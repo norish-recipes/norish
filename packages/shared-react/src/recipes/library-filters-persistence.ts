@@ -37,11 +37,8 @@ export function readStoredRecipeFilters(
   }
 }
 
-/**
- * Applies the device's stored filters to the Library's store, then writes every change back.
- * `resumed` stores already hold this document's own filters, so storage is not read for them.
- * `onKeep` is the platform's extra copy, search text included: web strips it for the cookie.
- */
+/** Applies the device's stored filters to the Library's store and writes changes back, skipping the
+ * read for `resumed` stores; `onKeep` is the platform's extra copy, which web strips for the cookie. */
 export function useLibraryFiltersPersistence({
   storage,
   resumed,

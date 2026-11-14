@@ -8,7 +8,6 @@ import { useCSSVariable } from "uniwind";
 
 export type ToastSeverity = "default" | "success" | "warning" | "danger";
 
-/** The icon circle per severity, as the board draws imported (accent) and failed (danger-soft). */
 const BADGE: Record<
   ToastSeverity,
   { icon: ComponentProps<typeof Ionicons>["name"]; circle: string; color: string }
@@ -23,7 +22,7 @@ const BADGE: Record<
   danger: { icon: "alert-circle-outline", circle: "bg-danger-soft", color: "--color-danger" },
 };
 
-/** Every toast of the app: the board's pill with the severity's circle, title, optional body and action. */
+/** Every toast of the app: a pill with the severity's circle, title, optional body and action. */
 export function AppToast({
   severity,
   title,

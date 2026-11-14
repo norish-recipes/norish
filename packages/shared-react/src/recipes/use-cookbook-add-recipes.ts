@@ -8,11 +8,8 @@ import { useCookbookMemberIdsQuery } from "./use-cookbook-member-ids-query";
 import { useCookbooksMutations } from "./use-cookbooks-mutations";
 import { useRecipesQuery } from "./use-recipes-query";
 
-/**
- * Filling a cookbook from its own side: a search over the recipes it does not hold yet, a staged
- * pick, and one save. What the cookbook holds is left out of the list, which needs the member ids
- * of the whole cookbook rather than a page of it.
- */
+/** A search over the recipes a cookbook doesn't hold, a staged pick and one save; leaving members
+ * out needs the whole cookbook's member ids, not a page of them. */
 export function useCookbookAddRecipes(cookbook: CookbookSummaryDTO) {
   const { setMembership } = useCookbooksMutations();
   const [input, setInput] = useState("");

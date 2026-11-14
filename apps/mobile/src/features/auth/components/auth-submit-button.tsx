@@ -26,7 +26,7 @@ export function AuthSubmitButton({
   const [accentForegroundColor] = useThemeColor(["accent-foreground"] as const);
 
   return (
-    // The boards dim a running attempt to 0.7, over heroui-native's 0.5 disabled opacity.
+    // A running attempt dims to 0.7, over heroui-native's 0.5 disabled opacity.
     <Button
       className="h-[52px] gap-2 rounded-full"
       isDisabled={isDisabled}

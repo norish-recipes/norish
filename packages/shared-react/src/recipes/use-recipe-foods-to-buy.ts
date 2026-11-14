@@ -6,11 +6,8 @@ import { useLinkedRecipeIngredients } from "./use-linked-recipe-ingredients";
 import { useRecipeIngredients } from "./use-recipe-ingredients";
 import { useServingsScaler } from "./use-servings-scaler";
 
-/**
- * A recipe's foods to buy at the servings picked: one row per food a line puts on the list (each
- * of an "and" line's, an "or" line's first), the recipes it links to included. `isLoading` holds
- * until the linked recipes have answered too, so no caller acts on a partial list.
- */
+/** A recipe's and its linked recipes' foods to buy at the picked servings, one per food (each of an
+ * "and" line's, an "or" line's first); `isLoading` holds until the linked recipes answer. */
 export function useRecipeFoodsToBuy(
   recipeId: string,
   originalServings: number,

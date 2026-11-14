@@ -5,13 +5,8 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 
-/**
- * One row of the Library, discriminated by what kind of thing it is.
- *
- * The Library is one list rather than two bands (ADR-0026), so a list has to
- * be told what it is drawing rather than assuming recipes. `pending` is the
- * import placeholder the dashboard already showed before cookbooks existed.
- */
+/** One row of the Library, which mixes kinds in one list (ADR-0026), so each row names its kind;
+ * `pending` is a running import's placeholder. */
 export type LibraryGridItem =
   | { kind: "pending"; id: string }
   | { kind: "recipe"; id: string; recipe: RecipeDashboardDTO }

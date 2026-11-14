@@ -10,7 +10,7 @@ import Animated, {
 import Svg, { Circle } from "react-native-svg";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 
-/** The board's import spinner: a 38-of-56 arc turning once per 0.9 s, still under Reduce Motion. */
+/** A 38-of-56 arc turning once per 0.9 s while an import runs, still under Reduce Motion. */
 export function ImportSpinner({ size }: { size: number }) {
   const color = useAccentTextColor();
   const reduceMotion = useReducedMotion();

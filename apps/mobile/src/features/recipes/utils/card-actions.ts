@@ -23,7 +23,7 @@ export type ActionDefinition = {
 export type RecipeMenuAction =
   "favourite" | "groceries" | "plan" | "addToCookbook" | "removeFromCookbook" | "delete";
 
-/** A recipe card's long-press menu, in the boards' order; Remove from cookbook only inside a cookbook the reader may edit. */
+/** A recipe card's long-press menu; Remove from cookbook only inside a cookbook the reader may edit. */
 export function recipeMenuActions({
   canDelete,
   canRemoveFromCookbook,

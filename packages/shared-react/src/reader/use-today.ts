@@ -11,11 +11,8 @@ function subscribe(onChange: () => void) {
   return () => clearInterval(id);
 }
 
-/**
- * The reader's date, `YYYY-MM-DD`, following the device's clock. `serverToday` is the date the
- * server rendered for the reader's time zone: it is what a hydrating page shows first, so a seeded
- * range keys the same query.
- */
+/** The reader's date, `YYYY-MM-DD`, on the device's clock; a hydrating page starts on `serverToday`,
+ * the server's date for the reader's zone, so a seeded range keys the same query. */
 export function useToday(serverToday?: string): string {
   return useSyncExternalStore(
     subscribe,

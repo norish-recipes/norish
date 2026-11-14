@@ -67,7 +67,7 @@ function OptionRow({ option, first }: { option: Option; first: boolean }) {
       accessibilityRole="button"
       className={`flex-row items-center gap-3.5 px-4 py-3 ${first ? "" : "border-separator border-t"}`}
       testID={`add-recipe-${option.key}`}
-      // The chosen way's sheet takes this one's place, as the boards draw one sheet at a time.
+      // The chosen way's sheet replaces this one, so only one sheet is ever stacked.
       onPress={() => router.replace(option.to)}
     >
       <View className="bg-surface size-10 items-center justify-center rounded-xl">

@@ -20,11 +20,8 @@ import { CookbooksEmpty, LibraryEmpty } from "./library-states";
 import { PendingCard } from "./pending-card";
 import { RecipeCard } from "./recipe-card";
 
-/**
- * The Recipes tab's scroll view: the large `title` on the avatar's band, `header` (Today) below it,
- * then the Library, whose rows are the running imports, recipes and cookbooks as one list, paged as
- * the reader scrolls. The title and avatar are list content, so they scroll away with it.
- */
+/** The Recipes tab: `title` and the avatar, `header` (Today), then imports, recipes and cookbooks
+ * as one paged list; the title and avatar are list content, so they scroll away with it. */
 export function LibraryList({
   title,
   header,

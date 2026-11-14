@@ -17,11 +17,8 @@ type SessionState = {
 const SIGNED_OUT: SessionState = { data: null, isPending: false, error: null };
 const noSession = { get: () => SIGNED_OUT, listen: () => () => {} };
 
-/**
- * The current client's session, or the persisted one while Offline, pending or on a non-401
- * error, so an Offline launch opens on its cached data. A 401 means signed out.
- * `ended` is the server's own answer: a 401, or a settled read with no session.
- */
+/** The client's session, or the persisted one while Offline, pending or on a non-401 error, so an
+ * Offline launch opens on cached data; `ended` is a 401 or a settled read with no session. */
 export function useMobileSession(): PlatformSession & { ended: boolean } {
   const authClient = useAuthClient();
   // Read directly: better-auth's useStore shows the previous client's last value for a render.

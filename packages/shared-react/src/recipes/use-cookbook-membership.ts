@@ -11,11 +11,8 @@ export type PendingCookbook = { key: number; title: string };
 
 export type FiledCookbook = { id: string; title: string };
 
-/**
- * Which cookbooks hold these recipes, staged: ticks and new cookbooks are applied together by
- * `save`, so closing without saving changes nothing. One recipe shows its memberships; several can
- * only be added. A cookbook asked for shows in the list as a row waiting to be made.
- */
+/** Staged cookbook ticks and new cookbooks for these recipes, applied by `save`; one recipe shows
+ * its memberships, several can only be added, and a new cookbook shows as a pending row. */
 export function useCookbookMembership({
   recipeIds,
   excludeCookbookId,

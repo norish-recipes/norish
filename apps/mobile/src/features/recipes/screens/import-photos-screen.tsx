@@ -20,7 +20,7 @@ import type { PhotoSource } from "../utils/photo-source";
 import { usePhotoPicker } from "../hooks/use-photo-picker";
 import { useStartImport } from "../hooks/use-start-import";
 
-/** Three tiles a row with the board's 8 pt gaps, inside the sheet's sides. */
+/** Three tiles a row with 8 pt gaps, inside the sheet's sides. */
 const COLUMNS = 3;
 const GAP = 8;
 

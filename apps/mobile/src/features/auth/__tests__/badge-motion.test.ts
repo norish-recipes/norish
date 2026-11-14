@@ -11,7 +11,7 @@ vi.mock("react-native-reanimated", () => ({
 const { STRIKE_TIMING, UPDATE_TIMING, badgeArrow, badgeRing, badgeShake } =
   await import("@/features/auth/utils/badge-motion");
 
-// The UpdateServer board, verbatim: dur 1.6s; the ring begins at click+0.72s and runs 0.8s.
+// Update your server's badge: 1.6s; the ring begins at click+0.72s and runs 0.8s.
 const BADGE_MS = UPDATE_TIMING.ms;
 const at = (keyTime: number) => keyTime * BADGE_MS;
 const GLYPH_SCALE = 1.4167;
@@ -46,8 +46,8 @@ describe("badge motion at the UpdateServer board's keyTimes", () => {
   });
 });
 
-// The SignInFailed and StorageUnavailable boards: shake dur 0.9s from 0.4s, ring from 0.9s (0.5s into the badge) for 0.8s.
-describe("badge motion at the SignInFailed board's keyTimes", () => {
+// Sign-in failed and storage unavailable: shake 0.9s from 0.4s, ring from 0.9s for 0.8s.
+describe("badge motion at the sign-in failure's keyTimes", () => {
   it("runs to the ring's end, 1.3s after the shake began", () => {
     expect(STRIKE_TIMING.ms).toBe(500 + 800);
   });

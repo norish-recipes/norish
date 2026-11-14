@@ -1,14 +1,7 @@
 import type { ServerAddressState } from "@/lib/network/server-address";
 
-/**
- * What the app shell should render once (or while) its async prerequisites
- * settle.
- *
- * Keeping every branch named here is deliberate: the boot gate previously
- * folded "still loading" and "failed to load" into a single `undefined`, so a
- * failure was indistinguishable from a slow read and left the app on a blank
- * screen forever.
- */
+/** What the shell renders while and once its async prerequisites settle; loading and failed are
+ * separate branches, so a failed read never looks like a slow one and leaves a blank screen. */
 type BootPhase =
   /** Hydration still in flight. The native splash stays up. */
   | { phase: "loading" }

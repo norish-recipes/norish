@@ -5,7 +5,7 @@ import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { Button } from "heroui-native";
 import { useIntl } from "react-intl";
 
-/** The Settings tab; the account's rows arrive with their ticket. Sign-out lives here until then. */
+/** The Settings tab, which holds only Sign-out until the account's rows are built. */
 export function SettingsScreen() {
   const intl = useIntl();
   const signOut = useConfirmedSignOut();

@@ -14,7 +14,7 @@ const LOGO_HEIGHT = (LOGO_WIDTH * 639) / 2370;
 // The splash centres logo and slogan as one group (gap-3, the slogan's 20pt line); the
 // splash PNGs carry that 32pt as transparent rows under the logo, so iOS centres it the same.
 const BRAND_HEIGHT = LOGO_HEIGHT + 12 + 20;
-// The form screens' boards (Login, Register) draw it smaller, under their prefix line.
+// Sign-in and sign-up draw the logo smaller, under their prefix line.
 const COMPACT_LOGO_WIDTH = 144;
 
 /** The splash brand's top in window points: the native splash centres the group on the window. */
@@ -39,7 +39,7 @@ export function Brand({ prefix, slogan = true, sloganStyle, compact = false }: B
   const width = compact ? COMPACT_LOGO_WIDTH : LOGO_WIDTH;
 
   return (
-    // The forms' boards space the prefix 10pt above the logo and the slogan 12pt under it.
+    // Compact spaces the prefix 10pt above the logo; the slogan sits 12pt under it.
     <View className={compact ? "items-center gap-2.5" : "items-center gap-3"}>
       {prefix ? <Text className="text-muted text-[17px] font-normal">{prefix}</Text> : null}
       <Mark

@@ -12,9 +12,9 @@ import { useIntl } from "react-intl";
 
 /** The glyph's frame and size: the glass style pads the label 7 pt on each side. */
 const SIZES = {
-  /** 26 pt makes the board's 40 pt circle. */
+  /** The glass pads a 26 pt frame to a 40 pt circle. */
   regular: { frame: 26, glyph: 18 },
-  /** 14 pt makes the 28 pt circle the boards put on a photo. */
+  /** A 14 pt frame makes the 28 pt circle drawn over a photo. */
   small: { frame: 14, glyph: 12 },
 } as const;
 

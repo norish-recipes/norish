@@ -43,11 +43,8 @@ export function nextSortOrder(current: SortOrder, type: "title" | "date"): SortO
   return current === asc ? desc : current === desc ? "none" : asc;
 }
 
-/**
- * The Filters panel's draft, started from the applied filters: edits stay in the draft until
- * `apply`, and `reset` clears the applied filters too. Mount it while the panel is open, so each
- * opening starts fresh.
- */
+/** The Filters panel's draft of the applied filters until `apply`; `reset` clears the applied ones
+ * too. Mount it while the panel is open, so each opening starts fresh. */
 export function useFiltersDraft() {
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);

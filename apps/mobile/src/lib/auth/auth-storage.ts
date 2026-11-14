@@ -128,13 +128,8 @@ function toSessionUser(value: unknown): SessionUser | null {
   };
 }
 
-/**
- * Read the persisted Better Auth session data from SecureStore and extract
- * the user object.
- *
- * Returns the validated user object, or `null` if the key is missing, empty,
- * unparseable, or the user shape is invalid.
- */
+/** The user in Better Auth's persisted session data in SecureStore; null when the key is missing,
+ * empty, unparseable or holds no valid user. */
 export async function readPersistedSession(): Promise<SessionUser | null> {
   let authCookie: string | null;
   let raw: string | null;

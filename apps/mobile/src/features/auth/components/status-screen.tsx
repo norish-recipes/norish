@@ -32,7 +32,7 @@ export function StatusScreen({
     <AuthLayout
       status
       footer={
-        // The boards keep 16pt between the block, the action and the chip.
+        // 16pt between the block, the action and the chip.
         <View className={action && chipAddress ? "gap-4 pt-4" : undefined}>
           {action ? (
             <AuthSubmitButton

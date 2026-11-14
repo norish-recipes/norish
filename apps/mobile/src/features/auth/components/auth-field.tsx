@@ -15,7 +15,7 @@ interface AuthFieldProps extends Omit<ComponentProps<typeof InputGroup.Input>, "
   icon?: ReactNode;
   /** After the input, such as the password toggle. */
   suffix?: ReactNode;
-  /** The forms' 50pt field (Login, Register boards) instead of Server address's 52pt. */
+  /** Sign-in and sign-up's 50pt field instead of Server address's 52pt. */
   compact?: boolean;
 }
 
@@ -33,7 +33,7 @@ export function AuthField({
 
   return (
     <TextField className={compact ? "gap-1.5" : "gap-2"} isInvalid={isInvalid}>
-      {/* The forms' boards keep a label row 20pt high, letting the 28pt help button overhang it. */}
+      {/* A 20pt label row, so the 28pt help button overhangs it rather than pushing the field down. */}
       <View
         className={`flex-row items-center gap-1 pl-1 ${compact && labelAccessory ? "h-5" : ""}`}
       >

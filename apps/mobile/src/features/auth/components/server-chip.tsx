@@ -39,7 +39,7 @@ export function ServerChip({ address }: { address: string }) {
         ]}
         onPress={changeServerAddress}
       >
-        {/* The glass style pads the label 7pt above and below, so a 26pt label makes the board's 40pt chip. */}
+        {/* The glass pads the label 7pt above and below, so a 26pt label makes a 40pt chip. */}
         <HStack modifiers={[frame({ height: 26 })]} spacing={8}>
           <Image
             color={typeof accentText === "string" ? accentText : accentColor}

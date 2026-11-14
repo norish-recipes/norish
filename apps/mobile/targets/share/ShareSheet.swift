@@ -17,7 +17,7 @@ final class ShareModel: ObservableObject {
   var close: () -> Void = {}
 }
 
-/// The Share Extension board: a glass card at the bottom, as tall as its content, over a scrim.
+/// A glass card at the bottom, as tall as its content, over a scrim.
 struct ShareSheet: View {
   @ObservedObject var model: ShareModel
 
@@ -134,7 +134,7 @@ private struct ItemRow: View {
     case 1:
       tile(preview.thumbnails[0], size: 52, radius: 14)
     default:
-      // Two photos fanned, as the board stacks them.
+      // The first two photos, fanned.
       ZStack(alignment: .topLeading) {
         tile(preview.thumbnails[0], size: 40, radius: 11).rotationEffect(.degrees(-8)).offset(y: 6)
         tile(preview.thumbnails[1], size: 40, radius: 11).offset(x: 12, y: 6)
@@ -197,7 +197,7 @@ private struct StatusView: View {
     }
   }
 
-  /// The board's one shake; none under Reduce Motion.
+  /// One shake on a failure; none under Reduce Motion.
   private func playShake() {
     guard !reduceMotion else { return }
     for (index, offset) in [-3.0, 3, -2, 2, 0].enumerated() {

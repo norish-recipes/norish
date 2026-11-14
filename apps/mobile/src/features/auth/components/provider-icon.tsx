@@ -2,11 +2,7 @@ import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-/**
- * Maps Iconify icon IDs (used by the web provider list) to @expo/vector-icons names.
- * Only the most common providers are mapped; everything else falls back to a
- * generic shield icon.
- */
+/** The web provider list's Iconify ids as Ionicons names; an unmapped provider gets a shield. */
 const ICONIFY_TO_IONICONS: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
   "mdi:github": "logo-github",
   "simple-icons:github": "logo-github",

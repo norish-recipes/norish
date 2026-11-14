@@ -4,11 +4,8 @@ import { useAppearancePreference } from "@/lib/preferences/appearance-preference
 
 export type { ResolvedColorScheme } from "@/lib/preferences/color-scheme";
 
-/**
- * The scheme the app is drawn in right now: the one the user chose, or the
- * system's while the preference is "system". Anything that picks a hex by
- * theme rather than a theme token — a Store's colour — reads this.
- */
+/** The scheme the app is drawn in: the chosen one, or the system's under "system". Read it to pick
+ * a hex by theme where no token fits, as a Store's colour does. */
 export function useResolvedColorScheme(): ResolvedColorScheme {
   const { mode } = useAppearancePreference();
   const systemColorScheme = useColorScheme();

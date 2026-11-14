@@ -47,11 +47,8 @@ export function useLinesToBuy<T extends ScaledFood>(
 
   for (const item of lines) (keptFor(item) ? inPantry : toBuy).push(item);
 
-  /**
-   * "We keep this": the line's own food goes in the Pantry, or the food of the name as edited
-   * here, resolved as a typed name is. The Pantry's optimistic row moves the line under "In your
-   * pantry" at once.
-   */
+  /** "We keep this": the line's food, or its edited name's resolved food, goes in the Pantry,
+   * whose optimistic row moves the line under "In your pantry" at once. */
   const keepLine = (item: GroceryIngredient) => {
     const edited = editedIngredients[item.id]?.name;
 

@@ -7,7 +7,7 @@ import { Stack, useRouter } from "expo-router";
 import { Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-// The SigningIn board's 12pt group gap plus the spinner's own 28pt margin.
+// The signing-in group's 12pt gap plus the spinner's own 28pt margin.
 const SPINNER_GAP = 40;
 
 // Only an outside norish://auth/callback link opens this, as the sign-in sheet keeps its own

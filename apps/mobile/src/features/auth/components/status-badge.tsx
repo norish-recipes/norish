@@ -23,7 +23,7 @@ import { useIntl } from "react-intl";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-// The boards' danger and warning with their soft grounds, in sRGB (the light warning is darker than the theme's).
+// Danger and warning with their soft grounds, in sRGB; the light warning is darker than the theme's.
 const TONES = {
   warning: {
     light: { color: "rgb(198, 108, 0)", soft: "rgba(255, 156, 61, 0.18)" },
@@ -145,7 +145,7 @@ export function StatusBadge({ variant }: { variant: StatusBadgeVariant }) {
   );
 }
 
-/** The board's 24-unit glyph on the 72pt badge, over its soft ground when given. */
+/** The 24-unit glyph on the 72pt badge, over its soft ground when given. */
 function Glyph({
   color,
   ground,
@@ -166,7 +166,7 @@ function Glyph({
 }
 
 const styles = StyleSheet.create({
-  // The board's 160pt ring canvas, centred on the 72pt badge.
+  // The 160pt ring canvas, centred on the 72pt badge.
   ring: { position: "absolute", left: -44, top: -44 },
   fill: StyleSheet.absoluteFill,
 });

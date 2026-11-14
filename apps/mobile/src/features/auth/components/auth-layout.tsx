@@ -8,9 +8,9 @@ interface AuthLayoutProps {
   children: ReactNode;
   /** Pinned to the bottom, above the home indicator. */
   footer?: ReactNode;
-  /** Sets the block 40pt under the top instead of centring it (the Login board). */
+  /** Sets the block 40pt under the top instead of centring it, as sign-in does. */
   topAligned?: boolean;
-  /** Centres the block in the whole space above the footer, with no bounce (the status boards). */
+  /** Centres the block in the whole space above the footer, with no bounce, for status screens. */
   status?: boolean;
   /** Starts the space under the native header's 48pt row, as the Register board does. */
   underHeader?: boolean;

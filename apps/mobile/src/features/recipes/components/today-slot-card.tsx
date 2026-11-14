@@ -19,7 +19,7 @@ import { TODAY_ACTION_DEFINITIONS, todayMenuActions } from "../utils/today-actio
 import { CardMenu } from "./card-menu";
 import { PhotoChip } from "./photo-chip";
 
-/** The one size of a Today card: the board's 172 by 244 pt, its photo 164 pt tall, 12 pt between. */
+/** Every Today card's size, 172 by 244 pt with a 164 pt photo, so the row's cards line up. */
 export const TODAY_CARD = "h-[244px] w-[172px] flex-none overflow-hidden rounded-[22px]";
 export const TODAY_CARD_PHOTO = "h-[164px] w-[172px]";
 export const TODAY_ROW_GAP = "gap-3";

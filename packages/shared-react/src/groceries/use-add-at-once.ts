@@ -3,11 +3,8 @@ import { useEffect, useRef } from "react";
 import type { ScaledFood } from "./use-lines-to-buy";
 import { useLinesToBuy } from "./use-lines-to-buy";
 
-/**
- * Adds what the panel would have ticked, once the recipe has answered and the Pantry was read in
- * this mount, never from a cached copy; a Pantry that cannot be read opens the panel instead
- * (`onOpenChange(true)`). Every other way out closes it. `onDone` runs once, as it decides.
- */
+/** Adds what the panel would tick once the recipe and a fresh Pantry read have answered; an
+ * unreadable Pantry opens the panel instead, and `onDone` runs once, as it decides. */
 export function useAddAtOnce({
   lines,
   linesReady,

@@ -12,11 +12,8 @@ const ACCESSORY_CLEARANCE = 72;
 // ponytail: no docs-backed inset follows the minimised bar; 49 pt of extra space at the end then.
 const TAB_BAR_HEIGHT = 49;
 
-/**
- * The scroll view of the Library's cards, a row each or two to a row, paged as the reader scrolls:
- * the Recipes tab's and a cookbook page's. `header` scrolls with the cards; `empty` shows when no
- * card does.
- */
+/** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
+ * `empty` shows when there is no card. */
 export function CardList<Row>({
   rows,
   variant,

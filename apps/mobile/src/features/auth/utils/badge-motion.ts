@@ -1,7 +1,7 @@
 import { Easing, Extrapolation, interpolate } from "react-native-reanimated";
 import { progress } from "@/lib/motion/progress";
 
-/** One badge's timing, from the board's markup: the shake's keyTimes run over `shakeMs`, the ring starts at `ringStart`. */
+/** One badge's timing: the shake's keyTimes run over `shakeMs`, the ring starts at `ringStart`. */
 export type BadgeTiming = {
   /** The whole replay in ms; the clock runs 0 to this. */
   ms: number;
@@ -11,9 +11,9 @@ export type BadgeTiming = {
   ringStart: number;
 };
 
-// The shake and ring start this long after the badge appears, on every board.
+// The shake and ring start this long after the badge appears, on every status screen.
 export const BADGE_START_DELAY_MS = 400;
-// The board runs the ring 0.8s; its radius grows from the badge's own 36 to 66 as its opacity falls from 0.6 to 0.
+// The ring runs 0.8s, its radius growing from the badge's 36 to 66 as its opacity falls from 0.6 to 0.
 const RING_MS = 800;
 const RING_FROM_RADIUS = 36;
 const RING_TO_RADIUS = 66;
@@ -44,7 +44,7 @@ const ARROW_DIPPED_AT = 0.52;
 const ARROW_SETTLED_AT = 0.62;
 const ARROW_RISEN = -3.5;
 const ARROW_DIPPED = 1;
-// The board draws the glyph in 24-unit space scaled 1.4167, so its offsets are in those units.
+// The glyph is drawn in 24-unit space scaled 1.4167, so its offsets are in those units.
 const GLYPH_SCALE = 1.4167;
 
 const arrowRise = Easing.bezierFn(0.3, 0, 0.2, 1);

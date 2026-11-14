@@ -1,8 +1,5 @@
-/**
- * Membership commits on Save, like every other sheet in the app. What a reader can observe: a toggle
- * they tapped is not written until they save, and a cookbook they asked for shows up in the list
- * they asked for it in rather than only on the server.
- */
+/** Membership commits on Save: a tapped toggle isn't written until then, and a cookbook asked for
+ * shows in the list it was asked for in, not only on the server. */
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

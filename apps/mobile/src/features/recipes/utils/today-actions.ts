@@ -2,7 +2,7 @@ import type { ActionDefinition } from "./card-actions";
 
 export type TodayMenuAction = "open" | "move" | "remove";
 
-/** A Today card's long-press menu, in the board's order; a note has no recipe to open. */
+/** A Today card's long-press menu; a note has no recipe to open. */
 export function todayMenuActions(isRecipe: boolean): TodayMenuAction[] {
   return isRecipe ? ["open", "move", "remove"] : ["move", "remove"];
 }

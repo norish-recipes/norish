@@ -10,8 +10,7 @@ export function isImportableLink(value: string): boolean {
   }
 }
 
-/** The copied link Add recipe offers as its first row: a URL on the clipboard that is a web link
- * and not into the own server, else null. */
+/** The clipboard's web link that Add recipe offers first, unless it points at the Server Address. */
 export function copiedLinkToOffer({
   hasUrl,
   url,

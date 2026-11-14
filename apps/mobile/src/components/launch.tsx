@@ -19,7 +19,7 @@ import { progress } from "@/lib/motion/progress";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
 
-// The launch timeline in ms from the JS splash's first frame, after the Launch board.
+// The launch timeline, in ms from the JS splash's first frame.
 const SLOGAN_IN = 400;
 const HOLD_END = 900;
 const FADE_END = 1200;

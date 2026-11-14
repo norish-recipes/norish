@@ -33,14 +33,14 @@ const GROUND: Record<SwipeAction["key"], string> = {
   delete: "bg-danger",
 };
 
-// The board's panels: list circles are 48 pt in a 208 pt panel, grid circles 44 pt in an 80 pt one;
-// the card stops 8 / 4 pt short of the panel.
+// List circles are 48 pt in a 208 pt panel, grid circles 44 pt in an 80 pt one; the card stops
+// 8 / 4 pt short of the panel.
 const LIST_BUTTON = 208 / 3;
 const LIST_GAP = 8;
 const GRID_PANEL = 80;
 const GRID_GAP = 4;
 
-// The board's `0 2px 8px` at 14% black.
+// A CSS `0 2px 8px` shadow at 14% black; iOS's radius is half the CSS blur.
 const CIRCLE_SHADOW = {
   shadowColor: "#000",
   shadowOpacity: 0.14,

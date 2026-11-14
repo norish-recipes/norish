@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The Share Extension board's tokens (oklch there), as sRGB for light and dark.
+/// The app theme's tokens the sheet uses, converted from oklch to sRGB for light and dark.
 enum Palette {
   static let surface = color(0xFFFFFF, 0x201E1A)
   static let fill = color(0xECE7DE, 0x292723)

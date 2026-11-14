@@ -8,13 +8,8 @@ interface StorageUnavailableScreenProps {
   onRetry: () => void;
 }
 
-/**
- * Shown when the app cannot read its secure storage on boot.
- *
- * Without that read the app cannot tell which backend it belongs to, and
- * guessing "not configured" would drop a server the user already set up. So
- * this is a dead end the user is told about rather than a silent blank screen.
- */
+/** Shown when secure storage can't be read on boot: guessing "not configured" would drop the
+ * server already set up, so the app stops here and says so. */
 export function StorageUnavailableScreen({ onRetry }: StorageUnavailableScreenProps) {
   const intl = useIntl();
 

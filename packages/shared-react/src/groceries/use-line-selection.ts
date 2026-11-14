@@ -27,10 +27,8 @@ export function useLineSelection<T extends Line>({
   const knownInPantryIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Selection starts from what is to buy, so the Pantry has to have
-    // answered before the first pick: a line in the Pantry is never
-    // pre-ticked. A Pantry that cannot be read has not answered either, so
-    // nothing is ticked: the person ticks what they need, and is told why.
+    // Nothing is pre-ticked until the Pantry answers, so a line in it is never ticked; an
+    // unreadable Pantry ticks nothing either, and the person is told why.
     if (pantryLoading || pantryUnavailable) return;
     const currentIds = lines.map((i) => i.id).filter(Boolean);
     const toBuyIds = new Set(toBuy.map((item) => item.id));
@@ -45,12 +43,8 @@ export function useLineSelection<T extends Line>({
       return;
     }
 
-    /* A line takes its section's default the moment it joins one: a new line,
-       and a line that crossed because a housemate changed the Pantry or
-       because its name was edited here. A tick was only ever about the
-       section the line was in, so it does not travel with it — otherwise a
-       line the Pantry has just claimed would be bought anyway, pre-ticked by
-       a default that was about buying it. */
+    // A line joining a section takes its default; a tick doesn't travel with it, or a line the
+    // Pantry just claimed would stay ticked to buy.
     const isNew = (id: string) => !knownIngredientIdsRef.current.has(id);
     const wasInPantry = (id: string) => knownInPantryIdsRef.current.has(id);
     const tick = currentIds.filter((id) => toBuyIds.has(id) && (isNew(id) || wasInPantry(id)));
@@ -71,10 +65,8 @@ export function useLineSelection<T extends Line>({
     });
   }, [lines, toBuy, inPantry, pantryLoading, pantryUnavailable]);
 
-  /* Count the visible rows that are selected rather than `selectedIds.length`,
-     so an id left behind by an ingredient that has since disappeared cannot
-     make the list look fully selected. The count, and "select all", are about
-     what is to buy; a line in the Pantry is ticked on its own. */
+  // Counted over visible rows, so a vanished line's id can't make the list look all selected;
+  // the count and select-all cover what is to buy, not the Pantry's lines.
   const selectedCount = toBuy.filter((item) => selectedIds.includes(item.id)).length;
   const inPantrySelectedCount = inPantry.filter((item) => selectedIds.includes(item.id)).length;
 

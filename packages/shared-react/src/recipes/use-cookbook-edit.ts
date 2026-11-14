@@ -29,11 +29,8 @@ export function cookbookEditPlan(
   };
 }
 
-/**
- * A cookbook's edit, staged: its title, its cover and the recipes to take out are applied together
- * by `save`, in that order, so closing without saving changes nothing. `save` takes the cover as an
- * argument when the caller has just picked one and saves at once.
- */
+/** A staged cookbook edit: `save` applies title, cover and removals in that order, so closing
+ * changes nothing; pass `save` a cover just picked to save it at once. */
 export function useCookbookEdit(
   cookbook: CookbookSummaryDTO,
   { withMembers = true }: { withMembers?: boolean } = {}

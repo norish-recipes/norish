@@ -65,10 +65,6 @@ const FONTS = {
   FiraCode_400Regular,
 };
 
-// ============================================================================
-// Entry point
-// ============================================================================
-
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -83,9 +79,7 @@ export default function RootLayout() {
   );
 }
 
-// ============================================================================
-// Boot gate — waits for hydration, then renders provider tree
-// ============================================================================
+// The boot gate: waits for hydration, then renders the provider tree.
 
 function RootLayoutContent() {
   const { hydrated } = useAppearancePreference();
@@ -172,10 +166,6 @@ function RootLayoutContent() {
   );
 }
 
-// ============================================================================
-// Session stack — the stack for the platform's session
-// ============================================================================
-
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
 /** The stack, wrapped in the offline controller while signed in; held under the splash while pending. */
@@ -257,10 +247,6 @@ function AuthenticatedEffects() {
 
   return null;
 }
-
-// ============================================================================
-// Navigation
-// ============================================================================
 
 /** A recipe opened from the Library: a transparent header with just the back arrow. */
 const OPENED_SCREEN = {

@@ -41,7 +41,7 @@ export function CookbookTitleSheet({
     "accent-foreground",
   ] as const);
   const disabled = !canSubmit || isLoading || !onSubmit;
-  // The sheet opens on its field, so the keyboard is up as the board draws it.
+  // The sheet opens on its field, so the keyboard rises with it.
   const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
 
   return (

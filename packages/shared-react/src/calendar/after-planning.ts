@@ -21,11 +21,8 @@ export function plannedServings(recipe: { servings?: number | null }) {
   return recipe.servings || 1;
 }
 
-/**
- * What happens once a recipe is planned, as the user chose in Preferences: nothing, the groceries
- * panel for it (the default), or its lines to buy straight onto the list. A planning panel closes
- * as it plans, so whoever hosts it renders what `planned` describes, which outlives it.
- */
+/** What follows planning, per Preferences: nothing, the groceries panel (default) or its lines
+ * onto the list; the planning panel closes as it plans, so its host renders `planned`. */
 export function useAfterPlanning(): {
   afterPlanning: (recipeId: string) => void;
   planned: Planned | null;

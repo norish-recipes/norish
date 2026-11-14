@@ -23,7 +23,7 @@ const GROUND: Record<Tone, string> = {
   warning: "bg-warning",
 };
 
-/** A card's small capsule: a fact, a tag, or an allergen warning, sized per the Library boards. */
+/** A card's small capsule: a fact, a tag, or an allergen warning, sized by the card's `size`. */
 export function Pill({
   children,
   icon,
