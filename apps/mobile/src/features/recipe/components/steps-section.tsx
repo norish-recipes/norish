@@ -242,26 +242,27 @@ function StepLine({
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
 
   return (
-    // Not one button, so VoiceOver reaches the step's timer chips; the number reads as its toggle.
+    // Not one button, so VoiceOver reaches the step's timer chips; the number is the toggle.
     <Pressable
       accessible={false}
       className="flex-row gap-3"
       testID={`recipe-step-${number}`}
       onPress={() => onToggle(number)}
     >
-      <View
-        accessible
+      <Pressable
         accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number })}
         accessibilityRole="button"
         accessibilityState={{ selected: done }}
         className="bg-accent size-7 items-center justify-center rounded-full"
+        testID={`recipe-step-${number}-toggle`}
+        onPress={() => onToggle(number)}
       >
         {done ? (
           <Ionicons color={accentForeground} name="checkmark" size={16} />
         ) : (
           <Text className="text-accent-foreground text-sm font-semibold">{number}</Text>
         )}
-      </View>
+      </Pressable>
       <View className="min-w-0 flex-1 gap-3">
         <StepText
           className={`pt-0.5 text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
