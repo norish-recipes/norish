@@ -1,9 +1,8 @@
 import { createContext } from "react";
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import { AUTH_STORAGE_KEYS } from "@/lib/auth/auth-storage";
-import { keychainOptions, moveToSharedKeychain } from "@/lib/auth/shared-keychain";
+import { appKeychain, moveToSharedKeychain } from "@/lib/auth/shared-keychain";
 import { clearServerTooOld } from "@/lib/network/too-old-server";
-import * as SecureStore from "expo-secure-store";
 
 import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
@@ -79,12 +78,12 @@ export async function loadServerAddress(): Promise<string | null> {
   // The boot's first SecureStore read, so the keychain the Share Extension reads is settled first.
   await moveToSharedKeychain([SERVER_ADDRESS_KEY, ...AUTH_STORAGE_KEYS]);
 
-  const stored = await SecureStore.getItemAsync(SERVER_ADDRESS_KEY, keychainOptions());
+  const stored = await appKeychain.getItemAsync(SERVER_ADDRESS_KEY);
 
   const normalized = stored ? normalizeServerAddress(stored) : null;
 
   if (stored && !normalized) {
-    await SecureStore.deleteItemAsync(SERVER_ADDRESS_KEY, keychainOptions());
+    await appKeychain.deleteItemAsync(SERVER_ADDRESS_KEY);
   }
 
   currentAddress = normalized ?? "";
@@ -104,7 +103,7 @@ export async function saveServerAddress(input: string): Promise<string> {
 
   // The Offline Cache and Outbox are per signed-in owner, and sign-out already cleared the reads.
   await resetAuthClientStorage();
-  await SecureStore.setItemAsync(SERVER_ADDRESS_KEY, normalized, keychainOptions());
+  await appKeychain.setItemAsync(SERVER_ADDRESS_KEY, normalized);
   currentAddress = normalized;
   clearServerTooOld();
   emitServerAddressChange();

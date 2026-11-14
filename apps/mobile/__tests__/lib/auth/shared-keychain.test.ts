@@ -167,9 +167,16 @@ describe("moveToSharedKeychain", () => {
   });
 
   const load = () => import("@/lib/auth/shared-keychain");
+  // Which store the app's keychain reads now, by a key only that store holds.
+  const reading = async (appKeychain: KeychainStore) => {
+    old.items.set("probe", "old");
+    shared.items.set("probe", "shared");
+
+    return appKeychain.getItemAsync("probe");
+  };
 
   it("rethrows a marker read that throws, touches neither store, and reads it again next call", async () => {
-    const { moveToSharedKeychain, keychainOptions } = await load();
+    const { moveToSharedKeychain, appKeychain } = await load();
 
     await signedIn(old);
     shared.items.set(MOVED, "1");
@@ -184,16 +191,16 @@ describe("moveToSharedKeychain", () => {
     await expect(moveToSharedKeychain(KEYS)).rejects.toThrow("interaction not allowed");
     expect(old.calls).toEqual([]);
     expect(shared.calls).toEqual([]);
-    expect(keychainOptions()).toEqual({});
-
     shared.store.getItemAsync = getItemAsync;
+    expect(await reading(appKeychain)).toBe("old");
+
     await moveToSharedKeychain(KEYS);
 
-    expect(keychainOptions()).toMatchObject({ keychainService: "norish.shared" });
+    expect(await reading(appKeychain)).toBe("shared");
   });
 
   it("reads the shared store once moved, whatever the old store does", async () => {
-    const { moveToSharedKeychain, keychainOptions } = await load();
+    const { moveToSharedKeychain, appKeychain } = await load();
     const broken = async () => {
       throw new Error("old keychain broken");
     };
@@ -206,12 +213,13 @@ describe("moveToSharedKeychain", () => {
     };
 
     await moveToSharedKeychain(KEYS);
+    old.store.getItemAsync = async () => "old";
 
-    expect(keychainOptions()).toMatchObject({ keychainService: "norish.shared" });
+    expect(await reading(appKeychain)).toBe("shared");
   });
 
   it("keeps the old store for this launch when the copy fails", async () => {
-    const { moveToSharedKeychain, keychainOptions } = await load();
+    const { moveToSharedKeychain, appKeychain } = await load();
 
     await signedIn(old);
     shared.store.setItemAsync = async () => {
@@ -220,6 +228,6 @@ describe("moveToSharedKeychain", () => {
 
     await moveToSharedKeychain(KEYS);
 
-    expect(keychainOptions()).toEqual({});
+    expect(await reading(appKeychain)).toBe("old");
   });
 });

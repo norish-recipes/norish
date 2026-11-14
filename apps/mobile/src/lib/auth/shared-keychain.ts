@@ -86,20 +86,19 @@ const SHARED_SERVICE = "norish.shared";
 let options: SecureStore.SecureStoreOptions = {};
 let moving: Promise<void> | null = null;
 
-/** The keychain SecureStore calls name: the one shared with the Share Extension once moved. */
-export function keychainOptions(): SecureStore.SecureStoreOptions {
-  return options;
-}
-
-function secureStore(storeOptions: SecureStore.SecureStoreOptions): KeychainStore {
+/** SecureStore under the options `storeOptions` returns at each call. */
+function secureStore(storeOptions: () => SecureStore.SecureStoreOptions): KeychainStore {
   return {
-    getItem: (key) => SecureStore.getItem(key, storeOptions),
-    getItemAsync: (key) => SecureStore.getItemAsync(key, storeOptions),
-    setItem: (key, value) => SecureStore.setItem(key, value, storeOptions),
-    setItemAsync: (key, value) => SecureStore.setItemAsync(key, value, storeOptions),
-    deleteItemAsync: (key) => SecureStore.deleteItemAsync(key, storeOptions),
+    getItem: (key) => SecureStore.getItem(key, storeOptions()),
+    getItemAsync: (key) => SecureStore.getItemAsync(key, storeOptions()),
+    setItem: (key, value) => SecureStore.setItem(key, value, storeOptions()),
+    setItemAsync: (key, value) => SecureStore.setItemAsync(key, value, storeOptions()),
+    deleteItemAsync: (key) => SecureStore.deleteItemAsync(key, storeOptions()),
   };
 }
+
+/** The app's keychain: the one shared with the Share Extension once moved. */
+export const appKeychain = secureStore(() => options);
 
 async function moveOnce(keys: readonly string[]): Promise<void> {
   // Empty off iOS, where the store stays as it is.
@@ -114,7 +113,9 @@ async function moveOnce(keys: readonly string[]): Promise<void> {
     keychainAccessible: SecureStore.WHEN_UNLOCKED,
   };
 
-  if (await moveKeychainItems(secureStore({}), secureStore(shared), keys)) options = shared;
+  if (await moveKeychainItems(secureStore(() => ({})), secureStore(() => shared), keys)) {
+    options = shared;
+  }
 }
 
 /**
