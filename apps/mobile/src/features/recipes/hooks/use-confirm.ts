@@ -1,4 +1,5 @@
 import { Alert } from "react-native";
+import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useIntl } from "react-intl";
 
 type Confirm = {
@@ -12,10 +13,11 @@ type Confirm = {
 /** The native alert: destructive button on the right, as the boards draw it. */
 export function useConfirm() {
   const intl = useIntl();
+  const cancel = useCancelButton();
 
   return ({ title, message, confirmLabelId = "common.actions.delete", onConfirm }: Confirm) =>
     Alert.alert(title, message, [
-      { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
+      cancel,
       {
         text: intl.formatMessage({ id: confirmLabelId }),
         style: "destructive",

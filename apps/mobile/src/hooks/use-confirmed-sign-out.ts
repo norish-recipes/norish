@@ -1,4 +1,5 @@
 import { Alert } from "react-native";
+import { useCancelButton } from "@/hooks/use-cancel-button";
 import { getAuthTransportSnapshot } from "@/lib/auth/auth-session-sync";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useIntl } from "react-intl";
@@ -12,6 +13,7 @@ import { useSignOut } from "@norish/shared-react/reader";
 export function useConfirmedSignOut(): (onLeaving?: () => void) => Promise<boolean> {
   const intl = useIntl();
   const signOut = useSignOut();
+  const cancel = useCancelButton();
 
   return async (onLeaving) => {
     // The session this was asked for; once it has ended (Session Expiry), there is nothing to leave.
@@ -39,11 +41,7 @@ export function useConfirmedSignOut(): (onLeaving?: () => void) => Promise<boole
           { count: unsynced }
         ),
         [
-          {
-            text: intl.formatMessage({ id: "common.actions.cancel" }),
-            style: "cancel",
-            onPress: () => resolve(false),
-          },
+          { ...cancel, onPress: () => resolve(false) },
           {
             text: intl.formatMessage({ id: "navbar.userMenu.logout" }),
             style: "destructive",

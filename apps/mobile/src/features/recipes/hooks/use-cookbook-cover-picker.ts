@@ -1,5 +1,6 @@
 import type * as ImagePicker from "expo-image-picker";
 import { ActionSheetIOS } from "react-native";
+import { useCancelButton } from "@/hooks/use-cancel-button";
 import { File } from "expo-file-system";
 import { useIntl } from "react-intl";
 
@@ -15,6 +16,7 @@ const PICKER = {
 /** The cover's source: asks library or camera in the native action sheet, then hands the picked file over. */
 export function useCookbookCoverPicker(onPicked: (file: File) => void) {
   const intl = useIntl();
+  const cancel = useCancelButton();
   // An expo-file-system File is a Blob, so the shared upload takes it as it takes a browser's.
   const { sources, pick } = usePhotoPicker(([asset]) => onPicked(new File(asset!.uri)));
 
@@ -31,7 +33,7 @@ export function useCookbookCoverPicker(onPicked: (file: File) => void) {
                   : "recipes.cookbooks.coverFromLibrary",
             })
           ),
-          intl.formatMessage({ id: "common.actions.cancel" }),
+          cancel.text,
         ],
         cancelButtonIndex: sources.length,
       },

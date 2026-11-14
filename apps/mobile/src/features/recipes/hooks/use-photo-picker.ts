@@ -1,6 +1,7 @@
 import type { PhotoSource } from "@/features/recipes/utils/photo-source";
 import { Alert, Linking } from "react-native";
 import { photoSources, settlePhotoPick } from "@/features/recipes/utils/photo-source";
+import { useCancelButton } from "@/hooks/use-cancel-button";
 import { isDevice } from "expo-device";
 import * as ImagePicker from "expo-image-picker";
 import { useIntl } from "react-intl";
@@ -11,6 +12,7 @@ import { useIntl } from "react-intl";
  */
 export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]) => void) {
   const intl = useIntl();
+  const cancel = useCancelButton();
   const run = async (pick: () => Promise<ImagePicker.ImagePickerResult>) => {
     const outcome = await settlePhotoPick(pick);
 
@@ -36,7 +38,7 @@ export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]
       intl.formatMessage({ id: "common.photos.cameraDeniedTitle" }),
       intl.formatMessage({ id: "common.photos.cameraDeniedMessage" }),
       [
-        { text: intl.formatMessage({ id: "common.actions.cancel" }), style: "cancel" },
+        cancel,
         {
           text: intl.formatMessage({ id: "common.photos.openSettings" }),
           onPress: () => void Linking.openSettings(),
