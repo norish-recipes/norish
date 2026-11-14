@@ -57,11 +57,13 @@ export function CookbookNoRecipes() {
   const intl = useIntl();
 
   return (
-    <EmptyCard
-      icon="book-outline"
-      testID="cookbook-empty"
-      title={intl.formatMessage({ id: "recipes.cookbooks.empty" })}
-    />
+    <View className="pt-[22px]">
+      <EmptyCard
+        icon="book-outline"
+        testID="cookbook-empty"
+        title={intl.formatMessage({ id: "recipes.cookbooks.empty" })}
+      />
+    </View>
   );
 }
 
