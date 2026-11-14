@@ -9,12 +9,11 @@ export function useStepTimers(text: string): { matches: TimerMatch[]; marked: st
 
   if (!timersEnabled || !timerKeywords.enabled) return { matches: [], marked: text };
 
-  // Sorted first, so a link's index is the match's place in this list.
   const matches = parseTimerDurations(text, {
     hours: timerKeywords.hours,
     minutes: timerKeywords.minutes,
     seconds: timerKeywords.seconds,
-  }).sort((a, b) => a.startIndex - b.startIndex);
+  });
 
   return { matches, marked: markTimers(text, matches) };
 }

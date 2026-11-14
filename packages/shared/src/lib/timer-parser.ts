@@ -224,7 +224,8 @@ export function parseTimerDurations(text: string, keywords?: TimerKeywords): Tim
     match = TIME_PATTERN.exec(text);
   }
 
-  return matches;
+  // Reading order: a timer link's index is its place in this list.
+  return matches.sort((a, b) => a.startIndex - b.startIndex);
 }
 
 /** The link scheme a step's text marks its durations with, `norish-timer:<match index>`. */
@@ -232,23 +233,20 @@ export const TIMER_HREF_PREFIX = "norish-timer:";
 
 const MARKDOWN_LABEL_ESCAPE = /[\\[\]]/g;
 
-/** The text with each duration as a markdown link to `norish-timer:<index>`; overlaps keep the first. */
+/** Each duration, in parseTimerDurations' order, as a `norish-timer:<index>` link; overlaps keep the first. */
 export function markTimers(text: string, timerMatches: TimerMatch[]): string {
   if (timerMatches.length === 0) return text;
 
   let result = "";
   let currentIndex = 0;
 
-  timerMatches
-    .slice()
-    .sort((a, b) => a.startIndex - b.startIndex)
-    .forEach((match, index) => {
-      if (match.startIndex < currentIndex) return;
+  timerMatches.forEach((match, index) => {
+    if (match.startIndex < currentIndex) return;
 
-      result += text.slice(currentIndex, match.startIndex);
-      result += `[${match.originalText.replace(MARKDOWN_LABEL_ESCAPE, "\\$&")}](${TIMER_HREF_PREFIX}${index})`;
-      currentIndex = match.endIndex;
-    });
+    result += text.slice(currentIndex, match.startIndex);
+    result += `[${match.originalText.replace(MARKDOWN_LABEL_ESCAPE, "\\$&")}](${TIMER_HREF_PREFIX}${index})`;
+    currentIndex = match.endIndex;
+  });
 
   return result + text.slice(currentIndex);
 }

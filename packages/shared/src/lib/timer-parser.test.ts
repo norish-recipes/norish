@@ -390,6 +390,13 @@ describe("parseTimerDurations", () => {
     });
   });
 });
+describe("parseTimerDurations order", () => {
+  it("returns durations in reading order, so a timer link's index is its place in the list", () => {
+    const matches = parseTimerDurations("Rest 5 minutes, then bake 1:30");
+
+    expect(matches.map((match) => match.originalText)).toEqual(["5 minutes", "1:30"]);
+  });
+});
 describe("markTimers", () => {
   it("links each duration by its place and escapes brackets in its label", () => {
     const text = "Rest [covered] 5 minutes, then bake 1 hour";
