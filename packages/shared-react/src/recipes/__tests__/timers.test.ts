@@ -216,9 +216,10 @@ describe("recipeTimerId", () => {
     expect(recipeTimerId("recipe-1", 2, 0)).toBe("recipe-1-s2-0");
   });
 
-  it("loads, ticks and removes a stored timer under an id no step builds now", async () => {
+  it("loads, ticks and dismisses a stored timer whose id no current step produces", async () => {
     const legacy = {
-      id: "recipe-1-s3-0",
+      // recipeTimerId always ends in -s<step>-<place>; this one cannot come from it.
+      id: "recipe-1-step-3",
       recipeId: "recipe-1",
       label: "Step 4 Timer",
       originalDurationMs: 60_000,
@@ -230,6 +231,7 @@ describe("recipeTimerId", () => {
       ["norish-timers", JSON.stringify({ state: { timers: [legacy] }, version: 0 })],
     ]);
 
+    expect(legacy.id).not.toMatch(/-s\d+-\d+$/);
     useTimerStore.setState({ timers: [] });
     connectTimerStorage(mapStorage(entries));
     await Promise.resolve();
