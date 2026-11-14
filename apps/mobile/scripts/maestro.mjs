@@ -11,7 +11,7 @@ import path from "node:path";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { ValkeyContainer } from "@testcontainers/valkey";
 
-import { importPageName, seeder, serveRecipePage } from "./maestro-seed.mjs";
+import { PAGE_NAME, seeder, serveRecipePage } from "./maestro-seed.mjs";
 
 // An optional argument runs that one flow, with the same setup, instead of the whole folder.
 const only = process.argv[2] && path.resolve(process.argv[2]);
@@ -214,14 +214,14 @@ const control = createServer(async (request, response) => {
           names: await seed.groceryNames(Number(route.searchParams.get("min") ?? 0)),
         })
       );
-    } else if (request.url === "/cut") {
+    } else if (route.pathname === "/cut") {
       proxy.close();
       for (const socket of sockets) socket.destroy();
-    } else if (request.url === "/restore" && !proxy.listening) {
+    } else if (route.pathname === "/restore" && !proxy.listening) {
       listenProxy();
-    } else if (request.url === "/old" || request.url === "/real") {
-      tooOld = request.url === "/old";
-    } else if (request.url === "/revoke-other-sessions") {
+    } else if (route.pathname === "/old" || route.pathname === "/real") {
+      tooOld = route.pathname === "/old";
+    } else if (route.pathname === "/revoke-other-sessions") {
       // This script's own session stays; the app's, signed in as the same Account, ends.
       await call("/api/auth/revoke-other-sessions", {});
     }
@@ -338,12 +338,15 @@ const appVersion = JSON.parse(readFileSync(path.join(flows, "../package.json"), 
 // The app's minimum, as in src/features/auth/utils/server-version.ts.
 const minimumVersion = appVersion.replace(/^(\d+\.\d+)\..*$/, "$1.0");
 // English copy the flows assert, from the catalogue so a rewording stays in step.
-const { signup, signInFailed, updateServer } = JSON.parse(
-  readFileSync(
-    path.join(import.meta.dirname, "../../../packages/i18n/src/messages/en/auth.json"),
-    "utf8"
-  )
-);
+const messages = (file) =>
+  JSON.parse(
+    readFileSync(
+      path.join(import.meta.dirname, `../../../packages/i18n/src/messages/en/${file}.json`),
+      "utf8"
+    )
+  );
+const { signup, signInFailed, updateServer } = messages("auth");
+const recipes = messages("recipes");
 
 const vars = {
   NORISH_SERVER_URL: server,
@@ -370,7 +373,8 @@ const vars = {
   // The recipe page the import flows read; the server fetches it, never the app.
   NORISH_IMPORT_URL: `http://127.0.0.1:${recipePage.address().port}/recipe`,
   NORISH_NOT_A_RECIPE_URL: `http://127.0.0.1:${recipePage.address().port}/notes`,
-  NORISH_IMPORT_NAME: importPageName,
+  NORISH_IMPORT_NAME: PAGE_NAME,
+  NORISH_COPY_NOT_A_RECIPE: recipes.toasts.notARecipe,
 };
 
 try {

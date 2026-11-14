@@ -1,10 +1,10 @@
 // What the flows ask of the throwaway server over the control port: clean slate, a recipe, a count.
 import { createServer } from "node:http";
 
-const PAGE_NAME = "Maestro Lemon Cake";
+export const PAGE_NAME = "Maestro Lemon Cake";
 
 // A recipe page on loopback for the import flows: schema.org JSON-LD, no bot check, no AI.
-export function recipePage() {
+function recipePage() {
   const recipe = {
     "@context": "https://schema.org",
     "@type": "Recipe",
@@ -21,8 +21,6 @@ export function recipePage() {
 function notesPage() {
   return "<!doctype html><html><head><title>Weekend notes</title></head><body><h1>Weekend notes</h1><p>Buy milk. Call the plumber.</p></body></html>";
 }
-
-export const importPageName = PAGE_NAME;
 
 export function serveRecipePage(host) {
   const page = createServer((request, response) => {
@@ -94,13 +92,16 @@ export function seeder({ trpc, query }) {
     // The grocery names once there are at least `min` of them, for a write still on its way.
     async groceryNames(min = 0) {
       const deadline = Date.now() + 15_000;
-      let names = [];
+      const names = async () =>
+        (await query("groceries.list")).groceries.map((grocery) => grocery.name);
+      let found = await names();
 
-      do {
-        names = (await query("groceries.list")).groceries.map((grocery) => grocery.name);
-      } while (names.length < min && Date.now() < deadline && (await sleep(250), true));
+      while (found.length < min && Date.now() < deadline) {
+        await sleep(250);
+        found = await names();
+      }
 
-      return names;
+      return found;
     },
   };
 }
