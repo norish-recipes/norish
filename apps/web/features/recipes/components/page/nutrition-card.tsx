@@ -18,8 +18,7 @@ import {
   usePageRecipe,
   useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
-import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
-import { PANEL_REASONS } from "@norish/shared/lib/recipe-nutrition";
+import { PANEL_REASONS, workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 
 /** Why a line was left out, in the card's words. */
 const REASON_KEYS = {
@@ -156,10 +155,7 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
   const format = useFormatter();
   const [listOpen, setListOpen] = useState(false);
   const [openIngredientId, setOpenIngredientId] = useState<string | null>(null);
-  const sources = [
-    ...workedOut.credits.map((credit) => NUTRITION_CREDIT_NAMES[credit]),
-    ...(workedOut.household ? [t("householdNumbers")] : []),
-  ];
+  const sources = workedOutSources(workedOut, t("householdNumbers"));
 
   return (
     <div className="mt-3 flex flex-col gap-2 text-sm">

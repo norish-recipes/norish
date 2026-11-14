@@ -37,7 +37,11 @@ import type {
   NutritionFact,
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
-import { creditOf, NUTRITION_CREDITS } from "@norish/shared/contracts/ingredient-nutrition";
+import {
+  creditOf,
+  NUTRITION_CREDIT_NAMES,
+  NUTRITION_CREDITS,
+} from "@norish/shared/contracts/ingredient-nutrition";
 import { foldName } from "@norish/shared/lib/fold-name";
 
 import type { LineWithFoods } from "./line-foods";
@@ -189,6 +193,17 @@ export interface WorkedOutNutrition {
   credits: NutritionCredit[];
   /** Whether a counted line took a fact from the household's own correction. */
   household: boolean;
+}
+
+/** Whom a worked-out total credits: the datasets by name, then the household's numbers. */
+export function workedOutSources(
+  workedOut: Pick<WorkedOutNutrition, "credits" | "household">,
+  householdLabel: string
+): string[] {
+  return [
+    ...workedOut.credits.map((credit) => NUTRITION_CREDIT_NAMES[credit]),
+    ...(workedOut.household ? [householdLabel] : []),
+  ];
 }
 
 /** The units-map entries that measure seasoning: never counted, and listed as seasoning. */
