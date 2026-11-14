@@ -116,6 +116,30 @@ describe("drainShareInbox", () => {
     expect(json.size).toBe(0);
   });
 
+  it("keeps an item the server may yet take and carries on with the next", async () => {
+    const statuses = [500, 502, 503, 504, 408, 429];
+    const { inbox, json } = fakeInbox({
+      ...Object.fromEntries(
+        statuses.map((status) => [`s${status}`, { kind: "text", text: String(status) }])
+      ),
+      gone: { kind: "url", url: "https://example.com/gone" },
+    });
+    const answer = (input: unknown) =>
+      input === "https://example.com/gone"
+        ? { data: { code: "NOT_FOUND", httpStatus: 404 } }
+        : { data: { code: "ERROR", httpStatus: Number(input) } };
+    const calls: unknown[] = [];
+    const run = (input: unknown, onSettled: ImportSettled) => {
+      calls.push(input);
+      queueMicrotask(() => onSettled(answer(input)));
+    };
+
+    await drainShareInbox(inbox, SERVER, { url: run, text: run, images: run });
+
+    expect(calls).toHaveLength(statuses.length + 1);
+    expect([...json.keys()]).toEqual(statuses.map((status) => `s${status}`));
+  });
+
   it("keeps everything while signed out, and items wait for the next drain", async () => {
     const { inbox, json } = fakeInbox({
       a: { kind: "url", url: "https://example.com/a" },

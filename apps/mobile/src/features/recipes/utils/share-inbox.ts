@@ -4,7 +4,11 @@ import type { ImportSettled } from "@norish/shared-react/recipes";
 import { isUnauthorizedTRPCError } from "@norish/shared-react/trpc";
 import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 import { createClientLogger } from "@norish/shared/lib/logger";
-import { isBackendUnreachableError, isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
+import {
+  httpStatusOf,
+  isBackendUnreachableError,
+  isQueuedOutboxSignal,
+} from "@norish/shared/lib/trpc-errors";
 
 const log = createClientLogger("share-inbox");
 
@@ -87,6 +91,14 @@ async function importItem(
   };
 }
 
+/** Imported, durably queued, or refused with a 4xx a retry would get again (not 401, 408 or 429). */
+function isSettledForGood(error: unknown): boolean {
+  if (error === null || isQueuedOutboxSignal(error)) return true;
+  const status = httpStatusOf(error);
+
+  return status !== null && status >= 400 && status < 500 && ![401, 408, 429].includes(status);
+}
+
 async function drain(inbox: ShareInbox, serverAddress: string, imports: ShareImports) {
   for (const id of inbox.ids()) {
     const { error } = await importItem(inbox, id, serverAddress, imports);
@@ -100,6 +112,8 @@ async function drain(inbox: ShareInbox, serverAddress: string, imports: ShareImp
     ) {
       return;
     }
+    // ponytail: an item the server always answers 5xx to is retried on every foreground, no attempt cap.
+    if (error !== "corrupt" && error !== "elsewhere" && !isSettledForGood(error)) continue;
     // Imported, durably in the Outbox, refused for good (its toast said so), or unusable.
     if (error !== null && !isQueuedOutboxSignal(error)) {
       log.warn({ id, error }, "Dropped a saved share that could not be imported");

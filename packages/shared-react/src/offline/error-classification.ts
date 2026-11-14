@@ -17,24 +17,13 @@
  *                      the loss is visible, never silent.
  */
 
-import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
+import { httpStatusOf, isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
 
 import { isUnauthorizedTRPCError } from "../trpc/trpc-links";
 
 type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
 
 export type ReplayOutcome = { kind: "success" } | { kind: "conflict" | ReplayFailureClass };
-
-/**
- * The HTTP status a tRPC error carries, from `error.data.httpStatus` — the same
- * field `isBackendUnreachableError` keys off. Present on `TRPCClientError` and
- * on the plain error shapes used in tests.
- */
-function httpStatusOf(error: unknown): number | null {
-  const data = (error as { data?: { httpStatus?: unknown } } | null | undefined)?.data;
-
-  return typeof data?.httpStatus === "number" ? data.httpStatus : null;
-}
 
 /**
  * Classify an error thrown while replaying a mutation. Order matters: a network
