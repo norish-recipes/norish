@@ -22,18 +22,22 @@ export function PendingCard({
   const host = url && isWebLink(url) ? plainLink(hostOf(url)) : "";
   const title = intl.formatMessage({ id: "recipes.dashboard.importingCard" });
 
+  const isGrid = variant === "grid";
   const copy = (
     <>
-      <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
+      <Text
+        className={`text-foreground font-semibold ${isGrid ? "text-sm" : "text-base"}`}
+        numberOfLines={1}
+      >
         {title}
       </Text>
-      <Text className="text-muted text-sm" numberOfLines={1}>
+      <Text className={`text-muted ${isGrid ? "text-xs" : "text-sm"}`} numberOfLines={1}>
         {host}
       </Text>
     </>
   );
 
-  return variant === "grid" ? (
+  return isGrid ? (
     <View
       accessible
       accessibilityLabel={`${title} ${host}`}

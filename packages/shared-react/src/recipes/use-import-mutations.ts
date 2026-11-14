@@ -74,7 +74,8 @@ function useImportMutation<Input, Output>(
   client: {
     mutate: (input: Input, options?: { context: { operationId: string } }) => Promise<Output>;
   },
-  handlers: ImportHandlers<Input, Output>
+  handlers: ImportHandlers<Input, Output>,
+  linkOf?: (input: Input) => string
 ) {
   const { addPendingRecipe } = useRecipesCacheHelpers();
 
@@ -82,10 +83,10 @@ function useImportMutation<Input, Output>(
     mutationKey: procedure.mutationKey(),
     mutationFn: ({ input, operationId }: ImportCall<Input>) =>
       client.mutate(input, withOperationId(operationId)),
-    onMutate: (): ImportMutationContext => {
+    onMutate: ({ input }): ImportMutationContext => {
       const optimisticPendingId = createOptimisticPendingRecipeId();
 
-      addPendingRecipe(optimisticPendingId);
+      addPendingRecipe(optimisticPendingId, linkOf?.(input));
 
       return { optimisticPendingId };
     },
@@ -136,28 +137,33 @@ export function useImportMutations(
     });
   };
 
-  const mutateImport = useImportMutation(trpc.recipes.importFromUrl, client.recipes.importFromUrl, {
-    onSuccess: ({ recipeId, status }, call, context) => {
-      // Nothing was queued, so there is no pending recipe to stand in for:
-      // drop the placeholder and hand the id to whoever can offer it.
-      if (status === "exists") {
-        dropPlaceholder(context);
-        onRecipeAlreadyExists?.(recipeId);
+  const mutateImport = useImportMutation(
+    trpc.recipes.importFromUrl,
+    client.recipes.importFromUrl,
+    {
+      onSuccess: ({ recipeId, status }, call, context) => {
+        // Nothing was queued, so there is no pending recipe to stand in for:
+        // drop the placeholder and hand the id to whoever can offer it.
+        if (status === "exists") {
+          dropPlaceholder(context);
+          onRecipeAlreadyExists?.(recipeId);
 
-        return;
-      }
+          return;
+        }
 
-      showImported(recipeId, context, call);
+        showImported(recipeId, context, call);
+      },
+      onError: (error, call, context) => {
+        handleImportError(
+          error,
+          call.input.forceAI ? "importFromUrlWithAI" : "importFromUrl",
+          context,
+          call
+        );
+      },
     },
-    onError: (error, call, context) => {
-      handleImportError(
-        error,
-        call.input.forceAI ? "importFromUrlWithAI" : "importFromUrl",
-        context,
-        call
-      );
-    },
-  });
+    (input) => input.url
+  );
   const mutateImageImport = useImportMutation(
     trpc.recipes.importFromImages,
     client.recipes.importFromImages,

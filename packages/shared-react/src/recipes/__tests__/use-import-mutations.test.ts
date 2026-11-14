@@ -102,6 +102,22 @@ describe("useImportMutations", () => {
     expect(onError).toHaveBeenCalledWith(unreachable, "importFromUrl");
   });
 
+  it("gives a link import's placeholder its link, and a paste import none", async () => {
+    server.importFromUrl.mockReturnValue(new Promise(() => {}));
+    server.importFromPaste.mockReturnValue(new Promise(() => {}));
+    const result = render();
+
+    act(() => result.current.importRecipe("https://www.example.com/pasta"));
+    act(() => result.current.importRecipeFromPaste("Soup"));
+
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryData<PendingRecipeDTO[]>(PENDING_KEY)?.map((p) => p.url)).toEqual([
+        "https://www.example.com/pasta",
+        "",
+      ])
+    );
+  });
+
   it("reports each import's end to its caller: null once taken, else the error", async () => {
     const queued = new TRPCClientError("Request failed");
     const reports = vi.fn();

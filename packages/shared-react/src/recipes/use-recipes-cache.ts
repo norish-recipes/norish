@@ -47,7 +47,7 @@ type RecipesCacheHelpers = {
     updater: (prev: InfiniteRecipeData | undefined) => InfiniteRecipeData | undefined
   ) => void;
   invalidate: () => void;
-  addPendingRecipe: (id: string) => void;
+  addPendingRecipe: (id: string, url?: string) => void;
   replacePendingRecipe: (fromId: string, toId: string) => void;
   replaceOldestOptimisticPendingRecipe: (recipeId: string, url?: string) => void;
   removePendingRecipe: (id: string) => void;
@@ -95,13 +95,13 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
   }, [queryClient, trpc]);
 
   const addPendingRecipe = useCallback(
-    (recipeId: string) => {
+    (recipeId: string, url = "") => {
       queryClient.setQueryData<PendingRecipeDTO[]>(pendingKey, (prev) => {
         const arr = prev ?? [];
 
         if (arr.some((p) => p.recipeId === recipeId)) return arr;
 
-        return [...arr, { recipeId, url: "", addedAt: Date.now() }];
+        return [...arr, { recipeId, url, addedAt: Date.now() }];
       });
     },
     [queryClient, pendingKey]

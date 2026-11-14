@@ -28,6 +28,8 @@ appId: dev.norish.app
     visible:
       id: pending-card-.*
     timeout: 20000
+# The card names the link's host while the import waits.
+- assertVisible: .*127\.0\.0\.1:.*
 # The queued import is kept across a relaunch, and still pending while the server is out.
 - stopApp
 - launchApp
