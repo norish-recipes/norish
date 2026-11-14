@@ -76,7 +76,7 @@ function CookHeader({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Holds the screen awake while cook mode is open, handing back only a hold it took itself. */
+/** Turns `wakeLock` on while open, which ScreenKeepAwake makes the native hold; hands back only its own. */
 function useCookKeepAwake() {
   const wakeLock = useRecipePageStore((state) => state.wakeLock);
   const setWakeLock = useRecipePageStore((state) => state.setWakeLock);
