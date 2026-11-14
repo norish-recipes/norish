@@ -2,7 +2,7 @@ import type { ImagePickerAsset } from "expo-image-picker";
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Alert, Image, Pressable, Text, useWindowDimensions, View } from "react-native";
-import { GlassCloseButton } from "@/components/glass-close-button";
+import { GlassCloseButton } from "@/components/glass";
 import { Sheet, SHEET_INSET, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";

@@ -30,11 +30,6 @@ vi.mock("@/components/glass", () => ({
     <button data-testid={testID} type="button" onClick={onPress} />
   ),
 }));
-vi.mock("@/components/glass-close-button", () => ({
-  GlassCloseButton: ({ testID, onPress }: Props) => (
-    <button data-testid={testID} type="button" onClick={onPress} />
-  ),
-}));
 vi.mock("@/hooks/use-resolved-color-scheme", () => ({}));
 vi.mock("@/lib/network/server-url", () => ({}));
 vi.mock("expo-router", () => ({
@@ -42,7 +37,9 @@ vi.mock("expo-router", () => ({
   useRouter: () => ({ back }),
 }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
-vi.mock("react-intl", () => ({ useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }) }));
+vi.mock("react-intl", () => ({
+  useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+}));
 vi.mock("@trpc/client", () => ({
   TRPCClientError: class TRPCClientError extends Error {
     data = { code: "NOT_FOUND" };
@@ -61,7 +58,6 @@ for (const path of [
   "../components/timer-list",
   "../components/tint",
   "../utils/dish-tint",
-  "../components/glass-surface",
   "../components/ingredients-section",
   "../components/timer-ring",
   "../utils/recipe-rows",

@@ -10,7 +10,7 @@ import { FlatList, Keyboard, LayoutAnimation, ScrollView, Text, View } from "rea
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { GlassCloseButton } from "./glass-close-button";
+import { GlassCloseButton } from "./glass";
 
 /** The props a body takes from the sheet rather than from the screen. */
 type SheetOwnedProps =

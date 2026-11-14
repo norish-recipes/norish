@@ -7,7 +7,7 @@ import {
   useFlingGesture,
 } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlassCloseButton } from "@/components/glass-close-button";
+import { GlassCloseButton, GlassSurface } from "@/components/glass";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -38,7 +38,6 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import { CookSteps } from "../components/cook-steps";
 import { FadeEdge } from "../components/fade-edge";
-import { GlassSurface } from "../components/glass-surface";
 import { Line, OptionsMenu, ServingsControl } from "../components/ingredients-section";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { sortTimers, TimerList } from "../components/timer-list";

@@ -4,6 +4,7 @@ import { Image, ScrollView, Text, useWindowDimensions, View } from "react-native
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { GlassIconButton } from "@/components/glass";
 import { useServerImage } from "@/lib/network/server-url";
 import * as Haptics from "expo-haptics";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -13,7 +14,6 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 import type { Item } from "../utils/hero-items";
 import { heroItems } from "../utils/hero-items";
-import { GlassIconButton } from "./glass-icon-button";
 
 export const HERO_HEIGHT = 430;
 

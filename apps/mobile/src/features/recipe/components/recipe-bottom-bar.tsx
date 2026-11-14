@@ -1,12 +1,12 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { GlassSurface } from "@/components/glass";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { FadeEdge } from "./fade-edge";
-import { GlassSurface } from "./glass-surface";
 
 const HEIGHT = 56;
 
