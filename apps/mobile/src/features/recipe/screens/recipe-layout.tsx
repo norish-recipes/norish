@@ -49,6 +49,10 @@ export function RecipeLayout() {
         <Stack.Screen name="index" options={{ title: "" }} />
         <Stack.Screen name="servings" options={FIT_SHEET_OPTIONS} />
         <Stack.Screen name="share" options={SHEET_OPTIONS} />
+        <Stack.Screen
+          name="cook"
+          options={{ headerShown: false, presentation: "fullScreenModal" }}
+        />
       </Stack>
     </RecipePageProvider>
   );

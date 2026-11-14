@@ -58,7 +58,7 @@ function RoundButton({
 }
 
 /** The servings stepper; the number opens the Servings sheet. */
-function ServingsControl() {
+export function ServingsControl() {
   const intl = useIntl();
   const router = useRouter();
   const recipe = useLoadedPageRecipe();
@@ -98,7 +98,7 @@ function ServingsControl() {
 }
 
 /** Fractions or decimals, and the measurement system: what changes how the lines read. */
-function OptionsMenu() {
+export function OptionsMenu() {
   const intl = useIntl();
   const { mode, toggleMode } = useAmountDisplayPreference();
   const conversion = useSystemConversion();
@@ -139,7 +139,8 @@ function OptionsMenu() {
   );
 }
 
-function Line({
+/** One ingredient line that ticks; `large` is cook mode's, read from across the counter. */
+export function Line({
   index,
   amount,
   unit,
@@ -147,6 +148,7 @@ function Line({
   ingredientId,
   checked,
   onToggle,
+  large = false,
 }: {
   index: number;
   amount: string;
@@ -155,6 +157,7 @@ function Line({
   ingredientId: string | null | undefined;
   checked: boolean;
   onToggle: (index: number) => void;
+  large?: boolean;
 }) {
   const plain = plainText(name);
 
@@ -163,15 +166,17 @@ function Line({
       accessibilityLabel={[amount, unit, plain].filter(Boolean).join(" ")}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      className="border-separator flex-row items-center gap-2.5 border-t py-2"
+      className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
       style={{ opacity: checked ? 0.5 : 1 }}
       testID={`recipe-ingredient-${index}`}
       onPress={() => onToggle(index)}
     >
       <RoundTick selected={checked} />
-      {namesNoFood(name) ? null : <IngredientIcon ingredientId={ingredientId} />}
+      {namesNoFood(name) ? null : (
+        <IngredientIcon ingredientId={ingredientId} size={large ? 34 : undefined} />
+      )}
       <Text
-        className={`min-w-0 flex-1 text-base leading-[22px] ${checked ? "text-muted line-through" : "text-foreground"}`}
+        className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
       >
         {amount ? <Text className="font-semibold">{`${amount} `}</Text> : null}
         {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
