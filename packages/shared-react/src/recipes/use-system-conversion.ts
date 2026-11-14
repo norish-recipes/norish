@@ -1,31 +1,29 @@
-"use client";
-
-import { useEffect, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
+import {
+  getMeasurementSystemPreference,
+  measurementSystemTarget,
+} from "@norish/shared/lib/user-preferences";
+
 import {
   ownerAllows,
   useHiddenItemVisibility,
   usePermissions,
   useProfileQuery,
   useRecipePermissions,
-} from "@norish/shared-react/reader";
-import {
-  useLoadedPageRecipe,
-  useRecipeConversion,
-  useRecipePageStore,
-  useRecipeQuery,
-} from "@norish/shared-react/recipes";
-import {
-  getMeasurementSystemPreference,
-  measurementSystemTarget,
-} from "@norish/shared/lib/user-preferences";
+} from "../reader";
+import { useRecipePageStore } from "./recipe-page-store";
+import { useLoadedPageRecipe, useRecipeConversion } from "./use-recipe-page";
+import { useRecipeQuery } from "./use-recipe-query";
+
+/** The `recipes.convert` message each option is written with. */
+export type SystemConversionLabelKey = "toMetric" | "toUS" | "toMetricWithAI" | "toUSWithAI";
 
 export type SystemConversionOption = {
   key: string;
   system: MeasurementSystem;
-  label: string;
+  labelKey: SystemConversionLabelKey;
   /** The language model writes the copy in this system again. */
   withAI: boolean;
   /** The system the recipe was written in. */
@@ -46,39 +44,38 @@ type SystemConversion = {
  * system it was written in, to the other one by the unit table and the
  * ingredient catalogue, and, where AI is on, to the other one by the language
  * model. Converting is a permission-gated action on the recipe and a Hidden
- * Item, so the gate has to answer the same way wherever the action is drawn —
- * the mobile actions menu and the desktop control read it from here rather
- * than each deciding for themselves.
+ * Item, so the gate has to answer the same way wherever the action is drawn.
  */
 export function useSystemConversion(): SystemConversion {
   const recipe = useLoadedPageRecipe();
   const { convertingTo, startConversion } = useRecipeConversion();
   const { showConversion } = useHiddenItemVisibility();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
-  const t = useTranslations("recipes.convert");
 
   const original = recipe.originalSystem ?? recipe.systemUsed;
+  const other: MeasurementSystem = original === "metric" ? "us" : "metric";
+  const labelKey = (system: MeasurementSystem): SystemConversionLabelKey =>
+    system === "metric" ? "toMetric" : "toUS";
+  const options: SystemConversionOption[] = [
+    {
+      key: original,
+      system: original,
+      labelKey: labelKey(original),
+      withAI: false,
+      isOriginal: true,
+    },
+    { key: other, system: other, labelKey: labelKey(other), withAI: false, isOriginal: false },
+  ];
 
-  const options = useMemo(() => {
-    const other: MeasurementSystem = original === "metric" ? "us" : "metric";
-    const label = (system: MeasurementSystem) => (system === "metric" ? t("toMetric") : t("toUS"));
-    const built: SystemConversionOption[] = [
-      { key: original, system: original, label: label(original), withAI: false, isOriginal: true },
-      { key: other, system: other, label: label(other), withAI: false, isOriginal: false },
-    ];
-
-    if (isAIEnabled) {
-      built.push({
-        key: `${other}-ai`,
-        system: other,
-        label: other === "metric" ? t("toMetricWithAI") : t("toUSWithAI"),
-        withAI: true,
-        isOriginal: false,
-      });
-    }
-
-    return built;
-  }, [original, isAIEnabled, t]);
+  if (isAIEnabled) {
+    options.push({
+      key: `${other}-ai`,
+      system: other,
+      labelKey: other === "metric" ? "toMetricWithAI" : "toUSWithAI",
+      withAI: true,
+      isOriginal: false,
+    });
+  }
 
   const currentSystem: MeasurementSystem = convertingTo != null ? convertingTo : recipe.systemUsed;
 
@@ -88,7 +85,7 @@ export function useSystemConversion(): SystemConversion {
     options,
     currentSystem,
     isConverting: convertingTo != null,
-    convertTo: (option: SystemConversionOption) => {
+    convertTo: (option) => {
       if (!option.withAI && option.system === currentSystem) return;
 
       startConversion(option.system, option.withAI);

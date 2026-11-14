@@ -10,7 +10,6 @@ import { RecipePageTint } from "@/features/recipes/components/read-only";
 import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { useRecipeEnrichmentSubscription } from "@/features/recipes/hooks/use-recipe-enrichment";
 import { useRecipeSubscription } from "@/features/recipes/hooks/use-recipe-subscription";
-import { useAutoConversion } from "@/features/recipes/hooks/use-system-conversion";
 import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +18,7 @@ import { useIngredientsSubscription } from "@norish/shared-react/config";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   RecipePageProvider,
+  useAutoConversion,
   useCookbooksSubscription,
   useRatingsSubscription,
   useRecipeQuery,

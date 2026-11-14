@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSystemConversion } from "@/features/recipes/hooks/use-system-conversion";
 import {
   AdjustmentsHorizontalIcon,
   ArrowsRightLeftIcon,
@@ -12,7 +11,7 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
-import { useAmountDisplayPreference } from "@norish/shared-react/recipes";
+import { useAmountDisplayPreference, useSystemConversion } from "@norish/shared-react/recipes";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 type OptionItem = {
@@ -62,7 +61,7 @@ export default function IngredientsOptionsMenu() {
 
       items.push({
         key: `convert-${option.key}`,
-        label: option.label,
+        label: tConvert(option.labelKey),
         icon: option.withAI ? (
           <SparklesIcon className="size-5" />
         ) : (

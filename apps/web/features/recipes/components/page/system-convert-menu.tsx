@@ -1,12 +1,12 @@
 "use client";
 
-import type { SystemConversionOption } from "@/features/recipes/hooks/use-system-conversion";
 import React from "react";
-import { useSystemConversion } from "@/features/recipes/hooks/use-system-conversion";
 import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/20/solid";
 import { Button, Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { SystemConversionOption } from "@norish/shared-react/recipes";
+import { useSystemConversion } from "@norish/shared-react/recipes";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 type SystemConvertMenuProps = {
@@ -45,7 +45,7 @@ export default function SystemConvertMenu({ compact = false }: SystemConvertMenu
               id={item.key}
               key={item.key}
               className="!bg-transparent py-1 data-[focus=true]:!bg-transparent data-[hovered=true]:!bg-transparent data-[selected=true]:!bg-transparent"
-              textValue={item.label}
+              textValue={t(item.labelKey)}
               onPress={() => convertTo(item)}
             >
               <div className={`flex w-full items-center justify-start gap-2 ${cssButtonPill}`}>
@@ -55,7 +55,7 @@ export default function SystemConvertMenu({ compact = false }: SystemConvertMenu
                   <ArrowsRightLeftIcon className="text-muted size-4" />
                 )}
                 <span className={`text-sm font-medium ${item.withAI ? cssAIGradientText : ""}`}>
-                  <Label>{item.label}</Label>
+                  <Label>{t(item.labelKey)}</Label>
                 </span>
                 {item.isOriginal && <span className="text-muted text-xs">{t("original")}</span>}
               </div>
