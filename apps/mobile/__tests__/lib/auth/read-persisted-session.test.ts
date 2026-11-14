@@ -46,6 +46,7 @@ const pluginStorage = vi.hoisted(() => ({
   current: null as Parameters<typeof storageAdapter>[0] | null,
 }));
 
+vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: {} } }));
 vi.mock("expo-secure-store", () => secureStore);
 vi.mock("@better-auth/expo/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@better-auth/expo/client")>()),

@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("expo-secure-store", () => ({}));
 vi.mock("@/lib/auth/auth-client", () => ({}));
+vi.mock("@/lib/auth/auth-storage", () => ({}));
+vi.mock("@/lib/auth/shared-keychain", () => ({}));
 
 const { checkServerAddress, serverAddressErrorId } =
   await import("@/features/auth/utils/check-server-address");

@@ -1,3 +1,4 @@
+import { keychainOptions } from "@/lib/auth/shared-keychain";
 import { storageAdapter } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 
@@ -11,10 +12,15 @@ export const AUTH_STORAGE_PREFIX = "norish";
 export const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
 const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
 
-type ClientStorage = Pick<
-  typeof SecureStore,
-  "getItem" | "getItemAsync" | "setItem" | "setItemAsync"
->;
+/** The keys the auth client stores, each with the chunk keys Better Auth splits it over. */
+export const AUTH_STORAGE_KEYS = [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY] as const;
+
+type ClientStorage = {
+  getItem: (key: string) => string | null;
+  getItemAsync: (key: string) => Promise<string | null>;
+  setItem: (key: string, value: string) => void;
+  setItemAsync: (key: string, value: string) => Promise<void>;
+};
 
 // The stored cookie as last read, so headers skip the Keychain; undefined until read or after a write.
 let storedCookie: string | null | undefined;
@@ -34,17 +40,18 @@ export function readStoredCookie(): string | null {
 function retirableStorage() {
   let retired = false;
   const storage: ClientStorage = {
-    getItem: (...args) => (retired ? null : SecureStore.getItem(...args)),
-    getItemAsync: async (...args) => (retired ? null : SecureStore.getItemAsync(...args)),
-    setItem: (...args) => {
+    getItem: (key) => (retired ? null : SecureStore.getItem(key, keychainOptions())),
+    getItemAsync: async (key) =>
+      retired ? null : SecureStore.getItemAsync(key, keychainOptions()),
+    setItem: (key, value) => {
       if (retired) return;
-      SecureStore.setItem(...args);
-      forgetCookie(args[0]);
+      SecureStore.setItem(key, value, keychainOptions());
+      forgetCookie(key);
     },
-    setItemAsync: async (...args) => {
+    setItemAsync: async (key, value) => {
       if (retired) return;
-      await SecureStore.setItemAsync(...args);
-      forgetCookie(args[0]);
+      await SecureStore.setItemAsync(key, value, keychainOptions());
+      forgetCookie(key);
     },
   };
 
@@ -180,9 +187,9 @@ export async function readPersistedSession(): Promise<SessionUser | null> {
 export async function clearAuthStorage(): Promise<void> {
   // The adapter has no delete; writing "" through it empties every chunk, then the key goes.
   const wipes = await Promise.allSettled(
-    [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY].map(async (key) => {
+    AUTH_STORAGE_KEYS.map(async (key) => {
       await authStorage().setItemAsync(key, "");
-      await SecureStore.deleteItemAsync(key);
+      await SecureStore.deleteItemAsync(key, keychainOptions());
       forgetCookie(key);
     })
   );

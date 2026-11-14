@@ -39,6 +39,7 @@ const seen = vi.hoisted(() => ({
   leftAt: -1,
 }));
 
+vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: {} } }));
 vi.mock("expo-secure-store", () => secureStore);
 vi.mock("expo-constants", () => ({ default: {} }));
 vi.mock("expo-linking", () => ({}));

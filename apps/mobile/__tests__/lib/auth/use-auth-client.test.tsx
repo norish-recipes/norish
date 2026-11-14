@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: {} } }));
 vi.mock("expo-secure-store", () => {
   const items = new Map<string, string>();
 
@@ -14,6 +15,7 @@ vi.mock("expo-secure-store", () => {
 });
 vi.mock("@/lib/auth/auth-storage", () => ({
   AUTH_STORAGE_PREFIX: "norish",
+  AUTH_STORAGE_KEYS: [],
   clearAuthStorage: async () => {},
   claimClientStorage: () => ({}),
   retireClientStorage: () => {},

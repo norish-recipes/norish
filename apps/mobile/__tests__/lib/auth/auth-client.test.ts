@@ -28,6 +28,7 @@ const secureStore = vi.hoisted(() => {
 const pluginStorages = vi.hoisted(() => [] as Storage[]);
 const createAuthClient = vi.hoisted(() => vi.fn((_options: object) => ({})));
 
+vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: {} } }));
 vi.mock("@/lib/auth/auth-storage", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/auth-storage")>()),
   clearAuthStorage,
