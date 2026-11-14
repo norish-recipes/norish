@@ -42,5 +42,6 @@ app-example
 /ios
 /android
 
-# generated at prebuild from packages/i18n
+# generated at prebuild from packages/i18n and packages/shared
 /targets/share/Localizable.xcstrings
+/targets/share/ShareLimits.swift

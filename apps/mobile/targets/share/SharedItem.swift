@@ -9,11 +9,11 @@ enum SharedItem {
   /// JPEG data, already downscaled.
   case images([Data])
 
-  // The server takes at most ten photos per import; a long edge this size keeps a page legible.
-  static let maxImages = 10
+  // A long edge this size keeps a page legible.
   private static let maxPixelSize = 2048
 
-  /// The first web link, else the images, else the text, from the share sheet's items.
+  /// The first web link, else the images, else the text, from the share sheet's items;
+  /// nil when there is none, or the text is over the server's paste cap.
   static func load(from items: [NSExtensionItem]) async -> SharedItem? {
     let providers = items.flatMap { $0.attachments ?? [] }
 
@@ -26,7 +26,7 @@ enum SharedItem {
     }
 
     var images: [Data] = []
-    for provider in providers.prefix(maxImages)
+    for provider in providers.prefix(ShareLimits.maxImages)
     where provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
       // One image in memory at a time: extensions get a small memory budget.
       if let jpeg = await downscaledJPEG(provider) { images.append(jpeg) }
@@ -41,7 +41,8 @@ enum SharedItem {
       if let url = URL(string: trimmed), isWebLink(url), !trimmed.contains(where: \.isWhitespace) {
         return .link(url)
       }
-      if !trimmed.isEmpty { return .text(trimmed) }
+      // Counted as the app's From text sheet counts it; over the cap, nothing is sent or saved.
+      if !trimmed.isEmpty { return trimmed.utf16.count > ShareLimits.maxPasteChars ? nil : .text(trimmed) }
     }
 
     return nil

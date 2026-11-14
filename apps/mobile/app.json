@@ -72,7 +72,8 @@
         }
       ],
       "@bacons/apple-targets",
-      "./plugins/with-share-strings"
+      "./plugins/with-share-strings",
+      "./plugins/with-share-limits"
     ],
     "experiments": {
       "typedRoutes": true,
