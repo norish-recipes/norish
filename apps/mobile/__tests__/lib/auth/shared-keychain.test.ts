@@ -1,10 +1,26 @@
 import type { KeychainStore } from "@/lib/auth/shared-keychain";
 import { moveKeychainItems } from "@/lib/auth/shared-keychain";
 import { storageAdapter } from "@better-auth/expo/client";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("expo-secure-store", () => ({}));
-vi.mock("expo-file-system", () => ({ Paths: {} }));
+// SecureStore as two fake keychains, told apart by the service a call names.
+const secureStores = vi.hoisted(() => ({ app: null, shared: null }) as Record<string, unknown>);
+
+vi.mock("expo-secure-store", () => {
+  const store = (options?: { keychainService?: string }) =>
+    secureStores[options?.keychainService ? "shared" : "app"] as KeychainStore;
+
+  return {
+    WHEN_UNLOCKED: 0,
+    getItem: (key: string, options?: object) => store(options).getItem(key),
+    getItemAsync: (key: string, options?: object) => store(options).getItemAsync(key),
+    setItem: (key: string, value: string, options?: object) => store(options).setItem(key, value),
+    setItemAsync: (key: string, value: string, options?: object) =>
+      store(options).setItemAsync(key, value),
+    deleteItemAsync: (key: string, options?: object) => store(options).deleteItemAsync(key),
+  };
+});
+vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: { "group.test": {} } } }));
 vi.mock("expo-constants", () => ({ default: {} }));
 vi.mock("expo-linking", () => ({}));
 vi.mock("react-native", () => ({ Platform: { OS: "ios" }, AppState: {} }));
@@ -17,19 +33,28 @@ const COOKIE = JSON.stringify({ "better-auth.session_token": { value: "t".repeat
 /** A keychain in memory; `failWrites` makes every write of a key that starts with it throw. */
 function fakeStore(failWrites?: string) {
   const items = new Map<string, string>();
+  const calls: string[] = [];
   const write = (key: string, value: string) => {
+    calls.push(`set ${key}`);
     if (failWrites && key.startsWith(failWrites)) throw new Error("keychain write failed");
     items.set(key, value);
   };
   const store: KeychainStore = {
     getItem: (key) => items.get(key) ?? null,
-    getItemAsync: async (key) => items.get(key) ?? null,
+    getItemAsync: async (key) => {
+      calls.push(`get ${key}`);
+
+      return items.get(key) ?? null;
+    },
     setItem: write,
     setItemAsync: async (key, value) => write(key, value),
-    deleteItemAsync: async (key) => void items.delete(key),
+    deleteItemAsync: async (key) => {
+      calls.push(`delete ${key}`);
+      items.delete(key);
+    },
   };
 
-  return { items, store, read: (key: string) => storageAdapter(store).getItemAsync(key) };
+  return { items, calls, store, read: (key: string) => storageAdapter(store).getItemAsync(key) };
 }
 
 /** What the app's auth client and Server Address left in the old keychain. */
@@ -100,14 +125,14 @@ describe("moveKeychainItems", () => {
     expect(old.items.size).toBe(0);
   });
 
-  it("throws and keeps the old items when a shared write fails, so nothing signs out", async () => {
+  it("answers false and keeps the old items when a shared write fails, so nothing signs out", async () => {
     const old = fakeStore();
     const shared = fakeStore("norish_cookie");
 
     await signedIn(old);
     const before = new Map(old.items);
 
-    await expect(moveKeychainItems(old.store, shared.store, KEYS)).rejects.toThrow();
+    await expect(moveKeychainItems(old.store, shared.store, KEYS)).resolves.toBe(false);
 
     expect(old.items).toEqual(before);
     expect(shared.items.has(MOVED)).toBe(false);
@@ -126,5 +151,75 @@ describe("moveKeychainItems", () => {
 
     expect(shared.items.get(MOVED)).toBe("1");
     expect(await shared.read("norish_cookie")).toBe(COOKIE);
+  });
+});
+
+describe("moveToSharedKeychain", () => {
+  let old: ReturnType<typeof fakeStore>;
+  let shared: ReturnType<typeof fakeStore>;
+
+  beforeEach(() => {
+    vi.resetModules();
+    old = fakeStore();
+    shared = fakeStore();
+    secureStores.app = old.store;
+    secureStores.shared = shared.store;
+  });
+
+  const load = () => import("@/lib/auth/shared-keychain");
+
+  it("rethrows a marker read that throws, touches neither store, and reads it again next call", async () => {
+    const { moveToSharedKeychain, keychainOptions } = await load();
+
+    await signedIn(old);
+    shared.items.set(MOVED, "1");
+    old.calls.length = 0;
+    const getItemAsync = shared.store.getItemAsync;
+
+    // A launch while the phone is locked: the keychain refuses every read.
+    shared.store.getItemAsync = async () => {
+      throw new Error("interaction not allowed");
+    };
+
+    await expect(moveToSharedKeychain(KEYS)).rejects.toThrow("interaction not allowed");
+    expect(old.calls).toEqual([]);
+    expect(shared.calls).toEqual([]);
+    expect(keychainOptions()).toEqual({});
+
+    shared.store.getItemAsync = getItemAsync;
+    await moveToSharedKeychain(KEYS);
+
+    expect(keychainOptions()).toMatchObject({ keychainService: "norish.shared" });
+  });
+
+  it("reads the shared store once moved, whatever the old store does", async () => {
+    const { moveToSharedKeychain, keychainOptions } = await load();
+    const broken = async () => {
+      throw new Error("old keychain broken");
+    };
+
+    shared.items.set(MOVED, "1");
+    old.store.getItemAsync = broken;
+    old.store.deleteItemAsync = broken;
+    old.store.getItem = () => {
+      throw new Error("old keychain broken");
+    };
+
+    await moveToSharedKeychain(KEYS);
+
+    expect(keychainOptions()).toMatchObject({ keychainService: "norish.shared" });
+  });
+
+  it("keeps the old store for this launch when the copy fails", async () => {
+    const { moveToSharedKeychain, keychainOptions } = await load();
+
+    await signedIn(old);
+    shared.store.setItemAsync = async () => {
+      throw new Error("keychain write failed");
+    };
+
+    await moveToSharedKeychain(KEYS);
+
+    expect(keychainOptions()).toEqual({});
   });
 });

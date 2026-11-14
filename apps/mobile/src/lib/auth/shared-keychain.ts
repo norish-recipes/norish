@@ -30,29 +30,44 @@ async function deleteWithChunks(store: KeychainStore, key: string): Promise<void
   await store.deleteItemAsync(key);
 }
 
+/** Copies every logical value of `keys` into `shared`, reads each back, then writes the marker. */
+async function copyKeychainItems(
+  old: KeychainStore,
+  shared: KeychainStore,
+  keys: readonly string[]
+): Promise<void> {
+  const from = storageAdapter(old);
+  const to = storageAdapter(shared);
+
+  for (const key of keys) {
+    const value = await from.getItemAsync(key);
+
+    // A copy an earlier attempt left must not outlive the old item it copied.
+    if (value === null) await deleteWithChunks(shared, key);
+    else await to.setItemAsync(key, value);
+
+    if ((await to.getItemAsync(key)) !== value) throw new Error(`${key} did not read back`);
+  }
+  await shared.setItemAsync(MOVED_KEY, "1");
+}
+
 /**
- * Moves `keys` from `old` into `shared`: until the marker is written the old items are the truth,
- * so a failed or interrupted move throws, leaves them, and is redone in full next time.
+ * Moves `keys` from `old` into `shared`; true once the shared items are the truth. A failed copy
+ * leaves the old items and answers false; a marker read that throws is a storage failure and rethrows.
  */
 export async function moveKeychainItems(
   old: KeychainStore,
   shared: KeychainStore,
   keys: readonly string[]
-): Promise<void> {
+): Promise<boolean> {
   if ((await shared.getItemAsync(MOVED_KEY)) !== "1") {
-    const from = storageAdapter(old);
-    const to = storageAdapter(shared);
+    try {
+      await copyKeychainItems(old, shared, keys);
+    } catch (error) {
+      log.warn({ error }, "Keychain move failed; using the app's own keychain this launch");
 
-    for (const key of keys) {
-      const value = await from.getItemAsync(key);
-
-      // A copy an earlier attempt left must not outlive the old item it copied.
-      if (value === null) await deleteWithChunks(shared, key);
-      else await to.setItemAsync(key, value);
-
-      if ((await to.getItemAsync(key)) !== value) throw new Error(`${key} did not read back`);
+      return false;
     }
-    await shared.setItemAsync(MOVED_KEY, "1");
   }
 
   // Leftovers only: the shared items are the truth now, so a failure here is retried next launch.
@@ -61,6 +76,8 @@ export async function moveKeychainItems(
       log.warn({ error, key }, "Could not delete a moved keychain item")
     );
   }
+
+  return true;
 }
 
 const SHARED_SERVICE = "norish.shared";
@@ -84,31 +101,36 @@ function secureStore(storeOptions: SecureStore.SecureStoreOptions): KeychainStor
   };
 }
 
+async function moveOnce(keys: readonly string[]): Promise<void> {
+  // Empty off iOS, where the store stays as it is.
+  const appGroup = Object.keys(Paths.appleSharedContainers)[0];
+
+  if (!appGroup) return;
+
+  // A service of its own keeps old and moved items apart whatever group a query names.
+  const shared: SecureStore.SecureStoreOptions = {
+    keychainService: SHARED_SERVICE,
+    accessGroup: appGroup,
+    keychainAccessible: SecureStore.WHEN_UNLOCKED,
+  };
+
+  if (await moveKeychainItems(secureStore({}), secureStore(shared), keys)) options = shared;
+}
+
 /**
  * Once per launch, before any other SecureStore read: moves `keys` into the App Group's keychain
- * (an App Group is an access group on iOS). A failure keeps today's keychain for this launch.
+ * (an App Group is an access group on iOS). A failed copy keeps today's keychain for this launch.
  */
 export function moveToSharedKeychain(keys: readonly string[]): Promise<void> {
-  moving ??= (async () => {
-    // Empty off iOS, where the store stays as it is.
-    const appGroup = Object.keys(Paths.appleSharedContainers)[0];
+  if (!moving) {
+    const attempt = moveOnce(keys);
 
-    if (!appGroup) return;
-
-    // A service of its own keeps old and moved items apart whatever group a query names.
-    const shared: SecureStore.SecureStoreOptions = {
-      keychainService: SHARED_SERVICE,
-      accessGroup: appGroup,
-      keychainAccessible: SecureStore.WHEN_UNLOCKED,
-    };
-
-    try {
-      await moveKeychainItems(secureStore({}), secureStore(shared), keys);
-      options = shared;
-    } catch (error) {
-      log.warn({ error }, "Keychain move failed; using the app's own keychain this launch");
-    }
-  })();
+    moving = attempt;
+    // A storage failure is not cached, so the boot's Retry reads the marker again.
+    attempt.catch(() => {
+      if (moving === attempt) moving = null;
+    });
+  }
 
   return moving;
 }
