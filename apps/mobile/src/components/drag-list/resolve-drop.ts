@@ -5,8 +5,6 @@ export type Drop<H, T> = {
   item: T;
   /** The heading row above where the item landed, or null above the first heading. */
   heading: H | null;
-  /** The item's index in `rows`. */
-  index: number;
   /** The rows in their new order. */
   rows: DragRow<H, T>[];
 };
@@ -21,12 +19,11 @@ export function resolveDrop<H, T>(
   if (moved?.kind !== "item") return null;
 
   const next = [...rows];
+  const [row] = next.splice(from, 1);
 
-  next.splice(to, 0, next.splice(from, 1)[0]!);
+  next.splice(to, 0, row);
 
-  let heading: H | null = null;
+  const above = next.slice(0, to).findLast((r) => r.kind === "heading");
 
-  for (const row of next.slice(0, to)) if (row.kind === "heading") heading = row.value;
-
-  return { item: moved.value, heading, index: to, rows: next };
+  return { item: moved.value, heading: above?.value ?? null, rows: next };
 }
