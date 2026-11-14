@@ -11,9 +11,12 @@ enum SharedItem {
 
   // A long edge this size keeps a page legible.
   private static let maxPixelSize = 2048
+  // ponytail: a memory guard, not a paste rule (the server takes any length and checks each recipe);
+  // 1 MB of UTF-8 is far past any recipe text and small beside an extension's memory budget.
+  private static let maxTextBytes = 1 << 20
 
   /// The first web link, else the images, else the text, from the share sheet's items;
-  /// nil when there is none, or the text is over the server's paste cap.
+  /// nil when there is none, or the text is over `maxTextBytes`.
   static func load(from items: [NSExtensionItem]) async -> SharedItem? {
     let providers = items.flatMap { $0.attachments ?? [] }
 
@@ -41,8 +44,8 @@ enum SharedItem {
       if let url = URL(string: trimmed), isWebLink(url), !trimmed.contains(where: \.isWhitespace) {
         return .link(url)
       }
-      // Counted as the app's From text sheet counts it; over the cap, nothing is sent or saved.
-      if !trimmed.isEmpty { return trimmed.utf16.count > ShareLimits.maxPasteChars ? nil : .text(trimmed) }
+      // Over the guard, nothing is sent or saved.
+      if !trimmed.isEmpty { return trimmed.utf8.count > maxTextBytes ? nil : .text(trimmed) }
     }
 
     return nil

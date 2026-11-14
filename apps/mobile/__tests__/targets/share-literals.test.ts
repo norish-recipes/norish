@@ -8,7 +8,7 @@ import { SHARE_INBOX_FOLDER } from "@/lib/offline/app-group-inbox";
 import { describe, expect, it, vi } from "vitest";
 
 import { OPERATION_ID_HEADER } from "@norish/shared-react/trpc";
-import { MAX_OCR_FILES, MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
+import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 
 vi.mock("expo-secure-store", () => ({}));
 vi.mock("expo-file-system", () => ({ Paths: {} }));
@@ -81,6 +81,13 @@ describe("the Share Extension's literals", () => {
     };
 
     expect(buildLimits()).toContain(`static let maxImages = ${MAX_OCR_FILES}\n`);
-    expect(buildLimits()).toContain(`static let maxPasteChars = ${MAX_RECIPE_PASTE_CHARS}\n`);
+  });
+
+  it("caps shared text only to guard memory, since the server takes a paste of any length", () => {
+    // The paste cap applies per recipe in the worker; a multi-recipe paste may be longer.
+    expect(read("../web/app/api/trpc/[trpc]/route.ts")).not.toMatch(/maxBodySize/);
+    expect(swift("SharedItem")).toContain("trimmed.utf8.count > maxTextBytes");
+    expect(swift("SharedItem")).toContain("maxTextBytes = 1 << 20");
+    expect(swift("SharedItem")).not.toContain("maxPasteChars");
   });
 });

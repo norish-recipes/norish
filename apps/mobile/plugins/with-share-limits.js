@@ -6,16 +6,14 @@ const { withDangerousMod } = require("expo/config-plugins");
 const UPLOADS = path.join(__dirname, "../../../packages/shared/src/contracts/uploads.ts");
 const OUTPUT = path.join(__dirname, "../targets/share/ShareLimits.swift");
 
-/** The server's import limits the Share Extension checks before it sends anything. */
+/** The server's photo limit, which the Share Extension checks before it sends anything. */
 function buildLimits() {
-  const { MAX_OCR_FILES, MAX_RECIPE_PASTE_CHARS } = require(UPLOADS);
+  const { MAX_OCR_FILES } = require(UPLOADS);
 
   return `// Generated at prebuild by plugins/with-share-limits.js from packages/shared.
 enum ShareLimits {
   /// MAX_OCR_FILES: photos per import.
   static let maxImages = ${MAX_OCR_FILES}
-  /// MAX_RECIPE_PASTE_CHARS: pasted text, in UTF-16 code units as JavaScript counts it.
-  static let maxPasteChars = ${MAX_RECIPE_PASTE_CHARS}
 }
 `;
 }
