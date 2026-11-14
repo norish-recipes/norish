@@ -1,0 +1,49 @@
+# Plans a recipe from its card: swipe, Plan, today's slot in the mini calendar. Planning opens Add to
+# groceries, the default after planning; once closed, Today shows the recipe in that slot.
+appId: dev.norish.app
+---
+- runFlow: subflows/reset.yaml
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Plan Card Curry
+      RECIPE_KEY: curry
+      RECIPE_INGREDIENTS: 2 eggs,100 g flour
+- runFlow: subflows/today.yaml
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.curry}
+    timeout: 20000
+- assertVisible:
+    id: today-add-${output.slot}
+- swipe:
+    from:
+      id: recipe-card-${output.curry}
+    direction: LEFT
+- tapOn:
+    id: recipe-swipe-plan-${output.curry}
+- extendedWaitUntil:
+    visible:
+      id: day-add-${output.today}
+    timeout: 20000
+- tapOn:
+    id: day-add-${output.today}
+- tapOn:
+    id: day-add-${output.today}-${output.slot}
+- extendedWaitUntil:
+    visible:
+      id: add-to-groceries-sheet
+    timeout: 20000
+- tapOn:
+    id: add-to-groceries-close
+- extendedWaitUntil:
+    visible:
+      id: today-card-.*
+      text: Plan Card Curry
+    timeout: 20000
+- assertNotVisible:
+    id: today-add-${output.slot}
