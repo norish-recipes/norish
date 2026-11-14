@@ -2,7 +2,7 @@ import type { ComponentRef } from "react";
 import React from "react";
 import { View } from "react-native";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Input, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -12,13 +12,11 @@ import { PickSheet } from "../components/pick-sheet";
 import { recipePickList, SearchRecipes } from "../components/recipe-pick";
 
 /**
- * New cookbook: a name and, under it, the recipes to start it with, then Create. Opened from a
- * recipe's Add to cookbook it starts with that recipe ticked.
+ * New cookbook: a name and, under it, the recipes to start it with, then Create.
  */
 export function NewCookbookScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const { recipeId } = useLocalSearchParams<{ recipeId?: string }>();
   const {
     title,
     setTitle,
@@ -31,7 +29,7 @@ export function NewCookbookScreen() {
     loadMore,
     selected,
     toggle,
-  } = useNewCookbook(recipeId ? [recipeId] : []);
+  } = useNewCookbook();
   // The sheet opens on its field, so the keyboard rises with it.
   const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
   const submit = () => {

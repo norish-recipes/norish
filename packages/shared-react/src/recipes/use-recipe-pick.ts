@@ -5,11 +5,11 @@ import { useState, useTransition } from "react";
 import { useRecipesQuery } from "./use-recipes-query";
 
 /** A search over the recipes and a staged pick of them, `initial` ticked from the start. */
-export function useRecipePick(initial: string[] = []) {
+export function useRecipePick() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
   const [, startTransition] = useTransition();
-  const [selected, setSelected] = useState<string[]>(initial);
+  const [selected, setSelected] = useState<string[]>([]);
   const { recipes, isLoading, hasMore, loadMore } = useRecipesQuery({
     search: search || undefined,
   });

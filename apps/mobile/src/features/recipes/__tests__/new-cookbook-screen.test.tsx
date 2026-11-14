@@ -6,8 +6,6 @@ const state = vi.hoisted(() => ({
   canCreate: false,
   create: vi.fn(),
   back: vi.fn(),
-  params: {} as { recipeId?: string },
-  opened: vi.fn(),
   action: undefined as { onPress?: () => void } | undefined,
 }));
 
@@ -18,7 +16,6 @@ vi.mock("react-intl", () => ({
 }));
 vi.mock("@/hooks/use-focus-on-mount", () => ({ useFocusOnMount: () => ({ current: null }) }));
 vi.mock("expo-router", () => ({
-  useLocalSearchParams: () => state.params,
   useRouter: () => ({ back: state.back }),
 }));
 vi.mock("../components/recipe-pick", () => ({
@@ -33,9 +30,7 @@ vi.mock("../components/pick-sheet", () => ({
   },
 }));
 vi.mock("@norish/shared-react/recipes", () => ({
-  useNewCookbook: (initial: string[]) => {
-    state.opened(initial);
-
+  useNewCookbook: () => {
     return {
       title: "Soups",
       setTitle: vi.fn(),
@@ -57,10 +52,8 @@ const { NewCookbookScreen } = await import("@/features/recipes/screens/new-cookb
 describe("New cookbook", () => {
   beforeEach(() => {
     state.canCreate = false;
-    state.params = {};
     state.create.mockReset();
     state.back.mockReset();
-    state.opened.mockReset();
     state.action = undefined;
   });
 
@@ -77,18 +70,5 @@ describe("New cookbook", () => {
 
     expect(state.create).toHaveBeenCalledOnce();
     expect(state.back).toHaveBeenCalledOnce();
-  });
-
-  it("starts empty from the Cookbooks lens", () => {
-    render(<NewCookbookScreen />);
-
-    expect(state.opened).toHaveBeenCalledWith([]);
-  });
-
-  it("starts with the card's recipe ticked", () => {
-    state.params = { recipeId: "r9" };
-    render(<NewCookbookScreen />);
-
-    expect(state.opened).toHaveBeenCalledWith(["r9"]);
   });
 });

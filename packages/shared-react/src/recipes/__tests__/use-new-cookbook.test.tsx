@@ -22,8 +22,8 @@ vi.mock("../use-recipes-query", () => ({
   }),
 }));
 
-const render = (initial?: string[]) =>
-  renderHook(() => useNewCookbook(initial), {
+const render = () =>
+  renderHook(() => useNewCookbook(), {
     wrapper: createTestWrapper(createTestQueryClient()),
   });
 
@@ -59,17 +59,6 @@ describe("useNewCookbook", () => {
       title: "Empty",
       recipeIds: [],
     });
-  });
-
-  it("starts with the recipe it was opened from ticked", () => {
-    const { result } = render(["r1"]);
-
-    expect(result.current.selected).toEqual(["r1"]);
-
-    act(() => result.current.setTitle("Quick"));
-    act(() => void result.current.create());
-
-    expect(state.createCookbook).toHaveBeenCalledWith({ title: "Quick", recipeIds: ["r1"] });
   });
 
   it("cannot create without a name", () => {

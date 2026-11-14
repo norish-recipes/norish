@@ -5,11 +5,10 @@ import { useState } from "react";
 import { useCookbooksMutations } from "./use-cookbooks-mutations";
 import { useRecipePick } from "./use-recipe-pick";
 
-/** A new cookbook's title and the recipes picked for it, created in one write; `initialRecipeIds`
- * are ticked from the start. */
-export function useNewCookbook(initialRecipeIds: string[] = []) {
+/** A new cookbook's title and the recipes picked for it, created in one write. */
+export function useNewCookbook() {
   const { createCookbook } = useCookbooksMutations();
-  const pick = useRecipePick(initialRecipeIds);
+  const pick = useRecipePick();
   const [title, setTitle] = useState("");
   const trimmed = title.trim();
 
