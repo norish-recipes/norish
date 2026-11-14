@@ -1,12 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import { useTokenColor } from "@/hooks/use-token-color";
 import { useIntl } from "react-intl";
 
 import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
 
 import type { NutritionFigures } from "../utils/stored-nutrition";
-import { useTokenColor } from "../hooks/use-token-color";
 
 export function NutritionDonut({
   figures,

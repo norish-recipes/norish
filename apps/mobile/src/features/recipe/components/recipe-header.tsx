@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -17,7 +18,6 @@ import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
 import { isAllergenTag } from "@norish/shared/lib/helpers";
 import { countryFlagEmoji } from "@norish/shared/lib/recipe-provenance";
 
-import { useTokenColor } from "../hooks/use-token-color";
 import { plainText } from "../utils/recipe-rows";
 import { useTint } from "./tint";
 

@@ -5,9 +5,9 @@ import React, { use, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
-import { useCSSVariable } from "uniwind";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
@@ -150,9 +150,8 @@ function ActionButton({
   onPress: () => void;
 }) {
   const [onColour] = useThemeColor(["danger-foreground"] as const);
-  const shopForeground = useCSSVariable("--color-shop-foreground");
-  const icon =
-    action.key === "groceries" && typeof shopForeground === "string" ? shopForeground : onColour;
+  const shopForeground = useTokenColor("shop-foreground");
+  const icon = action.key === "groceries" && shopForeground ? shopForeground : onColour;
 
   return (
     <Pressable

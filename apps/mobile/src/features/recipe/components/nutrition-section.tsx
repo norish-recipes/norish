@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -14,7 +15,6 @@ import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
 import { workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 
 import type { NutritionFigures } from "../utils/stored-nutrition";
-import { useTokenColor } from "../hooks/use-token-color";
 import { plainText } from "../utils/recipe-rows";
 import { storedNutrition } from "../utils/stored-nutrition";
 import { NutritionDonut } from "./nutrition-donut";

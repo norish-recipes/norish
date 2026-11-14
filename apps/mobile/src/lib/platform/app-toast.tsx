@@ -2,9 +2,9 @@ import type { ToastComponentProps } from "heroui-native";
 import type { ComponentProps } from "react";
 import React, { useRef } from "react";
 import { Text, View } from "react-native";
+import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, Toast, useThemeColor } from "heroui-native";
-import { useCSSVariable } from "uniwind";
 
 export type ToastSeverity = "default" | "success" | "warning" | "danger";
 
@@ -12,14 +12,14 @@ const BADGE: Record<
   ToastSeverity,
   { icon: ComponentProps<typeof Ionicons>["name"]; circle: string; color: string }
 > = {
-  default: { icon: "information", circle: "bg-accent-soft", color: "--color-accent-text" },
-  success: { icon: "checkmark", circle: "bg-accent", color: "--color-accent-foreground" },
+  default: { icon: "information", circle: "bg-accent-soft", color: "accent-text" },
+  success: { icon: "checkmark", circle: "bg-accent", color: "accent-foreground" },
   warning: {
     icon: "alert-circle-outline",
     circle: "bg-warning-soft",
-    color: "--color-warning-ink",
+    color: "warning-ink",
   },
-  danger: { icon: "alert-circle-outline", circle: "bg-danger-soft", color: "--color-danger" },
+  danger: { icon: "alert-circle-outline", circle: "bg-danger-soft", color: "danger" },
 };
 
 /** Every toast of the app: a pill with the severity's circle, title, optional body and action. */
@@ -38,7 +38,7 @@ export function AppToast({
   onAction?: () => void;
 }) {
   const badge = BADGE[severity];
-  const iconColor = useCSSVariable(badge.color);
+  const iconColor = useTokenColor(badge.color);
   const [foreground] = useThemeColor(["foreground"] as const);
   const pressedRef = useRef(false);
 
@@ -51,11 +51,7 @@ export function AppToast({
       testID="toast"
     >
       <View className={`size-6 items-center justify-center rounded-full ${badge.circle}`}>
-        <Ionicons
-          color={typeof iconColor === "string" ? iconColor : foreground}
-          name={badge.icon}
-          size={14}
-        />
+        <Ionicons color={iconColor ?? foreground} name={badge.icon} size={14} />
       </View>
       <View
         accessible

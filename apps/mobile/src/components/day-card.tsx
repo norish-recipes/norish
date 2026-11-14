@@ -2,12 +2,12 @@ import type { IntlShape } from "react-intl";
 import React from "react";
 import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { Button, Host, Image, Menu } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
-import { useCSSVariable } from "uniwind";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { usePlannedItemText } from "@norish/shared-react/calendar";
@@ -61,7 +61,7 @@ function SlotMenu({
   onAdd: (slot: Slot) => void;
 }) {
   const intl = useIntl();
-  const accentText = useCSSVariable("--color-accent-text");
+  const accentText = useAccentTextColor();
   const [accent] = useThemeColor(["accent"] as const);
 
   return (
@@ -70,7 +70,7 @@ function SlotMenu({
         <Menu
           label={
             <Image
-              color={typeof accentText === "string" ? accentText : accent}
+              color={accentText ?? accent}
               modifiers={[frame({ width: 36, height: 36 })]}
               size={16}
               systemName="plus"

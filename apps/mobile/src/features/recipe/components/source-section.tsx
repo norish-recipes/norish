@@ -1,12 +1,12 @@
 import React from "react";
 import { Linking, Pressable, Text, View } from "react-native";
+import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useLoadedPageRecipe } from "@norish/shared-react/recipes";
 
-import { useTokenColor } from "../hooks/use-token-color";
 import { SectionCard } from "./tint";
 
 const hostOf = (url: string) => {
