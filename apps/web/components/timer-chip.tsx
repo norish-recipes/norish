@@ -40,7 +40,7 @@ export function TimerChip({
     if (!timer) {
       // Request notification permission on first timer interaction
       requestPermission();
-      addTimer(id, recipeId, initialLabel, durationMs, recipeName);
+      addTimer({ id, recipeId, label: initialLabel, durationMs, recipeName });
       startTimer(id);
     } else if (timer.status === "running") {
       pauseTimer(id);

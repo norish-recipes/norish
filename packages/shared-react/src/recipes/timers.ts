@@ -40,12 +40,9 @@ interface TimerState {
 
   // Actions
   addTimer: (
-    id: string,
-    recipeId: string,
-    label: string,
-    durationMs: number,
-    recipeName?: string,
-    stepIndex?: number
+    timer: Pick<Timer, "id" | "recipeId" | "label" | "recipeName" | "stepIndex"> & {
+      durationMs: number;
+    }
   ) => void;
   removeTimer: (id: string) => void;
   clearAll: () => void;
@@ -63,20 +60,14 @@ export const useTimerStore = create<TimerState>()(
     (set, get) => ({
       timers: [],
 
-      addTimer: (id, recipeId, label, durationMs, recipeName, stepIndex) => {
-        const existing = get().timers.find((t) => t.id === id);
-
-        if (existing) return; // Don't duplicate
+      addTimer: ({ durationMs, ...timer }) => {
+        if (get().timers.some((t) => t.id === timer.id)) return; // Don't duplicate
 
         set((state) => ({
           timers: [
             ...state.timers,
             {
-              id,
-              recipeId,
-              recipeName,
-              stepIndex,
-              label,
+              ...timer,
               originalDurationMs: durationMs,
               remainingMs: durationMs,
               status: "paused",

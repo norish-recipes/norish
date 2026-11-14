@@ -57,14 +57,14 @@ export function TimerChip({
 
   const press = () => {
     if (!timer) {
-      addTimer(
+      addTimer({
         id,
-        recipe.id,
-        intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number: stepIndex + 1 }),
-        match.durationSeconds * 1000,
-        recipe.name,
-        stepIndex
-      );
+        recipeId: recipe.id,
+        label: intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number: stepIndex + 1 }),
+        durationMs: match.durationSeconds * 1000,
+        recipeName: recipe.name,
+        stepIndex,
+      });
       startTimer(id);
       void askTimerNotifications();
     } else if (timer.status === "running") pauseTimer(id);

@@ -13,7 +13,9 @@ describe("useTimerTicker", () => {
     vi.useFakeTimers();
     const finished = vi.fn();
 
-    useTimerStore.getState().addTimer("t", "recipe-1", "Simmer", 1500);
+    useTimerStore
+      .getState()
+      .addTimer({ id: "t", recipeId: "recipe-1", label: "Simmer", durationMs: 1500 });
     useTimerStore.getState().startTimer("t");
     renderHook(() => useTimerTicker({ finished }));
 

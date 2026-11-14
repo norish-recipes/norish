@@ -19,7 +19,7 @@ describe("useTimerStore", () => {
   it("adds a timer", () => {
     const { addTimer } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
 
     const { timers } = useTimerStore.getState();
 
@@ -38,7 +38,13 @@ describe("useTimerStore", () => {
   it("adds a timer with recipe name", () => {
     const { addTimer } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000, "My Recipe");
+    addTimer({
+      id: "test-1",
+      recipeId: "recipe-1",
+      label: "Test Timer",
+      durationMs: 60000,
+      recipeName: "My Recipe",
+    });
 
     const { timers } = useTimerStore.getState();
 
@@ -58,8 +64,8 @@ describe("useTimerStore", () => {
   it("does not duplicate timers with same id", () => {
     const { addTimer } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
 
     const { timers } = useTimerStore.getState();
 
@@ -69,7 +75,7 @@ describe("useTimerStore", () => {
   it("removes a timer", () => {
     const { addTimer, removeTimer } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
     removeTimer("test-1");
 
     const { timers } = useTimerStore.getState();
@@ -80,7 +86,7 @@ describe("useTimerStore", () => {
   it("starts a timer", () => {
     const { addTimer, startTimer } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
     startTimer("test-1");
 
     const { timers } = useTimerStore.getState();
@@ -92,7 +98,7 @@ describe("useTimerStore", () => {
   it("pauses a timer", () => {
     const { addTimer, startTimer, pauseTimer } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
     startTimer("test-1");
     pauseTimer("test-1");
 
@@ -105,7 +111,7 @@ describe("useTimerStore", () => {
   it("resets a timer", () => {
     const { addTimer, startTimer, resetTimer, tick } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
     startTimer("test-1");
 
     // Advance time by 10 seconds
@@ -126,7 +132,7 @@ describe("useTimerStore", () => {
   it("ticks correctly", () => {
     const { addTimer, startTimer, tick } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 60000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 60000 });
     startTimer("test-1");
 
     // Advance time by 1 second
@@ -145,7 +151,7 @@ describe("useTimerStore", () => {
   it("completes a timer", () => {
     const { addTimer, startTimer, tick } = useTimerStore.getState();
 
-    addTimer("test-1", "recipe-1", "Test Timer", 1000);
+    addTimer({ id: "test-1", recipeId: "recipe-1", label: "Test Timer", durationMs: 1000 });
     startTimer("test-1");
 
     // Advance time by 2 seconds (past duration)
@@ -161,7 +167,7 @@ describe("useTimerStore", () => {
   it("adjusts timer duration", () => {
     const { addTimer, adjustTimer } = useTimerStore.getState();
 
-    addTimer("test-adj", "recipe-1", "Adjust Timer", 60000);
+    addTimer({ id: "test-adj", recipeId: "recipe-1", label: "Adjust Timer", durationMs: 60000 });
 
     // Add 1 minute
     adjustTimer("test-adj", 60000);
@@ -188,8 +194,8 @@ describe("useTimerStore", () => {
   it("returns the timers that reach zero on a tick", () => {
     const { addTimer, startTimer, tick } = useTimerStore.getState();
 
-    addTimer("a", "recipe-1", "A", 1000);
-    addTimer("b", "recipe-1", "B", 5000);
+    addTimer({ id: "a", recipeId: "recipe-1", label: "A", durationMs: 1000 });
+    addTimer({ id: "b", recipeId: "recipe-1", label: "B", durationMs: 5000 });
     startTimer("a");
     startTimer("b");
     vi.setSystemTime(Date.now() + 1500);
@@ -218,7 +224,14 @@ describe("timerEndsAt", () => {
     const start = Date.now();
     const timer = () => useTimerStore.getState().timers[0]!;
 
-    addTimer("t", "recipe-1", "Simmer", 60_000, "Risotto", 3);
+    addTimer({
+      id: "t",
+      recipeId: "recipe-1",
+      label: "Simmer",
+      durationMs: 60_000,
+      recipeName: "Risotto",
+      stepIndex: 3,
+    });
     expect(timer().stepIndex).toBe(3);
     expect(timerEndsAt(timer())).toBeNull();
 
@@ -245,7 +258,9 @@ describe("connectTimerStorage", () => {
     const entries = new Map<string, string>();
 
     connectTimerStorage(mapStorage(entries));
-    useTimerStore.getState().addTimer("t", "recipe-1", "Simmer", 60_000);
+    useTimerStore
+      .getState()
+      .addTimer({ id: "t", recipeId: "recipe-1", label: "Simmer", durationMs: 60_000 });
     useTimerStore.getState().startTimer("t");
     // The app is killed: the store forgets, the stored copy stays.
     useTimerStore.setState({ timers: [] }, false);
@@ -301,7 +316,9 @@ describe("connectTimerStorage", () => {
     });
     const entries = new Map([["norish-timers", stored]]);
 
-    fresh.useTimerStore.getState().addTimer("early", "r", "Early", 1000);
+    fresh.useTimerStore
+      .getState()
+      .addTimer({ id: "early", recipeId: "r", label: "Early", durationMs: 1000 });
     expect(entries.get("norish-timers")).toBe(stored);
 
     fresh.connectTimerStorage(mapStorage(entries));

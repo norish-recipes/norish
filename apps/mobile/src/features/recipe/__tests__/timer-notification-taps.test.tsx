@@ -78,7 +78,9 @@ describe("useTimerNotificationTaps", () => {
     const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
     const { endSession } = await import("@/lib/auth/end-session");
 
-    useTimerStore.getState().addTimer("r-s0-0", "r", "Step 1", 60_000);
+    useTimerStore
+      .getState()
+      .addTimer({ id: "r-s0-0", recipeId: "r", label: "Step 1", durationMs: 60_000 });
     scheduled.add("timer:r-s0-0@5").add("other");
     presented.add("timer:r-s1-0@4").add("other");
     launch = response("timer:r-s1-0@4", { recipeId: "r", step: 1 });

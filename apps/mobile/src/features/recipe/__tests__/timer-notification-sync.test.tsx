@@ -41,7 +41,9 @@ describe("useRecipeTimers' notifications", () => {
   it("schedules a running timer's notification when the app returns after a grant in Settings", async () => {
     renderHook(() => useRecipeTimers());
     act(() => {
-      useTimerStore.getState().addTimer("t", "r", "Step 1", 60_000);
+      useTimerStore
+        .getState()
+        .addTimer({ id: "t", recipeId: "r", label: "Step 1", durationMs: 60_000 });
       useTimerStore.getState().startTimer("t");
     });
     // Refused: the start schedules nothing.
