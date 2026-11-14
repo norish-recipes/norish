@@ -11,6 +11,8 @@ import {
   useRecipeSubscription,
 } from "@norish/shared-react/recipes";
 
+import { ScreenKeepAwake } from "../components/screen-keep-awake";
+
 /** What the page keeps current: the recipe, its shares, its enrichment and the foods' icons. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   useRecipeSubscription(recipeId);
@@ -33,6 +35,7 @@ export function RecipeLayout() {
   return (
     <RecipePageProvider recipeId={id}>
       <RecipeSubscriptions recipeId={id} />
+      <ScreenKeepAwake />
       <Stack
         screenOptions={{
           headerTransparent: true,

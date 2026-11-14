@@ -20,6 +20,7 @@ import {
   useLoadedPageRecipe,
   usePageEnrichment,
   usePageServings,
+  useRecipePageStore,
 } from "@norish/shared-react/recipes";
 
 /** The AI actions a reader who may edit can ask for, in the order web's menu lists them. */
@@ -41,6 +42,8 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
   const actions = useCardActions();
   const enrichment = usePageEnrichment();
   const servings = usePageServings();
+  const keepAwake = useRecipePageStore((state) => state.wakeLock !== "off");
+  const setWakeLock = useRecipePageStore((state) => state.setWakeLock);
   const { isFavorite } = useFavoritesQuery();
   const { canEditRecipe } = useRecipePermissions();
   const { showFavorites } = useHiddenItemVisibility();
@@ -95,6 +98,13 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
       label: label("recipes.detail.addToGroceries"),
       icon: { type: "sfSymbol" as const, name: "bag" as const },
       onPress: () => actions.addToGroceries(recipe, servings),
+    },
+    {
+      type: "action" as const,
+      label: label(keepAwake ? "recipes.actions.screenOn" : "recipes.actions.keepScreenOn"),
+      icon: { type: "sfSymbol" as const, name: "iphone" as const },
+      state: keepAwake ? ("on" as const) : ("off" as const),
+      onPress: () => setWakeLock(keepAwake ? "off" : "held"),
     },
     ...(isAIEnabled && canEdit
       ? [

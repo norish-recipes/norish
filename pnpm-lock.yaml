@@ -481,6 +481,9 @@ importers:
       expo-image-picker:
         specifier: ~58.0.10
         version: 58.0.10(expo@58.0.23)
+      expo-keep-awake:
+        specifier: ~58.0.4
+        version: 58.0.4(expo@58.0.23)(react@19.3.1)
       expo-linking:
         specifier: ~58.0.16
         version: 58.0.16(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)(supports-color@10.2.2)(typescript@6.0.3)
@@ -6771,8 +6774,8 @@ packages:
   expo-json-utils@58.0.1:
     resolution: {integrity: sha512-jNHNElOUPz2/vW3CbDKRn6tTF6eE9wwVbh/Isnqp5c/CdTcONzFVR3YHN3WQ05PnkmieyEqVfeOusOd1X9FDtQ==}
 
-  expo-keep-awake@58.0.3:
-    resolution: {integrity: sha512-wLRF+XeVsD/Rt/ZyX+A0mk1brdf8vefWizNAPzqV5eOCgkj23LCRZdN8gUi5X8UwyR8UJ7Y7Dzdz4YDGB/4c9Q==}
+  expo-keep-awake@58.0.4:
+    resolution: {integrity: sha512-zXJJRBwMpWl2Q2Aj9rksMe1ncz6aphOPqYnG3rTkCFALZiM22xQCqpQqBloDcQ6g4RdGTy++lRnsDX7MWpK1qw==}
     peerDependencies:
       expo: '*'
       react: '*'
@@ -14872,7 +14875,7 @@ snapshots:
 
   expo-json-utils@58.0.1: {}
 
-  expo-keep-awake@58.0.3(expo@58.0.23)(react@19.3.1):
+  expo-keep-awake@58.0.4(expo@58.0.23)(react@19.3.1):
     dependencies:
       expo: 58.0.23(@babel/core@7.29.7(supports-color@10.2.2))(@expo/metro-runtime@58.0.17)(expo-router@58.0.30)(react-dom@19.3.1(react@19.3.1))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)(supports-color@10.2.2))(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)(supports-color@10.2.2)(typescript@6.0.3)
       react: 19.3.1
@@ -15038,7 +15041,7 @@ snapshots:
       expo-constants: 58.0.15(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       expo-file-system: 58.0.13(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))
       expo-font: 58.0.11(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)
-      expo-keep-awake: 58.0.3(expo@58.0.23)(react@19.3.1)
+      expo-keep-awake: 58.0.4(expo@58.0.23)(react@19.3.1)
       expo-modules-autolinking: 58.0.17(supports-color@10.2.2)(typescript@6.0.3)
       expo-modules-cli: 0.4.0
       expo-modules-core: 58.0.30(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)(supports-color@10.2.2))(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)
