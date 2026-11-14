@@ -46,3 +46,5 @@ Final state `2e6db2a00`: all 11 gates exit 0 with the tests uncached, mobile lin
 ### Follow-up (2026-11-14)
 
 Mike: the toast's icon circle is too large, "almost half the size". The board draws 40 pt with a 20 pt glyph and the app matches it; the app goes to a 24 pt circle with a 14 pt glyph. Done in `05e10a69d`: the pill's left padding went from 12 to 20 pt so the smaller circle clears the curve.
+
+Mike, 2026-11-14, on the asked glass toast: the opaque pill is fine. Closed; no toast layer of our own.
