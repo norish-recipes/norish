@@ -1,0 +1,27 @@
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { useTimerStore } from "../timer-store";
+import { useTimerTicker } from "../use-timer-ticker";
+
+describe("useTimerTicker", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    useTimerStore.setState({ timers: [] });
+  });
+
+  it("hands each timer that finishes to the notifier once", async () => {
+    vi.useFakeTimers();
+    const finished = vi.fn();
+
+    useTimerStore.getState().addTimer("t", "recipe-1", "Simmer", 1500);
+    useTimerStore.getState().startTimer("t");
+    renderHook(() => useTimerTicker({ finished }));
+
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(finished).toHaveBeenCalledTimes(1);
+    expect(finished).toHaveBeenCalledWith(expect.objectContaining({ id: "t" }));
+    expect(useTimerStore.getState().timers[0]?.status).toBe("completed");
+  });
+});
