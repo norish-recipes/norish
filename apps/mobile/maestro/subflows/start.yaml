@@ -1,0 +1,15 @@
+# Starts a flow from a known account: empties it, saves the RECIPES the caller passes via runFlow env
+# (see recipe.yaml), and signs in at NORISH_SIGN_IN_URL (see sign-in.yaml). Ends on Recipes.
+appId: dev.norish.app
+---
+- runFlow: reset.yaml
+- runFlow:
+    when:
+      true: ${typeof RECIPES !== 'undefined'}
+    file: recipe.yaml
+    env:
+      RECIPES: "${typeof RECIPES === 'undefined' ? '[]' : RECIPES}"
+- runFlow:
+    file: sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: "${typeof NORISH_SIGN_IN_URL === 'undefined' ? NORISH_SERVER_URL : NORISH_SIGN_IN_URL}"

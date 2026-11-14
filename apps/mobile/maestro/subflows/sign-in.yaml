@@ -1,11 +1,12 @@
-# Signs in at NORISH_SIGN_IN_URL, which callers pass via runFlow env and nothing via -e, and
-# keeps the session across a relaunch. NORISH_EMAIL/PASSWORD come from the maestro script.
+# Signs in at NORISH_SIGN_IN_URL (the server unless a caller passes another via runFlow env, and
+# nothing via -e) and keeps the session across a relaunch. NORISH_EMAIL/PASSWORD come from the
+# maestro script.
 appId: dev.norish.app
 ---
 - runFlow:
     file: connect.yaml
     env:
-      NORISH_CONNECT_URL: ${NORISH_SIGN_IN_URL}
+      NORISH_CONNECT_URL: "${typeof NORISH_SIGN_IN_URL === 'undefined' ? NORISH_SERVER_URL : NORISH_SIGN_IN_URL}"
 - runFlow: credentials.yaml
 - extendedWaitUntil:
     visible:

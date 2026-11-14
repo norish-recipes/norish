@@ -1,0 +1,4 @@
+# Sets output.count to how many recipes the server holds named COUNT_NAME, which callers pass via runFlow env.
+appId: dev.norish.app
+---
+- evalScript: ${output.count = json(http.get(NORISH_PROXY_CONTROL_URL + '/count?name=' + encodeURIComponent(COUNT_NAME)).body).count}

@@ -2,17 +2,10 @@
 # the server has the two lines.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/start.yaml
     env:
-      RECIPE_NAME: Grocery Omelette
-      RECIPE_KEY: omelette
-      RECIPE_INGREDIENTS: 2 eggs,100 g flour
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+      RECIPES: '[{"name": "Grocery Omelette", "key": "omelette", "ingredients": ["2 eggs", "100 g flour"]}]'
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.omelette}

@@ -2,21 +2,10 @@
 # server no longer has the recipe.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/start.yaml
     env:
-      RECIPE_NAME: Delete Me Stew
-      RECIPE_KEY: doomed
-- runFlow:
-    file: subflows/recipe.yaml
-    env:
-      RECIPE_NAME: Keep Me Salad
-      RECIPE_KEY: kept
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+      RECIPES: '[{"name": "Delete Me Stew", "key": "doomed"}, {"name": "Keep Me Salad", "key": "kept"}]'
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.doomed}
@@ -52,5 +41,8 @@ appId: dev.norish.app
     timeout: 20000
 - assertVisible:
     id: recipe-card-${output.kept}
-- evalScript: ${output.count = json(http.get(NORISH_PROXY_CONTROL_URL + '/count?name=Delete%20Me%20Stew').body).count}
+- runFlow:
+    file: subflows/count.yaml
+    env:
+      COUNT_NAME: Delete Me Stew
 - assertTrue: ${output.count == 0}

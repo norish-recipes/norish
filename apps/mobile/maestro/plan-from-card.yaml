@@ -1,25 +1,28 @@
-# Plans a recipe from its card: swipe, Plan, today's slot in the mini calendar. Planning opens Add to
-# groceries, the default after planning; once closed, Today shows the recipe in that slot.
+# Plans a recipe from its card: swipe, Plan, the day Today shows in the mini calendar, in the slot of
+# the empty card Today shows. Planning opens Add to groceries, the default after planning; once closed,
+# Today shows the recipe on a card. Slot and day come from what the app shows, not from the clock.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/start.yaml
     env:
-      RECIPE_NAME: Plan Card Curry
-      RECIPE_KEY: curry
-      RECIPE_INGREDIENTS: 2 eggs,100 g flour
-- runFlow: subflows/today.yaml
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+      RECIPES: '[{"name": "Plan Card Curry", "key": "curry", "ingredients": ["2 eggs", "100 g flour"]}]'
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.curry}
     timeout: 20000
-- assertVisible:
-    id: today-add-${output.slot}
+# An empty card reads "Add recipe, <slot>".
+- extendedWaitUntil:
+    visible:
+      id: today-add-.*
+    timeout: 20000
+- copyTextFrom:
+    id: today-add-.*
+- evalScript: ${output.slot = maestro.copiedText.split(', ').pop()}
+# Today's date reads "Saturday, Nov 14"; the day's "+" ends "on Sat, Nov 14".
+- copyTextFrom:
+    id: today-date
+- evalScript: ${output.day = maestro.copiedText.split(', ').pop()}
 - swipe:
     from:
       id: recipe-card-${output.curry}
@@ -28,22 +31,15 @@ appId: dev.norish.app
     id: recipe-swipe-plan-${output.curry}
 - extendedWaitUntil:
     visible:
-      id: day-add-${output.today}
+      id: day-add-.*
+      text: .* ${output.day}
     timeout: 20000
 - tapOn:
-    id: day-add-${output.today}
+    id: day-add-.*
+    text: .* ${output.day}
 - tapOn:
-    id: day-add-${output.today}-${output.slot}
-- extendedWaitUntil:
-    visible:
-      id: add-to-groceries-sheet
-    timeout: 20000
-- tapOn:
-    id: add-to-groceries-close
-- extendedWaitUntil:
-    visible:
-      id: today-card-.*
-      text: Plan Card Curry
-    timeout: 20000
-- assertNotVisible:
-    id: today-add-${output.slot}
+    id: day-add-.*-${output.slot}
+- runFlow:
+    file: subflows/planned.yaml
+    env:
+      PLANNED_NAME: Plan Card Curry

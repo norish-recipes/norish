@@ -2,21 +2,10 @@
 # cookbook's own Add recipes picker.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/start.yaml
     env:
-      RECIPE_NAME: Cookbook Soup
-      RECIPE_KEY: soup
-- runFlow:
-    file: subflows/recipe.yaml
-    env:
-      RECIPE_NAME: Cookbook Tart
-      RECIPE_KEY: tart
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+      RECIPES: '[{"name": "Cookbook Soup", "key": "soup"}, {"name": "Cookbook Tart", "key": "tart"}]'
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.soup}

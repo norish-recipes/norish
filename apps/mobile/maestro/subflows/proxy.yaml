@@ -1,0 +1,4 @@
+# Cuts or restores the backend the app reaches through the proxy; callers pass PROXY_ACTION (cut or restore) via runFlow env.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/' + PROXY_ACTION, { body: '' })}"

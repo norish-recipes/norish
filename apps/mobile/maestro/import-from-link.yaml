@@ -2,29 +2,21 @@
 # maestro script serves on loopback, so no public website is involved. The recipe lands in the Library once.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- runFlow: subflows/start.yaml
 - extendedWaitUntil:
     visible:
       id: add-recipe
     timeout: 20000
 - assertNotVisible: ${NORISH_IMPORT_NAME}
-- tapOn:
-    id: add-recipe
-- tapOn:
-    id: add-recipe-link
-- extendedWaitUntil:
-    visible:
-      id: import-link-field
-    timeout: 20000
-- inputText: ${NORISH_IMPORT_URL}
-- tapOn:
-    id: import-link-submit
+- runFlow:
+    file: subflows/import-link.yaml
+    env:
+      IMPORT_URL: ${NORISH_IMPORT_URL}
 - extendedWaitUntil:
     visible: ${NORISH_IMPORT_NAME}
     timeout: 60000
-- evalScript: ${output.count = json(http.get(NORISH_PROXY_CONTROL_URL + '/count?name=' + encodeURIComponent(NORISH_IMPORT_NAME)).body).count}
+- runFlow:
+    file: subflows/count.yaml
+    env:
+      COUNT_NAME: ${NORISH_IMPORT_NAME}
 - assertTrue: ${output.count == 1}

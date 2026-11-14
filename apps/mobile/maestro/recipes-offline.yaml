@@ -2,16 +2,14 @@
 # a recipe card opens its page.
 appId: dev.norish.app
 ---
-- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/proxy.yaml
     env:
-      RECIPE_NAME: Offline Roast
-      RECIPE_KEY: roast
+      PROXY_ACTION: restore
 - runFlow:
-    file: subflows/sign-in.yaml
+    file: subflows/start.yaml
     env:
+      RECIPES: '[{"name": "Offline Roast", "key": "roast"}]'
       NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
 - extendedWaitUntil:
     visible:
@@ -19,7 +17,10 @@ appId: dev.norish.app
     timeout: 20000
 # Leaving the app saves what it has read.
 - pressKey: home
-- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/cut', { body: '' })}"
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: cut
 - stopApp
 - launchApp
 - extendedWaitUntil:
@@ -35,4 +36,7 @@ appId: dev.norish.app
       id: recipe-name
       text: Offline Roast
     timeout: 20000
-- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore

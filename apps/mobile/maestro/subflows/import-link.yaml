@@ -1,0 +1,14 @@
+# Imports the link in IMPORT_URL, which callers pass via runFlow env: Add recipe, From a link, Import.
+appId: dev.norish.app
+---
+- tapOn:
+    id: add-recipe
+- tapOn:
+    id: add-recipe-link
+- extendedWaitUntil:
+    visible:
+      id: import-link-field
+    timeout: 20000
+- inputText: ${IMPORT_URL}
+- tapOn:
+    id: import-link-submit

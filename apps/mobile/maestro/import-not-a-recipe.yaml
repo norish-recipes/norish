@@ -1,29 +1,17 @@
 # Imports a link that is not a recipe: the failure toast carries the reason, and no recipe lands.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- runFlow: subflows/start.yaml
 - extendedWaitUntil:
     visible:
       id: add-recipe
     timeout: 20000
-- tapOn:
-    id: add-recipe
-- tapOn:
-    id: add-recipe-link
-- extendedWaitUntil:
-    visible:
-      id: import-link-field
-    timeout: 20000
-- inputText: ${NORISH_NOT_A_RECIPE_URL}
-- tapOn:
-    id: import-link-submit
+- runFlow:
+    file: subflows/import-link.yaml
+    env:
+      IMPORT_URL: ${NORISH_NOT_A_RECIPE_URL}
 - extendedWaitUntil:
     visible:
       id: toast
     timeout: 60000
-- assertVisible: .*This page doesn't look like a recipe..*
-- takeScreenshot: import-failed-toast
+- assertVisible: .*${NORISH_COPY_NOT_A_RECIPE}.*

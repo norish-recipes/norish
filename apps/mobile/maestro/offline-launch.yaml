@@ -2,16 +2,25 @@
 # `pnpm --filter @norish/mobile maestro` serves the cuttable proxy.
 appId: dev.norish.app
 ---
-- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
 - runFlow:
     file: subflows/sign-in.yaml
     env:
       NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
-- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/cut', { body: '' })}"
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: cut
 - stopApp
 - launchApp
 - extendedWaitUntil:
     visible:
       id: recipes-screen
     timeout: 20000
-- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore

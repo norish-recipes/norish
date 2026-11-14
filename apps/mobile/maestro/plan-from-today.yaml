@@ -1,44 +1,27 @@
-# Plans a recipe into the slot Today opens on (the next meal) from its empty card. Planning opens
-# Add to groceries, the default after planning; once closed, Today shows the recipe in that slot.
+# Plans a recipe into the slot Today shows, from its empty card. Planning opens Add to groceries, the
+# default after planning; once closed, Today shows the recipe on a card. The slot is whichever empty
+# card the app shows when it is tapped, so the flow does not depend on the time it runs.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/start.yaml
     env:
-      RECIPE_NAME: Plan Today Pasta
-      RECIPE_KEY: pasta
-      RECIPE_INGREDIENTS: 2 eggs,100 g flour
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
-- runFlow: subflows/today.yaml
+      RECIPES: '[{"name": "Plan Today Pasta", "key": "pasta", "ingredients": ["2 eggs", "100 g flour"]}]'
 - extendedWaitUntil:
     visible:
-      id: today-add-${output.slot}
+      id: today-add-.*
     timeout: 20000
 - assertNotVisible:
     id: today-card-.*
 - tapOn:
-    id: today-add-${output.slot}
+    id: today-add-.*
 - extendedWaitUntil:
     visible:
       id: plan-recipe-${output.pasta}
     timeout: 20000
 - tapOn:
     id: plan-recipe-${output.pasta}
-# Planning opens Add to groceries for this recipe; closing it leaves the plan.
-- extendedWaitUntil:
-    visible:
-      id: add-to-groceries-sheet
-    timeout: 20000
-- tapOn:
-    id: add-to-groceries-close
-- extendedWaitUntil:
-    visible:
-      id: today-card-.*
-      text: Plan Today Pasta
-    timeout: 20000
-- assertNotVisible:
-    id: today-add-${output.slot}
+- runFlow:
+    file: subflows/planned.yaml
+    env:
+      PLANNED_NAME: Plan Today Pasta

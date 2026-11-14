@@ -2,23 +2,10 @@
 # narrows the list, shows its mark and clears again.
 appId: dev.norish.app
 ---
-- runFlow: subflows/reset.yaml
 - runFlow:
-    file: subflows/recipe.yaml
+    file: subflows/start.yaml
     env:
-      RECIPE_NAME: Alpha Soup
-      RECIPE_KEY: alpha
-      RECIPE_TAGS: soup
-- runFlow:
-    file: subflows/recipe.yaml
-    env:
-      RECIPE_NAME: Berry Tart
-      RECIPE_KEY: berry
-      RECIPE_TAGS: dessert
-- runFlow:
-    file: subflows/sign-in.yaml
-    env:
-      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+      RECIPES: '[{"name": "Alpha Soup", "key": "alpha", "tags": ["soup"]}, {"name": "Berry Tart", "key": "berry", "tags": ["dessert"]}]'
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.alpha}
