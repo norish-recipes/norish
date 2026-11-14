@@ -32,12 +32,15 @@ type DragListProps<H, T> = Omit<
   onDrop: (drop: Drop<H, T>) => void;
 };
 
-const impact = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+const mediumImpact = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-const liftHaptic = () => {
+const dragHaptic = () => {
   "worklet";
-  scheduleOnRN(impact);
+  scheduleOnRN(mediumImpact);
 };
+
+// A module constant keeps the library from rebuilding its drag handlers each render.
+const STILL_CELL = { opacity: 1, transform: [] };
 
 function ItemRow<T>({
   item,
@@ -70,10 +73,10 @@ export function DragList<H, T>({
       data={rows}
       keyExtractor={(row) => row.key}
       onReorder={onReorder}
-      onDragStart={liftHaptic}
-      onDragEnd={liftHaptic}
+      onDragStart={dragHaptic}
+      onDragEnd={dragHaptic}
       animationDuration={reduceMotion ? 0 : 200}
-      cellAnimations={reduceMotion ? { opacity: 1, transform: [] } : undefined}
+      cellAnimations={reduceMotion ? STILL_CELL : undefined}
       renderItem={({ item: row }) =>
         row.kind === "heading" ? (
           renderHeading(row.value)
