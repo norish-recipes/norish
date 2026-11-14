@@ -102,6 +102,7 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
     <LibraryCards
       cookbook={cookbook}
       empty={<CookbookNoRecipes />}
+      fadeHeight={{ rest: 130, scrolled: 130 }}
       header={
         <>
           <Stack.Screen
@@ -124,7 +125,6 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
           {cookbook.memberCount > 0 ? <LibraryHeader scoped /> : null}
         </>
       }
-      fadeHeight={{ rest: 130, scrolled: 130 }}
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
       renderCard={(recipe, { variant, actions, allergies, isFavorite }) => (

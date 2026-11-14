@@ -67,6 +67,7 @@ export function LibraryList({
   return (
     <LibraryCards
       empty={filters.libraryType === "cookbooks" ? <CookbooksEmpty /> : <LibraryEmpty />}
+      fadeHeight={{ rest: 190, scrolled: 120 }}
       header={
         <>
           <View
@@ -86,7 +87,6 @@ export function LibraryList({
           <LibraryHeader />
         </>
       }
-      fadeHeight={{ rest: 190, scrolled: 120 }}
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
       renderCard={renderCard}
