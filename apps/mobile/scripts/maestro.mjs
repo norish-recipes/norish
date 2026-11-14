@@ -369,6 +369,7 @@ const vars = {
   NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
   // The recipe page the import flows read; the server fetches it, never the app.
   NORISH_IMPORT_URL: `http://127.0.0.1:${recipePage.address().port}/recipe`,
+  NORISH_NOT_A_RECIPE_URL: `http://127.0.0.1:${recipePage.address().port}/notes`,
   NORISH_IMPORT_NAME: importPageName,
 };
 

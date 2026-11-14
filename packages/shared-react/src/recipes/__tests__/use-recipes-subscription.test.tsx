@@ -13,6 +13,7 @@ import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts
 import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 import { REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
 import {
+  NO_RECIPE_FOUND_REASON,
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
@@ -403,6 +404,7 @@ describe("the recipe list events and recipe outcomes", () => {
 
   it("names a page that is not a recipe, and keeps other reasons out of the toast", () => {
     emit("onFailed", { reason: NOT_A_RECIPE_REASON });
+    emit("onFailed", { reason: NO_RECIPE_FOUND_REASON });
     emit("onFailed", { reason: PRIVATE_ADDRESS_REASON });
     emit("onFailed", { reason: "Python parser failed: WebsiteNotImplementedError" });
 
@@ -411,6 +413,7 @@ describe("the recipe list events and recipe outcomes", () => {
         .mocked(platform.toast.show)
         .mock.calls.map(([toast]) => [toast.severity, toast.title, toast.description])
     ).toEqual([
+      ["danger", "common.import.paste.failed", "recipes.toasts.notARecipe"],
       ["danger", "common.import.paste.failed", "recipes.toasts.notARecipe"],
       ["danger", "common.import.paste.failed", "recipes.toasts.privateAddress"],
       ["danger", "common.import.paste.failed", "recipes.toasts.failedDescription"],

@@ -33,6 +33,9 @@ export type RecipeShareEvent = z.infer<typeof RecipeShareEventSchema>;
 /** The `failed` reason of an import whose page is clearly not a recipe, which clients translate. */
 export const NOT_A_RECIPE_REASON = "This page doesn't look like a recipe.";
 
+/** The `failed` reason of an import whose page held no recipe markup the parser could read. */
+export const NO_RECIPE_FOUND_REASON = "Page does not appear to contain a recipe.";
+
 /** The `failed` reason of an import of a private address the administrator does not allow. */
 export const PRIVATE_ADDRESS_REASON =
   "Imports from private network addresses are not allowed on this server.";

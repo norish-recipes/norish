@@ -6,6 +6,7 @@ import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import {
+  NO_RECIPE_FOUND_REASON,
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
@@ -23,6 +24,7 @@ type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, 
 /** The server reasons a person can act on, each with its translation. */
 const TRANSLATED_REASONS: Record<string, string> = {
   [NOT_A_RECIPE_REASON]: "recipes.toasts.notARecipe",
+  [NO_RECIPE_FOUND_REASON]: "recipes.toasts.notARecipe",
   [PRIVATE_ADDRESS_REASON]: "recipes.toasts.privateAddress",
 };
 

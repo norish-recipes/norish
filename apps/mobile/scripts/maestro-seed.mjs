@@ -17,14 +17,21 @@ export function recipePage() {
   return `<!doctype html><html><head><title>${PAGE_NAME}</title><script type="application/ld+json">${JSON.stringify(recipe)}</script></head><body><h1>${PAGE_NAME}</h1></body></html>`;
 }
 
+// A page that is not a recipe, for the failed import's toast.
+function notesPage() {
+  return "<!doctype html><html><head><title>Weekend notes</title></head><body><h1>Weekend notes</h1><p>Buy milk. Call the plumber.</p></body></html>";
+}
+
 export const importPageName = PAGE_NAME;
 
 export function serveRecipePage(host) {
   const page = createServer((request, response) => {
-    response.writeHead(request.url === "/recipe" ? 200 : 404, {
+    const body = { "/recipe": recipePage(), "/notes": notesPage() }[request.url];
+
+    response.writeHead(body === undefined ? 404 : 200, {
       "content-type": "text/html; charset=utf-8",
     });
-    response.end(request.url === "/recipe" ? recipePage() : "");
+    response.end(body ?? "");
   });
 
   return new Promise((resolve) => page.listen(0, host, () => resolve(page)));
