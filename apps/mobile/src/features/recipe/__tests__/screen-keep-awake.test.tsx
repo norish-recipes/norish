@@ -6,8 +6,8 @@ import { ScreenKeepAwake } from "../components/screen-keep-awake";
 
 let wakeLock = "off";
 let focused = true;
-const activate = vi.fn(() => Promise.resolve());
-const deactivate = vi.fn();
+const activate = vi.fn((_tag: string) => Promise.resolve());
+const deactivate = vi.fn((_tag: string) => {});
 
 vi.mock("expo-router", () => ({ useIsFocused: () => focused }));
 vi.mock("expo-keep-awake", () => ({
