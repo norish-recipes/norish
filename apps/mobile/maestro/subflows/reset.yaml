@@ -1,0 +1,4 @@
+# Empties the throwaway account's recipes, cookbooks and groceries, so a flow starts from nothing.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/reset', { body: '' })}"

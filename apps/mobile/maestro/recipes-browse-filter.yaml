@@ -1,0 +1,100 @@
+# Browses the Library: all recipes show, the lenses and the list/grid toggle work, and a tag filter
+# narrows the list, shows its mark and clears again.
+appId: dev.norish.app
+---
+- runFlow: subflows/reset.yaml
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Alpha Soup
+      RECIPE_KEY: alpha
+      RECIPE_TAGS: soup
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Berry Tart
+      RECIPE_KEY: berry
+      RECIPE_TAGS: dessert
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.alpha}
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.berry}
+- assertNotVisible:
+    id: library-filters-active
+# The grid shows the same cards; the list brings them back.
+- tapOn:
+    id: library-view-grid
+- assertVisible:
+    id: recipe-card-${output.alpha}
+- tapOn:
+    id: library-view-list
+- assertVisible:
+    id: recipe-card-${output.berry}
+# No cookbooks yet: the Cookbooks lens hides the recipes, the Recipes lens shows them again.
+- tapOn:
+    id: library-lens-cookbooks
+- assertVisible:
+    id: library-cookbooks-empty
+- assertNotVisible:
+    id: recipe-card-${output.alpha}
+- tapOn:
+    id: library-lens-recipes
+- assertVisible:
+    id: recipe-card-${output.alpha}
+# A tag filter keeps only the recipes with it.
+- tapOn:
+    id: library-filters-button
+- scrollUntilVisible:
+    element:
+      id: filters-tag-soup
+    timeout: 20000
+- tapOn:
+    id: filters-tag-soup
+- tapOn:
+    id: filters-apply
+- extendedWaitUntil:
+    visible:
+      id: library-filters-active
+    timeout: 10000
+- assertVisible:
+    id: recipe-card-${output.alpha}
+- assertNotVisible:
+    id: recipe-card-${output.berry}
+# Clear filters applies at once and brings everything back.
+- tapOn:
+    id: library-filters-button
+- tapOn:
+    id: filters-reset
+- extendedWaitUntil:
+    notVisible:
+      id: library-filters-active
+    timeout: 10000
+- assertVisible:
+    id: recipe-card-${output.alpha}
+- assertVisible:
+    id: recipe-card-${output.berry}
+# Another tag swaps the list.
+- tapOn:
+    id: library-filters-button
+- scrollUntilVisible:
+    element:
+      id: filters-tag-dessert
+    timeout: 20000
+- tapOn:
+    id: filters-tag-dessert
+- tapOn:
+    id: filters-apply
+- extendedWaitUntil:
+    visible:
+      id: library-filters-active
+    timeout: 10000
+- assertVisible:
+    id: recipe-card-${output.berry}
+- assertNotVisible:
+    id: recipe-card-${output.alpha}

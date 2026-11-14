@@ -1,0 +1,16 @@
+# Saves one recipe on the server and keeps its id as output[RECIPE_KEY]. Callers pass RECIPE_NAME,
+# RECIPE_KEY and optionally RECIPE_INGREDIENTS and RECIPE_TAGS (comma-separated) via runFlow env.
+appId: dev.norish.app
+---
+- evalScript: |
+    ${
+      const list = (value) => (value ? value.split(',') : []);
+      const answer = http.post(NORISH_PROXY_CONTROL_URL + '/recipe', {
+        body: JSON.stringify({
+          name: RECIPE_NAME,
+          ingredients: list(typeof RECIPE_INGREDIENTS === 'undefined' ? '' : RECIPE_INGREDIENTS),
+          tags: list(typeof RECIPE_TAGS === 'undefined' ? '' : RECIPE_TAGS),
+        }),
+      });
+      output[RECIPE_KEY] = json(answer.body).id;
+    }

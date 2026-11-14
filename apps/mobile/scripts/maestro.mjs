@@ -11,6 +11,8 @@ import path from "node:path";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { ValkeyContainer } from "@testcontainers/valkey";
 
+import { importPageName, seeder, serveRecipePage } from "./maestro-seed.mjs";
+
 // An optional argument runs that one flow, with the same setup, instead of the whole folder.
 const only = process.argv[2] && path.resolve(process.argv[2]);
 
@@ -72,6 +74,8 @@ async function startServer() {
       PASSWORD_AUTH_ENABLED: "true",
       AUTH_RATE_LIMIT_ENABLED: "false",
       INGREDIENT_CATALOGUE_URL: "",
+      // The import flows' recipe page answers on loopback.
+      ALLOW_PRIVATE_ADDRESSES: "true",
       LOG_LEVEL: "error",
       NEXT_PUBLIC_LOG_LEVEL: "error",
       TRPC_LOG_LEVEL: "error",
@@ -94,6 +98,7 @@ async function startServer() {
     url,
     stop: async () => {
       child.kill();
+      await once(child, "exit");
       await Promise.all([postgres.stop(), valkey.stop()]);
     },
   };
@@ -122,6 +127,19 @@ const trpc = async (procedure, input) => {
 
   return data.result.data.json;
 };
+
+// GET with the input in the query string, as tRPC reads a query.
+const query = async (procedure, input) => {
+  const { ok, data } = await call(
+    `/api/trpc/${procedure}${input ? `?input=${encodeURIComponent(JSON.stringify({ json: input }))}` : ""}`
+  );
+
+  if (!ok) throw new Error(`${procedure} failed: ${JSON.stringify(data)}`);
+
+  return data.result.data.json;
+};
+const seed = seeder({ trpc, query });
+const recipePage = await serveRecipePage(LOOPBACK);
 
 const credentials = { email: env.NORISH_EMAIL, password: env.NORISH_PASSWORD };
 
@@ -172,16 +190,45 @@ const proxy = net.createServer((client) => {
 });
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
-  if (request.url === "/cut") {
-    proxy.close();
-    for (const socket of sockets) socket.destroy();
-  } else if (request.url === "/restore" && !proxy.listening) {
-    listenProxy();
-  } else if (request.url === "/old" || request.url === "/real") {
-    tooOld = request.url === "/old";
-  } else if (request.url === "/revoke-other-sessions") {
-    // This script's own session stays; the app's, signed in as the same Account, ends.
-    await call("/api/auth/revoke-other-sessions", {});
+  // `POST /reset`, `POST /recipe` (a JSON body), `GET /count?name=` and `GET /groceries` answer in JSON.
+  const route = new URL(request.url ?? "/", "http://control");
+  const body = await new Promise((resolve) => {
+    const chunks = [];
+
+    request.on("data", (chunk) => chunks.push(chunk));
+    request.on("end", () => resolve(Buffer.concat(chunks).toString()));
+  });
+
+  try {
+    if (route.pathname === "/reset") {
+      await seed.reset();
+    } else if (route.pathname === "/recipe") {
+      response.write(JSON.stringify({ id: await seed.createRecipe(JSON.parse(body)) }));
+    } else if (route.pathname === "/count") {
+      response.write(
+        JSON.stringify({ count: await seed.countRecipes(route.searchParams.get("name")) })
+      );
+    } else if (route.pathname === "/groceries") {
+      response.write(
+        JSON.stringify({
+          names: await seed.groceryNames(Number(route.searchParams.get("min") ?? 0)),
+        })
+      );
+    } else if (request.url === "/cut") {
+      proxy.close();
+      for (const socket of sockets) socket.destroy();
+    } else if (request.url === "/restore" && !proxy.listening) {
+      listenProxy();
+    } else if (request.url === "/old" || request.url === "/real") {
+      tooOld = request.url === "/old";
+    } else if (request.url === "/revoke-other-sessions") {
+      // This script's own session stays; the app's, signed in as the same Account, ends.
+      await call("/api/auth/revoke-other-sessions", {});
+    }
+  } catch (error) {
+    // A seed that failed fails the flow's next step, not the run.
+    console.error(`${route.pathname}: ${error.message}`);
+    response.statusCode = 500;
   }
   response.end();
 }).listen(Number(env.NORISH_PROXY_CONTROL_PORT), LOOPBACK);
@@ -320,6 +367,9 @@ const vars = {
   // The proxy forwards bytes, so a base path stays on the address the app is given.
   NORISH_PROXY_URL: `http://localhost:${env.NORISH_PROXY_PORT}${server.slice(backend.origin.length)}`,
   NORISH_PROXY_CONTROL_URL: `http://localhost:${env.NORISH_PROXY_CONTROL_PORT}`,
+  // The recipe page the import flows read; the server fetches it, never the app.
+  NORISH_IMPORT_URL: `http://127.0.0.1:${recipePage.address().port}/recipe`,
+  NORISH_IMPORT_NAME: importPageName,
 };
 
 try {
@@ -332,6 +382,7 @@ try {
   process.exitCode = error.code ?? 1;
 } finally {
   control.close();
+  recipePage.close();
   versionProxy.close();
   if (!registrationWasOpen) {
     const closed = await setRegistration(false).catch(() => null);
