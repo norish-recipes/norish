@@ -8,6 +8,7 @@ let listener: ((response: unknown) => void) | null = null;
 const scheduled = vi.hoisted(() => new Set<string>());
 const presented = vi.hoisted(() => new Set<string>());
 
+vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove: () => {} }) } }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ push }) }));
 vi.mock("expo-haptics", () => ({}));
 vi.mock("react-intl", () => ({ useIntl: () => ({ formatMessage: () => "" }) }));

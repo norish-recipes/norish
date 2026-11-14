@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { AppState } from "react-native";
 import { planTimerNotifications } from "@/lib/timer-notifications";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
@@ -96,10 +97,19 @@ function useTimerNotifications() {
   );
   const body = intl.formatMessage({ id: "common.timer.notification_body" });
 
+  // One sync at a time, so two quick changes never schedule the same timer twice.
+  const sync = () => void (syncing = syncing.then(() => syncTimerNotifications(body)));
+
+  useEffect(sync, [shape, answered, body]);
+
+  // A grant in Settings arrives with no event, so a return to the foreground syncs again.
   useEffect(() => {
-    // One sync at a time, so two quick changes never schedule the same timer twice.
-    syncing = syncing.then(() => syncTimerNotifications(body));
-  }, [shape, answered, body]);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") sync();
+    });
+
+    return () => subscription.remove();
+  });
 }
 
 const opened = new Set<string>();
