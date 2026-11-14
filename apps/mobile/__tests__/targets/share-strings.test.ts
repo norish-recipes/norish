@@ -15,16 +15,16 @@ describe("with-share-strings", () => {
   });
 
   it("writes a whole-message plural as plural variations on %lld", () => {
-    expect(localization("{count, plural, one {# photo} other {# photos}}", "en.photoCount")).toEqual(
-      {
-        variations: {
-          plural: {
-            one: { stringUnit: { state: "translated", value: "%lld photo" } },
-            other: { stringUnit: { state: "translated", value: "%lld photos" } },
-          },
+    expect(
+      localization("{count, plural, one {# photo} other {# photos}}", "en.photoCount")
+    ).toEqual({
+      variations: {
+        plural: {
+          one: { stringUnit: { state: "translated", value: "%lld photo" } },
+          other: { stringUnit: { state: "translated", value: "%lld photos" } },
         },
-      }
-    );
+      },
+    });
   });
 
   it("refuses a placeholder, a plural inside text and a plural without other", () => {

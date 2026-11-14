@@ -1,8 +1,4 @@
-import type {
-  ShareImportOptions,
-  ShareImports,
-  ShareInbox,
-} from "@/lib/offline/share-inbox";
+import type { ShareImportOptions, ShareImports, ShareInbox } from "@/lib/offline/share-inbox";
 import { drainShareInbox, withSavedShares } from "@/lib/offline/share-inbox";
 import { describe, expect, it, vi } from "vitest";
 

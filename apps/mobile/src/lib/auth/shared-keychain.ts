@@ -113,7 +113,13 @@ async function moveOnce(keys: readonly string[]): Promise<void> {
     keychainAccessible: SecureStore.WHEN_UNLOCKED,
   };
 
-  if (await moveKeychainItems(secureStore(() => ({})), secureStore(() => shared), keys)) {
+  if (
+    await moveKeychainItems(
+      secureStore(() => ({})),
+      secureStore(() => shared),
+      keys
+    )
+  ) {
     options = shared;
   }
 }
