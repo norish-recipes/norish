@@ -194,6 +194,13 @@ export const useTimerStore = create<TimerState>()(
       storage: createJSONStorage(() => timerStorage),
       // Nothing is read or written until the app connects its storage.
       skipHydration: true,
+      // A timer started before that joins the stored ones instead of being replaced by them.
+      merge: (stored, current) => {
+        const timers = (stored as Partial<TimerState> | undefined)?.timers ?? [];
+        const ids = new Set(timers.map((timer) => timer.id));
+
+        return { ...current, timers: [...timers, ...current.timers.filter((t) => !ids.has(t.id))] };
+      },
     }
   )
 );

@@ -230,6 +230,7 @@ describe("recipeTimerId", () => {
       ["norish-timers", JSON.stringify({ state: { timers: [legacy] }, version: 0 })],
     ]);
 
+    useTimerStore.setState({ timers: [] });
     connectTimerStorage(mapStorage(entries));
     await Promise.resolve();
     vi.setSystemTime(Date.now() + 1_000);
@@ -334,7 +335,7 @@ describe("connectTimerStorage", () => {
     });
   });
 
-  it("keeps the stored timers when one was added before the app connected its storage", async () => {
+  it("keeps the stored timers and the one added before the app connected its storage", async () => {
     vi.resetModules();
     const fresh = await import("../timers");
     const stored = JSON.stringify({
@@ -363,6 +364,9 @@ describe("connectTimerStorage", () => {
     fresh.connectTimerStorage(mapStorage(entries));
     await Promise.resolve();
 
-    expect(fresh.useTimerStore.getState().timers.map((timer) => timer.id)).toContain("kept");
+    expect(fresh.useTimerStore.getState().timers.map((timer) => timer.id)).toEqual([
+      "kept",
+      "early",
+    ]);
   });
 });
