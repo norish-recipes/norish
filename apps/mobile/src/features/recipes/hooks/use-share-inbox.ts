@@ -15,11 +15,10 @@ export function useShareInbox() {
 
   const drain = useEffectEvent(() => {
     const inbox = appGroupInbox();
-    // The Outbox's owner: a share imports only into the account that saved it.
-    const ownerId = offlineEngine.cache.owner();
 
-    if (!inbox || !ownerId) return;
-    drainShareInbox(inbox, ownerId, {
+    if (!inbox) return;
+    // The Outbox's owner, read before each item: a share imports only into the account that saved it.
+    drainShareInbox(inbox, () => offlineEngine.cache.owner(), {
       url: importRecipe,
       text: importFromPaste,
       images: importFromImages,

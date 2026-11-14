@@ -123,8 +123,13 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
   }
 }
 
-async function drain(inbox: ShareInbox, ownerId: string, imports: ShareImports) {
+async function drain(inbox: ShareInbox, owner: () => string | null, imports: ShareImports) {
+  const ownerId = owner();
+
+  if (!ownerId) return;
   for (const id of inbox.ids()) {
+    // A session end while an import hung: the rest must not go out under the next account.
+    if (owner() !== ownerId) return;
     const outcome = await importItem(inbox, id, ownerId, imports);
     const step = nextStep(outcome);
 
@@ -140,13 +145,13 @@ async function drain(inbox: ShareInbox, ownerId: string, imports: ShareImports) 
 // Module scope: one drain at a time across remounts, so an item is never imported twice.
 let draining: Promise<void> | null = null;
 
-/** Imports `ownerId`'s saved items one by one; each leaves the inbox once it is safe. */
+/** Imports the current owner's saved items one by one; each leaves the inbox once it is safe. */
 export function drainShareInbox(
   inbox: ShareInbox,
-  ownerId: string,
+  owner: () => string | null,
   imports: ShareImports
 ): Promise<void> {
-  draining ??= drain(inbox, ownerId, imports).finally(() => {
+  draining ??= drain(inbox, owner, imports).finally(() => {
     draining = null;
   });
 

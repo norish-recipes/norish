@@ -7,6 +7,7 @@ import { markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 // The signed-in account, as the Outbox's owner id.
 const OWNER = "user-a";
+const owner = () => OWNER;
 
 /** The Outbox link's Queued signal: unreachable, and durably admitted. */
 const queued = () => new TypeError("Network request failed");
@@ -63,7 +64,7 @@ describe("drainShareInbox", () => {
     );
     const { imports, calls } = fakeImports((kind) => (kind === "text" ? queued() : null));
 
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
 
     expect(calls).toEqual([
       ["url", "https://example.com/pasta"],
@@ -85,7 +86,7 @@ describe("drainShareInbox", () => {
       images: vi.fn(),
     };
 
-    const drained = drainShareInbox(inbox, OWNER, imports);
+    const drained = drainShareInbox(inbox, owner, imports);
 
     await vi.waitFor(() => expect(pending.settle).toBeDefined());
     expect(json.has("a")).toBe(true);
@@ -105,7 +106,7 @@ describe("drainShareInbox", () => {
     });
     const { imports, calls } = fakeImports();
 
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
 
     expect(calls).toEqual([["url", "https://example.com/b"]]);
     expect(json.size).toBe(0);
@@ -114,7 +115,7 @@ describe("drainShareInbox", () => {
   it("drops an item the server refused for good", async () => {
     const { inbox, json } = fakeInbox({ a: { kind: "url", url: "https://example.com/a" } });
 
-    await drainShareInbox(inbox, OWNER, fakeImports(refused).imports);
+    await drainShareInbox(inbox, owner, fakeImports(refused).imports);
 
     expect(json.size).toBe(0);
   });
@@ -137,7 +138,7 @@ describe("drainShareInbox", () => {
       queueMicrotask(() => onSettled(answer(input)));
     };
 
-    await drainShareInbox(inbox, OWNER, { url: run, text: run, images: run });
+    await drainShareInbox(inbox, owner, { url: run, text: run, images: run });
 
     expect(calls).toHaveLength(statuses.length + 1);
     expect([...json.keys()]).toEqual(statuses.map((status) => `s${status}`));
@@ -150,12 +151,12 @@ describe("drainShareInbox", () => {
     });
     const { imports, calls } = fakeImports(unauthorized);
 
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
 
     expect(calls).toHaveLength(1);
     expect([...json.keys()]).toEqual(["a", "b"]);
 
-    await drainShareInbox(inbox, OWNER, fakeImports().imports);
+    await drainShareInbox(inbox, owner, fakeImports().imports);
     expect(json.size).toBe(0);
   });
 
@@ -169,7 +170,7 @@ describe("drainShareInbox", () => {
       return error;
     };
 
-    await drainShareInbox(inbox, OWNER, fakeImports(lost).imports);
+    await drainShareInbox(inbox, owner, fakeImports(lost).imports);
 
     expect(json.has("a")).toBe(true);
   });
@@ -184,11 +185,31 @@ describe("drainShareInbox", () => {
     const remove = inbox.remove;
 
     inbox.remove = () => undefined;
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
     inbox.remove = remove;
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
 
     expect(operationIds).toEqual(["share-1", "share-2", "share-1", "share-2"]);
+  });
+
+  it("stops when the session ends mid-drain: the next item is neither imported nor removed", async () => {
+    const { inbox, json } = fakeInbox({
+      a: { kind: "url", url: "https://example.com/a" },
+      b: { kind: "url", url: "https://example.com/b" },
+    });
+    let current: string | null = OWNER;
+    const calls: unknown[] = [];
+    const run = (url: unknown, { onSettled }: ShareImportOptions) => {
+      calls.push(url);
+      // A's session expires and B signs in while A's first import is in flight.
+      current = "user-b";
+      queueMicrotask(() => onSettled(null));
+    };
+
+    await drainShareInbox(inbox, () => current, { url: run, text: run, images: run });
+
+    expect(calls).toEqual(["https://example.com/a"]);
+    expect([...json.keys()]).toEqual(["b"]);
   });
 
   it("imports an item once when the drain runs twice", async () => {
@@ -199,10 +220,10 @@ describe("drainShareInbox", () => {
     const { imports, calls } = fakeImports();
 
     await Promise.all([
-      drainShareInbox(inbox, OWNER, imports),
-      drainShareInbox(inbox, OWNER, imports),
+      drainShareInbox(inbox, owner, imports),
+      drainShareInbox(inbox, owner, imports),
     ]);
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
 
     expect(calls).toEqual([
       ["url", "https://example.com/a"],
@@ -226,12 +247,12 @@ describe("saved shares at a session end", () => {
     await expiry.clearForSignOut({ discardQueue: false });
     const { imports, calls } = fakeImports();
 
-    await drainShareInbox(inbox, "user-b", imports);
+    await drainShareInbox(inbox, () => "user-b", imports);
 
     expect(calls).toEqual([]);
     expect(json.has("a")).toBe(true);
 
-    await drainShareInbox(inbox, OWNER, imports);
+    await drainShareInbox(inbox, owner, imports);
     expect(calls).toEqual([["text", "A's soup"]]);
   });
 
