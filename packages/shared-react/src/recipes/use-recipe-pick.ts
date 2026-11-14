@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 
 import { useRecipesQuery } from "./use-recipes-query";
 
-/** A search over the recipes and a staged pick of them, `initial` ticked from the start. */
+/** A search over the recipes and a staged pick of them. */
 export function useRecipePick() {
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
