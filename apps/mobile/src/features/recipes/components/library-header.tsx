@@ -8,8 +8,9 @@ import { useIntl } from "react-intl";
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { hasActiveLibraryFilters, useLibraryFilters } from "@norish/shared-react/recipes";
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
+import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 const HEADING_KEYS = {
   all: "recipes.dashboard.libraryTitle",
@@ -52,7 +53,7 @@ export function FiltersButton() {
   const intl = useIntl();
   const router = useRouter();
   const [foreground] = useThemeColor(["foreground"] as const);
-  const filtersOn = hasActiveLibraryFilters(useLibraryFilters((state) => state.filters));
+  const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
 
   return (
     <Pressable

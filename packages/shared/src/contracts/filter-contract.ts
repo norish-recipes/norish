@@ -174,6 +174,8 @@ export function hasAppliedRecipeFilters(filters: CanonicalRecipeFilters): boolea
     filters.searchTags.length > 0 ||
     filters.categories.length > 0 ||
     filters.maxCookingTime !== null ||
+    filters.minRating !== null ||
+    filters.showFavoritesOnly ||
     filters.showPantryOnly
   );
 }

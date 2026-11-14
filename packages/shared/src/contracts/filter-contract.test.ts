@@ -112,4 +112,19 @@ describe("recipe filter contract", () => {
       );
     });
   });
+
+  describe("hasAppliedRecipeFilters", () => {
+    it("is off for the defaults", () => {
+      expect(hasAppliedRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(false);
+    });
+
+    it.each([
+      ["a minimum rating", { minRating: 4 }],
+      ["favourites only", { showFavoritesOnly: true }],
+      ["a category", { categories: ["Dinner"] }],
+      ["pantry only", { showPantryOnly: true }],
+    ])("is on for %s", (_name, over) => {
+      expect(hasAppliedRecipeFilters({ ...DEFAULT_RECIPE_FILTERS, ...over })).toBe(true);
+    });
+  });
 });
