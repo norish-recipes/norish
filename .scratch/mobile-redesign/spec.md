@@ -1,8 +1,8 @@
 # Mobile redesign: the iPhone screens
 
-Status: sign-in tickets 01-06 done; Recipes tab tickets 07-17 open
+Status: sign-in tickets 01-06 done; Recipes tab tickets 07-17 open; Recipe, Groceries and Calendar tickets 18-30 open
 
-Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area gets its tickets once the one before it has landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below).
+Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area got its tickets once the one before it had landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below). Recipe, Groceries and Calendar were specced together on 2026-11-14 as Parts 3–5, tickets 18–30.
 
 ## Problem Statement
 
@@ -193,3 +193,197 @@ The signed-in shell is built with native tabs and the "Add recipe" accessory, an
 - The Recipe screen and the recipe editor (stubs only), Search, Groceries, Calendar and Settings beyond placeholders.
 - PDF import on mobile, multi-select, an app-wide copied-link ask.
 - Fold, iPad, Android.
+
+---
+
+# Part 3: the Recipe screen, cook mode and the Live Activity
+
+Settled in a `/grilling` session on 2026-11-14, together with Parts 4 and 5. Vocabulary is CONTEXT.md's Recipes section, including the new **Recipe Timer**. The boards are the Recipe row (Recipe, RecipeSteps with its `part`/`overlay` tweaks, CookMode, RecipeEdit) plus what ticket 18 adds. Build order is Recipe, then Groceries, then Calendar, after ticket 17 has closed the Recipes tab.
+
+## Problem Statement
+
+A card on Recipes opens a stub with a photo and a name. A household member can't read a recipe on the phone, scale it, cook from it, set its timers or edit it, and a timer started on the phone would die with the screen, out of sight once the phone is locked.
+
+## Solution
+
+The Recipe screen is built from the canvas with everything web's recipe page offers a reader on a phone, cook mode follows web's cooking mode, and the editor replaces the "Write it yourself" placeholder. Recipe Timers move into shared-react, keep running when the app is closed, ring through a local notification and show on the Lock Screen and in the Dynamic Island as one Live Activity.
+
+## User Stories
+
+1. As a household member, I want to read a recipe on my phone in the order the canvas sets (Notes, Ingredients, Steps, rating, cookbooks, Nutrition, Provenance, Source), so that it reads like web.
+2. As a household member, I want to change the servings and switch metric/imperial, so that amounts fit what I'm cooking.
+3. As a household member, I want to favourite, rate, share, plan, add to groceries, run AI actions on and delete a recipe from its screen, so that I don't need web for it.
+4. As a household member, I want to page through a recipe's photos and play its video, so that I see what I'm making.
+5. As a household member, I want cook mode to walk me through the steps with the ingredients one swipe away and keep the screen awake, so that I cook with dirty hands.
+6. As a household member, I want to start a timer from a step on the recipe or in cook mode, so that I time what the step says.
+7. As a household member, I want my timers to keep running and ring when the app is closed or the phone is locked, so that nothing burns.
+8. As a household member, I want my running timers on the Lock Screen and in the Dynamic Island, so that I see them without unlocking.
+9. As a household member, I want tapping a timer's Live Activity or notification to open cook mode on that step, so that I carry on where the timer was.
+10. As a household member, I want to write and edit a recipe on my phone, so that a recipe from a card or a relative gets in.
+
+## Implementation Decisions
+
+### Scope and order
+
+- Ticket 18 is one canvas session (Mike) for all three areas, drawing only what the canvas lacks: Calendar empty and offline; Recipe Timer chips on the Recipe page; the Live Activity on the Lock Screen and in the Dynamic Island (compact, minimal, expanded) and its timer-done state; the small calendar widget filled, with a note and with nothing planned; the week widget; the widgets' signed-out state; every widget in light, dark, tinted and clear.
+- Recipe covers the page, its sheets (servings, share, AI, delete), media, cook mode and the editor. Print is web-only. Search and Settings stay out.
+
+### Shared logic first
+
+- As in Part 2, each ticket moves the web-only logic it needs into shared-react with its unit tests and switches web in separate commits: the conversion, amount-display and unsaved-navigation-guard hooks, and the timers store.
+
+### Recipe screen
+
+- Parity with web's recipe page as the RecipeSteps board orders it, Hidden Items respected. AI actions show only when AI is on and the reader may run them, as on web.
+
+### Cook mode
+
+- Web's cooking mode as the CookMode board draws it: faded previous/next steps, ingredient chips, progress and Ready At, steps and ingredients views. The screen stays awake while it is open.
+
+### Recipe Timers
+
+- `apps/web/lib/timers.ts` moves to shared-react with platform storage, so timers keep web's states (running, paused, done), adjust, reset and drift correction, and survive the app closing. Timer chips show on the Recipe page's steps and in cook mode. The clock pill in cook mode opens the timer list (canvas v69).
+- A Recipe Timer is not part of the Cooking Session (CONTEXT.md): closing cook mode leaves its timers running.
+- When a timer starts, a local notification is scheduled for its end (`expo-notifications`, added through `expo install`), and cancelled on pause, reset or removal. Notification permission is asked the first time a timer starts, never at launch. Tapping the notification opens cook mode on the timer's step.
+- Hiding recipe timers (a Hidden Item) removes the chips, so no timer, notification or Live Activity ever starts.
+
+### Live Activity
+
+- One Live Activity for every Recipe Timer on the device, whichever recipe started it. It starts with the first timer and ends when none is left; when the last one finishes it ends showing Done and iOS clears it.
+- Lock Screen: up to three timers, soonest first, each with its recipe and step label and a countdown or "Paused", then "+N". Dynamic Island compact shows the soonest countdown, minimal a ring, expanded the Lock Screen's rows.
+- Countdowns tick on their own (`timerInterval`), so the app only updates the activity when a timer starts, pauses, resets, is adjusted or finishes. No buttons; a tap opens cook mode on the soonest timer's step.
+- Built with `expo-widgets` (Expo's SDK 58 package, JSX with `@expo/ui` SwiftUI components), not as Swift in an `@bacons/apple-targets` target: the app pushes everything a widget or activity shows, which is what `expo-widgets` does. Its extension sits next to the Share Extension's target; the Live Activity ticket starts by proving the two build and run side by side (prebuild, simulator), with SwiftUI through apple-targets as the fallback if they don't.
+
+### Editor
+
+- The RecipeEdit board: full screen, glass close top-left, Save or Create as a full-width pill at the bottom, cards like the page, Notes above Ingredients, a row per ingredient with a grip, `#` sections, the `@` ingredient popup in steps. Leaving with changes asks through the native alert.
+
+### Offline
+
+- As Part 2: the recipe reads from the Warm Set and every write goes through the Outbox.
+
+## Testing Decisions
+
+- Gates per ticket as in Part 1. Moved logic keeps or gains unit tests in shared-react; web's E2E stays green after each move. The Live Activity's pushed state (which timers, order, "+N") is built by a pure function with unit tests.
+- Maestro flows: read a recipe and scale it, cook mode through a recipe with a timer, edit and save, create from Write it yourself. The Live Activity and the timer notification are checked by hand on a device, locked and with the app closed.
+
+## Out of Scope
+
+- Live Activity buttons (pause, +1 min, stop), timers shared across devices or the household, printing.
+
+---
+
+# Part 4: Groceries
+
+The Groceries row of the canvas (the list's `view` and `overlay` tweaks, the add and edit sheets, Repeat, Pantry, Manage stores, the store editor, product search). Vocabulary is CONTEXT.md's Groceries & Stores section.
+
+## Problem Statement
+
+On mobile, Add to groceries writes to a list nobody can see. A household member can't shop from the phone, tick lines off, sort them into stores and aisles, manage the pantry or the stores, or see prices.
+
+## Solution
+
+The Groceries tab is built from the canvas at parity with web, drag included: lines reorder within a Store, move between Stores, file into an Aisle, and Stores and Aisles reorder in Manage stores. Web's drop logic moves to shared-react so both apps resolve a drop the same way.
+
+## User Stories
+
+1. As a household member, I want the household's list grouped by Store and Aisle, or by recipe, so that I shop in the order I walk.
+2. As a household member, I want to tick a line off with one tap, so that I shop with one hand.
+3. As a household member, I want to add items with a store and a repeat, typed in plain words, so that weekly staples come back on their own.
+4. As a household member, I want to drag a line to another place, Store or Aisle, so that the list matches the shop; a line filed into an Aisle lands there next time.
+5. As a household member, I want to edit a line's store product, price, store, aisle and repeat, so that the price is right.
+6. As a household member, I want to clear done lines or the whole list, so that next week starts clean.
+7. As a household member, I want to manage my pantry, so that staples are left off what I buy.
+8. As a household member, I want to add, edit, colour, reorder and delete Stores and their Aisles, so that the list follows the shops I use.
+9. As a household member, I want groceries I tick or add offline to sync once I'm back, so that the list works in a shop without signal.
+
+## Implementation Decisions
+
+### Scope and order
+
+- Groceries covers the list (store, recipe and grouped views, empty), ticking, the "Add items" accessory and its sheet, the edit sheet, Repeat with its plain-words detection, clearing, Pantry, Manage stores with the store editor and delete, and Store Product search and prices. Ingredient management stays off mobile.
+
+### Gestures
+
+- On Groceries and the Calendar tab, holding a row lifts it and dragging moves it; a tap opens its sheet (the grocery edit sheet here), the checkbox ticks. Neither tab has a long-press context menu, because the native menu (`Link.Menu`) would claim the hold. Recipes cards keep theirs.
+
+### The drag list
+
+- One drag list shared by Groceries, Manage stores and the Calendar tab, built before either area: a flat list whose headings (Store, Aisle, day) are non-draggable rows, a drop resolved by the heading above it, a haptic on lift and drop, auto-scroll near the edges, a Reduce Motion fallback. Its ticket first checks `react-native-reorderable-list` on RN 0.88 / Reanimated 4.7 with headings as rows, and builds on Gesture Handler and Reanimated if it falls short.
+
+### Grocery drag
+
+- Full parity with web's drop plan (`dnd/drop-plan.ts`, `use-list-dnd.ts`), which moves to shared-react: reorder within a Store, move to another Store or Unsorted, drop under an Aisle heading to file the name there (an Aisle Link), a grouped line moves as one, in store view and recipe view.
+
+### Stores
+
+- Manage stores reorders Stores and each Store's Aisles by drag, as web's store manager does.
+
+### Offline
+
+- The list reads from the Warm Set; ticks, adds, edits and drops go through the Outbox.
+
+## Testing Decisions
+
+- Gates per ticket. The moved drop plan keeps its unit tests in shared-react; web's E2E stays green.
+- Maestro flows: add an item with a repeat, tick and clear, drag across Stores and into an Aisle, manage a Store, pantry, Groceries offline. The grocery realtime check that Part 2 deferred returns here.
+
+## Out of Scope
+
+- A groceries widget (dropped for now), ingredient management on mobile.
+
+---
+
+# Part 5: Calendar and the calendar widgets
+
+The Calendar row of the canvas plus ticket 18's empty, offline and widget boards. The day card is Part 2's.
+
+## Problem Statement
+
+The Calendar tab is a placeholder. A household member can plan from a card or from Today but can't see the weeks around today, move a meal to another day, or glance at what's for dinner without opening the app.
+
+## Solution
+
+The Calendar tab is web's timeline of day cards with the "Plan recipe" accessory, drag between days and the planned-item and add-to-day sheets. Two Home Screen widgets show the current planned meal and the coming seven days from data the app hands them.
+
+## User Stories
+
+1. As a household member, I want the days around today with what's planned in each slot, opened on today, so that I see the plan at a glance.
+2. As a household member, I want to drag a planned meal to another day, so that a shifted evening is one move.
+3. As a household member, I want to tap a planned item to open its recipe, add it to groceries, change its date or slot, or remove it, so that a plan is easy to fix.
+4. As a household member, I want to plan a recipe or a note on any day from the accessory, so that planning ahead is quick.
+5. As a household member, I want a small widget showing the meal for this part of the day, so that I know what's next without opening Norish.
+6. As a household member, I want a large widget with the next seven days, so that I see the week from the Home Screen.
+
+## Implementation Decisions
+
+### Calendar tab
+
+- Web's timeline: day cards from two weeks back to two weeks ahead, growing at either edge, opened on today with a way back to it; Today ringed. The "Plan recipe" accessory opens the plan sheet (add sheet plus a day picker). CalDAV is parked.
+- A tap on a planned item opens the planned-item sheet (date, slot, go to recipe, add to groceries, remove); an add on a day opens add-to-day.
+
+### Drag
+
+- Hold and drag as in Part 4, on the shared drag list. Web's rule (`use-calendar-dnd.ts`), moved to shared-react: an item dropped on another day keeps its slot and lands last in it; the list auto-scrolls near the edges and does not grow while dragging. Changing the slot stays in the sheet.
+
+### Widgets
+
+- Two widgets with `expo-widgets`, on the setup the Live Activity ticket proved. Small: the current planned meal; large: the next seven days. No medium size, no month.
+- Small follows Today's rule (`nextMealSlot`: Breakfast before 10:00, Lunch before 14:00, then Dinner). An empty slot falls forward to the next filled slot later today, never into tomorrow; with nothing left today it shows "Nothing planned" and opens Today. A recipe shows its photo full-bleed with the slot and name and opens the recipe; a note shows its text and opens Calendar on that day.
+- Large: today and the six days after it, a row per day with its planned items by slot, today ringed. A planned recipe opens it; a note or a day's empty space opens Calendar on that day; the header opens Calendar on today.
+- **Push only.** The widgets never talk to the server: the app hands them their data whenever it runs, at launch, on foreground and on every calendar change it sees, realtime included, and writes the photos they show into the shared folder. A change made by someone else while Norish isn't running shows only after the app next runs. This is a known constraint that the docs state. A widget fetching for itself (session readable after first unlock) can come later without changing the boards.
+- Each push hands over today and the next 13 days as timeline entries at midnight and at the 10:00 and 14:00 slot changes, so the widgets roll on their own for two weeks. Beyond that, and after Sign-out, which clears their data, they show one line: "Open Norish to sign in" when signed out, "Open Norish" when the data has run out.
+
+### Offline
+
+- The tab reads from the Warm Set; plans, moves and removes go through the Outbox. The widgets show what they were last handed.
+
+## Testing Decisions
+
+- Gates per ticket. The moved drop rule keeps its unit tests; the widgets' entry builder (which meal, fall-forward, the 14-day horizon, the slot-change entries) is a pure function with unit tests.
+- Maestro flows: plan from the accessory, drag to another day, open and remove from the sheet, Calendar offline. The widgets are checked by hand on a device in light, dark, tinted and clear.
+- The docs page for the widgets states that they update when Norish runs.
+
+## Out of Scope
+
+- CalDAV on mobile, a month view, a medium widget, widgets that fetch for themselves, Android.
