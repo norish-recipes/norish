@@ -80,7 +80,9 @@
     "addedBy": "Tilføjet af {name}",
     "decreaseServings": "Færre portioner",
     "increaseServings": "Flere portioner",
-    "multiplier": "Faktor"
+    "multiplier": "Faktor",
+    "rateStars": "Giv {count} af 5",
+    "stepPhoto": "Trinbillede"
   },
   "actions": {
     "plan": "Planlæg",
@@ -108,7 +110,8 @@
     "generatingImage": "Genererer billede…",
     "cookbooks": "Kogebøger",
     "favourite": "Favorit",
-    "unfavourite": "Fjern fra favoritter"
+    "unfavourite": "Fjern fra favoritter",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "Del opskrift",
@@ -242,10 +245,13 @@
       "unmute": "Slå lyd til",
       "fullscreen": "Gå til fuld skærm",
       "exitFullscreen": "Forlad fuld skærm",
-      "progress": "Videoforløb"
+      "progress": "Videoforløb",
+      "play": "Afspil",
+      "pause": "Pause"
     },
     "recipeImage": "Opskriftsbillede",
-    "closeViewer": "Luk billedfremviser"
+    "closeViewer": "Luk billedfremviser",
+    "photoOf": "Billede {current} af {total}"
   },
   "validation": {
     "nameRequired": "Opskriftsnavn er påkrævet",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Beregnet ud fra ingredienserne, med {sources}.",
     "householdNumbers": "din husstands værdier",
     "decreasePortions": "Færre portioner",
-    "increasePortions": "Flere portioner"
+    "increasePortions": "Flere portioner",
+    "portions": "{count, plural, one {# portion} other {# portioner}}"
   },
   "measurementSystem": {
     "label": "Målesystem",

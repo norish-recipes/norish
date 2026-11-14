@@ -80,7 +80,9 @@
     "addedBy": "Aggiunto da {name}",
     "decreaseServings": "Meno porzioni",
     "increaseServings": "Più porzioni",
-    "multiplier": "Moltiplicatore"
+    "multiplier": "Moltiplicatore",
+    "rateStars": "Valuta {count} su 5",
+    "stepPhoto": "Foto del passaggio"
   },
   "actions": {
     "plan": "Pianifica",
@@ -108,7 +110,8 @@
     "generatingImage": "Generazione immagine…",
     "cookbooks": "Libri di cucina",
     "favourite": "Preferito",
-    "unfavourite": "Rimuovi dai preferiti"
+    "unfavourite": "Rimuovi dai preferiti",
+    "ai": "IA"
   },
   "sharePanel": {
     "title": "Condividi ricetta",
@@ -242,10 +245,13 @@
       "unmute": "Attiva audio",
       "fullscreen": "Schermo intero",
       "exitFullscreen": "Esci da schermo intero",
-      "progress": "Avanzamento del video"
+      "progress": "Avanzamento del video",
+      "play": "Riproduci",
+      "pause": "Pausa"
     },
     "recipeImage": "Immagine della ricetta",
-    "closeViewer": "Chiudi il visualizzatore"
+    "closeViewer": "Chiudi il visualizzatore",
+    "photoOf": "Foto {current} di {total}"
   },
   "validation": {
     "nameRequired": "Il nome della ricetta è obbligatorio",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Calcolato dagli ingredienti, con {sources}.",
     "householdNumbers": "i valori della tua famiglia",
     "decreasePortions": "Meno porzioni",
-    "increasePortions": "Più porzioni"
+    "increasePortions": "Più porzioni",
+    "portions": "{count, plural, one {# porzione} other {# porzioni}}"
   },
   "measurementSystem": {
     "label": "Sistema di misura",

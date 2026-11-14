@@ -80,7 +80,9 @@
     "addedBy": "أضافها {name}",
     "decreaseServings": "حصص أقل",
     "increaseServings": "حصص أكثر",
-    "multiplier": "المضاعف"
+    "multiplier": "المضاعف",
+    "rateStars": "قيّم {count} من 5",
+    "stepPhoto": "صورة الخطوة"
   },
   "actions": {
     "plan": "تخطيط",
@@ -108,7 +110,8 @@
     "generatingImage": "جارٍ إنشاء الصورة…",
     "cookbooks": "كتب الطبخ",
     "favourite": "المفضلة",
-    "unfavourite": "إزالة من المفضلة"
+    "unfavourite": "إزالة من المفضلة",
+    "ai": "الذكاء الاصطناعي"
   },
   "sharePanel": {
     "title": "مشاركة الوصفة",
@@ -242,10 +245,13 @@
       "unmute": "تشغيل الصوت",
       "fullscreen": "ملء الشاشة",
       "exitFullscreen": "الخروج من ملء الشاشة",
-      "progress": "تقدم الفيديو"
+      "progress": "تقدم الفيديو",
+      "play": "تشغيل",
+      "pause": "إيقاف مؤقت"
     },
     "recipeImage": "صورة الوصفة",
-    "closeViewer": "إغلاق عارض الصور"
+    "closeViewer": "إغلاق عارض الصور",
+    "photoOf": "الصورة {current} من {total}"
   },
   "validation": {
     "nameRequired": "اسم الوصفة مطلوب",
@@ -274,7 +280,8 @@
     "workedOutFrom": "محسوبة من المكوّنات، باستخدام {sources}.",
     "householdNumbers": "أرقام منزلك",
     "decreasePortions": "حصص أقل",
-    "increasePortions": "حصص أكثر"
+    "increasePortions": "حصص أكثر",
+    "portions": "{count, plural, one {# حصة} two {# حصتان} few {# حصص} many {# حصة} other {# حصة}}"
   },
   "measurementSystem": {
     "label": "نظام القياس",

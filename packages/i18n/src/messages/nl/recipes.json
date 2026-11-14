@@ -80,7 +80,9 @@
     "addedBy": "Toegevoegd door {name}",
     "decreaseServings": "Minder porties",
     "increaseServings": "Meer porties",
-    "multiplier": "Factor"
+    "multiplier": "Factor",
+    "rateStars": "Geef {count} van de 5",
+    "stepPhoto": "Stapfoto"
   },
   "actions": {
     "plan": "Plannen",
@@ -108,7 +110,8 @@
     "generatingImage": "Afbeelding genereren…",
     "cookbooks": "Kookboeken",
     "favourite": "Favoriet",
-    "unfavourite": "Favoriet verwijderen"
+    "unfavourite": "Favoriet verwijderen",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "Recept delen",
@@ -242,10 +245,13 @@
       "unmute": "Geluid aan",
       "fullscreen": "Volledig scherm",
       "exitFullscreen": "Volledig scherm sluiten",
-      "progress": "Videovoortgang"
+      "progress": "Videovoortgang",
+      "play": "Afspelen",
+      "pause": "Pauzeren"
     },
     "recipeImage": "Receptafbeelding",
-    "closeViewer": "Afbeeldingsweergave sluiten"
+    "closeViewer": "Afbeeldingsweergave sluiten",
+    "photoOf": "Foto {current} van {total}"
   },
   "validation": {
     "nameRequired": "Receptnaam is verplicht",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Berekend uit de ingrediënten, met {sources}.",
     "householdNumbers": "de waarden van je huishouden",
     "decreasePortions": "Minder porties",
-    "increasePortions": "Meer porties"
+    "increasePortions": "Meer porties",
+    "portions": "{count, plural, one {# portie} other {# porties}}"
   },
   "measurementSystem": {
     "label": "Meetsysteem",

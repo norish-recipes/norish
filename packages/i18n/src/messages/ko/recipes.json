@@ -80,7 +80,9 @@
     "addedBy": "{name} 님이 추가함",
     "decreaseServings": "인분 줄이기",
     "increaseServings": "인분 늘리기",
-    "multiplier": "배율"
+    "multiplier": "배율",
+    "rateStars": "5점 중 {count}점 주기",
+    "stepPhoto": "단계 사진"
   },
   "actions": {
     "plan": "계획",
@@ -108,7 +110,8 @@
     "generatingImage": "이미지 생성 중…",
     "cookbooks": "요리책",
     "favourite": "즐겨찾기",
-    "unfavourite": "즐겨찾기 해제"
+    "unfavourite": "즐겨찾기 해제",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -242,10 +245,13 @@
       "unmute": "음소거 해제",
       "fullscreen": "전체 화면으로 전환",
       "exitFullscreen": "전체 화면 종료",
-      "progress": "동영상 진행률"
+      "progress": "동영상 진행률",
+      "play": "재생",
+      "pause": "일시정지"
     },
     "recipeImage": "레시피 이미지",
-    "closeViewer": "이미지 뷰어 닫기"
+    "closeViewer": "이미지 뷰어 닫기",
+    "photoOf": "사진 {current}/{total}"
   },
   "validation": {
     "nameRequired": "레시피 이름은 필수 항목입니다.",
@@ -274,7 +280,8 @@
     "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
     "householdNumbers": "우리 가구의 값",
     "decreasePortions": "인분 줄이기",
-    "increasePortions": "인분 늘리기"
+    "increasePortions": "인분 늘리기",
+    "portions": "{count, plural, other {#인분}}"
   },
   "measurementSystem": {
     "label": "측정 시스템",

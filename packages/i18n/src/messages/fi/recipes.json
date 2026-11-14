@@ -80,7 +80,9 @@
     "addedBy": "Lisännyt {name}",
     "decreaseServings": "Vähemmän annoksia",
     "increaseServings": "Enemmän annoksia",
-    "multiplier": "Kerroin"
+    "multiplier": "Kerroin",
+    "rateStars": "Anna {count}/5",
+    "stepPhoto": "Vaiheen kuva"
   },
   "actions": {
     "plan": "Suunnittele",
@@ -108,7 +110,8 @@
     "generatingImage": "Luodaan kuvaa…",
     "cookbooks": "Keittokirjat",
     "favourite": "Suosikki",
-    "unfavourite": "Poista suosikeista"
+    "unfavourite": "Poista suosikeista",
+    "ai": "Tekoäly"
   },
   "sharePanel": {
     "title": "Jaa resepti",
@@ -242,10 +245,13 @@
       "unmute": "Poista mykistys",
       "fullscreen": "Siirry koko näyttöön",
       "exitFullscreen": "Poistu koko näytöstä",
-      "progress": "Videon edistyminen"
+      "progress": "Videon edistyminen",
+      "play": "Toista",
+      "pause": "Tauko"
     },
     "recipeImage": "Reseptin kuva",
-    "closeViewer": "Sulje kuvanäkymä"
+    "closeViewer": "Sulje kuvanäkymä",
+    "photoOf": "Kuva {current}/{total}"
   },
   "validation": {
     "nameRequired": "Reseptin nimi on pakollinen",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
     "householdNumbers": "kotitaloutesi arvot",
     "decreasePortions": "Vähemmän annoksia",
-    "increasePortions": "Enemmän annoksia"
+    "increasePortions": "Enemmän annoksia",
+    "portions": "{count, plural, one {# annos} other {# annosta}}"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",

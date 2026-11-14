@@ -80,7 +80,9 @@
     "addedBy": "Tillagt av {name}",
     "decreaseServings": "Färre portioner",
     "increaseServings": "Fler portioner",
-    "multiplier": "Faktor"
+    "multiplier": "Faktor",
+    "rateStars": "Betygsätt {count} av 5",
+    "stepPhoto": "Stegbild"
   },
   "actions": {
     "plan": "Planera",
@@ -108,7 +110,8 @@
     "generatingImage": "Skapar bild…",
     "cookbooks": "Kokböcker",
     "favourite": "Favorit",
-    "unfavourite": "Ta bort som favorit"
+    "unfavourite": "Ta bort som favorit",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "Dela recept",
@@ -242,10 +245,13 @@
       "unmute": "Slå på ljud",
       "fullscreen": "Visa helskärm",
       "exitFullscreen": "Lämna helskärm",
-      "progress": "Videoförlopp"
+      "progress": "Videoförlopp",
+      "play": "Spela upp",
+      "pause": "Pausa"
     },
     "recipeImage": "Receptbild",
-    "closeViewer": "Stäng bildvisaren"
+    "closeViewer": "Stäng bildvisaren",
+    "photoOf": "Bild {current} av {total}"
   },
   "validation": {
     "nameRequired": "Receptnamn krävs",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Beräknat utifrån ingredienserna med {sources}.",
     "householdNumbers": "ditt hushålls värden",
     "decreasePortions": "Färre portioner",
-    "increasePortions": "Fler portioner"
+    "increasePortions": "Fler portioner",
+    "portions": "{count, plural, one {# portion} other {# portioner}}"
   },
   "measurementSystem": {
     "label": "Måttsystem",

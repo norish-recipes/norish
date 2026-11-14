@@ -80,7 +80,9 @@
     "addedBy": "Автор: {name}",
     "decreaseServings": "Менше порцій",
     "increaseServings": "Більше порцій",
-    "multiplier": "Множник"
+    "multiplier": "Множник",
+    "rateStars": "Оцінити на {count} із 5",
+    "stepPhoto": "Фото кроку"
   },
   "actions": {
     "plan": "Запланувати",
@@ -108,7 +110,8 @@
     "generatingImage": "Генеруємо зображення…",
     "cookbooks": "Кулінарні книги",
     "favourite": "В обране",
-    "unfavourite": "Прибрати з обраного"
+    "unfavourite": "Прибрати з обраного",
+    "ai": "ШІ"
   },
   "sharePanel": {
     "title": "Поділитися рецептом",
@@ -242,10 +245,13 @@
       "unmute": "Увімкнути звук",
       "fullscreen": "На весь екран",
       "exitFullscreen": "Вийти з повноекранного режиму",
-      "progress": "Прогрес відео"
+      "progress": "Прогрес відео",
+      "play": "Відтворити",
+      "pause": "Пауза"
     },
     "recipeImage": "Зображення рецепта",
-    "closeViewer": "Закрити перегляд зображення"
+    "closeViewer": "Закрити перегляд зображення",
+    "photoOf": "Фото {current} із {total}"
   },
   "validation": {
     "nameRequired": "Вкажіть назву рецепта",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Розраховано за інгредієнтами; використано: {sources}.",
     "householdNumbers": "дані вашого домогосподарства",
     "decreasePortions": "Менше порцій",
-    "increasePortions": "Більше порцій"
+    "increasePortions": "Більше порцій",
+    "portions": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}"
   },
   "measurementSystem": {
     "label": "Система мір",

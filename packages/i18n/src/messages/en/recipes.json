@@ -80,7 +80,9 @@
     "addedBy": "Added by {name}",
     "decreaseServings": "Fewer servings",
     "increaseServings": "More servings",
-    "multiplier": "Multiplier"
+    "multiplier": "Multiplier",
+    "rateStars": "Rate {count} out of 5",
+    "stepPhoto": "Step photo"
   },
   "actions": {
     "plan": "Plan",
@@ -108,7 +110,8 @@
     "generatingImage": "Generating picture…",
     "cookbooks": "Cookbooks",
     "favourite": "Favourite",
-    "unfavourite": "Unfavourite"
+    "unfavourite": "Unfavourite",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -242,10 +245,13 @@
       "unmute": "Unmute",
       "fullscreen": "Enter fullscreen",
       "exitFullscreen": "Exit fullscreen",
-      "progress": "Video progress"
+      "progress": "Video progress",
+      "play": "Play",
+      "pause": "Pause"
     },
     "recipeImage": "Recipe image",
-    "closeViewer": "Close image viewer"
+    "closeViewer": "Close image viewer",
+    "photoOf": "Photo {current} of {total}"
   },
   "validation": {
     "nameRequired": "Recipe name is required",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Worked out from the ingredients, with {sources}.",
     "householdNumbers": "your household's numbers",
     "decreasePortions": "Decrease portions",
-    "increasePortions": "Increase portions"
+    "increasePortions": "Increase portions",
+    "portions": "{count, plural, one {# portion} other {# portions}}"
   },
   "measurementSystem": {
     "label": "Measurement System",

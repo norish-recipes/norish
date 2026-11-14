@@ -80,7 +80,9 @@
     "addedBy": "Добавил(а) {name}",
     "decreaseServings": "Меньше порций",
     "increaseServings": "Больше порций",
-    "multiplier": "Множитель"
+    "multiplier": "Множитель",
+    "rateStars": "Оценить на {count} из 5",
+    "stepPhoto": "Фото шага"
   },
   "actions": {
     "plan": "Запланировать",
@@ -108,7 +110,8 @@
     "generatingImage": "Генерация изображения…",
     "cookbooks": "Кулинарные книги",
     "favourite": "В избранное",
-    "unfavourite": "Убрать из избранного"
+    "unfavourite": "Убрать из избранного",
+    "ai": "ИИ"
   },
   "sharePanel": {
     "title": "Поделиться рецептом",
@@ -242,10 +245,13 @@
       "unmute": "Включить звук",
       "fullscreen": "Во весь экран",
       "exitFullscreen": "Выйти из полноэкранного режима",
-      "progress": "Прогресс видео"
+      "progress": "Прогресс видео",
+      "play": "Воспроизвести",
+      "pause": "Пауза"
     },
     "recipeImage": "Изображение рецепта",
-    "closeViewer": "Закрыть просмотр изображения"
+    "closeViewer": "Закрыть просмотр изображения",
+    "photoOf": "Фото {current} из {total}"
   },
   "validation": {
     "nameRequired": "Название рецепта обязательно",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
     "householdNumbers": "значений вашей семьи",
     "decreasePortions": "Меньше порций",
-    "increasePortions": "Больше порций"
+    "increasePortions": "Больше порций",
+    "portions": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порции}}"
   },
   "measurementSystem": {
     "label": "Система мер",

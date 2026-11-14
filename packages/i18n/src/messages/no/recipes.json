@@ -80,7 +80,9 @@
     "addedBy": "Lagt til av {name}",
     "decreaseServings": "Færre porsjoner",
     "increaseServings": "Flere porsjoner",
-    "multiplier": "Faktor"
+    "multiplier": "Faktor",
+    "rateStars": "Gi {count} av 5",
+    "stepPhoto": "Trinnbilde"
   },
   "actions": {
     "plan": "Planlegg",
@@ -108,7 +110,8 @@
     "generatingImage": "Genererer bilde…",
     "cookbooks": "Kokebøker",
     "favourite": "Favoritt",
-    "unfavourite": "Fjern fra favoritter"
+    "unfavourite": "Fjern fra favoritter",
+    "ai": "KI"
   },
   "sharePanel": {
     "title": "Del oppskrift",
@@ -242,10 +245,13 @@
       "unmute": "Slå på lyd",
       "fullscreen": "Gå til fullskjerm",
       "exitFullscreen": "Forlat fullskjerm",
-      "progress": "Videofremdrift"
+      "progress": "Videofremdrift",
+      "play": "Spill av",
+      "pause": "Pause"
     },
     "recipeImage": "Oppskriftsbilde",
-    "closeViewer": "Lukk bildevisning"
+    "closeViewer": "Lukk bildevisning",
+    "photoOf": "Bilde {current} av {total}"
   },
   "validation": {
     "nameRequired": "Oppskriftnavn er påkrevd",
@@ -274,7 +280,8 @@
     "workedOutFrom": "Beregnet fra ingrediensene, med {sources}.",
     "householdNumbers": "husstandens verdier",
     "decreasePortions": "Færre porsjoner",
-    "increasePortions": "Flere porsjoner"
+    "increasePortions": "Flere porsjoner",
+    "portions": "{count, plural, one {# porsjon} other {# porsjoner}}"
   },
   "measurementSystem": {
     "label": "Målesystem",
