@@ -41,12 +41,30 @@ describe("parseInline", () => {
     expect(parseInline("2 * 3 * 4")).toEqual([{ kind: "text", text: "2 * 3 * 4" }]);
     expect(parseInline("a _ b _ c")).toEqual([{ kind: "text", text: "a _ b _ c" }]);
   });
+
+  it("keeps parentheses inside a link's address", () => {
+    expect(parseInline("[Foo](https://en.wikipedia.org/wiki/Foo_(bar)) now")).toEqual([
+      {
+        kind: "link",
+        href: "https://en.wikipedia.org/wiki/Foo_(bar)",
+        children: [{ kind: "text", text: "Foo" }],
+      },
+      { kind: "text", text: " now" },
+    ]);
+  });
+
+  it("renders an escaped star or underscore without its backslash", () => {
+    expect(parseInline("2 \\*3\\* and \\_x\\_")).toEqual([
+      { kind: "text", text: "2 *3* and _x_" },
+    ]);
+  });
 });
 
 describe("linkTarget", () => {
   it("opens the web and recipes, and nothing else", () => {
     expect(linkTarget("https://x.y/z")).toEqual({ to: "web", url: "https://x.y/z" });
     expect(linkTarget("id:abc-1")).toEqual({ to: "recipe", id: "abc-1" });
+    expect(linkTarget("mailto:a@b.nl")).toEqual({ to: "web", url: "mailto:a@b.nl" });
     expect(linkTarget("javascript:alert(1)")).toBeNull();
     expect(linkTarget("tel:123")).toBeNull();
   });
