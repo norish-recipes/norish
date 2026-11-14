@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type { ReactNode } from "react";
+import React, { Fragment, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -23,6 +24,12 @@ type Recipe = ReturnType<typeof useLoadedPageRecipe>;
 type Step = Recipe["steps"][number];
 type Line = ReturnType<typeof usePageIngredients>[number];
 
+/** Keys a step's photos by place: the same picture can sit twice, so only its place tells them apart. */
+function byPlace<T>(items: T[], render: (item: T, index: number) => ReactNode) {
+  // eslint-disable-next-line @eslint-react/no-array-index-key
+  return items.map((item, index) => <Fragment key={index}>{render(item, index)}</Fragment>);
+}
+
 /** A step's own photos as small thumbnails; one opens the pages in full. */
 function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
   const toImage = useServerImage();
@@ -32,11 +39,8 @@ function StepPhotos({ images, label }: { images: { image: string }[]; label: str
   return (
     <>
       <View className="flex-row flex-wrap gap-2">
-        {images.map((image, index) => (
+        {byPlace(images, (image, index) => (
           <Pressable
-            // The same picture can sit twice in a step, so only its place tells them apart.
-            // eslint-disable-next-line @eslint-react/no-array-index-key
-            key={index}
             accessibilityLabel={`${label} ${index + 1}`}
             accessibilityRole="button"
             onPress={() => setOpen(index)}
@@ -62,11 +66,8 @@ function StepPhotos({ images, label }: { images: { image: string }[]; label: str
             contentOffset={{ x: (open ?? 0) * width, y: 0 }}
             showsHorizontalScrollIndicator={false}
           >
-            {images.map((image, index) => (
+            {byPlace(images, (image) => (
               <Image
-                // The same picture can sit twice in a step, so only its place tells them apart.
-                // eslint-disable-next-line @eslint-react/no-array-index-key
-                key={index}
                 resizeMode="contain"
                 source={toImage(image.image)}
                 style={{ width, height: width * 1.2 }}
