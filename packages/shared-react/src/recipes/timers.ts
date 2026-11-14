@@ -23,7 +23,7 @@ const timerStorage: StateStorage = {
 export type TimerStatus = "running" | "paused" | "completed";
 
 export type Timer = {
-  id: string; // Composite ID: recipeId-stepIndex-occurrenceIndex
+  id: string; // recipeTimerId's, or an older one no step builds now
   recipeId: string;
   recipeName?: string; // Recipe name for display when multiple recipes
   /** The cook mode step it was started from, so a notification can open there. */
@@ -34,6 +34,10 @@ export type Timer = {
   status: TimerStatus;
   lastTickAt: number | null; // Timestamp of last update to calculate drift
 };
+
+/** A step's timer: its recipe, the step counted from 0 without headings, the duration's place in it. */
+export const recipeTimerId = (recipeId: string, stepIndex: number, occurrence: number) =>
+  `${recipeId}-s${stepIndex}-${occurrence}`;
 
 interface TimerState {
   timers: Timer[];

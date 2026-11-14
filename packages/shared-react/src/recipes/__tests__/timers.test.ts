@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlatformStorage } from "../../platform";
-import { connectTimerStorage, timerAdjustStep, timerEndsAt, useTimerStore } from "../timers";
+import {
+  connectTimerStorage,
+  recipeTimerId,
+  timerAdjustStep,
+  timerEndsAt,
+  useTimerStore,
+} from "../timers";
 
 const mapStorage = (entries: Map<string, string> = new Map()): PlatformStorage => ({
   getItem: (key) => entries.get(key) ?? null,
@@ -202,6 +208,39 @@ describe("useTimerStore", () => {
 
     expect(tick().map((timer) => timer.id)).toEqual(["a"]);
     expect(tick()).toEqual([]);
+  });
+});
+
+describe("recipeTimerId", () => {
+  it("names a step's timer by recipe, step and place", () => {
+    expect(recipeTimerId("recipe-1", 2, 0)).toBe("recipe-1-s2-0");
+  });
+
+  it("loads, ticks and removes a stored timer under an id no step builds now", async () => {
+    const legacy = {
+      id: "recipe-1-s3-0",
+      recipeId: "recipe-1",
+      label: "Step 4 Timer",
+      originalDurationMs: 60_000,
+      remainingMs: 60_000,
+      status: "running",
+      lastTickAt: Date.now(),
+    };
+    const entries = new Map([
+      ["norish-timers", JSON.stringify({ state: { timers: [legacy] }, version: 0 })],
+    ]);
+
+    connectTimerStorage(mapStorage(entries));
+    await Promise.resolve();
+    vi.setSystemTime(Date.now() + 1_000);
+    useTimerStore.getState().tick();
+
+    expect(useTimerStore.getState().timers[0]).toMatchObject({
+      id: legacy.id,
+      remainingMs: 59_000,
+    });
+    useTimerStore.getState().removeTimer(legacy.id);
+    expect(useTimerStore.getState().timers).toEqual([]);
   });
 });
 

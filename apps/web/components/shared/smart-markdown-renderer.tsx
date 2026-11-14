@@ -5,6 +5,7 @@ import { TimerChip } from "@/components/timer-chip";
 import ReactMarkdown from "react-markdown";
 
 import type { TimerKeywords, TimerMatch } from "@norish/shared/lib/timer-parser";
+import { recipeTimerId } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import {
   markTimers,
@@ -60,7 +61,7 @@ export default function SmartMarkdownRenderer({
       String(index),
       {
         durationMs: match.durationSeconds * 1000,
-        id: `${timerConfig?.recipeId ?? "recipe"}-s${timerConfig?.stepIndex ?? 0}-${index}`,
+        id: recipeTimerId(timerConfig?.recipeId ?? "recipe", timerConfig?.stepIndex ?? 0, index),
         label: `Step ${(timerConfig?.stepIndex ?? 0) + 1} Timer`,
         originalText: match.originalText,
       },

@@ -14,7 +14,6 @@ type CookingModeStepLike = {
 };
 
 export type ResolvedCookingModeStep = {
-  originalIndex: number;
   stepNumber: number;
   text: string;
   heading?: string;
@@ -35,7 +34,7 @@ export function resolveCookingModeSteps(
   let pendingHeadingImages: CookingModeStepImage[] = [];
   let stepNumber = 0;
 
-  filteredSteps.forEach((step, originalIndex) => {
+  filteredSteps.forEach((step) => {
     const text = step.step.trim();
     const images = [...(step.images ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -47,7 +46,6 @@ export function resolveCookingModeSteps(
 
     stepNumber += 1;
     resolved.push({
-      originalIndex,
       stepNumber,
       text: step.step,
       heading,

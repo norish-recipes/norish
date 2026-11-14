@@ -203,8 +203,7 @@ export function CookingStepView({
         animate={{ y: wrapperY }}
         transition={prefersReducedMotion || !enableTransitions ? { duration: 0 } : PAGE_TRANSITION}
       >
-        {steps.map((step) => {
-          const i = step.originalIndex;
+        {steps.map((step, i) => {
           const isCenter = i === activeStep;
           const isPrev = i < activeStep;
           const isNext = i > activeStep;
@@ -264,7 +263,7 @@ export function CookingStepView({
                       <SmartInstruction
                         recipeId={recipe.id}
                         recipeName={recipe.name}
-                        stepIndex={step.originalIndex}
+                        stepIndex={step.stepNumber - 1}
                         text={step.text}
                       />
                     </div>

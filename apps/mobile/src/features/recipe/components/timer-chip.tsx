@@ -6,7 +6,7 @@ import { useIntl } from "react-intl";
 
 import type { TimerMatch } from "@norish/shared/lib/timer-parser";
 import { useLoadedPageRecipe } from "@norish/shared-react/recipes";
-import { useTimerStore } from "@norish/shared-react/recipes/timers";
+import { recipeTimerId, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { askTimerNotifications } from "../hooks/use-recipe-timers";
@@ -17,10 +17,6 @@ const SIZES = {
   page: { height: 28, text: "text-[15px]", icon: 15, ring: 15, stroke: 2.3 },
   cook: { height: 34, text: "text-xl", icon: 18, ring: 18, stroke: 2.6 },
 } as const;
-
-/** The id web gives a step's timer, so one started on the page is the same in cook mode. */
-export const stepTimerId = (recipeId: string, stepIndex: number, index: number) =>
-  `${recipeId}-s${stepIndex}-${index}`;
 
 /**
  * A duration in a step as a chip: tap to start, pause or resume; a finished one shows Done and taps
@@ -40,7 +36,7 @@ export function TimerChip({
   const intl = useIntl();
   const recipe = useLoadedPageRecipe();
   const tint = useTint();
-  const id = stepTimerId(recipe.id, stepIndex, index);
+  const id = recipeTimerId(recipe.id, stepIndex, index);
   const timer = useTimerStore((state) => state.timers.find((entry) => entry.id === id));
   const addTimer = useTimerStore((state) => state.addTimer);
   const startTimer = useTimerStore((state) => state.startTimer);

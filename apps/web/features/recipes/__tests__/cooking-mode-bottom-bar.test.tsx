@@ -58,7 +58,6 @@ vi.mock("next-intl", () => ({
 }));
 
 const STEPS = [0, 1, 2].map((index) => ({
-  originalIndex: index,
   stepNumber: index + 1,
   text: `Step ${index + 1}`,
   images: [],
