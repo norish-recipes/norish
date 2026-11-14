@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import React, { useState } from "react";
-import { Text } from "react-native";
+import React from "react";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Stack } from "expo-router";
+import { AccountAvatar } from "@/components/account-avatar";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import {
@@ -20,13 +20,10 @@ import { CookbooksEmpty, LibraryEmpty } from "./library-states";
 import { PendingCard } from "./pending-card";
 import { RecipeCard } from "./recipe-card";
 
-/** Scrolled this far (the title's 6 pt offset and 41 pt line, less a margin), the header shows the title. */
-const TITLE_SCROLLED_AT = 40;
-
 /**
  * The Recipes tab's scroll view: the large `title` on the avatar's band, `header` (Today) below it,
  * then the Library, whose rows are the running imports, recipes and cookbooks as one list, paged as
- * the reader scrolls. Once the title has scrolled away the native header shows it inline.
+ * the reader scrolls. The title and avatar are list content, so they scroll away with it.
  */
 export function LibraryList({
   title,
@@ -38,7 +35,6 @@ export function LibraryList({
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
-  const [titleScrolled, setTitleScrolled] = useState(false);
   const filters = useLibraryFilters((state) => state.filters);
   const { pendingRecipes, pendingRecipeIds } = usePendingRecipesQuery();
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
@@ -76,15 +72,19 @@ export function LibraryList({
       empty={filters.libraryType === "cookbooks" ? <CookbooksEmpty /> : <LibraryEmpty />}
       header={
         <>
-          <Stack.Screen options={{ title: titleScrolled ? title : "" }} />
-          <Text
-            accessibilityRole="header"
-            className="text-foreground px-5 text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
+          <View
+            className="flex-row items-center justify-between px-5"
             style={{ paddingTop: insets.top + 6 }}
-            testID="large-title"
           >
-            {title}
-          </Text>
+            <Text
+              accessibilityRole="header"
+              className="text-foreground text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
+              testID="large-title"
+            >
+              {title}
+            </Text>
+            <AccountAvatar />
+          </View>
           {header}
           <LibraryHeader />
         </>
@@ -96,7 +96,6 @@ export function LibraryList({
       rows={rows}
       testID={testID}
       onEndReached={loadMore}
-      onScroll={(offset) => setTitleScrolled(offset > TITLE_SCROLLED_AT)}
     />
   );
 }

@@ -26,7 +26,6 @@ export function CardList<Row>({
   rowKey,
   renderCard,
   onEndReached,
-  onScroll,
   testID,
 }: {
   rows: Row[];
@@ -37,7 +36,6 @@ export function CardList<Row>({
   rowKey: (row: Row) => string;
   renderCard: (row: Row) => ReactElement;
   onEndReached: () => void;
-  onScroll?: (offset: number) => void;
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
@@ -64,11 +62,9 @@ export function CardList<Row>({
 
         return isGrid ? card : <View className="px-5 pb-3">{card}</View>;
       }}
-      scrollEventThrottle={16}
       testID={testID}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.6}
-      onScroll={onScroll ? ({ nativeEvent }) => onScroll(nativeEvent.contentOffset.y) : undefined}
     />
   );
 }

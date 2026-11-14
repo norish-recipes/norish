@@ -35,7 +35,6 @@ export function LibraryCards<Row>({
   rowKey,
   renderCard,
   onEndReached,
-  onScroll,
   testID,
 }: {
   rows: Row[];
@@ -48,7 +47,6 @@ export function LibraryCards<Row>({
   rowKey: (row: Row) => string;
   renderCard: (row: Row, context: CardContext) => ReactElement;
   onEndReached: () => void;
-  onScroll?: (offset: number) => void;
   testID?: string;
 }) {
   const [variant] = useDevicePreference("recipeViewMode");
@@ -76,7 +74,6 @@ export function LibraryCards<Row>({
       testID={testID}
       variant={variant}
       onEndReached={onEndReached}
-      onScroll={onScroll}
     />
   );
 }

@@ -1,5 +1,4 @@
 import React from "react";
-import { AccountAvatar } from "@/components/account-avatar";
 import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { Stack } from "expo-router";
 
@@ -18,7 +17,7 @@ const SHEETS = [
 
 const FIT_SHEETS = ["cookbook-rename", "new-cookbook"] as const;
 
-/** The Recipes tab's stack: a transparent native header with the account avatar pinned right; the screen draws its own large title. */
+/** The Recipes tab's stack: the list screen draws its own title and avatar and has no native header; a cookbook page keeps a transparent one for its back button. */
 export function RecipesStack() {
   return (
     <LibraryRoot>
@@ -28,9 +27,9 @@ export function RecipesStack() {
             headerTransparent: true,
             headerShadowVisible: false,
             headerTitleStyle: { fontSize: 17, fontWeight: "600" },
-            unstable_headerRightItems: () => [{ type: "custom", element: <AccountAvatar /> }],
           }}
         >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           {/* A cookbook opens inside this stack so its sheets present over it. */}
           <Stack.Screen
             name="cookbook/[id]"
