@@ -26,9 +26,8 @@ type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "determ
 export type ReplayOutcome = { kind: "success" } | { kind: "conflict" | ReplayFailureClass };
 
 /**
- * Classify an error thrown while replaying a mutation. Order matters: a network
- * failure (no HTTP status) is unreachable; a 401 halts the queue; a 5xx, 408 or
- * 429 is a transient to retry; anything else re-fails forever.
+ * Classify a replay's error, in order: no HTTP status is unreachable, a 401 halts the queue,
+ * a 5xx, 408 or 429 is retried, anything else re-fails forever.
  */
 export function classifyReplayError(error: unknown): ReplayFailureClass {
   if (isBackendUnreachableError(error)) {
