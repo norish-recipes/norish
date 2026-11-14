@@ -25,7 +25,8 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
   }
 
   /// Health first, AI for images, then the import; no HTTP answer at any step means saved for later.
-  func send(_ item: SharedItem) async -> ShareOutcome {
+  /// `operationId` goes in `x-operation-id`, so a timed-out import the drain sends again runs once.
+  func send(_ item: SharedItem, operationId: String) async -> ShareOutcome {
     switch await health() {
     case .some(let outcome): return outcome
     case .none: break
@@ -41,11 +42,14 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
     let reply: Reply?
     switch item {
     case .link(let url):
-      reply = await request("POST", "/api/trpc/recipes.importFromUrl", json: ["json": ["url": url.absoluteString]])
+      reply = await request(
+        "POST", "/api/trpc/recipes.importFromUrl", json: ["json": ["url": url.absoluteString]],
+        operationId: operationId)
     case .text(let text):
-      reply = await request("POST", "/api/trpc/recipes.importFromPaste", json: ["json": ["text": text]])
+      reply = await request(
+        "POST", "/api/trpc/recipes.importFromPaste", json: ["json": ["text": text]], operationId: operationId)
     case .images(let images):
-      reply = await request("POST", "/api/trpc/recipes.importFromImages", images: images)
+      reply = await request("POST", "/api/trpc/recipes.importFromImages", images: images, operationId: operationId)
     }
 
     guard let reply else { return .saved }
@@ -97,13 +101,15 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
 
   /// Nil when no HTTP answer came back.
   private func request(
-    _ method: String, _ path: String, withCookie: Bool = true, json: Any? = nil, images: [Data]? = nil
+    _ method: String, _ path: String, withCookie: Bool = true, json: Any? = nil, images: [Data]? = nil,
+    operationId: String? = nil
   ) async -> Reply? {
     guard let url = URL(string: session.address + path) else { return nil }
     var request = URLRequest(url: url)
     request.httpMethod = method
     request.setValue("application/json", forHTTPHeaderField: "Accept")
     if withCookie { request.setValue(session.cookie, forHTTPHeaderField: "Cookie") }
+    if let operationId { request.setValue(operationId, forHTTPHeaderField: "x-operation-id") }
     if let json {
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
       request.httpBody = try? JSONSerialization.data(withJSONObject: json)

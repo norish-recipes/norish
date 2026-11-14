@@ -39,16 +39,19 @@ export type ShareInbox = {
   remove: (id: string) => void;
 };
 
-/** The shared imports the Add recipe sheets use; each tells how it ended. */
+/** How the drain runs one import: told how it ended, under the share's id as its operation id. */
+export type ShareImportOptions = { onSettled: ImportSettled; operationId: string };
+
+/** The shared imports the Add recipe sheets use. */
 export type ShareImports = {
-  url: (url: string, onSettled: ImportSettled) => void;
-  text: (text: string, onSettled: ImportSettled) => void;
-  images: (files: Blob[], onSettled: ImportSettled) => void;
+  url: (url: string, options: ShareImportOptions) => void;
+  text: (text: string, options: ShareImportOptions) => void;
+  images: (files: Blob[], options: ShareImportOptions) => void;
 };
 
 type SavedShare = z.infer<typeof savedShareSchema>;
 type SavedShareOf = { [Share in SavedShare as Share["kind"]]: Share };
-type Start = (onSettled: ImportSettled) => void;
+type Start = (options: ShareImportOptions) => void;
 
 /** Each kind's import over its saved item; null when a saved image is gone. */
 const IMPORTS: {
@@ -58,12 +61,12 @@ const IMPORTS: {
     imports: ShareImports
   ) => Start | null;
 } = {
-  url: (item, _inbox, imports) => (done) => imports.url(item.url, done),
-  text: (item, _inbox, imports) => (done) => imports.text(item.text, done),
+  url: (item, _inbox, imports) => (options) => imports.url(item.url, options),
+  text: (item, _inbox, imports) => (options) => imports.text(item.text, options),
   images: (item, inbox, imports) => {
     const files = item.images.map(inbox.image).filter((file) => file !== null);
 
-    return files.length === item.images.length ? (done) => imports.images(files, done) : null;
+    return files.length === item.images.length ? (options) => imports.images(files, options) : null;
   },
 };
 
@@ -76,8 +79,12 @@ function startOf<Kind extends keyof SavedShareOf>(
   return IMPORTS[kind](item, inbox, imports);
 }
 
-/** Starts an import and resolves with how it ended: null once the server took it, else the error. */
-const outcomeOf = (start: Start) => new Promise<unknown>((resolve) => start(resolve));
+/**
+ * Starts an import and resolves with how it ended: null once the server took it, else the error.
+ * The share's id is the one the extension sent, so a repeat after a kill or a timeout runs once.
+ */
+const outcomeOf = (start: Start, id: string) =>
+  new Promise<unknown>((resolve) => start({ onSettled: resolve, operationId: id }));
 
 /** Why the item cannot be imported here, or how its import ended. */
 type ItemOutcome = "corrupt" | "elsewhere" | { error: unknown };
@@ -103,7 +110,7 @@ async function importItem(
   if (item.data.serverAddress !== serverAddress) return "elsewhere";
   const start = startOf(item.data.kind, item.data, inbox, imports);
 
-  return start ? { error: await outcomeOf(start) } : "corrupt";
+  return start ? { error: await outcomeOf(start, id) } : "corrupt";
 }
 
 /** What the drain does next with an item: done with it, drop it, keep it, or stop with the rest waiting. */

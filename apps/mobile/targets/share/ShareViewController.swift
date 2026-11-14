@@ -44,11 +44,13 @@ final class ShareViewController: UIViewController {
     model.preview = await Self.preview(of: item, in: items)
 
     guard let session = SharedSession.read() else { return end(.signedOut) }
-    let outcome = await ImportClient(session: session).send(item)
+    // One id per share: the import's operation id and the saved item's, so the server runs it once.
+    let shareId = UUID().uuidString.lowercased()
+    let outcome = await ImportClient(session: session).send(item, operationId: shareId)
     guard outcome == .saved else { return end(outcome) }
 
     do {
-      try ShareInbox.save(item, for: session)
+      try ShareInbox.save(item, id: shareId, for: session)
       end(.saved)
     } catch {
       end(.failed)

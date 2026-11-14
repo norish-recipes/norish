@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { useTRPC } from "../trpc";
+import { useTRPC, useTRPCClient } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { OPTIMISTIC_PENDING_RECIPE_PREFIX, useRecipesCacheHelpers } from "./use-recipes-cache";
 
@@ -16,14 +16,23 @@ type ImportMutationContext = {
 /** Told how one import ended: null once the server took it, else the error (a Queued one included). */
 export type ImportSettled = (error: unknown) => void;
 
+export type ImportOptions = {
+  onSettled?: ImportSettled;
+  /** Sent as the mutation's operation id, so the server runs a repeat of it once (ADR-0002). */
+  operationId?: string;
+};
+
 type ImportMutationsResult = {
-  importRecipe: (url: string, onSettled?: ImportSettled) => void;
+  importRecipe: (url: string, options?: ImportOptions) => void;
   importRecipeWithAI: (url: string) => void;
   /** Browser `File`s or expo-file-system `File`s, which are Blobs too. */
-  importRecipeFromImages: (files: Blob[], onSettled?: ImportSettled) => void;
-  importRecipeFromPaste: (text: string, onSettled?: ImportSettled) => void;
+  importRecipeFromImages: (files: Blob[], options?: ImportOptions) => void;
+  importRecipeFromPaste: (text: string, options?: ImportOptions) => void;
   importRecipeFromPasteWithAI: (text: string) => void;
 };
+
+/** One import's input and the operation id its caller already chose, if any. */
+type ImportCall<Input> = { input: Input; operationId?: string };
 
 /** Runs a mutation and reports its end; rollback and toasts stay in `useMutation`'s own options. */
 function settle(run: Promise<unknown>, onSettled?: ImportSettled): void {
@@ -32,6 +41,10 @@ function settle(run: Promise<unknown>, onSettled?: ImportSettled): void {
     (error: unknown) => onSettled?.(error)
   );
 }
+
+// The operation-id link keeps an id already in the context, and the Outbox stores it for Replay.
+const withOperationId = (operationId: string | undefined) =>
+  operationId ? { context: { operationId } } : undefined;
 
 /** Told the id of a recipe the household already holds: not an error, so an app can offer it. */
 type RecipeAlreadyExistsHandler = (recipeId: string) => void;
@@ -46,6 +59,7 @@ export function useImportMutations(
   onRecipeAlreadyExists?: RecipeAlreadyExistsHandler
 ): ImportMutationsResult {
   const trpc = useTRPC();
+  const client = useTRPCClient();
   const { addPendingRecipe, replacePendingRecipe, removePendingRecipe, invalidate } =
     useRecipesCacheHelpers();
 
@@ -83,78 +97,90 @@ export function useImportMutations(
     });
   };
 
-  const { mutateAsync: mutateImport } = useMutation(
-    trpc.recipes.importFromUrl.mutationOptions({
-      onMutate: addPlaceholder,
-      onSuccess: ({ recipeId, status }, _variables, context) => {
-        // Nothing was queued, so there is no pending recipe to stand in for:
-        // drop the placeholder and hand the id to whoever can offer it.
-        if (status === "exists") {
-          dropPlaceholder(context);
-          onRecipeAlreadyExists?.(recipeId);
+  type UrlInput = Parameters<typeof client.recipes.importFromUrl.mutate>[0];
+  type PasteInput = Parameters<typeof client.recipes.importFromPaste.mutate>[0];
 
-          return;
-        }
+  const { mutateAsync: mutateImport } = useMutation({
+    mutationKey: trpc.recipes.importFromUrl.mutationKey(),
+    mutationFn: ({ input, operationId }: ImportCall<UrlInput>) =>
+      client.recipes.importFromUrl.mutate(input, withOperationId(operationId)),
+    onMutate: addPlaceholder,
+    onSuccess: ({ recipeId, status }, _variables, context) => {
+      // Nothing was queued, so there is no pending recipe to stand in for:
+      // drop the placeholder and hand the id to whoever can offer it.
+      if (status === "exists") {
+        dropPlaceholder(context);
+        onRecipeAlreadyExists?.(recipeId);
 
-        showImported(recipeId, context);
-      },
-      onError: (error, variables, context) => {
-        handleImportError(
-          error,
-          variables.forceAI ? "importFromUrlWithAI" : "importFromUrl",
-          context
-        );
-      },
-    })
-  );
-  const { mutateAsync: mutateImageImport } = useMutation(
-    trpc.recipes.importFromImages.mutationOptions({
-      onMutate: addPlaceholder,
-      onSuccess: (recipeId, _variables, context) => {
-        showImported(recipeId, context);
-      },
-      onError: (error, _variables, context) => {
-        handleImportError(error, "importFromImages", context);
-      },
-    })
-  );
-  const { mutateAsync: mutatePasteImport } = useMutation(
-    trpc.recipes.importFromPaste.mutationOptions({
-      onMutate: addPlaceholder,
-      onSuccess: (result, _variables, context) => {
-        const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
+        return;
+      }
 
-        if (!firstRecipeId) {
-          dropPlaceholder(context);
-          invalidate();
+      showImported(recipeId, context);
+    },
+    onError: (error, { input }, context) => {
+      handleImportError(error, input.forceAI ? "importFromUrlWithAI" : "importFromUrl", context);
+    },
+  });
+  const { mutateAsync: mutateImageImport } = useMutation({
+    mutationKey: trpc.recipes.importFromImages.mutationKey(),
+    mutationFn: ({ input, operationId }: ImportCall<FormData>) =>
+      client.recipes.importFromImages.mutate(input, withOperationId(operationId)),
+    onMutate: addPlaceholder,
+    onSuccess: (recipeId, _variables, context) => {
+      showImported(recipeId, context);
+    },
+    onError: (error, _call, context) => {
+      handleImportError(error, "importFromImages", context);
+    },
+  });
+  const { mutateAsync: mutatePasteImport } = useMutation({
+    mutationKey: trpc.recipes.importFromPaste.mutationKey(),
+    mutationFn: ({ input, operationId }: ImportCall<PasteInput>) =>
+      client.recipes.importFromPaste.mutate(input, withOperationId(operationId)),
+    onMutate: addPlaceholder,
+    onSuccess: (result, _variables, context) => {
+      const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
 
-          return;
-        }
+      if (!firstRecipeId) {
+        dropPlaceholder(context);
+        invalidate();
 
-        showImported(firstRecipeId, context);
-        remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
-      },
-      onError: (error, variables, context) => {
-        handleImportError(
-          error,
-          variables.forceAI ? "importFromPasteWithAI" : "importFromPaste",
-          context
-        );
-      },
-    })
-  );
+        return;
+      }
+
+      showImported(firstRecipeId, context);
+      remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
+    },
+    onError: (error, { input }, context) => {
+      handleImportError(
+        error,
+        input.forceAI ? "importFromPasteWithAI" : "importFromPaste",
+        context
+      );
+    },
+  });
 
   return {
-    importRecipe: (url, onSettled) => settle(mutateImport({ url }), onSettled),
-    importRecipeWithAI: (url) => settle(mutateImport({ url, forceAI: true })),
-    importRecipeFromImages: (files, onSettled) =>
+    importRecipe: (url, options) =>
       settle(
-        mutateImageImport(
-          uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file])))
-        ),
-        onSettled
+        mutateImport({ input: { url }, operationId: options?.operationId }),
+        options?.onSettled
       ),
-    importRecipeFromPaste: (text, onSettled) => settle(mutatePasteImport({ text }), onSettled),
-    importRecipeFromPasteWithAI: (text) => settle(mutatePasteImport({ text, forceAI: true })),
+    importRecipeWithAI: (url) => settle(mutateImport({ input: { url, forceAI: true } })),
+    importRecipeFromImages: (files, options) =>
+      settle(
+        mutateImageImport({
+          input: uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file]))),
+          operationId: options?.operationId,
+        }),
+        options?.onSettled
+      ),
+    importRecipeFromPaste: (text, options) =>
+      settle(
+        mutatePasteImport({ input: { text }, operationId: options?.operationId }),
+        options?.onSettled
+      ),
+    importRecipeFromPasteWithAI: (text) =>
+      settle(mutatePasteImport({ input: { text, forceAI: true } })),
   };
 }

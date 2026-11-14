@@ -17,19 +17,26 @@ vi.mock("../../trpc", () => {
   const key =
     (...path: string[]) =>
     (input?: unknown) => [path, ...(input === undefined ? [] : [{ input }])];
-  const procedure = (mutationFn: (input: unknown) => unknown) => ({
-    mutationOptions: (options?: object) => ({ ...options, mutationFn }),
-  });
+  const procedure = (name: string) => ({ mutationKey: () => [["recipes", name]] });
+  // The client's `mutate(input, options)`, as the import mutations call it.
+  const client = (send: (input: unknown, options?: unknown) => unknown) => ({ mutate: send });
 
   return {
+    useTRPCClient: () => ({
+      recipes: {
+        importFromUrl: client(server.importFromUrl),
+        importFromImages: client(server.importFromImages),
+        importFromPaste: client(server.importFromPaste),
+      },
+    }),
     useTRPC: () => ({
       recipes: {
         list: { queryKey: key("recipes", "list"), pathKey: key("recipes", "list") },
         get: { queryKey: key("recipes", "get") },
         getPending: { queryKey: key("recipes", "getPending") },
-        importFromUrl: procedure(server.importFromUrl),
-        importFromImages: procedure(server.importFromImages),
-        importFromPaste: procedure(server.importFromPaste),
+        importFromUrl: procedure("importFromUrl"),
+        importFromImages: procedure("importFromImages"),
+        importFromPaste: procedure("importFromPaste"),
       },
       library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
       cookbooks: { recipes: { pathKey: key("cookbooks", "recipes") } },
@@ -104,15 +111,43 @@ describe("useImportMutations", () => {
     server.importFromImages.mockResolvedValue("recipe-pages");
     const result = render();
 
-    act(() => result.current.importRecipe("https://example.com/pasta", reports));
-    act(() => result.current.importRecipeFromPaste("Soup", reports));
-    act(() => result.current.importRecipeFromImages([new Blob(["jpeg"])], reports));
+    act(() => result.current.importRecipe("https://example.com/pasta", { onSettled: reports }));
+    act(() => result.current.importRecipeFromPaste("Soup", { onSettled: reports }));
+    act(() => result.current.importRecipeFromImages([new Blob(["jpeg"])], { onSettled: reports }));
     await settled();
 
     await vi.waitFor(() => expect(reports).toHaveBeenCalledTimes(3));
     expect(reports.mock.calls.map(([error]: unknown[]) => error)).toEqual(
       expect.arrayContaining([null, null, queued])
     );
+  });
+
+  it("sends a caller's operation id in the mutation's context, and none otherwise", async () => {
+    server.importFromUrl.mockResolvedValue({ recipeId: "recipe-new", status: "queued" });
+    server.importFromPaste.mockResolvedValue({ recipeIds: ["recipe-1"] });
+    server.importFromImages.mockResolvedValue("recipe-pages");
+    const result = render();
+
+    act(() => result.current.importRecipe("https://example.com/a", { operationId: "share-1" }));
+    act(() => result.current.importRecipeFromPaste("Soup", { operationId: "share-2" }));
+    act(() => result.current.importRecipeFromImages([new Blob(["a"])], { operationId: "share-3" }));
+    act(() => result.current.importRecipe("https://example.com/b"));
+    await settled();
+
+    expect(server.importFromUrl.mock.calls[0]).toEqual([
+      { url: "https://example.com/a" },
+      { context: { operationId: "share-1" } },
+    ]);
+    expect(server.importFromPaste.mock.calls[0]![1]).toEqual({
+      context: { operationId: "share-2" },
+    });
+    expect(server.importFromImages.mock.calls[0]![1]).toEqual({
+      context: { operationId: "share-3" },
+    });
+    expect(server.importFromUrl.mock.calls[1]).toEqual([
+      { url: "https://example.com/b" },
+      undefined,
+    ]);
   });
 
   it("drops the placeholder and tells the caller when an import fails", async () => {

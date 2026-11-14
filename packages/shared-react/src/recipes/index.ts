@@ -33,7 +33,7 @@ export { useRatingQuery } from "./use-rating-query";
 export { useRatingsMutation } from "./use-ratings-mutation";
 export { useRatingsSubscription } from "./use-ratings-subscription";
 export { useRecipeAutocomplete } from "./use-recipe-autocomplete";
-export type { ImportSettled } from "./use-import-mutations";
+export type { ImportOptions, ImportSettled } from "./use-import-mutations";
 export { useImportMutations } from "./use-import-mutations";
 export { isPasteTooLong, useImportRecipe } from "./use-import-recipe";
 export { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";

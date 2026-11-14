@@ -2,7 +2,7 @@
 
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
-import type { ImportSettled } from "./use-import-mutations";
+import type { ImportOptions } from "./use-import-mutations";
 import { usePlatform } from "../platform/platform";
 import { useImportMutations } from "./use-import-mutations";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
@@ -36,10 +36,10 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
     <T>(
       titleId: string,
       descriptionId: string,
-      run: (input: T, onSettled?: ImportSettled) => void
+      run: (input: T, options?: ImportOptions) => void
     ) =>
-    (input: T, onSettled?: ImportSettled) => {
-      run(input, onSettled);
+    (input: T, options?: ImportOptions) => {
+      run(input, options);
       toast.show({
         severity: "default",
         title: toast.translate(titleId),

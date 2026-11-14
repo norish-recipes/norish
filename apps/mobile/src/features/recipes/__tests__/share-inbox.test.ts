@@ -1,4 +1,8 @@
-import type { ShareImports, ShareInbox } from "@/features/recipes/utils/share-inbox";
+import type {
+  ShareImportOptions,
+  ShareImports,
+  ShareInbox,
+} from "@/features/recipes/utils/share-inbox";
 import { drainShareInbox } from "@/features/recipes/utils/share-inbox";
 import { describe, expect, it, vi } from "vitest";
 
@@ -33,18 +37,20 @@ function fakeInbox(items: Record<string, object | string>, images: Record<string
   return { inbox, json, images };
 }
 
-/** Imports that settle as `answer` says, recording what they were given. */
+/** Imports that settle as `answer` says, recording what they were given and the operation ids. */
 function fakeImports(answer: (kind: string) => unknown = () => null) {
   const calls: [string, unknown][] = [];
+  const operationIds: unknown[] = [];
   const run =
     (kind: string) =>
-    (input: unknown, onSettled: ImportSettled): void => {
+    (input: unknown, { onSettled, operationId }: ShareImportOptions): void => {
       calls.push([kind, input]);
+      operationIds.push(operationId);
       queueMicrotask(() => onSettled(answer(kind)));
     };
   const imports: ShareImports = { url: run("url"), text: run("text"), images: run("images") };
 
-  return { imports, calls };
+  return { imports, calls, operationIds };
 }
 
 describe("drainShareInbox", () => {
@@ -75,7 +81,7 @@ describe("drainShareInbox", () => {
     const { inbox, json } = fakeInbox({ a: { kind: "url", url: "https://example.com/pasta" } });
     const pending: { settle?: ImportSettled } = {};
     const imports: ShareImports = {
-      url: (_url, onSettled) => {
+      url: (_url, { onSettled }) => {
         pending.settle = onSettled;
       },
       text: vi.fn(),
@@ -129,7 +135,7 @@ describe("drainShareInbox", () => {
         ? { data: { code: "NOT_FOUND", httpStatus: 404 } }
         : { data: { code: "ERROR", httpStatus: Number(input) } };
     const calls: unknown[] = [];
-    const run = (input: unknown, onSettled: ImportSettled) => {
+    const run = (input: unknown, { onSettled }: ShareImportOptions) => {
       calls.push(input);
       queueMicrotask(() => onSettled(answer(input)));
     };
@@ -169,6 +175,23 @@ describe("drainShareInbox", () => {
     await drainShareInbox(inbox, SERVER, fakeImports(lost).imports);
 
     expect(json.has("a")).toBe(true);
+  });
+
+  it("imports each item under its own id as the operation id, the same id again after a kill", async () => {
+    const { inbox } = fakeInbox({
+      "share-1": { kind: "url", url: "https://example.com/a" },
+      "share-2": { kind: "text", text: "Soup" },
+    });
+    const { imports, operationIds } = fakeImports();
+    // Killed after the server took the import, before the item left the inbox.
+    const remove = inbox.remove;
+
+    inbox.remove = () => undefined;
+    await drainShareInbox(inbox, SERVER, imports);
+    inbox.remove = remove;
+    await drainShareInbox(inbox, SERVER, imports);
+
+    expect(operationIds).toEqual(["share-1", "share-2", "share-1", "share-2"]);
   });
 
   it("imports an item once when the drain runs twice", async () => {
