@@ -73,7 +73,8 @@
       ],
       "@bacons/apple-targets",
       "./plugins/with-share-strings",
-      "./plugins/with-share-limits"
+      "./plugins/with-share-limits",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
