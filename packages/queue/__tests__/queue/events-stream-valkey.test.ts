@@ -7,12 +7,11 @@
  * default) at a time, so "at the cap" means within one node of it.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Queue } from "bullmq";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 
-import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { QUEUE_NAMES } from "../../src/queue-names";
 import { closeAllQueues, EVENTS_MAX_LEN, getQueues, initializeQueues } from "../../src/registry";
 import { closeBullConnection, getBullConnectionOptions } from "../../src/valkey/bullmq";
@@ -35,7 +34,7 @@ let container: StartedValkeyContainer;
 let valkey: Valkey;
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   config.url = valkeyUrl(container);
   valkey = new Valkey(getBullConnectionOptions(config.url));
 });

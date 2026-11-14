@@ -6,13 +6,12 @@
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import type { Job } from "bullmq";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Queue } from "bullmq";
 import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 
 import type { CaldavSyncJobData } from "@norish/queue/contracts/job-types";
 
-import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { addCaldavSyncJob, isCaldavSyncPending } from "../../src/caldav-sync/producer";
 import { closeWorkers, createWorker } from "../../src/create-worker";
 import { QUEUE_NAMES } from "../../src/queue-names";
@@ -37,7 +36,7 @@ let hold: { itemId: string; started: () => void; released: Promise<void> } | nul
 let release = () => {};
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   config.url = valkeyUrl(container);
   queue = new Queue(QUEUE_NAMES.CALDAV_SYNC, { connection: getBullClient() });
 });

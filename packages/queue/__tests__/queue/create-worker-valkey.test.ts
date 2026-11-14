@@ -5,7 +5,6 @@
  * test watches what becomes of it.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Queue } from "bullmq";
 import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 
@@ -15,7 +14,7 @@ import {
   runWithOperationContext,
 } from "@norish/shared-server/lib/operation-context";
 
-import { freezableProxy, VALKEY_IMAGE } from "../../../shared-server/__tests__/helpers/valkey";
+import { freezableProxy, startValkey } from "../../../shared-server/__tests__/helpers/valkey";
 import {
   cancelRunningJob,
   closeWorkers,
@@ -56,7 +55,7 @@ let proxy: ReturnType<typeof freezableProxy>;
 let queue: Queue;
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   proxy = freezableProxy({ host: container.getHost(), port: container.getPort() });
   config.url = await proxy.listen();
   queue = new Queue(QUEUE, { connection: getBullClient() });

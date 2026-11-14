@@ -7,12 +7,11 @@
  * front of Valkey that drops every connection and refuses new ones.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 
 import { closeValkeyConnections, getPublisherClient } from "../../src/valkey/client";
-import { freezableProxy, VALKEY_IMAGE } from "../helpers/valkey";
+import { freezableProxy, startValkey } from "../helpers/valkey";
 
 const config = vi.hoisted(() => ({ url: "" }));
 
@@ -28,7 +27,7 @@ let container: StartedValkeyContainer;
 let proxy: ReturnType<typeof freezableProxy>;
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   proxy = freezableProxy({ host: container.getHost(), port: container.getPort() });
   config.url = await proxy.listen();
 });
