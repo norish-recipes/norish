@@ -49,7 +49,7 @@ export function seeder({ trpc, query }) {
 
       const { cookbooks } = await query("cookbooks.list", { limit: 200, cursor: 0 });
 
-      for (const { id, version } of cookbooks) await trpc("cookbooks.delete", { id, version });
+      for (const { id, version } of cookbooks) await trpc("cookbooks.remove", { id, version });
 
       const { groceries } = await query("groceries.list");
 
