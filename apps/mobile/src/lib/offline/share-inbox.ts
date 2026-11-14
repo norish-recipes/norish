@@ -49,33 +49,21 @@ export type ShareImports = {
 };
 
 type SavedShare = z.infer<typeof savedShareSchema>;
-type SavedShareOf = { [Share in SavedShare as Share["kind"]]: Share };
 type Start = (options: ShareImportOptions) => void;
 
-/** Each kind's import over its saved item; null when a saved image is gone. */
-const IMPORTS: {
-  [Kind in keyof SavedShareOf]: (
-    item: SavedShareOf[Kind],
-    inbox: ShareInbox,
-    imports: ShareImports
-  ) => Start | null;
-} = {
-  url: (item, _inbox, imports) => (options) => imports.url(item.url, options),
-  text: (item, _inbox, imports) => (options) => imports.text(item.text, options),
-  images: (item, inbox, imports) => {
-    const files = item.images.map(inbox.image).filter((file) => file !== null);
+/** The item's import; null when a saved image is gone. */
+function startOf(item: SavedShare, inbox: ShareInbox, imports: ShareImports): Start | null {
+  switch (item.kind) {
+    case "url":
+      return (options) => imports.url(item.url, options);
+    case "text":
+      return (options) => imports.text(item.text, options);
+    case "images": {
+      const files = item.images.map(inbox.image).filter((file) => file !== null);
 
-    return files.length === item.images.length ? (options) => imports.images(files, options) : null;
-  },
-};
-
-function startOf<Kind extends keyof SavedShareOf>(
-  kind: Kind,
-  item: SavedShareOf[Kind],
-  inbox: ShareInbox,
-  imports: ShareImports
-): Start | null {
-  return IMPORTS[kind](item, inbox, imports);
+      return files.length === item.images.length ? (options) => imports.images(files, options) : null;
+    }
+  }
 }
 
 /**
@@ -110,7 +98,7 @@ async function importItem(
   if (!item) return "corrupt";
   // Another account's, kept for it as its Outbox is (Session Expiry).
   if (item.ownerId !== ownerId) return "elsewhere";
-  const start = startOf(item.kind, item, inbox, imports);
+  const start = startOf(item, inbox, imports);
 
   return start ? { error: await outcomeOf(start, id) } : "corrupt";
 }
