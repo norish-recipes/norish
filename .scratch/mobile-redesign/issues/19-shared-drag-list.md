@@ -32,3 +32,5 @@ Rejected (3): `Status: open` with every box ticked (the gatekeeper sets it); the
 For the consumers: `Drop.heading` is the nearest heading only, so a grocery drop under an Aisle finds its Store by scanning `drop.rows` (ticket 25); a drop above the first heading reports `null` (Calendar rejects it, ticket 28); a hold that starts on a row's own checkbox does not lift the row; `from`/`to` are positions in `rows` as the drag started, so a realtime change mid-drag needs care.
 
 Final state: all 11 gates exit 0, mobile lint without warnings.
+
+Mike, 2026-11-14: `react-native-reorderable-list` stays (asked about `react-native-sortables`; that one is not virtualised and the Calendar timeline grows at both edges). It sits behind `DragList`, so a swap touches one file.
