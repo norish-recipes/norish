@@ -36,6 +36,11 @@ describe("parseInline", () => {
       { kind: "text", text: "use snake_case_name" },
     ]);
   });
+
+  it("leaves a lone star between spaces as text, as CommonMark does", () => {
+    expect(parseInline("2 * 3 * 4")).toEqual([{ kind: "text", text: "2 * 3 * 4" }]);
+    expect(parseInline("a _ b _ c")).toEqual([{ kind: "text", text: "a _ b _ c" }]);
+  });
 });
 
 describe("linkTarget", () => {

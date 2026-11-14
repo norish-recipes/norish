@@ -3,9 +3,9 @@ export type InlineNode =
   | { kind: "bold" | "italic"; children: InlineNode[] }
   | { kind: "link"; href: string; children: InlineNode[] };
 
-// Links, then bold, then italic; underscores only mark emphasis at a word's edge.
+// Links, then bold, then italic; underscores only mark emphasis at a word's edge, and no marker touches whitespace inside.
 const INLINE =
-  /\[([^\]]{0,200})\]\(([^)\s]{0,500})\)|\*\*([^*]+)\*\*|(?<!\w)__([^_]+)__(?!\w)|\*([^*]+)\*|(?<!\w)_([^_]+)_(?!\w)/g;
+  /\[([^\]]{0,200})\]\(([^)\s]{0,500})\)|\*\*(?!\s)([^*]+?)(?<!\s)\*\*|(?<!\w)__(?!\s)([^_]+?)(?<!\s)__(?!\w)|\*(?!\s)([^*]+?)(?<!\s)\*|(?<!\w)_(?!\s)([^_]+?)(?<!\s)_(?!\w)/g;
 
 /** The inline markdown web's step and ingredient text renders: links, bold and italic. */
 export function parseInline(markdown: string): InlineNode[] {
