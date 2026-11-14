@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { planTimerNotifications, timerNotificationId } from "@/lib/timer-notifications";
+import { describe, expect, it, vi } from "vitest";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
 
-import { planTimerNotifications, timerNotificationId } from "../utils/timer-notifications";
+vi.mock("expo-notifications", () => ({}));
 
 const NOW = 1_000_000;
 

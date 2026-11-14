@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { planTimerNotifications } from "@/lib/timer-notifications";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -7,8 +8,6 @@ import { useIntl } from "react-intl";
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { timerEndsAt, useTimerStore, useTimerTicker } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
-
-import { planTimerNotifications } from "../utils/timer-notifications";
 
 const log = createClientLogger("recipe-timers");
 

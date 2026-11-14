@@ -1,5 +1,7 @@
+import * as Notifications from "expo-notifications";
+
 import type { Timer } from "@norish/shared-react/recipes/timers";
-import { timerEndsAt } from "@norish/shared-react/recipes/timers";
+import { timerEndsAt, useTimerStore } from "@norish/shared-react/recipes/timers";
 
 const PREFIX = "timer:";
 
@@ -50,4 +52,24 @@ export function planTimerNotifications(
   const pending = new Set(scheduled);
 
   return { cancel, schedule: wanted.filter((entry) => !pending.has(entry.identifier)) };
+}
+
+/** Recipe Timers belong to the session: its end drops them, their notifications and the last tap. */
+export async function endRecipeTimers(): Promise<void> {
+  useTimerStore.getState().clearAll();
+  Notifications.clearLastNotificationResponse();
+
+  const [scheduled, presented] = await Promise.all([
+    Notifications.getAllScheduledNotificationsAsync(),
+    Notifications.getPresentedNotificationsAsync(),
+  ]);
+
+  await Promise.all([
+    ...scheduled
+      .filter(({ identifier }) => identifier.startsWith(PREFIX))
+      .map(({ identifier }) => Notifications.cancelScheduledNotificationAsync(identifier)),
+    ...presented
+      .filter(({ request }) => request.identifier.startsWith(PREFIX))
+      .map(({ request }) => Notifications.dismissNotificationAsync(request.identifier)),
+  ]);
 }

@@ -1,4 +1,5 @@
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
+import { endRecipeTimers } from "@/lib/timer-notifications";
 import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
 
 import type { SessionScope } from "@norish/shared-react/platform";
@@ -26,6 +27,10 @@ export async function endSession(authClient: SignOutClient, scope: SessionScope)
   } catch (error) {
     log.warn({ error }, "Failed to reset auth client storage during sign out");
   }
+
+  await endRecipeTimers().catch((error: unknown) =>
+    log.warn({ error }, "Could not end the Recipe Timers")
+  );
 }
 
 async function signOutRemotely(authClient: SignOutClient): Promise<void> {

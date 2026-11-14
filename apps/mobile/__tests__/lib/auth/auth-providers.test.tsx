@@ -43,6 +43,7 @@ vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: {} } }));
 vi.mock("expo-secure-store", () => secureStore);
 vi.mock("expo-constants", () => ({ default: {} }));
 vi.mock("expo-linking", () => ({}));
+vi.mock("@/lib/timer-notifications", () => ({ endRecipeTimers: async () => {} }));
 vi.mock("react-native", () => ({ Platform: { OS: "ios" }, AppState: {} }));
 vi.mock("@better-auth/expo/client", async (importOriginal) => ({
   ...(await importOriginal<object>()),

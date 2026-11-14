@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const push = vi.fn();
 let launch: unknown = null;
 let listener: ((response: unknown) => void) | null = null;
+const scheduled = vi.hoisted(() => new Set<string>());
+const presented = vi.hoisted(() => new Set<string>());
 
 vi.mock("expo-router", () => ({ useRouter: () => ({ push }) }));
 vi.mock("expo-haptics", () => ({}));
@@ -14,12 +16,21 @@ vi.mock("expo-notifications", () => ({
   DEFAULT_ACTION_IDENTIFIER: "default",
   setNotificationHandler: vi.fn(),
   getLastNotificationResponse: () => launch,
+  clearLastNotificationResponse: () => (launch = null),
+  getAllScheduledNotificationsAsync: async () =>
+    [...scheduled].map((identifier) => ({ identifier })),
+  cancelScheduledNotificationAsync: async (identifier: string) => void scheduled.delete(identifier),
+  getPresentedNotificationsAsync: async () =>
+    [...presented].map((identifier) => ({ request: { identifier } })),
+  dismissNotificationAsync: async (identifier: string) => void presented.delete(identifier),
   addNotificationResponseReceivedListener: (next: (response: unknown) => void) => {
     listener = next;
 
     return { remove: () => (listener = null) };
   },
 }));
+vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: vi.fn() }));
+vi.mock("@/lib/auth/auth-client", () => ({ resetAuthClientStorage: vi.fn() }));
 
 const response = (identifier: string, data: Record<string, unknown>, action = "default") => ({
   actionIdentifier: action,
@@ -59,5 +70,24 @@ describe("useTimerNotificationTaps", () => {
 
     expect(push).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith(cook("r", "0"));
+  });
+
+  it("forgets the device's timers at Sign-out, so a tap from before it is not replayed at the next sign-in", async () => {
+    const { useTimerNotificationTaps } = await import("../hooks/use-recipe-timers");
+    const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
+    const { endSession } = await import("@/lib/auth/end-session");
+
+    useTimerStore.getState().addTimer("r-s0-0", "r", "Step 1", 60_000);
+    scheduled.add("timer:r-s0-0@5").add("other");
+    presented.add("timer:r-s1-0@4").add("other");
+    launch = response("timer:r-s1-0@4", { recipeId: "r", step: 1 });
+
+    await endSession({ signOut: async () => {} }, "everywhere");
+    renderHook(() => useTimerNotificationTaps());
+
+    expect(push).not.toHaveBeenCalled();
+    expect(useTimerStore.getState().timers).toEqual([]);
+    expect([...scheduled]).toEqual(["other"]);
+    expect([...presented]).toEqual(["other"]);
   });
 });
