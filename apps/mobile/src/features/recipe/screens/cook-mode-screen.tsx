@@ -90,10 +90,7 @@ function useCookKeepAwake() {
   }, [took, setWakeLock]);
 }
 
-/**
- * Cook mode: one Cooking Session over the recipe, steps or ingredients, with Ready At fixed when it
- * opened. Opened on `step` by a timer's notification; a new session otherwise starts at the first.
- */
+/** One Cooking Session over the recipe, Ready At fixed when it opened; a notification opens it on `step`. */
 function CookMode() {
   const router = useRouter();
   const params = useLocalSearchParams<{ step?: string }>();

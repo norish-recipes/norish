@@ -7,10 +7,7 @@ import { TIMER_HREF_PREFIX } from "@norish/shared/lib/timer-parser";
 import type { InlineNode } from "../utils/inline-markdown";
 import { linkTarget, parseInline } from "../utils/inline-markdown";
 
-/**
- * A recipe's text with its links, bold and italic; nest it in a Text, which sets the type. Links read
- * as text when disabled, as on a ticked line; `norish-timer:` links render through `renderTimer`.
- */
+/** A recipe's text with links, bold and italic, nested in a Text; `norish-timer:` links go to `renderTimer`. */
 export function InlineMarkdown({
   text,
   disableLinks = false,

@@ -4,10 +4,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("timers");
 
-/**
- * Show an OS notification via the service worker when a timer completes
- * while the app is in the background (document.hidden === true).
- */
+/** Shows a finished timer's OS notification through the service worker while the page is hidden. */
 export function showTimerNotification(
   timer: Pick<Timer, "label" | "recipeName">,
   body: string

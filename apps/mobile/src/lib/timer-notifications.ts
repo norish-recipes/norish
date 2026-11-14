@@ -20,10 +20,7 @@ function parseId(identifier: string): { timerId: string; endsAt: number } | null
   return { timerId: identifier.slice(PREFIX.length, at), endsAt: Number(identifier.slice(at + 1)) };
 }
 
-/**
- * What to schedule and cancel so the pending notifications match the timers: one per running timer
- * at its end. Pause, reset and removal drop it; adjust and resume replace it with the new end.
- */
+/** What to cancel and schedule so each running timer has one pending notification, at its end. */
 export function planTimerNotifications(
   timers: readonly Timer[],
   scheduled: readonly string[],
