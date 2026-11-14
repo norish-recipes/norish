@@ -51,6 +51,21 @@ enum SharedItem {
     return nil
   }
 
+  /// The saved item's `kind`, the procedure that imports it, and a link's or text's input,
+  /// whose field names the server and the saved item share.
+  var route: (kind: String, procedure: String, fields: [String: String]) {
+    switch self {
+    case .link(let url): ("url", "recipes.importFromUrl", ["url": url.absoluteString])
+    case .text(let text): ("text", "recipes.importFromPaste", ["text": text])
+    case .images: ("images", "recipes.importFromImages", [:])
+    }
+  }
+
+  /// Photos are read by AI, so their import needs it on.
+  var needsAI: Bool {
+    if case .images = self { true } else { false }
+  }
+
   private static func isWebLink(_ url: URL) -> Bool {
     ["http", "https"].contains(url.scheme?.lowercased() ?? "") && url.host != nil
   }

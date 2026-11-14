@@ -12,20 +12,13 @@ enum ShareInbox {
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
     // The app imports it only into this account on this server, as its Outbox keeps an entry for its owner.
-    var entry: [String: Any] = [
-      "ownerId": session.userId,
-      "serverAddress": session.address,
-      "savedAt": ISO8601DateFormatter().string(from: Date()),
-    ]
-    switch item {
-    case .link(let url):
-      entry["kind"] = "url"
-      entry["url"] = url.absoluteString
-    case .text(let text):
-      entry["kind"] = "text"
-      entry["text"] = text
-    case .images(let images):
-      entry["kind"] = "images"
+    let (kind, _, fields) = item.route
+    var entry: [String: Any] = fields
+    entry["kind"] = kind
+    entry["ownerId"] = session.userId
+    entry["serverAddress"] = session.address
+    entry["savedAt"] = ISO8601DateFormatter().string(from: Date())
+    if case .images(let images) = item {
       entry["images"] = try images.enumerated().map { index, image in
         let name = "\(id)-\(index).jpg"
         try image.write(to: folder.appendingPathComponent(name), options: .atomic)

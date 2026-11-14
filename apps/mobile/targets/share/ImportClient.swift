@@ -31,7 +31,7 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
     case .some(let outcome): return outcome
     case .none: break
     }
-    if case .images = item {
+    if item.needsAI {
       guard let reply = await request("GET", "/api/trpc/permissions.get") else { return .saved }
       if reply.status == 401 { return .signedOut }
       guard reply.status == 200, let data = reply.data(), let json = data["json"] as? [String: Any]
@@ -39,17 +39,14 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
       if json["isAIEnabled"] as? Bool != true { return .noAi }
     }
 
+    let (_, procedure, fields) = item.route
+    let path = "/api/trpc/" + procedure
     let reply: Reply?
-    switch item {
-    case .link(let url):
-      reply = await request(
-        "POST", "/api/trpc/recipes.importFromUrl", json: ["json": ["url": url.absoluteString]],
-        operationId: operationId)
-    case .text(let text):
-      reply = await request(
-        "POST", "/api/trpc/recipes.importFromPaste", json: ["json": ["text": text]], operationId: operationId)
-    case .images(let images):
-      reply = await request("POST", "/api/trpc/recipes.importFromImages", images: images, operationId: operationId)
+    // Photos go as the form-data link's multipart, the rest as superjson.
+    if case .images(let images) = item {
+      reply = await request("POST", path, images: images, operationId: operationId)
+    } else {
+      reply = await request("POST", path, json: ["json": fields], operationId: operationId)
     }
 
     guard let reply else { return .saved }
