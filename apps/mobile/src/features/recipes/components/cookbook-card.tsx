@@ -1,3 +1,4 @@
+import type { CardActions } from "@/hooks/use-card-actions";
 import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
@@ -10,7 +11,6 @@ import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
-import type { CardActions } from "../hooks/use-card-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { COOKBOOK_ACTION_DEFINITIONS, cookbookMenuActions } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";

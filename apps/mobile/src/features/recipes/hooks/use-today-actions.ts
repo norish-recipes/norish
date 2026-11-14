@@ -1,3 +1,4 @@
+import { useConfirm } from "@/hooks/use-confirm";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -12,7 +13,6 @@ import { usePlatform } from "@norish/shared-react/platform";
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import type { TodayMenuAction } from "../utils/today-actions";
-import { useConfirm } from "./use-confirm";
 
 /**
  * What one Today card does and where it goes: the handlers for its menu and tap, and the

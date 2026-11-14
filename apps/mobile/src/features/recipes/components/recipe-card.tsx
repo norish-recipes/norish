@@ -1,3 +1,4 @@
+import type { CardActions } from "@/hooks/use-card-actions";
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
@@ -12,7 +13,6 @@ import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
 import { isAllergenTag } from "@norish/shared/lib/helpers";
 
-import type { CardActions } from "../hooks/use-card-actions";
 import type { RecipeMenuAction } from "../utils/card-actions";
 import type { SwipeAction } from "./swipe-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";

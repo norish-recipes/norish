@@ -1,3 +1,4 @@
+import { useConfirm } from "@/hooks/use-confirm";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -10,8 +11,6 @@ import {
   useRecipeMutationErrorToast,
   useRecipesMutations,
 } from "@norish/shared-react/recipes";
-
-import { useConfirm } from "./use-confirm";
 
 type Recipe = Pick<RecipeDashboardDTO, "id" | "name" | "version" | "userId">;
 type Cookbook = Pick<CookbookSummaryDTO, "id" | "title" | "version" | "userId">;
@@ -53,11 +52,14 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
       setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook });
       removeMember(recipe.id);
     },
-    deleteRecipe: (recipe: Recipe) =>
+    deleteRecipe: (recipe: Recipe, onDeleted?: () => void) =>
       confirm({
         title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
         message: intl.formatMessage({ id: "recipes.deleteModal.warning" }),
-        onConfirm: () => deleteRecipes([{ id: recipe.id, version: recipe.version }]),
+        onConfirm: () => {
+          deleteRecipes([{ id: recipe.id, version: recipe.version }]);
+          onDeleted?.();
+        },
       }),
     addRecipes: (cookbook: Cookbook) =>
       router.push({

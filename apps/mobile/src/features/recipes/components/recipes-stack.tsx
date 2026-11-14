@@ -36,6 +36,8 @@ export function RecipesStack() {
             name="cookbook/[id]"
             options={{ title: "", headerBackButtonDisplayMode: "minimal" }}
           />
+          {/* A recipe opens inside this stack too, with its own nested stack for its sheets. */}
+          <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
           {SHEETS.map((name) => (
             <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
           ))}
