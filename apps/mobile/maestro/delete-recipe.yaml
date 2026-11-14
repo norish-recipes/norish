@@ -23,8 +23,19 @@ appId: dev.norish.app
     timeout: 20000
 - assertVisible:
     id: recipe-card-${output.kept}
-# The list's swipe circles sit in a row; the grid's stack under the Add recipe accessory when the
-# Library is too short to scroll.
+# The Library is short, so the last row has to rest clear of the Add recipe accessory in both views.
+- tapOn:
+    id: library-view-grid
+- swipe:
+    from:
+      id: recipe-card-${output.doomed}
+    direction: LEFT
+- tapOn:
+    id: recipe-swipe-delete-${output.doomed}
+# The native alert asks first; cancelling keeps the card.
+- tapOn: Cancel
+- assertVisible:
+    id: recipe-card-${output.doomed}
 - tapOn:
     id: library-view-list
 - swipe:

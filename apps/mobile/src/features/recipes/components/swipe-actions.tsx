@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
@@ -12,6 +12,7 @@ import { useCSSVariable } from "uniwind";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
+import { RevealRowContext } from "./card-list";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -63,6 +64,7 @@ export function SwipeActions({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const rowRef = useRef<SwipeableMethods>(null);
+  const revealRow = useContext(RevealRowContext);
   const isGrid = variant === "grid";
   const width = isGrid ? GRID_PANEL + GRID_GAP : LIST_GAP + LIST_BUTTON * actions.length;
 
@@ -90,6 +92,7 @@ export function SwipeActions({
       onSwipeableWillOpen={() => {
         if (openRow !== rowRef.current) openRow?.close();
         openRow = rowRef.current;
+        revealRow();
       }}
     >
       {children}

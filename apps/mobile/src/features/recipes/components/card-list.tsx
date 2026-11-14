@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import React, { useState } from "react";
+import React, { createContext, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Spinner } from "heroui-native";
@@ -11,6 +11,12 @@ const ACCESSORY_CLEARANCE = 72;
 /** UIKit no longer insets the list for the tab bar, so its full height is added here. */
 // ponytail: no docs-backed inset follows the minimised bar; 49 pt of extra space at the end then.
 const TAB_BAR_HEIGHT = 49;
+
+/** Scrolls the row a card sits in clear of the accessory and tab bar; a card outside a list does nothing. */
+export const RevealRowContext = createContext<() => void>(() => {});
+
+/** Where a revealed row's top lands below the status bar. */
+const REVEAL_OFFSET = 120;
 
 /** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
  * `empty` shows when there is no card. */
@@ -41,12 +47,14 @@ export function CardList<Row>({
   const insets = useSafeAreaInsets();
   const [scrolled, setScrolled] = useState(false);
   const isGrid = variant === "grid";
+  const listRef = useRef<FlatList<Row>>(null);
 
   return (
     <View className="flex-1">
       {/* Remounted per view: a FlatList's column count can't change under it. */}
       <FlatList
         key={variant}
+        ref={listRef}
         ListEmptyComponent={empty}
         ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
         ListHeaderComponent={header}
@@ -59,10 +67,22 @@ export function CardList<Row>({
         data={rows}
         keyExtractor={rowKey}
         numColumns={isGrid ? 2 : 1}
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const card = renderCard(item);
 
-          return isGrid ? card : <View className="px-5 pb-3">{card}</View>;
+          return (
+            <RevealRowContext.Provider
+              value={() =>
+                listRef.current?.scrollToIndex({
+                  index: Math.floor(index / (isGrid ? 2 : 1)),
+                  viewOffset: REVEAL_OFFSET,
+                  animated: true,
+                })
+              }
+            >
+              {isGrid ? card : <View className="px-5 pb-3">{card}</View>}
+            </RevealRowContext.Provider>
+          );
         }}
         scrollEventThrottle={32}
         testID={testID}
