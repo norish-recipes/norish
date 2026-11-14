@@ -33,6 +33,8 @@ Done on the simulator (captures in `device-feedback/`):
 4. Swipe actions showing on long press: the actions panel sits behind the card and showed through it while the card lifted; the panel is now clear until the swipe progress is above 0 (grid and list checked).
 5. Sheet controls: chips, day cards, rows, fields, tiles, stepper and the grocery section take `bg-default` instead of `bg-surface` (inner icon circles and photo placeholders swapped the other way); checked on every Recipes sheet at both heights, light and dark. Page chips (lenses, Filters, card pills) are white on the cream page and show no problem.
 
-### New cookbook (Mike, 2026-11-14), open
+### New cookbook (Mike, 2026-11-14), done 2026-11-14
 
 The device run found New cookbook built as a sheet where the board draws a centred alert. Mike: keep it a sheet, and make it web's panel: one drawer where the cookbook is created and its recipes are set. Queued behind the board-differences fixer.
+
+Built: New cookbook is one two-detent sheet with the name, the recipe picker (search, ticked list, count as the subtitle) and Create pinned; `useNewCookbook` and `useRecipePick` are in shared-react and the picker's search and list are shared with Add recipes. A card's recipe is pre-picked through a `recipeId` param. Web's create panel takes only a title and files recipes afterwards from the cookbook (a separate panel), so this is mobile's own flow. A queued create is safe: `createCookbook` mints the id on the client and the create mutation already takes `recipeIds`, so one write carries both. Add to cookbook still stages a new cookbook inline in its own sheet and does not open New cookbook, so the pre-pick is reachable only if that entry is rewired.
