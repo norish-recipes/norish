@@ -41,7 +41,7 @@ export const offlineEngine = withSavedShares(
     refetchOnMount: (query) => (query.state.dataUpdatedAt < LAUNCHED_AT ? "always" : true),
   }),
   appGroupInbox,
-  getServerAddress
+  () => getServerAddress()
 );
 
 // React Native has no window focus, so the foreground is focus: stale reads refetch on return.
