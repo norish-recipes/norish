@@ -102,6 +102,7 @@ export function StepText({
   const { matches, marked } = useStepTimers(text);
   const [frames, setFrames] = useState<ReadonlyMap<number, LayoutRectangle>>(() => new Map());
   const containerRef = useRef<ComponentRef<typeof View>>(null);
+  const [layouts, setLayouts] = useState(0);
   // Kept when unchanged, so a chip measuring itself on every commit settles.
   const place = (index: number, frame: LayoutRectangle) =>
     setFrames((prev) => {
@@ -117,7 +118,7 @@ export function StepText({
     });
 
   return (
-    <View ref={containerRef}>
+    <View ref={containerRef} onLayout={() => setLayouts((count) => count + 1)}>
       <Text className={className}>
         <InlineMarkdown
           disableLinks={disableLinks}
@@ -127,6 +128,7 @@ export function StepText({
             return match ? (
               <TimerChip
                 index={index}
+                layouts={layouts}
                 match={match}
                 size={size}
                 stepIndex={stepIndex}

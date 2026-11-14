@@ -1,7 +1,7 @@
 import type { ComponentRef, RefObject } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -81,10 +81,13 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
 export function TimerChip({
   withinRef,
   onPlace,
+  layouts,
   ...props
 }: ChipProps & {
   withinRef: RefObject<ComponentRef<typeof View> | null>;
   onPlace: (frame: LayoutRectangle) => void;
+  /** Counts the step text's layouts, so a reflow with no render of the chip still re-measures it. */
+  layouts: number;
 }) {
   const intl = useIntl();
   const tint = useTint();
@@ -97,6 +100,8 @@ export function TimerChip({
   const { height, shift, text, icon, ring, stroke } = SIZES[props.size];
   const done = timer?.status === "completed";
   const faceRef = useRef<ComponentRef<typeof View>>(null);
+  // A text size change re-lays the text natively; reading it re-renders the chip to re-measure.
+  const { fontScale } = useWindowDimensions();
 
   // A view inside Text gets no onLayout, and Text places it after the commit: measured a frame later.
   useEffect(() => {
@@ -109,7 +114,7 @@ export function TimerChip({
     );
 
     return () => cancelAnimationFrame(frame);
-  });
+  }, [withinRef, onPlace, layouts, fontScale, timer?.status, left]);
 
   return (
     <View
