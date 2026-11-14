@@ -33,11 +33,7 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
   const mutations = useImportMutations(showErrorToast, showAlreadyExistsToast);
 
   const start =
-    <T>(
-      titleId: string,
-      descriptionId: string,
-      run: (input: T, options?: ImportOptions) => void
-    ) =>
+    <T>(titleId: string, descriptionId: string, run: (input: T, options?: ImportOptions) => void) =>
     (input: T, options?: ImportOptions) => {
       run(input, options);
       toast.show({
