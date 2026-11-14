@@ -1,0 +1,67 @@
+# Creates a cookbook with one recipe from New cookbook, opens it, and adds a second recipe from the
+# cookbook's own Add recipes picker.
+appId: dev.norish.app
+---
+- runFlow: subflows/reset.yaml
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Cookbook Soup
+      RECIPE_KEY: soup
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Cookbook Tart
+      RECIPE_KEY: tart
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 20000
+- tapOn:
+    id: library-lens-cookbooks
+- tapOn:
+    id: library-new-cookbook
+- extendedWaitUntil:
+    visible:
+      id: new-cookbook-title
+    timeout: 20000
+- inputText: Weeknight Dinners
+- tapOn:
+    id: cookbook-add-recipes-row-${output.soup}
+- tapOn:
+    id: new-cookbook-submit
+# The new cookbook is on the Cookbooks lens and opens with its one recipe.
+- extendedWaitUntil:
+    visible: Weeknight Dinners
+    timeout: 20000
+- tapOn: Weeknight Dinners
+- extendedWaitUntil:
+    visible:
+      id: cookbook-title
+      text: Weeknight Dinners
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.soup}
+- assertNotVisible:
+    id: recipe-card-${output.tart}
+# Add recipes files the second one.
+- tapOn:
+    id: cookbook-add-recipes-accessory
+- extendedWaitUntil:
+    visible:
+      id: cookbook-add-recipes-row-${output.tart}
+    timeout: 20000
+- tapOn:
+    id: cookbook-add-recipes-row-${output.tart}
+- tapOn:
+    id: cookbook-add-recipes-add
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.tart}
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.soup}
