@@ -22,7 +22,7 @@ export function RecipeBottomBar({ recipeId, page }: { recipeId: string; page: st
 
   return (
     <>
-      <FadeEdge color={page} edge="bottom" height={120} solidFrom={0.28} />
+      <FadeEdge color={page} edge="bottom" height={120} solidFraction={0.28} />
       <View className="absolute right-5 bottom-[26px] left-5 flex-row items-center gap-3">
         <Pressable
           accessibilityLabel={intl.formatMessage({ id: "navbar.nav.home" })}

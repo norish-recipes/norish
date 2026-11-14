@@ -156,8 +156,8 @@ function CookMode() {
             )}
           </View>
         </GestureDetector>
-        <FadeEdge color={page} edge="top" height={170} solidFrom={0.7} />
-        <FadeEdge color={page} edge="bottom" height={250} solidFrom={0.52} />
+        <FadeEdge color={page} edge="top" height={170} solidFraction={0.7} />
+        <FadeEdge color={page} edge="bottom" height={250} solidFraction={0.52} />
         <View className="absolute top-0 right-0 left-0">
           <CookHeader onClose={() => router.back()} />
         </View>

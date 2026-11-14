@@ -7,13 +7,13 @@ export function FadeEdge({
   edge,
   height,
   color,
-  solidFrom = 0.5,
+  solidFraction = 0.5,
 }: {
   edge: "top" | "bottom";
   height: number;
   color: string;
-  /** How much of the height is fully the page colour, measured from the edge. */
-  solidFrom?: number;
+  /** The fraction of the height, from the edge, that is fully the page colour. */
+  solidFraction?: number;
 }) {
   const id = `fade-${edge}`;
 
@@ -32,7 +32,7 @@ export function FadeEdge({
             y2={edge === "top" ? "0" : "1"}
           >
             <Stop offset="0" stopColor={color} stopOpacity={0} />
-            <Stop offset={1 - solidFrom} stopColor={color} stopOpacity={1} />
+            <Stop offset={1 - solidFraction} stopColor={color} stopOpacity={1} />
             <Stop offset="1" stopColor={color} stopOpacity={1} />
           </LinearGradient>
         </Defs>
