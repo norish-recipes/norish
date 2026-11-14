@@ -1,4 +1,5 @@
 import "@/global.css";
+import "@/lib/i18n/list-format";
 import "@/lib/i18n/plural-rules";
 
 import React from "react";

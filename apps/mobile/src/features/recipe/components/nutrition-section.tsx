@@ -150,11 +150,13 @@ export function NutritionSection() {
               {intl.formatMessage(
                 { id: "recipes.nutrition.workedOutFrom" },
                 {
-                  // Hermes has no Intl.ListFormat, so the names are comma-joined.
-                  sources: workedOutSources(
-                    workedOut,
-                    intl.formatMessage({ id: "recipes.nutrition.householdNumbers" })
-                  ).join(", "),
+                  sources: intl.formatList(
+                    workedOutSources(
+                      workedOut,
+                      intl.formatMessage({ id: "recipes.nutrition.householdNumbers" })
+                    ),
+                    { type: "conjunction" }
+                  ),
                 }
               )}
             </Text>
