@@ -67,6 +67,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@bacons/apple-targets": "5.0.0",
     "@norish/eslint-config": "workspace:*",
     "@norish/prettier-config": "workspace:*",
     "@testcontainers/postgresql": "catalog:",
@@ -88,6 +89,11 @@
       "exclude": [
         "react",
         "react-dom"
+      ]
+    },
+    "autolinking": {
+      "exclude": [
+        "@bacons/apple-targets"
       ]
     }
   }

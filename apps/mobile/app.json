@@ -30,6 +30,9 @@
           "sv",
           "ar"
         ]
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.dev.norish.app"]
       }
     },
     "android": {
@@ -67,7 +70,9 @@
           "cameraPermission": "Norish uses the camera to take a cookbook's cover.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "@bacons/apple-targets",
+      "./plugins/with-share-strings"
     ],
     "experiments": {
       "typedRoutes": true,
