@@ -1,6 +1,7 @@
 import React from "react";
 import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-accessory";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useTabBarHidden } from "@/lib/tab-bar-visibility";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
@@ -8,12 +9,15 @@ import { useIntl } from "react-intl";
 export function ShellTabs() {
   const intl = useIntl();
   const accent = useAccentTextColor();
+  const hidden = useTabBarHidden();
 
   return (
-    <NativeTabs minimizeBehavior="onScrollDown" tintColor={accent}>
-      <NativeTabs.BottomAccessory>
-        <AddRecipeAccessory />
-      </NativeTabs.BottomAccessory>
+    <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
+      {hidden ? null : (
+        <NativeTabs.BottomAccessory>
+          <AddRecipeAccessory />
+        </NativeTabs.BottomAccessory>
+      )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
         <NativeTabs.Trigger.Icon sf={{ default: "house", selected: "house.fill" }} />
         <NativeTabs.Trigger.Label>
