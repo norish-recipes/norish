@@ -156,7 +156,7 @@ export const useTimerStore = create<TimerState>()(
 
         set((state) => {
           let hasChanges = false;
-          const newTimers = state.timers.map((t) => {
+          const newTimers = state.timers.map((t): Timer => {
             if (t.status !== "running") return t;
 
             if (t.lastTickAt === null) {
@@ -180,10 +180,10 @@ export const useTimerStore = create<TimerState>()(
 
             hasChanges = true;
 
-            return { ...t, remainingMs: newRemaining, lastTickAt: now } as Timer;
+            return { ...t, remainingMs: newRemaining, lastTickAt: now };
           });
 
-          return (hasChanges ? { timers: newTimers } : {}) as Partial<TimerState>;
+          return hasChanges ? { timers: newTimers } : {};
         });
 
         return finished;
