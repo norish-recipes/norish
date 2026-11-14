@@ -60,3 +60,5 @@ Not seen on a device: the "+1" badge and the note card on a full Today; the Brea
 Not run: web E2E, by the maintainer's decision. The branch changed web behaviour in the applied-filter rule, the failed-import toast, cookbook failure toasts, Replay's retry of 408 and 429, and the shared import hooks; unit tests cover them.
 
 Final state `a0915b1fc` (plus the docs-only `f13cfa132`): all 11 gates exit 0, mobile lint has no warnings; the Maestro suite passed twice.
+
+Mike, 2026-11-14, closing the open items: Add to cookbook keeps creating its cookbook inline; the Share Extension docs screenshot over a real recipe page stays; the canvas keeps its 40 pt toast icon and its New cookbook alert, and the app's versions stand.
