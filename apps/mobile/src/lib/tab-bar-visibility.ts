@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { useIsFocused } from "expo-router";
 
 let hiders = 0;
 const listeners = new Set<() => void>();
@@ -20,11 +21,15 @@ export function useTabBarHidden(): boolean {
   );
 }
 
-/** Hides the tab bar for as long as the calling screen is mounted. */
+/** Hides the tab bar for as long as the calling screen is mounted and in front. */
 export function useHideTabBar() {
+  const focused = useIsFocused();
+
   useEffect(() => {
+    if (!focused) return;
+
     change(1);
 
     return () => change(-1);
-  }, []);
+  }, [focused]);
 }
