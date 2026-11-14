@@ -18,6 +18,7 @@ import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
 import { plainText, stepRows } from "../utils/recipe-rows";
 import { IngredientIcon } from "./ingredient-icon";
+import { InlineMarkdown } from "./inline-markdown";
 import { SectionCard, useTint } from "./tint";
 
 type Recipe = ReturnType<typeof useLoadedPageRecipe>;
@@ -172,7 +173,7 @@ function StepLine({
         <Text
           className={`pt-0.5 text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
         >
-          {plainText(step.step)}
+          <InlineMarkdown text={step.step} />
         </Text>
         <StepChips lines={lines} step={step} systemUsed={systemUsed} />
         {step.images && step.images.length > 0 ? (

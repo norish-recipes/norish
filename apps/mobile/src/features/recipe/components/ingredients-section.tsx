@@ -26,6 +26,7 @@ import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { ingredientRows, plainText } from "../utils/recipe-rows";
 import { IngredientIcon } from "./ingredient-icon";
+import { InlineMarkdown } from "./inline-markdown";
 import { SectionCard, useTint } from "./tint";
 
 function RoundButton({
@@ -174,7 +175,7 @@ function Line({
       >
         {amount ? <Text className="font-semibold">{`${amount} `}</Text> : null}
         {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
-        {plain}
+        <InlineMarkdown text={name} />
       </Text>
     </Pressable>
   );
