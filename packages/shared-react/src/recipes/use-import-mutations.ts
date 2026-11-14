@@ -1,5 +1,6 @@
 "use client";
 
+import type { MutationKey } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 
 import { uploadForm } from "@norish/shared/lib/upload-form";
@@ -58,6 +59,40 @@ function createOptimisticPendingRecipeId(): string {
   return `${OPTIMISTIC_PENDING_RECIPE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+type ImportHandlers<Input, Output> = {
+  onSuccess: (output: Output, call: ImportCall<Input>, context: ImportMutationContext) => void;
+  onError: (
+    error: unknown,
+    call: ImportCall<Input>,
+    context: ImportMutationContext | undefined
+  ) => void;
+};
+
+/** One import procedure's mutation, sent under its caller's operation id behind a placeholder card. */
+function useImportMutation<Input, Output>(
+  procedure: { mutationKey: () => MutationKey },
+  client: {
+    mutate: (input: Input, options?: { context: { operationId: string } }) => Promise<Output>;
+  },
+  handlers: ImportHandlers<Input, Output>
+) {
+  const { addPendingRecipe } = useRecipesCacheHelpers();
+
+  return useMutation({
+    mutationKey: procedure.mutationKey(),
+    mutationFn: ({ input, operationId }: ImportCall<Input>) =>
+      client.mutate(input, withOperationId(operationId)),
+    onMutate: (): ImportMutationContext => {
+      const optimisticPendingId = createOptimisticPendingRecipeId();
+
+      addPendingRecipe(optimisticPendingId);
+
+      return { optimisticPendingId };
+    },
+    ...handlers,
+  }).mutateAsync;
+}
+
 export function useImportMutations(
   onError?: RecipesMutationErrorHandler,
   onRecipeAlreadyExists?: RecipeAlreadyExistsHandler
@@ -66,14 +101,6 @@ export function useImportMutations(
   const client = useTRPCClient();
   const { addPendingRecipe, replacePendingRecipe, removePendingRecipe, invalidate } =
     useRecipesCacheHelpers();
-
-  const addPlaceholder = (): ImportMutationContext => {
-    const optimisticPendingId = createOptimisticPendingRecipeId();
-
-    addPendingRecipe(optimisticPendingId);
-
-    return { optimisticPendingId };
-  };
 
   const dropPlaceholder = (context: ImportMutationContext | undefined): void => {
     if (context) removePendingRecipe(context.optimisticPendingId);
@@ -109,14 +136,7 @@ export function useImportMutations(
     });
   };
 
-  type UrlInput = Parameters<typeof client.recipes.importFromUrl.mutate>[0];
-  type PasteInput = Parameters<typeof client.recipes.importFromPaste.mutate>[0];
-
-  const { mutateAsync: mutateImport } = useMutation({
-    mutationKey: trpc.recipes.importFromUrl.mutationKey(),
-    mutationFn: ({ input, operationId }: ImportCall<UrlInput>) =>
-      client.recipes.importFromUrl.mutate(input, withOperationId(operationId)),
-    onMutate: addPlaceholder,
+  const mutateImport = useImportMutation(trpc.recipes.importFromUrl, client.recipes.importFromUrl, {
     onSuccess: ({ recipeId, status }, call, context) => {
       // Nothing was queued, so there is no pending recipe to stand in for:
       // drop the placeholder and hand the id to whoever can offer it.
@@ -138,45 +158,45 @@ export function useImportMutations(
       );
     },
   });
-  const { mutateAsync: mutateImageImport } = useMutation({
-    mutationKey: trpc.recipes.importFromImages.mutationKey(),
-    mutationFn: ({ input, operationId }: ImportCall<FormData>) =>
-      client.recipes.importFromImages.mutate(input, withOperationId(operationId)),
-    onMutate: addPlaceholder,
-    onSuccess: (recipeId, call, context) => {
-      showImported(recipeId, context, call);
-    },
-    onError: (error, call, context) => {
-      handleImportError(error, "importFromImages", context, call);
-    },
-  });
-  const { mutateAsync: mutatePasteImport } = useMutation({
-    mutationKey: trpc.recipes.importFromPaste.mutationKey(),
-    mutationFn: ({ input, operationId }: ImportCall<PasteInput>) =>
-      client.recipes.importFromPaste.mutate(input, withOperationId(operationId)),
-    onMutate: addPlaceholder,
-    onSuccess: (result, call, context) => {
-      const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
+  const mutateImageImport = useImportMutation(
+    trpc.recipes.importFromImages,
+    client.recipes.importFromImages,
+    {
+      onSuccess: (recipeId, call, context) => {
+        showImported(recipeId, context, call);
+      },
+      onError: (error, call, context) => {
+        handleImportError(error, "importFromImages", context, call);
+      },
+    }
+  );
+  const mutatePasteImport = useImportMutation(
+    trpc.recipes.importFromPaste,
+    client.recipes.importFromPaste,
+    {
+      onSuccess: (result, call, context) => {
+        const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
 
-      if (!firstRecipeId) {
-        dropPlaceholder(context);
-        invalidate();
+        if (!firstRecipeId) {
+          dropPlaceholder(context);
+          invalidate();
 
-        return;
-      }
+          return;
+        }
 
-      showImported(firstRecipeId, context, call);
-      remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
-    },
-    onError: (error, call, context) => {
-      handleImportError(
-        error,
-        call.input.forceAI ? "importFromPasteWithAI" : "importFromPaste",
-        context,
-        call
-      );
-    },
-  });
+        showImported(firstRecipeId, context, call);
+        remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
+      },
+      onError: (error, call, context) => {
+        handleImportError(
+          error,
+          call.input.forceAI ? "importFromPasteWithAI" : "importFromPaste",
+          context,
+          call
+        );
+      },
+    }
+  );
 
   return {
     importRecipe: (url, options) =>

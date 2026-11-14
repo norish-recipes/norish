@@ -53,7 +53,7 @@ struct ShareSheet: View {
 
       if case .ended(let outcome) = model.phase, outcome != .sent {
         Button(action: model.close) {
-          Text(String(localized: "close"))
+          Text(closeLabel)
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(.primary)
             .frame(maxWidth: .infinity, minHeight: 50)
@@ -70,6 +70,8 @@ struct ShareSheet: View {
     .animation(.easeOut(duration: 0.25), value: model.phase)
   }
 }
+
+private let closeLabel = String(localized: "close")
 
 private extension View {
   /// The card's only fill is glass: Liquid Glass from iOS 26, the thick material before it.
@@ -90,7 +92,7 @@ private struct GlassCloseButton: View {
     let button = Button(action: action) {
       Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).frame(width: 40, height: 40)
     }
-    .accessibilityLabel(String(localized: "close"))
+    .accessibilityLabel(closeLabel)
     .accessibilityIdentifier("share-dismiss")
 
     if #available(iOS 26.0, *) {

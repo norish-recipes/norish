@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { ImportSettled } from "@norish/shared-react/recipes";
+import type { ImportOptions } from "@norish/shared-react/recipes";
 import { classifyReplayError } from "@norish/shared-react/offline";
 import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -41,11 +41,9 @@ export type ShareInbox = {
 };
 
 /** How the drain runs one import: told how it ended, under the share's id, quiet on what it keeps. */
-export type ShareImportOptions = {
-  onSettled: ImportSettled;
-  operationId: string;
-  keeps: (error: unknown) => boolean;
-};
+export type ShareImportOptions = Required<
+  Pick<ImportOptions, "onSettled" | "operationId" | "keeps">
+>;
 
 /** The shared imports the Add recipe sheets use. */
 export type ShareImports = {
