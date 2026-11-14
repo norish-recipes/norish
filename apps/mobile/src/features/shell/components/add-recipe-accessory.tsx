@@ -1,19 +1,25 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
+import { useOwnerRights } from "@/hooks/use-owner-rights";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { usePathname, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import { useCookbookQuery } from "@norish/shared-react/recipes";
+
 /**
- * The label the tab bar's bottom accessory draws. On a cookbook's page it reads Add recipes and
- * opens that cookbook's picker; elsewhere it reads Add recipe and opens the Add recipe sheet.
+ * The tab bar's bottom accessory: Add recipes opens the picker on a cookbook the Reader may edit;
+ * everywhere else Add recipe opens the Add recipe sheet.
  */
 export function AddRecipeAccessory() {
   const intl = useIntl();
   const router = useRouter();
   const [accent] = useThemeColor(["accent"] as const);
-  const cookbookId = /^\/cookbook\/([^/]+)$/.exec(usePathname())?.[1];
+  const pathId = /^\/cookbook\/([^/]+)$/.exec(usePathname())?.[1];
+  const { cookbook } = useCookbookQuery(pathId ?? "");
+  const { canEdit } = useOwnerRights();
+  const cookbookId = cookbook && canEdit(cookbook) ? cookbook.id : undefined;
   const label = intl.formatMessage({
     id: cookbookId ? "recipes.cookbooks.addRecipes" : "recipes.dashboard.addRecipe",
   });

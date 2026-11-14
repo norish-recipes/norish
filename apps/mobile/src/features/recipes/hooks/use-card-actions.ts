@@ -1,8 +1,8 @@
+import { useOwnerRights } from "@/hooks/use-owner-rights";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import type { CookbookSummaryDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
-import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import {
   useCookbookRecipesQuery,
   useCookbooksMutations,
@@ -26,7 +26,7 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
   const { toggleFavorite } = useFavoritesMutation();
   const { deleteRecipes } = useRecipesMutations(useRecipeMutationErrorToast());
   const { setMembership, deleteCookbook } = useCookbooksMutations();
-  const { canEditRecipe, canDeleteRecipe } = useRecipePermissions();
+  const { canEdit, canDelete } = useOwnerRights();
   // The page's member list is this cookbook's own read, so a removal drops the card now rather
   // than waiting for a refetch that Offline never comes.
   const { removeMember } = useCookbookRecipesQuery(cookbook?.id ?? "", {}, { enabled: false });
@@ -34,8 +34,8 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
   const confirm = useConfirm();
 
   return {
-    canDelete: (owned: Pick<Recipe, "userId">) => ownerAllows(owned.userId, canDeleteRecipe),
-    canEdit: (owned: Pick<Recipe, "userId">) => ownerAllows(owned.userId, canEditRecipe),
+    canDelete,
+    canEdit,
     toggleFavourite: (recipe: Recipe) => toggleFavorite(recipe.id),
     addToGroceries: (recipe: Recipe) =>
       router.push({ pathname: "/add-to-groceries", params: { recipeId: recipe.id } }),
@@ -46,7 +46,7 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
         pathname: "/add-to-cookbook",
         params: { recipeId: recipe.id, name: recipe.name },
       }),
-    canRemoveFromCookbook: cookbook ? ownerAllows(cookbook.userId, canEditRecipe) : false,
+    canRemoveFromCookbook: cookbook ? canEdit(cookbook) : false,
     removeFromCookbook: (recipe: Recipe) => {
       if (!cookbook) return;
 

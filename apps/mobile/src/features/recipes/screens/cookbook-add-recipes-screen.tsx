@@ -1,6 +1,7 @@
 import React from "react";
 import { Text } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
+import { useOwnerRights } from "@/hooks/use-owner-rights";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SearchField } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -99,13 +100,14 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   );
 }
 
-/** Add recipes: search what the cookbook does not hold, tick any number, then Add. */
+/** Add recipes: search what the cookbook does not hold, tick any number, then Add; inert without edit rights. */
 export function CookbookAddRecipesScreen() {
   const intl = useIntl();
   const { cookbookId, title } = useLocalSearchParams<{ cookbookId: string; title?: string }>();
   const { cookbook } = useCookbookQuery(cookbookId ?? "");
+  const { canEdit } = useOwnerRights();
 
-  return cookbook ? (
+  return cookbook && canEdit(cookbook) ? (
     <AddRecipesSheet key={cookbook.id} cookbook={cookbook} />
   ) : (
     <PickSheet
