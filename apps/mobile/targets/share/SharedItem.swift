@@ -16,7 +16,7 @@ enum SharedItem {
   private static let maxTextBytes = 1 << 20
 
   /// The first web link, else the images, else the text, from the share sheet's items;
-  /// nil when there is none, or the text is over `maxTextBytes`.
+  /// nil when there is none, an image fails to load, or the text is over `maxTextBytes`.
   static func load(from items: [NSExtensionItem]) async -> SharedItem? {
     let providers = items.flatMap { $0.attachments ?? [] }
 
@@ -28,13 +28,13 @@ enum SharedItem {
       }
     }
 
-    var images: [Data] = []
+    var loaded: [Data?] = []
     for provider in providers.prefix(ShareLimits.maxImages)
     where provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
       // One image in memory at a time: extensions get a small memory budget.
-      if let jpeg = await downscaledJPEG(provider) { images.append(jpeg) }
+      loaded.append(await downscaledJPEG(provider))
     }
-    if !images.isEmpty { return .images(images) }
+    if !loaded.isEmpty { return allLoaded(loaded).map(SharedItem.images) }
 
     for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
       guard let text = try? await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) as? String
@@ -64,6 +64,12 @@ enum SharedItem {
   /// Photos are read by AI, so their import needs it on.
   var needsAI: Bool {
     if case .images = self { true } else { false }
+  }
+
+  /// Every image, or nil when one failed: a recipe sent without one of its pages loses that page.
+  static func allLoaded(_ images: [Data?]) -> [Data]? {
+    let jpegs = images.compactMap { $0 }
+    return jpegs.count == images.count ? jpegs : nil
   }
 
   private static func isWebLink(_ url: URL) -> Bool {
