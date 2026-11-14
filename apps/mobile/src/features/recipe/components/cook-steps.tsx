@@ -75,9 +75,12 @@ export function CookSteps({
             {step.heading ? (
               <Text className="text-accent-text text-[15px] font-semibold">{step.heading}</Text>
             ) : null}
-            <Text className="text-foreground text-[28px] leading-[44px] font-medium tracking-[-0.3px]">
-              <StepText size="cook" stepIndex={step.stepNumber - 1} text={step.text} />
-            </Text>
+            <StepText
+              className="text-foreground text-[28px] leading-[44px] font-medium tracking-[-0.3px]"
+              size="cook"
+              stepIndex={step.stepNumber - 1}
+              text={step.text}
+            />
             <StepChips large lines={lines} step={step} systemUsed={recipe.systemUsed ?? "metric"} />
             {step.images.length > 0 ? (
               <StepPhotos

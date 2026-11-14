@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
-import React, { Fragment, useState } from "react";
+import type { ComponentRef, ReactNode } from "react";
+import type { LayoutRectangle } from "react-native";
+import React, { Fragment, useRef, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -21,7 +22,7 @@ import { useStepTimers } from "../hooks/use-step-timers";
 import { plainText, stepRows } from "../utils/recipe-rows";
 import { IngredientIcon } from "./ingredient-icon";
 import { InlineMarkdown } from "./inline-markdown";
-import { TimerChip } from "./timer-chip";
+import { TimerChip, TimerChipButton } from "./timer-chip";
 import { SectionCard, useTint } from "./tint";
 
 type Recipe = ReturnType<typeof useLoadedPageRecipe>;
@@ -89,27 +90,69 @@ export function StepText({
   text,
   stepIndex,
   size,
+  className,
   disableLinks = false,
 }: {
   text: string;
   stepIndex: number;
   size: "page" | "cook";
+  className: string;
   disableLinks?: boolean;
 }) {
   const { matches, marked } = useStepTimers(text);
+  const [frames, setFrames] = useState<ReadonlyMap<number, LayoutRectangle>>(() => new Map());
+  const container = useRef<ComponentRef<typeof View>>(null);
+  // Kept when unchanged, so a chip measuring itself on every commit settles.
+  const place = (index: number, frame: LayoutRectangle) =>
+    setFrames((prev) => {
+      const last = prev.get(index);
+
+      const same =
+        last?.x === frame.x &&
+        last.y === frame.y &&
+        last.width === frame.width &&
+        last.height === frame.height;
+
+      return same ? prev : new Map(prev).set(index, frame);
+    });
 
   return (
-    <InlineMarkdown
-      disableLinks={disableLinks}
-      renderTimer={(index) => {
-        const match = matches[index];
+    <View ref={container}>
+      <Text className={className}>
+        <InlineMarkdown
+          disableLinks={disableLinks}
+          renderTimer={(index) => {
+            const match = matches[index];
 
-        return match ? (
-          <TimerChip index={index} match={match} size={size} stepIndex={stepIndex} />
+            return match ? (
+              <TimerChip
+                index={index}
+                match={match}
+                size={size}
+                stepIndex={stepIndex}
+                within={container}
+                onPlace={(frame) => place(index, frame)}
+              />
+            ) : null;
+          }}
+          text={marked}
+        />
+      </Text>
+      {matches.map((match, index) => {
+        const frame = frames.get(index);
+
+        return frame ? (
+          <TimerChipButton
+            key={match.startIndex}
+            frame={frame}
+            index={index}
+            match={match}
+            size={size}
+            stepIndex={stepIndex}
+          />
         ) : null;
-      }}
-      text={marked}
-    />
+      })}
+    </View>
   );
 }
 
@@ -199,14 +242,20 @@ function StepLine({
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
 
   return (
+    // Not one button, so VoiceOver reaches the step's timer chips; the number reads as its toggle.
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: done }}
+      accessible={false}
       className="flex-row gap-3"
       testID={`recipe-step-${number}`}
       onPress={() => onToggle(number)}
     >
-      <View className="bg-accent size-7 items-center justify-center rounded-full">
+      <View
+        accessible
+        accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number })}
+        accessibilityRole="button"
+        accessibilityState={{ selected: done }}
+        className="bg-accent size-7 items-center justify-center rounded-full"
+      >
         {done ? (
           <Ionicons color={accentForeground} name="checkmark" size={16} />
         ) : (
@@ -214,11 +263,13 @@ function StepLine({
         )}
       </View>
       <View className="min-w-0 flex-1 gap-3">
-        <Text
+        <StepText
           className={`pt-0.5 text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
-        >
-          <StepText disableLinks={done} size="page" stepIndex={number - 1} text={step.step} />
-        </Text>
+          disableLinks={done}
+          size="page"
+          stepIndex={number - 1}
+          text={step.step}
+        />
         <StepChips lines={lines} step={step} systemUsed={systemUsed} />
         {step.images && step.images.length > 0 ? (
           <StepPhotos

@@ -1,5 +1,7 @@
-import React from "react";
-import { Pressable, Text } from "react-native";
+import type { ComponentRef, RefObject } from "react";
+import type { LayoutRectangle } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -14,41 +16,27 @@ import { TimerRing } from "./timer-ring";
 import { useTint } from "./tint";
 
 const SIZES = {
-  page: { height: 28, text: "text-[15px]", icon: 15, ring: 15, stroke: 2.3 },
-  cook: { height: 34, text: "text-xl", icon: 18, ring: 18, stroke: 2.6 },
+  page: { height: 28, shift: 5, text: "text-[15px]", icon: 15, ring: 15, stroke: 2.3 },
+  cook: { height: 34, shift: 6, text: "text-xl", icon: 18, ring: 18, stroke: 2.6 },
 } as const;
 
-/**
- * A duration in a step as a chip: tap to start, pause or resume; a finished one shows Done and taps
- * away. It sits inside the step's Text, so it flows with the words.
- */
-export function TimerChip({
-  match,
-  index,
-  stepIndex,
-  size,
-}: {
+type ChipProps = {
   match: TimerMatch;
   index: number;
   stepIndex: number;
   size: keyof typeof SIZES;
-}) {
+};
+
+/** A step duration's timer: a tap starts, pauses or resumes it, and taps a finished one away. */
+function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const intl = useIntl();
   const recipe = useLoadedPageRecipe();
-  const tint = useTint();
   const id = recipeTimerId(recipe.id, stepIndex, index);
   const timer = useTimerStore((state) => state.timers.find((entry) => entry.id === id));
   const addTimer = useTimerStore((state) => state.addTimer);
   const startTimer = useTimerStore((state) => state.startTimer);
   const pauseTimer = useTimerStore((state) => state.pauseTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
-  const [foreground, muted, accentForeground] = useThemeColor([
-    "foreground",
-    "muted",
-    "accent-foreground",
-  ] as const);
-  const { height, text, icon, ring, stroke } = SIZES[size];
-  const done = timer?.status === "completed";
   const left = timer ? formatTimerMs(timer.remainingMs) : "";
 
   const press = () => {
@@ -68,31 +56,69 @@ export function TimerChip({
     else removeTimer(id);
   };
 
+  // The duration first, then what a tap does: VoiceOver and Maestro find a chip by it.
   const label = !timer
     ? intl.formatMessage({ id: "recipes.cookMode.startTimer" }, { duration: match.originalText })
-    : done
-      ? intl.formatMessage({ id: "recipes.cookMode.dismissTimer" })
-      : intl.formatMessage(
-          {
-            id:
-              timer.status === "running"
-                ? "recipes.cookMode.pauseTimer"
-                : "recipes.cookMode.resumeTimer",
-          },
-          { time: left }
-        );
+    : [
+        match.originalText,
+        timer.status === "completed"
+          ? `${intl.formatMessage({ id: "common.timer.done" })}, ${intl.formatMessage({ id: "recipes.cookMode.dismissTimer" })}`
+          : intl.formatMessage(
+              {
+                id:
+                  timer.status === "running"
+                    ? "recipes.cookMode.pauseTimer"
+                    : "recipes.cookMode.resumeTimer",
+              },
+              { time: left }
+            ),
+      ].join(", ");
+
+  return { timer, left, label, press };
+}
+
+/** The chip drawn in the step's Text; inline views miss the accessibility tree, so TimerChipButton takes taps. */
+export function TimerChip({
+  within,
+  onPlace,
+  ...props
+}: ChipProps & {
+  within: RefObject<ComponentRef<typeof View> | null>;
+  onPlace: (frame: LayoutRectangle) => void;
+}) {
+  const intl = useIntl();
+  const tint = useTint();
+  const { timer, left } = useChipTimer(props);
+  const [foreground, muted, accentForeground] = useThemeColor([
+    "foreground",
+    "muted",
+    "accent-foreground",
+  ] as const);
+  const { height, shift, text, icon, ring, stroke } = SIZES[props.size];
+  const done = timer?.status === "completed";
+  const face = useRef<ComponentRef<typeof View>>(null);
+
+  // A view inside Text gets no onLayout, and Text places it after the commit: measured a frame later.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() =>
+      within.current?.measureInWindow((left, top) =>
+        face.current?.measureInWindow((x, y, width, height) =>
+          onPlace({ x: x - left, y: y - top, width, height })
+        )
+      )
+    );
+
+    return () => cancelAnimationFrame(frame);
+  });
 
   return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
+    <View
+      ref={face}
       className={`flex-row items-center gap-1.5 rounded-full pr-2.5 pl-2 ${done ? "bg-accent" : "bg-default"}`}
       style={[
-        { height, transform: [{ translateY: size === "cook" ? 6 : 5 }] },
+        { height, transform: [{ translateY: shift }] },
         !done && tint ? { backgroundColor: tint.soft } : null,
       ]}
-      testID={`timer-chip-${stepIndex}-${index}`}
-      onPress={press}
     >
       {!timer ? (
         <Ionicons color={foreground} name="time-outline" size={icon} />
@@ -113,11 +139,32 @@ export function TimerChip({
         style={timer && !done ? { fontVariant: ["tabular-nums"] } : undefined}
       >
         {!timer
-          ? match.originalText
+          ? props.match.originalText
           : done
             ? intl.formatMessage({ id: "common.timer.done" })
             : left}
       </Text>
-    </Pressable>
+    </View>
+  );
+}
+
+/** The chip's button, laid over where the Text drew it: the step's text stays one flow. */
+export function TimerChipButton({ frame, ...props }: ChipProps & { frame: LayoutRectangle }) {
+  const { label, press } = useChipTimer(props);
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      style={{
+        position: "absolute",
+        left: frame.x,
+        top: frame.y,
+        width: frame.width,
+        height: frame.height,
+      }}
+      testID={`timer-chip-${props.stepIndex}-${props.index}`}
+      onPress={press}
+    />
   );
 }
