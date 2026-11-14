@@ -1,6 +1,6 @@
 import React from "react";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-accessory";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 

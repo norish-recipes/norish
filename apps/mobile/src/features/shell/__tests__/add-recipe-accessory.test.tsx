@@ -22,7 +22,7 @@ vi.mock("react-native", async () => {
   };
 });
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("heroui-native", () => ({ useThemeColor: () => ["#000"] }));
+vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
