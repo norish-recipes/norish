@@ -79,11 +79,11 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
 
 /** The chip drawn in the step's Text; inline views miss the accessibility tree, so TimerChipButton takes taps. */
 export function TimerChip({
-  within,
+  withinRef,
   onPlace,
   ...props
 }: ChipProps & {
-  within: RefObject<ComponentRef<typeof View> | null>;
+  withinRef: RefObject<ComponentRef<typeof View> | null>;
   onPlace: (frame: LayoutRectangle) => void;
 }) {
   const intl = useIntl();
@@ -96,13 +96,13 @@ export function TimerChip({
   ] as const);
   const { height, shift, text, icon, ring, stroke } = SIZES[props.size];
   const done = timer?.status === "completed";
-  const face = useRef<ComponentRef<typeof View>>(null);
+  const faceRef = useRef<ComponentRef<typeof View>>(null);
 
   // A view inside Text gets no onLayout, and Text places it after the commit: measured a frame later.
   useEffect(() => {
     const frame = requestAnimationFrame(() =>
-      within.current?.measureInWindow((left, top) =>
-        face.current?.measureInWindow((x, y, width, height) =>
+      withinRef.current?.measureInWindow((left, top) =>
+        faceRef.current?.measureInWindow((x, y, width, height) =>
           onPlace({ x: x - left, y: y - top, width, height })
         )
       )
@@ -113,7 +113,7 @@ export function TimerChip({
 
   return (
     <View
-      ref={face}
+      ref={faceRef}
       className={`flex-row items-center gap-1.5 rounded-full pr-2.5 pl-2 ${done ? "bg-accent" : "bg-default"}`}
       style={[
         { height, transform: [{ translateY: shift }] },
