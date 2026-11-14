@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Prêt vers {time}",
     "timers": "Minuteurs",
-    "nextStep": "Étape suivante"
+    "nextStep": "Étape suivante",
+    "stepLabel": "Étape {number}",
+    "previousStep": "Étape précédente",
+    "startTimer": "Lancer un minuteur de {duration}",
+    "pauseTimer": "Mettre le minuteur en pause, {time} restantes",
+    "resumeTimer": "Reprendre le minuteur, {time} restantes",
+    "dismissTimer": "Fermer le minuteur",
+    "restartTimer": "Relancer le minuteur",
+    "notificationsOff": "Les notifications sont désactivées pour Norish : les minuteurs ne sonnent que lorsque l’app est ouverte.",
+    "decreaseTimer": "Retirer {time}",
+    "increaseTimer": "Ajouter {time}"
   },
   "enrichment": {
     "failed": "L'enrichissement a échoué",

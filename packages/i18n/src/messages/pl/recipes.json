@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Gotowe około {time}",
     "timers": "Minutniki",
-    "nextStep": "Następny krok"
+    "nextStep": "Następny krok",
+    "stepLabel": "Krok {number}",
+    "previousStep": "Poprzedni krok",
+    "startTimer": "Uruchom minutnik na {duration}",
+    "pauseTimer": "Wstrzymaj minutnik, zostało {time}",
+    "resumeTimer": "Wznów minutnik, zostało {time}",
+    "dismissTimer": "Zamknij minutnik",
+    "restartTimer": "Uruchom minutnik ponownie",
+    "notificationsOff": "Powiadomienia Norish są wyłączone, więc minutniki dzwonią tylko przy otwartej aplikacji.",
+    "decreaseTimer": "Odejmij {time}",
+    "increaseTimer": "Dodaj {time}"
   },
   "enrichment": {
     "failed": "Wzbogacanie nie powiodło się",

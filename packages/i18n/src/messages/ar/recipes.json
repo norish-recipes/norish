@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "جاهزة نحو الساعة {time}",
     "timers": "المؤقّتات",
-    "nextStep": "الخطوة التالية"
+    "nextStep": "الخطوة التالية",
+    "stepLabel": "الخطوة {number}",
+    "previousStep": "الخطوة السابقة",
+    "startTimer": "ابدأ مؤقتًا لمدة {duration}",
+    "pauseTimer": "إيقاف المؤقت مؤقتًا، متبقٍ {time}",
+    "resumeTimer": "استئناف المؤقت، متبقٍ {time}",
+    "dismissTimer": "إغلاق المؤقت",
+    "restartTimer": "إعادة تشغيل المؤقت",
+    "notificationsOff": "الإشعارات متوقفة لتطبيق Norish، لذا لا ترن المؤقتات إلا والتطبيق مفتوح.",
+    "decreaseTimer": "إنقاص {time}",
+    "increaseTimer": "إضافة {time}"
   },
   "enrichment": {
     "failed": "فشل الإثراء",

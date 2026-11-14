@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Valmis noin klo {time}",
     "timers": "Ajastimet",
-    "nextStep": "Seuraava vaihe"
+    "nextStep": "Seuraava vaihe",
+    "stepLabel": "Vaihe {number}",
+    "previousStep": "Edellinen vaihe",
+    "startTimer": "Käynnistä {duration} ajastin",
+    "pauseTimer": "Keskeytä ajastin, {time} jäljellä",
+    "resumeTimer": "Jatka ajastinta, {time} jäljellä",
+    "dismissTimer": "Sulje ajastin",
+    "restartTimer": "Käynnistä ajastin uudelleen",
+    "notificationsOff": "Norishin ilmoitukset ovat pois päältä, joten ajastimet hälyttävät vain sovelluksen ollessa auki.",
+    "decreaseTimer": "Vähennä {time}",
+    "increaseTimer": "Lisää {time}"
   },
   "enrichment": {
     "failed": "Rikastus epäonnistui",

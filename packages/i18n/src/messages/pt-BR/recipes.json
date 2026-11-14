@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Pronto por volta das {time}",
     "timers": "Temporizadores",
-    "nextStep": "Próximo passo"
+    "nextStep": "Próximo passo",
+    "stepLabel": "Passo {number}",
+    "previousStep": "Passo anterior",
+    "startTimer": "Iniciar um timer de {duration}",
+    "pauseTimer": "Pausar o timer, faltam {time}",
+    "resumeTimer": "Retomar o timer, faltam {time}",
+    "dismissTimer": "Fechar o timer",
+    "restartTimer": "Reiniciar o timer",
+    "notificationsOff": "As notificações do Norish estão desativadas, então os timers só tocam com o app aberto.",
+    "decreaseTimer": "Tirar {time}",
+    "increaseTimer": "Adicionar {time}"
   },
   "enrichment": {
     "failed": "Falha no enriquecimento",

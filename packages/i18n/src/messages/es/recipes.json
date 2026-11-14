@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Listo hacia las {time}",
     "timers": "Temporizadores",
-    "nextStep": "Siguiente paso"
+    "nextStep": "Siguiente paso",
+    "stepLabel": "Paso {number}",
+    "previousStep": "Paso anterior",
+    "startTimer": "Iniciar un temporizador de {duration}",
+    "pauseTimer": "Pausar el temporizador, quedan {time}",
+    "resumeTimer": "Reanudar el temporizador, quedan {time}",
+    "dismissTimer": "Cerrar el temporizador",
+    "restartTimer": "Reiniciar el temporizador",
+    "notificationsOff": "Las notificaciones de Norish están desactivadas, así que los temporizadores solo suenan con la app abierta.",
+    "decreaseTimer": "Quitar {time}",
+    "increaseTimer": "Añadir {time}"
   },
   "enrichment": {
     "failed": "El enriquecimiento falló",

@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Готово примерно в {time}",
     "timers": "Таймеры",
-    "nextStep": "Следующий шаг"
+    "nextStep": "Следующий шаг",
+    "stepLabel": "Шаг {number}",
+    "previousStep": "Предыдущий шаг",
+    "startTimer": "Запустить таймер на {duration}",
+    "pauseTimer": "Приостановить таймер, осталось {time}",
+    "resumeTimer": "Продолжить таймер, осталось {time}",
+    "dismissTimer": "Закрыть таймер",
+    "restartTimer": "Перезапустить таймер",
+    "notificationsOff": "Уведомления Norish выключены, поэтому таймеры звонят, только пока приложение открыто.",
+    "decreaseTimer": "Убавить {time}",
+    "increaseTimer": "Добавить {time}"
   },
   "enrichment": {
     "failed": "Не удалось выполнить обогащение",

@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Готово около {time}",
     "timers": "Таймери",
-    "nextStep": "Следваща стъпка"
+    "nextStep": "Следваща стъпка",
+    "stepLabel": "Стъпка {number}",
+    "previousStep": "Предишна стъпка",
+    "startTimer": "Пусни таймер за {duration}",
+    "pauseTimer": "Пауза на таймера, остават {time}",
+    "resumeTimer": "Продължи таймера, остават {time}",
+    "dismissTimer": "Затвори таймера",
+    "restartTimer": "Рестартирай таймера",
+    "notificationsOff": "Известията за Norish са изключени, затова таймерите звънят само докато приложението е отворено.",
+    "decreaseTimer": "Извади {time}",
+    "increaseTimer": "Добави {time}"
   },
   "enrichment": {
     "failed": "Обогатяването е неуспешно",

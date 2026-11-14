@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Ferdig rundt {time}",
     "timers": "Tidtakere",
-    "nextStep": "Neste steg"
+    "nextStep": "Neste steg",
+    "stepLabel": "Trinn {number}",
+    "previousStep": "Forrige trinn",
+    "startTimer": "Start en tidtaker på {duration}",
+    "pauseTimer": "Sett tidtakeren på pause, {time} igjen",
+    "resumeTimer": "Fortsett tidtakeren, {time} igjen",
+    "dismissTimer": "Lukk tidtakeren",
+    "restartTimer": "Start tidtakeren på nytt",
+    "notificationsOff": "Varsler er slått av for Norish, så tidtakere ringer bare mens appen er åpen.",
+    "decreaseTimer": "Trekk fra {time}",
+    "increaseTimer": "Legg til {time}"
   },
   "enrichment": {
     "failed": "Berikelse mislyktes",

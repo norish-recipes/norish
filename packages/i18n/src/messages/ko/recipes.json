@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "{time}쯤 완성",
     "timers": "타이머",
-    "nextStep": "다음 단계"
+    "nextStep": "다음 단계",
+    "stepLabel": "{number}단계",
+    "previousStep": "이전 단계",
+    "startTimer": "{duration} 타이머 시작",
+    "pauseTimer": "타이머 일시정지, {time} 남음",
+    "resumeTimer": "타이머 재개, {time} 남음",
+    "dismissTimer": "타이머 닫기",
+    "restartTimer": "타이머 다시 시작",
+    "notificationsOff": "Norish 알림이 꺼져 있어 앱이 열려 있을 때만 타이머가 울립니다.",
+    "decreaseTimer": "{time} 줄이기",
+    "increaseTimer": "{time} 늘리기"
   },
   "enrichment": {
     "failed": "보강에 실패했습니다",

@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Rond {time} klaar",
     "timers": "Timers",
-    "nextStep": "Volgende stap"
+    "nextStep": "Volgende stap",
+    "stepLabel": "Stap {number}",
+    "previousStep": "Vorige stap",
+    "startTimer": "Start een timer van {duration}",
+    "pauseTimer": "Timer pauzeren, nog {time}",
+    "resumeTimer": "Timer hervatten, nog {time}",
+    "dismissTimer": "Timer sluiten",
+    "restartTimer": "Timer opnieuw starten",
+    "notificationsOff": "Meldingen staan uit voor Norish, dus timers gaan alleen af terwijl de app open is.",
+    "decreaseTimer": "{time} eraf",
+    "increaseTimer": "{time} erbij"
   },
   "enrichment": {
     "failed": "Verrijking mislukt",

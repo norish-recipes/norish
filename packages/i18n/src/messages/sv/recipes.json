@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Klart ungefär {time}",
     "timers": "Timrar",
-    "nextStep": "Nästa steg"
+    "nextStep": "Nästa steg",
+    "stepLabel": "Steg {number}",
+    "previousStep": "Föregående steg",
+    "startTimer": "Starta en timer på {duration}",
+    "pauseTimer": "Pausa timern, {time} kvar",
+    "resumeTimer": "Återuppta timern, {time} kvar",
+    "dismissTimer": "Stäng timern",
+    "restartTimer": "Starta om timern",
+    "notificationsOff": "Notiser är avstängda för Norish, så timrar ringer bara medan appen är öppen.",
+    "decreaseTimer": "Dra av {time}",
+    "increaseTimer": "Lägg till {time}"
   },
   "enrichment": {
     "failed": "Kompletteringen misslyckades",

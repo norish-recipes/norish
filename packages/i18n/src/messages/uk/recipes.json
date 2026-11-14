@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Буде готово близько {time}",
     "timers": "Таймери",
-    "nextStep": "Наступний крок"
+    "nextStep": "Наступний крок",
+    "stepLabel": "Крок {number}",
+    "previousStep": "Попередній крок",
+    "startTimer": "Запустити таймер на {duration}",
+    "pauseTimer": "Призупинити таймер, залишилося {time}",
+    "resumeTimer": "Продовжити таймер, залишилося {time}",
+    "dismissTimer": "Закрити таймер",
+    "restartTimer": "Перезапустити таймер",
+    "notificationsOff": "Сповіщення Norish вимкнено, тож таймери дзвонять, лише поки застосунок відкритий.",
+    "decreaseTimer": "Зменшити на {time}",
+    "increaseTimer": "Додати {time}"
   },
   "enrichment": {
     "failed": "Не вдалося доповнити рецепт",

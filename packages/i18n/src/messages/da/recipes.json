@@ -354,7 +354,17 @@
     "stepCounter": "{current} / {total}",
     "readyAt": "Klar omkring {time}",
     "timers": "Timere",
-    "nextStep": "Næste trin"
+    "nextStep": "Næste trin",
+    "stepLabel": "Trin {number}",
+    "previousStep": "Forrige trin",
+    "startTimer": "Start en timer på {duration}",
+    "pauseTimer": "Sæt timeren på pause, {time} tilbage",
+    "resumeTimer": "Genoptag timeren, {time} tilbage",
+    "dismissTimer": "Luk timeren",
+    "restartTimer": "Genstart timeren",
+    "notificationsOff": "Notifikationer er slået fra for Norish, så timere ringer kun, mens appen er åben.",
+    "decreaseTimer": "Træk {time} fra",
+    "increaseTimer": "Læg {time} til"
   },
   "enrichment": {
     "failed": "Berigelse mislykkedes",
