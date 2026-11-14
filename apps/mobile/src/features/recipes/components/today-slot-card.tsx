@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
-import { SLOT_SYMBOLS } from "@/components/slot-icons";
+import { SLOT_GLYPHS } from "@/components/slot-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -17,7 +17,7 @@ import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { TODAY_ACTION_DEFINITIONS, todayMenuActions } from "../utils/today-actions";
 import { CardMenu } from "./card-menu";
-import { GlassChip } from "./glass-chip";
+import { PhotoChip } from "./photo-chip";
 
 /** The one size of a Today card: the board's 172 by 244 pt, its photo 164 pt tall, 12 pt between. */
 export const TODAY_CARD = "h-[244px] w-[172px] flex-none overflow-hidden rounded-[22px]";
@@ -36,10 +36,10 @@ function SlotChip({ slot }: { slot: Slot }) {
   const intl = useIntl();
 
   return (
-    <GlassChip
+    <PhotoChip
       className="absolute top-2.5 left-2.5"
+      icon={SLOT_GLYPHS[slot]}
       label={intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
-      systemName={SLOT_SYMBOLS[slot]}
     />
   );
 }
@@ -110,7 +110,7 @@ export function TodayPlannedCard({
             )}
             <SlotChip slot={slot} />
             {overflow > 0 ? (
-              <GlassChip semibold className="absolute top-2.5 right-2.5" label={`+${overflow}`} />
+              <PhotoChip semibold className="absolute top-2.5 right-2.5" label={`+${overflow}`} />
             ) : null}
             <View className="gap-0.5 px-3.5 pt-3">
               <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
