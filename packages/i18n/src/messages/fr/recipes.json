@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# photo, importée comme une seule recette} other {# photos, importées comme une seule recette}}",
     "photoLimits": "Jusqu'à {max} photos, JPEG, PNG ou WebP",
     "removePhoto": "Retirer la photo {number}"
+  },
+  "shareExtension": {
+    "sending": "Envoi vers Norish…",
+    "sentTitle": "Importation dans Norish",
+    "sentBody": "Elle apparaît dans votre bibliothèque dans un instant.",
+    "savedTitle": "Enregistré pour plus tard",
+    "savedBody": "Norish l’importera dès que votre serveur sera joignable.",
+    "signedOut": "Ouvrez Norish et connectez-vous d’abord.",
+    "tooOld": "Votre serveur Norish doit d’abord être mis à jour.",
+    "noAi": "Importer des photos nécessite l’IA, qui est désactivée sur votre serveur.",
+    "failed": "Norish n’a pas pu importer ceci.",
+    "close": "Fermer",
+    "photoCount": "{count, plural, one {# photo} other {# photos}}",
+    "text": "Texte"
   }
 }

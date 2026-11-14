@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, zero {# صور، تُستورد كوصفة واحدة} one {صورة واحدة، تُستورد كوصفة واحدة} two {صورتان، تُستوردان كوصفة واحدة} few {# صور، تُستورد كوصفة واحدة} many {# صورة، تُستورد كوصفة واحدة} other {# صورة، تُستورد كوصفة واحدة}}",
     "photoLimits": "حتى {max} صور، JPEG أو PNG أو WebP",
     "removePhoto": "إزالة الصورة {number}"
+  },
+  "shareExtension": {
+    "sending": "جارٍ الإرسال إلى Norish…",
+    "sentTitle": "جارٍ الاستيراد في Norish",
+    "sentBody": "ستظهر في مكتبتك بعد لحظات.",
+    "savedTitle": "محفوظ لوقت لاحق",
+    "savedBody": "سيستوردها Norish عندما يصبح خادمك متاحًا.",
+    "signedOut": "افتح Norish وسجّل الدخول أولًا.",
+    "tooOld": "يحتاج خادم Norish إلى تحديث أولًا.",
+    "noAi": "يتطلب استيراد الصور الذكاء الاصطناعي، وهو متوقف على خادمك.",
+    "failed": "تعذّر على Norish استيراد هذا.",
+    "close": "إغلاق",
+    "photoCount": "{count, plural, zero {# صور} one {صورة واحدة} two {صورتان} few {# صور} many {# صورة} other {# صورة}}",
+    "text": "نص"
   }
 }

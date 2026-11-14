@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# foto, importerat som ett recept} other {# foton, importerade som ett recept}}",
     "photoLimits": "Upp till {max} foton, JPEG, PNG eller WebP",
     "removePhoto": "Ta bort foto {number}"
+  },
+  "shareExtension": {
+    "sending": "Skickar till Norish…",
+    "sentTitle": "Importerar i Norish",
+    "sentBody": "Det dyker upp i ditt bibliotek om en stund.",
+    "savedTitle": "Sparat till senare",
+    "savedBody": "Norish importerar det när din server går att nå.",
+    "signedOut": "Öppna Norish och logga in först.",
+    "tooOld": "Din Norish-server behöver uppdateras först.",
+    "noAi": "Import av foton kräver AI, som är avstängd på din server.",
+    "failed": "Norish kunde inte importera detta.",
+    "close": "Stäng",
+    "photoCount": "{count, plural, one {# foto} other {# foton}}",
+    "text": "Text"
   }
 }

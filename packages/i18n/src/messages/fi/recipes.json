@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# kuva, tuodaan yhtenä reseptinä} other {# kuvaa, tuodaan yhtenä reseptinä}}",
     "photoLimits": "Enintään {max} kuvaa, JPEG, PNG tai WebP",
     "removePhoto": "Poista kuva {number}"
+  },
+  "shareExtension": {
+    "sending": "Lähetetään Norishiin…",
+    "sentTitle": "Tuodaan Norishiin",
+    "sentBody": "Se näkyy kirjastossasi hetken kuluttua.",
+    "savedTitle": "Tallennettu myöhemmäksi",
+    "savedBody": "Norish tuo sen, kun palvelimesi on tavoitettavissa.",
+    "signedOut": "Avaa Norish ja kirjaudu ensin sisään.",
+    "tooOld": "Norish-palvelimesi on ensin päivitettävä.",
+    "noAi": "Kuvien tuonti vaatii tekoälyä, joka on poissa käytöstä palvelimellasi.",
+    "failed": "Norish ei voinut tuoda tätä.",
+    "close": "Sulje",
+    "photoCount": "{count, plural, one {# kuva} other {# kuvaa}}",
+    "text": "Teksti"
   }
 }

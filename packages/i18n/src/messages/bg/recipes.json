@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# снимка, импортирана като една рецепта} other {# снимки, импортирани като една рецепта}}",
     "photoLimits": "До {max} снимки, JPEG, PNG или WebP",
     "removePhoto": "Премахване на снимка {number}"
+  },
+  "shareExtension": {
+    "sending": "Изпращане към Norish…",
+    "sentTitle": "Импортиране в Norish",
+    "sentBody": "След малко ще се появи във вашата библиотека.",
+    "savedTitle": "Запазено за по-късно",
+    "savedBody": "Norish ще го импортира, когато сървърът ви е достъпен.",
+    "signedOut": "Първо отворете Norish и влезте.",
+    "tooOld": "Първо трябва да обновите сървъра си на Norish.",
+    "noAi": "Импортирането на снимки изисква ИИ, който е изключен на сървъра ви.",
+    "failed": "Norish не успя да импортира това.",
+    "close": "Затвори",
+    "photoCount": "{count, plural, one {# снимка} other {# снимки}}",
+    "text": "Текст"
   }
 }

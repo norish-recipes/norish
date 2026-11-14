@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# photo, imported as one recipe} other {# photos, imported as one recipe}}",
     "photoLimits": "Up to {max} photos, JPEG, PNG or WebP",
     "removePhoto": "Remove photo {number}"
+  },
+  "shareExtension": {
+    "sending": "Sending to Norish…",
+    "sentTitle": "Importing in Norish",
+    "sentBody": "It shows up in your library in a moment.",
+    "savedTitle": "Saved for later",
+    "savedBody": "Norish imports it when your server is reachable.",
+    "signedOut": "Open Norish and sign in first.",
+    "tooOld": "Your Norish server needs an update first.",
+    "noAi": "Importing photos needs AI, which is off on your server.",
+    "failed": "Norish couldn’t import this.",
+    "close": "Close",
+    "photoCount": "{count, plural, one {# photo} other {# photos}}",
+    "text": "Text"
   }
 }

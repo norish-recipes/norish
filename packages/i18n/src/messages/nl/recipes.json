@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# foto, geïmporteerd als één recept} other {# foto's, geïmporteerd als één recept}}",
     "photoLimits": "Tot {max} foto's, JPEG, PNG of WebP",
     "removePhoto": "Foto {number} verwijderen"
+  },
+  "shareExtension": {
+    "sending": "Naar Norish sturen…",
+    "sentTitle": "Importeren in Norish",
+    "sentBody": "Het staat zo in je bibliotheek.",
+    "savedTitle": "Bewaard voor later",
+    "savedBody": "Norish importeert het zodra je server bereikbaar is.",
+    "signedOut": "Open Norish en log eerst in.",
+    "tooOld": "Je Norish-server moet eerst worden bijgewerkt.",
+    "noAi": "Foto’s importeren vraagt om AI, en dat staat uit op je server.",
+    "failed": "Norish kon dit niet importeren.",
+    "close": "Sluiten",
+    "photoCount": "{count, plural, one {# foto} other {# foto’s}}",
+    "text": "Tekst"
   }
 }

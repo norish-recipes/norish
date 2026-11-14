@@ -41,3 +41,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+# generated at prebuild from packages/i18n
+/targets/share/Localizable.xcstrings

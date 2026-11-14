@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, one {# foto, importeret som én opskrift} other {# fotos, importeret som én opskrift}}",
     "photoLimits": "Op til {max} fotos, JPEG, PNG eller WebP",
     "removePhoto": "Fjern foto {number}"
+  },
+  "shareExtension": {
+    "sending": "Sender til Norish…",
+    "sentTitle": "Importerer i Norish",
+    "sentBody": "Den dukker op i dit bibliotek om et øjeblik.",
+    "savedTitle": "Gemt til senere",
+    "savedBody": "Norish importerer den, når din server kan nås.",
+    "signedOut": "Åbn Norish, og log ind først.",
+    "tooOld": "Din Norish-server skal opdateres først.",
+    "noAi": "Import af fotos kræver AI, som er slået fra på din server.",
+    "failed": "Norish kunne ikke importere dette.",
+    "close": "Luk",
+    "photoCount": "{count, plural, one {# foto} other {# fotos}}",
+    "text": "Tekst"
   }
 }

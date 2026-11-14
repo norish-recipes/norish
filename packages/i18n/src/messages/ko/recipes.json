@@ -468,5 +468,19 @@
     "photoCount": "{count, plural, other {사진 #장, 레시피 하나로 가져옴}}",
     "photoLimits": "최대 {max}장, JPEG, PNG 또는 WebP",
     "removePhoto": "사진 {number} 삭제"
+  },
+  "shareExtension": {
+    "sending": "Norish로 보내는 중…",
+    "sentTitle": "Norish에서 가져오는 중",
+    "sentBody": "곧 라이브러리에 표시됩니다.",
+    "savedTitle": "나중을 위해 저장됨",
+    "savedBody": "서버에 연결되면 Norish가 가져옵니다.",
+    "signedOut": "먼저 Norish를 열고 로그인하세요.",
+    "tooOld": "먼저 Norish 서버를 업데이트해야 합니다.",
+    "noAi": "사진을 가져오려면 AI가 필요하지만 서버에서 꺼져 있습니다.",
+    "failed": "Norish가 이 항목을 가져오지 못했습니다.",
+    "close": "닫기",
+    "photoCount": "{count, plural, other {사진 #장}}",
+    "text": "텍스트"
   }
 }
