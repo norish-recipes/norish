@@ -4,7 +4,7 @@
 
 **Blocked by:** 15
 
-**Status:** open
+**Status:** done
 
 - [x] Added through a config plugin (`ios/` is generated); App Group and shared keychain access group on app and extension.
 - [x] The Server Address and session cookie reach the extension through them; Better Auth's SecureStore items move into the group once on upgrade, with nothing left behind under the old group.
@@ -50,3 +50,19 @@
 - Shared text capped at 1 MB of UTF-8 as a memory guard (`39c2be971`).
 - Tidying: one switch for a saved share's import (`354b4b248`), one import-mutation hook (`9f9e051dd`), `SharedItem.route`/`needsAI` (`aae492565`), named Swift constants and labels (`d3fd47832`), SecureStore wrapper in `app-keychain.ts` (`b1fc72126`).
 - Simulator (Release, clean prebuild): Safari link sent once; a text selection sent; a link with the server stopped saved with its `serverAddress`, arrived once under its operation id when the app opened, no pending card left.
+
+### Review log (2026-11-14)
+
+Implementation `313e26eb6..8267224ed` on Opus high (resumed after the first attempt stopped 17 minutes in when the machine went down), fixes `a3d7b7b77..7a0f6b250` and `a02d4bd88..4e3f6aeb4`. Two review rounds: Standards on Sonnet low, Spec on Opus high, as the ticket asks. No third per-ticket review; the whole-branch review covers the second fix round.
+
+Fixed, round 1 (11): a marker read that throws falls back to the emptied old keychain; a share imported twice after a timeout or an interrupted drain; a 5xx or 429 deleting a saved share; a saved share imported into another account; shared text with no cap; a duplicated SecureStore wrapper and storage type; Swift's literals untied from the TypeScript constants; the App Group adapter in the hook file; the drain's kind cascade and unused return; no test for the strings plugin. Better Auth exports no chunk helper, so our chunk deletion stays.
+
+Fixed, round 2 (12): the drain checking its owner only once; the Server Address check dropped from saved shares; a pending card left behind by a repeated share; a failure toast on every foreground for a kept share; the text cap applied as the paste rule (the server applies that per recipe; the cap is a 1 MB memory guard); two retry rules for one question (the inbox now uses `classifyReplayError`, which makes 408 and 429 retryable for Replay on web and mobile too); comments over two lines; a re-declared options type and three repeated mutation blocks; a forwarding helper; per-kind facts moved onto `SharedItem`; Swift constants named; the SecureStore wrapper in its own file.
+
+Rejected (3): Swift's ports of the version compare and the cookie header (Swift cannot import the TypeScript; each names its source); the hex palette copied from the app's tokens (documented in the file); `nextStep`'s string union and the request's optional parameters as types of their own.
+
+Maintainer, on the simulator: the sheet opened at nearly full height. iOS hosts a share extension in a full-height sheet and ignores detents and `preferredContentSize`; the extension clears its containers' backgrounds and draws the scrim and a content-height card itself.
+
+Not seen on a device: the too-old, AI-off and generic failure lines (they need an older server or AI off); a share from Notes (the simulator has none; text was shared as a Safari selection, and the server's AI then found no recipe in it); the move from a team-signed build; the lock-state class; the share sheets' memory limit. The hand-check box stays open for a real iPhone.
+
+Final state `b3d60040f`: all 11 gates exit 0, mobile lint has no warnings; the clean prebuild and Release build exited 0 at `4e3f6aeb4` (JavaScript-only changes since).
