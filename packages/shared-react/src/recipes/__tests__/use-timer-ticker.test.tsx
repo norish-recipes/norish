@@ -1,8 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useTimerStore } from "../timer-store";
-import { useTimerTicker } from "../use-timer-ticker";
+import { useTimerStore, useTimerTicker } from "../timers";
 
 describe("useTimerTicker", () => {
   afterEach(() => {

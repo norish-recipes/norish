@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlatformStorage } from "../../platform";
-import { connectTimerStorage, useTimerStore } from "../timer-store";
+import { connectTimerStorage, useTimerStore } from "../timers";
 
 const mapStorage = (entries: Map<string, string> = new Map()): PlatformStorage => ({
   getItem: (key) => entries.get(key) ?? null,
@@ -246,7 +246,7 @@ describe("connectTimerStorage", () => {
 
   it("keeps the stored timers when one was added before the app connected its storage", async () => {
     vi.resetModules();
-    const fresh = await import("../timer-store");
+    const fresh = await import("../timers");
     const stored = JSON.stringify({
       state: {
         timers: [

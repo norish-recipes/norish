@@ -1,6 +1,7 @@
 "use client";
 
 import type { StateStorage } from "zustand/middleware";
+import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -204,4 +205,25 @@ export function connectTimerStorage(storage: PlatformStorage): void {
 
   platformStorage = storage;
   void useTimerStore.persist.rehydrate();
+}
+
+/** What an app does when a Recipe Timer it watched reaches zero, such as notifying. */
+export type TimerNotifier = {
+  finished: (timer: Timer) => void;
+};
+
+/** Ticks running timers once a second and hands each one that finishes to the notifier. */
+export function useTimerTicker(notifier: TimerNotifier) {
+  const tick = useTimerStore((state) => state.tick);
+  const hasRunningTimers = useTimerStore((state) =>
+    state.timers.some((timer) => timer.status === "running")
+  );
+
+  useEffect(() => {
+    if (!hasRunningTimers) return;
+
+    const interval = setInterval(() => tick().forEach((timer) => notifier.finished(timer)), 1000);
+
+    return () => clearInterval(interval);
+  }, [tick, hasRunningTimers, notifier]);
 }
