@@ -11,6 +11,7 @@ import {
   useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
 import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
+import { workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 
 import type { NutritionFigures } from "../utils/stored-nutrition";
 import { useTokenColor } from "../hooks/use-token-color";
@@ -142,6 +143,22 @@ export function NutritionSection() {
           {!stored && workedOut?.estimated ? (
             <Text className="text-muted pt-2 text-xs">
               {intl.formatMessage({ id: "recipes.nutrition.estimated" })}
+            </Text>
+          ) : null}
+          {!stored && workedOut ? (
+            <Text className="text-muted pt-2 text-xs" testID="nutrition-credit">
+              {intl.formatMessage(
+                { id: "recipes.nutrition.workedOutFrom" },
+                {
+                  sources: intl.formatList(
+                    workedOutSources(
+                      workedOut,
+                      intl.formatMessage({ id: "recipes.nutrition.householdNumbers" })
+                    ),
+                    { type: "conjunction" }
+                  ),
+                }
+              )}
             </Text>
           ) : null}
           {leftOut.length > 0 ? (
