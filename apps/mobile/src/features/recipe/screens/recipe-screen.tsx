@@ -16,17 +16,15 @@ import {
   useRecipeQuery,
 } from "@norish/shared-react/recipes";
 
+import { CookbooksSection } from "../components/cookbooks-section";
 import { IngredientsSection } from "../components/ingredients-section";
-import {
-  CookbooksSection,
-  NotesSection,
-  NutritionSection,
-  ProvenanceSection,
-  RatingSection,
-  SourceSection,
-} from "../components/more-sections";
+import { NotesSection } from "../components/notes-section";
+import { NutritionSection } from "../components/nutrition-section";
+import { ProvenanceSection } from "../components/provenance-section";
+import { RatingSection } from "../components/rating-section";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
+import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
 import { TintContext } from "../components/tint";
 import { useRecipeHeaderItems } from "../hooks/use-recipe-menu";
