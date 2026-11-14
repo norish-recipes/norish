@@ -26,7 +26,7 @@ export function ServingsStepper({
       <Button
         isIconOnly
         accessibilityLabel={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
-        className="bg-surface size-[34px] rounded-full"
+        className="bg-default size-[34px] rounded-full"
         testID={`${testID}-decrease`}
         variant="secondary"
         onPress={onDecrement}
@@ -42,7 +42,7 @@ export function ServingsStepper({
       <Button
         isIconOnly
         accessibilityLabel={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
-        className="bg-surface size-[34px] rounded-full"
+        className="bg-default size-[34px] rounded-full"
         testID={`${testID}-increase`}
         variant="secondary"
         onPress={onIncrement}

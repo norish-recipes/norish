@@ -55,7 +55,7 @@ export function AddToCookbookScreen() {
           <TextField className="flex-1">
             <Input
               accessibilityLabel={newLabel}
-              className="h-12 rounded-full px-4 text-base"
+              className="bg-default h-12 rounded-full px-4 text-base"
               placeholder={newLabel}
               returnKeyType="done"
               testID="add-to-cookbook-new-title"
@@ -95,7 +95,7 @@ export function AddToCookbookScreen() {
                     className={pickRowClass(position)}
                     testID={`add-to-cookbook-pending-${item.entry.key}`}
                   >
-                    <View className="bg-default size-11 items-center justify-center rounded-xl">
+                    <View className="bg-surface size-11 items-center justify-center rounded-xl">
                       <Ionicons color={muted} name="book-outline" size={20} />
                     </View>
                     <View className="min-w-0 flex-1">
@@ -109,7 +109,7 @@ export function AddToCookbookScreen() {
                     <Pressable
                       accessibilityLabel={intl.formatMessage({ id: "common.actions.remove" })}
                       accessibilityRole="button"
-                      className="bg-default size-8 items-center justify-center rounded-full"
+                      className="bg-surface size-8 items-center justify-center rounded-full"
                       testID={`add-to-cookbook-unstage-${item.entry.key}`}
                       onPress={() => unstage(item.entry.key)}
                     >
@@ -123,6 +123,7 @@ export function AddToCookbookScreen() {
                         className="size-11 overflow-hidden rounded-xl"
                         cookbook={item.cookbook}
                         iconSize={20}
+                        onSheet
                       />
                     }
                     position={position}

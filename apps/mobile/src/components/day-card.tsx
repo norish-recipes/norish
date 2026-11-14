@@ -37,9 +37,9 @@ function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
       testID={`day-item-${item.id}`}
     >
       {isRecipeItem(item) ? (
-        <CardPhoto className="size-10 rounded-[11px]" image={item.recipeImage} />
+        <CardPhoto className="size-10 rounded-[11px]" image={item.recipeImage} onSheet />
       ) : (
-        <View className="bg-default size-10 items-center justify-center rounded-[11px]">
+        <View className="bg-surface size-10 items-center justify-center rounded-[11px]">
           <Ionicons color={muted} name="document-text-outline" size={20} />
         </View>
       )}
@@ -65,7 +65,7 @@ function SlotMenu({
   const [accent] = useThemeColor(["accent"] as const);
 
   return (
-    <View className="bg-default size-9 overflow-hidden rounded-full">
+    <View className="bg-surface size-9 overflow-hidden rounded-full">
       <Host matchContents>
         <Menu
           label={
@@ -119,7 +119,7 @@ export function DayCard({
 
   return (
     <View
-      className={`bg-surface rounded-3xl pr-2 pl-3.5 ${DAY_CARD_CLASS.card}`}
+      className={`bg-default rounded-3xl pr-2 pl-3.5 ${DAY_CARD_CLASS.card}`}
       testID={`day-card-${dateKey}`}
     >
       {isToday ? (
@@ -178,7 +178,7 @@ function SlotGlyph({ slot }: { slot: Slot }) {
 export function DayCardSkeleton() {
   return (
     <View
-      className={`bg-surface rounded-3xl pt-[19px] pl-3.5 ${DAY_CARD_CLASS.skeleton}`}
+      className={`bg-default rounded-3xl pt-[19px] pl-3.5 ${DAY_CARD_CLASS.skeleton}`}
       testID="day-card-skeleton"
     >
       <Skeleton className="h-5 w-32 rounded-md" />

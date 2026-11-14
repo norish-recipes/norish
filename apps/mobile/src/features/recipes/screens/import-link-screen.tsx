@@ -72,7 +72,7 @@ export function ImportLinkScreen() {
               ref={fieldRef}
               autoCapitalize="none"
               autoCorrect={false}
-              className="bg-surface ios:shadow-none h-[52px] rounded-full text-base"
+              className="bg-default ios:shadow-none h-[52px] rounded-full text-base"
               keyboardType="url"
               placeholder={intl.formatMessage({ id: "common.import.url.placeholder" })}
               returnKeyType="go"
@@ -87,7 +87,7 @@ export function ImportLinkScreen() {
                 <Pressable
                   accessibilityLabel={intl.formatMessage({ id: "common.actions.clear" })}
                   accessibilityRole="button"
-                  className="bg-default size-7 items-center justify-center rounded-full"
+                  className="bg-surface size-7 items-center justify-center rounded-full"
                   hitSlop={8}
                   testID="import-link-clear"
                   onPress={() => {

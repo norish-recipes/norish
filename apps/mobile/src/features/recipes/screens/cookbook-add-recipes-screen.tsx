@@ -29,7 +29,7 @@ function SearchRecipes({
         <SearchField.Input
           accessibilityLabel={label}
           autoCorrect={false}
-          className="bg-surface h-12 rounded-3xl"
+          className="bg-default h-12 rounded-3xl"
           placeholder={label}
           returnKeyType="search"
           testID="cookbook-add-recipes-search"
@@ -81,7 +81,7 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
               keyExtractor: (recipe) => recipe.id,
               renderRow: (recipe, position) => (
                 <PickRow
-                  media={<CardPhoto className="size-11 rounded-xl" image={recipe.image} />}
+                  media={<CardPhoto className="size-11 rounded-xl" image={recipe.image} onSheet />}
                   position={position}
                   selected={selected.includes(recipe.id)}
                   testID={`cookbook-add-recipes-row-${recipe.id}`}

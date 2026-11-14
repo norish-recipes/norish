@@ -12,22 +12,26 @@ export function CookbookCover({
   cookbook,
   className,
   iconSize = 26,
+  onSheet,
 }: {
   cookbook: CookbookSummaryDTO;
   className: string;
   /** The book shown while the cookbook has no photo to draw. */
   iconSize?: number;
+  /** On a sheet row, whose fill is the neutral one, so the ground takes the white. */
+  onSheet?: boolean;
 }) {
+  const ground = onSheet ? "bg-surface" : "bg-default";
   const toImage = useServerImage();
   const [muted] = useThemeColor(["muted"] as const);
   const photos = cookbook.image ? [cookbook.image] : cookbook.coverImages.slice(0, 4);
   const tile = (uri: string, tileClass: string) => (
-    <Image key={uri} className={`bg-default ${tileClass}`} source={toImage(uri)} />
+    <Image key={uri} className={`${ground} ${tileClass}`} source={toImage(uri)} />
   );
 
   if (photos.length === 0) {
     return (
-      <View className={`bg-default items-center justify-center ${className}`}>
+      <View className={`${ground} items-center justify-center ${className}`}>
         <Ionicons color={muted} name="book-outline" size={iconSize} />
       </View>
     );

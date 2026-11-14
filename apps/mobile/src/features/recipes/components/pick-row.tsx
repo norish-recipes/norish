@@ -9,7 +9,7 @@ export type PickRowPosition = { first: boolean; last: boolean };
 
 /** A row's classes, for the rows of the list that are not ticks. */
 export const pickRowClass = ({ first, last }: PickRowPosition) =>
-  `bg-surface flex-row items-center gap-3 px-3.5 py-2.5 ${first ? "rounded-t-[22px]" : "border-separator border-t"} ${last ? "rounded-b-[22px]" : ""}`;
+  `bg-default flex-row items-center gap-3 px-3.5 py-2.5 ${first ? "rounded-t-[22px]" : "border-separator border-t"} ${last ? "rounded-b-[22px]" : ""}`;
 
 /** A row's shell while its content loads: the picture, the name and the tick, in the row's own layout. */
 export function PickRowSkeleton({ position }: { position: PickRowPosition }) {

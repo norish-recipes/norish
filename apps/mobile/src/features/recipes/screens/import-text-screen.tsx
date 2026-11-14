@@ -69,7 +69,7 @@ export function ImportTextScreen() {
           <TextArea
             ref={fieldRef}
             scrollEnabled
-            className="bg-surface ios:shadow-none flex-1 rounded-3xl px-4 py-3.5 text-base leading-[23px]"
+            className="bg-default ios:shadow-none flex-1 rounded-3xl px-4 py-3.5 text-base leading-[23px]"
             placeholder={intl.formatMessage({ id: "common.import.paste.placeholder" })}
             testID="import-text-field"
             textAlignVertical="top"

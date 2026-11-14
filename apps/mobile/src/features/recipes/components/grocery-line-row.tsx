@@ -77,7 +77,7 @@ export function GroceryLineRow({
         <Pressable
           accessibilityLabel={intl.formatMessage({ id: "groceries.panel.weKeepThis" })}
           accessibilityRole="button"
-          className="bg-default size-8 items-center justify-center rounded-full"
+          className="bg-surface size-8 items-center justify-center rounded-full"
           testID={`${testID}-keep`}
           onPress={onKeep}
         >
