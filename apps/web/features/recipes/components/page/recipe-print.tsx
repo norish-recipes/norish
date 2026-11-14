@@ -2,7 +2,6 @@
 
 import type { CSSProperties } from "react";
 import { useState } from "react";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Button, Checkbox, Label, ListBox, Modal, Select } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -11,6 +10,7 @@ import { createPortal } from "react-dom";
 import { useTimerKeywordsQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useHydrated } from "@norish/shared-react/platform";
 import {
+  useAmountDisplayPreference,
   useLoadedPageRecipe,
   usePageIngredients,
   usePageServings,

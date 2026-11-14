@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useSystemConversion } from "@/features/recipes/hooks/use-system-conversion";
 import {
   AdjustmentsHorizontalIcon,
@@ -13,6 +12,7 @@ import { Button, Dropdown, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
+import { useAmountDisplayPreference } from "@norish/shared-react/recipes";
 import { cssAIGradientText, cssAIIconColor, cssButtonPill } from "@norish/web/config/css-tokens";
 
 type OptionItem = {

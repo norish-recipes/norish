@@ -14,7 +14,8 @@ vi.mock("@/features/recipes/components/read-only/smart-instruction", () => ({
 vi.mock("@/features/recipes/components/page/cooking-mode/step-images", () => ({
   StepImages: () => null,
 }));
-vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useAmountDisplayPreference: () => ({ mode: "decimal" }),
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({

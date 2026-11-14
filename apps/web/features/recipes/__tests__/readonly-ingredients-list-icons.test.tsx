@@ -10,7 +10,8 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@norish/shared-react/reader", async () =>
   (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
 );
-vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useAmountDisplayPreference: () => ({ mode: "decimal" }),
 }));
 vi.mock("@/hooks/use-unit-formatter", () => ({

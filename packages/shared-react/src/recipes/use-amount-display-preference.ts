@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback } from "react";
-
 import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
-import { useDevicePreference } from "@norish/shared-react/reader";
+
+import { useDevicePreference } from "../reader";
 
 /** Decimal or fraction amounts, read and toggled through the `amountDisplay` Device Preference. */
 export function useAmountDisplayPreference(): {
@@ -13,9 +10,7 @@ export function useAmountDisplayPreference(): {
 } {
   const [mode, setMode] = useDevicePreference("amountDisplay");
 
-  const toggleMode = useCallback(() => {
-    setMode((prev) => (prev === "decimal" ? "fraction" : "decimal"));
-  }, [setMode]);
+  const toggleMode = () => setMode((prev) => (prev === "decimal" ? "fraction" : "decimal"));
 
   return { mode, setMode, toggleMode };
 }

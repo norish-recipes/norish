@@ -28,7 +28,8 @@ vi.mock("@norish/shared-react/reader", async () =>
   )
 );
 
-vi.mock("@/features/recipes/hooks/use-amount-display-preference", () => ({
+vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useAmountDisplayPreference: () => ({
     mode: mocks.amountMode,
     setMode: vi.fn(),

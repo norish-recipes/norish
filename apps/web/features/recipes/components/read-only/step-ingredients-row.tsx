@@ -1,7 +1,6 @@
 "use client";
 
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
-import { useAmountDisplayPreference } from "@/features/recipes/hooks/use-amount-display-preference";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { Chip } from "@heroui/react";
 import { useLocale } from "next-intl";
@@ -9,6 +8,7 @@ import { useLocale } from "next-intl";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
 import { useDevicePreference } from "@norish/shared-react/reader";
+import { useAmountDisplayPreference } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
