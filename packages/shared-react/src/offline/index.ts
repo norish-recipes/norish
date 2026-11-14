@@ -1,4 +1,5 @@
 export { createOfflineEngine, type OfflineEngine } from "./engine";
+export { classifyReplayError } from "./error-classification";
 export type { OfflineStorage } from "./storage";
 export type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
 export { createOutboxStore } from "./outbox-store";

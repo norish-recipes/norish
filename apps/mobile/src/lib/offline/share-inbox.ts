@@ -1,14 +1,10 @@
 import { z } from "zod";
 
 import type { ImportSettled } from "@norish/shared-react/recipes";
-import { isUnauthorizedTRPCError } from "@norish/shared-react/trpc";
+import { classifyReplayError } from "@norish/shared-react/offline";
 import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 import { createClientLogger } from "@norish/shared/lib/logger";
-import {
-  httpStatusOf,
-  isBackendUnreachableError,
-  isQueuedOutboxSignal,
-} from "@norish/shared/lib/trpc-errors";
+import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
 const log = createClientLogger("share-inbox");
 
@@ -125,23 +121,18 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
   if (outcome === "elsewhere") return "keep";
   const { error } = outcome;
 
-  // Signed out, or unreachable and not durably queued: this item and the rest wait for next time.
-  if (
-    isUnauthorizedTRPCError(error) ||
-    (isBackendUnreachableError(error) && !isQueuedOutboxSignal(error))
-  ) {
-    return "stop";
-  }
   if (error === null || isQueuedOutboxSignal(error)) return "done";
-  const status = httpStatusOf(error);
-
-  // Refused with a 4xx a retry gets again; 408 and 429 ask for the retry.
-  if (status !== null && status >= 400 && status < 500 && status !== 408 && status !== 429) {
-    return "drop";
+  // Replay's rule: signed out or not durably queued stops; a 5xx, 408 or 429 waits; the rest is final.
+  switch (classifyReplayError(error)) {
+    case "unreachable":
+    case "unauthorized":
+      return "stop";
+    case "ambiguous":
+      // ponytail: no attempt cap, so a share the server always fails is retried on each foreground.
+      return "keep";
+    case "deterministic":
+      return "drop";
   }
-
-  // ponytail: an item the server always answers 5xx to is retried on every foreground, no attempt cap.
-  return "keep";
 }
 
 async function drain(inbox: ShareInbox, ownerId: string, imports: ShareImports) {

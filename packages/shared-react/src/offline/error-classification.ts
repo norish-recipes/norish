@@ -8,8 +8,8 @@
  *                      recovery. Nothing lost, nothing skipped.
  *  - `unauthorized`  — expired session: halt the whole queue ("sign in to sync")
  *                      so a dead cookie can't wreck it.
- *  - `ambiguous`     — a 5xx (server mid-restart): bounded retry with backoff,
- *                      then park.
+ *  - `ambiguous`     — a 5xx (server mid-restart), 408 or 429: bounded retry
+ *                      with backoff, then park.
  *  - `deterministic` — a 4xx / validation error that will re-fail forever: park
  *                      this one, but keep draining the rest.
  *  - `conflict`      — a *successful* response carrying `stale: true`: first
@@ -27,8 +27,8 @@ export type ReplayOutcome = { kind: "success" } | { kind: "conflict" | ReplayFai
 
 /**
  * Classify an error thrown while replaying a mutation. Order matters: a network
- * failure (no HTTP status) is unreachable; a 401 halts the queue; a 5xx is a
- * transient to retry; anything else with a definite status re-fails forever.
+ * failure (no HTTP status) is unreachable; a 401 halts the queue; a 5xx, 408 or
+ * 429 is a transient to retry; anything else re-fails forever.
  */
 export function classifyReplayError(error: unknown): ReplayFailureClass {
   if (isBackendUnreachableError(error)) {
@@ -41,7 +41,8 @@ export function classifyReplayError(error: unknown): ReplayFailureClass {
 
   const status = httpStatusOf(error);
 
-  if (status !== null && status >= 500) {
+  // 408 and 429 ask for the retry themselves.
+  if (status !== null && (status >= 500 || status === 408 || status === 429)) {
     return "ambiguous";
   }
 
