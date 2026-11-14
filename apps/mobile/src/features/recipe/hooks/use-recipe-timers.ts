@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { syncTimerNotifications } from "@/lib/timer-notifications";
 import * as Haptics from "expo-haptics";
@@ -61,9 +61,9 @@ function useTimerNotifications() {
   );
   const body = intl.formatMessage({ id: "common.timer.notification_body" });
 
-  const sync = () => void syncTimerNotifications(body);
+  const sync = useEffectEvent(() => void syncTimerNotifications(body));
 
-  useEffect(sync, [shape, answered, body]);
+  useEffect(() => void syncTimerNotifications(body), [shape, answered, body]);
 
   // A grant in Settings arrives with no event, so a return to the foreground syncs again.
   useEffect(() => {
@@ -72,7 +72,7 @@ function useTimerNotifications() {
     });
 
     return () => subscription.remove();
-  });
+  }, []);
 }
 
 const opened = new Set<string>();

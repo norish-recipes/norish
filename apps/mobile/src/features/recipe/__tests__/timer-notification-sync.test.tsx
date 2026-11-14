@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const native = vi.hoisted(() => ({
   granted: false,
   appState: new Set<(state: string) => void>(),
+  subscriptions: 0,
   pending: new Set<string>(),
   permission: null as Promise<void> | null,
   schedule: vi.fn(async ({ identifier }: { identifier: string }) => {
@@ -18,6 +19,7 @@ vi.mock("react-native", () => ({
   AppState: {
     addEventListener: (_type: "change", listener: (state: string) => void) => {
       native.appState.add(listener);
+      native.subscriptions += 1;
 
       return { remove: () => native.appState.delete(listener) };
     },
@@ -103,5 +105,19 @@ describe("useRecipeTimers' notifications", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(native.pending).toEqual(new Set());
+  });
+
+  it("subscribes to the app's foreground once, however often it renders", () => {
+    native.subscriptions = 0;
+    const { rerender } = renderHook(() => useRecipeTimers());
+
+    act(() => {
+      useTimerStore
+        .getState()
+        .addTimer({ id: "again", recipeId: "r", label: "Step 3", durationMs: 60_000 });
+    });
+    rerender();
+
+    expect(native.subscriptions).toBe(1);
   });
 });
