@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlatformStorage } from "../../platform";
-import { connectTimerStorage, useTimerStore } from "../timers";
+import { connectTimerStorage, timerEndsAt, useTimerStore } from "../timers";
 
 const mapStorage = (entries: Map<string, string> = new Map()): PlatformStorage => ({
   getItem: (key) => entries.get(key) ?? null,
@@ -196,6 +196,34 @@ describe("useTimerStore", () => {
 
     expect(tick().map((timer) => timer.id)).toEqual(["a"]);
     expect(tick()).toEqual([]);
+  });
+});
+
+describe("timerEndsAt", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    useTimerStore.setState({ timers: [] });
+  });
+
+  it("stays put across ticks and moves with an adjust; none while paused", () => {
+    const { addTimer, startTimer, tick, adjustTimer, pauseTimer } = useTimerStore.getState();
+    const start = Date.now();
+    const timer = () => useTimerStore.getState().timers[0]!;
+
+    addTimer("t", "recipe-1", "Simmer", 60_000, "Risotto", 3);
+    expect(timer().stepIndex).toBe(3);
+    expect(timerEndsAt(timer())).toBeNull();
+
+    startTimer("t");
+    vi.setSystemTime(start + 10_250);
+    tick();
+    expect(timerEndsAt(timer())).toBe(start + 60_000);
+
+    adjustTimer("t", 10_000);
+    expect(timerEndsAt(timer())).toBe(start + 70_000);
+
+    pauseTimer("t");
+    expect(timerEndsAt(timer())).toBeNull();
   });
 });
 

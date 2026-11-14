@@ -26,6 +26,8 @@ export type Timer = {
   id: string; // Composite ID: recipeId-stepIndex-occurrenceIndex
   recipeId: string;
   recipeName?: string; // Recipe name for display when multiple recipes
+  /** The cook mode step it was started from, so a notification can open there. */
+  stepIndex?: number;
   label: string; // "Top with cilantro..." truncated
   originalDurationMs: number;
   remainingMs: number;
@@ -42,7 +44,8 @@ interface TimerState {
     recipeId: string,
     label: string,
     durationMs: number,
-    recipeName?: string
+    recipeName?: string,
+    stepIndex?: number
   ) => void;
   removeTimer: (id: string) => void;
   clearAll: () => void;
@@ -60,7 +63,7 @@ export const useTimerStore = create<TimerState>()(
     (set, get) => ({
       timers: [],
 
-      addTimer: (id, recipeId, label, durationMs, recipeName) => {
+      addTimer: (id, recipeId, label, durationMs, recipeName, stepIndex) => {
         const existing = get().timers.find((t) => t.id === id);
 
         if (existing) return; // Don't duplicate
@@ -72,6 +75,7 @@ export const useTimerStore = create<TimerState>()(
               id,
               recipeId,
               recipeName,
+              stepIndex,
               label,
               originalDurationMs: durationMs,
               remainingMs: durationMs,
@@ -198,6 +202,13 @@ export const useTimerStore = create<TimerState>()(
     }
   )
 );
+
+/** When a running timer reaches zero by the wall clock; null while it is paused or done. */
+export function timerEndsAt(timer: Timer): number | null {
+  return timer.status === "running" && timer.lastTickAt !== null
+    ? timer.lastTickAt + timer.remainingMs
+    : null;
+}
 
 /** Persists Recipe Timers through the app's storage and restores the ones it holds; call once. */
 export function connectTimerStorage(storage: PlatformStorage): void {
