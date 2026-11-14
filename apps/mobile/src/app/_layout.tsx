@@ -265,7 +265,6 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="recipe/[id]" options={OPENED_SCREEN} />
         <Stack.Screen name="recipe/new" options={OPENED_SCREEN} />
         {/* Add recipe and its imports present over whichever tab the accessory was pressed on. */}
         {FIT_IMPORT_SHEETS.map((name) => (
