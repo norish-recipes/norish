@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { oklchHueChromaFromSrgb } from "@norish/shared/lib/oklab";
+import { dishHueChroma, MAX_DISH_TINT_CHROMA } from "@norish/shared/lib/oklab";
 
 /**
  * The Dish Colour → page-tint derivation (ADR-0023). The stored colour is a
@@ -17,21 +17,12 @@ import { oklchHueChromaFromSrgb } from "@norish/shared/lib/oklab";
  * reached three ways, built once.
  */
 
-/**
- * How much saturation a dish may put into the page ground. The theme's own
- * neutral ground sits at ~0.008–0.016 chroma, so this is a clearly visible
- * warmth without approaching the accent's 0.083; the cards take only a
- * fraction of it (globals.css), so the ceiling also sets how far a card can
- * stand off the ground.
- */
-export const MAX_DISH_TINT_CHROMA = 0.05;
+export { MAX_DISH_TINT_CHROMA };
 
 type DishTintStyle = CSSProperties & {
   "--dish-h": string;
   "--dish-c": string;
 };
-
-const HEX_COLOR_PATTERN = /^#([0-9a-f]{6})$/i;
 
 /**
  * The scoped variables for one Dish Colour, or undefined when there is
@@ -40,17 +31,12 @@ const HEX_COLOR_PATTERN = /^#([0-9a-f]{6})$/i;
  * variables at all and the page renders on the plain theme tokens.
  */
 export function dishTintStyle(dishColor: string | null | undefined): DishTintStyle | undefined {
-  if (!dishColor) return undefined;
+  const tint = dishHueChroma(dishColor);
 
-  const match = dishColor.match(HEX_COLOR_PATTERN);
-
-  if (!match) return undefined;
-
-  const value = parseInt(match[1]!, 16);
-  const { h, c } = oklchHueChromaFromSrgb((value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
+  if (!tint) return undefined;
 
   return {
-    "--dish-h": h.toFixed(2),
-    "--dish-c": Math.min(c, MAX_DISH_TINT_CHROMA).toFixed(4),
+    "--dish-h": tint.h.toFixed(2),
+    "--dish-c": tint.c.toFixed(4),
   };
 }

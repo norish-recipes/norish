@@ -1,9 +1,10 @@
-import { oklchHueChromaFromSrgb, srgbFromOklab } from "@norish/shared/lib/oklab";
+import { dishHueChroma, srgbFromOklab } from "@norish/shared/lib/oklab";
 
 export type DishTint = { page: string; card: string; soft: string };
 
-/** The most chroma a dish puts into the page ground, as web's tint (ADR-0023). */
-const MAX_DISH_CHROMA = 0.05;
+/** The share of the page's chroma the card and the chips on it take, as web's CSS does. */
+const CARD_CHROMA_SHARE = 0.3;
+const SOFT_CHROMA_SHARE = 0.7;
 
 /** The theme's own lightness for the ground, the card and the chips on it, in light and dark. */
 const LIGHTNESS = {
@@ -31,18 +32,16 @@ export function dishTint(
   dishColor: string | null | undefined,
   scheme: "light" | "dark"
 ): DishTint | null {
-  const match = dishColor?.match(/^#([0-9a-f]{6})$/i);
+  const tint = dishHueChroma(dishColor);
 
-  if (!match) return null;
+  if (!tint) return null;
 
-  const value = parseInt(match[1]!, 16);
-  const { h, c } = oklchHueChromaFromSrgb((value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
-  const chroma = Math.min(c, MAX_DISH_CHROMA);
+  const { h, c: chroma } = tint;
   const lightness = LIGHTNESS[scheme];
 
   return {
     page: oklch(lightness.page, chroma, h),
-    card: oklch(lightness.card, chroma * 0.3, h),
-    soft: oklch(lightness.soft, chroma * 0.7, h),
+    card: oklch(lightness.card, chroma * CARD_CHROMA_SHARE, h),
+    soft: oklch(lightness.soft, chroma * SOFT_CHROMA_SHARE, h),
   };
 }
