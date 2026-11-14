@@ -40,7 +40,8 @@ export const offlineEngine = withSavedShares(
     // As web: a read restored from an earlier launch refetches when it mounts, fresh or not.
     refetchOnMount: (query) => (query.state.dataUpdatedAt < LAUNCHED_AT ? "always" : true),
   }),
-  appGroupInbox
+  appGroupInbox,
+  getServerAddress
 );
 
 // React Native has no window focus, so the foreground is focus: stale reads refetch on return.

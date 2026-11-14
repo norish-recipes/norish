@@ -11,9 +11,10 @@ enum ShareInbox {
     let folder = container.appendingPathComponent("share-inbox", isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
-    // The app imports it only into this account, as its Outbox keeps an entry for its owner.
+    // The app imports it only into this account on this server, as its Outbox keeps an entry for its owner.
     var entry: [String: Any] = [
       "ownerId": session.userId,
+      "serverAddress": session.address,
       "savedAt": ISO8601DateFormatter().string(from: Date()),
     ]
     switch item {

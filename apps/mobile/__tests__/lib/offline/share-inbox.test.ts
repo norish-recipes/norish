@@ -7,7 +7,8 @@ import { markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 // The signed-in account, as the Outbox's owner id.
 const OWNER = "user-a";
-const owner = () => OWNER;
+const SERVER = "https://norish.example.com";
+const owner = () => ({ ownerId: OWNER, serverAddress: SERVER });
 
 /** The Outbox link's Queued signal: unreachable, and durably admitted. */
 const queued = () => new TypeError("Network request failed");
@@ -19,7 +20,7 @@ function fakeInbox(items: Record<string, object | string>, images: Record<string
   const json = new Map(
     Object.entries(items).map(([id, item]) => [
       id,
-      typeof item === "string" ? item : JSON.stringify({ ownerId: OWNER, ...item }),
+      typeof item === "string" ? item : JSON.stringify({ ownerId: OWNER, serverAddress: SERVER, ...item }),
     ])
   );
   const inbox: ShareInbox = {
@@ -197,12 +198,12 @@ describe("drainShareInbox", () => {
       a: { kind: "url", url: "https://example.com/a" },
       b: { kind: "url", url: "https://example.com/b" },
     });
-    let current: string | null = OWNER;
+    let current = owner();
     const calls: unknown[] = [];
     const run = (url: unknown, { onSettled }: ShareImportOptions) => {
       calls.push(url);
       // A's session expires and B signs in while A's first import is in flight.
-      current = "user-b";
+      current = { ownerId: "user-b", serverAddress: SERVER };
       queueMicrotask(() => onSettled(null));
     };
 
@@ -242,18 +243,31 @@ describe("saved shares at a session end", () => {
   it("keeps A's share for A alone: B on the same server imports nothing", async () => {
     // A shared offline; A's session expired, which keeps the Outbox, and B signed in.
     const { inbox, json } = fakeInbox({ a: { kind: "text", text: "A's soup" } });
-    const expiry = withSavedShares(engine(OWNER), () => inbox);
+    const expiry = withSavedShares(engine(OWNER), () => inbox, () => SERVER);
 
     await expiry.clearForSignOut({ discardQueue: false });
     const { imports, calls } = fakeImports();
 
-    await drainShareInbox(inbox, () => "user-b", imports);
+    await drainShareInbox(inbox, () => ({ ownerId: "user-b", serverAddress: SERVER }), imports);
 
     expect(calls).toEqual([]);
     expect(json.has("a")).toBe(true);
 
     await drainShareInbox(inbox, owner, imports);
     expect(calls).toEqual([["text", "A's soup"]]);
+  });
+
+  it("keeps a share for its own server: the same user id on another server imports nothing", async () => {
+    // Two servers made from one database copy share their user ids.
+    const { inbox, json } = fakeInbox({
+      a: { kind: "text", text: "Soup", serverAddress: "https://copy.example.com" },
+    });
+    const { imports, calls } = fakeImports();
+
+    await drainShareInbox(inbox, owner, imports);
+
+    expect(calls).toEqual([]);
+    expect(json.has("a")).toBe(true);
   });
 
   it("counts the owner's shares as unsynced and discards them, files included, with its Outbox", async () => {
@@ -263,24 +277,25 @@ describe("saved shares at a session end", () => {
         a: { kind: "images", images: ["a-0.jpg"] },
         b: { kind: "url", url: "https://example.com/b" },
         other: { kind: "url", url: "https://example.com/c", ownerId: "user-b" },
+        copy: { kind: "url", url: "https://example.com/d", serverAddress: "https://copy.example.com" },
       },
       { "a-0.jpg": page }
     );
     const base = engine(OWNER);
-    const signOut = withSavedShares(base, () => inbox);
+    const signOut = withSavedShares(base, () => inbox, () => SERVER);
 
     expect(await signOut.unsyncedChanges()).toBe(3);
 
     await signOut.clearForSignOut({ discardQueue: true });
 
-    expect([...json.keys()]).toEqual(["other"]);
+    expect([...json.keys()]).toEqual(["other", "copy"]);
     expect(images).toEqual({});
     expect(base.clearForSignOut).toHaveBeenCalledWith({ discardQueue: true });
   });
 
   it("clears the engine even when there is no inbox or owner", async () => {
     const base = engine(null);
-    const signOut = withSavedShares(base, () => null);
+    const signOut = withSavedShares(base, () => null, () => SERVER);
 
     expect(await signOut.unsyncedChanges()).toBe(1);
     await signOut.clearForSignOut({ discardQueue: true });

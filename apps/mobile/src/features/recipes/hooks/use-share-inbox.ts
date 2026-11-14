@@ -17,8 +17,8 @@ export function useShareInbox() {
     const inbox = appGroupInbox();
 
     if (!inbox) return;
-    // The Outbox's owner, read before each item: a share imports only into the account that saved it.
-    drainShareInbox(inbox, () => offlineEngine.cache.owner(), {
+    // Read before each item: a share imports only into the account and server it was shared to.
+    drainShareInbox(inbox, () => offlineEngine.shareAccount(), {
       url: importRecipe,
       text: importFromPaste,
       images: importFromImages,

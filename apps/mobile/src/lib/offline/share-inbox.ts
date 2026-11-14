@@ -8,8 +8,10 @@ import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
 const log = createClientLogger("share-inbox");
 
-// The signed-in user who shared it, the id the Outbox's entries carry as their owner.
-const owner = { ownerId: z.string().min(1) };
+/** Whose a saved share is: the Outbox's owner id on the Server Address it was shared to. */
+export type ShareAccount = { ownerId: string; serverAddress: string };
+
+const owner = { ownerId: z.string().min(1), serverAddress: z.string().min(1) };
 
 /** What the Share Extension saved while the server was unreachable (`ShareInbox.swift`). */
 const savedShareSchema = z.discriminatedUnion("kind", [
@@ -87,17 +89,20 @@ async function readItem(inbox: ShareInbox, id: string): Promise<SavedShare | nul
   }
 }
 
+const sameAccount = (a: ShareAccount | null, b: ShareAccount | null) =>
+  a !== null && b !== null && a.ownerId === b.ownerId && a.serverAddress === b.serverAddress;
+
 async function importItem(
   inbox: ShareInbox,
   id: string,
-  ownerId: string,
+  account: ShareAccount,
   imports: ShareImports
 ): Promise<ItemOutcome> {
   const item = await readItem(inbox, id);
 
   if (!item) return "corrupt";
-  // Another account's, kept for it as its Outbox is (Session Expiry).
-  if (item.ownerId !== ownerId) return "elsewhere";
+  // Another account's or server's, kept for it as its Outbox is (Session Expiry).
+  if (!sameAccount(item, account)) return "elsewhere";
   const start = startOf(item, inbox, imports);
 
   return start ? { error: await outcomeOf(start, id) } : "corrupt";
@@ -123,14 +128,18 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
   }
 }
 
-async function drain(inbox: ShareInbox, owner: () => string | null, imports: ShareImports) {
-  const ownerId = owner();
+async function drain(
+  inbox: ShareInbox,
+  account: () => ShareAccount | null,
+  imports: ShareImports
+) {
+  const startedUnder = account();
 
-  if (!ownerId) return;
+  if (!startedUnder) return;
   for (const id of inbox.ids()) {
     // A session end while an import hung: the rest must not go out under the next account.
-    if (owner() !== ownerId) return;
-    const outcome = await importItem(inbox, id, ownerId, imports);
+    if (!sameAccount(account(), startedUnder)) return;
+    const outcome = await importItem(inbox, id, startedUnder, imports);
     const step = nextStep(outcome);
 
     if (step === "stop") return;
@@ -145,13 +154,13 @@ async function drain(inbox: ShareInbox, owner: () => string | null, imports: Sha
 // Module scope: one drain at a time across remounts, so an item is never imported twice.
 let draining: Promise<void> | null = null;
 
-/** Imports the current owner's saved items one by one; each leaves the inbox once it is safe. */
+/** Imports the current account's saved items one by one; each leaves the inbox once it is safe. */
 export function drainShareInbox(
   inbox: ShareInbox,
-  owner: () => string | null,
+  account: () => ShareAccount | null,
   imports: ShareImports
 ): Promise<void> {
-  draining ??= drain(inbox, owner, imports).finally(() => {
+  draining ??= drain(inbox, account, imports).finally(() => {
     draining = null;
   });
 
@@ -168,16 +177,22 @@ type SessionEndEngine = {
 /** The owner's saved shares are part of its Outbox: counted before a Sign-out and discarded with it. */
 export function withSavedShares<Engine extends SessionEndEngine>(
   engine: Engine,
-  inbox: () => ShareInbox | null
-): Engine {
+  inbox: () => ShareInbox | null,
+  serverAddress: () => string
+): Engine & { shareAccount: () => ShareAccount | null } {
+  const shareAccount = () => {
+    const ownerId = engine.cache.owner();
+
+    return ownerId ? { ownerId, serverAddress: serverAddress() } : null;
+  };
   const ownersShares = async () => {
     const folder = inbox();
-    const ownerId = engine.cache.owner();
+    const account = shareAccount();
     const ids: string[] = [];
 
-    if (!folder || !ownerId) return { folder, ids };
+    if (!folder || !account) return { folder, ids };
     for (const id of folder.ids()) {
-      if ((await readItem(folder, id))?.ownerId === ownerId) ids.push(id);
+      if (sameAccount(await readItem(folder, id), account)) ids.push(id);
     }
 
     return { folder, ids };
@@ -185,6 +200,7 @@ export function withSavedShares<Engine extends SessionEndEngine>(
 
   return {
     ...engine,
+    shareAccount,
     unsyncedChanges: async () =>
       (await engine.unsyncedChanges()) + (await ownersShares()).ids.length,
     clearForSignOut: async (options) => {
