@@ -7,6 +7,7 @@ import { getServerHealthUrl, SERVER_ADDRESS_KEY } from "@/lib/network/server-add
 import { SHARE_INBOX_FOLDER } from "@/lib/offline/app-group-inbox";
 import { describe, expect, it, vi } from "vitest";
 
+import { classifyReplayError } from "@norish/shared-react/offline";
 import { OPERATION_ID_HEADER } from "@norish/shared-react/trpc";
 import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 
@@ -89,5 +90,22 @@ describe("the Share Extension's literals", () => {
     expect(swift("SharedItem")).toContain("trimmed.utf8.count > maxTextBytes");
     expect(swift("SharedItem")).toContain("maxTextBytes = 1 << 20");
     expect(swift("SharedItem")).not.toContain("maxPasteChars");
+  });
+
+  it("saves for later exactly the answers the app's drain retries", () => {
+    const rule = /static func isRetryable\(_ status: Int\) -> Bool \{ ([^}]+) \}/.exec(
+      swift("ImportClient")
+    )?.[1];
+    expect(rule).toBeDefined();
+    // The Swift expression is also valid JavaScript.
+    const isRetryable = new Function("status", `return ${rule};`) as (status: number) => boolean;
+
+    for (let status = 400; status < 600; status++) {
+      if (status === 401) continue;
+      expect(isRetryable(status), String(status)).toBe(
+        classifyReplayError({ data: { httpStatus: status } }) === "ambiguous"
+      );
+    }
+    expect(swift("ImportClient").match(/Self\.isRetryable\(reply\.status\)/g)).toHaveLength(3);
   });
 });

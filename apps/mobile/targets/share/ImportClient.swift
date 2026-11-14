@@ -31,6 +31,7 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
     if item.needsAI {
       guard let reply = await request("GET", "/api/trpc/permissions.get") else { return .saved }
       if reply.status == 401 { return .signedOut }
+      if Self.isRetryable(reply.status) { return .saved }
       guard reply.status == 200, let data = reply.data(), let json = data["json"] as? [String: Any]
       else { return .failed }
       if json["isAIEnabled"] as? Bool != true { return .noAi }
@@ -48,6 +49,8 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
 
     guard let reply else { return .saved }
     if reply.status == 401 { return .signedOut }
+    // A 504 can hide an import the server took; the drain resends it under the same operation id.
+    if Self.isRetryable(reply.status) { return .saved }
     return reply.status == 200 && reply.data() != nil ? .sent : .failed
   }
 
@@ -55,7 +58,7 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
   private func health() async -> ShareOutcome? {
     guard let reply = await request("GET", "/api/v1/health", withCookie: false) else { return .saved }
     // A reverse proxy answering for a server that is down is the server being unreachable.
-    if [502, 503, 504].contains(reply.status) { return .saved }
+    if Self.isRetryable(reply.status) { return .saved }
     guard reply.status == 200, let health = reply.json,
       health["status"] as? String == "ok", health["parser"] is [String: Any]
     else { return .failed }
@@ -64,6 +67,9 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
     else { return .tooOld }
     return nil
   }
+
+  /// An answer the app's drain retries, as `classifyReplayError` calls a status ambiguous.
+  static func isRetryable(_ status: Int) -> Bool { status >= 500 || status == 408 || status == 429 }
 
   /// The containing app's `major.minor.0`, as the app's `MINIMUM_SERVER_VERSION`.
   static let minimumServerVersion: String = {
