@@ -1,0 +1,47 @@
+# Imports a recipe from a link while the server is unreachable: a pending card shows, survives an app
+# relaunch, and once the server returns the recipe lands exactly once and the pending card goes.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
+- runFlow: subflows/reset.yaml
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
+- extendedWaitUntil:
+    visible:
+      id: add-recipe
+    timeout: 20000
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/cut', { body: '' })}"
+- tapOn:
+    id: add-recipe
+- tapOn:
+    id: add-recipe-link
+- extendedWaitUntil:
+    visible:
+      id: import-link-field
+    timeout: 20000
+- inputText: ${NORISH_IMPORT_URL}
+- tapOn:
+    id: import-link-submit
+- extendedWaitUntil:
+    visible:
+      id: pending-card-.*
+    timeout: 20000
+# The queued import is kept across a relaunch, and still pending while the server is out.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: pending-card-.*
+    timeout: 20000
+- assertNotVisible: ${NORISH_IMPORT_NAME}
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/restore', { body: '' })}"
+# The Offline backoff tops out at 30 seconds between probes.
+- extendedWaitUntil:
+    visible: ${NORISH_IMPORT_NAME}
+    timeout: 90000
+- assertNotVisible:
+    id: pending-card-.*
+- evalScript: ${output.count = json(http.get(NORISH_PROXY_CONTROL_URL + '/count?name=' + encodeURIComponent(NORISH_IMPORT_NAME)).body).count}
+- assertTrue: ${output.count == 1}
