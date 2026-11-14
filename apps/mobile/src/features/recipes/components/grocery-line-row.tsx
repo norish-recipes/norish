@@ -1,9 +1,10 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { RoundTick } from "@/components/round-tick";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Chip, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+
+import { RoundTick } from "./round-tick";
 
 const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
 const rowClass = (first: boolean) => `${ROW} ${first ? "" : "border-separator border-t"}`;

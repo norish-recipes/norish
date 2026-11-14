@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AccountAvatar } from "@/components/account-avatar";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import {
@@ -13,6 +12,7 @@ import {
 } from "@norish/shared-react/recipes";
 
 import type { CardContext } from "./library-cards";
+import { AccountAvatar } from "./account-avatar";
 import { CookbookCard } from "./cookbook-card";
 import { LibraryCards } from "./library-cards";
 import { LibraryHeader } from "./library-header";

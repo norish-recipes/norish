@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { RoundTick } from "@/components/round-tick";
 import { Skeleton } from "heroui-native";
+
+import { RoundTick } from "./round-tick";
 
 /** Where a row sits in its group, which rounds the group's first and last row. */
 export type PickRowPosition = { first: boolean; last: boolean };
