@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
-import { planTimerNotifications } from "@/lib/timer-notifications";
+import { syncTimerNotifications } from "@/lib/timer-notifications";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -44,42 +44,6 @@ export async function askTimerNotifications(): Promise<void> {
   }
 }
 
-let syncing = Promise.resolve();
-
-/** Schedules and cancels so the pending notifications match the store's running timers. */
-async function syncTimerNotifications(body: string): Promise<void> {
-  try {
-    const pending = await Notifications.getAllScheduledNotificationsAsync();
-    const { cancel, schedule } = planTimerNotifications(
-      useTimerStore.getState().timers,
-      pending.map((request) => request.identifier),
-      Date.now()
-    );
-
-    await Promise.all(
-      cancel.map((identifier) => Notifications.cancelScheduledNotificationAsync(identifier))
-    );
-    // Without permission the system refuses them; the answer to the first ask syncs again.
-    if (schedule.length === 0 || !(await Notifications.getPermissionsAsync()).granted) return;
-    await Promise.all(
-      schedule.map(({ identifier, timer, endsAt }) =>
-        Notifications.scheduleNotificationAsync({
-          identifier,
-          content: {
-            title: timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label,
-            body,
-            sound: "default",
-            data: { recipeId: timer.recipeId, step: timer.stepIndex ?? 0 },
-          },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: endsAt },
-        })
-      )
-    );
-  } catch (error) {
-    log.warn({ error }, "Could not schedule timer notifications");
-  }
-}
-
 /** Keeps one pending notification per running timer at its end, rescheduled on every change. */
 function useTimerNotifications() {
   const intl = useIntl();
@@ -97,8 +61,7 @@ function useTimerNotifications() {
   );
   const body = intl.formatMessage({ id: "common.timer.notification_body" });
 
-  // One sync at a time, so two quick changes never schedule the same timer twice.
-  const sync = () => void (syncing = syncing.then(() => syncTimerNotifications(body)));
+  const sync = () => void syncTimerNotifications(body);
 
   useEffect(sync, [shape, answered, body]);
 
