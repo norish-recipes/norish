@@ -98,3 +98,22 @@ appId: dev.norish.app
     id: recipe-card-${output.berry}
 - assertNotVisible:
     id: recipe-card-${output.alpha}
+# Favourites only matches nothing here: the no-results card shows, not the empty Library.
+- tapOn:
+    id: library-filters-button
+- tapOn:
+    id: filters-reset
+- tapOn:
+    id: library-filters-button
+- tapOn:
+    id: filters-favorites
+- tapOn:
+    id: filters-apply
+- extendedWaitUntil:
+    visible:
+      id: library-no-results
+    timeout: 10000
+- assertVisible:
+    id: library-filters-active
+- assertNotVisible:
+    id: library-empty
