@@ -6,8 +6,14 @@ import { usePlatform } from "@norish/shared-react/platform";
 import type { InlineNode } from "../utils/inline-markdown";
 import { linkTarget, parseInline } from "../utils/inline-markdown";
 
-/** A recipe's text with its links, bold and italic; nest it in a Text, which sets the type. */
-export function InlineMarkdown({ text }: { text: string }) {
+/** A recipe's text with its links, bold and italic; nest it in a Text, which sets the type. Links read as text when disabled, as on a ticked line. */
+export function InlineMarkdown({
+  text,
+  disableLinks = false,
+}: {
+  text: string;
+  disableLinks?: boolean;
+}) {
   const { navigation } = usePlatform();
 
   const render = (nodes: InlineNode[]): React.ReactNode[] =>
@@ -18,7 +24,7 @@ export function InlineMarkdown({ text }: { text: string }) {
       if (node.kind === "text") return <React.Fragment key={key}>{node.text}</React.Fragment>;
 
       if (node.kind === "link") {
-        const target = linkTarget(node.href);
+        const target = disableLinks ? null : linkTarget(node.href);
 
         return target ? (
           <Text

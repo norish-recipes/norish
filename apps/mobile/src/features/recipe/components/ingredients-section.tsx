@@ -175,7 +175,7 @@ function Line({
       >
         {amount ? <Text className="font-semibold">{`${amount} `}</Text> : null}
         {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
-        <InlineMarkdown text={name} />
+        <InlineMarkdown disableLinks={checked} text={name} />
       </Text>
     </Pressable>
   );
