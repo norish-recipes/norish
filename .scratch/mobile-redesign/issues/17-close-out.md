@@ -6,9 +6,9 @@
 
 **Status:** open
 
-- [ ] Maestro flows: browse and filter, plan from Today, plan from a card, add to groceries, cookbook create and add, import from a link, delete, Recipes offline.
-- [ ] One full Maestro run after tickets 08–16 are reviewed and fixed; each new flow run repeatedly to prove it stable.
-- [ ] Offline replay (Outbox) and realtime coverage return on Recipes flows, replacing the smoke-screen flows ticket 08 removed; the grocery check returns with the Groceries area.
+- [x] Maestro flows: browse and filter, plan from Today, plan from a card, add to groceries, cookbook create and add, import from a link, delete, Recipes offline.
+- [x] One full Maestro run after tickets 08–16 are reviewed and fixed; each new flow run repeatedly to prove it stable.
+- [x] Offline replay (Outbox) and realtime coverage return on Recipes flows, replacing the smoke-screen flows ticket 08 removed; the grocery check returns with the Groceries area.
 - [ ] Device run of every Recipes board against the canvas.
 - [ ] Docs (the mobile app page in `apps/docs`, iPhone screenshots of Recipes and the Share Extension) and the 0.27.0-beta release notes line, written by Terra.
 - [ ] Gates green.
@@ -38,3 +38,9 @@ Done on the simulator (captures in `device-feedback/`):
 The device run found New cookbook built as a sheet where the board draws a centred alert. Mike: keep it a sheet, and make it web's panel: one drawer where the cookbook is created and its recipes are set. Queued behind the board-differences fixer.
 
 Built: New cookbook is one two-detent sheet with the name, the recipe picker (search, ticked list, count as the subtitle) and Create pinned; `useNewCookbook` and `useRecipePick` are in shared-react and the picker's search and list are shared with Add recipes. A card's recipe is pre-picked through a `recipeId` param. Web's create panel takes only a title and files recipes afterwards from the cookbook (a separate panel), so this is mobile's own flow. A queued create is safe: `createCookbook` mints the id on the client and the create mutation already takes `recipeIds`, so one write carries both. Add to cookbook still stages a new cookbook inline in its own sheet and does not open New cookbook, so the pre-pick is reachable only if that entry is rewired.
+
+### Maestro flows (2026-11-14)
+
+Ten flows in `apps/mobile/maestro/`: `recipes-browse-filter` (lenses, list/grid, tag filter, Clear filters), `plan-from-today`, `plan-from-card` (swipe, mini calendar; both pass through the Add to groceries sheet that planning opens), `add-to-groceries` (server has the lines), `cookbook-create-add` (New cookbook sheet, then Add recipes), `delete-recipe`, `import-from-link`, `recipes-offline` (cold launch with the server cut), `recipes-offline-replay` (import queued while cut: pending card, kept over a relaunch, one recipe after the server returns) and `recipes-realtime` (a recipe saved on the server appears live). The grocery check returns with the Groceries area.
+Each flow resets and seeds the throwaway account over the script's control port (`/reset`, `/recipe`, `/count`, `/groceries`); the import page is a small JSON-LD page the script serves on loopback (nothing existed in the web E2E that fits: its recipe site needs https and a browser), and the throwaway server runs with `ALLOW_PRIVATE_ADDRESSES`. Each flow ran alone five times and the full set twice, all green (19/19 and 4/4).
+No app code changed. Found: in grid view with a short Library the Delete swipe circle sits under the Add recipe accessory and cannot be tapped, so `delete-recipe` uses the list; not fixed here (a layout call). Left for the device pass: the other two boxes.
