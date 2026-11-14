@@ -6,6 +6,8 @@ import Security
 struct SharedSession {
   let address: String
   let cookie: String
+  /// The signed-in user, the owner the app's Outbox keys a saved share to.
+  let userId: String
 
   /// `group.` + the containing app's bundle id, which is this extension's minus its last part.
   static let appGroup: String? = Bundle.main.bundleIdentifier.map {
@@ -21,10 +23,20 @@ struct SharedSession {
   static func read() -> SharedSession? {
     guard let group = appGroup, item("norish_keychain_moved", group) == "1",
       let address = value("norish.backend-base-url", group), !address.isEmpty,
-      let stored = value("norish_cookie", group), let cookie = cookieHeader(stored)
+      let stored = value("norish_cookie", group), let cookie = cookieHeader(stored),
+      let userId = value("norish_session_data", group).flatMap(sessionUserId)
     else { return nil }
 
-    return SharedSession(address: address, cookie: cookie)
+    return SharedSession(address: address, cookie: cookie, userId: userId)
+  }
+
+  /// `user.id` from the session Better Auth stores beside the cookie, as the app's boot reads it.
+  static func sessionUserId(_ stored: String) -> String? {
+    guard let data = stored.data(using: .utf8),
+      let session = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+      let user = session["user"] as? [String: Any], let id = user["id"] as? String, !id.isEmpty
+    else { return nil }
+    return id
   }
 
   /// The Cookie header Better Auth's `getCookie` builds from the stored JSON, expired cookies left out.

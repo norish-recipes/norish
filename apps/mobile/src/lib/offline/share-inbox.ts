@@ -12,10 +12,13 @@ import {
 
 const log = createClientLogger("share-inbox");
 
+// The signed-in user who shared it, the id the Outbox's entries carry as their owner.
+const owner = { ownerId: z.string().min(1) };
+
 /** What the Share Extension saved while the server was unreachable (`ShareInbox.swift`). */
 const savedShareSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("url"), url: z.string().min(1), serverAddress: z.string() }),
-  z.object({ kind: z.literal("text"), text: z.string().min(1), serverAddress: z.string() }),
+  z.object({ kind: z.literal("url"), url: z.string().min(1), ...owner }),
+  z.object({ kind: z.literal("text"), text: z.string().min(1), ...owner }),
   z.object({
     kind: z.literal("images"),
     // Bare names in the inbox folder, never a path out of it.
@@ -23,7 +26,7 @@ const savedShareSchema = z.discriminatedUnion("kind", [
       .array(z.string().regex(/^[\w-]+\.jpg$/))
       .min(1)
       .max(MAX_OCR_FILES),
-    serverAddress: z.string(),
+    ...owner,
   }),
 ]);
 
@@ -89,33 +92,37 @@ const outcomeOf = (start: Start, id: string) =>
 /** Why the item cannot be imported here, or how its import ended. */
 type ItemOutcome = "corrupt" | "elsewhere" | { error: unknown };
 
+/** The saved item, or null when it is missing, unparseable or not a share. */
+async function readItem(inbox: ShareInbox, id: string): Promise<SavedShare | null> {
+  const raw = await inbox.read(id);
+
+  try {
+    return savedShareSchema.safeParse(raw === null ? null : JSON.parse(raw)).data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function importItem(
   inbox: ShareInbox,
   id: string,
-  serverAddress: string,
+  ownerId: string,
   imports: ShareImports
 ): Promise<ItemOutcome> {
-  const raw = await inbox.read(id);
-  let parsed: unknown = null;
+  const item = await readItem(inbox, id);
 
-  try {
-    parsed = raw === null ? null : JSON.parse(raw);
-  } catch {
-    // Unparseable, as a missing file: dropped below.
-  }
-  const item = savedShareSchema.safeParse(parsed);
-
-  if (!item.success) return "corrupt";
-  // Saved for another server: the share is not this one's to import.
-  if (item.data.serverAddress !== serverAddress) return "elsewhere";
-  const start = startOf(item.data.kind, item.data, inbox, imports);
+  if (!item) return "corrupt";
+  // Another account's, kept for it as its Outbox is (Session Expiry).
+  if (item.ownerId !== ownerId) return "elsewhere";
+  const start = startOf(item.kind, item, inbox, imports);
 
   return start ? { error: await outcomeOf(start, id) } : "corrupt";
 }
 
 /** What the drain does next with an item: done with it, drop it, keep it, or stop with the rest waiting. */
 function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
-  if (typeof outcome === "string") return "drop";
+  if (outcome === "corrupt") return "drop";
+  if (outcome === "elsewhere") return "keep";
   const { error } = outcome;
 
   // Signed out, or unreachable and not durably queued: this item and the rest wait for next time.
@@ -137,9 +144,9 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
   return "keep";
 }
 
-async function drain(inbox: ShareInbox, serverAddress: string, imports: ShareImports) {
+async function drain(inbox: ShareInbox, ownerId: string, imports: ShareImports) {
   for (const id of inbox.ids()) {
-    const outcome = await importItem(inbox, id, serverAddress, imports);
+    const outcome = await importItem(inbox, id, ownerId, imports);
     const step = nextStep(outcome);
 
     if (step === "stop") return;
@@ -154,15 +161,58 @@ async function drain(inbox: ShareInbox, serverAddress: string, imports: ShareImp
 // Module scope: one drain at a time across remounts, so an item is never imported twice.
 let draining: Promise<void> | null = null;
 
-/** Imports the Share Extension's saved items one by one; each leaves the inbox once it is safe. */
+/** Imports `ownerId`'s saved items one by one; each leaves the inbox once it is safe. */
 export function drainShareInbox(
   inbox: ShareInbox,
-  serverAddress: string,
+  ownerId: string,
   imports: ShareImports
 ): Promise<void> {
-  draining ??= drain(inbox, serverAddress, imports).finally(() => {
+  draining ??= drain(inbox, ownerId, imports).finally(() => {
     draining = null;
   });
 
   return draining;
+}
+
+/** The part of the offline engine a session end goes through. */
+type SessionEndEngine = {
+  cache: { owner: () => string | null };
+  unsyncedChanges: () => Promise<number>;
+  clearForSignOut: (options: { discardQueue: boolean }) => Promise<void>;
+};
+
+/** The owner's saved shares are part of its Outbox: counted before a Sign-out and discarded with it. */
+export function withSavedShares<Engine extends SessionEndEngine>(
+  engine: Engine,
+  inbox: () => ShareInbox | null
+): Engine {
+  const ownersShares = async () => {
+    const folder = inbox();
+    const ownerId = engine.cache.owner();
+    const ids: string[] = [];
+
+    if (!folder || !ownerId) return { folder, ids };
+    for (const id of folder.ids()) {
+      if ((await readItem(folder, id))?.ownerId === ownerId) ids.push(id);
+    }
+
+    return { folder, ids };
+  };
+
+  return {
+    ...engine,
+    unsyncedChanges: async () =>
+      (await engine.unsyncedChanges()) + (await ownersShares()).ids.length,
+    clearForSignOut: async (options) => {
+      try {
+        if (options.discardQueue) {
+          const { folder, ids } = await ownersShares();
+
+          for (const id of ids) folder?.remove(id);
+        }
+      } finally {
+        await engine.clearForSignOut(options);
+      }
+    },
+  };
 }

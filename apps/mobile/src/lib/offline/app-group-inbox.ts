@@ -1,4 +1,4 @@
-import type { ShareInbox } from "@/features/recipes/utils/share-inbox";
+import type { ShareInbox } from "@/lib/offline/share-inbox";
 import { Directory, File, Paths } from "expo-file-system";
 
 /** The Share Extension's `share-inbox` folder in the App Group; null off iOS or before it exists. */
@@ -31,7 +31,10 @@ export function appGroupInbox(): ShareInbox | null {
       for (const entry of folder.list()) {
         if (entry.name.startsWith(`${id}-`)) entry.delete();
       }
-      file(`${id}.json`).delete();
+      const json = file(`${id}.json`);
+
+      // A Sign-out's discard may have removed it while the drain was importing it.
+      if (json.exists) json.delete();
     },
   };
 }

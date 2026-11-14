@@ -19,7 +19,9 @@ import {
 import { useConnectionStatus } from "@norish/shared-react/trpc";
 import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
+import { appGroupInbox } from "./app-group-inbox";
 import { createMmkvStorage } from "./mmkv-storage";
+import { withSavedShares } from "./share-inbox";
 import { uploadFiles } from "./upload-files";
 
 /** Marks the app's replays in server logs. */
@@ -28,15 +30,18 @@ const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
 /** Reads restored from an earlier launch may predate a change made elsewhere. */
 const LAUNCHED_AT = Date.now();
 
-export const offlineEngine = createOfflineEngine({
-  storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
-  replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
-  probeUrl: () => `${getServerAddress()}${HEALTH_PROBE_PATH}`,
-  buster: APP_VERSION,
-  calendarRanges: () => [getInitialCalendarRange("mobile")],
-  // As web: a read restored from an earlier launch refetches when it mounts, fresh or not.
-  refetchOnMount: (query) => (query.state.dataUpdatedAt < LAUNCHED_AT ? "always" : true),
-});
+export const offlineEngine = withSavedShares(
+  createOfflineEngine({
+    storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
+    replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
+    probeUrl: () => `${getServerAddress()}${HEALTH_PROBE_PATH}`,
+    buster: APP_VERSION,
+    calendarRanges: () => [getInitialCalendarRange("mobile")],
+    // As web: a read restored from an earlier launch refetches when it mounts, fresh or not.
+    refetchOnMount: (query) => (query.state.dataUpdatedAt < LAUNCHED_AT ? "always" : true),
+  }),
+  appGroupInbox
+);
 
 // React Native has no window focus, so the foreground is focus: stale reads refetch on return.
 // iOS `inactive` (Face ID, the share sheet, the switcher peek) is not leaving, so it changes nothing.

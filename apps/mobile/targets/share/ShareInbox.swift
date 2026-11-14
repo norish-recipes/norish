@@ -11,9 +11,9 @@ enum ShareInbox {
     let folder = container.appendingPathComponent("share-inbox", isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
-    // The app drops an item saved for another server rather than import it there.
+    // The app imports it only into this account, as its Outbox keeps an entry for its owner.
     var entry: [String: Any] = [
-      "serverAddress": session.address,
+      "ownerId": session.userId,
       "savedAt": ISO8601DateFormatter().string(from: Date()),
     ]
     switch item {

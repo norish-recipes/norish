@@ -1,23 +1,25 @@
 import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
-import { appGroupInbox } from "@/features/recipes/utils/app-group-inbox";
-import { drainShareInbox } from "@/features/recipes/utils/share-inbox";
-import { getServerAddress } from "@/lib/network/server-address";
+import { appGroupInbox } from "@/lib/offline/app-group-inbox";
+import { offlineEngine } from "@/lib/offline/engine";
+import { drainShareInbox } from "@/lib/offline/share-inbox";
 
 import { useImportRecipe } from "@norish/shared-react/recipes";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("share-inbox");
 
-/** Imports what the Share Extension saved for later, on mount and on each return to the foreground. */
+/** Imports the signed-in owner's saved shares on mount, once the owner is known, and on each foreground. */
 export function useShareInbox() {
   const { importRecipe, importFromPaste, importFromImages } = useImportRecipe({ stay: true });
 
   const drain = useEffectEvent(() => {
     const inbox = appGroupInbox();
+    // The Outbox's owner: a share imports only into the account that saved it.
+    const ownerId = offlineEngine.cache.owner();
 
-    if (!inbox) return;
-    drainShareInbox(inbox, getServerAddress(), {
+    if (!inbox || !ownerId) return;
+    drainShareInbox(inbox, ownerId, {
       url: importRecipe,
       text: importFromPaste,
       images: importFromImages,
@@ -29,7 +31,11 @@ export function useShareInbox() {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") drain();
     });
+    const unsubscribe = offlineEngine.cache.subscribe(() => drain());
 
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      unsubscribe();
+    };
   }, []);
 }
