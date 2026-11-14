@@ -86,6 +86,7 @@ export function LibraryList({
           <LibraryHeader />
         </>
       }
+      fadeHeight={{ rest: 190, scrolled: 120 }}
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
       renderCard={renderCard}

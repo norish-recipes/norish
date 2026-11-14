@@ -35,6 +35,7 @@ export function LibraryCards<Row>({
   rowKey,
   renderCard,
   onEndReached,
+  fadeHeight,
   testID,
 }: {
   rows: Row[];
@@ -47,6 +48,7 @@ export function LibraryCards<Row>({
   rowKey: (row: Row) => string;
   renderCard: (row: Row, context: CardContext) => ReactElement;
   onEndReached: () => void;
+  fadeHeight: { rest: number; scrolled: number };
   testID?: string;
 }) {
   const [variant] = useDevicePreference("recipeViewMode");
@@ -66,6 +68,7 @@ export function LibraryCards<Row>({
           empty
         )
       }
+      fadeHeight={fadeHeight}
       header={header}
       isFetchingNextPage={isFetchingNextPage}
       renderCard={(row) => renderCard(row, { variant, actions, allergies, isFavorite })}
