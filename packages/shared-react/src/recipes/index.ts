@@ -27,7 +27,7 @@ export {
   useLibraryList,
   useLibraryQueryFilters,
 } from "./use-library-list";
-export { usePendingRecipesQuery } from "./use-pending-recipes-query";
+export { usePendingRecipesQuery, useRereadPendingRecipes } from "./use-pending-recipes-query";
 export { useRandomRecipe } from "./use-random-recipe";
 export { useRatingQuery } from "./use-rating-query";
 export { useRatingsMutation } from "./use-ratings-mutation";

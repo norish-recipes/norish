@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
 
@@ -26,4 +26,12 @@ export function usePendingRecipesQuery() {
     isLoading,
     error,
   };
+}
+
+/** Rereads the running imports, for a caller whose placeholders may name imports already done. */
+export function useRereadPendingRecipes(): () => void {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return () => void queryClient.invalidateQueries({ queryKey: trpc.recipes.getPending.queryKey() });
 }
