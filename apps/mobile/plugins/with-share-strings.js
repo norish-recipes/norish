@@ -63,3 +63,4 @@ module.exports = (config) =>
   ]);
 
 module.exports.buildCatalogue = buildCatalogue;
+module.exports.localization = localization;
