@@ -1,10 +1,10 @@
 import { TimerTicker } from "@/components/timer-dock";
-import { useTimerStore } from "@/lib/timers";
 import { act, render } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import common from "@norish/i18n/messages/nl/common.json";
+import { useTimerStore } from "@norish/shared-react/recipes/timers";
 
 describe("a timer completing in the background", () => {
   afterEach(() => {

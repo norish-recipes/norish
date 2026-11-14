@@ -1,6 +1,5 @@
 "use client";
 
-import { useTimerStore } from "@/lib/timers";
 import {
   BookOpenIcon,
   ChevronDownIcon,
@@ -12,6 +11,7 @@ import { Button, Meter } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
+import { useTimerStore } from "@norish/shared-react/recipes/timers";
 
 import type { CookingModeDialogProps } from "./types";
 import WakeLockToggle from "../wake-lock-toggle";

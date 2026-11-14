@@ -6,7 +6,6 @@ import { useDockedTimers } from "@/hooks/use-docked-timers";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 import { showTimerNotification } from "@/lib/timer-notification";
-import { useTimerStore } from "@/lib/timers";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -21,7 +20,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
 
+import type { Timer } from "@norish/shared-react/recipes/timers";
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
+import { useTimerStore, useTimerTicker } from "@norish/shared-react/recipes/timers";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -31,22 +32,10 @@ const logger = createClientLogger("timer-dock");
 
 // Global tick loop component - only runs when timers are active
 export function TimerTicker() {
-  const tick = useTimerStore((state) => state.tick);
-  const timers = useTimerStore((state) => state.timers);
   const t = useTranslations("common.timer");
 
-  // Check if there are any running timers
-  const hasRunningTimers = timers.some((timer) => timer.status === "running");
-  useEffect(() => {
-    // Only start interval if there are running timers
-    if (!hasRunningTimers) {
-      return;
-    }
-    const interval = setInterval(() => {
-      tick().forEach((timer) => showTimerNotification(timer, t("notification_body")));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [tick, hasRunningTimers, t]);
+  useTimerTicker({ finished: (timer) => showTimerNotification(timer, t("notification_body")) });
+
   return null;
 }
 export function TimerDock({
@@ -303,7 +292,7 @@ function TimerRow({
   t,
   isLast,
 }: {
-  timer: import("@/lib/timers").Timer;
+  timer: Timer;
   t: (key: string) => string;
   isLast: boolean;
 }) {

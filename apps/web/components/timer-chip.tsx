@@ -3,10 +3,10 @@
 import React from "react";
 import { ChipButton } from "@/components/shared/chip-button";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
-import { useTimerStore } from "@/lib/timers";
 import { ArrowPathIcon, ClockIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { Chip } from "@heroui/react";
 
+import { useTimerStore } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 interface TimerChipProps {

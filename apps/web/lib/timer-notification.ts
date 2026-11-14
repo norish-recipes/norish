@@ -1,5 +1,4 @@
-import type { Timer } from "@/lib/timers";
-
+import type { Timer } from "@norish/shared-react/recipes/timers";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { createClientLogger } from "@norish/shared/lib/logger";
 

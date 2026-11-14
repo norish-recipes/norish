@@ -18,11 +18,15 @@ import type {
 } from "@norish/shared-react/platform";
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import { PlatformProvider } from "@norish/shared-react/platform";
+import { connectTimerStorage } from "@norish/shared-react/recipes/timers";
 import { signOut } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
 
 const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
+
+// On import, as the store once read localStorage itself; the server keeps no timers.
+if (typeof window !== "undefined") connectTimerStorage(browserStorage);
 
 let navigatedToLogin = false;
 
