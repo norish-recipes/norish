@@ -1,0 +1,45 @@
+# Deletes a recipe from its card: swipe, Delete, confirm. The card goes, the other stays and the
+# server no longer has the recipe.
+appId: dev.norish.app
+---
+- runFlow: subflows/reset.yaml
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Delete Me Stew
+      RECIPE_KEY: doomed
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Keep Me Salad
+      RECIPE_KEY: kept
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.doomed}
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.kept}
+# The list's swipe circles sit in a row; the grid's stack under the Add recipe accessory when the
+# Library is too short to scroll.
+- tapOn:
+    id: library-view-list
+- swipe:
+    from:
+      id: recipe-card-${output.doomed}
+    direction: LEFT
+- tapOn:
+    id: recipe-swipe-delete-${output.doomed}
+# The native alert asks first.
+- tapOn: Delete
+- extendedWaitUntil:
+    notVisible:
+      id: recipe-card-${output.doomed}
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.kept}
+- evalScript: ${output.count = json(http.get(NORISH_PROXY_CONTROL_URL + '/count?name=Delete%20Me%20Stew').body).count}
+- assertTrue: ${output.count == 0}
