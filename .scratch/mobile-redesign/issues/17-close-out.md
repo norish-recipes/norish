@@ -20,7 +20,7 @@
 Mike, on the simulator. One fixer takes all five once ticket 16's fix round frees the checkout and the device.
 
 1. Today: the slot tags (Breakfast, Lunch, Dinner, Snack) at the top left of each slot are not fixed in place; they move as the page scrolls.
-2. The global header (the "Recipes" title with the user's avatar) does not need to follow the scroll: it stays at the top of the page and scrolls away with it. No sticky header. Not the "Your recipes" row.
+2. The global header (the "Recipes" title with the user's avatar) does not need to follow the scroll: it stays at the top of the page and scrolls away with it. Today, scrolling down animates "Recipes" to a centred title in a faded bar; neither should happen (no collapsing title, no bar appearing over the content). Not the "Your recipes" row.
 3. The long press opens faster.
 4. A long press shows the swipe actions for a moment as the menu opens and as it closes.
 5. Tags and chips are plain white, so on a sheet that can be pulled to full height they match the sheet's background and lose their contrast; the same on the mini calendar and the other sheets that can be enlarged. They take a fill that reads on the glass sheet and on the full-height one (as ticket 15 did for a sheet's secondary action).
