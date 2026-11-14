@@ -1,13 +1,13 @@
 import React from "react";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-accessory";
 import { NativeTabs } from "expo-router/native-tabs";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /** The signed-in tabs: the system tab bar, Search as its own tab, Add recipe above it. */
 export function ShellTabs() {
   const intl = useIntl();
-  const [accent] = useThemeColor(["accent"] as const);
+  const accent = useAccentTextColor();
 
   return (
     <NativeTabs minimizeBehavior="onScrollDown" tintColor={accent}>

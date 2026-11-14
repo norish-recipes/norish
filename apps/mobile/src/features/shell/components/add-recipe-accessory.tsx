@@ -1,9 +1,9 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { usePathname, useRouter } from "expo-router";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useCookbookQuery } from "@norish/shared-react/recipes";
@@ -15,7 +15,7 @@ import { useCookbookQuery } from "@norish/shared-react/recipes";
 export function AddRecipeAccessory() {
   const intl = useIntl();
   const router = useRouter();
-  const [accent] = useThemeColor(["accent"] as const);
+  const accent = useAccentTextColor();
   const pathId = /^\/cookbook\/([^/]+)$/.exec(usePathname())?.[1];
   const { cookbook } = useCookbookQuery(pathId ?? "");
   const { canEdit } = useOwnerRights();
