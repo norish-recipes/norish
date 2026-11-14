@@ -15,7 +15,7 @@
 
 ## Comments
 
-### Maintainer feedback on the Recipes tab (2026-11-14), open
+### Maintainer feedback on the Recipes tab (2026-11-14), done 2026-11-14
 
 Mike, on the simulator. One fixer takes all five once ticket 16's fix round frees the checkout and the device.
 
@@ -24,3 +24,11 @@ Mike, on the simulator. One fixer takes all five once ticket 16's fix round free
 3. The long press opens faster.
 4. A long press shows the swipe actions for a moment as the menu opens and as it closes.
 5. Tags and chips are plain white, so on a sheet that can be pulled to full height they match the sheet's background and lose their contrast; the same on the mini calendar and the other sheets that can be enlarged. They take a fill that reads on the glass sheet and on the full-height one (as ticket 15 did for a sheet's secondary action).
+
+Done on the simulator (captures in `device-feedback/`):
+
+1. Slot tags: the native glass host lagged behind the page's vertical scroll, so the tag drifted off its corner; `PhotoChip` is now a plain view (RN white 85% pill) that moves with its slot. Glass on those two chips is gone.
+2. Header: the title and avatar were a native transparent header plus a collapsing title; they are now list content on the Recipes screen (native header off for that screen), so they scroll away. Groceries, Calendar and Settings have no header, so nothing to change there.
+3. Long press: not changed. It is iOS's own context menu (`Link.Menu`), its delay is fixed by the system and the package exposes no option.
+4. Swipe actions showing on long press: the actions panel sits behind the card and showed through it while the card lifted; the panel is now clear until the swipe progress is above 0 (grid and list checked).
+5. Sheet controls: chips, day cards, rows, fields, tiles, stepper and the grocery section take `bg-default` instead of `bg-surface` (inner icon circles and photo placeholders swapped the other way); checked on every Recipes sheet at both heights, light and dark. Page chips (lenses, Filters, card pills) are white on the cream page and show no problem.
