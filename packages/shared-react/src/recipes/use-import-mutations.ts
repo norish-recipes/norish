@@ -26,7 +26,7 @@ type ImportMutationsResult = {
 };
 
 /** Runs a mutation and reports its end; rollback and toasts stay in `useMutation`'s own options. */
-function settle(run: Promise<unknown>, onSettled: ImportSettled | undefined): void {
+function settle(run: Promise<unknown>, onSettled?: ImportSettled): void {
   void run.then(
     () => onSettled?.(null),
     (error: unknown) => onSettled?.(error)
@@ -146,7 +146,7 @@ export function useImportMutations(
 
   return {
     importRecipe: (url, onSettled) => settle(mutateImport({ url }), onSettled),
-    importRecipeWithAI: (url) => settle(mutateImport({ url, forceAI: true }), undefined),
+    importRecipeWithAI: (url) => settle(mutateImport({ url, forceAI: true })),
     importRecipeFromImages: (files, onSettled) =>
       settle(
         mutateImageImport(
@@ -155,7 +155,6 @@ export function useImportMutations(
         onSettled
       ),
     importRecipeFromPaste: (text, onSettled) => settle(mutatePasteImport({ text }), onSettled),
-    importRecipeFromPasteWithAI: (text) =>
-      settle(mutatePasteImport({ text, forceAI: true }), undefined),
+    importRecipeFromPasteWithAI: (text) => settle(mutatePasteImport({ text, forceAI: true })),
   };
 }
