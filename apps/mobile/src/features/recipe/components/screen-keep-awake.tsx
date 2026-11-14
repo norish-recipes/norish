@@ -9,15 +9,15 @@ export function ScreenKeepAwake() {
   const wanted = useRecipePageStore((state) => state.wakeLock !== "off");
   const focused = useIsFocused();
   // One tag per page: a recipe link stacks pages, and one's release must not cancel another's hold.
-  const tag = useId();
+  const tagId = useId();
 
   useEffect(() => {
     if (!wanted || !focused) return;
 
-    void activateKeepAwakeAsync(tag);
+    void activateKeepAwakeAsync(tagId);
 
-    return () => void deactivateKeepAwake(tag);
-  }, [wanted, focused, tag]);
+    return () => void deactivateKeepAwake(tagId);
+  }, [wanted, focused, tagId]);
 
   return null;
 }
