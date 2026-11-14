@@ -1,8 +1,10 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import type { SharedValue } from "react-native-reanimated";
 import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useCSSVariable } from "uniwind";
@@ -69,25 +71,15 @@ export function SwipeActions({
       ref={rowRef}
       containerStyle={isGrid ? { flex: 1, borderRadius: 24 } : undefined}
       overshootRight={false}
-      renderRightActions={(_progress, _translation, methods) => (
-        <View
-          accessibilityElementsHidden={!isOpen}
-          className={isGrid ? "items-center justify-center gap-[18px] pl-1" : "flex-row pl-2"}
-          importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
-          style={{ width }}
-        >
-          {actions.map((action) => (
-            <ActionButton
-              key={action.key}
-              action={action}
-              isGrid={isGrid}
-              onPress={() => {
-                methods.close();
-                action.onPress();
-              }}
-            />
-          ))}
-        </View>
+      renderRightActions={(progress, _translation, methods) => (
+        <ActionsPanel
+          actions={actions}
+          isGrid={isGrid}
+          isOpen={isOpen}
+          methods={methods}
+          progress={progress}
+          width={width}
+        />
       )}
       rightThreshold={40}
       onSwipeableClose={() => {
@@ -102,6 +94,46 @@ export function SwipeActions({
     >
       {children}
     </ReanimatedSwipeable>
+  );
+}
+
+/** The panel sits behind the card, so it is clear until the card moves: a lifting card then shows nothing behind it. */
+function ActionsPanel({
+  actions,
+  isGrid,
+  isOpen,
+  methods,
+  progress,
+  width,
+}: {
+  actions: SwipeAction[];
+  isGrid: boolean;
+  isOpen: boolean;
+  methods: SwipeableMethods;
+  progress: SharedValue<number>;
+  width: number;
+}) {
+  const visibility = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
+
+  return (
+    <Animated.View
+      accessibilityElementsHidden={!isOpen}
+      className={isGrid ? "items-center justify-center gap-[18px] pl-1" : "flex-row pl-2"}
+      importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
+      style={[{ width }, visibility]}
+    >
+      {actions.map((action) => (
+        <ActionButton
+          key={action.key}
+          action={action}
+          isGrid={isGrid}
+          onPress={() => {
+            methods.close();
+            action.onPress();
+          }}
+        />
+      ))}
+    </Animated.View>
   );
 }
 
