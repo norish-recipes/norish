@@ -22,7 +22,11 @@ import useSound from "use-sound";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
-import { useTimerStore, useTimerTicker } from "@norish/shared-react/recipes/timers";
+import {
+  timerAdjustStep,
+  useTimerStore,
+  useTimerTicker,
+} from "@norish/shared-react/recipes/timers";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -279,14 +283,6 @@ export function TimerDock({
   );
 }
 
-// Helper for smart increment
-function getSmartIncrement(originalDurationMs: number): number {
-  const minutes = originalDurationMs / 1000 / 60;
-  if (minutes < 5) return 10 * 1000; // 10s
-  if (minutes < 20) return 60 * 1000; // 1m
-
-  return 5 * 60 * 1000; // 5m
-}
 function TimerRow({
   timer,
   t,
@@ -303,7 +299,7 @@ function TimerRow({
   const adjustTimer = useTimerStore((state) => state.adjustTimer);
   const isCompleted = timer.status === "completed";
   const isRunning = timer.status === "running";
-  const smartIncrement = getSmartIncrement(timer.originalDurationMs);
+  const smartIncrement = timerAdjustStep(timer.originalDurationMs);
   const handleTimerClick = () => {
     router.push(`/recipes/${timer.recipeId}`);
   };

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlatformStorage } from "../../platform";
-import { connectTimerStorage, timerEndsAt, useTimerStore } from "../timers";
+import { connectTimerStorage, timerAdjustStep, timerEndsAt, useTimerStore } from "../timers";
 
 const mapStorage = (entries: Map<string, string> = new Map()): PlatformStorage => ({
   getItem: (key) => entries.get(key) ?? null,
@@ -196,6 +196,14 @@ describe("useTimerStore", () => {
 
     expect(tick().map((timer) => timer.id)).toEqual(["a"]);
     expect(tick()).toEqual([]);
+  });
+});
+
+describe("timerAdjustStep", () => {
+  it("steps 10 seconds under 5 minutes, a minute under 20, else 5 minutes", () => {
+    expect(timerAdjustStep(4 * 60_000)).toBe(10_000);
+    expect(timerAdjustStep(5 * 60_000)).toBe(60_000);
+    expect(timerAdjustStep(20 * 60_000)).toBe(300_000);
   });
 });
 

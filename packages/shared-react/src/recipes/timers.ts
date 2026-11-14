@@ -203,6 +203,16 @@ export const useTimerStore = create<TimerState>()(
   )
 );
 
+/** How much one tap of − or + adjusts a timer by: finer for short timers. */
+export function timerAdjustStep(originalDurationMs: number): number {
+  const minutes = originalDurationMs / 1000 / 60;
+
+  if (minutes < 5) return 10 * 1000;
+  if (minutes < 20) return 60 * 1000;
+
+  return 5 * 60 * 1000;
+}
+
 /** When a running timer reaches zero by the wall clock; null while it is paused or done. */
 export function timerEndsAt(timer: Timer): number | null {
   return timer.status === "running" && timer.lastTickAt !== null
