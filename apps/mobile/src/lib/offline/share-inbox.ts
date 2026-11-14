@@ -40,8 +40,12 @@ export type ShareInbox = {
   remove: (id: string) => void;
 };
 
-/** How the drain runs one import: told how it ended, under the share's id as its operation id. */
-export type ShareImportOptions = { onSettled: ImportSettled; operationId: string };
+/** How the drain runs one import: told how it ended, under the share's id, quiet on what it keeps. */
+export type ShareImportOptions = {
+  onSettled: ImportSettled;
+  operationId: string;
+  keeps: (error: unknown) => boolean;
+};
 
 /** The shared imports the Add recipe sheets use. */
 export type ShareImports = {
@@ -72,12 +76,9 @@ function startOf(item: SavedShare, inbox: ShareInbox, imports: ShareImports): St
   }
 }
 
-/**
- * Starts an import and resolves with how it ended: null once the server took it, else the error.
- * The share's id is the one the extension sent, so a repeat after a kill or a timeout runs once.
- */
+// Null once the server took it, else the error; under the extension's id, so a repeat runs once.
 const outcomeOf = (start: Start, id: string) =>
-  new Promise<unknown>((resolve) => start({ onSettled: resolve, operationId: id }));
+  new Promise<unknown>((resolve) => start({ onSettled: resolve, operationId: id, keeps: isKept }));
 
 /** Why the item cannot be imported here, or how its import ended. */
 type ItemOutcome = "corrupt" | "elsewhere" | { error: unknown };
@@ -130,6 +131,13 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
     case "deterministic":
       return "drop";
   }
+}
+
+/** An error the item stays in the inbox for: its import toasts nothing. */
+function isKept(error: unknown): boolean {
+  const step = nextStep({ error });
+
+  return step === "keep" || step === "stop";
 }
 
 async function drain(inbox: ShareInbox, account: () => ShareAccount | null, imports: ShareImports) {

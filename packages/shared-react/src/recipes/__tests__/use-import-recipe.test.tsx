@@ -64,6 +64,24 @@ describe("useImportRecipe", () => {
     expect(adapter.navigation.toHome).not.toHaveBeenCalled();
   });
 
+  it("says a caller's kept import only once the server queued it", () => {
+    const { result } = renderHook(() => useImportRecipe({ stay: true }), { wrapper });
+    const keeps = () => true;
+
+    result.current.importFromPaste("soup", { keeps });
+
+    expect(adapter.toast.show).not.toHaveBeenCalled();
+    const [, options] = mocks.importRecipeFromPaste.mock.calls[0]!;
+
+    expect(options).toMatchObject({ keeps });
+    options.onAccepted();
+    expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
+      severity: "default",
+      title: "common.import.paste.importing",
+      description: "common.import.paste.inProgress",
+    });
+  });
+
   it("says nothing when the import throws", () => {
     mocks.importRecipeFromPaste.mockImplementationOnce(() => {
       throw new Error("offline");

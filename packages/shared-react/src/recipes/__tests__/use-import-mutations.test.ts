@@ -164,6 +164,43 @@ describe("useImportMutations", () => {
     expect(onError).toHaveBeenCalledWith(failure, "importFromUrlWithAI");
   });
 
+  it("tells its caller nothing of an error it keeps, and still drops the placeholder", async () => {
+    const onError = vi.fn();
+    const busy = { data: { code: "INTERNAL_SERVER_ERROR", httpStatus: 503 } };
+    const refused = { data: { code: "BAD_REQUEST", httpStatus: 400 } };
+    const keeps = (error: unknown) => error === busy;
+
+    server.importFromUrl.mockRejectedValueOnce(busy).mockRejectedValueOnce(refused);
+    const result = render(onError);
+
+    act(() => result.current.importRecipe("https://example.com/a", { keeps }));
+    await settled();
+    act(() => result.current.importRecipe("https://example.com/b", { keeps }));
+    await settled();
+
+    expect(pendingIds()).toEqual([]);
+    expect(onError).toHaveBeenCalledExactlyOnceWith(refused, "importFromUrl");
+  });
+
+  it("says when the server queued an import, not when the household already holds it", async () => {
+    const onAccepted = vi.fn();
+
+    server.importFromUrl
+      .mockResolvedValueOnce({ recipeId: "recipe-held", status: "exists" })
+      .mockResolvedValueOnce({ recipeId: "recipe-new", status: "queued" });
+    server.importFromPaste.mockResolvedValue({ recipeIds: ["recipe-1", "recipe-2"] });
+    const result = render();
+
+    act(() => result.current.importRecipe("https://example.com/a", { onAccepted }));
+    await settled();
+    expect(onAccepted).not.toHaveBeenCalled();
+    act(() => result.current.importRecipe("https://example.com/b", { onAccepted }));
+    act(() => result.current.importRecipeFromPaste("two recipes", { onAccepted }));
+    await settled();
+
+    expect(onAccepted).toHaveBeenCalledTimes(2);
+  });
+
   it("tracks every recipe a paste import found", async () => {
     server.importFromPaste.mockResolvedValue({ recipeIds: ["recipe-1", "recipe-2", "recipe-3"] });
     const result = render();

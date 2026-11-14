@@ -35,12 +35,20 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
   const start =
     <T>(titleId: string, descriptionId: string, run: (input: T, options?: ImportOptions) => void) =>
     (input: T, options?: ImportOptions) => {
-      run(input, options);
-      toast.show({
-        severity: "default",
-        title: toast.translate(titleId),
-        description: toast.translate(descriptionId),
-      });
+      const announce = () =>
+        toast.show({
+          severity: "default",
+          title: toast.translate(titleId),
+          description: toast.translate(descriptionId),
+        });
+
+      // A caller that keeps failures for a later try says so only once the server queued it.
+      if (options?.keeps) {
+        run(input, { ...options, onAccepted: announce });
+      } else {
+        run(input, options);
+        announce();
+      }
       if (!stay) navigation.toHome();
     };
 

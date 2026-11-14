@@ -20,6 +20,10 @@ export type ImportOptions = {
   onSettled?: ImportSettled;
   /** Sent as the mutation's operation id, so the server runs a repeat of it once (ADR-0002). */
   operationId?: string;
+  /** The errors its caller keeps the import for, to try later: they toast nothing. */
+  keeps?: (error: unknown) => boolean;
+  /** Called once the server queued it and its pending card shows. */
+  onAccepted?: () => void;
 };
 
 type ImportMutationsResult = {
@@ -31,8 +35,8 @@ type ImportMutationsResult = {
   importRecipeFromPasteWithAI: (text: string) => void;
 };
 
-/** One import's input and the operation id its caller already chose, if any. */
-type ImportCall<Input> = { input: Input; operationId?: string };
+/** One import's input and its caller's options. */
+type ImportCall<Input> = Omit<ImportOptions, "onSettled"> & { input: Input };
 
 /** Runs a mutation and reports its end; rollback and toasts stay in `useMutation`'s own options. */
 function settle(run: Promise<unknown>, onSettled?: ImportSettled): void {
@@ -76,7 +80,12 @@ export function useImportMutations(
   };
 
   // The placeholder becomes the imported recipe; without one, the recipe is added.
-  const showImported = (recipeId: string, context: ImportMutationContext | undefined): void => {
+  const showImported = (
+    recipeId: string,
+    context: ImportMutationContext | undefined,
+    call: ImportCall<unknown>
+  ): void => {
+    call.onAccepted?.();
     if (!context) {
       addPendingRecipe(recipeId);
 
@@ -89,9 +98,12 @@ export function useImportMutations(
   const handleImportError = (
     error: unknown,
     operation: string,
-    context: ImportMutationContext | undefined
+    context: ImportMutationContext | undefined,
+    call: ImportCall<unknown>
   ): void => {
-    handleRecipesMutationError(error, operation, onError, () => {
+    const report = call.keeps?.(error) ? undefined : onError;
+
+    handleRecipesMutationError(error, operation, report, () => {
       dropPlaceholder(context);
       invalidate();
     });
@@ -105,7 +117,7 @@ export function useImportMutations(
     mutationFn: ({ input, operationId }: ImportCall<UrlInput>) =>
       client.recipes.importFromUrl.mutate(input, withOperationId(operationId)),
     onMutate: addPlaceholder,
-    onSuccess: ({ recipeId, status }, _variables, context) => {
+    onSuccess: ({ recipeId, status }, call, context) => {
       // Nothing was queued, so there is no pending recipe to stand in for:
       // drop the placeholder and hand the id to whoever can offer it.
       if (status === "exists") {
@@ -115,10 +127,15 @@ export function useImportMutations(
         return;
       }
 
-      showImported(recipeId, context);
+      showImported(recipeId, context, call);
     },
-    onError: (error, { input }, context) => {
-      handleImportError(error, input.forceAI ? "importFromUrlWithAI" : "importFromUrl", context);
+    onError: (error, call, context) => {
+      handleImportError(
+        error,
+        call.input.forceAI ? "importFromUrlWithAI" : "importFromUrl",
+        context,
+        call
+      );
     },
   });
   const { mutateAsync: mutateImageImport } = useMutation({
@@ -126,11 +143,11 @@ export function useImportMutations(
     mutationFn: ({ input, operationId }: ImportCall<FormData>) =>
       client.recipes.importFromImages.mutate(input, withOperationId(operationId)),
     onMutate: addPlaceholder,
-    onSuccess: (recipeId, _variables, context) => {
-      showImported(recipeId, context);
+    onSuccess: (recipeId, call, context) => {
+      showImported(recipeId, context, call);
     },
-    onError: (error, _call, context) => {
-      handleImportError(error, "importFromImages", context);
+    onError: (error, call, context) => {
+      handleImportError(error, "importFromImages", context, call);
     },
   });
   const { mutateAsync: mutatePasteImport } = useMutation({
@@ -138,7 +155,7 @@ export function useImportMutations(
     mutationFn: ({ input, operationId }: ImportCall<PasteInput>) =>
       client.recipes.importFromPaste.mutate(input, withOperationId(operationId)),
     onMutate: addPlaceholder,
-    onSuccess: (result, _variables, context) => {
+    onSuccess: (result, call, context) => {
       const [firstRecipeId, ...remainingRecipeIds] = result.recipeIds;
 
       if (!firstRecipeId) {
@@ -148,38 +165,33 @@ export function useImportMutations(
         return;
       }
 
-      showImported(firstRecipeId, context);
+      showImported(firstRecipeId, context, call);
       remainingRecipeIds.forEach((recipeId) => addPendingRecipe(recipeId));
     },
-    onError: (error, { input }, context) => {
+    onError: (error, call, context) => {
       handleImportError(
         error,
-        input.forceAI ? "importFromPasteWithAI" : "importFromPaste",
-        context
+        call.input.forceAI ? "importFromPasteWithAI" : "importFromPaste",
+        context,
+        call
       );
     },
   });
 
   return {
     importRecipe: (url, options) =>
-      settle(
-        mutateImport({ input: { url }, operationId: options?.operationId }),
-        options?.onSettled
-      ),
+      settle(mutateImport({ ...options, input: { url } }), options?.onSettled),
     importRecipeWithAI: (url) => settle(mutateImport({ input: { url, forceAI: true } })),
     importRecipeFromImages: (files, options) =>
       settle(
         mutateImageImport({
+          ...options,
           input: uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file]))),
-          operationId: options?.operationId,
         }),
         options?.onSettled
       ),
     importRecipeFromPaste: (text, options) =>
-      settle(
-        mutatePasteImport({ input: { text }, operationId: options?.operationId }),
-        options?.onSettled
-      ),
+      settle(mutatePasteImport({ ...options, input: { text } }), options?.onSettled),
     importRecipeFromPasteWithAI: (text) =>
       settle(mutatePasteImport({ input: { text, forceAI: true } })),
   };

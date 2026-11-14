@@ -226,6 +226,28 @@ describe("drainShareInbox", () => {
     expect([...json.keys()]).toEqual(["b"]);
   });
 
+  it("asks for no toast on what it keeps: a 5xx, 408, 429, 401 or an unsaved Outbox entry", async () => {
+    const { inbox } = fakeInbox({ a: { kind: "url", url: "https://example.com/a" } });
+    const handed: ShareImportOptions[] = [];
+    const run = (_input: unknown, options: ShareImportOptions) => {
+      handed.push(options);
+      queueMicrotask(() => options.onSettled(null));
+    };
+    const lost = queued();
+
+    markOutboxAdmissionFailed(lost);
+    await drainShareInbox(inbox, owner, { url: run, text: run, images: run, reconcile: vi.fn() });
+    const { keeps } = handed[0]!;
+
+    for (const status of [500, 503, 408, 429])
+      expect(keeps({ data: { httpStatus: status } })).toBe(true);
+    expect(keeps(unauthorized())).toBe(true);
+    expect(keeps(lost)).toBe(true);
+    expect(keeps(refused())).toBe(false);
+    expect(keeps(queued())).toBe(false);
+    expect(keeps(null)).toBe(false);
+  });
+
   it("rereads the pending imports once after a drain the server took an import in", async () => {
     // A repeat's stored answer names a recipe that may have finished long ago.
     const { inbox } = fakeInbox({
