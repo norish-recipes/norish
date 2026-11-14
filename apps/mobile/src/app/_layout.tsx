@@ -11,6 +11,7 @@ import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
+import { useRecipeTimers } from "@/features/recipe/hooks/use-recipe-timers";
 import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
@@ -240,6 +241,8 @@ function AuthenticatedEffects() {
   useRecipeOutcomesSubscription();
   // What the Share Extension saved while the server was unreachable.
   useShareInbox();
+  // Recipe Timers outlive the screen that started them: they tick, notify and open from here.
+  useRecipeTimers();
   useRecipeListSubscription();
   useRatingsSubscription();
   useCookbooksSubscription();

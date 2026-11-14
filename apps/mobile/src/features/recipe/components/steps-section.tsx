@@ -6,6 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { StepIngredientRefLike } from "@norish/shared/lib/step-ingredients";
 import {
   useAmountDisplayPreference,
   useLoadedPageRecipe,
@@ -16,9 +17,11 @@ import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
+import { useStepTimers } from "../hooks/use-step-timers";
 import { plainText, stepRows } from "../utils/recipe-rows";
 import { IngredientIcon } from "./ingredient-icon";
 import { InlineMarkdown } from "./inline-markdown";
+import { TimerChip } from "./timer-chip";
 import { SectionCard, useTint } from "./tint";
 
 type Recipe = ReturnType<typeof useLoadedPageRecipe>;
@@ -32,7 +35,7 @@ function byPlace<T>(items: T[], render: (item: T, index: number) => ReactNode) {
 }
 
 /** A step's own photos as small thumbnails; one opens the pages in full. */
-function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
+export function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
   const toImage = useServerImage();
   const { width } = useWindowDimensions();
   const [open, setOpen] = useState<number | null>(null);
@@ -81,8 +84,47 @@ function StepPhotos({ images, label }: { images: { image: string }[]; label: str
   );
 }
 
-/** The lines a step uses, as chips with their amounts at the page's servings. */
-function StepChips({ step, lines, systemUsed }: { step: Step; lines: Line[]; systemUsed: string }) {
+/** A step's text with its durations as timer chips; `stepIndex` counts steps, not headings, from 0. */
+export function StepText({
+  text,
+  stepIndex,
+  size,
+  disableLinks = false,
+}: {
+  text: string;
+  stepIndex: number;
+  size: "page" | "cook";
+  disableLinks?: boolean;
+}) {
+  const { matches, marked } = useStepTimers(text);
+
+  return (
+    <InlineMarkdown
+      disableLinks={disableLinks}
+      renderTimer={(index) => {
+        const match = matches[index];
+
+        return match ? (
+          <TimerChip index={index} match={match} size={size} stepIndex={stepIndex} />
+        ) : null;
+      }}
+      text={marked}
+    />
+  );
+}
+
+/** The lines a step uses, as chips with their amounts at the page's servings; larger in cook mode. */
+export function StepChips({
+  step,
+  lines,
+  systemUsed,
+  large = false,
+}: {
+  step: { stepIngredients?: StepIngredientRefLike[] };
+  lines: Line[];
+  systemUsed: string;
+  large?: boolean;
+}) {
   const intl = useIntl();
   const { mode } = useAmountDisplayPreference();
   const { formatUnitOnly } = useUnitFormatter(intl.locale);
@@ -119,16 +161,18 @@ function StepChips({ step, lines, systemUsed }: { step: Step; lines: Line[]; sys
         return (
           <View
             key={item.ingredientOrder}
-            className="bg-default h-[30px] flex-row items-center gap-1.5 rounded-full pr-2.5 pl-1"
+            className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
             style={tint ? { backgroundColor: tint.soft } : undefined}
           >
             {namesNoFood(item.name) ? null : (
               <IngredientIcon
                 ingredientId={lineAt.get(item.ingredientOrder)?.ingredientId}
-                size={22}
+                size={large ? 26 : 22}
               />
             )}
-            <Text className="text-foreground text-[13px]">{label}</Text>
+            <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
+              {label}
+            </Text>
           </View>
         );
       })}
@@ -173,7 +217,7 @@ function StepLine({
         <Text
           className={`pt-0.5 text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
         >
-          <InlineMarkdown disableLinks={done} text={step.step} />
+          <StepText disableLinks={done} size="page" stepIndex={number - 1} text={step.step} />
         </Text>
         <StepChips lines={lines} step={step} systemUsed={systemUsed} />
         {step.images && step.images.length > 0 ? (

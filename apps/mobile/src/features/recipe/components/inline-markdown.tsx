@@ -2,17 +2,23 @@ import React from "react";
 import { Linking, Text } from "react-native";
 
 import { usePlatform } from "@norish/shared-react/platform";
+import { TIMER_HREF_PREFIX } from "@norish/shared/lib/timer-parser";
 
 import type { InlineNode } from "../utils/inline-markdown";
 import { linkTarget, parseInline } from "../utils/inline-markdown";
 
-/** A recipe's text with its links, bold and italic; nest it in a Text, which sets the type. Links read as text when disabled, as on a ticked line. */
+/**
+ * A recipe's text with its links, bold and italic; nest it in a Text, which sets the type. Links read
+ * as text when disabled, as on a ticked line; `norish-timer:` links render through `renderTimer`.
+ */
 export function InlineMarkdown({
   text,
   disableLinks = false,
+  renderTimer,
 }: {
   text: string;
   disableLinks?: boolean;
+  renderTimer?: (index: number) => React.ReactNode;
 }) {
   const { navigation } = usePlatform();
 
@@ -22,6 +28,12 @@ export function InlineMarkdown({
       const key = index;
 
       if (node.kind === "text") return <React.Fragment key={key}>{node.text}</React.Fragment>;
+
+      if (node.kind === "link" && node.href.startsWith(TIMER_HREF_PREFIX)) {
+        const timer = renderTimer?.(Number(node.href.slice(TIMER_HREF_PREFIX.length)));
+
+        return <React.Fragment key={key}>{timer ?? render(node.children)}</React.Fragment>;
+      }
 
       if (node.kind === "link") {
         const target = disableLinks ? null : linkTarget(node.href);

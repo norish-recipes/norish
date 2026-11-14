@@ -16,6 +16,7 @@ import type {
 } from "@norish/shared-react/platform";
 import { createIntlMessageTranslator } from "@norish/i18n";
 import { PlatformProvider } from "@norish/shared-react/platform";
+import { connectTimerStorage } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { ToastSeverity } from "./app-toast";
@@ -34,6 +35,9 @@ const mmkvStorage: PlatformStorage = {
     storage.remove(key);
   },
 };
+
+// Before the first render, so a cold start (a notification tap too) already has its timers.
+connectTimerStorage(mmkvStorage);
 
 /** The mobile app's platform adapter: heroui-native toasts, Expo Router, MMKV and the session. */
 export function MobilePlatformProvider({
