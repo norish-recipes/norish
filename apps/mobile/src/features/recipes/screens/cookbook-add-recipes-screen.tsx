@@ -6,48 +6,38 @@ import { useIntl } from "react-intl";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { useCookbookAddRecipes, useCookbookQuery } from "@norish/shared-react/recipes";
 
-import { PickSheet } from "../components/pick-sheet";
-import { recipePickList, SearchRecipes } from "../components/recipe-pick";
+import { RecipePickSheet } from "../components/recipe-pick";
 
 function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const intl = useIntl();
   const router = useRouter();
-  const { input, setInput, addable, hasRecipes, isLoading, loadMore, selected, toggle, save } =
-    useCookbookAddRecipes(cookbook);
+  const { addable, hasRecipes, save, ...pick } = useCookbookAddRecipes(cookbook);
 
   return (
-    <PickSheet
+    <RecipePickSheet
       action={{
         label:
-          selected.length > 0
-            ? intl.formatMessage({ id: "recipes.cookbooks.addCount" }, { count: selected.length })
+          pick.selected.length > 0
+            ? intl.formatMessage(
+                { id: "recipes.cookbooks.addCount" },
+                { count: pick.selected.length }
+              )
             : intl.formatMessage({ id: "common.actions.add" }),
         icon: "add",
         testID: "cookbook-add-recipes-add",
         onPress:
-          selected.length === 0
+          pick.selected.length === 0
             ? undefined
             : () => {
                 save();
                 router.back();
               },
       }}
-      header={<SearchRecipes value={input} onChange={setInput} />}
-      list={
-        isLoading
-          ? undefined
-          : recipePickList({
-              intl,
-              recipes: addable,
-              emptyId: hasRecipes
-                ? "recipes.cookbooks.everythingAlreadyIn"
-                : "recipes.cookbooks.noRecipesToAdd",
-              selected,
-              onToggle: toggle,
-              onEndReached: loadMore,
-            })
+      emptyId={
+        hasRecipes ? "recipes.cookbooks.everythingAlreadyIn" : "recipes.cookbooks.noRecipesToAdd"
       }
       name="cookbook-add-recipes"
+      pick={{ ...pick, recipes: addable }}
       subtitle={cookbook.title}
       title={intl.formatMessage({ id: "recipes.cookbooks.addRecipes" })}
     />
@@ -64,13 +54,13 @@ export function CookbookAddRecipesScreen() {
   return cookbook && canEdit(cookbook) ? (
     <AddRecipesSheet key={cookbook.id} cookbook={cookbook} />
   ) : (
-    <PickSheet
+    <RecipePickSheet
       action={{
         label: intl.formatMessage({ id: "common.actions.add" }),
         icon: "add",
         testID: "cookbook-add-recipes-add",
       }}
-      header={<SearchRecipes />}
+      emptyId="recipes.cookbooks.noRecipesToAdd"
       name="cookbook-add-recipes"
       subtitle={title}
       title={intl.formatMessage({ id: "recipes.cookbooks.addRecipes" })}
