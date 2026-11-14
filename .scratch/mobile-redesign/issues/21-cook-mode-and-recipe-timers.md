@@ -4,7 +4,7 @@
 
 **Blocked by:** 20
 
-**Status:** open
+**Status:** done
 
 - [x] Moved first, in separate commits, web switched over: `apps/web/lib/timers.ts` to shared-react on platform storage, web's service-worker notification behind a platform notifier.
 - [x] Cook mode as web's: prev/next peeks, ingredient chips, progress and Ready At, steps and ingredients views; the screen stays awake.
@@ -21,3 +21,23 @@
 - 2026-11-14 review round: cook mode shows the Recipe screen's not-found state and a close while loading or gone; Sign-out (and Session Expiry, Account deletion) ends the device's Recipe Timers in `endSession`, cancelling their pending and delivered notifications and the last tap; a return to the foreground resyncs notifications; one `recipeTimerId` in shared-react, web's cooking mode now counts steps without headings (its step centring did the same) and `originalIndex` is gone; a timer added before storage connects is kept; `addTimer` takes an object, the ticker a callback; `parseTimerDurations` returns reading order; one glass module (`components/glass.tsx`); cook mode's bar and ingredients moved to components. Chips are accessible buttons laid over the inline chip, placed by `measureInWindow` a frame after commit (inline views get no onLayout and a stale `measureLayout`); the page's step row is no longer one button, its number is the toggle. Simulator (iPhone 18 Pro, iOS 27.2, Debug dev client): a cook deep link to a missing recipe shows Recipe Not Found and closes; chips show in the accessibility snapshot on the page and in cook mode and a tap by label starts, pauses and dismisses; with notifications off in Settings a running timer has nothing pending, and after turning them on and returning to the app its notification is pending; signing out 6 s before a timer's end left nothing pending, and signing back in replayed no tap. Not seen: a cold-start deep link (no Release build made: it replaces the shared simulator's dev client).
 - 2026-11-15 re-review round: ending a session now chains onto the notification sync, so a sync waiting on the permission answer schedules before the end lists and cancels (test: a sync in flight at sign-out leaves nothing pending; red before); the foreground resync subscribes once (`useEffectEvent`); the Recipe page's step number is its own Pressable toggle, the row still toggles on any other tap; timer chip buttons re-measure on a font scale change and on the step text's own layout. Tests: a stored timer under an id `recipeTimerId` cannot build loads, ticks and dismisses; web's page vs cooking mode and mobile's page vs cook mode give one timer id per step for a recipe with `#` headings (each fails if a heading is counted). Simulator (iPhone 18 Pro, iOS 27.2, Debug dev client): before the chip fix, raising Large → XXXL with the Recipe page open left the chip buttons at their old frames and a tap on the drawn "3 mins" chip ticked the step off; after it the buttons followed the chips, that tap started the timer, an idle chip started by label on the page and, after XXXL → Large, in cook mode; the step number by label and a tap on the step text each toggle. Text size put back to Large, timers dismissed.
 - Open: a cold-start cook deep link on a Release build. Ticket 30: docs and release notes for cook mode, timer chips, the notification and its permission.
+
+### Review log (2026-11-15)
+
+Range `d620a4017..d41fd096b`. Standards on Sonnet low, Spec on Opus high (the ticket moves the timers store and keeps notifications in step with it); fixes `262fda00c..fc0cfb3f6`, re-reviewed on Opus high, second round `441d465dd..d41fd096b`. The Spec review traced the store move, every timer transition and Hidden Items and found them clean.
+
+Fixed, first round (13): cook mode opening blank with no way out when its recipe cannot be loaded; a notification tap replayed after the next sign-in (the session end now ends the device's timers and their notifications, on Sign-out, Session Expiry and Account deletion); a permission granted later in Settings (reconciled on return to the app); timer chips missing from the accessibility tree; one `recipeTimerId` for web's page, web's cooking mode and mobile, which also fixed web's heading mismatch and its step centring; a timer started before storage connects being lost; `cook-mode-screen.tsx` split; one glass module for three wrappers; `addTimer` taking one object; the ticker taking a callback; casts, a double sort (web's chips were indexed unsorted), a rename and long comments.
+
+Fixed, second round (6): a session end racing a notification sync in flight; the step number as the pressable done toggle; chip buttons re-measured on a text size change (seen failing on the simulator first); two tests that proved nothing; the foreground listener subscribing once.
+
+Kept after checking: `hasChanges` in the store's tick (it is false when nothing runs).
+
+Rejected (2): the notification id's `@` separator (the parse takes the last `@` and an end time has none); a timer stored under a chip index that the parser's sort moved (it lasts until that timer is dismissed).
+
+Kept as built, the maintainer may overrule: a haptic on finish; the "notifications off" note in the timer list; Restart on a finished timer; Done on the last step closing cook mode (web disables it); the ingredients view using the page's servings stepper as web does, not the board's segment and pill; no sound when a timer finishes in the foreground with notifications refused.
+
+Also in this range: `9792dc4b3`, test containers start with a 180 s timeout under a 240 s hook timeout, after `@norish/queue`'s Valkey container timed out once in `pnpm test:run`. It did not reproduce in five forced runs, so the cause is inferred.
+
+Open for ticket 30's device run: tapping the notification itself (banner and Lock Screen), and a cold-start deep link into cook mode; both need a Release build or a real iPhone.
+
+Final state `d41fd096b`: all 11 gates exit 0, mobile lint without warnings.
