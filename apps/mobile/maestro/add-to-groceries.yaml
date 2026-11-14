@@ -1,0 +1,38 @@
+# Adds a recipe's ingredients to groceries from its card: swipe, Groceries, Add. The sheet closes and
+# the server has the two lines.
+appId: dev.norish.app
+---
+- runFlow: subflows/reset.yaml
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPE_NAME: Grocery Omelette
+      RECIPE_KEY: omelette
+      RECIPE_INGREDIENTS: 2 eggs,100 g flour
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.omelette}
+    timeout: 20000
+- swipe:
+    from:
+      id: recipe-card-${output.omelette}
+    direction: LEFT
+- tapOn:
+    id: recipe-swipe-groceries-${output.omelette}
+- extendedWaitUntil:
+    visible:
+      id: add-to-groceries-add
+    timeout: 20000
+- tapOn:
+    id: add-to-groceries-add
+- extendedWaitUntil:
+    notVisible:
+      id: add-to-groceries-sheet
+    timeout: 20000
+# The server answers once both lines are there.
+- evalScript: ${output.groceries = json(http.get(NORISH_PROXY_CONTROL_URL + '/groceries?min=2').body).names}
+- assertTrue: ${output.groceries.length == 2}
