@@ -20,6 +20,8 @@ export type CookbooksCacheHelpers = {
   invalidateMembership: (recipeId?: string) => void;
   /** Write a cookbook into its own read, so its page can open at once. */
   seedCookbook: (cookbook: CookbookSummaryDTO) => void;
+  /** Write the recipes a new cookbook starts with into its own member list. */
+  seedCookbookMembers: (cookbookId: string, recipeIds: string[]) => void;
   /** Write a membership change straight into the recipe's own read. */
   patchRecipeMembership: (
     recipeId: string,
@@ -30,7 +32,8 @@ export type CookbooksCacheHelpers = {
 
 export type CookbooksMutationsResult = {
   /** Resolves with the cookbook's id — client-minted, so it is known up front. */
-  createCookbook: (input: { title: string; recipeIds?: string[] }) => Promise<string>;
+  /** Resolves with the new id, or undefined when the server refused it (the toast has said so). */
+  createCookbook: (input: { title: string; recipeIds?: string[] }) => Promise<string | undefined>;
   /** `image`: a URL from `uploadCookbookImage`, null to clear it, absent to keep it. */
   updateCookbook: (input: {
     id: string;

@@ -15,6 +15,7 @@ import {
 import { useReader } from "../reader";
 import { useTRPC } from "../trpc";
 import { useCookbooksCacheHelpers } from "./use-cookbooks-cache";
+import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
 
 export function useCookbooksMutations(): CookbooksMutationsResult {
   const trpc = useTRPC();
@@ -25,6 +26,7 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
     invalidateMembership,
     patchRecipeMembership,
     seedCookbook,
+    seedCookbookMembers,
   } = useCookbooksCacheHelpers();
   // So a cookbook created Offline is the Reader's own rather than Orphaned (ADR-0027).
   const currentUserId = useReader().user?.id;
@@ -32,15 +34,28 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
   // A queued write keeps its tentative state: there is nothing to refetch Offline, and refetching
   // would erase the change the reader can see (ADR-0009).
   const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
+  // A write the Outbox kept is saved, not failed; any other refusal is told to the reader.
+  const showFailure = useRecipeMutationErrorToast();
+  const tellRefusal = (operation: string) => (error: unknown) => {
+    if (!shouldPreserveOptimisticUpdate(error)) showFailure(error, `cookbooks:${operation}`);
+  };
   const updateMutation = useMutation(
     trpc.cookbooks.update.mutationOptions({
       onSuccess: (_data, { id }) => invalidateCookbook(id),
-      onError: invalidateUnlessQueued,
+      onError: (error) => {
+        invalidateUnlessQueued(error);
+        tellRefusal("update")(error);
+      },
     })
   );
   const { mutate: mutateUpdate } = updateMutation;
   const deleteMutation = useMutation(
-    trpc.cookbooks.remove.mutationOptions({ onError: invalidateUnlessQueued })
+    trpc.cookbooks.remove.mutationOptions({
+      onError: (error) => {
+        invalidateUnlessQueued(error);
+        tellRefusal("remove")(error);
+      },
+    })
   );
   const { mutate: mutateDelete } = deleteMutation;
   const membershipMutation = useMutation(
@@ -51,7 +66,10 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
         // Refetch the lists too: the patch cleared derived fields only the server can answer.
         invalidate();
       },
-      onError: invalidateUnlessQueued,
+      onError: (error) => {
+        invalidateUnlessQueued(error);
+        tellRefusal("membership")(error);
+      },
     })
   );
   const { mutate: mutateMembership } = membershipMutation;
@@ -100,8 +118,10 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
 
         if (seeded) seedCookbook(seeded);
       },
-      onError: (error, { id }, context) => {
+      onError: (error, { id, recipeIds = [] }, context) => {
         const tentative = context?.tentative;
+
+        tellRefusal("create")(error);
 
         if (!shouldPreserveOptimisticUpdate(error) || !tentative) {
           invalidate();
@@ -131,6 +151,7 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
           };
         });
         seedCookbook(tentative);
+        seedCookbookMembers(tentative.id, recipeIds);
       },
     })
   );
@@ -144,7 +165,8 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
 
       return mutateCreateAsync({ id, title, recipeIds }).then(
         () => id,
-        (error: unknown) => (shouldPreserveOptimisticUpdate(error) ? id : Promise.reject(error))
+        // A refusal was told to the reader by the mutation's `onError`.
+        (error: unknown) => (shouldPreserveOptimisticUpdate(error) ? id : undefined)
       );
     },
     [mutateCreateAsync]

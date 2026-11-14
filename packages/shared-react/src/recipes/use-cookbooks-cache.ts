@@ -3,10 +3,15 @@
 import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import type { CookbookSummaryDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  toRecipesQueryFilters,
+} from "@norish/shared/contracts/filter-contract";
+import { cookbookRecipesInput } from "@norish/shared/contracts/list-queries";
 
 import type { CookbooksCacheHelpers, InfiniteCookbookData } from "./cookbook-types";
-import type { InfiniteLibraryData } from "./library-cache";
+import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
 import { useTRPC } from "../trpc";
 import { applyCookbookUpdateToLibrary, applyCookbookUpdateToList } from "./library-cache";
 import { cookbookIdOf } from "./use-cookbook-recipes-query";
@@ -138,6 +143,35 @@ export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
     [queryClient, trpc]
   );
 
+  /**
+   * Write the recipes just picked into a new cookbook's own member list, so its page lists what
+   * its card counts until Replay. They are read back from the recipe lists already cached.
+   */
+  // ponytail: the default-filter list only; a reader filtering the Library opens another key.
+  const seedCookbookMembers = useCallback(
+    (cookbookId: string, recipeIds: string[]) => {
+      const known = new Map<string, RecipeDashboardDTO>();
+
+      for (const [, data] of queryClient.getQueriesData<InfiniteRecipeData>({
+        queryKey: trpc.recipes.list.pathKey(),
+      })) {
+        for (const page of data?.pages ?? []) {
+          for (const recipe of page.recipes) known.set(recipe.id, recipe);
+        }
+      }
+
+      const recipes = recipeIds.flatMap((id) => known.get(id) ?? []);
+
+      queryClient.setQueryData<InfiniteRecipeData>(
+        trpc.cookbooks.recipes.infiniteQueryKey(
+          cookbookRecipesInput(cookbookId, toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS))
+        ),
+        { pages: [{ recipes, total: recipes.length, nextCursor: null }], pageParams: [0] }
+      );
+    },
+    [queryClient, trpc]
+  );
+
   return {
     setAllCookbooksData,
     invalidate,
@@ -145,5 +179,6 @@ export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
     invalidateMembership,
     patchRecipeMembership,
     seedCookbook,
+    seedCookbookMembers,
   };
 }

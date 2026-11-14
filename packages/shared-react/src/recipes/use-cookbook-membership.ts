@@ -81,9 +81,9 @@ export function useCookbookMembership({
       // cookbook, and a half-typed title is not that.
       const created = await Promise.all(
         pending.map((entry) =>
-          createCookbook({ title: entry.title, recipeIds })
-            .then((id) => (id ? { id, title: entry.title } : null))
-            .catch(() => null)
+          createCookbook({ title: entry.title, recipeIds }).then((id) =>
+            id ? { id, title: entry.title } : null
+          )
         )
       );
 
