@@ -48,14 +48,14 @@ export function AppToast({
       {...props}
       // ponytail: opaque overlay, as heroui's glass theme forces; native glass drew nothing in the toast window.
       background={null}
-      className="bg-overlay min-h-16 flex-row items-center gap-3 rounded-[32px] py-2.5 pr-2.5 pl-3"
+      className="bg-overlay min-h-16 flex-row items-center gap-3 rounded-[32px] py-2.5 pr-2.5 pl-5"
       testID="toast"
     >
-      <View className={`size-10 items-center justify-center rounded-full ${badge.circle}`}>
+      <View className={`size-6 items-center justify-center rounded-full ${badge.circle}`}>
         <Ionicons
           color={typeof iconColor === "string" ? iconColor : foreground}
           name={badge.icon}
-          size={20}
+          size={14}
         />
       </View>
       <View
