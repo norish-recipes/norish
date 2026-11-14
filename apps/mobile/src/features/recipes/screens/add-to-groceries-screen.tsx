@@ -21,13 +21,13 @@ import {
   useUnitFormatter,
 } from "@norish/shared-react/recipes";
 
-import { groceriesStartServings } from "../utils/card-actions";
 import { GroceryLineRow, GroceryLineRowSkeleton } from "../components/grocery-line-row";
 import {
   GroceryLinesSection,
   GroceryLinesSectionSkeleton,
 } from "../components/grocery-lines-section";
 import { ServingsStepper } from "../components/servings-stepper";
+import { groceriesStartServings } from "../utils/card-actions";
 
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
 const AS_WRITTEN = {};
