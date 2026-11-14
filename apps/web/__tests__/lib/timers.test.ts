@@ -1,3 +1,4 @@
+import { showTimerNotification } from "@/lib/timer-notification";
 import { useTimerStore } from "@/lib/timers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -113,7 +114,7 @@ describe("useTimerStore", () => {
 
     // Advance time by 10 seconds
     vi.setSystemTime(Date.now() + 10000);
-    tick("Timer complete!");
+    tick();
 
     let { timers } = useTimerStore.getState();
 
@@ -136,7 +137,7 @@ describe("useTimerStore", () => {
     const now = Date.now();
 
     vi.setSystemTime(now + 1000);
-    tick("Timer complete!");
+    tick();
 
     const { timers } = useTimerStore.getState();
     const expectedRemainingIds = 60000 - 1000;
@@ -153,7 +154,7 @@ describe("useTimerStore", () => {
 
     // Advance time by 2 seconds (past duration)
     vi.setSystemTime(Date.now() + 2000);
-    tick("Timer complete!");
+    tick();
 
     const { timers } = useTimerStore.getState();
 
@@ -187,7 +188,7 @@ describe("useTimerStore", () => {
     startTimer("test-1");
 
     vi.setSystemTime(Date.now() + 2000);
-    tick("Timer complete!");
+    tick().forEach((timer) => showTimerNotification(timer, "Timer complete!"));
 
     await Promise.resolve();
 

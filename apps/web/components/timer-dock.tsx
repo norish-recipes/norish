@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDockedTimers } from "@/hooks/use-docked-timers";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { showTimerNotification } from "@/lib/timer-notification";
 import { useTimerStore } from "@/lib/timers";
 import {
   ChevronDownIcon,
@@ -42,7 +43,7 @@ export function TimerTicker() {
       return;
     }
     const interval = setInterval(() => {
-      tick(t("notification_body"));
+      tick().forEach((timer) => showTimerNotification(timer, t("notification_body")));
     }, 1000);
     return () => clearInterval(interval);
   }, [tick, hasRunningTimers, t]);

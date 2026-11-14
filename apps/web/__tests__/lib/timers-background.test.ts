@@ -1,3 +1,4 @@
+import { showTimerNotification } from "@/lib/timer-notification";
 import { useTimerStore } from "@/lib/timers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -36,7 +37,10 @@ describe("timer completion in the background", () => {
       ],
     });
 
-    useTimerStore.getState().tick("Timer complete!");
+    useTimerStore
+      .getState()
+      .tick()
+      .forEach((timer) => showTimerNotification(timer, "Timer complete!"));
 
     await vi.waitFor(() =>
       expect(warn).toHaveBeenCalledWith(refusal, "Failed to show timer notification")

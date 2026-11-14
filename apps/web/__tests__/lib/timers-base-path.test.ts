@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 type TimerStore = typeof import("@/lib/timers");
 
 let useTimerStore: TimerStore["useTimerStore"];
+let showTimerNotification: (typeof import("@/lib/timer-notification"))["showTimerNotification"];
 
 beforeEach(async () => {
   vi.resetModules();
@@ -12,6 +13,7 @@ beforeEach(async () => {
   const module = await import("@/lib/timers");
 
   useTimerStore = module.useTimerStore;
+  showTimerNotification = (await import("@/lib/timer-notification")).showTimerNotification;
 
   const storage = new Map();
 
@@ -53,7 +55,7 @@ describe("timer notifications under a base path", () => {
     addTimer("test-1", "recipe-1", "Test Timer", 1000);
     startTimer("test-1");
     vi.setSystemTime(Date.now() + 2000);
-    tick("Timer complete!");
+    tick().forEach((timer) => showTimerNotification(timer, "Timer complete!"));
 
     await Promise.resolve();
 

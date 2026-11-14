@@ -1,45 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { addBasePath } from "@norish/shared/lib/base-path";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const logger = createClientLogger("timers");
-
-/**
- * Show an OS notification via the service worker when a timer completes
- * while the app is in the background (document.hidden === true).
- */
-function showTimerNotification(timer: { label: string; recipeName?: string }, body: string) {
-  // Audio still plays in the foreground where notifications are unavailable.
-  if (
-    typeof document === "undefined" ||
-    !document.hidden ||
-    typeof navigator === "undefined" ||
-    !("serviceWorker" in navigator) ||
-    typeof Notification === "undefined" ||
-    Notification.permission !== "granted"
-  ) {
-    return;
-  }
-
-  navigator.serviceWorker.ready
-    .then((registration) => {
-      const title = timer.recipeName ? `${timer.label} — ${timer.recipeName}` : timer.label;
-
-      return registration.showNotification(title, {
-        body,
-        icon: addBasePath("/brand/icon-192.png"),
-        tag: "timer-complete",
-        renotify: true,
-        requireInteraction: true,
-        vibrate: [200, 100, 200],
-      } as NotificationOptions);
-    })
-    .catch((err) => {
-      logger.warn(err, "Failed to show timer notification");
-    });
-}
 
 type TimerStatus = "running" | "paused" | "completed";
 
@@ -72,8 +36,8 @@ interface TimerState {
   resetTimer: (id: string) => void;
   adjustTimer: (id: string, deltaMs: number) => void;
 
-  // The tick loop to update times
-  tick: (notificationBody: string) => void;
+  /** Brings running timers to the clock; returns the ones that reached zero on this tick. */
+  tick: () => Timer[];
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -172,8 +136,9 @@ export const useTimerStore = create<TimerState>()(
         }));
       },
 
-      tick: (notificationBody) => {
+      tick: () => {
         const now = Date.now();
+        const finished: Timer[] = [];
 
         set((state) => {
           let hasChanges = false;
@@ -194,7 +159,7 @@ export const useTimerStore = create<TimerState>()(
 
             if (newRemaining === 0 && t.remainingMs > 0) {
               hasChanges = true;
-              showTimerNotification(t, notificationBody);
+              finished.push(t);
 
               return { ...t, remainingMs: 0, status: "completed", lastTickAt: now };
             }
@@ -206,6 +171,8 @@ export const useTimerStore = create<TimerState>()(
 
           return (hasChanges ? { timers: newTimers } : {}) as Partial<TimerState>;
         });
+
+        return finished;
       },
     }),
     {
