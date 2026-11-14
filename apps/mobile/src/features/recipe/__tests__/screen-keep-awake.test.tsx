@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import React from "react";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,10 +7,25 @@ import { ScreenKeepAwake } from "../components/screen-keep-awake";
 
 let wakeLock = "off";
 let focused = true;
-const activate = vi.fn((_tag: string) => Promise.resolve());
-const deactivate = vi.fn((_tag: string) => {});
+// The tags expo-keep-awake holds; the screen stays awake while any is held.
+const held = new Set<string>();
+const activate = vi.fn((tag: string) => {
+  held.add(tag);
 
-vi.mock("expo-router", () => ({ useIsFocused: () => focused }));
+  return Promise.resolve();
+});
+const deactivate = vi.fn((tag: string) => {
+  held.delete(tag);
+});
+const Focus = React.createContext<boolean | null>(null);
+
+vi.mock("expo-router", () => ({
+  useIsFocused: () => {
+    const own = React.useContext(Focus);
+
+    return own ?? focused;
+  },
+}));
 vi.mock("expo-keep-awake", () => ({
   activateKeepAwakeAsync: (tag: string) => activate(tag),
   deactivateKeepAwake: (tag: string) => deactivate(tag),
@@ -22,6 +38,7 @@ describe("ScreenKeepAwake", () => {
   beforeEach(() => {
     wakeLock = "off";
     focused = true;
+    held.clear();
     activate.mockClear();
     deactivate.mockClear();
   });
@@ -36,10 +53,40 @@ describe("ScreenKeepAwake", () => {
     wakeLock = "held";
     const view = render(<ScreenKeepAwake />);
 
-    expect(activate).toHaveBeenCalledWith("recipe-page");
+    expect(held.size).toBe(1);
 
     view.unmount();
-    expect(deactivate).toHaveBeenCalledWith("recipe-page");
+    expect(held.size).toBe(0);
+  });
+
+  it("lets go when the page goes behind another screen", () => {
+    wakeLock = "held";
+    const view = render(<ScreenKeepAwake />);
+
+    expect(held.size).toBe(1);
+
+    focused = false;
+    view.rerender(<ScreenKeepAwake />);
+    expect(held.size).toBe(0);
+  });
+
+  it("keeps the hold of the page in front when the one below loses focus later", () => {
+    wakeLock = "held";
+    const pages = (lower: boolean, upper: boolean) => (
+      <>
+        <Focus.Provider value={lower}>
+          <ScreenKeepAwake />
+        </Focus.Provider>
+        <Focus.Provider value={upper}>
+          <ScreenKeepAwake />
+        </Focus.Provider>
+      </>
+    );
+    const view = render(pages(false, true));
+
+    view.rerender(pages(true, true));
+    view.rerender(pages(false, true));
+    expect(held.size).toBe(1);
   });
 
   it("does not hold behind another screen", () => {
