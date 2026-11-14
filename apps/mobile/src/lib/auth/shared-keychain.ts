@@ -1,3 +1,5 @@
+import type { KeychainStore } from "@/lib/auth/app-keychain";
+import { secureStore, setAppKeychainOptions } from "@/lib/auth/app-keychain";
 import { storageAdapter } from "@better-auth/expo/client";
 import { Paths } from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
@@ -5,15 +7,6 @@ import * as SecureStore from "expo-secure-store";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("shared-keychain");
-
-/** One keychain's items as SecureStore reads and writes them. */
-export type KeychainStore = {
-  getItem: (key: string) => string | null;
-  getItemAsync: (key: string) => Promise<string | null>;
-  setItem: (key: string, value: string) => void;
-  setItemAsync: (key: string, value: string) => Promise<void>;
-  deleteItemAsync: (key: string) => Promise<void>;
-};
 
 /** Written to the shared keychain once every value is there and reads back. */
 export const MOVED_KEY = "norish_keychain_moved";
@@ -82,23 +75,7 @@ export async function moveKeychainItems(
 
 export const SHARED_SERVICE = "norish.shared";
 
-// The app's own keychain until the move succeeds; module scope, read on every access.
-let options: SecureStore.SecureStoreOptions = {};
 let moving: Promise<void> | null = null;
-
-/** SecureStore under the options `storeOptions` returns at each call. */
-function secureStore(storeOptions: () => SecureStore.SecureStoreOptions): KeychainStore {
-  return {
-    getItem: (key) => SecureStore.getItem(key, storeOptions()),
-    getItemAsync: (key) => SecureStore.getItemAsync(key, storeOptions()),
-    setItem: (key, value) => SecureStore.setItem(key, value, storeOptions()),
-    setItemAsync: (key, value) => SecureStore.setItemAsync(key, value, storeOptions()),
-    deleteItemAsync: (key) => SecureStore.deleteItemAsync(key, storeOptions()),
-  };
-}
-
-/** The app's keychain: the one shared with the Share Extension once moved. */
-export const appKeychain = secureStore(() => options);
 
 async function moveOnce(keys: readonly string[]): Promise<void> {
   // Empty off iOS, where the store stays as it is.
@@ -120,7 +97,7 @@ async function moveOnce(keys: readonly string[]): Promise<void> {
       keys
     )
   ) {
-    options = shared;
+    setAppKeychainOptions(shared);
   }
 }
 

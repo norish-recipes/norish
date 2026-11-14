@@ -5,14 +5,14 @@ const store = vi.hoisted(() => new Map<string, string>());
 
 vi.mock("@/lib/auth/auth-client", () => ({ resetAuthClientStorage: () => Promise.resolve() }));
 vi.mock("@/lib/auth/auth-storage", () => ({ AUTH_STORAGE_KEYS: [] }));
-vi.mock("@/lib/auth/shared-keychain", () => ({
+vi.mock("@/lib/auth/app-keychain", () => ({
   appKeychain: {
     getItemAsync: (key: string) => Promise.resolve(store.get(key) ?? null),
     setItemAsync: (key: string, value: string) => Promise.resolve(void store.set(key, value)),
     deleteItemAsync: (key: string) => Promise.resolve(void store.delete(key)),
   },
-  moveToSharedKeychain: () => Promise.resolve(),
 }));
+vi.mock("@/lib/auth/shared-keychain", () => ({ moveToSharedKeychain: () => Promise.resolve() }));
 
 describe("saveServerAddress", () => {
   it("announces a change only when the address really changes", async () => {

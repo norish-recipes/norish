@@ -1,7 +1,8 @@
 import { createContext } from "react";
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import { AUTH_STORAGE_KEYS } from "@/lib/auth/auth-storage";
-import { appKeychain, moveToSharedKeychain } from "@/lib/auth/shared-keychain";
+import { appKeychain } from "@/lib/auth/app-keychain";
+import { moveToSharedKeychain } from "@/lib/auth/shared-keychain";
 import { clearServerTooOld } from "@/lib/network/too-old-server";
 
 import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";

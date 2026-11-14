@@ -1,5 +1,5 @@
-import type { KeychainStore } from "@/lib/auth/shared-keychain";
-import { appKeychain } from "@/lib/auth/shared-keychain";
+import type { KeychainStore } from "@/lib/auth/app-keychain";
+import { appKeychain } from "@/lib/auth/app-keychain";
 import { storageAdapter } from "@better-auth/expo/client";
 
 import type { SessionUser } from "@norish/shared-react/reader";

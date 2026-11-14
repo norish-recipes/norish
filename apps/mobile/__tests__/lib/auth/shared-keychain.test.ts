@@ -1,4 +1,4 @@
-import type { KeychainStore } from "@/lib/auth/shared-keychain";
+import type { KeychainStore } from "@/lib/auth/app-keychain";
 import { moveKeychainItems } from "@/lib/auth/shared-keychain";
 import { storageAdapter } from "@better-auth/expo/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -166,7 +166,10 @@ describe("moveToSharedKeychain", () => {
     secureStores.shared = shared.store;
   });
 
-  const load = () => import("@/lib/auth/shared-keychain");
+  const load = async () => ({
+    ...(await import("@/lib/auth/shared-keychain")),
+    ...(await import("@/lib/auth/app-keychain")),
+  });
   // Which store the app's keychain reads now, by a key only that store holds.
   const reading = async (appKeychain: KeychainStore) => {
     old.items.set("probe", "old");
