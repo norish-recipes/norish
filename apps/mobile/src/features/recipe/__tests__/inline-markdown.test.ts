@@ -54,9 +54,7 @@ describe("parseInline", () => {
   });
 
   it("renders an escaped star or underscore without its backslash", () => {
-    expect(parseInline("2 \\*3\\* and \\_x\\_")).toEqual([
-      { kind: "text", text: "2 *3* and _x_" },
-    ]);
+    expect(parseInline("2 \\*3\\* and \\_x\\_")).toEqual([{ kind: "text", text: "2 *3* and _x_" }]);
   });
 });
 
