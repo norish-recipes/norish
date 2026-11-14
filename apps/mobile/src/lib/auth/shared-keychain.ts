@@ -16,9 +16,9 @@ export type KeychainStore = {
 };
 
 /** Written to the shared keychain once every value is there and reads back. */
-const MOVED_KEY = "norish_keychain_moved";
+export const MOVED_KEY = "norish_keychain_moved";
 // Better Auth's MAX_STORAGE_CHUNKS: a value is split over at most this many keys.
-const MAX_CHUNKS = 100;
+export const MAX_CHUNKS = 100;
 
 /** Deletes `key` and every chunk key Better Auth's adapter may have written for it. */
 async function deleteWithChunks(store: KeychainStore, key: string): Promise<void> {
@@ -80,7 +80,7 @@ export async function moveKeychainItems(
   return true;
 }
 
-const SHARED_SERVICE = "norish.shared";
+export const SHARED_SERVICE = "norish.shared";
 
 // The app's own keychain until the move succeeds; module scope, read on every access.
 let options: SecureStore.SecureStoreOptions = {};

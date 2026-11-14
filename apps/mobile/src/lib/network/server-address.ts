@@ -7,7 +7,7 @@ import { clearServerTooOld } from "@/lib/network/too-old-server";
 import { withoutTrailingSlashes } from "@norish/shared/lib/helpers";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 
-const SERVER_ADDRESS_KEY = "norish.backend-base-url";
+export const SERVER_ADDRESS_KEY = "norish.backend-base-url";
 const listeners = new Set<() => void>();
 // The last address read or saved, for callers that need it synchronously (tRPC, the probe).
 let currentAddress = "";

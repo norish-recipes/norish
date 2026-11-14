@@ -10,7 +10,7 @@ const log = createClientLogger("auth-storage");
 export const AUTH_STORAGE_PREFIX = "norish";
 
 export const AUTH_COOKIE_KEY = `${AUTH_STORAGE_PREFIX}_cookie`;
-const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
+export const AUTH_SESSION_DATA_KEY = `${AUTH_STORAGE_PREFIX}_session_data`;
 
 /** The keys the auth client stores, each with the chunk keys Better Auth splits it over. */
 export const AUTH_STORAGE_KEYS = [AUTH_COOKIE_KEY, AUTH_SESSION_DATA_KEY] as const;

@@ -1,10 +1,13 @@
 import type { ShareInbox } from "@/lib/offline/share-inbox";
 import { Directory, File, Paths } from "expo-file-system";
 
+/** The App Group folder `ShareInbox.swift` saves shares in. */
+export const SHARE_INBOX_FOLDER = "share-inbox";
+
 /** The Share Extension's `share-inbox` folder in the App Group; null off iOS or before it exists. */
 export function appGroupInbox(): ShareInbox | null {
   const [container] = Object.values(Paths.appleSharedContainers);
-  const folder = container && new Directory(container, "share-inbox");
+  const folder = container && new Directory(container, SHARE_INBOX_FOLDER);
 
   if (!folder?.exists) return null;
   const file = (name: string) => new File(folder, name);
