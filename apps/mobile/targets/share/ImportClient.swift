@@ -27,10 +27,7 @@ final class ImportClient: NSObject, URLSessionTaskDelegate {
   /// Health first, AI for images, then the import; no HTTP answer at any step means saved for later.
   /// `operationId` goes in `x-operation-id`, so a timed-out import the drain sends again runs once.
   func send(_ item: SharedItem, operationId: String) async -> ShareOutcome {
-    switch await health() {
-    case .some(let outcome): return outcome
-    case .none: break
-    }
+    if let outcome = await health() { return outcome }
     if item.needsAI {
       guard let reply = await request("GET", "/api/trpc/permissions.get") else { return .saved }
       if reply.status == 401 { return .signedOut }

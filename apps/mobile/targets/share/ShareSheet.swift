@@ -35,7 +35,7 @@ struct ShareSheet: View {
       Capsule().fill(Palette.muted.opacity(0.4)).frame(width: 36, height: 5).padding(.bottom, 12)
 
       HStack {
-        Image("Logo").resizable().scaledToFit().frame(height: 26).accessibilityLabel("Norish")
+        Image("Logo").resizable().scaledToFit().frame(height: 26).accessibilityLabel(appName)
         Spacer()
         GlassCloseButton(action: model.close)
       }
@@ -72,6 +72,8 @@ struct ShareSheet: View {
 }
 
 private let closeLabel = String(localized: "close")
+// The extension's display name, which its target config takes from the app's.
+private let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? ""
 
 private extension View {
   /// The card's only fill is glass: Liquid Glass from iOS 26, the thick material before it.

@@ -2,7 +2,7 @@
 module.exports = (config) => ({
   type: "share",
   name: "NorishShare",
-  displayName: "Norish",
+  displayName: config.name,
   bundleIdentifier: ".share",
   // The app's own minimum, so every phone that runs Norish can share to it.
   deploymentTarget: "16.4",

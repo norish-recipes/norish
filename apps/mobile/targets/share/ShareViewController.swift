@@ -6,6 +6,12 @@ import UniformTypeIdentifiers
 final class ShareViewController: UIViewController {
   private let model = ShareModel()
   private lazy var host = UIHostingController(rootView: ShareSheet(model: model))
+  private var finished = false
+
+  // Long enough to read the sent line before the sheet closes itself.
+  private static let sentLinger: TimeInterval = 1.6
+  // The link row's 52-point thumbnail at 3x.
+  private static let previewImageSize = CGSize(width: 156, height: 156)
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -63,11 +69,9 @@ final class ShareViewController: UIViewController {
     feedback.notificationOccurred(outcome == .sent ? .success : outcome == .saved ? .warning : .error)
     // Sent closes by itself; every other state waits for Close.
     if outcome == .sent {
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { [weak self] in self?.finish() }
+      DispatchQueue.main.asyncAfter(deadline: .now() + Self.sentLinger) { [weak self] in self?.finish() }
     }
   }
-
-  private var finished = false
 
   private func finish() {
     guard !finished else { return }
@@ -99,7 +103,7 @@ final class ShareViewController: UIViewController {
     guard let provider = items.flatMap({ $0.attachments ?? [] })
       .first(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) })
     else { return nil }
-    let options = [NSItemProviderPreferredImageSizeKey: NSValue(cgSize: CGSize(width: 156, height: 156))]
+    let options = [NSItemProviderPreferredImageSizeKey: NSValue(cgSize: previewImageSize)]
 
     return await withCheckedContinuation { continuation in
       provider.loadPreviewImage(options: options) { image, _ in
