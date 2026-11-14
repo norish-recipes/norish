@@ -48,6 +48,8 @@ export type ShareImports = {
   url: (url: string, options: ShareImportOptions) => void;
   text: (text: string, options: ShareImportOptions) => void;
   images: (files: Blob[], options: ShareImportOptions) => void;
+  /** Rereads the pending imports: a repeat's stored answer may name a recipe already done. */
+  reconcile: () => void;
 };
 
 type SavedShare = z.infer<typeof savedShareSchema>;
@@ -63,7 +65,9 @@ function startOf(item: SavedShare, inbox: ShareInbox, imports: ShareImports): St
     case "images": {
       const files = item.images.map(inbox.image).filter((file) => file !== null);
 
-      return files.length === item.images.length ? (options) => imports.images(files, options) : null;
+      return files.length === item.images.length
+        ? (options) => imports.images(files, options)
+        : null;
     }
   }
 }
@@ -128,27 +132,26 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
   }
 }
 
-async function drain(
-  inbox: ShareInbox,
-  account: () => ShareAccount | null,
-  imports: ShareImports
-) {
+async function drain(inbox: ShareInbox, account: () => ShareAccount | null, imports: ShareImports) {
   const startedUnder = account();
+  let taken = false;
 
   if (!startedUnder) return;
   for (const id of inbox.ids()) {
     // A session end while an import hung: the rest must not go out under the next account.
-    if (!sameAccount(account(), startedUnder)) return;
+    if (!sameAccount(account(), startedUnder)) break;
     const outcome = await importItem(inbox, id, startedUnder, imports);
     const step = nextStep(outcome);
 
-    if (step === "stop") return;
+    if (typeof outcome === "object" && outcome.error === null) taken = true;
+    if (step === "stop") break;
     if (step === "keep") continue;
     // Refused for good (its toast said so), or unusable.
     if (step === "drop")
       log.warn({ id, outcome }, "Dropped a saved share that could not be imported");
     inbox.remove(id);
   }
+  if (taken) imports.reconcile();
 }
 
 // Module scope: one drain at a time across remounts, so an item is never imported twice.

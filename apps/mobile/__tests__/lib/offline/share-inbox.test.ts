@@ -20,7 +20,9 @@ function fakeInbox(items: Record<string, object | string>, images: Record<string
   const json = new Map(
     Object.entries(items).map(([id, item]) => [
       id,
-      typeof item === "string" ? item : JSON.stringify({ ownerId: OWNER, serverAddress: SERVER, ...item }),
+      typeof item === "string"
+        ? item
+        : JSON.stringify({ ownerId: OWNER, serverAddress: SERVER, ...item }),
     ])
   );
   const inbox: ShareInbox = {
@@ -47,7 +49,12 @@ function fakeImports(answer: (kind: string) => unknown = () => null) {
       operationIds.push(operationId);
       queueMicrotask(() => onSettled(answer(kind)));
     };
-  const imports: ShareImports = { url: run("url"), text: run("text"), images: run("images") };
+  const imports: ShareImports = {
+    url: run("url"),
+    text: run("text"),
+    images: run("images"),
+    reconcile: vi.fn(),
+  };
 
   return { imports, calls, operationIds };
 }
@@ -85,6 +92,7 @@ describe("drainShareInbox", () => {
       },
       text: vi.fn(),
       images: vi.fn(),
+      reconcile: vi.fn(),
     };
 
     const drained = drainShareInbox(inbox, owner, imports);
@@ -139,7 +147,7 @@ describe("drainShareInbox", () => {
       queueMicrotask(() => onSettled(answer(input)));
     };
 
-    await drainShareInbox(inbox, owner, { url: run, text: run, images: run });
+    await drainShareInbox(inbox, owner, { url: run, text: run, images: run, reconcile: vi.fn() });
 
     expect(calls).toHaveLength(statuses.length + 1);
     expect([...json.keys()]).toEqual(statuses.map((status) => `s${status}`));
@@ -207,10 +215,40 @@ describe("drainShareInbox", () => {
       queueMicrotask(() => onSettled(null));
     };
 
-    await drainShareInbox(inbox, () => current, { url: run, text: run, images: run });
+    await drainShareInbox(inbox, () => current, {
+      url: run,
+      text: run,
+      images: run,
+      reconcile: vi.fn(),
+    });
 
     expect(calls).toEqual(["https://example.com/a"]);
     expect([...json.keys()]).toEqual(["b"]);
+  });
+
+  it("rereads the pending imports once after a drain the server took an import in", async () => {
+    // A repeat's stored answer names a recipe that may have finished long ago.
+    const { inbox } = fakeInbox({
+      a: { kind: "url", url: "https://example.com/a" },
+      b: { kind: "text", text: "Soup" },
+    });
+    const { imports } = fakeImports();
+
+    await drainShareInbox(inbox, owner, imports);
+
+    expect(imports.reconcile).toHaveBeenCalledTimes(1);
+  });
+
+  it("rereads nothing when the server took no import", async () => {
+    const { inbox } = fakeInbox({
+      a: { kind: "url", url: "https://example.com/a" },
+      b: { kind: "text", text: "Soup" },
+    });
+    const { imports } = fakeImports((kind) => (kind === "url" ? queued() : refused()));
+
+    await drainShareInbox(inbox, owner, imports);
+
+    expect(imports.reconcile).not.toHaveBeenCalled();
   });
 
   it("imports an item once when the drain runs twice", async () => {
@@ -243,7 +281,11 @@ describe("saved shares at a session end", () => {
   it("keeps A's share for A alone: B on the same server imports nothing", async () => {
     // A shared offline; A's session expired, which keeps the Outbox, and B signed in.
     const { inbox, json } = fakeInbox({ a: { kind: "text", text: "A's soup" } });
-    const expiry = withSavedShares(engine(OWNER), () => inbox, () => SERVER);
+    const expiry = withSavedShares(
+      engine(OWNER),
+      () => inbox,
+      () => SERVER
+    );
 
     await expiry.clearForSignOut({ discardQueue: false });
     const { imports, calls } = fakeImports();
@@ -277,12 +319,20 @@ describe("saved shares at a session end", () => {
         a: { kind: "images", images: ["a-0.jpg"] },
         b: { kind: "url", url: "https://example.com/b" },
         other: { kind: "url", url: "https://example.com/c", ownerId: "user-b" },
-        copy: { kind: "url", url: "https://example.com/d", serverAddress: "https://copy.example.com" },
+        copy: {
+          kind: "url",
+          url: "https://example.com/d",
+          serverAddress: "https://copy.example.com",
+        },
       },
       { "a-0.jpg": page }
     );
     const base = engine(OWNER);
-    const signOut = withSavedShares(base, () => inbox, () => SERVER);
+    const signOut = withSavedShares(
+      base,
+      () => inbox,
+      () => SERVER
+    );
 
     expect(await signOut.unsyncedChanges()).toBe(3);
 
@@ -295,7 +345,11 @@ describe("saved shares at a session end", () => {
 
   it("clears the engine even when there is no inbox or owner", async () => {
     const base = engine(null);
-    const signOut = withSavedShares(base, () => null, () => SERVER);
+    const signOut = withSavedShares(
+      base,
+      () => null,
+      () => SERVER
+    );
 
     expect(await signOut.unsyncedChanges()).toBe(1);
     await signOut.clearForSignOut({ discardQueue: true });
