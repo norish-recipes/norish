@@ -19,6 +19,7 @@ import {
   useFavoritesQuery,
   useLoadedPageRecipe,
   usePageEnrichment,
+  usePageServings,
 } from "@norish/shared-react/recipes";
 
 /** The AI actions a reader who may edit can ask for, in the order web's menu lists them. */
@@ -39,6 +40,7 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
   const recipe = useLoadedPageRecipe();
   const actions = useCardActions();
   const enrichment = usePageEnrichment();
+  const servings = usePageServings();
   const { isFavorite } = useFavoritesQuery();
   const { canEditRecipe } = useRecipePermissions();
   const { showFavorites } = useHiddenItemVisibility();
@@ -92,7 +94,7 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
       type: "action" as const,
       label: label("recipes.detail.addToGroceries"),
       icon: { type: "sfSymbol" as const, name: "bag" as const },
-      onPress: () => actions.addToGroceries(recipe),
+      onPress: () => actions.addToGroceries(recipe, servings),
     },
     ...(isAIEnabled && canEdit
       ? [

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { RoundTick } from "@/components/round-tick";
+import { useCardActions } from "@/hooks/use-card-actions";
 import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -182,8 +183,9 @@ function Line({
 /** The Ingredients card: servings, options, ticks, and Add to groceries. */
 export function IngredientsSection() {
   const intl = useIntl();
-  const router = useRouter();
+  const actions = useCardActions();
   const recipe = useLoadedPageRecipe();
+  const servings = usePageServings();
   const display = usePageIngredients();
   const { mode } = useAmountDisplayPreference();
   const { formatUnitOnly } = useUnitFormatter(intl.locale);
@@ -233,9 +235,7 @@ export function IngredientsSection() {
         className="mt-3 rounded-full"
         testID="recipe-add-to-groceries"
         variant="primary"
-        onPress={() =>
-          router.push({ pathname: "/add-to-groceries", params: { recipeId: recipe.id } })
-        }
+        onPress={() => actions.addToGroceries(recipe, servings)}
       >
         <Ionicons color={accentForeground} name="bag-outline" size={18} />
         <Button.Label>{intl.formatMessage({ id: "recipes.detail.addToGroceries" })}</Button.Label>

@@ -21,6 +21,7 @@ import {
   useUnitFormatter,
 } from "@norish/shared-react/recipes";
 
+import { groceriesStartServings } from "../utils/card-actions";
 import { GroceryLineRow, GroceryLineRowSkeleton } from "../components/grocery-line-row";
 import {
   GroceryLinesSection,
@@ -145,6 +146,7 @@ function LineSection({
 function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
   const intl = useIntl();
   const router = useRouter();
+  const { servings: startParam } = useLocalSearchParams<{ servings?: string }>();
   const servings = plannedServings(recipe);
   const {
     isLoading,
@@ -152,7 +154,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
     incrementServings,
     decrementServings,
     scaledIngredients,
-  } = useRecipeFoodsToBuy(recipe.id, servings, servings);
+  } = useRecipeFoodsToBuy(recipe.id, servings, groceriesStartServings(startParam, servings));
   const {
     pantry,
     toBuy,

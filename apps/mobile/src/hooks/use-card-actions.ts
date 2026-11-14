@@ -1,5 +1,6 @@
 import { useConfirm } from "@/hooks/use-confirm";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { addToGroceriesRoute } from "@/features/recipes/utils/card-actions";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -36,8 +37,8 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
     canDelete,
     canEdit,
     toggleFavourite: (recipe: Recipe) => toggleFavorite(recipe.id),
-    addToGroceries: (recipe: Recipe) =>
-      router.push({ pathname: "/add-to-groceries", params: { recipeId: recipe.id } }),
+    addToGroceries: (recipe: Recipe, servings?: number) =>
+      router.push(addToGroceriesRoute(recipe.id, servings)),
     plan: (recipe: Recipe) =>
       router.push({ pathname: "/plan", params: { recipeId: recipe.id, name: recipe.name } }),
     addToCookbook: (recipe: Recipe) =>
