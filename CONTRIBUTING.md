@@ -336,7 +336,7 @@ pnpm --filter @norish/mobile ios --configuration Release
 pnpm --filter @norish/mobile maestro
 ```
 
-Step 3 starts the web build with throwaway Postgres and Valkey containers, so rebuild after a server change. It signs up `maestro@norish.test` and runs the flows, then runs the flows in `apps/mobile/maestro/old-server/`. The flows cover offline launch, sign-in, sign-up, sign-out, session expiry and server version checks.
+Step 3 starts the web build with throwaway Postgres and Valkey containers, so rebuild after a server change. It signs up `maestro@norish.test` and runs the flows, then runs the flows in `apps/mobile/maestro/old-server/`. The flows cover offline launch, sign-in, sign-up, sign-out, session expiry and server version checks, and the Recipes tab: browse and filter, planning, groceries, cookbooks, delete, import from a link, offline replay and realtime. Each Recipes flow seeds its own recipes through the script's control port; import from a link reads a recipe page the script serves on loopback.
 
 To use a running server, set `NORISH_SERVER_URL`. If registration is closed, create the account first or set `NORISH_EMAIL` and `NORISH_PASSWORD` for an existing account. The script opens registration if needed and attempts to restore it afterward. The account must be an admin to open registration. The script also turns off password AutoFill prompts on the simulator. Set `NORISH_SIMULATOR` to a simulator UDID when several are booted.
 
