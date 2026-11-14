@@ -320,9 +320,19 @@ NEXT_PUBLIC_BASE_PATH=/norish pnpm run build --filter=@norish/web...
 pnpm --filter @norish/web run test:e2e
 ```
 
+### iOS device builds
+
+Choose your Apple development team locally in Xcode. A device build with the
+Share Extension needs the App Group `group.dev.norish.app` registered for
+`dev.norish.app` and `dev.norish.app.share` on your team. Xcode automatic signing
+registers it.
+
+Set `LANG=en_US.UTF-8` when running `expo prebuild` so CocoaPods can run.
+
 ### Mobile app flows (Maestro)
 
-The flows in `apps/mobile/maestro/` drive the iOS app against a throwaway server. They run on your machine only; CI does not run them. You need [Maestro](https://maestro.dev), Docker, Xcode and a booted iPhone simulator.
+The flows in `apps/mobile/maestro/` drive the iOS app against a throwaway server. They run on your machine only; CI does not run them. You need [Maestro](https://maestro.dev), Docker, Xcode and a booted iPhone simulator. Set `JAVA_HOME` to a JDK and add
+`~/.maestro/bin` to `PATH`.
 
 ```bash
 # 1. Build the web app, which the flows' server runs
