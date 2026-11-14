@@ -1,8 +1,7 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-
 import { CookingStepView } from "@/features/recipes/components/page/cooking-mode/cooking-step-view";
 import { ReadonlyStepsList } from "@/features/recipes/components/read-only/readonly-steps-list";
+import { cleanup, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { resolveCookingModeSteps } from "@norish/shared-react/recipes";
 import { recipeTimerId } from "@norish/shared-react/recipes/timers";
@@ -49,8 +48,7 @@ const STEPS = [
 ].map((step, order) => ({ step, systemUsed: "metric", order }));
 const TEXTS = STEPS.map((s) => s.step).filter((text) => !text.startsWith("#"));
 
-const timerIds = () =>
-  TEXTS.map((text) => screen.getByText(text).getAttribute("data-timer-id"));
+const timerIds = () => TEXTS.map((text) => screen.getByText(text).getAttribute("data-timer-id"));
 
 describe("Recipe Timer ids on web", () => {
   it("are the same on the recipe page and in cooking mode for a recipe with headings", () => {
