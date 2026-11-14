@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetRow, SheetScrollView } from "@/components/sheet";
+import { groceriesStartServings } from "@/lib/add-to-groceries";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Spinner, useThemeColor } from "heroui-native";
@@ -27,7 +28,6 @@ import {
   GroceryLinesSectionSkeleton,
 } from "../components/grocery-lines-section";
 import { ServingsStepper } from "../components/servings-stepper";
-import { groceriesStartServings } from "../utils/card-actions";
 
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
 const AS_WRITTEN = {};

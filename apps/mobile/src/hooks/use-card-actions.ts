@@ -1,6 +1,6 @@
-import { addToGroceriesRoute } from "@/features/recipes/utils/card-actions";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { addToGroceriesRoute } from "@/lib/add-to-groceries";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
