@@ -22,6 +22,7 @@ import { NotesSection } from "../components/notes-section";
 import { NutritionSection } from "../components/nutrition-section";
 import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
+import { RecipeBottomBar } from "../components/recipe-bottom-bar";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
 import { SourceSection } from "../components/source-section";
@@ -113,7 +114,7 @@ function RecipePage() {
           recipe={recipe}
           onDoubleTap={showFavorites ? () => toggleFavorite(recipe.id) : undefined}
         />
-        <View className="-mt-12 gap-4 pb-12">
+        <View className="-mt-12 gap-4 pb-32">
           <RecipeHeader recipe={recipe} />
           <View className="gap-4 px-5">
             <NotesSection />
@@ -127,6 +128,7 @@ function RecipePage() {
           </View>
         </View>
       </ScrollView>
+      <RecipeBottomBar page={tint?.page ?? background} recipeId={recipe.id} />
     </TintContext>
   );
 }
