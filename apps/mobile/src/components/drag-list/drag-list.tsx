@@ -70,13 +70,10 @@ export function DragList<H, T>({
   return (
     <ReorderableList
       {...rest}
-      data={rows}
-      keyExtractor={(row) => row.key}
-      onReorder={onReorder}
-      onDragStart={dragHaptic}
-      onDragEnd={dragHaptic}
       animationDuration={reduceMotion ? 0 : 200}
       cellAnimations={reduceMotion ? STILL_CELL : undefined}
+      data={rows}
+      keyExtractor={(row) => row.key}
       renderItem={({ item: row }) =>
         row.kind === "heading" ? (
           renderHeading(row.value)
@@ -84,6 +81,9 @@ export function DragList<H, T>({
           <ItemRow item={row.value} render={renderItem} />
         )
       }
+      onDragEnd={dragHaptic}
+      onDragStart={dragHaptic}
+      onReorder={onReorder}
     />
   );
 }
