@@ -4,14 +4,14 @@
 
 **Blocked by:** 16
 
-**Status:** open
+**Status:** done
 
 - [x] Maestro flows: browse and filter, plan from Today, plan from a card, add to groceries, cookbook create and add, import from a link, delete, Recipes offline.
 - [x] One full Maestro run after tickets 08–16 are reviewed and fixed; each new flow run repeatedly to prove it stable.
 - [x] Offline replay (Outbox) and realtime coverage return on Recipes flows, replacing the smoke-screen flows ticket 08 removed; the grocery check returns with the Groceries area.
-- [ ] Device run of every Recipes board against the canvas.
+- [x] Device run of every Recipes board against the canvas.
 - [x] Docs (the mobile app page in `apps/docs`, iPhone screenshots of Recipes and the Share Extension) and the 0.27.0-beta release notes line, written by Terra.
-- [ ] Gates green.
+- [x] Gates green.
 
 ## Comments
 
@@ -44,3 +44,19 @@ Built: New cookbook is one two-detent sheet with the name, the recipe picker (se
 Ten flows in `apps/mobile/maestro/`: `recipes-browse-filter` (lenses, list/grid, tag filter, Clear filters), `plan-from-today`, `plan-from-card` (swipe, mini calendar; both pass through the Add to groceries sheet that planning opens), `add-to-groceries` (server has the lines), `cookbook-create-add` (New cookbook sheet, then Add recipes), `delete-recipe`, `import-from-link`, `recipes-offline` (cold launch with the server cut), `recipes-offline-replay` (import queued while cut: pending card, kept over a relaunch, one recipe after the server returns) and `recipes-realtime` (a recipe saved on the server appears live). The grocery check returns with the Groceries area.
 Each flow resets and seeds the throwaway account over the script's control port (`/reset`, `/recipe`, `/count`, `/groceries`); the import page is a small JSON-LD page the script serves on loopback (nothing existed in the web E2E that fits: its recipe site needs https and a browser), and the throwaway server runs with `ALLOW_PRIVATE_ADDRESSES`. Each flow ran alone five times and the full set twice, all green (19/19 and 4/4).
 No app code changed. Found: in grid view with a short Library the Delete swipe circle sits under the Add recipe accessory and cannot be tapped, so `delete-recipe` uses the list; not fixed here (a layout call). Left for the device pass: the other two boxes.
+
+### Review log (2026-11-14)
+
+Range `523b4f636..f13cfa132`, after the whole-branch review of tickets 08-16 (Standards on Sonnet low, Spec on Opus high, GPT-6.1 Sol on high; its seven findings fixed in `e39eb29f9..523b4f636`). Ticket 17's own review: Standards on Sonnet low, Spec on Opus medium; fixes `40fa23b5f..a0915b1fc`, docs fixes by Terra `c6e905dd4..5cda57f47` and `f13cfa132`.
+
+Device runs against the boards, two passes (the second on the throwaway Maestro stack for states that need other data). Fixed: the missing bottom fade on the Recipes list and the cookbook page; the lens row past the margin on Cookbooks; the tab bar's dim tint in dark; one rule for an applied filter (favourites and minimum rating were not counted, on web too); a swiped card's actions under the Add recipe accessory in a short grid; a pending link import's host line; a failed import's reason in the toast (web too); the empty cookbook's spacing. Kept, as decided: native alerts and menus, the native tab bar's and grabber's sizes, the Library heading following the lens (as on web), Today opening on the next meal (spec), empty states without subtext, straight apostrophes in English.
+
+Fixed from the review (18): a refused cookbook write failing without a word (now a toast for every cookbook write, on web too); a cookbook created Offline whose card and page disagreed; a test for a queued create carrying its recipes; the two planning flows' dependence on the clock; repeated flow steps moved into subflows; the not-a-recipe flow's hard-coded copy; one recipe pick sheet for New cookbook and Add recipes; named fade heights; harness tidying; stale comments; release notes for four changes to web's behaviour; the cookbook menu's wording and how a cover is set in the docs.
+
+Rejected (3): the straightened apostrophe (it is the English messages' convention); two server strings mapping to one translation key (the reviewer calls it acceptable); the list also owning the swipe's reveal scroll (it must live where the list's ref is). Accepted: `seedCookbookMembers` uses `useCallback` like the seven helpers beside it in `use-cookbooks-cache.ts`.
+
+Not seen on a device: the "+1" badge and the note card on a full Today; the Breakfast and Lunch slots once their meal has passed; the camera tile and the copied-link row (simulator); the Share Extension's too-old, AI-off and generic failure lines. The planning flows were not run across 10:00, 14:00 or midnight (the simulator's clock is the Mac's).
+
+Not run: web E2E, by the maintainer's decision. The branch changed web behaviour in the applied-filter rule, the failed-import toast, cookbook failure toasts, Replay's retry of 408 and 429, and the shared import hooks; unit tests cover them.
+
+Final state `a0915b1fc` (plus the docs-only `f13cfa132`): all 11 gates exit 0, mobile lint has no warnings; the Maestro suite passed twice.
