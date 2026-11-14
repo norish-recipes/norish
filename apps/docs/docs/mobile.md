@@ -64,8 +64,9 @@ to add. Ingredients already in your pantry appear separately.
 
 Choose **Cookbooks** and tap the plus button to create one. In **New cookbook**,
 enter a name, select recipes and tap **Create**. Open a cookbook to see its
-recipes, add more, or use its menu to edit or delete it. You can also long-press
-a cookbook card to add recipes, rename or delete it.
+recipes. Its menu offers **Add recipes**, **Rename**, **Change cover** and
+**Delete**. To set a cover, choose **Change cover** and select or take a photo.
+You can also long-press a cookbook card to add recipes, rename or delete it.
 
 ![New cookbook sheet with a name and selected recipes](/img/screenshots/mobile-new-cookbook.png)
 
@@ -90,6 +91,8 @@ Share a link, text or up to 10 photos from another app and choose Norish. The
 Share Extension imports it without opening the app. If the server is
 unreachable, Norish saves the share and imports it the next time you open the
 app.
+
+![Share Extension importing a recipe link](/img/screenshots/mobile-share-extension.png)
 
 If you are signed out, your server needs an update or you share photos while AI
 is off, the extension shows a message and **Close**.
