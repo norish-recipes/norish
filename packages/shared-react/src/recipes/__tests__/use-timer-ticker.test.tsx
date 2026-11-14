@@ -17,7 +17,7 @@ describe("useTimerTicker", () => {
       .getState()
       .addTimer({ id: "t", recipeId: "recipe-1", label: "Simmer", durationMs: 1500 });
     useTimerStore.getState().startTimer("t");
-    renderHook(() => useTimerTicker({ finished }));
+    renderHook(() => useTimerTicker(finished));
 
     await act(() => vi.advanceTimersByTimeAsync(3000));
 

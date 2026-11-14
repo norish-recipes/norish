@@ -38,7 +38,7 @@ const logger = createClientLogger("timer-dock");
 export function TimerTicker() {
   const t = useTranslations("common.timer");
 
-  useTimerTicker({ finished: (timer) => showTimerNotification(timer, t("notification_body")) });
+  useTimerTicker((timer) => showTimerNotification(timer, t("notification_body")));
 
   return null;
 }

@@ -150,9 +150,7 @@ export function useRecipeTimers() {
   const clearAll = useTimerStore((state) => state.clearAll);
   const hasTimers = useTimerStore((state) => state.timers.length > 0);
 
-  useTimerTicker({
-    finished: () => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-  });
+  useTimerTicker(() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
   useTimerNotifications();
   useTimerNotificationTaps();
 

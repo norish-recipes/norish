@@ -230,13 +230,8 @@ export function connectTimerStorage(storage: PlatformStorage): void {
   void useTimerStore.persist.rehydrate();
 }
 
-/** What an app does when a Recipe Timer it watched reaches zero, such as notifying. */
-export type TimerNotifier = {
-  finished: (timer: Timer) => void;
-};
-
-/** Ticks running timers once a second and hands each one that finishes to the notifier. */
-export function useTimerTicker(notifier: TimerNotifier) {
+/** Ticks running timers once a second and hands each one that finishes to `onFinished`, to notify. */
+export function useTimerTicker(onFinished: (timer: Timer) => void) {
   const tick = useTimerStore((state) => state.tick);
   const hasRunningTimers = useTimerStore((state) =>
     state.timers.some((timer) => timer.status === "running")
@@ -245,8 +240,8 @@ export function useTimerTicker(notifier: TimerNotifier) {
   useEffect(() => {
     if (!hasRunningTimers) return;
 
-    const interval = setInterval(() => tick().forEach((timer) => notifier.finished(timer)), 1000);
+    const interval = setInterval(() => tick().forEach((timer) => onFinished(timer)), 1000);
 
     return () => clearInterval(interval);
-  }, [tick, hasRunningTimers, notifier]);
+  }, [tick, hasRunningTimers, onFinished]);
 }
