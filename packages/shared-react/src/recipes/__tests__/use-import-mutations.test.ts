@@ -95,6 +95,26 @@ describe("useImportMutations", () => {
     expect(onError).toHaveBeenCalledWith(unreachable, "importFromUrl");
   });
 
+  it("reports each import's end to its caller: null once taken, else the error", async () => {
+    const queued = new TRPCClientError("Request failed");
+    const reports = vi.fn();
+
+    server.importFromUrl.mockResolvedValue({ recipeId: "recipe-new", status: "queued" });
+    server.importFromPaste.mockRejectedValue(queued);
+    server.importFromImages.mockResolvedValue("recipe-pages");
+    const result = render();
+
+    act(() => result.current.importRecipe("https://example.com/pasta", reports));
+    act(() => result.current.importRecipeFromPaste("Soup", reports));
+    act(() => result.current.importRecipeFromImages([new Blob(["jpeg"])], reports));
+    await settled();
+
+    await vi.waitFor(() => expect(reports).toHaveBeenCalledTimes(3));
+    expect(reports.mock.calls.map(([error]: unknown[]) => error)).toEqual(
+      expect.arrayContaining([null, null, queued])
+    );
+  });
+
   it("drops the placeholder and tells the caller when an import fails", async () => {
     const onError = vi.fn();
     const failure = new Error("Bad recipe URL");

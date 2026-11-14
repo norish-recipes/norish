@@ -4,3 +4,4 @@ export {
   useTRPC,
   useTRPCClient,
 } from "./trpc-provider";
+export { isUnauthorizedTRPCError } from "./trpc-links";

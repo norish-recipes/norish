@@ -13,14 +13,25 @@ type ImportMutationContext = {
   optimisticPendingId: string;
 };
 
+/** Told how one import ended: null once the server took it, else the error (a Queued one included). */
+export type ImportSettled = (error: unknown) => void;
+
 type ImportMutationsResult = {
-  importRecipe: (url: string) => void;
+  importRecipe: (url: string, onSettled?: ImportSettled) => void;
   importRecipeWithAI: (url: string) => void;
   /** Browser `File`s or expo-file-system `File`s, which are Blobs too. */
-  importRecipeFromImages: (files: Blob[]) => void;
-  importRecipeFromPaste: (text: string) => void;
+  importRecipeFromImages: (files: Blob[], onSettled?: ImportSettled) => void;
+  importRecipeFromPaste: (text: string, onSettled?: ImportSettled) => void;
   importRecipeFromPasteWithAI: (text: string) => void;
 };
+
+/** Runs a mutation and reports its end; rollback and toasts stay in `useMutation`'s own options. */
+function settle(run: Promise<unknown>, onSettled: ImportSettled | undefined): void {
+  void run.then(
+    () => onSettled?.(null),
+    (error: unknown) => onSettled?.(error)
+  );
+}
 
 /** Told the id of a recipe the household already holds: not an error, so an app can offer it. */
 type RecipeAlreadyExistsHandler = (recipeId: string) => void;
@@ -72,7 +83,7 @@ export function useImportMutations(
     });
   };
 
-  const { mutate: mutateImport } = useMutation(
+  const { mutateAsync: mutateImport } = useMutation(
     trpc.recipes.importFromUrl.mutationOptions({
       onMutate: addPlaceholder,
       onSuccess: ({ recipeId, status }, _variables, context) => {
@@ -96,7 +107,7 @@ export function useImportMutations(
       },
     })
   );
-  const { mutate: mutateImageImport } = useMutation(
+  const { mutateAsync: mutateImageImport } = useMutation(
     trpc.recipes.importFromImages.mutationOptions({
       onMutate: addPlaceholder,
       onSuccess: (recipeId, _variables, context) => {
@@ -107,7 +118,7 @@ export function useImportMutations(
       },
     })
   );
-  const { mutate: mutatePasteImport } = useMutation(
+  const { mutateAsync: mutatePasteImport } = useMutation(
     trpc.recipes.importFromPaste.mutationOptions({
       onMutate: addPlaceholder,
       onSuccess: (result, _variables, context) => {
@@ -134,11 +145,17 @@ export function useImportMutations(
   );
 
   return {
-    importRecipe: (url) => mutateImport({ url }),
-    importRecipeWithAI: (url) => mutateImport({ url, forceAI: true }),
-    importRecipeFromImages: (files) =>
-      mutateImageImport(uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file])))),
-    importRecipeFromPaste: (text) => mutatePasteImport({ text }),
-    importRecipeFromPasteWithAI: (text) => mutatePasteImport({ text, forceAI: true }),
+    importRecipe: (url, onSettled) => settle(mutateImport({ url }), onSettled),
+    importRecipeWithAI: (url) => settle(mutateImport({ url, forceAI: true }), undefined),
+    importRecipeFromImages: (files, onSettled) =>
+      settle(
+        mutateImageImport(
+          uploadForm(Object.fromEntries(files.map((file, i) => [`file${i}`, file])))
+        ),
+        onSettled
+      ),
+    importRecipeFromPaste: (text, onSettled) => settle(mutatePasteImport({ text }), onSettled),
+    importRecipeFromPasteWithAI: (text) =>
+      settle(mutatePasteImport({ text, forceAI: true }), undefined),
   };
 }

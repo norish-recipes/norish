@@ -40,7 +40,7 @@ describe("useImportRecipe", () => {
 
     result.current.importFromPaste("soup");
 
-    expect(mocks.importRecipeFromPaste).toHaveBeenCalledWith("soup");
+    expect(mocks.importRecipeFromPaste).toHaveBeenCalledWith("soup", undefined);
     expect(adapter.toast.show).toHaveBeenCalledWith({
       severity: "default",
       title: "common.import.paste.importing",
@@ -55,7 +55,7 @@ describe("useImportRecipe", () => {
 
     result.current.importFromImages(files);
 
-    expect(mocks.importRecipeFromImages).toHaveBeenCalledWith(files);
+    expect(mocks.importRecipeFromImages).toHaveBeenCalledWith(files, undefined);
     expect(adapter.toast.show).toHaveBeenCalledWith({
       severity: "default",
       title: "common.import.image.importing",
@@ -138,7 +138,7 @@ describe("useImportRecipe", () => {
     const { result } = renderHook(() => useImportRecipe(), { wrapper });
 
     expect(result.current.importFromPasteWithAI(text)).toBe(true);
-    expect(mocks.importRecipeFromPasteWithAI).toHaveBeenCalledWith(text);
+    expect(mocks.importRecipeFromPasteWithAI).toHaveBeenCalledWith(text, undefined);
     expect(adapter.toast.show).toHaveBeenCalledWith({
       severity: "default",
       title: "common.import.paste.importingWithAI",

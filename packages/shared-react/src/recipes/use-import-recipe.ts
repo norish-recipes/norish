@@ -2,6 +2,7 @@
 
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
+import type { ImportSettled } from "./use-import-mutations";
 import { usePlatform } from "../platform/platform";
 import { useImportMutations } from "./use-import-mutations";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
@@ -32,9 +33,13 @@ export function useImportRecipe({ stay = false }: { stay?: boolean } = {}) {
   const mutations = useImportMutations(showErrorToast, showAlreadyExistsToast);
 
   const start =
-    <T>(titleId: string, descriptionId: string, run: (input: T) => void) =>
-    (input: T) => {
-      run(input);
+    <T>(
+      titleId: string,
+      descriptionId: string,
+      run: (input: T, onSettled?: ImportSettled) => void
+    ) =>
+    (input: T, onSettled?: ImportSettled) => {
+      run(input, onSettled);
       toast.show({
         severity: "default",
         title: toast.translate(titleId),
