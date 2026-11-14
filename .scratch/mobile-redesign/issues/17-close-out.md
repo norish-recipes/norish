@@ -32,3 +32,7 @@ Done on the simulator (captures in `device-feedback/`):
 3. Long press: not changed. It is iOS's own context menu (`Link.Menu`), its delay is fixed by the system and the package exposes no option.
 4. Swipe actions showing on long press: the actions panel sits behind the card and showed through it while the card lifted; the panel is now clear until the swipe progress is above 0 (grid and list checked).
 5. Sheet controls: chips, day cards, rows, fields, tiles, stepper and the grocery section take `bg-default` instead of `bg-surface` (inner icon circles and photo placeholders swapped the other way); checked on every Recipes sheet at both heights, light and dark. Page chips (lenses, Filters, card pills) are white on the cream page and show no problem.
+
+### New cookbook (Mike, 2026-11-14), open
+
+The device run found New cookbook built as a sheet where the board draws a centred alert. Mike: keep it a sheet, and make it web's panel: one drawer where the cookbook is created and its recipes are set. Queued behind the board-differences fixer.
