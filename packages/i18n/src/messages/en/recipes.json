@@ -478,7 +478,7 @@
     "signedOut": "Open Norish and sign in first.",
     "tooOld": "Your Norish server needs an update first.",
     "noAi": "Importing photos needs AI, which is off on your server.",
-    "failed": "Norish couldn’t import this.",
+    "failed": "Norish couldn't import this.",
     "close": "Close",
     "photoCount": "{count, plural, one {# photo} other {# photos}}",
     "text": "Text"
