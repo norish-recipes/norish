@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
-import { moveTargetIndex, useMovePlannedItem } from "../use-move-planned-item";
+import { dayDropTarget, moveTargetIndex, useMovePlannedItem } from "../use-move-planned-item";
 
 const moveItem = vi.hoisted(() => vi.fn());
 
@@ -38,6 +38,28 @@ describe("moveTargetIndex", () => {
     expect(moveTargetIndex(items, moved, "2026-11-14", "Dinner")).toBe(2);
     expect(moveTargetIndex(items, moved, "2026-11-14", "Lunch")).toBe(0);
     expect(moveTargetIndex(items, items[1]!, "2026-11-14", "Dinner")).toBe(1);
+  });
+});
+
+describe("dayDropTarget", () => {
+  it("lands on the day in the item's own slot, after what is there", () => {
+    expect(dayDropTarget(items, items[1]!, "2026-11-13")).toEqual({
+      date: "2026-11-13",
+      slot: "Dinner",
+      index: 0,
+    });
+    expect(dayDropTarget(items, planned("c", "2026-11-12", "Dinner"), "2026-11-14")).toEqual({
+      date: "2026-11-14",
+      slot: "Dinner",
+      index: 2,
+    });
+  });
+
+  it.each([
+    ["no day", null],
+    ["its own day", "2026-11-14"],
+  ])("moves nothing when dropped on %s", (_, dayKey) => {
+    expect(dayDropTarget(items, items[1]!, dayKey)).toBeNull();
   });
 });
 

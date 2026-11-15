@@ -9,7 +9,7 @@ import { dateKeyOfDrop } from "@/components/calendar/day-drop-id";
 import { pointerWithin, rectIntersection } from "@dnd-kit/core";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-import { useCalendarMutations } from "@norish/shared-react/calendar";
+import { dayDropTarget, useCalendarMutations } from "@norish/shared-react/calendar";
 
 const collisionDetection: CollisionDetection = (args) => {
   const pointerCollisions = pointerWithin(args);
@@ -48,13 +48,15 @@ export function useCalendarDnd(calendarData: Record<string, PlannedItemFromQuery
 
     resetDrag();
 
-    if (!draggedItem || !targetDate || targetDate === draggedItem.date) return;
+    if (!draggedItem) return;
 
-    const targetIndex = (calendarData[targetDate] ?? []).filter(
-      (i) => i.slot === draggedItem.slot && i.id !== draggedItem.id
-    ).length;
+    const target = dayDropTarget(
+      targetDate ? (calendarData[targetDate] ?? []) : [],
+      draggedItem,
+      targetDate
+    );
 
-    moveItem(draggedItem.id, targetDate, draggedItem.slot, targetIndex);
+    if (target) moveItem(draggedItem.id, target.date, target.slot, target.index);
   };
 
   return {
