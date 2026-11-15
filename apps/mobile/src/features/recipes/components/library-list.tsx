@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import React from "react";
-import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TitleRow } from "@/components/title-row";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import {
@@ -34,7 +33,6 @@ export function LibraryList({
   header?: ReactNode;
   testID?: string;
 }) {
-  const insets = useSafeAreaInsets();
   const filters = useLibraryFilters((state) => state.filters);
   const { pendingRecipes, pendingRecipeIds } = usePendingRecipesQuery();
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
@@ -73,19 +71,9 @@ export function LibraryList({
       fadeHeight={LIST_FADE_HEIGHT}
       header={
         <>
-          <View
-            className="flex-row items-center justify-between px-5"
-            style={{ paddingTop: insets.top + 6 }}
-          >
-            <Text
-              accessibilityRole="header"
-              className="text-foreground text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
-              testID="large-title"
-            >
-              {title}
-            </Text>
+          <TitleRow title={title}>
             <AccountAvatar />
-          </View>
+          </TitleRow>
           {header}
           <LibraryHeader />
         </>

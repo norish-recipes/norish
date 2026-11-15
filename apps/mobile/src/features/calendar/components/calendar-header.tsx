@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassSurface } from "@/components/glass";
+import { TitleRow } from "@/components/title-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -20,23 +20,11 @@ export function CalendarHeader({
   onToday: () => void;
 }) {
   const intl = useIntl();
-  const insets = useSafeAreaInsets();
   const { isOffline } = useConnectivity();
   const [foreground] = useThemeColor(["foreground"] as const);
 
   return (
-    <View
-      className="flex-row items-center justify-between gap-2 px-5 pb-1"
-      style={{ paddingTop: insets.top + 6 }}
-    >
-      <Text
-        accessibilityRole="header"
-        className="text-foreground text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
-        numberOfLines={1}
-        testID="large-title"
-      >
-        {intl.formatMessage({ id: "calendar.page.title" })}
-      </Text>
+    <TitleRow className="pb-1" title={intl.formatMessage({ id: "calendar.page.title" })}>
       <View className="h-11 flex-row items-center gap-2">
         {isOffline ? (
           <View
@@ -71,6 +59,6 @@ export function CalendarHeader({
           </Pressable>
         ) : null}
       </View>
-    </View>
+    </TitleRow>
   );
 }

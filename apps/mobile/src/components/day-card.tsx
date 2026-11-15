@@ -1,7 +1,7 @@
 import type { IntlShape } from "react-intl";
 import React from "react";
 import { Text, View } from "react-native";
-import { CardPhoto } from "@/components/card-photo";
+import { PlannedThumb } from "@/components/planned-thumb";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { Button, Host, Image, Menu } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
@@ -13,7 +13,6 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { usePlannedItemText } from "@norish/shared-react/calendar";
 import {
   groupTodayItemsBySlot,
-  isRecipeItem,
   slotTranslationKeys,
   TODAY_MEAL_SLOTS,
 } from "@norish/shared-react/calendar/todays-meals";
@@ -26,9 +25,50 @@ export function formatDay(intl: IntlShape, date: Date) {
   return intl.formatDate(date, { weekday: "short", month: "short", day: "numeric" });
 }
 
+/**
+ * A day's date on one line, Today named first; the sizes are the caller's (`title` for the lead,
+ * `date` for the date after Today).
+ */
+export function DayTitle({
+  date,
+  isToday,
+  title,
+  after,
+}: {
+  date: Date;
+  isToday: boolean;
+  title: string;
+  after: string;
+}) {
+  const intl = useIntl();
+  const formatted = formatDay(intl, date);
+
+  return (
+    <View className="min-w-0 flex-1 flex-row items-baseline gap-2">
+      {isToday ? (
+        <>
+          <Text accessibilityRole="header" className={`text-accent-text font-semibold ${title}`}>
+            {intl.formatMessage({ id: "calendar.mobile.today" })}
+          </Text>
+          <Text className={`text-muted flex-shrink ${after}`} numberOfLines={1}>
+            {formatted}
+          </Text>
+        </>
+      ) : (
+        <Text
+          accessibilityRole="header"
+          className={`text-foreground font-semibold ${title}`}
+          numberOfLines={1}
+        >
+          {formatted}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 /** One planned item: its photo, or a note's glyph, and its name. */
 function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
-  const [muted] = useThemeColor(["muted"] as const);
   const { title } = usePlannedItemText()(item);
 
   return (
@@ -36,13 +76,7 @@ function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
       className={`flex-row items-center gap-3 ${DAY_CARD_CLASS.row}`}
       testID={`day-item-${item.id}`}
     >
-      {isRecipeItem(item) ? (
-        <CardPhoto className="size-10 rounded-[11px]" image={item.recipeImage} onSheet />
-      ) : (
-        <View className="bg-surface size-10 items-center justify-center rounded-[11px]">
-          <Ionicons color={muted} name="document-text-outline" size={20} />
-        </View>
-      )}
+      <PlannedThumb className="size-10 rounded-[11px]" item={item} onSheet />
       <Text className="text-foreground flex-1 text-[15px]" numberOfLines={1}>
         {title}
       </Text>
@@ -114,7 +148,6 @@ export function DayCard({
   onAdd: (slot: Slot) => void;
 }) {
   const intl = useIntl();
-  const formatted = formatDay(intl, date);
   const bySlot = groupTodayItemsBySlot(items);
 
   return (
@@ -129,22 +162,7 @@ export function DayCard({
         />
       ) : null}
       <View className={`flex-row items-center gap-2 ${DAY_CARD_CLASS.header}`}>
-        <View className="min-w-0 flex-1 flex-row items-baseline gap-2">
-          {isToday ? (
-            <>
-              <Text className="text-accent-text text-[17px] font-semibold">
-                {intl.formatMessage({ id: "calendar.mobile.today" })}
-              </Text>
-              <Text className="text-muted flex-shrink text-[15px]" numberOfLines={1}>
-                {formatted}
-              </Text>
-            </>
-          ) : (
-            <Text className="text-foreground text-[17px] font-semibold" numberOfLines={1}>
-              {formatted}
-            </Text>
-          )}
-        </View>
+        <DayTitle after="text-[15px]" date={date} isToday={isToday} title="text-[17px]" />
         <SlotMenu addLabel={addLabel} testID={`day-add-${dateKey}`} onAdd={onAdd} />
       </View>
       {TODAY_MEAL_SLOTS.filter((slot) => bySlot[slot].length > 0).map((slot) => (

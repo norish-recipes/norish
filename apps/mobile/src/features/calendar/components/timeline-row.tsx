@@ -2,16 +2,16 @@ import type { Edge } from "@/components/card-edges";
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
-import { CardPhoto } from "@/components/card-photo";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
-import { formatDay } from "@/components/day-card";
+import { DayTitle, formatDay } from "@/components/day-card";
 import { useIsLifted } from "@/components/drag-list/drag-list";
+import { PlannedThumb } from "@/components/planned-thumb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePlannedItemText } from "@norish/shared-react/calendar";
-import { isRecipeItem, slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
+import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
 
 import type { TimelineHeading, TimelineItem } from "../utils/timeline-rows";
 import {
@@ -53,29 +53,12 @@ export function DayHeadingRow({
         style={{ marginTop: TIMELINE.dayTop, height: dayHeaderHeight(fontScale) }}
         testID={`calendar-day-${heading.dayKey}`}
       >
-        <View className="min-w-0 flex-1 flex-row items-baseline gap-2">
-          {heading.isToday ? (
-            <>
-              <Text
-                accessibilityRole="header"
-                className="text-accent-text text-xl leading-7 font-semibold"
-              >
-                {intl.formatMessage({ id: "calendar.mobile.today" })}
-              </Text>
-              <Text className="text-muted flex-shrink text-base leading-6" numberOfLines={1}>
-                {day}
-              </Text>
-            </>
-          ) : (
-            <Text
-              accessibilityRole="header"
-              className="text-foreground text-xl leading-7 font-semibold"
-              numberOfLines={1}
-            >
-              {day}
-            </Text>
-          )}
-        </View>
+        <DayTitle
+          after="text-base leading-6"
+          date={heading.date}
+          isToday={heading.isToday}
+          title="text-xl leading-7"
+        />
         <Pressable
           accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToDay" }, { day })}
           accessibilityRole="button"
@@ -121,7 +104,6 @@ export function PlannedItemRow({
   onOpen: () => void;
   onDrag: () => void;
 }) {
-  const [muted] = useThemeColor(["muted"] as const);
   const { fontScale } = useWindowDimensions();
   const { title, subtitle } = usePlannedItemText()(row.item);
   const lifted = useIsLifted();
@@ -142,13 +124,7 @@ export function PlannedItemRow({
         onPress={onOpen}
       >
         <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
-          {isRecipeItem(row.item) ? (
-            <CardPhoto className="size-[52px] rounded-[14px]" image={row.item.recipeImage} />
-          ) : (
-            <View className="bg-default size-[52px] items-center justify-center rounded-[14px]">
-              <Ionicons color={muted} name="document-text-outline" size={20} />
-            </View>
-          )}
+          <PlannedThumb className="size-[52px] rounded-[14px]" item={row.item} />
         </PlannedItemLine>
       </Pressable>
       {row.isToday && !lifted ? <TodayRing edge={edge} /> : null}
@@ -157,7 +133,7 @@ export function PlannedItemRow({
 }
 
 /** A planned item's thumbnail, name and details on one line, `height` tall. */
-export function PlannedItemLine({
+function PlannedItemLine({
   title,
   subtitle,
   height,

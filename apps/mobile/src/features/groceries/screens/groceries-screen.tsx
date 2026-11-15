@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
+import { TitleRow } from "@/components/title-row";
 import { useConfirm } from "@/hooks/use-confirm";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
@@ -29,7 +30,6 @@ import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { ListSettingsMenu } from "../components/list-settings-menu";
 import { ListSwitch } from "../components/list-switch";
-import { TitleRow } from "../components/title-row";
 import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
 
@@ -148,7 +148,7 @@ export function GroceriesScreen() {
         actions={actions}
         empty={loading ? <GroceriesSkeleton /> : nothing ? <GroceriesEmpty /> : null}
         header={
-          <TitleRow title={intl.formatMessage({ id: "groceries.page.title" })}>
+          <TitleRow className="pb-5" title={intl.formatMessage({ id: "groceries.page.title" })}>
             <View className="flex-row items-center gap-2">
               <ListSettingsMenu
                 canClear={groceries.length > 0}

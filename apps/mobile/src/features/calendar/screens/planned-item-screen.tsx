@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { SlotTabs } from "@/components/slot-tabs";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Input, Skeleton, Tabs, TextField } from "heroui-native";
+import { Button, Input, Skeleton, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -15,11 +16,7 @@ import {
   useCalendarRangeQuery,
   usePlannedItemText,
 } from "@norish/shared-react/calendar";
-import {
-  isRecipeItem,
-  slotTranslationKeys,
-  TODAY_MEAL_SLOTS,
-} from "@norish/shared-react/calendar/todays-meals";
+import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
 import { usePlatform } from "@norish/shared-react/platform";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -183,30 +180,12 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
             <Text className="text-muted mx-1 text-[13px]">
               {intl.formatMessage({ id: "calendar.editPlannedRecipe.slot" })}
             </Text>
-            <Tabs
+            <SlotTabs
+              inCard
+              testID="planned-item-slot"
               value={item.slot}
-              onValueChange={(next) => {
-                const slot = TODAY_MEAL_SLOTS.find((candidate) => candidate === next);
-
-                if (slot) moveTo(item.date, slot);
-              }}
-            >
-              <Tabs.List className="bg-surface h-10 rounded-full p-[3px]">
-                <Tabs.Indicator className="bg-default rounded-full" />
-                {TODAY_MEAL_SLOTS.map((slot) => (
-                  <Tabs.Trigger
-                    key={slot}
-                    className="h-[34px] flex-1 px-0"
-                    testID={`planned-item-slot-${slot}`}
-                    value={slot}
-                  >
-                    <Tabs.Label className="text-sm font-medium" numberOfLines={1}>
-                      {intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
-                    </Tabs.Label>
-                  </Tabs.Trigger>
-                ))}
-              </Tabs.List>
-            </Tabs>
+              onChange={(slot) => moveTo(item.date, slot)}
+            />
           </View>
         </View>
       </SheetBody>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import { CardPhoto } from "@/components/card-photo";
+import { PlannedThumb } from "@/components/planned-thumb";
 import { SLOT_GLYPHS } from "@/components/slot-icons";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -79,7 +79,6 @@ export function TodayPlannedCard({
   /** How many more items the slot holds. */
   overflow: number;
 }) {
-  const [muted] = useThemeColor(["muted"] as const);
   const plannedItemText = usePlannedItemText();
   const { title, subtitle } = plannedItemText(item);
   const { isRecipe, handlers, href } = useTodayActions(item);
@@ -102,13 +101,7 @@ export function TodayPlannedCard({
       <CardMenu href={href} items={items}>
         <GestureDetector gesture={tap}>
           <View className={`bg-surface ${TODAY_CARD}`} collapsable={false}>
-            {isRecipe ? (
-              <CardPhoto className={TODAY_CARD_PHOTO} image={item.recipeImage} />
-            ) : (
-              <View className={`bg-default items-center justify-center ${TODAY_CARD_PHOTO}`}>
-                <Ionicons color={muted} name="document-text-outline" size={30} />
-              </View>
-            )}
+            <PlannedThumb className={TODAY_CARD_PHOTO} glyphSize={30} item={item} />
             <SlotChip slot={slot} />
             {overflow > 0 ? (
               <PhotoChip semibold className="absolute top-2.5 right-2.5" label={`+${overflow}`} />

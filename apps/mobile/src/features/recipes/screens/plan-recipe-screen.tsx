@@ -3,17 +3,16 @@ import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
 import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
+import { asSlot, SlotTabs } from "@/components/slot-tabs";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { Button, SearchField, Skeleton, Spinner, Tabs, useThemeColor } from "heroui-native";
+import { Button, SearchField, Skeleton, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { Slot } from "@norish/shared/contracts";
 import { useSlotPlanning } from "@norish/shared-react/calendar";
-import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "@norish/shared-react/calendar/todays-meals";
 import { useToday } from "@norish/shared-react/reader";
 import {
   useRandomRecipe,
@@ -27,9 +26,6 @@ import { usePlanExit } from "../hooks/use-plan-exit";
 /** The days on the strip, today first; its last chip picks any other. */
 const DAYS = 14;
 const SKELETON_ROWS = [0, 1, 2, 3];
-
-const asSlot = (value: string | undefined): Slot =>
-  TODAY_MEAL_SLOTS.find((slot) => slot === value) ?? "Dinner";
 
 /**
  * Plan a recipe: a day (from the strip, or any day from its date chip), a slot, then a recipe
@@ -128,23 +124,7 @@ export function PlanRecipeScreen() {
         </SheetStrip>
       )}
 
-      <Tabs value={slot} onValueChange={(next) => setSlot(asSlot(next))}>
-        <Tabs.List className="bg-default h-10 rounded-full p-[3px]">
-          <Tabs.Indicator className="bg-surface rounded-full" />
-          {TODAY_MEAL_SLOTS.map((target) => (
-            <Tabs.Trigger
-              key={target}
-              className="h-[34px] flex-1 px-0"
-              testID={`plan-recipe-slot-${target}`}
-              value={target}
-            >
-              <Tabs.Label className="text-sm font-medium" numberOfLines={1}>
-                {intl.formatMessage({ id: `common.slots.${slotTranslationKeys[target]}` })}
-              </Tabs.Label>
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-      </Tabs>
+      <SlotTabs testID="plan-recipe-slot" value={slot} onChange={setSlot} />
 
       <SearchField value={input} onChange={setInput}>
         <SearchField.Group>
