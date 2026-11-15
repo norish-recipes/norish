@@ -142,6 +142,23 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         expect(requeued!.parkedReason).toBeUndefined();
       });
 
+      it("changes an entry in one step, or leaves it when the change declines", async () => {
+        const store = await outboxOf();
+        const queued = await store.enqueue(entry());
+        const claim = (seq: number) =>
+          store.change(seq, (stored) =>
+            stored.sending ? undefined : { ...stored, sending: true }
+          );
+
+        const [first, second] = await Promise.all([claim(queued.seq), claim(queued.seq)]);
+
+        expect(first).toMatchObject({ seq: queued.seq, sending: true });
+        expect(second).toBeUndefined();
+        expect((await store.forOwner("u1"))[0]).toMatchObject({ sending: true });
+        await store.remove(queued.seq);
+        expect(await claim(queued.seq)).toBeUndefined();
+      });
+
       it("ignores an update to an entry that is gone", async () => {
         const store = await outboxOf();
         const gone = await store.enqueue(entry());

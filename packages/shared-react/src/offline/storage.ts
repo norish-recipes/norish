@@ -29,6 +29,14 @@ export interface OfflineStorage {
     get(seq: number): Promise<OutboxEntry | undefined>;
     /** Replace an existing entry (status, attempts); its stored blobs stay valid. */
     put(entry: OutboxEntry): Promise<void>;
+    /**
+     * In one atomic step, replace an entry with what `change` returns, uploads kept; undefined
+     * writes nothing. Resolves with the entry as written, or undefined.
+     */
+    change(
+      seq: number,
+      change: (entry: OutboxEntry) => OutboxEntry | undefined
+    ): Promise<OutboxEntry | undefined>;
     /** Delete an entry and whatever blobs were stored for it. */
     remove(seq: number): Promise<void>;
     /** Hear changes another context sharing this storage made (another browser tab). */

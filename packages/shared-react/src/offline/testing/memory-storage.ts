@@ -46,6 +46,14 @@ export function createMemoryStorage(): OfflineStorage {
       put: async (entry) => {
         entries.set(entry.seq, structuredClone(entry));
       },
+      change: async (seq, change) => {
+        const stored = entries.get(seq);
+        const next = stored && change(structuredClone(stored));
+
+        if (next) entries.set(seq, structuredClone(next));
+
+        return next && structuredClone(next);
+      },
       remove: async (seq) => {
         entries.delete(seq);
       },

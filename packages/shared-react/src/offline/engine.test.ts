@@ -3,14 +3,21 @@ import { describe, expect, it, vi } from "vitest";
 
 import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
+import type { LockManagerLike } from "./leader";
+import type { OutboxEntry } from "./outbox-types";
 import type { OfflineStorage } from "./storage";
 import { createOfflineEngine } from "./engine";
+import { runReplayPass } from "./replay";
 import { OUTBOX_REPLAY_HEADER } from "./replay-client";
 import { createMemoryStorage } from "./testing/memory-storage";
 
-function engineOver(storage: OfflineStorage = createMemoryStorage()) {
+function engineOver(
+  storage: OfflineStorage = createMemoryStorage(),
+  locks?: () => LockManagerLike | null
+) {
   return createOfflineEngine({
     storage,
+    locks,
     replayHeaderValue: "test-outbox",
     probeUrl: () => "/api/v1/health/ready",
     buster: "test",
@@ -28,6 +35,38 @@ function mutateUnreachable(engine: ReturnType<typeof engineOver>, input: unknown
       next: () => observable((observer) => observer.error(new TypeError("Failed to fetch"))),
     } as never).subscribe({ error: resolve });
   });
+}
+
+const recipeId = "11111111-1111-4111-8111-111111111111";
+const edit = (name: string, version = 3) => ({ id: recipeId, version, data: { name } });
+const unreachable = () =>
+  observable((observer) => observer.error(new TypeError("Failed to fetch")));
+
+/** Save a recipe through the engine's Outbox link; resolves with its answer or error. */
+function saveRecipe(
+  engine: ReturnType<typeof engineOver>,
+  input: ReturnType<typeof edit>,
+  next: () => ReturnType<typeof observable>
+) {
+  const operationId = input.data.name;
+
+  return new Promise<{ value?: unknown; error?: unknown }>((resolve) =>
+    engine
+      .outboxLink({} as never)({
+        op: {
+          type: "mutation",
+          path: "recipes.update",
+          input,
+          context: { operationId, headers: { "x-operation-id": operationId } },
+        },
+        next,
+      } as never)
+      .subscribe({
+        next: (value: unknown) => resolve({ value }),
+        error: (error: unknown) => resolve({ error }),
+        complete: () => resolve({}),
+      })
+  );
 }
 
 describe("createOfflineEngine", () => {
@@ -91,6 +130,93 @@ describe("createOfflineEngine", () => {
 
     expect(told).toHaveBeenCalledWith([expect.objectContaining({ status: "conflicted" })]);
     expect(await engine.outbox.forOwner("u1", "conflicted")).toHaveLength(1);
+  });
+
+  describe("a recipe save beside Replay", () => {
+    const pending = (input: unknown, path = "recipes.update") => ({
+      id: path,
+      ownerId: "u1",
+      path,
+      input,
+      entityId: null,
+      operationId: null,
+      headers: {},
+    });
+    const settledSoon = <T>(promise: Promise<T>) =>
+      Promise.race([promise, new Promise((resolve) => setTimeout(() => resolve("waiting"), 50))]);
+    const inputs = async (engine: ReturnType<typeof engineOver>) =>
+      (await engine.outbox.loadAll()).map((entry) => entry.input);
+
+    it("is stored at once while the Cache Warmer holds the Outbox lock", async () => {
+      const held: LockManagerLike = { request: () => new Promise(() => {}) };
+      const engine = engineOver(createMemoryStorage(), () => held);
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await engine.outbox.enqueue(pending(edit("First")));
+
+      const saved = await settledSoon(saveRecipe(engine, edit("Second", 4), unreachable));
+
+      expect(saved).not.toBe("waiting");
+      expect(await inputs(engine)).toEqual([edit("Second", 3)]);
+    });
+
+    it("is stored at once while a Replay pass sends another entry", async () => {
+      const engine = engineOver();
+      let release = () => {};
+      const update = vi.fn(async (_input: unknown) => ({ stale: false, version: 4 }));
+      const recovery = engine.createRecovery({
+        transport: {
+          groceries: {
+            create: { mutate: () => new Promise((resolve) => (release = () => resolve({}))) },
+          },
+          recipes: { update: { mutate: update } },
+        },
+        verifySession: async () => "match",
+        refetchActiveQueries: async () => {},
+        topUp: async () => {},
+      });
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await engine.outbox.enqueue(pending({ id: "g1" }, "groceries.create"));
+      await engine.outbox.enqueue(pending(edit("First")));
+      const replaying = recovery.recover();
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const saved = await settledSoon(saveRecipe(engine, edit("Second", 4), unreachable));
+
+      expect(saved).not.toBe("waiting");
+      expect((await inputs(engine)).at(-1)).toEqual(edit("Second", 3));
+      release();
+      await replaying;
+      expect(update.mock.calls.map(([input]) => input)).toEqual([edit("Second", 3)]);
+    });
+
+    it("never changes the entry Replay is sending, and loses no edit", async () => {
+      const engine = engineOver();
+      const sent: unknown[] = [];
+      let answer = (_outcome: "success") => {};
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await engine.outbox.enqueue(pending(edit("First")));
+      const submit = vi.fn(async (entry: OutboxEntry) => {
+        sent.push(entry.input);
+        if (sent.length > 1) return { kind: "success" as const };
+
+        return new Promise<{ kind: "success" }>(
+          (resolve) => (answer = (kind) => resolve({ kind }))
+        );
+      });
+      const sending = runReplayPass({ store: engine.outbox, submit, ownerId: "u1" });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await saveRecipe(engine, edit("Second"), unreachable);
+      answer("success");
+      await sending;
+      await runReplayPass({ store: engine.outbox, submit, ownerId: "u1" });
+
+      expect(sent).toEqual([edit("First"), edit("Second")]);
+      expect(await engine.outbox.size("u1")).toBe(0);
+    });
   });
 
   it("replays only the applied owner's queue, marked with the client's replay header", async () => {

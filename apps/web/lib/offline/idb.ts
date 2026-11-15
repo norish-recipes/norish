@@ -75,6 +75,12 @@ interface OfflineIdb {
     mode: IDBTransactionMode,
     body: (objectStore: IDBObjectStore) => IDBRequest<T>
   ): Promise<T>;
+  /** Read a keyPath store's record and put what `change` returns in one transaction. */
+  change<T>(
+    store: OfflineStoreName,
+    key: IDBValidKey,
+    change: (value: T) => T | undefined
+  ): Promise<T | undefined>;
 }
 
 export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
@@ -123,6 +129,30 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
     });
   }
 
+  async function change<T>(
+    store: OfflineStoreName,
+    key: IDBValidKey,
+    changeValue: (value: T) => T | undefined
+  ): Promise<T | undefined> {
+    const db = await open();
+
+    return new Promise<T | undefined>((resolve, reject) => {
+      const tx = db.transaction(store, "readwrite");
+      const objectStore = tx.objectStore(store);
+      const request = objectStore.get(key);
+      let written: T | undefined;
+
+      request.onsuccess = () => {
+        written = request.result === undefined ? undefined : changeValue(request.result as T);
+        if (written !== undefined) objectStore.put(written);
+        tx.commit();
+      };
+      tx.onabort = () => reject(tx.error ?? request.error);
+      tx.oncomplete = () => resolve(written);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   return {
     async get<T>(store: OfflineStoreName, key: IDBValidKey): Promise<T | undefined> {
       return run<T | undefined>(store, "readonly", (objectStore) => objectStore.get(key));
@@ -137,5 +167,6 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
       return run<IDBValidKey[]>(store, "readonly", (objectStore) => objectStore.getAllKeys());
     },
     transaction: run,
+    change,
   };
 }

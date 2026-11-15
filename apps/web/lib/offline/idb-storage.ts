@@ -80,6 +80,13 @@ export function createIdbStorage(factory?: IDBFactory): OfflineStorage {
         await idb.transaction(OUTBOX_STORE, "readwrite", (store) => store.put(entry));
         changed();
       },
+      async change(seq, change) {
+        const written = await idb.change<OutboxEntry>(OUTBOX_STORE, seq, change);
+
+        if (written) changed();
+
+        return written;
+      },
       async remove(seq) {
         await idb.transaction(OUTBOX_STORE, "readwrite", (store) => store.delete(seq));
         changed();

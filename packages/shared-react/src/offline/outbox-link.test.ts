@@ -6,7 +6,6 @@ import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
 import { isEncodedFormData } from "./input-codec";
-import { createProcessLock, runWithOutboxLock } from "./leader";
 import { createOutboxLink } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";
 import { runReplayPass } from "./replay";
@@ -190,13 +189,18 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     observable((observer) => observer.error(new TypeError("Failed to fetch")));
   let storage: ReturnType<typeof createMemoryStorage>;
   let store: OutboxStore;
-  let lock: ReturnType<typeof createProcessLock>;
 
   beforeEach(() => {
     storage = createMemoryStorage();
     store = createOutboxStore(storage.outbox);
-    lock = createProcessLock();
     onConflict.mockClear();
+    link = createOutboxLink({
+      store,
+      owner,
+      replayHeaderValue: REPLAY_HEADER_VALUE,
+      wholeEdits: new Set(["recipes.update"]),
+      onConflict,
+    })({} as never);
   });
 
   const answer = (data: unknown) => () =>
@@ -205,21 +209,9 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       observer.complete();
     });
 
-  const link = createOutboxLinkOver();
-
   const onConflict = vi.fn();
-
-  function createOutboxLinkOver() {
-    return () =>
-      createOutboxLink({
-        store,
-        owner,
-        replayHeaderValue: REPLAY_HEADER_VALUE,
-        wholeEdits: new Set(["recipes.update"]),
-        locks: () => lock,
-        onConflict,
-      })({} as never);
-  }
+  // One link per client, as the tRPC client builds it.
+  let link: ReturnType<ReturnType<typeof createOutboxLink>>;
 
   function save(
     input: { id: string; version: number; data: { name: string } },
@@ -230,10 +222,10 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       "x-operation-id": operationId,
       ...(replay ? { [OUTBOX_REPLAY_HEADER]: REPLAY_HEADER_VALUE } : {}),
     };
-    const op = { type: "mutation", path, input, context: { operationId, headers } };
+    const op = { id: ++opId, type: "mutation", path, input, context: { operationId, headers } };
 
     return new Promise<{ value?: unknown; error?: unknown }>((resolve) => {
-      link()({ op, next: terminal } as never).subscribe({
+      link({ op, next: terminal } as never).subscribe({
         next: (value: unknown) => resolve({ value }),
         error: (error: unknown) => resolve({ error }),
         complete: () => resolve({}),
@@ -242,6 +234,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
   }
 
   const edit = (name: string, version = 3) => ({ id, version, data: { name } });
+  let opId = 0;
 
   it("puts a second save in place of the unsent one, on the first's base", async () => {
     const terminal = vi.fn(unreachable);
@@ -291,24 +284,6 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       edit("First"),
       edit("Second"),
     ]);
-  });
-
-  it("does not touch the entry while Replay holds the Outbox", async () => {
-    await save(edit("First"), unreachable);
-    let release = () => {};
-    const replaying = runWithOutboxLock(
-      () => new Promise<void>((resolve) => (release = resolve)),
-      lock
-    );
-
-    const second = save(edit("Second"), unreachable);
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect((await store.loadAll())[0]!.input).toEqual(edit("First"));
-    release();
-    await replaying;
-    await second;
-    expect((await store.loadAll())[0]!.input).toEqual(edit("Second"));
   });
 
   it("sends a save live when nothing of that recipe is pending", async () => {

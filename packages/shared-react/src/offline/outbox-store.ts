@@ -11,6 +11,8 @@ export interface OutboxStore {
   /** An owner's entries in FIFO order, optionally filtered by status. */
   forOwner(ownerId: string, status?: OutboxEntryStatus): Promise<OutboxEntry[]>;
   update(seq: number, patch: Partial<Omit<OutboxEntry, "seq">>): Promise<void>;
+  /** Change one entry atomically; resolves with it as written, or undefined when unchanged. */
+  change: OfflineStorage["outbox"]["change"];
   park(seq: number, reason: ParkedReason): Promise<void>;
   remove(seq: number): Promise<void>;
   size(ownerId?: string): Promise<number>;
@@ -65,10 +67,19 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
     notify();
   }
 
+  async function change(...args: Parameters<OutboxStore["change"]>) {
+    const written = await outbox.change(...args);
+
+    if (written) notify();
+
+    return written;
+  }
+
   async function park(seq: number, reason: ParkedReason): Promise<void> {
     await update(seq, {
       status: reason === "conflict" ? "conflicted" : "parked",
       parkedReason: reason,
+      sending: false,
     });
   }
 
@@ -96,6 +107,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
     loadAll: () => outbox.all(),
     forOwner,
     update,
+    change,
     park,
     remove,
     size,

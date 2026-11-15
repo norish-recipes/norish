@@ -15,6 +15,7 @@
  *
  * A whole edit (`recipes.update`) saved while one of the same id is pending
  * waits in the Outbox: in that entry, on its version, if it was never sent.
+ * The replace is one atomic change, which Replay's mark on an entry it sends excludes.
  */
 
 import type { HTTPHeaders, Operation, OperationLink, TRPCLink } from "@trpc/client";
@@ -30,12 +31,10 @@ import {
   markOutboxAdmissionFailed,
 } from "@norish/shared/lib/trpc-errors";
 
-import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry } from "./outbox-types";
 import { isStaleResult } from "./error-classification";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
-import { runWithOutboxLock } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
 
 const log = createClientLogger("OutboxLink");
@@ -65,8 +64,6 @@ interface OutboxLinkDependencies {
   replayHeaderValue: string;
   /** Procedures that save a whole entity at the version it was read at; they create nothing. */
   wholeEdits?: ReadonlySet<string>;
-  /** The lock Replay holds, so a save never changes an entry being sent. */
-  locks?: () => LockManagerLike | null;
   /** Told of a whole edit sent live and refused as stale, once it is parked Conflicted. */
   onConflict?: (entry: OutboxEntry) => void;
 }
@@ -128,30 +125,32 @@ function operationOf(context: unknown) {
 
 const idOf = (input: unknown) => (input as { id?: unknown } | null)?.id;
 
-/** Queue a whole edit behind a pending one of its id: in its place if unsent. False if none. */
-async function queueBehindPending(deps: OutboxLinkDependencies, op: Operation): Promise<boolean> {
+/** Put a whole edit in place of its recipe's unsent pending entry, on that entry's version. */
+async function replaceUnsent(
+  deps: OutboxLinkDependencies,
+  op: Operation
+): Promise<"replaced" | "kept" | "none"> {
   const ownerId = deps.owner();
   const pending = ownerId ? await deps.store.forOwner(ownerId, "pending") : [];
   const last = pending
     .filter((entry) => entry.path === op.path && idOf(entry.input) === idOf(op.input))
     .at(-1);
 
-  if (!last) return false;
-  if (last.attempts > 0) {
-    await captureToOutbox(deps, op.path, op.input, op.context);
+  if (!last) return "none";
+  const replaced = await deps.store.change(last.seq, (stored) =>
+    stored.status === "pending" && stored.attempts === 0 && !stored.sending
+      ? {
+          ...stored,
+          input: {
+            ...(encodeOutboxInput(op.input) as object),
+            version: (stored.input as { version?: unknown }).version,
+          },
+          ...operationOf(op.context),
+        }
+      : undefined
+  );
 
-    return true;
-  }
-  // One write: a kill leaves the old save or the new one.
-  await deps.store.update(last.seq, {
-    input: {
-      ...(encodeOutboxInput(op.input) as object),
-      version: (last.input as { version?: unknown }).version,
-    },
-    ...operationOf(op.context),
-  });
-
-  return true;
+  return replaced ? "replaced" : "kept";
 }
 
 /** Park a live whole edit the server refused, as Replay parks one (ADR-0004). */
@@ -223,34 +222,42 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
         let subscription: Unsubscribable | null = null;
         let closed = false;
 
-        runWithOutboxLock(() => queueBehindPending(deps, op), deps.locks?.() ?? null).then(
-          (queued) => {
-            if (queued) return observer.error(queuedError());
-            if (closed) return;
-            let answered = Promise.resolve();
+        replaceUnsent(deps, op)
+          .then(async (found) => {
+            if (found === "kept") await captureToOutbox(deps, op.path, op.input, op.context);
 
-            subscription = capture({ op, next }).subscribe({
-              next: (value) => {
-                if (!isStaleResult("data" in value.result ? value.result.data : null)) {
-                  return observer.next(value);
-                }
-                // Parked before the answer passes on, so the reader is told of a stored entry.
-                answered = parkRefused(deps, op)
-                  .catch((error: unknown) => log.error({ error }, "Parking a refused save failed"))
-                  .then(() => observer.next(value));
-              },
-              error: (error) => observer.error(error),
-              complete: () => void answered.then(() => observer.complete()),
-            });
-          },
-          (persistError: unknown) => {
-            log.error({ error: persistError, path: op.path }, "Outbox admission failed");
-            const error = queuedError();
+            return found !== "none";
+          })
+          .then(
+            (queued) => {
+              if (queued) return observer.error(queuedError());
+              if (closed) return;
+              let answered = Promise.resolve();
 
-            markOutboxAdmissionFailed(error);
-            observer.error(error);
-          }
-        );
+              subscription = capture({ op, next }).subscribe({
+                next: (value) => {
+                  if (!isStaleResult("data" in value.result ? value.result.data : null)) {
+                    return observer.next(value);
+                  }
+                  // Parked before the answer passes on, so the reader is told of a stored entry.
+                  answered = parkRefused(deps, op)
+                    .catch((error: unknown) =>
+                      log.error({ error }, "Parking a refused save failed")
+                    )
+                    .then(() => observer.next(value));
+                },
+                error: (error) => observer.error(error),
+                complete: () => void answered.then(() => observer.complete()),
+              });
+            },
+            (persistError: unknown) => {
+              log.error({ error: persistError, path: op.path }, "Outbox admission failed");
+              const error = queuedError();
+
+              markOutboxAdmissionFailed(error);
+              observer.error(error);
+            }
+          );
 
         return () => {
           closed = true;

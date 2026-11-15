@@ -137,7 +137,14 @@ export async function runReplayPass({
       continue;
     }
 
-    const outcome = await submit(entry);
+    // Marked before it is sent, and sent as stored then: a save replaced it until this point.
+    const claimed = await store.change(entry.seq, (stored) =>
+      stored.status === "pending" ? { ...stored, sending: true } : undefined
+    );
+
+    if (!claimed) continue;
+    const outcome = await submit(claimed);
+    const unmark = () => store.update(entry.seq, { sending: false });
 
     switch (outcome.kind) {
       case "success":
@@ -147,7 +154,7 @@ export async function runReplayPass({
 
       case "conflict":
         await parkWith(entry, "conflict");
-        conflicted.push(entry);
+        conflicted.push(claimed);
         break;
 
       case "deterministic":
@@ -155,9 +162,13 @@ export async function runReplayPass({
         break;
 
       case "unauthorized":
+        await unmark();
+
         return finish("unauthorized", null);
 
       case "unreachable":
+        await unmark();
+
         return finish("unreachable", null);
 
       case "ambiguous": {
@@ -169,7 +180,7 @@ export async function runReplayPass({
           break;
         }
 
-        await store.update(entry.seq, { attempts });
+        await store.update(entry.seq, { attempts, sending: false });
 
         return finish("retry", retryDelayMs(attempts));
       }

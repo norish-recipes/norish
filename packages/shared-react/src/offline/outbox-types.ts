@@ -44,6 +44,8 @@ export interface OutboxEntry {
   createdAt: string;
   /** Replay attempts so far (drives the bounded 5xx retry). */
   attempts: number;
+  /** Set while Replay sends it, so a save never replaces an entry in flight. */
+  sending?: boolean;
   /** Current lifecycle state. */
   status: OutboxEntryStatus;
   /** Set when {@link status} is `parked` or `conflicted`. */

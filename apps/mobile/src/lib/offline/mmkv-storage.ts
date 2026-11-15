@@ -171,6 +171,15 @@ export function createMmkvStorage({
           .sort((a, b) => a.seq - b.seq),
       get: async (seq) => readEntry(OUTBOX_PREFIX + seq),
       put: async (entry) => writeEntry(entry),
+      // Read and written with no await between, so nothing else runs in the middle.
+      change: async (seq, change) => {
+        const stored = readEntry(OUTBOX_PREFIX + seq);
+        const next = stored && change(stored);
+
+        if (next) writeEntry(next);
+
+        return next;
+      },
       async remove(seq) {
         const names = storedNames(read<OutboxEntry>(OUTBOX_PREFIX + seq)?.input);
 
