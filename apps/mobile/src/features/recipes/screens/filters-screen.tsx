@@ -1,8 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Sheet, SheetScrollView } from "@/components/sheet";
+import { ToggleChip } from "@/components/toggle-chip";
 import { FilterSection } from "@/features/recipes/components/filter-section";
-import { ToggleChip } from "@/features/recipes/components/toggle-chip";
 import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
