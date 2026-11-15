@@ -48,11 +48,11 @@ const log = createClientLogger("calendar-widgets");
 const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => {
   "widget";
   const dark = environment.colorScheme === "dark";
-  // The board's widget tokens in sRGB; an 8-digit hex is RGBA here.
-  const ground = dark ? "#201E1A" : "#FFFFFF";
-  const ink = dark ? "#FBFCFC" : "#181918";
-  const muted = dark ? "#AEAAA3" : "#615D56";
-  const accent = dark ? "#76C788" : "#336640";
+  // The theme's tokens in sRGB, as the Live Activity's; an 8-digit hex is RGBA here.
+  const ground = dark ? "#201E1A" : "#FFFFFF"; // --surface
+  const ink = dark ? "#FBFCFC" : "#181918"; // --foreground
+  const muted = dark ? "#A7A29C" : "#6E6A63"; // --muted
+  const accent = dark ? "#76BE86" : "#336640"; // --accent-text
   const label = (text: string, color: string) => (
     <Text modifiers={[font({ size: 13, weight: "semibold" }), foregroundStyle(color)]}>{text}</Text>
   );
@@ -148,15 +148,16 @@ const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => 
 const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => {
   "widget";
   const dark = environment.colorScheme === "dark";
-  const ground = dark ? "#201E1A" : "#FFFFFF";
-  const ink = dark ? "#FBFCFC" : "#181918";
-  const muted = dark ? "#AEAAA3" : "#615D56";
-  const accent = dark ? "#76C788" : "#336640";
-  // Tinted and clear draw every fill in the tint, so the tile drops to the board's 14%.
+  // As `mealLayout`'s, which this body cannot reach.
+  const ground = dark ? "#201E1A" : "#FFFFFF"; // --surface
+  const ink = dark ? "#FBFCFC" : "#181918"; // --foreground
+  const muted = dark ? "#A7A29C" : "#6E6A63"; // --muted
+  const accent = dark ? "#76BE86" : "#336640"; // --accent-text
+  // --default; tinted and clear draw every fill in the tint, so the tile drops to the board's 14%.
   const soft =
-    environment.widgetRenderingMode === "accented" ? "#FFFFFF24" : dark ? "#2D2B27" : "#ECE7DE";
+    environment.widgetRenderingMode === "accented" ? "#FFFFFF24" : dark ? "#292723" : "#ECE7DE";
   // The accent at half strength, as RGBA.
-  const ring = dark ? "#76C7888C" : "#33664080";
+  const ring = dark ? "#76BE868C" : "#33664080";
 
   if (props.kind === "message") {
     return (

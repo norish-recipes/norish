@@ -33,9 +33,9 @@ const log = createClientLogger("recipe-timers");
 const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivityEnvironment) => {
   "widget";
   const dark = environment.colorScheme === "dark";
-  // The app theme's accent, muted and surface tokens in sRGB, and the Dynamic Island's green.
-  const accent = dark ? "#76BE86" : "#336640";
-  const muted = dark ? "#A7A29C" : "#6E6A63";
+  // The theme's tokens in sRGB, as the widgets'; the Lock Screen board's own panel; the island's green.
+  const accent = dark ? "#76BE86" : "#336640"; // --accent-text
+  const muted = dark ? "#A7A29C" : "#6E6A63"; // --muted
   const surface = dark ? "#1C1A16" : "#FBF8F0";
   const islandGreen = "#7FDB8E";
 
