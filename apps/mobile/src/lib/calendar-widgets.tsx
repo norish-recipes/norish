@@ -199,7 +199,8 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
               <RoundedRectangle
                 cornerRadius={12}
                 modifiers={[
-                  foregroundStyle("#00000000"),
+                  // WidgetKit hit-tests a link by what it draws, so the row is filled at 1%.
+                  foregroundStyle(dark ? "#201E1A03" : "#FFFFFF03"),
                   ...(day.today
                     ? [
                         strokeBorder({
