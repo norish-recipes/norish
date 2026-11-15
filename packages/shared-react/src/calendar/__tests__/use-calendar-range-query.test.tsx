@@ -53,4 +53,18 @@ describe("useCalendarRangeQuery", () => {
     expect(result.current.range.endISO).toBe("2026-12-11");
     expect(result.current.isLoading).toBe(false);
   });
+
+  it("lists every day of the range, growing with it", () => {
+    readRange.mockReturnValue(new Promise(() => {}));
+    const { result } = renderCalendar();
+    const dates = () => result.current.days.map((day) => day.getDate());
+
+    expect(result.current.days[0]?.getDate()).toBe(26);
+    expect(result.current.days).toHaveLength(35);
+
+    act(() => result.current.grow("past"));
+
+    expect(result.current.days).toHaveLength(47);
+    expect(dates()[0]).toBe(14);
+  });
 });

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 
+import { eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
+
 import { useCalendarRange } from "./calendar-range-store";
 import { useCalendarQuery } from "./use-calendar-query";
 
-/** The calendar page's range, its grow and what is planned in it; loading until the first read settles. */
+/** The calendar page's range, its days, its grow and what is planned in it; loading until the first read settles. */
 export function useCalendarRangeQuery() {
   const range = useCalendarRange((state) => state.range);
   const isGrowing = useCalendarRange((state) => state.isGrowing);
@@ -16,5 +18,12 @@ export function useCalendarRangeQuery() {
 
   if (!isLoading && !hasSettled) setHasSettled(true);
 
-  return { range, isGrowing, grow, calendarData, isLoading: isLoading && !hasSettled };
+  return {
+    range,
+    days: eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO)),
+    isGrowing,
+    grow,
+    calendarData,
+    isLoading: isLoading && !hasSettled,
+  };
 }

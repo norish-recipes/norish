@@ -22,7 +22,7 @@ import { useWindowSize } from "usehooks-ts";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { useCalendarRangeQuery } from "@norish/shared-react/calendar";
-import { dateKey, eachDayOfInterval, parseDateKey } from "@norish/shared/lib/helpers";
+import { dateKey } from "@norish/shared/lib/helpers";
 
 import { TimelineScrollToToday } from "./timeline-scroll-to-today";
 
@@ -47,12 +47,8 @@ export function MobileTimeline({ onAddItem, onNoteClick, onRecipeClick }: Mobile
 
   const locale = useLocale();
 
-  const { range, isGrowing, grow, calendarData, isLoading } = useCalendarRangeQuery();
+  const { days: allDays, isGrowing, grow, calendarData, isLoading } = useCalendarRangeQuery();
 
-  const allDays = useMemo(
-    () => eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO)),
-    [range.startISO, range.endISO]
-  );
   const dayKeys = useMemo(() => allDays.map((d) => dateKey(d)), [allDays]);
 
   // A day's date on one line: "Wed, Oct 7"
