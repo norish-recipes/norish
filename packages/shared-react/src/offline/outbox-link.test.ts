@@ -288,9 +288,9 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
   });
 
   it.each([
-    ["in the order sent", [0, 1]],
-    ["the later one first", [1, 0]],
-  ])("keeps the later of two live saves that both fail, %s", async (_order, failOrder) => {
+    ["in the order sent", [0, 1], ["First", "Second"]],
+    ["the later one first", [1, 0], ["Second", "First"]],
+  ])("stores each of two live saves that both fail, %s", async (_order, failOrder, stored) => {
     const fails: (() => void)[] = [];
     const inFlight = () =>
       observable((observer) => {
@@ -304,8 +304,52 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       await saves[index];
     }
 
+    expect((await store.loadAll()).map((entry) => entry.operationId)).toEqual(stored);
+  });
+
+  it("stores a save that fails unanswered after a later one was refused", async () => {
+    let fail = () => {};
+    const inFlight = () =>
+      observable((observer) => {
+        fail = () => observer.error(new TypeError("Failed to fetch"));
+      });
+    const first = save(edit("First"), inFlight);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await save(edit("Second"), errorWith({ data: { httpStatus: 400 } }));
+    fail();
+    await first;
+
     expect(await store.loadAll()).toMatchObject([
-      { input: edit("Second"), operationId: "Second", status: "pending" },
+      { input: edit("First"), operationId: "First", status: "pending" },
+    ]);
+  });
+
+  it("never puts a failed save in place of another entry", async () => {
+    let fail = () => {};
+    const inFlight = () =>
+      observable((observer) => {
+        fail = () => observer.error(new TypeError("Failed to fetch"));
+      });
+    const mine = save(edit("Mine"), inFlight);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Another tab queues a newer save of the recipe meanwhile.
+    await store.enqueue({
+      id: "other",
+      ownerId: "u1",
+      path: "recipes.update",
+      input: edit("Other tab"),
+      entityId: null,
+      operationId: "Other tab",
+      headers: {},
+    });
+    fail();
+    await mine;
+
+    expect((await store.loadAll()).map((entry) => entry.operationId)).toEqual([
+      "Other tab",
+      "Mine",
     ]);
   });
 
