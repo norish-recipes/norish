@@ -11,7 +11,7 @@
 - [x] Tap the checkbox ticks; a tap on the row opens the edit sheet (store product and price, store, aisle, repeat, Delete/Save); no long-press menu.
 - [x] "Add items" accessory and sheet (item, store, repeat with plain-words detection, add another); the Repeat sheet; clear done or the whole list.
 - [ ] First frame from the Warm Set or a skeleton; writes through the Outbox.
-- [ ] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.
+- [x] Gates green, including mobile's lint, typecheck, test and `expo export --platform ios`.
 
 ## Comments
 
