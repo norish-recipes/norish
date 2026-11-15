@@ -1,4 +1,4 @@
-import * as Linking from "expo-linking";
+import { routeUrl } from "./route-url";
 
 /** Where a timer's notification and its Live Activity open: cook mode on the timer's step. */
 export const cookModeRoute = (recipeId: string, step: number) =>
@@ -8,7 +8,5 @@ export const cookModeRoute = (recipeId: string, step: number) =>
 export function cookModeUrl(recipeId: string, step: number): string {
   const { pathname, params } = cookModeRoute(recipeId, step);
 
-  return Linking.createURL(pathname.replace("[id]", encodeURIComponent(params.id)), {
-    queryParams: { step: params.step },
-  });
+  return routeUrl(pathname, params);
 }

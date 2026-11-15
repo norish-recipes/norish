@@ -10,9 +10,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
+// As expo-linking's: an empty query adds no "?".
 vi.mock("expo-linking", () => ({
-  createURL: (path: string, options?: { queryParams?: { day: string } }) =>
-    `norish://${path.slice(1)}${options?.queryParams ? `?day=${options.queryParams.day}` : ""}`,
+  createURL: (path: string, options?: { queryParams?: Record<string, string> }) => {
+    const query = new URLSearchParams(options?.queryParams).toString();
+
+    return `norish://${path.slice(1)}${query ? `?${query}` : ""}`;
+  },
 }));
 
 const strings: WidgetStrings = {

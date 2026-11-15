@@ -1,5 +1,3 @@
-import * as Linking from "expo-linking";
-
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import {
   firstSlotFrom,
@@ -10,6 +8,7 @@ import {
 } from "@norish/shared-react/calendar/todays-meals";
 import { addDays, dateKey } from "@norish/shared/lib/helpers";
 
+import { routeUrl } from "./route-url";
 import { TAB_ROUTES } from "./tab-routes";
 
 /** Today and the 13 days after it: how long the widgets roll without the app. */
@@ -88,10 +87,9 @@ export type WidgetTimelines = {
   large: WidgetEntry<LargeWidgetProps>[];
 };
 
-export const recipeUrl = (id: string) => Linking.createURL(`/recipe/${encodeURIComponent(id)}`);
-export const calendarDayUrl = (key: string) =>
-  Linking.createURL(TAB_ROUTES.calendar.root, { queryParams: { day: key } });
-export const todayUrl = () => Linking.createURL(TAB_ROUTES.recipes.root);
+export const recipeUrl = (id: string) => routeUrl("/recipe/[id]", { id });
+export const calendarDayUrl = (key: string) => routeUrl(TAB_ROUTES.calendar.root, { day: key });
+export const todayUrl = () => routeUrl(TAB_ROUTES.recipes.root);
 
 /** What both widgets show signed out: one line that opens Sign in. */
 export function signedOutTimelines(strings: Pick<WidgetStrings, "signIn">): WidgetTimelines {
