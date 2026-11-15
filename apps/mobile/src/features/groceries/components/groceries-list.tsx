@@ -138,12 +138,12 @@ export function GroceriesList({
         <ItemSlice edge={edge}>
           <GroupRow
             group={item.group}
+            open={openGroups.has(item.key)}
             store={item.store}
             subline={sublineOf(
               recurringId ? recurringById.get(recurringId) : null,
               only?.recipeName ?? null
             )}
-            open={openGroups.has(item.key)}
             onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
             onToggle={actions.toggle}
