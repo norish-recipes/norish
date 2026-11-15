@@ -1,4 +1,5 @@
 import type * as ImagePicker from "expo-image-picker";
+import type { SetStateAction } from "react";
 import React from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { GlassCloseButton, GlassSurface } from "@/components/glass";
@@ -36,7 +37,7 @@ export function MediaStrip({
 }: {
   media: RecipeGalleryMedia[];
   uploads: ReturnType<typeof useEditorUploads>;
-  onChange: (media: RecipeGalleryMedia[]) => void;
+  onChange: (media: SetStateAction<RecipeGalleryMedia[]>) => void;
 }) {
   const intl = useIntl();
   const toImage = useServerImage();
@@ -53,7 +54,8 @@ export function MediaStrip({
   const pick = usePhotoSourceSheet(text("recipes.editor.addPhoto"));
   const upload = (assets: ImagePicker.ImagePickerAsset[]) => {
     void uploads.uploadGallery(assets.slice(0, room), media.length).then((added) => {
-      if (added.length > 0) onChange([...media, ...added]);
+      // Joins the strip as it is now: a photo removed meanwhile stays removed.
+      if (added.length > 0) onChange((current) => [...current, ...added]);
     });
   };
   const remove = (item: RecipeGalleryMedia) => {

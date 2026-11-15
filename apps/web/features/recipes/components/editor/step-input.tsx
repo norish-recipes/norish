@@ -11,7 +11,6 @@ import type {
   IngredientSuggestion,
   LineMoves,
   Step,
-  StepImage,
   StepIngredientDraft,
   StepRow as StepItem,
 } from "@norish/shared-react/recipes";
@@ -200,26 +199,27 @@ export default function StepInput({
     emitChanges(updated);
   };
   const handleImageUpload = async (index: number, file: File) => {
-    if (!recipeId) return;
+    const rowId = items[index]?.id;
+
+    if (!recipeId || !rowId) return;
     setUploadingIndex(index);
     await uploadStepImage(file, recipeId)
       .then((result) => {
-        const current = items[index];
+        const { url } = result;
 
-        if (result.success && result.url && current) {
-          const updated = [...items];
-          const newImage: StepImage = {
-            image: result.url,
-            order: current.images.length,
-          };
+        if (!result.success || !url) return;
+        // The photo joins its row as the rows are now: they may have changed while uploading.
+        setItems((current) => {
+          const updated = current.map((item) =>
+            item.id === rowId
+              ? { ...item, images: [...item.images, { image: url, order: item.images.length }] }
+              : item
+          );
 
-          updated[index] = {
-            ...current,
-            images: [...current.images, newImage],
-          };
-          setItems(updated);
           emitChanges(updated);
-        }
+
+          return updated;
+        });
       })
       .finally(() => setUploadingIndex(null));
   };

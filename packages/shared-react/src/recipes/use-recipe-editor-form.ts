@@ -1,5 +1,6 @@
 "use client";
 
+import type { SetStateAction } from "react";
 import { useState } from "react";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
@@ -50,8 +51,18 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   });
   const labeller = { locale, units, unitStyle };
 
-  const set = <K extends keyof RecipeFormState>(key: K, value: RecipeFormState[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  // An updater reads the field as it is now, for a write that lands after an await.
+  const set = <K extends keyof RecipeFormState>(
+    key: K,
+    value: SetStateAction<RecipeFormState[K]>
+  ) =>
+    setForm((prev) => ({
+      ...prev,
+      [key]:
+        typeof value === "function"
+          ? (value as (current: RecipeFormState[K]) => RecipeFormState[K])(prev[key])
+          : value,
+    }));
 
   // An edit seeds its lines and steps once, in the active system, when the units are known.
   if (

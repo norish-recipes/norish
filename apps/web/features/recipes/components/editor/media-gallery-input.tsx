@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
+import type { SetStateAction } from "react";
 import React, { useCallback, useId, useRef, useState } from "react";
 import NextImage from "next/image";
 import { useRecipeImages } from "@/features/recipes/hooks/use-recipe-images";
@@ -46,7 +47,7 @@ export type { RecipeGalleryMedia } from "@norish/shared-react/recipes";
 
 interface MediaGalleryInputProps {
   media: RecipeGalleryMedia[];
-  onChange: (media: RecipeGalleryMedia[]) => void;
+  onChange: (media: SetStateAction<RecipeGalleryMedia[]>) => void;
   recipeId: string;
   maxImages?: number;
   maxVideos?: number;
@@ -303,7 +304,7 @@ export default function MediaGalleryInput({
               version: result.version,
             };
 
-            onChange([...media, newMedia]);
+            onChange((current) => [...current, newMedia]);
           } else if (result.error) {
             setUploadError(result.error);
             setTimeout(() => setUploadError(null), 3000);
@@ -320,7 +321,7 @@ export default function MediaGalleryInput({
               version: result.version,
             };
 
-            onChange([...media, newMedia]);
+            onChange((current) => [...current, newMedia]);
           } else if (result.error) {
             setUploadError(result.error);
             setTimeout(() => setUploadError(null), 3000);
