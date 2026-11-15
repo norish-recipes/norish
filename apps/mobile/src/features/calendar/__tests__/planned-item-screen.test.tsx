@@ -9,7 +9,6 @@ const held = vi.hoisted(() => ({
   moveItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
-  reach: vi.fn(),
   back: vi.fn(),
   pickDate: (_date: Date) => {},
 }));
@@ -106,7 +105,7 @@ vi.mock("@norish/shared-react/calendar", () => ({
   useCalendarRangeQuery: () => ({
     calendarData: { "2026-11-12": held.items },
     isRead: true,
-    reach: held.reach,
+    range: { startISO: "2026-10-29", endISO: "2026-11-26" },
   }),
   useCalendarMutations: () => ({
     moveItem: held.moveItem,
@@ -165,14 +164,19 @@ describe("PlannedItemScreen", () => {
     expect(screen.queryByTestId("planned-item-save")).toBeNull();
   });
 
-  it("moves to a picked day last in its slot, the range reaching it first", () => {
+  it("moves to a picked day in the range last in its slot and stays open on it", () => {
     render(<PlannedItemScreen />);
-    held.pickDate(new Date(2026, 11, 24));
+    held.pickDate(new Date(2026, 10, 15));
 
-    expect(held.reach).toHaveBeenCalledWith("2026-12-24");
-    expect(held.moveItem).toHaveBeenCalledWith("note-1", "2026-12-24", "Lunch");
-    expect(held.reach.mock.invocationCallOrder[0]).toBeLessThan(
-      held.moveItem.mock.invocationCallOrder[0]!
-    );
+    expect(held.moveItem).toHaveBeenCalledWith("note-1", "2026-11-15", "Lunch");
+    expect(held.back).not.toHaveBeenCalled();
+  });
+
+  it("moves to a picked day past the range and closes, leaving the range as it is", () => {
+    render(<PlannedItemScreen />);
+    held.pickDate(new Date(2027, 2, 24));
+
+    expect(held.moveItem).toHaveBeenCalledWith("note-1", "2027-03-24", "Lunch");
+    expect(held.back).toHaveBeenCalledTimes(1);
   });
 });

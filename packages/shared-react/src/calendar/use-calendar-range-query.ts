@@ -12,7 +12,6 @@ export function useCalendarRangeQuery() {
   const range = useCalendarRange((state) => state.range);
   const isGrowing = useCalendarRange((state) => state.isGrowing);
   const grow = useCalendarRange((state) => state.grow);
-  const reach = useCalendarRange((state) => state.reach);
   const { calendarData, isLoading, isRead } = useCalendarQuery(range);
   // Set once, so a grown range with nothing cached (after a failed read) keeps the timeline.
   const [hasSettled, setHasSettled] = useState(false);
@@ -24,7 +23,6 @@ export function useCalendarRangeQuery() {
     days: eachDayOfInterval(parseDateKey(range.startISO), parseDateKey(range.endISO)),
     isGrowing,
     grow,
-    reach,
     calendarData,
     isLoading: isLoading && !hasSettled,
     /** A grown range starts from what the narrower one read, so this stays true as it grows. */

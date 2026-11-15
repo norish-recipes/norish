@@ -55,7 +55,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const router = useRouter();
   const { navigation } = usePlatform();
   const { moveItem, deleteItem, updateItem } = useCalendarMutations();
-  const { reach } = useCalendarRangeQuery();
+  const { range } = useCalendarRangeQuery();
   const { title, subtitle } = usePlannedItemText()(item);
   const accent = useAccentTextColor();
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
@@ -66,11 +66,11 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
     updateItem(item.id, note.trim());
     router.back();
   };
-  // Another day or slot: last there, as a drag puts it. The range reaches the day, so it stays on show.
+  // Another day or slot: last there, as a drag puts it. A day past the range leaves it, so the sheet closes.
   const moveTo = (day: string, slot: Slot) => {
     if (day === item.date && slot === item.slot) return;
-    reach(day);
     moveItem(item.id, day, slot);
+    if (day < range.startISO || day > range.endISO) router.back();
   };
 
   return (

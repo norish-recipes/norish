@@ -37,16 +37,6 @@ describe("createCalendarRangeStore", () => {
     expect(calendar.getState().range).toEqual({ startISO: "2026-10-14", endISO: "2026-12-11" });
   });
 
-  it("reaches a day outside the range, either way, and leaves a day inside it alone", () => {
-    const calendar = createCalendarRangeStore(TODAY);
-
-    calendar.getState().reach("2026-11-20");
-    expect(calendar.getState().range).toEqual({ startISO: "2026-10-26", endISO: "2026-11-29" });
-    calendar.getState().reach("2027-01-04");
-    calendar.getState().reach("2026-09-01");
-    expect(calendar.getState().range).toEqual({ startISO: "2026-09-01", endISO: "2027-01-04" });
-  });
-
   it("ignores a grow in the direction that is settling", () => {
     const calendar = createCalendarRangeStore(TODAY);
 
