@@ -19,7 +19,7 @@ import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { RecipeFormErrors } from "@norish/shared-react/recipes";
+import type { LineMoves, RecipeFormErrors } from "@norish/shared-react/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
@@ -65,6 +65,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
     submit: editor.errors.submit,
   };
   const [newCategory, setNewCategory] = useState("");
+  const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
 
   const navigateBack = () => router.back();
   const {
@@ -215,6 +216,10 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               ingredients={form.ingredients}
               systemUsed={form.systemUsed}
               onChange={(ingredients) => set("ingredients", ingredients)}
+              onLinesMoved={(moves) => {
+                editor.moveLines(moves);
+                setLineMoves(moves);
+              }}
             />
             {errors.ingredients && (
               <p className="text-danger mt-2 text-base">{errors.ingredients}</p>
@@ -238,6 +243,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
             </div>
             <StepInput
               ingredients={form.ingredients}
+              lineMoves={lineMoves}
               recipeId={recipeId ?? undefined}
               steps={form.steps}
               systemUsed={form.systemUsed}

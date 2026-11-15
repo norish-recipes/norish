@@ -120,6 +120,40 @@ function lastEmitted(): Step[] {
 }
 
 describe("StepInput chips", () => {
+  it("keeps a chip on its line when the lines move", () => {
+    const step: Step = {
+      step: "Add the salt.",
+      order: 0,
+      systemUsed: "metric",
+      stepIngredients: [{ ingredientOrder: 0, share: 1, order: 0 }],
+    };
+    const { rerender } = render(
+      <StepInput ingredients={INGREDIENTS} steps={[step]} systemUsed="metric" onChange={onChange} />
+    );
+
+    // Salt moved to the third line; the step still uses salt, now by its new order.
+    rerender(
+      <StepInput
+        ingredients={INGREDIENTS}
+        lineMoves={
+          new Map([
+            [0, 2],
+            [1, 0],
+            [2, 1],
+          ])
+        }
+        steps={[step]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+    fireEvent.change(screen.getAllByRole("textbox")[0]!, {
+      target: { value: "Add the salt now." },
+    });
+
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 2, share: 1, order: 0 }]);
+  });
+
   it("emits attached chips riding the step payload, with reference orders reindexed", () => {
     render(
       <StepInput

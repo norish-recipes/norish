@@ -7,13 +7,14 @@ import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type { IngredientRow, ParsedIngredient } from "@norish/shared-react/recipes";
+import type { IngredientRow, LineMoves, ParsedIngredient } from "@norish/shared-react/recipes";
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import { useUnitsQuery } from "@norish/shared-react/config";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   createIngredientRow,
   ingredientRowsToLines,
+  lineMoves,
   normalizeIngredientRows,
   parseIngredientRow,
   removeIngredientRow,
@@ -33,6 +34,8 @@ interface IngredientInputProps {
   onChange: (ingredients: ParsedIngredient[]) => void;
   systemUsed?: MeasurementSystem;
   onSystemDetected?: (system: MeasurementSystem) => void;
+  /** Lines were reordered or removed, so the steps' references can follow them. */
+  onLinesMoved?: (moves: LineMoves) => void;
 }
 
 export default function IngredientInput({
@@ -40,6 +43,7 @@ export default function IngredientInput({
   onChange,
   systemUsed = "metric",
   onSystemDetected: _onSystemDetected,
+  onLinesMoved,
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
   const t = useTranslations("recipes.ingredientInput");
@@ -65,6 +69,13 @@ export default function IngredientInput({
     const doUpdate = debounce(flushParse, 300);
     doUpdate(updatedItems);
   };
+  // The rows after a reorder or a removal, reporting where each line went.
+  const moveRows = (updated: IngredientRow[]) => {
+    const moves = lineMoves(items, updated);
+
+    setItems(updated);
+    if (moves) onLinesMoved?.(moves);
+  };
   const handleInputChange = (index: number, value: string) => {
     const updated = typeIngredientRow(items, index, value);
 
@@ -88,7 +99,7 @@ export default function IngredientInput({
     } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
       e.preventDefault();
       const updated = items.filter((_, i) => i !== index);
-      setItems(updated);
+      moveRows(updated);
       debouncedParse(updated);
       setTimeout(() => {
         textareasRef.current[index - 1]?.focus();
@@ -100,7 +111,7 @@ export default function IngredientInput({
     if (!items[index]?.text.trim() && index < items.length - 1) {
       const updated = removeIngredientRow(items, index);
 
-      setItems(updated);
+      moveRows(updated);
       flushParse(updated);
     } else {
       // Leaving the field commits the pending parse immediately, so a submit
@@ -111,12 +122,12 @@ export default function IngredientInput({
   const handleRemove = (index: number) => {
     const updated = removeIngredientRow(items, index);
 
-    setItems(updated);
+    moveRows(updated);
     debouncedParse(updated);
   };
   const handleReorder = (newOrder: IngredientRow[]) => {
     const normalized = normalizeIngredientRows(newOrder);
-    setItems(normalized);
+    moveRows(normalized);
     debouncedParse(normalized);
   };
 

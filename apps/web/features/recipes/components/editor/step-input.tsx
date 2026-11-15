@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 
 import type {
   IngredientSuggestion,
+  LineMoves,
   Step,
   StepImage,
   StepIngredientDraft,
@@ -22,6 +23,7 @@ import {
   isHeadingText,
   mentionIngredient,
   normalizeStepRows,
+  remapStepRefs,
   removeStepRow,
   rowNumbers,
   seedStepRows,
@@ -48,6 +50,8 @@ interface StepInputProps {
   systemUsed?: MeasurementSystem;
   recipeId?: string; // Required for image uploads
   ingredients?: StepInputIngredient[];
+  /** The last move of the ingredient lines, which the steps' references follow. */
+  lineMoves?: LineMoves | null;
 }
 
 export default function StepInput({
@@ -56,6 +60,7 @@ export default function StepInput({
   systemUsed = "metric",
   recipeId,
   ingredients = [],
+  lineMoves = null,
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
   const [items, setItems] = useState<StepItem[]>(() => seedStepRows(steps));
@@ -90,6 +95,20 @@ export default function StepInput({
       first.images.length === 0
     ) {
       setItems(seedStepRows(steps));
+    }
+  }
+  // The form already moved its copy of the references; the rows' copy follows once per move.
+  const [appliedMoves, setAppliedMoves] = useState(lineMoves);
+
+  if (lineMoves !== appliedMoves) {
+    setAppliedMoves(lineMoves);
+    if (lineMoves) {
+      setItems(
+        items.map((item) => ({
+          ...item,
+          stepIngredients: remapStepRefs(item.stepIngredients, lineMoves),
+        }))
+      );
     }
   }
   const emitChanges = (updatedItems: StepItem[]) =>
