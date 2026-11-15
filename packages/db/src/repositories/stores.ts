@@ -185,7 +185,8 @@ export async function reorderStores(
 
       const [row] = await trx
         .update(stores)
-        .set({ sortOrder: i, updatedAt: new Date(), version: sql`${stores.version} + 1` })
+        // Renumbering is not an edit: the version stays, so a write queued on it still lands.
+        .set({ sortOrder: i, updatedAt: new Date() })
         .where(and(eq(stores.id, storeUpdate.id), eq(stores.version, storeUpdate.version)))
         .returning();
 
