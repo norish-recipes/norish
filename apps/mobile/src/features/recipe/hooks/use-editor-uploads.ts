@@ -78,13 +78,14 @@ export function useEditorUploads(recipeId: string) {
           version: result.version,
         } satisfies RecipeGalleryMedia;
       }),
-    uploadStep: (assets: ImagePicker.ImagePickerAsset[], firstOrder: number) =>
+    /** The photos in pick order; the row orders them as it is when they join. */
+    uploadStep: (assets: ImagePicker.ImagePickerAsset[]) =>
       each(assets, async (file, index) => {
         const result = await images.uploadStepImageData(uploadForm({ image: file, recipeId }));
 
         if (!result.success || !result.url) throw new Error(result.error);
 
-        return { image: result.url, order: firstOrder + index } satisfies StepImage;
+        return { image: result.url, order: index } satisfies StepImage;
       }),
     removeGallery: (item: RecipeGalleryMedia) => {
       if (!item.id) return;

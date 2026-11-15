@@ -54,8 +54,13 @@ export function MediaStrip({
   const pick = usePhotoSourceSheet(text("recipes.editor.addPhoto"));
   const upload = (assets: ImagePicker.ImagePickerAsset[]) => {
     void uploads.uploadGallery(assets.slice(0, room), media.length).then((added) => {
-      // Joins the strip as it is now: a photo removed meanwhile stays removed.
-      if (added.length > 0) onChange((current) => [...current, ...added]);
+      // Joins the strip as it is now, ordered there: a photo removed meanwhile stays removed.
+      if (added.length > 0) {
+        onChange((current) => [
+          ...current,
+          ...added.map((item, index) => ({ ...item, order: current.length + index })),
+        ]);
+      }
     });
   };
   const remove = (item: RecipeGalleryMedia) => {

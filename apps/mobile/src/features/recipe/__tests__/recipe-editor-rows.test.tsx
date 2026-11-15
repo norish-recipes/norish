@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
-import React from "react";
+import React, { StrictMode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -150,8 +150,8 @@ vi.mock("../hooks/use-editor-uploads", () => ({
         added.map((item, index) => ({ ...item, order: order + index }))
       );
     },
-    uploadStep: async (assets: { uri: string }[], order: number) =>
-      assets.map((asset, index) => ({ image: asset.uri, order: order + index })),
+    uploadStep: async (assets: { uri: string }[]) =>
+      assets.map((asset, order) => ({ image: asset.uri, order })),
     removeGallery: () => {},
     removeStepImage: () => {},
   }),
@@ -378,6 +378,17 @@ describe("RecipeEditorScreen with its real rows", () => {
     expect(saved().images.map((image) => image.image)).toEqual(["/new.jpg"]);
   });
 
+  it("orders a gallery photo by the strip as it is when the upload ends", async () => {
+    render(<RecipeEditorScreen initialData={stored} mode="edit" />);
+    fireEvent.click(screen.getByTestId("editor-media-add"));
+    act(() => state.pendingPick?.());
+    fireEvent.click(screen.getByTestId("editor-media-remove-0"));
+    await act(async () => state.galleryUpload?.resolve([{ type: "image", src: "/new.jpg" }]));
+    save();
+
+    expect(saved().images).toEqual([expect.objectContaining({ image: "/new.jpg", order: 0 })]);
+  });
+
   it("does not save while a photo uploads", () => {
     state.isUploading = true;
     render(<RecipeEditorScreen initialData={stored} mode="edit" />);
@@ -396,6 +407,37 @@ describe("RecipeEditorScreen with its real rows", () => {
     save();
 
     expect(state.create).toHaveBeenCalledOnce();
+  });
+});
+
+describe("StepRows photos", () => {
+  it("tells the form once about an uploaded step photo, under StrictMode too", async () => {
+    const onChange = vi.fn();
+    const uploads = {
+      canUpload: () => true,
+      uploadStep: async (assets: { uri: string }[]) =>
+        assets.map((asset, order) => ({ image: asset.uri, order })),
+    } as unknown as Parameters<typeof StepRows>[0]["uploads"];
+
+    render(
+      <StrictMode>
+        <StepRows
+          ingredients={[]}
+          lineMoves={null}
+          steps={[{ step: "Stir.", order: 0, systemUsed: "metric" }]}
+          systemUsed="metric"
+          uploads={uploads}
+          onChange={onChange}
+        />
+      </StrictMode>
+    );
+    fireEvent.click(screen.getByTestId("editor-step-photo-0"));
+    await act(async () => state.pendingPick?.());
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.mock.calls[0]?.[0][0].images).toEqual([
+      { image: "/recipes/r/steps/new.jpg", order: 0 },
+    ]);
   });
 });
 

@@ -1,5 +1,5 @@
 import type * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { DragList } from "@/components/drag-list/drag-list";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
@@ -59,6 +59,12 @@ export function StepRows({
 }) {
   const intl = useIntl();
   const [rows, setRows] = useState<StepRowValue[]>(() => seedStepRows(steps));
+  // The rows as last rendered, for an upload that ends after they changed.
+  const latestRowsRef = useRef(rows);
+
+  useEffect(() => {
+    latestRowsRef.current = rows;
+  });
   const [seededLength, setSeededLength] = useState(steps.length);
   const trailingRow = useTrailingRow(rows, hasStepContent);
   const text = (id: string) => intl.formatMessage({ id });
@@ -95,17 +101,21 @@ export function StepRows({
 
   const pickPhotos = usePhotoSourceSheet(text("recipes.editor.addStepPhoto"));
   const addPhotos = (row: StepRowValue, assets: ImagePicker.ImagePickerAsset[]) => {
-    void uploads.uploadStep(assets, row.images.length).then((added) => {
+    void uploads.uploadStep(assets).then((added) => {
       // The rows may have moved on while uploading, so the photos join the row as it is now.
-      setRows((current) => {
-        const next = current.map((entry) =>
-          entry.id === row.id ? { ...entry, images: [...entry.images, ...added] } : entry
-        );
-
-        onChange(stepRowsToSteps(next, systemUsed));
-
-        return next;
-      });
+      commit(
+        latestRowsRef.current.map((entry) =>
+          entry.id === row.id
+            ? {
+                ...entry,
+                images: [
+                  ...entry.images,
+                  ...added.map((image, index) => ({ ...image, order: entry.images.length + index })),
+                ],
+              }
+            : entry
+        )
+      );
     });
   };
 
