@@ -24,18 +24,16 @@ interface DropFiling {
 }
 
 export interface DropPlan {
-  /** Every row whose place changed: a per-Store sort order, and the Store on the one that moved Store. */
+  /** Every row whose place changed: a per-Store sort order, and the Store on the one that moved. */
   updates: ReorderUpdate[];
-  /** What the drop teaches the target Store — a grocery filed under an aisle, or under none — written after the reorder. */
+  /** The aisle (or none) the target Store files the moved food under, written after the reorder. */
   filings: DropFiling[];
 }
 
 interface DropInput {
   /** The containers as the drag left them: the visual order to commit. */
   items: ItemsState;
-  /** The container the dragged thing sat in when the drag began. */
   originContainer: ContainerId;
-  /** The container it was dropped into. */
   targetContainer: ContainerId;
   stores: StoreDto[];
   aisleFor: AisleResolver;
@@ -43,28 +41,13 @@ interface DropInput {
   movedIds: readonly string[];
   /** The groceries the dragged key carries; a group files every one of them. */
   movedGroceries: readonly FiledGrocery[];
-  /**
-   * The grocery ids behind each key in `items`, in order: a row is its own
-   * id, a group is its sources' ids, which all take the group's position.
-   */
+  /** The grocery ids behind each key in `items`; a group's sources all take its position. */
   idsOf: (key: string) => readonly string[];
 }
 
 /**
- * What a drop means, in two mutations that stay separate and each idempotent.
- *
- * Sort order is one number per Store, so every row of the target Store — and
- * of the Store the drag left, when that is another — is re-numbered in the
- * order its block shows them: the unfiled area first, then each aisle in the
- * Store's order, rows within an aisle following it. The row that changed
- * Store carries its new Store on the same update.
- *
- * Then the filing. A drop into an aisle of the row's own Store files the name
- * there; a drop into the Store's unfiled area forgets it; a drop into another
- * Store's aisle files it there, after the reorder, so the grocery sits under
- * the Store before its name is taught to it; a drop into another Store's
- * unfiled area, or into `unsorted`, teaches nothing. Only a filing that
- * differs from what the Store remembers is written (ADR-0031).
+ * Renumbers the target Store (and the one left) in its block's order, then files the food where a
+ * drop into an aisle teaches the Store something new (ADR-0031). Two writes, each idempotent.
  */
 export function planDrop(input: DropInput): DropPlan {
   const { items, originContainer, targetContainer, stores, aisleFor, movedGroceries, idsOf } =
@@ -100,9 +83,8 @@ export function planDrop(input: DropInput): DropPlan {
     const seen = new Set<string>();
 
     for (const grocery of movedGroceries) {
-      // One filing per food: a group's sources are mostly one Ingredient. A
-      // grocery added offline has none yet, and is told apart by the key its
-      // name will resolve by ("onions, diced" is "onions").
+      // One filing per food; a line added offline has no Ingredient yet, so its name's food key
+      // stands in ("onions, diced" is "onions").
       const key = grocery.ingredientId ?? `name:${foodKey(grocery.name)}`;
 
       if (!grocery.name?.trim() || seen.has(key)) continue;

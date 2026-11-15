@@ -48,11 +48,7 @@ type StoreDropInput = {
   groups: ReadonlyMap<string | null, GroceryGroup[]> | null;
 };
 
-/**
- * A by-Store drop as web's plan reads it. The rows say only where it landed: the heading above
- * and the rows between; the containers are built from the list as it is now and the row placed
- * after the nearest of those still there, by id. Null puts it back.
- */
+/** A by-Store drop, placed after the nearest row above it still on the list now; null puts it back. */
 export function planStoreDrop({
   drop,
   groceries,

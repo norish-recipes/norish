@@ -67,11 +67,7 @@ export function placeOfContainer(
   return { storeId: containerIdToStoreId(containerId), aisleId: null };
 }
 
-/**
- * A Store's containers in the order its block shows them: the unfiled area
- * first, then every aisle in the Store's order. Sort order is one number per
- * Store, so a drop re-numbers exactly these, in exactly this order.
- */
+/** A Store's containers as its block shows them, unfiled area first: what a drop renumbers. */
 export function storeContainers(storeId: string | null, stores: StoreDto[]): ContainerId[] {
   if (storeId === null) return [UNSORTED_CONTAINER];
   const store = stores.find((candidate) => candidate.id === storeId);
