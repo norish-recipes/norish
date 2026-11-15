@@ -18,24 +18,22 @@ import {
 import { useTRPC } from "../trpc";
 
 /**
- * The aisles as the Store will carry them once the save lands, for the
- * optimistic row: a known aisle keeps its version unless its name or place
- * changed, in which case the server will bump it; a new one starts at 1; and
- * the position in the list is the order (ADR-0031).
+ * The aisles as the Store will carry them once the save lands: a known aisle's
+ * version bumps only for a rename, as the server's does; a new one starts at 1 (ADR-0031).
  */
 function optimisticAisles(storeId: string, input: AisleInput[], before: AisleDto[]): AisleDto[] {
   const known = new Map(before.map((aisle) => [aisle.id, aisle]));
 
   return input.map((aisle, index) => {
     const was = known.get(aisle.id);
-    const changed = was !== undefined && (was.name !== aisle.name || was.sortOrder !== index);
+    const renamed = was !== undefined && was.name !== aisle.name;
 
     return {
       id: aisle.id,
       storeId,
       name: aisle.name,
       sortOrder: index,
-      version: was === undefined ? 1 : was.version + (changed ? 1 : 0),
+      version: was === undefined ? 1 : was.version + (renamed ? 1 : 0),
     };
   });
 }
@@ -93,9 +91,22 @@ export function useStoresMutations(): StoresMutationsResult {
       invalidate();
     },
   });
-  const updateOptions = trpc.stores.update.mutationOptions({ onError: invalidateUnlessQueued });
-  const deleteOptions = trpc.stores.delete.mutationOptions({ onError: invalidate });
-  const reorderOptions = trpc.stores.reorder.mutationOptions({ onError: invalidateUnlessQueued });
+  // A refused write leaves the optimistic row ahead of the server's: read it again.
+  const rereadIfStale = ({ stale }: { stale: boolean }) => {
+    if (stale) invalidate();
+  };
+  const updateOptions = trpc.stores.update.mutationOptions({
+    onSuccess: rereadIfStale,
+    onError: invalidateUnlessQueued,
+  });
+  const deleteOptions = trpc.stores.delete.mutationOptions({
+    onSuccess: rereadIfStale,
+    onError: invalidate,
+  });
+  const reorderOptions = trpc.stores.reorder.mutationOptions({
+    onSuccess: rereadIfStale,
+    onError: invalidateUnlessQueued,
+  });
   const createMutation = useMutation(createOptions);
   const { mutateAsync: mutateCreate } = createMutation;
   const updateMutation = useMutation(updateOptions);
@@ -132,6 +143,8 @@ export function useStoresMutations(): StoresMutationsResult {
         return {
           ...s,
           ...fields,
+          // The server bumps the Store on every edit; holding that keeps the next write current.
+          version: s.version + 1,
           // Absent, the aisles are not part of this save and stay as they are.
           aisles: aisles === undefined ? s.aisles : optimisticAisles(s.id, aisles, s.aisles),
         };
