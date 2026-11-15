@@ -99,9 +99,38 @@ export function useStoresMutations(): StoresMutationsResult {
     onSuccess: rereadIfStale,
     onError: invalidateUnlessQueued,
   });
+  const groceriesKey = trpc.groceries.list.queryKey();
   const deleteOptions = trpc.stores.delete.mutationOptions({
+    // The Store's lines go with it, or to Unsorted at the version the server's move leaves.
+    onMutate: ({ storeId, deleteGroceries }) => {
+      const was = {
+        stores: queryClient.getQueryData<StoresData>(storesKey),
+        groceries: queryClient.getQueryData<GroceriesData>(groceriesKey),
+      };
+
+      setStoresData((prev) => prev?.filter((s) => s.id !== storeId));
+      queryClient.setQueryData<GroceriesData>(groceriesKey, (prev) => {
+        if (!prev) return prev;
+        const kept = deleteGroceries
+          ? prev.groceries.filter((g) => g.storeId !== storeId)
+          : prev.groceries.map((g) =>
+              g.storeId === storeId ? { ...g, storeId: null, version: g.version + 1 } : g
+            );
+
+        return { ...prev, groceries: kept };
+      });
+
+      return was;
+    },
     onSuccess: rereadIfStale,
-    onError: invalidate,
+    onError: (error, _input, was) => {
+      if (shouldPreserveOptimisticUpdate(error)) return;
+      if (was) {
+        queryClient.setQueryData(storesKey, was.stores);
+        queryClient.setQueryData(groceriesKey, was.groceries);
+      }
+      invalidate();
+    },
   });
   const reorderOptions = trpc.stores.reorder.mutationOptions({
     onSuccess: rereadIfStale,
@@ -157,17 +186,9 @@ export function useStoresMutations(): StoresMutationsResult {
   const deleteStore = (storeId: string, deleteGroceries: boolean) => {
     const version = versionOf(heldStores(), storeId);
     // The Store's groceries at the versions this screen holds: the server deletes or moves only those.
-    const grocerySnapshot = (
-      queryClient.getQueryData<GroceriesData>(trpc.groceries.list.queryKey())?.groceries ?? []
-    )
+    const grocerySnapshot = (queryClient.getQueryData<GroceriesData>(groceriesKey)?.groceries ?? [])
       .filter((grocery) => grocery.storeId === storeId)
       .map(({ id, version: groceryVersion }) => ({ id, version: groceryVersion }));
-
-    setStoresData((prev) => {
-      if (!prev) return prev;
-
-      return prev.filter((s) => s.id !== storeId);
-    });
 
     const input: StoreDeleteInput = {
       storeId,

@@ -143,6 +143,74 @@ describe("useStoresMutations", () => {
     expect(queryClient.getQueryState(["stores", "list"])?.isInvalidated).toBe(false);
   });
 
+  const lines = () =>
+    queryClient
+      .getQueryData<{ groceries: Array<{ id: string; version: number; storeId: string | null }> }>(
+        ["groceries", "list"]
+      )
+      ?.groceries.map(({ id, version, storeId }) => [id, storeId, version]);
+
+  it("takes the Store's lines off the list at once when its delete deletes them", async () => {
+    const { result } = render();
+
+    answerLater(sent.delete);
+    act(() => result.current.deleteStore("store-1", true));
+
+    expect(names()).toEqual(["store-2"]);
+    expect(lines()).toEqual([["g3", "store-2", 1]]);
+  });
+
+  it("moves the Store's lines to Unsorted at once when its delete keeps them", async () => {
+    const { result } = render();
+
+    answerLater(sent.delete);
+    act(() => result.current.deleteStore("store-1", false));
+
+    // The server bumps each line it moves; the cache holds the version it will.
+    expect(lines()).toEqual([
+      ["g1", null, 3],
+      ["g2", null, 6],
+      ["g3", "store-2", 1],
+    ]);
+  });
+
+  it("puts the Store and its lines back when the delete fails", async () => {
+    const { result } = render();
+    const answer = answerLater(sent.delete);
+
+    act(() => result.current.deleteStore("store-1", true));
+    await act(async () => answer.reject(new Error("Server error")));
+    await settled();
+
+    expect(names()).toEqual(["store-1", "store-2"]);
+    expect(lines()).toEqual([
+      ["g1", "store-1", 2],
+      ["g2", "store-1", 5],
+      ["g3", "store-2", 1],
+    ]);
+  });
+
+  it("keeps a delete Queued in the Outbox applied, lines and all", async () => {
+    const { result } = render();
+
+    sent.delete.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    act(() => result.current.deleteStore("store-1", true));
+    await settled();
+
+    expect(names()).toEqual(["store-2"]);
+    expect(lines()).toEqual([["g3", "store-2", 1]]);
+  });
+
+  it("reads the Stores again when the server answers a write stale", async () => {
+    const { result } = render();
+
+    sent.update.mockResolvedValueOnce({ success: true, stale: true });
+    act(() => result.current.updateStore({ id: "store-1", name: "Lidl" }));
+    await settled();
+
+    expect(queryClient.getQueryState(["stores", "list"])?.isInvalidated).toBe(true);
+  });
+
   it.each([
     ["update", (m: ReturnType<typeof useStoresMutations>) => m.updateStore({ id: "store-1" })],
     ["delete", (m: ReturnType<typeof useStoresMutations>) => m.deleteStore("store-1", false)],
@@ -159,7 +227,7 @@ describe("useStoresMutations", () => {
 
       act(() => save(result.current));
       act(() => save(result.current));
-      await act(async () => second.resolve(undefined));
+      await act(async () => second.resolve({ success: true, stale: false }));
       await act(async () => first.reject(new Error("Version conflict")));
       await settled();
 
