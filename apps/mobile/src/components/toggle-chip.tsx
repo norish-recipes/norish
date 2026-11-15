@@ -4,7 +4,7 @@ import { Pressable, Text } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
-/** A filter choice in the Filters sheet: a pill that is filled while it applies. */
+/** A choice, such as a filter or a Category: a pill that is filled while it applies. */
 export function ToggleChip({
   label,
   icon,

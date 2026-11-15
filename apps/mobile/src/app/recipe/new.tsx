@@ -1,17 +1,7 @@
 import React from "react";
-import { View } from "react-native";
-import { Stack } from "expo-router";
-import { useIntl } from "react-intl";
+import { RecipeEditorScreen } from "@/features/recipe/screens/recipe-editor-screen";
 
-/** Write it yourself: a placeholder until the Recipe area brings the editor; its name is the header's. */
+/** Write it yourself: the editor on an empty recipe. */
 export default function NewRecipeRoute() {
-  const intl = useIntl();
-
-  return (
-    <View className="bg-background flex-1" testID="new-recipe-placeholder">
-      <Stack.Screen
-        options={{ headerTitle: intl.formatMessage({ id: "navbar.userMenu.newRecipe.title" }) }}
-      />
-    </View>
-  );
+  return <RecipeEditorScreen mode="create" />;
 }

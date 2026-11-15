@@ -253,15 +253,6 @@ function AuthenticatedEffects() {
   return null;
 }
 
-/** A recipe opened from the Library: a transparent header with just the back arrow. */
-const OPENED_SCREEN = {
-  headerShown: true,
-  headerTransparent: true,
-  headerTitle: "",
-  headerShadowVisible: false,
-  headerBackButtonDisplayMode: "minimal",
-} as const;
-
 /** The import sheets as tall as their content; From text's field takes the sheet's height. */
 const FIT_IMPORT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
 
@@ -270,7 +261,7 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="recipe/new" options={OPENED_SCREEN} />
+        <Stack.Screen name="recipe/new" />
         {/* Add recipe and its imports present over whichever tab the accessory was pressed on. */}
         {FIT_IMPORT_SHEETS.map((name) => (
           <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />

@@ -1,0 +1,183 @@
+import type { ComponentRef } from "react";
+import type { TextInput } from "react-native";
+import React, { useRef, useState } from "react";
+import { View } from "react-native";
+import { DragList } from "@/components/drag-list/drag-list";
+import { useIntl } from "react-intl";
+
+import type { IngredientRow, LineMoves, ParsedIngredient } from "@norish/shared-react/recipes";
+import type { MeasurementSystem } from "@norish/shared/contracts";
+import { useUnitsQuery } from "@norish/shared-react/config";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
+import {
+  createIngredientRow,
+  ingredientRowsToLines,
+  isHeadingText,
+  lineMoves,
+  normalizeIngredientRows,
+  parseIngredientRow,
+  removeIngredientRow,
+  seedIngredientRows,
+  typeIngredientRow,
+} from "@norish/shared-react/recipes";
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
+
+import { IngredientIcon } from "../ingredient-icon";
+import { AddRow, DragGrip, EditorInput, RowIconButton } from "./editor-parts";
+import { useFoodsByName } from "./use-foods-by-name";
+
+/**
+ * A row per ingredient line with a grip; `#` starts a section. The trailing empty row to type
+ * into shows on a new recipe or once Add ingredient asks for it.
+ */
+export function IngredientRows({
+  ingredients,
+  systemUsed,
+  onChange,
+  onLinesMoved,
+}: {
+  ingredients: ParsedIngredient[];
+  systemUsed: MeasurementSystem;
+  onChange: (ingredients: ParsedIngredient[]) => void;
+  /** Lines were reordered or removed, so the steps' references can follow them. */
+  onLinesMoved: (moves: LineMoves) => void;
+}) {
+  const intl = useIntl();
+  const { units } = useUnitsQuery();
+  const [rows, setRows] = useState<IngredientRow[]>(() => seedIngredientRows(ingredients));
+  const [seededLength, setSeededLength] = useState(ingredients.length);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [revealedId, setRevealedId] = useState<string | null>(null);
+  const inputsRef = useRef(new Map<string, ComponentRef<typeof TextInput>>());
+
+  // Seeds once when an edit's lines arrive; a later change must not overwrite what is typed.
+  if (ingredients.length !== seededLength) {
+    setSeededLength(ingredients.length);
+    if (ingredients.length > 0 && rows.length === 1 && rows[0]?.text === "") {
+      setRows(seedIngredientRows(ingredients));
+    }
+  }
+
+  const commit = (next: IngredientRow[]) => {
+    const moves = lineMoves(rows, next);
+
+    setRows(next);
+    if (moves) onLinesMoved(moves);
+    onChange(ingredientRowsToLines(next, units, systemUsed));
+  };
+  const trailing = rows.at(-1);
+  const shown = rows.filter(
+    (row) =>
+      row !== trailing ||
+      rows.length === 1 ||
+      row.id === focusedId ||
+      row.id === revealedId ||
+      row.text !== ""
+  );
+  const focusRow = (index: number) => {
+    const next = rows[index];
+
+    if (!next) return;
+    if (next === trailing) setRevealedId(next.id);
+    inputsRef.current.get(next.id)?.focus();
+  };
+  const leaveRow = (index: number) => {
+    setFocusedId(null);
+    // An emptied row other than the trailing one goes, as on web.
+    if (!rows[index]?.text.trim() && index < rows.length - 1)
+      commit(removeIngredientRow(rows, index));
+  };
+
+  const foodNames = rows.map((row, index) => {
+    const name = parseIngredientRow(row, index, units, systemUsed)?.ingredientName ?? "";
+
+    return namesNoFood(name) || isHeadingText(name) ? "" : name;
+  });
+  const foods = useFoodsByName(foodNames);
+
+  useIngredientIcons([...foods.values()]);
+
+  const renderRow = (row: IngredientRow, drag: () => void) => {
+    const index = rows.indexOf(row);
+    const heading = isHeadingText(row.text);
+    const focused = focusedId === row.id;
+
+    return (
+      <View
+        className={`min-h-12 flex-row items-center gap-2.5 py-2 ${index === 0 ? "" : "border-separator border-t"}`}
+        testID={`editor-ingredient-${index}`}
+      >
+        <View className="w-7 items-center">
+          {heading ? null : (
+            <IngredientIcon ingredientId={foods.get(foodNames[index] ?? "") ?? null} />
+          )}
+        </View>
+        <View className="flex-1">
+          <EditorInput
+            ref={(input) => {
+              if (input) inputsRef.current.set(row.id, input);
+              else inputsRef.current.delete(row.id);
+            }}
+            multiline
+            accessibilityLabel={intl.formatMessage({
+              id: heading ? "recipes.editor.sectionHeading" : "recipes.editor.ingredient",
+            })}
+            autoFocus={row.id === revealedId}
+            className={`text-foreground py-0 text-[17px] leading-6 ${heading ? "font-semibold" : ""}`}
+            placeholder={
+              rows.length === 1
+                ? intl.formatMessage({ id: "recipes.ingredientInput.placeholder" })
+                : ""
+            }
+            returnKeyType="next"
+            submitBehavior="submit"
+            testID={`editor-ingredient-input-${index}`}
+            value={row.text}
+            onBlur={() => leaveRow(index)}
+            onChangeText={(text) => commit(typeIngredientRow(rows, index, text))}
+            onFocus={() => setFocusedId(row.id)}
+            onSubmitEditing={() => focusRow(index + 1)}
+          />
+        </View>
+        {focused && row.text !== "" ? (
+          <RowIconButton
+            icon="close-circle"
+            label={intl.formatMessage({ id: "recipes.editor.removeIngredient" })}
+            testID={`editor-ingredient-remove-${index}`}
+            onPress={() => commit(removeIngredientRow(rows, index))}
+          />
+        ) : row.text !== "" ? (
+          <DragGrip
+            label={intl.formatMessage({ id: "recipes.gallery.dragToReorder" })}
+            onDrag={drag}
+          />
+        ) : null}
+      </View>
+    );
+  };
+
+  return (
+    <View>
+      <DragList
+        nested
+        // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
+        keyboardShouldPersistTaps="handled"
+        renderHeading={() => null}
+        renderItem={renderRow}
+        rows={shown.map((row) => ({ kind: "item" as const, key: row.id, value: row }))}
+        onDrop={(drop) => commit(normalizeIngredientRows(drop.rows.map((entry) => entry.value)))}
+      />
+      {shown.includes(trailing!) ? null : (
+        <AddRow
+          label={intl.formatMessage({ id: "recipes.editor.addIngredient" })}
+          testID="editor-add-ingredient"
+          onPress={() => {
+            const last = rows.at(-1) ?? createIngredientRow("");
+
+            setRevealedId(last.id);
+          }}
+        />
+      )}
+    </View>
+  );
+}
