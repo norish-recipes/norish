@@ -45,6 +45,8 @@ export function CalendarScreen() {
   const { days, grow, calendarData, isRead } = useCalendarRangeQuery();
   const { moveItem } = useCalendarMutations();
   const listRef = useRef<FlatList<TimelineRow>>(null);
+  // What the list shows, which a held drop keeps apart from `rows`.
+  const shownRowsRef = useRef<TimelineRow[]>([]);
   const growth = useHeldGrowth(grow);
   // The days a row of which is on screen, for the way back to today.
   const [shownDays, setShownDays] = useState<string[]>([]);
@@ -63,7 +65,11 @@ export function CalendarScreen() {
   const header = (
     <CalendarHeader
       todayDirection={todayShown ? null : (shownDays[0] ?? "") > todayKey ? "up" : "down"}
-      onToday={() => listRef.current?.scrollToIndex({ index: todayIndex, animated: true })}
+      onToday={() => {
+        const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(todayKey));
+
+        if (index >= 0) listRef.current?.scrollToIndex({ index, animated: true });
+      }}
     />
   );
 
@@ -120,6 +126,7 @@ export function CalendarScreen() {
           />
         )}
         rows={rows}
+        shownRef={shownRowsRef}
         testID="calendar-list"
         viewabilityConfig={VIEWABILITY}
         onDrop={(drop) => {

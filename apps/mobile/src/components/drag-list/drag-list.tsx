@@ -1,6 +1,7 @@
-import type { ReactNode, Ref } from "react";
+import type { ReactNode, Ref, RefObject } from "react";
 import type { FlatList } from "react-native";
 import type { ReorderableListProps } from "react-native-reorderable-list";
+import { useEffect } from "react";
 import { useReducedMotion } from "react-native-reanimated";
 import ReorderableList, {
   NestedReorderableList,
@@ -46,6 +47,8 @@ type DragListProps<H, T> = Omit<
   /** Laid out at full height inside a `DragScrollView`, which scrolls instead. */
   nested?: boolean;
   ref?: Ref<FlatList<DragRow<H, T>>>;
+  /** Holds the rows shown, which a scroll by index counts in. */
+  shownRef?: RefObject<DragRow<H, T>[]>;
 };
 
 // A module constant keeps the library from rebuilding its drag handlers each render.
@@ -71,12 +74,17 @@ export function DragList<H, T>({
   onDrop,
   onHeldChange,
   nested = false,
+  shownRef,
   ...rest
 }: DragListProps<H, T>) {
   const reduceMotion = useReducedMotion();
   const List = nested ? NestedReorderableList : ReorderableList;
   const held = useHeldRows(rows, onDrop);
   const events = useDragEvents(held, onHeldChange);
+
+  useEffect(() => {
+    if (shownRef) shownRef.current = held.shown;
+  });
 
   return (
     <List
