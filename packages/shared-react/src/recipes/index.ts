@@ -116,3 +116,4 @@ export {
   resolveCookingModeSteps,
   type ResolvedCookingModeStep,
 } from "./cooking-mode-steps";
+export { useUnsavedNavigationGuard } from "./use-unsaved-navigation-guard";
