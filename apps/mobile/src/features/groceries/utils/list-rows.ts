@@ -12,8 +12,8 @@ import {
 } from "@norish/shared-react/groceries";
 import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 
-/** Which corners of its section's card a row rounds: the heading the top, the last row the bottom. */
-export type Edge = { top: boolean; bottom: boolean };
+import type { Edge } from "../components/card-edges";
+import { edgeAt } from "../components/card-edges";
 
 export type Heading =
   | {
@@ -62,7 +62,7 @@ const groupRow = (group: GroceryGroup, store: StoreDto | null): DragRow<Heading,
 /** A section's rows with the card's corners set: the first rounds the top, the last the bottom. */
 function sealed(rows: DragRow<Heading, Item>[]): ListRow[] {
   return rows.map((row, index): ListRow => {
-    const edge = { top: index === 0, bottom: index === rows.length - 1 };
+    const edge = edgeAt(index, rows.length);
 
     if (row.kind === "heading") return { ...row, value: { ...row.value, edge } };
 
