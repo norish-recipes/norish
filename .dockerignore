@@ -52,7 +52,7 @@ packages/ui/dist
 tooling/**/dist
 
 # Mobile app
-apps/mobile/**
+apps/mobile
 
 # Community app references
 apps/quick-import-extension/**
