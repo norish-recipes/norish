@@ -6,7 +6,7 @@ import type {
 } from "@dnd-kit/core";
 import { useEffect, useRef, useState } from "react";
 import { KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import type {
   AisleResolver,
@@ -16,7 +16,12 @@ import type {
   ReorderUpdate,
 } from "@norish/shared-react/groceries";
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
-import { findContainerForItem, planDrop } from "@norish/shared-react/groceries";
+import {
+  findContainerForItem,
+  moveKey,
+  planListDrop,
+  writeDrop,
+} from "@norish/shared-react/groceries";
 
 import { createMultiContainerCollisionDetection } from "./collision-detection";
 
@@ -129,10 +134,7 @@ export function useListDnd({
 
         return {
           ...was,
-          items: {
-            ...was.items,
-            [activeContainer]: arrayMove(activeItems, activeIndex, overIndex),
-          },
+          items: moveKey(was.items, key, activeContainer, activeContainer, overIndex),
         };
       }
 
@@ -148,14 +150,7 @@ export function useListDnd({
 
       recentlyMovedToNewContainerRef.current = true;
 
-      return {
-        ...was,
-        items: {
-          ...was.items,
-          [activeContainer]: activeItems.filter((item) => item !== key),
-          [overContainer]: [...overItems.slice(0, newIndex), key, ...overItems.slice(newIndex)],
-        },
-      };
+      return { ...was, items: moveKey(was.items, key, activeContainer, overContainer, newIndex) };
     });
   };
 
@@ -165,25 +160,18 @@ export function useListDnd({
     const key = active.id as string;
     const target = findContainer(key);
     const origin = arranged?.origin;
-    const lines = linesOf(key);
-    const { updates, filings } =
-      over != null && target && origin && lines.length > 0
-        ? planDrop({
-            items: current,
-            originContainer: origin,
-            targetContainer: target,
-            stores,
-            aisleFor,
-            movedIds: lines.map((grocery) => grocery.id),
-            movedGroceries: lines,
-            idsOf: (other) => linesOf(other).map((grocery) => grocery.id),
-          })
-        : { updates: [], filings: [] };
+    const wrote =
+      over != null &&
+      target !== undefined &&
+      !!origin &&
+      writeDrop(
+        planListDrop({ items: current, key, origin, target, stores, aisleFor, linesOf }),
+        onReorder,
+        onFileGroceryName
+      );
 
-    if (updates.length > 0) onReorder(updates);
-    for (const filing of filings) onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
     // A drop that writes nothing brings no list back, so the Stores read their own rows now.
-    if (updates.length === 0 && filings.length === 0) setArranged(null);
+    if (!wrote) setArranged(null);
     setActiveId(null);
     setOverContainerId(null);
   };

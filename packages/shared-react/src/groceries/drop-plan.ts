@@ -1,7 +1,13 @@
 import type { StoreDto } from "@norish/shared/contracts";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
-import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./drop-containers";
+import type {
+  AisleResolver,
+  ContainerId,
+  FileGroceryName,
+  ItemsState,
+  ReorderUpdate,
+} from "./drop-containers";
 import { placeOfContainer, storeContainers } from "./drop-containers";
 
 /** A grocery as a drop files it: its name, and the Ingredient that is filed. */
@@ -108,4 +114,59 @@ export function planDrop(input: DropInput): DropPlan {
   }
 
   return { updates: [...updates.values()], filings };
+}
+
+/** `items` with `key` taken out of `from` and put into `to` at `index`, counted without it. */
+export function moveKey(
+  items: ItemsState,
+  key: string,
+  from: ContainerId,
+  to: ContainerId,
+  index: number
+): ItemsState {
+  const left = (items[from] ?? []).filter((other) => other !== key);
+  const into = from === to ? left : (items[to] ?? []);
+
+  return { ...items, [from]: left, [to]: [...into.slice(0, index), key, ...into.slice(index)] };
+}
+
+interface ListDropInput {
+  /** The containers as the drop left them. */
+  items: ItemsState;
+  /** The dragged key: a row's id, or a group's key. */
+  key: string;
+  origin: ContainerId;
+  target: ContainerId;
+  stores: StoreDto[];
+  aisleFor: AisleResolver;
+  /** The groceries a key stands for: one row, or a group's lines. */
+  linesOf: (key: string) => readonly (FiledGrocery & { id: string })[];
+}
+
+/** `planDrop` for a list keyed by row or group: a key that stands for no grocery plans nothing. */
+export function planListDrop({ key, linesOf, origin, target, ...list }: ListDropInput): DropPlan {
+  const lines = linesOf(key);
+
+  if (lines.length === 0) return { updates: [], filings: [] };
+
+  return planDrop({
+    ...list,
+    originContainer: origin,
+    targetContainer: target,
+    movedIds: lines.map((grocery) => grocery.id),
+    movedGroceries: lines,
+    idsOf: (other) => linesOf(other).map((grocery) => grocery.id),
+  });
+}
+
+/** Sends a plan: the reorder first, then each filing. False when it holds nothing to write. */
+export function writeDrop(
+  { updates, filings }: DropPlan,
+  onReorder: (updates: ReorderUpdate[]) => void,
+  onFileGroceryName: FileGroceryName
+): boolean {
+  if (updates.length > 0) onReorder(updates);
+  for (const filing of filings) onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
+
+  return updates.length > 0 || filings.length > 0;
 }

@@ -16,7 +16,7 @@ export {
   storeItems,
   UNSORTED_CONTAINER,
 } from "./drop-containers";
-export { planDrop } from "./drop-plan";
+export { moveKey, planDrop, planListDrop, writeDrop } from "./drop-plan";
 export type { RecipeGroceries } from "./group-by-recipe";
 export { groupGroceriesByRecipe } from "./group-by-recipe";
 export type { PickedFood } from "./types";

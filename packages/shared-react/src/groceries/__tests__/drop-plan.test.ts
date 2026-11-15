@@ -2,12 +2,12 @@
  * What a drop means: a per-Store renumbering, and what it teaches the Store.
  * The drag itself is dnd-kit's; this is the one place its outcome is decided.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { StoreDto } from "@norish/shared/contracts";
 
 import { aisleContainerId, UNSORTED_CONTAINER } from "../drop-containers";
-import { planDrop } from "../drop-plan";
+import { moveKey, planDrop, planListDrop, writeDrop } from "../drop-plan";
 
 const MARKT = "store-markt";
 const BAKKER = "store-bakker";
@@ -247,5 +247,86 @@ describe("planDrop", () => {
     expect(plan.filings).toEqual([
       { storeId: MARKT, grocery: grocery("melk", null), aisleId: ZUIVEL },
     ]);
+  });
+});
+
+describe("moveKey", () => {
+  it("moves a key within its container as arrayMove does", () => {
+    expect(moveKey({ a: ["x", "y", "z"] }, "x", "a", "a", 2)).toEqual({ a: ["y", "z", "x"] });
+  });
+
+  it("moves a key into another container at an index", () => {
+    expect(moveKey({ a: ["x", "y"], b: ["z"] }, "x", "a", "b", 1)).toEqual({
+      a: ["y"],
+      b: ["z", "x"],
+    });
+  });
+});
+
+describe("planListDrop", () => {
+  const lines: Record<string, { id: string; name: string; ingredientId: string }[]> = {
+    melk: [{ id: "melk", name: "melk", ingredientId: "i-melk" }],
+    group: [
+      { id: "kaas-1", name: "kaas", ingredientId: "i-kaas" },
+      { id: "kaas-2", name: "kaas", ingredientId: "i-kaas" },
+    ],
+  };
+  const linesOf = (key: string) => lines[key] ?? [];
+
+  it("moves a group's every line to its place and files its food once", () => {
+    const plan = planListDrop({
+      items: { [UNSORTED_CONTAINER]: [], [BAKKER]: ["group"], [aisleContainerId(BROOD)]: [] },
+      key: "group",
+      origin: UNSORTED_CONTAINER,
+      target: BAKKER,
+      stores: STORES,
+      aisleFor,
+      linesOf,
+    });
+
+    expect(plan.updates).toEqual([
+      { id: "kaas-1", sortOrder: 0, storeId: BAKKER },
+      { id: "kaas-2", sortOrder: 0, storeId: BAKKER },
+    ]);
+    // Another Store's unfiled area teaches it nothing.
+    expect(plan.filings).toEqual([]);
+  });
+
+  it("plans nothing for a key that stands for no grocery", () => {
+    expect(
+      planListDrop({
+        items: { [MARKT]: ["gone"] },
+        key: "gone",
+        origin: MARKT,
+        target: MARKT,
+        stores: STORES,
+        aisleFor,
+        linesOf,
+      })
+    ).toEqual({ updates: [], filings: [] });
+  });
+});
+
+describe("writeDrop", () => {
+  it("sends the reorder before the filings and says it wrote", () => {
+    const calls: string[] = [];
+    const wrote = writeDrop(
+      {
+        updates: [{ id: "melk", sortOrder: 0 }],
+        filings: [{ storeId: MARKT, grocery: grocery("melk"), aisleId: ZUIVEL }],
+      },
+      () => calls.push("reorder"),
+      () => calls.push("file")
+    );
+
+    expect(wrote).toBe(true);
+    expect(calls).toEqual(["reorder", "file"]);
+  });
+
+  it("writes nothing for an empty plan", () => {
+    const onReorder = vi.fn();
+
+    expect(writeDrop({ updates: [], filings: [] }, onReorder, vi.fn())).toBe(false);
+    expect(onReorder).not.toHaveBeenCalled();
   });
 });
