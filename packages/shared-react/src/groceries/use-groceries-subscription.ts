@@ -138,7 +138,7 @@ export function useGroceriesSubscription() {
     },
   });
 
-  // The failing member alone hears about a validation failure (scope `user`).
+  // A write of this member that failed outside the app, such as through the API (scope `user`).
   useRealtimeSubscription<Payload<"failed">>(trpc.groceries.onFailed, {
     ...live,
     onEvent: (payload) => {

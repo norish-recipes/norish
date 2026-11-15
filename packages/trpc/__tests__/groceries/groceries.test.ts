@@ -15,6 +15,7 @@ import {
   markGroceryUndoneProcedure,
 } from "../../src/routers/groceries/groceries";
 import { createGroceriesData } from "../../src/routers/groceries/groceries-helpers";
+import { recurringGroceriesProcedures } from "../../src/routers/groceries/recurring";
 import { router } from "../../src/trpc";
 import { createMockCallerContext } from "../calendar/test-utils";
 // Import mocks for assertions
@@ -38,7 +39,10 @@ import { resolveGroceryNames } from "../mocks/ingredient-groceries";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
-import { listRecurringGroceriesByUsers } from "../mocks/recurring-groceries";
+import {
+  createRecurringGroceries,
+  listRecurringGroceriesByUsers,
+} from "../mocks/recurring-groceries";
 // Import test utilities
 import {
   createMockAuthedContext,
@@ -1165,8 +1169,31 @@ describe("a grocery write answers whether it was refused as stale", () => {
       deleteDoneInStore.mockRejectedValue(new Error("database down"));
 
       await expect(write()).rejects.toThrow();
+      // The app's own client toasts the rejection; a `failed` event would toast it twice.
+      expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+        userId: ctx.user.id,
+      });
     }
   );
+
+  it("createRecurring rejects a failed write without a second toast", async () => {
+    createRecurringGroceries.mockRejectedValue(new Error("database down"));
+
+    await expect(
+      recurringGroceriesProcedures.createCaller(createMockCallerContext(ctx)).createRecurring({
+        name: "Milk",
+        amount: 1,
+        unit: null,
+        recurrenceRule: "week",
+        recurrenceInterval: 1,
+        recurrenceWeekday: null,
+        nextPlannedFor: "2026-11-16",
+      })
+    ).rejects.toThrow();
+    expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+      userId: ctx.user.id,
+    });
+  });
 
   const deletes = ["delete", "deleteDone"];
 

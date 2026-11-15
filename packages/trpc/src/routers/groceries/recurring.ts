@@ -172,13 +172,6 @@ const createRecurring = authedProcedure
       return { ...first, shifted: made.shifted };
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create recurring grocery");
-      void groceries.publish(
-        "failed",
-        {
-          reason: "Failed to create recurring grocery",
-        },
-        { userId: ctx.user.id }
-      );
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to create recurring grocery",
@@ -315,13 +308,6 @@ const updateRecurring = authedProcedure
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to update recurring grocery"
         );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to update recurring grocery",
-          },
-          { userId: ctx.user.id }
-        );
         throw err;
       });
   });
@@ -424,13 +410,6 @@ const detachRecurring = authedProcedure
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to detach recurring grocery"
         );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to detach recurring grocery",
-          },
-          { userId: ctx.user.id }
-        );
         throw err;
       });
   });
@@ -501,13 +480,6 @@ const deleteRecurring = authedProcedure
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to delete recurring grocery"
-        );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to delete recurring grocery",
-          },
-          { userId: ctx.user.id }
         );
         throw err;
       });
@@ -615,13 +587,6 @@ const checkRecurring = authedProcedure
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to check recurring grocery"
-        );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to check recurring grocery",
-          },
-          { userId: ctx.user.id }
         );
         throw err;
       });

@@ -971,6 +971,10 @@ describe("a failed repeat edit rejects, so Replay parks it", () => {
     getRecurringGroceryOwnerId.mockResolvedValue(null);
 
     await expect(write()).rejects.toThrow("Recurring grocery not found");
+    // The app's own client toasts the rejection; a `failed` event would toast it twice.
+    expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+      userId: ctx.user.id,
+    });
   });
 });
 

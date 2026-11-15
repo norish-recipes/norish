@@ -67,13 +67,6 @@ const create = authedProcedure
       return result;
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create groceries");
-      void groceries.publish(
-        "failed",
-        {
-          reason: "Failed to create grocery items",
-        },
-        { userId: ctx.user.id }
-      );
       throw err;
     }
   });
@@ -187,13 +180,6 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
     })
     .catch((err) => {
       log.error({ err, userId: ctx.user.id, groceryId }, "Failed to update grocery");
-      void groceries.publish(
-        "failed",
-        {
-          reason: err.message || "Failed to update grocery",
-        },
-        { userId: ctx.user.id }
-      );
       throw err;
     });
 });
@@ -207,13 +193,6 @@ const toggle = authedProcedure.input(GroceryToggleSchema).mutation(async ({ ctx,
     const groceryIds = input.groceries.map((grocery) => grocery.id);
 
     log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to toggle groceries");
-    void groceries.publish(
-      "failed",
-      {
-        reason: err instanceof Error ? err.message : "Failed to update groceries",
-      },
-      { userId: ctx.user.id }
-    );
     throw err;
   }
 });
@@ -229,13 +208,6 @@ const deleteGroceries = authedProcedure
       const groceryIds = input.groceries.map((grocery) => grocery.id);
 
       log.error({ err, userId: ctx.user.id, groceryIds }, "Failed to delete groceries");
-      void groceries.publish(
-        "failed",
-        {
-          reason: err instanceof Error ? err.message : "Failed to delete groceries",
-        },
-        { userId: ctx.user.id }
-      );
       throw err;
     }
   });
@@ -476,13 +448,6 @@ const assignToStore = authedProcedure
         { err, userId: ctx.user.id, groceryId: input.groceryId, storeId: input.storeId },
         "Failed to assign grocery to store"
       );
-      void groceries.publish(
-        "failed",
-        {
-          reason: err instanceof Error ? err.message : "Failed to assign grocery to store",
-        },
-        { userId: ctx.user.id }
-      );
       throw err;
     }
   });
@@ -602,13 +567,6 @@ const reorderInStore = authedProcedure
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, updates }, "Failed to reorder groceries");
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to reorder groceries",
-          },
-          { userId: ctx.user.id }
-        );
         throw err;
       });
   });
@@ -651,13 +609,6 @@ const markAllDone = authedProcedure
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to mark groceries as done");
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to mark groceries as done",
-          },
-          { userId: ctx.user.id }
-        );
         throw err;
       });
   });
@@ -702,13 +653,6 @@ const deleteDone = authedProcedure
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete done groceries");
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to delete done groceries",
-          },
-          { userId: ctx.user.id }
-        );
         throw err;
       });
   });

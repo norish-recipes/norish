@@ -338,6 +338,27 @@ describe("useGroceriesMutations", () => {
       expect(list()?.groceries[0]).toMatchObject({ id: "g1", isDone: false, version: 3 });
     });
 
+    it.each([
+      ["toggle", (m: ReturnType<typeof useGroceriesMutations>) => m.toggleGroceries(["g1"], true)],
+      ["delete", (m: ReturnType<typeof useGroceriesMutations>) => m.deleteGroceries(["g1"])],
+    ] as const)("a %s the server refused toasts once", async (path, write) => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData([createMockGrocery({ id: "g1", version: 3 })], [])
+      );
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      _mockMutations[path].mockRejectedValueOnce(new Error("database down"));
+      act(() => write(result.current));
+      await settled();
+
+      // The server sends no `failed` event for the app's own writes, so this is the only toast.
+      expect(adapter.showError).toHaveBeenCalledTimes(1);
+      expect(list()?.groceries[0]).toMatchObject({ id: "g1", version: 3 });
+    });
+
     it("rolls back two saves that overlap and both fail, in the order they were sent", async () => {
       const before = createMockGroceriesData(
         [
