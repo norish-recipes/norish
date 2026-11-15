@@ -1,5 +1,5 @@
 import type { FlatList, FlatListProps } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DayCardSkeleton } from "@/components/day-card";
@@ -14,6 +14,7 @@ import { useToday } from "@norish/shared-react/reader";
 import type { TimelineRow } from "../utils/timeline-rows";
 import { CalendarHeader } from "../components/calendar-header";
 import { DayHeadingRow, PlannedItemRow, SlotLabelRow } from "../components/timeline-row";
+import { useCalendarLinkArrivals } from "../hooks/use-calendar-link-arrivals";
 import { useHeldGrowth } from "../hooks/use-held-growth";
 import {
   dayRowKey,
@@ -66,13 +67,12 @@ export function CalendarScreen() {
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
   const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
 
-  // A link to another day while the timeline is open scrolls to it.
-  useEffect(() => {
-    if (!day) return;
-    const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(day));
+  // A link while the timeline is open scrolls to its day, every time it is tapped.
+  useCalendarLinkArrivals((linked) => {
+    const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(linked));
 
     if (index >= 0) listRef.current?.scrollToIndex({ index, animated: false });
-  }, [day]);
+  });
 
   const header = (
     <CalendarHeader
