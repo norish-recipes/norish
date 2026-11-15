@@ -3,13 +3,14 @@
  * else the server's answer for the settled name, and null while that answer is on its way.
  */
 import type { ReactNode } from "react";
-import { useIngredientFor } from "@/features/groceries/hooks/use-ingredient-for";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
+
+import { useIngredientFor } from "../use-ingredient-for";
 
 const OWN = "11111111-1111-4111-8111-111111111111";
 const FOUND = "22222222-2222-4222-8222-222222222222";

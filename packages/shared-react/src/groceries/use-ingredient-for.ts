@@ -1,8 +1,7 @@
-"use client";
-
-import { useSpellingRules } from "@norish/shared-react/config";
-import { useIngredientsNamed } from "@norish/shared-react/ingredients";
 import { sameFood } from "@norish/shared/lib/spelling-keys";
+
+import { useSpellingRules } from "../config";
+import { useIngredientsNamed } from "../ingredients";
 
 /**
  * The Ingredient a grocery panel's name stands for (ADR-0037): the grocery's own while the name is

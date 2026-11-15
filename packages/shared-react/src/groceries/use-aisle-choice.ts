@@ -1,9 +1,8 @@
-"use client";
-
 import { useCallback, useState } from "react";
 
 import type { StoreDto } from "@norish/shared/contracts";
-import { useAisleFor, useFileGroceryName } from "@norish/shared-react/groceries";
+
+import { useAisleFor, useFileGroceryName } from "./use-store-aisles";
 
 /**
  * Which aisle a grocery's name is filed under, as the grocery panel holds it.

@@ -3,14 +3,17 @@
 import { useRef, useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useAisleChoice } from "@/features/groceries/hooks/use-aisle-choice";
 import { useProductChoice } from "@/features/groceries/hooks/use-product-choice";
 import { Input } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
-import { useGroceryFormState, useRecurrenceDetection } from "@norish/shared-react/groceries";
+import {
+  useAisleChoice,
+  useGroceryFormState,
+  useRecurrenceDetection,
+} from "@norish/shared-react/groceries";
 
 import { AisleSelector } from "./aisle-selector";
 import { GroceryProductField } from "./grocery-product-field";

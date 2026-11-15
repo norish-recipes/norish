@@ -5,6 +5,7 @@ export { groupGroceriesByRecipe } from "./group-by-recipe";
 export type { PickedFood } from "./types";
 
 export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
+export { useAisleChoice } from "./use-aisle-choice";
 export { useAddAtOnce } from "./use-add-at-once";
 export { useGroceriesMutations } from "./use-groceries-mutations";
 export {
@@ -22,12 +23,14 @@ export { useGroceriesSubscription } from "./use-groceries-subscription";
 export { useGroceriesUiStore } from "./use-groceries-ui-store";
 export type { GroceryPrice } from "./use-grocery-price";
 export { priceOfLink, useGroceryPrice } from "./use-grocery-price";
+export { useIngredientFor } from "./use-ingredient-for";
 export { useGroceryFormState } from "./use-grocery-form-state";
 export { useLineSelection } from "./use-line-selection";
 export type { ScaledFood } from "./use-lines-to-buy";
 export type { GroceryLineControls } from "./use-grocery-lines";
 export { useGroceryLines } from "./use-grocery-lines";
 export { useLinesToBuy } from "./use-lines-to-buy";
+export { useParsedGroceryName } from "./use-parsed-grocery-name";
 export { usePantryMutations } from "./use-pantry-mutations";
 export { usePantryItem, usePantryQuery } from "./use-pantry-query";
 export { usePantrySubscription } from "./use-pantry-subscription";
@@ -47,6 +50,7 @@ export {
   useStorePrices,
   useStorePricesSubscription,
 } from "./use-store-prices";
+export { useSettledName } from "./use-settled-name";
 export { useStoreTotal } from "./use-store-total";
 export { useStoresMutations } from "./use-stores-mutations";
 export { useStoreGroceryCount, useStoresQuery } from "./use-stores-query";

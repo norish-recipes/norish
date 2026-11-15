@@ -112,7 +112,7 @@ function linkOnTheList(storeId: string | null, ingredientId: string | null | und
     : null;
 }
 
-vi.mock("@/features/groceries/hooks/use-parsed-grocery-name", () => ({
+vi.mock("../../../../../packages/shared-react/src/groceries/use-parsed-grocery-name", () => ({
   useParsedGroceryName: (raw: string) => raw.trim(),
 }));
 
@@ -120,13 +120,21 @@ vi.mock("@/features/groceries/hooks/use-parsed-grocery-name", () => ({
 const AISLE_LINKS: Record<string, string> = { "store-c|i-cola": "aisle-frisdrank" };
 const fileGroceryName = vi.fn();
 
+// The aisle hooks read these where they live, so the package's own copy of them is what is faked.
+vi.mock(
+  "../../../../../packages/shared-react/src/groceries/use-store-aisles",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    useAisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
+      AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,
+    useFileGroceryName: () => fileGroceryName,
+  })
+);
+
 vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useRecurrenceDetection: () => ({ detectedPattern: null }),
   useLinkFor: linkOnTheList,
-  useAisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
-    AISLE_LINKS[`${storeId}|${ingredientId}`] ?? null,
-  useFileGroceryName: () => fileGroceryName,
   useChooseProduct: () => chooseProduct,
   useShopSearch: () => ({ data: undefined, isPending: true, isFetching: false }),
   useStoreProducts: (storeId: string | null, enabled: boolean) => ({

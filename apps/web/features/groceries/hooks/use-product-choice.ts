@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import type { StoreDto, StoreProductChoice } from "@norish/shared/contracts";
-import { useChooseProduct, useLinkFor, useProductLink } from "@norish/shared-react/groceries";
+import {
+  useChooseProduct,
+  useIngredientFor,
+  useLinkFor,
+  useParsedGroceryName,
+  useProductLink,
+  useSettledName,
+} from "@norish/shared-react/groceries";
 import { isPendingLink } from "@norish/shared/lib/product-link";
-
-import { useIngredientFor } from "./use-ingredient-for";
-import { useParsedGroceryName } from "./use-parsed-grocery-name";
-
-/** How long a shopper stops typing a grocery's name before its food and link are read. */
-const LOOKUP_DEBOUNCE_MS = 400;
 
 /**
  * Which of a shop's products a Grocery is, as the grocery panel holds it.
@@ -56,18 +57,7 @@ export function useProductChoice(options: {
   );
   const chooseProduct = useChooseProduct();
   const groceryName = useParsedGroceryName(itemName);
-  const [settledName, setSettledName] = useState(groceryName);
-
-  // A name is not looked up once per keystroke, so what is typed waits for the
-  // typing to stop; an emptied field asks nothing and settles at once.
-  if (groceryName === "" && settledName !== "") setSettledName("");
-
-  useEffect(() => {
-    if (groceryName === settledName) return;
-    const timer = setTimeout(() => setSettledName(groceryName), LOOKUP_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [groceryName, settledName]);
+  const settledName = useSettledName(groceryName);
 
   const ingredientId = useIngredientFor(groceryName, settledName, options.grocery);
   const store = stores.find((candidate) => candidate.id === selectedStoreId) ?? null;

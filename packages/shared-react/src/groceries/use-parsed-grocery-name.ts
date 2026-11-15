@@ -1,9 +1,8 @@
-"use client";
-
 import { useMemo } from "react";
 
-import { useUnitsQuery } from "@norish/shared-react/config";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+
+import { useUnitsQuery } from "../config";
 
 /**
  * The grocery's name as the server will store it. The Product Link is keyed by
