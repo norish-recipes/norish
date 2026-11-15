@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "Днес",
-    "scrollToToday": "Към днес"
+    "scrollToToday": "Към днес",
+    "planRecipe": "Планирай рецепта"
   },
   "today": {
     "openRecipe": "Отвори рецептата",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "Търсете рецепти или добавете бележка",
     "random": "Случайна рецепта",
     "planThisRecipe": "Планирай тази рецепта",
-    "planOnDay": "Планирай {name} за {day}"
+    "planOnDay": "Планирай {name} за {day}",
+    "addToDay": "Добави към {day}"
   },
   "caldav": {
     "syncStarted": "Синхронизацията с CalDAV започна",

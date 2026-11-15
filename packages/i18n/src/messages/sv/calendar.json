@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "Idag",
-    "scrollToToday": "Gå till idag"
+    "scrollToToday": "Gå till idag",
+    "planRecipe": "Planera recept"
   },
   "today": {
     "openRecipe": "Öppna recept",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "Sök recept eller lägg till en anteckning",
     "random": "Slumpmässigt recept",
     "planThisRecipe": "Planera det här receptet",
-    "planOnDay": "Planera {name} på {day}"
+    "planOnDay": "Planera {name} på {day}",
+    "addToDay": "Lägg till på {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startad",

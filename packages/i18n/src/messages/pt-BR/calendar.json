@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "Hoje",
-    "scrollToToday": "Ir para hoje"
+    "scrollToToday": "Ir para hoje",
+    "planRecipe": "Planejar receita"
   },
   "today": {
     "openRecipe": "Abrir receita",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "Busque receitas ou adicione uma nota",
     "random": "Receita aleatória",
     "planThisRecipe": "Planejar esta receita",
-    "planOnDay": "Planejar {name} em {day}"
+    "planOnDay": "Planejar {name} em {day}",
+    "addToDay": "Adicionar a {day}"
   },
   "caldav": {
     "syncStarted": "Sincronização CalDAV iniciada",

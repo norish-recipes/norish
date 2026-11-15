@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "Tänään",
-    "scrollToToday": "Siirry tähän päivään"
+    "scrollToToday": "Siirry tähän päivään",
+    "planRecipe": "Suunnittele resepti"
   },
   "today": {
     "openRecipe": "Avaa resepti",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "Hae reseptejä tai lisää muistiinpano",
     "random": "Satunnainen resepti",
     "planThisRecipe": "Suunnittele tämä resepti",
-    "planOnDay": "Suunnittele {name} päivälle {day}"
+    "planOnDay": "Suunnittele {name} päivälle {day}",
+    "addToDay": "Lisää päivälle {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronointi aloitettu",

@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "I dag",
-    "scrollToToday": "Gå til i dag"
+    "scrollToToday": "Gå til i dag",
+    "planRecipe": "Planlæg opskrift"
   },
   "today": {
     "openRecipe": "Åbn opskrift",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "Søg efter opskrifter eller tilføj en note",
     "random": "Tilfældig opskrift",
     "planThisRecipe": "Planlæg denne opskrift",
-    "planOnDay": "Planlæg {name} på {day}"
+    "planOnDay": "Planlæg {name} på {day}",
+    "addToDay": "Tilføj til {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synkronisering startet",

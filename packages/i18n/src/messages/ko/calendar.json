@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "오늘",
-    "scrollToToday": "오늘로 이동"
+    "scrollToToday": "오늘로 이동",
+    "planRecipe": "레시피 계획"
   },
   "today": {
     "openRecipe": "레시피 열기",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "레시피를 검색하거나 메모를 추가하세요",
     "random": "무작위 레시피",
     "planThisRecipe": "이 레시피 계획하기",
-    "planOnDay": "{day}에 {name} 계획하기"
+    "planOnDay": "{day}에 {name} 계획하기",
+    "addToDay": "{day}에 추가"
   },
   "caldav": {
     "syncStarted": "CalDAV 동기화 시작됨",

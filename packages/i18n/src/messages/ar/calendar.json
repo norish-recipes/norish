@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "اليوم",
-    "scrollToToday": "الانتقال إلى اليوم"
+    "scrollToToday": "الانتقال إلى اليوم",
+    "planRecipe": "خطط لوصفة"
   },
   "today": {
     "openRecipe": "فتح الوصفة",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "ابحث عن وصفات أو أضف ملاحظة",
     "random": "وصفة عشوائية",
     "planThisRecipe": "تخطيط هذه الوصفة",
-    "planOnDay": "تخطيط {name} ليوم {day}"
+    "planOnDay": "تخطيط {name} ليوم {day}",
+    "addToDay": "إضافة إلى {day}"
   },
   "caldav": {
     "syncStarted": "بدأت مزامنة CalDAV",

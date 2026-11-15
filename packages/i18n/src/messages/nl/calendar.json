@@ -4,7 +4,8 @@
   },
   "mobile": {
     "today": "Vandaag",
-    "scrollToToday": "Ga naar vandaag"
+    "scrollToToday": "Ga naar vandaag",
+    "planRecipe": "Recept plannen"
   },
   "today": {
     "openRecipe": "Recept openen",
@@ -58,7 +59,8 @@
     "searchOrAddNote": "Zoek recepten of voeg een notitie toe",
     "random": "Willekeurig recept",
     "planThisRecipe": "Dit recept plannen",
-    "planOnDay": "{name} plannen op {day}"
+    "planOnDay": "{name} plannen op {day}",
+    "addToDay": "Toevoegen aan {day}"
   },
   "caldav": {
     "syncStarted": "CalDAV-synchronisatie gestart",
