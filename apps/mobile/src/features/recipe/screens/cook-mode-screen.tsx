@@ -8,11 +8,11 @@ import {
 } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
+import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerImage } from "@/lib/network/server-url";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useDevicePreference } from "@norish/shared-react/reader";
@@ -23,7 +23,6 @@ import {
   useRecipePageStore,
   useRecipeQuery,
 } from "@norish/shared-react/recipes";
-import { isBuiltInCategory } from "@norish/shared/lib/categories";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
@@ -38,19 +37,13 @@ import { TintContext } from "../components/tint";
 import { dishTint } from "../utils/dish-tint";
 
 function CookHeader({ onClose }: { onClose: () => void }) {
-  const intl = useIntl();
+  const categoryLabel = useCategoryLabel();
   const recipe = useLoadedPageRecipe();
   const toImage = useServerImage();
   const { top } = useSafeAreaInsets();
   const image = primaryRecipeImage(recipe);
   const subtitle = [
-    recipe.categories
-      .map((name) =>
-        isBuiltInCategory(name)
-          ? intl.formatMessage({ id: `recipes.form.category.${name.toLowerCase()}` })
-          : name
-      )
-      .join(", "),
+    recipe.categories.map(categoryLabel).join(", "),
     recipe.totalMinutes ? formatMinutesHM(recipe.totalMinutes) : "",
   ]
     .filter(Boolean)

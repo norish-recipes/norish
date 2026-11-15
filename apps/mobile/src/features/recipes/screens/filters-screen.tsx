@@ -3,17 +3,17 @@ import { Pressable, Text, View } from "react-native";
 import { Sheet, SheetScrollView } from "@/components/sheet";
 import { ToggleChip } from "@/components/toggle-chip";
 import { FilterSection } from "@/features/recipes/components/filter-section";
+import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { Button, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { FilterMode, RecipeCategory } from "@norish/shared/contracts";
+import type { FilterMode } from "@norish/shared/contracts";
 import { useCategoriesQuery, useTagsQuery } from "@norish/shared-react/config";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { COOKING_TIME_OPTIONS, useFiltersDraft } from "@norish/shared-react/recipes";
-import { isBuiltInCategory } from "@norish/shared/lib/categories";
 
 const MODES: { value: FilterMode; label: string }[] = [
   { value: "AND", label: "common.filters.modeAll" },
@@ -25,6 +25,7 @@ const STARS = [1, 2, 3, 4, 5];
 /** The Library's filters, web's less "Search in" (the Search tab owns search), applied together with Apply. */
 export function FiltersScreen() {
   const intl = useIntl();
+  const categoryLabel = useCategoryLabel();
   const router = useRouter();
   const [foreground, muted, star] = useThemeColor(["foreground", "muted", "warning"] as const);
   const warningInk = useWarningInkColor();
@@ -43,10 +44,6 @@ export function FiltersScreen() {
   const { tags, isLoading: tagsLoading } = useTagsQuery();
   // A stored filter stays visible, so it can be cleared, even once the list drops it.
   const categories = Array.from(new Set([...householdCategories, ...draft.categories]));
-  const categoryLabel = (name: RecipeCategory) =>
-    isBuiltInCategory(name)
-      ? intl.formatMessage({ id: `recipes.form.category.${name.toLowerCase()}` })
-      : name;
   const close = () => router.back();
 
   return (

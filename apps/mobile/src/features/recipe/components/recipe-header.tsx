@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -13,7 +14,6 @@ import {
   usePageServings,
   useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
-import { isBuiltInCategory } from "@norish/shared/lib/categories";
 import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
 import { isAllergenTag } from "@norish/shared/lib/helpers";
 import { countryFlagEmoji } from "@norish/shared/lib/recipe-provenance";
@@ -95,7 +95,7 @@ function TimeBar({ recipe }: { recipe: FullRecipeDTO }) {
 
 /** The title block: name, description, glance bar, time bar and tags, on the page ground. */
 export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
-  const intl = useIntl();
+  const categoryLabel = useCategoryLabel();
   const servings = usePageServings();
   const { allergies } = useActiveAllergies();
   const { showNutrition } = useHiddenItemVisibility();
@@ -105,11 +105,7 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
   const facts = recipeCardFacts(recipe, allergies);
   const flag = countryFlagEmoji(recipe.originCountry);
   const kcal = recipe.calories ?? workedOut?.perServing?.calories ?? null;
-  const categories = recipe.categories.map((name) =>
-    isBuiltInCategory(name)
-      ? intl.formatMessage({ id: `recipes.form.category.${name.toLowerCase()}` })
-      : name
-  );
+  const categories = recipe.categories.map(categoryLabel);
   const plainTags = facts.tagNames.filter((tag) => !isAllergenTag(tag, facts.allergySet));
   const allergens = facts.tagNames.filter((tag) => isAllergenTag(tag, facts.allergySet));
   const shown = [...categories, ...plainTags].join(", ");
