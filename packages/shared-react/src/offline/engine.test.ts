@@ -207,6 +207,48 @@ describe("createOfflineEngine", () => {
       expect(sent).toEqual([edit("First"), edit("Second")]);
       expect(await engine.outbox.size("u1")).toBe(0);
     });
+
+    // The accepted gap: a send whose answer was lost may have landed, so its replacement is refused.
+    it("refuses a replacement of a save that reached the server unanswered, told once", async () => {
+      const engine = engineOver();
+      const told = vi.fn();
+      const server = { version: 3, name: "Original" };
+      let dropAnswer = true;
+      const update = vi.fn(async (input: { version: number; data: { name: string } }) => {
+        if (input.version !== server.version) return { stale: true, version: null };
+        Object.assign(server, { version: server.version + 1, name: input.data.name });
+        if (dropAnswer) {
+          dropAnswer = false;
+          throw new TypeError("Failed to fetch");
+        }
+
+        return { stale: false, version: server.version };
+      });
+      const recovery = engine.createRecovery({
+        transport: { recipes: { update: { mutate: update } } },
+        verifySession: async () => "match",
+        refetchActiveQueries: async () => {},
+        topUp: async () => {},
+      });
+
+      await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      recovery.subscribeConflicts(told);
+      await saveRecipe(engine, edit("First"), unreachable);
+      await recovery.recover();
+      expect(await engine.outbox.loadAll()).toMatchObject([
+        { input: edit("First"), attempts: 0, status: "pending" },
+      ]);
+
+      await saveRecipe(engine, edit("Second"), unreachable);
+      await recovery.recover();
+
+      expect(update.mock.calls.map(([input]) => input)).toEqual([edit("First"), edit("Second")]);
+      expect(server).toEqual({ version: 4, name: "First" });
+      expect(await engine.outbox.loadAll()).toMatchObject([
+        { input: edit("Second"), status: "conflicted", parkedReason: "conflict" },
+      ]);
+      expect(told).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("replays only the applied owner's queue, marked with the client's replay header", async () => {
