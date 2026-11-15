@@ -424,6 +424,9 @@ importers:
       '@expo/vector-icons':
         specifier: ^15.1.1
         version: 15.1.1(expo-font@58.0.11(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.3.0)(react@19.3.1)(supports-color@10.2.2))(react@19.3.1)
+      '@formatjs/intl-displaynames':
+        specifier: ^8.0.3
+        version: 8.0.3
       '@formatjs/intl-listformat':
         specifier: ^9.0.3
         version: 9.0.3
@@ -3592,6 +3595,9 @@ packages:
 
   '@formatjs/icu-skeleton-parser@2.1.12':
     resolution: {integrity: sha512-ca7tZMLpfHX3sUD7hP6gE/qr6Iq89EDd3ZLeRhbsB7r0UD55DGJq+tmFLzrGrnx5StahUevQmQQVtbDRHsfDHA==}
+
+  '@formatjs/intl-displaynames@8.0.3':
+    resolution: {integrity: sha512-UhKG1OwrbQzZNKIcmZu+/JR5SOxE25RWmUzxaNfQ04AJ4OwxNkTvAbVX0ojnkm0i8Qs4E8ElIoBdA6F8XTkJXw==}
 
   '@formatjs/intl-listformat@9.0.3':
     resolution: {integrity: sha512-XamK+7ie16gbBp51AH+K97NfwCoECk36jEbBO9m7HaInoLbG1F3P8M22enKtkifsi/cH9gjp4igFaYtY23h0uA==}
@@ -11920,6 +11926,10 @@ snapshots:
   '@formatjs/icu-skeleton-parser@2.1.11': {}
 
   '@formatjs/icu-skeleton-parser@2.1.12': {}
+
+  '@formatjs/intl-displaynames@8.0.3':
+    dependencies:
+      '@formatjs/intl-localematcher': 0.10.1
 
   '@formatjs/intl-listformat@9.0.3':
     dependencies:
