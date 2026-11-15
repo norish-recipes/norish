@@ -334,6 +334,9 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       if (was) unsettled.delete(was);
     },
   };
+  // Versioned writes go one at a time, in the order made: each is sent at the version the one
+  // before it bumped in the cache, so one sent ahead would be refused as stale.
+  const inOrder = { ...settles, scope: { id: "grocery-writes" } };
   const reconcileCreated = (result: CreateGroceriesResult, was: Undo) =>
     setGroceriesData(
       (prev) =>
@@ -408,7 +411,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       setGroceriesData((prev) => prev && applyRecurringCreatedToCache(prev, result)),
   });
   const toggleOptions = trpc.groceries.toggle.mutationOptions({
-    ...settles,
+    ...inOrder,
     // The version is bumped, so a follow-up write to the row sends the one this write leaves.
     onMutate: ({ groceries: rows, isDone }) => {
       const ids = new Set(rows.map((row) => row.id));
@@ -422,7 +425,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     },
   });
   const checkRecurringOptions = trpc.groceries.checkRecurring.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ recurringGroceryId, groceryId, isDone }) =>
       writeOver((prev) => {
         const groceries = prev.groceries.map((g) =>
@@ -455,7 +458,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       }),
   });
   const updateOptions = trpc.groceries.update.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ groceryId, raw, storeId, purchaseAmount }) => {
       const edit = parse(raw);
 
@@ -468,7 +471,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     },
   });
   const updateRecurringOptions = trpc.groceries.updateRecurring.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ recurringGroceryId, groceryId, storeId, purchaseAmount, data }) =>
       writeOver((prev) => ({
         ...prev,
@@ -483,7 +486,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
   // One atomic write: deleting the recurring row and the grocery's edit commit together, instead
   // of racing two version-guarded writes against the same rows.
   const detachRecurringOptions = trpc.groceries.detachRecurring.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ recurringGroceryId, groceryId, raw, storeId, purchaseAmount }) => {
       const edit = parse(raw);
 
@@ -499,7 +502,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     },
   });
   const deleteOptions = trpc.groceries.delete.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ groceries: rows }) => {
       const ids = new Set(rows.map((row) => row.id));
 
@@ -510,7 +513,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     },
   });
   const deleteRecurringOptions = trpc.groceries.deleteRecurring.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ recurringGroceryId }) =>
       writeOver((prev) => ({
         ...prev,
@@ -519,7 +522,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       })),
   });
   const assignToStoreOptions = trpc.groceries.assignToStore.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ groceryId, storeId }) =>
       writeOver((prev) => ({
         ...prev,
@@ -529,9 +532,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       })),
   });
   const reorderOptions = trpc.groceries.reorderInStore.mutationOptions({
-    ...settles,
-    // One at a time: a quick second drop sent at the first's version would overtake it as stale.
-    scope: { id: "grocery-reorders" },
+    ...inOrder,
     onMutate: ({ updates }) => {
       const byId = new Map(updates.map((update) => [update.id, update]));
 
@@ -555,7 +556,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     },
   });
   const markAllDoneOptions = trpc.groceries.markAllDone.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ storeId }) =>
       writeOver((prev) => ({
         ...prev,
@@ -565,7 +566,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       })),
   });
   const deleteDoneOptions = trpc.groceries.deleteDone.mutationOptions({
-    ...settles,
+    ...inOrder,
     onMutate: ({ storeId }) =>
       writeOver((prev) => ({
         ...prev,

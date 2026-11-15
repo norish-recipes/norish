@@ -199,6 +199,132 @@ describe("useGroceriesMutations", () => {
     });
   });
 
+  describe("write order", () => {
+    /** A server holding each line's version: a write at another version is refused as stale. */
+    const versionedServer = (versions: Record<string, number>) => {
+      const stored: string[] = [];
+      const write =
+        (name: string, rowsOf: (input: never) => Array<{ id: string; version: number }>) =>
+        async (input: never) => {
+          const rows = rowsOf(input);
+
+          if (rows.some((row) => versions[row.id] !== row.version)) return { stale: true };
+          for (const row of rows) versions[row.id] = row.version + 1;
+          stored.push(name);
+
+          return { success: true, stale: false };
+        };
+
+      _mockMutations.reorderInStore.mockImplementation(
+        write(
+          "reorder",
+          (input: { updates: Array<{ id: string; version: number }> }) => input.updates
+        )
+      );
+      _mockMutations.toggle.mockImplementation(
+        write(
+          "toggle",
+          (input: { groceries: Array<{ id: string; version: number }> }) => input.groceries
+        )
+      );
+      _mockMutations.update.mockImplementation(
+        write("update", (input: { groceryId: string; version: number }) => [
+          { id: input.groceryId, version: input.version },
+        ])
+      );
+
+      return stored;
+    };
+    const seed = () =>
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData(
+          [
+            createMockGrocery({ id: "a", sortOrder: 0, version: 1 }),
+            createMockGrocery({ id: "b", sortOrder: 1, version: 1 }),
+          ],
+          []
+        )
+      );
+    /** Holds the next send of a procedure until the test lets it through to the server. */
+    const holdNext = (send: (typeof _mockMutations)[keyof typeof _mockMutations]) => {
+      const gate = Promise.withResolvers<void>();
+      const pass = send.getMockImplementation();
+
+      send.mockImplementationOnce(async (input: unknown) => {
+        await gate.promise;
+
+        return pass?.(input);
+      });
+
+      return gate;
+    };
+
+    it("lands drop, drop, then a tick of a line the second drop renumbered", async () => {
+      seed();
+      const stored = versionedServer({ a: 1, b: 1 });
+      const first = holdNext(_mockMutations.reorderInStore);
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() =>
+        result.current.reorderGroceriesInStore([
+          { id: "b", sortOrder: 0 },
+          { id: "a", sortOrder: 1 },
+        ])
+      );
+      act(() =>
+        result.current.reorderGroceriesInStore([
+          { id: "a", sortOrder: 0 },
+          { id: "b", sortOrder: 1 },
+        ])
+      );
+      act(() => result.current.toggleGroceries(["a"], true));
+      first.resolve();
+      await settled();
+
+      expect(stored).toEqual(["reorder", "reorder", "toggle"]);
+    });
+
+    it("lands a tick and an edit of the same line made at once", async () => {
+      seed();
+      const stored = versionedServer({ a: 1, b: 1 });
+      const first = holdNext(_mockMutations.toggle);
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => result.current.toggleGroceries(["a"], true));
+      act(() => result.current.updateGrocery("a", "2 apples"));
+      first.resolve();
+      await settled();
+
+      expect(stored).toEqual(["toggle", "update"]);
+    });
+
+    it("still sends the writes behind one that failed", async () => {
+      seed();
+      versionedServer({ a: 1, b: 1 });
+      const first = answerLater(_mockMutations.reorderInStore);
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() =>
+        result.current.reorderGroceriesInStore([
+          { id: "b", sortOrder: 0 },
+          { id: "a", sortOrder: 1 },
+        ])
+      );
+      act(() => result.current.toggleGroceries(["b"], true));
+      await act(async () => first.reject(new Error("database down")));
+      await settled();
+
+      expect(_mockMutations.toggle).toHaveBeenCalledOnce();
+    });
+  });
+
   describe("module structure", () => {
     it("exports all expected mutation functions", async () => {
       // Set up initial data in cache
