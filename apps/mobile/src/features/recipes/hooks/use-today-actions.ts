@@ -1,4 +1,5 @@
 import { useConfirm } from "@/hooks/use-confirm";
+import { recipeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -49,9 +50,7 @@ export function useTodayActions(item: PlannedItemFromQuery) {
         onConfirm: () => deleteItem(item.id),
       }),
   };
-  const href = isRecipe
-    ? ({ pathname: "/recipe/[id]", params: { id: item.recipeId } } as const)
-    : ("/calendar" as const);
+  const href = isRecipe ? recipeRoute(item.recipeId) : ("/calendar" as const);
 
   return { isRecipe, handlers, href };
 }

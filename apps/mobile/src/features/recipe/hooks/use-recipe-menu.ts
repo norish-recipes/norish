@@ -4,6 +4,7 @@ import type {
   NativeStackHeaderItemMenuSubmenu,
 } from "expo-router/native-stack";
 import { useCardActions } from "@/hooks/use-card-actions";
+import { recipeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -76,15 +77,13 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
             type: "action" as const,
             label: label("common.actions.edit"),
             icon: { type: "sfSymbol" as const, name: "pencil" as const },
-            onPress: () =>
-              router.push({ pathname: "/recipe/[id]/edit", params: { id: recipe.id } }),
+            onPress: () => router.push(recipeRoute(recipe.id, "edit")),
           },
           {
             type: "action" as const,
             label: label("recipes.actions.share"),
             icon: { type: "sfSymbol" as const, name: "link" as const },
-            onPress: () =>
-              router.push({ pathname: "/recipe/[id]/share", params: { id: recipe.id } }),
+            onPress: () => router.push(recipeRoute(recipe.id, "share")),
           },
         ]
       : []),

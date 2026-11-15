@@ -7,6 +7,7 @@ import { DragScrollView } from "@/components/drag-list/drag-list";
 import { GlassCloseButton, GlassSurface } from "@/components/glass";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { FocusedFieldContext, useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
+import { recipeRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -152,7 +153,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
     try {
       if (mode === "create") {
         createRecipe({ ...payload, id: recipeId });
-        router.dismissTo({ pathname: "/recipe/[id]", params: { id: recipeId } });
+        router.dismissTo(recipeRoute(recipeId));
       } else if (initialData) {
         updateRecipe(initialData.id, { ...payload, version: initialData.version });
         router.back();

@@ -1,7 +1,12 @@
 import type { Timer } from "@norish/shared-react/recipes/timers";
 import { runningTimers, timerEndsAt } from "@norish/shared-react/recipes/timers";
 
-import { cookModeUrl } from "./cook-mode-route";
+import { routeUrl } from "./route-url";
+import { TAB_ROUTES } from "./tab-routes";
+
+/** Cook mode on the timer's step, as a link: the Live Activity opens the app from outside. */
+const cookModeUrl = (recipeId: string, step: number) =>
+  routeUrl(TAB_ROUTES.recipes.cook, { id: recipeId, step: String(step) });
 
 /** The most timers the Live Activity lists before "+N". */
 export const TIMER_ACTIVITY_ROWS = 3;

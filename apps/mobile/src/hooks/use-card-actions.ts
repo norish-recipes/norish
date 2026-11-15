@@ -1,6 +1,6 @@
 import { useConfirm } from "@/hooks/use-confirm";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
-import { addToGroceriesRoute } from "@/lib/add-to-groceries";
+import { addToGroceriesRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GlassSurface } from "@/components/glass";
+import { cookModeRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -40,7 +41,7 @@ export function RecipeBottomBar({ recipeId, page }: { recipeId: string; page: st
           className="flex-1 flex-row items-center justify-center gap-2 rounded-full"
           style={{ height: HEIGHT }}
           testID="recipe-cook"
-          onPress={() => router.push({ pathname: "/recipe/[id]/cook", params: { id: recipeId } })}
+          onPress={() => router.push(cookModeRoute(recipeId))}
         >
           <GlassSurface radius={HEIGHT / 2} tint={accent} />
           <Ionicons color={accentForeground} name="flame-outline" size={20} />

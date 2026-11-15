@@ -4,6 +4,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
+import { recipeRoute } from "@/lib/tab-routes";
 import * as Haptics from "expo-haptics";
 import { useIntl } from "react-intl";
 
@@ -97,7 +98,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
         testID={`recipe-card-${recipe.id}`}
         onAccessibilityTap={open}
       >
-        <CardMenu href={{ pathname: "/recipe/[id]", params: { id: recipe.id } }} items={items}>
+        <CardMenu href={recipeRoute(recipe.id)} items={items}>
           <GestureDetector gesture={singleTap}>
             <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
           </GestureDetector>

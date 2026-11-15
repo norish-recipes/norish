@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
+import { recipeRoute } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
@@ -27,7 +28,7 @@ export function EditRecipeScreen() {
 
   // The same check as hides Edit; a reader who may not edit is left on the Recipe screen.
   useEffect(() => {
-    if (refused) router.dismissTo({ pathname: "/recipe/[id]", params: { id } });
+    if (refused) router.dismissTo(recipeRoute(id));
   }, [refused, router, id]);
 
   if (recipe && !checking && !refused) {

@@ -21,6 +21,7 @@ import { connectTimerStorage } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { ToastSeverity } from "./app-toast";
+import { recipeRoute } from "../tab-routes";
 import { AppToast } from "./app-toast";
 import { mobileToastDescription } from "./toast-description";
 
@@ -91,7 +92,7 @@ export function MobilePlatformProvider({
     },
     navigation: {
       toHome: () => router.replace("/"),
-      toRecipe: (id) => router.push({ pathname: "/recipe/[id]", params: { id } }),
+      toRecipe: (id) => router.push(recipeRoute(id)),
     },
     showError: (error, context, title) => {
       log.error({ error }, context);

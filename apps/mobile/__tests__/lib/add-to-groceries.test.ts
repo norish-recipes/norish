@@ -1,4 +1,5 @@
-import { addToGroceriesRoute, groceriesStartServings } from "@/lib/add-to-groceries";
+import { groceriesStartServings } from "@/lib/add-to-groceries";
+import { addToGroceriesRoute } from "@/lib/tab-routes";
 import { describe, expect, it } from "vitest";
 
 describe("addToGroceriesRoute", () => {

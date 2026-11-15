@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
 import { useCardActions } from "@/hooks/use-card-actions";
+import { recipeRoute } from "@/lib/tab-routes";
 import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -81,9 +82,7 @@ export function ServingsControl() {
         accessibilityRole="button"
         className="min-w-8 items-center py-2"
         testID="recipe-servings-value"
-        onPress={() =>
-          router.push({ pathname: "/recipe/[id]/servings", params: { id: recipe.id } })
-        }
+        onPress={() => router.push(recipeRoute(recipe.id, "servings"))}
       >
         <Text className="text-foreground text-base font-semibold">{formatServings(servings)}</Text>
       </Pressable>

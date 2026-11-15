@@ -85,7 +85,7 @@ export type WidgetTimelines = {
   large: WidgetEntry<LargeWidgetProps>[];
 };
 
-export const recipeUrl = (id: string) => routeUrl("/recipe/[id]", { id });
+export const recipeUrl = (id: string) => routeUrl(TAB_ROUTES.recipes.recipe, { id });
 export const calendarDayUrl = (key: string) => routeUrl(TAB_ROUTES.calendar.root, { day: key });
 export const todayUrl = () => routeUrl(TAB_ROUTES.recipes.root);
 
