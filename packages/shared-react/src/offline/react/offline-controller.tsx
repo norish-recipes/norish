@@ -1,12 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { OfflineEngine } from "../engine";
 import type { ConnectivityValue } from "./connectivity";
+import { usePlatform } from "../../platform";
 import { useTRPCClient } from "../../trpc";
 import { sessionVerdict } from "../recovery";
 import { RecoveryProvider } from "./recovery-context";
@@ -35,6 +36,7 @@ export function OfflineController({
   wsStatus: ConnectionStatus;
 }) {
   const queryClient = useQueryClient();
+  const { toast } = usePlatform();
   const transport = useTRPCClient();
   const warmSet = useWarmSet(engine);
 
@@ -48,6 +50,16 @@ export function OfflineController({
         topUp: warmSet.topUp,
       }),
     [engine, getSessionUserId, queryClient, transport, warmSet]
+  );
+
+  // Refused as stale: the next reads show the server's state, and the user hears it once.
+  useEffect(
+    () =>
+      recovery.subscribeConflicts(() => {
+        void queryClient.invalidateQueries({ refetchType: "none" });
+        toast.show({ severity: "warning", title: toast.translate("common.changedElsewhere.title") });
+      }),
+    [queryClient, recovery, toast]
   );
 
   const { switching } = useOfflineController({

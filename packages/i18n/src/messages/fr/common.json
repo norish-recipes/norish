@@ -288,6 +288,9 @@
     "title": "Vous êtes hors ligne",
     "description": "Mis en file d'attente — Norish terminera automatiquement dès que vous serez de nouveau en ligne."
   },
+  "changedElsewhere": {
+    "title": "Non enregistré : modifié ailleurs entre-temps"
+  },
   "storageUnavailable": {
     "title": "Stockage indisponible",
     "description": "Norish n'a pas pu lire le trousseau de cet iPhone.",

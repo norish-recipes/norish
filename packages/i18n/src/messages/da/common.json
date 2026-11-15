@@ -288,6 +288,9 @@
     "title": "Du er offline",
     "description": "Sat i kø — Norish fuldfører dette automatisk, når du er online igen."
   },
+  "changedElsewhere": {
+    "title": "Ikke gemt: det blev ændret et andet sted først"
+  },
   "storageUnavailable": {
     "title": "Lager utilgængeligt",
     "description": "Norish kunne ikke læse denne iPhones nøglering.",

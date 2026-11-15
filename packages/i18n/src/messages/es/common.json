@@ -288,6 +288,9 @@
     "title": "Estás sin conexión",
     "description": "En cola: Norish lo completará automáticamente cuando vuelvas a estar en línea."
   },
+  "changedElsewhere": {
+    "title": "No guardado: se cambió antes en otro lugar"
+  },
   "storageUnavailable": {
     "title": "Almacenamiento no disponible",
     "description": "Norish no pudo leer el llavero de este iPhone.",

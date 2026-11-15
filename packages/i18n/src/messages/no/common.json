@@ -288,6 +288,9 @@
     "title": "Du er frakoblet",
     "description": "Lagt i kø — Norish fullfører dette automatisk når du er tilkoblet igjen."
   },
+  "changedElsewhere": {
+    "title": "Ikke lagret: det ble endret et annet sted først"
+  },
   "storageUnavailable": {
     "title": "Lagring utilgjengelig",
     "description": "Norish kunne ikke lese nøkkelringen på denne iPhonen.",

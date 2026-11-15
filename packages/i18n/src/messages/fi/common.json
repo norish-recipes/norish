@@ -288,6 +288,9 @@
     "title": "Olet offline-tilassa",
     "description": "Jonossa – Norish viimeistelee tämän automaattisesti, kun yhteys palaa."
   },
+  "changedElsewhere": {
+    "title": "Ei tallennettu: sitä muutettiin ensin muualla"
+  },
   "storageUnavailable": {
     "title": "Tallennustila ei ole käytettävissä",
     "description": "Norish ei voinut lukea tämän iPhonen avainnippua.",

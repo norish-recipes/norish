@@ -21,6 +21,7 @@
 
 import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
+import type { OutboxEntry } from "./outbox-types";
 import type { ReplaySubmit } from "./replay";
 import { runWithOutboxLock } from "./leader";
 import { runReplayPass } from "./replay";
@@ -57,6 +58,8 @@ export interface Recovery {
   recover(reason?: RecoveryReason): Promise<void>;
   isSyncing(): boolean;
   subscribe(listener: () => void): () => void;
+  /** Told once per batch about the entries the server refused as stale (parked Conflicted). */
+  subscribeConflicts(listener: (entries: OutboxEntry[]) => void): () => void;
 }
 
 const waitFor = (delayMs: number) =>
@@ -78,6 +81,7 @@ export function createRecovery({
   let followUpRequested = false;
   let requestedReason: RecoveryReason | null = null;
   const listeners = new Set<() => void>();
+  const conflictListeners = new Set<(entries: OutboxEntry[]) => void>();
 
   /** Coalesced triggers take the stronger reason: one resync makes the run one. */
   function request(reason: RecoveryReason): void {
@@ -88,12 +92,15 @@ export function createRecovery({
     for (const listener of listeners) listener();
   }
 
-  async function replayToTerminalBatch(): Promise<{ completed: boolean; sent: boolean }> {
+  type Batch = { completed: boolean; sent: boolean; conflicted: OutboxEntry[] };
+
+  async function replayToTerminalBatch(): Promise<Batch> {
     const batchOwner = owner();
     let sent = false;
+    const conflicted: OutboxEntry[] = [];
 
     if (!batchOwner) {
-      return { completed: false, sent };
+      return { completed: false, sent, conflicted };
     }
 
     while (owner() === batchOwner) {
@@ -119,10 +126,11 @@ export function createRecovery({
       }, locks());
 
       if (!attempt) {
-        return { completed: false, sent };
+        return { completed: false, sent, conflicted };
       }
 
       sent ||= attempt.removed > 0 || attempt.parked > 0;
+      conflicted.push(...attempt.conflicted);
 
       if (attempt.halted === "retry" && attempt.retryAfterMs !== null) {
         await wait(attempt.retryAfterMs);
@@ -134,14 +142,18 @@ export function createRecovery({
         continue;
       }
 
-      return { completed: attempt.halted === null, sent };
+      return { completed: attempt.halted === null, sent, conflicted };
     }
 
-    return { completed: false, sent };
+    return { completed: false, sent, conflicted };
   }
 
   async function run(reason: RecoveryReason): Promise<void> {
     const batch = await replayToTerminalBatch();
+
+    if (batch.conflicted.length > 0) {
+      for (const listener of conflictListeners) listener(batch.conflicted);
+    }
 
     if (!batch.completed) {
       return;
@@ -198,6 +210,12 @@ export function createRecovery({
       listeners.add(listener);
 
       return () => listeners.delete(listener);
+    },
+
+    subscribeConflicts(listener) {
+      conflictListeners.add(listener);
+
+      return () => conflictListeners.delete(listener);
     },
   };
 }

@@ -288,6 +288,9 @@
     "title": "أنت غير متصل",
     "description": "أُضيف إلى قائمة الانتظار — سيُكمله Norish تلقائيًا عند عودة الاتصال."
   },
+  "changedElsewhere": {
+    "title": "لم يُحفظ: تم تغييره في مكان آخر أولاً"
+  },
   "storageUnavailable": {
     "title": "التخزين غير متاح",
     "description": "تعذّر على Norish قراءة سلسلة مفاتيح هذا الـ iPhone.",

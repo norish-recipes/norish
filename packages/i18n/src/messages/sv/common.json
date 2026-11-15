@@ -288,6 +288,9 @@
     "title": "Du är offline",
     "description": "Åtgärden har köats. Norish slutför den automatiskt när du är online igen."
   },
+  "changedElsewhere": {
+    "title": "Inte sparat: det ändrades någon annanstans först"
+  },
   "storageUnavailable": {
     "title": "Lagring otillgänglig",
     "description": "Norish kunde inte läsa nyckelringen på den här iPhonen.",

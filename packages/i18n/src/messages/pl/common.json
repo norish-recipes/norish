@@ -288,6 +288,9 @@
     "title": "Jesteś offline",
     "description": "Dodano do kolejki — Norish dokończy to automatycznie, gdy wrócisz online."
   },
+  "changedElsewhere": {
+    "title": "Nie zapisano: najpierw zmieniono to gdzie indziej"
+  },
   "storageUnavailable": {
     "title": "Pamięć niedostępna",
     "description": "Norish nie mógł odczytać pęku kluczy tego iPhone'a.",

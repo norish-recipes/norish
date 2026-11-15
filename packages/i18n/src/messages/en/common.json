@@ -288,6 +288,9 @@
     "title": "You're offline",
     "description": "Queued — Norish will finish this automatically when you're back online."
   },
+  "changedElsewhere": {
+    "title": "Not saved: it changed elsewhere first"
+  },
   "storageUnavailable": {
     "title": "Storage unavailable",
     "description": "Norish couldn't read this iPhone's keychain.",

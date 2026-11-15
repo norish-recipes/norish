@@ -288,6 +288,9 @@
     "title": "Du bist offline",
     "description": "In der Warteschlange — Norish schließt dies automatisch ab, sobald du wieder online bist."
   },
+  "changedElsewhere": {
+    "title": "Nicht gespeichert: Es wurde zuerst anderswo geändert"
+  },
   "storageUnavailable": {
     "title": "Speicher nicht verfügbar",
     "description": "Norish konnte den Schlüsselbund dieses iPhones nicht lesen.",

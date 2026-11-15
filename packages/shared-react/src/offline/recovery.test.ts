@@ -66,6 +66,38 @@ describe("Recovery", () => {
     expect(await store.size("u1")).toBe(0);
   });
 
+  it("tells once about the edits a batch found refused, before the reads refresh", async () => {
+    const onConflicted = vi.fn(() => calls.push("told"));
+
+    await store.enqueue(entry({ id: "a", path: "recipes.update", input: { id: "r1", version: 5 } }));
+    await store.enqueue(entry({ id: "b", path: "recipes.update", input: { id: "r1", version: 5 } }));
+    submit.mockResolvedValue({ kind: "conflict" });
+
+    const run = recovery();
+
+    run.subscribeConflicts(onConflicted);
+    await run.recover();
+
+    expect(onConflicted).toHaveBeenCalledTimes(1);
+    expect(onConflicted).toHaveBeenCalledWith([
+      expect.objectContaining({ id: "a" }),
+      expect.objectContaining({ id: "b" }),
+    ]);
+    expect(calls).toEqual(["told", "refetch", "warm"]);
+  });
+
+  it("tells nothing when every edit landed", async () => {
+    const onConflicted = vi.fn();
+
+    const run = recovery();
+
+    run.subscribeConflicts(onConflicted);
+    await store.enqueue(entry());
+    await run.recover();
+
+    expect(onConflicted).not.toHaveBeenCalled();
+  });
+
   it("still reconciles an empty Outbox on startup or reconnect", async () => {
     await recovery().recover();
 

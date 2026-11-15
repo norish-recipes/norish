@@ -31,6 +31,8 @@ type ReplayHaltReason = "unreachable" | "unauthorized" | "retry";
 interface ReplayPassResult {
   removed: number;
   parked: number;
+  /** The entries this pass parked as Conflicted: the server kept a newer write. */
+  conflicted: OutboxEntry[];
   /** Pending entries still queued for this owner after the pass. */
   remaining: number;
   /** Why the pass stopped early, or null if it drained/parked everything. */
@@ -107,6 +109,7 @@ export async function runReplayPass({
 
   let removed = 0;
   let parked = 0;
+  const conflicted: OutboxEntry[] = [];
 
   const finish = async (
     halted: ReplayHaltReason | null,
@@ -114,7 +117,7 @@ export async function runReplayPass({
   ): Promise<ReplayPassResult> => {
     const remaining = (await store.forOwner(ownerId, "pending")).length;
 
-    return { removed, parked, remaining, halted, retryAfterMs };
+    return { removed, parked, conflicted, remaining, halted, retryAfterMs };
   };
 
   const parkWith = async (entry: OutboxEntry, reason: Parameters<OutboxStore["park"]>[1]) => {
@@ -144,6 +147,7 @@ export async function runReplayPass({
 
       case "conflict":
         await parkWith(entry, "conflict");
+        conflicted.push(entry);
         break;
 
       case "deterministic":
