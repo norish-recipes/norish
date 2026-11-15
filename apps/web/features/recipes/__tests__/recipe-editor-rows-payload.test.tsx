@@ -234,4 +234,22 @@ describe("RecipeEditorScreen save through its real rows", () => {
     ]);
     expect(refIds(payload)).toEqual([[], ["ing-3", "ing-4"], ["ing-5"]]);
   });
+  it("keeps a reference on its line when a line above is cleared and Save tapped at once", async () => {
+    open();
+    const [salt] = screen.getAllByDisplayValue("salt");
+
+    fireEvent.focus(salt!);
+    fireEvent.change(salt!, { target: { value: "" } });
+    // Inside the parse's pause; a click on Save blurs the field first, as a browser does.
+    fireEvent.blur(salt!);
+    const payload = await save();
+
+    expect(payload.recipeIngredients.map((ing) => ing.id)).toEqual([
+      "ing-1",
+      "ing-3",
+      "ing-4",
+      "ing-5",
+    ]);
+    expect(refIds(payload)).toEqual([[], ["ing-3", "ing-4"], ["ing-5"]]);
+  });
 });
