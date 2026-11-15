@@ -1,12 +1,11 @@
 import type { Query } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import type { InfiniteRecipeData } from "../recipes/library-cache";
 import type { CachedCalendarRange, CalendarMutationsResult } from "./types";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { usePlatform } from "../platform/platform";
@@ -14,6 +13,9 @@ import { rereadOnceWritesSettle } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { moveItemInRange, moveTargetIndex, upsertItemInRange } from "./calendar-cache-merge";
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
+
+/** What a plan shows of its recipe, as a cached recipe list page holds it. */
+type ListedRecipe = Pick<RecipeDashboardDTO, "id" | "name" | "image" | "servings" | "calories">;
 
 type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => PlannedItemFromQuery[];
 
@@ -88,7 +90,9 @@ export function useCalendarMutations(): CalendarMutationsResult {
   // A planned recipe's name and photo as the cached recipe lists or its page hold them.
   const cachedRecipe = (recipeId: string) => {
     const listed = queryClient
-      .getQueriesData<InfiniteRecipeData>({ queryKey: trpc.recipes.list.pathKey() })
+      .getQueriesData<{ pages?: { recipes: ListedRecipe[] }[] }>({
+        queryKey: trpc.recipes.list.pathKey(),
+      })
       .flatMap(([, data]) => data?.pages?.flatMap((page) => page.recipes) ?? [])
       .find((recipe) => recipe.id === recipeId);
     const page = queryClient.getQueryData(trpc.recipes.get.queryKey({ id: recipeId }));
