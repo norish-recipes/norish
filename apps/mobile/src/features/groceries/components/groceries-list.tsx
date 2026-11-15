@@ -8,15 +8,13 @@ import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 
 import type { ListRow } from "../utils/list-rows";
 import { sectionKeyOf } from "../utils/list-rows";
+import { AisleHeadingRow } from "./aisle-heading-row";
 import { CardSlice } from "./card-slice";
+import { DoneRow } from "./done-row";
 import { GroceryRow } from "./grocery-row";
 import { GroupRow } from "./group-row";
-import {
-  AisleHeadingRow,
-  DoneRow,
-  RecipeHeadingRow,
-  StoreHeadingRow,
-} from "./section-heading-rows";
+import { RecipeHeadingRow } from "./recipe-heading-row";
+import { StoreHeadingRow } from "./store-heading-row";
 
 export type ListActions = {
   toggle: (ids: string[], isDone: boolean) => void;
