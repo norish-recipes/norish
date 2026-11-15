@@ -8,6 +8,9 @@ import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
+/** The largest text scale a 44 pt pill holds whole. */
+const PILL_TEXT_SCALE = 2;
+
 /**
  * The tab's large title, an Offline pill while the server can't be reached, and the way back to
  * today while it is off screen, pointing where it is.
@@ -34,7 +37,10 @@ export function CalendarHeader({
           >
             <GlassSurface radius={22} />
             <View className="bg-warning size-2.5 rounded-full" />
-            <Text className="text-foreground text-[15px] font-semibold">
+            <Text
+              className="text-foreground text-[15px] font-semibold"
+              maxFontSizeMultiplier={PILL_TEXT_SCALE}
+            >
               {intl.formatMessage({ id: "common.connection.offline" })}
             </Text>
           </View>
@@ -53,7 +59,10 @@ export function CalendarHeader({
               name={todayDirection === "up" ? "arrow-up" : "arrow-down"}
               size={16}
             />
-            <Text className="text-foreground text-[15px] font-semibold">
+            <Text
+              className="text-foreground text-[15px] font-semibold"
+              maxFontSizeMultiplier={PILL_TEXT_SCALE}
+            >
               {intl.formatMessage({ id: "calendar.mobile.today" })}
             </Text>
           </Pressable>
