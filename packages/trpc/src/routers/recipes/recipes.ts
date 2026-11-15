@@ -66,6 +66,7 @@ import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import type { RecipeUserContext } from "./helpers";
+import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
@@ -286,31 +287,34 @@ async function applyRecipeUpdate(
     return { recipe: null, stale: true, version: null };
   }
 
-  const updatedRecipe = await getRecipeFull(id);
+  const updatedRecipe = await afterCommit(ctx, "announcing the recipe", async () => {
+    const stored = await getRecipeFull(id);
 
-  if (updatedRecipe) {
-    log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
-    const policy = await getRecipePermissionPolicy();
+    if (stored) {
+      log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
+      const policy = await getRecipePermissionPolicy();
 
-    void recipes.publish(
-      "updated",
-      { recipe: updatedRecipe },
-      { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-    );
-  }
+      void recipes.publish(
+        "updated",
+        { recipe: stored },
+        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      );
+    }
 
-  return { recipe: updatedRecipe, stale: false, version: result.value };
-}
-
-// Answers once stored, with the stored version: the client sends its next edit of this recipe at it.
-const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
-  const result = await applyRecipeUpdate(ctx, input).catch((err) => {
-    handleRecipeError(ctx, err, "update recipe", { recipeId: input.id });
-
-    return null;
+    return stored;
   });
 
-  return { stale: result?.stale ?? false, version: result?.version ?? null };
+  return { recipe: updatedRecipe ?? null, stale: false, version: result.value };
+}
+
+// Answers once stored, with the stored version; a failure rejects, so the client rolls back.
+const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
+  const result = await applyRecipeUpdate(ctx, input).catch((err: unknown) => {
+    log.error({ err, userId: ctx.user.id, recipeId: input.id }, "Failed to update recipe");
+    throw err;
+  });
+
+  return { stale: result.stale, version: result.version };
 });
 
 export const updateRecipeProcedure = authedProcedure

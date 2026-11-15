@@ -715,6 +715,49 @@ describe("recipes procedures", () => {
     });
   });
 
+  describe("edit from the app", () => {
+    const id = "55555555-5555-4555-8555-555555555555";
+
+    function createCaller() {
+      return recipesRouter.createCaller({ ...ctx, connectionId: null, operationId: null });
+    }
+
+    it("rejects a refused edit, so the client rolls back and Replay parks it", async () => {
+      getRecipeOwnerId.mockResolvedValue("other-user-id");
+      canAccessResource.mockResolvedValue(false);
+
+      await expect(
+        createCaller().update({ id, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(recipes.publish).not.toHaveBeenCalledWith(
+        "failed",
+        expect.anything(),
+        expect.anything()
+      );
+    });
+
+    it("rejects an edit the database failed to store", async () => {
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockRejectedValue(new Error("connection lost"));
+
+      await expect(
+        createCaller().update({ id, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+    });
+
+    it("answers a stored edit as stored when reading it back fails", async () => {
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false, value: 2 });
+      getRecipeFull.mockRejectedValue(new Error("read failed"));
+
+      await expect(createCaller().update({ id, data: { name: "x" }, version: 1 })).resolves.toEqual(
+        { stale: false, version: 2 }
+      );
+    });
+  });
+
   describe("Dish Colour store paths", () => {
     const recipeImage = "/recipes/44444444-4444-4444-8444-444444444444/photo.jpg";
 
