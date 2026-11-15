@@ -25,6 +25,7 @@ export type ListActions = {
   edit: (id: string) => void;
   toggleCollapsed: (sectionKey: string) => void;
   toggleDone: (sectionKey: string) => void;
+  toggleGroup: (groupKey: string) => void;
   markAllDone: (storeId: string | null) => void;
   deleteDone: (storeId: string | null) => void;
   /** Asks, then clears: a Store's, Unsorted's or a recipe's lines. */
@@ -41,6 +42,7 @@ export function GroceriesList({
   empty,
   recipeNameFor,
   recurringById,
+  openGroups,
   storeNameOnLines,
   actions,
   onDrop,
@@ -50,6 +52,8 @@ export function GroceriesList({
   empty: ReactElement | null;
   recipeNameFor: (grocery: GroceryDto) => string | null;
   recurringById: ReadonlyMap<string, RecurringGroceryDto>;
+  /** The groups folded out, by key; held above the list, which remounts the rows a drop passes. */
+  openGroups: ReadonlySet<string>;
   /** The list by recipe names each line's Store under it, where a Store's list never does. */
   storeNameOnLines: boolean;
   actions: ListActions;
@@ -139,9 +143,11 @@ export function GroceriesList({
               recurringId ? recurringById.get(recurringId) : null,
               only?.recipeName ?? null
             )}
+            open={openGroups.has(item.key)}
             onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
             onToggle={actions.toggle}
+            onToggleOpen={() => actions.toggleGroup(item.key)}
           />
         </ItemSlice>
       );

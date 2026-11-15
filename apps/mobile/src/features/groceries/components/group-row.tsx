@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -26,6 +26,8 @@ export function GroupRow({
   onToggle,
   onEdit,
   onDrag,
+  open,
+  onToggleOpen,
 }: {
   group: GroceryGroup;
   store: StoreDto | null;
@@ -35,10 +37,12 @@ export function GroupRow({
   onEdit: (id: string) => void;
   /** Lifts the group as one; left out on a done group, which stays put. */
   onDrag?: () => void;
+  /** Held above the row: the drag library remounts the rows a reorder passes. */
+  open: boolean;
+  onToggleOpen: () => void;
 }) {
   const intl = useIntl();
   const { formatAmountUnit } = useUnitFormatter(intl.locale);
-  const [open, setOpen] = useState(false);
   const [muted] = useThemeColor(["muted"] as const);
   const color = useStoreColor(store?.color);
   const only = group.sources.length === 1 ? group.sources[0] : undefined;
@@ -68,7 +72,7 @@ export function GroupRow({
           className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
           testID={`group-${group.primaryId}`}
           onLongPress={onDrag}
-          onPress={() => (only ? onEdit(only.grocery.id) : setOpen(!open))}
+          onPress={() => (only ? onEdit(only.grocery.id) : onToggleOpen())}
         >
           <View className="min-w-0 flex-1 gap-0.5">
             <AmountName amount={amount} className="text-[17px]" done={done} name={name} />

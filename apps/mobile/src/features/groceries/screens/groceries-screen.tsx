@@ -65,6 +65,7 @@ export function GroceriesScreen() {
   const [grouped, setGrouped] = useDevicePreference("groceryGroupSimilar");
   const [doneOpen, setDoneOpen] = useState<ReadonlySet<string>>(() => new Set());
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  const [openGroups, setOpenGroups] = useState<ReadonlySet<string>>(() => new Set());
 
   // The list's realtime; the Warm Set keeps its reads for the first frame.
   useGroceriesSubscription();
@@ -133,6 +134,7 @@ export function GroceriesScreen() {
     edit: (id) => router.push({ pathname: "/groceries/edit", params: { id } }),
     toggleCollapsed: (key) => setCollapsed(flipped(collapsed, key)),
     toggleDone: (key) => setDoneOpen(flipped(doneOpen, key)),
+    toggleGroup: (key) => setOpenGroups(flipped(openGroups, key)),
     markAllDone: markAllDoneInStore,
     deleteDone: deleteDoneInStore,
     clear: (name, ids) =>
@@ -171,6 +173,7 @@ export function GroceriesScreen() {
             />
           </View>
         }
+        openGroups={openGroups}
         recipeNameFor={getRecipeNameForGrocery}
         recurringById={new Map(recurringGroceries.map((recurring) => [recurring.id, recurring]))}
         rows={loading ? [] : nothing ? [] : rows}
