@@ -139,7 +139,9 @@ export default function StepInput({
     commit((current) => {
       const row = current[index];
 
-      return row ? current.with(index, { ...row, stepIngredients: refs }) : current;
+      return row
+        ? current.map((entry, i) => (i === index ? { ...row, stepIngredients: refs } : entry))
+        : current;
     });
   const handleIngredientMention = (
     index: number,

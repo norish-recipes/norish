@@ -443,13 +443,11 @@ describe("StepInput photos", () => {
       target: { files: [new File(["x"], name, { type: "image/jpeg" })] },
     });
   const deferredUploads = () => {
-    const pending: PromiseWithResolvers<{ success: boolean; url: string }>[] = [];
+    const pending: { resolve: (result: { success: boolean; url: string }) => void }[] = [];
 
-    images.uploadStepImage.mockImplementation(() => {
-      pending.push(Promise.withResolvers());
-
-      return pending.at(-1)!.promise;
-    });
+    images.uploadStepImage.mockImplementation(
+      () => new Promise((resolve) => pending.push({ resolve }))
+    );
 
     return pending;
   };
@@ -476,7 +474,7 @@ describe("StepInput photos", () => {
       pending[1]!.resolve({ success: true, url: "/b.jpg" });
     });
 
-    expect(lastEmitted().map((step) => step.images.map((image) => image.image))).toEqual([
+    expect(lastEmitted().map((step) => step.images?.map((image) => image.image))).toEqual([
       ["/a.jpg"],
       ["/b.jpg"],
     ]);
@@ -495,7 +493,9 @@ describe("StepInput photos", () => {
     act(() => pickFile(container, 0, "a.jpg"));
     await act(async () => {
       pending[0]!.resolve({ success: true, url: "/a.jpg" });
-      await pending[0]!.promise;
+      // The upload's `.then` runs a microtask after its promise settles.
+      await Promise.resolve();
+      await Promise.resolve();
       // A bare event, so the edit lands before the photo's render has committed.
       const field = container.querySelector("textarea")!;
 
