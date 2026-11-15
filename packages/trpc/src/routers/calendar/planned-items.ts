@@ -179,8 +179,14 @@ export const plannedItemsProcedures = router({
 
     await assertHouseholdAccess(ctx.user.id, item.userId);
 
+    // A write at another version changes nothing, whatever it asks (ADR-0004).
+    if (item.version !== version) {
+      log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar move mutation");
+
+      return { success: true, moved: false, stale: true };
+    }
     if (item.date === targetDate && item.slot === targetSlot && item.sortOrder === targetIndex) {
-      return { success: true, moved: false };
+      return { success: true, moved: false, stale: false };
     }
 
     const moveResult = await moveItem(itemId, targetDate, targetSlot, targetIndex, version);

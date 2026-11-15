@@ -79,6 +79,31 @@ describe("calendar planned items stale handling", () => {
     expect(calendar.publish).not.toHaveBeenCalled();
   });
 
+  describe("a move to where the plan already is", () => {
+    const item = createPlannedItem({ date: "2025-01-20", slot: "Lunch", sortOrder: 1 });
+    const move = (version: number) =>
+      plannedItemsProcedures.createCaller(ctx as any).moveItem({
+        itemId: item.id,
+        version,
+        targetDate: "2025-01-20",
+        targetSlot: "Lunch",
+        targetIndex: 1,
+      });
+
+    beforeEach(() => getPlannedItemById.mockResolvedValue(item));
+
+    it("answers stale at another version, as any write there does", async () => {
+      expect(await move(item.version - 1)).toEqual({ success: true, moved: false, stale: true });
+      expect(moveItem).not.toHaveBeenCalled();
+    });
+
+    it("moves nothing at its own version, and says it is not stale", async () => {
+      expect(await move(item.version)).toEqual({ success: true, moved: false, stale: false });
+      expect(moveItem).not.toHaveBeenCalled();
+      expect(calendar.publish).not.toHaveBeenCalled();
+    });
+  });
+
   it("logs stale deleteItem mutations as no-ops", async () => {
     const item = createPlannedItem();
 
