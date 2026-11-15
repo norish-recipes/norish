@@ -19,7 +19,7 @@ import {
   useRecipeListSubscription,
   useRecipesQuery,
 } from "@norish/shared-react/recipes";
-import { parseDateKey } from "@norish/shared/lib/helpers";
+import { addDays, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { usePlanExit } from "../hooks/use-plan-exit";
 
@@ -39,10 +39,7 @@ export function PlanRecipeScreen() {
   const accentText = useAccentTextColor();
   const today = parseDateKey(useToday());
   const day = params.date ? parseDateKey(params.date) : null;
-  const days = Array.from(
-    { length: DAYS },
-    (_, offset) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
-  );
+  const days = Array.from({ length: DAYS }, (_, offset) => addDays(today, offset));
   const [picked, setPicked] = useState<{ day: Date; fromStrip: boolean } | null>(null);
   // Today until a day is picked; a strip day that midnight took off the strip is today again.
   const stripped = picked?.fromStrip && !days.some((d) => d.getTime() === picked.day.getTime());

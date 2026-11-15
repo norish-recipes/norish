@@ -469,6 +469,11 @@ export function eachDayOfInterval(start: Date, end: Date): Date[] {
   return days;
 }
 
+/** `date`'s calendar day moved by `days`, at `hour` local time, so a daylight-saving change moves no hour. */
+export function addDays(date: Date, days: number, hour = 0): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days, hour);
+}
+
 export function dateKey(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");

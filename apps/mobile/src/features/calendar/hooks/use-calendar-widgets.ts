@@ -6,7 +6,7 @@ import { useIntl } from "react-intl";
 
 import { useCalendarQuery, useCalendarRangeFetched } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
-import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
+import { addDays, dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 /**
  * Hands the Home Screen widgets the plan whenever it changes here, realtime and this device's
@@ -15,11 +15,10 @@ import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 export function useCalendarWidgets() {
   const intl = useIntl();
   const todayKey = useToday();
-  const today = parseDateKey(todayKey);
-  const endISO = dateKey(
-    new Date(today.getFullYear(), today.getMonth(), today.getDate() + WIDGET_DATA_DAYS - 1)
-  );
-  const range = { startISO: todayKey, endISO };
+  const range = {
+    startISO: todayKey,
+    endISO: dateKey(addDays(parseDateKey(todayKey), WIDGET_DATA_DAYS - 1)),
+  };
   const { calendarData } = useCalendarQuery(range);
   // Not the query's `isRead`: seeded from other ranges, that holds days no read of this one confirmed.
   const fetched = useCalendarRangeFetched(range);

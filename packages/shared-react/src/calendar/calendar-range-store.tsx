@@ -5,7 +5,12 @@ import { useState } from "react";
 import { createStore } from "zustand";
 
 import type { CalendarRange } from "@norish/shared/lib/helpers";
-import { dateKey, getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
+import {
+  addDays,
+  dateKey,
+  getInitialCalendarRange,
+  parseDateKey,
+} from "@norish/shared/lib/helpers";
 
 import { createPageStoreContext } from "../page-store";
 
@@ -23,11 +28,7 @@ type CalendarRangeState = {
 };
 
 function shiftDays(iso: string, days: number) {
-  const date = parseDateKey(iso);
-
-  date.setDate(date.getDate() + days);
-
-  return dateKey(date);
+  return dateKey(addDays(parseDateKey(iso), days));
 }
 
 /** The calendar's range, opening two weeks either side of `today` (`YYYY-MM-DD`). */

@@ -8,7 +8,7 @@ import {
   nextMealSlot,
   TODAY_MEAL_SLOTS,
 } from "@norish/shared-react/calendar/todays-meals";
-import { dateKey } from "@norish/shared/lib/helpers";
+import { addDays, dateKey } from "@norish/shared/lib/helpers";
 
 import { TAB_ROUTES } from "./tab-routes";
 
@@ -22,6 +22,9 @@ export const WIDGET_DATA_DAYS = WIDGET_DAYS + WEEK_DAYS - 1;
 export const SLOT_CHANGE_HOURS = [10, 14] as const;
 /** Lines the large widget's week fits: one per day, empty or not, and three more. */
 export const WEEK_LINES = 10;
+
+/** The planned items by date key, as the calendar query groups them. */
+export type Plan = Record<string, PlannedItemFromQuery[]>;
 
 export type PhotoSize = "meal" | "thumb";
 /** A photo's file in the shared folder, or null while it is not on the device. */
@@ -102,33 +105,27 @@ export function signedOutTimelines(strings: Pick<WidgetStrings, "signIn">): Widg
  * slot change, the large one at midnight; the device's local time sets each. After them, "Open Norish".
  */
 export function calendarWidgetTimelines(
-  plan: Record<string, PlannedItemFromQuery[]>,
+  plan: Plan,
   now: number,
   strings: WidgetStrings,
   photo: PhotoLookup
 ): WidgetTimelines {
   const start = new Date(now);
-  // Built from the calendar date, so a daylight-saving change moves no boundary off its hour.
-  const at = (offset: number, hour = 0) =>
-    new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset, hour);
   const small: WidgetEntry<SmallWidgetProps>[] = [];
   const large: WidgetEntry<LargeWidgetProps>[] = [];
 
   for (let offset = 0; offset < WIDGET_DAYS; offset++) {
-    const day = at(offset);
+    const day = addDays(start, offset);
 
-    large.push({ date: day.getTime(), props: weekProps(plan, offset, at, strings, photo) });
+    large.push({ date: day.getTime(), props: weekProps(plan, day, strings, photo) });
     for (const hour of [0, ...SLOT_CHANGE_HOURS]) {
-      const date = at(offset, hour);
+      const date = addDays(start, offset, hour);
 
-      small.push({
-        date: date.getTime(),
-        props: smallProps(plan[dateKey(date)] ?? [], date, strings, photo),
-      });
+      small.push({ date: date.getTime(), props: smallProps(plan, date, strings, photo) });
     }
   }
   const runOut: WidgetMessage = { kind: "message", text: strings.open, url: todayUrl() };
-  const end = at(WIDGET_DAYS).getTime();
+  const end = addDays(start, WIDGET_DAYS).getTime();
 
   return {
     small: [...fromNow(small, now), { date: end, props: runOut }],
@@ -149,13 +146,16 @@ function itemName(item: PlannedItemFromQuery, strings: WidgetStrings) {
   return item.recipeName ?? item.title ?? strings.untitled;
 }
 
+/** A day's items by slot, each slot in its planned order. */
+const slotsOn = (plan: Plan, date: Date) => groupTodayItemsBySlot(plan[dateKey(date)] ?? []);
+
 function smallProps(
-  items: PlannedItemFromQuery[],
+  plan: Plan,
   date: Date,
   strings: WidgetStrings,
   photo: PhotoLookup
 ): SmallWidgetProps {
-  const bySlot = groupTodayItemsBySlot(items);
+  const bySlot = slotsOn(plan, date);
   const filled = TODAY_MEAL_SLOTS.filter((slot) => bySlot[slot].length > 0);
   // The slot for the hour, or the next filled one later in the same day.
   const slot = firstSlotFrom(filled, nextMealSlot(date.getHours()));
@@ -178,15 +178,14 @@ function smallProps(
 }
 
 function weekProps(
-  plan: Record<string, PlannedItemFromQuery[]>,
-  offset: number,
-  at: (offset: number) => Date,
+  plan: Plan,
+  first: Date,
   strings: WidgetStrings,
   photo: PhotoLookup
 ): LargeWidgetProps {
-  const dates = Array.from({ length: WEEK_DAYS }, (_, index) => at(offset + index));
+  const dates = Array.from({ length: WEEK_DAYS }, (_, index) => addDays(first, index));
   const items = dates.map((date) => {
-    const bySlot = groupTodayItemsBySlot(plan[dateKey(date)] ?? []);
+    const bySlot = slotsOn(plan, date);
 
     return TODAY_MEAL_SLOTS.flatMap((slot) => bySlot[slot]);
   });

@@ -28,11 +28,11 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget } from "expo-widgets";
 
-import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type {
   LargeWidgetProps,
+  Plan,
   SmallWidgetProps,
   WeekLine,
   WidgetMessage,
@@ -321,10 +321,7 @@ export function startCalendarWidgets() {
  * Hands both widgets two weeks from `plan` and writes the photos they show into the shared
  * folder: shown without a photo first, again with it once it is on the device.
  */
-export function syncCalendarWidgets(
-  plan: Record<string, PlannedItemFromQuery[]>,
-  strings: WidgetStrings
-): Promise<void> {
+export function syncCalendarWidgets(plan: Plan, strings: WidgetStrings): Promise<void> {
   if (!widgets) return Promise.resolve();
   const started = generation;
 
