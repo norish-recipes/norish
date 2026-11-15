@@ -35,8 +35,7 @@ export type Heading =
 
 /** A grocery's row or a group's; `key` is what a drop plan knows it by. */
 export type Item = { store: StoreDto | null; key: string; done: boolean } & (
-  | { type: "line"; grocery: GroceryDto }
-  | { type: "group"; group: GroceryGroup }
+  { type: "line"; grocery: GroceryDto } | { type: "group"; group: GroceryGroup }
 );
 
 /** A row's value with its corners; held in the value, so a drag list's renderers see them. */
