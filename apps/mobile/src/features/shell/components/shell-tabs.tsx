@@ -1,13 +1,14 @@
 import React from "react";
 import { AddGroceriesAccessory } from "@/features/shell/components/add-groceries-accessory";
 import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-accessory";
+import { PlanRecipeAccessory } from "@/features/shell/components/plan-recipe-accessory";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
 import { usePathname } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
-/** The signed-in tabs: the system tab bar, Search as its own tab, Add recipe (Add items on Groceries) above it. */
+/** The signed-in tabs: the system tab bar, Search as its own tab, Add recipe (Add items on Groceries, Plan recipe on Calendar) above it. */
 export function ShellTabs() {
   const intl = useIntl();
   const accent = useAccentTextColor();
@@ -16,12 +17,19 @@ export function ShellTabs() {
   // The Pantry (and its food sheet) draws no accessory: nothing is added to the list from there.
   const onPantry = path.startsWith("/groceries/pantry") || path.startsWith("/groceries/food");
   const onGroceries = path.startsWith("/groceries");
+  const onCalendar = path.startsWith("/calendar");
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
       {hidden || onPantry ? null : (
         <NativeTabs.BottomAccessory>
-          {onGroceries ? <AddGroceriesAccessory /> : <AddRecipeAccessory />}
+          {onGroceries ? (
+            <AddGroceriesAccessory />
+          ) : onCalendar ? (
+            <PlanRecipeAccessory />
+          ) : (
+            <AddRecipeAccessory />
+          )}
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
