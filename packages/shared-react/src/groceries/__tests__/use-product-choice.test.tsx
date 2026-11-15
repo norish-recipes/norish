@@ -39,10 +39,12 @@ describe("useProductChoice", () => {
     expect(held.chooseProduct).not.toHaveBeenCalled();
     act(() => result.current.commit());
 
-    expect(held.chooseProduct).toHaveBeenCalledWith("s1", "avocado", {
-      kind: "product",
-      storeProductId: "p2",
-    });
+    expect(held.chooseProduct).toHaveBeenCalledWith(
+      "s1",
+      "avocado",
+      { kind: "product", storeProductId: "p2" },
+      "i1"
+    );
     expect(result.current.choice).toBeNull();
   });
 

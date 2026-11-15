@@ -86,7 +86,7 @@ export function useProductChoice(options: {
     // Unlinking what was never linked writes a Miss for a name the Store may
     // still be about to answer; there is nothing to undo.
     if (chosen.kind === "none" && !linked) return;
-    chooseProduct(selectedStoreId, groceryName, chosen);
+    chooseProduct(selectedStoreId, groceryName, chosen, ingredientId);
   };
 
   return {
