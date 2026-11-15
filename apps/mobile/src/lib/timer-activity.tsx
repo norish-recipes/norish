@@ -206,6 +206,8 @@ export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> 
     if (plan.kind === "done") await activity.end("default", plan.props);
     else await activity.end("immediate");
   } catch (error) {
+    // A failed start stays owed, so the next sync tries it again.
+    running = before;
     log.warn({ error }, "Could not update the timers' Live Activity");
   }
 }

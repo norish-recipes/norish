@@ -136,4 +136,16 @@ describe("syncTimerActivity", () => {
     await syncTimerActivity(show("a", null, ["t2"]));
     expect(native.start).toHaveBeenCalledTimes(1);
   });
+
+  it("starts on the next sync of the same plan after a start that failed", async () => {
+    native.start.mockImplementationOnce(() => {
+      throw new Error("Live Activities are not enabled");
+    });
+    await syncTimerActivity(show("a", null, ["t1"]));
+    // Live Activities turned on, then a foreground resync of the same timers.
+    await syncTimerActivity(show("a", null, ["t1"]));
+
+    expect(native.start).toHaveBeenCalledTimes(2);
+  });
+
 });
