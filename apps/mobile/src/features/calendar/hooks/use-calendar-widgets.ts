@@ -1,13 +1,11 @@
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { startCalendarWidgets, syncCalendarWidgets } from "@/lib/calendar-widgets";
 import { WIDGET_DATA_DAYS } from "@/lib/calendar-widgets-state";
-import { hashKey, useQueryClient } from "@tanstack/react-query";
 import { useIntl } from "react-intl";
 
-import { useCalendarQuery } from "@norish/shared-react/calendar";
+import { useCalendarQuery, useCalendarRangeFetched } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
-import { useTRPC } from "@norish/shared-react/trpc";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 /**
@@ -23,11 +21,8 @@ export function useCalendarWidgets() {
   );
   const range = { startISO: todayKey, endISO };
   const { calendarData } = useCalendarQuery(range);
-  const queryClient = useQueryClient();
-  const rangeHash = hashKey(useTRPC().calendar.listItems.queryKey(range));
-  // A seeded range holds only what other ranges knew, and writes land in it too: a fetch of it is known.
-  const [readHash, setReadHash] = useState<string | null>(null);
-  const isRead = readHash === rangeHash;
+  // Not the query's `isRead`: seeded from other ranges, that holds days no read of this one confirmed.
+  const fetched = useCalendarRangeFetched(range);
   const message = (id: string) => intl.formatMessage({ id });
   const strings = {
     nothingPlanned: message("calendar.widgets.nothingPlanned"),
@@ -49,26 +44,12 @@ export function useCalendarWidgets() {
   const shape = JSON.stringify(calendarData);
   // An unread range is unknown, not empty: nothing is pushed, so the widgets keep what they were handed.
   const sync = useEffectEvent(() => {
-    if (isRead) void syncCalendarWidgets(calendarData, strings);
+    if (fetched) void syncCalendarWidgets(calendarData, strings);
   });
 
   useEffect(() => startCalendarWidgets(), []);
 
-  useEffect(
-    () =>
-      queryClient.getQueryCache().subscribe((event) => {
-        if (
-          event.type === "updated" &&
-          event.action.type === "success" &&
-          !event.action.manual &&
-          event.query.queryHash === rangeHash
-        )
-          setReadHash(rangeHash);
-      }),
-    [queryClient, rangeHash]
-  );
-
-  useEffect(() => sync(), [shape, isRead, todayKey, intl.locale]);
+  useEffect(() => sync(), [shape, fetched, todayKey, intl.locale]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
