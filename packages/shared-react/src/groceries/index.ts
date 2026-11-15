@@ -102,3 +102,6 @@ export {
 } from "./store-editor";
 export type { ShopCheck } from "./use-save-store";
 export { useSaveStore } from "./use-save-store";
+export type { ProductRow } from "./product-rows";
+export { useProductField } from "./use-product-field";
+export { useProductChoice } from "./use-product-choice";

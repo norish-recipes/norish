@@ -72,42 +72,45 @@ function answer(storeId: string | null, term: string) {
 const KNOWN: Record<string, StoreProductDto[]> = { "store-a": [], "store-b": [] };
 
 // react-query's own semantics: a disabled query never leaves `pending`.
-vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  useShopSearch: (storeId: string | null, term: string, enabled: boolean) => {
-    searchCalls.push({ storeId, term, enabled });
-    const on = enabled && Boolean(storeId) && term.trim().length > 0;
+vi.mock(
+  "../../../../../packages/shared-react/src/groceries/use-store-products-query",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    useShopSearch: (storeId: string | null, term: string, enabled: boolean) => {
+      searchCalls.push({ storeId, term, enabled });
+      const on = enabled && Boolean(storeId) && term.trim().length > 0;
 
-    if (!on) return { data: undefined, isPending: true, isFetching: false };
-    if (SEARCH_IS_SLOW.current) return { data: undefined, isPending: true, isFetching: true };
-    if (SHOP_IS_DOWN.current) {
-      return { data: { candidates: [], answered: false }, isPending: false, isFetching: false };
-    }
+      if (!on) return { data: undefined, isPending: true, isFetching: false };
+      if (SEARCH_IS_SLOW.current) return { data: undefined, isPending: true, isFetching: true };
+      if (SHOP_IS_DOWN.current) {
+        return { data: { candidates: [], answered: false }, isPending: false, isFetching: false };
+      }
 
-    return {
-      data: {
-        candidates: answer(storeId, term).map((candidate) => ({
-          name: candidate.name,
-          url: candidate.url,
-          price: candidate.price,
-          currency: "EUR",
-          size: candidate.size,
-          pack: readPackSize(candidate.size) ?? undefined,
-          regularPrice: candidate.regularPrice,
-          dealWords: candidate.dealWords,
-        })),
-        answered: true,
-      },
-      isPending: false,
+      return {
+        data: {
+          candidates: answer(storeId, term).map((candidate) => ({
+            name: candidate.name,
+            url: candidate.url,
+            price: candidate.price,
+            currency: "EUR",
+            size: candidate.size,
+            pack: readPackSize(candidate.size) ?? undefined,
+            regularPrice: candidate.regularPrice,
+            dealWords: candidate.dealWords,
+          })),
+          answered: true,
+        },
+        isPending: false,
+        isFetching: false,
+      };
+    },
+    useStoreProducts: (storeId: string | null, enabled: boolean) => ({
+      data: enabled ? (KNOWN[storeId ?? ""] ?? []) : undefined,
+      isPending: !enabled,
       isFetching: false,
-    };
-  },
-  useStoreProducts: (storeId: string | null, enabled: boolean) => ({
-    data: enabled ? (KNOWN[storeId ?? ""] ?? []) : undefined,
-    isPending: !enabled,
-    isFetching: false,
-  }),
-}));
+    }),
+  })
+);
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: Record<string, unknown>) =>

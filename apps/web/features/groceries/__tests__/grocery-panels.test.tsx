@@ -134,27 +134,41 @@ vi.mock(
 vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useRecurrenceDetection: () => ({ detectedPattern: null }),
-  useLinkFor: linkOnTheList,
-  useChooseProduct: () => chooseProduct,
-  useShopSearch: () => ({ data: undefined, isPending: true, isFetching: false }),
-  useStoreProducts: (storeId: string | null, enabled: boolean) => ({
-    data: enabled
-      ? Object.values(LINKS).filter((candidate) => candidate.storeId === storeId)
-      : undefined,
-    isPending: !enabled,
-    isFetching: false,
-  }),
-  useProductLink: (storeId: string | null, name: string) => {
-    // The server resolves the name to its Ingredient and reads that link.
-    const ingredientId = ingredientOf(name);
-    const product = LINKS[`${storeId}|${ingredientId}`];
-
-    return {
-      data: product ? { storeId, ingredientId, product, triedAt: null, suggestion: null } : null,
-      isPending: false,
-    };
-  },
 }));
+vi.mock(
+  "../../../../../packages/shared-react/src/groceries/use-store-prices",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    useLinkFor: linkOnTheList,
+  })
+);
+vi.mock("../../../../../packages/shared-react/src/groceries/use-store-products-mutations", () => ({
+  useChooseProduct: () => chooseProduct,
+}));
+vi.mock(
+  "../../../../../packages/shared-react/src/groceries/use-store-products-query",
+  async (importOriginal) => ({
+    ...(await importOriginal<object>()),
+    useShopSearch: () => ({ data: undefined, isPending: true, isFetching: false }),
+    useStoreProducts: (storeId: string | null, enabled: boolean) => ({
+      data: enabled
+        ? Object.values(LINKS).filter((candidate) => candidate.storeId === storeId)
+        : undefined,
+      isPending: !enabled,
+      isFetching: false,
+    }),
+    useProductLink: (storeId: string | null, name: string) => {
+      // The server resolves the name to its Ingredient and reads that link.
+      const ingredientId = ingredientOf(name);
+      const product = LINKS[`${storeId}|${ingredientId}`];
+
+      return {
+        data: product ? { storeId, ingredientId, product, triedAt: null, suggestion: null } : null,
+        isPending: false,
+      };
+    },
+  })
+);
 
 // The Aisle field itself is not what these are about; a plain select drives
 // exactly the callback the real one does.
