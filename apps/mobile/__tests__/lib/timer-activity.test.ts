@@ -1,4 +1,8 @@
-import type { TimerActivityPlan, TimerActivityProps } from "@/lib/timer-activity-state";
+import type {
+  TimerActivityPlan,
+  TimerActivityProps,
+  TimerActivityRow,
+} from "@/lib/timer-activity-state";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Fake = { update: ReturnType<typeof vi.fn>; end: ReturnType<typeof vi.fn> };
@@ -152,4 +156,32 @@ describe("syncTimerActivity", () => {
     expect(native.start).toHaveBeenCalledTimes(2);
   });
 
+  it("pushes a running row once while its end holds, and again when the end moves", async () => {
+    const activity = fake();
+    const row = (startsAt: number, endsAt: number): TimerActivityRow => ({
+      id: "t1",
+      recipe: "Soup",
+      step: "Step 1",
+      state: "running",
+      startsAt,
+      endsAt,
+    });
+    const at = (startsAt: number, endsAt: number): TimerActivityPlan => ({
+      kind: "show",
+      props: { ...props("a"), rows: [row(startsAt, endsAt)] },
+      staleAt: endsAt,
+      running: ["t1"],
+    });
+
+    native.instances = [activity];
+    // A 60 s timer adjusted past its duration: the start follows now until the end moves.
+    await syncTimerActivity(at(10_000, 80_000));
+    await syncTimerActivity(at(15_000, 80_000));
+    await syncTimerActivity(at(20_000, 90_000));
+
+    expect(activity.update.mock.calls.map(([pushed]) => pushed.rows)).toEqual([
+      [row(10_000, 80_000)],
+      [row(20_000, 90_000)],
+    ]);
+  });
 });
