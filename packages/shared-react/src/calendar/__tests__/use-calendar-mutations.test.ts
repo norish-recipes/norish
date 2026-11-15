@@ -281,6 +281,29 @@ describe("useCalendarMutations", () => {
     });
   });
 
+  describe("a write the server refuses", () => {
+    type Writes = ReturnType<typeof useCalendarMutations>;
+
+    it.each([
+      ["a plan", mockCreateItemMutate, (w: Writes) => w.planNote("2025-01-15", "Lunch", "Soup")],
+      ["a remove", mockDeleteItemMutate, (w: Writes) => w.deleteItem("item-1")],
+      ["a move", mockMoveItemMutate, (w: Writes) => w.moveItem("item-1", "2025-01-16", "Lunch")],
+      ["an edit", mockUpdateItemMutate, (w: Writes) => w.updateItem("item-1", "Soup")],
+    ])("tells the reader when %s is rolled back", async (_, mutation, write) => {
+      queryClient.setQueryData(getQueryKey(), [createMockItem({ id: "item-1" })]);
+      mutation.mockRejectedValue(new Error("refused"));
+      const adapter = fakePlatformAdapter("phone", { id: "user-1" } as never);
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+
+      act(() => write(result.current));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(adapter.showError).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("deleteItem", () => {
     it("applies optimistic update removing item from cache", async () => {
       const item1 = createMockItem({ id: "item-1" });

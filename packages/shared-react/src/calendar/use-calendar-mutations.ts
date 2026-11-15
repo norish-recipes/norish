@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PlannedItemFromQuery, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
+import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
 import type { CachedCalendarRange, CalendarMutationsResult } from "./types";
@@ -17,13 +18,15 @@ import { useCalendarCacheHelpers } from "./use-calendar-cache";
 /** What a plan shows of its recipe, as a cached recipe list page holds it. */
 type ListedRecipe = Pick<RecipeDashboardDTO, "id" | "name" | "image" | "servings" | "calories">;
 
+const log = createClientLogger("CalendarMutations");
+
 type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => PlannedItemFromQuery[];
 
 /** Plans and edits land in every cached `calendar.listItems` range, whichever screen shows it. */
 export function useCalendarMutations(): CalendarMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { session } = usePlatform();
+  const { session, showError } = usePlatform();
   const {
     cachedRanges,
     writeRange,
@@ -64,6 +67,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
     for (const { key, items } of context?.held ?? []) writeRange(key, items);
     // The snapshots can predate a later write or event; reread so each range converges.
     rereadAllRanges();
+    log.error({ error }, "Failed to save calendar change");
+    showError("The calendar change was not saved. Please try again.", "calendar-mutations");
   };
 
   // A move or update answers with its item, new version included: the echo is the fast path (ADR-0011).
