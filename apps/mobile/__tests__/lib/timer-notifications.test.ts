@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
 
+const warn = vi.hoisted(() => vi.fn());
+vi.mock("@norish/shared/lib/logger", () => ({ createClientLogger: () => ({ warn }) }));
 const activity = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/lib/timer-activity", () => ({ syncTimerActivity: activity }));
 const link = vi.hoisted(() => ({ fail: false }));
@@ -114,7 +116,9 @@ describe("the sync chain", () => {
 
     useTimerStore.setState({ timers: [timer("a", { lastTickAt: Date.now() })] });
     link.fail = true;
+    warn.mockClear();
     await syncTimers({ body: "", paused: "", done: "", more: String });
+    expect(warn).toHaveBeenCalledWith(expect.anything(), "Could not sync the Recipe Timers");
     link.fail = false;
     activity.mockClear();
     await syncTimers({ body: "", paused: "", done: "", more: String });
@@ -126,9 +130,11 @@ describe("the sync chain", () => {
 
     activity.mockClear();
     activity.mockRejectedValueOnce(new Error("Live Activities are not enabled"));
+    warn.mockClear();
     await expect(
       syncTimers({ body: "", paused: "", done: "", more: String })
     ).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(expect.anything(), "Could not sync the Recipe Timers");
     await syncTimers({ body: "", paused: "", done: "", more: String });
 
     expect(activity).toHaveBeenCalledTimes(2);

@@ -8,6 +8,8 @@ const native = vi.hoisted(() => ({
   start: vi.fn(),
 }));
 
+const warn = vi.hoisted(() => vi.fn());
+vi.mock("@norish/shared/lib/logger", () => ({ createClientLogger: () => ({ warn }) }));
 vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
 vi.mock("@expo/ui/swift-ui", () => ({}));
 vi.mock("@expo/ui/swift-ui/modifiers", () => ({}));
@@ -39,6 +41,7 @@ describe("syncTimerActivity", () => {
   beforeEach(async () => {
     native.instances = [];
     native.start.mockReset();
+    warn.mockClear();
     // Clears the last pushed plan between tests.
     await syncTimerActivity({ kind: "end" });
   });
@@ -132,6 +135,7 @@ describe("syncTimerActivity", () => {
     });
 
     await expect(syncTimerActivity(show("a"))).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(1);
     native.start.mockReset();
     await syncTimerActivity(show("a", null, ["t2"]));
     expect(native.start).toHaveBeenCalledTimes(1);
