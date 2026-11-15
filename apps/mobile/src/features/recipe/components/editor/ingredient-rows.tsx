@@ -11,6 +11,7 @@ import { useUnitsQuery } from "@norish/shared-react/config";
 import { useFoodsByName, useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   hasIngredientContent,
+  inDraggedOrder,
   ingredientRowsToLines,
   isHeadingText,
   lineMoves,
@@ -143,7 +144,16 @@ export function IngredientRows({
           key: row.id,
           value: row,
         }))}
-        onDrop={(drop) => commit(normalizeIngredientRows(drop.rows.map((entry) => entry.value)))}
+        onDrop={(drop) =>
+          commit(
+            normalizeIngredientRows(
+              inDraggedOrder(
+                drop.rows.map((entry) => entry.value),
+                rows
+              )
+            )
+          )
+        }
       />
       {trailingRow.canAdd ? (
         <AddRow

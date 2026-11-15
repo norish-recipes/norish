@@ -96,6 +96,13 @@ export function ingredientRowsToLines(
     .filter((ing): ing is ParsedIngredient => ing !== null);
 }
 
+/** The dragged order over `current`: a row can change while held, so each is read by id. */
+export function inDraggedOrder<T extends { id: string }>(dragged: T[], current: T[]): T[] {
+  const byId = new Map(current.map((row) => [row.id, row]));
+
+  return dragged.map((row) => byId.get(row.id) ?? row);
+}
+
 /** The rows after a reorder: empty rows dropped, one empty row to type into at the end. */
 export function normalizeIngredientRows(rows: IngredientRow[]): IngredientRow[] {
   return [...rows.filter((row) => row.text.trim().length > 0), createIngredientRow("")];

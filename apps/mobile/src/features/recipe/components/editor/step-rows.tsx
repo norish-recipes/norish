@@ -16,6 +16,7 @@ import { useFoodsByName } from "@norish/shared-react/ingredients";
 import {
   chipLinesOf,
   hasStepContent,
+  inDraggedOrder,
   ingredientSuggestionsOf,
   mentionIngredient,
   normalizeStepRows,
@@ -199,7 +200,16 @@ export function StepRows({
           key: row.id,
           value: row,
         }))}
-        onDrop={(drop) => commit(() => normalizeStepRows(drop.rows.map((entry) => entry.value)))}
+        onDrop={(drop) =>
+          commit((current) =>
+            normalizeStepRows(
+              inDraggedOrder(
+                drop.rows.map((entry) => entry.value),
+                current
+              )
+            )
+          )
+        }
       />
       {trailingRow.canAdd ? (
         <AddRow

@@ -14,6 +14,7 @@ import { useFoodsByName, useIngredientIcons } from "@norish/shared-react/ingredi
 import {
   createIngredientRow,
   hasIngredientContent,
+  inDraggedOrder,
   ingredientRowsToLines,
   lineMoves,
   normalizeIngredientRows,
@@ -123,7 +124,7 @@ export default function IngredientInput({
     debouncedParse(updated);
   };
   const handleReorder = (newOrder: IngredientRow[]) => {
-    const normalized = normalizeIngredientRows(newOrder);
+    const normalized = normalizeIngredientRows(inDraggedOrder(newOrder, items));
     moveRows(normalized);
     debouncedParse(normalized);
   };

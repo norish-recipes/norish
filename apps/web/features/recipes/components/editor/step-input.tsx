@@ -19,6 +19,7 @@ import {
   chipLinesOf,
   createStepRow,
   hasStepContent,
+  inDraggedOrder,
   ingredientSuggestionsOf,
   isHeadingText,
   mentionIngredient,
@@ -247,7 +248,7 @@ export default function StepInput({
     fileInputsRef.current[index]?.click();
   };
   const handleReorder = (newOrder: StepItem[]) => {
-    commit(() => normalizeStepRows(newOrder));
+    commit((current) => normalizeStepRows(inDraggedOrder(newOrder, current)));
   };
   const clearPendingMentionEntry = () => setPendingMentionEntry(null);
 

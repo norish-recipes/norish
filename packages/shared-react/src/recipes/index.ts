@@ -147,6 +147,7 @@ export {
   ingredientSuggestionsOf,
   ingredientTriggerAt,
   isHeadingText,
+  inDraggedOrder,
   lineMoves,
   matchIngredientSuggestions,
   mentionIngredient,

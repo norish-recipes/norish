@@ -521,6 +521,44 @@ describe("StepRows uploads that end together", () => {
   });
 });
 
+describe("StepRows dropped while a photo uploads", () => {
+  it("keeps the photo that finished while the step was held", async () => {
+    const upload = Promise.withResolvers<{ image: string; order: number }[]>();
+    const uploads = {
+      canUpload: () => true,
+      pendingFor: () => [],
+      uploadStep: () => upload.promise,
+    } as unknown as Parameters<typeof StepRows>[0]["uploads"];
+    const onChange = vi.fn();
+
+    render(
+      <StepRows
+        ingredients={[]}
+        lineMoves={null}
+        steps={[
+          { step: "Stir.", order: 0, systemUsed: "metric" },
+          { step: "Serve.", order: 1, systemUsed: "metric" },
+        ]}
+        systemUsed="metric"
+        uploads={uploads}
+        onChange={onChange}
+      />
+    );
+    fireEvent.click(screen.getByTestId("editor-step-photo-0"));
+    act(() => state.pendingPick?.());
+    // The list holds the rows it was lifted from while the upload ends.
+    const lifted = state.lists.get("step")!.rows as DragRows;
+
+    await act(async () => upload.resolve([{ image: "/a.jpg", order: 0 }]));
+    act(() => state.lists.get("step")!.onDrop(resolveDrop(lifted, 0, 1)));
+
+    expect(onChange.mock.calls.at(-1)?.[0]).toMatchObject([
+      { step: "Serve.", images: [] },
+      { step: "Stir.", images: [{ image: "/a.jpg", order: 0 }] },
+    ]);
+  });
+});
+
 describe("StepRows when lines move", () => {
   it("keeps the form's references when two moves land in one render", () => {
     const onChange = vi.fn();
