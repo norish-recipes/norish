@@ -12,11 +12,14 @@ export function ShellTabs() {
   const intl = useIntl();
   const accent = useAccentTextColor();
   const hidden = useTabBarHidden();
-  const onGroceries = usePathname().startsWith("/groceries");
+  const path = usePathname();
+  // The Pantry (and its food sheet) draws no accessory: nothing is added to the list from there.
+  const onPantry = path.startsWith("/groceries/pantry") || path.startsWith("/groceries/food");
+  const onGroceries = path.startsWith("/groceries");
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
-      {hidden ? null : (
+      {hidden || onPantry ? null : (
         <NativeTabs.BottomAccessory>
           {onGroceries ? <AddGroceriesAccessory /> : <AddRecipeAccessory />}
         </NativeTabs.BottomAccessory>
