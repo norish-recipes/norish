@@ -16,7 +16,13 @@ export type TimelineHeading = {
   dayKey: string;
   isToday: boolean;
 } & (
-  | { type: "day"; date: Date; empty: boolean; /** A gap above: every card but the first. */ gap: boolean }
+  | {
+      type: "day";
+      date: Date;
+      empty: boolean;
+      /** A gap above: every card but the first. */
+      gap: boolean;
+    }
   | { type: "slot"; slot: Slot }
 );
 
@@ -57,10 +63,12 @@ const fit = (least: number, line: number, padding: number, scale: number) =>
 export const itemLineHeight = (scale = 1) => fit(TIMELINE.photo, TIMELINE.lines.item, 0, scale);
 
 /** A day top's date row, at a font scale. */
-export const dayHeaderHeight = (scale = 1) => fit(TIMELINE.dayHeader, TIMELINE.lines.day, 24, scale);
+export const dayHeaderHeight = (scale = 1) =>
+  fit(TIMELINE.dayHeader, TIMELINE.lines.day, 24, scale);
 
 /** A slot label, at a font scale. */
-export const slotLabelHeight = (scale = 1) => fit(TIMELINE.slotLabel, TIMELINE.lines.slot, 18, scale);
+export const slotLabelHeight = (scale = 1) =>
+  fit(TIMELINE.slotLabel, TIMELINE.lines.slot, 18, scale);
 
 /** A day top's row key. */
 export const dayRowKey = (dayKey: string) => `day:${dayKey}`;
