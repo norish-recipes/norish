@@ -78,7 +78,7 @@ function GroceryListContent({
   const fileGroceryName = useFileGroceryName();
 
   // Group groceries by storeId; a Store whose groceries did not change keeps its array.
-  const builtByStore = useMemo(() => groceriesByStore(groceries, stores), [groceries, stores]);
+  const builtByStore = groceriesByStore(groceries, stores);
   const sharedByStore = useStructuralSharing([...builtByStore]);
   const groupedGroceries = new Map(sharedByStore);
 
