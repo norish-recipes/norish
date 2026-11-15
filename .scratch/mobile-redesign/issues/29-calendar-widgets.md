@@ -4,7 +4,7 @@
 
 **Blocked by:** 22, 28
 
-**Status:** open
+**Status:** done
 
 - [x] An entry builder (pure, unit-tested): which meal per `nextMealSlot`, fall-forward within today, today plus 13 days, entries at midnight, 10:00 and 14:00.
 - [x] The app pushes at launch, on foreground and on every calendar change it sees, realtime included; photos written to the shared folder.
@@ -25,3 +25,23 @@
 
 - 2026-11-15 re-review round (`56492d0d4..`): the push gate is now `useCalendarRangeRead` (shared-react): open while the widgets' 20-day query holds a real read, this run's or restored (`dataUpdatedAt > 0`), so a relaunch inside the five-minute stale window or offline pushes the user's plans at once; a seed from other ranges keeps `dataUpdatedAt` 0, and `writeRange` keeps it 0 on a never-read range, so a new day stays shut until read. The large widget shows one line a day: its systemLarge sizes run from 364×382 pt (Pro Max) through 338×354 (6.1") and 329×345 (mini) down to 321×324 (iPhone SE 2/3, on iOS 27); the old 10-line week was ~348 pt of content, already past the 18 Pro's margins and with the header and Saturday clipped on an SE simulator, and seven lines (~270 pt) leave ~16 pt spare on the SE while an eighth (24 pt) does not fit, so `lineBudget` is gone. "+N more" is its own link to the day with layout priority, so a long recipe name truncates first. The ring comment now says 50% light / 55% dark, as the board has it. Simulator (own :3400 server, throwaway Postgres/Valkey, Debug + Metro, both extensions): SE (created for this, then deleted) and 18 Pro, light and dark, a full week fits whole; "+1 more" opened Calendar on Wed 18 and the long name beside Thu's count opened its recipe; planned, relaunched within a minute and planned again: shown at once; server stopped, relaunched and planned: shown at once. Widgets removed, app back on :3000, signed out.
 - Known limit: offline on a new day, before that day's range has ever been read, the widgets keep the timeline they hold and the user's own offline plans do not reach them until the server is back.
+
+### Review log (2026-11-15)
+
+Range `8d53d0eed..f8a1c5633`. Standards on Sonnet low, Spec on Opus high; fixes `42a6c76e5..56492d0d4`, re-reviewed on Opus high, second round `361b213fb..f8a1c5633`. The Spec review found the entry builder (the shared `nextMealSlot`, a push made mid-period, daylight saving and time zones with real dates), the photo handling and the session-end clear sound.
+
+Fixed, first round (14): the large widget hiding items without a count; days handed to the widgets that were never read; Sign-out waiting on a photo download; a Calendar-day link working only once; a blank card when a session ends before any push; the widgets kept off Android; the auth layout clearing through lib; photos in their own module; one last-pushed helper and one link builder shared with the Live Activity; the widgets' colours brought back to the theme; shared helpers inside the layouts, one date helper, names and a comment.
+
+Fixed, second round (4): the push gate staying shut for a whole session after a relaunch (it opens on any real read of the range, this run's or a restored one); the week overflowing smaller phones (one line a day, which fits the 321 by 324 pt large widget of the smallest supported iPhone); "+N more" as its own link to the day, never truncated; a comment.
+
+Closed after checking: the small widget already follows Today's fall-forward (no setting hides a single slot; hiding the Today section does not affect the widget). `expo-widgets` reads an 8-digit hex as RGBA (ticket 22's note corrected).
+
+Unticked, the maintainer's: the device hand-check in light, dark, tinted and clear (list above).
+
+For the maintainer to judge: the large widget shows one line a day with "+N more" (taller phones could take a line or two more, or a day's items could sit side by side); no Norish mark on the message cards; the widget gallery's name and description in English only.
+
+Known limits: offline on a new day, before that day's range was ever read, the widgets keep the timeline they hold and the user's own offline plans do not reach them until the server is back; a roll at 10:00, 14:00 and midnight was not seen (the simulator's clock cannot be set).
+
+Seen and left, predates the ticket: after Sign-out with a server that accepts connections but never answers, the app stays blank until it answers.
+
+Final state `f8a1c5633`: all 11 gates exit 0; lint warnings at the baseline in every package, mobile at zero.
