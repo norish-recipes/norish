@@ -580,7 +580,7 @@ export async function assignGroceryToStoreData(
   // Store's answer was never about this one.
   await afterCommit(ctx, "pricing and remembering the Store", async () => {
     await noticeGroceries(ctx, [updated]);
-    if (savePreference) await rememberStorePreference(ctx.user.id, grocery.ingredientId, storeId);
+    if (savePreference) await rememberStorePreference(ctx.user.id, updated.ingredientId, storeId);
   });
 
   void groceries.publish(
