@@ -24,11 +24,11 @@ export function FoodScreen() {
   const [keeps, setKeeps] = useState(true);
   const gone = !item && isRead;
   // Save closes the sheet itself; the cache then drops the food and must not close it again.
-  const saving = useRef(false);
+  const savingRef = useRef(false);
 
   // Closed once a housemate takes the food out.
   useEffect(() => {
-    if (gone && !saving.current) router.back();
+    if (gone && !savingRef.current) router.back();
   }, [gone, router]);
 
   if (!item) {
@@ -43,7 +43,7 @@ export function FoodScreen() {
 
   const label = intl.formatMessage({ id: "groceries.pantry.inYourPantry" });
   const save = () => {
-    saving.current = true;
+    savingRef.current = true;
     if (!keeps) removePantryIngredient(item.id);
     router.back();
   };
