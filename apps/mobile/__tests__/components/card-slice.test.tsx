@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import React, { useState } from "react";
+import { ItemSlice } from "@/components/card-slice";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-
-import { ItemSlice } from "../components/card-slice";
 
 const lift = vi.hoisted(() => ({ lifted: false }));
 

@@ -1,3 +1,4 @@
+import type { Edge } from "@/components/card-edges";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
@@ -8,7 +9,6 @@ import { useIntl } from "react-intl";
 
 import type { StoreDto } from "@norish/shared/contracts";
 
-import type { Edge } from "./card-edges";
 import { useStoreColor } from "../hooks/use-store-color";
 
 const TILT = { transform: [{ rotate: "-1.5deg" }] };

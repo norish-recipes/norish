@@ -1,8 +1,8 @@
+import type { Edge } from "@/components/card-edges";
+import { edgeAt } from "@/components/card-edges";
+
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
-
-import type { Edge } from "../components/card-edges";
-import { edgeAt } from "../components/card-edges";
 
 /** A catalogue food a search found. */
 type Match = { id: string; name: string; localeNames?: Record<string, string> };

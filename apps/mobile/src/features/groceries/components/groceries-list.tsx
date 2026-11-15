@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 
@@ -14,7 +15,6 @@ import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { isGroupOpen, sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
-import { CardSlice, ItemSlice } from "./card-slice";
 import { DoneRow } from "./done-row";
 import { GroceryRow } from "./grocery-row";
 import { GroupRow } from "./group-row";

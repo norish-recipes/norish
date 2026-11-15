@@ -55,7 +55,7 @@ vi.mock("heroui-native", () => ({
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("../components/card-slice", () => ({
+vi.mock("@/components/card-slice", () => ({
   CardSlice: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock("../components/list-switch", () => ({

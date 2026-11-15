@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { CardSlice } from "@/components/card-slice";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -11,7 +12,6 @@ import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { PantryRow } from "../utils/pantry-rows";
-import { CardSlice } from "./card-slice";
 import { SkeletonCard } from "./groceries-states";
 
 /** A kept food that still has a grocery to buy: handled, so nobody adds it twice. */
