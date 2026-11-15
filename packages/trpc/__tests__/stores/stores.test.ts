@@ -98,33 +98,149 @@ describe("stores procedures", () => {
     });
   });
 
-  it("logs stale store updates as no-ops", async () => {
+  it("answers a stale store update as stale, and changes nothing", async () => {
     storesRepository.updateStore.mockResolvedValue(null);
+    const storeId = crypto.randomUUID();
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
-    const result = await caller.update({
-      id: crypto.randomUUID(),
-      version: 3,
-      name: "Pantry",
-    });
+    const result = await caller.update({ id: storeId, version: 3, name: "Pantry" });
 
-    expect(result).toBeDefined();
+    expect(result).toEqual({ success: true, stale: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
-      { userId: ctx.user.id, storeId: result, version: 3 },
+      { userId: ctx.user.id, storeId, version: 3 },
       "Ignoring stale store update mutation"
     );
     expect(stores.publish).not.toHaveBeenCalled();
   });
 
-  it("logs stale store reorders as no-ops", async () => {
+  it("answers an applied store update as not stale and tells the household", async () => {
     const storeId = crypto.randomUUID();
 
+    storesRepository.updateStore.mockResolvedValue({ id: storeId, version: 4 });
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+    const result = await caller.update({ id: storeId, version: 3, name: "Pantry" });
+
+    expect(result).toEqual({ success: true, stale: false });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "updated",
+      { store: { id: storeId, version: 4 } },
+      { householdKey: ctx.householdKey }
+    );
+  });
+
+  it("answers an update to a Store that no longer exists as stale", async () => {
+    storesRepository.getStoreOwnerId.mockResolvedValue(null);
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.update({ id: crypto.randomUUID(), version: 3, name: "Pantry" })
+    ).resolves.toEqual({ success: true, stale: true });
+    expect(storesRepository.updateStore).not.toHaveBeenCalled();
+  });
+
+  it("fails an update the database refused, so it is never taken as stored", async () => {
+    storesRepository.updateStore.mockRejectedValue(new Error("connection lost"));
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.update({ id: crypto.randomUUID(), version: 3, name: "Pantry" })
+    ).rejects.toThrow("connection lost");
+  });
+
+  it("answers a delete once decided: stale when the version moved on", async () => {
+    storesRepository.deleteStore.mockResolvedValue({
+      deletedGroceryIds: [],
+      storeDeleted: false,
+      stale: true,
+    });
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+    const result = await caller.delete({
+      storeId: crypto.randomUUID(),
+      version: 2,
+      deleteGroceries: false,
+      grocerySnapshot: [],
+    });
+
+    expect(result).toEqual({ success: true, stale: true });
+    expect(stores.publish).not.toHaveBeenCalled();
+  });
+
+  it("answers a delete that kept the Store for lines it was not shown as stale", async () => {
+    storesRepository.deleteStore.mockResolvedValue({
+      deletedGroceryIds: [],
+      storeDeleted: false,
+      stale: false,
+    });
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+    const result = await caller.delete({
+      storeId: crypto.randomUUID(),
+      version: 2,
+      deleteGroceries: true,
+      grocerySnapshot: [{ id: crypto.randomUUID(), version: 1 }],
+    });
+
+    expect(result).toEqual({ success: true, stale: true });
+  });
+
+  it("answers an applied delete as not stale and tells the household", async () => {
+    const storeId = crypto.randomUUID();
+    const groceryId = crypto.randomUUID();
+
+    storesRepository.deleteStore.mockResolvedValue({
+      deletedGroceryIds: [groceryId],
+      storeDeleted: true,
+      stale: false,
+    });
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+    const result = await caller.delete({
+      storeId,
+      version: 2,
+      deleteGroceries: true,
+      grocerySnapshot: [{ id: groceryId, version: 1 }],
+    });
+
+    expect(result).toEqual({ success: true, stale: false });
+    expect(stores.publish).toHaveBeenCalledWith(
+      "deleted",
+      { storeId, deletedGroceryIds: [groceryId] },
+      { householdKey: ctx.householdKey }
+    );
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "deleted",
+      { groceryIds: [groceryId] },
+      { householdKey: ctx.householdKey }
+    );
+  });
+
+  it("takes a delete of a Store already gone as done", async () => {
+    storesRepository.getStoreOwnerId.mockResolvedValue(null);
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.delete({
+        storeId: crypto.randomUUID(),
+        version: 2,
+        deleteGroceries: false,
+        grocerySnapshot: [],
+      })
+    ).resolves.toEqual({ success: true, stale: false });
+    expect(storesRepository.deleteStore).not.toHaveBeenCalled();
+  });
+
+  it("answers a reorder none of whose versions held as stale", async () => {
     storesRepository.reorderStores.mockResolvedValue([]);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
-    const result = await caller.reorder({ stores: [{ id: storeId, version: 2 }] });
+    const result = await caller.reorder({ stores: [{ id: crypto.randomUUID(), version: 2 }] });
 
-    expect(result).toEqual([storeId]);
+    expect(result).toEqual({ success: true, stale: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, requestedStoreCount: 1 },
       "Ignoring stale store reorder mutation"
@@ -132,7 +248,7 @@ describe("stores procedures", () => {
     expect(stores.publish).not.toHaveBeenCalled();
   });
 
-  it("logs partial store reorders and emits only applied stores", async () => {
+  it("answers a partial store reorder as stale and emits only the applied stores", async () => {
     const storeA = crypto.randomUUID();
     const storeB = crypto.randomUUID();
     const reorderedStore = {
@@ -153,7 +269,7 @@ describe("stores procedures", () => {
       ],
     });
 
-    expect(result).toEqual([storeA, storeB]);
+    expect(result).toEqual({ success: true, stale: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, requestedStoreCount: 2, appliedStoreCount: 1 },
       "Store reorder partially applied due to stale versions"
@@ -164,6 +280,23 @@ describe("stores procedures", () => {
         stores: [reorderedStore],
       },
       { householdKey: ctx.householdKey }
+    );
+  });
+
+  it("answers a whole reorder as not stale, and a failed one as failed", async () => {
+    const storeId = crypto.randomUUID();
+
+    storesRepository.reorderStores.mockResolvedValue([{ id: storeId, version: 2 }]);
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(caller.reorder({ stores: [{ id: storeId, version: 2 }] })).resolves.toEqual({
+      success: true,
+      stale: false,
+    });
+
+    storesRepository.reorderStores.mockRejectedValue(new Error("connection lost"));
+    await expect(caller.reorder({ stores: [{ id: storeId, version: 2 }] })).rejects.toThrow(
+      "connection lost"
     );
   });
 
