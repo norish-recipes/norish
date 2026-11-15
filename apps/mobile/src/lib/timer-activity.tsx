@@ -24,6 +24,7 @@ import type {
   TimerActivityProps,
   TimerActivityRow,
 } from "./timer-activity-state";
+import { lastPushed } from "./last-pushed";
 import { keepStarts } from "./timer-activity-state";
 
 const log = createClientLogger("recipe-timers");
@@ -162,7 +163,7 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
 const factory =
   Platform.OS === "ios" ? createLiveActivity("RecipeTimers", timerActivityLayout) : null;
 
-let shown: { content: string; props: TimerActivityProps } | null = null;
+const pushed = lastPushed<{ props: TimerActivityProps; staleAt: number | null }>();
 // The timers running at the last sync; null before the first, so a launch starts nothing.
 let running: ReadonlySet<string> | null = null;
 
@@ -180,10 +181,10 @@ export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> 
     await Promise.all(extra.map((stale) => stale.end("immediate")));
 
     if (plan.kind === "show") {
-      const props = keepStarts(plan.props, shown?.props ?? null);
-      const content = JSON.stringify({ props, staleAt: plan.staleAt });
+      const props = keepStarts(plan.props, pushed.value?.props ?? null);
+      const next = { props, staleAt: plan.staleAt };
 
-      if (activity && content === shown?.content) return;
+      if (activity && pushed.holds(next)) return;
       const staleDate = plan.staleAt === null ? undefined : new Date(plan.staleAt);
 
       if (activity) await activity.update(props, staleDate);
@@ -191,16 +192,16 @@ export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> 
       else if (before && plan.running.some((id) => !before.has(id)))
         factory.start(props, undefined, staleDate);
       else {
-        shown = null;
+        pushed.forget();
 
         return;
       }
-      shown = { content, props };
+      pushed.record(next);
 
       return;
     }
 
-    shown = null;
+    pushed.forget();
     if (!activity) return;
     // Done stays on the Lock Screen until iOS clears it; a removal or a session end goes at once.
     if (plan.kind === "done") await activity.end("default", plan.props);

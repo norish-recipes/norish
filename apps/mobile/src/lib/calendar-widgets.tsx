@@ -40,6 +40,7 @@ import type {
 } from "./calendar-widgets-state";
 import { clearPhotos, renderWithPhotos } from "./calendar-widget-photos";
 import { calendarWidgetTimelines, signedOutTimelines, todayUrl } from "./calendar-widgets-state";
+import { lastPushed } from "./last-pushed";
 
 const log = createClientLogger("calendar-widgets");
 
@@ -287,7 +288,7 @@ const widgets =
       }
     : null;
 
-let shown: string | null = null;
+const pushed = lastPushed<WidgetTimelines>();
 // Set by a session end, so a push still on its way when the session ended shows nothing.
 let ended = false;
 // Bumped by a session end: a refresh started before it writes no photo and pushes nothing.
@@ -303,16 +304,14 @@ function queue(task: () => Promise<void>): Promise<void> {
 }
 
 function push(timelines: WidgetTimelines) {
-  const content = JSON.stringify(timelines);
-
-  if (!widgets || content === shown) return;
+  if (!widgets || pushed.holds(timelines)) return;
   widgets.small.updateTimeline(
     timelines.small.map((entry) => ({ date: new Date(entry.date), props: entry.props }))
   );
   widgets.large.updateTimeline(
     timelines.large.map((entry) => ({ date: new Date(entry.date), props: entry.props }))
   );
-  shown = content;
+  pushed.record(timelines);
 }
 
 /** Starts pushing for a new session. */
