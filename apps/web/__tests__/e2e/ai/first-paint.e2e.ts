@@ -124,7 +124,6 @@ const CALENDAR_SUBSCRIPTIONS = [
   "calendar.onItemDeleted",
   "calendar.onItemMoved",
   "calendar.onItemUpdated",
-  "calendar.onFailed",
   "recipes.onUpdated",
 ];
 

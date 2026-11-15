@@ -53,13 +53,6 @@ vi.mock("../../trpc", () => ({
           return { enabled: true };
         },
       },
-      onFailed: {
-        subscriptionOptions: (_input: unknown, options: { onData: SubscriptionCallback }) => {
-          subscriptionCallbacks["onFailed"] = options?.onData;
-
-          return { enabled: true };
-        },
-      },
     },
     recipes: {
       onUpdated: {
@@ -641,24 +634,6 @@ describe("useCalendarSubscription", () => {
         itemType: "note",
         version: 2,
       });
-    });
-  });
-
-  describe("onFailed subscription", () => {
-    it("rereads every cached range on failure", () => {
-      const otherRange = [
-        ["calendar", "listItems"],
-        { input: { startISO: "2020-01-01", endISO: "2020-01-07" }, type: "query" },
-      ];
-
-      queryClient.setQueryData(getQueryKey(), []);
-      queryClient.setQueryData(otherRange, []);
-      renderSubscriptionHook();
-
-      subscriptionCallbacks["onFailed"]!(trackedEvent({ reason: "Something went wrong" }));
-
-      expect(queryClient.getQueryState(getQueryKey())?.isInvalidated).toBe(true);
-      expect(queryClient.getQueryState(otherRange)?.isInvalidated).toBe(true);
     });
   });
 

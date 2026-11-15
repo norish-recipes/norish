@@ -50,13 +50,6 @@ export function useCalendarSubscription() {
     },
   });
 
-  useRealtimeSubscription<Payload<"failed">>(trpc.calendar.onFailed, {
-    ...live,
-    onEvent: () => {
-      rereadAllRanges();
-    },
-  });
-
   // A planned recipe shows its recipe's name and image in every cached range; an
   // enrichment changes neither.
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "updated">>(trpc.recipes.onUpdated, {

@@ -69,7 +69,6 @@ const trpc = {
     onItemDeleted: procedure("onItemDeleted"),
     onItemMoved: procedure("onItemMoved"),
     onItemUpdated: procedure("onItemUpdated"),
-    onFailed: procedure("onFailed"),
   },
   recipes: {
     onUpdated: procedure("recipes.onUpdated"),
