@@ -2,6 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+
 import "@testing-library/jest-dom";
 
 import { offlineEngine } from "@/lib/offline/engine";
@@ -77,6 +80,7 @@ const recovery = vi.hoisted(() => ({
   recover,
   isSyncing,
   subscribe: () => () => {},
+  subscribeConflicts: () => () => {},
 }));
 const liveProbes = vi.hoisted(() => {
   const listeners = new Set<() => void>();
@@ -138,15 +142,19 @@ vi.spyOn(offlineEngine, "createWarmSet").mockImplementation(() => ({
   inspect: vi.fn(),
 }));
 
+const platform = fakePlatformAdapter();
+
 function renderController(seededUserId?: string) {
   const queryClient = new QueryClient();
 
   const result = render(
-    <QueryClientProvider client={queryClient}>
-      <OfflineCacheController seededUserId={seededUserId}>
-        <div>child</div>
-      </OfflineCacheController>
-    </QueryClientProvider>
+    <PlatformProvider adapter={platform}>
+      <QueryClientProvider client={queryClient}>
+        <OfflineCacheController seededUserId={seededUserId}>
+          <div>child</div>
+        </OfflineCacheController>
+      </QueryClientProvider>
+    </PlatformProvider>
   );
 
   return { ...result, queryClient };
@@ -267,11 +275,13 @@ describe("OfflineCacheController", () => {
     );
     user = { id: "u2" };
     view.rerender(
-      <QueryClientProvider client={view.queryClient}>
-        <OfflineCacheController>
-          <div>child</div>
-        </OfflineCacheController>
-      </QueryClientProvider>
+      <PlatformProvider adapter={platform}>
+        <QueryClientProvider client={view.queryClient}>
+          <OfflineCacheController>
+            <div>child</div>
+          </OfflineCacheController>
+        </QueryClientProvider>
+      </PlatformProvider>
     );
 
     expect(screen.queryByText("child")).not.toBeInTheDocument();
@@ -312,11 +322,13 @@ describe("OfflineCacheController", () => {
     const settle = (status: typeof wsStatus) => {
       wsStatus = status;
       view.rerender(
-        <QueryClientProvider client={view.queryClient}>
-          <OfflineCacheController>
-            <div>child</div>
-          </OfflineCacheController>
-        </QueryClientProvider>
+        <PlatformProvider adapter={platform}>
+          <QueryClientProvider client={view.queryClient}>
+            <OfflineCacheController>
+              <div>child</div>
+            </OfflineCacheController>
+          </QueryClientProvider>
+        </PlatformProvider>
       );
     };
 
@@ -339,11 +351,13 @@ describe("OfflineCacheController", () => {
 
     wsStatus = "connected";
     view.rerender(
-      <QueryClientProvider client={view.queryClient}>
-        <OfflineCacheController>
-          <div>child</div>
-        </OfflineCacheController>
-      </QueryClientProvider>
+      <PlatformProvider adapter={platform}>
+        <QueryClientProvider client={view.queryClient}>
+          <OfflineCacheController>
+            <div>child</div>
+          </OfflineCacheController>
+        </QueryClientProvider>
+      </PlatformProvider>
     );
 
     // Startup already read the live server; connecting the socket adds nothing.
