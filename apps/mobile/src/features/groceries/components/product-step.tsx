@@ -127,8 +127,7 @@ export function ProductStep({
           </View>
           <TextField>
             <Input
-              // The search opens focused, which also asks the Store for what it knows.
-              // eslint-disable-next-line jsx-a11y-x/no-autofocus
+              // eslint-disable-next-line jsx-a11y-x/no-autofocus -- the search opens focused, which also asks the Store what it knows
               autoFocus
               accessibilityLabel={text("groceries.picker.searchPlaceholder")}
               autoCapitalize="none"
