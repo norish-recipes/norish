@@ -22,7 +22,7 @@ export function PantryScreen() {
       <TitleRow title={intl.formatMessage({ id: "groceries.page.pantry" })}>
         <ListSwitch
           value="pantry"
-          onChange={(value) => value === "list" && router.back()}
+          onChange={(value) => value === "list" && router.dismissTo("/groceries")}
         />
       </TitleRow>
       <View className="px-5 pb-3.5">

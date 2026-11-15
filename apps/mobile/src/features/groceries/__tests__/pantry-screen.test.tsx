@@ -130,4 +130,12 @@ describe("the Pantry screen's first frame", () => {
 
     expect(screen.queryByText("Salt")).not.toBeNull();
   });
+
+  it("goes to the list by navigating to it, whatever is under the Pantry", () => {
+    render(<PantryScreen />);
+    switchProps.onChange("list");
+
+    expect(router.dismissTo).toHaveBeenCalledWith("/groceries");
+    expect(router.back).not.toHaveBeenCalled();
+  });
 });
