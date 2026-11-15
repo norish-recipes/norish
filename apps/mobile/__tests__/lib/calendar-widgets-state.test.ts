@@ -4,7 +4,7 @@ import {
   signedOutTimelines,
   WIDGET_DAYS,
 } from "@/lib/calendar-widgets-state";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
@@ -84,12 +84,10 @@ function smallAt(items: PlannedItemFromQuery[], now: Date, at: Date = now) {
 
 const local = (day: number, hour: number, minute = 0) => new Date(2026, 10, day, hour, minute);
 
-let zone: string | undefined;
+// Pinned before collection: the it.each rows below build their dates when the file loads.
+const zone = process.env.TZ;
 
-beforeAll(() => {
-  zone = process.env.TZ;
-  process.env.TZ = "Europe/Amsterdam";
-});
+process.env.TZ = "Europe/Amsterdam";
 
 afterAll(() => {
   process.env.TZ = zone;
