@@ -34,6 +34,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import type {
   LargeWidgetProps,
   SmallWidgetProps,
+  WeekLine,
   WidgetMessage,
   WidgetStrings,
   WidgetTimelines,
@@ -44,7 +45,8 @@ import { lastPushed } from "./last-pushed";
 
 const log = createClientLogger("calendar-widgets");
 
-// Both layouts run in the widget extension's own runtime: everything they use is declared inside.
+// Both layouts run in the widget extension's own runtime: everything they use is declared inside,
+// so each keeps its own palette (a serialised body cannot reach a shared one).
 const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => {
   "widget";
   const dark = environment.colorScheme === "dark";
@@ -62,15 +64,16 @@ const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => 
     </Text>
   );
   const date = (weekday: string, day: string, color: string, dayColor: string) => (
-    <VStack alignment="leading" spacing={0}>
+    <VStack key="date" alignment="leading" spacing={0}>
       {label(weekday, color)}
       <Text modifiers={[font({ size: 40, weight: "semibold" }), foregroundStyle(dayColor)]}>
         {day}
       </Text>
     </VStack>
   );
-  const card = (url: string, background: string, children: React.ReactNode) => (
-    <HStack modifiers={[containerBackground(background, "widget"), widgetURL(url)]}>
+  // The card's text column, at the board's insets, on its own or over a photo.
+  const column = (children: React.ReactNode, modifiers: ReturnType<typeof widgetURL>[] = []) => (
+    <HStack modifiers={modifiers}>
       <VStack
         alignment="leading"
         modifiers={[padding({ top: 15, leading: 16, trailing: 16, bottom: 14 })]}
@@ -81,32 +84,31 @@ const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => 
       <Spacer />
     </HStack>
   );
+  const card = (url: string, children: React.ReactNode) =>
+    column(children, [containerBackground(ground, "widget"), widgetURL(url)]);
 
   if (props.kind === "message") {
-    return card(props.url, ground, [<Spacer key="space" />, title(props.text, ink, 17)]);
+    return card(props.url, [<Spacer key="space" />, title(props.text, ink, 17)]);
   }
   if (props.kind === "empty") {
-    return card(props.url, ground, [
-      <VStack key="date">{date(props.weekday, props.day, accent, ink)}</VStack>,
+    return card(props.url, [
+      date(props.weekday, props.day, accent, ink),
       <Spacer key="space" />,
       <VStack key="text">{title(props.text, muted)}</VStack>,
     ]);
   }
+  // White on a photo, the slot a little softer; the theme's colours without one.
+  const [dateColor, nameColor, slotColor] = props.photo
+    ? ["#FFFFFF", "#FFFFFF", "#FFFFFFD9"]
+    : [accent, ink, accent];
   const text = [
-    <VStack key="date">
-      {date(
-        props.weekday,
-        props.day,
-        props.photo ? "#FFFFFF" : accent,
-        props.photo ? "#FFFFFF" : ink
-      )}
-    </VStack>,
+    date(props.weekday, props.day, dateColor, nameColor),
     <Spacer key="space" />,
-    <VStack key="slot">{label(props.slot, props.photo ? "#FFFFFFD9" : accent)}</VStack>,
-    <VStack key="name">{title(props.name, props.photo ? "#FFFFFF" : ink)}</VStack>,
+    <VStack key="slot">{label(props.slot, slotColor)}</VStack>,
+    <VStack key="name">{title(props.name, nameColor)}</VStack>,
   ];
 
-  if (!props.photo) return card(props.url, ground, text);
+  if (!props.photo) return card(props.url, text);
 
   return (
     <ZStack modifiers={[containerBackground("#000000", "widget"), widgetURL(props.url)]}>
@@ -131,16 +133,7 @@ const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => 
           }),
         ]}
       />
-      <HStack>
-        <VStack
-          alignment="leading"
-          modifiers={[padding({ top: 15, leading: 16, trailing: 16, bottom: 14 })]}
-          spacing={0}
-        >
-          {text}
-        </VStack>
-        <Spacer />
-      </HStack>
+      {column(text)}
     </ZStack>
   );
 };
@@ -172,12 +165,29 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
       </HStack>
     );
   }
-  const tile = (symbol: "doc.text" | "fork.knife") => (
-    <ZStack modifiers={[frame({ width: 20, height: 20 })]}>
-      <RoundedRectangle cornerRadius={6} modifiers={[foregroundStyle(soft)]} />
-      <Image color={muted} size={11} systemName={symbol} />
-    </ZStack>
-  );
+  // A line's 20 pt square: the recipe's photo, or a tile with a fork or, for a note, a page.
+  const thumbnail = (line: WeekLine) =>
+    line.photo ? (
+      <Image
+        modifiers={[
+          resizable(),
+          widgetAccentedRenderingMode("accentedDesaturated"),
+          aspectRatio({ contentMode: "fill" }),
+          frame({ width: 20, height: 20 }),
+          clipShape("roundedRectangle", 6),
+        ]}
+        uiImage={line.photo}
+      />
+    ) : (
+      <ZStack modifiers={[frame({ width: 20, height: 20 })]}>
+        <RoundedRectangle cornerRadius={6} modifiers={[foregroundStyle(soft)]} />
+        <Image
+          color={muted}
+          size={11}
+          systemName={line.kind === "note" ? "doc.text" : "fork.knife"}
+        />
+      </ZStack>
+    );
 
   return (
     <VStack alignment="leading" modifiers={[containerBackground(ground, "widget")]} spacing={6}>
@@ -240,20 +250,7 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
                 {day.lines.map((line) => (
                   <Link key={line.id} destination={line.url}>
                     <HStack modifiers={[frame({ height: 20 })]} spacing={8}>
-                      {line.photo ? (
-                        <Image
-                          modifiers={[
-                            resizable(),
-                            widgetAccentedRenderingMode("accentedDesaturated"),
-                            aspectRatio({ contentMode: "fill" }),
-                            frame({ width: 20, height: 20 }),
-                            clipShape("roundedRectangle", 6),
-                          ]}
-                          uiImage={line.photo}
-                        />
-                      ) : (
-                        tile(line.kind === "note" ? "doc.text" : "fork.knife")
-                      )}
+                      {thumbnail(line)}
                       <Text modifiers={[font({ size: 14 }), foregroundStyle(ink), lineLimit(1)]}>
                         {line.name}
                       </Text>
