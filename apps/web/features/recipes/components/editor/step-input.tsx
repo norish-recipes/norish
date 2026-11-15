@@ -30,11 +30,14 @@ import {
   typeStepRow,
 } from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
 import SmartTextInput from "./smart-text-input";
 import { StepIngredientChips } from "./step-ingredient-chips";
 
 export type { Step } from "@norish/shared-react/recipes";
+
+const log = createClientLogger("StepInput");
 
 interface StepInputIngredient {
   ingredientName: string;
@@ -188,10 +191,9 @@ export default function StepInput({
     const stepImages = items[index]?.images ?? [];
 
     stepImages.forEach((img) => {
-      deleteStepImage(img.image).catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error("Failed to delete step image:", err);
-      });
+      deleteStepImage(img.image).catch((err: unknown) =>
+        log.error({ err }, "Failed to delete step image")
+      );
     });
     const updated = removeStepRow(items, index);
 
@@ -230,10 +232,9 @@ export default function StepInput({
     const imageUrl = current.images[imageIndex]?.image;
 
     if (imageUrl) {
-      deleteStepImage(imageUrl).catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error("Failed to delete step image:", err);
-      });
+      deleteStepImage(imageUrl).catch((err: unknown) =>
+        log.error({ err }, "Failed to delete step image")
+      );
     }
     const updated = [...items];
 
