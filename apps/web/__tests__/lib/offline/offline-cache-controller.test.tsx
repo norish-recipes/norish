@@ -84,8 +84,9 @@ const recovery = vi.hoisted(() => ({
   subscribeConflicts: (listener: (entries: OutboxEntry[]) => void) => {
     conflictListeners.add(listener);
 
-    return () => conflictListeners.delete(listener);
+    return () => void conflictListeners.delete(listener);
   },
+  reportConflicts: () => {},
 }));
 const liveProbes = vi.hoisted(() => {
   const listeners = new Set<() => void>();
