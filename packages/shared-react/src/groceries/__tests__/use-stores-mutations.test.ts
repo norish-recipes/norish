@@ -145,9 +145,10 @@ describe("useStoresMutations", () => {
 
   const lines = () =>
     queryClient
-      .getQueryData<{ groceries: Array<{ id: string; version: number; storeId: string | null }> }>(
-        ["groceries", "list"]
-      )
+      .getQueryData<{ groceries: Array<{ id: string; version: number; storeId: string | null }> }>([
+        "groceries",
+        "list",
+      ])
       ?.groceries.map(({ id, version, storeId }) => [id, storeId, version]);
 
   it("takes the Store's lines off the list at once when its delete deletes them", async () => {

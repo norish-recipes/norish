@@ -103,7 +103,14 @@ function serverOf(rows: StoreDto[]) {
               const was = row.aisles.find((a) => a.id === next.id);
               const current = !was || next.version === undefined || next.version === was.version;
 
-              if (!was) return { id: next.id, storeId: row.id, name: next.name, sortOrder: index, version: 1 };
+              if (!was)
+                return {
+                  id: next.id,
+                  storeId: row.id,
+                  name: next.name,
+                  sortOrder: index,
+                  version: 1,
+                };
               if (!current) return was;
 
               return {
@@ -120,7 +127,9 @@ function serverOf(rows: StoreDto[]) {
         },
       },
       reorder: {
-        mutate: async (input: { stores: Array<{ id: string; version: number }> }): Promise<Answer> => {
+        mutate: async (input: {
+          stores: Array<{ id: string; version: number }>;
+        }): Promise<Answer> => {
           const current = input.stores.filter(({ id, version }) => !stale(id, version));
 
           input.stores.forEach(({ id, version }, index) => {
@@ -205,7 +214,8 @@ describe("store writes made offline, replayed", () => {
   const rename = (name: string) => (m: M) => m.updateStore({ id: "lidl", name });
   const remove = (m: M) => m.deleteStore("lidl", false);
   // The editor sends every aisle at the version it holds, in its new order.
-  const editAisles = (change: (aisles: StoreDto["aisles"]) => Array<{ id: string; name: string }>) =>
+  const editAisles =
+    (change: (aisles: StoreDto["aisles"]) => Array<{ id: string; name: string }>) =>
     (m: M, stores: StoreDto[]) => {
       const lidl = stores.find((s) => s.id === "lidl")!;
       const versions = new Map(lidl.aisles.map((a) => [a.id, a.version]));
@@ -225,8 +235,16 @@ describe("store writes made offline, replayed", () => {
 
   it.each([
     ["reorder, then reorder", [swap, back], { order: ["lidl", "dirk"], name: "Lidl" }],
-    ["reorder, then edit", [swap, rename("Lidl Centrum")], { order: ["dirk", "lidl"], name: "Lidl Centrum" }],
-    ["edit, then edit", [rename("Lidl 1"), rename("Lidl 2")], { order: ["lidl", "dirk"], name: "Lidl 2" }],
+    [
+      "reorder, then edit",
+      [swap, rename("Lidl Centrum")],
+      { order: ["dirk", "lidl"], name: "Lidl Centrum" },
+    ],
+    [
+      "edit, then edit",
+      [rename("Lidl 1"), rename("Lidl 2")],
+      { order: ["lidl", "dirk"], name: "Lidl 2" },
+    ],
   ])("%s: every write is stored", async (_, steps, expected) => {
     await offline(steps);
     const server = serverOf(held());
@@ -234,9 +252,9 @@ describe("store writes made offline, replayed", () => {
     const pass = await replay(server.client);
 
     expect(pass).toMatchObject({ removed: steps.length, parked: 0, conflicted: [] });
-    expect([...server.db.values()].sort((a, b) => a.sortOrder - b.sortOrder).map((s) => s.id)).toEqual(
-      expected.order
-    );
+    expect(
+      [...server.db.values()].sort((a, b) => a.sortOrder - b.sortOrder).map((s) => s.id)
+    ).toEqual(expected.order);
     expect(server.db.get("lidl")?.name).toBe(expected.name);
   });
 
