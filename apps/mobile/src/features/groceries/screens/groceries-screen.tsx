@@ -160,6 +160,7 @@ export function GroceriesScreen() {
                   )
                 }
                 onGrouped={setGrouped}
+                onManageStores={() => router.push("/groceries/stores")}
                 onView={setView}
               />
               <ListSwitch

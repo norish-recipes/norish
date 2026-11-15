@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 import React, { useState } from "react";
 import { Sheet, SheetScrollView } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
@@ -16,7 +16,7 @@ import { ChoiceList } from "./choice-list";
 import { FormCard, FormRow, RepeatPills } from "./form-parts";
 import { RepeatBody } from "./repeat-view";
 
-type Step = "form" | "repeat" | "store" | "aisle";
+type Step = "form" | "repeat" | "store" | "aisle" | "product";
 
 /**
  * The add and edit sheets' shell. The form is one view; Repeat, Store and Aisle replace it inside
@@ -29,6 +29,7 @@ export function GrocerySheet({
   field,
   notes,
   product,
+  productStep,
   stores,
   storeId,
   noStoreLabelId,
@@ -50,8 +51,10 @@ export function GrocerySheet({
   field: ReactNode;
   /** What sits under the field, such as where the grocery came from. */
   notes?: ReactNode;
-  /** The Store Product the grocery is priced by, the form's first row. */
-  product?: ReactNode;
+  /** The Store Product the grocery is priced by, the form's first row; `open` shows its search. */
+  product?: (open: () => void) => ReactNode;
+  /** The product search that replaces the form, given what goes back to it. */
+  productStep?: (back: () => void) => ReactNode;
   stores: readonly StoreDto[];
   storeId: string | null;
   noStoreLabelId: string;
@@ -101,7 +104,7 @@ export function GrocerySheet({
       />
     </Sheet>
   );
-  const steps: Record<Step, ReactElement> = {
+  const steps: Record<Step, ReactNode> = {
     form: (
       <Sheet actions={actions} name={name} subtitle={subtitle} title={title}>
         <SheetScrollView contentClassName="gap-3">
@@ -115,7 +118,7 @@ export function GrocerySheet({
           />
           {notes}
           <FormCard>
-            {product}
+            {product?.(() => setView("product"))}
             <FormRow
               dotColor={store ? dot(store.color) : undefined}
               first={!product}
@@ -187,6 +190,7 @@ export function GrocerySheet({
         <RepeatBody pattern={draft} onChange={setDraft} />
       </Sheet>
     ),
+    product: productStep?.(back),
     store: choiceSheet(
       "store",
       [
@@ -211,5 +215,5 @@ export function GrocerySheet({
     ),
   };
 
-  return steps[view];
+  return steps[view] ?? steps.form;
 }

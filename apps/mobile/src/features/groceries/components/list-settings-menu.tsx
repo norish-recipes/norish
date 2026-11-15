@@ -7,11 +7,12 @@ import { useIntl } from "react-intl";
 
 import type { GroceryViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
-/** The gear: view mode, grouping and Clear list, in iOS's own menu on a glass circle. */
+/** The gear: view mode, grouping, Manage stores and Clear list, in iOS's own menu on a glass circle. */
 export function ListSettingsMenu({
   view,
   grouped,
   canClear,
+  onManageStores,
   onView,
   onGrouped,
   onClear,
@@ -19,6 +20,7 @@ export function ListSettingsMenu({
   view: GroceryViewMode;
   grouped: boolean;
   canClear: boolean;
+  onManageStores: () => void;
   onView: (view: GroceryViewMode) => void;
   onGrouped: (grouped: boolean) => void;
   onClear: () => void;
@@ -53,6 +55,11 @@ export function ListSettingsMenu({
               onIsOnChange={onGrouped}
             />
           ) : null}
+          <Button
+            label={text("groceries.mobile.manageStores")}
+            systemImage="gearshape"
+            onPress={onManageStores}
+          />
           {canClear ? (
             <>
               <Divider />

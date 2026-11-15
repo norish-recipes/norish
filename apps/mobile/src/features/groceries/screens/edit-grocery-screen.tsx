@@ -15,6 +15,8 @@ import {
   useGroceryFormState,
   useGroceryPrice,
   useParsedGroceryName,
+  useProductChoice,
+  useProductField,
   useRecurrenceDetection,
   useRecurringGroceryFor,
   useSettledName,
@@ -26,6 +28,8 @@ import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { NameField } from "../components/form-parts";
 import { GrocerySheet } from "../components/grocery-sheet";
 import { ProductRow } from "../components/product-row";
+import { ProductStep } from "../components/product-step";
+import { usePackSizeWords } from "../hooks/use-pack-size-words";
 
 function EditSheet({
   grocery,
@@ -47,12 +51,43 @@ function EditSheet({
   const [seeded, setSeeded] = useState(false);
   const { detectedPattern } = useRecurrenceDetection({ itemName: form.itemName });
   const groceryName = useParsedGroceryName(form.itemName);
-  const ingredientId = useIngredientFor(groceryName, useSettledName(groceryName), grocery);
+  const settledName = useSettledName(groceryName);
+  const ingredientId = useIngredientFor(groceryName, settledName, grocery);
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
+  const [productValid, setProductValid] = useState(true);
+  const productChoice = useProductChoice({
+    groceryName,
+    settledName,
+    ingredientId,
+    stores,
+    selectedStoreId: storeId,
+    resetOn: grocery.id,
+  });
+  const packWords = usePackSizeWords();
+  const field = useProductField({
+    store,
+    groceryName,
+    linkedProduct: productChoice.linkedProduct,
+    linkPending: productChoice.linkPending,
+    choice: productChoice.choice,
+    onChoice: productChoice.setChoice,
+    onValidityChange: setProductValid,
+    locale: intl.locale,
+    packWords,
+  });
   const aisle = useAisleChoice({ groceryName, ingredientId, store, resetOn: grocery.id });
   // What the Store charges for this food, at the line as it is saved.
   const price = useGroceryPrice({ ...lineOf(grocery), storeId, ingredientId });
   const trimmed = form.itemName.trim();
+  // A product the list does not price yet: one just chosen, or a Store's link for this food.
+  const shown =
+    field.picked !== null ||
+    field.hasTypedPrice ||
+    (productChoice.linkedProduct && !field.unlinked);
+  const held =
+    shown && (productChoice.choice !== null || price.status !== "priced")
+      ? { name: field.manualName, detail: field.detailsSummary }
+      : null;
 
   // The sheet starts on the grocery's own repeat.
   if (!seeded) {
@@ -70,6 +105,7 @@ function EditSheet({
       grocery.purchaseAmount ?? null
     );
     aisle.commit();
+    productChoice.commit();
     router.back();
   };
 
@@ -95,7 +131,7 @@ function EditSheet({
           <Sheet.Action>
             <Button
               className="h-[50px]"
-              isDisabled={!trimmed}
+              isDisabled={!trimmed || !productValid}
               testID="edit-grocery-save"
               variant="primary"
               onPress={submit}
@@ -129,7 +165,19 @@ function EditSheet({
           </Text>
         ) : null
       }
-      product={<ProductRow price={price} />}
+      product={(open) => (
+        <ProductRow held={held} price={price} onPress={field.pointsAtShop ? open : undefined} />
+      )}
+      productStep={(back) =>
+        store ? (
+          <ProductStep
+            field={field}
+            linked={productChoice.linkedProduct !== null}
+            store={store}
+            onBack={back}
+          />
+        ) : null
+      }
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}

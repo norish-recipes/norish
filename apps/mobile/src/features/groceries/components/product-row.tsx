@@ -1,45 +1,95 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { GroceryPrice } from "@norish/shared-react/groceries";
 import { formatPackSize, formatShelfPrice } from "@norish/shared/lib/format-price";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 
-/** The Store Product a grocery is priced by, and what the grocery costs of it; nothing while the Store has none. */
-export function ProductRow({ price }: { price: GroceryPrice }) {
+/** A product the form holds that the list does not price yet: a pick, or a Store's own link. */
+export type HeldProduct = { name: string; detail: string };
+
+/**
+ * The Store Product a grocery is priced by, and what the grocery costs of it. A held product (one
+ * just chosen, or a Store's link the list has no line for) shows without a cost, which only the
+ * saved line has. With `onPress` the row opens the product search, and is there while empty.
+ */
+export function ProductRow({
+  price,
+  held = null,
+  onPress,
+}: {
+  price: GroceryPrice;
+  held?: HeldProduct | null;
+  onPress?: () => void;
+}) {
   const intl = useIntl();
+  const [muted] = useThemeColor(["muted"] as const);
+  const priced = held === null && price.status === "priced" ? price : null;
 
-  if (price.status !== "priced") return null;
+  if (!held && !priced && !onPress) return null;
 
-  const { product, cost, regularCost } = price;
-  const format = (amount: number) => formatShelfPrice(intl.locale, amount, product.currency);
-  const pack = packSizeOf(product);
-  const size =
-    product.size ??
-    (pack
-      ? formatPackSize(pack, {
-          per: (unit) => intl.formatMessage({ id: "groceries.price.perUnit" }, { unit }),
-          pieces: (count) => intl.formatMessage({ id: "groceries.price.pieces" }, { count }),
-        })
-      : null);
+  const format = (amount: number, currency: string) =>
+    formatShelfPrice(intl.locale, amount, currency);
+  let name = intl.formatMessage({ id: "groceries.mobile.chooseProduct" });
+  let detail: React.ReactNode = null;
+  let cost: string | null = null;
+
+  if (held) {
+    ({ name } = held);
+    detail = held.detail;
+  } else if (priced) {
+    const { product, regularCost } = priced;
+    const pack = packSizeOf(product);
+    const size =
+      product.size ??
+      (pack
+        ? formatPackSize(pack, {
+            per: (unit) => intl.formatMessage({ id: "groceries.price.perUnit" }, { unit }),
+            pieces: (count) => intl.formatMessage({ id: "groceries.price.pieces" }, { count }),
+          })
+        : null);
+
+    name = product.name;
+    cost = format(priced.cost.cost, product.currency);
+    detail = (
+      <>
+        {[format(product.price, product.currency), size].filter(Boolean).join(" · ")}
+        {regularCost === null || product.regularPrice === null ? null : (
+          <Text className="line-through">{` ${format(product.regularPrice, product.currency)}`}</Text>
+        )}
+      </>
+    );
+  }
 
   return (
-    <View className="flex-row items-center gap-3 px-4 py-3" testID="grocery-product">
+    <Pressable
+      accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.product" })}
+      accessibilityRole={onPress ? "button" : undefined}
+      className="min-h-[52px] flex-row items-center gap-3 px-4 py-3"
+      disabled={!onPress}
+      testID="grocery-product"
+      onPress={onPress}
+    >
       <View className="min-w-0 flex-1 gap-0.5">
-        <Text className="text-foreground text-base font-medium" numberOfLines={2}>
-          {product.name}
+        <Text
+          className={`${held || priced ? "text-foreground font-medium" : "text-muted"} text-base`}
+          numberOfLines={2}
+        >
+          {name}
         </Text>
-        <Text className="text-muted text-[13px]" numberOfLines={1}>
-          {[format(product.price), size].filter(Boolean).join(" · ")}
-          {regularCost === null || product.regularPrice === null ? null : (
-            <Text className="line-through">{` ${format(product.regularPrice)}`}</Text>
-          )}
-        </Text>
+        {detail ? (
+          <Text className="text-muted text-[13px]" numberOfLines={1}>
+            {detail}
+          </Text>
+        ) : null}
       </View>
-      <Text className="text-foreground text-[17px] font-semibold tabular-nums">
-        {format(cost.cost)}
-      </Text>
-    </View>
+      {cost ? (
+        <Text className="text-foreground text-[17px] font-semibold tabular-nums">{cost}</Text>
+      ) : null}
+      {onPress ? <Ionicons color={muted} name="chevron-forward" size={16} /> : null}
+    </Pressable>
   );
 }
