@@ -184,7 +184,7 @@ describe("RecipeEditorScreen save of an untouched recipe", () => {
     fireEvent.click(screen.getByRole("button", { name: "saveChanges" }));
 
     await waitFor(() => expect(mocks.updateRecipe).toHaveBeenCalledTimes(1));
-    expect(mocks.updateRecipe.mock.calls[0]).toStrictEqual([
+    expect(mocks.updateRecipe.mock.calls[0]?.slice(0, 2)).toStrictEqual([
       stored.id,
       {
         name: "Hoisin chicken",
@@ -277,6 +277,33 @@ describe("RecipeEditorScreen save of an untouched recipe", () => {
         version: 7,
       },
     ]);
-    expect(mocks.push).toHaveBeenCalledWith(`/recipes/${stored.id}`);
+  });
+});
+
+describe("RecipeEditorScreen save that fails", () => {
+  const saveChanges = () => {
+    render(<RecipeEditorScreen initialData={stored} mode="edit" />, {
+      wrapper: createTestWrapper(createTestQueryClient()),
+    });
+    fireEvent.click(screen.getByRole("button", { name: "saveChanges" }));
+  };
+
+  it("shows the error and keeps the form open", async () => {
+    mocks.updateRecipe.mockImplementation((_id, _input, after) =>
+      after.onFailed(new Error("You do not have permission to access this recipe"))
+    );
+    saveChanges();
+
+    expect(
+      await screen.findByText("You do not have permission to access this recipe")
+    ).toBeTruthy();
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it("opens the recipe once the save is stored", async () => {
+    mocks.updateRecipe.mockImplementation((_id, _input, after) => after.onSaved());
+    saveChanges();
+
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith(`/recipes/${stored.id}`));
   });
 });
