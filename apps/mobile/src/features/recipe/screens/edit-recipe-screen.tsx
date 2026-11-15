@@ -36,7 +36,11 @@ export function EditRecipeScreen() {
 
   return (
     <View className="bg-background flex-1">
-      {!recipe && (loaded || isRecipeNotFound(error)) ? <RecipeNotFound /> : <RecipeEditorSkeleton />}
+      {!recipe && (loaded || isRecipeNotFound(error)) ? (
+        <RecipeNotFound />
+      ) : (
+        <RecipeEditorSkeleton />
+      )}
       <View className="absolute left-4" style={{ top: top + 6 }}>
         <GlassCloseButton testID="recipe-editor-close" onPress={() => router.back()} />
       </View>

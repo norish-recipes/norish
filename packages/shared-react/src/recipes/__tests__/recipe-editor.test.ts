@@ -13,6 +13,7 @@ import {
   validateRecipeForm,
 } from "../recipe-editor";
 import {
+  hasIngredientContent,
   ingredientRowsToLines,
   ingredientSuggestionsOf,
   ingredientTriggerAt,
@@ -24,7 +25,6 @@ import {
   remapStepRefs,
   removeIngredientRow,
   replaceTrigger,
-  hasIngredientContent,
   rowNumbers,
   rowsAfterLeaving,
   seedIngredientRows,

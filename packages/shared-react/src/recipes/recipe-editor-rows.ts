@@ -123,7 +123,11 @@ export function hasIngredientContent(row: IngredientRow): boolean {
 }
 
 /** The rows once `index` is left: an emptied row goes, unless it is the trailing one to type into. */
-export function rowsAfterLeaving<T>(rows: T[], index: number, hasContent: (row: T) => boolean): T[] {
+export function rowsAfterLeaving<T>(
+  rows: T[],
+  index: number,
+  hasContent: (row: T) => boolean
+): T[] {
   const row = rows[index];
 
   return row && !hasContent(row) && index < rows.length - 1

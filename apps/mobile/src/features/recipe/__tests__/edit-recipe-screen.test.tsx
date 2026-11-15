@@ -21,8 +21,13 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0 }) }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("heroui-native", () => ({ Skeleton: () => null, useThemeColor: (names: string[]) => names }));
-vi.mock("react-intl", () => ({ useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }) }));
+vi.mock("heroui-native", () => ({
+  Skeleton: () => null,
+  useThemeColor: (names: string[]) => names,
+}));
+vi.mock("react-intl", () => ({
+  useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+}));
 vi.mock("@/components/glass", () => ({
   GlassCloseButton: ({ testID, onPress }: Props) => (
     <button data-testid={testID} type="button" onClick={onPress} />

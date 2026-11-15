@@ -114,10 +114,9 @@ vi.mock("@/components/glass", () => ({
 vi.mock("@/hooks/use-category-label", () => ({ useCategoryLabel: () => (name: string) => name }));
 vi.mock("@/hooks/use-photo-source-sheet", () => ({
   // The sheet answers after the tap, with the handler of the render the tap was made in.
-  usePhotoSourceSheet:
-    () => (_options: unknown, onPicked: (assets: { uri: string }[]) => void) => {
-      state.pendingPick = () => onPicked([{ uri: "/recipes/r/steps/new.jpg" }]);
-    },
+  usePhotoSourceSheet: () => (_options: unknown, onPicked: (assets: { uri: string }[]) => void) => {
+    state.pendingPick = () => onPicked([{ uri: "/recipes/r/steps/new.jpg" }]);
+  },
 }));
 vi.mock("@/lib/network/server-url", () => ({ useServerImage: () => (path: string) => path }));
 vi.mock("../components/ingredient-icon", () => ({ IngredientIcon: () => null }));
@@ -404,7 +403,10 @@ describe("StepRows when lines move", () => {
   it("keeps the form's references when two moves land in one render", () => {
     const onChange = vi.fn();
     const lines = stored.recipeIngredients.map((ing) => ({ ...ing, unit: ing.unit ?? null }));
-    const step = { ...stored.steps[2]!, stepIngredients: [{ ingredientOrder: 1, share: 1, order: 0 }] };
+    const step = {
+      ...stored.steps[2]!,
+      stepIngredients: [{ ingredientOrder: 1, share: 1, order: 0 }],
+    };
     const props = { ingredients: lines, systemUsed: "metric" as const, onChange };
     const uploads = {} as Parameters<typeof StepRows>[0]["uploads"];
     const view = render(<StepRows {...props} lineMoves={null} steps={[step]} uploads={uploads} />);
