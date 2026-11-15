@@ -4,7 +4,7 @@
 
 **Blocked by:** 21
 
-**Status:** open
+**Status:** done
 
 - [x] First: `expo-widgets` (`expo install`) beside the Share Extension's `@bacons/apple-targets` target, App Group `group.dev.norish.app`; prebuild and a simulator run prove both extensions build and run. If not, stop and fall back to SwiftUI through apple-targets, noted in the comments.
 - [x] Starts with the first timer, ends when none is left; the last one finishing ends it showing Done.
@@ -25,3 +25,19 @@
 - Limit: the extension renders with no clock and one stale date, so without a push a finished row among running ones stays first at 0:00 until the app runs.
 - Maintainer device check, added: tap the island compact (leading and trailing), minimal and expanded: each opens cook mode on the soonest step; swipe the activity away, then pause or adjust: it stays away; start a timer: it returns.
 - Ticket 30: docs and release notes for the Live Activity (what it shows, the tap, Done, that it needs Live Activities allowed in Settings).
+
+### Review log (2026-11-15)
+
+Range `89402fdb9..a0f1e240e`. Standards on Sonnet low, Spec on Opus high; fixes `4d721d16f..ffba250ff`, re-reviewed on Opus high, second round `eb9ca7dc2..a0f1e240e`. The Spec review found the update triggers, the serialised start and end, the session end, Hidden Items, the tap's route and the `expo-widgets` set-up beside the Share Extension clean.
+
+Fixed, first round (12): a running timer adjusted up freezing its countdown (the interval's start is never after now); a swiped-away activity coming back on the next resync (only a timer start creates one); the cook-mode link on every island region; the stale date set from the last running end when paused timers are present; one failed step stalling every later timer sync; tests for ties and for Live Activities switched off; one strings type; `runningTimers` shared with the notification planner; rows carrying a `state`; names, `syncTimers`, comments.
+
+Fixed, second round (3): a start that failed with Live Activities off being counted as done; three tests asserting the log; the unchanged-plan skip tested with a running row.
+
+Rejected (1): after a cold start the ring of a timer adjusted past its duration starts full again (the countdown stays right; it would need a new persisted field).
+
+Known limits, written above: a row that ended early among running ones shows 0:00 until the app next runs; a launch after iOS ended the activity at eight hours shows none until a timer is started.
+
+For the maintainer: the device hand-check box (list above, including the island taps and the swipe-away rule); the 42 pt rows; a Done activity ending with iOS's default dismissal, so an earlier one can sit above a new one; whether a launch with timers running should bring a missing activity back.
+
+Final state `a0f1e240e`: all 11 gates exit 0, mobile lint without warnings.
