@@ -186,7 +186,7 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
   return () => {
     const capture: OperationLink<TRouter> = ({ op, next }) =>
       observable((observer) => {
-        const fail = (error: unknown) => {
+        const fail = (error: TRPCClientError<TRouter>) => {
           if (
             isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
             !isBackendUnreachableError(error)
