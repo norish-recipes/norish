@@ -168,6 +168,22 @@ const queuedError = () =>
 export function createOutboxLink<TRouter extends AnyTRPCRouter>(
   deps: OutboxLinkDependencies
 ): TRPCLink<TRouter> {
+  // The latest whole edit sent per id: an older one failing after it is already covered.
+  const latestEdit = new Map<unknown, number>();
+
+  /** Store a failed mutation; a whole edit takes its recipe's unsent entry when there is one. */
+  async function admit(op: Operation): Promise<void> {
+    if (!deps.wholeEdits?.has(op.path)) {
+      await captureToOutbox(deps, op.path, op.input, op.context);
+
+      return;
+    }
+    if ((latestEdit.get(idOf(op.input)) ?? op.id) > op.id) return;
+    if ((await replaceUnsent(deps, op)) !== "replaced") {
+      await captureToOutbox(deps, op.path, op.input, op.context);
+    }
+  }
+
   return () => {
     const capture: OperationLink<TRouter> = ({ op, next }) =>
       observable((observer) => {
@@ -186,7 +202,7 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
             // Queued means durably stored: hold the error until the entry is
             // in storage, and downgrade it to a real failure if it is not.
             void Promise.resolve()
-              .then(() => captureToOutbox(deps, op.path, op.input, op.context))
+              .then(() => admit(op))
               .then(
                 () => observer.error(error),
                 (persistError: unknown) => {
@@ -222,6 +238,7 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
         let subscription: Unsubscribable | null = null;
         let closed = false;
 
+        latestEdit.set(idOf(op.input), op.id);
         replaceUnsent(deps, op)
           .then(async (found) => {
             if (found === "kept") await captureToOutbox(deps, op.path, op.input, op.context);

@@ -286,6 +286,28 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     ]);
   });
 
+  it.each([
+    ["in the order sent", [0, 1]],
+    ["the later one first", [1, 0]],
+  ])("keeps the later of two live saves that both fail, %s", async (_order, failOrder) => {
+    const fails: (() => void)[] = [];
+    const inFlight = () =>
+      observable((observer) => {
+        fails.push(() => observer.error(new TypeError("Failed to fetch")));
+      });
+    const saves = [save(edit("First"), inFlight), save(edit("Second"), inFlight)];
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    for (const index of failOrder) {
+      fails[index]!();
+      await saves[index];
+    }
+
+    expect(await store.loadAll()).toMatchObject([
+      { input: edit("Second"), operationId: "Second", status: "pending" },
+    ]);
+  });
+
   it("sends a save live when nothing of that recipe is pending", async () => {
     const terminal = vi.fn(answer({ stale: false, version: 4 }));
 
