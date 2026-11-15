@@ -370,6 +370,30 @@ describe("useRecipesMutations", () => {
       );
     });
 
+    it.each([
+      ["refused as stale", () => Promise.resolve({ stale: true, version: null })],
+      ["failed", () => Promise.reject(new Error("Bad recipe"))],
+    ])("refetches an edit %s behind a waiting one once that one settles", async (_case, refuse) => {
+      const first = Promise.withResolvers<never>();
+
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockImplementationOnce(() => first.promise).mockImplementationOnce(refuse);
+      const result = render();
+
+      act(() => result.current.updateRecipe("recipe-1", { name: "First", version: 1 }));
+      act(() => result.current.updateRecipe("recipe-1", { name: "Second", version: 1 }));
+      await act(async () => {
+        await vi.waitFor(() => expect(queryClient.isMutating()).toBe(1));
+      });
+      expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(false);
+
+      // The first is queued for Replay, which keeps its optimistic state.
+      await act(async () => first.reject(new TypeError("Failed to fetch")));
+      await settled();
+
+      expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
+    });
+
     it("sends an edit of another recipe while one is still waiting", async () => {
       server.update.mockReturnValue(new Promise(() => {}));
       const result = render();

@@ -338,11 +338,22 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
         (state.variables as UpdateVariables | undefined)?.id === variables.id,
     }).length > 0;
 
-  // Back to the recipe before this edit, then the server's; a later edit's answer settles its own.
+  // Back to the recipe before this edit, then the server's; with other edits waiting, the server's
+  // once they settle, so the refused content does not stay on screen.
   const rollBackEdit = (variables: UpdateVariables, context: unknown) => {
     const { detailQueryKey, previousDetail } = (context ?? {}) as Partial<UpdateMutationContext>;
 
-    if (otherPendingEdits(variables)) return false;
+    if (otherPendingEdits(variables)) {
+      const stopWaiting = queryClient.getMutationCache().subscribe(() => {
+        if (otherPendingEdits(variables)) return;
+        stopWaiting();
+        void queryClient.invalidateQueries({
+          queryKey: trpc.recipes.get.queryKey({ id: variables.id }),
+        });
+      });
+
+      return false;
+    }
     if (detailQueryKey) {
       queryClient.setQueryData(detailQueryKey, previousDetail);
       void queryClient.invalidateQueries({ queryKey: detailQueryKey });
