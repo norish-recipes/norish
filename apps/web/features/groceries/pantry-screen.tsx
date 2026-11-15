@@ -9,17 +9,15 @@ import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { PickedFood } from "@norish/shared-react/groceries";
 import { useSpellingRules } from "@norish/shared-react/config";
-import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
+import { useOnTheList, usePantryField, usePantryQuery } from "@norish/shared-react/groceries";
 import { useIngredientIcons, usePantryCatalogue } from "@norish/shared-react/ingredients";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { pantryIngredientFor, searchPantry } from "@norish/shared/lib/pantry";
-import { foodKey } from "@norish/shared/lib/spelling-keys";
+import { searchPantry } from "@norish/shared/lib/pantry";
 
 import { FromYourRecipes } from "./components/pantry/from-your-recipes";
 import { PutOnTheList, usePutOnTheList } from "./components/pantry/put-on-the-list";
@@ -41,15 +39,13 @@ export function PantryScreen() {
   const { isOffline } = useConnectivity();
   const { items, isLoading, isUnavailable } = usePantryQuery();
   const { showIngredientIcons } = useHiddenItemVisibility();
-  const { addPantryIngredient } = usePantryMutations();
   const onTheList = useOnTheList(items);
 
   useIngredientIcons(items.map((item) => item.ingredientId));
   const putOnTheList = usePutOnTheList();
-  const [draft, setDraft] = useState("");
+  const { draft, setDraft, typed, canAdd, keep: keepFood } = usePantryField(items, locale, rules);
   const [openId, setOpenId] = useState<string | null>(null);
   const fieldRef = useRef<HTMLInputElement>(null);
-  const typed = draft.trim();
   const keptIds = new Set(items.map((item) => item.ingredientId));
   const matches = usePantryCatalogue(typed, locale, keptIds);
 
@@ -61,20 +57,12 @@ export function PantryScreen() {
     );
   }
 
-  const keep = (food: string | PickedFood) => {
-    const name = typeof food === "string" ? food : ingredientDisplayName(food, locale);
-
-    void addPantryIngredient(food, name);
-    setDraft("");
+  const keep = (food: Parameters<typeof keepFood>[0]) => {
+    keepFood(food);
     // The field is where the next food goes, however the last one was added.
     fieldRef.current?.focus();
   };
-
-  const duplicate =
-    foodKey(draft, rules) !== "" &&
-    pantryIngredientFor(items, { ingredientName: draft }, rules) !== null;
   const kept = searchPantry(items, draft, locale, rules);
-  const canAdd = foodKey(draft, rules) !== "" && !duplicate;
   const addTyped = () => {
     if (canAdd) keep(typed);
   };

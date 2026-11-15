@@ -1,5 +1,3 @@
-"use client";
-
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import { IconActionButton } from "@/components/shared/action-button";
 import { showActionToast } from "@/lib/ui/action-toast";
@@ -7,36 +5,22 @@ import { ShoppingCartIcon } from "@heroicons/react/16/solid";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
-import { useGroceriesMutations } from "@norish/shared-react/groceries";
-import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
+import { usePutOnTheList as usePutOnTheListShared } from "@norish/shared-react/groceries";
 
 /** A kept food, as much of it as putting it on the list needs. */
 type KeptFood = { name: string; localeNames?: LocaleNames };
 
-/**
- * Running out of a kept food: one grocery for it, named the way the reader
- * reads the food, with no amount and no Store, so the server files it where
- * the household buys that food, else under Unsorted. The food stays in the
- * Pantry. It is optimistic and queues offline like any grocery, and the
- * toast's Undo deletes the grocery it made.
- */
+/** Puts a kept food on the list and tells the reader, with an Undo that deletes the grocery. */
 export function usePutOnTheList(): (food: KeptFood) => void {
   const t = useTranslations("groceries.pantry");
-  const locale = useLocale();
-  const { createGroceriesFromData, deleteGroceries } = useGroceriesMutations();
+  const put = usePutOnTheListShared(useLocale());
 
   return (food) => {
-    const name = ingredientDisplayName(food, locale);
-    // A failed create says so itself, and puts the list back.
-    const created = createGroceriesFromData([{ name, amount: null, unit: null }]);
+    const { name, undo } = put(food);
 
-    created.catch(() => undefined);
     showActionToast(t("putOnTheListToast", { name }), {
       variant: "success",
-      action: {
-        label: t("undo"),
-        onPress: () => void created.then(deleteGroceries, () => undefined),
-      },
+      action: { label: t("undo"), onPress: undo },
     });
   };
 }

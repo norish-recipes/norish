@@ -39,12 +39,24 @@ vi.mock("@norish/shared-react/config", async () => {
 
   return { useSpellingRules: () => spellingRules(units as UnitsMap) };
 });
+// The shared hooks run for real over these mutations.
+vi.mock("../../../../../packages/shared-react/src/groceries/use-pantry-mutations", () => ({
+  usePantryMutations: () => ({ addPantryIngredient }),
+}));
+vi.mock("../../../../../packages/shared-react/src/groceries/use-groceries-mutations", () => ({
+  useGroceriesMutations: () => ({ createGroceriesFromData, deleteGroceries: vi.fn() }),
+}));
 vi.mock("@norish/shared-react/groceries", async () => {
   const { groceryOnTheList } = await import("@norish/shared/lib/pantry");
+  const { usePantryField } =
+    await import("../../../../../packages/shared-react/src/groceries/use-pantry-field");
+  const { usePutOnTheList } =
+    await import("../../../../../packages/shared-react/src/groceries/use-put-on-the-list");
 
   return {
+    usePantryField,
+    usePutOnTheList,
     usePantryQuery: () => ({ items, ...pantry }),
-    usePantryMutations: () => ({ addPantryIngredient }),
     usePantrySuggestions: () => ({ suggestions }),
     // What the hook's select answers over the list these tests hold.
     useOnTheList: (kept: PantryIngredientDto[]) =>
@@ -57,7 +69,6 @@ vi.mock("@norish/shared-react/groceries", async () => {
             ) !== null
         )
         .map((item) => item.id),
-    useGroceriesMutations: () => ({ createGroceriesFromData, deleteGroceries: vi.fn() }),
   };
 });
 vi.mock("@norish/shared-react/trpc", () => ({
