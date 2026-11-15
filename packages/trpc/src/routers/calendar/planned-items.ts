@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { SlotItemSortUpdate } from "@norish/shared/contracts/zod";
@@ -11,7 +10,6 @@ import {
   updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { calendar } from "@norish/shared-server/realtime/calendar";
 import {
   PlannedItemDeleteInputSchema,
   PlannedItemMoveInputSchema,
@@ -162,7 +160,7 @@ export const deletePlannedRecipeProcedure = authedProcedure
   })
   .input(PlannedItemDeleteInputSchema)
   .output(deletePlannedRecipeOutputSchema)
-  .mutation(async ({ ctx, input }) => deleteCalendarItem(ctx, input));
+  .mutation(async ({ ctx, input }) => deleteCalendarItem(ctx, input, { rejectMissing: true }));
 
 export const plannedItemsProcedures = router({
   listItems: authedProcedure.input(listItemsInput).query(async ({ ctx, input }) => {
@@ -176,12 +174,8 @@ export const plannedItemsProcedures = router({
 
     const item = await getPlannedItemById(itemId);
 
-    if (!item) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Planned item not found",
-      });
-    }
+    // A plan another member removed lost to an earlier write: stale, as a changed version is.
+    if (!item) return { success: true, moved: false, stale: true };
 
     await assertHouseholdAccess(ctx.user.id, item.userId);
 
@@ -203,12 +197,8 @@ export const plannedItemsProcedures = router({
 
     const movedItemWithRecipe = await getPlannedItemWithRecipeById(movedItem.id);
 
-    if (!movedItemWithRecipe) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch moved item with recipe data",
-      });
-    }
+    // Stored all the same: no item in the answer makes the client reread.
+    if (!movedItemWithRecipe) return { success: true, moved: true, stale: false };
 
     const targetSlotItems = await listPlannedItemsWithRecipeBySlot(
       ctx.userIds,
@@ -273,40 +263,28 @@ export const plannedItemsProcedures = router({
 
       const item = await getPlannedItemById(itemId);
 
-      if (!item) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Planned item not found",
-        });
-      }
+      if (!item) return { success: true, stale: true };
 
       await assertHouseholdAccess(ctx.user.id, item.userId);
 
-      try {
-        const updateResult = await updatePlannedItem(itemId, { title }, version);
+      // A failure here rejects, so the client rolls back and Replay never takes it as stored.
+      const updateResult = await updatePlannedItem(itemId, { title }, version);
 
-        if (updateResult.stale) {
-          log.info({ userId, itemId, version }, "Ignoring stale calendar update mutation");
+      if (updateResult.stale) {
+        log.info({ userId, itemId, version }, "Ignoring stale calendar update mutation");
 
-          return { success: true, stale: true };
-        }
-
-        const itemWithRecipe = await getPlannedItemWithRecipeById(updateResult.value.id);
-
-        if (!itemWithRecipe) {
-          throw new Error("Failed to fetch updated item");
-        }
-
-        const itemPayload = buildPlannedItemPayload(itemWithRecipe);
-
-        await publishCalendarItemEvent("itemUpdated", { item: itemPayload }, householdKey);
-
-        return { success: true, stale: false, item: itemPayload };
-      } catch (err) {
-        log.error({ err, userId, itemId }, "Failed to update calendar item");
-        void calendar.publish("failed", { reason: "Failed to update item" }, { householdKey });
-
-        return { success: false };
+        return { success: true, stale: true };
       }
+
+      const itemWithRecipe = await getPlannedItemWithRecipeById(updateResult.value.id);
+
+      // Stored all the same: no item in the answer makes the client reread.
+      if (!itemWithRecipe) return { success: true, stale: false };
+
+      const itemPayload = buildPlannedItemPayload(itemWithRecipe);
+
+      await publishCalendarItemEvent("itemUpdated", { item: itemPayload }, householdKey);
+
+      return { success: true, stale: false, item: itemPayload };
     }),
 });

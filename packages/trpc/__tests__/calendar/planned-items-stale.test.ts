@@ -118,6 +118,52 @@ describe("calendar planned items stale handling", () => {
     expect(calendar.publish).not.toHaveBeenCalled();
   });
 
+  const GONE = "00000000-0000-4000-8000-000000000001";
+
+  describe("a plan another member removed", () => {
+    beforeEach(() => getPlannedItemById.mockResolvedValue(null));
+    const caller = () => plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
+
+    it("answers a move as stale", async () => {
+      const result = await caller().moveItem({
+        itemId: GONE,
+        version: 2,
+        targetDate: "2025-01-20",
+        targetSlot: "Lunch",
+        targetIndex: 0,
+      });
+
+      expect(result).toEqual({ success: true, moved: false, stale: true });
+      expect(moveItem).not.toHaveBeenCalled();
+    });
+
+    it("answers an update as stale", async () => {
+      const result = await caller().updateItem({ itemId: GONE, version: 2, title: "Soup" });
+
+      expect(result).toEqual({ success: true, stale: true });
+      expect(updatePlannedItem).not.toHaveBeenCalled();
+    });
+
+    it("answers a delete as done, not stale", async () => {
+      const result = await caller().deleteItem({ itemId: GONE, version: 2 });
+
+      expect(result).toEqual({ success: true, stale: false });
+      expect(deletePlannedItem).not.toHaveBeenCalled();
+      expect(calendar.publish).not.toHaveBeenCalled();
+    });
+  });
+
+  it("rejects an update that failed, telling no one else", async () => {
+    updatePlannedItem.mockRejectedValue(new Error("database down"));
+
+    const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(caller.updateItem({ itemId: GONE, version: 4, title: "Soup" })).rejects.toThrow(
+      "database down"
+    );
+    expect(calendar.publish).not.toHaveBeenCalled();
+  });
+
   // The client places the answer's item in its cache, so it must be the item the echo carries.
   function publishedItem(event: string) {
     const call = calendar.publish.mock.calls.find(([name]) => name === event);
