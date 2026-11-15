@@ -5,11 +5,18 @@ import type { Timer } from "@norish/shared-react/recipes/timers";
 
 const activity = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock("@/lib/timer-activity", () => ({ syncTimerActivity: activity }));
+const link = vi.hoisted(() => ({ fail: false }));
 vi.mock("expo-linking", () => ({
-  createURL: (path: string, { queryParams }: { queryParams: { step: string } }) =>
-    `norish://${path}?step=${queryParams.step}`,
+  createURL: (path: string, { queryParams }: { queryParams: { step: string } }) => {
+    if (link.fail) throw new Error("no scheme");
+
+    return `norish://${path}?step=${queryParams.step}`;
+  },
 }));
-vi.mock("expo-notifications", () => ({}));
+vi.mock("expo-notifications", () => ({
+  getAllScheduledNotificationsAsync: async () => [],
+  getPermissionsAsync: async () => ({ granted: false }),
+}));
 
 const NOW = 1_000_000;
 
@@ -97,5 +104,33 @@ describe("planTimerNotifications", () => {
       cancel: [],
       schedule: [],
     });
+  });
+});
+
+describe("the sync chain", () => {
+  it("runs the next sync after one whose step threw", async () => {
+    const { syncTimerNotifications } = await import("@/lib/timer-notifications");
+    const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
+
+    useTimerStore.setState({ timers: [timer("a", { lastTickAt: Date.now() })] });
+    link.fail = true;
+    await syncTimerNotifications({ body: "", paused: "", done: "", more: String });
+    link.fail = false;
+    activity.mockClear();
+    await syncTimerNotifications({ body: "", paused: "", done: "", more: String });
+
+    expect(activity).toHaveBeenCalledTimes(1);
+  });
+  it("completes the notification sync when the Live Activity step rejects, and runs the next", async () => {
+    const { syncTimerNotifications } = await import("@/lib/timer-notifications");
+
+    activity.mockClear();
+    activity.mockRejectedValueOnce(new Error("Live Activities are not enabled"));
+    await expect(
+      syncTimerNotifications({ body: "", paused: "", done: "", more: String })
+    ).resolves.toBeUndefined();
+    await syncTimerNotifications({ body: "", paused: "", done: "", more: String });
+
+    expect(activity).toHaveBeenCalledTimes(2);
   });
 });

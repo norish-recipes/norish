@@ -59,16 +59,23 @@ export function planTimerNotifications(
 // One sync or end at a time, so two quick changes never schedule a timer twice and an end follows any sync.
 let syncing = Promise.resolve();
 
+/** Runs `step` after the queued ones; a failure is logged, so it never stops the next. */
+function queue(step: () => Promise<void>): Promise<void> {
+  syncing = syncing
+    .then(step)
+    .catch((error: unknown) => log.warn({ error }, "Could not sync the Recipe Timers"));
+
+  return syncing;
+}
+
 /** Brings the pending notifications and the Live Activity in line with the store's timers. */
 export function syncTimerNotifications(strings: TimerStrings): Promise<void> {
-  syncing = syncing.then(async () => {
+  return queue(async () => {
     await syncNotifications(strings.body);
     await syncTimerActivity(
       timerActivityPlan(useTimerStore.getState().timers, Date.now(), strings)
     );
   });
-
-  return syncing;
 }
 
 async function syncNotifications(body: string): Promise<void> {
@@ -108,14 +115,10 @@ async function syncNotifications(body: string): Promise<void> {
 export function endRecipeTimers(): Promise<void> {
   useTimerStore.getState().clearAll();
   Notifications.clearLastNotificationResponse();
-  const ending = syncing.then(() =>
-    Promise.all([cancelTimerNotifications(), syncTimerActivity({ kind: "end" })]).then(() => {})
-  );
 
-  // A failed end must not stop the next session's syncs.
-  syncing = ending.catch(() => {});
-
-  return ending;
+  return queue(async () => {
+    await Promise.all([cancelTimerNotifications(), syncTimerActivity({ kind: "end" })]);
+  });
 }
 
 async function cancelTimerNotifications(): Promise<void> {

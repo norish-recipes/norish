@@ -28,9 +28,8 @@ export async function endSession(authClient: SignOutClient, scope: SessionScope)
     log.warn({ error }, "Failed to reset auth client storage during sign out");
   }
 
-  await endRecipeTimers().catch((error: unknown) =>
-    log.warn({ error }, "Could not end the Recipe Timers")
-  );
+  // Never rejects: a failed end is logged and the next session's syncs still run.
+  await endRecipeTimers();
 }
 
 async function signOutRemotely(authClient: SignOutClient): Promise<void> {
