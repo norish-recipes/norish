@@ -3,7 +3,7 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const sync = vi.fn(async () => {});
-const range = vi.hoisted(() => ({ fetched: false }));
+const range = vi.hoisted(() => ({ read: false }));
 
 vi.mock("expo-linking", () => ({ createURL: (path: string) => path }));
 vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove() {} }) } }));
@@ -17,7 +17,7 @@ vi.mock("@/lib/calendar-widgets", () => ({
 // Seeded from another range's cache, so the query already reads as `isRead`.
 vi.mock("@norish/shared-react/calendar", () => ({
   useCalendarQuery: () => ({ calendarData: {}, isLoading: false, isRead: true }),
-  useCalendarRangeFetched: () => range.fetched,
+  useCalendarRangeRead: () => range.read,
 }));
 vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-15" }));
 
@@ -26,12 +26,12 @@ const { useCalendarWidgets } = await import("../hooks/use-calendar-widgets");
 beforeEach(() => sync.mockClear());
 
 describe("useCalendarWidgets", () => {
-  it("pushes nothing until the widgets' own range is fetched, then pushes", () => {
-    range.fetched = false;
+  it("pushes nothing until the widgets' own range is read, then pushes", () => {
+    range.read = false;
     const { rerender } = renderHook(() => useCalendarWidgets());
 
     expect(sync).not.toHaveBeenCalled();
-    range.fetched = true;
+    range.read = true;
     rerender();
 
     expect(sync).toHaveBeenCalledOnce();

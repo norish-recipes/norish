@@ -4,7 +4,7 @@ import { startCalendarWidgets, syncCalendarWidgets } from "@/lib/calendar-widget
 import { WIDGET_DATA_DAYS } from "@/lib/calendar-widgets-state";
 import { useIntl } from "react-intl";
 
-import { useCalendarQuery, useCalendarRangeFetched } from "@norish/shared-react/calendar";
+import { useCalendarQuery, useCalendarRangeRead } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
 import { addDays, dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
@@ -21,7 +21,7 @@ export function useCalendarWidgets() {
   };
   const { calendarData } = useCalendarQuery(range);
   // Not the query's `isRead`: seeded from other ranges, that holds days no read of this one confirmed.
-  const fetched = useCalendarRangeFetched(range);
+  const read = useCalendarRangeRead(range);
   const message = (id: string) => intl.formatMessage({ id });
   const strings = {
     nothingPlanned: message("calendar.widgets.nothingPlanned"),
@@ -43,12 +43,12 @@ export function useCalendarWidgets() {
   const shape = JSON.stringify(calendarData);
   // An unread range is unknown, not empty: nothing is pushed, so the widgets keep what they were handed.
   const sync = useEffectEvent(() => {
-    if (fetched) void syncCalendarWidgets(calendarData, strings);
+    if (read) void syncCalendarWidgets(calendarData, strings);
   });
 
   useEffect(() => startCalendarWidgets(), []);
 
-  useEffect(() => sync(), [shape, fetched, todayKey, intl.locale]);
+  useEffect(() => sync(), [shape, read, todayKey, intl.locale]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {

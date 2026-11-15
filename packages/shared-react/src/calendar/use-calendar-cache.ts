@@ -30,12 +30,17 @@ export function useCalendarCacheHelpers(): CalendarCacheHelpers {
         return range && items ? [{ key, range, items }] : [];
       });
 
-  // `setQueryData` clears `isInvalidated`, so a flagged range no component shows would
-  // mount later without a read: flag it again, without refetching.
+  // `setQueryData` clears `isInvalidated`, so flag it again without refetching, or an unshown range
+  // would mount without a read; a never-read range keeps `dataUpdatedAt` 0, so it stays unread.
   const writeRange = (key: QueryKey, items: PlannedItemFromQuery[]) => {
-    const wasInvalidated = queryClient.getQueryState(key)?.isInvalidated;
+    const state = queryClient.getQueryState(key);
+    const wasInvalidated = state?.isInvalidated;
 
-    queryClient.setQueryData<PlannedItemFromQuery[]>(key, items);
+    queryClient.setQueryData<PlannedItemFromQuery[]>(
+      key,
+      items,
+      state?.dataUpdatedAt === 0 ? { updatedAt: 0 } : undefined
+    );
     if (wasInvalidated) {
       void queryClient.invalidateQueries({ queryKey: key, exact: true, refetchType: "none" });
     }
