@@ -13,14 +13,19 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
-import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
 import { isRecurrenceRule } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 import {
   formatNextOccurrence,
   formatRecurrenceSummary,
+  recurrenceTranslationsFrom,
   recurrenceUnitKey,
 } from "@norish/shared/lib/recurrence/formatter";
+import {
+  recurrenceHasWeekday,
+  stepRecurrenceInterval,
+  withRecurrenceRule,
+} from "@norish/shared/lib/recurrence/pattern";
 
 type RecurrencePanelProps = {
   open: boolean;
@@ -44,31 +49,7 @@ export function RecurrencePanel({
   const [pattern, setPattern] = useState<RecurrencePattern | null>(initialPattern || null);
   const [seededFrom, setSeededFrom] = useState({ open, initialPattern });
 
-  // Build translations object for the formatter
-  const formatterTranslations: RecurrenceTranslations = {
-    every: t("every"),
-    everyOther: t("everyOther"),
-    on: t("on"),
-    day: t("day"),
-    days: t("days"),
-    week: t("week"),
-    weeks: t("weeks"),
-    month: t("month"),
-    months: t("months"),
-    year: t("year"),
-    years: t("years"),
-    today: t("today"),
-    tomorrow: t("tomorrow"),
-    weekdaysFull: {
-      "0": t("weekdaysFull.0"),
-      "1": t("weekdaysFull.1"),
-      "2": t("weekdaysFull.2"),
-      "3": t("weekdaysFull.3"),
-      "4": t("weekdaysFull.4"),
-      "5": t("weekdaysFull.5"),
-      "6": t("weekdaysFull.6"),
-    },
-  };
+  const formatterTranslations = recurrenceTranslationsFrom(t);
 
   // Initialize pattern when panel opens
   if (seededFrom.open !== open || seededFrom.initialPattern !== initialPattern) {
@@ -81,20 +62,11 @@ export function RecurrencePanel({
     setPattern(newPattern);
   };
   const handleFrequencyChange = (rule: RecurrenceRule) => {
-    const newPattern: RecurrencePattern = {
-      rule,
-      interval: pattern?.interval || 1,
-      weekday: rule === "week" || rule === "month" ? (pattern?.weekday ?? 1) : undefined,
-    };
-    handlePatternChange(newPattern);
+    handlePatternChange(withRecurrenceRule(pattern, rule));
   };
   const handleIntervalChange = (delta: number) => {
     if (!pattern) return;
-    const newInterval = Math.max(1, pattern.interval + delta);
-    handlePatternChange({
-      ...pattern,
-      interval: newInterval,
-    });
+    handlePatternChange(stepRecurrenceInterval(pattern, delta));
   };
   const handleWeekdayChange = (weekday: number) => {
     if (!pattern) return;
@@ -120,7 +92,7 @@ export function RecurrencePanel({
     }
   };
   const nextOccurrence = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
-  const showWeekdaySelector = pattern?.rule === "week" || pattern?.rule === "month";
+  const showWeekdaySelector = recurrenceHasWeekday(pattern);
   return (
     <Panel
       nested={nested}

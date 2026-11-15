@@ -23,6 +23,28 @@ export type RecurrenceTranslations = {
   weekdaysFull: Record<string, string>;
 };
 
+/** The words a formatter reads, taken from a `common.recurrence` message lookup. */
+export function recurrenceTranslationsFrom(t: (key: string) => string): RecurrenceTranslations {
+  return {
+    every: t("every"),
+    everyOther: t("everyOther"),
+    on: t("on"),
+    day: t("day"),
+    days: t("days"),
+    week: t("week"),
+    weeks: t("weeks"),
+    month: t("month"),
+    months: t("months"),
+    year: t("year"),
+    years: t("years"),
+    today: t("today"),
+    tomorrow: t("tomorrow"),
+    weekdaysFull: Object.fromEntries(
+      [0, 1, 2, 3, 4, 5, 6].map((day) => [String(day), t(`weekdaysFull.${day}`)])
+    ),
+  };
+}
+
 /**
  * Default English translations for recurrence formatting.
  * Used when no translations are provided (e.g., server-side rendering).

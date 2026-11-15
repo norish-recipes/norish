@@ -5,12 +5,12 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { RecurringGroceryDto } from "@norish/shared/contracts";
-import type { RecurrenceTranslations } from "@norish/shared/lib/recurrence/formatter";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { isOverdue } from "@norish/shared/lib/recurrence/calculator";
 import {
   formatNextOccurrence,
   formatRecurrenceSummary,
+  recurrenceTranslationsFrom,
 } from "@norish/shared/lib/recurrence/formatter";
 
 type RecurrencePillProps = {
@@ -32,31 +32,7 @@ export function RecurrencePill({
 }: RecurrencePillProps) {
   const t = useTranslations("common.recurrence");
 
-  // Build translations object for the formatter
-  const formatterTranslations: RecurrenceTranslations = {
-    every: t("every"),
-    everyOther: t("everyOther"),
-    on: t("on"),
-    day: t("day"),
-    days: t("days"),
-    week: t("week"),
-    weeks: t("weeks"),
-    month: t("month"),
-    months: t("months"),
-    year: t("year"),
-    years: t("years"),
-    today: t("today"),
-    tomorrow: t("tomorrow"),
-    weekdaysFull: {
-      "0": t("weekdaysFull.0"),
-      "1": t("weekdaysFull.1"),
-      "2": t("weekdaysFull.2"),
-      "3": t("weekdaysFull.3"),
-      "4": t("weekdaysFull.4"),
-      "5": t("weekdaysFull.5"),
-      "6": t("weekdaysFull.6"),
-    },
-  };
+  const formatterTranslations = recurrenceTranslationsFrom(t);
 
   const pattern = recurrencePatternOf(recurringGrocery);
 
