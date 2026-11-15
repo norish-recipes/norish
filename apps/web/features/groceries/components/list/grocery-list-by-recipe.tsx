@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { groupGroceriesByRecipe } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
@@ -31,12 +31,6 @@ interface GroceryListByRecipeProps {
   onClearRecipe?: (ids: string[], name: string) => void;
 }
 
-interface RecipeGroup {
-  recipeId: string | null;
-  recipeName: string;
-  groceries: GroceryDto[];
-}
-
 /** The list by recipe, under one read of the icons of every food on it. */
 export function GroceryListByRecipe(props: GroceryListByRecipeProps) {
   useIngredientIcons(listFoodIds(props));
@@ -57,65 +51,7 @@ function GroceryListByRecipeContent({
 }: GroceryListByRecipeProps) {
   const t = useTranslations("groceries");
 
-  // Group groceries by recipe
-  const recipeGroups = useMemo(() => {
-    const groups: Map<string | null, GroceryDto[]> = new Map();
-
-    // Initialize with null for manual items
-    groups.set(null, []);
-
-    groceries.forEach((grocery) => {
-      const recipeIngredientId = grocery.recipeIngredientId;
-      const recipeInfo = recipeIngredientId ? recipeMap[recipeIngredientId] : null;
-      const recipeId = recipeInfo?.recipeId ?? null;
-
-      if (!groups.has(recipeId)) {
-        groups.set(recipeId, []);
-      }
-      groups.get(recipeId)!.push(grocery);
-    });
-
-    // Convert to array of RecipeGroup
-    const result: RecipeGroup[] = [];
-
-    // Add manual items first (if present)
-    const manualItems = groups.get(null) ?? [];
-
-    if (manualItems.length > 0) {
-      result.push({
-        recipeId: null,
-        recipeName: t("empty.manual"),
-        groceries: manualItems,
-      });
-    }
-
-    // Add recipe groups (sorted by recipe name)
-    const recipeEntries: [string, GroceryDto[]][] = [];
-
-    groups.forEach((groceries, recipeId) => {
-      if (recipeId !== null && groceries.length > 0) {
-        recipeEntries.push([recipeId, groceries]);
-      }
-    });
-
-    // Sort by recipe name
-    recipeEntries.sort((a, b) => {
-      const nameA = getRecipeNameFromId(a[0], a[1], recipeMap);
-      const nameB = getRecipeNameFromId(b[0], b[1], recipeMap);
-
-      return nameA.localeCompare(nameB);
-    });
-
-    recipeEntries.forEach(([recipeId, groceries]) => {
-      result.push({
-        recipeId,
-        recipeName: getRecipeNameFromId(recipeId, groceries, recipeMap),
-        groceries,
-      });
-    });
-
-    return result;
-  }, [groceries, recipeMap, t]);
+  const recipeGroups = groupGroceriesByRecipe(groceries, recipeMap, t("empty.manual"));
 
   // Check if there are any groceries
   const hasGroceries = groceries.length > 0;
@@ -174,24 +110,4 @@ function GroceryListByRecipeContent({
       ))}
     </div>
   );
-}
-
-// Helper to get recipe name from recipeId using the recipeMap
-function getRecipeNameFromId(
-  recipeId: string,
-  groceries: GroceryDto[],
-  recipeMap: RecipeMap
-): string {
-  // Find the first grocery with this recipe's recipeIngredientId
-  for (const grocery of groceries) {
-    if (grocery.recipeIngredientId) {
-      const info = recipeMap[grocery.recipeIngredientId];
-
-      if (info?.recipeId === recipeId) {
-        return info.recipeName;
-      }
-    }
-  }
-
-  return "Unknown Recipe";
 }

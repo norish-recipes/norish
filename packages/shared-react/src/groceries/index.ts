@@ -1,3 +1,7 @@
+export type { AisleBlock, AisleBlocks } from "./aisle-blocks";
+export { placeInAisles } from "./aisle-blocks";
+export type { RecipeGroceries } from "./group-by-recipe";
+export { groupGroceriesByRecipe } from "./group-by-recipe";
 export type { PickedFood } from "./types";
 
 export { mergePantryAdded, mergePantryRemoved } from "./pantry-merge";
