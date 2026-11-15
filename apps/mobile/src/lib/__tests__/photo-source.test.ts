@@ -1,4 +1,4 @@
-import { photoSources, settlePhotoPick } from "@/features/recipes/utils/photo-source";
+import { photoSources, settlePhotoPick } from "@/lib/photo-source";
 import { describe, expect, it } from "vitest";
 
 describe("photoSources", () => {

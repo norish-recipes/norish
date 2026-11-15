@@ -1,10 +1,9 @@
 import type * as ImagePicker from "expo-image-picker";
 import { ActionSheetIOS } from "react-native";
 import { useCancelButton } from "@/hooks/use-cancel-button";
+import { usePhotoPicker } from "@/hooks/use-photo-picker";
 import { File } from "expo-file-system";
 import { useIntl } from "react-intl";
-
-import { usePhotoPicker } from "./use-photo-picker";
 
 const PICKER = {
   mediaTypes: ["images"],

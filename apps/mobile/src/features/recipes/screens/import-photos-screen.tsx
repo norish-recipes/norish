@@ -1,3 +1,4 @@
+import type { PhotoSource } from "@/lib/photo-source";
 import type { ImagePickerAsset } from "expo-image-picker";
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
@@ -5,6 +6,7 @@ import { Alert, Image, Pressable, Text, useWindowDimensions, View } from "react-
 import { GlassCloseButton } from "@/components/glass";
 import { Sheet, SHEET_INSET, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { usePhotoPicker } from "@/hooks/use-photo-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
 import { UIImagePickerPreferredAssetRepresentationMode } from "expo-image-picker";
@@ -16,8 +18,6 @@ import { useImportRecipe } from "@norish/shared-react/recipes";
 import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 import { fitOcrCap, refuseOcrImage } from "@norish/shared/lib/ocr-images";
 
-import type { PhotoSource } from "../utils/photo-source";
-import { usePhotoPicker } from "../hooks/use-photo-picker";
 import { useStartImport } from "../hooks/use-start-import";
 
 /** Three tiles a row with 8 pt gaps, inside the sheet's sides. */

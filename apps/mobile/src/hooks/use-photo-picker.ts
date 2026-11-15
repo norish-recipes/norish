@@ -1,7 +1,7 @@
-import type { PhotoSource } from "@/features/recipes/utils/photo-source";
+import type { PhotoSource } from "@/lib/photo-source";
 import { Alert, Linking } from "react-native";
-import { photoSources, settlePhotoPick } from "@/features/recipes/utils/photo-source";
 import { useCancelButton } from "@/hooks/use-cancel-button";
+import { photoSources, settlePhotoPick } from "@/lib/photo-source";
 import { isDevice } from "expo-device";
 import * as ImagePicker from "expo-image-picker";
 import { useIntl } from "react-intl";
