@@ -1,7 +1,7 @@
 import { sameFood } from "@norish/shared/lib/spelling-keys";
 
 import { useSpellingRules } from "../config";
-import { useIngredientsNamed } from "../ingredients";
+import { useIngredientsNamed } from "./use-ingredient-icons";
 
 /**
  * The Ingredient a grocery panel's name stands for (ADR-0037): the grocery's own while the name is

@@ -14,13 +14,13 @@ import {
   useGroceryFor,
   useGroceryFormState,
   useGroceryPrice,
-  useIngredientFor,
   useParsedGroceryName,
   useRecurrenceDetection,
   useRecurringGroceryFor,
   useSettledName,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
+import { useIngredientFor } from "@norish/shared-react/ingredients";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import { NameField } from "../components/form-parts";

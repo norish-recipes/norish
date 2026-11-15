@@ -10,12 +10,12 @@ import {
   useAisleChoice,
   useGroceriesMutations,
   useGroceryFormState,
-  useIngredientFor,
   useParsedGroceryName,
   useRecurrenceDetection,
   useSettledName,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
+import { useIngredientFor } from "@norish/shared-react/ingredients";
 
 import { NameField } from "../components/form-parts";
 import { GrocerySheet } from "../components/grocery-sheet";

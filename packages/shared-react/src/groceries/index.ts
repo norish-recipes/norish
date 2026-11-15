@@ -23,7 +23,6 @@ export { useGroceriesSubscription } from "./use-groceries-subscription";
 export { useGroceriesUiStore } from "./use-groceries-ui-store";
 export type { GroceryPrice } from "./use-grocery-price";
 export { priceOfLink, useGroceryPrice } from "./use-grocery-price";
-export { useIngredientFor } from "./use-ingredient-for";
 export { useGroceryEdit } from "./use-grocery-edit";
 export { useGroceryFormState } from "./use-grocery-form-state";
 export { useLineSelection } from "./use-line-selection";

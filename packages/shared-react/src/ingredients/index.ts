@@ -1,6 +1,7 @@
 export type { AIChange, IngredientItem, NamedIngredient, Spelling, StoredIcon } from "./types";
 
 export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
+export { useIngredientFor } from "./use-ingredient-for";
 export {
   useFoodsByName,
   useIngredientIconAddress,

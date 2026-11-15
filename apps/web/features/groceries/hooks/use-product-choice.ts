@@ -5,12 +5,12 @@ import { useCallback, useState } from "react";
 import type { StoreDto, StoreProductChoice } from "@norish/shared/contracts";
 import {
   useChooseProduct,
-  useIngredientFor,
   useLinkFor,
   useParsedGroceryName,
   useProductLink,
   useSettledName,
 } from "@norish/shared-react/groceries";
+import { useIngredientFor } from "@norish/shared-react/ingredients";
 import { isPendingLink } from "@norish/shared/lib/product-link";
 
 /**
