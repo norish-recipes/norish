@@ -169,6 +169,42 @@ describe("runReplayPass", () => {
     expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toContain("tick");
   });
 
+  it("parks a dependent edit with a replace that lands while it parks", async () => {
+    const storage = createMemoryStorage();
+    const { change } = storage.outbox;
+
+    store = createOutboxStore(storage.outbox);
+    const create = await store.enqueue(
+      entry({ id: "create", path: "recipes.create", input: { id: "r1" }, entityId: "r1" })
+    );
+
+    await store.park(create.seq, "deterministic");
+    const edit = await store.enqueue(
+      entry({ id: "edit", path: "recipes.update", input: { id: "r1", name: "First" } })
+    );
+    let replaced = false;
+    // A save replaces the edit just before the pass's first write to it.
+    const replace = async () => {
+      if (replaced) return;
+      replaced = true;
+      await change(edit.seq, (stored) => ({ ...stored, input: { id: "r1", name: "Second" } }));
+    };
+
+    storage.outbox.change = async (seq, next) => {
+      await replace();
+
+      return change(seq, next);
+    };
+    await runReplayPass({ store, submit: stubSubmit({}).submit, ownerId: "u1" });
+
+    expect(replaced).toBe(true);
+    expect((await storage.outbox.all()).at(-1)).toMatchObject({
+      input: { id: "r1", name: "Second" },
+      status: "parked",
+      parkedReason: "dependency",
+    });
+  });
+
   it("only touches the given owner's entries", async () => {
     await store.enqueue(entry({ id: "mine", ownerId: "u1" }));
     await store.enqueue(entry({ id: "theirs", ownerId: "u2" }));

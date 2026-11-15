@@ -55,24 +55,17 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
     );
   }
 
-  async function update(seq: number, patch: Partial<Omit<OutboxEntry, "seq">>): Promise<void> {
-    const existing = await outbox.get(seq);
-
-    if (!existing) {
-      return;
-    }
-
-    await outbox.put({ ...existing, ...patch, seq });
-
-    notify();
-  }
-
   async function change(...args: Parameters<OutboxStore["change"]>) {
     const written = await outbox.change(...args);
 
     if (written) notify();
 
     return written;
+  }
+
+  // Atomic, so a save replacing the entry meanwhile is never written over.
+  async function update(seq: number, patch: Partial<Omit<OutboxEntry, "seq">>): Promise<void> {
+    await change(seq, (existing) => ({ ...existing, ...patch, seq }));
   }
 
   async function park(seq: number, reason: ParkedReason): Promise<void> {
