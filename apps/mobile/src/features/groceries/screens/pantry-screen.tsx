@@ -17,7 +17,7 @@ export function PantryScreen() {
   const intl = useIntl();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { rows, actions, field, unread, isUnavailable } = usePantryScreen();
+  const { rows, actions, field, isRead, isUnavailable } = usePantryScreen();
   const header = (
     <View>
       <TitleRow className="pb-5" title={intl.formatMessage({ id: "groceries.page.pantry" })}>
@@ -30,7 +30,7 @@ export function PantryScreen() {
         {/* Drawn while the Pantry loads but taking nothing: a food added then could double one kept. */}
         <FindField
           canAdd={field.canAdd}
-          disabled={unread}
+          disabled={!isRead}
           fieldRef={field.ref}
           value={field.draft}
           onAdd={field.add}
@@ -60,7 +60,7 @@ export function PantryScreen() {
         ListHeaderComponent={header}
         contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
         contentInsetAdjustmentBehavior="never"
-        data={unread ? [] : rows}
+        data={isRead ? rows : []}
         keyExtractor={(row) => row.key}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"

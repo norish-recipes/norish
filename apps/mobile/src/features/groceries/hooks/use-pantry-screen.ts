@@ -84,8 +84,8 @@ export function usePantryScreen() {
     rows,
     actions,
     field: { ref: fieldRef, draft, setDraft, canAdd, add: () => canAdd && add(typed) },
-    // Until a read holds data the Pantry is unread, not empty: the rows wait and the field is inert.
-    unread: !isRead,
+    // Until a read holds data the Pantry is unknown, not empty: the rows wait and the field is inert.
+    isRead,
     isUnavailable,
   };
 }

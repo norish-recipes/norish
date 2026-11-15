@@ -75,9 +75,9 @@ export function GroceriesScreen() {
   useStoreAislesSubscription();
   useIngredientsSubscription();
 
-  // Until a read holds data an empty list is unread, not empty: a failed first read stays a skeleton.
-  const unread = groceries.length === 0 && !(isRead && (view === "recipe" || storesRead));
-  const loading = isLoading || storesLoading || aislesLoading || unread;
+  // Until a read holds data an empty list is unknown, not empty: a failed first read stays a skeleton.
+  const isListRead = groceries.length > 0 || (isRead && (view === "recipe" || storesRead));
+  const loading = isLoading || storesLoading || aislesLoading || !isListRead;
   const groups =
     view === "store" && grouped
       ? groupGroceriesByIngredient(groceries, getRecipeNameForGrocery, units, (grocery) =>
