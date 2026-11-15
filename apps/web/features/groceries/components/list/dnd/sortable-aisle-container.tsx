@@ -11,9 +11,9 @@ import {
 } from "@dnd-kit/sortable";
 
 import type { AisleDto } from "@norish/shared/contracts";
+import { aisleContainerId } from "@norish/shared-react/groceries";
 
 import { AisleHeading } from "../aisle-heading";
-import { aisleContainerId } from "./utils";
 
 // Always animate layout changes, including after drag
 const animateLayoutChanges: AnimateLayoutChanges = (args) =>

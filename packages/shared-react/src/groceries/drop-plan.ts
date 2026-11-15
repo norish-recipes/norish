@@ -1,8 +1,8 @@
 import type { StoreDto } from "@norish/shared/contracts";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
-import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./types";
-import { placeOfContainer, storeContainers } from "./utils";
+import type { AisleResolver, ContainerId, ItemsState, ReorderUpdate } from "./drop-containers";
+import { placeOfContainer, storeContainers } from "./drop-containers";
 
 /** A grocery as a drop files it: its name, and the Ingredient that is filed. */
 interface FiledGrocery {

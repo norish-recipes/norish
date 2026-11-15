@@ -1,40 +1,12 @@
+import type {
+  AisleResolver,
+  ContainerId,
+  FileGroceryName,
+  ItemsState,
+  ReorderUpdate,
+} from "@norish/shared-react/groceries";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-
-/** Container ID for groceries without a store assignment */
-export const UNSORTED_CONTAINER = "unsorted" as const;
-
-/** Prefix of an aisle's container id: `aisle:<aisleId>`, inside its Store's block. */
-export const AISLE_CONTAINER_PREFIX = "aisle:" as const;
-
-/**
- * A droppable of the list: `unsorted`, a store id (the Store's own unfiled
- * area, at the top of its block) or `aisle:<aisleId>` (one aisle of a Store).
- */
-export type ContainerId = string;
-
-/** Container ID => the keys in it, a row's id or a group's key, in the order shown. */
-export type ItemsState = Record<ContainerId, string[]>;
-
-/** The aisle a Store files an Ingredient under, or null where it has never been told (ADR-0031). */
-export type AisleResolver = (
-  storeId: string | null,
-  ingredientId: string | null | undefined
-) => string | null;
-
-/** File a grocery's Ingredient at a Store under an aisle, or under none (null), which forgets it. */
-export type FileGroceryName = (
-  storeId: string,
-  grocery: { name: string | null; ingredientId?: string | null },
-  aisleId: string | null
-) => void;
-
-/** One row's or group's new place: a sort order per Store, and the Store where that changed. */
-export interface ReorderUpdate {
-  id: string;
-  sortOrder: number;
-  storeId?: string | null;
-}
 
 /** What a drag arranged, until the list it was dropped on comes back from the cache. */
 interface Arrangement<T> {

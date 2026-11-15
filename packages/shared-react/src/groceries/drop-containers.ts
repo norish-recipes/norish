@@ -1,12 +1,43 @@
-import type { UniqueIdentifier } from "@dnd-kit/core";
-
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-import { placeInAisles } from "@norish/shared-react/groceries";
 import { sortAisles } from "@norish/shared/lib/aisles";
 
-import type { AisleResolver, ContainerId, ItemsState } from "./types";
-import { AISLE_CONTAINER_PREFIX, UNSORTED_CONTAINER } from "./types";
+import { placeInAisles } from "./aisle-blocks";
+
+/** Container ID for groceries without a store assignment */
+export const UNSORTED_CONTAINER = "unsorted" as const;
+
+/** Prefix of an aisle's container id: `aisle:<aisleId>`, inside its Store's block. */
+const AISLE_CONTAINER_PREFIX = "aisle:" as const;
+
+/**
+ * A droppable of the list: `unsorted`, a store id (the Store's own unfiled
+ * area, at the top of its block) or `aisle:<aisleId>` (one aisle of a Store).
+ */
+export type ContainerId = string;
+
+/** Container ID => the keys in it, a row's id or a group's key, in the order shown. */
+export type ItemsState = Record<ContainerId, string[]>;
+
+/** The aisle a Store files an Ingredient under, or null where it has never been told (ADR-0031). */
+export type AisleResolver = (
+  storeId: string | null,
+  ingredientId: string | null | undefined
+) => string | null;
+
+/** File a grocery's Ingredient at a Store under an aisle, or under none (null), which forgets it. */
+export type FileGroceryName = (
+  storeId: string,
+  grocery: { name: string | null; ingredientId?: string | null },
+  aisleId: string | null
+) => void;
+
+/** One row's or group's new place: a sort order per Store, and the Store where that changed. */
+export interface ReorderUpdate {
+  id: string;
+  sortOrder: number;
+  storeId?: string | null;
+}
 
 /** The container of one aisle, inside its Store's block. */
 export function aisleContainerId(aisleId: string): ContainerId {
@@ -54,12 +85,9 @@ function containerIdToStoreId(containerId: ContainerId): string | null {
 }
 
 /** Find which container an item belongs to */
-export function findContainerForItem(
-  itemId: UniqueIdentifier,
-  items: ItemsState
-): ContainerId | null {
+export function findContainerForItem(itemId: string, items: ItemsState): ContainerId | null {
   for (const [containerId, itemIds] of Object.entries(items)) {
-    if (itemIds.includes(itemId as string)) {
+    if (itemIds.includes(itemId)) {
       return containerId;
     }
   }

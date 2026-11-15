@@ -2,12 +2,12 @@
  * What a drop means: a per-Store renumbering, and what it teaches the Store.
  * The drag itself is dnd-kit's; this is the one place its outcome is decided.
  */
-import { planDrop } from "@/features/groceries/components/list/dnd/drop-plan";
-import { UNSORTED_CONTAINER } from "@/features/groceries/components/list/dnd/types";
-import { aisleContainerId } from "@/features/groceries/components/list/dnd/utils";
 import { describe, expect, it } from "vitest";
 
 import type { StoreDto } from "@norish/shared/contracts";
+
+import { aisleContainerId, UNSORTED_CONTAINER } from "../drop-containers";
+import { planDrop } from "../drop-plan";
 
 const MARKT = "store-markt";
 const BAKKER = "store-bakker";

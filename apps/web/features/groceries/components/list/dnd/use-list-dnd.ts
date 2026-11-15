@@ -8,18 +8,17 @@ import { useEffect, useRef, useState } from "react";
 import { KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
-import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
-
 import type {
   AisleResolver,
   ContainerId,
   FileGroceryName,
   ItemsState,
   ReorderUpdate,
-} from "./types";
+} from "@norish/shared-react/groceries";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import { findContainerForItem, planDrop } from "@norish/shared-react/groceries";
+
 import { createMultiContainerCollisionDetection } from "./collision-detection";
-import { planDrop } from "./drop-plan";
-import { findContainerForItem } from "./utils";
 
 interface ListDndOptions {
   /** Every container's keys as the list holds them now: a row's id, or a group's key. */

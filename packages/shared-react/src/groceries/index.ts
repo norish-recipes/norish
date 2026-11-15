@@ -1,5 +1,22 @@
 export type { AisleBlock, AisleBlocks } from "./aisle-blocks";
 export { placeInAisles } from "./aisle-blocks";
+export type {
+  AisleResolver,
+  ContainerId,
+  FileGroceryName,
+  ItemsState,
+  ReorderUpdate,
+} from "./drop-containers";
+export {
+  aisleContainerId,
+  buildGroupItemsState,
+  buildItemsState,
+  findContainerForItem,
+  storeGroupItems,
+  storeItems,
+  UNSORTED_CONTAINER,
+} from "./drop-containers";
+export { planDrop } from "./drop-plan";
 export type { RecipeGroceries } from "./group-by-recipe";
 export { groupGroceriesByRecipe } from "./group-by-recipe";
 export type { PickedFood } from "./types";

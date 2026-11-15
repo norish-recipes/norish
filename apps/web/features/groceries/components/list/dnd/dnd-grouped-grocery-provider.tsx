@@ -4,11 +4,11 @@ import { createContext, use, useId } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
+import { buildGroupItemsState } from "@norish/shared-react/groceries";
 
 import type { DndGroupedGroceryContextValue, DndGroupedGroceryProviderProps } from "./types";
 import { GroupDragOverlay } from "./group-drag-overlay";
 import { useListDnd } from "./use-list-dnd";
-import { buildGroupItemsState } from "./utils";
 
 const DndGroupedGroceryContext = createContext<DndGroupedGroceryContextValue | null>(null);
 

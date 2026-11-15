@@ -2,7 +2,7 @@ import type { CollisionDetection, UniqueIdentifier } from "@dnd-kit/core";
 import type { RefObject } from "react";
 import { closestCenter, getFirstCollision, pointerWithin, rectIntersection } from "@dnd-kit/core";
 
-import type { ItemsState } from "./types";
+import type { ItemsState } from "@norish/shared-react/groceries";
 
 /**
  * Custom collision detection for multiple containers (based on dnd-kit example).

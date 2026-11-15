@@ -1,8 +1,7 @@
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 
 import type { AisleDto } from "@norish/shared/contracts";
-
-import { aisleContainerId } from "./dnd/utils";
+import { aisleContainerId } from "@norish/shared-react/groceries";
 
 interface AisleBlock<T> {
   aisle: AisleDto;

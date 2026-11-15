@@ -4,11 +4,11 @@ import { createContext, use, useId } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import { buildItemsState } from "@norish/shared-react/groceries";
 
 import type { DndGroceryContextValue, DndGroceryProviderProps } from "./types";
 import { GroceryDragOverlay } from "./grocery-drag-overlay";
 import { useListDnd } from "./use-list-dnd";
-import { buildItemsState } from "./utils";
 
 const DndGroceryContext = createContext<DndGroceryContextValue | null>(null);
 

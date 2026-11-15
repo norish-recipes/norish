@@ -6,16 +6,20 @@ import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { AisleResolver } from "@norish/shared-react/groceries";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
-import { lineOf, useStoreTotal } from "@norish/shared-react/groceries";
+import {
+  aisleContainerId,
+  lineOf,
+  storeItems,
+  UNSORTED_CONTAINER,
+  useStoreTotal,
+} from "@norish/shared-react/groceries";
 
-import type { AisleResolver } from "./dnd/types";
 import { useDndGroceryContext } from "./dnd/dnd-grocery-provider";
 import { SortableAisleContainer } from "./dnd/sortable-aisle-container";
 import { SortableGroceryItem } from "./dnd/sortable-grocery-item";
 import { SortableStoreContainer } from "./dnd/sortable-store-container";
-import { UNSORTED_CONTAINER } from "./dnd/types";
-import { aisleContainerId, storeItems } from "./dnd/utils";
 import { DoneRow } from "./done-row";
 import { GroceryItem } from "./grocery-item";
 import { StoreHeading } from "./store-heading";

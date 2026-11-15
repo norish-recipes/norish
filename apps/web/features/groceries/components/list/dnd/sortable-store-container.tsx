@@ -9,8 +9,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import type { ContainerId } from "./types";
-import { UNSORTED_CONTAINER } from "./types";
+import type { ContainerId } from "@norish/shared-react/groceries";
+import { UNSORTED_CONTAINER } from "@norish/shared-react/groceries";
 
 // Always animate layout changes, including after drag
 const animateLayoutChanges: AnimateLayoutChanges = (args) =>
