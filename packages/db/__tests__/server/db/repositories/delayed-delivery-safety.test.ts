@@ -136,6 +136,7 @@ describe("delayed-delivery repository safety", () => {
 
     expect(result).toEqual({
       deletedGroceryIds: [snapshotted.id],
+      movedGroceries: [],
       storeDeleted: false,
       stale: false,
     });
