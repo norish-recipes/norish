@@ -28,6 +28,7 @@ import type { GroceryDrop } from "../utils/grocery-drop";
 import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { ListSettingsMenu } from "../components/list-settings-menu";
+import { ListSwitch } from "../components/list-switch";
 import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
 
@@ -158,19 +159,25 @@ export function GroceriesScreen() {
             >
               {intl.formatMessage({ id: "groceries.page.title" })}
             </Text>
-            <ListSettingsMenu
-              canClear={groceries.length > 0}
-              grouped={grouped}
-              view={view}
-              onClear={() =>
-                clear(
-                  null,
-                  groceries.map((grocery) => grocery.id)
-                )
-              }
-              onGrouped={setGrouped}
-              onView={setView}
-            />
+            <View className="flex-row items-center gap-2">
+              <ListSettingsMenu
+                canClear={groceries.length > 0}
+                grouped={grouped}
+                view={view}
+                onClear={() =>
+                  clear(
+                    null,
+                    groceries.map((grocery) => grocery.id)
+                  )
+                }
+                onGrouped={setGrouped}
+                onView={setView}
+              />
+              <ListSwitch
+                value="list"
+                onChange={(value) => value === "pantry" && router.push("/groceries/pantry")}
+              />
+            </View>
           </View>
         }
         openGroups={openGroups}

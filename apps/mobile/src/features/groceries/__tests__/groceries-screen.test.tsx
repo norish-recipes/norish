@@ -55,6 +55,7 @@ vi.mock("../components/groceries-states", () => ({
   GroceriesSkeleton: () => <p>skeleton</p>,
 }));
 vi.mock("../components/list-settings-menu", () => ({ ListSettingsMenu: () => null }));
+vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
 vi.mock("../utils/list-rows", () => ({ recipeListRows: () => [], storeListRows: () => [] }));
 vi.mock("../utils/grocery-drop", () => ({ planRecipeRowDrop: vi.fn(), planStoreRowDrop: vi.fn() }));
 

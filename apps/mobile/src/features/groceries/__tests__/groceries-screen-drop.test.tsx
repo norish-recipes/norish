@@ -109,6 +109,7 @@ vi.mock("../components/groceries-states", () => ({
   GroceriesSkeleton: () => null,
 }));
 vi.mock("../components/list-settings-menu", () => ({ ListSettingsMenu: () => null }));
+vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
 
 const { GroceriesScreen } = await import("../screens/groceries-screen");
 
