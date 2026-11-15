@@ -222,6 +222,18 @@ export function timerEndsAt(timer: Timer): number | null {
     : null;
 }
 
+/** The timers still counting down at `now`, with their ends, in store order. */
+export function runningTimers(
+  timers: readonly Timer[],
+  now: number
+): { timer: Timer; endsAt: number }[] {
+  return timers.flatMap((timer) => {
+    const endsAt = timerEndsAt(timer);
+
+    return endsAt !== null && endsAt > now ? [{ timer, endsAt }] : [];
+  });
+}
+
 /** Persists Recipe Timers through the app's storage and restores the ones it holds; call once. */
 export function connectTimerStorage(storage: PlatformStorage): void {
   if (platformStorage === storage) return;

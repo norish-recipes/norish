@@ -4,6 +4,7 @@ import type { PlatformStorage } from "../../platform";
 import {
   connectTimerStorage,
   recipeTimerId,
+  runningTimers,
   timerAdjustStep,
   timerEndsAt,
   useTimerStore,
@@ -287,6 +288,28 @@ describe("timerEndsAt", () => {
 
     pauseTimer("t");
     expect(timerEndsAt(timer())).toBeNull();
+  });
+});
+
+describe("runningTimers", () => {
+  const base = {
+    recipeId: "r",
+    label: "Step",
+    originalDurationMs: 60_000,
+    remainingMs: 30_000,
+    lastTickAt: 1_000,
+  };
+
+  it("keeps the running timers not yet past their end, in store order", () => {
+    const late = { ...base, id: "late", status: "running" as const };
+    const soon = { ...base, id: "soon", status: "running" as const, remainingMs: 5_000 };
+    const ranOut = { ...base, id: "out", status: "running" as const, remainingMs: 100 };
+    const paused = { ...base, id: "paused", status: "paused" as const, lastTickAt: null };
+
+    expect(runningTimers([late, ranOut, paused, soon], 2_000)).toEqual([
+      { timer: late, endsAt: 31_000 },
+      { timer: soon, endsAt: 6_000 },
+    ]);
   });
 });
 
