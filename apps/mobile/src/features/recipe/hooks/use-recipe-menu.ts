@@ -74,6 +74,13 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
       ? [
           {
             type: "action" as const,
+            label: label("common.actions.edit"),
+            icon: { type: "sfSymbol" as const, name: "pencil" as const },
+            onPress: () =>
+              router.push({ pathname: "/recipe/[id]/edit", params: { id: recipe.id } }),
+          },
+          {
+            type: "action" as const,
             label: label("recipes.actions.share"),
             icon: { type: "sfSymbol" as const, name: "link" as const },
             onPress: () =>
