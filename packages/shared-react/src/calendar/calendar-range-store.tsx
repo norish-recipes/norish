@@ -20,6 +20,8 @@ type CalendarRangeState = {
   /** Briefly true after a grow either way, so a scroll resting near an edge grows once. */
   isGrowing: boolean;
   grow: (direction: GrowDirection) => void;
+  /** Widens the range to hold `dayKey`, so a plan moved there stays on show. */
+  reach: (dayKey: string) => void;
 };
 
 function shiftDays(iso: string, days: number) {
@@ -56,6 +58,12 @@ export function createCalendarRangeStore(today: string) {
         settling.delete(direction);
         set({ isGrowing: settling.size > 0 });
       }, 100);
+    },
+    reach: (dayKey) => {
+      const { startISO, endISO } = get().range;
+
+      if (dayKey < startISO) set({ range: { startISO: dayKey, endISO } });
+      else if (dayKey > endISO) set({ range: { startISO, endISO: dayKey } });
     },
   }));
 }

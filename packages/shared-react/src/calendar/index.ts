@@ -21,4 +21,3 @@ export { usePlanOnDay } from "./use-plan-on-day";
 export { afterPlanningStep, plannedServings, useAfterPlanning } from "./after-planning";
 export type { Planned } from "./after-planning";
 export { dayDropTarget, useMovePlannedItem } from "./use-move-planned-item";
-export { moveTargetIndex } from "./calendar-cache-merge";

@@ -10,7 +10,6 @@ import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import {
-  moveTargetIndex,
   useCalendarMutations,
   useCalendarRangeQuery,
   usePlannedItemText,
@@ -32,7 +31,7 @@ export function PlannedItemScreen() {
   const item = items.find((candidate) => candidate.id === id);
   const gone = isRead && !item;
 
-  // Removed here or by someone else, or moved out of the range: nothing left to show.
+  // Removed here or by someone else: nothing left to show.
   useEffect(() => {
     if (gone) router.back();
   }, [gone, router]);
@@ -47,28 +46,23 @@ export function PlannedItemScreen() {
     );
   }
 
-  return <PlannedItemSheet item={item} items={items} />;
+  return <PlannedItemSheet item={item} />;
 }
 
-function PlannedItemSheet({
-  item,
-  items,
-}: {
-  item: PlannedItemFromQuery;
-  items: PlannedItemFromQuery[];
-}) {
+function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const intl = useIntl();
   const router = useRouter();
   const { navigation } = usePlatform();
   const { moveItem, deleteItem } = useCalendarMutations();
+  const { reach } = useCalendarRangeQuery();
   const { title, subtitle } = usePlannedItemText()(item);
   const accent = useAccentTextColor();
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
-  // Another day or slot: the item goes last there, as a drag puts it.
+  // Another day or slot: last there, as a drag puts it. The range reaches the day, so it stays on show.
   const moveTo = (day: string, slot: Slot) => {
-    if (day !== item.date || slot !== item.slot) {
-      moveItem(item.id, day, slot, moveTargetIndex(items, item, day, slot));
-    }
+    if (day === item.date && slot === item.slot) return;
+    reach(day);
+    moveItem(item.id, day, slot);
   };
 
   return (
