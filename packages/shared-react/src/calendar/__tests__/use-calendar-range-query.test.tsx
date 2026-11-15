@@ -67,4 +67,17 @@ describe("useCalendarRangeQuery", () => {
     expect(result.current.days).toHaveLength(47);
     expect(dates()[0]).toBe(14);
   });
+
+  it("is unread until a read holds data", async () => {
+    readRange.mockRejectedValueOnce(new Error("offline"));
+    readRange.mockResolvedValue([]);
+
+    const { result } = renderCalendar();
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isRead).toBe(false);
+
+    act(() => result.current.grow("future"));
+    await waitFor(() => expect(result.current.isRead).toBe(true));
+  });
 });

@@ -37,5 +37,5 @@ export function useCalendarQuery(range: CalendarRange): CalendarQueryResult {
     initialDataUpdatedAt: 0,
   });
 
-  return { calendarData: groupItemsByDate(data ?? []), isLoading };
+  return { calendarData: groupItemsByDate(data ?? []), isLoading, isRead: data !== undefined };
 }

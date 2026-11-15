@@ -39,6 +39,8 @@ export type CalendarCacheHelpers = {
 export type CalendarQueryResult = {
   calendarData: CalendarData;
   isLoading: boolean;
+  /** The range holds a read, cached or seeded from another range; until then empty is unknown. */
+  isRead: boolean;
 };
 
 export type CalendarMutationsResult = {
