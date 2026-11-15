@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecipeImages } from "@/features/recipes/hooks/use-recipe-images";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
@@ -68,6 +68,12 @@ export default function StepInput({
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
   const [items, setItems] = useState<StepItem[]>(() => seedStepRows(steps));
+  // The rows as last rendered, for an upload that ends after they changed.
+  const latestItemsRef = useRef(items);
+
+  useEffect(() => {
+    latestItemsRef.current = items;
+  });
   const [seededLength, setSeededLength] = useState(steps.length);
   // A freshly mentioned line whose chip should ask for its amount: the row
   // it landed on, and the line's order for the chips to open once rendered.
@@ -202,17 +208,14 @@ export default function StepInput({
 
         if (!result.success || !url) return;
         // The photo joins its row as the rows are now: they may have changed while uploading.
-        setItems((current) => {
-          const updated = current.map((item) =>
-            item.id === rowId
-              ? { ...item, images: [...item.images, { image: url, order: item.images.length }] }
-              : item
-          );
+        const updated = latestItemsRef.current.map((item) =>
+          item.id === rowId
+            ? { ...item, images: [...item.images, { image: url, order: item.images.length }] }
+            : item
+        );
 
-          emitChanges(updated);
-
-          return updated;
-        });
+        setItems(updated);
+        emitChanges(updated);
       })
       .finally(() => setUploadingIndex(null));
   };

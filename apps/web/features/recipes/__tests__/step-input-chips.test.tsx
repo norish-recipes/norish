@@ -1,5 +1,6 @@
 import type { Mock } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { StrictMode } from "react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
@@ -15,9 +16,13 @@ vi.mock("motion/react", () => ({
   useDragControls: () => ({ start: vi.fn() }),
 }));
 
+const images = vi.hoisted(() => ({
+  uploadStepImage: vi.fn(),
+}));
+
 vi.mock("@/features/recipes/hooks/use-recipe-images", () => ({
   useRecipeImages: () => ({
-    uploadStepImage: vi.fn(),
+    uploadStepImage: images.uploadStepImage,
     deleteStepImage: vi.fn().mockResolvedValue(undefined),
   }),
 }));
@@ -407,5 +412,29 @@ describe("StepInput chips", () => {
     // The salt line exists in both systems at order 0; the chip resolves
     // against the metric one because that is the system being edited.
     expect(screen.getByText("2.5 g salt")).toBeInTheDocument();
+  });
+});
+
+describe("StepInput photos", () => {
+  it("tells the form once about an uploaded photo, under StrictMode too", async () => {
+    images.uploadStepImage.mockResolvedValue({ success: true, url: "/recipes/r1/steps/a.jpg" });
+    const { container } = render(
+      <StrictMode>
+        <StepInput
+          recipeId="r1"
+          steps={[{ step: "Mix.", order: 0, systemUsed: "metric" }]}
+          onChange={onChange}
+        />
+      </StrictMode>
+    );
+
+    await act(async () => {
+      fireEvent.change(container.querySelector('input[type="file"]')!, {
+        target: { files: [new File(["x"], "a.jpg", { type: "image/jpeg" })] },
+      });
+    });
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(lastEmitted()[0]?.images).toEqual([{ image: "/recipes/r1/steps/a.jpg", order: 0 }]);
   });
 });
