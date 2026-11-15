@@ -59,20 +59,21 @@ export function StepRows({
 }) {
   const intl = useIntl();
   const [rows, setRows] = useState<StepRowValue[]>(() => seedStepRows(steps));
-  // The rows as last rendered, for an upload that ends after they changed.
+  // The rows as last changed, which a render may not show yet when an upload ends.
   const latestRowsRef = useRef(rows);
-
-  useEffect(() => {
-    latestRowsRef.current = rows;
-  });
   const [seededLength, setSeededLength] = useState(steps.length);
+  // Rows set while rendering (seeded, references taken back), for the ref once committed.
+  const [adopted, setAdopted] = useState<StepRowValue[] | null>(null);
   const trailingRow = useTrailingRow(rows, hasStepContent);
   const text = (id: string) => intl.formatMessage({ id });
 
   if (steps.length !== seededLength) {
     setSeededLength(steps.length);
     if (steps.length > 0 && rows.length === 1 && !hasStepContent(rows[0]!)) {
-      setRows(seedStepRows(steps));
+      const seeded = seedStepRows(steps);
+
+      setRows(seeded);
+      setAdopted(seeded);
     }
   }
 
@@ -81,30 +82,42 @@ export function StepRows({
 
   if (lineMoves !== appliedMoves) {
     setAppliedMoves(lineMoves);
-    if (lineMoves) setRows(withStepRefsOf(rows, steps));
+    if (lineMoves) {
+      const taken = withStepRefsOf(rows, steps);
+
+      setRows(taken);
+      setAdopted(taken);
+    }
   }
+  useEffect(() => {
+    if (adopted) latestRowsRef.current = adopted;
+  }, [adopted]);
 
   const chipLines = chipLinesOf(ingredients, systemUsed);
   const suggestions = ingredientSuggestionsOf(chipLines);
   // The rows above already load these icons; a line names its food the same way here.
   const foods = useFoodsByName(suggestions.map((suggestion) => suggestion.label));
   const numbers = rowNumbers(rows.map((row) => row.text));
-  const commit = (next: StepRowValue[]) => {
+  const commit = (change: (current: StepRowValue[]) => StepRowValue[]) => {
+    const next = change(latestRowsRef.current);
+
+    latestRowsRef.current = next;
     setRows(next);
     onChange(stepRowsToSteps(next, systemUsed));
   };
-  const update = (index: number, patch: Partial<StepRowValue>) => {
-    const row = rows[index];
+  const update = (index: number, patch: (row: StepRowValue) => Partial<StepRowValue>) =>
+    commit((current) => {
+      const row = current[index];
 
-    if (row) commit(rows.with(index, { ...row, ...patch }));
-  };
+      return row ? current.with(index, { ...row, ...patch(row) }) : current;
+    });
 
   const pickPhotos = usePhotoSourceSheet(text("recipes.editor.addStepPhoto"));
   const addPhotos = (row: StepRowValue, assets: ImagePicker.ImagePickerAsset[]) => {
     void uploads.uploadStep(assets, row.id).then((added) => {
       // The rows may have moved on while uploading, so the photos join the row as it is now.
-      commit(
-        latestRowsRef.current.map((entry) =>
+      commit((current) =>
+        current.map((entry) =>
           entry.id === row.id
             ? {
                 ...entry,
@@ -145,28 +158,30 @@ export function StepRows({
         onLeave={() => {
           const next = trailingRow.leave(index);
 
-          if (next) commit(next);
+          if (next) commit(() => next);
         }}
         onMention={(suggestion, mentioned) =>
-          commit(mentionIngredient(rows, index, suggestion, mentioned, chipLines).rows)
+          commit(
+            (current) => mentionIngredient(current, index, suggestion, mentioned, chipLines).rows
+          )
         }
-        onRefsChange={(stepIngredients) => update(index, { stepIngredients })}
+        onRefsChange={(stepIngredients) => update(index, () => ({ stepIngredients }))}
         onRemove={() => {
           row.images.forEach((image) => uploads.removeStepImage(image.image));
           uploads.pendingFor(row.id).forEach((photo) => uploads.cancel(photo.key));
-          commit(removeStepRow(rows, index));
+          commit((current) => removeStepRow(current, index));
         }}
         onRemovePhoto={(imageIndex) => {
           const image = row.images[imageIndex];
 
           if (image) uploads.removeStepImage(image.image);
-          update(index, {
-            images: row.images
+          update(index, (current) => ({
+            images: current.images
               .filter((_, i) => i !== imageIndex)
               .map((kept, order) => ({ ...kept, order })),
-          });
+          }));
         }}
-        onType={(value) => commit(typeStepRow(rows, index, value))}
+        onType={(value) => commit((current) => typeStepRow(current, index, value))}
       />
     );
   };
@@ -184,7 +199,7 @@ export function StepRows({
           key: row.id,
           value: row,
         }))}
-        onDrop={(drop) => commit(normalizeStepRows(drop.rows.map((entry) => entry.value)))}
+        onDrop={(drop) => commit(() => normalizeStepRows(drop.rows.map((entry) => entry.value)))}
       />
       {trailingRow.canAdd ? (
         <AddRow

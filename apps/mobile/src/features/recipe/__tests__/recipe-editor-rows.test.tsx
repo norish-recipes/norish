@@ -445,6 +445,83 @@ describe("StepRows photos", () => {
   });
 });
 
+describe("StepRows uploads that end together", () => {
+  const deferredUploads = () => {
+    const pending: PromiseWithResolvers<{ image: string; order: number }[]>[] = [];
+    const uploads = {
+      canUpload: () => true,
+      pendingFor: () => [],
+      uploadStep: () => {
+        pending.push(Promise.withResolvers());
+
+        return pending.at(-1)!.promise;
+      },
+    } as unknown as Parameters<typeof StepRows>[0]["uploads"];
+
+    return { pending, uploads };
+  };
+  const renderRows = (uploads: Parameters<typeof StepRows>[0]["uploads"]) => {
+    const onChange = vi.fn();
+
+    render(
+      <StepRows
+        ingredients={[]}
+        lineMoves={null}
+        steps={[{ step: "Stir.", order: 0, systemUsed: "metric" }]}
+        systemUsed="metric"
+        uploads={uploads}
+        onChange={onChange}
+      />
+    );
+
+    return onChange;
+  };
+  const pick = () => {
+    fireEvent.click(screen.getByTestId("editor-step-photo-0"));
+    act(() => state.pendingPick?.());
+  };
+
+  it("keeps both photos when two uploads end in the same tick", async () => {
+    const { pending, uploads } = deferredUploads();
+    const onChange = renderRows(uploads);
+
+    pick();
+    pick();
+    await act(async () => {
+      pending[0]!.resolve([{ image: "/a.jpg", order: 0 }]);
+      pending[1]!.resolve([{ image: "/b.jpg", order: 0 }]);
+    });
+
+    expect(
+      onChange.mock.calls.at(-1)?.[0][0].images.map((image: { image: string }) => image.image)
+    ).toEqual(["/a.jpg", "/b.jpg"]);
+  });
+
+  it("keeps an edit made while the photo uploaded", async () => {
+    const { pending, uploads } = deferredUploads();
+    const onChange = renderRows(uploads);
+
+    pick();
+    await act(async () => {
+      pending[0]!.resolve([{ image: "/a.jpg", order: 0 }]);
+      await pending[0]!.promise;
+      // A bare event, so the edit lands before the photo's render has committed.
+      const field = input("editor-step-input-0");
+
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set?.call(
+        field,
+        "Stir well."
+      );
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    expect(onChange.mock.calls.at(-1)?.[0][0]).toMatchObject({
+      step: "Stir well.",
+      images: [{ image: "/a.jpg", order: 0 }],
+    });
+  });
+});
+
 describe("StepRows when lines move", () => {
   it("keeps the form's references when two moves land in one render", () => {
     const onChange = vi.fn();
