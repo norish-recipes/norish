@@ -58,10 +58,12 @@ export type SmallWidgetProps =
 
 export type WeekLine = {
   id: string;
-  kind: "recipe" | "note" | "more";
+  kind: "recipe" | "note";
   name: string;
   photo?: string;
   url: string;
+  /** On a day's last shown line, "+N more" for the items it leaves out. */
+  more?: string;
 };
 
 export type WeekDay = {
@@ -198,9 +200,7 @@ function weekProps(
       const key = dateKey(date);
       const dayItems = items[index] ?? [];
       const shown = budget[index] ?? 0;
-      // A day cut short to two lines or more ends on "+N"; one line keeps its first item.
-      const cut = dayItems.length > shown && shown > 1;
-      const lines: WeekLine[] = dayItems.slice(0, cut ? shown - 1 : shown).map((item) => {
+      const lines: WeekLine[] = dayItems.slice(0, shown).map((item) => {
         const recipe = isRecipeItem(item);
 
         return {
@@ -211,15 +211,10 @@ function weekProps(
           url: recipe ? recipeUrl(item.recipeId) : calendarDayUrl(key),
         };
       });
+      const last = lines.at(-1);
 
-      if (cut) {
-        lines.push({
-          id: `${key}-more`,
-          name: strings.more(dayItems.length - lines.length),
-          kind: "more",
-          url: calendarDayUrl(key),
-        });
-      }
+      if (last && dayItems.length > lines.length)
+        last.more = strings.more(dayItems.length - lines.length);
 
       return {
         key,
@@ -233,16 +228,19 @@ function weekProps(
   };
 }
 
-/** Item lines per day: every day's row holds one, the lines left go to the earliest days that need them. */
+/** Item lines per day: one for each day with items, then the spare lines one per day in turn. */
 export function lineBudget(counts: number[]): number[] {
   const budget = counts.map((count) => Math.min(count, 1));
   let left = WEEK_LINES - counts.length;
 
-  return budget.map((lines, index) => {
-    const extra = Math.max(0, Math.min((counts[index] ?? 0) - lines, left));
+  while (left > 0 && budget.some((lines, index) => lines < (counts[index] ?? 0))) {
+    for (let index = 0; index < budget.length && left > 0; index++) {
+      if ((budget[index] ?? 0) < (counts[index] ?? 0)) {
+        budget[index] = (budget[index] ?? 0) + 1;
+        left -= 1;
+      }
+    }
+  }
 
-    left -= extra;
-
-    return lines + extra;
-  });
+  return budget;
 }

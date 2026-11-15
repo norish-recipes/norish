@@ -243,7 +243,7 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
                 {day.lines.map((line) => (
                   <Link key={line.id} destination={line.url}>
                     <HStack modifiers={[frame({ height: 20 })]} spacing={8}>
-                      {line.kind === "more" ? null : line.photo ? (
+                      {line.photo ? (
                         <Image
                           modifiers={[
                             resizable(),
@@ -257,16 +257,15 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
                       ) : (
                         tile(line.kind === "note" ? "doc.text" : "fork.knife")
                       )}
-                      <Text
-                        modifiers={[
-                          font({ size: 14 }),
-                          foregroundStyle(line.kind === "more" ? muted : ink),
-                          lineLimit(1),
-                        ]}
-                      >
+                      <Text modifiers={[font({ size: 14 }), foregroundStyle(ink), lineLimit(1)]}>
                         {line.name}
                       </Text>
                       <Spacer />
+                      {line.more ? (
+                        <Text modifiers={[font({ size: 13 }), foregroundStyle(muted)]}>
+                          {line.more}
+                        </Text>
+                      ) : null}
                     </HStack>
                   </Link>
                 ))}

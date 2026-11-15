@@ -336,7 +336,7 @@ describe("the large widget", () => {
     expect(next.days[6]).toMatchObject({ day: "22" });
   });
 
-  it("ends a crowded day on +N", () => {
+  it("ends a crowded day's last shown line on +N", () => {
     const items = ["A", "B", "C", "D", "E", "F"].map((name, index) =>
       recipe("2026-11-15", "Dinner", name, index)
     );
@@ -349,18 +349,46 @@ describe("the large widget", () => {
     const week = large[0]?.props;
 
     if (week?.kind !== "week") throw new Error("expected a week");
-    expect(week.days[0]?.lines.map((line) => line.name)).toEqual(["A", "B", "C", "+3 more"]);
-    expect(week.days[0]?.lines.at(-1)).toMatchObject({
-      kind: "more",
-      url: "norish://calendar?day=2026-11-15",
-    });
+    expect(week.days[0]?.lines.map((line) => [line.name, line.more])).toEqual([
+      ["A", undefined],
+      ["B", undefined],
+      ["C", undefined],
+      ["D", "+2 more"],
+    ]);
+  });
+
+  it("says what every day hides, a day held to one line too", () => {
+    const days = ["15", "16", "17", "18", "19", "20", "21"].map((day) => `2026-11-${day}`);
+    const items = days.flatMap((date) => [
+      recipe(date, "Breakfast", `Oats ${date}`),
+      recipe(date, "Dinner", `Curry ${date}`),
+    ]);
+    const { large } = calendarWidgetTimelines(
+      byDate(items),
+      local(15, 9).getTime(),
+      strings,
+      photo
+    );
+    const week = large[0]?.props;
+
+    if (week?.kind !== "week") throw new Error("expected a week");
+    expect(week.days.map((day) => day.lines.map((line) => line.more ?? line.name))).toEqual([
+      ["Oats 2026-11-15", "Curry 2026-11-15"],
+      ["Oats 2026-11-16", "Curry 2026-11-16"],
+      ["Oats 2026-11-17", "Curry 2026-11-17"],
+      ["+1 more"],
+      ["+1 more"],
+      ["+1 more"],
+      ["+1 more"],
+    ]);
   });
 });
 
 describe("lineBudget", () => {
-  it("gives every day with items a line before any day a second", () => {
-    expect(lineBudget([5, 5, 5, 5, 5, 5, 5])).toEqual([4, 1, 1, 1, 1, 1, 1]);
+  it("gives every day with items a line, then the spare lines one per day in turn", () => {
+    expect(lineBudget([5, 5, 5, 5, 5, 5, 5])).toEqual([2, 2, 2, 1, 1, 1, 1]);
     expect(lineBudget([2, 0, 2, 1, 0, 2, 2])).toEqual([2, 0, 2, 1, 0, 2, 1]);
+    expect(lineBudget([5, 2, 0, 0, 0, 0, 0])).toEqual([3, 2, 0, 0, 0, 0, 0]);
     expect(lineBudget([9, 0, 0, 0, 0, 0, 0])).toEqual([WEEK_LINES - 6, 0, 0, 0, 0, 0, 0]);
   });
 });
