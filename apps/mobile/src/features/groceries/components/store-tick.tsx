@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, View } from "react-native";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useThemeColor } from "heroui-native";
 
 /** The check circle: 24 pt, ringed in the Store's colour and filled with a 14 pt check once ticked. */
 export function StoreTick({
@@ -21,7 +21,7 @@ export function StoreTick({
   testID: string;
   onPress: () => void;
 }) {
-  const accent = useAccentTextColor();
+  const [accent] = useThemeColor(["accent"] as const);
   const tint = color ?? accent;
   const filled = checked || partial;
 

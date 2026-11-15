@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -131,7 +130,6 @@ function SourceRow({
   onEdit: (id: string) => void;
 }) {
   const intl = useIntl();
-  const accent = useAccentTextColor();
 
   return (
     <View
@@ -139,7 +137,7 @@ function SourceRow({
     >
       <StoreTick
         checked={grocery.isDone}
-        color={color ?? accent}
+        color={color}
         label={intl.formatMessage({ id: "groceries.mobile.amountFor" }, { amount, recipe: name })}
         testID={`source-tick-${grocery.id}`}
         onPress={() => onToggle(grocery.id, !grocery.isDone)}
