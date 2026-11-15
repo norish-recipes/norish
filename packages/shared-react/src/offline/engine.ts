@@ -17,6 +17,7 @@ import type { OutboxMutationClient } from "./replay-client";
 import type { OfflineStorage } from "./storage";
 import type { WarmedRecipe, WarmSet } from "./warm-set";
 import { createCacheManager } from "./cache-manager";
+import { createProcessLock } from "./leader";
 import { createOutboxLink } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";
 import { probeBackendReachable } from "./probe";
@@ -84,6 +85,9 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
     onClear: options.onClear,
   });
   const outbox = createOutboxStore(storage.outbox);
+  // Replay and a save placed in the Outbox exclude each other, in one process too.
+  const processLock = createProcessLock();
+  const outboxLocks = () => locks() ?? processLock;
 
   return {
     queryClient: cache.queryClient,
@@ -93,6 +97,8 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       store: outbox,
       owner: cache.owner,
       replayHeaderValue,
+      wholeEdits: new Set(["recipes.update"]),
+      locks: outboxLocks,
     }),
     probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),
     createRecovery: ({ transport, verifySession, refetchActiveQueries, topUp }) =>
@@ -103,7 +109,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
         verifySession,
         refetchActiveQueries,
         topUp,
-        locks,
+        locks: outboxLocks,
       }),
     createWarmSet: (trpc) =>
       createWarmSet({

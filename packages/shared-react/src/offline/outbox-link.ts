@@ -12,10 +12,15 @@
  *
  * Replayed mutations carry a marker context and are skipped, so a replay is
  * never re-captured.
+ *
+ * A whole edit (`recipes.update`) saved while one of the same id is pending
+ * waits in the Outbox: in that entry, on its version, if it was never sent.
  */
 
-import type { HTTPHeaders, TRPCLink } from "@trpc/client";
+import type { HTTPHeaders, Operation, OperationLink, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
+import type { Unsubscribable } from "@trpc/server/observable";
+import { TRPCClientError } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -25,8 +30,10 @@ import {
   markOutboxAdmissionFailed,
 } from "@norish/shared/lib/trpc-errors";
 
+import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
+import { runWithOutboxLock } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
 
 const log = createClientLogger("OutboxLink");
@@ -54,6 +61,10 @@ interface OutboxLinkDependencies {
   /** The applied cache owner; admission fails while there is none. */
   owner: () => string | null;
   replayHeaderValue: string;
+  /** Procedures that save a whole entity at the version it was read at; they create nothing. */
+  wholeEdits?: ReadonlySet<string>;
+  /** The lock Replay holds, so a save never changes an entry being sent. */
+  locks?: () => LockManagerLike | null;
 }
 
 function captureOwner(owner: () => string | null): string {
@@ -85,13 +96,11 @@ function entityIdOf(input: unknown): string | null {
 
 /** Durably admit the mutation to the Outbox; rejects when persistence fails. */
 async function captureToOutbox(
-  { store, owner }: OutboxLinkDependencies,
+  { store, owner, wholeEdits }: OutboxLinkDependencies,
   path: string,
   input: unknown,
   context: unknown
 ): Promise<void> {
-  const ctx = (context ?? {}) as { operationId?: unknown; headers?: HTTPHeaders };
-  const operationId = typeof ctx.operationId === "string" ? ctx.operationId : null;
   const encodedInput = encodeOutboxInput(input);
 
   await store.enqueue({
@@ -99,22 +108,58 @@ async function captureToOutbox(
     ownerId: captureOwner(owner),
     path,
     input: encodedInput,
-    entityId: entityIdOf(encodedInput),
-    operationId,
-    headers: normalizeHeaders(ctx.headers),
+    entityId: wholeEdits?.has(path) ? null : entityIdOf(encodedInput),
+    ...operationOf(context),
   });
 }
+
+function operationOf(context: unknown) {
+  const ctx = (context ?? {}) as { operationId?: unknown; headers?: HTTPHeaders };
+
+  return {
+    operationId: typeof ctx.operationId === "string" ? ctx.operationId : null,
+    headers: normalizeHeaders(ctx.headers),
+  };
+}
+
+const idOf = (input: unknown) => (input as { id?: unknown } | null)?.id;
+
+/** Queue a whole edit behind a pending one of its id: in its place if unsent. False if none. */
+async function queueBehindPending(deps: OutboxLinkDependencies, op: Operation): Promise<boolean> {
+  const ownerId = deps.owner();
+  const pending = ownerId ? await deps.store.forOwner(ownerId, "pending") : [];
+  const last = pending
+    .filter((entry) => entry.path === op.path && idOf(entry.input) === idOf(op.input))
+    .at(-1);
+
+  if (!last) return false;
+  if (last.attempts > 0) {
+    await captureToOutbox(deps, op.path, op.input, op.context);
+
+    return true;
+  }
+  // One write: a kill leaves the old save or the new one.
+  await deps.store.update(last.seq, {
+    input: {
+      ...(encodeOutboxInput(op.input) as object),
+      version: (last.input as { version?: unknown }).version,
+    },
+    ...operationOf(op.context),
+  });
+
+  return true;
+}
+
+/** The Queued outcome for a save that went to the Outbox without being sent. */
+const queuedError = () =>
+  new TRPCClientError("Queued behind a pending save", { cause: new TypeError("Failed to fetch") });
 
 export function createOutboxLink<TRouter extends AnyTRPCRouter>(
   deps: OutboxLinkDependencies
 ): TRPCLink<TRouter> {
   return () => {
-    return ({ op, next }) => {
-      if (op.type !== "mutation") {
-        return next(op);
-      }
-
-      return observable((observer) => {
+    const capture: OperationLink<TRouter> = ({ op, next }) =>
+      observable((observer) => {
         const subscription = next(op).subscribe({
           next: (value) => observer.next(value),
           error: (error) => {
@@ -147,6 +192,43 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
         });
 
         return () => subscription.unsubscribe();
+      });
+
+    return ({ op, next }) => {
+      if (op.type !== "mutation") {
+        return next(op);
+      }
+
+      if (
+        !deps.wholeEdits?.has(op.path) ||
+        typeof idOf(op.input) !== "string" ||
+        isOutboxReplayContext(op.context, deps.replayHeaderValue)
+      ) {
+        return capture({ op, next });
+      }
+
+      return observable((observer) => {
+        let subscription: Unsubscribable | null = null;
+        let closed = false;
+
+        runWithOutboxLock(() => queueBehindPending(deps, op), deps.locks?.() ?? null).then(
+          (queued) => {
+            if (queued) observer.error(queuedError());
+            else if (!closed) subscription = capture({ op, next }).subscribe(observer);
+          },
+          (persistError: unknown) => {
+            log.error({ error: persistError, path: op.path }, "Outbox admission failed");
+            const error = queuedError();
+
+            markOutboxAdmissionFailed(error);
+            observer.error(error);
+          }
+        );
+
+        return () => {
+          closed = true;
+          subscription?.unsubscribe();
+        };
       });
     };
   };

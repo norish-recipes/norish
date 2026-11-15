@@ -25,6 +25,21 @@ export interface LockManagerLike {
   ): Promise<T>;
 }
 
+/** The Outbox lock for a client with no lock manager: one process, so holders queue in it. */
+export function createProcessLock(): LockManagerLike {
+  let tail: Promise<unknown> = Promise.resolve();
+
+  return {
+    request(_name, _options, callback) {
+      const run = tail.then(() => callback(null));
+
+      tail = run.catch(() => undefined);
+
+      return run;
+    },
+  };
+}
+
 /**
  * Run `task` while holding the Outbox leader lock, resolving with its result.
  * Blocks until the lock is free, so callers can rely on any prior holder's work

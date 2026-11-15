@@ -6,8 +6,12 @@ import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
 import { isEncodedFormData } from "./input-codec";
+import { createProcessLock, runWithOutboxLock } from "./leader";
 import { createOutboxLink } from "./outbox-link";
+import { createOutboxStore } from "./outbox-store";
+import { runReplayPass } from "./replay";
 import { OUTBOX_REPLAY_HEADER } from "./replay-client";
+import { createMemoryStorage } from "./testing/memory-storage";
 
 const REPLAY_HEADER_VALUE = "test-outbox";
 
@@ -178,4 +182,149 @@ describe("createOutboxLink", () => {
     expect(isEncodedFormData(stored.input)).toBe(true);
     expect(stored.entityId).toBe("33333333-3333-4333-8333-333333333333");
   });
+});
+
+describe("createOutboxLink: a whole edit waits behind its pending save", () => {
+  const id = "11111111-1111-4111-8111-111111111111";
+  const unreachable = () =>
+    observable((observer) => observer.error(new TypeError("Failed to fetch")));
+  let storage: ReturnType<typeof createMemoryStorage>;
+  let store: OutboxStore;
+  let lock: ReturnType<typeof createProcessLock>;
+
+  beforeEach(() => {
+    storage = createMemoryStorage();
+    store = createOutboxStore(storage.outbox);
+    lock = createProcessLock();
+  });
+
+  const link = createOutboxLinkOver();
+
+  function createOutboxLinkOver() {
+    return () =>
+      createOutboxLink({
+        store,
+        owner,
+        replayHeaderValue: REPLAY_HEADER_VALUE,
+        wholeEdits: new Set(["recipes.update"]),
+        locks: () => lock,
+      })({} as never);
+  }
+
+  function save(
+    input: { id: string; version: number; data: { name: string } },
+    terminal: () => ReturnType<typeof observable>,
+    { path = "recipes.update", operationId = input.data.name } = {}
+  ) {
+    const op = {
+      type: "mutation",
+      path,
+      input,
+      context: { operationId, headers: { "x-operation-id": operationId } },
+    };
+
+    return new Promise<{ value?: unknown; error?: unknown }>((resolve) => {
+      link()({ op, next: terminal } as never).subscribe({
+        next: (value: unknown) => resolve({ value }),
+        error: (error: unknown) => resolve({ error }),
+        complete: () => resolve({}),
+      });
+    });
+  }
+
+  const edit = (name: string, version = 3) => ({ id, version, data: { name } });
+
+  it("puts a second save in place of the unsent one, on the first's base", async () => {
+    const terminal = vi.fn(unreachable);
+
+    await save(edit("First", 3), terminal);
+    const second = await save(edit("Second", 4), terminal);
+
+    expect(terminal).toHaveBeenCalledTimes(1);
+    expect(hasOutboxAdmissionFailed(second.error)).toBe(false);
+    for (const entries of [await store.loadAll(), await storage.outbox.all()]) {
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        input: { id, version: 3, data: { name: "Second" } },
+        operationId: "Second",
+        headers: { "x-operation-id": "Second" },
+        entityId: null,
+      });
+    }
+    // A reload reads the one entry back.
+    expect(await createOutboxStore(storage.outbox).forOwner("u1", "pending")).toHaveLength(1);
+  });
+
+  it("replays the one save, and it lands", async () => {
+    await save(edit("First"), unreachable);
+    await save(edit("Second"), unreachable);
+    const submit = vi.fn(async (entry: OutboxEntry) => {
+      expect(entry.input).toMatchObject({ version: 3, data: { name: "Second" } });
+
+      return { kind: "success" as const };
+    });
+
+    const pass = await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(pass).toMatchObject({ removed: 1, parked: 0 });
+    expect(await store.loadAll()).toEqual([]);
+  });
+
+  it("queues a save as its own entry behind one already attempted", async () => {
+    await save(edit("First"), unreachable);
+    const [first] = await store.loadAll();
+
+    await store.update(first!.seq, { attempts: 1 });
+    await save(edit("Second", 3), unreachable);
+
+    expect((await store.loadAll()).map((entry) => entry.input)).toEqual([
+      edit("First"),
+      edit("Second"),
+    ]);
+  });
+
+  it("does not touch the entry while Replay holds the Outbox", async () => {
+    await save(edit("First"), unreachable);
+    let release = () => {};
+    const replaying = runWithOutboxLock(
+      () => new Promise<void>((resolve) => (release = resolve)),
+      lock
+    );
+
+    const second = save(edit("Second"), unreachable);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect((await store.loadAll())[0]!.input).toEqual(edit("First"));
+    release();
+    await replaying;
+    await second;
+    expect((await store.loadAll())[0]!.input).toEqual(edit("Second"));
+  });
+
+  it("sends a save live when nothing of that recipe is pending", async () => {
+    const terminal = vi.fn(() => observable((observer) => observer.next({ ok: true })));
+
+    await save({ ...edit("Other"), id: "22222222-2222-4222-8222-222222222222" }, unreachable);
+    const result = await save(edit("Live"), terminal);
+
+    expect(terminal).toHaveBeenCalledTimes(1);
+    expect(result.value).toEqual({ ok: true });
+  });
+
+  it.each(["siteAuthTokens.update", "recipes.shareUpdate"])(
+    "leaves %s with a top-level { id, version } as it was",
+    async (path) => {
+      const terminal = vi.fn(unreachable);
+
+      await save(edit("First"), terminal, { path });
+      await save(edit("Second"), terminal, { path });
+
+      expect(terminal).toHaveBeenCalledTimes(2);
+      expect(await store.loadAll()).toMatchObject([
+        { path, input: edit("First"), entityId: id },
+        { path, input: edit("Second"), entityId: id },
+      ]);
+    }
+  );
 });
