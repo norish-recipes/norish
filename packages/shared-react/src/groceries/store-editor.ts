@@ -1,4 +1,4 @@
-import type { StoreColor, StoreDto } from "@norish/shared/contracts";
+import type { SearchAddressOutcome, StoreColor, StoreDto } from "@norish/shared/contracts";
 import { duplicateAisleName, foldAisleName, sortAisles } from "@norish/shared/lib/aisles";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { deriveSearchAddress } from "@norish/shared/lib/search-address";
@@ -105,3 +105,12 @@ export function renamedAisle(aisles: EditingAisle[], id: string, name: string): 
 export function removedAisle(aisles: EditingAisle[], id: string): EditingAisle[] {
   return aisles.filter((aisle) => aisle.id !== id);
 }
+
+/** The words for each thing a shop can answer when its Search Address is tried, so no outcome goes unworded. */
+export const SHOP_CHECK_MESSAGES: Record<SearchAddressOutcome, string> = {
+  products: "checkFoundProducts",
+  "no-products": "checkNoProducts",
+  answered: "checkAnswered",
+  "no-answer": "checkNoAnswer",
+  "no-address": "checkNoAddress",
+};

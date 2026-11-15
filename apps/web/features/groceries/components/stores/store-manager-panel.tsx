@@ -12,10 +12,11 @@ import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { EditingStore, ShopCheck } from "@norish/shared-react/groceries";
-import type { SearchAddressOutcome, StoreDto } from "@norish/shared/contracts";
+import type { StoreDto } from "@norish/shared/contracts";
 import {
   editingStoreOf,
   newEditingStore,
+  SHOP_CHECK_MESSAGES,
   useSaveStore,
   useStoresMutations,
 } from "@norish/shared-react/groceries";
@@ -150,21 +151,12 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
   );
 }
 
-/** One line of copy per thing a shop can answer, so no outcome goes unworded. */
-const CHECK_MESSAGES: Record<SearchAddressOutcome, string> = {
-  products: "checkFoundProducts",
-  "no-products": "checkNoProducts",
-  answered: "checkAnswered",
-  "no-answer": "checkNoAnswer",
-  "no-address": "checkNoAddress",
-};
-
 /** What the shop answered, in the user's own words rather than an error. */
 function ShopCheckLine({ check }: { check: ShopCheck }) {
   const t = useTranslations("groceries.storeManager");
   const { result } = check;
   const message = result
-    ? t(CHECK_MESSAGES[result.outcome], { store: check.storeName, count: result.count ?? 0 })
+    ? t(SHOP_CHECK_MESSAGES[result.outcome], { store: check.storeName, count: result.count ?? 0 })
     : t("checkingShop", { store: check.storeName });
 
   return (

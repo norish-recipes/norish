@@ -20,7 +20,8 @@ import { useShopSearch, useStoreProducts } from "./use-store-products-query";
 const SEARCH_DEBOUNCE_MS = 400;
 
 export interface ProductFieldOptions {
-  store: StoreDto;
+  /** The Store being priced at; none while the grocery has none, and the field then does nothing. */
+  store: StoreDto | null;
   /** The grocery's name as it will be stored; the Product Link is keyed by it. */
   groceryName: string;
   /** What this grocery is linked to now, which is what the field opens reading. */
@@ -54,8 +55,8 @@ export function useProductField({
   locale,
   packWords,
 }: ProductFieldOptions) {
-  const canSearch = Boolean(store.searchAddress);
-  const pointsAtShop = Boolean(store.website ?? store.searchAddress);
+  const canSearch = Boolean(store?.searchAddress);
+  const pointsAtShop = Boolean(store?.website ?? store?.searchAddress);
   const opensWith = linkedProduct?.name ?? "";
   const [term, setTerm] = useState(opensWith);
   const [searchedTerm, setSearchedTerm] = useState(() => groceryName.trim());
@@ -121,8 +122,8 @@ export function useProductField({
   // Exactly the query's own `enabled`, so what the field says about the search
   // and what the search is doing cannot drift apart.
   const asking = wants && searchedTerm.trim().length > 0;
-  const search = useShopSearch(store.id, searchedTerm, asking);
-  const products = useStoreProducts(store.id, asked);
+  const search = useShopSearch(store?.id ?? null, searchedTerm, asking);
+  const products = useStoreProducts(store?.id ?? null, asked);
   const candidates = (search.data?.candidates ?? []).filter(isPriced);
   const stored = products.data ?? [];
   const storedByPage = new Map(
@@ -169,7 +170,10 @@ export function useProductField({
   // rather than a question: what this Store's products are already priced in,
   // else what its website's top-level domain implies.
   const suggestedCurrency =
-    stored[0]?.currency ?? candidates[0]?.currency ?? currencyForUrl(store.website) ?? "EUR";
+    stored[0]?.currency ??
+    candidates[0]?.currency ??
+    currencyForUrl(store?.website ?? null) ??
+    "EUR";
   const currency = (manualCurrency.trim() || suggestedCurrency).toUpperCase();
   const typedPrice = Number(manualPrice.replace(",", "."));
   // What is typed is held to what it claims to be, and said so under the
@@ -294,6 +298,16 @@ export function useProductField({
     setUnlinked(true);
     onChoice({ kind: "none" });
   };
+
+  // Another Store is another shop: nothing of the last one's search or product carries over.
+  const storeId = store?.id ?? null;
+  const [lastStoreId, setLastStoreId] = useState(storeId);
+
+  if (lastStoreId !== storeId) {
+    setLastStoreId(storeId);
+    untake();
+    setUnlinked(false);
+  }
 
   // A row the field took for the grocery's own name follows that name. A
   // shopper who goes on typing after the field took "kaas" for them is no

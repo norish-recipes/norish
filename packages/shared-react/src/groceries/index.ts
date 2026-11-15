@@ -98,6 +98,7 @@ export {
   newEditingStore,
   removedAisle,
   renamedAisle,
+  SHOP_CHECK_MESSAGES,
   storeLinkFields,
 } from "./store-editor";
 export type { ShopCheck } from "./use-save-store";

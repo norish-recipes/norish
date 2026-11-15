@@ -115,4 +115,29 @@ describe("useProductField", () => {
     expect(onChoice).toHaveBeenLastCalledWith(row.choice);
     expect(result.current.manualPrice).toBe("1.29");
   });
+
+  it("does nothing without a Store, and starts over when the Store changes", () => {
+    const onChoice = vi.fn();
+    const { result, rerender } = renderHook(
+      (props: { store: StoreDto | null }) =>
+        useProductField({
+          store: props.store,
+          groceryName: "avocado",
+          linkedProduct: null,
+          choice: null,
+          onChoice,
+          locale: "en",
+          packWords: words,
+        }),
+      { initialProps: { store: null as StoreDto | null } }
+    );
+
+    expect(result.current.pointsAtShop).toBe(false);
+    rerender({ store });
+    act(() => result.current.editPrice("2"));
+    expect(result.current.manualPrice).toBe("2");
+    rerender({ store: { ...store, id: "s2" } });
+
+    expect(result.current.manualPrice).toBe("");
+  });
 });
