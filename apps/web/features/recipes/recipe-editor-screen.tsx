@@ -1,27 +1,17 @@
 "use client";
 
-import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
-import type { RecipeGalleryMedia } from "@/features/recipes/components/editor/media-gallery-input";
-import type { ProvenanceFormValue } from "@/features/recipes/components/editor/provenance-fields";
-import type { Step } from "@/features/recipes/components/editor/step-input";
-import React, { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChipButton } from "@/components/shared/chip-button";
 import TagInput from "@/components/shared/tag-input";
 import IngredientInput from "@/features/recipes/components/editor/ingredient-input";
 import MeasurementSystemSelector from "@/features/recipes/components/editor/measurement-system-selector";
 import MediaGalleryInput from "@/features/recipes/components/editor/media-gallery-input";
-import ProvenanceFields, {
-  EMPTY_PROVENANCE_FORM_VALUE,
-} from "@/features/recipes/components/editor/provenance-fields";
+import ProvenanceFields from "@/features/recipes/components/editor/provenance-fields";
 import SmartInputHelp from "@/features/recipes/components/editor/smart-input-help";
 import SmartTextInput from "@/features/recipes/components/editor/smart-text-input";
 import StepInput from "@/features/recipes/components/editor/step-input";
 import TimeInputs from "@/features/recipes/components/editor/time-inputs";
-import {
-  buildInitialMedia,
-  useRecipeFormDirtyState,
-} from "@/features/recipes/components/editor/use-recipe-form-dirty-state";
 import EditRecipeSkeleton from "@/features/recipes/components/skeleton/edit-recipe-skeleton";
 import { useUnsavedNavigationGuard } from "@/features/recipes/hooks/use-unsaved-navigation-guard";
 import { useRecipesMutations } from "@/hooks/use-recipes-mutations";
@@ -29,20 +19,15 @@ import { useCategoryLabel } from "@/lib/category-display";
 import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+import type { RecipeFormErrors } from "@norish/shared-react/recipes";
+import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
-  useCategoriesQuery,
-  useIngredientsSubscription,
-  useUnitsQuery,
-} from "@norish/shared-react/config";
-import { useHydrated } from "@norish/shared-react/platform";
-import { useDevicePreference } from "@norish/shared-react/reader";
-import { useRecipeId, useRecipeListSubscription } from "@norish/shared-react/recipes";
-import { resolveCategoryName } from "@norish/shared/lib/categories";
-import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
-import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+  useRecipeEditorForm,
+  useRecipeId,
+  useRecipeListSubscription,
+} from "@norish/shared-react/recipes";
 import { createClientLogger } from "@norish/shared/lib/logger";
-import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 const log = createClientLogger("RecipeEditorScreen");
 
@@ -54,406 +39,80 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
   const router = useRouter();
   const { createRecipe, updateRecipe } = useRecipesMutations();
   const locale = useLocale();
-  const { units, isLoading: isLoadingUnits } = useUnitsQuery();
-  const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
 
   // The ingredient rows draw each food's icon; the list events reread the Categories offered.
   useIngredientsSubscription();
   useRecipeListSubscription();
 
   const categoryLabel = useCategoryLabel();
-  const [unitStyle] = useDevicePreference("unitStyle");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const t = useTranslations("recipes.form");
   const tValidation = useTranslations("recipes.validation");
   const tCommon = useTranslations("common.actions");
-
-  // Use hook for ID reservation
   const { recipeId, isLoading: isLoadingRecipeId } = useRecipeId(mode, initialData?.id);
+  const editor = useRecipeEditorForm({ mode, initialData, locale });
+  const { form, set } = editor;
+  const errorText = (field: keyof RecipeFormErrors) => {
+    const key = editor.errors[field];
 
-  // Form state
-  const [name, setName] = useState(initialData?.name ?? "");
-  const [description, setDescription] = useState(initialData?.description ?? "");
-  const [notes, setNotes] = useState(initialData?.notes ?? "");
-  const [url, setUrl] = useState(initialData?.url ?? "");
-  // Null while the field is empty, so a count can be cleared and retyped.
-  const [servings, setServings] = useState<number | null>(initialData?.servings ?? 1);
-  const [prepMinutes, setPrepMinutes] = useState<number | null>(initialData?.prepMinutes ?? null);
-  const [cookMinutes, setCookMinutes] = useState<number | null>(initialData?.cookMinutes ?? null);
-  const [totalMinutes, setTotalMinutes] = useState<number | null>(
-    initialData?.totalMinutes ?? null
-  );
-  const [tags, setTags] = useState<string[]>(initialData?.tags?.map((t) => t.name) ?? []);
-  const [categories, setCategories] = useState<RecipeCategory[]>(initialData?.categories ?? []);
-  // The household's list, plus any the recipe carries from elsewhere or was just given.
-  const categoryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set([...householdCategories, ...(initialData?.categories ?? []), ...categories])
-      ),
-    [householdCategories, initialData?.categories, categories]
-  );
+    return key ? tValidation(key) : undefined;
+  };
+  const errors = {
+    name: errorText("name"),
+    ingredients: errorText("ingredients"),
+    steps: errorText("steps"),
+    servings: errorText("servings"),
+    submit: editor.errors.submit,
+  };
   const [newCategory, setNewCategory] = useState("");
-  const [ingredients, setIngredients] = useState<ParsedIngredient[]>([]);
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [systemUsed, setSystemUsed] = useState<MeasurementSystem>(
-    initialData?.systemUsed ?? "metric"
-  );
-  const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
-  const [manuallySetSystem, setManuallySetSystem] = useState(false);
-  const [initializedRecipeId, setInitializedRecipeId] = useState<string | null>(null);
-  // False on the server and while hydrating, so the browser's first render matches
-  // the server's form, which never has the lines filled in.
-  const isHydrated = useHydrated();
-  const [detectedFor, setDetectedFor] = useState({
-    ingredients,
-    manuallySetSystem,
-    isLoadingUnits,
-  });
 
-  // Media state - unified array of images and videos
-  const [media, setMedia] = useState<RecipeGalleryMedia[]>(() => buildInitialMedia(initialData));
-
-  // Nutrition state
-  const [calories, setCalories] = useState<number | null>(initialData?.calories ?? null);
-  const [fat, setFat] = useState<number | null>(
-    initialData?.fat != null ? Number(initialData.fat) : null
-  );
-  const [carbs, setCarbs] = useState<number | null>(
-    initialData?.carbs != null ? Number(initialData.carbs) : null
-  );
-  const [protein, setProtein] = useState<number | null>(
-    initialData?.protein != null ? Number(initialData.protein) : null
-  );
-  // Recipe Provenance is one atomic group, so the form holds it as one value.
-  const [provenance, setProvenance] = useState<ProvenanceFormValue>(() =>
-    initialData
-      ? {
-          originCountry: initialData.originCountry ?? null,
-          originCountryName: initialData.originCountryName ?? null,
-          originRegion: initialData.originRegion ?? "",
-          provenanceNote: initialData.provenanceNote ?? "",
-          cuisineIds: initialData.cuisines.map((cuisine) => cuisine.id),
-        }
-      : { ...EMPTY_PROVENANCE_FORM_VALUE }
-  );
-  const currentFormState = useMemo(
-    () => ({
-      name,
-      description,
-      notes,
-      url,
-      servings,
-      prepMinutes,
-      cookMinutes,
-      totalMinutes,
-      tags,
-      categories,
-      ingredients,
-      steps,
-      systemUsed,
-      media,
-      calories,
-      fat,
-      carbs,
-      protein,
-      provenance,
-    }),
-    [
-      name,
-      description,
-      notes,
-      url,
-      servings,
-      prepMinutes,
-      cookMinutes,
-      totalMinutes,
-      tags,
-      categories,
-      ingredients,
-      steps,
-      systemUsed,
-      media,
-      calories,
-      fat,
-      carbs,
-      protein,
-      provenance,
-    ]
-  );
-  const hasUnsavedChanges = useRecipeFormDirtyState({
-    current: currentFormState,
-    initialData,
-    initializedRecipeId,
-    locale,
-    mode,
-    units,
-    unitStyle,
-  });
-  const navigateBack = useCallback(() => router.back(), [router]);
+  const navigateBack = () => router.back();
   const {
     allowNavigation,
     confirmNavigation: confirmDiscardChanges,
     disallowNavigation,
   } = useUnsavedNavigationGuard({
-    hasUnsavedChanges,
+    hasUnsavedChanges: editor.hasUnsavedChanges,
     confirmationMessage: t("discardChangesConfirm"),
     onConfirmLeave: navigateBack,
   });
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     if (!confirmDiscardChanges()) return;
     allowNavigation();
     navigateBack();
-  }, [allowNavigation, confirmDiscardChanges, navigateBack]);
-
-  // Initialize ingredients and steps from initialData
-  // Filter by the current systemUsed to only show items for the active measurement system
-  if (
-    isHydrated &&
-    mode === "edit" &&
-    initialData &&
-    !isLoadingUnits &&
-    initializedRecipeId !== initialData.id
-  ) {
-    // Filter ingredients by the recipe's measurement system
-    const filteredIngredients = initialData.recipeIngredients.filter(
-      (ing) => ing.systemUsed === initialData.systemUsed
-    );
-    const initIngredients: ParsedIngredient[] = filteredIngredients.map((ing) => ({
-      id: ing.id,
-      version: ing.version,
-      ingredientName: ing.ingredientName,
-      amount: ing.amount,
-      unit: ing.unit ? formatUnit(ing.unit, locale, units, ing.amount, unitStyle) : null,
-      order: ing.order,
-      systemUsed: ing.systemUsed,
-    }));
-
-    setIngredients(initIngredients);
-
-    // Filter steps by the recipe's measurement system
-    const filteredSteps = initialData.steps.filter((s) => s.systemUsed === initialData.systemUsed);
-    const initSteps: Step[] = filteredSteps.map((s) => ({
-      step: s.step,
-      order: s.order,
-      systemUsed: s.systemUsed,
-      version: s.version,
-      images: s.images || [],
-      stepIngredients: s.stepIngredients || [],
-    }));
-
-    setSteps(initSteps);
-    setInitializedRecipeId(initialData.id);
-  }
-
-  // Detect measurement system from ingredients and auto-select for new recipes only.
-  // Existing recipes already have an explicit active system, and re-detection can flip it on save.
-  if (
-    detectedFor.ingredients !== ingredients ||
-    detectedFor.manuallySetSystem !== manuallySetSystem ||
-    detectedFor.isLoadingUnits !== isLoadingUnits
-  ) {
-    setDetectedFor({ ingredients, manuallySetSystem, isLoadingUnits });
-
-    if (mode === "create" && ingredients.length > 0 && !manuallySetSystem) {
-      const ingredientLines = ingredients.map((ing) =>
-        `${ing.amount ?? ""} ${ing.unit ?? ""} ${ing.ingredientName}`.trim()
-      );
-      const parsed = parseIngredientWithDefaults(ingredientLines, units);
-
-      if (parsed.length > 0) {
-        const detected = inferSystemUsedFromParsed(parsed);
-
-        setDetectedSystem(detected);
-        setSystemUsed(detected);
-        setIngredients((prev) =>
-          prev.some((ing) => ing.systemUsed !== detected)
-            ? prev.map((ing) => ({
-                ...ing,
-                systemUsed: detected,
-              }))
-            : prev
-        );
-        setSteps((prev) =>
-          prev.some((step) => step.systemUsed !== detected)
-            ? prev.map((step) => ({
-                ...step,
-                systemUsed: detected,
-              }))
-            : prev
-        );
-      }
-    }
-  }
-  const toggleCategory = useCallback((category: RecipeCategory) => {
-    setCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-  }, []);
-  // Resolved like the server does, so a typed name picks the chip it will save as.
-  const addCategory = () => {
-    const pick = resolveCategoryName(newCategory, builtInAliases, categoryOptions);
-
-    setNewCategory("");
-    if (!pick) return;
-
-    setCategories((prev) => (prev.includes(pick) ? prev : [...prev, pick]));
   };
-  const validate = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
+  const addCategory = () => {
+    setNewCategory("");
+    editor.addCategory(newCategory);
+  };
+  const handleSubmit = () => {
+    const recipeData = editor.submit();
 
-    if (!name.trim()) {
-      newErrors.name = tValidation("nameRequired");
-    }
-    if (ingredients.length === 0) {
-      newErrors.ingredients = tValidation("ingredientsRequired");
-    }
-    if (steps.length === 0) {
-      newErrors.steps = tValidation("stepsRequired");
-    }
-    if (servings === null || servings < 1) {
-      newErrors.servings = tValidation("servingsMin");
-    }
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  }, [name, ingredients, steps, servings, tValidation]);
-  const handleSubmit = useCallback(() => {
-    if (!validate() || servings === null) return;
+    if (!recipeData) return;
     setIsSubmitting(true);
-    setErrors({});
-    // Extract images from unified media state, preserving their order
-    const images = media
-      .filter((m) => m.type === "image")
-      .map((img) => ({
-        id: img.id,
-        image: img.src,
-        order: img.order,
-        version: img.version,
-      }));
-
-    // Extract videos from unified media state, preserving their order
-    const videos = media
-      .filter((m) => m.type === "video")
-      .map((vid) => ({
-        id: vid.id,
-        video: vid.src,
-        thumbnail: vid.thumbnail ?? null,
-        duration: vid.duration ?? null,
-        order: vid.order,
-        version: vid.version,
-      }));
-    const recipeData = {
-      name: name.trim(),
-      description: description.trim() || null,
-      notes: notes.trim() || null,
-      url: url.trim() || null,
-      servings,
-      prepMinutes: prepMinutes ?? undefined,
-      cookMinutes: cookMinutes ?? undefined,
-      totalMinutes: totalMinutes ?? undefined,
-      calories,
-      fat: fat != null ? fat.toString() : null,
-      carbs: carbs != null ? carbs.toString() : null,
-      protein: protein != null ? protein.toString() : null,
-      originCountry: provenance.originCountry,
-      originCountryName: provenance.originCountryName,
-      originRegion: provenance.originRegion.trim() || null,
-      provenanceNote: provenance.provenanceNote.trim() || null,
-      cuisines: provenance.cuisineIds,
-      systemUsed,
-      tags: tags.map((t) => ({
-        name: t,
-      })),
-      categories,
-      recipeIngredients: ingredients.map((ing, idx) => ({
-        id: ing.id,
-        version: ing.version,
-        ingredientName: ing.ingredientName,
-        ingredientId: null,
-        amount: ing.amount,
-        unit: ing.unit,
-        order: idx,
-        systemUsed: ing.systemUsed,
-      })),
-      steps: steps.map((s, idx) => ({
-        step: s.step,
-        order: idx,
-        systemUsed: s.systemUsed,
-        version: s.version,
-        images: s.images || [],
-        stepIngredients: s.stepIngredients || [],
-      })),
-      // Images array field
-      images,
-      // Videos array field
-      videos,
-    };
     const editing = mode === "edit" ? initialData : undefined;
 
     try {
       if (mode === "create") {
         allowNavigation();
-        createRecipe({
-          ...recipeData,
-          id: recipeId!,
-        });
+        createRecipe({ ...recipeData, id: recipeId! });
         router.push(`/recipes/${recipeId!}`);
       } else if (editing) {
         allowNavigation();
-        updateRecipe(editing.id, {
-          ...recipeData,
-          version: editing.version,
-        });
+        updateRecipe(editing.id, { ...recipeData, version: editing.version });
         router.push(`/recipes/${editing.id}`);
       }
     } catch (err) {
       log.error({ err }, "Failed to save recipe");
       disallowNavigation();
-      setErrors({
-        submit: (err as Error).message,
-      });
+      editor.failSubmit((err as Error).message);
     }
     setIsSubmitting(false);
-  }, [
-    validate,
-    name,
-    description,
-    url,
-    media,
-    servings,
-    prepMinutes,
-    cookMinutes,
-    totalMinutes,
-    systemUsed,
-    tags,
-    categories,
-    ingredients,
-    steps,
-    mode,
-    initialData,
-    createRecipe,
-    updateRecipe,
-    recipeId,
-    calories,
-    fat,
-    carbs,
-    protein,
-    provenance,
-    notes,
-    allowNavigation,
-    disallowNavigation,
-    router,
-  ]);
-  const handleTimeChange = useCallback(
-    (field: "prepMinutes" | "cookMinutes" | "totalMinutes", value: number | null) => {
-      if (field === "prepMinutes") setPrepMinutes(value);
-      else if (field === "cookMinutes") setCookMinutes(value);
-      else if (field === "totalMinutes") setTotalMinutes(value);
-    },
-    []
-  );
+  };
+  const handleTimeChange = (
+    field: "prepMinutes" | "cookMinutes" | "totalMinutes",
+    value: number | null
+  ) => set(field, value);
 
   // Show skeleton while reserving recipe ID for create mode
   if (isLoadingRecipeId) {
@@ -493,9 +152,12 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           </h2>
           <div className="ml-0 min-w-0 md:ml-9">
             {recipeId && (
-              <MediaGalleryInput media={media} recipeId={recipeId} onChange={setMedia} />
+              <MediaGalleryInput
+                media={form.media}
+                recipeId={recipeId}
+                onChange={(media) => set("media", media)}
+              />
             )}
-            {errors.image && <p className="text-danger mt-2 text-base">{errors.image}</p>}
           </div>
         </section>
 
@@ -512,8 +174,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               isRequired
               className="text-lg"
               isInvalid={!!errors.name}
-              value={name}
-              onChange={setName}
+              value={form.name}
+              onChange={(value) => set("name", value)}
             >
               <Label>{t("recipeName")}</Label>
               <Input placeholder={t("recipeNamePlaceholder")} />
@@ -528,8 +190,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartTextInput
                 minRows={2}
                 placeholder={t("descriptionPlaceholder")}
-                value={description}
-                onValueChange={setDescription}
+                value={form.description}
+                onValueChange={(value) => set("description", value)}
               />
             </div>
           </div>
@@ -550,9 +212,9 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartInputHelp />
             </div>
             <IngredientInput
-              ingredients={ingredients}
-              systemUsed={systemUsed}
-              onChange={setIngredients}
+              ingredients={form.ingredients}
+              systemUsed={form.systemUsed}
+              onChange={(ingredients) => set("ingredients", ingredients)}
             />
             {errors.ingredients && (
               <p className="text-danger mt-2 text-base">{errors.ingredients}</p>
@@ -575,11 +237,11 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartInputHelp showIngredientMention />
             </div>
             <StepInput
-              ingredients={ingredients}
+              ingredients={form.ingredients}
               recipeId={recipeId ?? undefined}
-              steps={steps}
-              systemUsed={systemUsed}
-              onChange={setSteps}
+              steps={form.steps}
+              systemUsed={form.systemUsed}
+              onChange={(steps) => set("steps", steps)}
             />
             {errors.steps && <p className="text-danger mt-2 text-base">{errors.steps}</p>}
           </div>
@@ -596,13 +258,13 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           <div className="ml-0 space-y-6 md:ml-9">
             <div>
               <p className="text-muted mb-3 text-base">{t("tagsHelp")}</p>
-              <TagInput value={tags} onChange={setTags} />
+              <TagInput value={form.tags} onChange={(tags) => set("tags", tags)} />
             </div>
             <div>
               <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
               <div className="flex flex-wrap gap-2">
-                {categoryOptions.map((category) => {
-                  const active = categories.includes(category);
+                {editor.categoryOptions.map((category) => {
+                  const active = form.categories.includes(category);
 
                   return (
                     <ChipButton
@@ -611,7 +273,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
                       className="chip--on-ground h-8 cursor-pointer rounded-full px-3 text-sm"
                       color={active ? "accent" : "default"}
                       variant={active ? "primary" : "tertiary"}
-                      onClick={() => toggleCategory(category)}
+                      onClick={() => editor.toggleCategory(category)}
                     >
                       {categoryLabel(category)}
                     </ChipButton>
@@ -652,8 +314,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <TextField
                 className="w-full"
                 type="number"
-                value={calories != null ? calories.toString() : ""}
-                onChange={(value) => setCalories(value ? parseInt(value, 10) || null : null)}
+                value={form.calories != null ? form.calories.toString() : ""}
+                onChange={(value) => set("calories", value ? parseInt(value, 10) || null : null)}
               >
                 <Label>{t("calories")}</Label>
                 <Input min={0} placeholder="-" />
@@ -661,8 +323,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <TextField
                 className="w-full"
                 type="number"
-                value={fat != null ? fat.toString() : ""}
-                onChange={(value) => setFat(value ? parseFloat(value) || null : null)}
+                value={form.fat != null ? form.fat.toString() : ""}
+                onChange={(value) => set("fat", value ? parseFloat(value) || null : null)}
               >
                 <Label>{t("fat")}</Label>
                 <Input min={0} placeholder="-" step={0.1} />
@@ -670,8 +332,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <TextField
                 className="w-full"
                 type="number"
-                value={carbs != null ? carbs.toString() : ""}
-                onChange={(value) => setCarbs(value ? parseFloat(value) || null : null)}
+                value={form.carbs != null ? form.carbs.toString() : ""}
+                onChange={(value) => set("carbs", value ? parseFloat(value) || null : null)}
               >
                 <Label>{t("carbs")}</Label>
                 <Input min={0} placeholder="-" step={0.1} />
@@ -679,8 +341,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <TextField
                 className="w-full"
                 type="number"
-                value={protein != null ? protein.toString() : ""}
-                onChange={(value) => setProtein(value ? parseFloat(value) || null : null)}
+                value={form.protein != null ? form.protein.toString() : ""}
+                onChange={(value) => set("protein", value ? parseFloat(value) || null : null)}
               >
                 <Label>{t("protein")}</Label>
                 <Input min={0} placeholder="-" step={0.1} />
@@ -698,7 +360,10 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
             {t("provenance")}
           </h2>
           <div className="ml-0 md:ml-9">
-            <ProvenanceFields value={provenance} onChange={setProvenance} />
+            <ProvenanceFields
+              value={form.provenance}
+              onChange={(provenance) => set("provenance", provenance)}
+            />
           </div>
         </section>
 
@@ -716,8 +381,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
                 className="w-full"
                 isInvalid={!!errors.servings}
                 type="number"
-                value={servings?.toString() ?? ""}
-                onChange={(value) => setServings(parseInt(value, 10) || null)}
+                value={form.servings?.toString() ?? ""}
+                onChange={(value) => set("servings", parseInt(value, 10) || null)}
               >
                 <Label>{t("servings")}</Label>
                 <Input min={1} placeholder="1" />
@@ -732,9 +397,9 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
                 {t("cookingTimes")} <span className="text-muted font-normal">{t("optional")}</span>
               </span>
               <TimeInputs
-                cookMinutes={cookMinutes}
-                prepMinutes={prepMinutes}
-                totalMinutes={totalMinutes}
+                cookMinutes={form.cookMinutes}
+                prepMinutes={form.prepMinutes}
+                totalMinutes={form.totalMinutes}
                 onChange={handleTimeChange}
               />
             </div>
@@ -758,38 +423,21 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartTextInput
                 minRows={2}
                 placeholder={t("notesPlaceholder")}
-                value={notes}
-                onValueChange={setNotes}
+                value={form.notes}
+                onValueChange={(value) => set("notes", value)}
               />
             </div>
 
-            <TextField className="w-full" value={url} onChange={setUrl}>
+            <TextField className="w-full" value={form.url} onChange={(value) => set("url", value)}>
               <Label>{t("sourceUrl")}</Label>
               <Input placeholder={t("sourceUrlPlaceholder")} />
             </TextField>
 
             <div>
               <MeasurementSystemSelector
-                detected={detectedSystem ?? undefined}
-                value={systemUsed}
-                onChange={(sys) => {
-                  setSystemUsed(sys);
-                  setManuallySetSystem(true);
-
-                  // Update systemUsed on all ingredients and steps
-                  setIngredients((prev) =>
-                    prev.map((ing) => ({
-                      ...ing,
-                      systemUsed: sys,
-                    }))
-                  );
-                  setSteps((prev) =>
-                    prev.map((step) => ({
-                      ...step,
-                      systemUsed: sys,
-                    }))
-                  );
-                }}
+                detected={editor.detectedSystem ?? undefined}
+                value={form.systemUsed}
+                onChange={editor.changeSystem}
               />
               <p className="text-muted mt-2 text-xs">
                 {t("measurementSystemNote")}

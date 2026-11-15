@@ -34,6 +34,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
+import type { RecipeGalleryMedia } from "@norish/shared-react/recipes";
 import { MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod/recipe-images";
 import { MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod/recipe-videos";
 import { addBasePath } from "@norish/shared/lib/base-path";
@@ -41,15 +42,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 
 const log = createClientLogger("MediaGalleryInput");
 
-export interface RecipeGalleryMedia {
-  id?: string;
-  type: "image" | "video";
-  src: string;
-  thumbnail?: string | null;
-  duration?: number | null;
-  order: number;
-  version?: number;
-}
+export type { RecipeGalleryMedia } from "@norish/shared-react/recipes";
 
 interface MediaGalleryInputProps {
   media: RecipeGalleryMedia[];

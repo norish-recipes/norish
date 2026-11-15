@@ -1,40 +1,40 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRecipeImages } from "@/features/recipes/hooks/use-recipe-images";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { MeasurementSystem } from "@norish/shared/contracts";
+import type {
+  IngredientSuggestion,
+  Step,
+  StepImage,
+  StepIngredientDraft,
+  StepRow as StepItem,
+} from "@norish/shared-react/recipes";
+import type { MeasurementSystem } from "@norish/shared/contracts";
+import {
+  chipLinesOf,
+  createStepRow,
+  ingredientSuggestionsOf,
+  isHeadingText,
+  mentionIngredient,
+  normalizeStepRows,
+  removeStepRow,
+  rowNumbers,
+  seedStepRows,
+  stepRowsToSteps,
+  typeStepRow,
+} from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
-import { toLineAmount } from "@norish/shared/lib/step-ingredients";
 
-import type { SmartTextInputIngredientSuggestion } from "./smart-text-input";
-import type { StepIngredientDraft } from "./step-ingredient-chips";
 import SmartTextInput from "./smart-text-input";
 import { StepIngredientChips } from "./step-ingredient-chips";
 
-interface StepImage {
-  id?: string;
-  image: string;
-  order: number;
-  version?: number;
-}
-interface StepIngredientRef {
-  ingredientOrder: number;
-  share: number;
-  order?: number;
-}
-export interface Step {
-  step: string;
-  order: number;
-  systemUsed: MeasurementSystem;
-  version?: number;
-  images?: StepImage[];
-  stepIngredients?: StepIngredientRef[];
-}
+export type { Step } from "@norish/shared-react/recipes";
+
 interface StepInputIngredient {
   ingredientName: string;
   amount: number | null;
@@ -50,46 +50,6 @@ interface StepInputProps {
   ingredients?: StepInputIngredient[];
 }
 
-// Internal type with stable IDs for reordering
-interface StepItem {
-  id: string;
-  text: string;
-  images: StepImage[];
-  stepIngredients: StepIngredientDraft[];
-  version?: number;
-}
-let nextId = 0;
-
-function createStepItem(
-  text: string,
-  images: StepImage[] = [],
-  version?: number,
-  stepIngredients: StepIngredientDraft[] = []
-): StepItem {
-  return {
-    id: `step-${nextId++}`,
-    text,
-    images,
-    stepIngredients,
-    version,
-  };
-}
-// The editor's rows for the given steps, plus the empty row to type into.
-function seedStepItems(steps: Step[]): StepItem[] {
-  return [
-    ...steps.map((s) =>
-      createStepItem(
-        s.step,
-        s.images || [],
-        s.version,
-        [...(s.stepIngredients ?? [])]
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map((ref) => ({ ingredientOrder: ref.ingredientOrder, share: ref.share }))
-      )
-    ),
-    createStepItem("", []),
-  ];
-}
 export default function StepInput({
   steps,
   onChange,
@@ -98,7 +58,7 @@ export default function StepInput({
   ingredients = [],
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
-  const [items, setItems] = useState<StepItem[]>(() => seedStepItems(steps));
+  const [items, setItems] = useState<StepItem[]>(() => seedStepRows(steps));
   const [seededLength, setSeededLength] = useState(steps.length);
   // A freshly mentioned line whose chip should ask for its amount: the row
   // it landed on, and the line's order for the chips to open once rendered.
@@ -113,21 +73,8 @@ export default function StepInput({
   const { uploadStepImage, deleteStepImage } = useRecipeImages();
   // Chips derive amounts, so they get the active system's lines only — an
   // entered "100" means 100 in the units the editor is looking at.
-  const chipLines = useMemo(
-    () => ingredients.filter((ingredient) => ingredient.systemUsed === systemUsed),
-    [ingredients, systemUsed]
-  );
-  const ingredientSuggestions = useMemo(
-    () =>
-      chipLines
-        .filter((ingredient) => !ingredient.ingredientName.trim().startsWith("#"))
-        .map((ingredient): SmartTextInputIngredientSuggestion => ({
-          key: `${ingredient.order}`,
-          label: ingredient.ingredientName,
-          ingredientOrder: ingredient.order,
-        })),
-    [chipLines]
-  );
+  const chipLines = chipLinesOf(ingredients, systemUsed);
+  const ingredientSuggestions = ingredientSuggestionsOf(chipLines);
 
   // Seeds the editor once when the steps load; a later change to them must not
   // overwrite what is being typed.
@@ -142,255 +89,160 @@ export default function StepInput({
       first.text === "" &&
       first.images.length === 0
     ) {
-      setItems(seedStepItems(steps));
+      setItems(seedStepRows(steps));
     }
   }
-  const emitChanges = useCallback(
-    (updatedItems: StepItem[]) => {
-      const parsed = updatedItems
-        .map((item, idx) => ({
-          step: item.text.trim(),
-          order: idx,
-          systemUsed,
-          version: item.version,
-          images: item.images,
-          // Chips on a heading row cannot exist; a row that became a heading
-          // sheds any it had rather than saving links a reader never sees.
-          stepIngredients: item.text.trim().startsWith("#")
-            ? []
-            : item.stepIngredients.map((ref, refIdx) => ({ ...ref, order: refIdx })),
-        }))
-        .filter((s) => s.step || s.images.length > 0);
+  const emitChanges = (updatedItems: StepItem[]) =>
+    onChange(stepRowsToSteps(updatedItems, systemUsed));
+  const handleStepIngredientsChange = (index: number, refs: StepIngredientDraft[]) => {
+    const current = items[index];
 
-      onChange(parsed);
-    },
-    [onChange, systemUsed]
-  );
-  const handleStepIngredientsChange = useCallback(
-    (index: number, refs: StepIngredientDraft[]) => {
-      const current = items[index];
+    if (!current) return;
+    const updated = [...items];
 
-      if (!current) return;
-      const updated = [...items];
+    updated[index] = {
+      ...current,
+      stepIngredients: refs,
+    };
+    setItems(updated);
+    emitChanges(updated);
+  };
+  const handleIngredientMention = (
+    index: number,
+    suggestion: IngredientSuggestion,
+    newText: string
+  ): boolean => {
+    // One update for both halves of the gesture: the word lands and its chip attaches.
+    const { rows, asksAmount } = mentionIngredient(items, index, suggestion, newText, chipLines);
 
-      updated[index] = {
-        ...current,
-        stepIngredients: refs,
-      };
-      setItems(updated);
-      emitChanges(updated);
-    },
-    [items, emitChanges]
-  );
-  const handleIngredientMention = useCallback(
-    (index: number, suggestion: SmartTextInputIngredientSuggestion, newText: string): boolean => {
-      // One update for both halves of the gesture: the plain word lands in
-      // the sentence and the chip attaches beneath it, at the full share.
-      const target = items[index];
+    if (rows === items) return false;
+    setItems(rows);
+    emitChanges(rows);
+    // The chips take focus to ask the amount, so the mention reports that it gave focus up.
+    if (asksAmount) setPendingMentionEntry({ index, order: suggestion.ingredientOrder });
 
-      if (!target) return false;
-      const updated = [...items];
-      const alreadyAttached = target.stepIngredients.some(
-        (ref) => ref.ingredientOrder === suggestion.ingredientOrder
-      );
+    return asksAmount;
+  };
+  const handleInputChange = (index: number, value: string) => {
+    const updated = typeStepRow(items, index, value);
 
-      updated[index] = {
-        ...target,
-        text: newText,
-        stepIngredients: alreadyAttached
-          ? target.stepIngredients
-          : [...target.stepIngredients, { ingredientOrder: suggestion.ingredientOrder, share: 1 }],
-      };
-
-      // Mentioning in the trailing row grows the list, exactly like typing.
-      if (index === items.length - 1 && newText.trim()) {
-        updated.push(createStepItem("", []));
-      }
-      setItems(updated);
-      emitChanges(updated);
-
-      // A newly attached, amounted line gets asked how much of it the step
-      // uses; the chips take focus for the ask, so the mention reports it.
-      // Re-mentions, amountless lines, and heading rows ask nothing. This
-      // predicts what the chips' pending-entry effect will decide — the two
-      // must agree, or the mention gives up focus for an ask that never
-      // opens and the keyboard is left nowhere.
-      const line = chipLines.find((candidate) => candidate.order === suggestion.ingredientOrder);
-      const willAsk =
-        !alreadyAttached &&
-        !newText.trim().startsWith("#") &&
-        line != null &&
-        toLineAmount(line.amount) != null;
-
-      if (willAsk) {
-        setPendingMentionEntry({ index, order: suggestion.ingredientOrder });
-      }
-
-      return willAsk;
-    },
-    [items, emitChanges, chipLines]
-  );
-  const handleInputChange = useCallback(
-    (index: number, value: string) => {
-      const current = items[index];
-
-      if (!current) return;
-      const updated = [...items];
-
-      updated[index] = {
-        ...current,
-        text: value,
-      };
-
-      // Auto-add empty line at the end
-      if (index === items.length - 1 && value.trim()) {
-        updated.push(createStepItem("", []));
-      }
-      setItems(updated);
-      emitChanges(updated);
-    },
-    [items, emitChanges]
-  );
-  const handleKeyDown = useCallback(
-    (index: number, e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        if (index < items.length - 1) {
-          textareasRef.current[index + 1]?.focus();
-        } else {
-          const updated = [...items, createStepItem("", [])];
-
-          setItems(updated);
-          setTimeout(() => {
-            textareasRef.current[items.length]?.focus();
-          }, 0);
-        }
-      } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
-        e.preventDefault();
-        const updated = items.filter((_, i) => i !== index);
+    if (updated === items) return;
+    setItems(updated);
+    emitChanges(updated);
+  };
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (index < items.length - 1) {
+        textareasRef.current[index + 1]?.focus();
+      } else {
+        const updated = [...items, createStepRow("")];
 
         setItems(updated);
-        emitChanges(updated);
         setTimeout(() => {
-          textareasRef.current[index - 1]?.focus();
+          textareasRef.current[items.length]?.focus();
         }, 0);
       }
-    },
-    [items, emitChanges]
-  );
-  const handleBlur = useCallback(
-    (index: number) => {
-      const item = items[index];
-
-      // Auto-remove empty rows on blur (except the last one)
-      if (item && !item.text.trim() && item.images.length === 0 && index < items.length - 1) {
-        const updated = items.filter((_, i) => i !== index);
-
-        if (updated.length === 0) updated.push(createStepItem("", []));
-        setItems(updated);
-        emitChanges(updated);
-      }
-    },
-    [items, emitChanges]
-  );
-  const handleRemove = useCallback(
-    (index: number) => {
-      // Delete all images for this step
-      const stepImages = items[index]?.images ?? [];
-
-      stepImages.forEach((img) => {
-        deleteStepImage(img.image).catch((err) => {
-          // eslint-disable-next-line no-console
-          console.error("Failed to delete step image:", err);
-        });
-      });
+    } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
+      e.preventDefault();
       const updated = items.filter((_, i) => i !== index);
 
-      if (updated.length === 0) updated.push(createStepItem("", []));
       setItems(updated);
       emitChanges(updated);
-    },
-    [items, emitChanges, deleteStepImage]
-  );
-  const handleImageUpload = useCallback(
-    async (index: number, file: File) => {
-      if (!recipeId) return;
-      setUploadingIndex(index);
-      await uploadStepImage(file, recipeId)
-        .then((result) => {
-          const current = items[index];
+      setTimeout(() => {
+        textareasRef.current[index - 1]?.focus();
+      }, 0);
+    }
+  };
+  const handleBlur = (index: number) => {
+    const item = items[index];
 
-          if (result.success && result.url && current) {
-            const updated = [...items];
-            const newImage: StepImage = {
-              image: result.url,
-              order: current.images.length,
-            };
+    // Auto-remove empty rows on blur (except the last one)
+    if (item && !item.text.trim() && item.images.length === 0 && index < items.length - 1) {
+      const updated = removeStepRow(items, index);
 
-            updated[index] = {
-              ...current,
-              images: [...current.images, newImage],
-            };
-            setItems(updated);
-            emitChanges(updated);
-          }
-        })
-        .finally(() => setUploadingIndex(null));
-    },
-    [recipeId, items, emitChanges, uploadStepImage]
-  );
-  const handleRemoveImage = useCallback(
-    (stepIndex: number, imageIndex: number) => {
-      const current = items[stepIndex];
-
-      if (!current) return;
-      const imageUrl = current.images[imageIndex]?.image;
-
-      if (imageUrl) {
-        deleteStepImage(imageUrl).catch((err) => {
-          // eslint-disable-next-line no-console
-          console.error("Failed to delete step image:", err);
-        });
-      }
-      const updated = [...items];
-
-      updated[stepIndex] = {
-        ...current,
-        images: current.images
-          .filter((_, i) => i !== imageIndex)
-          .map((img, i) => ({
-            ...img,
-            order: i,
-          })),
-      };
       setItems(updated);
       emitChanges(updated);
-    },
-    [items, emitChanges, deleteStepImage]
-  );
+    }
+  };
+  const handleRemove = (index: number) => {
+    // Delete all images for this step
+    const stepImages = items[index]?.images ?? [];
+
+    stepImages.forEach((img) => {
+      deleteStepImage(img.image).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to delete step image:", err);
+      });
+    });
+    const updated = removeStepRow(items, index);
+
+    setItems(updated);
+    emitChanges(updated);
+  };
+  const handleImageUpload = async (index: number, file: File) => {
+    if (!recipeId) return;
+    setUploadingIndex(index);
+    await uploadStepImage(file, recipeId)
+      .then((result) => {
+        const current = items[index];
+
+        if (result.success && result.url && current) {
+          const updated = [...items];
+          const newImage: StepImage = {
+            image: result.url,
+            order: current.images.length,
+          };
+
+          updated[index] = {
+            ...current,
+            images: [...current.images, newImage],
+          };
+          setItems(updated);
+          emitChanges(updated);
+        }
+      })
+      .finally(() => setUploadingIndex(null));
+  };
+  const handleRemoveImage = (stepIndex: number, imageIndex: number) => {
+    const current = items[stepIndex];
+
+    if (!current) return;
+    const imageUrl = current.images[imageIndex]?.image;
+
+    if (imageUrl) {
+      deleteStepImage(imageUrl).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to delete step image:", err);
+      });
+    }
+    const updated = [...items];
+
+    updated[stepIndex] = {
+      ...current,
+      images: current.images
+        .filter((_, i) => i !== imageIndex)
+        .map((img, i) => ({
+          ...img,
+          order: i,
+        })),
+    };
+    setItems(updated);
+    emitChanges(updated);
+  };
   const handleFileSelect = (index: number) => {
     fileInputsRef.current[index]?.click();
   };
-  const handleReorder = useCallback(
-    (newOrder: StepItem[]) => {
-      const normalized = normalizeStepItems(newOrder);
+  const handleReorder = (newOrder: StepItem[]) => {
+    const normalized = normalizeStepRows(newOrder);
 
-      setItems(normalized);
-      emitChanges(normalized);
-    },
-    [emitChanges]
-  );
-  const clearPendingMentionEntry = useCallback(() => setPendingMentionEntry(null), []);
-
-  // Track step numbers excluding headings
-  const getStepNumber = (index: number): number | null => {
-    const isHeading = (item: StepItem) => item.text.trim().startsWith("#");
-    const item = items[index];
-
-    if (!item || isHeading(item)) return null;
-
-    return items.slice(0, index + 1).filter((it) => !isHeading(it)).length;
+    setItems(normalized);
+    emitChanges(normalized);
   };
+  const clearPendingMentionEntry = () => setPendingMentionEntry(null);
+
+  // Steps are numbered past the section headings.
+  const numbers = rowNumbers(items.map((item) => item.text));
 
   return (
     <Reorder.Group
@@ -414,7 +266,7 @@ export default function StepInput({
           item={item}
           recipeId={recipeId}
           showRemove={items.length > 1 && (!!item.text || item.images.length > 0)}
-          stepNumber={getStepNumber(index)}
+          stepNumber={numbers[index] ?? null}
           stepPlaceholder={t("stepPlaceholder", {
             number: index + 1,
           })}
@@ -439,15 +291,6 @@ export default function StepInput({
     </Reorder.Group>
   );
 }
-function normalizeStepItems(next: StepItem[]): StepItem[] {
-  const withoutTrailingEmpty = next.filter(
-    (it) => it.text.trim().length > 0 || (it.images && it.images.length > 0)
-  );
-  const normalized = [...withoutTrailingEmpty, createStepItem("", [])];
-
-  return normalized.length ? normalized : [createStepItem("", [])];
-}
-
 // Separate component for each row to use useDragControls
 interface StepRowProps {
   item: StepItem;
@@ -462,7 +305,7 @@ interface StepRowProps {
   dragConstraintsRef: React.RefObject<HTMLUListElement | null>;
   stepPlaceholder: string;
   stepPlaceholderShort: string;
-  ingredientSuggestions: SmartTextInputIngredientSuggestion[];
+  ingredientSuggestions: IngredientSuggestion[];
   ingredients: StepInputIngredient[];
   autoEntryOrder: number | null;
   onAutoEntryHandled: () => void;
@@ -474,10 +317,7 @@ interface StepRowProps {
   onRemoveImage: (imageIndex: number) => void;
   onFileSelect: () => void;
   onStepIngredientsChange: (refs: StepIngredientDraft[]) => void;
-  onIngredientMention: (
-    suggestion: SmartTextInputIngredientSuggestion,
-    newText: string
-  ) => boolean | void;
+  onIngredientMention: (suggestion: IngredientSuggestion, newText: string) => boolean | void;
 }
 function StepRow({
   item,
@@ -511,7 +351,7 @@ function StepRow({
   const canDrag = !isLast && hasContent;
   // Heading rows cannot receive chips, and the trailing empty row has no step
   // for them to belong to yet.
-  const canCarryStepIngredients = !!item.text.trim() && !item.text.trim().startsWith("#");
+  const canCarryStepIngredients = !!item.text.trim() && !isHeadingText(item.text);
 
   return (
     <Reorder.Item

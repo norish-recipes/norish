@@ -84,7 +84,7 @@ const stored: FullRecipeDTO = {
     },
     { step: "Serve.", order: 0, systemUsed: "us", version: 1, images: [], stepIngredients: [] },
   ],
-  images: [{ id: "img-1", image: "/recipes/r/a.jpg", order: 0, version: 3 }],
+  images: [{ id: "img-1", image: "/recipes/r/a.jpg", order: 0, generated: false, version: 3 }],
   videos: [],
 };
 

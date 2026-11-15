@@ -74,7 +74,7 @@ const stored: FullRecipeDTO = {
   originRegion: "Guangdong",
   provenanceNote: "Cantonese roots.",
   dishColor: null,
-  cuisines: [{ id: "cuisine-1", name: "Cantonese" }],
+  cuisines: [{ id: "cuisine-1", name: "Cantonese", version: 1 }],
   createdAt: at,
   updatedAt: at,
   categories: ["Dinner"],
@@ -155,8 +155,8 @@ const stored: FullRecipeDTO = {
     },
   ],
   images: [
-    { id: "img-2", image: "/recipes/r/b.jpg", order: 1, version: 1 },
-    { id: "img-1", image: "/recipes/r/a.jpg", order: 0, version: 3 },
+    { id: "img-2", image: "/recipes/r/b.jpg", order: 1, generated: false, version: 1 },
+    { id: "img-1", image: "/recipes/r/a.jpg", order: 0, generated: false, version: 3 },
   ],
   videos: [
     {

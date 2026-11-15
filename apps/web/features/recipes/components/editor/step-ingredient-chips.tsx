@@ -5,14 +5,11 @@ import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Input, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
+import type { StepIngredientDraft } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { deriveStepIngredientAmount, toLineAmount } from "@norish/shared/lib/step-ingredients";
 
-/** A chip as the editor holds it: which line, and how much of it. */
-export interface StepIngredientDraft {
-  ingredientOrder: number;
-  share: number;
-}
+export type { StepIngredientDraft } from "@norish/shared-react/recipes";
 
 type LineLike = {
   ingredientName: string;

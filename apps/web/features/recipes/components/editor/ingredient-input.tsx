@@ -1,29 +1,33 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { IngredientIcon, useFoodsByName } from "@/components/ingredients/ingredient-icon";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import type { IngredientRow, ParsedIngredient } from "@norish/shared-react/recipes";
+import type { MeasurementSystem } from "@norish/shared/contracts";
 import { useUnitsQuery } from "@norish/shared-react/config";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
-import { MeasurementSystem } from "@norish/shared/contracts";
-import { debounce, parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
+import {
+  createIngredientRow,
+  ingredientRowsToLines,
+  normalizeIngredientRows,
+  parseIngredientRow,
+  removeIngredientRow,
+  rowNumbers,
+  seedIngredientRows,
+  typeIngredientRow,
+} from "@norish/shared-react/recipes";
+import { debounce } from "@norish/shared/lib/helpers";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import SmartTextInput from "./smart-text-input";
 
-export interface ParsedIngredient {
-  id?: string;
-  version?: number;
-  ingredientName: string;
-  amount: number | null;
-  unit: string | null;
-  order: number;
-  systemUsed: MeasurementSystem;
-}
+export type { ParsedIngredient } from "@norish/shared-react/recipes";
+
 interface IngredientInputProps {
   ingredients: ParsedIngredient[];
   onChange: (ingredients: ParsedIngredient[]) => void;
@@ -31,38 +35,6 @@ interface IngredientInputProps {
   onSystemDetected?: (system: MeasurementSystem) => void;
 }
 
-// Internal type with stable IDs for reordering
-interface IngredientItem {
-  id: string;
-  text: string;
-  recipeIngredientId?: string;
-  version?: number;
-}
-let nextId = 0;
-function createItem(
-  text: string,
-  meta?: Pick<IngredientItem, "recipeIngredientId" | "version">
-): IngredientItem {
-  return {
-    id: `ing-${nextId++}`,
-    text,
-    ...meta,
-  };
-}
-// The editor's rows for the given ingredients, plus the empty row to type into.
-function seedItems(ingredients: ParsedIngredient[]): IngredientItem[] {
-  const formatted = ingredients.map((ing) => {
-    const parts: string[] = [];
-    if (ing.amount !== null) parts.push(String(ing.amount));
-    if (ing.unit) parts.push(ing.unit);
-    if (ing.ingredientName) parts.push(ing.ingredientName);
-    return createItem(parts.join(" "), {
-      recipeIngredientId: ing.id,
-      version: ing.version,
-    });
-  });
-  return [...formatted, createItem("")];
-}
 export default function IngredientInput({
   ingredients,
   onChange,
@@ -71,7 +43,7 @@ export default function IngredientInput({
 }: IngredientInputProps) {
   const { units } = useUnitsQuery();
   const t = useTranslations("recipes.ingredientInput");
-  const [items, setItems] = useState<IngredientItem[]>(() => seedItems(ingredients));
+  const [items, setItems] = useState<IngredientRow[]>(() => seedIngredientRows(ingredients));
   const [seededLength, setSeededLength] = useState(ingredients.length);
   const textareasRef = useRef<(HTMLTextAreaElement | null)[]>([]);
   const dragConstraintsRef = useRef<HTMLUListElement>(null);
@@ -83,139 +55,74 @@ export default function IngredientInput({
     const first = items[0];
 
     if (first && ingredients.length > 0 && items.length === 1 && first.text === "") {
-      setItems(seedItems(ingredients));
+      setItems(seedIngredientRows(ingredients));
     }
   }
-  const parseIngredient = useCallback(
-    (item: IngredientItem, order: number): ParsedIngredient | null => {
-      const trimmed = item.text.trim();
-      if (!trimmed) return null;
-      const first = parseIngredientWithDefaults(trimmed, units)?.[0];
+  const flushParse = (updatedItems: IngredientRow[]) => {
+    onChange(ingredientRowsToLines(updatedItems, units, systemUsed));
+  };
+  const debouncedParse = (updatedItems: IngredientRow[]) => {
+    const doUpdate = debounce(flushParse, 300);
+    doUpdate(updatedItems);
+  };
+  const handleInputChange = (index: number, value: string) => {
+    const updated = typeIngredientRow(items, index, value);
 
-      if (!first) {
-        // Fallback: treat entire text as ingredient name
-        return {
-          id: item.recipeIngredientId,
-          version: item.version,
-          ingredientName: trimmed,
-          amount: null,
-          unit: null,
-          order,
-          systemUsed,
-        };
-      }
-      return {
-        id: item.recipeIngredientId,
-        version: item.version,
-        ingredientName: first.description || trimmed,
-        amount: first.quantity ? Number(first.quantity) : null,
-        unit: first.unitOfMeasure || null,
-        order,
-        systemUsed,
-      };
-    },
-    [systemUsed, units]
-  );
-  const flushParse = useCallback(
-    (updatedItems: IngredientItem[]) => {
-      const parsed = updatedItems
-        .map((item, idx) => parseIngredient(item, idx))
-        .filter((ing): ing is ParsedIngredient => ing !== null);
-      onChange(parsed);
-    },
-    [parseIngredient, onChange]
-  );
-  const debouncedParse = useCallback(
-    (updatedItems: IngredientItem[]) => {
-      const doUpdate = debounce(flushParse, 300);
-      doUpdate(updatedItems);
-    },
-    [flushParse]
-  );
-  const handleInputChange = useCallback(
-    (index: number, value: string) => {
-      const current = items[index];
-
-      if (!current) return;
-      const updated = [...items];
-
-      updated[index] = {
-        ...current,
-        text: value,
-      };
-
-      // Auto-add empty line at the end
-      if (index === items.length - 1 && value.trim()) {
-        updated.push(createItem(""));
-      }
-      setItems(updated);
-      debouncedParse(updated);
-    },
-    [items, debouncedParse]
-  );
-  const handleKeyDown = useCallback(
-    (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        // Move to next input or create new one
-        if (index < items.length - 1) {
-          textareasRef.current[index + 1]?.focus();
-        } else {
-          const updated = [...items, createItem("")];
-          setItems(updated);
-          setTimeout(() => {
-            textareasRef.current[items.length]?.focus();
-          }, 0);
-        }
-      } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
-        e.preventDefault();
-        const updated = items.filter((_, i) => i !== index);
+    if (updated === items) return;
+    setItems(updated);
+    debouncedParse(updated);
+  };
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      // Move to next input or create new one
+      if (index < items.length - 1) {
+        textareasRef.current[index + 1]?.focus();
+      } else {
+        const updated = [...items, createIngredientRow("")];
         setItems(updated);
-        debouncedParse(updated);
         setTimeout(() => {
-          textareasRef.current[index - 1]?.focus();
+          textareasRef.current[items.length]?.focus();
         }, 0);
       }
-    },
-    [items, debouncedParse]
-  );
-  const handleBlur = useCallback(
-    (index: number) => {
-      // Auto-remove empty rows on blur (except the last one)
-      if (!items[index]?.text.trim() && index < items.length - 1) {
-        const updated = items.filter((_, i) => i !== index);
-        if (updated.length === 0) updated.push(createItem(""));
-        setItems(updated);
-        flushParse(updated);
-      } else {
-        // Leaving the field commits the pending parse immediately, so a submit
-        // inside the debounce window cannot lose what was just typed.
-        flushParse(items);
-      }
-    },
-    [items, flushParse]
-  );
-  const handleRemove = useCallback(
-    (index: number) => {
+    } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
+      e.preventDefault();
       const updated = items.filter((_, i) => i !== index);
-      if (updated.length === 0) updated.push(createItem(""));
       setItems(updated);
       debouncedParse(updated);
-    },
-    [items, debouncedParse]
-  );
-  const handleReorder = useCallback(
-    (newOrder: IngredientItem[]) => {
-      const normalized = normalizeIngredientItems(newOrder);
-      setItems(normalized);
-      debouncedParse(normalized);
-    },
-    [debouncedParse]
-  );
+      setTimeout(() => {
+        textareasRef.current[index - 1]?.focus();
+      }, 0);
+    }
+  };
+  const handleBlur = (index: number) => {
+    // Auto-remove empty rows on blur (except the last one)
+    if (!items[index]?.text.trim() && index < items.length - 1) {
+      const updated = removeIngredientRow(items, index);
+
+      setItems(updated);
+      flushParse(updated);
+    } else {
+      // Leaving the field commits the pending parse immediately, so a submit
+      // inside the debounce window cannot lose what was just typed.
+      flushParse(items);
+    }
+  };
+  const handleRemove = (index: number) => {
+    const updated = removeIngredientRow(items, index);
+
+    setItems(updated);
+    debouncedParse(updated);
+  };
+  const handleReorder = (newOrder: IngredientRow[]) => {
+    const normalized = normalizeIngredientRows(newOrder);
+    setItems(normalized);
+    debouncedParse(normalized);
+  };
 
   // The food each row names, read as Save will read it, for the row's icon.
   const foodNames = items.map((item, index) => {
-    const name = parseIngredient(item, index)?.ingredientName ?? "";
+    const name = parseIngredientRow(item, index, units, systemUsed)?.ingredientName ?? "";
 
     return namesNoFood(name) ? "" : name;
   });
@@ -223,15 +130,9 @@ export default function IngredientInput({
 
   useIngredientIcons([...foods.values()]);
 
-  // Calculate ingredient numbers (excluding headings)
-  const getIngredientNumber = (index: number): number | null => {
-    const isHeading = (item: IngredientItem) => item.text.trim().startsWith("#");
-    const item = items[index];
+  // Lines are numbered past the section headings.
+  const numbers = rowNumbers(items.map((item) => item.text));
 
-    if (!item || isHeading(item)) return null;
-
-    return items.slice(0, index + 1).filter((it) => !isHeading(it)).length;
-  };
   return (
     <Reorder.Group
       ref={dragConstraintsRef}
@@ -246,7 +147,7 @@ export default function IngredientInput({
           dragConstraintsRef={dragConstraintsRef}
           foodId={foods.get(foodNames[index] ?? "") ?? null}
           index={index}
-          ingredientNumber={getIngredientNumber(index)}
+          ingredientNumber={numbers[index] ?? null}
           ingredientPlaceholder={t("placeholder")}
           isLast={index === items.length - 1}
           item={item}
@@ -262,15 +163,9 @@ export default function IngredientInput({
     </Reorder.Group>
   );
 }
-function normalizeIngredientItems(next: IngredientItem[]): IngredientItem[] {
-  const withoutTrailingEmpty = next.filter((it) => it.text.trim().length > 0);
-  const normalized = [...withoutTrailingEmpty, createItem("")];
-  return normalized.length ? normalized : [createItem("")];
-}
-
 // Separate component for each row to use useDragControls
 interface IngredientRowProps {
-  item: IngredientItem;
+  item: IngredientRow;
   index: number;
   /** The food the row's text names, for its icon; null shows the placeholder. */
   foodId: string | null;

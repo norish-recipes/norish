@@ -4,15 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar, ListBox, Spinner, TextArea } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useRecipeAutocomplete } from "@norish/shared-react/recipes";
+import type { IngredientSuggestion } from "@norish/shared-react/recipes";
+import {
+  ingredientTriggerAt,
+  matchIngredientSuggestions,
+  recipeTriggerAt,
+  replaceTrigger,
+  useRecipeAutocomplete,
+} from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
-export interface SmartTextInputIngredientSuggestion {
-  key: string;
-  label: string;
-  /** The referenced ingredient line's order — what a mention attaches. */
-  ingredientOrder: number;
-}
+export type SmartTextInputIngredientSuggestion = IngredientSuggestion;
 
 interface SmartTextInputProps {
   value: string;
@@ -79,11 +81,7 @@ export default function SmartTextInput({
   );
   const ingredientMatches =
     autocomplete?.type === "ingredient"
-      ? ingredientSuggestions
-          .filter((suggestion) =>
-            suggestion.label.toLowerCase().includes(autocomplete.query.trim().toLowerCase())
-          )
-          .slice(0, 8)
+      ? matchIngredientSuggestions(ingredientSuggestions, autocomplete.query)
       : [];
   const showAutocomplete =
     autocomplete?.type === "recipe" ||
@@ -104,8 +102,8 @@ export default function SmartTextInput({
 
     const cursorPos = textareaRef.current?.selectionStart ?? newValue.length;
 
-    const recipeMatch = getRecipeTriggerMatch(newValue, cursorPos);
-    const ingredientMatch = getIngredientTriggerMatch(newValue, cursorPos);
+    const recipeMatch = recipeTriggerAt(newValue, cursorPos);
+    const ingredientMatch = ingredientTriggerAt(newValue, cursorPos);
 
     if (
       ingredientMatch &&
@@ -156,10 +154,11 @@ export default function SmartTextInput({
 
     // The mention gesture: the plain word goes into the sentence — the `@`
     // and the query it swallowed are replaced, never stored.
-    const before = value.slice(0, autocomplete.triggerStart);
-    const after = value.slice(autocomplete.cursorPosition);
-    const newValue = `${before}${suggestion.label}${after}`;
-    const newCursorPos = before.length + suggestion.label.length;
+    const { text: newValue, caret: newCursorPos } = replaceTrigger(
+      value,
+      autocomplete,
+      suggestion.label
+    );
 
     // A handler returning true is taking focus — it opens the amount ask
     // for the attached line. The caret still lands after the inserted
@@ -283,53 +282,4 @@ export default function SmartTextInput({
       )}
     </div>
   );
-}
-
-function getRecipeTriggerMatch(
-  value: string,
-  cursorPosition: number
-): { query: string; triggerStart: number; cursorPosition: number } | null {
-  const textBeforeCursor = value.slice(0, cursorPosition);
-  const triggerStart = textBeforeCursor.lastIndexOf("/");
-
-  if (triggerStart === -1) return null;
-
-  const previousChar = triggerStart > 0 ? textBeforeCursor[triggerStart - 1] : " ";
-  const isValidTrigger = previousChar === " " || previousChar === "\n" || triggerStart === 0;
-
-  if (!isValidTrigger) return null;
-
-  const query = textBeforeCursor.slice(triggerStart + 1);
-
-  if (query.length < 1 || query.includes("\n")) return null;
-
-  return {
-    query,
-    triggerStart,
-    cursorPosition,
-  };
-}
-
-function getIngredientTriggerMatch(
-  value: string,
-  cursorPosition: number
-): { query: string; triggerStart: number; cursorPosition: number } | null {
-  const textBeforeCursor = value.slice(0, cursorPosition);
-  const triggerStart = textBeforeCursor.lastIndexOf("@");
-
-  if (triggerStart === -1) return null;
-
-  const previousChar = triggerStart > 0 ? textBeforeCursor.charAt(triggerStart - 1) : "";
-
-  if (/[A-Za-z0-9_]/.test(previousChar)) return null;
-
-  const query = textBeforeCursor.slice(triggerStart + 1);
-
-  if (query.includes("\n") || query.includes("{") || query.includes("}")) return null;
-
-  return {
-    query,
-    triggerStart,
-    cursorPosition,
-  };
 }

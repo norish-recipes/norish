@@ -4,29 +4,14 @@ import { useMemo } from "react";
 import { ComboBox, Input, Label, ListBox, Select, TextArea, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { ProvenanceFormValue } from "@norish/shared-react/recipes";
 import { useCuisinesQuery } from "@norish/shared-react/config";
 import { listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
-/** Recipe Provenance as the form holds it: one atomic group. */
-export interface ProvenanceFormValue {
-  originCountry: string | null;
-  /**
-   * The country's written name as the editor saw it — the picker label they
-   * chose, in their own words — or, untouched, whatever name is stored.
-   */
-  originCountryName: string | null;
-  originRegion: string;
-  provenanceNote: string;
-  cuisineIds: string[];
-}
-
-export const EMPTY_PROVENANCE_FORM_VALUE: ProvenanceFormValue = {
-  originCountry: null,
-  originCountryName: null,
-  originRegion: "",
-  provenanceNote: "",
-  cuisineIds: [],
-};
+export {
+  EMPTY_PROVENANCE_FORM_VALUE,
+  type ProvenanceFormValue,
+} from "@norish/shared-react/recipes";
 
 /**
  * The "no country" row's key.

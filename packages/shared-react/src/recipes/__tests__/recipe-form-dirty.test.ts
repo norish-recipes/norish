@@ -1,12 +1,10 @@
-import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
-import type { RecipeGalleryMedia } from "@/features/recipes/components/editor/media-gallery-input";
-import type { Step } from "@/features/recipes/components/editor/step-input";
-import { useRecipeFormDirtyState } from "@/features/recipes/components/editor/use-recipe-form-dirty-state";
-import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
+
+import type { ParsedIngredient, RecipeGalleryMedia, Step } from "../recipe-editor";
+import { isRecipeFormDirty } from "../recipe-editor";
 
 interface RecipeFormState {
   name: string;
@@ -218,21 +216,24 @@ function renderDirtyState(options: {
   initializedRecipeId?: string | null;
   mode?: "create" | "edit";
 }) {
-  return renderHook(() =>
-    useRecipeFormDirtyState({
-      current: options.current,
-      initialData: options.initialData,
-      initializedRecipeId:
-        options.initializedRecipeId === undefined ? baseRecipe.id : options.initializedRecipeId,
+  const mode = options.mode ?? "edit";
+  const initializedRecipeId =
+    options.initializedRecipeId === undefined ? baseRecipe.id : options.initializedRecipeId;
+  // The editor reports nothing until an edit has seeded its lines and steps.
+  const ready =
+    mode !== "edit" || !options.initialData || initializedRecipeId === options.initialData.id;
+  const dirty =
+    ready &&
+    isRecipeFormDirty(options.current, mode, options.initialData, {
       locale: "en",
-      mode: options.mode ?? "edit",
       units,
       unitStyle: "written",
-    })
-  );
+    });
+
+  return { result: { current: dirty } };
 }
 
-describe("useRecipeFormDirtyState", () => {
+describe("isRecipeFormDirty", () => {
   it("returns false for an unchanged initialized edit form", () => {
     const { result } = renderDirtyState({
       current: createInitialCurrent(),
