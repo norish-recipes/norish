@@ -249,4 +249,50 @@ describe("useStoresMutations", () => {
       expect(queryClient.getQueryState(["stores", "list"])?.isInvalidated).toBe(true);
     }
   );
+
+  it("sends a reorder made during a save once the save is stored, at the version it stored", async () => {
+    const { result } = render();
+    const saved = answerLater(sent.update);
+
+    sent.reorder.mockResolvedValue({ success: true, stale: false });
+    act(() => result.current.updateStore({ id: "store-1", name: "Renamed" }));
+    act(() => result.current.reorderStores(["store-2", "store-1"]));
+    await act(async () => {
+      await vi.waitFor(() => expect(sent.update).toHaveBeenCalled());
+    });
+    expect(sent.reorder).not.toHaveBeenCalled();
+
+    await act(async () => saved.resolve({ success: true, stale: false }));
+    await settled();
+
+    expect(sent.reorder).toHaveBeenCalledWith(
+      {
+        stores: [
+          { id: "store-2", version: 3 },
+          { id: "store-1", version: 7 },
+        ],
+      },
+      expect.anything()
+    );
+  });
+
+  it("sends the second of two saves once the first is stored", async () => {
+    const { result } = render();
+    const first = answerLater(sent.update);
+
+    sent.update.mockResolvedValue({ success: true, stale: false });
+    act(() => result.current.updateStore({ id: "store-1", name: "First" }));
+    act(() => result.current.updateStore({ id: "store-1", name: "Second" }));
+    await act(async () => {
+      await vi.waitFor(() => expect(sent.update).toHaveBeenCalledTimes(1));
+    });
+
+    await act(async () => first.resolve({ success: true, stale: false }));
+    await settled();
+
+    expect(sent.update.mock.calls.map(([input]) => input)).toEqual([
+      expect.objectContaining({ name: "First", version: 6 }),
+      expect.objectContaining({ name: "Second", version: 7 }),
+    ]);
+  });
 });

@@ -17,7 +17,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import type { OutboxEntry } from "../../offline/outbox-types";
-import { createOutboxLink } from "../../offline/outbox-link";
+import { createOutboxLink, MUTATION_SEND_TIMEOUT_MS } from "../../offline/outbox-link";
 import { createOutboxStore } from "../../offline/outbox-store";
 import { runReplayPass } from "../../offline/replay";
 import { replayOutboxEntry } from "../../offline/replay-client";
@@ -434,5 +434,53 @@ describe("store writes made offline, replayed", () => {
     ]);
     // A second pass finds nothing new to tell.
     await expect(replay(server.client)).resolves.toMatchObject({ conflicted: [] });
+  });
+
+  it("a live save that never answers is captured after the timeout, and the reorder behind it goes out", async () => {
+    const timed = createOutboxLink({
+      store,
+      owner: () => OWNER,
+      replayHeaderValue: "test-outbox",
+      timedWrites: new Set(["stores.update", "stores.reorder"]),
+    })({} as never);
+    const reached: string[] = [];
+    const send = (path: string, answer: boolean) => (input: unknown) =>
+      new Promise((resolve, reject) =>
+        timed({
+          op: { id: 1, type: "mutation", path, input, context: {} },
+          next: () =>
+            observable((observer) => {
+              reached.push(path);
+              if (answer) observer.next({ result: { data: { success: true, stale: false } } });
+              if (answer) observer.complete();
+            }),
+        } as never).subscribe({ next: ({ result }: never) => resolve(result), error: reject })
+      );
+
+    sends.update.mockImplementation(send("stores.update", false));
+    sends.reorder.mockImplementation(send("stores.reorder", true));
+    const queryClient = createTestQueryClient();
+
+    queryClient.setQueryData(["stores", "list"], held());
+    const { result } = renderHook(() => useStoresMutations(), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    vi.useFakeTimers();
+    try {
+      act(() => result.current.updateStore({ id: "lidl", name: "Lidl Centrum" }));
+      act(() => result.current.reorderStores(["dirk", "lidl"]));
+      await act(() => vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS - 1));
+      expect(reached).toEqual(["stores.update"]);
+      await act(() => vi.advanceTimersByTimeAsync(2));
+    } finally {
+      vi.useRealTimers();
+    }
+    await act(async () => {
+      await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
+    });
+
+    expect(reached).toEqual(["stores.update", "stores.reorder"]);
+    expect((await store.loadAll()).map((entry) => entry.path)).toEqual(["stores.update"]);
   });
 });

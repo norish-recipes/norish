@@ -99,13 +99,21 @@ describe("createOfflineEngine", () => {
     expect((await engine.outbox.forOwner("u1")).map((entry) => entry.entityId)).toEqual(["g1"]);
   });
 
-  it("times out the grocery writes that share one scope, and no other mutation", async () => {
+  it("times out every write that shares a scope, and no other mutation", async () => {
     const engine = engineOver();
 
     await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     vi.useFakeTimers();
     try {
-      for (const path of ["groceries.toggle", "recipes.update", "admin.testAIEndpoint"]) {
+      for (const path of [
+        "groceries.toggle",
+        "stores.update",
+        "stores.reorder",
+        "calendar.moveItem",
+        "user.setDevicePreferences",
+        "recipes.update",
+        "admin.testAIEndpoint",
+      ]) {
         engine
           .outboxLink({} as never)({
             op: { type: "mutation", path, input: { id: path }, context: {} },
@@ -120,6 +128,10 @@ describe("createOfflineEngine", () => {
 
     expect((await engine.outbox.loadAll()).map((entry) => entry.path)).toEqual([
       "groceries.toggle",
+      "stores.update",
+      "stores.reorder",
+      "calendar.moveItem",
+      "user.setDevicePreferences",
     ]);
   });
 

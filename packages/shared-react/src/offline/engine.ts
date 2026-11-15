@@ -25,9 +25,9 @@ import { replayOutboxEntry } from "./replay-client";
 import { discardAllEntries, requeueParkedEntries } from "./status-actions";
 import { createWarmSet } from "./warm-set";
 
-// The grocery writes sharing the `grocery-writes` mutation scope: one send that never answers would
-// hold every later one, so these, and only these, are timed out.
-const SCOPED_GROCERY_WRITES = [
+// Every write sharing a mutation scope: one send that never answers would hold every later one in
+// its scope, so these, and only these, are timed out.
+const SCOPED_WRITES = [
   "groceries.toggle",
   "groceries.checkRecurring",
   "groceries.update",
@@ -39,6 +39,14 @@ const SCOPED_GROCERY_WRITES = [
   "groceries.reorderInStore",
   "groceries.markAllDone",
   "groceries.deleteDone",
+  "stores.update",
+  "stores.delete",
+  "stores.reorder",
+  "calendar.createItem",
+  "calendar.deleteItem",
+  "calendar.moveItem",
+  "calendar.updateItem",
+  "user.setDevicePreferences",
 ];
 
 interface OfflineEngineOptions {
@@ -112,7 +120,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       owner: cache.owner,
       replayHeaderValue,
       wholeEdits: new Set(["recipes.update"]),
-      timedWrites: new Set(SCOPED_GROCERY_WRITES),
+      timedWrites: new Set(SCOPED_WRITES),
       locks,
       onConflict: () => recovery?.reportConflict(),
     }),

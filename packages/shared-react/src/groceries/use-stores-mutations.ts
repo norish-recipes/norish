@@ -95,12 +95,17 @@ export function useStoresMutations(): StoresMutationsResult {
   const rereadIfStale = ({ stale }: { stale: boolean }) => {
     if (stale) invalidate();
   };
+  // Versioned writes go one at a time, in the order made: each is sent at the version the one
+  // before it bumped in the cache, so one sent ahead would be refused as stale.
+  const inOrder = { id: "store-writes" };
   const updateOptions = trpc.stores.update.mutationOptions({
+    scope: inOrder,
     onSuccess: rereadIfStale,
     onError: invalidateUnlessQueued,
   });
   const groceriesKey = trpc.groceries.list.queryKey();
   const deleteOptions = trpc.stores.delete.mutationOptions({
+    scope: inOrder,
     // The Store's lines go with it, or to Unsorted at the version the server's move leaves.
     onMutate: ({ storeId, deleteGroceries }) => {
       const was = {
@@ -138,6 +143,7 @@ export function useStoresMutations(): StoresMutationsResult {
     },
   });
   const reorderOptions = trpc.stores.reorder.mutationOptions({
+    scope: inOrder,
     onSuccess: rereadIfStale,
     onError: invalidateUnlessQueued,
   });
