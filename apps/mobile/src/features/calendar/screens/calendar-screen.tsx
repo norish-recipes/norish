@@ -1,12 +1,12 @@
 import type { FlatList, FlatListProps } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
@@ -39,6 +39,8 @@ const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
  */
 export function CalendarScreen() {
   const router = useRouter();
+  // A widget opens the Calendar on a day; without one it opens on today.
+  const { day } = useLocalSearchParams<{ day?: string }>();
   const insets = useSafeAreaInsets();
   const { fontScale } = useWindowDimensions();
   const todayKey = useToday();
@@ -61,6 +63,16 @@ export function CalendarScreen() {
   const rows = timelineRows(days, calendarData, todayKey);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
+  const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
+  const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
+
+  // A link to another day while the timeline is open scrolls to it.
+  useEffect(() => {
+    if (!day) return;
+    const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(day));
+
+    if (index >= 0) listRef.current?.scrollToIndex({ index, animated: false });
+  }, [day]);
 
   const header = (
     <CalendarHeader
@@ -98,7 +110,7 @@ export function CalendarScreen() {
         // The rows the list shows, which a held row keeps still while `rows` moves on.
         getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
         initialNumToRender={12}
-        initialScrollIndex={todayIndex < 0 ? undefined : todayIndex}
+        initialScrollIndex={openIndex < 0 ? undefined : openIndex}
         // Rows added above keep the ones on screen where they are.
         maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         renderHeading={(heading) =>
