@@ -87,7 +87,6 @@ export function StepRows({
   const [revealedId, setRevealedId] = useState<string | null>(null);
   // The focused row's caret, so the `@` popup reads the text before it.
   const [caret, setCaret] = useState<{ rowId: string; at: number } | null>(null);
-  const [photoRowId, setPhotoRowId] = useState<string | null>(null);
   const inputsRef = useRef(new Map<string, ComponentRef<typeof TextInput>>());
   const text = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values);
 
@@ -130,10 +129,8 @@ export function StepRows({
     commit(rows.with(index, { ...row, ...patch }));
   };
 
-  const pickPhotos = usePhotoSourceSheet(text("recipes.editor.addStepPhoto"), (assets) => {
-    const rowId = photoRowId;
-
-    if (!rowId) return;
+  const pickPhotos = usePhotoSourceSheet(text("recipes.editor.addStepPhoto"));
+  const addPhotos = (rowId: string, assets: ImagePicker.ImagePickerAsset[]) => {
     const row = rows[indexOf(rowId)];
 
     void uploads.uploadStep(assets, row?.images.length ?? 0).then((added) => {
@@ -148,7 +145,7 @@ export function StepRows({
         return next;
       });
     });
-  });
+  };
 
   const trailing = rows.at(-1);
   const shown = rows.filter(
@@ -355,8 +352,7 @@ export function StepRows({
               testID={`editor-step-photo-${index}`}
               onPress={() => {
                 if (!uploads.canUpload()) return;
-                setPhotoRowId(row.id);
-                pickPhotos(STEP_PHOTO);
+                pickPhotos(STEP_PHOTO, (assets) => addPhotos(row.id, assets));
               }}
             />
           )}

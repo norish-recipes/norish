@@ -14,10 +14,7 @@ const PICKER = {
 export function useCookbookCoverPicker(onPicked: (file: File) => void) {
   const intl = useIntl();
   // An expo-file-system File is a Blob, so the shared upload takes it as it takes a browser's.
-  const open = usePhotoSourceSheet(
-    intl.formatMessage({ id: "recipes.cookbooks.changeCover" }),
-    ([asset]) => onPicked(new File(asset!.uri))
-  );
+  const open = usePhotoSourceSheet(intl.formatMessage({ id: "recipes.cookbooks.changeCover" }));
 
-  return () => open(PICKER);
+  return () => open(PICKER, ([asset]) => onPicked(new File(asset!.uri)));
 }

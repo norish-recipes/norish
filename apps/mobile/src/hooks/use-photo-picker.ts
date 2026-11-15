@@ -6,14 +6,16 @@ import { isDevice } from "expo-device";
 import * as ImagePicker from "expo-image-picker";
 import { useIntl } from "react-intl";
 
+type OnPicked = (assets: ImagePicker.ImagePickerAsset[]) => void;
+
 /**
  * The photo sources this device has and a picker per source: a failure or a denied camera ends
- * in a translated alert, a cancel in nothing, and the picked files go to `onPicked`.
+ * in a translated alert, a cancel in nothing, and the picked files go to the pick's `onPicked`.
  */
-export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]) => void) {
+export function usePhotoPicker() {
   const intl = useIntl();
   const cancel = useCancelButton();
-  const run = async (pick: () => Promise<ImagePicker.ImagePickerResult>) => {
+  const run = async (pick: () => Promise<ImagePicker.ImagePickerResult>, onPicked: OnPicked) => {
     const outcome = await settlePhotoPick(pick);
 
     if (outcome.kind === "picked") onPicked(outcome.assets);
@@ -24,11 +26,11 @@ export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]
       );
     }
   };
-  const fromCamera = async (options: ImagePicker.ImagePickerOptions) => {
+  const fromCamera = async (options: ImagePicker.ImagePickerOptions, onPicked: OnPicked) => {
     const { granted } = await ImagePicker.requestCameraPermissionsAsync();
 
     if (granted) {
-      await run(() => ImagePicker.launchCameraAsync(options));
+      await run(() => ImagePicker.launchCameraAsync(options), onPicked);
 
       return;
     }
@@ -49,9 +51,9 @@ export function usePhotoPicker(onPicked: (assets: ImagePicker.ImagePickerAsset[]
 
   return {
     sources: photoSources(isDevice),
-    pick: (source: PhotoSource, options: ImagePicker.ImagePickerOptions) =>
+    pick: (source: PhotoSource, options: ImagePicker.ImagePickerOptions, onPicked: OnPicked) =>
       source === "camera"
-        ? fromCamera(options)
-        : run(() => ImagePicker.launchImageLibraryAsync(options)),
+        ? fromCamera(options, onPicked)
+        : run(() => ImagePicker.launchImageLibraryAsync(options), onPicked),
   };
 }

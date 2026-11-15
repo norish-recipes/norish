@@ -50,11 +50,12 @@ export function MediaStrip({
   const room = MAX_RECIPE_IMAGES - imageCount;
   const text = (id: string, values?: Record<string, number>) => intl.formatMessage({ id }, values);
 
-  const pick = usePhotoSourceSheet(text("recipes.editor.addPhoto"), (assets) => {
+  const pick = usePhotoSourceSheet(text("recipes.editor.addPhoto"));
+  const upload = (assets: ImagePicker.ImagePickerAsset[]) => {
     void uploads.uploadGallery(assets.slice(0, room), media.length).then((added) => {
       if (added.length > 0) onChange([...media, ...added]);
     });
-  });
+  };
   const remove = (item: RecipeGalleryMedia) => {
     uploads.removeGallery(item);
     onChange(media.filter((entry) => entry !== item).map((entry, order) => ({ ...entry, order })));
@@ -120,7 +121,7 @@ export function MediaStrip({
             style={{ width: TILE, height: TILE, borderWidth: 1.5, borderColor: border }}
             testID="editor-media-add"
             onPress={() => {
-              if (uploads.canUpload()) pick(GALLERY_PHOTO);
+              if (uploads.canUpload()) pick(GALLERY_PHOTO, upload);
             }}
           >
             {uploads.isUploading ? (

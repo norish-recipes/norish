@@ -105,7 +105,7 @@ export function ImportPhotosScreen() {
       );
     }
   };
-  const { sources, pick } = usePhotoPicker(add);
+  const { sources, pick } = usePhotoPicker();
 
   return (
     <Sheet
@@ -166,7 +166,7 @@ export function ImportPhotosScreen() {
               style={{ width: tile, height: tile }}
               testID={`import-photos-${source}`}
               onPress={() =>
-                void pick(source, pickerOptions(source, MAX_OCR_FILES - photos.length))
+                void pick(source, pickerOptions(source, MAX_OCR_FILES - photos.length), add)
               }
             >
               <Ionicons color={accentText} name={SOURCE_TILE[source].icon} size={24} />

@@ -4,16 +4,16 @@ import { useCancelButton } from "@/hooks/use-cancel-button";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
 import { useIntl } from "react-intl";
 
-/** Asks library or camera in the native action sheet, then hands the picked photos over. */
-export function usePhotoSourceSheet(
-  title: string,
-  onPicked: (assets: ImagePicker.ImagePickerAsset[]) => void
-) {
+/** Asks library or camera in the native action sheet, then hands the picked photos to `onPicked`. */
+export function usePhotoSourceSheet(title: string) {
   const intl = useIntl();
   const cancel = useCancelButton();
-  const { sources, pick } = usePhotoPicker(onPicked);
+  const { sources, pick } = usePhotoPicker();
 
-  return (options: ImagePicker.ImagePickerOptions) =>
+  return (
+    options: ImagePicker.ImagePickerOptions,
+    onPicked: (assets: ImagePicker.ImagePickerAsset[]) => void
+  ) =>
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title,
@@ -33,7 +33,7 @@ export function usePhotoSourceSheet(
       (index) => {
         const source = sources[index];
 
-        if (source) void pick(source, options);
+        if (source) void pick(source, options, onPicked);
       }
     );
 }
