@@ -15,7 +15,7 @@ import { useTRPC } from "../trpc";
 export function useGroceriesQuery(): GroceriesQueryResult {
   const trpc = useTRPC();
 
-  const { data, error, isLoading, isSuccess } = useQuery(trpc.groceries.list.queryOptions());
+  const { data, error, isLoading } = useQuery(trpc.groceries.list.queryOptions());
 
   const groceries = data?.groceries ?? [];
   const recurringGroceries = data?.recurringGroceries ?? [];
@@ -38,7 +38,7 @@ export function useGroceriesQuery(): GroceriesQueryResult {
     recipeMap,
     error,
     isLoading,
-    isSuccess,
+    isRead: data !== undefined,
     getRecipeNameForGrocery,
   };
 }

@@ -121,6 +121,32 @@ describe("useGroceriesQuery", () => {
       // The hook should still return empty arrays as fallback
       expect(result.current.groceries).toEqual([]);
       expect(result.current.recurringGroceries).toEqual([]);
+      expect(result.current.isRead).toBe(false);
+    });
+
+    it("stays read when a refetch of an empty list fails", async () => {
+      let fail = false;
+
+      mockQueryOptions.mockReturnValue({
+        queryKey: mockQueryKey,
+        queryFn: async () => {
+          if (fail) throw new Error("server down");
+
+          return createMockGroceriesData();
+        },
+      });
+
+      const { result } = renderHook(() => useGroceriesQuery(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      await waitFor(() => expect(result.current.isRead).toBe(true));
+      fail = true;
+      await act(() => queryClient.refetchQueries({ queryKey: mockQueryKey }));
+
+      await waitFor(() => expect(result.current.error).not.toBeNull());
+      expect(result.current.groceries).toEqual([]);
+      expect(result.current.isRead).toBe(true);
     });
   });
 });

@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const read = vi.hoisted(() => ({
-  groceries: { isLoading: false, isSuccess: true, groceries: [] as unknown[] },
-  stores: { isLoading: false, isSuccess: true, stores: [] as unknown[] },
+  groceries: { isLoading: false, isSuccess: true, isRead: true, groceries: [] as unknown[] },
+  stores: { isLoading: false, isSuccess: true, isRead: true, stores: [] as unknown[] },
 }));
 
 vi.mock("react-native", async () => {
@@ -59,8 +59,8 @@ const { GroceriesScreen } = await import("../screens/groceries-screen");
 
 describe("the Groceries screen's first frame", () => {
   beforeEach(() => {
-    read.groceries = { isLoading: false, isSuccess: true, groceries: [] };
-    read.stores = { isLoading: false, isSuccess: true, stores: [] };
+    read.groceries = { isLoading: false, isSuccess: true, isRead: true, groceries: [] };
+    read.stores = { isLoading: false, isSuccess: true, isRead: true, stores: [] };
   });
 
   it("shows the empty state once the list was read and holds nothing", () => {
@@ -69,8 +69,16 @@ describe("the Groceries screen's first frame", () => {
     expect(screen.queryByText("empty")).not.toBeNull();
   });
 
+  it("shows the empty state when a refetch of the empty list failed", () => {
+    read.groceries = { isLoading: false, isSuccess: false, isRead: true, groceries: [] };
+    read.stores = { isLoading: false, isSuccess: false, isRead: true, stores: [] };
+    render(<GroceriesScreen />);
+
+    expect(screen.queryByText("empty")).not.toBeNull();
+  });
+
   it("keeps the skeleton when the read failed with nothing cached", () => {
-    read.groceries = { isLoading: false, isSuccess: false, groceries: [] };
+    read.groceries = { isLoading: false, isSuccess: false, isRead: false, groceries: [] };
     render(<GroceriesScreen />);
 
     expect(screen.queryByText("skeleton")).not.toBeNull();

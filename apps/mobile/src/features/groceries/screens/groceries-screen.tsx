@@ -47,10 +47,10 @@ export function GroceriesScreen() {
     recurringGroceries,
     recipeMap,
     isLoading,
-    isSuccess,
+    isRead,
     getRecipeNameForGrocery,
   } = useGroceriesQuery();
-  const { stores, isLoading: storesLoading, isSuccess: storesRead } = useStoresQuery();
+  const { stores, isLoading: storesLoading, isRead: storesRead } = useStoresQuery();
   const { aisleFor } = useStoreAisles();
   const aislesLoading = useAisleLinksLoading();
   const { units } = useUnitsQuery();
@@ -69,8 +69,8 @@ export function GroceriesScreen() {
   useStoreAislesSubscription();
   useIngredientsSubscription();
 
-  // Until a read has succeeded an empty list is unread, not empty: a failed first read stays a skeleton.
-  const unread = groceries.length === 0 && !(isSuccess && (view === "recipe" || storesRead));
+  // Until a read holds data an empty list is unread, not empty: a failed first read stays a skeleton.
+  const unread = groceries.length === 0 && !(isRead && (view === "recipe" || storesRead));
   const loading = isLoading || storesLoading || aislesLoading || unread;
   const rows =
     view === "store"

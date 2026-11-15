@@ -30,8 +30,8 @@ export type GroceriesQueryResult = {
   recipeMap: RecipeMap;
   error: unknown;
   isLoading: boolean;
-  /** A read has succeeded: an empty list is then really empty, not unread. */
-  isSuccess: boolean;
+  /** The query holds data, even after a failed refetch: an empty list is then really empty. */
+  isRead: boolean;
   getRecipeNameForGrocery: (grocery: GroceryDto) => string | null;
 };
 
@@ -88,7 +88,7 @@ export type StoresQueryResult = {
   stores: StoreDto[];
   error: unknown;
   isLoading: boolean;
-  isSuccess: boolean;
+  isRead: boolean;
 };
 
 export type StoreUpdateDraft = Omit<StoreUpdateInput, "version">;
