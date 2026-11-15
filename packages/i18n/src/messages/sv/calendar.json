@@ -72,5 +72,11 @@
     "configDeletedDescription": "Dina CalDAV-inställningar har tagits bort.",
     "retryStarted": "Synkronisering startad",
     "retryStartedDescription": "Försöker igen med väntande och misslyckade objekt…"
+  },
+  "widgets": {
+    "nothingPlanned": "Inget planerat",
+    "signIn": "Öppna Norish för att logga in",
+    "open": "Öppna Norish",
+    "more": "+{count} till"
   }
 }

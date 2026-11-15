@@ -72,5 +72,11 @@
     "configDeletedDescription": "Ваши настройки CalDAV удалены.",
     "retryStarted": "Синхронизация запущена",
     "retryStartedDescription": "Повторная попытка для ожидающих и неудачных элементов…"
+  },
+  "widgets": {
+    "nothingPlanned": "Ничего не запланировано",
+    "signIn": "Откройте Norish, чтобы войти",
+    "open": "Открыть Norish",
+    "more": "ещё +{count}"
   }
 }

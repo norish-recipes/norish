@@ -72,5 +72,11 @@
     "configDeletedDescription": "Je CalDAV-instellingen zijn verwijderd.",
     "retryStarted": "Synchronisatie gestart",
     "retryStartedDescription": "Openstaande en mislukte items worden opnieuw geprobeerd…"
+  },
+  "widgets": {
+    "nothingPlanned": "Niets gepland",
+    "signIn": "Open Norish om in te loggen",
+    "open": "Open Norish",
+    "more": "+{count} meer"
   }
 }

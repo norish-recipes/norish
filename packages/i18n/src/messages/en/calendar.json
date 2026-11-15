@@ -72,5 +72,11 @@
     "configDeletedDescription": "Your CalDAV settings have been removed.",
     "retryStarted": "Sync started",
     "retryStartedDescription": "Retrying pending and failed items…"
+  },
+  "widgets": {
+    "nothingPlanned": "Nothing planned",
+    "signIn": "Open Norish to sign in",
+    "open": "Open Norish",
+    "more": "+{count} more"
   }
 }

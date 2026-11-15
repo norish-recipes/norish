@@ -72,5 +72,11 @@
     "configDeletedDescription": "CalDAV-asetuksesi on poistettu.",
     "retryStarted": "Synkronointi aloitettu",
     "retryStartedDescription": "Yritetään uudelleen odottavia ja epäonnistuneita kohteita…"
+  },
+  "widgets": {
+    "nothingPlanned": "Ei mitään suunniteltu",
+    "signIn": "Avaa Norish kirjautuaksesi",
+    "open": "Avaa Norish",
+    "more": "+{count} lisää"
   }
 }

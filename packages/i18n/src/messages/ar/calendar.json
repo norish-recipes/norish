@@ -72,5 +72,11 @@
     "configDeletedDescription": "تمت إزالة إعدادات CalDAV الخاصة بك.",
     "retryStarted": "بدأت المزامنة",
     "retryStartedDescription": "جارٍ إعادة محاولة العناصر المعلقة والفاشلة…"
+  },
+  "widgets": {
+    "nothingPlanned": "لا شيء مخطط",
+    "signIn": "افتح Norish لتسجيل الدخول",
+    "open": "افتح Norish",
+    "more": "+{count} أخرى"
   }
 }
