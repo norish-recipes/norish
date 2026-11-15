@@ -122,7 +122,12 @@ export function useStoresMutations(): StoresMutationsResult {
 
       return was;
     },
-    onSuccess: rereadIfStale,
+    // Kept for lines it was not shown, the Store's lines come back too: read both again.
+    onSuccess: ({ stale }) => {
+      if (!stale) return;
+      invalidate();
+      void queryClient.invalidateQueries({ queryKey: groceriesKey });
+    },
     onError: (error, _input, was) => {
       if (shouldPreserveOptimisticUpdate(error)) return;
       if (was) {

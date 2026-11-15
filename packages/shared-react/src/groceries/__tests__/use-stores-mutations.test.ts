@@ -212,6 +212,20 @@ describe("useStoresMutations", () => {
     expect(queryClient.getQueryState(["stores", "list"])?.isInvalidated).toBe(true);
   });
 
+  it.each([true, false])(
+    "reads the Stores and the lines again when a delete is answered stale (delete items: %s)",
+    async (deleteGroceries) => {
+      const { result } = render();
+
+      sent.delete.mockResolvedValueOnce({ success: true, stale: true });
+      act(() => result.current.deleteStore("store-1", deleteGroceries));
+      await settled();
+
+      expect(queryClient.getQueryState(["stores", "list"])?.isInvalidated).toBe(true);
+      expect(queryClient.getQueryState(["groceries", "list"])?.isInvalidated).toBe(true);
+    }
+  );
+
   it.each([
     ["update", (m: ReturnType<typeof useStoresMutations>) => m.updateStore({ id: "store-1" })],
     ["delete", (m: ReturnType<typeof useStoresMutations>) => m.deleteStore("store-1", false)],
