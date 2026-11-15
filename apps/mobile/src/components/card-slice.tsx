@@ -37,10 +37,20 @@ const sliceClass = (edge: Edge, className: string, separated: boolean) =>
 const TILT = { transform: [{ rotate: "-1.5deg" }] };
 
 /**
- * A grocery row's slice; while a drag carries it, a card of its own above the list. Only the
+ * An item row's slice; while a drag carries it, a card of its own above the list. Only the
  * classes change on lift, so the row keeps its state (a group stays folded out).
  */
-export function ItemSlice({ edge, children }: { edge: Edge; children: ReactNode }) {
+export function ItemSlice({
+  edge,
+  separated = true,
+  className = "bg-surface",
+  children,
+}: {
+  edge: Edge;
+  separated?: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
   const lifted = useIsLifted();
   const reduceMotion = useReducedMotion();
 
@@ -48,7 +58,7 @@ export function ItemSlice({ edge, children }: { edge: Edge; children: ReactNode 
     <View className={lifted ? "px-3.5" : "px-5"} style={lifted && !reduceMotion ? TILT : undefined}>
       <View
         className={
-          lifted ? "bg-surface rounded-[20px] shadow-lg" : sliceClass(edge, "bg-surface", true)
+          lifted ? "bg-surface rounded-[20px] shadow-lg" : sliceClass(edge, className, separated)
         }
       >
         {children}
