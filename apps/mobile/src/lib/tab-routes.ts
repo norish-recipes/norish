@@ -4,6 +4,7 @@
  */
 export const TAB_ROUTES = {
   recipes: {
+    root: "/",
     planRecipe: "/plan-recipe",
     addToGroceries: "/add-to-groceries",
     cookbookAddRecipes: "/cookbook-add-recipes",
