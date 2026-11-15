@@ -1,6 +1,5 @@
+import { serialQueue } from "@/lib/serial-queue";
 import { describe, expect, it, vi } from "vitest";
-
-import { serialQueue } from "../src/lib/serial-queue";
 
 describe("serialQueue", () => {
   it("runs tasks one after another, past a failure, and stops waiting once reset", async () => {
