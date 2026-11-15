@@ -1,9 +1,9 @@
 import React from "react";
-import { Pressable, View } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Pressable } from "react-native";
+import { RoundTick } from "@/components/round-tick";
 import { useThemeColor } from "heroui-native";
 
-/** The check circle: 24 pt, ringed in the Store's colour and filled with a 14 pt check once ticked. */
+/** The round tick in the Store's colour, under a 44 pt press target. */
 export function StoreTick({
   checked,
   partial = false,
@@ -22,8 +22,6 @@ export function StoreTick({
   onPress: () => void;
 }) {
   const [accent] = useThemeColor(["accent"] as const);
-  const tint = color ?? accent;
-  const filled = checked || partial;
 
   return (
     <Pressable
@@ -36,14 +34,7 @@ export function StoreTick({
       testID={testID}
       onPress={onPress}
     >
-      <View
-        className="size-6 items-center justify-center rounded-full border-2"
-        style={{ borderColor: tint, backgroundColor: filled ? tint : "transparent" }}
-      >
-        {filled ? (
-          <Ionicons color="#ffffff" name={partial ? "remove" : "checkmark"} size={14} />
-        ) : null}
-      </View>
+      <RoundTick color={color ?? accent} partial={partial} selected={checked} />
     </Pressable>
   );
 }
