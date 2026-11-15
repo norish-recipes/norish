@@ -86,12 +86,8 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
     .then(async (ownerIds) => {
       const ownerId = ownerIds.get(groceryId);
 
-      if (!ownerId) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Grocery not found",
-        });
-      }
+      // A line another member deleted lost to an earlier write: stale, as a changed version is.
+      if (!ownerId) return { success: true, stale: true };
 
       await assertHouseholdAccess(ctx.user.id, ownerId);
       // The Store the grocery is filed under, and priced through, is the
@@ -310,7 +306,6 @@ export const markGroceryDoneProcedure = authedProcedure
         "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        404: "Grocery not found",
       },
     },
   })
@@ -352,7 +347,6 @@ export const markGroceryUndoneProcedure = authedProcedure
         "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        404: "Grocery not found",
       },
     },
   })
@@ -394,7 +388,6 @@ export const deleteGroceryProcedure = authedProcedure
         "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        404: "Grocery not found",
       },
     },
   })
@@ -406,7 +399,7 @@ export const deleteGroceryProcedure = authedProcedure
         groceries: [{ id: input.id, version: input.version }],
       });
 
-      return { success: true, stale: result.deletedIds.length === 0 };
+      return { success: true, stale: result.staleIds.length > 0 };
     } catch (err) {
       log.error(
         { err, userId: ctx.user.id, groceryId: input.id },
@@ -435,7 +428,7 @@ export const assignGroceryToStoreProcedure = authedProcedure
         "Send the grocery's current `version` from the list; a stale version changes nothing and returns `stale: true`. A `storeId` of `null` removes the store. With `savePreference` (on by default) the same ingredient goes to this store next time.",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        404: "Grocery or store not found",
+        404: "Store not found",
       },
     },
   })
@@ -516,12 +509,8 @@ const reorderInStore = authedProcedure
 
     return getGroceryOwnerIds(groceryIds)
       .then(async (ownerIds) => {
-        if (ownerIds.size !== groceryIds.length) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Some groceries not found",
-          });
-        }
+        // A line another member deleted lost to an earlier write: left out, it answers stale.
+        const present = updates.filter((u) => ownerIds.has(u.id));
 
         // Check household access for all groceries
         for (const ownerId of ownerIds.values()) {
@@ -539,7 +528,8 @@ const reorderInStore = authedProcedure
         }
 
         // Perform reorder (and optional store changes)
-        const updated = await reorderGroceriesInStore(updates, ctx.userIds);
+        const updated =
+          present.length > 0 ? await reorderGroceriesInStore(present, ctx.userIds) : [];
 
         if (updated.length !== updates.length) {
           log.info(
@@ -675,9 +665,13 @@ const deleteDone = authedProcedure
 
     log.info({ userId: ctx.user.id, storeId }, "Deleting done groceries in store");
 
-    return deleteDoneInStore(ctx.userIds, storeId, targets)
-      .then((deletedIds) => {
-        if (deletedIds.length < targets.length) {
+    // A line already gone is a delete that already happened: skipped, not stale.
+    return getGroceryOwnerIds(targets.map((grocery) => grocery.id))
+      .then(async (ownerIds) => {
+        const present = targets.filter((grocery) => ownerIds.has(grocery.id));
+        const deletedIds = await deleteDoneInStore(ctx.userIds, storeId, present);
+
+        if (deletedIds.length < present.length) {
           log.info(
             { userId: ctx.user.id, requested: targets.length, applied: deletedIds.length },
             "Stale grocery delete-done mutations; requesting client refresh"
@@ -700,7 +694,7 @@ const deleteDone = authedProcedure
           );
         }
 
-        return { success: true, stale: deletedIds.length < targets.length };
+        return { success: true, stale: deletedIds.length < present.length };
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete done groceries");

@@ -404,21 +404,14 @@ export async function toggleGroceriesData(
 
   log.debug({ userId: ctx.user.id, count: groceryIds.length, isDone }, "Toggling groceries");
 
+  // A line another member deleted lost to an earlier write: it is left out and answers stale.
   const ownerIds = await getGroceryOwnerIds(groceryIds);
-
-  if (ownerIds.size !== groceryIds.length) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
-  }
 
   for (const ownerId of ownerIds.values()) {
     await assertHouseholdAccess(ctx.user.id, ownerId);
   }
 
-  const existingGroceries = await getGroceriesByIds(groceryIds);
-
-  if (existingGroceries.length === 0) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Groceries not found" });
-  }
+  const existingGroceries = ownerIds.size > 0 ? await getGroceriesByIds([...ownerIds.keys()]) : [];
 
   const updatedGroceries = existingGroceries.map((grocery) => ({
     ...grocery,
@@ -432,13 +425,16 @@ export async function toggleGroceriesData(
     throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid data" });
   }
 
-  const updated = await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.userIds);
+  const updated =
+    parsed.data.length > 0
+      ? await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.userIds)
+      : [];
 
-  if (updated.length !== parsed.data.length) {
+  if (updated.length !== groceryIds.length) {
     log.info(
       {
         userId: ctx.user.id,
-        requestedCount: parsed.data.length,
+        requestedCount: groceryIds.length,
         updatedCount: updated.length,
       },
       updated.length === 0
@@ -477,17 +473,17 @@ export async function deleteGroceriesData(
 
   log.info({ userId: ctx.user.id, count: groceryIds.length }, "Deleting groceries");
 
+  // A line already gone is a delete that already happened: it is skipped, not stale.
   const ownerIds = await getGroceryOwnerIds(groceryIds);
-
-  if (ownerIds.size !== groceryIds.length) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
-  }
 
   for (const ownerId of ownerIds.values()) {
     await assertHouseholdAccess(ctx.user.id, ownerId);
   }
 
-  const result = await deleteGroceryByIds(input.groceries, ctx.userIds);
+  const result = await deleteGroceryByIds(
+    input.groceries.filter((grocery) => ownerIds.has(grocery.id)),
+    ctx.userIds
+  );
 
   if (result.staleIds.length > 0) {
     log.info(
@@ -529,11 +525,8 @@ export async function assignGroceryToStoreData(
   ]);
   const ownerId = ownerIds.get(groceryId);
 
-  if (!ownerId) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
-  }
-
-  await assertHouseholdAccess(ctx.user.id, ownerId);
+  // A line another member deleted lost to an earlier write: stale, as a changed version is.
+  if (ownerId) await assertHouseholdAccess(ctx.user.id, ownerId);
 
   if (storeId) {
     if (!storeOwnerId) {
@@ -542,13 +535,10 @@ export async function assignGroceryToStoreData(
     await assertHouseholdAccess(ctx.user.id, storeOwnerId);
   }
 
-  const [grocery] = await getGroceriesByIds([groceryId]);
-
-  if (!grocery) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
-  }
-
-  const updated = await assignGroceryToStore(groceryId, storeId, ctx.userIds, version);
+  const [grocery] = ownerId ? await getGroceriesByIds([groceryId]) : [];
+  const updated = grocery
+    ? await assignGroceryToStore(groceryId, storeId, ctx.userIds, version)
+    : null;
 
   if (!updated) {
     log.info(

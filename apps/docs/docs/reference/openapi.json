@@ -4170,16 +4170,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Recipe not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error.NOT_FOUND"
-                }
-              }
-            }
           }
         }
       }
@@ -4377,16 +4367,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Recipe not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error.NOT_FOUND"
-                }
-              }
-            }
           }
         }
       }
@@ -4459,16 +4439,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/error.UNAUTHORIZED"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Recipe not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error.NOT_FOUND"
                 }
               }
             }

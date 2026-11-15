@@ -1090,9 +1090,11 @@ describe("a grocery write answers whether it was refused as stale", () => {
     [
       "delete",
       (applied) =>
-        deleteGroceryByIds.mockResolvedValue(
-          applied ? { deletedIds: [id], staleIds: [] } : { deletedIds: [], staleIds: [id] }
-        ),
+        deleteGroceryByIds.mockImplementation(async (items: Array<{ id: string }>) => {
+          const ids = items.map((item) => item.id);
+
+          return applied ? { deletedIds: ids, staleIds: [] } : { deletedIds: [], staleIds: ids };
+        }),
       () => caller().delete({ groceries: [{ id, version: 1 }] }),
     ],
     [
@@ -1133,12 +1135,46 @@ describe("a grocery write answers whether it was refused as stale", () => {
     "%s rejects a write that failed, so Replay parks it",
     async (_, answer, write) => {
       answer(true);
-      getGroceryOwnerIds.mockResolvedValue(new Map());
-      getGroceriesByIds.mockResolvedValue([]);
+      getGroceryOwnerIds.mockRejectedValue(new Error("database down"));
       markAllDoneInStore.mockRejectedValue(new Error("database down"));
       deleteDoneInStore.mockRejectedValue(new Error("database down"));
 
       await expect(write()).rejects.toThrow();
+    }
+  );
+
+  const deletes = ["delete", "deleteDone"];
+
+  it.each(writes.filter(([name]) => !deletes.includes(name)))(
+    "%s answers stale: true for a line another member deleted",
+    async (_, answer, write) => {
+      answer(false);
+      getGroceryOwnerIds.mockResolvedValue(new Map());
+      getGroceriesByIds.mockResolvedValue([]);
+
+      await expect(write()).resolves.toEqual({ success: true, stale: true });
+    }
+  );
+
+  it.each(writes.filter(([name]) => deletes.includes(name)))(
+    "%s of a line already gone succeeds as a no-op",
+    async (_, answer, write) => {
+      answer(false);
+      getGroceryOwnerIds.mockResolvedValue(new Map());
+      getGroceriesByIds.mockResolvedValue([]);
+
+      await expect(write()).resolves.toEqual({ success: true, stale: false });
+    }
+  );
+
+  it.each(writes.filter(([name]) => !["markAllDone", "deleteDone"].includes(name)))(
+    "%s refuses a line of another household",
+    async (_, answer, write) => {
+      answer(true);
+      getGroceryOwnerIds.mockResolvedValue(new Map([[id, "stranger"]]));
+      assertHouseholdAccess.mockRejectedValue(new Error("FORBIDDEN"));
+
+      await expect(write()).rejects.toThrow("FORBIDDEN");
     }
   );
 });
