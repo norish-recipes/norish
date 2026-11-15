@@ -156,7 +156,9 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
   const ink = dark ? "#FBFCFC" : "#181918";
   const muted = dark ? "#AEAAA3" : "#615D56";
   const accent = dark ? "#76C788" : "#336640";
-  const soft = dark ? "#2D2B27" : "#ECE7DE";
+  // Tinted and clear draw every fill in the tint, so the tile drops to the board's 14%.
+  const soft =
+    environment.widgetRenderingMode === "accented" ? "#FFFFFF24" : dark ? "#2D2B27" : "#ECE7DE";
   // The accent at half strength, as RGBA.
   const ring = dark ? "#76C7888C" : "#33664080";
 
