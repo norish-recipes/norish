@@ -7,17 +7,17 @@ import type { GrowDirection } from "@norish/shared-react/calendar";
  * then grows once the row is let go, as the list tells each edge only once per content length.
  */
 export function useHeldGrowth(grow: (direction: GrowDirection) => void) {
-  const state = useRef({ held: false, missed: new Set<GrowDirection>() });
+  const stateRef = useRef({ held: false, missed: new Set<GrowDirection>() });
 
   return {
     reached: (direction: GrowDirection) => {
-      if (state.current.held) state.current.missed.add(direction);
+      if (stateRef.current.held) stateRef.current.missed.add(direction);
       else grow(direction);
     },
     heldChange: (held: boolean) => {
-      const { missed } = state.current;
+      const { missed } = stateRef.current;
 
-      state.current.held = held;
+      stateRef.current.held = held;
       if (held) return;
       for (const direction of missed) grow(direction);
       missed.clear();
