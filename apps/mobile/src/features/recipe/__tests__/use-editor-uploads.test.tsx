@@ -9,7 +9,9 @@ const server = vi.hoisted(() => ({
 }));
 
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
-vi.mock("react-intl", () => ({ useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }) }));
+vi.mock("react-intl", () => ({
+  useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+}));
 vi.mock("expo-file-system", () => ({
   File: class {
     constructor(readonly uri: string) {

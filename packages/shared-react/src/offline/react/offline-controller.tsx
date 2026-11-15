@@ -57,7 +57,10 @@ export function OfflineController({
     () =>
       recovery.subscribeConflicts(() => {
         void queryClient.invalidateQueries({ refetchType: "none" });
-        toast.show({ severity: "warning", title: toast.translate("common.changedElsewhere.title") });
+        toast.show({
+          severity: "warning",
+          title: toast.translate("common.changedElsewhere.title"),
+        });
       }),
     [queryClient, recovery, toast]
   );

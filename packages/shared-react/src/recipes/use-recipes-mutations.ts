@@ -385,9 +385,14 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
       // Refused: someone changed it first. Show theirs, and tell once for edits on the same base.
       onSuccess: (answer, variables) => {
         if (!answer.stale) return;
-        void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id: variables.id }) });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.recipes.get.queryKey({ id: variables.id }),
+        });
         if (otherPendingEdits(variables, true)) return;
-        toast.show({ severity: "warning", title: toast.translate("common.changedElsewhere.title") });
+        toast.show({
+          severity: "warning",
+          title: toast.translate("common.changedElsewhere.title"),
+        });
       },
       onError: (error, variables, context) => {
         handleRecipesMutationError(error, "update", onError, () => {

@@ -69,8 +69,12 @@ describe("Recovery", () => {
   it("tells once about the edits a batch found refused, before the reads refresh", async () => {
     const onConflicted = vi.fn(() => calls.push("told"));
 
-    await store.enqueue(entry({ id: "a", path: "recipes.update", input: { id: "r1", version: 5 } }));
-    await store.enqueue(entry({ id: "b", path: "recipes.update", input: { id: "r1", version: 5 } }));
+    await store.enqueue(
+      entry({ id: "a", path: "recipes.update", input: { id: "r1", version: 5 } })
+    );
+    await store.enqueue(
+      entry({ id: "b", path: "recipes.update", input: { id: "r1", version: 5 } })
+    );
     submit.mockResolvedValue({ kind: "conflict" });
 
     const run = recovery();

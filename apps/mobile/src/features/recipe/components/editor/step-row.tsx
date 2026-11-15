@@ -20,10 +20,10 @@ import {
   stepChipLabel,
 } from "@norish/shared-react/recipes";
 
+import type { PendingPhoto } from "../../hooks/use-editor-uploads";
 import { IngredientIcon } from "../ingredient-icon";
 import { DragGrip, EditorInput, RowIconButton } from "./editor-parts";
 import { MentionPopup } from "./mention-popup";
-import type { PendingPhoto } from "../../hooks/use-editor-uploads";
 import { StepPhotos } from "./step-photos";
 
 /** A step's share presets, as web's chip menu lists them. */

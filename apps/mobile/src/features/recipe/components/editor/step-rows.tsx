@@ -110,7 +110,10 @@ export function StepRows({
                 ...entry,
                 images: [
                   ...entry.images,
-                  ...added.map((image, index) => ({ ...image, order: entry.images.length + index })),
+                  ...added.map((image, index) => ({
+                    ...image,
+                    order: entry.images.length + index,
+                  })),
                 ],
               }
             : entry

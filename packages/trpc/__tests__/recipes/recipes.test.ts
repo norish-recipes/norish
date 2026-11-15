@@ -796,12 +796,12 @@ describe("recipes procedures", () => {
       updateRecipeWithRefs.mockResolvedValueOnce({ stale: false, value: 6 });
       updateRecipeWithRefs.mockResolvedValueOnce({ stale: true });
 
-      await expect(
-        createCaller().update({ id, data: { name: "x" }, version: 5 })
-      ).resolves.toEqual({ stale: false, version: 6 });
-      await expect(
-        createCaller().update({ id, data: { name: "x" }, version: 5 })
-      ).resolves.toEqual({ stale: true, version: null });
+      await expect(createCaller().update({ id, data: { name: "x" }, version: 5 })).resolves.toEqual(
+        { stale: false, version: 6 }
+      );
+      await expect(createCaller().update({ id, data: { name: "x" }, version: 5 })).resolves.toEqual(
+        { stale: true, version: null }
+      );
     });
 
     it("an edit that does not touch the media says nothing about the colour", async () => {
