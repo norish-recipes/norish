@@ -12,7 +12,7 @@ vi.mock("@/features/groceries/components/panels/edit-grocery-panel", () => ({
 }));
 vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
   ...(await importOriginal()),
-  useGroceriesMutations: () => ({}),
+  useGroceryEdit: () => ({ save: vi.fn(), remove: vi.fn() }),
 }));
 vi.mock("@norish/shared-react/trpc", () => {
   const trpc = {

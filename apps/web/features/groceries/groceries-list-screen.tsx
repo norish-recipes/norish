@@ -3,13 +3,13 @@
 import type { ComponentProps } from "react";
 import { useState } from "react";
 
-import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
-import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
+import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import {
   useAisleLinksLoading,
   useGroceriesMutations,
   useGroceriesQuery,
   useGroceriesUiStore,
+  useGroceryEdit,
   useGroceryFor,
   useRecurringGroceryFor,
   useStoresQuery,
@@ -186,53 +186,34 @@ export function EditGrocery({ stores }: { stores: StoreDto[] }) {
   const setEditingGroceryId = useGroceriesUiStore((state) => state.setEditingGroceryId);
   const grocery = useGroceryFor(groceryId);
   const recurringGrocery = useRecurringGroceryFor(groceryId);
-  const {
-    deleteGroceries,
-    createRecurringGrocery,
-    updateGrocery,
-    updateRecurringGrocery,
-    deleteRecurringGrocery,
-  } = useGroceriesMutations();
 
   if (!grocery) return null;
 
-  const handleSave = (
-    itemName: string,
-    pattern: RecurrencePattern | null,
-    storeId?: string | null,
-    purchaseAmount?: number | null
-  ) => {
-    if (recurringGrocery) {
-      // Already recurring - update the recurring grocery (store change included)
-      updateRecurringGrocery(
-        recurringGrocery.id,
-        grocery.id,
-        itemName,
-        pattern,
-        storeId,
-        purchaseAmount
-      );
-    } else if (pattern) {
-      // Convert regular grocery to recurring without racing an update against the delete.
-      createRecurringGrocery(
-        itemName,
-        pattern,
-        storeId !== undefined ? storeId : grocery.storeId,
-        purchaseAmount
-      );
-      deleteGroceries([grocery.id]);
-    } else {
-      // Simple update
-      updateGrocery(grocery.id, itemName, storeId, purchaseAmount);
-    }
-  };
+  return (
+    <EditingGrocery
+      grocery={grocery}
+      recurringGrocery={recurringGrocery}
+      stores={stores}
+      onDone={() => setEditingGroceryId(null)}
+    />
+  );
+}
+
+function EditingGrocery({
+  grocery,
+  recurringGrocery,
+  stores,
+  onDone,
+}: {
+  grocery: GroceryDto;
+  recurringGrocery: RecurringGroceryDto | null;
+  stores: StoreDto[];
+  onDone: () => void;
+}) {
+  const { save, remove } = useGroceryEdit(grocery, recurringGrocery);
   const handleDelete = () => {
-    if (recurringGrocery) {
-      deleteRecurringGrocery(recurringGrocery.id);
-    } else {
-      deleteGroceries([grocery.id]);
-    }
-    setEditingGroceryId(null);
+    remove();
+    onDone();
   };
 
   return (
@@ -242,8 +223,8 @@ export function EditGrocery({ stores }: { stores: StoreDto[] }) {
       recurringGrocery={recurringGrocery}
       stores={stores}
       onDelete={handleDelete}
-      onOpenChange={(open) => !open && setEditingGroceryId(null)}
-      onSave={handleSave}
+      onOpenChange={(open) => !open && onDone()}
+      onSave={save}
     />
   );
 }
