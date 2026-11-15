@@ -5,9 +5,9 @@ import { useTRPC } from "../trpc";
 
 export function useStoresQuery(): StoresQueryResult {
   const trpc = useTRPC();
-  const { data, error, isLoading } = useQuery(trpc.stores.list.queryOptions());
+  const { data, error, isLoading, isSuccess } = useQuery(trpc.stores.list.queryOptions());
 
-  return { stores: data ?? [], error, isLoading };
+  return { stores: data ?? [], error, isLoading, isSuccess };
 }
 
 /** How many groceries sit under a Store, for its delete confirm; `null` reads nothing. */
