@@ -13,6 +13,8 @@ type Held<H, T> = {
   refused?: boolean;
 };
 
+export type HeldRows<H, T> = ReturnType<typeof useHeldRows<H, T>>;
+
 /**
  * The rows a drag list shows. Under a lifted row they hold still, so a realtime change can't
  * move the slots the drag counts in; after a kept drop they show it until `rows` changes.

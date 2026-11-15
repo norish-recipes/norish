@@ -1,20 +1,15 @@
 import type { ReactNode, Ref } from "react";
 import type { FlatList } from "react-native";
-import type {
-  ReorderableListProps,
-  ReorderableListReorderEvent,
-} from "react-native-reorderable-list";
-import { useEffect, useRef, useState } from "react";
+import type { ReorderableListProps } from "react-native-reorderable-list";
 import { useReducedMotion } from "react-native-reanimated";
 import ReorderableList, {
   NestedReorderableList,
   ScrollViewContainer,
   useReorderableDrag,
 } from "react-native-reorderable-list";
-import { scheduleOnRN } from "react-native-worklets";
-import * as Haptics from "expo-haptics";
 
 import type { DragRow, Drop } from "./resolve-drop";
+import { useDragEvents } from "./use-drag-events";
 import { useHeldRows } from "./use-held-rows";
 
 export type { Drop, DragRow };
@@ -53,8 +48,6 @@ type DragListProps<H, T> = Omit<
   ref?: Ref<FlatList<DragRow<H, T>>>;
 };
 
-const mediumImpact = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
 // A module constant keeps the library from rebuilding its drag handlers each render.
 const STILL_CELL = { opacity: 1, transform: [] };
 
@@ -83,41 +76,7 @@ export function DragList<H, T>({
   const reduceMotion = useReducedMotion();
   const List = nested ? NestedReorderableList : ReorderableList;
   const held = useHeldRows(rows, onDrop);
-  const latestRef = useRef({ held, onHeldChange });
-
-  useEffect(() => {
-    latestRef.current = { held, onHeldChange };
-  });
-  // Built once: the library rebuilds every row's drag handler when these change.
-  const [events] = useState(() => {
-    const told = (isHeld: boolean) => latestRef.current.onHeldChange?.(isHeld);
-    const lift = () => {
-      latestRef.current.held.lift();
-      told(true);
-    };
-    const settle = () => {
-      latestRef.current.held.settle();
-      told(false);
-    };
-
-    return {
-      onDragStart: () => {
-        "worklet";
-        scheduleOnRN(mediumImpact);
-        scheduleOnRN(lift);
-      },
-      onDragEnd: ({ from, to }: { from: number; to: number }) => {
-        "worklet";
-        scheduleOnRN(mediumImpact);
-        // A move lands in onReorder once the row has settled.
-        if (from === to) scheduleOnRN(settle);
-      },
-      onReorder: ({ from, to }: ReorderableListReorderEvent) => {
-        latestRef.current.held.drop(from, to);
-        told(false);
-      },
-    };
-  });
+  const events = useDragEvents(held, onHeldChange);
 
   return (
     <List
