@@ -139,7 +139,7 @@ export function GroceriesList({
               recurringId ? recurringById.get(recurringId) : null,
               only?.recipeName ?? null
             )}
-            onDrag={item.group.allDone ? undefined : drag}
+            onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
             onToggle={actions.toggle}
           />
@@ -162,7 +162,7 @@ export function GroceriesList({
                   recipeNameFor(grocery)
                 )
           }
-          onDrag={grocery.isDone ? undefined : drag}
+          onDrag={item.done ? undefined : drag}
           onEdit={actions.edit}
           onToggle={(id, isDone) => actions.toggle([id], isDone)}
         />

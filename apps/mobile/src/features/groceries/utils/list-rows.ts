@@ -33,9 +33,11 @@ export type Heading =
   | { type: "done"; sectionKey: string; count: number; open: boolean }
   | { type: "recipe"; recipeId: string | null; name: string; open: number; ids: string[] };
 
-export type Item =
-  | { type: "line"; grocery: GroceryDto; store: StoreDto | null }
-  | { type: "group"; group: GroceryGroup; store: StoreDto | null };
+/** A grocery's row or a group's; `key` is what a drop plan knows it by. */
+export type Item = { store: StoreDto | null; key: string; done: boolean } & (
+  | { type: "line"; grocery: GroceryDto }
+  | { type: "group"; group: GroceryGroup }
+);
 
 /** A row's value with its corners; held in the value, so a drag list's renderers see them. */
 export type ListHeading = Heading & { edge: Edge };
@@ -46,6 +48,17 @@ export type ListRow = DragRow<ListHeading, ListItem>;
 export const UNSORTED_KEY = "unsorted";
 
 export const sectionKeyOf = (storeId: string | null) => storeId ?? UNSORTED_KEY;
+
+const lineRow = (grocery: GroceryDto, store: StoreDto | null): DragRow<Heading, Item> => ({
+  kind: "item",
+  key: `line:${grocery.id}`,
+  value: { type: "line", grocery, store, key: grocery.id, done: grocery.isDone },
+});
+const groupRow = (group: GroceryGroup, store: StoreDto | null): DragRow<Heading, Item> => ({
+  kind: "item",
+  key: `group:${group.groupKey}`,
+  value: { type: "group", group, store, key: group.groupKey, done: group.allDone },
+});
 
 /** A section's rows with the card's corners set: the first rounds the top, the last the bottom. */
 function sealed(rows: DragRow<Heading, Item>[]): ListRow[] {
@@ -112,16 +125,8 @@ export function storeListRows({
 
     if (isCollapsed) return sealed([heading]);
 
-    const item = (grocery: GroceryDto): DragRow<Heading, Item> => ({
-      kind: "item",
-      key: `line:${grocery.id}`,
-      value: { type: "line", grocery, store },
-    });
-    const groupItem = (group: GroceryGroup): DragRow<Heading, Item> => ({
-      kind: "item",
-      key: `group:${group.groupKey}`,
-      value: { type: "group", group, store },
-    });
+    const item = (grocery: GroceryDto) => lineRow(grocery, store);
+    const groupItem = (group: GroceryGroup) => groupRow(group, store);
     const body: DragRow<Heading, Item>[] = [];
     const doneRows: DragRow<Heading, Item>[] = [];
 
@@ -193,11 +198,8 @@ export function recipeListRows(
   return recipes.flatMap(({ recipeId, recipeName, groceries }) => {
     const open = openBySortOrder(groceries);
     const done = groceries.filter((grocery) => grocery.isDone).sort(bySortOrder);
-    const line = (grocery: GroceryDto): DragRow<Heading, Item> => ({
-      kind: "item",
-      key: `line:${grocery.id}`,
-      value: { type: "line", grocery, store: storeById.get(grocery.storeId ?? "") ?? null },
-    });
+    const line = (grocery: GroceryDto) =>
+      lineRow(grocery, storeById.get(grocery.storeId ?? "") ?? null);
 
     return sealed([
       {

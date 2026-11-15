@@ -25,12 +25,6 @@ import type { ListHeading, ListItem } from "./list-rows";
 
 export type GroceryDrop = Drop<ListHeading, ListItem>;
 
-/** The key the shared plan knows a row by: a grocery's id, or a group's key. */
-const keyOf = (item: ListItem) => (item.type === "line" ? item.grocery.id : item.group.groupKey);
-
-const isDone = (item: ListItem) =>
-  item.type === "line" ? item.grocery.isDone : item.group.allDone;
-
 /** The container a heading opens; null for one a drop means nothing under (the done fold, a recipe). */
 function containerOf(heading: ListHeading): ContainerId | null {
   if (heading.type === "store") return heading.store?.id ?? UNSORTED_CONTAINER;
@@ -63,18 +57,18 @@ export function planStoreDrop({
 
   for (const row of drop.rows.slice(0, at).reverse()) {
     if (row.kind === "item") {
-      above.push(keyOf(row.value));
+      above.push(row.value.key);
       continue;
     }
     target = containerOf(row.value);
     break;
   }
-  if (target === null || isDone(drop.item)) return null;
+  if (target === null || drop.item.done) return null;
 
   const items = groups
     ? buildGroupItemsState(groups, stores)
     : buildItemsState(groceriesByStore(groceries, stores), stores, aisleFor);
-  const key = keyOf(drop.item);
+  const { key } = drop.item;
   const origin = findContainerForItem(key, items);
 
   if (origin === null || !(target in items)) return null;
