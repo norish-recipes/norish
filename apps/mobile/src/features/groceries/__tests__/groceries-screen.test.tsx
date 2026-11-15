@@ -56,7 +56,7 @@ vi.mock("../components/groceries-states", () => ({
 }));
 vi.mock("../components/list-settings-menu", () => ({ ListSettingsMenu: () => null }));
 vi.mock("../utils/list-rows", () => ({ recipeListRows: () => [], storeListRows: () => [] }));
-vi.mock("../utils/grocery-drop", () => ({ planRecipeDrop: vi.fn(), planStoreDrop: vi.fn() }));
+vi.mock("../utils/grocery-drop", () => ({ planRecipeRowDrop: vi.fn(), planStoreRowDrop: vi.fn() }));
 
 const { GroceriesScreen } = await import("../screens/groceries-screen");
 
