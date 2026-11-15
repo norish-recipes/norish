@@ -305,7 +305,7 @@ describe("useGroceriesMutations", () => {
 
     it("still sends the writes behind one that failed", async () => {
       seed();
-      versionedServer({ a: 1, b: 1 });
+      const stored = versionedServer({ a: 1, b: 1 });
       const first = answerLater(_mockMutations.reorderInStore);
       const { result } = renderHook(() => useGroceriesMutations(), {
         wrapper: createTestWrapper(queryClient, adapter),
@@ -318,10 +318,21 @@ describe("useGroceriesMutations", () => {
         ])
       );
       act(() => result.current.toggleGroceries(["b"], true));
+      await act(async () => {
+        await vi.waitFor(() => expect(_mockMutations.reorderInStore).toHaveBeenCalledOnce());
+      });
+      expect(_mockMutations.toggle).not.toHaveBeenCalled();
+
       await act(async () => first.reject(new Error("database down")));
       await settled();
 
+      // Sent at the version the failed reorder would have left, so the server refuses it.
       expect(_mockMutations.toggle).toHaveBeenCalledOnce();
+      expect(_mockMutations.toggle.mock.calls[0]?.[0]).toMatchObject({
+        groceries: [{ id: "b", version: 2 }],
+      });
+      await expect(_mockMutations.toggle.mock.results[0]?.value).resolves.toEqual({ stale: true });
+      expect(stored).toEqual([]);
     });
   });
 
