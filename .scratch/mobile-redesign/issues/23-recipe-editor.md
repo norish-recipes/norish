@@ -36,3 +36,5 @@ Options put to the maintainer: A (recommended) an unsent edit of the same recipe
 
 Everything else from the reviews is fixed: first round 13 findings (`4b2359c44..26c75302c`), second round the editor items (`b1b92a01d`, `560da254e`, `489d5779c`, `0ece4144d`, `550170ee6`, `97b1f13f8`, `836206f5a`), third round the row ref read stale by two uploads and the sheet's keyboard `LayoutAnimation` crashing on close (`8fefdb636..cdbbf32a8`). Rejected: Maestro flows here (ticket 30), photos orphaned by a discarded create (as on web), a 76-character commit subject.
 
+
+Decided (Mike, 2026-11-15): option A. Saving a recipe that already has an unsent edit in the Outbox replaces that entry's payload and keeps its base version, so one write per recipe is sent. The link's per-entity ordering and version rewrite (`c97a955d2`, `a37bd5c23`) come out; `recipes.update` keeps answering `{ stale, version }` and a refused edit keeps its one toast. Accepted gap: an edit sent whose answer was lost, followed by another edit of that recipe, can be refused with the toast.
