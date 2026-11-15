@@ -1,21 +1,24 @@
 import React from "react";
+import { AddGroceriesAccessory } from "@/features/shell/components/add-groceries-accessory";
 import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-accessory";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
+import { usePathname } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
-/** The signed-in tabs: the system tab bar, Search as its own tab, Add recipe above it. */
+/** The signed-in tabs: the system tab bar, Search as its own tab, Add recipe (Add items on Groceries) above it. */
 export function ShellTabs() {
   const intl = useIntl();
   const accent = useAccentTextColor();
   const hidden = useTabBarHidden();
+  const onGroceries = usePathname().startsWith("/groceries");
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
       {hidden ? null : (
         <NativeTabs.BottomAccessory>
-          <AddRecipeAccessory />
+          {onGroceries ? <AddGroceriesAccessory /> : <AddRecipeAccessory />}
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">

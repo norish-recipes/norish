@@ -7,6 +7,7 @@ export function GroceriesStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="add" options={SHEET_OPTIONS} />
       <Stack.Screen name="edit" options={SHEET_OPTIONS} />
     </Stack>
   );
