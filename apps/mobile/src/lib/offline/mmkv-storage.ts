@@ -79,6 +79,7 @@ export function createMmkvStorage({
   };
   const writeEntry = (entry: OutboxEntry) =>
     write(OUTBOX_PREFIX + entry.seq, { ...entry, input: mapUploads(entry.input, fileName) });
+
   async function removeEntry(seq: number) {
     const names = storedNames(read<OutboxEntry>(OUTBOX_PREFIX + seq)?.input);
 
