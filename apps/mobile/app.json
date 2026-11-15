@@ -80,7 +80,20 @@
         {
           "bundleIdentifier": "dev.norish.app.widgets",
           "groupIdentifier": "group.dev.norish.app",
-          "widgets": []
+          "widgets": [
+            {
+              "name": "CalendarMeal",
+              "displayName": "Next meal",
+              "description": "The meal planned for this part of the day.",
+              "ios": { "supportedFamilies": ["systemSmall"], "contentMarginsDisabled": true }
+            },
+            {
+              "name": "CalendarWeek",
+              "displayName": "This week",
+              "description": "Today and the six days after it.",
+              "ios": { "supportedFamilies": ["systemLarge"] }
+            }
+          ]
         }
       ]
     ],
