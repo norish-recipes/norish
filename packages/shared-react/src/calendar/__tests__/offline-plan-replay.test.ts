@@ -1,11 +1,14 @@
 /**
- * Plan writes made offline, replayed in order against a server with the repository's version
- * rules: a create starts at version 1, a move bumps the moved plan alone and renumbers its
- * slot-mates without bumping them, an update bumps its plan, a delete renumbers without bumping,
- * and a write at another version changes nothing and answers `stale: true`.
+ * Plan writes made offline, queued by the real Outbox link and replayed in order against a server
+ * with the router's and repository's rules: a create starts at version 1, last in its owner's
+ * slot; a write at another version changes nothing and answers `stale: true`, a move to where the
+ * plan is moves nothing; a move bumps the moved plan alone, lands at its index (none: last) among
+ * its owner's slot-mates and renumbers them without bumping; an update bumps its plan, and a
+ * delete renumbers without bumping.
  */
 import type { inferRouterOutputs } from "@trpc/server";
 import { act, renderHook } from "@testing-library/react";
+import { observable } from "@trpc/server/observable";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -17,6 +20,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import type { OutboxEntry } from "../../offline/outbox-types";
+import { createOutboxLink } from "../../offline/outbox-link";
 import { createOutboxStore } from "../../offline/outbox-store";
 import { runReplayPass } from "../../offline/replay";
 import { replayOutboxEntry } from "../../offline/replay-client";
@@ -52,18 +56,30 @@ vi.mock("../../trpc", () => ({
 }));
 
 type Answers = inferRouterOutputs<AppRouter>["calendar"];
-type Row = { date: string; slot: Slot; sortOrder: number; version: number; title: string };
+type Row = {
+  userId: string;
+  date: string;
+  slot: Slot;
+  sortOrder: number;
+  version: number;
+  title: string;
+};
 type M = ReturnType<typeof useCalendarMutations>;
 
 const OWNER = "u1";
+const HOUSEMATE = "u2";
 const RANGE = { startISO: "2026-11-09", endISO: "2026-11-22" };
 const RANGE_KEY = [["calendar", "listItems"], { input: RANGE, type: "query" }];
 
-function serverOf(rows: Record<string, Row>) {
+function serverOf(rows: Record<string, Row>, { deletedRecipes = new Set<string>() } = {}) {
   const db = new Map(Object.entries(rows).map(([id, row]) => [id, { ...row }]));
-  const slotOf = (date: string, slot: Slot, without?: string) =>
+  // A slot is its owner's: a housemate's plans on the same day and slot are not counted.
+  const slotOf = (userId: string, date: string, slot: Slot, without?: string) =>
     [...db.entries()]
-      .filter(([id, row]) => id !== without && row.date === date && row.slot === slot)
+      .filter(
+        ([id, row]) =>
+          id !== without && row.userId === userId && row.date === date && row.slot === slot
+      )
       .sort(([, a], [, b]) => a.sortOrder - b.sortOrder);
   const renumber = (entries: Array<[string, Row]>) =>
     entries.forEach(([, row], index) => (row.sortOrder = index));
@@ -71,45 +87,70 @@ function serverOf(rows: Record<string, Row>) {
   const client = {
     calendar: {
       createItem: {
-        mutate: async (input: { id: string; date: string; slot: Slot; title?: string }) => {
-          db.set(input.id, {
-            date: input.date,
-            slot: input.slot,
-            sortOrder: slotOf(input.date, input.slot).length,
-            version: 1,
-            title: input.title ?? "",
-          });
+        mutate: vi.fn(
+          async (input: {
+            id: string;
+            date: string;
+            slot: Slot;
+            recipeId?: string;
+            title?: string;
+          }) => {
+            // Its recipe was deleted meanwhile: refused, as a write that will fail again.
+            if (input.recipeId && deletedRecipes.has(input.recipeId)) {
+              throw Object.assign(new Error("recipe gone"), { data: { httpStatus: 400 } });
+            }
+            db.set(input.id, {
+              userId: OWNER,
+              date: input.date,
+              slot: input.slot,
+              sortOrder: slotOf(OWNER, input.date, input.slot).length,
+              version: 1,
+              title: input.title ?? "",
+            });
 
-          return { id: input.id };
-        },
+            return { id: input.id };
+          }
+        ),
       },
       moveItem: {
-        mutate: async (input: {
-          itemId: string;
-          version: number;
-          targetDate: string;
-          targetSlot: Slot;
-          targetIndex: number;
-        }): Promise<Answers["moveItem"]> => {
-          const row = db.get(input.itemId);
+        mutate: vi.fn(
+          async (input: {
+            itemId: string;
+            version: number;
+            targetDate: string;
+            targetSlot: Slot;
+            targetIndex?: number;
+          }): Promise<Answers["moveItem"]> => {
+            const row = db.get(input.itemId);
 
-          if (!row || row.version !== input.version) {
-            return { success: true, moved: false, stale: true };
+            if (!row || row.version !== input.version) {
+              return { success: true, moved: false, stale: true };
+            }
+            if (
+              row.date === input.targetDate &&
+              row.slot === input.targetSlot &&
+              row.sortOrder === input.targetIndex
+            ) {
+              return { success: true, moved: false, stale: false };
+            }
+            const source = slotOf(row.userId, row.date, row.slot, input.itemId);
+            const target = slotOf(row.userId, input.targetDate, input.targetSlot, input.itemId);
+
+            target.splice(Math.min(input.targetIndex ?? target.length, target.length), 0, [
+              input.itemId,
+              row,
+            ]);
+            Object.assign(row, {
+              date: input.targetDate,
+              slot: input.targetSlot,
+              version: row.version + 1,
+            });
+            renumber(source);
+            renumber(target);
+
+            return { success: true, moved: true, stale: false };
           }
-          const source = slotOf(row.date, row.slot, input.itemId);
-          const target = slotOf(input.targetDate, input.targetSlot, input.itemId);
-
-          target.splice(input.targetIndex, 0, [input.itemId, row]);
-          Object.assign(row, {
-            date: input.targetDate,
-            slot: input.targetSlot,
-            version: row.version + 1,
-          });
-          renumber(source);
-          renumber(target);
-
-          return { success: true, moved: true, stale: false };
-        },
+        ),
       },
       updateItem: {
         mutate: async (input: {
@@ -135,7 +176,7 @@ function serverOf(rows: Record<string, Row>) {
           if (!row) return { success: true, stale: false };
           if (row.version !== input.version) return { success: true, stale: true };
           db.delete(input.itemId);
-          renumber(slotOf(row.date, row.slot));
+          renumber(slotOf(row.userId, row.date, row.slot));
 
           return { success: true, stale: false };
         },
@@ -147,15 +188,43 @@ function serverOf(rows: Record<string, Row>) {
 }
 
 const rows = (): Record<string, Row> => ({
-  soup: { date: "2026-11-11", slot: "Dinner", sortOrder: 0, version: 1, title: "Soup" },
-  salad: { date: "2026-11-11", slot: "Dinner", sortOrder: 1, version: 3, title: "Salad" },
-  toast: { date: "2026-11-12", slot: "Dinner", sortOrder: 0, version: 2, title: "Toast" },
+  soup: {
+    userId: OWNER,
+    date: "2026-11-11",
+    slot: "Dinner",
+    sortOrder: 0,
+    version: 1,
+    title: "Soup",
+  },
+  salad: {
+    userId: OWNER,
+    date: "2026-11-11",
+    slot: "Dinner",
+    sortOrder: 1,
+    version: 3,
+    title: "Salad",
+  },
+  toast: {
+    userId: OWNER,
+    date: "2026-11-12",
+    slot: "Dinner",
+    sortOrder: 0,
+    version: 2,
+    title: "Toast",
+  },
+  pie: {
+    userId: HOUSEMATE,
+    date: "2026-11-12",
+    slot: "Dinner",
+    sortOrder: 0,
+    version: 1,
+    title: "Pie",
+  },
 });
 
 const cached = (): PlannedItemFromQuery[] =>
   Object.entries(rows()).map(([id, row]) => ({
     id,
-    userId: OWNER,
     ...row,
     itemType: "note",
     recipeId: null,
@@ -169,26 +238,25 @@ const cached = (): PlannedItemFromQuery[] =>
 
 describe("plan writes made offline, replayed", () => {
   const store = createOutboxStore(createMemoryStorage().outbox);
-  let queued = 0;
+  // Unreachable: the real link admits the write to the Outbox, then fails it as Queued.
+  const link = createOutboxLink({ store, owner: () => OWNER, replayHeaderValue: "test-outbox" })(
+    {} as never
+  );
 
   beforeEach(async () => {
     for (const entry of await store.loadAll()) await store.remove(entry.seq);
     for (const [path, send] of Object.entries(sends)) {
       send.mockReset();
-      // Unreachable: the write is Queued, as the Outbox link admits it.
-      send.mockImplementation(async (input: unknown) => {
-        queued += 1;
-        await store.enqueue({
-          id: `entry-${queued}`,
-          ownerId: OWNER,
-          path: `calendar.${path}`,
-          input: structuredClone(input),
-          entityId: null,
-          operationId: null,
-          headers: {},
-        });
-        throw new TypeError("Failed to fetch");
-      });
+      send.mockImplementation(
+        (input: unknown) =>
+          new Promise((resolve, reject) => {
+            const op = { id: 0, type: "mutation", path: `calendar.${path}`, input, context: {} };
+            const unreachable = () =>
+              observable((observer) => observer.error(new TypeError("Failed to fetch")));
+
+            link({ op, next: unreachable } as never).subscribe({ next: resolve, error: reject });
+          })
+      );
     }
   });
 
@@ -295,6 +363,48 @@ describe("plan writes made offline, replayed", () => {
 
     expect(await replay(server.client)).toMatchObject({ removed: 2, conflicted: [] });
     expect(server.db.get(id)).toMatchObject({ date: "2026-11-12", slot: "Lunch", version: 2 });
+  });
+
+  it("lands a move with no index last among its owner's plans, a housemate's not counted", async () => {
+    await offline([(m) => m.moveItem("soup", "2026-11-12", "Dinner")]);
+    const server = serverOf(rows());
+
+    expect(await replay(server.client)).toMatchObject({ removed: 1, conflicted: [] });
+    expect(server.db.get("soup")).toMatchObject({ sortOrder: 1, version: 2 });
+    expect(server.db.get("pie")).toMatchObject({ sortOrder: 0, version: 1 });
+  });
+
+  it("parks a move back to where the plan is as Conflicted when the plan moved on meanwhile", async () => {
+    await offline([(m) => m.moveItem("toast", "2026-11-12", "Dinner", 0)]);
+    const server = serverOf(rows());
+
+    server.db.get("toast")!.version = 3;
+
+    expect((await replay(server.client)).conflicted.map((entry) => entry.path)).toEqual([
+      "calendar.moveItem",
+    ]);
+  });
+
+  it("queues a create under its plan's id", async () => {
+    await offline([(m) => m.planNote("2026-11-11", "Lunch", "Leftovers")]);
+    const [entry] = await store.loadAll();
+
+    expect(entry).toMatchObject({ path: "calendar.createItem", entityId: await plannedId() });
+  });
+
+  it("parks a move behind its refused create, never sending it", async () => {
+    await offline([(m) => m.planRecipe("2026-11-11", "Lunch", "gone-recipe")]);
+    const id = await plannedId();
+
+    await offline([(m) => m.moveItem(id, "2026-11-12", "Lunch")]);
+    const server = serverOf(rows(), { deletedRecipes: new Set(["gone-recipe"]) });
+
+    expect(await replay(server.client)).toMatchObject({ removed: 0, parked: 2, conflicted: [] });
+    expect(server.client.calendar.moveItem.mutate).not.toHaveBeenCalled();
+    expect((await store.loadAll()).map(({ path, parkedReason }) => [path, parkedReason])).toEqual([
+      ["calendar.createItem", "deterministic"],
+      ["calendar.moveItem", "dependency"],
+    ]);
   });
 
   it("parks a move as Conflicted when another member moved the plan meanwhile", async () => {
