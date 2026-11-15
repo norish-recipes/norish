@@ -6,11 +6,12 @@ const router = vi.hoisted(() => ({ back: vi.fn(), replace: vi.fn() }));
 const user = vi.hoisted(() => ({ current: {} as unknown }));
 const addAtOnce = vi.hoisted(() => vi.fn());
 
-const path = vi.hoisted(() => ({ current: "/" }));
+const route = vi.hoisted(() => ({ current: "/add-to-groceries" }));
 
-vi.mock("expo-router", () => ({ useRouter: () => router, usePathname: () => path.current }));
+vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("@/features/recipes/components/add-at-once-host", () => ({
   useAddAtOnceStarter: () => addAtOnce,
+  useAddToGroceriesRoute: () => route.current,
 }));
 vi.mock("@norish/shared-react/reader", () => ({ useReader: () => ({ user: user.current }) }));
 
@@ -49,10 +50,10 @@ describe("usePlanExit", () => {
     expect(router.back).not.toHaveBeenCalled();
   });
 
-  it("opens the Calendar's own Add to groceries when planned from the Calendar", () => {
-    path.current = "/calendar/plan-recipe";
+  it("opens the Add to groceries of the stack it was planned in", () => {
+    route.current = "/calendar/add-to-groceries";
     exit()("r1");
-    path.current = "/";
+    route.current = "/add-to-groceries";
 
     expect(router.replace).toHaveBeenCalledWith({
       pathname: "/calendar/add-to-groceries",

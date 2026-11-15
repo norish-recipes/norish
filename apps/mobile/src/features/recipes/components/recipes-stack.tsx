@@ -1,5 +1,6 @@
 import React from "react";
 import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { Stack } from "expo-router";
 
 import { AddAtOnceHost } from "./add-at-once-host";
@@ -22,7 +23,7 @@ const FIT_SHEETS = ["cookbook-rename"] as const;
 export function RecipesStack() {
   return (
     <LibraryRoot>
-      <AddAtOnceHost>
+      <AddAtOnceHost addToGroceries={TAB_ROUTES.recipes.addToGroceries}>
         <Stack
           screenOptions={{
             headerTransparent: true,

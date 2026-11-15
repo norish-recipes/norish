@@ -10,7 +10,7 @@ const state = vi.hoisted(() => ({
   foodsArgs: {} as Record<string, unknown>,
 }));
 
-vi.mock("expo-router", () => ({ useRouter: () => router, usePathname: () => "/" }));
+vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("@norish/shared-react/recipes", () => ({
   useRecipeQuery: () => ({ recipe: state.recipe }),
   useRecipeFoodsToBuy: (recipeId: string, original: number, initial: number) => {
@@ -43,9 +43,11 @@ function Starter() {
   return null;
 }
 
-const mount = () =>
+const mount = (
+  addToGroceries: "/add-to-groceries" | "/calendar/add-to-groceries" = "/add-to-groceries"
+) =>
   render(
-    <AddAtOnceHost>
+    <AddAtOnceHost addToGroceries={addToGroceries}>
       <Starter />
     </AddAtOnceHost>
   );
@@ -85,6 +87,17 @@ describe("AddAtOnceHost", () => {
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/add-to-groceries",
+      params: { recipeId: "r1" },
+    });
+  });
+
+  it("opens its own stack's Add to groceries", () => {
+    state.hook = (args) => (args.onOpenChange as (open: boolean) => void)(true);
+    mount("/calendar/add-to-groceries");
+    act(() => start("r1"));
+
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/calendar/add-to-groceries",
       params: { recipeId: "r1" },
     });
   });

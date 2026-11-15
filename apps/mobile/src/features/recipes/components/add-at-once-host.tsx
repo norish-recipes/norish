@@ -1,3 +1,4 @@
+import type { AddToGroceriesRoute } from "@/lib/tab-routes";
 import type { ReactNode } from "react";
 import { createContext, use, useState } from "react";
 import { useRouter } from "expo-router";
@@ -6,18 +7,23 @@ import { plannedServings } from "@norish/shared-react/calendar";
 import { useAddAtOnce } from "@norish/shared-react/groceries";
 import { useRecipeFoodsToBuy, useRecipeQuery } from "@norish/shared-react/recipes";
 
-import { useAddToGroceriesPath } from "../hooks/use-add-to-groceries-path";
+type AddAtOnce = { start: (recipeId: string) => void; addToGroceries: AddToGroceriesRoute };
 
-const AddAtOnceContext = createContext<((recipeId: string) => void) | null>(null);
+const AddAtOnceContext = createContext<AddAtOnce | null>(null);
+
+function useHost() {
+  const host = use(AddAtOnceContext);
+
+  if (!host) throw new Error("useAddAtOnceStarter must be used within AddAtOnceHost");
+
+  return host;
+}
 
 /** Puts a recipe's lines to buy on the list without showing the sheet; see `AddAtOnceHost`. */
-export function useAddAtOnceStarter() {
-  const start = use(AddAtOnceContext);
+export const useAddAtOnceStarter = () => useHost().start;
 
-  if (!start) throw new Error("useAddAtOnceStarter must be used within AddAtOnceHost");
-
-  return start;
-}
+/** The Add to groceries of the stack the host sits in, which its plan sheets open. */
+export const useAddToGroceriesRoute = () => useHost().addToGroceries;
 
 function AddAtOnce({
   recipeId,
@@ -29,7 +35,7 @@ function AddAtOnce({
   onDone: () => void;
 }) {
   const router = useRouter();
-  const addToGroceries = useAddToGroceriesPath();
+  const addToGroceries = useAddToGroceriesRoute();
 
   const { scaledIngredients, isLoading } = useRecipeFoodsToBuy(recipeId, servings, servings);
 
@@ -57,14 +63,23 @@ function PlannedAddAtOnce({ recipeId, onDone }: { recipeId: string; onDone: () =
 
 /**
  * Hosts "add at once" after planning. A plan sheet closes as it plans, so what adds the lines
- * lives above the sheets and outlives them.
+ * lives above the sheets and outlives them. `addToGroceries` is its stack's own sheet.
  */
-export function AddAtOnceHost({ children }: { children: ReactNode }) {
+export function AddAtOnceHost({
+  addToGroceries,
+  children,
+}: {
+  addToGroceries: AddToGroceriesRoute;
+  children: ReactNode;
+}) {
   const [pending, setPending] = useState<{ key: number; recipeId: string } | null>(null);
 
   return (
     <AddAtOnceContext
-      value={(recipeId) => setPending((prev) => ({ key: (prev?.key ?? 0) + 1, recipeId }))}
+      value={{
+        start: (recipeId) => setPending((prev) => ({ key: (prev?.key ?? 0) + 1, recipeId })),
+        addToGroceries,
+      }}
     >
       {children}
       {pending ? (
