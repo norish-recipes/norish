@@ -41,6 +41,7 @@ export function resolveCookingModeSteps(
     if (text.startsWith("#")) {
       heading = text.replace(/^#+\s*/, "");
       pendingHeadingImages = images;
+
       return;
     }
 
@@ -61,5 +62,6 @@ export function resolveCookingModeSteps(
 /** The step index kept within the steps there are; 0 when there are none. */
 export function clampStep(step: number, total: number) {
   if (total <= 0) return 0;
+
   return Math.min(Math.max(step, 0), total - 1);
 }
