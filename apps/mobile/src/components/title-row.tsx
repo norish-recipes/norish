@@ -23,6 +23,7 @@ export function TitleRow({
       <Text
         accessibilityRole="header"
         className="text-foreground flex-shrink text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
+        numberOfLines={1}
         testID="large-title"
       >
         {title}
