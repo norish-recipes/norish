@@ -12,9 +12,21 @@
  *
  * Replayed mutations carry a marker context and are skipped, so a replay is
  * never re-captured.
+ *
+ * Edits of one entity (`{ id, version }`) go one at a time, live and replayed
+ * alike. An answer `{ stale: false, version }` moves the later edits sent on
+ * the same base, in memory and in the Outbox, to the version it stored: our
+ * own write is the only change they skip over, so another member's still wins.
  */
 
-import type { HTTPHeaders, TRPCLink } from "@trpc/client";
+import type {
+  HTTPHeaders,
+  Operation,
+  OperationLink,
+  OperationResultEnvelope,
+  TRPCClientError,
+  TRPCLink,
+} from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 
@@ -105,48 +117,155 @@ async function captureToOutbox(
   });
 }
 
+type VersionedEdit = { id: string; version: number };
+
+/** An input that edits one entity at the version it was read at: `{ id, version }`. */
+function versionedEdit(input: unknown): VersionedEdit | null {
+  if (!input || typeof input !== "object" || isEncodedFormData(input)) return null;
+  const { id, version } = input as { id?: unknown; version?: unknown };
+
+  return typeof id === "string" && typeof version === "number" ? { id, version } : null;
+}
+
+/** The version an answer says it stored: `{ stale: false, version }`. */
+function storedVersion(value: unknown): number | null {
+  const data = (value as { result?: { data?: unknown } } | undefined)?.result?.data;
+  const { stale, version } = (data ?? {}) as { stale?: unknown; version?: unknown };
+
+  return stale === false && typeof version === "number" ? version : null;
+}
+
 export function createOutboxLink<TRouter extends AnyTRPCRouter>(
   deps: OutboxLinkDependencies
 ): TRPCLink<TRouter> {
+  // Our own stored edits, `path id sent` to stored: a later edit on that base is sent on top of it.
+  const forwards = new Map<string, number>();
+  // One edit of an entity at a time, so each is sent after the last one's answer.
+  const tails = new Map<string, Promise<void>>();
+
+  /** Move the Outbox's pending edits of the entity from our sent version to the stored one. */
+  async function moveQueued(op: Operation, edit: VersionedEdit, stored: number): Promise<void> {
+    const operationId = (op.context as { operationId?: unknown } | undefined)?.operationId;
+
+    for (const entry of await deps.store.loadAll()) {
+      const queued = versionedEdit(entry.input);
+
+      if (
+        entry.status === "pending" &&
+        entry.path === op.path &&
+        entry.operationId !== operationId &&
+        queued?.id === edit.id &&
+        queued.version === edit.version
+      ) {
+        await deps.store.update(entry.seq, {
+          input: { ...(entry.input as object), version: stored },
+        });
+      }
+    }
+  }
+
   return () => {
+    const capture = ({ op, next }: Parameters<OperationLink<TRouter>>[0]) =>
+      observable<OperationResultEnvelope<unknown, TRPCClientError<TRouter>>, TRPCClientError<TRouter>>(
+        (observer) => {
+          const subscription = next(op).subscribe({
+            next: (value) => observer.next(value),
+            error: (error) => {
+              if (
+                isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
+                !isBackendUnreachableError(error)
+              ) {
+                observer.error(error);
+
+                return;
+              }
+
+              // Queued means durably stored: hold the error until the entry is
+              // in storage, and downgrade it to a real failure if it is not.
+              void Promise.resolve()
+                .then(() => captureToOutbox(deps, op.path, op.input, op.context))
+                .then(
+                  () => observer.error(error),
+                  (persistError: unknown) => {
+                    log.error(
+                      { error: persistError, path: op.path },
+                      "Outbox admission failed; presenting mutation as failed"
+                    );
+                    markOutboxAdmissionFailed(error);
+                    observer.error(error);
+                  }
+                );
+            },
+            complete: () => observer.complete(),
+          });
+
+          return () => subscription.unsubscribe();
+        }
+      );
+
     return ({ op, next }) => {
       if (op.type !== "mutation") {
         return next(op);
       }
 
+      const edit = versionedEdit(op.input);
+
+      if (!edit) {
+        return capture({ op, next });
+      }
+
       return observable((observer) => {
-        const subscription = next(op).subscribe({
-          next: (value) => observer.next(value),
-          error: (error) => {
-            if (
-              isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
-              !isBackendUnreachableError(error)
-            ) {
+        const entity = `${op.path} ${edit.id}`;
+        let resolveSettled = () => {};
+        const settled = new Promise<void>((resolve) => (resolveSettled = resolve));
+        const release = () => {
+          resolveSettled();
+          if (tails.get(entity) === settled) tails.delete(entity);
+        };
+        const previous = tails.get(entity) ?? Promise.resolve();
+        let subscription: { unsubscribe: () => void } | null = null;
+        let closed = false;
+
+        tails.set(entity, settled);
+        void previous.then(() => {
+          if (closed) return release();
+          let version = edit.version;
+
+          while (forwards.has(`${entity} ${version}`)) version = forwards.get(`${entity} ${version}`)!;
+          const sent = { ...edit, version };
+          let answered: Promise<void> = Promise.resolve();
+
+          subscription = capture({
+            op: { ...op, input: { ...(op.input as object), version } },
+            next,
+          }).subscribe({
+            next: (value) => {
+              const stored = storedVersion(value);
+
+              if (stored === null || stored <= version) return observer.next(value);
+              forwards.set(`${entity} ${version}`, stored);
+              // Stored before the answer passes on, so a restart finds the queued edits moved.
+              answered = moveQueued(op, sent, stored)
+                .catch((error: unknown) => log.error({ error }, "Moving queued edits failed"))
+                .then(() => observer.next(value));
+            },
+            error: (error) => {
+              release();
               observer.error(error);
-
-              return;
-            }
-
-            // Queued means durably stored: hold the error until the entry is
-            // in storage, and downgrade it to a real failure if it is not.
-            void Promise.resolve()
-              .then(() => captureToOutbox(deps, op.path, op.input, op.context))
-              .then(
-                () => observer.error(error),
-                (persistError: unknown) => {
-                  log.error(
-                    { error: persistError, path: op.path },
-                    "Outbox admission failed; presenting mutation as failed"
-                  );
-                  markOutboxAdmissionFailed(error);
-                  observer.error(error);
-                }
-              );
-          },
-          complete: () => observer.complete(),
+            },
+            complete: () =>
+              void answered.then(() => {
+                release();
+                observer.complete();
+              }),
+          });
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+          closed = true;
+          subscription?.unsubscribe();
+          release();
+        };
       });
     };
   };
