@@ -6,7 +6,8 @@ import type {
   ScrollViewProps,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, Keyboard, LayoutAnimation, ScrollView, Text, View } from "react-native";
+import { FlatList, Keyboard, ScrollView, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -122,15 +123,11 @@ function useKeyboardOverlap() {
   const [keyboardTop, setKeyboardTop] = useState<number | null>(null);
 
   useEffect(() => {
-    const moveTo = (top: number | null) => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setKeyboardTop(top);
-    };
     const subscriptions = [
       Keyboard.addListener("keyboardWillChangeFrame", (event: KeyboardEvent) =>
-        moveTo(event.endCoordinates.screenY)
+        setKeyboardTop(event.endCoordinates.screenY)
       ),
-      Keyboard.addListener("keyboardWillHide", () => moveTo(null)),
+      Keyboard.addListener("keyboardWillHide", () => setKeyboardTop(null)),
     ];
 
     return () => subscriptions.forEach((subscription) => subscription.remove());
@@ -168,13 +165,18 @@ export function Sheet({
 }) {
   const router = useRouter();
   const { overlap, onLayout } = useKeyboardOverlap();
+  // Animated on this view only: a global LayoutAnimation left armed by a picker's keyboard events
+  // animated the sheet's unmount, which Reanimated's layout animations abort on.
+  const keyboardStyle = useAnimatedStyle(() => ({
+    paddingBottom: withTiming(overlap, { duration: 250 }),
+  }));
 
   return (
     // Not flattened, so react-native-screens never resizes the body directly.
-    <View
+    <Animated.View
       className="grow"
       collapsable={false}
-      style={{ paddingBottom: overlap }}
+      style={keyboardStyle}
       testID={`${name}-sheet`}
       onLayout={onLayout}
     >
@@ -197,7 +199,7 @@ export function Sheet({
       </View>
       {children}
       {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
-    </View>
+    </Animated.View>
   );
 }
 
