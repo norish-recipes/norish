@@ -2,6 +2,7 @@
  * Grocery writes made offline, replayed in order against a server with the repository's version
  * rules: a write at the row's version stores and bumps it, a create shifts its Store's open lines
  * without bumping them, and a write at another version changes nothing and answers `stale: true`.
+ * The fake only models the shift; packages/db's groceries-create test guards the real one.
  */
 import type { inferRouterOutputs } from "@trpc/server";
 import { act, renderHook } from "@testing-library/react";
@@ -65,27 +66,34 @@ vi.mock("@norish/shared/lib/helpers", () => ({
 }));
 
 type Answers = inferRouterOutputs<AppRouter>["groceries"];
-type Row = { name: string; version: number; isDone: boolean; storeId: string | null };
+type Row = {
+  name: string;
+  version: number;
+  isDone: boolean;
+  storeId: string | null;
+  sortOrder: number;
+};
 type M = ReturnType<typeof useGroceriesMutations>;
 
 const OWNER = "u1";
 
 function serverOf(rows: Record<string, Row>) {
   const db = new Map(Object.entries(rows).map(([id, row]) => [id, { ...row }]));
-  const write = (id: string, version: number, change: Partial<Row>) => {
+  const stale = (id: string, version: number) => db.get(id)?.version !== version;
+  const write = (id: string, change: Partial<Row>) => {
     const row = db.get(id)!;
 
-    if (row.version !== version) return false;
     Object.assign(row, change, { version: row.version + 1 });
-
-    return true;
   };
   const client = {
     groceries: {
       create: {
         mutate: async (input: Array<{ id: string; name: string; storeId: string | null }>) => {
           for (const { id, name, storeId } of input) {
-            db.set(id, { name, version: 1, isDone: false, storeId });
+            for (const row of db.values()) {
+              if (!row.isDone && row.storeId === storeId) row.sortOrder += 1;
+            }
+            db.set(id, { name, version: 1, isDone: false, storeId, sortOrder: 0 });
           }
 
           return { ids: input.map(({ id }) => id) };
@@ -96,11 +104,11 @@ function serverOf(rows: Record<string, Row>) {
           groceries: Array<{ id: string; version: number }>;
           isDone: boolean;
         }): Promise<Answers["toggle"]> => {
-          const stored = input.groceries.filter(({ id, version }) =>
-            write(id, version, { isDone: input.isDone })
-          );
+          const current = input.groceries.filter(({ id, version }) => !stale(id, version));
 
-          return { success: true, stale: stored.length !== input.groceries.length };
+          for (const { id } of current) write(id, { isDone: input.isDone });
+
+          return { success: true, stale: current.length < input.groceries.length };
         },
       },
       update: {
@@ -108,10 +116,12 @@ function serverOf(rows: Record<string, Row>) {
           groceryId: string;
           raw: string;
           version: number;
-        }): Promise<Answers["update"]> => ({
-          success: true,
-          stale: !write(input.groceryId, input.version, { name: input.raw }),
-        }),
+        }): Promise<Answers["update"]> => {
+          if (stale(input.groceryId, input.version)) return { success: true, stale: true };
+          write(input.groceryId, { name: input.raw });
+
+          return { success: true, stale: false };
+        },
       },
     },
   };
@@ -145,8 +155,8 @@ describe("grocery writes made offline, replayed", () => {
   });
 
   const rows = (): Record<string, Row> => ({
-    milk: { name: "Milk", version: 1, isDone: false, storeId: null },
-    eggs: { name: "Eggs", version: 1, isDone: false, storeId: null },
+    milk: { name: "Milk", version: 1, isDone: false, storeId: null, sortOrder: 0 },
+    eggs: { name: "Eggs", version: 1, isDone: false, storeId: null, sortOrder: 1 },
   });
 
   async function offline(steps: Array<(m: M) => void>) {
@@ -193,7 +203,7 @@ describe("grocery writes made offline, replayed", () => {
     const pass = await replay(server.client);
 
     expect(pass).toMatchObject({ removed: steps.length, parked: 0, conflicted: [] });
-    expect(server.db.get("milk")?.name).toBe("Oat milk");
+    expect(server.db.get("milk")).toMatchObject({ name: "Oat milk", version: 2, sortOrder: 1 });
   });
 
   it("parks an edit as Conflicted when another member changed the line meanwhile", async () => {
