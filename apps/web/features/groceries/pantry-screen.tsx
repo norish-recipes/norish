@@ -11,7 +11,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
-import type { PantryIngredientDto } from "@norish/shared/contracts";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
 import { useIngredientIcons, useIngredientSearchQuery } from "@norish/shared-react/ingredients";
@@ -20,7 +19,7 @@ import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { pantryIngredientFor, sortPantryIngredients } from "@norish/shared/lib/pantry";
+import { pantryIngredientFor, searchPantry } from "@norish/shared/lib/pantry";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 import { FromYourRecipes } from "./components/pantry/from-your-recipes";
@@ -32,13 +31,6 @@ const SEARCH_DELAY_MS = 250;
 const SEARCH_MIN_LENGTH = 2;
 /** How many catalogue foods are offered below the kept ones. */
 const CATALOGUE_MATCHES = 8;
-
-/** Whether a kept food goes by a name containing the folded text, in any language. */
-function goesBy(item: PantryIngredientDto, needle: string): boolean {
-  return [item.name, ...Object.values(item.localeNames)].some((name) =>
-    foldName(name).includes(needle)
-  );
-}
 
 /**
  * The Pantry's screen: the foods the household keeps, by the name the
@@ -93,13 +85,7 @@ export function PantryScreen() {
   const duplicate =
     foodKey(draft, rules) !== "" &&
     pantryIngredientFor(items, { ingredientName: draft }, rules) !== null;
-  const needle = foldName(draft);
-  const kept = sortPantryIngredients(items, locale).filter(
-    (item) =>
-      needle === "" ||
-      goesBy(item, needle) ||
-      pantryIngredientFor([item], { ingredientName: draft }, rules) !== null
-  );
+  const kept = searchPantry(items, draft, locale, rules);
   const keptIds = new Set(items.map((item) => item.ingredientId));
   // Only the answer for the text in the field: a press on matches for an
   // earlier text, or for the text an add just cleared, would add the wrong food.

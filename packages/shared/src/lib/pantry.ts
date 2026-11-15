@@ -1,6 +1,7 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
+import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import {
   BASE_SPELLING_RULES,
@@ -107,5 +108,48 @@ export function sortPantryIngredients<
     ingredientDisplayName(a, locale).localeCompare(ingredientDisplayName(b, locale), locale, {
       sensitivity: "base",
     })
+  );
+}
+
+/** Whether a kept food goes by a name containing the folded text, in any language. */
+function goesBy(item: PantryIngredientDto, needle: string): boolean {
+  return [item.name, ...Object.values(item.localeNames)].some((name) =>
+    foldName(name).includes(needle)
+  );
+}
+
+/**
+ * The Pantry the field narrows: every kept food whose name, in any language, contains the text, or
+ * that the text names as a food, in the reader's order. No text keeps them all.
+ */
+export function searchPantry(
+  items: readonly PantryIngredientDto[],
+  text: string,
+  locale: string,
+  rules: SpellingRules = BASE_SPELLING_RULES
+): PantryIngredientDto[] {
+  const needle = foldName(text);
+
+  return sortPantryIngredients(items, locale).filter(
+    (item) =>
+      needle === "" ||
+      goesBy(item, needle) ||
+      pantryIngredientFor([item], { ingredientName: text }, rules) !== null
+  );
+}
+
+/** The suggested foods the Pantry does not cover, by the rule the server used to suggest them. */
+export function uncoveredSuggestions<T extends { ingredientId: string; name: string }>(
+  items: readonly PantryIngredientDto[],
+  suggestions: readonly T[],
+  rules: SpellingRules = BASE_SPELLING_RULES
+): T[] {
+  return suggestions.filter(
+    (food) =>
+      pantryIngredientFor(
+        items,
+        { ingredientId: food.ingredientId, ingredientName: food.name },
+        rules
+      ) === null
   );
 }

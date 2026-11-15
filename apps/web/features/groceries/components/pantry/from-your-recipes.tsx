@@ -13,7 +13,7 @@ import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantrySuggestions } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { uncoveredSuggestions } from "@norish/shared/lib/pantry";
 
 /** How many suggestions show before Show more. */
 const HANDFUL = 6;
@@ -40,14 +40,7 @@ export function FromYourRecipes({
   // Mounted once the Pantry has answered, so this is the Pantry on load.
   const [open, setOpen] = useState(items.length === 0);
   const [showAll, setShowAll] = useState(false);
-  const offered = suggestions.filter(
-    (food) =>
-      pantryIngredientFor(
-        items,
-        { ingredientId: food.ingredientId, ingredientName: food.name },
-        rules
-      ) === null
-  );
+  const offered = uncoveredSuggestions(items, suggestions, rules);
   const shown = showAll ? offered : offered.slice(0, HANDFUL);
 
   useIngredientIcons(open ? shown.map((food) => food.ingredientId) : []);

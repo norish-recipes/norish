@@ -5,7 +5,9 @@ import { foodsToBuy } from "@norish/shared/lib/line-foods";
 import {
   groceryOnTheList,
   pantryIngredientFor,
+  searchPantry,
   sortPantryIngredients,
+  uncoveredSuggestions,
 } from "@norish/shared/lib/pantry";
 
 function item(
@@ -183,5 +185,40 @@ describe("groceryOnTheList", () => {
     const typed = grocery("uien", null);
 
     expect(groceryOnTheList([typed], { ...onions, localeNames: { nl: "ui" } })).toBe(typed);
+  });
+});
+
+describe("searchPantry", () => {
+  const kept = [
+    { ...item("Olive Oil", "olive oil"), localeNames: { nl: "Olijfolie" } },
+    item("Salt", "salt"),
+  ];
+
+  it("keeps everything, in order, for no text", () => {
+    expect(searchPantry(kept, "  ", "en").map((i) => i.name)).toEqual(["Olive Oil", "Salt"]);
+  });
+
+  it("matches a name contained in any language, folded", () => {
+    expect(searchPantry(kept, "OLIJF", "en").map((i) => i.name)).toEqual(["Olive Oil"]);
+    expect(searchPantry(kept, "alt", "en").map((i) => i.name)).toEqual(["Salt"]);
+  });
+
+  it("matches a text that names the food, and nothing else", () => {
+    expect(searchPantry(kept, "salt to taste", "en").map((i) => i.name)).toEqual(["Salt"]);
+    expect(searchPantry(kept, "pepper", "en")).toEqual([]);
+  });
+});
+
+describe("uncoveredSuggestions", () => {
+  it("drops the foods the Pantry covers, by Ingredient or by name", () => {
+    const kept = [item("Salt", "salt")];
+    const suggested = [
+      { ingredientId: "i-salt", name: "Salt" },
+      { ingredientId: "i-rice", name: "Rice" },
+    ];
+
+    expect(uncoveredSuggestions(kept, suggested)).toEqual([
+      { ingredientId: "i-rice", name: "Rice" },
+    ]);
   });
 });
