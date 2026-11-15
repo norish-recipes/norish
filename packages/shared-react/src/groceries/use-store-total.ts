@@ -1,7 +1,6 @@
-import { useStorePrices } from "@norish/shared-react/groceries";
-
 import type { PricedLine, StoreTotal } from "./store-total";
 import { storeTotal } from "./store-total";
+import { useStorePrices } from "./use-store-prices";
 
 /**
  * What is still to buy at this Store costs this, for the heading of the

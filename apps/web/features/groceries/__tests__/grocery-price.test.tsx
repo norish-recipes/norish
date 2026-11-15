@@ -5,20 +5,25 @@
  * asked about.
  */
 import { GroceryPrice } from "@/features/groceries/components/list/grocery-price";
-import { lineOf } from "@/features/groceries/components/list/store-total";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
 import type { GroceryDto, ResolvedProductLink, StoreProductDto } from "@norish/shared/contracts";
+import { lineOf } from "@norish/shared-react/groceries";
 
 const links = new Map<string, ResolvedProductLink>();
 
-vi.mock("@norish/shared-react/groceries", () => ({
-  useLinkFor: (storeId: string | null, ingredientId: string | null | undefined) =>
-    links.get(`${storeId}|${ingredientId}`) ?? null,
-}));
+vi.mock("@norish/shared-react/groceries", async (importActual) => {
+  const actual = await importActual<typeof import("@norish/shared-react/groceries")>();
+
+  return {
+    ...actual,
+    useGroceryPrice: (line: Parameters<typeof actual.useGroceryPrice>[0]) =>
+      actual.priceOfLink(line, links.get(`${line.storeId}|${line.ingredientId}`) ?? null),
+  };
+});
 
 vi.mock("@/hooks/use-unit-formatter", () => ({
   useUnitFormatter: () => ({

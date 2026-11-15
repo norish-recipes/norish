@@ -11,11 +11,11 @@ import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { lineOf } from "@norish/shared-react/groceries";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryPrice } from "./grocery-price";
 import { RecurrencePill } from "./recurrence-pill";
-import { lineOf } from "./store-total";
 
 interface GroceryItemProps {
   grocery: GroceryDto;

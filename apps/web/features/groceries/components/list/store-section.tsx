@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { lineOf, useStoreTotal } from "@norish/shared-react/groceries";
 
 import type { AisleResolver } from "./dnd/types";
 import { useDndGroceryContext } from "./dnd/dnd-grocery-provider";
@@ -18,9 +19,7 @@ import { aisleContainerId, storeItems } from "./dnd/utils";
 import { DoneRow } from "./done-row";
 import { GroceryItem } from "./grocery-item";
 import { StoreHeading } from "./store-heading";
-import { lineOf } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
-import { useStoreTotal } from "./use-store-total";
 
 interface StoreSectionProps {
   store: StoreDto | null; // null = Unsorted

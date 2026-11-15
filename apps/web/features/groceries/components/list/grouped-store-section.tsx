@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
+import { lineOfGroup, useStoreTotal } from "@norish/shared-react/groceries";
 
 import type { GroupRow } from "./dnd/types";
 import { useDndGroupedGroceryContext } from "./dnd/dnd-grouped-grocery-provider";
@@ -19,9 +20,7 @@ import { aisleContainerId, storeGroupItems } from "./dnd/utils";
 import { DoneRow } from "./done-row";
 import { GroupedGroceryItem } from "./grouped-grocery-item";
 import { StoreHeading } from "./store-heading";
-import { lineOfGroup } from "./store-total";
 import { useAisleBlocks } from "./use-aisle-blocks";
-import { useStoreTotal } from "./use-store-total";
 
 const NO_KEYS: string[] = [];
 

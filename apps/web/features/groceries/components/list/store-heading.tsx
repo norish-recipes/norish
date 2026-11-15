@@ -10,9 +10,8 @@ import { Button, Dropdown, Label, Separator } from "@heroui/react";
 import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { StoreTotal } from "@norish/shared-react/groceries";
 import { formatShelfPrice } from "@norish/shared/lib/format-price";
-
-import type { StoreTotal } from "./store-total";
 
 /** Mark all done, Delete done and Clear all: what a section's kebab can hold. */
 interface StoreHeadingActions {

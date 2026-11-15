@@ -11,9 +11,13 @@ export {
   useOnTheList,
   useRecurringGroceryFor,
 } from "./use-groceries-query";
+export type { PricedLine, StoreTotal } from "./store-total";
+export { lineOf, lineOfGroup, storeTotal } from "./store-total";
 export { useGroceriesPantryAndCatalogueSubscriptions } from "./use-groceries-pantry-and-catalogue-subscriptions";
 export { useGroceriesSubscription } from "./use-groceries-subscription";
 export { useGroceriesUiStore } from "./use-groceries-ui-store";
+export type { GroceryPrice } from "./use-grocery-price";
+export { priceOfLink, useGroceryPrice } from "./use-grocery-price";
 export { useGroceryFormState } from "./use-grocery-form-state";
 export { useLineSelection } from "./use-line-selection";
 export type { ScaledFood } from "./use-lines-to-buy";
@@ -39,6 +43,7 @@ export {
   useStorePrices,
   useStorePricesSubscription,
 } from "./use-store-prices";
+export { useStoreTotal } from "./use-store-total";
 export { useStoresMutations } from "./use-stores-mutations";
 export { useStoreGroceryCount, useStoresQuery } from "./use-stores-query";
 export { useStoresSubscription } from "./use-stores-subscription";

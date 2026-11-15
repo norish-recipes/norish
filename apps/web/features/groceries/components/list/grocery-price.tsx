@@ -3,14 +3,10 @@
 import { Spinner } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { useLinkFor } from "@norish/shared-react/groceries";
+import type { PricedLine } from "@norish/shared-react/groceries";
+import { useGroceryPrice } from "@norish/shared-react/groceries";
 import { formatShelfPrice } from "@norish/shared/lib/format-price";
-import { groupLineCost } from "@norish/shared/lib/line-cost";
-import { packSizeOf } from "@norish/shared/lib/pack-size";
-import { isPendingLink } from "@norish/shared/lib/product-link";
-import { saleRegularPrice } from "@norish/shared/lib/sale";
 
-import type { PricedLine } from "./store-total";
 import { SalePrice } from "./sale-price";
 
 /**
@@ -27,12 +23,12 @@ import { SalePrice } from "./sale-price";
  * and no words: waiting must read as waiting and not as failure.
  */
 export function GroceryPrice({ line }: { line: PricedLine }) {
-  const link = useLinkFor(line.storeId, line.ingredientId);
+  const price = useGroceryPrice(line);
   const locale = useLocale();
   const t = useTranslations("groceries.price");
 
-  if (!link) return null;
-  if (isPendingLink(link)) {
+  if (price.status === "none") return null;
+  if (price.status === "pending") {
     return (
       <span className="flex shrink-0 items-center justify-end" data-testid="grocery-price-pending">
         <Spinner aria-label={t("pending")} className="text-muted" color="current" size="sm" />
@@ -40,17 +36,9 @@ export function GroceryPrice({ line }: { line: PricedLine }) {
     );
   }
 
-  const product = link.product;
-
-  if (!product) return null;
-  const pack = packSizeOf(product);
-  const cost = groupLineCost(line.amounts, { price: product.price, pack });
-  // The regular Line Cost: the same packs at the price the shop struck through.
-  const regularPrice = saleRegularPrice(product.price, product.regularPrice);
-  const regular =
-    regularPrice === null ? null : groupLineCost(line.amounts, { price: regularPrice, pack }).cost;
+  const { product, cost, regularCost } = price;
   const regularWords =
-    regular === null ? null : formatShelfPrice(locale, regular, product.currency);
+    regularCost === null ? null : formatShelfPrice(locale, regularCost, product.currency);
   const detail = `${new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(cost.purchaseAmount)} × ${formatShelfPrice(locale, product.price, product.currency)}`;
 
   return (

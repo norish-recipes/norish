@@ -12,11 +12,11 @@ import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
+import { lineOfGroup } from "@norish/shared-react/groceries";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryPrice } from "./grocery-price";
 import { RecurrencePill } from "./recurrence-pill";
-import { lineOfGroup } from "./store-total";
 
 /**
  * Format inline source breakdown showing recipe names and amounts.
