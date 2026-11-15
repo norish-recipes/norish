@@ -6,6 +6,7 @@ import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/s
 import { resolveCategoryName } from "@norish/shared/lib/categories";
 
 import type { RecipeEditorMode, RecipeFormErrors, RecipeFormState } from "./recipe-editor";
+import type { LineMoves } from "./recipe-editor-rows";
 import { useCategoriesQuery, useUnitsQuery } from "../config";
 import { useHydrated } from "../platform/use-hydrated";
 import { useDevicePreference } from "../reader";
@@ -18,6 +19,7 @@ import {
   recipeFormPayload,
   validateRecipeForm,
 } from "./recipe-editor";
+import { remapStepRefs } from "./recipe-editor-rows";
 
 interface UseRecipeEditorFormOptions {
   mode: RecipeEditorMode;
@@ -96,6 +98,16 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     }
   }
 
+  /** Keeps every step's references on their lines when lines move or go. */
+  const moveLines = (moves: LineMoves) =>
+    setForm((prev) => ({
+      ...prev,
+      steps: prev.steps.map((step) => ({
+        ...step,
+        stepIngredients: step.stepIngredients && remapStepRefs(step.stepIngredients, moves),
+      })),
+    }));
+
   /** The reader's pick: relabels every line and step, it does not convert. */
   const changeSystem = (systemUsed: MeasurementSystem) => {
     setManuallySetSystem(true);
@@ -152,6 +164,7 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     hasUnsavedChanges,
     detectedSystem,
     changeSystem,
+    moveLines,
     categoryOptions,
     toggleCategory,
     addCategory,

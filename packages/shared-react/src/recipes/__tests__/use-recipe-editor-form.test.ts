@@ -101,6 +101,25 @@ describe("useRecipeEditorForm", () => {
     expect(result.current.form.systemUsed).toBe("metric");
   });
 
+  it("moves a step's references with their lines", () => {
+    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }));
+
+    act(() =>
+      result.current.set("steps", [
+        {
+          step: "Mix",
+          order: 0,
+          systemUsed: "metric",
+          stepIngredients: [{ ingredientOrder: 0, share: 1, order: 0 }],
+        },
+      ])
+    );
+    act(() => result.current.moveLines(new Map([[0, 2]])));
+    expect(result.current.form.steps[0]?.stepIngredients).toEqual([
+      { ingredientOrder: 2, share: 1, order: 0 },
+    ]);
+  });
+
   it("refuses to submit an empty form and names what is missing", () => {
     const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }));
     let payload: unknown;

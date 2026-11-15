@@ -16,10 +16,12 @@ import {
   ingredientRowsToLines,
   ingredientSuggestionsOf,
   ingredientTriggerAt,
+  lineMoves,
   matchIngredientSuggestions,
   mentionIngredient,
   normalizeIngredientRows,
   recipeTriggerAt,
+  remapStepRefs,
   removeIngredientRow,
   replaceTrigger,
   rowNumbers,
@@ -203,6 +205,28 @@ describe("ingredient rows", () => {
     expect(ingredientRowsToLines(rows, {}, "metric")).toEqual([
       expect.objectContaining({ ingredientName: "flour", amount: 200, order: 0 }),
     ]);
+  });
+});
+
+describe("line moves", () => {
+  it("keeps a step's references on their lines when a line moves or goes", () => {
+    const rows = seedIngredientRows(editorIngredientsOf(stored, labeller));
+    const [onions, section, hoisin, salt, trailing] = rows;
+    const reordered = [hoisin!, onions!, section!, salt!, trailing!];
+    const moves = lineMoves(rows, reordered)!;
+    const refs = [
+      { ingredientOrder: 2, share: 0.5 },
+      { ingredientOrder: 0, share: 1 },
+    ];
+
+    expect(remapStepRefs(refs, moves)).toEqual([
+      { ingredientOrder: 0, share: 0.5 },
+      { ingredientOrder: 1, share: 1 },
+    ]);
+    expect(remapStepRefs(refs, lineMoves(rows, removeIngredientRow(rows, 0))!)).toEqual([
+      { ingredientOrder: 1, share: 0.5 },
+    ]);
+    expect(lineMoves(rows, typeIngredientRow(rows, 3, "a pinch of salt"))).toBeNull();
   });
 });
 

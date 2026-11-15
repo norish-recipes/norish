@@ -125,6 +125,33 @@ export function removeIngredientRow(rows: IngredientRow[], index: number): Ingre
   return updated.length === 0 ? [createIngredientRow("")] : updated;
 }
 
+/**
+ * Where each line went when the rows were reordered or one was removed, by its old order (its
+ * index). A removed line maps to null. Null when nothing moved.
+ */
+export type LineMoves = ReadonlyMap<number, number | null>;
+
+export function lineMoves(before: IngredientRow[], after: IngredientRow[]): LineMoves | null {
+  const index = new Map(after.map((row, i) => [row.id, i]));
+  const moves = new Map(before.map((row, i) => [i, index.get(row.id) ?? null]));
+
+  return [...moves].every(([from, to]) => from === to) ? null : moves;
+}
+
+/** Step references kept on their lines after a move; one to a removed line goes with it. */
+export function remapStepRefs<T extends { ingredientOrder: number }>(
+  refs: T[],
+  moves: LineMoves
+): T[] {
+  return refs.flatMap((ref) => {
+    const to = moves.has(ref.ingredientOrder)
+      ? moves.get(ref.ingredientOrder)
+      : ref.ingredientOrder;
+
+    return to == null ? [] : [{ ...ref, ingredientOrder: to }];
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Step rows
 
