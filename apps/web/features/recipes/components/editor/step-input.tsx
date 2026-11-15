@@ -18,12 +18,14 @@ import type { MeasurementSystem } from "@norish/shared/contracts";
 import {
   chipLinesOf,
   createStepRow,
+  hasStepContent,
   ingredientSuggestionsOf,
   isHeadingText,
   mentionIngredient,
   normalizeStepRows,
   removeStepRow,
   rowNumbers,
+  rowsAfterLeaving,
   seedStepRows,
   stepRowsToSteps,
   typeStepRow,
@@ -169,15 +171,11 @@ export default function StepInput({
     }
   };
   const handleBlur = (index: number) => {
-    const item = items[index];
+    const updated = rowsAfterLeaving(items, index, hasStepContent);
 
-    // Auto-remove empty rows on blur (except the last one)
-    if (item && !item.text.trim() && item.images.length === 0 && index < items.length - 1) {
-      const updated = removeStepRow(items, index);
-
-      setItems(updated);
-      emitChanges(updated);
-    }
+    if (updated === items) return;
+    setItems(updated);
+    emitChanges(updated);
   };
   const handleRemove = (index: number) => {
     // Delete all images for this step

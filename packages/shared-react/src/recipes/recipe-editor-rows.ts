@@ -118,6 +118,19 @@ export function typeIngredientRow(
   return updated;
 }
 
+export function hasIngredientContent(row: IngredientRow): boolean {
+  return row.text.trim().length > 0;
+}
+
+/** The rows once `index` is left: an emptied row goes, unless it is the trailing one to type into. */
+export function rowsAfterLeaving<T>(rows: T[], index: number, hasContent: (row: T) => boolean): T[] {
+  const row = rows[index];
+
+  return row && !hasContent(row) && index < rows.length - 1
+    ? rows.filter((_, i) => i !== index)
+    : rows;
+}
+
 /** The rows without `index`, never fewer than the one empty row. */
 export function removeIngredientRow(rows: IngredientRow[], index: number): IngredientRow[] {
   const updated = rows.filter((_, i) => i !== index);

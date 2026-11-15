@@ -13,12 +13,14 @@ import { useUnitsQuery } from "@norish/shared-react/config";
 import { useFoodsByName, useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   createIngredientRow,
+  hasIngredientContent,
   ingredientRowsToLines,
   lineMoves,
   normalizeIngredientRows,
   parseIngredientRow,
   removeIngredientRow,
   rowNumbers,
+  rowsAfterLeaving,
   seedIngredientRows,
   typeIngredientRow,
 } from "@norish/shared-react/recipes";
@@ -107,17 +109,12 @@ export default function IngredientInput({
     }
   };
   const handleBlur = (index: number) => {
-    // Auto-remove empty rows on blur (except the last one)
-    if (!items[index]?.text.trim() && index < items.length - 1) {
-      const updated = removeIngredientRow(items, index);
+    const updated = rowsAfterLeaving(items, index, hasIngredientContent);
 
-      moveRows(updated);
-      flushParse(updated);
-    } else {
-      // Leaving the field commits the pending parse immediately, so a submit
-      // inside the debounce window cannot lose what was just typed.
-      flushParse(items);
-    }
+    if (updated !== items) moveRows(updated);
+    // Leaving the field commits the pending parse immediately, so a submit
+    // inside the debounce window cannot lose what was just typed.
+    flushParse(updated);
   };
   const handleRemove = (index: number) => {
     const updated = removeIngredientRow(items, index);

@@ -24,7 +24,9 @@ import {
   remapStepRefs,
   removeIngredientRow,
   replaceTrigger,
+  hasIngredientContent,
   rowNumbers,
+  rowsAfterLeaving,
   seedIngredientRows,
   seedStepRows,
   stepChipLabel,
@@ -227,6 +229,17 @@ describe("ingredient rows", () => {
       "",
     ]);
     expect(removeIngredientRow([rows[0]!], 0).map((row) => row.text)).toEqual([""]);
+  });
+
+  it("drops an emptied row once left, but never the trailing one", () => {
+    const rows = seedIngredientRows(editorIngredientsOf(stored, labeller));
+    const emptied = typeIngredientRow(rows, 1, " ");
+
+    expect(rowsAfterLeaving(emptied, 1, hasIngredientContent).map((row) => row.id)).toEqual(
+      rows.filter((_, index) => index !== 1).map((row) => row.id)
+    );
+    expect(rowsAfterLeaving(emptied, 0, hasIngredientContent)).toBe(emptied);
+    expect(rowsAfterLeaving(rows, rows.length - 1, hasIngredientContent)).toBe(rows);
   });
 
   it("reads amount and unit from a typed row", () => {
