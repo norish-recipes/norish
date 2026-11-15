@@ -1,10 +1,10 @@
 "use client";
 
-import { formatShelfPrice } from "@/features/groceries/lib/format-price";
 import { Spinner } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useLinkFor } from "@norish/shared-react/groceries";
+import { formatShelfPrice } from "@norish/shared/lib/format-price";
 import { groupLineCost } from "@norish/shared/lib/line-cost";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 import { isPendingLink } from "@norish/shared/lib/product-link";

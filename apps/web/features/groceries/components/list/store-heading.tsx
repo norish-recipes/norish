@@ -1,6 +1,5 @@
 "use client";
 
-import { formatShelfPrice } from "@/features/groceries/lib/format-price";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -10,6 +9,8 @@ import {
 import { Button, Dropdown, Label, Separator } from "@heroui/react";
 import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
+
+import { formatShelfPrice } from "@norish/shared/lib/format-price";
 
 import type { StoreTotal } from "./store-total";
 

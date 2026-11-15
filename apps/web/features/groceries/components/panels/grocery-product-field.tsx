@@ -1,11 +1,9 @@
 "use client";
 
-import type { PackSizeWords } from "@/features/groceries/lib/format-price";
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { SalePrice } from "@/features/groceries/components/list/sale-price";
 import { usePackSizeWords } from "@/features/groceries/hooks/use-pack-size-words";
-import { formatPackSize, formatShelfPrice } from "@/features/groceries/lib/format-price";
 import { FIELD_CLASS, FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { ArrowTopRightOnSquareIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
@@ -22,11 +20,13 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { StoreDto, StoreProductChoice, StoreProductDto } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
+import type { PackSizeWords } from "@norish/shared/lib/format-price";
 import type { PackSize } from "@norish/shared/lib/pack-size";
 import { useShopSearch, useStoreProducts } from "@norish/shared-react/groceries";
 import { chooseUnmistakable, distinctProducts } from "@norish/shared/lib/auto-link";
 import { currencyForUrl, isPriced } from "@norish/shared/lib/currency";
 import { nameWords } from "@norish/shared/lib/fold-name";
+import { formatPackSize, formatShelfPrice } from "@norish/shared/lib/format-price";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 import { saleRegularPrice } from "@norish/shared/lib/sale";
