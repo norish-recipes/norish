@@ -787,6 +787,23 @@ describe("recipes procedures", () => {
       await answer;
     });
 
+    it("answers with the version it stored, or that it refused a stale one", async () => {
+      const id = "55555555-5555-4555-8555-555555555555";
+
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      getRecipeFull.mockResolvedValue(null);
+      updateRecipeWithRefs.mockResolvedValueOnce({ stale: false, value: 6 });
+      updateRecipeWithRefs.mockResolvedValueOnce({ stale: true });
+
+      await expect(
+        createCaller().update({ id, data: { name: "x" }, version: 5 })
+      ).resolves.toEqual({ stale: false, version: 6 });
+      await expect(
+        createCaller().update({ id, data: { name: "x" }, version: 5 })
+      ).resolves.toEqual({ stale: true, version: null });
+    });
+
     it("an edit that does not touch the media says nothing about the colour", async () => {
       getRecipeOwnerId.mockResolvedValue(ctx.user.id);
       canAccessResource.mockResolvedValue(true);

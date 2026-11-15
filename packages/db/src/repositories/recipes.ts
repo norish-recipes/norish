@@ -1675,7 +1675,7 @@ export async function updateRecipeWithRefs(
   userId: string,
   input: WithIngredientResolutions<FullRecipeUpdateDTO>,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<number | null>> {
   const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeUpdateSchema.safeParse(input);
 
@@ -1732,7 +1732,7 @@ export async function updateRecipeWithRefs(
       .update(recipes)
       .set({ ...updateData, version: sql`${recipes.version} + 1` })
       .where(and(...whereConditions))
-      .returning({ id: recipes.id });
+      .returning({ id: recipes.id, version: recipes.version });
 
     if (!updatedRecipeRow && version) {
       return staleOutcome();
@@ -1830,7 +1830,8 @@ export async function updateRecipeWithRefs(
       await syncRecipeVideosTx(tx, recipeId, payload.videos);
     }
 
-    return appliedOutcome(undefined);
+    // The version this write stored, so a client can send its next edit on top of it.
+    return appliedOutcome(updatedRecipeRow?.version ?? null);
   });
 }
 

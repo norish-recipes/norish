@@ -283,7 +283,7 @@ async function applyRecipeUpdate(
   if (result.stale) {
     log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
 
-    return { recipe: null, stale: true };
+    return { recipe: null, stale: true, version: null };
   }
 
   const updatedRecipe = await getRecipeFull(id);
@@ -299,16 +299,18 @@ async function applyRecipeUpdate(
     );
   }
 
-  return { recipe: updatedRecipe, stale: false };
+  return { recipe: updatedRecipe, stale: false, version: result.value };
 }
 
-// Answers once stored: an Outbox replays edits in order, each at the version the last one earned.
+// Answers once stored, with the stored version: the client sends its next edit of this recipe at it.
 const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
-  await applyRecipeUpdate(ctx, input).catch((err) =>
-    handleRecipeError(ctx, err, "update recipe", { recipeId: input.id })
-  );
+  const result = await applyRecipeUpdate(ctx, input).catch((err) => {
+    handleRecipeError(ctx, err, "update recipe", { recipeId: input.id });
 
-  return { success: true };
+    return null;
+  });
+
+  return { stale: result?.stale ?? false, version: result?.version ?? null };
 });
 
 export const updateRecipeProcedure = authedProcedure
