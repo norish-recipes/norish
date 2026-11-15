@@ -104,4 +104,36 @@ describe("syncTimerActivity", () => {
 
     expect(native.start).toHaveBeenCalledTimes(2);
   });
+
+  it("leaves an activity the user swiped away gone until a timer starts", async () => {
+    await syncTimerActivity(show("a", null, ["t1"]));
+    // Swiped away: iOS no longer lists it. An adjust, then a pause, start nothing.
+    await syncTimerActivity(show("b", null, ["t1"]));
+    await syncTimerActivity(show("c", null, []));
+    expect(native.start).toHaveBeenCalledTimes(1);
+
+    // Resuming the paused one is a start.
+    await syncTimerActivity(show("d", null, ["t1"]));
+    expect(native.start).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts nothing on the first sync after a launch, when iOS lists no activity", async () => {
+    vi.resetModules();
+    const fresh = await import("@/lib/timer-activity");
+
+    await fresh.syncTimerActivity(show("a"));
+
+    expect(native.start).not.toHaveBeenCalled();
+  });
+
+  it("logs and resolves when Live Activities are off and start throws", async () => {
+    native.start.mockImplementation(() => {
+      throw new Error("Live Activities are not enabled");
+    });
+
+    await expect(syncTimerActivity(show("a"))).resolves.toBeUndefined();
+    native.start.mockReset();
+    await syncTimerActivity(show("a", null, ["t2"]));
+    expect(native.start).toHaveBeenCalledTimes(1);
+  });
 });

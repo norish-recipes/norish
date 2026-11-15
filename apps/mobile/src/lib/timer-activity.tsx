@@ -162,10 +162,15 @@ const factory =
   Platform.OS === "ios" ? createLiveActivity("RecipeTimers", timerActivityLayout) : null;
 
 let shown: { content: string; props: TimerActivityProps } | null = null;
+// The timers running at the last sync; null before the first, so a launch starts nothing.
+let running: ReadonlySet<string> | null = null;
 
 /** Starts, updates or ends the one Live Activity so it shows `plan`; an unchanged plan is not pushed. */
 export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> {
   if (!factory) return;
+  const before = running;
+
+  running = new Set(plan.kind === "show" ? plan.running : []);
 
   try {
     // A crash or a second start can leave more than one; the first is kept.
@@ -181,7 +186,14 @@ export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> 
       const staleDate = plan.staleAt === null ? undefined : new Date(plan.staleAt);
 
       if (activity) await activity.update(props, staleDate);
-      else factory.start(props, undefined, staleDate);
+      // Only a timer starting brings back an activity the user swiped away (or starts the first).
+      else if (before && plan.running.some((id) => !before.has(id)))
+        factory.start(props, undefined, staleDate);
+      else {
+        shown = null;
+
+        return;
+      }
       shown = { content, props };
 
       return;
