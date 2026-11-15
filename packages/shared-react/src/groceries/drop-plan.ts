@@ -1,4 +1,4 @@
-import type { StoreDto } from "@norish/shared/contracts";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 import type {
@@ -169,4 +169,24 @@ export function writeDrop(
   for (const filing of filings) onFileGroceryName(filing.storeId, filing.grocery, filing.aisleId);
 
   return updates.length > 0 || filings.length > 0;
+}
+
+/** A recipe's open lines in the order a drop left them, numbered from the top; no Store changes. */
+export function planRecipeReorder(ids: readonly string[]): ReorderUpdate[] {
+  return ids.map((id, sortOrder) => ({ id, sortOrder }));
+}
+
+/** The list under each Store, Unsorted (null) first; a line whose Store is gone sits under Unsorted. */
+export function groceriesByStore(
+  groceries: readonly GroceryDto[],
+  stores: readonly StoreDto[]
+): Map<string | null, GroceryDto[]> {
+  const byStore = new Map<string | null, GroceryDto[]>([[null, []]]);
+
+  for (const store of stores) byStore.set(store.id, []);
+  for (const grocery of groceries) {
+    (byStore.get(grocery.storeId) ?? byStore.get(null))?.push(grocery);
+  }
+
+  return byStore;
 }

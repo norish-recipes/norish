@@ -10,7 +10,11 @@ import { useTranslations } from "next-intl";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { useUnitsQuery } from "@norish/shared-react/config";
-import { useFileGroceryName, useStoreAisles } from "@norish/shared-react/groceries";
+import {
+  groceriesByStore,
+  useFileGroceryName,
+  useStoreAisles,
+} from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
@@ -74,31 +78,7 @@ function GroceryListContent({
   const fileGroceryName = useFileGroceryName();
 
   // Group groceries by storeId; a Store whose groceries did not change keeps its array.
-  const builtByStore = useMemo(() => {
-    const groups: Map<string | null, GroceryDto[]> = new Map();
-
-    // Initialize with null for unsorted
-    groups.set(null, []);
-
-    // Initialize groups for each store
-    stores.forEach((store) => {
-      groups.set(store.id, []);
-    });
-
-    // Group groceries
-    groceries.forEach((grocery) => {
-      const storeId = grocery.storeId;
-
-      // If the storeId doesn't exist in our map (orphaned), put in unsorted
-      if (!groups.has(storeId)) {
-        groups.get(null)!.push(grocery);
-      } else {
-        groups.get(storeId)!.push(grocery);
-      }
-    });
-
-    return groups;
-  }, [groceries, stores]);
+  const builtByStore = useMemo(() => groceriesByStore(groceries, stores), [groceries, stores]);
   const sharedByStore = useStructuralSharing([...builtByStore]);
   const groupedGroceries = new Map(sharedByStore);
 

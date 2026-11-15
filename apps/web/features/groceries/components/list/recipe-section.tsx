@@ -22,6 +22,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { planRecipeReorder } from "@norish/shared-react/groceries";
 
 import { GroceryDragOverlay } from "./dnd/grocery-drag-overlay";
 import { SortableGroceryItem } from "./dnd/sortable-grocery-item";
@@ -229,9 +230,7 @@ function RecipeSectionComponent({
 
       // Call backend with new sort orders
       if (onReorder) {
-        const updates = newOrder.map((id, index) => ({ id, sortOrder: index }));
-
-        onReorder(updates);
+        onReorder(planRecipeReorder(newOrder));
       }
     },
     [orderedIds, onReorder]

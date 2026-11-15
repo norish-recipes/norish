@@ -4,10 +4,17 @@
  */
 import { describe, expect, it, vi } from "vitest";
 
-import type { StoreDto } from "@norish/shared/contracts";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import { aisleContainerId, UNSORTED_CONTAINER } from "../drop-containers";
-import { moveKey, planDrop, planListDrop, writeDrop } from "../drop-plan";
+import {
+  groceriesByStore,
+  moveKey,
+  planDrop,
+  planListDrop,
+  planRecipeReorder,
+  writeDrop,
+} from "../drop-plan";
 
 const MARKT = "store-markt";
 const BAKKER = "store-bakker";
@@ -328,5 +335,30 @@ describe("writeDrop", () => {
 
     expect(writeDrop({ updates: [], filings: [] }, onReorder, vi.fn())).toBe(false);
     expect(onReorder).not.toHaveBeenCalled();
+  });
+});
+
+describe("planRecipeReorder", () => {
+  it("numbers a recipe's lines from the top and moves none to another Store", () => {
+    expect(planRecipeReorder(["b", "a"])).toEqual([
+      { id: "b", sortOrder: 0 },
+      { id: "a", sortOrder: 1 },
+    ]);
+  });
+});
+
+describe("groceriesByStore", () => {
+  it("puts a line under its Store, and one whose Store is gone under Unsorted", () => {
+    const line = (id: string, storeId: string | null) => ({ id, storeId }) as GroceryDto;
+    const byStore = groceriesByStore(
+      [line("melk", MARKT), line("brood", "store-gone"), line("kaas", null)],
+      STORES
+    );
+
+    expect([...byStore].map(([storeId, rows]) => [storeId, rows.map((r) => r.id)])).toEqual([
+      [null, ["brood", "kaas"]],
+      [MARKT, ["melk"]],
+      [BAKKER, []],
+    ]);
   });
 });
