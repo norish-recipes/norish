@@ -88,3 +88,17 @@ export { useStoreGroceryCount, useStoresQuery } from "./use-stores-query";
 export { useStoresSubscription } from "./use-stores-subscription";
 export { useProductLink, useShopSearch, useStoreProducts } from "./use-store-products-query";
 export { useChooseProduct } from "./use-store-products-mutations";
+export type { EditingAisle, EditingStore } from "./store-editor";
+export {
+  addedAisle,
+  AISLE_NAME_MAX,
+  aisleDraftState,
+  canSaveStore,
+  editingStoreOf,
+  newEditingStore,
+  removedAisle,
+  renamedAisle,
+  storeLinkFields,
+} from "./store-editor";
+export type { ShopCheck } from "./use-save-store";
+export { useSaveStore } from "./use-save-store";

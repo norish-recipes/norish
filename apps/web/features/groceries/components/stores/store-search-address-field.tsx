@@ -16,28 +16,6 @@ interface StoreSearchAddressFieldProps {
   onChange: (value: string) => void;
 }
 
-/**
- * What a store's pasted link becomes: the shop's website, and its Search
- * Address when the paste carried one. The user never authors a template —
- * they paste the homepage or a search they just ran — so the derivation is
- * shown rather than demanded, and the field stays theirs to correct.
- */
-export function storeLinkFields(value: string): {
-  website: string | null;
-  searchAddress: string | null;
-  /** The term the paste carried, which is what the shop is probed with. */
-  term: string | null;
-} {
-  const derived = deriveSearchAddress(value);
-
-  if (!derived) return { website: null, searchAddress: null, term: null };
-  if (derived.kind === "website") {
-    return { website: derived.website, searchAddress: null, term: null };
-  }
-
-  return { website: derived.website, searchAddress: derived.searchAddress, term: derived.term };
-}
-
 /** The Search Address with its slot set apart from the address around it. */
 function MarkedAddress({ address }: { address: string }) {
   const [before, after] = address.split(SEARCH_ADDRESS_PLACEHOLDER);

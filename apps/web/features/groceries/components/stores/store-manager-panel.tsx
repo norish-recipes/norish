@@ -7,33 +7,28 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import type {
-  SearchAddressOutcome,
-  StoreDto,
-  StoreSearchAddressResult,
-} from "@norish/shared/contracts";
-import { useStoresMutations } from "@norish/shared-react/groceries";
-import { sortAisles } from "@norish/shared/lib/aisles";
+import type { EditingStore, ShopCheck } from "@norish/shared-react/groceries";
+import type { SearchAddressOutcome, StoreDto } from "@norish/shared/contracts";
+import {
+  editingStoreOf,
+  newEditingStore,
+  useSaveStore,
+  useStoresMutations,
+} from "@norish/shared-react/groceries";
 
-import type { EditingStore } from "./store-editor-panel";
 import { DeleteStoreModal } from "./delete-store-modal";
-import { storeColorKey, storeColorStyle } from "./store-colors";
-import { canSaveStore, StoreEditorPanel } from "./store-editor-panel";
-import { storeLinkFields } from "./store-search-address-field";
+import { storeColorStyle } from "./store-colors";
+import { StoreEditorPanel } from "./store-editor-panel";
 
 interface StoreManagerPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   stores: StoreDto[];
 }
-/** What the shop said when its Search Address was last tried, if it was. */
-type ShopCheck = { storeName: string; result: StoreSearchAddressResult | null };
-
 /**
  * The household's Stores: a list to reorder, edit and delete, with the one
  * being added or edited in a panel of its own over it. What the shop
@@ -41,100 +36,23 @@ type ShopCheck = { storeName: string; result: StoreSearchAddressResult | null };
  * once the editor has closed.
  */
 export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPanelProps) {
-  const { createStore, updateStore, deleteStore, reorderStores, checkSearchAddress } =
-    useStoresMutations();
+  const { deleteStore, reorderStores } = useStoresMutations();
+  const { save, shopCheck } = useSaveStore(stores);
   const t = useTranslations("groceries.storeManager");
   const tActions = useTranslations("common.actions");
-  const tErrors = useTranslations("common.errors");
   const [editingStore, setEditingStore] = useState<EditingStore | null>(null);
-  const [shopCheck, setShopCheck] = useState<ShopCheck | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [storeToDelete, setStoreToDelete] = useState<{
     id: string;
     name: string;
   } | null>(null);
   const dragConstraintsRef = useRef<HTMLDivElement>(null);
-  const handleStartCreate = () => {
-    setEditingStore({
-      id: null,
-      name: "",
-      color: "primary",
-      link: "",
-      aisles: [],
-    });
-  };
-  const handleStartEdit = (store: StoreDto) => {
-    setEditingStore({
-      id: store.id,
-      name: store.name,
-      color: storeColorKey(store.color),
-      link: store.searchAddress ?? store.website ?? "",
-      aisles: sortAisles(store.aisles).map(({ id, name, version }) => ({ id, name, version })),
-    });
-  };
+  const handleStartCreate = () => setEditingStore(newEditingStore());
+  const handleStartEdit = (store: StoreDto) => setEditingStore(editingStoreOf(store));
   const handleSave = async () => {
-    if (!editingStore || !canSaveStore(editingStore)) return;
-
-    const { website, searchAddress, term } = storeLinkFields(editingStore.link);
-    const storeName = editingStore.name.trim();
-    // Re-saving a Store with the link it already had asks the shop nothing:
-    // the address was checked when it was pasted, and a paste re-read from the
-    // Store carries no term to check it with.
-    const before = editingStore.id ? stores.find((store) => store.id === editingStore.id) : null;
-    const linkChanged =
-      !before ||
-      (before.website ?? null) !== website ||
-      (before.searchAddress ?? null) !== searchAddress;
-
-    let savedId = editingStore.id;
-    // The whole list, in order: the aisles are saved with the Store, in one
-    // write, each known aisle at the version it was read at (ADR-0004).
-    const aisles = editingStore.aisles.map(({ id, name, version }) => ({
-      id,
-      name: name.trim(),
-      ...(version === undefined ? {} : { version }),
-    }));
-
-    if (editingStore.id) {
-      updateStore({
-        id: editingStore.id,
-        name: storeName,
-        color: editingStore.color,
-        website,
-        searchAddress,
-        aisles,
-      });
-    } else {
-      // A refused create leaves the editor open on its draft, so Save can try again.
-      const createdId = await createStore({
-        name: storeName,
-        color: editingStore.color,
-        website,
-        searchAddress,
-        aisles,
-      }).catch((error: unknown) => {
-        showSafeErrorToast({
-          title: tErrors("operationFailed"),
-          description: tErrors("technicalDetails"),
-          error,
-          context: "stores:create",
-        });
-
-        return null;
-      });
-
-      if (createdId === null) return;
-      savedId = createdId;
-    }
-    setEditingStore(null);
-    // Verification informs, it never gates: the Store is stored by now, and
-    // this only tells the user what the address it was given actually found.
-    if (savedId && (website ?? searchAddress) && linkChanged) {
-      setShopCheck({ storeName, result: null });
-      checkSearchAddress(savedId, term, searchAddress, website)
-        .then((result) => setShopCheck({ storeName, result }))
-        .catch(() => setShopCheck(null));
-    }
+    if (!editingStore) return;
+    // A refused create leaves the editor open on its draft, so Save can try again.
+    if (await save(editingStore)) setEditingStore(null);
   };
   const handleCancel = () => {
     setEditingStore(null);

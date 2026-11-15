@@ -7,18 +7,14 @@ import { Button, FieldError, Input, TextField } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { duplicateAisleName, foldAisleName } from "@norish/shared/lib/aisles";
-import { createClientId } from "@norish/shared/lib/operation-helpers";
-
-/** Aisle names are one to a hundred characters; the fields stop at the hundredth. */
-export const AISLE_NAME_MAX = 100;
-
-/** An aisle as it is being typed: a client-minted id (ADR-0003), a name, and the version a known one was read at. */
-export interface EditingAisle {
-  id: string;
-  name: string;
-  version?: number;
-}
+import type { EditingAisle } from "@norish/shared-react/groceries";
+import {
+  addedAisle,
+  AISLE_NAME_MAX,
+  aisleDraftState,
+  removedAisle,
+  renamedAisle,
+} from "@norish/shared-react/groceries";
 
 interface StoreAislesEditorProps {
   aisles: EditingAisle[];
@@ -45,20 +41,15 @@ export function StoreAislesEditor({ aisles, onChange, open }: StoreAislesEditorP
     if (!open) setDraft("");
   }
 
-  const draftFolded = foldAisleName(draft);
-  const draftDuplicate =
-    draftFolded !== "" && aisles.some((aisle) => foldAisleName(aisle.name) === draftFolded);
-  // Two aisles renamed onto one name: said under the list, and Save waits.
-  const listDuplicate = duplicateAisleName(aisles.map((aisle) => aisle.name)) !== null;
+  const { canAdd, duplicate: draftDuplicate, listDuplicate } = aisleDraftState(aisles, draft);
 
   const add = () => {
-    if (draftFolded === "" || draftDuplicate) return;
-    onChange([...aisles, { id: createClientId(), name: draft.trim() }]);
+    if (!canAdd) return;
+    onChange(addedAisle(aisles, draft));
     setDraft("");
   };
-  const rename = (id: string, name: string) =>
-    onChange(aisles.map((aisle) => (aisle.id === id ? { ...aisle, name } : aisle)));
-  const remove = (id: string) => onChange(aisles.filter((aisle) => aisle.id !== id));
+  const rename = (id: string, name: string) => onChange(renamedAisle(aisles, id, name));
+  const remove = (id: string) => onChange(removedAisle(aisles, id));
 
   return (
     <div data-testid="store-aisles">
@@ -119,7 +110,7 @@ export function StoreAislesEditor({ aisles, onChange, open }: StoreAislesEditorP
           aria-label={t("addAisle")}
           className="mt-1 shrink-0"
           data-testid="add-aisle"
-          isDisabled={draftFolded === "" || draftDuplicate}
+          isDisabled={!canAdd}
           size="sm"
           variant="tertiary"
           onPress={add}

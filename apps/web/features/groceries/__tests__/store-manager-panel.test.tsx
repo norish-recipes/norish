@@ -12,6 +12,7 @@ import "@testing-library/jest-dom";
 
 import type { StoreDto } from "@norish/shared/contracts";
 
+const showSafeErrorToast = vi.hoisted(() => vi.fn());
 const createStore = vi.fn(async () => "store-new");
 const updateStore = vi.fn();
 const reorderStores = vi.fn();
@@ -21,17 +22,33 @@ const reorderList = vi.hoisted(() => ({
   onDragEnd: undefined as (() => void) | undefined,
 }));
 
-vi.mock("@norish/shared-react/groceries", () => ({
-  useStoresMutations: () => ({
-    createStore,
-    updateStore,
-    deleteStore: vi.fn(),
-    reorderStores,
-    checkSearchAddress: vi.fn(async () => ({ outcome: "answered", count: null })),
+const storesMutations = {
+  createStore,
+  updateStore,
+  deleteStore: vi.fn(),
+  reorderStores,
+  checkSearchAddress: vi.fn(async () => ({ outcome: "answered", count: null })),
+};
+
+// The save hook is the real one; only what it writes through and says errors with is stubbed.
+vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useStoresMutations: () => storesMutations,
+}));
+vi.mock("../../../../../packages/shared-react/src/groceries/use-stores-mutations", () => ({
+  useStoresMutations: () => storesMutations,
+}));
+vi.mock("../../../../../packages/shared-react/src/platform", () => ({
+  usePlatform: () => ({
+    showError: (error: unknown, context: string) =>
+      showSafeErrorToast({
+        title: "operationFailed",
+        description: "common.errors.technicalDetails",
+        error,
+        context,
+      }),
   }),
 }));
-
-const showSafeErrorToast = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/ui/safe-error-toast", () => ({ showSafeErrorToast }));
 
@@ -183,12 +200,14 @@ describe("StoreManagerPanel", () => {
     );
   });
 
-  it("saves an edit from the editor's own footer and closes it", () => {
+  it("saves an edit from the editor's own footer and closes it", async () => {
     render(<StoreManagerPanel open={true} stores={[DIRK]} onOpenChange={() => undefined} />);
 
     fireEvent.click(screen.getByTestId("icon-edit"));
     fireEvent.change(nameField(), { target: { value: "Dirk van den Broek" } });
-    fireEvent.click(screen.getByTestId("action-save"));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("action-save"));
+    });
 
     expect(updateStore).toHaveBeenCalledWith(
       expect.objectContaining({
