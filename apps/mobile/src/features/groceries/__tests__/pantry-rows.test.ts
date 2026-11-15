@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
+import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
 
-import { HANDFUL, pantryRows } from "../utils/pantry-rows";
+import { pantryRows as rowsOf } from "../utils/pantry-rows";
 
 const kept = (name: string): PantryIngredientDto => ({
   id: `p-${name}`,
@@ -24,12 +25,15 @@ const base = {
   items: [] as PantryIngredientDto[],
   kept: [] as PantryIngredientDto[],
   onTheList: [] as string[],
-  matches: [],
+  matches: [] as { id: string; name: string }[],
   offered: [] as PantrySuggestionDto[],
   typed: "",
   suggestionsOpen: true,
   showAll: false,
 };
+/** The rows of a state given as one flat object. */
+const pantryRows = ({ typed, suggestionsOpen, showAll, ...foods }: typeof base) =>
+  rowsOf(foods, { typed, suggestionsOpen, showAll });
 const types = (rows: ReturnType<typeof pantryRows>) => rows.map((row) => row.type);
 
 describe("pantryRows", () => {
@@ -79,7 +83,7 @@ describe("pantryRows", () => {
   });
 
   it("folds the suggestions, and shows a handful before Show more", () => {
-    const offered = Array.from({ length: HANDFUL + 2 }, (_, i) => suggestion(`f${i}`));
+    const offered = Array.from({ length: SUGGESTIONS_SHOWN + 2 }, (_, i) => suggestion(`f${i}`));
 
     expect(types(pantryRows({ ...base, offered, suggestionsOpen: false }))).toEqual([
       "note",
@@ -87,10 +91,10 @@ describe("pantryRows", () => {
     ]);
     const rows = pantryRows({ ...base, offered });
 
-    expect(types(rows).filter((type) => type === "suggestion")).toHaveLength(HANDFUL);
+    expect(types(rows).filter((type) => type === "suggestion")).toHaveLength(SUGGESTIONS_SHOWN);
     expect(types(rows).at(-1)).toBe("more");
     expect(
       types(pantryRows({ ...base, offered, showAll: true })).filter((t) => t === "suggestion")
-    ).toHaveLength(HANDFUL + 2);
+    ).toHaveLength(SUGGESTIONS_SHOWN + 2);
   });
 });

@@ -44,7 +44,10 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("@/components/tab-list-inset", () => ({ tabListBottomInset: () => 0 }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("expo-router", () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
+const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), dismissTo: vi.fn() }));
+const switchProps = vi.hoisted(() => ({ onChange: (_value: string) => {} }));
+
+vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("heroui-native", () => ({
   Skeleton: () => <i>skeleton</i>,
   useThemeColor: () => ["#000", "#000"],
@@ -55,12 +58,14 @@ vi.mock("react-intl", () => ({
 vi.mock("../components/card-slice", () => ({
   CardSlice: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
-vi.mock("../components/pantry-rows", () => ({
-  FoodRow: ({ name }: { name: string }) => <p>{name}</p>,
-  OnTheListChip: () => null,
-  RowButton: () => null,
+vi.mock("../components/list-switch", () => ({
+  ListSwitch: (props: { onChange: (value: string) => void }) => {
+    switchProps.onChange = props.onChange;
+
+    return null;
+  },
 }));
+vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
 vi.mock("@norish/shared-react/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
 
@@ -74,9 +79,15 @@ vi.mock("@norish/shared-react/ingredients", () => ({
   usePantryCatalogue: () => [],
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
-  useGroceriesMutations: () => ({}),
   useOnTheList: () => [],
-  usePantryMutations: () => ({ addPantryIngredient: vi.fn() }),
+  usePantryField: () => ({
+    draft: "",
+    setDraft: vi.fn(),
+    typed: "",
+    canAdd: false,
+    keep: vi.fn(),
+  }),
+  usePutOnTheList: () => vi.fn(),
   usePantryQuery: () => pantry,
   usePantrySuggestions: () => ({ suggestions: [] }),
 }));
