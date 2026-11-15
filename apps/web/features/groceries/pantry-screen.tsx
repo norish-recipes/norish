@@ -8,12 +8,11 @@ import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useDebounceValue } from "usehooks-ts";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
 import { useSpellingRules } from "@norish/shared-react/config";
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
-import { useIngredientIcons, useIngredientSearchQuery } from "@norish/shared-react/ingredients";
+import { useIngredientIcons, usePantryCatalogue } from "@norish/shared-react/ingredients";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
@@ -24,13 +23,6 @@ import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 import { FromYourRecipes } from "./components/pantry/from-your-recipes";
 import { PutOnTheList, usePutOnTheList } from "./components/pantry/put-on-the-list";
-
-/** How long typing pauses before the catalogue is searched, as in the ingredient picker. */
-const SEARCH_DELAY_MS = 250;
-/** The catalogue is searched from this many characters on. */
-const SEARCH_MIN_LENGTH = 2;
-/** How many catalogue foods are offered below the kept ones. */
-const CATALOGUE_MATCHES = 8;
 
 /**
  * The Pantry's screen: the foods the household keeps, by the name the
@@ -58,12 +50,8 @@ export function PantryScreen() {
   const [openId, setOpenId] = useState<string | null>(null);
   const fieldRef = useRef<HTMLInputElement>(null);
   const typed = draft.trim();
-  const [search] = useDebounceValue(typed, SEARCH_DELAY_MS);
-  const { items: catalogue } = useIngredientSearchQuery(
-    !isOffline && search.length >= SEARCH_MIN_LENGTH ? search : null,
-    locale,
-    { listedOnly: false }
-  );
+  const keptIds = new Set(items.map((item) => item.ingredientId));
+  const matches = usePantryCatalogue(typed, locale, keptIds);
 
   if (isUnavailable) {
     return (
@@ -86,13 +74,6 @@ export function PantryScreen() {
     foodKey(draft, rules) !== "" &&
     pantryIngredientFor(items, { ingredientName: draft }, rules) !== null;
   const kept = searchPantry(items, draft, locale, rules);
-  const keptIds = new Set(items.map((item) => item.ingredientId));
-  // Only the answer for the text in the field: a press on matches for an
-  // earlier text, or for the text an add just cleared, would add the wrong food.
-  const matches =
-    !isOffline && typed.length >= SEARCH_MIN_LENGTH && search === typed
-      ? catalogue.filter((food) => !keptIds.has(food.id)).slice(0, CATALOGUE_MATCHES)
-      : [];
   const canAdd = foodKey(draft, rules) !== "" && !duplicate;
   const addTyped = () => {
     if (canAdd) keep(typed);
