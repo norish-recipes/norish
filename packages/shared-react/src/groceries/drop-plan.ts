@@ -23,7 +23,7 @@ interface DropFiling {
   aisleId: string | null;
 }
 
-interface DropPlan {
+export interface DropPlan {
   /** Every row whose place changed: a per-Store sort order, and the Store on the one that moved Store. */
   updates: ReorderUpdate[];
   /** What the drop teaches the target Store — a grocery filed under an aisle, or under none — written after the reorder. */

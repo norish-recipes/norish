@@ -16,6 +16,7 @@ export {
   storeItems,
   UNSORTED_CONTAINER,
 } from "./drop-containers";
+export type { DropPlan } from "./drop-plan";
 export {
   groceriesByStore,
   moveKey,

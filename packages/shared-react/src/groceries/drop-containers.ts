@@ -186,7 +186,7 @@ export function storeGroupItems(
 
 /** Every container the list has, with each Store's open groups in theirs. */
 export function buildGroupItemsState(
-  groupedGroceries: Map<string | null, GroceryGroup[]>,
+  groupedGroceries: ReadonlyMap<string | null, GroceryGroup[]>,
   stores: StoreDto[]
 ): ItemsState {
   const items = emptyContainers(stores);
