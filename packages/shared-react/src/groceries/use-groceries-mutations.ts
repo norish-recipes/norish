@@ -530,6 +530,8 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
   });
   const reorderOptions = trpc.groceries.reorderInStore.mutationOptions({
     ...settles,
+    // One at a time: a quick second drop sent at the first's version would overtake it as stale.
+    scope: { id: "grocery-reorders" },
     onMutate: ({ updates }) => {
       const byId = new Map(updates.map((update) => [update.id, update]));
 

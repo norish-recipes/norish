@@ -150,6 +150,55 @@ describe("useGroceriesMutations", () => {
   const list = () =>
     queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(["groceries", "list"]);
 
+  describe("reorders", () => {
+    it("sends a second quick drop only once the first is answered", async () => {
+      queryClient.setQueryData(
+        ["groceries", "list"],
+        createMockGroceriesData(
+          [
+            createMockGrocery({ id: "a", sortOrder: 0, version: 1 }),
+            createMockGrocery({ id: "b", sortOrder: 1, version: 1 }),
+          ],
+          []
+        )
+      );
+      const { result } = renderHook(() => useGroceriesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      });
+      const first = answerLater(_mockMutations.reorderInStore);
+
+      _mockMutations.reorderInStore.mockResolvedValue({ success: true, stale: false });
+      act(() =>
+        result.current.reorderGroceriesInStore([
+          { id: "b", sortOrder: 0 },
+          { id: "a", sortOrder: 1 },
+        ])
+      );
+      act(() =>
+        result.current.reorderGroceriesInStore([
+          { id: "a", sortOrder: 0 },
+          { id: "b", sortOrder: 1 },
+        ])
+      );
+      await act(async () => {
+        await vi.waitFor(() => expect(_mockMutations.reorderInStore).toHaveBeenCalledOnce());
+      });
+
+      first.resolve({ success: true, stale: false });
+      await settled();
+
+      // The second was sent at the version the first stored.
+      expect(_mockMutations.reorderInStore).toHaveBeenCalledTimes(2);
+      expect(_mockMutations.reorderInStore.mock.calls[1]?.[0]).toMatchObject({
+        updates: [
+          { id: "a", sortOrder: 0, version: 2 },
+          { id: "b", sortOrder: 1, version: 2 },
+        ],
+      });
+      expect(list()?.groceries.map((grocery) => grocery.id)).toEqual(["a", "b"]);
+    });
+  });
+
   describe("module structure", () => {
     it("exports all expected mutation functions", async () => {
       // Set up initial data in cache
