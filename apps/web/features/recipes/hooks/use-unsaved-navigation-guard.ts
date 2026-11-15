@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
+
+import { useUnsavedNavigationGuard as useSharedGuard } from "@norish/shared-react/recipes";
 
 interface UseUnsavedNavigationGuardOptions {
   hasUnsavedChanges: boolean;
@@ -22,60 +24,41 @@ function isEditableBackspaceTarget(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }
 
+/** The shared guard in a browser: asks with `confirm`, holds a reload or close and Backspace. */
 export function useUnsavedNavigationGuard({
   hasUnsavedChanges,
   confirmationMessage,
   onConfirmLeave,
 }: UseUnsavedNavigationGuardOptions) {
-  const allowNavigationRef = useRef(false);
+  const { allowNavigation, disallowNavigation, mustAsk, requestLeave } = useSharedGuard({
+    hasUnsavedChanges,
+    ask: (leave) => {
+      if (window.confirm(confirmationMessage)) leave();
+    },
+  });
 
-  const allowNavigation = useCallback(() => {
-    allowNavigationRef.current = true;
-  }, []);
+  const confirmNavigation = () => !mustAsk() || window.confirm(confirmationMessage);
+  const handleBeforeUnload = useEffectEvent((event: BeforeUnloadEvent) => {
+    if (mustAsk()) event.preventDefault();
+  });
+  const handleBackspace = useEffectEvent((event: KeyboardEvent) => {
+    if (event.key !== "Backspace" || isEditableBackspaceTarget(event.target)) return;
 
-  const disallowNavigation = useCallback(() => {
-    allowNavigationRef.current = false;
-  }, []);
-
-  const confirmNavigation = useCallback(() => {
-    if (!hasUnsavedChanges || allowNavigationRef.current) return true;
-
-    return window.confirm(confirmationMessage);
-  }, [confirmationMessage, hasUnsavedChanges]);
+    event.preventDefault();
+    requestLeave(onConfirmLeave);
+  });
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (allowNavigationRef.current) return;
-
-      event.preventDefault();
-    };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("keydown", handleBackspace, { capture: true });
 
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasUnsavedChanges]);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const handleBackspaceNavigation = (event: KeyboardEvent) => {
-      if (event.key !== "Backspace" || isEditableBackspaceTarget(event.target)) return;
-
-      event.preventDefault();
-
-      if (!confirmNavigation()) return;
-
-      allowNavigation();
-      onConfirmLeave();
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("keydown", handleBackspace, { capture: true });
     };
-
-    window.addEventListener("keydown", handleBackspaceNavigation, { capture: true });
-
-    return () =>
-      window.removeEventListener("keydown", handleBackspaceNavigation, { capture: true });
-  }, [allowNavigation, confirmNavigation, hasUnsavedChanges, onConfirmLeave]);
+  }, [hasUnsavedChanges]);
 
   return { allowNavigation, confirmNavigation, disallowNavigation };
 }
