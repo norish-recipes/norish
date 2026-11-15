@@ -74,7 +74,15 @@
       "@bacons/apple-targets",
       "./plugins/with-share-strings",
       "./plugins/with-share-limits",
-      "expo-video"
+      "expo-video",
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "dev.norish.app.widgets",
+          "groupIdentifier": "group.dev.norish.app",
+          "widgets": []
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

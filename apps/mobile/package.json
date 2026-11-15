@@ -52,6 +52,7 @@
     "expo-system-ui": "~58.0.7",
     "expo-video": "~58.0.14",
     "expo-web-browser": "~58.0.7",
+    "expo-widgets": "~58.0.28",
     "heroui-native": "1.0.11",
     "react": "catalog:",
     "react-intl": "^10.1.22",
