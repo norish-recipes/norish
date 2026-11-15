@@ -14,7 +14,8 @@
 
 import type { ReplayOutcome } from "./error-classification";
 import type { OutboxStore } from "./outbox-store";
-import type { OutboxEntry } from "./outbox-types";
+import type { OutboxEntry, ParkedReason } from "./outbox-types";
+import { parkedPatch } from "./outbox-store";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;
@@ -120,9 +121,7 @@ export async function runReplayPass({
     return { removed, parked, conflicted, remaining, halted, retryAfterMs };
   };
 
-  const parkWith = async (entry: OutboxEntry, reason: Parameters<OutboxStore["park"]>[1]) => {
-    await store.park(entry.seq, reason);
-
+  const countParked = (entry: OutboxEntry) => {
     if (entry.entityId) {
       parkedEntityIds.add(entry.entityId);
     }
@@ -132,7 +131,8 @@ export async function runReplayPass({
 
   for (const entry of await store.forOwner(ownerId, "pending")) {
     if (referencesParkedEntity(entry.input, parkedEntityIds)) {
-      await parkWith(entry, "dependency");
+      await store.park(entry.seq, "dependency");
+      countParked(entry);
 
       continue;
     }
@@ -144,43 +144,60 @@ export async function runReplayPass({
 
     if (!claimed) continue;
     const outcome = await submit(claimed);
-    const unmark = () => store.update(entry.seq, { sending: undefined });
+    // Acts only on the entry as sent: a save that replaced it meanwhile (from a context that may
+    // count this mark stale) stays pending, unmarked, for a later pass. Null removes the entry.
+    const settle = async (patch: Partial<OutboxEntry> | null) => {
+      const written = await store.change(entry.seq, (stored) =>
+        stored.operationId !== claimed.operationId
+          ? stored.sending === store.process
+            ? { ...stored, sending: undefined }
+            : undefined
+          : patch && { ...stored, ...patch, sending: undefined }
+      );
+
+      return written === null || (!!written && written.operationId === claimed.operationId);
+    };
+    const park = async (reason: ParkedReason) => {
+      const parks = await settle(parkedPatch(reason));
+
+      if (parks) countParked(entry);
+
+      return parks;
+    };
 
     switch (outcome.kind) {
       case "success":
-        await store.remove(entry.seq);
-        removed += 1;
+        if (await settle(null)) removed += 1;
         break;
 
       case "conflict":
-        await parkWith(entry, "conflict");
-        conflicted.push(claimed);
+        if (await park("conflict")) conflicted.push(claimed);
         break;
 
       case "deterministic":
-        await parkWith(entry, "deterministic");
+        await park("deterministic");
         break;
 
       case "unauthorized":
-        await unmark();
+        await settle({});
 
         return finish("unauthorized", null);
 
       case "unreachable":
-        await unmark();
+        await settle({});
 
         return finish("unreachable", null);
 
       case "ambiguous": {
-        const attempts = entry.attempts + 1;
+        const attempts = claimed.attempts + 1;
 
         if (attempts >= MAX_AMBIGUOUS_ATTEMPTS) {
-          await parkWith(entry, "retries-exhausted");
+          await park("retries-exhausted");
 
           break;
         }
 
-        await store.update(entry.seq, { attempts, sending: undefined });
+        await settle({ attempts });
 
         return finish("retry", retryDelayMs(attempts));
       }

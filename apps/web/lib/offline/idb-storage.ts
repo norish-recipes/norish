@@ -75,7 +75,7 @@ export function createIdbStorage(factory?: IDBFactory): OfflineStorage {
       async change(seq, change) {
         const written = await idb.change<OutboxEntry>(OUTBOX_STORE, seq, change);
 
-        if (written) changed();
+        if (written !== undefined) changed();
 
         return written;
       },

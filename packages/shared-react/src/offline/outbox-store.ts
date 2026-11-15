@@ -15,7 +15,7 @@ export interface OutboxStore {
   /** An owner's entries in FIFO order, optionally filtered by status. */
   forOwner(ownerId: string, status?: OutboxEntryStatus): Promise<OutboxEntry[]>;
   update(seq: number, patch: Partial<Omit<OutboxEntry, "seq">>): Promise<void>;
-  /** Change one entry atomically; resolves with it as written, or undefined when unchanged. */
+  /** Change one entry atomically (null deletes it); resolves with what was written. */
   change: OfflineStorage["outbox"]["change"];
   park(seq: number, reason: ParkedReason): Promise<void>;
   remove(seq: number): Promise<void>;
@@ -23,6 +23,13 @@ export interface OutboxStore {
   /** Notified (here and from other contexts sharing the storage) whenever the queue changes. */
   subscribe(listener: () => void): () => void;
 }
+
+export const parkedPatch = (reason: ParkedReason) =>
+  ({
+    status: reason === "conflict" ? "conflicted" : "parked",
+    parkedReason: reason,
+    sending: undefined,
+  }) satisfies Partial<OutboxEntry>;
 
 export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore {
   const listeners = new Set<() => void>();
@@ -62,7 +69,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
   async function change(...args: Parameters<OutboxStore["change"]>) {
     const written = await outbox.change(...args);
 
-    if (written) notify();
+    if (written !== undefined) notify();
 
     return written;
   }
@@ -73,11 +80,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
   }
 
   async function park(seq: number, reason: ParkedReason): Promise<void> {
-    await update(seq, {
-      status: reason === "conflict" ? "conflicted" : "parked",
-      parkedReason: reason,
-      sending: undefined,
-    });
+    await update(seq, parkedPatch(reason));
   }
 
   async function remove(seq: number): Promise<void> {

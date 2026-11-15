@@ -162,7 +162,8 @@ async function replaceUnsent(
           }
         : undefined
     );
-  // Another process's mark is stale unless a context holds the Replay lock (web: another tab).
+  // Another process's mark is stale unless a context holds the Replay lock (web: another tab); a
+  // live one is safe to replace, as Replay's finish leaves the replacement pending.
   const locks = deps.locks?.() ?? null;
   let replaced = await take(!locks);
 

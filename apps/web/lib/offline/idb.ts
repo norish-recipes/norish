@@ -75,12 +75,12 @@ interface OfflineIdb {
     mode: IDBTransactionMode,
     body: (objectStore: IDBObjectStore) => IDBRequest<T>
   ): Promise<T>;
-  /** Read a keyPath store's record and put what `change` returns in one transaction. */
+  /** In one transaction, put what `change` returns for a keyPath record; null deletes it. */
   change<T>(
     store: OfflineStoreName,
     key: IDBValidKey,
-    change: (value: T) => T | undefined
-  ): Promise<T | undefined>;
+    change: (value: T) => T | null | undefined
+  ): Promise<T | null | undefined>;
 }
 
 export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
@@ -132,19 +132,20 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
   async function change<T>(
     store: OfflineStoreName,
     key: IDBValidKey,
-    changeValue: (value: T) => T | undefined
-  ): Promise<T | undefined> {
+    changeValue: (value: T) => T | null | undefined
+  ): Promise<T | null | undefined> {
     const db = await open();
 
-    return new Promise<T | undefined>((resolve, reject) => {
+    return new Promise<T | null | undefined>((resolve, reject) => {
       const tx = db.transaction(store, "readwrite");
       const objectStore = tx.objectStore(store);
       const request = objectStore.get(key);
-      let written: T | undefined;
+      let written: T | null | undefined;
 
       request.onsuccess = () => {
         written = request.result === undefined ? undefined : changeValue(request.result as T);
-        if (written !== undefined) objectStore.put(written);
+        if (written) objectStore.put(written);
+        if (written === null) objectStore.delete(key);
         tx.commit();
       };
       tx.onabort = () => reject(tx.error ?? request.error);

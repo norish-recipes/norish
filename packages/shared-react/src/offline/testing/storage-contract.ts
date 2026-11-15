@@ -6,6 +6,7 @@
 import { observable } from "@trpc/server/observable";
 import { describe, expect, it, vi } from "vitest";
 
+import type { ReplayOutcome } from "../error-classification";
 import type { LockManagerLike } from "../leader";
 import type { NewOutboxEntry } from "../outbox-types";
 import type { OfflineStorage } from "../storage";
@@ -174,7 +175,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
       });
     });
 
-    describe("a send cut off by a kill", () => {
+    describe("a save of an entry marked as being sent", () => {
       const recipeId = "11111111-1111-4111-8111-111111111111";
       const edit = (name: string, version: number) => ({ id: recipeId, version, data: { name } });
       const held: LockManagerLike = { request: (_name, _options, granted) => granted(null) };
@@ -207,7 +208,13 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
 
         await new Promise<void>((resolve) =>
           link({
-            op: { id: 1, type: "mutation", path: "recipes.update", input: edit("Second", 4) },
+            op: {
+              id: 1,
+              type: "mutation",
+              path: "recipes.update",
+              input: edit("Second", 4),
+              context: { operationId: "op-2" },
+            },
             next: () => observable((observer) => observer.error(new TypeError("Failed to fetch"))),
           } as never).subscribe({ next: () => resolve(), error: () => resolve() })
         );
@@ -227,6 +234,62 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
           edit("First", 3),
           edit("Second", 4),
         ]);
+      });
+
+      /** Another context (no lock manager) is sending the save when this one saves again. */
+      async function replacedWhileSent(kind: ReplayOutcome["kind"], replace = true) {
+        const storage = await harness.create();
+        const sender = createOutboxStore(storage.outbox);
+        let answer: (outcome: ReplayOutcome) => void = () => {};
+
+        await sender.enqueue(
+          entry({ path: "recipes.update", input: edit("First", 3), entityId: null })
+        );
+        const pass = runReplayPass({
+          store: sender,
+          ownerId: "u1",
+          submit: () => new Promise((resolve) => (answer = resolve)),
+        });
+
+        await vi.waitFor(async () => expect((await sender.loadAll())[0]?.sending).toBeTruthy());
+        if (replace) await saveAgain(storage, null);
+        answer({ kind });
+        await pass;
+        const left = (await sender.loadAll()).map(({ input, status, sending, attempts }) => ({
+          input,
+          status,
+          sending,
+          attempts,
+        }));
+        const sent: unknown[] = [];
+
+        await runReplayPass({
+          store: sender,
+          ownerId: "u1",
+          submit: (next) => {
+            sent.push(next.input);
+
+            return Promise.resolve({ kind: "success" });
+          },
+        });
+
+        return { left, sent };
+      }
+
+      it.each<ReplayOutcome["kind"]>(["success", "conflict", "deterministic", "ambiguous"])(
+        "keeps a save that replaced the entry during a send ending %s, and sends it next",
+        async (kind) => {
+          expect(await replacedWhileSent(kind)).toEqual({
+            left: [
+              { input: edit("Second", 3), status: "pending", sending: undefined, attempts: 0 },
+            ],
+            sent: [edit("Second", 3)],
+          });
+        }
+      );
+
+      it("removes a sent entry nothing replaced", async () => {
+        expect(await replacedWhileSent("success", false)).toEqual({ left: [], sent: [] });
       });
     });
 
