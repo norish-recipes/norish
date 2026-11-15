@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View } from "react-native";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -29,6 +28,7 @@ import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { ListSettingsMenu } from "../components/list-settings-menu";
 import { ListSwitch } from "../components/list-switch";
+import { TitleRow } from "../components/title-row";
 import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
 
@@ -45,7 +45,6 @@ function flipped(set: ReadonlySet<string>, key: string): Set<string> {
 export function GroceriesScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const confirm = useConfirm();
   const { groceries, recurringGroceries, recipeMap, isLoading, isRead, getRecipeNameForGrocery } =
     useGroceriesQuery();
@@ -148,17 +147,7 @@ export function GroceriesScreen() {
         actions={actions}
         empty={loading ? <GroceriesSkeleton /> : nothing ? <GroceriesEmpty /> : null}
         header={
-          <View
-            className="flex-row items-center justify-between px-5 pb-5"
-            style={{ paddingTop: insets.top + 6 }}
-          >
-            <Text
-              accessibilityRole="header"
-              className="text-foreground text-[34px] leading-[41px] font-semibold tracking-[-0.75px]"
-              testID="large-title"
-            >
-              {intl.formatMessage({ id: "groceries.page.title" })}
-            </Text>
+          <TitleRow title={intl.formatMessage({ id: "groceries.page.title" })}>
             <View className="flex-row items-center gap-2">
               <ListSettingsMenu
                 canClear={groceries.length > 0}
@@ -178,7 +167,7 @@ export function GroceriesScreen() {
                 onChange={(value) => value === "pantry" && router.push("/groceries/pantry")}
               />
             </View>
-          </View>
+          </TitleRow>
         }
         openGroups={openGroups}
         recipeNameFor={getRecipeNameForGrocery}
