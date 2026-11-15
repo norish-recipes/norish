@@ -7,14 +7,7 @@ import { useLinkFor } from "./use-store-prices";
 import { useChooseProduct } from "./use-store-products-mutations";
 import { useProductLink } from "./use-store-products-query";
 
-/**
- * Which of a shop's products a Grocery is, as the grocery panel holds it.
- *
- * Both grocery panels hold exactly this, and both must agree: the field reads
- * whatever the grocery is linked to now, a selection is visible immediately,
- * and it is written only on the panel's own Save or Add, against the name the
- * grocery is saved under, whose Ingredient the Product Link is keyed by.
- */
+/** The product choice a grocery panel holds: read from the link, shown at once, written on Save or Add. */
 export function useProductChoice(options: {
   /** The grocery as it is saved, parsed from the panel's own field. */
   groceryName: string;
@@ -28,11 +21,8 @@ export function useProductChoice(options: {
   resetOn?: unknown;
 }) {
   const { groceryName, settledName, ingredientId, stores, selectedStoreId, resetOn } = options;
-  // What is held is held for one Store and one grocery. Reading it back
-  // through that key, rather than clearing it in an effect, means a field
-  // mounted for another Store never sees the last Store's choice — not even
-  // for the one render an effect would take to clear it, which is the render
-  // the field reads its opening state from.
+  // Held under its Store and grocery and read back through that key, so another Store's field
+  // never sees it, not even for the render an effect would take to clear it.
   const [held, setHeld] = useState<{
     storeId: string | null;
     about: unknown;
@@ -49,20 +39,14 @@ export function useProductChoice(options: {
   const store = stores.find((candidate) => candidate.id === selectedStoreId) ?? null;
   const listLink = useLinkFor(selectedStoreId, ingredientId);
   const onTheList = listLink?.product ?? null;
-  // The Store has been asked about this very name and has not answered: the
-  // field waits for that answer rather than asking the shop a second time.
+  // The Store was asked about this name and has not answered: wait rather than ask twice.
   const askedOnTheList = isPendingLink(listLink);
 
-  // The list's own prices answer for the Store each grocery sits under and no
-  // other, so a Store the shopper has just selected is read on its own.
+  // The list's prices cover each grocery's own Store only; another selected Store is read on its own.
   const lookup = useProductLink(listLink ? null : selectedStoreId, settledName);
   const linked = onTheList ?? (settledName === groceryName ? (lookup.data?.product ?? null) : null);
-  // Whether the link is still being read: the name has not settled yet, the
-  // Store is being asked by this screen, or the Store is being asked by the
-  // queue — a Pending Link, on the list or read on its own. Until then
-  // "nothing linked" is not an answer, and the field must not treat it as
-  // one — by searching the shop for a name that may well be linked, or by
-  // taking a product for it.
+  // Still read while the name settles, the lookup loads or a Pending Link waits on the queue;
+  // until then "nothing linked" is no answer to search or auto-pick on.
   const linkPending =
     !onTheList &&
     Boolean(selectedStoreId) &&
@@ -72,19 +56,16 @@ export function useProductChoice(options: {
       isPendingLink(lookup.data));
 
   const commit = () => {
-    // Committed or not, the choice is spent: the panel that stays open for the
-    // next grocery must not still be holding this one's product.
+    // Committed or not, the choice is spent: a panel left open for the next grocery holds none.
     const chosen = choice;
 
     setHeld(null);
     if (!chosen || !selectedStoreId || !groceryName) return;
-    // An untouched field has nothing to say: only a choice the user actually
-    // made is written, and never over the same product it already pointed at.
+    // Only a choice the user made is written, and never the product already linked.
     if (chosen.kind === "product" && chosen.storeProductId === linked?.id) {
       return;
     }
-    // Unlinking what was never linked writes a Miss for a name the Store may
-    // still be about to answer; there is nothing to undo.
+    // Unlinking what was never linked would write a Miss over an answer still coming.
     if (chosen.kind === "none" && !linked) return;
     chooseProduct(selectedStoreId, groceryName, chosen, ingredientId);
   };
@@ -93,7 +74,6 @@ export function useProductChoice(options: {
     choice,
     setChoice,
     groceryName,
-    /** The Ingredient the name stands for, where Norish knows it yet. */
     store,
     /** What this grocery is linked to now, if anything. */
     linkedProduct: linked,

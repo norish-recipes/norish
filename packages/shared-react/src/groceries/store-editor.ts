@@ -39,13 +39,7 @@ export function editingStoreOf(store: StoreDto): EditingStore {
   };
 }
 
-/**
- * Whether the form can be saved: a name, a shop link that is either empty or
- * one Norish can read, and aisles that each have a name of their own. A link
- * Norish cannot read would be saved as no link at all, silently taking the
- * Store's website and Search Address with it; two aisles on one name would
- * be refused by the server, so Save waits here instead.
- */
+/** A name, a link empty or readable (an unreadable one would save as none), and aisles each named once. */
 export function canSaveStore(editing: EditingStore): boolean {
   const link = editing.link.trim();
   const aisleNames = editing.aisles.map((aisle) => aisle.name);
@@ -58,10 +52,7 @@ export function canSaveStore(editing: EditingStore): boolean {
   );
 }
 
-/**
- * What a store's pasted link becomes: the shop's website, and its Search
- * Address when the paste carried one.
- */
+/** What a pasted link becomes: the shop's website, and its Search Address when the paste carried one. */
 export function storeLinkFields(value: string): {
   website: string | null;
   searchAddress: string | null;

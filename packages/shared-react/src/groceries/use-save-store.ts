@@ -25,9 +25,7 @@ export function useSaveStore(stores: StoreDto[]) {
 
     const { website, searchAddress, term } = storeLinkFields(editing.link);
     const storeName = editing.name.trim();
-    // Re-saving a Store with the link it already had asks the shop nothing:
-    // the address was checked when it was pasted, and a paste re-read from the
-    // Store carries no term to check it with.
+    // The link it already had asks the shop nothing: it was checked when pasted, and carries no term.
     const before = editing.id ? stores.find((store) => store.id === editing.id) : null;
     const linkChanged =
       !before ||

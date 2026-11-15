@@ -78,21 +78,15 @@ export function selectedKey(choice: StoreProductChoice | null): string | null {
   return null;
 }
 
-/**
- * Whether a product the Store already stored is an answer to this question.
- * The shop filters its own answers; nothing filters what the Store has lying
- * around, so a search for "cola" must not hand back last week's cheese. The
- * words are the auto-link rule's own, so the two never disagree on what a word is.
- */
+/** Whether a product the Store stored answers the term, by the auto-link rule's own words: the shop filters only its own. */
 export function answers(name: string, term: string): boolean {
   const asked = nameWords(term);
 
   if (asked.length === 0) return true;
   const has = nameWords(name);
 
-  // A long enough word may sit inside one of the name's own — "cola" answers
-  // "Coca-Cola" — but a short one must be a word in its own right, or the "l"
-  // of "1 L" would answer every question with an l in it.
+  // A word of three letters or more may sit inside one ("cola" in "Coca-Cola"); a shorter one
+  // must be whole, or the "l" of "1 L" answers everything.
   return asked.some((word) =>
     word.length < 3 ? has.includes(word) : has.some((part) => part.includes(word))
   );
