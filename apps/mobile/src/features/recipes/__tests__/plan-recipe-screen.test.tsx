@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const held = vi.hoisted(() => ({
   params: {} as { date?: string },
+  today: "2026-11-15",
   planned: [] as Date[],
   pickDate: (_date: Date) => {},
 }));
@@ -83,7 +84,7 @@ vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id, formatDate: () => "d" }),
 }));
 vi.mock("expo-router", () => ({ useLocalSearchParams: () => held.params }));
-vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-15" }));
+vi.mock("@norish/shared-react/reader", () => ({ useToday: () => held.today }));
 vi.mock("@norish/shared-react/recipes", () => ({
   useRandomRecipe: () => ({ getRandomRecipe: vi.fn() }),
   useRecipeListSubscription: vi.fn(),
@@ -105,6 +106,7 @@ describe("PlanRecipeScreen", () => {
   beforeEach(() => {
     held.params = {};
     held.planned = [];
+    held.today = "2026-11-15";
   });
 
   it.each([
@@ -124,6 +126,28 @@ describe("PlanRecipeScreen", () => {
     fireEvent.click(screen.getByTestId("plan-recipe-day-1"));
     fireEvent.click(screen.getByTestId("plan-recipe-random"));
     expect(held.planned.at(-1)).toEqual(new Date(2026, 10, 16));
+  });
+
+  it("falls back to today when the picked strip day leaves the strip at midnight", () => {
+    const { rerender } = render(<PlanRecipeScreen />);
+
+    fireEvent.click(screen.getByTestId("plan-recipe-day-0"));
+    held.today = "2026-11-16";
+    rerender(<PlanRecipeScreen />);
+    fireEvent.click(screen.getByTestId("plan-recipe-random"));
+
+    expect(held.planned.at(-1)).toEqual(new Date(2026, 10, 16));
+  });
+
+  it("keeps a day the date chip picked past midnight", () => {
+    const { rerender } = render(<PlanRecipeScreen />);
+
+    act(() => held.pickDate(new Date(2026, 10, 15)));
+    held.today = "2026-11-16";
+    rerender(<PlanRecipeScreen />);
+    fireEvent.click(screen.getByTestId("plan-recipe-random"));
+
+    expect(held.planned.at(-1)).toEqual(new Date(2026, 10, 15));
   });
 
   it("drops the strip when opened on one day", () => {

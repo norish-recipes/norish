@@ -43,9 +43,10 @@ export function PlanRecipeScreen() {
     { length: DAYS },
     (_, offset) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
   );
-  const [picked, setPicked] = useState<Date | null>(null);
-  // Today until a day is picked, so the sheet follows midnight.
-  const date = day ?? picked ?? today;
+  const [picked, setPicked] = useState<{ day: Date; fromStrip: boolean } | null>(null);
+  // Today until a day is picked; a strip day that midnight took off the strip is today again.
+  const stripped = picked?.fromStrip && !days.some((d) => d.getTime() === picked.day.getTime());
+  const date = day ?? (picked && !stripped ? picked.day : today);
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
   const search = useDeferredValue(input.trim());
@@ -92,7 +93,7 @@ export function PlanRecipeScreen() {
                 accessibilityState={{ checked: selected }}
                 className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
                 testID={`plan-recipe-day-${offset}`}
-                onPress={() => setPicked(day)}
+                onPress={() => setPicked({ day, fromStrip: true })}
               >
                 <Text
                   className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
@@ -116,7 +117,10 @@ export function PlanRecipeScreen() {
                 ]}
                 selection={date}
                 onDateChange={(next) =>
-                  setPicked(new Date(next.getFullYear(), next.getMonth(), next.getDate()))
+                  setPicked({
+                    day: new Date(next.getFullYear(), next.getMonth(), next.getDate()),
+                    fromStrip: false,
+                  })
                 }
               />
             </Host>
