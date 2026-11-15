@@ -1,9 +1,11 @@
-import type { Drop } from "@/components/drag-list/drag-list";
+import type { DragRow, Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
+import type { FlatList } from "react-native";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
+import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -18,6 +20,9 @@ import {
 } from "@norish/shared-react/groceries";
 
 type AisleItem = { aisle: EditingAisle; first: boolean };
+
+/** The sheet's actions under the list, pt-3 + 50 + pb-5, which the keyboard pushes up with it. */
+const ACTIONS_HEIGHT = 82;
 
 function AisleRow({
   aisle,
@@ -61,7 +66,10 @@ function AisleRow({
   );
 }
 
-/** The Store's Aisles as one drag list under `header`, with the add field as its footer. */
+/**
+ * The Store's Aisles as one drag list under `header`, with the add field as its footer, kept above
+ * the keyboard and the sheet's actions while it is typed in.
+ */
 export function StoreAisleList({
   aisles,
   onChange,
@@ -75,6 +83,9 @@ export function StoreAisleList({
   const text = (id: string) => intl.formatMessage({ id });
   const [accent] = useThemeColor(["accent"] as const);
   const [draft, setDraft] = useState("");
+  const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } = useFocusedFieldInView<
+    FlatList<DragRow<null, AisleItem>>
+  >(ACTIONS_HEIGHT + 8);
   const { canAdd, duplicate, listDuplicate } = aisleDraftState(aisles, draft);
   const rows = aisles.map((aisle, index) => ({
     kind: "item" as const,
@@ -94,6 +105,7 @@ export function StoreAisleList({
 
   return (
     <DragList
+      ref={scrollRef}
       ListFooterComponent={
         <View className="px-4">
           <View
@@ -109,6 +121,10 @@ export function StoreAisleList({
                 testID="aisle-name"
                 value={draft}
                 onChangeText={setDraft}
+                onFocus={(event) => {
+                  // The old architecture's numeric tag can't be measured; Fabric hands the element.
+                  if (typeof event.currentTarget !== "number") onFieldFocus(event.currentTarget);
+                }}
                 onSubmitEditing={add}
               />
               <Pressable
@@ -153,7 +169,11 @@ export function StoreAisleList({
       rows={rows}
       showsVerticalScrollIndicator={false}
       testID="store-aisles"
+      // The list shrinks as the sheet makes room for the keyboard; the field follows it up.
+      onContentSizeChange={onContentSizeChange}
       onDrop={drop}
+      onLayout={onContentSizeChange}
+      onScroll={onScroll}
     />
   );
 }

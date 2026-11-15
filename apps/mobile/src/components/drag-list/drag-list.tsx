@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
+import type { FlatList } from "react-native";
 import type {
   ReorderableListProps,
   ReorderableListReorderEvent,
@@ -47,6 +48,7 @@ type DragListProps<H, T> = Omit<
   onDrop: (drop: Drop<H, T>) => boolean | void;
   /** Laid out at full height inside a `DragScrollView`, which scrolls instead. */
   nested?: boolean;
+  ref?: Ref<FlatList<DragRow<H, T>>>;
 };
 
 const mediumImpact = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
