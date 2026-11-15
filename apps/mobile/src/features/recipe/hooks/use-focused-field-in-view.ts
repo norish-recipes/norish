@@ -54,5 +54,6 @@ export function useFocusedFieldInView(clearance: number) {
     requestAnimationFrame(reveal);
   };
 
-  return { scrollRef, onScroll, onFieldFocus };
+  // A row focused by Return or a growing popup moves once the content has grown under it.
+  return { scrollRef, onScroll, onFieldFocus, onContentSizeChange: () => reveal() };
 }

@@ -130,7 +130,9 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
 
   // Over the keyboard the pill needs no room for the home indicator.
   const pillGap = useKeyboardShown() ? 10 : Math.max(insets.bottom, 12) + 10;
-  const { scrollRef, onScroll, onFieldFocus } = useFocusedFieldInView(PILL + 10 + 12);
+  const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } = useFocusedFieldInView(
+    PILL + 10 + 12
+  );
 
   const save = () => {
     if (busy) return;
@@ -170,6 +172,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         testID="recipe-editor-scroll"
+        onContentSizeChange={onContentSizeChange}
         onScroll={onScroll}
       >
         <FocusedFieldContext value={onFieldFocus}>
