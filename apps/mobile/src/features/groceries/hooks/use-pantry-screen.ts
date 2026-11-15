@@ -57,7 +57,11 @@ export function usePantryScreen() {
     ...(suggestionsOpen ? offered.map((food) => food.ingredientId) : []),
   ]);
 
-  const add = keep;
+  // The field is where the next food goes, however the last one was added.
+  const add = (food: Parameters<typeof keep>[0]) => {
+    keep(food);
+    fieldRef.current?.focus();
+  };
   const actions: PantryActions = {
     open: (item) => router.push({ pathname: "/groceries/food", params: { id: item.id } }),
     putOnTheList: (item) => {
