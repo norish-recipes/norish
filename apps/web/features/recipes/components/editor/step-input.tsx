@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useRecipeImages } from "@/features/recipes/hooks/use-recipe-images";
 import { Bars3Icon, PhotoIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
@@ -120,7 +120,7 @@ export default function StepInput({
       setAdopted(taken);
     }
   }
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (adopted) latestItemsRef.current = adopted;
   }, [adopted]);
   /** Changes the rows as last changed; tells the form unless `quiet`. False when nothing changed. */

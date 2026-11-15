@@ -1,5 +1,5 @@
 import type * as ImagePicker from "expo-image-picker";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { DragList } from "@/components/drag-list/drag-list";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
@@ -89,7 +89,7 @@ export function StepRows({
       setAdopted(taken);
     }
   }
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (adopted) latestRowsRef.current = adopted;
   }, [adopted]);
 
