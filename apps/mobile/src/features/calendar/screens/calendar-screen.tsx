@@ -1,6 +1,6 @@
 import type { FlatList, FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
@@ -39,6 +39,7 @@ const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
 export function CalendarScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
   const todayKey = useToday();
   const { days, grow, calendarData, isRead } = useCalendarRangeQuery();
   const { moveItem } = useCalendarMutations();
@@ -88,7 +89,7 @@ export function CalendarScreen() {
         contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
         contentInsetAdjustmentBehavior="never"
         // The rows the list shows, which a held row keeps still while `rows` moves on.
-        getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index), index })}
+        getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
         initialNumToRender={12}
         initialScrollIndex={todayIndex < 0 ? undefined : todayIndex}
         // Rows added above keep the ones on screen where they are.

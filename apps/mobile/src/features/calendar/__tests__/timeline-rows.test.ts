@@ -94,6 +94,22 @@ describe("rowLayout", () => {
     expect(layouts[5]!.length).toBe(itemHeight(item("stew")));
   });
 
+  it("grows each row's text room with the font scale, the photo's height its least", () => {
+    const at = (scale: number) => rows.map((_, index) => rowLayout(rows, index, scale).length);
+
+    expect(at(0.8)).toEqual(at(1));
+    expect(itemHeight(item("eggs"), 3)).toBe(Math.ceil(TIMELINE.lines.item * 3));
+    expect(rowLayout(rows, 1, 3).length).toBe(Math.ceil(TIMELINE.lines.slot * 3) + 18);
+    expect(rowLayout(rows, 0, 3).length).toBe(
+      TIMELINE.dayTop + Math.ceil(TIMELINE.lines.day * 3) + 24
+    );
+    expect(rowLayout(rows, 9, 3).offset).toBe(
+      at(3)
+        .slice(0, 9)
+        .reduce((sum, length) => sum + length, 0)
+    );
+  });
+
   it("lays out the rows it is given, whatever the plan is now", () => {
     // Held under a drag: another member's plan lands above, another's leaves the last day.
     const now = timelineRows(

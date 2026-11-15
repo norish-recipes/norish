@@ -45,7 +45,22 @@ export const TIMELINE = {
   itemGap: 8,
   /** Below the last item, closing the card. */
   cardBottom: 14,
+  /** The text's line heights at font scale 1: an item's title and details, a date, a slot label. */
+  lines: { item: 22 + 2 + 20, day: 28, slot: 18 },
 } as const;
+
+// A row holds its text at the reader's font scale, and never shrinks below its drawn height.
+const fit = (least: number, line: number, padding: number, scale: number) =>
+  Math.max(least, Math.ceil(line * scale) + padding);
+
+/** An item's photo-and-text line, at a font scale. */
+export const itemLineHeight = (scale = 1) => fit(TIMELINE.photo, TIMELINE.lines.item, 0, scale);
+
+/** A day top's date row, at a font scale. */
+export const dayHeaderHeight = (scale = 1) => fit(TIMELINE.dayHeader, TIMELINE.lines.day, 24, scale);
+
+/** A slot label, at a font scale. */
+export const slotLabelHeight = (scale = 1) => fit(TIMELINE.slotLabel, TIMELINE.lines.slot, 18, scale);
 
 /** A day top's row key. */
 export const dayRowKey = (dayKey: string) => `day:${dayKey}`;
@@ -98,42 +113,55 @@ export function timelineRows(days: Date[], data: CalendarData, todayKey: string)
 }
 
 /** A planned item's row: its line, the gap above it in its slot, the card's close under the last. */
-export function itemHeight({ firstInSlot, lastOfDay }: TimelineItem): number {
-  return TIMELINE.photo + (firstInSlot ? 0 : TIMELINE.itemGap) + (lastOfDay ? TIMELINE.cardBottom : 0);
+export function itemHeight({ firstInSlot, lastOfDay }: TimelineItem, scale = 1): number {
+  return (
+    itemLineHeight(scale) +
+    (firstInSlot ? 0 : TIMELINE.itemGap) +
+    (lastOfDay ? TIMELINE.cardBottom : 0)
+  );
 }
 
 /** A row's height without the gap above a card; `rowLayout` adds that. */
-export function rowHeight(row: TimelineRow): number {
-  if (row.kind === "item") return itemHeight(row.value);
-  if (row.value.type === "slot") return TIMELINE.slotLabel;
+export function rowHeight(row: TimelineRow, scale = 1): number {
+  if (row.kind === "item") return itemHeight(row.value, scale);
+  if (row.value.type === "slot") return slotLabelHeight(scale);
 
-  return TIMELINE.dayTop + TIMELINE.dayHeader + (row.value.empty ? TIMELINE.emptyBottom : 0);
+  return TIMELINE.dayTop + dayHeaderHeight(scale) + (row.value.empty ? TIMELINE.emptyBottom : 0);
 }
 
-const rowLength = (row: TimelineRow) =>
-  rowHeight(row) + (row.kind === "heading" && row.value.type === "day" && row.value.gap ? TIMELINE.gap : 0);
+const rowLength = (row: TimelineRow, scale: number) =>
+  rowHeight(row, scale) +
+  (row.kind === "heading" && row.value.type === "day" && row.value.gap ? TIMELINE.gap : 0);
+
+type Layouts = { scale: number; layouts: { offset: number; length: number }[] };
 
 // Per rows array: a list asks for every row's layout, so each set is added up once.
-const layoutsOf = new WeakMap<ArrayLike<TimelineRow>, { offset: number; length: number }[]>();
+const layoutsOf = new WeakMap<ArrayLike<TimelineRow>, Layouts>();
 
-/** Row `index`'s top edge and full length, its gap included, among `rows`: the rows the list shows. */
-export function rowLayout(rows: ArrayLike<TimelineRow>, index: number) {
-  let layouts = layoutsOf.get(rows);
+/**
+ * Row `index`'s top edge and full length, its gap included, among `rows` (the rows the list
+ * shows) at the reader's font scale.
+ */
+export function rowLayout(rows: ArrayLike<TimelineRow>, index: number, scale = 1) {
+  let known = layoutsOf.get(rows);
 
-  if (!layouts) {
+  if (known?.scale !== scale) {
     let offset = 0;
 
-    layouts = Array.from(rows, (row) => {
-      const layout = { offset, length: rowLength(row) };
+    known = {
+      scale,
+      layouts: Array.from(rows, (row) => {
+        const layout = { offset, length: rowLength(row, scale) };
 
-      offset += layout.length;
+        offset += layout.length;
 
-      return layout;
-    });
-    layoutsOf.set(rows, layouts);
+        return layout;
+      }),
+    };
+    layoutsOf.set(rows, known);
   }
 
-  return layouts[index] ?? { offset: 0, length: 0 };
+  return known.layouts[index] ?? { offset: 0, length: 0 };
 }
 
 /**

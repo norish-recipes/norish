@@ -1,7 +1,7 @@
 import type { Edge } from "@/components/card-edges";
 import type { ReactNode } from "react";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { formatDay } from "@/components/day-card";
@@ -14,7 +14,13 @@ import { usePlannedItemText } from "@norish/shared-react/calendar";
 import { isRecipeItem, slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
 
 import type { TimelineHeading, TimelineItem } from "../utils/timeline-rows";
-import { itemHeight, TIMELINE } from "../utils/timeline-rows";
+import {
+  dayHeaderHeight,
+  itemHeight,
+  itemLineHeight,
+  slotLabelHeight,
+  TIMELINE,
+} from "../utils/timeline-rows";
 
 /** Today's ring, drawn over each of its card's slices: the sides, and the top or bottom at its ends. */
 function TodayRing({ edge }: { edge: Edge }) {
@@ -35,6 +41,7 @@ export function DayHeadingRow({
   onAdd: () => void;
 }) {
   const intl = useIntl();
+  const { fontScale } = useWindowDimensions();
   const [foreground] = useThemeColor(["foreground"] as const);
   const day = formatDay(intl, heading.date);
   const edge = { top: true, bottom: heading.empty };
@@ -43,23 +50,26 @@ export function DayHeadingRow({
     <CardSlice edge={edge} gap={heading.gap} separated={false}>
       <View
         className={`flex-row items-center gap-2 px-4 ${heading.empty ? "" : "border-separator border-b"}`}
-        style={{ marginTop: TIMELINE.dayTop, height: TIMELINE.dayHeader }}
+        style={{ marginTop: TIMELINE.dayTop, height: dayHeaderHeight(fontScale) }}
         testID={`calendar-day-${heading.dayKey}`}
       >
         <View className="min-w-0 flex-1 flex-row items-baseline gap-2">
           {heading.isToday ? (
             <>
-              <Text accessibilityRole="header" className="text-accent-text text-xl font-semibold">
+              <Text
+                accessibilityRole="header"
+                className="text-accent-text text-xl leading-7 font-semibold"
+              >
                 {intl.formatMessage({ id: "calendar.mobile.today" })}
               </Text>
-              <Text className="text-muted flex-shrink text-base" numberOfLines={1}>
+              <Text className="text-muted flex-shrink text-base leading-6" numberOfLines={1}>
                 {day}
               </Text>
             </>
           ) : (
             <Text
               accessibilityRole="header"
-              className="text-foreground text-xl font-semibold"
+              className="text-foreground text-xl leading-7 font-semibold"
               numberOfLines={1}
             >
               {day}
@@ -86,12 +96,13 @@ export function DayHeadingRow({
 /** A filled slot's label inside its day's card. */
 export function SlotLabelRow({ heading }: { heading: Extract<TimelineHeading, { type: "slot" }> }) {
   const intl = useIntl();
+  const { fontScale } = useWindowDimensions();
   const edge = { top: false, bottom: false };
 
   return (
     <CardSlice edge={edge} separated={false}>
-      <View className="justify-end px-4 pb-2" style={{ height: TIMELINE.slotLabel }}>
-        <Text className="text-muted text-[13px]">
+      <View className="justify-end px-4 pb-2" style={{ height: slotLabelHeight(fontScale) }}>
+        <Text className="text-muted text-[13px] leading-[18px]">
           {intl.formatMessage({ id: `common.slots.${slotTranslationKeys[heading.slot]}` })}
         </Text>
       </View>
@@ -111,6 +122,7 @@ export function PlannedItemRow({
   onDrag: () => void;
 }) {
   const [muted] = useThemeColor(["muted"] as const);
+  const { fontScale } = useWindowDimensions();
   const { title, subtitle } = usePlannedItemText()(row.item);
   const lifted = useIsLifted();
   const edge = { top: false, bottom: row.lastOfDay };
@@ -122,14 +134,14 @@ export function PlannedItemRow({
         accessibilityRole="button"
         className="justify-start px-4"
         style={{
-          height: itemHeight(row),
+          height: itemHeight(row, fontScale),
           paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
         }}
         testID={`calendar-item-${row.item.id}`}
         onLongPress={onDrag}
         onPress={onOpen}
       >
-        <PlannedItemLine subtitle={subtitle} title={title}>
+        <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
           {isRecipeItem(row.item) ? (
             <CardPhoto className="size-[52px] rounded-[14px]" image={row.item.recipeImage} />
           ) : (
@@ -144,25 +156,27 @@ export function PlannedItemRow({
   );
 }
 
-/** A planned item's thumbnail, name and details on one 52 pt line. */
+/** A planned item's thumbnail, name and details on one line, `height` tall. */
 export function PlannedItemLine({
   title,
   subtitle,
+  height,
   children,
 }: {
   title: string;
   subtitle: string | null;
+  height: number;
   children: ReactNode;
 }) {
   return (
-    <View className="h-[52px] flex-row items-center gap-3.5">
+    <View className="flex-row items-center gap-3.5" style={{ height }}>
       {children}
       <View className="min-w-0 flex-1 gap-0.5">
-        <Text className="text-foreground text-[17px]" numberOfLines={1}>
+        <Text className="text-foreground text-[17px] leading-[22px]" numberOfLines={1}>
           {title}
         </Text>
         {subtitle ? (
-          <Text className="text-muted text-sm" numberOfLines={1}>
+          <Text className="text-muted text-sm leading-5" numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
