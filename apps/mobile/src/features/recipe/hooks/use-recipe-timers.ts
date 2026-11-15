@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
+import { cookModeRoute } from "@/lib/cook-mode-route";
 import { syncTimerNotifications } from "@/lib/timer-notifications";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
@@ -22,10 +23,6 @@ Notifications.setNotificationHandler({
       shouldSetBadge: false,
     }),
 });
-
-/** Where a timer's notification and its Live Activity open: cook mode on the timer's step. */
-export const cookModeRoute = (recipeId: string, step: number) =>
-  ({ pathname: "/recipe/[id]/cook", params: { id: recipeId, step: String(step) } }) as const;
 
 let answers = 0;
 const answerListeners = new Set<() => void>();

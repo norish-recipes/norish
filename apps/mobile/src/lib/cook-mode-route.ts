@@ -1,0 +1,14 @@
+import * as Linking from "expo-linking";
+
+/** Where a timer's notification and its Live Activity open: cook mode on the timer's step. */
+export const cookModeRoute = (recipeId: string, step: number) =>
+  ({ pathname: "/recipe/[id]/cook", params: { id: recipeId, step: String(step) } }) as const;
+
+/** `cookModeRoute` as a link, for the Live Activity, which opens the app from outside. */
+export function cookModeUrl(recipeId: string, step: number): string {
+  const { pathname, params } = cookModeRoute(recipeId, step);
+
+  return Linking.createURL(pathname.replace("[id]", encodeURIComponent(params.id)), {
+    queryParams: { step: params.step },
+  });
+}
