@@ -82,7 +82,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
   log.debug({ userId: ctx.user.id, groceryId }, "Updating grocery");
 
-  getGroceryOwnerIds([groceryId])
+  return getGroceryOwnerIds([groceryId])
     .then(async (ownerIds) => {
       const ownerId = ownerIds.get(groceryId);
 
@@ -175,7 +175,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
           { householdKey: ctx.householdKey }
         );
 
-        return;
+        return { success: true, stale: true };
       }
 
       // Editing the store through the panel implies "remember this store for
@@ -183,6 +183,8 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       await rememberStorePreference(ctx.user.id, edited.ingredientId, storeId);
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
+
+      return { success: true, stale: false };
     })
     .catch((err) => {
       log.error({ err, userId: ctx.user.id, groceryId }, "Failed to update grocery");
@@ -193,16 +195,15 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         },
         { userId: ctx.user.id }
       );
+      throw err;
     });
-
-  return { success: true };
 });
 
 const toggle = authedProcedure.input(GroceryToggleSchema).mutation(async ({ ctx, input }) => {
   try {
-    await toggleGroceriesData(ctx, input);
+    const updated = await toggleGroceriesData(ctx, input);
 
-    return { success: true };
+    return { success: true, stale: updated.length !== input.groceries.length };
   } catch (err) {
     const groceryIds = input.groceries.map((grocery) => grocery.id);
 
@@ -222,9 +223,9 @@ const deleteGroceries = authedProcedure
   .input(GroceryDeleteSchema)
   .mutation(async ({ ctx, input }) => {
     try {
-      await deleteGroceriesData(ctx, input);
+      const { staleIds } = await deleteGroceriesData(ctx, input);
 
-      return { success: true };
+      return { success: true, stale: staleIds.length > 0 };
     } catch (err) {
       const groceryIds = input.groceries.map((grocery) => grocery.id);
 
@@ -471,9 +472,9 @@ const assignToStore = authedProcedure
   .input(AssignGroceryToStoreInputSchema)
   .mutation(async ({ ctx, input }) => {
     try {
-      await assignGroceryToStoreData(ctx, input);
+      const updated = await assignGroceryToStoreData(ctx, input);
 
-      return { success: true };
+      return { success: true, stale: updated === null };
     } catch (err) {
       log.error(
         { err, userId: ctx.user.id, groceryId: input.groceryId, storeId: input.storeId },
@@ -496,7 +497,7 @@ const reorderInStore = authedProcedure
     const { updates, savePreference } = input;
 
     if (updates.length === 0) {
-      return { success: true };
+      return { success: true, stale: false };
     }
 
     log.debug({ userId: ctx.user.id, count: updates.length }, "Reordering groceries");
@@ -513,7 +514,7 @@ const reorderInStore = authedProcedure
       }
     }
 
-    getGroceryOwnerIds(groceryIds)
+    return getGroceryOwnerIds(groceryIds)
       .then(async (ownerIds) => {
         if (ownerIds.size !== groceryIds.length) {
           throw new TRPCError({
@@ -602,6 +603,8 @@ const reorderInStore = authedProcedure
             { householdKey: ctx.householdKey }
           );
         }
+
+        return { success: true, stale: updated.length !== updates.length };
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, updates }, "Failed to reorder groceries");
@@ -612,9 +615,8 @@ const reorderInStore = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const markAllDone = authedProcedure
@@ -624,7 +626,7 @@ const markAllDone = authedProcedure
 
     log.info({ userId: ctx.user.id, storeId }, "Marking all groceries done in store");
 
-    markAllDoneInStore(ctx.userIds, storeId, targets)
+    return markAllDoneInStore(ctx.userIds, storeId, targets)
       .then((updated) => {
         if (updated.length < targets.length) {
           log.info(
@@ -650,6 +652,8 @@ const markAllDone = authedProcedure
             { householdKey: ctx.householdKey }
           );
         }
+
+        return { success: true, stale: updated.length < targets.length };
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to mark groceries as done");
@@ -660,9 +664,8 @@ const markAllDone = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const deleteDone = authedProcedure
@@ -672,7 +675,7 @@ const deleteDone = authedProcedure
 
     log.info({ userId: ctx.user.id, storeId }, "Deleting done groceries in store");
 
-    deleteDoneInStore(ctx.userIds, storeId, targets)
+    return deleteDoneInStore(ctx.userIds, storeId, targets)
       .then((deletedIds) => {
         if (deletedIds.length < targets.length) {
           log.info(
@@ -696,6 +699,8 @@ const deleteDone = authedProcedure
             { householdKey: ctx.householdKey }
           );
         }
+
+        return { success: true, stale: deletedIds.length < targets.length };
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete done groceries");
@@ -706,9 +711,8 @@ const deleteDone = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 export const groceriesProcedures = router({

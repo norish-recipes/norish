@@ -205,7 +205,7 @@ const updateRecurring = authedProcedure
 
     log.debug({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Updating recurring grocery");
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -277,7 +277,7 @@ const updateRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
         await rememberStorePreference(ctx.user.id, outcome.value.grocery.ingredientId, storeId);
@@ -299,6 +299,8 @@ const updateRecurring = authedProcedure
         );
 
         if (made) await announceRecurring(ctx, made);
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
@@ -312,9 +314,8 @@ const updateRecurring = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const detachRecurring = authedProcedure
@@ -324,7 +325,7 @@ const detachRecurring = authedProcedure
 
     log.info({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Detaching recurring grocery");
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -389,7 +390,7 @@ const detachRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
         await rememberStorePreference(ctx.user.id, edited.ingredientId, storeId);
@@ -405,6 +406,8 @@ const detachRecurring = authedProcedure
           },
           { householdKey: ctx.householdKey }
         );
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
@@ -418,9 +421,8 @@ const detachRecurring = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const deleteRecurring = authedProcedure
@@ -435,7 +437,7 @@ const deleteRecurring = authedProcedure
 
     log.info({ userId: ctx.user.id, recurringGroceryId, version }, "Deleting recurring grocery");
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -460,7 +462,7 @@ const deleteRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
         log.info({ userId: ctx.user.id, recurringGroceryId }, "Recurring grocery deleted");
@@ -482,6 +484,8 @@ const deleteRecurring = authedProcedure
           },
           { householdKey: ctx.householdKey }
         );
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
@@ -495,9 +499,8 @@ const deleteRecurring = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const checkRecurring = authedProcedure
@@ -519,7 +522,7 @@ const checkRecurring = authedProcedure
       "Checking recurring grocery"
     );
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -583,7 +586,7 @@ const checkRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
         log.debug({ userId: ctx.user.id, recurringGroceryId, isDone }, "Recurring grocery checked");
@@ -595,6 +598,8 @@ const checkRecurring = authedProcedure
           },
           { householdKey: ctx.householdKey }
         );
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
@@ -608,9 +613,8 @@ const checkRecurring = authedProcedure
           },
           { userId: ctx.user.id }
         );
+        throw err;
       });
-
-    return { success: true };
   });
 
 export const recurringGroceriesProcedures = router({
