@@ -13,6 +13,7 @@ import { useToday } from "@norish/shared-react/reader";
 import type { TimelineRow } from "../utils/timeline-rows";
 import { CalendarHeader } from "../components/calendar-header";
 import { DayHeadingRow, PlannedItemRow, SlotLabelRow } from "../components/timeline-row";
+import { useHeldGrowth } from "../hooks/use-held-growth";
 import {
   dayRowKey,
   planTimelineDrop,
@@ -42,7 +43,7 @@ export function CalendarScreen() {
   const { days, grow, calendarData, isRead } = useCalendarRangeQuery();
   const { moveItem } = useCalendarMutations();
   const listRef = useRef<FlatList<TimelineRow>>(null);
-  const heldRef = useRef(false);
+  const growth = useHeldGrowth(grow);
   // The days a row of which is on screen, for the way back to today.
   const [shownDays, setShownDays] = useState<string[]>([]);
   // Stable: FlatList refuses a new viewability callback after its first render.
@@ -56,9 +57,6 @@ export function CalendarScreen() {
   const rows = timelineRows(days, calendarData, todayKey);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
-  const growUnlessHeld = (direction: "past" | "future") => {
-    if (!heldRef.current) grow(direction);
-  };
 
   const header = (
     <CalendarHeader
@@ -125,12 +123,10 @@ export function CalendarScreen() {
 
           return true;
         }}
-        onEndReached={() => growUnlessHeld("future")}
+        onEndReached={() => growth.reached("future")}
         onEndReachedThreshold={GROW_THRESHOLD}
-        onHeldChange={(held) => {
-          heldRef.current = held;
-        }}
-        onStartReached={() => growUnlessHeld("past")}
+        onHeldChange={growth.heldChange}
+        onStartReached={() => growth.reached("past")}
         onStartReachedThreshold={GROW_THRESHOLD}
         onViewableItemsChanged={onViewable}
       />
