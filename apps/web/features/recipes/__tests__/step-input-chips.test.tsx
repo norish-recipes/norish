@@ -437,4 +437,78 @@ describe("StepInput photos", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(lastEmitted()[0]?.images).toEqual([{ image: "/recipes/r1/steps/a.jpg", order: 0 }]);
   });
+
+  const pickFile = (container: HTMLElement, index: number, name: string) =>
+    fireEvent.change(container.querySelectorAll('input[type="file"]')[index]!, {
+      target: { files: [new File(["x"], name, { type: "image/jpeg" })] },
+    });
+  const deferredUploads = () => {
+    const pending: PromiseWithResolvers<{ success: boolean; url: string }>[] = [];
+
+    images.uploadStepImage.mockImplementation(() => {
+      pending.push(Promise.withResolvers());
+
+      return pending.at(-1)!.promise;
+    });
+
+    return pending;
+  };
+
+  it("keeps both photos when two uploads end in the same tick", async () => {
+    const pending = deferredUploads();
+    const { container } = render(
+      <StepInput
+        recipeId="r1"
+        steps={[
+          { step: "Mix.", order: 0, systemUsed: "metric" },
+          { step: "Bake.", order: 1, systemUsed: "metric" },
+        ]}
+        onChange={onChange}
+      />
+    );
+
+    act(() => {
+      pickFile(container, 0, "a.jpg");
+      pickFile(container, 1, "b.jpg");
+    });
+    await act(async () => {
+      pending[0]!.resolve({ success: true, url: "/a.jpg" });
+      pending[1]!.resolve({ success: true, url: "/b.jpg" });
+    });
+
+    expect(lastEmitted().map((step) => step.images.map((image) => image.image))).toEqual([
+      ["/a.jpg"],
+      ["/b.jpg"],
+    ]);
+  });
+
+  it("keeps an edit made while the photo uploaded", async () => {
+    const pending = deferredUploads();
+    const { container } = render(
+      <StepInput
+        recipeId="r1"
+        steps={[{ step: "Mix.", order: 0, systemUsed: "metric" }]}
+        onChange={onChange}
+      />
+    );
+
+    act(() => pickFile(container, 0, "a.jpg"));
+    await act(async () => {
+      pending[0]!.resolve({ success: true, url: "/a.jpg" });
+      await pending[0]!.promise;
+      // A bare event, so the edit lands before the photo's render has committed.
+      const field = container.querySelector("textarea")!;
+
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set?.call(
+        field,
+        "Mix well."
+      );
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    expect(lastEmitted()[0]).toMatchObject({
+      step: "Mix well.",
+      images: [{ image: "/a.jpg", order: 0 }],
+    });
+  });
 });

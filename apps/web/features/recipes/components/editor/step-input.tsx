@@ -68,13 +68,11 @@ export default function StepInput({
 }: StepInputProps) {
   const t = useTranslations("recipes.stepInput");
   const [items, setItems] = useState<StepItem[]>(() => seedStepRows(steps));
-  // The rows as last rendered, for an upload that ends after they changed.
+  // The rows as last changed, which a render may not show yet when an upload ends.
   const latestItemsRef = useRef(items);
-
-  useEffect(() => {
-    latestItemsRef.current = items;
-  });
   const [seededLength, setSeededLength] = useState(steps.length);
+  // Rows set while rendering (seeded, references taken back), for the ref once committed.
+  const [adopted, setAdopted] = useState<StepItem[] | null>(null);
   // A freshly mentioned line whose chip should ask for its amount: the row
   // it landed on, and the line's order for the chips to open once rendered.
   const [pendingMentionEntry, setPendingMentionEntry] = useState<{
@@ -104,7 +102,10 @@ export default function StepInput({
       first.text === "" &&
       first.images.length === 0
     ) {
-      setItems(seedStepRows(steps));
+      const seeded = seedStepRows(steps);
+
+      setItems(seeded);
+      setAdopted(seeded);
     }
   }
   // The form moved the references; the rows take them from it once lines have moved.
@@ -112,77 +113,78 @@ export default function StepInput({
 
   if (lineMoves !== appliedMoves) {
     setAppliedMoves(lineMoves);
-    if (lineMoves) setItems(withStepRefsOf(items, steps));
+    if (lineMoves) {
+      const taken = withStepRefsOf(items, steps);
+
+      setItems(taken);
+      setAdopted(taken);
+    }
   }
-  const emitChanges = (updatedItems: StepItem[]) =>
-    onChange(stepRowsToSteps(updatedItems, systemUsed));
-  const handleStepIngredientsChange = (index: number, refs: StepIngredientDraft[]) => {
-    const current = items[index];
+  useEffect(() => {
+    if (adopted) latestItemsRef.current = adopted;
+  }, [adopted]);
+  /** Changes the rows as last changed; tells the form unless `quiet`. False when nothing changed. */
+  const commit = (change: (current: StepItem[]) => StepItem[], quiet = false) => {
+    const current = latestItemsRef.current;
+    const next = change(current);
 
-    if (!current) return;
-    const updated = [...items];
+    if (next === current) return false;
+    latestItemsRef.current = next;
+    setItems(next);
+    if (!quiet) onChange(stepRowsToSteps(next, systemUsed));
 
-    updated[index] = {
-      ...current,
-      stepIngredients: refs,
-    };
-    setItems(updated);
-    emitChanges(updated);
+    return true;
   };
+  const handleStepIngredientsChange = (index: number, refs: StepIngredientDraft[]) =>
+    commit((current) => {
+      const row = current[index];
+
+      return row ? current.with(index, { ...row, stepIngredients: refs }) : current;
+    });
   const handleIngredientMention = (
     index: number,
     suggestion: IngredientSuggestion,
     newText: string
   ): boolean => {
     // One update for both halves of the gesture: the word lands and its chip attaches.
-    const { rows, asksAmount } = mentionIngredient(items, index, suggestion, newText, chipLines);
+    let asksAmount = false;
+    const changed = commit((current) => {
+      const mention = mentionIngredient(current, index, suggestion, newText, chipLines);
 
-    if (rows === items) return false;
-    setItems(rows);
-    emitChanges(rows);
+      asksAmount = mention.asksAmount;
+
+      return mention.rows;
+    });
+
+    if (!changed) return false;
     // The chips take focus to ask the amount, so the mention reports that it gave focus up.
     if (asksAmount) setPendingMentionEntry({ index, order: suggestion.ingredientOrder });
 
     return asksAmount;
   };
-  const handleInputChange = (index: number, value: string) => {
-    const updated = typeStepRow(items, index, value);
-
-    if (updated === items) return;
-    setItems(updated);
-    emitChanges(updated);
-  };
+  const handleInputChange = (index: number, value: string) =>
+    commit((current) => typeStepRow(current, index, value));
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (index < items.length - 1) {
         textareasRef.current[index + 1]?.focus();
       } else {
-        const updated = [...items, createStepRow("")];
-
-        setItems(updated);
+        commit((current) => [...current, createStepRow("")], true);
         setTimeout(() => {
           textareasRef.current[items.length]?.focus();
         }, 0);
       }
     } else if (e.key === "Backspace" && !items[index]?.text && index > 0) {
       e.preventDefault();
-      const updated = items.filter((_, i) => i !== index);
-
-      setItems(updated);
-      emitChanges(updated);
+      commit((current) => current.filter((_, i) => i !== index));
       setTimeout(() => {
         textareasRef.current[index - 1]?.focus();
       }, 0);
     }
   };
-  const handleBlur = (index: number) => {
-    const updated = rowsAfterLeaving(items, index, hasStepContent);
-
-    if (updated === items) return;
-    setItems(updated);
-    emitChanges(updated);
-  };
+  const handleBlur = (index: number) =>
+    commit((current) => rowsAfterLeaving(current, index, hasStepContent));
   const handleRemove = (index: number) => {
     // Delete all images for this step
     const stepImages = items[index]?.images ?? [];
@@ -192,10 +194,7 @@ export default function StepInput({
         log.error({ err }, "Failed to delete step image")
       );
     });
-    const updated = removeStepRow(items, index);
-
-    setItems(updated);
-    emitChanges(updated);
+    commit((current) => removeStepRow(current, index));
   };
   const handleImageUpload = async (index: number, file: File) => {
     const rowId = items[index]?.id;
@@ -208,14 +207,13 @@ export default function StepInput({
 
         if (!result.success || !url) return;
         // The photo joins its row as the rows are now: they may have changed while uploading.
-        const updated = latestItemsRef.current.map((item) =>
-          item.id === rowId
-            ? { ...item, images: [...item.images, { image: url, order: item.images.length }] }
-            : item
+        commit((current) =>
+          current.map((item) =>
+            item.id === rowId
+              ? { ...item, images: [...item.images, { image: url, order: item.images.length }] }
+              : item
+          )
         );
-
-        setItems(updated);
-        emitChanges(updated);
       })
       .finally(() => setUploadingIndex(null));
   };
@@ -230,28 +228,24 @@ export default function StepInput({
         log.error({ err }, "Failed to delete step image")
       );
     }
-    const updated = [...items];
-
-    updated[stepIndex] = {
-      ...current,
-      images: current.images
-        .filter((_, i) => i !== imageIndex)
-        .map((img, i) => ({
-          ...img,
-          order: i,
-        })),
-    };
-    setItems(updated);
-    emitChanges(updated);
+    commit((rows) =>
+      rows.map((row) =>
+        row.id === current.id
+          ? {
+              ...row,
+              images: row.images
+                .filter((_, i) => i !== imageIndex)
+                .map((image, order) => ({ ...image, order })),
+            }
+          : row
+      )
+    );
   };
   const handleFileSelect = (index: number) => {
     fileInputsRef.current[index]?.click();
   };
   const handleReorder = (newOrder: StepItem[]) => {
-    const normalized = normalizeStepRows(newOrder);
-
-    setItems(normalized);
-    emitChanges(normalized);
+    commit(() => normalizeStepRows(newOrder));
   };
   const clearPendingMentionEntry = () => setPendingMentionEntry(null);
 
