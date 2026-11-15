@@ -31,7 +31,7 @@ type Line = ReturnType<typeof usePageIngredients>[number];
 
 /** Keys a step's photos by place: the same picture can sit twice, so only its place tells them apart. */
 function byPlace<T>(items: T[], render: (item: T, index: number) => ReactNode) {
-  // eslint-disable-next-line @eslint-react/no-array-index-key
+  // eslint-disable-next-line @eslint-react/no-array-index-key -- the same picture can sit here twice
   return items.map((item, index) => <Fragment key={index}>{render(item, index)}</Fragment>);
 }
 

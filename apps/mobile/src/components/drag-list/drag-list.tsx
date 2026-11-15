@@ -93,9 +93,8 @@ export function DragList<H, T>({
       cellAnimations={reduceMotion ? STILL_CELL : undefined}
       data={held.shown}
       keyExtractor={(row) => row.key}
-      // Nested, a swipe across a row scrolls the page; only a hold takes the row. Its successor,
-      // `panGesture`, needs Gesture Handler 3's deprecated builder in a type the library lacks.
-      // eslint-disable-next-line sonarjs/deprecation
+      // Nested, a swipe across a row scrolls the page; only a hold takes the row.
+      // eslint-disable-next-line sonarjs/deprecation -- its successor `panGesture` needs a builder type the library lacks
       panActivateAfterLongPress={nested ? HOLD_MS : undefined}
       renderItem={({ item: row, index }) =>
         row.kind === "heading" ? (

@@ -28,8 +28,7 @@ export function StepPhotos({
   return (
     <View className="flex-row flex-wrap gap-2">
       {images.map((image, imageIndex) => (
-        // The same picture can sit here twice, so only its place tells the two apart.
-        // eslint-disable-next-line @eslint-react/no-array-index-key
+        // eslint-disable-next-line @eslint-react/no-array-index-key -- the same picture can sit here twice
         <View key={imageIndex} className="size-16">
           <Image
             className="size-16 rounded-xl"
