@@ -10,13 +10,11 @@ import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import {
   aisleContainerId,
-  buildGroupItemsState,
-  buildItemsState,
-  findContainerForItem,
   groceriesByStore,
-  moveKey,
+  keyedGroups,
+  keyedLines,
   openBySortOrder,
-  planListDrop,
+  planKeyedDrop,
   planRecipeReorder,
   UNSORTED_CONTAINER,
 } from "@norish/shared-react/groceries";
@@ -43,7 +41,7 @@ type StoreDropInput = {
   groups: ReadonlyMap<string | null, GroceryGroup[]> | null;
 };
 
-/** A by-Store drop, placed after the nearest row above it still on the list now; null puts it back. */
+/** A by-Store drop, after the nearest row above it still on the list; null puts it back. */
 export function planStoreDrop({
   drop,
   groceries,
@@ -65,39 +63,18 @@ export function planStoreDrop({
   }
   if (target === null || drop.item.done) return null;
 
-  const items = groups
-    ? buildGroupItemsState(groups, stores)
-    : buildItemsState(groceriesByStore(groceries, stores), stores, aisleFor);
+  const list = groups
+    ? keyedGroups(groups, stores)
+    : keyedLines(groceriesByStore(groceries, stores), stores, aisleFor);
   const { key } = drop.item;
-  const origin = findContainerForItem(key, items);
-
-  if (origin === null || !(target in items)) return null;
-
-  const into = (items[target] ?? []).filter((other) => other !== key);
+  const was = list.items[target] ?? [];
+  const into = was.filter((other) => other !== key);
   const after = above.find((other) => into.includes(other));
   const index = after === undefined ? 0 : into.indexOf(after) + 1;
 
-  if (origin === target && items[origin]?.indexOf(key) === index) return null;
+  if (was.indexOf(key) === index) return null;
 
-  const byId = new Map(groceries.map((grocery) => [grocery.id, grocery]));
-  const byKey = new Map(
-    [...(groups?.values() ?? [])].flat().map((group) => [group.groupKey, group])
-  );
-
-  return planListDrop({
-    items: moveKey(items, key, origin, target, index),
-    key,
-    origin,
-    target,
-    stores,
-    aisleFor,
-    linesOf: (other) => {
-      if (groups) return byKey.get(other)?.sources.map((source) => source.grocery) ?? [];
-      const grocery = byId.get(other);
-
-      return grocery ? [grocery] : [];
-    },
-  });
+  return planKeyedDrop({ ...list, key, target, index, stores, aisleFor });
 }
 
 /**

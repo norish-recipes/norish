@@ -9,9 +9,11 @@ import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import { aisleContainerId, UNSORTED_CONTAINER } from "../drop-containers";
 import {
   groceriesByStore,
+  keyedGroups,
+  keyedLines,
   moveKey,
   planDrop,
-  planListDrop,
+  planKeyedDrop,
   planRecipeReorder,
   writeDrop,
 } from "../drop-plan";
@@ -270,7 +272,7 @@ describe("moveKey", () => {
   });
 });
 
-describe("planListDrop", () => {
+describe("planKeyedDrop", () => {
   const lines: Record<string, { id: string; name: string; ingredientId: string }[]> = {
     melk: [{ id: "melk", name: "melk", ingredientId: "i-melk" }],
     group: [
@@ -281,36 +283,95 @@ describe("planListDrop", () => {
   const linesOf = (key: string) => lines[key] ?? [];
 
   it("moves a group's every line to its place and files its food once", () => {
-    const plan = planListDrop({
-      items: { [UNSORTED_CONTAINER]: [], [BAKKER]: ["group"], [aisleContainerId(BROOD)]: [] },
+    const plan = planKeyedDrop({
+      items: { [UNSORTED_CONTAINER]: ["group"], [BAKKER]: [], [aisleContainerId(BROOD)]: [] },
       key: "group",
-      origin: UNSORTED_CONTAINER,
       target: BAKKER,
+      index: 0,
       stores: STORES,
       aisleFor,
       linesOf,
     });
 
-    expect(plan.updates).toEqual([
+    expect(plan?.updates).toEqual([
       { id: "kaas-1", sortOrder: 0, storeId: BAKKER },
       { id: "kaas-2", sortOrder: 0, storeId: BAKKER },
     ]);
     // Another Store's unfiled area teaches it nothing.
-    expect(plan.filings).toEqual([]);
+    expect(plan?.filings).toEqual([]);
+  });
+
+  it("puts the key at its index among the others", () => {
+    const plan = planKeyedDrop({
+      items: { [MARKT]: ["melk", "a", "b"] },
+      key: "melk",
+      target: MARKT,
+      index: 2,
+      stores: STORES,
+      aisleFor,
+      linesOf: (key) => (linesOf(key).length ? linesOf(key) : [{ id: key, name: key }]),
+    });
+
+    expect(plan?.updates.map((update) => update.id)).toEqual(["a", "b", "melk"]);
   });
 
   it("plans nothing for a key that stands for no grocery", () => {
     expect(
-      planListDrop({
+      planKeyedDrop({
         items: { [MARKT]: ["gone"] },
         key: "gone",
-        origin: MARKT,
         target: MARKT,
+        index: 0,
         stores: STORES,
         aisleFor,
         linesOf,
       })
     ).toEqual({ updates: [], filings: [] });
+  });
+
+  it("puts back a key or a target that is not on the list", () => {
+    const drop = (key: string, target: string) =>
+      planKeyedDrop({
+        items: { [MARKT]: ["melk"] },
+        key,
+        target,
+        index: 0,
+        stores: STORES,
+        aisleFor,
+        linesOf,
+      });
+
+    expect(drop("kaas", MARKT)).toBeNull();
+    expect(drop("melk", "nowhere")).toBeNull();
+  });
+});
+
+describe("keyedLines and keyedGroups", () => {
+  const line = (id: string, storeId: string | null, sortOrder: number) =>
+    ({ id, name: id, storeId, sortOrder, isDone: false }) as unknown as GroceryDto;
+
+  it("keys a row by its id and stands for that one line", () => {
+    const melk = line("melk", MARKT, 0);
+    const list = keyedLines(groceriesByStore([melk], STORES), STORES, aisleFor);
+
+    expect(list.items[MARKT]).toEqual(["melk"]);
+    expect(list.byKey.get("melk")).toBe(melk);
+    expect(list.linesOf("melk")).toEqual([melk]);
+    expect(list.linesOf("gone")).toEqual([]);
+  });
+
+  it("keys a group by its key and stands for its sources", () => {
+    const kaas = [line("kaas-1", BAKKER, 0), line("kaas-2", BAKKER, 1)];
+    const group = {
+      groupKey: "kaas",
+      aisleId: null,
+      allDone: false,
+      sources: kaas.map((grocery) => ({ grocery, recipeName: null })),
+    };
+    const list = keyedGroups(new Map([[BAKKER, [group as never]]]), STORES);
+
+    expect(list.items[BAKKER]).toEqual(["kaas"]);
+    expect(list.linesOf("kaas")).toEqual(kaas);
   });
 });
 

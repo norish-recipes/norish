@@ -3,8 +3,7 @@
 import { createContext, use, useId } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 
-import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-import { buildGroupItemsState } from "@norish/shared-react/groceries";
+import { keyedGroups } from "@norish/shared-react/groceries";
 
 import type { DndGroupedGroceryContextValue, DndGroupedGroceryProviderProps } from "./types";
 import { GroupDragOverlay } from "./group-drag-overlay";
@@ -30,16 +29,13 @@ export function DndGroupedGroceryProvider({
   onFileGroceryName,
 }: DndGroupedGroceryProviderProps) {
   const dndId = useId();
-  const groups = new Map<string, GroceryGroup>();
-
-  for (const storeGroups of groupedGroceries.values()) {
-    for (const group of storeGroups) groups.set(group.groupKey, group);
-  }
+  const list = keyedGroups(groupedGroceries, stores);
+  const groups = list.byKey;
 
   const dnd = useListDnd({
-    items: buildGroupItemsState(groupedGroceries, stores),
+    items: list.items,
     source: [groupedGroceries, stores],
-    linesOf: (key) => groups.get(key)?.sources.map((source) => source.grocery) ?? [],
+    linesOf: list.linesOf,
     stores,
     aisleFor,
     onReorder: onReorderGroups,

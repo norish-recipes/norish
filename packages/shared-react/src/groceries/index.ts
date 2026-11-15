@@ -17,12 +17,14 @@ export {
   storeItems,
   UNSORTED_CONTAINER,
 } from "./drop-containers";
-export type { DropPlan } from "./drop-plan";
+export type { DropPlan, KeyedList } from "./drop-plan";
 export {
   groceriesByStore,
+  keyedGroups,
+  keyedLines,
   moveKey,
   planDrop,
-  planListDrop,
+  planKeyedDrop,
   planRecipeReorder,
   writeDrop,
 } from "./drop-plan";

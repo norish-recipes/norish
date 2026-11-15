@@ -1,4 +1,5 @@
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { foodKey } from "@norish/shared/lib/spelling-keys";
 
 import type {
@@ -8,7 +9,13 @@ import type {
   ItemsState,
   ReorderUpdate,
 } from "./drop-containers";
-import { placeOfContainer, storeContainers } from "./drop-containers";
+import {
+  buildGroupItemsState,
+  buildItemsState,
+  findContainerForItem,
+  placeOfContainer,
+  storeContainers,
+} from "./drop-containers";
 
 /** A grocery as a drop files it: its name, and the Ingredient that is filed. */
 interface FiledGrocery {
@@ -112,27 +119,79 @@ export function moveKey(
   return { ...items, [from]: left, [to]: [...into.slice(0, index), key, ...into.slice(index)] };
 }
 
-interface ListDropInput {
-  /** The containers as the drop left them. */
+/** A by-Store list as a drop reads it: its containers, each key's row or group, and its lines. */
+export interface KeyedList<V> {
   items: ItemsState;
-  /** The dragged key: a row's id, or a group's key. */
-  key: string;
-  origin: ContainerId;
-  target: ContainerId;
-  stores: StoreDto[];
-  aisleFor: AisleResolver;
-  /** The groceries a key stands for: one row, or a group's lines. */
-  linesOf: (key: string) => readonly (FiledGrocery & { id: string })[];
+  byKey: ReadonlyMap<string, V>;
+  linesOf: (key: string) => readonly GroceryDto[];
 }
 
-/** `planDrop` for a list keyed by row or group: a key that stands for no grocery plans nothing. */
-export function planListDrop({ key, linesOf, origin, target, ...list }: ListDropInput): DropPlan {
+/** The list one row per grocery, each keyed by its id. */
+export function keyedLines(
+  byStore: Map<string | null, GroceryDto[]>,
+  stores: StoreDto[],
+  aisleFor: AisleResolver
+): KeyedList<GroceryDto> {
+  const byKey = new Map([...byStore.values()].flat().map((grocery) => [grocery.id, grocery]));
+
+  return {
+    items: buildItemsState(byStore, stores, aisleFor),
+    byKey,
+    linesOf: (key) => {
+      const grocery = byKey.get(key);
+
+      return grocery ? [grocery] : [];
+    },
+  };
+}
+
+/** The list grouped by food, each group keyed by its group key. */
+export function keyedGroups(
+  groups: ReadonlyMap<string | null, GroceryGroup[]>,
+  stores: StoreDto[]
+): KeyedList<GroceryGroup> {
+  const byKey = new Map([...groups.values()].flat().map((group) => [group.groupKey, group]));
+
+  return {
+    items: buildGroupItemsState(groups, stores),
+    byKey,
+    linesOf: (key) => byKey.get(key)?.sources.map((source) => source.grocery) ?? [],
+  };
+}
+
+interface KeyedDropInput {
+  /** The containers before the drop. */
+  items: ItemsState;
+  linesOf: (key: string) => readonly (FiledGrocery & { id: string })[];
+  /** The dragged key: a row's id, or a group's key. */
+  key: string;
+  target: ContainerId;
+  /** Where in `target` the key lands, counted without it. */
+  index: number;
+  stores: StoreDto[];
+  aisleFor: AisleResolver;
+}
+
+/** `key` moved to `index` in `target`, planned; null when the key or target is not on the list. */
+export function planKeyedDrop({
+  items,
+  linesOf,
+  key,
+  target,
+  index,
+  ...list
+}: KeyedDropInput): DropPlan | null {
+  const origin = findContainerForItem(key, items);
+
+  if (origin === null || !(target in items)) return null;
+
   const lines = linesOf(key);
 
   if (lines.length === 0) return { updates: [], filings: [] };
 
   return planDrop({
     ...list,
+    items: moveKey(items, key, origin, target, index),
     originContainer: origin,
     targetContainer: target,
     movedIds: lines.map((grocery) => grocery.id),

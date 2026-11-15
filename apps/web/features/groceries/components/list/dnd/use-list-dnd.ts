@@ -19,7 +19,7 @@ import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import {
   findContainerForItem,
   moveKey,
-  planListDrop,
+  planKeyedDrop,
   writeDrop,
 } from "@norish/shared-react/groceries";
 
@@ -38,11 +38,11 @@ interface ListDndOptions {
   onFileGroceryName: FileGroceryName;
 }
 
-/** A drag's arrangement: the keys where it put them, and where the dragged one started. */
+/** A drag's arrangement: the keys where it put them, and where they were when it began. */
 interface Arranged {
   items: ItemsState;
   source: readonly unknown[];
-  origin: ContainerId | null;
+  start: ItemsState;
 }
 
 /**
@@ -103,7 +103,7 @@ export function useListDnd({
     const origin = findContainerForItem(key, current);
 
     setActiveId(key);
-    setArranged({ items: current, source, origin });
+    setArranged({ items: current, source, start: current });
     setOverContainerId(origin);
   };
 
@@ -159,16 +159,19 @@ export function useListDnd({
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     const key = active.id as string;
     const target = findContainer(key);
-    const origin = arranged?.origin;
-    const wrote =
-      over != null &&
-      target !== undefined &&
-      !!origin &&
-      writeDrop(
-        planListDrop({ items: current, key, origin, target, stores, aisleFor, linesOf }),
-        onReorder,
-        onFileGroceryName
-      );
+    const plan =
+      over != null && target !== undefined && arranged
+        ? planKeyedDrop({
+            items: arranged.start,
+            key,
+            target,
+            index: current[target]?.indexOf(key) ?? 0,
+            stores,
+            aisleFor,
+            linesOf,
+          })
+        : null;
+    const wrote = plan !== null && writeDrop(plan, onReorder, onFileGroceryName);
 
     // A drop that writes nothing brings no list back, so the Stores read their own rows now.
     if (!wrote) setArranged(null);

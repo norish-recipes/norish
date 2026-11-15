@@ -12,7 +12,7 @@ import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 interface Arrangement<T> {
   items: ItemsState;
   /** Every row or group by key, since one dragged in comes from another Store's. */
-  byKey: Map<string, T>;
+  byKey: ReadonlyMap<string, T>;
 }
 
 /** A list's DnD context; it changes only while a drag is on. */

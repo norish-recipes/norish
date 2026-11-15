@@ -4,7 +4,7 @@ import { createContext, use, useId } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
-import { buildItemsState } from "@norish/shared-react/groceries";
+import { keyedLines } from "@norish/shared-react/groceries";
 
 import type { DndGroceryContextValue, DndGroceryProviderProps } from "./types";
 import { GroceryDragOverlay } from "./grocery-drag-overlay";
@@ -31,17 +31,12 @@ export function DndGroceryProvider({
   getRecipeNameForGrocery,
 }: DndGroceryProviderProps) {
   const dndId = useId();
-  const rows = new Map(
-    [...groceriesByStore.values()].flat().map((grocery) => [grocery.id, grocery])
-  );
+  const list = keyedLines(groceriesByStore, stores, aisleFor);
+  const rows = list.byKey;
   const dnd = useListDnd({
-    items: buildItemsState(groceriesByStore, stores, aisleFor),
+    items: list.items,
     source: [groceriesByStore, stores, aisleFor],
-    linesOf: (id) => {
-      const grocery = rows.get(id);
-
-      return grocery ? [grocery] : [];
-    },
+    linesOf: list.linesOf,
     stores,
     aisleFor,
     onReorder: onReorderInStore,
