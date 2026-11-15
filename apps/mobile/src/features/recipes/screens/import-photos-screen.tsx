@@ -9,7 +9,6 @@ import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
-import { UIImagePickerPreferredAssetRepresentationMode } from "expo-image-picker";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -24,7 +23,7 @@ import { useStartImport } from "../hooks/use-start-import";
 const COLUMNS = 3;
 const GAP = 8;
 
-/** iOS hands HEIC over as JPEG, which the import takes; the camera's photo is one file. */
+/** The library hands several photos over in pick order; the camera's photo is one file. */
 const pickerOptions = (source: PhotoSource, room: number) =>
   source === "camera"
     ? { mediaTypes: ["images" as const], quality: 0.9 }
@@ -34,7 +33,6 @@ const pickerOptions = (source: PhotoSource, room: number) =>
         orderedSelection: true,
         selectionLimit: room,
         quality: 0.9,
-        preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
       };
 
 const SOURCE_TILE: Record<

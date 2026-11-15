@@ -54,6 +54,15 @@ export function usePhotoPicker() {
     pick: (source: PhotoSource, options: ImagePicker.ImagePickerOptions, onPicked: OnPicked) =>
       source === "camera"
         ? fromCamera(options, onPicked)
-        : run(() => ImagePicker.launchImageLibraryAsync(options), onPicked),
+        : run(
+            () =>
+              ImagePicker.launchImageLibraryAsync({
+                ...options,
+                // A library HEIC comes over as JPEG: the server takes JPEG, PNG, WebP and AVIF only.
+                preferredAssetRepresentationMode:
+                  ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+              }),
+            onPicked
+          ),
   };
 }
