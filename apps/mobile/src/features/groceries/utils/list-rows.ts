@@ -217,3 +217,24 @@ export function recipeListRows(
     ]);
   });
 }
+
+/** A group is folded out while one of its lines is in `open`, so a drop that re-keys it keeps it. */
+export const isGroupOpen = (open: ReadonlySet<string>, group: GroceryGroup) =>
+  group.sources.some(({ grocery }) => open.has(grocery.id));
+
+/** Folds `group` in or out of `open`, which keeps only lines still on the list. */
+export function toggledGroup(
+  open: ReadonlySet<string>,
+  group: GroceryGroup,
+  groceries: readonly GroceryDto[]
+): Set<string> {
+  const wasOpen = isGroupOpen(open, group);
+  const next = new Set(groceries.flatMap(({ id }) => (open.has(id) ? [id] : [])));
+
+  for (const { grocery } of group.sources) {
+    if (wasOpen) next.delete(grocery.id);
+    else next.add(grocery.id);
+  }
+
+  return next;
+}

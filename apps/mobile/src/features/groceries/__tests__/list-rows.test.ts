@@ -1,5 +1,10 @@
 import { resolveDrop } from "@/components/drag-list/resolve-drop";
-import { recipeListRows, storeListRows } from "@/features/groceries/utils/list-rows";
+import {
+  isGroupOpen,
+  recipeListRows,
+  storeListRows,
+  toggledGroup,
+} from "@/features/groceries/utils/list-rows";
 import { describe, expect, it } from "vitest";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
@@ -186,5 +191,28 @@ describe("recipeListRows", () => {
 
     expect(keys(rows)).toEqual(["recipe:r", "line:open", "line:done"]);
     expect(rows[1]).toMatchObject({ value: { type: "line", store: { id: "s" } } });
+  });
+});
+
+describe("toggledGroup", () => {
+  const groupOf = (...ids: string[]) =>
+    ({
+      sources: ids.map((id) => ({ grocery: line(id, null), recipeName: null })),
+    }) as unknown as GroceryGroup;
+
+  it("folds a group out and back in by its lines", () => {
+    const milk = groupOf("a", "b");
+    const open = toggledGroup(new Set(), milk, [line("a", null), line("b", null)]);
+
+    expect(isGroupOpen(open, milk)).toBe(true);
+    expect(isGroupOpen(toggledGroup(open, milk, [line("a", null), line("b", null)]), milk)).toBe(
+      false
+    );
+  });
+
+  it("forgets the lines of groups no longer on the list", () => {
+    const open = toggledGroup(new Set(["gone"]), groupOf("a"), [line("a", null)]);
+
+    expect([...open]).toEqual(["a"]);
   });
 });

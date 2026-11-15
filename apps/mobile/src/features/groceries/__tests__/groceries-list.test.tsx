@@ -79,6 +79,7 @@ vi.mock("@/components/drag-list/drag-list", async () => {
 });
 
 const { GroceriesList } = await import("../components/groceries-list");
+const { toggledGroup } = await import("../utils/list-rows");
 
 const grocery = (id: string) =>
   ({ id, name: "milk", amount: 1, unit: "l", isDone: false }) as unknown as GroceryDto;
@@ -95,25 +96,29 @@ const group = {
     { grocery: grocery("b"), recipeName: null },
   ],
 } as unknown as GroceryGroup;
-const rows: ListRow[] = [
+/** The group's one row, under the key its Store and Aisle give it. */
+const rowsKeyed = (key: string): ListRow[] => [
   {
     kind: "item",
-    key: "group:milk",
+    key: `group:${key}`,
     value: {
       type: "group",
-      group,
+      group: { ...group, groupKey: key },
       store: null,
-      key: "milk",
+      key,
       done: false,
       edge: { top: true, bottom: true },
     },
   },
 ];
 /** The list under a parent that holds its fold state, as the screen does. */
-function Screen() {
+function Screen({ rows = rowsKeyed("milk") }: { rows?: ListRow[] }) {
   const [openGroups, setOpenGroups] = React.useState<ReadonlySet<string>>(new Set());
   const actions = new Proxy(
-    { toggleGroup: (key: string) => setOpenGroups(new Set([...openGroups, key])) },
+    {
+      toggleGroup: (toggled: GroceryGroup) =>
+        setOpenGroups(toggledGroup(openGroups, toggled, [grocery("a"), grocery("b")])),
+    },
     { get: (target, name) => (name === "toggleGroup" ? target.toggleGroup : vi.fn()) }
   ) as unknown as ListActions;
 
@@ -140,6 +145,15 @@ describe("GroceriesList", () => {
     expect(screen.queryByTestId("group-sources-a")).not.toBeNull();
 
     rerender(<Screen />);
+    expect(screen.queryByTestId("group-sources-a")).not.toBeNull();
+  });
+
+  it("keeps a group folded out when a drop into another Store or Aisle re-keys it", () => {
+    const { rerender } = render(<Screen />);
+
+    fireEvent.click(screen.getByTestId("group-a"));
+    rerender(<Screen rows={rowsKeyed("store-2|dairy|milk|l")} />);
+
     expect(screen.queryByTestId("group-sources-a")).not.toBeNull();
   });
 });

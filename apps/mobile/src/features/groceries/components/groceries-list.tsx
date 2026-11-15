@@ -7,11 +7,12 @@ import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
-import { sectionKeyOf } from "../utils/list-rows";
+import { isGroupOpen, sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
 import { CardSlice, ItemSlice } from "./card-slice";
 import { DoneRow } from "./done-row";
@@ -25,7 +26,7 @@ export type ListActions = {
   edit: (id: string) => void;
   toggleCollapsed: (sectionKey: string) => void;
   toggleDone: (sectionKey: string) => void;
-  toggleGroup: (groupKey: string) => void;
+  toggleGroup: (group: GroceryGroup) => void;
   markAllDone: (storeId: string | null) => void;
   deleteDone: (storeId: string | null) => void;
   /** Asks, then clears: a Store's, Unsorted's or a recipe's lines. */
@@ -52,7 +53,7 @@ export function GroceriesList({
   empty: ReactElement | null;
   recipeNameFor: (grocery: GroceryDto) => string | null;
   recurringById: ReadonlyMap<string, RecurringGroceryDto>;
-  /** The groups folded out, by key; held above the list, which remounts the rows a drop passes. */
+  /** The lines of the groups folded out; held above the list, which remounts the rows a drop passes. */
   openGroups: ReadonlySet<string>;
   /** The list by recipe names each line's Store under it, where a Store's list never does. */
   storeNameOnLines: boolean;
@@ -138,7 +139,7 @@ export function GroceriesList({
         <ItemSlice edge={edge}>
           <GroupRow
             group={item.group}
-            open={openGroups.has(item.key)}
+            open={isGroupOpen(openGroups, item.group)}
             store={item.store}
             subline={sublineOf(
               recurringId ? recurringById.get(recurringId) : null,
@@ -147,7 +148,7 @@ export function GroceriesList({
             onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
             onToggle={actions.toggle}
-            onToggleOpen={() => actions.toggleGroup(item.key)}
+            onToggleOpen={() => actions.toggleGroup(item.group)}
           />
         </ItemSlice>
       );

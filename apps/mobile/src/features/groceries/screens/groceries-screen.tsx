@@ -29,7 +29,7 @@ import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { ListSettingsMenu } from "../components/list-settings-menu";
 import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
-import { recipeListRows, storeListRows } from "../utils/list-rows";
+import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
 
 /** Adds or removes `key`: the sets of folded sections and of open done tails. */
 function flipped(set: ReadonlySet<string>, key: string): Set<string> {
@@ -134,7 +134,7 @@ export function GroceriesScreen() {
     edit: (id) => router.push({ pathname: "/groceries/edit", params: { id } }),
     toggleCollapsed: (key) => setCollapsed(flipped(collapsed, key)),
     toggleDone: (key) => setDoneOpen(flipped(doneOpen, key)),
-    toggleGroup: (key) => setOpenGroups(flipped(openGroups, key)),
+    toggleGroup: (group) => setOpenGroups(toggledGroup(openGroups, group, groceries)),
     markAllDone: markAllDoneInStore,
     deleteDone: deleteDoneInStore,
     clear: (name, ids) =>
