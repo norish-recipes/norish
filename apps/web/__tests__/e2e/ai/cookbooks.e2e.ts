@@ -203,6 +203,10 @@ test("an import still running shows under Recipes but not under Cookbooks", asyn
 
     await selectChip("recipes");
     await expect(running).toHaveCount(1);
+
+    // A reload rereads the running imports from the server, which must list a pasted one too.
+    await page.reload();
+    await expect(running).toHaveCount(1);
   } finally {
     stack.ai.control.release();
   }
