@@ -11,10 +11,8 @@ const SEARCH_MIN_LENGTH = 2;
 /** How many catalogue foods are offered below the kept ones. */
 const CATALOGUE_MATCHES = 8;
 
-/**
- * The catalogue foods the field's text finds that the household does not keep: none offline,
- * and none until the answer is for the text now in the field.
- */
+/** The catalogue foods the field's text finds that the household does not keep: none offline, and
+ * none until the answer is for the text now in the field. */
 export function usePantryCatalogue(
   typed: string,
   locale: string,

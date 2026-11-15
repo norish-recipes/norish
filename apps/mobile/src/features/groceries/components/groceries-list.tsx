@@ -33,10 +33,8 @@ export type ListActions = {
   clear: (name: string, ids: string[]) => void;
 };
 
-/**
- * The list's rows, virtualised: headings, grocery rows and the done tails, each a slice of its
- * section's card. Holding an open row lifts it; a done one stays put.
- */
+/** The list's rows, virtualised: headings, grocery rows and the done tails, each a slice of its
+ * section's card. Holding an open row lifts it; a done one stays put. */
 export function GroceriesList({
   rows,
   header,

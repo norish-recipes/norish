@@ -18,10 +18,8 @@ import { RepeatBody } from "./repeat-view";
 
 type Step = "form" | "repeat" | "store" | "aisle" | "product";
 
-/**
- * The add and edit sheets' shell. The form is one view; Repeat, Store and Aisle replace it inside
- * the same sheet, the close button going back, so a pick returns to what was typed.
- */
+/** The add and edit sheets' shell. The form is one view; Repeat, Store and Aisle replace it
+ * inside the same sheet, the close button going back, so a pick returns to what was typed. */
 export function GrocerySheet({
   name,
   title,

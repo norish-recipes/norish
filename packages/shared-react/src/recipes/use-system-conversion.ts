@@ -39,13 +39,8 @@ type SystemConversion = {
   convertTo: (option: SystemConversionOption) => void;
 };
 
-/**
- * The measurement conversion a recipe can offer, in one place: back to the
- * system it was written in, to the other one by the unit table and the
- * ingredient catalogue, and, where AI is on, to the other one by the language
- * model. Converting is a permission-gated action on the recipe and a Hidden
- * Item, so the gate has to answer the same way wherever the action is drawn.
- */
+/** The conversions a recipe offers: back to its own system, to the other by the unit table and
+ * catalogue, or by AI where on; one gate for the permission and the Hidden Item everywhere. */
 export function useSystemConversion(): SystemConversion {
   const recipe = useLoadedPageRecipe();
   const { convertingTo, startConversion } = useRecipeConversion();
@@ -93,15 +88,8 @@ export function useSystemConversion(): SystemConversion {
   };
 }
 
-/**
- * Presses convert for the reader whose Preferences name a measurement system,
- * once per recipe opened: a recipe someone else switches while it is open
- * stays switched. With AI it writes only a copy that is missing; a copy already
- * there is switched to, as the unit table's would be. Only for a reader who
- * may convert the recipe, since anyone else would only be refused, and only
- * once the server's copy is in: a saved one may be behind, and a convert sent
- * from it is ignored as stale.
- */
+/** Converts once per opened recipe for a reader whose Preferences name a system and who may, once
+ * the server's copy is in (a cached one may be stale); with AI it writes only a missing copy. */
 export function useAutoConversion() {
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);

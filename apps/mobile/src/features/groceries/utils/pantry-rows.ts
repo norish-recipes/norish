@@ -31,10 +31,8 @@ export type PantryFoods = {
 /** What the reader has typed and opened. */
 export type PantryView = { typed: string; suggestionsOpen: boolean; showAll: boolean };
 
-/**
- * The Pantry's rows, flat so one virtualised list holds them: the kept foods (or why there are
- * none), the catalogue foods the text finds, and while the field is empty "From your recipes".
- */
+/** The Pantry's rows, flat so one virtualised list holds them: the kept foods (or why there are
+ * none), the catalogue foods the text finds, and while the field is empty "From your recipes". */
 export function pantryRows(
   { items, kept, onTheList, matches, offered }: PantryFoods,
   { typed, suggestionsOpen, showAll }: PantryView

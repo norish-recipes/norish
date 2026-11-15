@@ -38,10 +38,8 @@ const STEP_PHOTO = {
   quality: 0.9,
 } satisfies ImagePicker.ImagePickerOptions;
 
-/**
- * A numbered row per step with a grip, `#` sections, the `@` popup that links a line to the
- * step, its chips, and step photos from the library or the camera.
- */
+/** A numbered row per step with a grip, `#` sections, the `@` popup that links a line to the
+ * step, its chips, and step photos from the library or the camera. */
 export function StepRows({
   steps,
   ingredients,

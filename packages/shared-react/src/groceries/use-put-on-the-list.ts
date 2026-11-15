@@ -6,11 +6,8 @@ import { useGroceriesMutations } from "./use-groceries-mutations";
 /** A kept food, as much of it as putting it on the list needs. */
 type KeptFood = { name: string; localeNames?: LocaleNames };
 
-/**
- * Running out of a kept food: one grocery for it, named as the reader reads the food, with no
- * amount and no Store. Optimistic and queued offline like any grocery; the food stays kept.
- * Returns the name put on the list and `undo`, which deletes the grocery made.
- */
+/** Running out of a kept food: one grocery named as the reader reads it, no amount or Store, and
+ * optimistic and queued like any grocery. Returns the name put on the list and an `undo`. */
 export function usePutOnTheList(
   locale: string
 ): (food: KeptFood) => { name: string; undo: () => void } {

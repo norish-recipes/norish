@@ -26,10 +26,8 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   return null;
 }
 
-/**
- * The recipe route's own stack: the page and its sheets share one page store, so the Servings
- * sheet changes the servings the page shows. The header is transparent over the photo.
- */
+/** The recipe route's own stack: the page and its sheets share one page store, so the Servings
+ * sheet changes the servings the page shows. The header is transparent over the photo. */
 export function RecipeLayout() {
   const { id } = useLocalSearchParams<{ id: string }>();
 

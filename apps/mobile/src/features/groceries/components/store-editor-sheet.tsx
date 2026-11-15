@@ -15,10 +15,8 @@ import { StoreColorPicker } from "./store-color-picker";
 
 const FIELD = "h-[52px] rounded-[18px] px-4 text-[17px]";
 
-/**
- * The Store being added or edited: its name, shop link, colour and Aisles, held by the manager
- * and written only on Save. Aisles reorder by holding a row.
- */
+/** The Store being added or edited: its name, shop link, colour and Aisles, held by the manager
+ * and written only on Save. Aisles reorder by holding a row. */
 export function StoreEditorSheet({
   editing,
   onChange,

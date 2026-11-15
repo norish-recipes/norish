@@ -8,10 +8,8 @@ import { useCalendarQuery, useCalendarRangeRead } from "@norish/shared-react/cal
 import { useToday } from "@norish/shared-react/reader";
 import { addDays, dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
-/**
- * Hands the Home Screen widgets the plan whenever it changes here, realtime and this device's
- * writes included, and on every return to the foreground. Pushing never blocks the caller.
- */
+/** Hands the Home Screen widgets the plan whenever it changes here, realtime and this device's
+ * writes included, and on every return to the foreground. Pushing never blocks the caller. */
 export function useCalendarWidgets() {
   const intl = useIntl();
   const todayKey = useToday();

@@ -82,11 +82,8 @@ type StoreListInput = {
   collapsed: ReadonlySet<string>;
 };
 
-/**
- * The list by Store as flat rows, Unsorted first and only while it holds a grocery, then each
- * Store in its order. Under a heading: the unfiled rows with no heading, then every aisle in
- * the Store's order, then the done tail.
- */
+/** The list by Store as flat rows: Unsorted first while it holds a grocery, then each Store; under
+ * a heading the unfiled rows, then each aisle in the Store's order, then the done tail. */
 export function storeListRows({
   stores,
   groceries,

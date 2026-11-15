@@ -13,11 +13,8 @@
  * Mutations of {@link isUncaptured} procedures pass straight through: never stored or timed.
  *
  * Replayed mutations carry a marker context and are skipped, so a replay is
- * never re-captured.
- *
- * A whole edit (`recipes.update`) saved while one of the same id is pending
- * waits in the Outbox: in that entry, on its version, if it was never sent.
- * The replace is one atomic change, which Replay's mark on an entry it sends excludes.
+ * never re-captured. A `recipes.update` saved while one of its id waits unsent replaces that
+ * entry in one atomic change, which Replay's mark on an entry it sends excludes.
  */
 
 import type { HTTPHeaders, Operation, OperationLink, TRPCLink } from "@trpc/client";

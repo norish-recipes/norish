@@ -69,10 +69,8 @@ function AisleRow({
   );
 }
 
-/**
- * The Store's Aisles as one drag list under `header`, with the add field as its footer, kept above
- * the keyboard and the sheet's actions while it is typed in.
- */
+/** The Store's Aisles as one drag list under `header`, with the add field as its footer, kept
+ * above the keyboard and the sheet's actions while it is typed in. */
 export function StoreAisleList({
   aisles,
   onChange,

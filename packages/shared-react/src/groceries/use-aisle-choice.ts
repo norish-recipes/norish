@@ -4,16 +4,8 @@ import type { StoreDto } from "@norish/shared/contracts";
 
 import { useAisleFor, useFileGroceryName } from "./use-store-aisles";
 
-/**
- * Which aisle a grocery's name is filed under, as the grocery panel holds it.
- *
- * Both grocery panels hold exactly this, and both agree: the field reads what
- * the chosen Store remembers for the name, a choice is visible at once, and
- * it is written only on the panel's own Save or Add, against the name the
- * grocery is saved under, whose Ingredient the Aisle Link is keyed by
- * (ADR-0031, ADR-0037). Swapping the Store drops the choice: an aisle of one shop is
- * nowhere in another.
- */
+/** The aisle a grocery's name is filed under, as both grocery panels hold it: the Store's until a
+ * choice, written on Save or Add (ADR-0031, ADR-0037); swapping the Store drops the choice. */
 export function useAisleChoice(options: {
   /** The grocery's name as it will be saved: "oude kaas" out of "2 kg oude kaas". */
   groceryName: string;
@@ -26,11 +18,8 @@ export function useAisleChoice(options: {
   const { groceryName, ingredientId, store, resetOn } = options;
   const storeId = store?.id ?? null;
   const fileGroceryName = useFileGroceryName();
-  // Held for one Store and one opening of the panel. It is read back through
-  // that key, so a field mounted for another Store never sees the last
-  // Store's choice for even one render — and let go the moment either
-  // changes, so a Store swapped away from and back, or a panel closed and
-  // reopened, reads what the Store remembers rather than a stale choice.
+  // Keyed by Store and panel opening, so another Store or a reopened panel reads what the Store
+  // remembers, never the last choice, even for one render.
   const [held, setHeld] = useState<{
     storeId: string | null;
     resetToken: unknown;

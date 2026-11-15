@@ -56,10 +56,8 @@ function ShopCheckLine({
   );
 }
 
-/**
- * Manage stores: the household's Stores, reordered by holding a row, opened on a tap into the
- * editor that replaces the list inside the same sheet. Deleting asks first, as web does.
- */
+/** Manage stores: the household's Stores, reordered by holding a row, opened on a tap into the
+ * editor that replaces the list inside the same sheet. Deleting asks first, as web does. */
 export function ManageStoresScreen() {
   const intl = useIntl();
   const cancel = useCancelButton();

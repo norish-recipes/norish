@@ -29,10 +29,8 @@ interface UseRecipeEditorFormOptions {
   locale: string;
 }
 
-/**
- * The recipe editor's form: its fields, the lines and steps seeded once the units load, the
- * detected system of a new recipe, the Categories offered, validation and the save payload.
- */
+/** The recipe editor's form: its fields, the lines and steps seeded once the units load, the
+ * detected system of a new recipe, the Categories offered, validation and the save payload. */
 export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEditorFormOptions) {
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   const { categories: householdCategories, builtInAliases } = useCategoriesQuery();

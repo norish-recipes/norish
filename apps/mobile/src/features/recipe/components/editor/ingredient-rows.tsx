@@ -26,10 +26,8 @@ import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { useTrailingRow } from "../../hooks/use-trailing-row";
 import { AddRow, EditorInput, RowIconButton } from "./editor-parts";
 
-/**
- * A row per ingredient line with a grip; `#` starts a section. The trailing empty row to type
- * into shows on a new recipe or once Add ingredient asks for it.
- */
+/** A row per ingredient line with a grip; `#` starts a section. The trailing empty row to type
+ * into shows on a new recipe or once Add ingredient asks for it. */
 export function IngredientRows({
   ingredients,
   systemUsed,

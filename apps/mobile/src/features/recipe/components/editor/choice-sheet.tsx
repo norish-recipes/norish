@@ -7,10 +7,8 @@ import { useIntl } from "react-intl";
 
 export type Choice = { key: string; label: string };
 
-/**
- * A searchable list in a page sheet. With `multiple` each tap ticks a choice and the sheet stays;
- * without it a tap picks one and closes.
- */
+/** A searchable list in a page sheet. With `multiple` each tap ticks a choice and the sheet
+ * stays; without it a tap picks one and closes. */
 export function ChoiceSheet({
   title,
   choices,

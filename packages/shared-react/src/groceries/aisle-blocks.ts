@@ -13,10 +13,8 @@ export interface AisleBlocks<T> {
   blocks: AisleBlock<T>[];
 }
 
-/**
- * A Store's rows placed in its aisles (ADR-0031), in the order given. No Store, such as Unsorted,
- * has no aisles, so every row is unfiled.
- */
+/** A Store's rows placed in its aisles (ADR-0031), in the order given. No Store, such as
+ * Unsorted, has no aisles, so every row is unfiled. */
 export function placeInAisles<T>(
   store: Pick<StoreDto, "aisles"> | null | undefined,
   rows: readonly T[],

@@ -118,10 +118,8 @@ function hasNameContaining(item: PantryIngredientDto, needle: string): boolean {
   );
 }
 
-/**
- * The Pantry the field narrows: every kept food whose name, in any language, contains the text, or
- * that the text names as a food, in the reader's order. No text keeps them all.
- */
+/** The Pantry the field narrows: every kept food whose name, in any language, contains the text,
+ * or that the text names as a food, in the reader's order. No text keeps them all. */
 export function searchPantry(
   items: readonly PantryIngredientDto[],
   text: string,

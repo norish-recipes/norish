@@ -23,10 +23,8 @@ type Scrollable =
   | { scrollTo: (to: { y: number; animated: boolean }) => void }
   | { scrollToOffset: (to: { offset: number; animated: boolean }) => void };
 
-/**
- * Keeps the focused field above the keyboard and anything floating over the content: iOS lifts a
- * field only as the keyboard opens, and never past a floating control.
- */
+/** Keeps the focused field above the keyboard and anything floating over the content: iOS lifts a
+ * field only as the keyboard opens, and never past a floating control. */
 export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(
   clearance: number,
   /** How long the container keeps resizing after the keyboard shows, as a sheet's padding does. */

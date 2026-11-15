@@ -37,10 +37,8 @@ type DragListProps<H, T> = Omit<
   renderHeading: (heading: H, index: number) => ReactNode;
   /** `drag` lifts the row; give it to the row's `onLongPress` so a tap still reaches `onPress`. */
   renderItem: (item: T, drag: () => void) => ReactNode;
-  /**
-   * Fired after a drop that moved the row, counted in the rows shown at the lift. The list shows
-   * `drop.rows` until `rows` changes; returning false puts the row back instead.
-   */
+  /** Fired after a drop that moved the row, counted in the rows shown at the lift. The list shows
+   * `drop.rows` until `rows` changes; returning false puts the row back instead. */
   onDrop: (drop: Drop<H, T>) => boolean | void;
   /** Told when a row is lifted and when it is let go. */
   onHeldChange?: (held: boolean) => void;

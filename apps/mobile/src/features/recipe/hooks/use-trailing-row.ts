@@ -4,10 +4,8 @@ import { useRef, useState } from "react";
 
 import { rowsAfterLeaving } from "@norish/shared-react/recipes";
 
-/**
- * The editor's rows with the trailing empty one to type into hidden until Add asks for it (a
- * recipe with no rows yet shows it). Return moves focus down; an emptied row goes when left.
- */
+/** The editor's rows with the trailing empty one to type into hidden until Add asks for it (a
+ * recipe with no rows yet shows it). Return moves focus down; an emptied row goes when left. */
 export function useTrailingRow<T extends { id: string }>(
   rows: T[],
   hasContent: (row: T) => boolean

@@ -72,10 +72,8 @@ export function oklchHueChromaFromSrgb(
   return { h: h < 0 ? h + 360 : h, c };
 }
 
-/**
- * How much chroma a dish may put into a page ground (ADR-0023). The theme's own neutral ground
- * sits at ~0.008-0.016, so this is a clearly visible warmth short of the accent's 0.083.
- */
+/** How much chroma a dish may put into a page ground (ADR-0023). The theme's own neutral ground
+ * sits at ~0.008-0.016, so this is a clearly visible warmth short of the accent's 0.083. */
 export const MAX_DISH_TINT_CHROMA = 0.05;
 
 /** The hue and clamped chroma a stored Dish Colour (`#rrggbb`) tints a page with, or null. */

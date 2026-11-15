@@ -30,10 +30,8 @@ export interface ProductFieldOptions {
   packWords: PackSizeWords;
 }
 
-/**
- * Which of the shop's products a grocery is: its search and the by-hand fields, composed. Nothing
- * is written here; the choice goes to `onChoice` for the screen's own Save or Add.
- */
+/** Which of the shop's products a grocery is: its search and the by-hand fields, composed.
+ * Nothing is written here; the choice goes to `onChoice` for the screen's own Save or Add. */
 export function useProductField({
   store,
   groceryName,

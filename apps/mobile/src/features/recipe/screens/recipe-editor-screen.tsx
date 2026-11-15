@@ -71,10 +71,8 @@ export function RecipeEditorSkeleton() {
   );
 }
 
-/**
- * The recipe editor, for Write it yourself and for Edit: cards in the page's order, Save or Create
- * in the pill. Leaving with changes asks first, from the close button and the back swipe alike.
- */
+/** The recipe editor, for Write it yourself and Edit: cards in the page's order, Save or Create in
+ * the pill. Leaving with changes asks first, from the close button and the back swipe alike. */
 export function RecipeEditorScreen({ mode, initialData }: EditorProps) {
   // The recipe as it opened: a save carries its version, so an edit made meanwhile elsewhere
   // conflicts rather than being overwritten.

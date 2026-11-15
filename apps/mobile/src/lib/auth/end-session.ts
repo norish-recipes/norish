@@ -15,10 +15,8 @@ type SignOutClient = {
   signOut: (options: { fetchOptions: { signal: AbortSignal } }) => Promise<unknown>;
 };
 
-/**
- * Ends the session on the server too when `scope` is everywhere and it answers, and on this device
- * always; `widgetSignIn` is the line the cleared widgets show.
- */
+/** Ends the session on the server too when `scope` is everywhere and it answers, and on this
+ * device always; `widgetSignIn` is the line the cleared widgets show. */
 export async function endSession(
   authClient: SignOutClient,
   scope: SessionScope,

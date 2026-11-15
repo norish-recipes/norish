@@ -1,7 +1,5 @@
-/**
- * Each tab's path and the routes its stack presents, as Expo Router's typed hrefs. The tab bar
- * tells the tab by its path; screens and accessories push these.
- */
+/** Each tab's path and the routes its stack presents, as Expo Router's typed hrefs. The tab bar
+ * tells the tab by its path; screens and accessories push these. */
 export const TAB_ROUTES = {
   recipes: {
     root: "/",

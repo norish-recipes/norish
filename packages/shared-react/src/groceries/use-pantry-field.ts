@@ -9,10 +9,8 @@ import { foodKey } from "@norish/shared/lib/spelling-keys";
 import type { PickedFood } from "./types";
 import { usePantryMutations } from "./use-pantry-mutations";
 
-/**
- * The Pantry's one field: its text, whether that text can be added (a food, not one already
- * kept), and `keep`, which adds a typed name or a picked food and empties the field.
- */
+/** The Pantry's one field: its text, whether that text can be added (a food, not one already
+ * kept), and `keep`, which adds a typed name or a picked food and empties the field. */
 export function usePantryField(
   items: readonly PantryIngredientDto[],
   locale: string,

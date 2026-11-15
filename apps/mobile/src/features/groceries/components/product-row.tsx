@@ -11,11 +11,8 @@ import { packSizeOf } from "@norish/shared/lib/pack-size";
 /** A product the form holds that the list does not price yet: a pick, or a Store's own link. */
 export type HeldProduct = { name: string; detail: string };
 
-/**
- * The Store Product a grocery is priced by, and what the grocery costs of it. A held product (one
- * just chosen, or a Store's link the list has no line for) shows without a cost, which only the
- * saved line has. With `onPress` the row opens the product search, and is there while empty.
- */
+/** The Store Product a grocery is priced by, and its cost; a held product (just chosen, or not on
+ * the list) has none. With `onPress` the row opens the product search, and shows while empty. */
 export function ProductRow({
   price,
   held = null,

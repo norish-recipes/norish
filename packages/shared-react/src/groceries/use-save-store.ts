@@ -10,10 +10,8 @@ import { useStoresMutations } from "./use-stores-mutations";
 /** What the shop said when its Search Address was last tried, if it was. */
 export type ShopCheck = { storeName: string; result: StoreSearchAddressResult | null };
 
-/**
- * Saves the Store being edited as web's store manager does: one write with its aisles, a refused
- * create left to try again, and the shop asked about a changed link once the Store is stored.
- */
+/** Saves the Store being edited as web's store manager does: one write with its aisles, a refused
+ * create left to try again, and the shop asked about a changed link once the Store is stored. */
 export function useSaveStore(stores: StoreDto[]) {
   const { createStore, updateStore, checkSearchAddress } = useStoresMutations();
   const { showError } = usePlatform();

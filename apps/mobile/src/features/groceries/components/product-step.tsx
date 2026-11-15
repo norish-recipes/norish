@@ -71,10 +71,8 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-/**
- * Store Product search, a step of the edit sheet: type to ask the shop, tap a product to hold it,
- * or type the price yourself. Nothing is written here; the sheet's Save commits the choice.
- */
+/** Store Product search, a step of the edit sheet: type to ask the shop, tap a product to hold
+ * it, or type the price yourself. Nothing is written here; the sheet's Save commits the choice. */
 export function ProductStep({
   store,
   field,

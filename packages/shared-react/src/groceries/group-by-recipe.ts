@@ -9,10 +9,8 @@ export interface RecipeGroceries {
   groceries: GroceryDto[];
 }
 
-/**
- * The list by recipe: the lines no recipe added first, under `manualName`, then each recipe's
- * lines under its name, in name order.
- */
+/** The list by recipe: the lines no recipe added first, under `manualName`, then each recipe's
+ * lines under its name, in name order. */
 export function groupGroceriesByRecipe(
   groceries: readonly GroceryDto[],
   recipeMap: GroceriesQueryResult["recipeMap"],

@@ -9,10 +9,8 @@ import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "@norish/shared-react/cale
 export const asSlot = (value: string | undefined): Slot =>
   TODAY_MEAL_SLOTS.find((slot) => slot === value) ?? "Dinner";
 
-/**
- * The four meal slots as one rounded segmented control. `inCard` swaps its fills for a grouped
- * card's, whose ground is the neutral one; each tab's testID is `${testID}-${slot}`.
- */
+/** The four meal slots as one rounded segmented control. `inCard` swaps its fills for a grouped
+ * card's, whose ground is the neutral one; each tab's testID is `${testID}-${slot}`. */
 export function SlotTabs({
   value,
   testID,

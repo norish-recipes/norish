@@ -20,10 +20,8 @@ import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
 import { usePlatform } from "@norish/shared-react/platform";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
-/**
- * A planned item's sheet: a note's text with Save, its date and slot, which move it at once, its
- * recipe, its groceries, and Remove.
- */
+/** A planned item's sheet: a note's text with Save, its date and slot, which move it at once, its
+ * recipe, its groceries, and Remove. */
 export function PlannedItemScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();

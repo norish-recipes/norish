@@ -28,10 +28,8 @@ function photoName(image: string, size: PhotoSize) {
   return `${image.replace(/[^a-zA-Z0-9]/g, "_").slice(-120)}-${size}.jpg`;
 }
 
-/**
- * Calls `render` with the photos on the device, removes the ones it left out, downloads the ones
- * it wants and renders again once one lands. Stops, and keeps nothing, once `current` turns false.
- */
+/** Calls `render` with the photos on the device, removes those it left out, downloads those it
+ * wants and renders again as each lands; once `current` turns false it stops and keeps nothing. */
 export async function renderWithPhotos(
   render: (photo: PhotoLookup) => void,
   current: () => boolean,

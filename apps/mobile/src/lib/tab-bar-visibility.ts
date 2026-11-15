@@ -21,10 +21,8 @@ export function useTabBarHidden(): boolean {
   );
 }
 
-/**
- * Hides the tab bar for as long as the calling screen is mounted and in front, or has only the
- * named sheets of its stack over it while its tab is in front.
- */
+/** Hides the tab bar for as long as the calling screen is mounted and in front, or has only the
+ * named sheets of its stack over it while its tab is in front. */
 export function useHideTabBar(sheets: readonly string[] = []) {
   const navigation = useNavigation();
   const route = useRoute();

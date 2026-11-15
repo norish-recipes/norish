@@ -160,10 +160,8 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
   );
 }
 
-/**
- * The recipe's photo, its gallery paged with dots, or its video, fading into the page; a double
- * tap favourites with a light haptic.
- */
+/** The recipe's photo, its gallery paged with dots, or its video, fading into the page; a double
+ * tap favourites with a light haptic. */
 export function RecipeHero({
   recipe,
   pageColor,

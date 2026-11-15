@@ -7,10 +7,8 @@ import { useThemeColor } from "heroui-native";
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
 
-/**
- * A planned item's picture: its recipe's photo, or a note's tile with its glyph. `className`
- * sizes and rounds it; on a sheet row the note tile and the photo's ground take the white.
- */
+/** A planned item's picture: its recipe's photo, or a note's tile with its glyph. `className`
+ * sizes and rounds it; on a sheet row the note tile and the photo's ground take the white. */
 export function PlannedThumb({
   item,
   className,

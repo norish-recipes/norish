@@ -3,10 +3,8 @@ import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 import { useGroceriesMutations } from "./use-groceries-mutations";
 
-/**
- * What saving and deleting a grocery's edit write, whether the grocery repeats or not: a repeating
- * one updates its repeat, a plain one that gains a repeat becomes one, and a plain edit updates.
- */
+/** What saving and deleting a grocery's edit write: a repeating one updates its repeat, a plain
+ * one that gains a repeat becomes one, and a plain edit updates. */
 export function useGroceryEdit(grocery: GroceryDto, recurringGrocery: RecurringGroceryDto | null) {
   const {
     deleteGroceries,

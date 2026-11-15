@@ -34,10 +34,8 @@ const GROW_THRESHOLD = 2;
 /** A row counts as shown once half of it is on screen; one object, as FlatList asks. */
 const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
 
-/**
- * The Calendar tab: web's timeline of day cards, opened on today and growing at either edge as it
- * scrolls. A tap opens a planned item's sheet; a hold lifts it to drag onto another day.
- */
+/** The Calendar tab: web's timeline of day cards, opened on today and growing at either edge as
+ * it scrolls. A tap opens a planned item's sheet; a hold lifts it to drag onto another day. */
 export function CalendarScreen() {
   const router = useRouter();
   // A widget opens the Calendar on a day; without one it opens on today.

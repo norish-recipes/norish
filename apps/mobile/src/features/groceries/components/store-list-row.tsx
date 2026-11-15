@@ -41,10 +41,8 @@ function CircleButton({
   );
 }
 
-/**
- * A Store of Manage stores: its grip, its dot and name, and edit and delete. A tap opens the
- * editor and a hold lifts the row; while it is carried it is a card of its own.
- */
+/** A Store of Manage stores: its grip, its dot and name, and edit and delete. A tap opens the
+ * editor and a hold lifts the row; while it is carried it is a card of its own. */
 export function StoreListRow({
   store,
   edge,

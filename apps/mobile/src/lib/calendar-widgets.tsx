@@ -321,10 +321,8 @@ export function startCalendarWidgets() {
   ended = false;
 }
 
-/**
- * Hands both widgets two weeks from `plan` and writes the photos they show into the shared
- * folder: shown without a photo first, again with it once it is on the device.
- */
+/** Hands both widgets two weeks from `plan` and writes the photos they show into the shared
+ * folder: shown without a photo first, again with it once it is on the device. */
 export function syncCalendarWidgets(plan: Plan, strings: WidgetStrings): Promise<void> {
   if (!widgets) return Promise.resolve();
   const started = generation;
@@ -337,10 +335,8 @@ export function syncCalendarWidgets(plan: Plan, strings: WidgetStrings): Promise
   );
 }
 
-/**
- * Leaves both widgets on `signIn`, the signed-out line, and removes their photos at once, so nothing
- * of the household stays on the Home Screen; a refresh still downloading is dropped, not awaited.
- */
+/** Leaves both widgets on `signIn`, the signed-out line, and removes their photos at once; a
+ * refresh still downloading is dropped, not awaited. */
 export function clearCalendarWidgets(signIn: string): Promise<void> {
   if (!widgets) return Promise.resolve();
   ended = true;

@@ -25,10 +25,8 @@ export function formatDay(intl: IntlShape, date: Date) {
   return intl.formatDate(date, { weekday: "short", month: "short", day: "numeric" });
 }
 
-/**
- * A day's date on one line, Today named first; the sizes are the caller's (`title` for the lead,
- * `date` for the date after Today).
- */
+/** A day's date on one line, Today named first; the sizes are the caller's (`title` for the lead,
+ * `date` for the date after Today). */
 export function DayTitle({
   date,
   isToday,

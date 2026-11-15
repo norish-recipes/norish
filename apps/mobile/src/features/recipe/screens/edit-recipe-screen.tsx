@@ -11,10 +11,8 @@ import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { RecipeEditorScreen, RecipeEditorSkeleton } from "./recipe-editor-screen";
 
-/**
- * Edit: the editor on the recipe as the Warm Set or the server has it, for a reader who may edit
- * it. Until then a skeleton, and once the recipe is gone (deleted while open) the not-found state.
- */
+/** Edit: the editor on the recipe from the Warm Set or the server, for a reader who may edit it;
+ * a skeleton until then, and the not-found state once it is deleted while open. */
 export function EditRecipeScreen() {
   const router = useRouter();
   const { top } = useSafeAreaInsets();

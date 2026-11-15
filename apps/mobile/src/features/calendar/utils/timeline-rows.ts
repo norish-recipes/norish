@@ -146,10 +146,8 @@ type Layouts = { scale: number; layouts: { offset: number; length: number }[] };
 // Per rows array: a list asks for every row's layout, so each set is added up once.
 const layoutsOf = new WeakMap<ArrayLike<TimelineRow>, Layouts>();
 
-/**
- * Row `index`'s top edge and full length, its gap included, among `rows` (the rows the list
- * shows) at the reader's font scale.
- */
+/** Row `index`'s top edge and full length, its gap included, among `rows` (the rows the list
+ * shows) at the reader's font scale. */
 export function rowLayout(rows: ArrayLike<TimelineRow>, index: number, scale = 1) {
   let known = layoutsOf.get(rows);
 
@@ -172,10 +170,8 @@ export function rowLayout(rows: ArrayLike<TimelineRow>, index: number, scale = 1
   return known.layouts[index] ?? { offset: 0, length: 0 };
 }
 
-/**
- * Where a held item dropped: resolved by id against the plan as it is when it lands, onto the
- * day of the heading above, in its own slot, last. Null for a drop that means nothing.
- */
+/** Where a held item dropped: resolved by id against the plan as it is when it lands, onto the
+ * day of the heading above, in its own slot, last. Null for a drop that means nothing. */
 export function planTimelineDrop(drop: Drop<TimelineHeading, TimelineItem>, data: CalendarData) {
   const dayKey = drop.heading?.dayKey ?? null;
   const item = Object.values(data)

@@ -53,10 +53,8 @@ interface DropInput {
   idsOf: (key: string) => readonly string[];
 }
 
-/**
- * Renumbers the target Store (and the one left) in its block's order, then files the food where a
- * drop into an aisle teaches the Store something new (ADR-0031). Two writes, each idempotent.
- */
+/** Renumbers the target Store (and the one left) in its block's order, then files the food where
+ * a drop into an aisle teaches the Store something new (ADR-0031). Two writes, each idempotent. */
 export function planDrop(input: DropInput): DropPlan {
   const { items, originContainer, targetContainer, stores, aisleFor, movedGroceries, idsOf } =
     input;
@@ -218,10 +216,8 @@ export function planRecipeReorder(ids: readonly string[]): ReorderUpdate[] {
   return ids.map((id, sortOrder) => ({ id, sortOrder }));
 }
 
-/**
- * A by-recipe drop reorders the recipe's open lines as `landed` (its ids as the drop left them)
- * holds them; null for a drop below a done line, or one that changes nothing.
- */
+/** A by-recipe drop reorders the recipe's open lines as `landed` (its ids as the drop left them)
+ * holds them; null for a drop below a done line, or one that changes nothing. */
 export function planRecipeDrop(
   lines: readonly GroceryDto[],
   landed: readonly string[],

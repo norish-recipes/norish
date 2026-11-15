@@ -203,13 +203,8 @@ function getDisplayName(name: string | null): string {
   return stripBracketed(name).replace(/\s+/g, " ").trim() || "Unknown item";
 }
 
-/**
- * Format inline source breakdown showing recipe names and amounts.
- * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B". The
- * lines added by hand are named once, with their amounts together:
- * "Recipe A (300g), Manual Items (2×, 1×)", where a line that states no
- * amount is the one the group's total counts it as.
- */
+/** Inline sources with amounts: "Recipe A (300g), Recipe B"; lines added by hand are named once,
+ * amounts together ("Manual Items (2×, 1×)"), a line with no amount as the total counts it. */
 export function formatInlineSourceBreakdown(
   sources: GroupedGrocerySource[],
   formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string,

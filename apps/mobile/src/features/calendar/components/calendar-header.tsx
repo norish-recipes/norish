@@ -11,10 +11,8 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 /** The largest text scale a 44 pt pill holds whole. */
 const PILL_TEXT_SCALE = 2;
 
-/**
- * The tab's large title, an Offline pill while the server can't be reached, and the way back to
- * today while it is off screen, pointing where it is.
- */
+/** The tab's large title, an Offline pill while the server can't be reached, and the way back to
+ * today while it is off screen, pointing where it is. */
 export function CalendarHeader({
   todayDirection,
   onToday,

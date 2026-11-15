@@ -7,10 +7,8 @@ import type { PricedLine } from "@norish/shared-react/groceries";
 import { useGroceryPrice } from "@norish/shared-react/groceries";
 import { formatShelfPrice } from "@norish/shared/lib/format-price";
 
-/**
- * What a row costs at its Store: the Line Cost, the regular one struck through beside it on a
- * Sale, a spinner while the Store is still being asked, nothing for a Miss.
- */
+/** What a row costs at its Store: the Line Cost, the regular one struck through beside it on a
+ * Sale, a spinner while the Store is still being asked, nothing for a Miss. */
 export function GroceryPrice({
   line,
   size = "base",

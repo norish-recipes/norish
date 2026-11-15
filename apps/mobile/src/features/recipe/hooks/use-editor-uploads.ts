@@ -13,13 +13,11 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 
 const log = createClientLogger("EditorUploads");
 
-/**
- * The editor's photo uploads, which need the server: the form must hold each photo's address,
- * which a queued upload has not got yet. Removing a photo deletes it at once, as on web.
- */
 /** A photo still uploading: shown with a spinner, and removable while its upload hangs. */
 export type PendingPhoto = { key: string; uri: string; target: string };
 
+/** The editor's photo uploads, which need the server: the form holds each photo's address, which
+ * a queued upload has not got. Removing a photo deletes it at once, as on web. */
 export function useEditorUploads(recipeId: string) {
   const intl = useIntl();
   const { isOffline } = useConnectivity();

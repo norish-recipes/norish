@@ -3,10 +3,8 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import { moveTargetIndex } from "./calendar-cache-merge";
 import { useCalendarMutations } from "./use-calendar-mutations";
 
-/**
- * Where a planned item dropped on a day lands: that day, its own slot, last in it. Null for a drop
- * on no day or on its own day, which moves nothing.
- */
+/** Where a planned item dropped on a day lands: that day, its own slot, last in it. Null for a
+ * drop on no day or on its own day, which moves nothing. */
 export function dayDropTarget(
   items: PlannedItemFromQuery[],
   dropped: Pick<PlannedItemFromQuery, "id" | "userId" | "date" | "slot">,

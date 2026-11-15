@@ -8,10 +8,8 @@ interface UseUnsavedNavigationGuardOptions {
   ask: (leave: () => void) => void;
 }
 
-/**
- * Leaving a form with unsaved changes asks first. A save calls `allowNavigation` so its own
- * navigation passes, and `disallowNavigation` when it fails.
- */
+/** Leaving a form with unsaved changes asks first. A save calls `allowNavigation` so its own
+ * navigation passes, and `disallowNavigation` when it fails. */
 export function useUnsavedNavigationGuard({
   hasUnsavedChanges,
   ask,

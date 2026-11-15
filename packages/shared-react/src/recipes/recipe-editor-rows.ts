@@ -149,10 +149,8 @@ export function removeIngredientRow(rows: IngredientRow[], index: number): Ingre
   return updated.length === 0 ? [createIngredientRow("")] : updated;
 }
 
-/**
- * Where each line went when the rows were reordered or one was removed, by its old order (its
- * index). A removed line maps to null. Null when nothing moved.
- */
+/** Where each line went when the rows were reordered or one was removed, by its old order (its
+ * index). A removed line maps to null. Null when nothing moved. */
 export type LineMoves = ReadonlyMap<number, number | null>;
 
 export function lineMoves(before: IngredientRow[], after: IngredientRow[]): LineMoves | null {
@@ -243,10 +241,8 @@ export function stepRowsToSteps(rows: StepRow[], systemUsed: MeasurementSystem):
     .filter((step) => step.step || step.images.length > 0);
 }
 
-/**
- * The rows with each step's references as the form holds them: the form owns them, so after
- * lines move the rows take them back however many moves one render brought.
- */
+/** The rows with each step's references as the form holds them: the form owns them, so after
+ * lines move the rows take them back however many moves one render brought. */
 export function withStepRefsOf(rows: StepRow[], steps: Step[]): StepRow[] {
   let next = 0;
 
@@ -313,10 +309,8 @@ export function ingredientSuggestionsOf(
     }));
 }
 
-/**
- * The `@` mention: the word lands in the step's text and its chip attaches at the full share.
- * `asksAmount` says whether the new chip should ask how much of an amounted line the step uses.
- */
+/** The `@` mention: the word lands in the step's text and its chip attaches at the full share.
+ * `asksAmount` says whether the new chip should ask how much of an amounted line the step uses. */
 export function mentionIngredient(
   rows: StepRow[],
   index: number,
@@ -351,10 +345,8 @@ export function mentionIngredient(
   return { rows: updated, asksAmount };
 }
 
-/**
- * A chip using the whole line is the bare name; part of an amounted line reads as the derived
- * amount ("2.5 g salt"), and only an amountless line falls back to the fraction.
- */
+/** A chip using the whole line is the bare name; part of an amounted line reads as the derived
+ * amount ("2.5 g salt"), and only an amountless line falls back to the fraction. */
 export function stepChipLabel(
   line: { ingredientName: string; amount?: number | string | null; unit?: string | null },
   share: number

@@ -11,10 +11,8 @@ export const UNSORTED_CONTAINER = "unsorted" as const;
 /** Prefix of an aisle's container id: `aisle:<aisleId>`, inside its Store's block. */
 const AISLE_CONTAINER_PREFIX = "aisle:" as const;
 
-/**
- * A droppable of the list: `unsorted`, a store id (the Store's own unfiled
- * area, at the top of its block) or `aisle:<aisleId>` (one aisle of a Store).
- */
+/** A droppable of the list: `unsorted`, a store id (the Store's own unfiled area, at the top of
+ * its block) or `aisle:<aisleId>` (one aisle of a Store). */
 export type ContainerId = string;
 
 /** Container ID => the keys in it, a row's id or a group's key, in the order shown. */
@@ -132,10 +130,8 @@ function fillContainers<T>(
 export const openBySortOrder = <T extends GroceryDto>(groceries: readonly T[]) =>
   groceries.filter((grocery) => !grocery.isDone).sort(bySortOrder);
 
-/**
- * One Store's containers and its open groceries in each, by sort order: a grocery sits
- * where its Store files its Ingredient, which nothing on the row says (ADR-0031, ADR-0037).
- */
+/** One Store's containers and its open groceries in each, by sort order: a grocery sits where its
+ * Store files its Ingredient, which nothing on the row says (ADR-0031, ADR-0037). */
 export function storeItems(
   storeId: string | null,
   groceries: readonly GroceryDto[],

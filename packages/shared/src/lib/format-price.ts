@@ -2,11 +2,8 @@ import type { PackSize } from "@norish/shared/lib/pack-size";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 import { unitLabel } from "@norish/shared/lib/units";
 
-/**
- * A Shelf Price as a shopper reads it: the shop's own currency, the reader's
- * own locale. Never a price per kilo — that is a different number Norish does
- * not show.
- */
+/** A Shelf Price in the shop's currency and the reader's locale; never a price per kilo, which
+ * Norish does not show. */
 export function formatShelfPrice(locale: string, price: number, currency: string): string {
   try {
     return new Intl.NumberFormat(locale, { style: "currency", currency }).format(price);
@@ -25,11 +22,8 @@ export interface PackSizeWords {
   pieces: (count: number) => string;
 }
 
-/**
- * Norish's own words for a Pack Size, for a product whose shop supplied no
- * size words or whose Pack Size was set by hand: "500 g", "6 pieces",
- * "per kg", "per 100 g". Where the shop's words exist they are shown instead.
- */
+/** Norish's own words for a Pack Size ("500 g", "6 pieces", "per kg"), for a product with no shop
+ * words or a Pack Size set by hand; the shop's words are shown where they exist. */
 export function formatPackSize(pack: PackSize, words: PackSizeWords): string {
   const unit = pack.unit === "piece" ? words.pieces(pack.quantity) : unitLabel(pack.unit);
   const quantity = formatAmountAsDecimal(pack.quantity);

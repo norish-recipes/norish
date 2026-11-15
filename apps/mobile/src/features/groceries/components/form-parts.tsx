@@ -45,10 +45,8 @@ export function NameField({
   );
 }
 
-/**
- * How often it comes back, right under the field: the repeat the text states, as a dashed pill
- * that takes it on a tap, and the repeat it has, as a filled pill that opens Repeat and has an ×.
- */
+/** The repeat under the field: the one the text states, a dashed pill a tap takes, and the one
+ * it has, a filled pill that opens Repeat and has an ×. */
 export function RepeatPills({
   detected,
   confirmed,

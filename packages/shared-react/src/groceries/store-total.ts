@@ -4,12 +4,8 @@ import type { LineAmount, LineCost } from "@norish/shared/lib/line-cost";
 import { groupLineCost } from "@norish/shared/lib/line-cost";
 import { packSizeOf } from "@norish/shared/lib/pack-size";
 
-/**
- * One row of a list, as it is priced: the Store and Ingredient its Product
- * Link is keyed by (ADR-0037), its name, and the amounts the row stands for —
- * one for a plain grocery, one per source for a group, which is priced as one
- * purchase.
- */
+/** One row as priced: the Store and Ingredient its Product Link is keyed by (ADR-0037), its name,
+ * and its amounts, one for a grocery, one per source for a group priced as one purchase. */
 export interface PricedLine {
   storeId: string | null;
   /** None yet on a line added offline, which is unpriced until it is resolved. */
@@ -31,11 +27,8 @@ export function lineOf(grocery: GroceryDto): PricedLine {
   };
 }
 
-/**
- * A group shares one name at one Store, so one product prices it — the
- * link of its first source, which is every source's link — and its amounts
- * are all its sources', because the row shows all of them.
- */
+/** A group shares one name at one Store, so its first source's link prices it, and its amounts
+ * are all its sources', because the row shows all of them. */
 export function lineOfGroup(group: GroceryGroup): PricedLine {
   const first = group.sources[0];
 
@@ -79,17 +72,8 @@ export interface StoreTotal {
   currency: string;
 }
 
-/**
- * What is still to buy at one Store costs this, as the Store last knew: the
- * Line Costs of the outstanding rows added up. The lines are the rows a
- * section shows — in the grouped list one per group — so the heading is
- * always the sum of the prices under it.
- *
- * A line the Store cannot price is left out rather than guessed at, and a
- * Store whose products are priced in more than one currency totals the one its
- * first priced line is in — a shop charges in its own money, and a total in
- * two of them would be a lie either way.
- */
+/** The Line Costs of a Store's outstanding rows summed, so a heading is the sum under it; an
+ * unpriced line is left out, and the total is in its first priced line's currency only. */
 export function storeTotal(
   lines: PricedLine[],
   priceFor: PriceFor,

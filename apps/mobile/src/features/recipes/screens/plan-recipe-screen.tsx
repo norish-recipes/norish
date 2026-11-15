@@ -27,11 +27,8 @@ import { usePlanExit } from "../hooks/use-plan-exit";
 const DAYS = 14;
 const SKELETON_ROWS = [0, 1, 2, 3];
 
-/**
- * Plan a recipe: a day (from the strip, or any day from its date chip), a slot, then a recipe
- * from the search, a random one or a note. Opened on one day (`date`) it is that day's add,
- * without the day strip.
- */
+/** Plan a recipe: a day (strip or date chip), a slot, then a recipe from the search, a random one
+ * or a note. Opened on one day (`date`) it is that day's add, without the strip. */
 export function PlanRecipeScreen() {
   const intl = useIntl();
   const params = useLocalSearchParams<{ slot?: string; date?: string }>();

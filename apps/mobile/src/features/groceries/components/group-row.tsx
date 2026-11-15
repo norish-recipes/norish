@@ -15,10 +15,8 @@ import { useStoreColor } from "../hooks/use-store-color";
 import { GroceryPrice } from "./grocery-price";
 import { StoreTick } from "./store-tick";
 
-/**
- * One food's groceries as a single row, ticked as one; a group of several folds out into an inset
- * block of one row per source. A group of one is that grocery's row, and a tap opens its sheet.
- */
+/** One food's groceries as one row, ticked as one; several fold out into a row per source, and a
+ * group of one is that grocery's row, whose tap opens its sheet. */
 export function GroupRow({
   group,
   store,
