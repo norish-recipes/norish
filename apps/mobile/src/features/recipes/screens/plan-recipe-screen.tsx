@@ -3,6 +3,9 @@ import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
 import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { DatePicker, Host } from "@expo/ui/swift-ui";
+import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { Button, SearchField, Skeleton, Spinner, Tabs, useThemeColor } from "heroui-native";
@@ -20,9 +23,8 @@ import {
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { usePlanExit } from "../hooks/use-plan-exit";
-import { planDay } from "../utils/plan-day";
 
-/** The days offered, today first. */
+/** The days on the strip, today first; its last chip picks any other. */
 const DAYS = 14;
 const SKELETON_ROWS = [0, 1, 2, 3];
 
@@ -30,20 +32,24 @@ const asSlot = (value: string | undefined): Slot =>
   TODAY_MEAL_SLOTS.find((slot) => slot === value) ?? "Dinner";
 
 /**
- * Plan a recipe: a day, a slot, then a recipe from the search, a random one or a note. Opened
- * on one day (`date`) it is that day's add, without the day strip.
+ * Plan a recipe: a day (from the strip, or any day from its date chip), a slot, then a recipe
+ * from the search, a random one or a note. Opened on one day (`date`) it is that day's add,
+ * without the day strip.
  */
 export function PlanRecipeScreen() {
   const intl = useIntl();
   const params = useLocalSearchParams<{ slot?: string; date?: string }>();
   const [foreground] = useThemeColor(["foreground"] as const);
+  const accentText = useAccentTextColor();
   const today = parseDateKey(useToday());
+  const day = params.date ? parseDateKey(params.date) : null;
   const days = Array.from(
     { length: DAYS },
     (_, offset) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
   );
   const [picked, setPicked] = useState<Date | null>(null);
-  const date = params.date ? parseDateKey(params.date) : planDay(picked, days);
+  // Today until a day is picked, so the sheet follows midnight.
+  const date = day ?? picked ?? today;
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
   const search = useDeferredValue(input.trim());
@@ -65,7 +71,7 @@ export function PlanRecipeScreen() {
   const header = (
     <View className="gap-3">
       {/* heroui-native has no day strip, so these chips are hand-built. */}
-      {params.date ? null : (
+      {day ? null : (
         <SheetStrip
           accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
           contentClassName="gap-2"
@@ -105,6 +111,20 @@ export function PlanRecipeScreen() {
               </Pressable>
             );
           })}
+          <View className="h-16 justify-center">
+            <Host matchContents>
+              <DatePicker
+                modifiers={[
+                  accessibilityIdentifier("plan-recipe-other-day"),
+                  ...(accentText ? [tint(accentText)] : []),
+                ]}
+                selection={date}
+                onDateChange={(next) =>
+                  setPicked(new Date(next.getFullYear(), next.getMonth(), next.getDate()))
+                }
+              />
+            </Host>
+          </View>
         </SheetStrip>
       )}
 
@@ -171,8 +191,8 @@ export function PlanRecipeScreen() {
     <Sheet
       name="plan-recipe"
       title={
-        params.date
-          ? intl.formatMessage({ id: "calendar.panel.addToDay" }, { day: formatDay(intl, date) })
+        day
+          ? intl.formatMessage({ id: "calendar.panel.addToDay" }, { day: formatDay(intl, day) })
           : intl.formatMessage({ id: "calendar.panel.planRecipe" })
       }
     >
