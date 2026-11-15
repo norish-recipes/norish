@@ -101,7 +101,7 @@ export function StepRows({
 
   const pickPhotos = usePhotoSourceSheet(text("recipes.editor.addStepPhoto"));
   const addPhotos = (row: StepRowValue, assets: ImagePicker.ImagePickerAsset[]) => {
-    void uploads.uploadStep(assets).then((added) => {
+    void uploads.uploadStep(assets, row.id).then((added) => {
       // The rows may have moved on while uploading, so the photos join the row as it is now.
       commit(
         latestRowsRef.current.map((entry) =>
@@ -132,11 +132,13 @@ export function StepRows({
         inputProps={trailingRow.inputProps(row, index)}
         isOnlyRow={rows.length === 1}
         number={numbers[index] ?? null}
+        pendingPhotos={uploads.pendingFor(row.id)}
         row={row}
         suggestions={suggestions}
         onAddPhoto={() => {
           if (uploads.canUpload()) pickPhotos(STEP_PHOTO, (assets) => addPhotos(row, assets));
         }}
+        onCancelPhoto={uploads.cancel}
         onLeave={() => {
           const next = trailingRow.leave(index);
 
@@ -148,6 +150,7 @@ export function StepRows({
         onRefsChange={(stepIngredients) => update(index, { stepIngredients })}
         onRemove={() => {
           row.images.forEach((image) => uploads.removeStepImage(image.image));
+          uploads.pendingFor(row.id).forEach((photo) => uploads.cancel(photo.key));
           commit(removeStepRow(rows, index));
         }}
         onRemovePhoto={(imageIndex) => {

@@ -120,6 +120,28 @@ export function MediaStrip({
             </View>
           </View>
         ))}
+        {uploads.pendingFor("gallery").map((photo, index) => (
+          <View
+            key={photo.key}
+            className="items-center justify-center overflow-hidden rounded-[20px]"
+            style={{ width: TILE, height: TILE }}
+          >
+            <Image
+              className="absolute opacity-50"
+              source={{ uri: photo.uri }}
+              style={{ width: TILE, height: TILE }}
+            />
+            <ActivityIndicator />
+            <View className="absolute top-1.5 right-1.5">
+              <GlassCloseButton
+                label={text("recipes.editor.removePhoto")}
+                size="small"
+                testID={`editor-media-pending-remove-${index}`}
+                onPress={() => uploads.cancel(photo.key)}
+              />
+            </View>
+          </View>
+        ))}
         {room > 0 ? (
           <Pressable
             accessibilityLabel={text("recipes.editor.addPhoto")}
@@ -131,11 +153,7 @@ export function MediaStrip({
               if (uploads.canUpload()) pick(GALLERY_PHOTO, upload);
             }}
           >
-            {uploads.isUploading ? (
-              <ActivityIndicator />
-            ) : (
-              <ClassIcon colorClassName="text-accent-text" name="add" size={24} />
-            )}
+            <ClassIcon colorClassName="text-accent-text" name="add" size={24} />
             <Text className="text-accent-text text-sm font-medium">
               {text("common.actions.add")}
             </Text>

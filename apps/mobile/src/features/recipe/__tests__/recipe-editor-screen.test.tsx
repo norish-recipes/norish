@@ -91,7 +91,9 @@ vi.mock("../components/editor/provenance-cards", () => ({
   SourceCard: () => null,
 }));
 vi.mock("../components/editor/step-rows", () => ({ StepRows: () => null }));
-vi.mock("../hooks/use-editor-uploads", () => ({ useEditorUploads: () => ({}) }));
+vi.mock("../hooks/use-editor-uploads", () => ({
+  useEditorUploads: () => ({ pendingFor: () => [] }),
+}));
 vi.mock("@norish/shared-react/config", () => ({ useIngredientsSubscription: () => undefined }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),

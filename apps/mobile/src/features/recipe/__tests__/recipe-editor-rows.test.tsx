@@ -142,6 +142,8 @@ vi.mock("../hooks/use-focused-field-in-view", async () => {
 vi.mock("../hooks/use-editor-uploads", () => ({
   useEditorUploads: () => ({
     isUploading: state.isUploading,
+    pendingFor: () => [],
+    cancel: () => {},
     canUpload: () => true,
     uploadGallery: (_assets: unknown[], order: number) => {
       state.galleryUpload = Promise.withResolvers<object[]>();
@@ -415,6 +417,7 @@ describe("StepRows photos", () => {
     const onChange = vi.fn();
     const uploads = {
       canUpload: () => true,
+      pendingFor: () => [],
       uploadStep: async (assets: { uri: string }[]) =>
         assets.map((asset, order) => ({ image: asset.uri, order })),
     } as unknown as Parameters<typeof StepRows>[0]["uploads"];
@@ -450,7 +453,9 @@ describe("StepRows when lines move", () => {
       stepIngredients: [{ ingredientOrder: 1, share: 1, order: 0 }],
     };
     const props = { ingredients: lines, systemUsed: "metric" as const, onChange };
-    const uploads = {} as Parameters<typeof StepRows>[0]["uploads"];
+    const uploads = { pendingFor: () => [] } as unknown as Parameters<
+      typeof StepRows
+    >[0]["uploads"];
     const view = render(<StepRows {...props} lineMoves={null} steps={[step]} uploads={uploads} />);
 
     // The line went 1 → 2, then 2 → 4; the form applied both, the rows see only the last move.

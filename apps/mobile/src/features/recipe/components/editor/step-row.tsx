@@ -23,6 +23,7 @@ import {
 import { IngredientIcon } from "../ingredient-icon";
 import { DragGrip, EditorInput, RowIconButton } from "./editor-parts";
 import { MentionPopup } from "./mention-popup";
+import type { PendingPhoto } from "../../hooks/use-editor-uploads";
 import { StepPhotos } from "./step-photos";
 
 /** A step's share presets, as web's chip menu lists them. */
@@ -49,8 +50,10 @@ export function StepRow({
   onLeave,
   onMention,
   onRefsChange,
+  pendingPhotos,
   onAddPhoto,
   onRemovePhoto,
+  onCancelPhoto,
   onRemove,
 }: {
   row: StepRowValue;
@@ -74,7 +77,10 @@ export function StepRow({
   onMention: (suggestion: IngredientSuggestion, text: string) => void;
   onRefsChange: (refs: StepIngredientDraft[]) => void;
   onAddPhoto: () => void;
+  /** Photos still uploading to this step. */
+  pendingPhotos: PendingPhoto[];
   onRemovePhoto: (imageIndex: number) => void;
+  onCancelPhoto: (key: string) => void;
   onRemove: () => void;
 }) {
   const intl = useIntl();
@@ -177,8 +183,14 @@ export function StepRow({
             })}
           </View>
         ) : null}
-        {row.images.length > 0 ? (
-          <StepPhotos images={row.images} rowIndex={index} onRemove={onRemovePhoto} />
+        {row.images.length > 0 || pendingPhotos.length > 0 ? (
+          <StepPhotos
+            images={row.images}
+            pending={pendingPhotos}
+            rowIndex={index}
+            onCancel={onCancelPhoto}
+            onRemove={onRemovePhoto}
+          />
         ) : null}
       </View>
       <View className="items-center">
