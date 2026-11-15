@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
-import { dayDropTarget, moveTargetIndex, useMovePlannedItem } from "../use-move-planned-item";
+import { moveTargetIndex } from "../calendar-cache-merge";
+import { dayDropTarget, useMovePlannedItem } from "../use-move-planned-item";
 
 const moveItem = vi.hoisted(() => vi.fn());
 
@@ -66,12 +67,12 @@ describe("dayDropTarget", () => {
 describe("useMovePlannedItem", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("moves the item to the end of the slot and closes", () => {
+  it("moves the item last in the slot, for the server to place, and closes", () => {
     const { result } = renderHook(() => useMovePlannedItem({ itemId: "m", items, close }));
 
     result.current("2026-11-14", "Dinner");
 
-    expect(moveItem).toHaveBeenCalledWith("m", "2026-11-14", "Dinner", 2);
+    expect(moveItem).toHaveBeenCalledWith("m", "2026-11-14", "Dinner");
     expect(close).toHaveBeenCalled();
   });
 

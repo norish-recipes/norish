@@ -104,6 +104,22 @@ describe("calendar planned items stale handling", () => {
     });
   });
 
+  it("leaves a move with no index to the repository, which puts it last", async () => {
+    const item = createPlannedItem();
+
+    getPlannedItemById.mockResolvedValue(item);
+    moveItem.mockResolvedValue({ stale: true });
+
+    await plannedItemsProcedures.createCaller(ctx as any).moveItem({
+      itemId: item.id,
+      version: item.version,
+      targetDate: item.date,
+      targetSlot: item.slot as "Breakfast",
+    });
+
+    expect(moveItem).toHaveBeenCalledWith(item.id, item.date, item.slot, undefined, item.version);
+  });
+
   it("logs stale deleteItem mutations as no-ops", async () => {
     const item = createPlannedItem();
 

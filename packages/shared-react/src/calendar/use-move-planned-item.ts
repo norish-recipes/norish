@@ -1,17 +1,7 @@
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
+import { moveTargetIndex } from "./calendar-cache-merge";
 import { useCalendarMutations } from "./use-calendar-mutations";
-
-/** Where a moved item lands in its new slot: after what is already there. */
-export function moveTargetIndex(
-  items: PlannedItemFromQuery[],
-  moved: Pick<PlannedItemFromQuery, "id">,
-  dayKey: string,
-  slot: Slot
-) {
-  return items.filter((item) => item.id !== moved.id && item.date === dayKey && item.slot === slot)
-    .length;
-}
 
 /**
  * Where a planned item dropped on a day lands: that day, its own slot, last in it. Null for a drop
@@ -34,7 +24,7 @@ export function dayDropTarget(
 type MovePlannedItemOptions = {
   /** The item to move; one that is gone (deleted elsewhere) closes the sheet instead. */
   itemId: string;
-  /** The planned items of the days on show: where the item is, and the end of the target slot. */
+  /** The planned items of the days on show: where the item is. */
   items: PlannedItemFromQuery[];
   close: () => void;
 };
@@ -47,7 +37,7 @@ export function useMovePlannedItem({ itemId, items, close }: MovePlannedItemOpti
   return (dayKey: string, slot: Slot) => {
     if (!item) return close();
     if (item.date !== dayKey || item.slot !== slot) {
-      moveItem(item.id, dayKey, slot, moveTargetIndex(items, item, dayKey, slot));
+      moveItem(item.id, dayKey, slot);
     }
     close();
   };

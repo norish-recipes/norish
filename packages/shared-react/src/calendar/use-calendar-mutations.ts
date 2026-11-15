@@ -13,7 +13,7 @@ import {
 } from "../offline/optimistic-updates";
 import { rereadOnceWritesSettle } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
-import { moveItemInRange } from "./calendar-cache-merge";
+import { moveItemInRange, moveTargetIndex } from "./calendar-cache-merge";
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
 type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => PlannedItemFromQuery[];
@@ -116,10 +116,19 @@ export function useCalendarMutations(): CalendarMutationsResult {
     trpc.calendar.moveItem.mutationOptions({
       onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) => {
         const moved = findItem(itemId);
-        const target = { date: targetDate, slot: targetSlot, sortOrder: targetIndex };
+        // No index: last, as each range knows the slot; the server finds the real end.
+        const sortOrder = (items: PlannedItemFromQuery[]) =>
+          targetIndex ?? (moved ? moveTargetIndex(items, moved, targetDate, targetSlot) : 0);
 
         return writeAcrossRanges((items, range) =>
-          moved ? moveItemInRange(items, moved, target, range) : items
+          moved
+            ? moveItemInRange(
+                items,
+                moved,
+                { date: targetDate, slot: targetSlot, sortOrder: sortOrder(items) },
+                range
+              )
+            : items
         );
       },
       onSuccess: placeAnswer,
@@ -157,7 +166,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
     deleteItem: (itemId) => {
       mutateDelete({ itemId, version: versionOf(itemId) });
     },
-    moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex: number) => {
+    moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex?: number) => {
       mutateMove({ itemId, version: versionOf(itemId), targetDate, targetSlot, targetIndex });
     },
     updateItem: (itemId, title) => {

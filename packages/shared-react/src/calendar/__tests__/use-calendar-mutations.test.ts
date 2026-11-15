@@ -264,6 +264,26 @@ describe("useCalendarMutations", () => {
       });
     });
 
+    it("a move with no index sends none and shows the plan last in its slot", async () => {
+      const moved = createMockItem({ id: "b-1", slot: "Breakfast", sortOrder: 0 });
+      const lunch = [0, 1].map((n) => createMockItem({ id: `l-${n}`, slot: "Lunch", sortOrder: n }));
+
+      queryClient.setQueryData(getQueryKey(), [moved, ...lunch]);
+      mockMoveItemMutate.mockResolvedValue({ success: true, moved: true, stale: false });
+
+      const { result } = renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient),
+      });
+
+      act(() => result.current.moveItem("b-1", "2025-01-15", "Lunch"));
+
+      expect(
+        queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!.map((i) => i.id)
+      ).toEqual(["l-0", "l-1", "b-1"]);
+      await waitFor(() => expect(mockMoveItemMutate).toHaveBeenCalled());
+      expect(mockMoveItemMutate.mock.calls[0]![0]).toMatchObject({ targetIndex: undefined });
+    });
+
     it("applies optimistic update for cross-date move", async () => {
       const item = createMockItem({ id: "item-1", date: "2025-01-15", sortOrder: 0 });
 

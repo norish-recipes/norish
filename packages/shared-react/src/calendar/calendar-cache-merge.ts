@@ -1,11 +1,22 @@
 // One merge per cached range for the realtime echo and the actor's own result, keyed by
 // item id and placed by date alone, so whichever lands second is a no-op.
 
-import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
+
+/** Where a moved item lands in its new slot: after what is already there. */
+export function moveTargetIndex(
+  items: PlannedItemFromQuery[],
+  moved: Pick<PlannedItemFromQuery, "id">,
+  dayKey: string,
+  slot: Slot
+) {
+  return items.filter((item) => item.id !== moved.id && item.date === dayKey && item.slot === slot)
+    .length;
+}
 
 function isDateInRange(date: string, { startISO, endISO }: CalendarRange) {
   return date >= startISO && date <= endISO;

@@ -270,7 +270,8 @@ export async function moveItem(
   itemId: string,
   targetDate: string,
   targetSlot: PlannedItemSlot,
-  targetIndex: number,
+  /** Undefined: last in the target slot. */
+  targetIndex: number | undefined,
   version?: number
 ): Promise<MutationOutcome<PlannedItem>> {
   return await db.transaction(async (trx) => {
@@ -317,7 +318,10 @@ export async function moveItem(
 
     const sourceWithout = sourceItems.filter((item) => item.id !== itemId);
     const nextTargetItems = sameSlot ? [...sourceWithout] : [...targetItems];
-    const clampedIndex = Math.max(0, Math.min(targetIndex, nextTargetItems.length));
+    const clampedIndex = Math.max(
+      0,
+      Math.min(targetIndex ?? nextTargetItems.length, nextTargetItems.length)
+    );
 
     nextTargetItems.splice(clampedIndex, 0, { ...current, date: targetDate, slot: targetSlot });
 

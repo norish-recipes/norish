@@ -94,6 +94,19 @@ describe("slot-mate versions", () => {
     await expectWritableAt(a.id, a.version);
   });
 
+  it("a move with no index lands last in its slot", async () => {
+    const a = await plan("Dinner", "a");
+    await plan("Lunch", "x");
+    await plan("Lunch", "y");
+
+    expect((await moveItem(a.id, date, "Lunch", undefined, a.version)).stale).toBe(false);
+    expect((await slotOf("Lunch")).map(({ title, sortOrder }) => [title, sortOrder])).toEqual([
+      ["x", 0],
+      ["y", 1],
+      ["a", 2],
+    ]);
+  });
+
   it("a delete renumbers the plans left without bumping them", async () => {
     const a = await plan("Dinner", "a");
     const b = await plan("Dinner", "b");
