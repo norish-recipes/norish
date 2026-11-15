@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React, { use } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { HintButton } from "@/components/hint-button";
 import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -59,22 +60,6 @@ export function EditorField({
       {children}
       {error ? <Text className="text-danger text-[13px] font-medium">{error}</Text> : null}
     </View>
-  );
-}
-
-/** The small (i) beside a title: its hint opens in an alert. */
-export function HintButton({ hint, title }: { hint: string; title?: string }) {
-  const [muted] = useThemeColor(["muted"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={hint}
-      accessibilityRole="button"
-      hitSlop={10}
-      onPress={() => Alert.alert(title ?? hint, title ? hint : undefined)}
-    >
-      <Ionicons color={muted} name="information-circle-outline" size={18} />
-    </Pressable>
   );
 }
 

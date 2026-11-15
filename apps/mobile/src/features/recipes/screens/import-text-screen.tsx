@@ -1,10 +1,10 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { View } from "react-native";
+import { HintButton } from "@/components/hint-button";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { FieldError, Label, TextArea, TextField, useThemeColor } from "heroui-native";
+import { FieldError, Label, TextArea, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -21,7 +21,6 @@ export function ImportTextScreen() {
   const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importFromPaste, importFromPasteWithAI } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const [muted] = useThemeColor(["muted"] as const);
   const fieldRef = useFocusOnMount<ComponentRef<typeof TextArea>>();
   const trimmed = text.trim();
   // Only the AI import has a length cap, as on web; the field says so before a press can.
@@ -55,16 +54,12 @@ export function ImportTextScreen() {
                 {intl.formatMessage({ id: "common.import.paste.label" })}
               </Label.Text>
             </Label>
-            <Pressable
-              accessibilityLabel={limit}
-              accessibilityRole="button"
+            <HintButton
               className="size-7 items-center justify-center rounded-full"
-              hitSlop={8}
+              hint={limit}
+              size={20}
               testID="import-text-info"
-              onPress={() => Alert.alert(limit)}
-            >
-              <Ionicons color={muted} name="information-circle-outline" size={20} />
-            </Pressable>
+            />
           </View>
           <TextArea
             ref={fieldRef}

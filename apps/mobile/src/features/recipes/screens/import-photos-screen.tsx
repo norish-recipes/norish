@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Alert, Image, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { GlassCloseButton } from "@/components/glass";
+import { HintButton } from "@/components/hint-button";
 import { Sheet, SHEET_INSET, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
@@ -51,7 +52,7 @@ export function ImportPhotosScreen() {
   const { importFromImages } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
   const accentText = useAccentTextColor();
-  const [muted, accentForeground] = useThemeColor(["muted", "accent-foreground"] as const);
+  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
   const tile = (useWindowDimensions().width - 2 * SHEET_INSET - GAP * (COLUMNS - 1)) / COLUMNS;
   const isFull = photos.length >= MAX_OCR_FILES;
   const limitsText = intl.formatMessage(
@@ -181,16 +182,11 @@ export function ImportPhotosScreen() {
               : limitsText}
           </Text>
           {photos.length > 0 ? (
-            <Pressable
-              accessibilityLabel={limitsText}
-              accessibilityRole="button"
+            <HintButton
               className="size-7 items-center justify-center rounded-full"
-              hitSlop={8}
+              hint={limitsText}
               testID="import-photos-info"
-              onPress={() => Alert.alert(limitsText)}
-            >
-              <Ionicons color={muted} name="information-circle-outline" size={18} />
-            </Pressable>
+            />
           ) : null}
         </View>
       </SheetBody>

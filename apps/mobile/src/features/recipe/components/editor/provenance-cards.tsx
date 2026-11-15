@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { HintButton } from "@/components/hint-button";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -12,7 +13,7 @@ import { countryFlagEmoji, listCountryOptions } from "@norish/shared/lib/recipe-
 import { SectionCard } from "../tint";
 import { ChoiceSheet } from "./choice-sheet";
 import { AddChip, RemovableChip } from "./detail-cards";
-import { EditorField, EditorInput, HintButton } from "./editor-parts";
+import { EditorField, EditorInput } from "./editor-parts";
 
 /** Country, region, cuisines and a note, as one atomic group. */
 export function ProvenanceCard({

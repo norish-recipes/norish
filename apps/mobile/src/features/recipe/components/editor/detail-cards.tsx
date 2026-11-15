@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
+import { HintButton } from "@/components/hint-button";
 import { ServingsStepper } from "@/components/servings-stepper";
 import { ToggleChip } from "@/components/toggle-chip";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -13,7 +14,7 @@ import { useTagsQuery } from "@norish/shared-react/config";
 import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 
 import { SectionCard } from "../tint";
-import { EditorInput, HintButton } from "./editor-parts";
+import { EditorInput } from "./editor-parts";
 
 type Set = <K extends keyof RecipeFormState>(key: K, value: RecipeFormState[K]) => void;
 
