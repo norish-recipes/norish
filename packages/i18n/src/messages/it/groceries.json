@@ -199,6 +199,16 @@
     "collapse": "Comprimi",
     "itemLabel": "Articolo",
     "decreaseInterval": "Riduci intervallo",
-    "increaseInterval": "Aumenta intervallo"
+    "increaseInterval": "Aumenta intervallo",
+    "manageStores": "Gestisci negozi",
+    "addStore": "Aggiungi negozio",
+    "editStore": "Modifica negozio",
+    "editStoreLabel": "Modifica {store}",
+    "deleteStoreLabel": "Elimina {store}",
+    "deleteStoreTitle": "Eliminare {store}?",
+    "moveItemsToUnsorted": "Sposta gli articoli in Non ordinati",
+    "typePrice": "Digita il prezzo tu stesso",
+    "product": "Prodotto",
+    "chooseProduct": "Scegli un prodotto"
   }
 }

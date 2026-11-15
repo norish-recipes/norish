@@ -199,6 +199,16 @@
     "collapse": "Inklappen",
     "itemLabel": "Item",
     "decreaseInterval": "Interval verlagen",
-    "increaseInterval": "Interval verhogen"
+    "increaseInterval": "Interval verhogen",
+    "manageStores": "Winkels beheren",
+    "addStore": "Winkel toevoegen",
+    "editStore": "Winkel bewerken",
+    "editStoreLabel": "{store} bewerken",
+    "deleteStoreLabel": "{store} verwijderen",
+    "deleteStoreTitle": "{store} verwijderen?",
+    "moveItemsToUnsorted": "Items naar Ongesorteerd verplaatsen",
+    "typePrice": "Typ de prijs zelf",
+    "product": "Product",
+    "chooseProduct": "Kies een product"
   }
 }

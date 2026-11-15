@@ -199,6 +199,16 @@
     "collapse": "Skjul",
     "itemLabel": "Vare",
     "decreaseInterval": "Reduser intervall",
-    "increaseInterval": "Øk intervall"
+    "increaseInterval": "Øk intervall",
+    "manageStores": "Administrer butikker",
+    "addStore": "Legg til butikk",
+    "editStore": "Rediger butikk",
+    "editStoreLabel": "Rediger {store}",
+    "deleteStoreLabel": "Slett {store}",
+    "deleteStoreTitle": "Slette {store}?",
+    "moveItemsToUnsorted": "Flytt varer til Usortert",
+    "typePrice": "Skriv inn prisen selv",
+    "product": "Produkt",
+    "chooseProduct": "Velg et produkt"
   }
 }

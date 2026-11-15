@@ -199,6 +199,16 @@
     "collapse": "Свиване",
     "itemLabel": "Продукт",
     "decreaseInterval": "Намаляване на интервала",
-    "increaseInterval": "Увеличаване на интервала"
+    "increaseInterval": "Увеличаване на интервала",
+    "manageStores": "Управление на магазините",
+    "addStore": "Добавяне на магазин",
+    "editStore": "Редактиране на магазин",
+    "editStoreLabel": "Редактиране на {store}",
+    "deleteStoreLabel": "Изтриване на {store}",
+    "deleteStoreTitle": "Да се изтрие ли {store}?",
+    "moveItemsToUnsorted": "Премести артикулите в Несортирани",
+    "typePrice": "Въведете цената сами",
+    "product": "Продукт",
+    "chooseProduct": "Избор на продукт"
   }
 }

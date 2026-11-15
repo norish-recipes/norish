@@ -199,6 +199,16 @@
     "collapse": "Свернуть",
     "itemLabel": "Товар",
     "decreaseInterval": "Уменьшить интервал",
-    "increaseInterval": "Увеличить интервал"
+    "increaseInterval": "Увеличить интервал",
+    "manageStores": "Управление магазинами",
+    "addStore": "Добавить магазин",
+    "editStore": "Изменить магазин",
+    "editStoreLabel": "Изменить {store}",
+    "deleteStoreLabel": "Удалить {store}",
+    "deleteStoreTitle": "Удалить {store}?",
+    "moveItemsToUnsorted": "Перенести товары в «Без магазина»",
+    "typePrice": "Введите цену сами",
+    "product": "Товар",
+    "chooseProduct": "Выбрать товар"
   }
 }

@@ -199,6 +199,16 @@
     "collapse": "طيّ",
     "itemLabel": "العنصر",
     "decreaseInterval": "تقليل الفاصل",
-    "increaseInterval": "زيادة الفاصل"
+    "increaseInterval": "زيادة الفاصل",
+    "manageStores": "إدارة المتاجر",
+    "addStore": "إضافة متجر",
+    "editStore": "تعديل المتجر",
+    "editStoreLabel": "تعديل {store}",
+    "deleteStoreLabel": "حذف {store}",
+    "deleteStoreTitle": "حذف {store}؟",
+    "moveItemsToUnsorted": "نقل العناصر إلى غير مصنّف",
+    "typePrice": "اكتب السعر بنفسك",
+    "product": "المنتج",
+    "chooseProduct": "اختر منتجًا"
   }
 }

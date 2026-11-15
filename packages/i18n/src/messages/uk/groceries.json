@@ -199,6 +199,16 @@
     "collapse": "Згорнути",
     "itemLabel": "Товар",
     "decreaseInterval": "Зменшити інтервал",
-    "increaseInterval": "Збільшити інтервал"
+    "increaseInterval": "Збільшити інтервал",
+    "manageStores": "Керування магазинами",
+    "addStore": "Додати магазин",
+    "editStore": "Змінити магазин",
+    "editStoreLabel": "Змінити {store}",
+    "deleteStoreLabel": "Видалити {store}",
+    "deleteStoreTitle": "Видалити {store}?",
+    "moveItemsToUnsorted": "Перенести товари до «Без магазину»",
+    "typePrice": "Введіть ціну самостійно",
+    "product": "Товар",
+    "chooseProduct": "Вибрати товар"
   }
 }

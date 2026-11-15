@@ -199,6 +199,16 @@
     "collapse": "접기",
     "itemLabel": "항목",
     "decreaseInterval": "간격 줄이기",
-    "increaseInterval": "간격 늘리기"
+    "increaseInterval": "간격 늘리기",
+    "manageStores": "매장 관리",
+    "addStore": "매장 추가",
+    "editStore": "매장 편집",
+    "editStoreLabel": "{store} 편집",
+    "deleteStoreLabel": "{store} 삭제",
+    "deleteStoreTitle": "{store}을(를) 삭제할까요?",
+    "moveItemsToUnsorted": "항목을 미분류로 이동",
+    "typePrice": "가격 직접 입력",
+    "product": "제품",
+    "chooseProduct": "제품 선택"
   }
 }

@@ -199,6 +199,16 @@
     "collapse": "Zuklappen",
     "itemLabel": "Eintrag",
     "decreaseInterval": "Intervall verringern",
-    "increaseInterval": "Intervall erhöhen"
+    "increaseInterval": "Intervall erhöhen",
+    "manageStores": "Geschäfte verwalten",
+    "addStore": "Geschäft hinzufügen",
+    "editStore": "Geschäft bearbeiten",
+    "editStoreLabel": "{store} bearbeiten",
+    "deleteStoreLabel": "{store} löschen",
+    "deleteStoreTitle": "{store} löschen?",
+    "moveItemsToUnsorted": "Artikel nach „Unsortiert“ verschieben",
+    "typePrice": "Preis selbst eingeben",
+    "product": "Produkt",
+    "chooseProduct": "Produkt auswählen"
   }
 }

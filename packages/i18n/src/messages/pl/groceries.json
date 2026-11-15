@@ -199,6 +199,16 @@
     "collapse": "Zwiń",
     "itemLabel": "Produkt",
     "decreaseInterval": "Zmniejsz odstęp",
-    "increaseInterval": "Zwiększ odstęp"
+    "increaseInterval": "Zwiększ odstęp",
+    "manageStores": "Zarządzaj sklepami",
+    "addStore": "Dodaj sklep",
+    "editStore": "Edytuj sklep",
+    "editStoreLabel": "Edytuj {store}",
+    "deleteStoreLabel": "Usuń {store}",
+    "deleteStoreTitle": "Usunąć {store}?",
+    "moveItemsToUnsorted": "Przenieś pozycje do Nieposortowane",
+    "typePrice": "Wpisz cenę samodzielnie",
+    "product": "Produkt",
+    "chooseProduct": "Wybierz produkt"
   }
 }

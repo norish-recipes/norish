@@ -199,6 +199,16 @@
     "collapse": "Tiivistä",
     "itemLabel": "Tuote",
     "decreaseInterval": "Pienennä väliä",
-    "increaseInterval": "Suurenna väliä"
+    "increaseInterval": "Suurenna väliä",
+    "manageStores": "Hallitse kauppoja",
+    "addStore": "Lisää kauppa",
+    "editStore": "Muokkaa kauppaa",
+    "editStoreLabel": "Muokkaa: {store}",
+    "deleteStoreLabel": "Poista {store}",
+    "deleteStoreTitle": "Poistetaanko {store}?",
+    "moveItemsToUnsorted": "Siirrä tuotteet kohtaan Lajittelematon",
+    "typePrice": "Kirjoita hinta itse",
+    "product": "Tuote",
+    "chooseProduct": "Valitse tuote"
   }
 }

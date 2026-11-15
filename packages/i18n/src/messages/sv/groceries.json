@@ -199,6 +199,16 @@
     "collapse": "Dölj",
     "itemLabel": "Vara",
     "decreaseInterval": "Minska intervall",
-    "increaseInterval": "Öka intervall"
+    "increaseInterval": "Öka intervall",
+    "manageStores": "Hantera butiker",
+    "addStore": "Lägg till butik",
+    "editStore": "Redigera butik",
+    "editStoreLabel": "Redigera {store}",
+    "deleteStoreLabel": "Ta bort {store}",
+    "deleteStoreTitle": "Ta bort {store}?",
+    "moveItemsToUnsorted": "Flytta varor till Osorterat",
+    "typePrice": "Skriv in priset själv",
+    "product": "Produkt",
+    "chooseProduct": "Välj en produkt"
   }
 }

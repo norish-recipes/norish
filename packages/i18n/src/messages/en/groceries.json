@@ -199,6 +199,16 @@
     "collapse": "Collapse",
     "itemLabel": "Item",
     "decreaseInterval": "Decrease interval",
-    "increaseInterval": "Increase interval"
+    "increaseInterval": "Increase interval",
+    "manageStores": "Manage stores",
+    "addStore": "Add store",
+    "editStore": "Edit store",
+    "editStoreLabel": "Edit {store}",
+    "deleteStoreLabel": "Delete {store}",
+    "deleteStoreTitle": "Delete {store}?",
+    "moveItemsToUnsorted": "Move items to Unsorted",
+    "typePrice": "Type the price yourself",
+    "product": "Product",
+    "chooseProduct": "Choose a product"
   }
 }
