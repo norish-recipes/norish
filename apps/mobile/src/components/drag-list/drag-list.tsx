@@ -4,7 +4,11 @@ import type {
   ReorderableListReorderEvent,
 } from "react-native-reorderable-list";
 import { useReducedMotion } from "react-native-reanimated";
-import ReorderableList, { useReorderableDrag } from "react-native-reorderable-list";
+import ReorderableList, {
+  NestedReorderableList,
+  ScrollViewContainer,
+  useReorderableDrag,
+} from "react-native-reorderable-list";
 import { scheduleOnRN } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 
@@ -12,6 +16,9 @@ import type { DragRow, Drop } from "./resolve-drop";
 import { resolveDrop } from "./resolve-drop";
 
 export type { Drop, DragRow };
+
+/** The scroll view a `nested` list sits in, so a drag scrolls the page around it. */
+export { ScrollViewContainer as DragScrollView };
 
 type DragListProps<H, T> = Omit<
   ReorderableListProps<DragRow<H, T>>,
@@ -30,6 +37,8 @@ type DragListProps<H, T> = Omit<
   renderItem: (item: T, drag: () => void) => ReactNode;
   /** Fired after a drop that moved the row; the list is controlled, so apply `drop.rows`. */
   onDrop: (drop: Drop<H, T>) => void;
+  /** Laid out at full height inside a `DragScrollView`, which scrolls instead. */
+  nested?: boolean;
 };
 
 const mediumImpact = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -41,6 +50,9 @@ const dragHaptic = () => {
 
 // A module constant keeps the library from rebuilding its drag handlers each render.
 const STILL_CELL = { opacity: 1, transform: [] };
+
+/** How long a nested row is held before a pan drags it rather than the page. */
+const HOLD_MS = 150;
 
 function ItemRow<T>({
   item,
@@ -57,9 +69,11 @@ export function DragList<H, T>({
   renderHeading,
   renderItem,
   onDrop,
+  nested = false,
   ...rest
 }: DragListProps<H, T>) {
   const reduceMotion = useReducedMotion();
+  const List = nested ? NestedReorderableList : ReorderableList;
 
   const onReorder = ({ from, to }: ReorderableListReorderEvent) => {
     const drop = resolveDrop(rows, from, to);
@@ -68,9 +82,11 @@ export function DragList<H, T>({
   };
 
   return (
-    <ReorderableList
+    <List
       {...rest}
       animationDuration={reduceMotion ? 0 : 200}
+      // Nested, a swipe across a row scrolls the page; only a hold takes the row.
+      panActivateAfterLongPress={nested ? HOLD_MS : rest.panActivateAfterLongPress}
       cellAnimations={reduceMotion ? STILL_CELL : undefined}
       data={rows}
       keyExtractor={(row) => row.key}
@@ -81,6 +97,8 @@ export function DragList<H, T>({
           <ItemRow item={row.value} render={renderItem} />
         )
       }
+      // A nested list never scrolls itself, which also keeps RN from flagging it as nested.
+      scrollEnabled={nested ? false : rest.scrollEnabled}
       onDragEnd={dragHaptic}
       onDragStart={dragHaptic}
       onReorder={onReorder}
