@@ -77,6 +77,7 @@ vi.mock("better-auth/react", () => ({
     return { $store: { atoms: { session } }, signOut };
   },
 }));
+vi.mock("@/lib/calendar-widgets", () => ({ clearCalendarWidgets: async () => {} }));
 vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: async () => {} }));
 vi.mock("@norish/shared-react/offline/react", () => ({
   useConnectivity: () => ({ isOffline: false }),

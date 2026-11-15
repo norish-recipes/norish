@@ -36,6 +36,7 @@ vi.mock("expo-notifications", () => ({
     return { remove: () => (listener = null) };
   },
 }));
+vi.mock("@/lib/calendar-widgets", () => ({ clearCalendarWidgets: async () => {} }));
 vi.mock("@/lib/trpc/trpc-provider", () => ({ closeMobileTrpcConnections: vi.fn() }));
 vi.mock("@/lib/auth/auth-client", () => ({ resetAuthClientStorage: vi.fn() }));
 
