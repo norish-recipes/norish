@@ -4,12 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 
 const listeners = vi.hoisted(() => [] as ((event: { url: string }) => void)[]);
 
-vi.mock("expo-linking", () => ({
-  addEventListener: (_type: string, listener: (event: { url: string }) => void) => {
-    listeners.push(listener);
+vi.mock("react-native", () => ({
+  Linking: {
+    addEventListener: (_type: string, listener: (event: { url: string }) => void) => {
+      listeners.push(listener);
 
-    return { remove: () => listeners.splice(listeners.indexOf(listener), 1) };
+      return { remove: () => listeners.splice(listeners.indexOf(listener), 1) };
+    },
   },
+}));
+vi.mock("expo-linking", () => ({
   parse: (url: string) => {
     const parsed = new URL(url);
 
