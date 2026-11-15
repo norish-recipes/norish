@@ -331,6 +331,22 @@ describe("useRecipesMutations", () => {
       expect(opened()?.version).toBe(5);
     });
 
+    it("puts no stored version on content a refetch read before the edit, and refetches", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockImplementation(async () => {
+        queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), { ...detail });
+
+        return { stale: false, version: 2 };
+      });
+      const result = render();
+
+      act(() => result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }));
+      await settled();
+
+      expect(opened()).toMatchObject({ name: "Original recipe", version: 1 });
+      expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
+    });
+
     it("keeps a second edit when the first fails, and sends the second at its own base", async () => {
       const first = Promise.withResolvers<never>();
 

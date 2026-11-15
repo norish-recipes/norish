@@ -32,6 +32,8 @@ type DeleteMutationContext = {
 type UpdateMutationContext = {
   detailQueryKey: QueryKey;
   previousDetail: FullRecipeDTO | null | undefined;
+  /** What this edit put in the cache, if it showed. */
+  optimisticDetail: FullRecipeDTO | null | undefined;
 };
 
 function restoreRecipeLists(
@@ -357,35 +359,40 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
         await queryClient.cancelQueries({ queryKey: detailQueryKey });
 
         const previousDetail = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
+        let shown = false;
 
-        queryClient.setQueryData<FullRecipeDTO | null | undefined>(detailQueryKey, (previous) => {
-          // An edit made on a version the cache has moved past is refused; it is never shown.
-          if (!previous || previous.version !== version) return previous;
+        const written = queryClient.setQueryData<FullRecipeDTO | null | undefined>(
+          detailQueryKey,
+          (previous) => {
+            // An edit made on a version the cache has moved past is refused; it is never shown.
+            if (!previous || previous.version !== version) return previous;
+            shown = true;
 
-          return {
-            ...previous,
-            ...data,
-            recipeIngredients: data.recipeIngredients
-              ? optimisticIngredients(data.recipeIngredients, previous.systemUsed)
-              : previous.recipeIngredients,
-            steps: data.steps ? optimisticSteps(data.steps, previous.systemUsed) : previous.steps,
-            // The form sends cuisine ids; the cache holds the entries. A removal
-            // shows at once, an addition when the server answers.
-            cuisines: data.cuisines
-              ? previous.cuisines.filter((cuisine) => data.cuisines?.includes(cuisine.id))
-              : previous.cuisines,
-            tags: data.tags
-              ? data.tags.map(({ name }) => ({
-                  name,
-                  version: previous.tags.find((tag) => tag.name === name)?.version ?? 1,
-                }))
-              : previous.tags,
-            images: data.images ? optimisticImages(data.images) : previous.images,
-            videos: data.videos ? optimisticVideos(data.videos) : previous.videos,
-          };
-        });
+            return {
+              ...previous,
+              ...data,
+              recipeIngredients: data.recipeIngredients
+                ? optimisticIngredients(data.recipeIngredients, previous.systemUsed)
+                : previous.recipeIngredients,
+              steps: data.steps ? optimisticSteps(data.steps, previous.systemUsed) : previous.steps,
+              // The form sends cuisine ids; the cache holds the entries. A removal
+              // shows at once, an addition when the server answers.
+              cuisines: data.cuisines
+                ? previous.cuisines.filter((cuisine) => data.cuisines?.includes(cuisine.id))
+                : previous.cuisines,
+              tags: data.tags
+                ? data.tags.map(({ name }) => ({
+                    name,
+                    version: previous.tags.find((tag) => tag.name === name)?.version ?? 1,
+                  }))
+                : previous.tags,
+              images: data.images ? optimisticImages(data.images) : previous.images,
+              videos: data.videos ? optimisticVideos(data.videos) : previous.videos,
+            };
+          }
+        );
 
-        return { detailQueryKey, previousDetail };
+        return { detailQueryKey, previousDetail, optimisticDetail: shown ? written : undefined };
       },
       // Stored: the next write from the cache (an edit, a convert) is sent at that version.
       // Refused: the Outbox parks it as Conflicted and tells the reader.
@@ -398,11 +405,15 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           return;
         }
         if (version === null) return;
-        queryClient.setQueryData<FullRecipeDTO | null | undefined>(
-          trpc.recipes.get.queryKey({ id: variables.id }),
-          (previous) =>
-            previous && previous.version < version ? { ...previous, version } : previous
-        );
+        const { detailQueryKey, optimisticDetail } = context;
+        const cached = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
+
+        // Only on this edit's own state: other content (a refetch, a later edit) is read again.
+        if (!optimisticDetail || cached !== optimisticDetail) {
+          void queryClient.invalidateQueries({ queryKey: detailQueryKey });
+        } else if (optimisticDetail.version < version) {
+          queryClient.setQueryData(detailQueryKey, { ...optimisticDetail, version });
+        }
       },
       onError: (error, variables, context) => {
         handleRecipesMutationError(error, "update", onError, () => {
