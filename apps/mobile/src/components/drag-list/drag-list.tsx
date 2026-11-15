@@ -46,6 +46,8 @@ type DragListProps<H, T> = Omit<
    * `drop.rows` until `rows` changes; returning false puts the row back instead.
    */
   onDrop: (drop: Drop<H, T>) => boolean | void;
+  /** Told when a row is lifted and when it is let go. */
+  onHeldChange?: (held: boolean) => void;
   /** Laid out at full height inside a `DragScrollView`, which scrolls instead. */
   nested?: boolean;
   ref?: Ref<FlatList<DragRow<H, T>>>;
@@ -74,21 +76,29 @@ export function DragList<H, T>({
   renderHeading,
   renderItem,
   onDrop,
+  onHeldChange,
   nested = false,
   ...rest
 }: DragListProps<H, T>) {
   const reduceMotion = useReducedMotion();
   const List = nested ? NestedReorderableList : ReorderableList;
   const held = useHeldRows(rows, onDrop);
-  const latestRef = useRef(held);
+  const latestRef = useRef({ held, onHeldChange });
 
   useEffect(() => {
-    latestRef.current = held;
+    latestRef.current = { held, onHeldChange };
   });
   // Built once: the library rebuilds every row's drag handler when these change.
   const [events] = useState(() => {
-    const lift = () => latestRef.current.lift();
-    const settle = () => latestRef.current.settle();
+    const told = (isHeld: boolean) => latestRef.current.onHeldChange?.(isHeld);
+    const lift = () => {
+      latestRef.current.held.lift();
+      told(true);
+    };
+    const settle = () => {
+      latestRef.current.held.settle();
+      told(false);
+    };
 
     return {
       onDragStart: () => {
@@ -102,7 +112,10 @@ export function DragList<H, T>({
         // A move lands in onReorder once the row has settled.
         if (from === to) scheduleOnRN(settle);
       },
-      onReorder: ({ from, to }: ReorderableListReorderEvent) => latestRef.current.drop(from, to),
+      onReorder: ({ from, to }: ReorderableListReorderEvent) => {
+        latestRef.current.held.drop(from, to);
+        told(false);
+      },
     };
   });
 
