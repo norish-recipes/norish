@@ -112,7 +112,7 @@ export function sortPantryIngredients<
 }
 
 /** Whether a kept food goes by a name containing the folded text, in any language. */
-function goesBy(item: PantryIngredientDto, needle: string): boolean {
+function hasNameContaining(item: PantryIngredientDto, needle: string): boolean {
   return [item.name, ...Object.values(item.localeNames)].some((name) =>
     foldName(name).includes(needle)
   );
@@ -133,10 +133,13 @@ export function searchPantry(
   return sortPantryIngredients(items, locale).filter(
     (item) =>
       needle === "" ||
-      goesBy(item, needle) ||
+      hasNameContaining(item, needle) ||
       pantryIngredientFor([item], { ingredientName: text }, rules) !== null
   );
 }
+
+/** How many suggested foods show before Show more. */
+export const SUGGESTIONS_SHOWN = 6;
 
 /** The suggested foods the Pantry does not cover, by the rule the server used to suggest them. */
 export function uncoveredSuggestions<T extends { ingredientId: string; name: string }>(

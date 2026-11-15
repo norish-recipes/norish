@@ -12,9 +12,8 @@ const SEARCH_MIN_LENGTH = 2;
 const CATALOGUE_MATCHES = 8;
 
 /**
- * The catalogue foods the Pantry field's text finds that the household does not keep yet. Only the
- * answer for the text now in the field is offered, so a press never adds an earlier text's food,
- * and nothing is asked offline.
+ * The catalogue foods the field's text finds that the household does not keep: none offline,
+ * and none until the answer is for the text now in the field.
  */
 export function usePantryCatalogue(
   typed: string,

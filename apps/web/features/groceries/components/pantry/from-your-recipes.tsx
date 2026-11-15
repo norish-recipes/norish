@@ -13,10 +13,7 @@ import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantrySuggestions } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { uncoveredSuggestions } from "@norish/shared/lib/pantry";
-
-/** How many suggestions show before Show more. */
-const HANDFUL = 6;
+import { SUGGESTIONS_SHOWN, uncoveredSuggestions } from "@norish/shared/lib/pantry";
 
 /**
  * "From your recipes": the foods the household's own recipes use most, each
@@ -41,7 +38,7 @@ export function FromYourRecipes({
   const [open, setOpen] = useState(items.length === 0);
   const [showAll, setShowAll] = useState(false);
   const offered = uncoveredSuggestions(items, suggestions, rules);
-  const shown = showAll ? offered : offered.slice(0, HANDFUL);
+  const shown = showAll ? offered : offered.slice(0, SUGGESTIONS_SHOWN);
 
   useIngredientIcons(open ? shown.map((food) => food.ingredientId) : []);
 
@@ -88,7 +85,7 @@ export function FromYourRecipes({
               );
             })}
           </ul>
-          {!showAll && offered.length > HANDFUL ? (
+          {!showAll && offered.length > SUGGESTIONS_SHOWN ? (
             <Button className="w-fit" size="sm" variant="tertiary" onPress={() => setShowAll(true)}>
               {t("showMore")}
             </Button>
