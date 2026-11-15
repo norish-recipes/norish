@@ -2,6 +2,7 @@ import type { ComponentRef, ReactNode } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { Fragment, useRef, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { IngredientIcon } from "@/components/ingredient-icon";
 import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -20,7 +21,6 @@ import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
 import { useStepTimers } from "../hooks/use-step-timers";
 import { plainText, stepRows } from "../utils/recipe-rows";
-import { IngredientIcon } from "./ingredient-icon";
 import { InlineMarkdown } from "./inline-markdown";
 import { TimerChip, TimerChipButton } from "./timer-chip";
 import { SectionCard, useTint } from "./tint";

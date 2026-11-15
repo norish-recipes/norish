@@ -1,11 +1,11 @@
 import React, { use, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
+import { IngredientIcon } from "@/components/ingredient-icon";
 import { useIntl } from "react-intl";
 
 import type { IngredientSuggestion } from "@norish/shared-react/recipes";
 
 import { FocusedFieldContext, PopupOpenContext } from "../../hooks/use-focused-field-in-view";
-import { IngredientIcon } from "../ingredient-icon";
 
 /** The lines an `@` query matches, under the step's field; a tap links one to the step. */
 export function MentionPopup({

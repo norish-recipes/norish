@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { IngredientIcon } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
@@ -25,7 +26,6 @@ import { formatAmount } from "@norish/shared/lib/format-amount";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { ingredientRows, plainText } from "../utils/recipe-rows";
-import { IngredientIcon } from "./ingredient-icon";
 import { InlineMarkdown } from "./inline-markdown";
 import { SectionCard, useTint } from "./tint";
 

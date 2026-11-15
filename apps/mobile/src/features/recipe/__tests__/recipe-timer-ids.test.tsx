@@ -43,7 +43,7 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   useUnitFormatter: () => ({ formatUnitOnly: () => "" }),
 }));
 vi.mock("../components/tint", () => ({ SectionCard: host, useTint: () => null }));
-vi.mock("../components/ingredient-icon", () => ({ IngredientIcon: () => null }));
+vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
 // Every step has one duration, drawn as a chip that shows the timer id it would start.
 vi.mock("../hooks/use-step-timers", () => ({
   useStepTimers: (text: string) => ({ matches: [{ originalText: text }], marked: text }),
