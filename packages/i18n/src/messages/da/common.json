@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Færdig",
+    "paused": "Sat på pause",
     "done_action": "Færdig",
     "one": "Timer",
     "other": "Timere",
@@ -220,7 +221,8 @@
     "label_other": "{count} timere",
     "notification_body": "Timer færdig",
     "notifications_disabled": "Notifikationer er deaktiveret",
-    "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden."
+    "notifications_disabled_hint": "Aktiver notifikationer i dine browserindstillinger for at modtage alarmer, når timere afsluttes i baggrunden.",
+    "more": "+{count} mere"
   },
   "offlineStatus": {
     "title": "Forbindelse og offline",

@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Terminé",
+    "paused": "En pause",
     "done_action": "Terminé",
     "one": "Minuteur",
     "other": "Minuteurs",
@@ -220,7 +221,8 @@
     "label_other": "{count} minuteurs",
     "notification_body": "Minuteur terminé",
     "notifications_disabled": "Les notifications sont désactivées",
-    "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan."
+    "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan.",
+    "more": "+{count} de plus"
   },
   "offlineStatus": {
     "title": "Connexion et hors ligne",

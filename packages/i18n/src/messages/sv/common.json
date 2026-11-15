@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Klart",
+    "paused": "Pausad",
     "done_action": "Klart",
     "one": "Timer",
     "other": "Timrar",
@@ -220,7 +221,8 @@
     "label_other": "{count} timrar",
     "notification_body": "Timern är klar",
     "notifications_disabled": "Aviseringar är avstängda",
-    "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden."
+    "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden.",
+    "more": "+{count} till"
   },
   "offlineStatus": {
     "title": "Anslutning och offline",

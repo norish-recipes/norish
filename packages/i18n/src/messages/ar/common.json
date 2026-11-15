@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "انتهى",
+    "paused": "متوقف مؤقتًا",
     "done_action": "تم",
     "one": "مؤقّت",
     "other": "مؤقّتات",
@@ -220,7 +221,8 @@
     "label_other": "{count} مؤقّتات",
     "notification_body": "انتهى المؤقّت",
     "notifications_disabled": "الإشعارات معطّلة",
-    "notifications_disabled_hint": "فعّل الإشعارات من إعدادات المتصفح لتصلك التنبيهات عند انتهاء المؤقّتات في الخلفية."
+    "notifications_disabled_hint": "فعّل الإشعارات من إعدادات المتصفح لتصلك التنبيهات عند انتهاء المؤقّتات في الخلفية.",
+    "more": "+{count} أخرى"
   },
   "offlineStatus": {
     "title": "الاتصال والعمل دون إنترنت",

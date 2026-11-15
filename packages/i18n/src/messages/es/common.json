@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Listo",
+    "paused": "En pausa",
     "done_action": "Listo",
     "one": "Temporizador",
     "other": "Temporizadores",
@@ -220,7 +221,8 @@
     "label_other": "{count} temporizadores",
     "notification_body": "Temporizador finalizado",
     "notifications_disabled": "Las notificaciones están desactivadas",
-    "notifications_disabled_hint": "Activa las notificaciones en la configuración de tu navegador para recibir alertas cuando los temporizadores terminen en segundo plano."
+    "notifications_disabled_hint": "Activa las notificaciones en la configuración de tu navegador para recibir alertas cuando los temporizadores terminen en segundo plano.",
+    "more": "+{count} más"
   },
   "offlineStatus": {
     "title": "Conexión y modo sin conexión",

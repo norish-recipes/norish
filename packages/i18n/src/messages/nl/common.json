@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Klaar",
+    "paused": "Gepauzeerd",
     "done_action": "Klaar",
     "one": "Timer",
     "other": "Timers",
@@ -220,7 +221,8 @@
     "label_other": "{count} timers",
     "notification_body": "Timer afgelopen",
     "notifications_disabled": "Meldingen zijn uitgeschakeld",
-    "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen."
+    "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen.",
+    "more": "+{count} meer"
   },
   "offlineStatus": {
     "title": "Verbinding & offline",

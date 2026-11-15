@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Done",
+    "paused": "Paused",
     "done_action": "Done",
     "one": "Timer",
     "other": "Timers",
@@ -220,7 +221,8 @@
     "label_other": "{count} Timers",
     "notification_body": "Timer complete!",
     "notifications_disabled": "Notifications are disabled",
-    "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background."
+    "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background.",
+    "more": "+{count} more"
   },
   "offlineStatus": {
     "title": "Connection & offline",

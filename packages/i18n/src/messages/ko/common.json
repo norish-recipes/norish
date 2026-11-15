@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "완료",
+    "paused": "일시정지됨",
     "done_action": "완료",
     "one": "타이머",
     "other": "타이머",
@@ -220,7 +221,8 @@
     "label_other": "{count}개의 타이머",
     "notification_body": "타이머 완료",
     "notifications_disabled": "알림이 비활성화되었습니다.",
-    "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요."
+    "notifications_disabled_hint": "타이머가 백그라운드에서 완료될 때 알림을 받으려면 브라우저 설정에서 알림을 활성화하세요.",
+    "more": "외 {count}개"
   },
   "offlineStatus": {
     "title": "연결 및 오프라인",

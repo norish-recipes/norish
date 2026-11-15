@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Valmis",
+    "paused": "Tauolla",
     "done_action": "Valmis",
     "one": "Ajastin",
     "other": "Ajastimet",
@@ -220,7 +221,8 @@
     "label_other": "{count} ajastinta",
     "notification_body": "Ajastin päättyi",
     "notifications_disabled": "Ilmoitukset ovat pois käytöstä",
-    "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla."
+    "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla.",
+    "more": "+{count} lisää"
   },
   "offlineStatus": {
     "title": "Yhteys ja offline-tila",

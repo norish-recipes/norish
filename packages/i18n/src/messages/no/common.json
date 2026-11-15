@@ -213,6 +213,7 @@
   },
   "timer": {
     "done": "Ferdig",
+    "paused": "Satt på pause",
     "done_action": "Ferdig",
     "one": "Timer",
     "other": "Timere",
@@ -220,7 +221,8 @@
     "label_other": "{count} timere",
     "notification_body": "Timer ferdig",
     "notifications_disabled": "Varsler er deaktivert",
-    "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen."
+    "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen.",
+    "more": "+{count} til"
   },
   "offlineStatus": {
     "title": "Tilkobling og frakoblet bruk",
