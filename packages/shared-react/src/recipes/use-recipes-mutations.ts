@@ -14,6 +14,7 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
+import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -336,20 +337,30 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
       predicate: ({ state }) =>
         state.variables !== variables &&
         (state.variables as UpdateVariables | undefined)?.id === variables.id,
-    }).length > 0;
+    });
 
-  // Back to the recipe before this edit, then the server's; with other edits waiting, the server's
-  // once they settle, so the refused content does not stay on screen.
+  // Back to the recipe before this edit, then the server's; with other edits waiting, once they
+  // settle. A queued one keeps what it shows, and Recovery refetches after Replay sends it.
   const rollBackEdit = (variables: UpdateVariables, context: unknown) => {
-    const { detailQueryKey, previousDetail } = (context ?? {}) as Partial<UpdateMutationContext>;
+    const { detailQueryKey, previousDetail, optimisticDetail } = (context ??
+      {}) as Partial<UpdateMutationContext>;
+    const others = otherPendingEdits(variables);
 
-    if (otherPendingEdits(variables)) {
+    if (others.length > 0) {
       const stopWaiting = queryClient.getMutationCache().subscribe(() => {
-        if (otherPendingEdits(variables)) return;
+        if (others.some(({ state }) => state.status === "pending")) return;
         stopWaiting();
-        void queryClient.invalidateQueries({
-          queryKey: trpc.recipes.get.queryKey({ id: variables.id }),
-        });
+        if (!others.some(({ state }) => shouldPreserveOptimisticUpdate(state.error))) {
+          void queryClient.invalidateQueries({
+            queryKey: trpc.recipes.get.queryKey({ id: variables.id }),
+          });
+        } else if (
+          detailQueryKey &&
+          optimisticDetail &&
+          queryClient.getQueryData(detailQueryKey) === optimisticDetail
+        ) {
+          queryClient.setQueryData(detailQueryKey, previousDetail);
+        }
       });
 
       return false;
