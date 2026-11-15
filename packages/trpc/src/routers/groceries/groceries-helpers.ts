@@ -42,6 +42,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 
+import { afterCommit } from "../../after-commit";
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
 
@@ -65,21 +66,6 @@ export type GroceryProcedureContext = {
   userIds: string[];
   householdKey: string;
 };
-
-/** Runs work that follows a committed write; a failure is logged, never turned into a failed write. */
-export async function afterCommit<T>(
-  ctx: GroceryProcedureContext,
-  what: string,
-  work: () => Promise<T>
-): Promise<T | undefined> {
-  try {
-    return await work();
-  } catch (err) {
-    log.error({ err, userId: ctx.user.id }, `Failed after the commit: ${what}`);
-
-    return undefined;
-  }
-}
 
 type GroceryMergeCandidate = {
   id: string;
