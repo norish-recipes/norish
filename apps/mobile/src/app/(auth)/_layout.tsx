@@ -1,8 +1,11 @@
 import React from "react";
 import { Platform } from "react-native";
+import { useSignedOutWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
 import { Stack } from "expo-router";
 
 export default function AuthLayout() {
+  useSignedOutWidgets();
+
   return (
     <Stack
       screenOptions={{

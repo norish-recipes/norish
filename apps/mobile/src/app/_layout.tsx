@@ -12,6 +12,7 @@ import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
+import { useCalendarWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
 import { useRecipeTimers } from "@/features/recipe/hooks/use-recipe-timers";
 import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
@@ -249,6 +250,8 @@ function AuthenticatedEffects() {
   useCookbooksSubscription();
   usePantrySubscription();
   useCalendarSubscription();
+  // The Home Screen widgets show only what the app hands them while it runs.
+  useCalendarWidgets();
 
   return null;
 }
