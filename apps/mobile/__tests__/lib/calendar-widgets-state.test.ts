@@ -183,9 +183,21 @@ describe("the small widget", () => {
 
     expect(small[0]?.props).toMatchObject({
       kind: "meal",
-      photo: null,
       url: "norish://recipe/recipe-Chili",
     });
+    expect(small[0]?.props).not.toHaveProperty("photo");
+  });
+
+  it("holds no null anywhere, which the widgets' native store refuses", () => {
+    const none: PhotoLookup = () => null;
+    const items = [
+      recipe("2026-11-15", "Dinner", "Chili"),
+      note("2026-11-15", "Lunch", "Leftovers"),
+      { ...recipe("2026-11-16", "Dinner", "Gone"), recipeId: null, recipeImage: null },
+    ];
+    const timelines = calendarWidgetTimelines(byDate(items), local(15, 9).getTime(), strings, none);
+
+    expect(JSON.stringify(timelines)).not.toContain("null");
   });
 
   it("shows a note's text and opens Calendar on its day", () => {
@@ -195,7 +207,6 @@ describe("the small widget", () => {
       day: "15",
       slot: "Lunch",
       name: "Leftovers",
-      photo: null,
       url: "norish://calendar?day=2026-11-15",
     });
   });
@@ -303,7 +314,6 @@ describe("the large widget", () => {
         id: expect.any(String),
         kind: "note",
         name: "Leftovers",
-        photo: null,
         url: "norish://calendar?day=2026-11-15",
       },
       {

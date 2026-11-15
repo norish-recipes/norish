@@ -142,7 +142,8 @@ describe("syncCalendarWidgets", () => {
     await syncCalendarWidgets(plan(), strings);
 
     expect(native.small).toHaveBeenCalledTimes(2);
-    expect(firstSmall(0)).toMatchObject({ name: "Popcorn", photo: null });
+    expect(firstSmall(0)).toMatchObject({ name: "Popcorn" });
+    expect(firstSmall(0)).not.toHaveProperty("photo");
     expect(firstSmall(1)).toMatchObject({
       photo: "file:///group/ExpoWidgets/_recipes_a_one_jpg-meal.jpg",
     });

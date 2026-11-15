@@ -50,7 +50,8 @@ export type SmallWidgetProps =
       day: string;
       slot: string;
       name: string;
-      photo: string | null;
+      /** Absent while not on the device: the widget store takes no null. */
+      photo?: string;
       url: string;
     }
   | { kind: "empty"; weekday: string; day: string; text: string; url: string };
@@ -59,7 +60,7 @@ export type WeekLine = {
   id: string;
   kind: "recipe" | "note" | "more";
   name: string;
-  photo: string | null;
+  photo?: string;
   url: string;
 };
 
@@ -140,6 +141,8 @@ function fromNow<P>(entries: WidgetEntry<P>[], now: number): WidgetEntry<P>[] {
   return entries.slice(Math.max(current, 0));
 }
 
+const withPhoto = (file: string | null) => (file ? { photo: file } : {});
+
 function itemName(item: PlannedItemFromQuery, strings: WidgetStrings) {
   return item.recipeName ?? item.title ?? strings.untitled;
 }
@@ -167,7 +170,7 @@ function smallProps(
     ...header,
     slot: strings.slots[slot],
     name: itemName(item, strings),
-    photo: recipe && item.recipeImage ? photo(item.recipeImage, "meal") : null,
+    ...withPhoto(recipe && item.recipeImage ? photo(item.recipeImage, "meal") : null),
     url: recipe ? recipeUrl(item.recipeId) : calendarDayUrl(dateKey(date)),
   };
 }
@@ -204,7 +207,7 @@ function weekProps(
           id: item.id,
           name: itemName(item, strings),
           kind: recipe ? "recipe" : "note",
-          photo: recipe && item.recipeImage ? photo(item.recipeImage, "thumb") : null,
+          ...withPhoto(recipe && item.recipeImage ? photo(item.recipeImage, "thumb") : null),
           url: recipe ? recipeUrl(item.recipeId) : calendarDayUrl(key),
         };
       });
@@ -214,7 +217,6 @@ function weekProps(
           id: `${key}-more`,
           name: strings.more(dayItems.length - lines.length),
           kind: "more",
-          photo: null,
           url: calendarDayUrl(key),
         });
       }
