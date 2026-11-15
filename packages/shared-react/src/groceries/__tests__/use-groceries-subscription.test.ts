@@ -325,6 +325,42 @@ describe("useGroceriesSubscription", () => {
       expect(cachedData?.groceries.find((g) => g.id === "g1")?.name).toBe("Whole Milk");
       expect(cachedData?.groceries.find((g) => g.id === "g2")?.name).toBe("Bread");
     });
+
+    /** The cached line after one onUpdated event carrying `changed`. */
+    const afterEcho = (
+      cached: ReturnType<typeof createMockGrocery>,
+      changed: ReturnType<typeof createMockGrocery>
+    ) => {
+      queryClient.setQueryData(mockQueryKey, createMockGroceriesData([cached], []));
+      renderHook(() => useGroceriesSubscription(), { wrapper: createTestWrapper(queryClient) });
+      act(() => subscriptionCallbacks.onUpdated!(emitPayload({ changedGroceries: [changed] })));
+
+      return queryClient.getQueryData<ReturnType<typeof createMockGroceriesData>>(mockQueryKey)
+        ?.groceries[0];
+    };
+
+    it("ignores a tick's echo older than the edit made after it", () => {
+      // Ticked (v1 to v2), then renamed (v2 to v3) before the tick's echo came back.
+      const edited = createMockGrocery({ id: "g1", name: "Oat milk", isDone: true, version: 3 });
+      const tickEcho = { ...edited, name: "Milk", version: 2 };
+
+      expect(afterEcho(edited, tickEcho)).toMatchObject({ name: "Oat milk", version: 3 });
+    });
+
+    it("takes a row at the same version with a new sort order", () => {
+      const cached = createMockGrocery({ id: "g1", sortOrder: 0, version: 2 });
+
+      expect(afterEcho(cached, { ...cached, sortOrder: 1 })?.sortOrder).toBe(1);
+    });
+
+    it("takes a newer row another member wrote", () => {
+      const cached = createMockGrocery({ id: "g1", name: "Milk", version: 2 });
+
+      expect(afterEcho(cached, { ...cached, name: "Soy milk", version: 3 })).toMatchObject({
+        name: "Soy milk",
+        version: 3,
+      });
+    });
   });
 
   describe("onDeleted handler", () => {

@@ -58,7 +58,13 @@ export function useGroceriesSubscription() {
       queryClient.setQueryData<GroceriesData>(listKey, (prev) => {
         if (!prev) return prev;
 
-        return { ...prev, groceries: mergeGroceries(prev.groceries, payload.changedGroceries) };
+        // An echo older than the cached row is a write this client already went past.
+        const cached = new Map(prev.groceries.map((g) => [g.id, g.version]));
+        const changed = payload.changedGroceries.filter(
+          (g) => g.version >= (cached.get(g.id) ?? g.version)
+        );
+
+        return { ...prev, groceries: mergeGroceries(prev.groceries, changed) };
       });
     },
   });
