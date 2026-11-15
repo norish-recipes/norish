@@ -349,6 +349,39 @@ describe("useRecipesMutations", () => {
       expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
     });
 
+    it("tells the caller a rejected save failed, after rolling it back", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockRejectedValue(new Error("No permission"));
+      const onSaved = vi.fn();
+      const onFailed = vi.fn();
+      const result = render();
+
+      act(() =>
+        result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }, { onSaved, onFailed })
+      );
+      await settled();
+
+      expect(onFailed).toHaveBeenCalledWith(expect.objectContaining({ message: "No permission" }));
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(opened()).toMatchObject({ name: "Original recipe" });
+    });
+
+    it("tells the caller a stored save was saved", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockResolvedValue({ stale: false, version: 2 });
+      const onSaved = vi.fn();
+      const onFailed = vi.fn();
+      const result = render();
+
+      act(() =>
+        result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }, { onSaved, onFailed })
+      );
+      await settled();
+
+      expect(onSaved).toHaveBeenCalledOnce();
+      expect(onFailed).not.toHaveBeenCalled();
+    });
+
     it("keeps a second edit when the first fails, and sends the second at its own base", async () => {
       const first = Promise.withResolvers<never>();
 

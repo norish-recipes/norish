@@ -99,9 +99,23 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
         createRecipe({ ...recipeData, id: recipeId! });
         router.push(`/recipes/${recipeId!}`);
       } else if (editing) {
-        allowNavigation();
-        updateRecipe(editing.id, { ...recipeData, version: editing.version });
-        router.push(`/recipes/${editing.id}`);
+        // The form stays open until the save is stored or queued, so a failure shows here.
+        updateRecipe(
+          editing.id,
+          { ...recipeData, version: editing.version },
+          {
+            onSaved: () => {
+              allowNavigation();
+              router.push(`/recipes/${editing.id}`);
+            },
+            onFailed: (err) => {
+              setIsSubmitting(false);
+              editor.failSubmit(err instanceof Error ? err.message : String(err));
+            },
+          }
+        );
+
+        return;
       }
     } catch (err) {
       log.error({ err }, "Failed to save recipe");

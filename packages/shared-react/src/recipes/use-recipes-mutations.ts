@@ -258,9 +258,12 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
   };
 }
 
+export type SaveCallbacks = { onSaved: () => void; onFailed: (error: unknown) => void };
+
 export type RecipesMutationsResult = {
   createRecipe: (input: FullRecipeInsertDTO) => void;
-  updateRecipe: (id: string, input: FullRecipeUpdateDTO) => void;
+  /** `after` hears once the save is stored or queued, or that it failed. */
+  updateRecipe: (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks) => void;
   /** Delete recipes, each at the version the reader saw; one call however many. */
   deleteRecipes: (recipes: Array<{ id: string; version: number }>) => void;
   convertMeasurements: (recipeId: string, system: MeasurementSystem, version: number) => void;
@@ -419,13 +422,13 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
       // Stored: the next write from the cache (an edit, a convert) is sent at that version.
       // Refused: the Outbox parks it as Conflicted and tells the reader.
       onSuccess: (answer, variables, context) => {
-        const { version } = answer;
-
         if (answer.stale) {
           rollBackEdit(variables, context);
 
           return;
         }
+        const { version } = answer;
+
         if (version === null) return;
         const { detailQueryKey, optimisticDetail } = context;
         const cached = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
@@ -523,8 +526,15 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
     mutateCreate(input);
   };
 
-  const updateRecipe = (id: string, input: FullRecipeUpdateDTO): void => {
-    mutateUpdate({ id, version: input.version ?? 1, data: input });
+  const updateRecipe = (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks): void => {
+    mutateUpdate(
+      { id, version: input.version ?? 1, data: input },
+      after && {
+        onSuccess: after.onSaved,
+        onError: (error) =>
+          shouldPreserveOptimisticUpdate(error) ? after.onSaved() : after.onFailed(error),
+      }
+    );
   };
 
   const deleteRecipes = (recipes: Array<{ id: string; version: number }>): void => {
