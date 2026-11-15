@@ -274,15 +274,15 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
   );
 };
 
-// Before the first push a widget is a blank surface that opens the app.
-const blank: WidgetMessage = { kind: "message", text: "", url: todayUrl() };
+// Before the first push a widget is an empty card that opens the app.
+const unpushed: WidgetMessage = { kind: "message", text: "", url: todayUrl() };
 
 // The widgets exist on iOS only.
 const widgets =
   Platform.OS === "ios"
     ? {
-        small: createWidget<SmallWidgetProps>("CalendarMeal", mealLayout, blank),
-        large: createWidget<LargeWidgetProps>("CalendarWeek", weekLayout, blank),
+        small: createWidget<SmallWidgetProps>("CalendarMeal", mealLayout, unpushed),
+        large: createWidget<LargeWidgetProps>("CalendarWeek", weekLayout, unpushed),
       }
     : null;
 

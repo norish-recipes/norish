@@ -100,10 +100,8 @@ export function signedOutTimelines(strings: Pick<WidgetStrings, "signIn">): Widg
   return { small: [{ date: 0, props }], large: [{ date: 0, props }] };
 }
 
-/**
- * The widgets' timelines from `now` for two weeks: the small one changes at every midnight and
- * slot change, the large one at midnight; the device's local time sets each. After them, "Open Norish".
- */
+/** Two weeks of timelines from `now` in local time: the small steps at midnight and each slot change,
+ * the large at midnight; "Open Norish" after them. */
 export function calendarWidgetTimelines(
   plan: Plan,
   now: number,

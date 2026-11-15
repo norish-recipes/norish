@@ -16,8 +16,8 @@ const MAX_PHOTOS = 60;
 /** Each photo's side in points: the small widget's longest, the week's thumbnail. */
 const PHOTO_POINTS: Record<PhotoSize, number> = { meal: 170, thumb: 20 };
 
-/** A photo's file in the shared folder and the size it is cut to. */
-type PhotoFile = { name: string; size: PhotoSize };
+/** A photo a widget shows: its server path, its file in the shared folder and the size it is cut to. */
+type WidgetPhoto = { image: string; name: string; size: PhotoSize };
 
 function photoFolder(): Directory | null {
   return Platform.OS === "ios" && widgetsDirectory ? new Directory(widgetsDirectory) : null;
@@ -40,13 +40,13 @@ export async function renderWithPhotos(
   if (!current()) return;
   const folder = photoFolder();
   const present = new Set(folder?.list().map((entry) => entry.name) ?? []);
-  const wanted = new Map<string, { image: string; size: PhotoSize }>();
+  const wanted = new Map<string, WidgetPhoto>();
 
   render((image, size) => {
     const name = photoName(image, size);
 
     if (!folder || (!wanted.has(name) && wanted.size >= MAX_PHOTOS)) return null;
-    wanted.set(name, { image, size });
+    wanted.set(name, { image, name, size });
 
     return present.has(name) ? new File(folder, name).uri : null;
   });
@@ -54,11 +54,11 @@ export async function renderWithPhotos(
   for (const entry of folder.list()) if (!wanted.has(entry.name)) entry.delete();
 
   // Each missing photo is downloaded once for every size it is shown at.
-  const missing = new Map<string, PhotoFile[]>();
+  const missing = new Map<string, WidgetPhoto[]>();
 
-  for (const [name, { image, size }] of wanted) {
-    if (present.has(name) || failed.has(name)) continue;
-    missing.set(image, [...(missing.get(image) ?? []), { name, size }]);
+  for (const photo of wanted.values()) {
+    if (present.has(photo.name) || failed.has(photo.name)) continue;
+    missing.set(photo.image, [...(missing.get(photo.image) ?? []), photo]);
   }
   let fetched = false;
 
@@ -79,7 +79,7 @@ export function clearPhotos() {
 async function fetchPhoto(
   folder: Directory,
   image: string,
-  files: PhotoFile[],
+  files: WidgetPhoto[],
   current: () => boolean
 ): Promise<boolean> {
   const source = serverImage(getServerAddress(), image);
