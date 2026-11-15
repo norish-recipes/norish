@@ -302,8 +302,9 @@ async function applyRecipeUpdate(
   return { recipe: updatedRecipe, stale: false };
 }
 
-const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
-  applyRecipeUpdate(ctx, input).catch((err) =>
+// Answers once stored: an Outbox replays edits in order, each at the version the last one earned.
+const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
+  await applyRecipeUpdate(ctx, input).catch((err) =>
     handleRecipeError(ctx, err, "update recipe", { recipeId: input.id })
   );
 

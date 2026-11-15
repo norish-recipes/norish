@@ -767,6 +767,26 @@ describe("recipes procedures", () => {
       );
     });
 
+    it("answers an edit once it is stored, so the next queued edit finds its version", async () => {
+      const stored = Promise.withResolvers<{ stale: false }>();
+      let answered = false;
+
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockReturnValue(stored.promise);
+      getRecipeFull.mockResolvedValue(null);
+
+      const answer = createCaller()
+        .update({ id: "55555555-5555-4555-8555-555555555555", data: { name: "x" }, version: 1 })
+        .then(() => (answered = true));
+
+      await vi.waitFor(() => expect(updateRecipeWithRefs).toHaveBeenCalled());
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(answered).toBe(false);
+      stored.resolve({ stale: false });
+      await answer;
+    });
+
     it("an edit that does not touch the media says nothing about the colour", async () => {
       getRecipeOwnerId.mockResolvedValue(ctx.user.id);
       canAccessResource.mockResolvedValue(true);
