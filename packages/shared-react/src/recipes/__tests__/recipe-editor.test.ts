@@ -25,6 +25,7 @@ import {
   rowNumbers,
   seedIngredientRows,
   seedStepRows,
+  stepChipLabel,
   stepRowsToSteps,
   typeIngredientRow,
   typeStepRow,
@@ -235,6 +236,16 @@ describe("step rows", () => {
     expect(
       ingredientSuggestionsOf(editorIngredientsOf(stored, labeller)).map((s) => s.label)
     ).toEqual(["green onions", "hoisin sauce", "salt"]);
+  });
+});
+
+describe("stepChipLabel", () => {
+  it("reads a whole line as its name and part of one as the derived amount", () => {
+    const salt = { ingredientName: "salt", amount: 5, unit: "g" };
+
+    expect(stepChipLabel(salt, 1)).toBe("salt");
+    expect(stepChipLabel(salt, 0.5)).toBe("2.5 g salt");
+    expect(stepChipLabel({ ingredientName: "pepper", amount: null }, 0.5)).toBe("½ × pepper");
   });
 });
 

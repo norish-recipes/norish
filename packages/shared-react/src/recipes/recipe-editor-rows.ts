@@ -1,7 +1,8 @@
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { MeasurementSystem } from "@norish/shared/contracts";
+import { formatAmount } from "@norish/shared/lib/format-amount";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
-import { toLineAmount } from "@norish/shared/lib/step-ingredients";
+import { deriveStepIngredientAmount, toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 import type { ParsedIngredient, Step, StepImage } from "./recipe-editor";
 
@@ -276,6 +277,28 @@ export function mentionIngredient(
     toLineAmount(line.amount) != null;
 
   return { rows: updated, asksAmount };
+}
+
+/**
+ * A chip using the whole line is the bare name; part of an amounted line reads as the derived
+ * amount ("2.5 g salt"), and only an amountless line falls back to the fraction.
+ */
+export function stepChipLabel(
+  line: { ingredientName: string; amount?: number | string | null; unit?: string | null },
+  share: number
+): string {
+  if (Math.abs(share - 1) < 0.0001) return line.ingredientName;
+  const lineAmount = toLineAmount(line.amount);
+
+  if (lineAmount == null) return `${formatAmount(share, "fraction")} × ${line.ingredientName}`;
+
+  return [
+    formatAmount(deriveStepIngredientAmount(lineAmount, share), "decimal"),
+    line.unit ?? "",
+    line.ingredientName,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 // ---------------------------------------------------------------------------

@@ -158,6 +158,7 @@ export {
   rowNumbers,
   seedIngredientRows,
   seedStepRows,
+  stepChipLabel,
   stepRowsToSteps,
   typeIngredientRow,
   typeStepRow,
