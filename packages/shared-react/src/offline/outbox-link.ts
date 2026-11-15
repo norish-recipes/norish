@@ -166,42 +166,43 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
 
   return () => {
     const capture = ({ op, next }: Parameters<OperationLink<TRouter>>[0]) =>
-      observable<OperationResultEnvelope<unknown, TRPCClientError<TRouter>>, TRPCClientError<TRouter>>(
-        (observer) => {
-          const subscription = next(op).subscribe({
-            next: (value) => observer.next(value),
-            error: (error) => {
-              if (
-                isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
-                !isBackendUnreachableError(error)
-              ) {
-                observer.error(error);
+      observable<
+        OperationResultEnvelope<unknown, TRPCClientError<TRouter>>,
+        TRPCClientError<TRouter>
+      >((observer) => {
+        const subscription = next(op).subscribe({
+          next: (value) => observer.next(value),
+          error: (error) => {
+            if (
+              isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
+              !isBackendUnreachableError(error)
+            ) {
+              observer.error(error);
 
-                return;
-              }
+              return;
+            }
 
-              // Queued means durably stored: hold the error until the entry is
-              // in storage, and downgrade it to a real failure if it is not.
-              void Promise.resolve()
-                .then(() => captureToOutbox(deps, op.path, op.input, op.context))
-                .then(
-                  () => observer.error(error),
-                  (persistError: unknown) => {
-                    log.error(
-                      { error: persistError, path: op.path },
-                      "Outbox admission failed; presenting mutation as failed"
-                    );
-                    markOutboxAdmissionFailed(error);
-                    observer.error(error);
-                  }
-                );
-            },
-            complete: () => observer.complete(),
-          });
+            // Queued means durably stored: hold the error until the entry is
+            // in storage, and downgrade it to a real failure if it is not.
+            void Promise.resolve()
+              .then(() => captureToOutbox(deps, op.path, op.input, op.context))
+              .then(
+                () => observer.error(error),
+                (persistError: unknown) => {
+                  log.error(
+                    { error: persistError, path: op.path },
+                    "Outbox admission failed; presenting mutation as failed"
+                  );
+                  markOutboxAdmissionFailed(error);
+                  observer.error(error);
+                }
+              );
+          },
+          complete: () => observer.complete(),
+        });
 
-          return () => subscription.unsubscribe();
-        }
-      );
+        return () => subscription.unsubscribe();
+      });
 
     return ({ op, next }) => {
       if (op.type !== "mutation") {
@@ -218,20 +219,27 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
         const entity = `${op.path} ${edit.id}`;
         let resolveSettled = () => {};
         const settled = new Promise<void>((resolve) => (resolveSettled = resolve));
+        const previous = tails.get(entity) ?? Promise.resolve();
+        // The next edit waits for the earlier ones too, even if this one is dropped first.
+        const tail = previous.then(() => settled);
         const release = () => {
           resolveSettled();
-          if (tails.get(entity) === settled) tails.delete(entity);
+          void tail.then(() => {
+            if (tails.get(entity) === tail) tails.delete(entity);
+          });
         };
-        const previous = tails.get(entity) ?? Promise.resolve();
         let subscription: { unsubscribe: () => void } | null = null;
         let closed = false;
 
-        tails.set(entity, settled);
+        tails.set(entity, tail);
         void previous.then(() => {
           if (closed) return release();
           let version = edit.version;
 
-          while (forwards.has(`${entity} ${version}`)) version = forwards.get(`${entity} ${version}`)!;
+          for (let next = forwards.get(`${entity} ${version}`); next;) {
+            version = next;
+            next = forwards.get(`${entity} ${version}`);
+          }
           const sent = { ...edit, version };
           let answered: Promise<void> = Promise.resolve();
 

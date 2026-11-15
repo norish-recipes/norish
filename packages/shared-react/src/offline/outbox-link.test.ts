@@ -192,9 +192,7 @@ describe("createOutboxLink: one entity's versioned edits", () => {
   });
 
   const linkOver = (outbox: OutboxStore) =>
-    createOutboxLink({ store: outbox, owner, replayHeaderValue: REPLAY_HEADER_VALUE })(
-      {} as never
-    );
+    createOutboxLink({ store: outbox, owner, replayHeaderValue: REPLAY_HEADER_VALUE })({} as never);
 
   type Edit = { id: string; version: number; data: { name: string } };
 
@@ -259,6 +257,31 @@ describe("createOutboxLink: one entity's versioned edits", () => {
     expect(server.state).toMatchObject({ names: ["First", "Second"], sent: [5, 6] });
   });
 
+  it("keeps a later edit behind the first when the one between them is dropped", async () => {
+    const server = versionedServer(5);
+    const gate = Promise.withResolvers<void>();
+    const link = linkOver(store);
+    const op = (name: string) => ({
+      type: "mutation",
+      path: "recipes.update",
+      input: edit(name),
+      context: {},
+    });
+
+    const first = send(link, edit("First"), answering(server, gate.promise));
+    const dropped = link({ op: op("Dropped"), next: answering(server) } as never).subscribe({});
+
+    dropped.unsubscribe();
+    const third = send(link, edit("Third"), answering(server));
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(server.state.sent).toEqual([]);
+    gate.resolve();
+    await Promise.all([first, third]);
+
+    expect(server.state).toMatchObject({ names: ["First", "Third"], sent: [5, 6] });
+  });
+
   it("never moves an edit past another member's change", async () => {
     const server = versionedServer(5);
     const link = linkOver(store);
@@ -318,7 +341,8 @@ describe("createOutboxLink: one entity's versioned edits", () => {
       });
     }
     const submitVia =
-      (link: ReturnType<typeof linkOver>, reachable: () => boolean) => async (entry: OutboxEntry) => {
+      (link: ReturnType<typeof linkOver>, reachable: () => boolean) =>
+      async (entry: OutboxEntry) => {
         const terminal = reachable()
           ? answering(server)
           : errorWith(new TypeError("Failed to fetch"));
@@ -330,7 +354,11 @@ describe("createOutboxLink: one entity's versioned edits", () => {
     // The first replays, then the app is killed before the second is sent.
     let sends = 0;
 
-    await runReplayPass({ store, ownerId: "u1", submit: submitVia(linkOver(store), () => sends++ === 0) });
+    await runReplayPass({
+      store,
+      ownerId: "u1",
+      submit: submitVia(linkOver(store), () => sends++ === 0),
+    });
     // A fresh start: nothing in memory, only the stored Outbox.
     await runReplayPass({ store, ownerId: "u1", submit: submitVia(linkOver(store), () => true) });
 
