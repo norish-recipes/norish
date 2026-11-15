@@ -113,6 +113,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       replayHeaderValue,
       wholeEdits: new Set(["recipes.update"]),
       timedWrites: new Set(SCOPED_GROCERY_WRITES),
+      locks,
       onConflict: () => recovery?.reportConflict(),
     }),
     probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),

@@ -3,13 +3,17 @@
  * engine's own Outbox store and cache manager, so no adapter quietly behaves differently.
  */
 
-import { describe, expect, it } from "vitest";
+import { observable } from "@trpc/server/observable";
+import { describe, expect, it, vi } from "vitest";
 
+import type { LockManagerLike } from "../leader";
 import type { NewOutboxEntry } from "../outbox-types";
 import type { OfflineStorage } from "../storage";
 import { createCacheManager } from "../cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "../last-warmed";
+import { createOutboxLink } from "../outbox-link";
 import { createOutboxStore } from "../outbox-store";
+import { runReplayPass } from "../replay";
 
 interface StorageContractHarness {
   /** A fresh, empty adapter over its own backing store. */
@@ -147,14 +151,14 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         const queued = await store.enqueue(entry());
         const claim = (seq: number) =>
           store.change(seq, (stored) =>
-            stored.sending ? undefined : { ...stored, sending: true }
+            stored.sending ? undefined : { ...stored, sending: store.process }
           );
 
         const [first, second] = await Promise.all([claim(queued.seq), claim(queued.seq)]);
 
-        expect(first).toMatchObject({ seq: queued.seq, sending: true });
+        expect(first).toMatchObject({ seq: queued.seq, sending: store.process });
         expect(second).toBeUndefined();
-        expect((await store.forOwner("u1"))[0]).toMatchObject({ sending: true });
+        expect((await store.forOwner("u1"))[0]).toMatchObject({ sending: store.process });
         await store.remove(queued.seq);
         expect(await claim(queued.seq)).toBeUndefined();
       });
@@ -167,6 +171,62 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         await store.update(gone.seq, { attempts: 1 });
 
         expect(await store.size()).toBe(0);
+      });
+    });
+
+    describe("a send cut off by a kill", () => {
+      const recipeId = "11111111-1111-4111-8111-111111111111";
+      const edit = (name: string, version: number) => ({ id: recipeId, version, data: { name } });
+      const held: LockManagerLike = { request: (_name, _options, granted) => granted(null) };
+      const free: LockManagerLike = { request: (_name, _options, granted) => granted({}) };
+
+      /** Replay marks the queued save and sends it; the process dies before an answer. */
+      async function killedWhileSending() {
+        const storage = await harness.create();
+        const before = createOutboxStore(storage.outbox);
+
+        await before.enqueue(
+          entry({ path: "recipes.update", input: edit("First", 3), entityId: null })
+        );
+        void runReplayPass({ store: before, ownerId: "u1", submit: () => new Promise(() => {}) });
+        await vi.waitFor(async () => expect((await before.loadAll())[0]?.sending).toBeTruthy());
+
+        return storage;
+      }
+
+      /** After a relaunch (a new store over the same storage), save the recipe again. */
+      async function saveAgain(storage: OfflineStorage, locks: LockManagerLike | null) {
+        const store = createOutboxStore(storage.outbox);
+        const link = createOutboxLink({
+          store,
+          owner: () => "u1",
+          replayHeaderValue: "contract",
+          wholeEdits: new Set(["recipes.update"]),
+          locks: () => locks,
+        })({} as never);
+
+        await new Promise<void>((resolve) =>
+          link({
+            op: { id: 1, type: "mutation", path: "recipes.update", input: edit("Second", 4) },
+            next: () => observable((observer) => observer.error(new TypeError("Failed to fetch"))),
+          } as never).subscribe({ next: () => resolve(), error: () => resolve() })
+        );
+
+        return (await store.loadAll()).map((stored) => stored.input);
+      }
+
+      it.each([
+        ["with no lock manager", null],
+        ["while no context holds the Replay lock", free],
+      ])("lets a save replace what the killed send left marked, %s", async (_case, locks) => {
+        expect(await saveAgain(await killedWhileSending(), locks)).toEqual([edit("Second", 3)]);
+      });
+
+      it("keeps the mark while another context holds the Replay lock", async () => {
+        expect(await saveAgain(await killedWhileSending(), held)).toEqual([
+          edit("First", 3),
+          edit("Second", 4),
+        ]);
       });
     });
 

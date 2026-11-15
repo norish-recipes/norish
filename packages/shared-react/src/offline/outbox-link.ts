@@ -31,10 +31,12 @@ import {
   markOutboxAdmissionFailed,
 } from "@norish/shared/lib/trpc-errors";
 
+import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry } from "./outbox-types";
 import { isStaleResult } from "./error-classification";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
+import { runIfLeader } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
 
 const log = createClientLogger("OutboxLink");
@@ -69,6 +71,8 @@ interface OutboxLinkDependencies {
   wholeEdits?: ReadonlySet<string>;
   /** Procedures whose send, live or replayed, is aborted after {@link MUTATION_SEND_TIMEOUT_MS}. */
   timedWrites?: ReadonlySet<string>;
+  /** The Replay lock: while a context holds it, another process's mark on an entry is live. */
+  locks?: () => LockManagerLike | null;
   /** Told of a whole edit sent live and refused as stale; nothing is stored for it. */
   onConflict?: () => void;
 }
@@ -142,18 +146,29 @@ async function replaceUnsent(
     .at(-1);
 
   if (!last) return "none";
-  const replaced = await deps.store.change(last.seq, (stored) =>
-    stored.status === "pending" && stored.attempts === 0 && !stored.sending
-      ? {
-          ...stored,
-          input: {
-            ...(encodeOutboxInput(op.input) as object),
-            version: (stored.input as { version?: unknown }).version,
-          },
-          ...operationOf(op.context),
-        }
-      : undefined
-  );
+  const own = deps.store.process;
+  const take = (otherMarksStale: boolean) =>
+    deps.store.change(last.seq, (stored) =>
+      stored.status === "pending" &&
+      stored.attempts === 0 &&
+      (!stored.sending || (otherMarksStale && stored.sending !== own))
+        ? {
+            ...stored,
+            input: {
+              ...(encodeOutboxInput(op.input) as object),
+              version: (stored.input as { version?: unknown }).version,
+            },
+            ...operationOf(op.context),
+          }
+        : undefined
+    );
+  // Another process's mark is stale unless a context holds the Replay lock (web: another tab).
+  const locks = deps.locks?.() ?? null;
+  let replaced = await take(!locks);
+
+  if (!replaced && locks && last.sending && last.sending !== own) {
+    replaced = await runIfLeader(() => take(true), locks);
+  }
 
   return replaced ? "replaced" : "kept";
 }

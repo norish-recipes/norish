@@ -139,12 +139,12 @@ export async function runReplayPass({
 
     // Marked before it is sent, and sent as stored then: a save replaced it until this point.
     const claimed = await store.change(entry.seq, (stored) =>
-      stored.status === "pending" ? { ...stored, sending: true } : undefined
+      stored.status === "pending" ? { ...stored, sending: store.process } : undefined
     );
 
     if (!claimed) continue;
     const outcome = await submit(claimed);
-    const unmark = () => store.update(entry.seq, { sending: false });
+    const unmark = () => store.update(entry.seq, { sending: undefined });
 
     switch (outcome.kind) {
       case "success":
@@ -180,7 +180,7 @@ export async function runReplayPass({
           break;
         }
 
-        await store.update(entry.seq, { attempts, sending: false });
+        await store.update(entry.seq, { attempts, sending: undefined });
 
         return finish("retry", retryDelayMs(attempts));
       }

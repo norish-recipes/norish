@@ -1,10 +1,14 @@
 // The persisted Outbox, FIFO by the adapter's seq. Replay touches only the current owner's
 // entries; a departed owner's wait for their sign-in, unless a sign-out discards them (ADR-0009).
 
+import { createClientId } from "@norish/shared/lib/operation-helpers";
+
 import type { NewOutboxEntry, OutboxEntry, OutboxEntryStatus, ParkedReason } from "./outbox-types";
 import type { OfflineStorage } from "./storage";
 
 export interface OutboxStore {
+  /** This store's id, which Replay marks an entry it sends with: a mark outlives its process. */
+  readonly process: string;
   enqueue(entry: NewOutboxEntry): Promise<OutboxEntry>;
   /** All entries across all owners, in FIFO (seq) order. */
   loadAll(): Promise<OutboxEntry[]>;
@@ -72,7 +76,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
     await update(seq, {
       status: reason === "conflict" ? "conflicted" : "parked",
       parkedReason: reason,
-      sending: false,
+      sending: undefined,
     });
   }
 
@@ -96,6 +100,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
   }
 
   return {
+    process: createClientId(),
     enqueue,
     loadAll: () => outbox.all(),
     forOwner,
