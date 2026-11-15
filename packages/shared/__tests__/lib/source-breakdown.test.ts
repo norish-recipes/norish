@@ -1,7 +1,7 @@
-import { formatInlineSourceBreakdown } from "@/features/groceries/components/list/grouped-grocery-item";
 import { describe, expect, it } from "vitest";
 
 import type { GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
+import { formatInlineSourceBreakdown } from "@norish/shared/lib/grocery-grouping";
 
 const source = (recipeName: string | null, amount: number | null, unit: string | null = null) =>
   ({ recipeName, grocery: { amount, unit } }) as unknown as GroupedGrocerySource;

@@ -13,42 +13,10 @@ import { useTranslations } from "next-intl";
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup, GroupedGrocerySource } from "@norish/shared/lib/grocery-grouping";
 import { lineOfGroup } from "@norish/shared-react/groceries";
-import { shownAmount } from "@norish/shared/lib/grocery-grouping";
+import { formatInlineSourceBreakdown, shownAmount } from "@norish/shared/lib/grocery-grouping";
 
 import { GroceryPrice } from "./grocery-price";
 import { RecurrencePill } from "./recurrence-pill";
-
-/**
- * Format inline source breakdown showing recipe names and amounts.
- * e.g., "Recipe A (300g), Recipe B (200g)" or "Recipe A, Recipe B". The
- * lines added by hand are named once, with their amounts together:
- * "Recipe A (300g), Manual Items (2×, 1×)", where a line that states no
- * amount is the one the group's total counts it as.
- */
-export function formatInlineSourceBreakdown(
-  sources: GroupedGrocerySource[],
-  formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string,
-  manualLabel: string
-): string {
-  const named = (name: string, amounts: string[]) =>
-    amounts.length > 0 ? `${name} (${amounts.join(", ")})` : name;
-  const amountOf = (source: GroupedGrocerySource) =>
-    formatFn(shownAmount(source.grocery), source.grocery.unit);
-  const manual = sources.filter((source) => !source.recipeName);
-  const entries = sources.flatMap((source) =>
-    source.recipeName ? [named(source.recipeName, [amountOf(source)].filter(Boolean))] : []
-  );
-
-  if (manual.length > 0) {
-    const amounts = manual.map((source) =>
-      formatFn(shownAmount(source.grocery) ?? 1, source.grocery.unit)
-    );
-
-    entries.push(named(manualLabel, amounts.filter(Boolean)));
-  }
-
-  return entries.join(", ");
-}
 
 interface GroupedGroceryItemProps {
   group: GroceryGroup;
