@@ -281,6 +281,7 @@ export const markGroceryDoneProcedure = authedProcedure
         "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
       errorResponses: {
         401: "Missing or invalid API credentials",
+        404: "Grocery not found",
       },
     },
   })
@@ -288,10 +289,14 @@ export const markGroceryDoneProcedure = authedProcedure
   .output(groceryMutationOutputSchema)
   .mutation(async ({ ctx, input }) => {
     try {
-      const updated = await toggleGroceriesData(ctx, {
-        groceries: [{ id: input.id, version: input.version }],
-        isDone: true,
-      });
+      const updated = await toggleGroceriesData(
+        ctx,
+        {
+          groceries: [{ id: input.id, version: input.version }],
+          isDone: true,
+        },
+        { rejectMissing: true }
+      );
 
       return { grocery: updated[0] ?? null, stale: updated.length === 0 };
     } catch (err) {
@@ -322,6 +327,7 @@ export const markGroceryUndoneProcedure = authedProcedure
         "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
       errorResponses: {
         401: "Missing or invalid API credentials",
+        404: "Grocery not found",
       },
     },
   })
@@ -329,10 +335,14 @@ export const markGroceryUndoneProcedure = authedProcedure
   .output(groceryMutationOutputSchema)
   .mutation(async ({ ctx, input }) => {
     try {
-      const updated = await toggleGroceriesData(ctx, {
-        groceries: [{ id: input.id, version: input.version }],
-        isDone: false,
-      });
+      const updated = await toggleGroceriesData(
+        ctx,
+        {
+          groceries: [{ id: input.id, version: input.version }],
+          isDone: false,
+        },
+        { rejectMissing: true }
+      );
 
       return { grocery: updated[0] ?? null, stale: updated.length === 0 };
     } catch (err) {
@@ -363,6 +373,7 @@ export const deleteGroceryProcedure = authedProcedure
         "Send the grocery's current `version` from the list. If it no longer matches, nothing changes and the response has `stale: true`: fetch the list again and retry.",
       errorResponses: {
         401: "Missing or invalid API credentials",
+        404: "Grocery not found",
       },
     },
   })
@@ -370,9 +381,11 @@ export const deleteGroceryProcedure = authedProcedure
   .output(deleteGroceryOutputSchema)
   .mutation(async ({ ctx, input }) => {
     try {
-      const result = await deleteGroceriesData(ctx, {
-        groceries: [{ id: input.id, version: input.version }],
-      });
+      const result = await deleteGroceriesData(
+        ctx,
+        { groceries: [{ id: input.id, version: input.version }] },
+        { rejectMissing: true }
+      );
 
       return { success: true, stale: result.staleIds.length > 0 };
     } catch (err) {
@@ -403,7 +416,7 @@ export const assignGroceryToStoreProcedure = authedProcedure
         "Send the grocery's current `version` from the list; a stale version changes nothing and returns `stale: true`. A `storeId` of `null` removes the store. With `savePreference` (on by default) the same ingredient goes to this store next time.",
       errorResponses: {
         401: "Missing or invalid API credentials",
-        404: "Store not found",
+        404: "Grocery or store not found",
       },
     },
   })
@@ -411,12 +424,16 @@ export const assignGroceryToStoreProcedure = authedProcedure
   .output(groceryMutationOutputSchema)
   .mutation(async ({ ctx, input }) => {
     try {
-      const updated = await assignGroceryToStoreData(ctx, {
-        groceryId: input.id,
-        version: input.version,
-        storeId: input.storeId,
-        savePreference: input.savePreference,
-      });
+      const updated = await assignGroceryToStoreData(
+        ctx,
+        {
+          groceryId: input.id,
+          version: input.version,
+          storeId: input.storeId,
+          savePreference: input.savePreference,
+        },
+        { rejectMissing: true }
+      );
 
       return { grocery: updated, stale: updated === null };
     } catch (err) {

@@ -408,6 +408,37 @@ describe("groceries openapi procedures", () => {
     expect(result).toEqual({ success: true, stale: true });
   });
 
+  it.each([
+    [
+      "markGroceryDone",
+      (c: ReturnType<typeof caller>, id: string) => c.markGroceryDone({ id, version: 1 }),
+    ],
+    [
+      "markGroceryUndone",
+      (c: ReturnType<typeof caller>, id: string) => c.markGroceryUndone({ id, version: 1 }),
+    ],
+    [
+      "deleteGrocery",
+      (c: ReturnType<typeof caller>, id: string) => c.deleteGrocery({ id, version: 1 }),
+    ],
+    [
+      "assignGroceryToStore",
+      (c: ReturnType<typeof caller>, id: string) =>
+        c.assignGroceryToStore({ id, version: 1, storeId: null, savePreference: false }),
+    ],
+  ])("%s answers NOT_FOUND for a grocery that does not exist", async (_, call) => {
+    getGroceryOwnerIds.mockResolvedValue(new Map());
+    getGroceriesByIds.mockResolvedValue([]);
+
+    await expect(call(caller(), crypto.randomUUID())).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  function caller() {
+    return openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
+  }
+
   it("marks a grocery as undone and returns the updated grocery", async () => {
     const groceryId = crypto.randomUUID();
     const ownerIds = new Map([[groceryId, ctx.user.id]]);

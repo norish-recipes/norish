@@ -414,7 +414,8 @@ export async function createGroceriesData(
 
 export async function toggleGroceriesData(
   ctx: GroceryProcedureContext,
-  input: z.infer<typeof GroceryToggleSchema>
+  input: z.infer<typeof GroceryToggleSchema>,
+  { rejectMissing = false } = {}
 ) {
   const { groceries: toggles, isDone } = input;
   const groceryIds = toggles.map((grocery) => grocery.id);
@@ -424,6 +425,10 @@ export async function toggleGroceriesData(
 
   // A line another member deleted lost to an earlier write: it is left out and answers stale.
   const ownerIds = await getGroceryOwnerIds(groceryIds);
+
+  if (rejectMissing && ownerIds.size !== groceryIds.length) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
+  }
 
   for (const ownerId of ownerIds.values()) {
     await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -485,7 +490,8 @@ export async function toggleGroceriesData(
 
 export async function deleteGroceriesData(
   ctx: GroceryProcedureContext,
-  input: z.infer<typeof GroceryDeleteSchema>
+  input: z.infer<typeof GroceryDeleteSchema>,
+  { rejectMissing = false } = {}
 ) {
   const groceryIds = input.groceries.map((grocery) => grocery.id);
 
@@ -493,6 +499,10 @@ export async function deleteGroceriesData(
 
   // A line already gone is a delete that already happened: it is skipped, not stale.
   const ownerIds = await getGroceryOwnerIds(groceryIds);
+
+  if (rejectMissing && ownerIds.size !== groceryIds.length) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
+  }
 
   for (const ownerId of ownerIds.values()) {
     await assertHouseholdAccess(ctx.user.id, ownerId);
@@ -531,7 +541,8 @@ export async function deleteGroceriesData(
 
 export async function assignGroceryToStoreData(
   ctx: GroceryProcedureContext,
-  input: z.infer<typeof AssignGroceryToStoreInputSchema>
+  input: z.infer<typeof AssignGroceryToStoreInputSchema>,
+  { rejectMissing = false } = {}
 ) {
   const { groceryId, storeId, savePreference, version } = input;
 
@@ -542,6 +553,10 @@ export async function assignGroceryToStoreData(
     storeId ? getStoreOwnerId(storeId) : Promise.resolve(null),
   ]);
   const ownerId = ownerIds.get(groceryId);
+
+  if (rejectMissing && !ownerId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
+  }
 
   // A line another member deleted lost to an earlier write: stale, as a changed version is.
   if (ownerId) await assertHouseholdAccess(ctx.user.id, ownerId);
