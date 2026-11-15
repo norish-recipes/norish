@@ -26,27 +26,33 @@ export function CardSlice({
 }) {
   return (
     <View className={`px-5 ${gap ? "pt-3.5" : ""}`}>
-      <View
-        className={`overflow-hidden ${className} ${edge.top ? "rounded-t-3xl" : separated ? "border-separator border-t" : ""} ${edge.bottom ? "rounded-b-3xl" : ""}`}
-      >
-        {children}
-      </View>
+      <View className={sliceClass(edge, className, separated)}>{children}</View>
     </View>
   );
 }
 
+const sliceClass = (edge: Edge, className: string, separated: boolean) =>
+  `overflow-hidden ${className} ${edge.top ? "rounded-t-3xl" : separated ? "border-separator border-t" : ""} ${edge.bottom ? "rounded-b-3xl" : ""}`;
+
 const TILT = { transform: [{ rotate: "-1.5deg" }] };
 
-/** A grocery row's slice; while a drag carries it, a card of its own above the list. */
+/**
+ * A grocery row's slice; while a drag carries it, a card of its own above the list. Only the
+ * classes change on lift, so the row keeps its state (a group stays folded out).
+ */
 export function ItemSlice({ edge, children }: { edge: Edge; children: ReactNode }) {
   const lifted = useIsLifted();
   const reduceMotion = useReducedMotion();
 
-  if (!lifted) return <CardSlice edge={edge}>{children}</CardSlice>;
-
   return (
-    <View className="px-3.5" style={reduceMotion ? undefined : TILT}>
-      <View className="bg-surface rounded-[20px] shadow-lg">{children}</View>
+    <View className={lifted ? "px-3.5" : "px-5"} style={lifted && !reduceMotion ? TILT : undefined}>
+      <View
+        className={
+          lifted ? "bg-surface rounded-[20px] shadow-lg" : sliceClass(edge, "bg-surface", true)
+        }
+      >
+        {children}
+      </View>
     </View>
   );
 }
