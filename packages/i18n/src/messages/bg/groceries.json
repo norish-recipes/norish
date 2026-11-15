@@ -179,5 +179,26 @@
     "onePack": "броено като една опаковка",
     "sale": "Промоция",
     "regularPrice": "Редовна цена {price}"
+  },
+  "mobile": {
+    "viewMode": "Изглед",
+    "viewByStore": "По магазини",
+    "viewByRecipe": "По рецепти",
+    "listSettings": "Настройки на списъка",
+    "emptyHint": "Добавете продукти с бутона по-долу.",
+    "addTitle": "Добавяне на покупки",
+    "editTitle": "Редактиране на продукт",
+    "fromRecipe": "От {recipe}",
+    "store": "Магазин",
+    "noStore": "Без магазин",
+    "automatic": "Автоматично",
+    "never": "Никога",
+    "removeRepeat": "Премахване на повторението",
+    "amountFor": "{amount} за {recipe}",
+    "expand": "Разгъване",
+    "collapse": "Свиване",
+    "itemLabel": "Продукт",
+    "decreaseInterval": "Намаляване на интервала",
+    "increaseInterval": "Увеличаване на интервала"
   }
 }

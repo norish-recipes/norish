@@ -179,5 +179,26 @@
     "onePack": "geteld als één verpakking",
     "sale": "Aanbieding",
     "regularPrice": "Normale prijs {price}"
+  },
+  "mobile": {
+    "viewMode": "Weergave",
+    "viewByStore": "Per winkel",
+    "viewByRecipe": "Per recept",
+    "listSettings": "Lijstinstellingen",
+    "emptyHint": "Voeg items toe met de knop hieronder.",
+    "addTitle": "Boodschappen toevoegen",
+    "editTitle": "Boodschap bewerken",
+    "fromRecipe": "Uit {recipe}",
+    "store": "Winkel",
+    "noStore": "Geen winkel",
+    "automatic": "Automatisch",
+    "never": "Nooit",
+    "removeRepeat": "Herhaling verwijderen",
+    "amountFor": "{amount} voor {recipe}",
+    "expand": "Uitklappen",
+    "collapse": "Inklappen",
+    "itemLabel": "Item",
+    "decreaseInterval": "Interval verlagen",
+    "increaseInterval": "Interval verhogen"
   }
 }

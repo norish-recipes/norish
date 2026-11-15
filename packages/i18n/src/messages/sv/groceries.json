@@ -179,5 +179,26 @@
     "onePack": "prissatt som en förpackning",
     "sale": "Extrapris",
     "regularPrice": "Ordinarie pris {price}"
+  },
+  "mobile": {
+    "viewMode": "Visning",
+    "viewByStore": "Efter butik",
+    "viewByRecipe": "Efter recept",
+    "listSettings": "Listinställningar",
+    "emptyHint": "Lägg till varor med knappen nedan.",
+    "addTitle": "Lägg till varor",
+    "editTitle": "Redigera vara",
+    "fromRecipe": "Från {recipe}",
+    "store": "Butik",
+    "noStore": "Ingen butik",
+    "automatic": "Automatisk",
+    "never": "Aldrig",
+    "removeRepeat": "Ta bort upprepning",
+    "amountFor": "{amount} till {recipe}",
+    "expand": "Visa mer",
+    "collapse": "Dölj",
+    "itemLabel": "Vara",
+    "decreaseInterval": "Minska intervall",
+    "increaseInterval": "Öka intervall"
   }
 }

@@ -179,5 +179,26 @@
     "onePack": "1개 포장으로 계산됨",
     "sale": "할인",
     "regularPrice": "정가 {price}"
+  },
+  "mobile": {
+    "viewMode": "보기",
+    "viewByStore": "매장별",
+    "viewByRecipe": "레시피별",
+    "listSettings": "목록 설정",
+    "emptyHint": "아래 버튼으로 항목을 추가하세요.",
+    "addTitle": "식료품 추가",
+    "editTitle": "식료품 수정",
+    "fromRecipe": "{recipe}에서",
+    "store": "매장",
+    "noStore": "매장 없음",
+    "automatic": "자동",
+    "never": "안 함",
+    "removeRepeat": "반복 삭제",
+    "amountFor": "{recipe}용 {amount}",
+    "expand": "펼치기",
+    "collapse": "접기",
+    "itemLabel": "항목",
+    "decreaseInterval": "간격 줄이기",
+    "increaseInterval": "간격 늘리기"
   }
 }

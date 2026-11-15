@@ -179,5 +179,26 @@
     "onePack": "посчитано как одна упаковка",
     "sale": "Скидка",
     "regularPrice": "Обычная цена {price}"
+  },
+  "mobile": {
+    "viewMode": "Вид",
+    "viewByStore": "По магазинам",
+    "viewByRecipe": "По рецептам",
+    "listSettings": "Настройки списка",
+    "emptyHint": "Добавьте товары кнопкой ниже.",
+    "addTitle": "Добавить покупки",
+    "editTitle": "Изменить покупку",
+    "fromRecipe": "Из рецепта «{recipe}»",
+    "store": "Магазин",
+    "noStore": "Без магазина",
+    "automatic": "Автоматически",
+    "never": "Никогда",
+    "removeRepeat": "Убрать повтор",
+    "amountFor": "{amount} для рецепта «{recipe}»",
+    "expand": "Развернуть",
+    "collapse": "Свернуть",
+    "itemLabel": "Товар",
+    "decreaseInterval": "Уменьшить интервал",
+    "increaseInterval": "Увеличить интервал"
   }
 }

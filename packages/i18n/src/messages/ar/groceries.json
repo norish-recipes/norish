@@ -179,5 +179,26 @@
     "onePack": "مسعّر كعبوة واحدة",
     "sale": "عرض",
     "regularPrice": "السعر العادي {price}"
+  },
+  "mobile": {
+    "viewMode": "العرض",
+    "viewByStore": "حسب المتجر",
+    "viewByRecipe": "حسب الوصفة",
+    "listSettings": "إعدادات القائمة",
+    "emptyHint": "أضف العناصر بالزر أدناه.",
+    "addTitle": "إضافة مشتريات",
+    "editTitle": "تعديل عنصر",
+    "fromRecipe": "من {recipe}",
+    "store": "المتجر",
+    "noStore": "بدون متجر",
+    "automatic": "تلقائي",
+    "never": "أبدًا",
+    "removeRepeat": "إزالة التكرار",
+    "amountFor": "{amount} لـ {recipe}",
+    "expand": "توسيع",
+    "collapse": "طيّ",
+    "itemLabel": "العنصر",
+    "decreaseInterval": "تقليل الفاصل",
+    "increaseInterval": "زيادة الفاصل"
   }
 }

@@ -179,5 +179,26 @@
     "onePack": "priced as one pack",
     "sale": "Sale",
     "regularPrice": "Regular price {price}"
+  },
+  "mobile": {
+    "viewMode": "View mode",
+    "viewByStore": "By store",
+    "viewByRecipe": "By recipe",
+    "listSettings": "List settings",
+    "emptyHint": "Add items with the button below.",
+    "addTitle": "Add groceries",
+    "editTitle": "Edit grocery",
+    "fromRecipe": "From {recipe}",
+    "store": "Store",
+    "noStore": "No store",
+    "automatic": "Automatic",
+    "never": "Never",
+    "removeRepeat": "Remove repeat",
+    "amountFor": "{amount} for {recipe}",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "itemLabel": "Item",
+    "decreaseInterval": "Decrease interval",
+    "increaseInterval": "Increase interval"
   }
 }

@@ -179,5 +179,26 @@
     "onePack": "compté comme un seul paquet",
     "sale": "Promo",
     "regularPrice": "Prix normal {price}"
+  },
+  "mobile": {
+    "viewMode": "Affichage",
+    "viewByStore": "Par magasin",
+    "viewByRecipe": "Par recette",
+    "listSettings": "Réglages de la liste",
+    "emptyHint": "Ajoutez des articles avec le bouton ci-dessous.",
+    "addTitle": "Ajouter des courses",
+    "editTitle": "Modifier l'article",
+    "fromRecipe": "De {recipe}",
+    "store": "Magasin",
+    "noStore": "Aucun magasin",
+    "automatic": "Automatique",
+    "never": "Jamais",
+    "removeRepeat": "Supprimer la répétition",
+    "amountFor": "{amount} pour {recipe}",
+    "expand": "Développer",
+    "collapse": "Réduire",
+    "itemLabel": "Article",
+    "decreaseInterval": "Réduire l'intervalle",
+    "increaseInterval": "Augmenter l'intervalle"
   }
 }

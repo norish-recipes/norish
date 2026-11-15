@@ -179,5 +179,26 @@
     "sectionTitle": "Tyhjennetäänkö {name}?",
     "sectionDescription": "Tämä poistaa kohteesta {name} {count, plural, one {# tuotteen} other {# tuotetta}}. Tätä ei voi perua.",
     "confirm": "Tyhjennä"
+  },
+  "mobile": {
+    "viewMode": "Näkymä",
+    "viewByStore": "Kaupoittain",
+    "viewByRecipe": "Resepteittäin",
+    "listSettings": "Listan asetukset",
+    "emptyHint": "Lisää tuotteita alla olevalla painikkeella.",
+    "addTitle": "Lisää ostokset",
+    "editTitle": "Muokkaa tuotetta",
+    "fromRecipe": "Reseptistä {recipe}",
+    "store": "Kauppa",
+    "noStore": "Ei kauppaa",
+    "automatic": "Automaattinen",
+    "never": "Ei koskaan",
+    "removeRepeat": "Poista toisto",
+    "amountFor": "{amount} reseptiin {recipe}",
+    "expand": "Laajenna",
+    "collapse": "Tiivistä",
+    "itemLabel": "Tuote",
+    "decreaseInterval": "Pienennä väliä",
+    "increaseInterval": "Suurenna väliä"
   }
 }

@@ -179,5 +179,26 @@
     "onePack": "talt som én pakke",
     "sale": "Tilbud",
     "regularPrice": "Normalpris {price}"
+  },
+  "mobile": {
+    "viewMode": "Visning",
+    "viewByStore": "Efter butik",
+    "viewByRecipe": "Efter opskrift",
+    "listSettings": "Listeindstillinger",
+    "emptyHint": "Tilføj varer med knappen nedenfor.",
+    "addTitle": "Tilføj indkøb",
+    "editTitle": "Rediger vare",
+    "fromRecipe": "Fra {recipe}",
+    "store": "Butik",
+    "noStore": "Ingen butik",
+    "automatic": "Automatisk",
+    "never": "Aldrig",
+    "removeRepeat": "Fjern gentagelse",
+    "amountFor": "{amount} til {recipe}",
+    "expand": "Udvid",
+    "collapse": "Skjul",
+    "itemLabel": "Vare",
+    "decreaseInterval": "Mindsk interval",
+    "increaseInterval": "Øg interval"
   }
 }

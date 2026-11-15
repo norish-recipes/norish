@@ -179,5 +179,26 @@
     "onePack": "contado como uma embalagem",
     "sale": "Oferta",
     "regularPrice": "Preço normal {price}"
+  },
+  "mobile": {
+    "viewMode": "Visualização",
+    "viewByStore": "Por loja",
+    "viewByRecipe": "Por receita",
+    "listSettings": "Ajustes da lista",
+    "emptyHint": "Adicione itens com o botão abaixo.",
+    "addTitle": "Adicionar compras",
+    "editTitle": "Editar item",
+    "fromRecipe": "De {recipe}",
+    "store": "Loja",
+    "noStore": "Sem loja",
+    "automatic": "Automática",
+    "never": "Nunca",
+    "removeRepeat": "Remover repetição",
+    "amountFor": "{amount} para {recipe}",
+    "expand": "Expandir",
+    "collapse": "Recolher",
+    "itemLabel": "Item",
+    "decreaseInterval": "Diminuir intervalo",
+    "increaseInterval": "Aumentar intervalo"
   }
 }
