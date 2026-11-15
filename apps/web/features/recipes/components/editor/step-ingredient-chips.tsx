@@ -6,7 +6,7 @@ import { Button, Dropdown, Input, Label } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { StepIngredientDraft } from "@norish/shared-react/recipes";
-import { formatAmount } from "@norish/shared/lib/format-amount";
+import { stepChipLabel } from "@norish/shared-react/recipes";
 import { deriveStepIngredientAmount, toLineAmount } from "@norish/shared/lib/step-ingredients";
 
 export type { StepIngredientDraft } from "@norish/shared-react/recipes";
@@ -47,25 +47,6 @@ const SHARE_PRESETS = [
 
 function isHeading(line: LineLike): boolean {
   return line.ingredientName.trim().startsWith("#");
-}
-
-/**
- * A chip using the whole line is the bare name. Partial use of an amounted
- * line reads as the derived amount ("2.5 g salt") — the same number readers
- * see beneath the step; only an amountless line falls back to the fraction.
- */
-function chipLabel(line: LineLike, share: number): string {
-  if (Math.abs(share - 1) < 0.0001) return line.ingredientName;
-
-  const lineAmount = toLineAmount(line.amount);
-
-  if (lineAmount == null) return `${formatAmount(share, "fraction")} × ${line.ingredientName}`;
-
-  const derived = deriveStepIngredientAmount(lineAmount, share);
-
-  return [formatAmount(derived, "decimal"), line.unit ?? "", line.ingredientName]
-    .filter(Boolean)
-    .join(" ");
 }
 
 /**
@@ -224,7 +205,7 @@ export function StepIngredientChips({
 
         if (!line) return null;
 
-        const label = chipLabel(line, ref.share);
+        const label = stepChipLabel(line, ref.share);
         const hasAmount = toLineAmount(line.amount) != null;
         const customEntryLabel = t(hasAmount ? "share.amount" : "share.custom");
 
