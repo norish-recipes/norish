@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { IngredientIcon, useFoodsByName } from "@/components/ingredients/ingredient-icon";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { Reorder, useDragControls } from "motion/react";
@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import type { IngredientRow, LineMoves, ParsedIngredient } from "@norish/shared-react/recipes";
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import { useUnitsQuery } from "@norish/shared-react/config";
-import { useIngredientIcons } from "@norish/shared-react/ingredients";
+import { useFoodsByName, useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   createIngredientRow,
   ingredientRowsToLines,

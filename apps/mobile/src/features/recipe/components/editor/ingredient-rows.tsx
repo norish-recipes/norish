@@ -8,7 +8,7 @@ import { useIntl } from "react-intl";
 import type { IngredientRow, LineMoves, ParsedIngredient } from "@norish/shared-react/recipes";
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import { useUnitsQuery } from "@norish/shared-react/config";
-import { useIngredientIcons } from "@norish/shared-react/ingredients";
+import { useFoodsByName, useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
   createIngredientRow,
   ingredientRowsToLines,
@@ -24,7 +24,6 @@ import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { IngredientIcon } from "../ingredient-icon";
 import { AddRow, DragGrip, EditorInput, RowIconButton } from "./editor-parts";
-import { useFoodsByName } from "./use-foods-by-name";
 
 /**
  * A row per ingredient line with a grip; `#` starts a section. The trailing empty row to type

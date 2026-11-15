@@ -1,8 +1,6 @@
 "use client";
 
-import { useDebounceValue } from "usehooks-ts";
-
-import { useIngredientIconAddress, useIngredientsNamed } from "@norish/shared-react/ingredients";
+import { useIngredientIconAddress } from "@norish/shared-react/ingredients";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
@@ -10,19 +8,6 @@ import { addBasePath } from "@norish/shared/lib/base-path";
 const SIZES = { chip: "size-5", line: "size-6 md:size-8", panel: "size-16" } as const;
 
 type IngredientIconSize = keyof typeof SIZES;
-
-/** How long typing pauses before a typed name is looked up. */
-const FIND_DELAY_MS = 400;
-
-/** The food each typed name names, or null, looked up once typing pauses; it never mints. */
-export function useFoodsByName(names: readonly string[]): ReadonlyMap<string, string | null> {
-  const [typed] = useDebounceValue(
-    [...new Set(names.filter((name) => name !== ""))].join("\n"),
-    FIND_DELAY_MS
-  );
-
-  return useIngredientsNamed(typed ? typed.split("\n") : []);
-}
 
 /**
  * A food's icon from `src`, else from the surface's read by `ingredientId`; an empty slot holds its

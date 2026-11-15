@@ -2,6 +2,7 @@ export type { AIChange, IngredientItem, NamedIngredient, Spelling, StoredIcon } 
 
 export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
 export {
+  useFoodsByName,
   useIngredientIconAddress,
   useIngredientIconMutations,
   useIngredientIcons,

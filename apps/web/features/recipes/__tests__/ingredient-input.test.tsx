@@ -16,9 +16,11 @@ vi.mock("@/components/ingredients/ingredient-icon", () => ({
   IngredientIcon: ({ ingredientId }: { ingredientId: string | null }) => (
     <span data-food={ingredientId ?? ""} data-testid="row-icon" />
   ),
-  useFoodsByName: () => foods,
 }));
-vi.mock("@norish/shared-react/ingredients", () => ({ useIngredientIcons: () => {} }));
+vi.mock("@norish/shared-react/ingredients", () => ({
+  useFoodsByName: () => foods,
+  useIngredientIcons: () => {},
+}));
 
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),

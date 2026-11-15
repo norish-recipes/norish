@@ -1,5 +1,5 @@
 import type { inferRouterOutputs } from "@trpc/server";
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   matchQuery,
   notifyManager,
@@ -91,6 +91,23 @@ export function useIngredientsNamed(names: readonly string[]): ReadonlyMap<strin
   });
 
   return new Map(names.map((name, index) => [name, found[index]?.data?.ingredientId ?? null]));
+}
+
+/** How long typing pauses before a typed name is looked up. */
+const FIND_DELAY_MS = 400;
+
+/** The food each typed name names, or null, looked up once typing pauses; it never mints. */
+export function useFoodsByName(names: readonly string[]): ReadonlyMap<string, string | null> {
+  const key = [...new Set(names.filter((name) => name !== ""))].join("\n");
+  const [typed, setTyped] = useState(key);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTyped(key), FIND_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [key]);
+
+  return useIngredientsNamed(typed ? typed.split("\n") : []);
 }
 
 /** Upload a picture or generate an icon for a food; each resolves the stored icon, or null when it failed. */

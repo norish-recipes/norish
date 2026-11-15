@@ -10,6 +10,8 @@ import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
 import { useServerImage } from "@/lib/network/server-url";
 import { useIntl } from "react-intl";
 
+import { useFoodsByName } from "@norish/shared-react/ingredients";
+
 import type {
   IngredientSuggestion,
   LineMoves,
@@ -42,7 +44,6 @@ import type { useEditorUploads } from "../../hooks/use-editor-uploads";
 import { FocusedFieldContext } from "../../hooks/use-focused-field-in-view";
 import { IngredientIcon } from "../ingredient-icon";
 import { AddRow, DragGrip, EditorInput, RowIconButton } from "./editor-parts";
-import { useFoodsByName } from "./use-foods-by-name";
 
 const STEP_PHOTO = {
   mediaTypes: ["images"],

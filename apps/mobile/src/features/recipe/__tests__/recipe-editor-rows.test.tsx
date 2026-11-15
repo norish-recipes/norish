@@ -163,8 +163,8 @@ vi.mock("@norish/shared-react/config", () => ({
   useCategoriesQuery: () => ({ categories: [], builtInAliases: {}, isLoading: false }),
 }));
 vi.mock("@norish/shared-react/ingredients", () => ({
+  useFoodsByName: () => new Map(),
   useIngredientIcons: () => undefined,
-  useIngredientsNamed: () => new Map(),
 }));
 vi.mock("@norish/shared-react/reader", async (importOriginal) => ({
   ...(await importOriginal<object>()),
