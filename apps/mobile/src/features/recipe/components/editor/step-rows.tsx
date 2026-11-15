@@ -30,7 +30,6 @@ import {
   matchIngredientSuggestions,
   mentionIngredient,
   normalizeStepRows,
-  remapStepRefs,
   removeStepRow,
   replaceTrigger,
   rowNumbers,
@@ -38,6 +37,7 @@ import {
   stepChipLabel,
   stepRowsToSteps,
   typeStepRow,
+  withStepRefsOf,
 } from "@norish/shared-react/recipes";
 
 import type { useEditorUploads } from "../../hooks/use-editor-uploads";
@@ -98,19 +98,12 @@ export function StepRows({
     }
   }
 
-  // The form already moved its copy of the references; the rows' copy follows once per move.
+  // The form moved the references; the rows take them from it once lines have moved.
   const [appliedMoves, setAppliedMoves] = useState(lineMoves);
 
   if (lineMoves !== appliedMoves) {
     setAppliedMoves(lineMoves);
-    if (lineMoves) {
-      setRows(
-        rows.map((row) => ({
-          ...row,
-          stepIngredients: remapStepRefs(row.stepIngredients, lineMoves),
-        }))
-      );
-    }
+    if (lineMoves) setRows(withStepRefsOf(rows, steps));
   }
 
   const chipLines = chipLinesOf(ingredients, systemUsed);

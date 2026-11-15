@@ -22,12 +22,12 @@ import {
   isHeadingText,
   mentionIngredient,
   normalizeStepRows,
-  remapStepRefs,
   removeStepRow,
   rowNumbers,
   seedStepRows,
   stepRowsToSteps,
   typeStepRow,
+  withStepRefsOf,
 } from "@norish/shared-react/recipes";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -99,19 +99,12 @@ export default function StepInput({
       setItems(seedStepRows(steps));
     }
   }
-  // The form already moved its copy of the references; the rows' copy follows once per move.
+  // The form moved the references; the rows take them from it once lines have moved.
   const [appliedMoves, setAppliedMoves] = useState(lineMoves);
 
   if (lineMoves !== appliedMoves) {
     setAppliedMoves(lineMoves);
-    if (lineMoves) {
-      setItems(
-        items.map((item) => ({
-          ...item,
-          stepIngredients: remapStepRefs(item.stepIngredients, lineMoves),
-        }))
-      );
-    }
+    if (lineMoves) setItems(withStepRefsOf(items, steps));
   }
   const emitChanges = (updatedItems: StepItem[]) =>
     onChange(stepRowsToSteps(updatedItems, systemUsed));

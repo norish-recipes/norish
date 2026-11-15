@@ -131,7 +131,7 @@ describe("StepInput chips", () => {
       <StepInput ingredients={INGREDIENTS} steps={[step]} systemUsed="metric" onChange={onChange} />
     );
 
-    // Salt moved to the third line; the step still uses salt, now by its new order.
+    // Salt moved to the third line; the form moved the reference, the rows follow it.
     rerender(
       <StepInput
         ingredients={INGREDIENTS}
@@ -142,7 +142,7 @@ describe("StepInput chips", () => {
             [2, 1],
           ])
         }
-        steps={[step]}
+        steps={[{ ...step, stepIngredients: [{ ingredientOrder: 2, share: 1, order: 0 }] }]}
         systemUsed="metric"
         onChange={onChange}
       />
@@ -152,6 +152,39 @@ describe("StepInput chips", () => {
     });
 
     expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 2, share: 1, order: 0 }]);
+  });
+
+  it("keeps the form's references when two moves land in one render", () => {
+    const step: Step = {
+      step: "Add the salt.",
+      order: 0,
+      systemUsed: "metric",
+      stepIngredients: [{ ingredientOrder: 0, share: 1, order: 0 }],
+    };
+    const { rerender } = render(
+      <StepInput ingredients={INGREDIENTS} steps={[step]} systemUsed="metric" onChange={onChange} />
+    );
+
+    // Salt went 0 → 1, then 1 → 3; the form applied both, the rows saw only the last move.
+    rerender(
+      <StepInput
+        ingredients={INGREDIENTS}
+        lineMoves={
+          new Map([
+            [1, 3],
+            [3, 1],
+          ])
+        }
+        steps={[{ ...step, stepIngredients: [{ ingredientOrder: 3, share: 1, order: 0 }] }]}
+        systemUsed="metric"
+        onChange={onChange}
+      />
+    );
+    fireEvent.change(screen.getAllByRole("textbox")[0]!, {
+      target: { value: "Add the salt now." },
+    });
+
+    expect(lastEmitted()[0]?.stepIngredients).toEqual([{ ingredientOrder: 3, share: 1, order: 0 }]);
   });
 
   it("emits attached chips riding the step payload, with reference orders reindexed", () => {

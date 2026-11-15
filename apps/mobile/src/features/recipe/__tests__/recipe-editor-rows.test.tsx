@@ -178,6 +178,7 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
 }));
 
 const { RecipeEditorScreen } = await import("../screens/recipe-editor-screen");
+const { StepRows } = await import("../components/editor/step-rows");
 
 const at = new Date("2026-05-01T10:00:00.000Z");
 const line = (
@@ -396,5 +397,36 @@ describe("RecipeEditorScreen with its real rows", () => {
     save();
 
     expect(state.create).toHaveBeenCalledOnce();
+  });
+});
+
+describe("StepRows when lines move", () => {
+  it("keeps the form's references when two moves land in one render", () => {
+    const onChange = vi.fn();
+    const lines = stored.recipeIngredients.map((ing) => ({ ...ing, unit: ing.unit ?? null }));
+    const step = { ...stored.steps[2]!, stepIngredients: [{ ingredientOrder: 1, share: 1, order: 0 }] };
+    const props = { ingredients: lines, systemUsed: "metric" as const, onChange };
+    const uploads = {} as Parameters<typeof StepRows>[0]["uploads"];
+    const view = render(<StepRows {...props} lineMoves={null} steps={[step]} uploads={uploads} />);
+
+    // The line went 1 → 2, then 2 → 4; the form applied both, the rows see only the last move.
+    view.rerender(
+      <StepRows
+        {...props}
+        lineMoves={
+          new Map([
+            [2, 4],
+            [4, 2],
+          ])
+        }
+        steps={[{ ...step, stepIngredients: [{ ingredientOrder: 4, share: 1, order: 0 }] }]}
+        uploads={uploads}
+      />
+    );
+    type("editor-step-input-0", "Squeeze it.");
+
+    expect(onChange.mock.calls.at(-1)?.[0][0].stepIngredients).toEqual([
+      { ingredientOrder: 4, share: 1, order: 0 },
+    ]);
   });
 });

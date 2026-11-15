@@ -219,6 +219,27 @@ export function stepRowsToSteps(rows: StepRow[], systemUsed: MeasurementSystem):
     .filter((step) => step.step || step.images.length > 0);
 }
 
+/**
+ * The rows with each step's references as the form holds them: the form owns them, so after
+ * lines move the rows take them back however many moves one render brought.
+ */
+export function withStepRefsOf(rows: StepRow[], steps: Step[]): StepRow[] {
+  let next = 0;
+
+  return rows.map((row) => {
+    const step = hasStepContent(row) ? steps[next++] : undefined;
+
+    return step
+      ? {
+          ...row,
+          stepIngredients: [...(step.stepIngredients ?? [])]
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+            .map((ref) => ({ ingredientOrder: ref.ingredientOrder, share: ref.share })),
+        }
+      : row;
+  });
+}
+
 export function normalizeStepRows(rows: StepRow[]): StepRow[] {
   return [...rows.filter(hasStepContent), createStepRow("")];
 }
