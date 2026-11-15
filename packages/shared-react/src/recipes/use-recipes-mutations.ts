@@ -387,9 +387,22 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
 
         return { detailQueryKey, previousDetail };
       },
+      // Stored: the next write from the cache (an edit, a convert) is sent at that version.
       // Refused: the Outbox parks it as Conflicted and tells the reader.
       onSuccess: (answer, variables, context) => {
-        if (answer.stale) rollBackEdit(variables, context);
+        const { version } = answer;
+
+        if (answer.stale) {
+          rollBackEdit(variables, context);
+
+          return;
+        }
+        if (version === null) return;
+        queryClient.setQueryData<FullRecipeDTO | null | undefined>(
+          trpc.recipes.get.queryKey({ id: variables.id }),
+          (previous) =>
+            previous && previous.version < version ? { ...previous, version } : previous
+        );
       },
       onError: (error, variables, context) => {
         handleRecipesMutationError(error, "update", onError, () => {

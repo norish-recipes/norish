@@ -14,6 +14,7 @@ import { useRecipesMutations } from "../use-recipes-mutations";
 const server = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
+  convert: vi.fn(),
 }));
 
 vi.mock("../../trpc", () => {
@@ -38,7 +39,7 @@ vi.mock("../../trpc", () => {
         create: procedure("create", server.create),
         update: procedure("update", server.update),
         delete: procedure("delete", vi.fn()),
-        convertMeasurements: procedure("convertMeasurements", vi.fn()),
+        convertMeasurements: procedure("convertMeasurements", server.convert),
       },
       library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
       cookbooks: { recipes: { pathKey: key("cookbooks", "recipes") } },
@@ -295,6 +296,39 @@ describe("useRecipesMutations", () => {
       expect(opened()).toMatchObject({ name: "Original recipe", version: 1 });
       expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
       expect(adapter.toast.show).not.toHaveBeenCalled();
+    });
+
+    it("keeps the version an applied edit stored, and a convert after it sends that", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockResolvedValue({ stale: false, version: 2 });
+      server.convert.mockResolvedValue(undefined);
+      const result = render();
+
+      act(() => result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }));
+      await settled();
+      act(() => result.current.convertMeasurements("recipe-1", "metric", opened()!.version));
+      await settled();
+
+      expect(opened()).toMatchObject({ name: "Mine", version: 2 });
+      expect(server.convert).toHaveBeenCalledWith(
+        expect.objectContaining({ recipeId: "recipe-1", version: 2 }),
+        expect.anything()
+      );
+    });
+
+    it("does not move the version back when a newer one is already shown", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockImplementation(async () => {
+        queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), { ...detail, version: 5 });
+
+        return { stale: false, version: 2 };
+      });
+      const result = render();
+
+      act(() => result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }));
+      await settled();
+
+      expect(opened()?.version).toBe(5);
     });
 
     it("keeps a second edit when the first fails, and sends the second at its own base", async () => {
