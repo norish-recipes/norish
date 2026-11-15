@@ -239,6 +239,37 @@ describe("useCalendarMutations", () => {
       expect(planned().map((item) => item.id)).toEqual(["lunch-1", id]);
     });
 
+    it("counts only its owner's plans in the slot, as the server does", () => {
+      queryClient.setQueryData(getQueryKey(), [
+        createMockItem({ id: "h-1", userId: "housemate", slot: "Dinner", sortOrder: 0 }),
+        createMockItem({ id: "h-2", userId: "housemate", slot: "Dinner", sortOrder: 1 }),
+        createMockItem({ id: "h-3", userId: "housemate", slot: "Dinner", sortOrder: 2 }),
+      ]);
+      mockCreateItemMutate.mockReturnValue(new Promise(() => {}));
+      const { result } = render();
+
+      act(() => result.current.planNote("2025-01-15", "Dinner", "Leftovers"));
+
+      expect(planned().find((item) => item.userId === "user-1")).toMatchObject({ sortOrder: 0 });
+    });
+
+    it("moves with no index last among its owner's plans", () => {
+      queryClient.setQueryData(getQueryKey(), [
+        createMockItem({ id: "mine", slot: "Lunch", sortOrder: 0 }),
+        createMockItem({ id: "h-1", userId: "housemate", slot: "Dinner", sortOrder: 0 }),
+        createMockItem({ id: "h-2", userId: "housemate", slot: "Dinner", sortOrder: 1 }),
+      ]);
+      mockMoveItemMutate.mockReturnValue(new Promise(() => {}));
+      const { result } = render();
+
+      act(() => result.current.moveItem("mine", "2025-01-15", "Dinner"));
+
+      expect(planned().find((item) => item.id === "mine")).toMatchObject({
+        slot: "Dinner",
+        sortOrder: 0,
+      });
+    });
+
     it("goes again when the create fails", async () => {
       mockCreateItemMutate.mockRejectedValue(new Error("refused"));
       const { result } = render();

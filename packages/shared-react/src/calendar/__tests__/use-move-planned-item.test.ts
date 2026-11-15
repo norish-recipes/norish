@@ -40,6 +40,12 @@ describe("moveTargetIndex", () => {
     expect(moveTargetIndex(items, moved, "2026-11-14", "Lunch")).toBe(0);
     expect(moveTargetIndex(items, items[1]!, "2026-11-14", "Dinner")).toBe(1);
   });
+
+  it("counts only the moved item's owner's plans, as the server does", () => {
+    expect(moveTargetIndex(items, { ...moved, userId: "housemate" }, "2026-11-14", "Dinner")).toBe(
+      0
+    );
+  });
 });
 
 describe("dayDropTarget", () => {

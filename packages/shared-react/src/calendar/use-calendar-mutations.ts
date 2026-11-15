@@ -111,6 +111,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
       // created echo replace it by that id (ADR-0011).
       onMutate: ({ id, date, slot, itemType, recipeId, title }) => {
         const recipe = recipeId ? cachedRecipe(recipeId) : null;
+        const userId = session.user?.id ?? "";
 
         return writeAcrossRanges((items, range) =>
           id
@@ -118,10 +119,10 @@ export function useCalendarMutations(): CalendarMutationsResult {
                 items,
                 {
                   id,
-                  userId: session.user?.id ?? "",
+                  userId,
                   date,
                   slot,
-                  sortOrder: moveTargetIndex(items, { id }, date, slot),
+                  sortOrder: moveTargetIndex(items, { id, userId }, date, slot),
                   itemType,
                   recipeId: recipeId ?? null,
                   title: title ?? null,

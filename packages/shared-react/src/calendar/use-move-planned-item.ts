@@ -9,7 +9,7 @@ import { useCalendarMutations } from "./use-calendar-mutations";
  */
 export function dayDropTarget(
   items: PlannedItemFromQuery[],
-  dropped: Pick<PlannedItemFromQuery, "id" | "date" | "slot">,
+  dropped: Pick<PlannedItemFromQuery, "id" | "userId" | "date" | "slot">,
   dayKey: string | null
 ) {
   if (!dayKey || dayKey === dropped.date) return null;
