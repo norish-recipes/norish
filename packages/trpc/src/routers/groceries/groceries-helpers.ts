@@ -66,6 +66,21 @@ export type GroceryProcedureContext = {
   householdKey: string;
 };
 
+/** Runs work that follows a committed write; a failure is logged, never turned into a failed write. */
+export async function afterCommit<T>(
+  ctx: GroceryProcedureContext,
+  what: string,
+  work: () => Promise<T>
+): Promise<T | undefined> {
+  try {
+    return await work();
+  } catch (err) {
+    log.error({ err, userId: ctx.user.id }, `Failed after the commit: ${what}`);
+
+    return undefined;
+  }
+}
+
 type GroceryMergeCandidate = {
   id: string;
   name: string | null;
@@ -382,7 +397,10 @@ export async function createGroceriesData(
   // A name the Store already knows is priced in this same response, with no
   // outbound request; a name it does not goes to the lookup queue, so adding
   // six things in a row stays as fast as it was. An edited name asks anew.
-  const prices = await noticeGroceries(ctx, [...editedRows, ...returnedGroceries]);
+  const prices =
+    (await afterCommit(ctx, "pricing groceries", () =>
+      noticeGroceries(ctx, [...editedRows, ...returnedGroceries])
+    )) ?? [];
 
   return {
     edited,
@@ -560,9 +578,10 @@ export async function assignGroceryToStoreData(
 
   // Moving a grocery to another Store asks that Store a new question; the old
   // Store's answer was never about this one.
-  await noticeGroceries(ctx, [updated]);
-
-  if (savePreference) await rememberStorePreference(ctx.user.id, grocery.ingredientId, storeId);
+  await afterCommit(ctx, "pricing and remembering the Store", async () => {
+    await noticeGroceries(ctx, [updated]);
+    if (savePreference) await rememberStorePreference(ctx.user.id, grocery.ingredientId, storeId);
+  });
 
   void groceries.publish(
     "updated",

@@ -35,6 +35,7 @@ import { router } from "../../trpc";
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
 import {
+  afterCommit,
   assignGroceryToStoreData,
   createGroceriesData,
   deleteGroceriesData,
@@ -176,7 +177,9 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
       // Editing the store through the panel implies "remember this store for
       // this ingredient", matching the previous assignToStore behaviour.
-      await rememberStorePreference(ctx.user.id, edited.ingredientId, storeId);
+      await afterCommit(ctx, "remembering the Store", () =>
+        rememberStorePreference(ctx.user.id, edited.ingredientId, storeId)
+      );
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
 
@@ -561,12 +564,13 @@ const reorderInStore = authedProcedure
         const moved = new Set(updates.filter((u) => u.storeId !== undefined).map((u) => u.id));
         const movedGroceries = updated.filter((grocery) => moved.has(grocery.id));
 
-        if (movedGroceries.length > 0) {
-          await noticeGroceries(ctx, movedGroceries);
-        }
+        await afterCommit(ctx, "pricing and remembering the Stores", async () => {
+          if (movedGroceries.length > 0) {
+            await noticeGroceries(ctx, movedGroceries);
+          }
 
-        // Save store preferences for any items that changed stores
-        if (savePreference) {
+          // Save store preferences for any items that changed stores
+          if (!savePreference) return;
           const itemsWithStoreChange = updates.filter(
             (u) => u.storeId !== undefined && u.storeId !== null
           );
@@ -582,7 +586,7 @@ const reorderInStore = authedProcedure
               await rememberStorePreference(ctx.user.id, grocery.ingredientId, update?.storeId);
             }
           }
-        }
+        });
 
         if (updated.length > 0) {
           void groceries.publish(

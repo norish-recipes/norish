@@ -691,6 +691,31 @@ describe("stale grocery updates", () => {
     );
   });
 
+  it("answers stored when the work after the commit fails, and logs it", async () => {
+    const groceryId = crypto.randomUUID();
+    const storeId = crypto.randomUUID();
+
+    getGroceryOwnerIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    assertHouseholdAccess.mockResolvedValue(undefined);
+    updateGroceries.mockResolvedValue([
+      createMockGrocery({ id: groceryId, name: "Oat Milk", storeId }),
+    ]);
+    storesRepository.upsertIngredientStorePreference.mockRejectedValueOnce(new Error("down"));
+
+    const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.update({ groceryId, raw: "Oat milk", version: 4, storeId })
+    ).resolves.toEqual({ success: true, stale: false });
+    expect(trpcLogger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ err: expect.any(Error) }),
+      expect.stringContaining("after")
+    );
+    expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+      userId: ctx.user.id,
+    });
+  });
+
   it("asks the Store a grocery was dragged into what it knows about it", async () => {
     const groceryId = crypto.randomUUID();
     const storeId = crypto.randomUUID();

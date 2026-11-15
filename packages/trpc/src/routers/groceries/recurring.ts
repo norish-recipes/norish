@@ -38,7 +38,12 @@ import type { GroceryProcedureContext } from "./groceries-helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { noticeGroceries } from "../stores/pricing";
-import { createGroceriesData, otherFoods, rememberStorePreference } from "./groceries-helpers";
+import {
+  afterCommit,
+  createGroceriesData,
+  otherFoods,
+  rememberStorePreference,
+} from "./groceries-helpers";
 
 /** What a recurring grocery repeats, and its first grocery's Store and pack count. */
 type RecurringOf = Pick<
@@ -100,9 +105,11 @@ function recurringRows(
 async function announceRecurring(ctx: GroceryProcedureContext, made: CreatedRecurringGroceries) {
   // A repeating grocery is a grocery on the list like any other: its Store
   // is asked what it knows about the name, exactly as the add panel asks.
-  await noticeGroceries(
-    ctx,
-    made.created.map(({ grocery }) => grocery)
+  await afterCommit(ctx, "pricing repeating groceries", () =>
+    noticeGroceries(
+      ctx,
+      made.created.map(({ grocery }) => grocery)
+    )
   );
 
   // The siblings it made room among moved down; every screen hears their new sort order.
@@ -280,10 +287,11 @@ const updateRecurring = authedProcedure
           return { success: true, stale: true };
         }
 
-        await rememberStorePreference(ctx.user.id, outcome.value.grocery.ingredientId, storeId);
-
-        // Renamed or moved, the grocery asks its Store a new question.
-        await noticeGroceries(ctx, [outcome.value.grocery]);
+        await afterCommit(ctx, "remembering the Store and pricing", async () => {
+          await rememberStorePreference(ctx.user.id, outcome.value.grocery.ingredientId, storeId);
+          // Renamed or moved, the grocery asks its Store a new question.
+          await noticeGroceries(ctx, [outcome.value.grocery]);
+        });
 
         log.debug(
           { userId: ctx.user.id, recurringGroceryId, groceryId },
@@ -393,7 +401,9 @@ const detachRecurring = authedProcedure
           return { success: true, stale: true };
         }
 
-        await rememberStorePreference(ctx.user.id, edited.ingredientId, storeId);
+        await afterCommit(ctx, "remembering the Store", () =>
+          rememberStorePreference(ctx.user.id, edited.ingredientId, storeId)
+        );
 
         log.info(
           { userId: ctx.user.id, recurringGroceryId, groceryId },
