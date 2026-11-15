@@ -5,8 +5,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
+import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import type { ListRow } from "../utils/list-rows";
+import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
 import { CardSlice } from "./card-slice";
@@ -47,6 +49,12 @@ export function GroceriesList({
   actions: ListActions;
 }) {
   const insets = useSafeAreaInsets();
+  const recurrence = useRecurrenceLabel();
+  // What sits under a row's name: how it repeats, else the recipe it came from.
+  const sublineOf = (
+    recurring: RecurringGroceryDto | null | undefined,
+    recipeName: string | null
+  ) => (recurring ? recurrence(recurrencePatternOf(recurring)) : recipeName);
 
   const renderRow = ({ item: row, index }: { item: ListRow; index: number }) => {
     const { edge } = row;
@@ -120,8 +128,11 @@ export function GroceriesList({
         <CardSlice edge={edge}>
           <GroupRow
             group={item.group}
-            recurring={recurringId ? (recurringById.get(recurringId) ?? null) : null}
             store={item.store}
+            subline={sublineOf(
+              recurringId ? recurringById.get(recurringId) : null,
+              only?.recipeName ?? null
+            )}
             onEdit={actions.edit}
             onToggle={actions.toggle}
           />
@@ -135,14 +146,15 @@ export function GroceriesList({
       <CardSlice edge={edge}>
         <GroceryRow
           grocery={grocery}
-          recipeName={storeNameOnLines ? null : recipeNameFor(grocery)}
-          recurring={
-            grocery.recurringGroceryId
-              ? (recurringById.get(grocery.recurringGroceryId) ?? null)
-              : null
-          }
           store={store}
-          subline={storeNameOnLines ? (store?.name ?? null) : undefined}
+          subline={
+            storeNameOnLines
+              ? (store?.name ?? null)
+              : sublineOf(
+                  grocery.recurringGroceryId ? recurringById.get(grocery.recurringGroceryId) : null,
+                  recipeNameFor(grocery)
+                )
+          }
           onEdit={actions.edit}
           onToggle={(id, isDone) => actions.toggle([id], isDone)}
         />

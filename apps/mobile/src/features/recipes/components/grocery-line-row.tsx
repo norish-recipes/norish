@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { AmountName, amountNameLabel } from "@/components/amount-name";
 import { RoundTick } from "@/components/round-tick";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Chip, Skeleton, useThemeColor } from "heroui-native";
@@ -60,7 +61,7 @@ export function GroceryLineRow({
   return (
     <View className={rowClass(first)}>
       <Pressable
-        accessibilityLabel={[amount, name].filter(Boolean).join(" ")}
+        accessibilityLabel={amountNameLabel(amount, name)}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: selected }}
         className="min-h-6 flex-1 flex-row items-center gap-3"
@@ -68,10 +69,7 @@ export function GroceryLineRow({
         onPress={onToggle}
       >
         <RoundTick selected={selected} />
-        <Text className="text-foreground min-w-0 flex-1 text-base">
-          {amount ? <Text className="text-accent-text font-medium">{`${amount} `}</Text> : null}
-          {name}
-        </Text>
+        <AmountName amount={amount} className="min-w-0 flex-1 text-base" name={name} />
       </Pressable>
       {canKeep ? (
         <Pressable

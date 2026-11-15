@@ -1,55 +1,35 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { AmountName, amountNameLabel } from "@/components/amount-name";
 import { useIntl } from "react-intl";
 
-import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import { lineOf } from "@norish/shared-react/groceries";
 import { useUnitFormatter } from "@norish/shared-react/recipes";
-import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { shownAmount } from "@norish/shared/lib/grocery-grouping";
 
-import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { useStoreColor } from "../hooks/use-store-color";
 import { GroceryPrice } from "./grocery-price";
 import { StoreTick } from "./store-tick";
-
-/** What sits under a row's name: the recipe it came from, or how it repeats; `subline` replaces both. */
-export function useSubline({
-  recipeName,
-  recurring,
-}: {
-  recipeName?: string | null;
-  recurring?: RecurringGroceryDto | null;
-}): string | null {
-  const recurrence = useRecurrenceLabel();
-
-  return recurring ? recurrence(recurrencePatternOf(recurring)) : (recipeName ?? null);
-}
 
 /** One grocery: its tick, its amount and name, and its price; a tap on the row opens its sheet. */
 export function GroceryRow({
   grocery,
   store,
-  recipeName,
-  recurring,
   subline,
   onToggle,
   onEdit,
 }: {
   grocery: GroceryDto;
   store: StoreDto | null;
-  recipeName?: string | null;
-  recurring?: RecurringGroceryDto | null;
-  /** Replaces the recipe or repeat line, as the list by recipe names the Store there. */
-  subline?: string | null;
+  /** The line under the name: where it came from, how it repeats, or its Store. */
+  subline: string | null;
   onToggle: (id: string, isDone: boolean) => void;
   onEdit: (id: string) => void;
 }) {
   const intl = useIntl();
   const { formatAmountUnit } = useUnitFormatter(intl.locale);
   const color = useStoreColor(store?.color);
-  const under = useSubline({ recipeName, recurring });
-  const second = subline ?? under;
   const amount = formatAmountUnit(shownAmount(grocery), grocery.unit);
   const name = grocery.name || intl.formatMessage({ id: "groceries.item.unnamedItem" });
   const done = grocery.isDone;
@@ -59,7 +39,7 @@ export function GroceryRow({
       <StoreTick
         checked={done}
         color={color}
-        label={[amount, name].filter(Boolean).join(" ")}
+        label={amountNameLabel(amount, name)}
         testID={`grocery-tick-${grocery.id}`}
         onPress={() => onToggle(grocery.id, !done)}
       />
@@ -70,17 +50,10 @@ export function GroceryRow({
         onPress={() => onEdit(grocery.id)}
       >
         <View className="min-w-0 flex-1 gap-0.5">
-          <Text className={`text-[17px] ${done ? "text-muted line-through" : "text-foreground"}`}>
-            {amount ? (
-              <Text className={`font-medium ${done ? "text-muted" : "text-accent-text"}`}>
-                {`${amount} `}
-              </Text>
-            ) : null}
-            {name}
-          </Text>
-          {second ? (
+          <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
+          {subline ? (
             <Text className="text-muted text-sm" numberOfLines={1}>
-              {second}
+              {subline}
             </Text>
           ) : null}
         </View>

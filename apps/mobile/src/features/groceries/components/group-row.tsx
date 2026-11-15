@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { AmountName, amountNameLabel } from "@/components/amount-name";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import type { StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { lineOf, lineOfGroup } from "@norish/shared-react/groceries";
 import { useUnitFormatter } from "@norish/shared-react/recipes";
@@ -12,7 +13,6 @@ import { formatInlineSourceBreakdown, shownAmount } from "@norish/shared/lib/gro
 
 import { useStoreColor } from "../hooks/use-store-color";
 import { GroceryPrice } from "./grocery-price";
-import { useSubline } from "./grocery-row";
 import { StoreTick } from "./store-tick";
 
 /**
@@ -22,14 +22,14 @@ import { StoreTick } from "./store-tick";
 export function GroupRow({
   group,
   store,
-  recurring,
+  subline,
   onToggle,
   onEdit,
 }: {
   group: GroceryGroup;
   store: StoreDto | null;
-  /** The repeat of a single source, if it has one. */
-  recurring: RecurringGroceryDto | null;
+  /** The line under a single source's name; several sources show their breakdown instead. */
+  subline: string | null;
   onToggle: (ids: string[], isDone: boolean) => void;
   onEdit: (id: string) => void;
 }) {
@@ -42,9 +42,8 @@ export function GroupRow({
   const amount = formatAmountUnit(group.totalAmount, group.displayUnit);
   const name = group.displayName || intl.formatMessage({ id: "groceries.item.unnamedItem" });
   const manual = intl.formatMessage({ id: "groceries.empty.manual" });
-  const under = useSubline({ recipeName: only?.recipeName, recurring });
   const second = only
-    ? under
+    ? subline
     : formatInlineSourceBreakdown(group.sources, formatAmountUnit, manual);
   const ids = group.sources.map((source) => source.grocery.id);
   const done = group.allDone;
@@ -55,7 +54,7 @@ export function GroupRow({
         <StoreTick
           checked={done}
           color={color}
-          label={[amount, name].filter(Boolean).join(" ")}
+          label={amountNameLabel(amount, name)}
           partial={group.anyDone && !done}
           testID={`group-tick-${group.primaryId}`}
           onPress={() => onToggle(ids, !done)}
@@ -68,14 +67,7 @@ export function GroupRow({
           onPress={() => (only ? onEdit(only.grocery.id) : setOpen(!open))}
         >
           <View className="min-w-0 flex-1 gap-0.5">
-            <Text className={`text-[17px] ${done ? "text-muted line-through" : "text-foreground"}`}>
-              {amount ? (
-                <Text className={`font-medium ${done ? "text-muted" : "text-accent-text"}`}>
-                  {`${amount} `}
-                </Text>
-              ) : null}
-              {name}
-            </Text>
+            <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
             {second ? (
               <Text className="text-muted text-sm" numberOfLines={1}>
                 {second}
@@ -148,13 +140,13 @@ function SourceRow({
         testID={`source-${grocery.id}`}
         onPress={() => onEdit(grocery.id)}
       >
-        <Text
-          className={`min-w-0 flex-1 text-base ${grocery.isDone ? "text-muted line-through" : "text-foreground"}`}
+        <AmountName
+          amount={amount}
+          className="min-w-0 flex-1 text-base"
+          done={grocery.isDone}
+          name={name}
           numberOfLines={1}
-        >
-          {amount ? <Text className="text-accent-text font-medium">{`${amount} `}</Text> : null}
-          {name}
-        </Text>
+        />
         <GroceryPrice line={lineOf(grocery)} muted={grocery.isDone} size="small" />
       </Pressable>
     </View>
