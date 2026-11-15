@@ -2,15 +2,10 @@ import type { ReactElement } from "react";
 import React, { createContext, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { tabListBottomInset } from "@/components/tab-list-inset";
 import { Spinner } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-
-/** The tab bar's Add recipe accessory floats over the list's end, so the last row scrolls clear of it. */
-const ACCESSORY_CLEARANCE = 72;
-/** UIKit no longer insets the list for the tab bar, so its full height is added here. */
-// ponytail: no docs-backed inset follows the minimised bar; 49 pt of extra space at the end then.
-const TAB_BAR_HEIGHT = 49;
 
 /** Scrolls the row a card sits in clear of the accessory and tab bar; a card outside a list does nothing. */
 export const RevealRowContext = createContext<() => void>(() => {});
@@ -63,7 +58,7 @@ export function CardList<Row>({
         className="flex-1"
         columnWrapperClassName={isGrid ? "mb-3 gap-3 px-5" : undefined}
         contentContainerStyle={{
-          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE,
+          paddingBottom: tabListBottomInset(insets.bottom),
         }}
         contentInsetAdjustmentBehavior="never"
         data={rows}
