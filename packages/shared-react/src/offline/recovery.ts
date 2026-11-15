@@ -58,8 +58,10 @@ export interface Recovery {
   recover(reason?: RecoveryReason): Promise<void>;
   isSyncing(): boolean;
   subscribe(listener: () => void): () => void;
-  /** Told once per batch about the entries the server refused as stale (parked Conflicted). */
+  /** Told once per run about the entries the server refused as stale (parked Conflicted). */
   subscribeConflicts(listener: (entries: OutboxEntry[]) => void): () => void;
+  /** A refusal outside Replay (a live save): told now, or with the run under way. */
+  reportConflicts(entries: OutboxEntry[]): void;
 }
 
 const waitFor = (delayMs: number) =>
@@ -82,6 +84,13 @@ export function createRecovery({
   let requestedReason: RecoveryReason | null = null;
   const listeners = new Set<() => void>();
   const conflictListeners = new Set<(entries: OutboxEntry[]) => void>();
+  // Refusals reported while a batch replays wait for it; a run tells once.
+  let heldConflicts: OutboxEntry[] | null = null;
+  let runTold = false;
+
+  function tellConflicts(entries: OutboxEntry[]): void {
+    for (const listener of conflictListeners) listener(entries);
+  }
 
   /** Coalesced triggers take the stronger reason: one resync makes the run one. */
   function request(reason: RecoveryReason): void {
@@ -149,10 +158,13 @@ export function createRecovery({
   }
 
   async function run(reason: RecoveryReason): Promise<void> {
-    const batch = await replayToTerminalBatch();
+    const held: OutboxEntry[] = (heldConflicts = []);
+    const batch = await replayToTerminalBatch().finally(() => (heldConflicts = null));
+    const conflicts = [...held, ...batch.conflicted];
 
-    if (batch.conflicted.length > 0) {
-      for (const listener of conflictListeners) listener(batch.conflicted);
+    if (conflicts.length > 0 && !runTold) {
+      runTold = true;
+      tellConflicts(conflicts);
     }
 
     if (!batch.completed) {
@@ -193,6 +205,7 @@ export function createRecovery({
         return processing;
       }
 
+      runTold = false;
       processing = runRequestedRecoveries().finally(() => {
         processing = null;
         notify();
@@ -210,6 +223,15 @@ export function createRecovery({
       listeners.add(listener);
 
       return () => listeners.delete(listener);
+    },
+
+    reportConflicts(entries) {
+      if (heldConflicts) {
+        heldConflicts.push(...entries);
+      } else if (!processing || !runTold) {
+        runTold = processing !== null;
+        tellConflicts(entries);
+      }
     },
 
     subscribeConflicts(listener) {

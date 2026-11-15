@@ -88,6 +88,8 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
   // Replay and a save placed in the Outbox exclude each other, in one process too.
   const processLock = createProcessLock();
   const outboxLocks = () => locks() ?? processLock;
+  // The latest Recovery, which tells the reader of a refused save.
+  let recovery: Recovery | null = null;
 
   return {
     queryClient: cache.queryClient,
@@ -99,10 +101,11 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       replayHeaderValue,
       wholeEdits: new Set(["recipes.update"]),
       locks: outboxLocks,
+      onConflict: (entry) => recovery?.reportConflicts([entry]),
     }),
     probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),
     createRecovery: ({ transport, verifySession, refetchActiveQueries, topUp }) =>
-      createRecovery({
+      (recovery = createRecovery({
         store: outbox,
         owner: cache.owner,
         submit: (entry) => replayOutboxEntry(transport, entry, replayHeaderValue),
@@ -110,7 +113,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
         refetchActiveQueries,
         topUp,
         locks: outboxLocks,
-      }),
+      })),
     createWarmSet: (trpc) =>
       createWarmSet({
         queryClient: cache.queryClient,

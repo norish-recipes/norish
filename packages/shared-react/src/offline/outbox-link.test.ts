@@ -196,9 +196,18 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     storage = createMemoryStorage();
     store = createOutboxStore(storage.outbox);
     lock = createProcessLock();
+    onConflict.mockClear();
   });
 
+  const answer = (data: unknown) => () =>
+    observable((observer) => {
+      observer.next({ result: { data } });
+      observer.complete();
+    });
+
   const link = createOutboxLinkOver();
+
+  const onConflict = vi.fn();
 
   function createOutboxLinkOver() {
     return () =>
@@ -208,20 +217,20 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
         replayHeaderValue: REPLAY_HEADER_VALUE,
         wholeEdits: new Set(["recipes.update"]),
         locks: () => lock,
+        onConflict,
       })({} as never);
   }
 
   function save(
     input: { id: string; version: number; data: { name: string } },
     terminal: () => ReturnType<typeof observable>,
-    { path = "recipes.update", operationId = input.data.name } = {}
+    { path = "recipes.update", operationId = input.data.name, replay = false } = {}
   ) {
-    const op = {
-      type: "mutation",
-      path,
-      input,
-      context: { operationId, headers: { "x-operation-id": operationId } },
+    const headers = {
+      "x-operation-id": operationId,
+      ...(replay ? { [OUTBOX_REPLAY_HEADER]: REPLAY_HEADER_VALUE } : {}),
     };
+    const op = { type: "mutation", path, input, context: { operationId, headers } };
 
     return new Promise<{ value?: unknown; error?: unknown }>((resolve) => {
       link()({ op, next: terminal } as never).subscribe({
@@ -303,13 +312,13 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
   });
 
   it("sends a save live when nothing of that recipe is pending", async () => {
-    const terminal = vi.fn(() => observable((observer) => observer.next({ ok: true })));
+    const terminal = vi.fn(answer({ stale: false, version: 4 }));
 
     await save({ ...edit("Other"), id: "22222222-2222-4222-8222-222222222222" }, unreachable);
     const result = await save(edit("Live"), terminal);
 
     expect(terminal).toHaveBeenCalledTimes(1);
-    expect(result.value).toEqual({ ok: true });
+    expect(result.value).toEqual({ result: { data: { stale: false, version: 4 } } });
   });
 
   it.each(["siteAuthTokens.update", "recipes.shareUpdate"])(
@@ -327,4 +336,50 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       ]);
     }
   );
+
+  it("parks a live save the server refused as Conflicted, and reports it", async () => {
+    const result = await save(edit("Mine"), answer({ stale: true, version: null }));
+
+    expect(result.value).toEqual({ result: { data: { stale: true, version: null } } });
+    expect(await store.loadAll()).toMatchObject([
+      { path: "recipes.update", input: edit("Mine"), status: "conflicted", entityId: null },
+    ]);
+    expect(onConflict).toHaveBeenCalledWith(
+      expect.objectContaining({ input: edit("Mine"), status: "conflicted" })
+    );
+  });
+
+  it("leaves a replayed refusal and a stored save to Replay", async () => {
+    await save(edit("Replayed"), answer({ stale: true, version: null }), { replay: true });
+    await save(edit("Stored"), answer({ stale: false, version: 4 }));
+
+    expect(await store.loadAll()).toEqual([]);
+    expect(onConflict).not.toHaveBeenCalled();
+  });
+
+  it("still sends a favourite queued behind a refused edit of its recipe", async () => {
+    await save(edit("Mine"), unreachable);
+    await new Promise<void>((resolve) =>
+      createOutboxLink({ store, owner, replayHeaderValue: REPLAY_HEADER_VALUE })({} as never)({
+        op: {
+          type: "mutation",
+          path: "favorites.toggle",
+          input: { recipeId: id, isFavorite: true },
+          context: {},
+        },
+        next: unreachable,
+      } as never).subscribe({ error: () => resolve() })
+    );
+    const submit = vi.fn(async (entry: OutboxEntry) => ({
+      kind: entry.path === "recipes.update" ? ("conflict" as const) : ("success" as const),
+    }));
+
+    const pass = await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submit.mock.calls.map(([entry]) => entry.path)).toEqual([
+      "recipes.update",
+      "favorites.toggle",
+    ]);
+    expect(pass).toMatchObject({ removed: 1, parked: 1 });
+  });
 });

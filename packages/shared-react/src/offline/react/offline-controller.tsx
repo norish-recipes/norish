@@ -52,11 +52,11 @@ export function OfflineController({
     [engine, getSessionUserId, queryClient, transport, warmSet]
   );
 
-  // Refused as stale: the next reads show the server's state, and the user hears it once.
+  // Refused as stale: what is on show refetches the server's state, and the user hears it once.
   useEffect(
     () =>
       recovery.subscribeConflicts(() => {
-        void queryClient.invalidateQueries({ refetchType: "none" });
+        void queryClient.invalidateQueries();
         toast.show({
           severity: "warning",
           title: toast.translate("common.changedElsewhere.title"),

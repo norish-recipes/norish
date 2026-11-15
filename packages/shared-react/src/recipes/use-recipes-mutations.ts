@@ -14,7 +14,6 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -267,7 +266,6 @@ export type RecipesMutationsResult = {
 export function useRecipesMutations(onError?: RecipesMutationErrorHandler): RecipesMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { toast } = usePlatform();
   const { setAllRecipesData, invalidate } = useRecipesCacheHelpers();
 
   const recipesPath = [trpc.recipes.list.queryKey({})[0]];
@@ -328,21 +326,28 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const { mutate: mutateCreate } = createMutation;
 
   type UpdateVariables = { id: string; version: number };
-  // The other edits of this recipe still waiting for an answer; `sameBase` those made on its version.
-  const otherPendingEdits = (variables: UpdateVariables, sameBase: boolean) =>
+  // The other edits of this recipe still waiting for an answer.
+  const otherPendingEdits = (variables: UpdateVariables) =>
     queryClient.getMutationCache().findAll({
       mutationKey: trpc.recipes.update.mutationKey(),
       status: "pending",
-      predicate: ({ state }) => {
-        const other = state.variables as UpdateVariables | undefined;
-
-        return (
-          state.variables !== variables &&
-          other?.id === variables.id &&
-          (!sameBase || other.version === variables.version)
-        );
-      },
+      predicate: ({ state }) =>
+        state.variables !== variables &&
+        (state.variables as UpdateVariables | undefined)?.id === variables.id,
     }).length > 0;
+
+  // Back to the recipe before this edit, then the server's; a later edit's answer settles its own.
+  const rollBackEdit = (variables: UpdateVariables, context: unknown) => {
+    const { detailQueryKey, previousDetail } = (context ?? {}) as Partial<UpdateMutationContext>;
+
+    if (otherPendingEdits(variables)) return false;
+    if (detailQueryKey) {
+      queryClient.setQueryData(detailQueryKey, previousDetail);
+      void queryClient.invalidateQueries({ queryKey: detailQueryKey });
+    }
+
+    return true;
+  };
 
   const updateMutation = useMutation(
     trpc.recipes.update.mutationOptions({
@@ -382,30 +387,13 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
 
         return { detailQueryKey, previousDetail };
       },
-      // Refused: someone changed it first. Show theirs, and tell once for edits on the same base.
-      onSuccess: (answer, variables) => {
-        if (!answer.stale) return;
-        void queryClient.invalidateQueries({
-          queryKey: trpc.recipes.get.queryKey({ id: variables.id }),
-        });
-        if (otherPendingEdits(variables, true)) return;
-        toast.show({
-          severity: "warning",
-          title: toast.translate("common.changedElsewhere.title"),
-        });
+      // Refused: the Outbox parks it as Conflicted and tells the reader.
+      onSuccess: (answer, variables, context) => {
+        if (answer.stale) rollBackEdit(variables, context);
       },
       onError: (error, variables, context) => {
         handleRecipesMutationError(error, "update", onError, () => {
-          // A later edit's state is on top; its own answer settles the recipe.
-          if (otherPendingEdits(variables, false)) return;
-          const updateContext = context as UpdateMutationContext | undefined;
-
-          if (updateContext?.detailQueryKey) {
-            queryClient.setQueryData(updateContext.detailQueryKey, updateContext.previousDetail);
-            queryClient.invalidateQueries({ queryKey: updateContext.detailQueryKey });
-          }
-
-          invalidate();
+          if (rollBackEdit(variables, context)) invalidate();
         });
       },
     })

@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -76,11 +76,16 @@ const outbox = vi.hoisted(() => {
 });
 const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const isSyncing = vi.hoisted(() => vi.fn(() => false));
+const conflictListeners = vi.hoisted(() => new Set<(entries: OutboxEntry[]) => void>());
 const recovery = vi.hoisted(() => ({
   recover,
   isSyncing,
   subscribe: () => () => {},
-  subscribeConflicts: () => () => {},
+  subscribeConflicts: (listener: (entries: OutboxEntry[]) => void) => {
+    conflictListeners.add(listener);
+
+    return () => conflictListeners.delete(listener);
+  },
 }));
 const liveProbes = vi.hoisted(() => {
   const listeners = new Set<() => void>();
@@ -191,6 +196,30 @@ describe("OfflineCacheController", () => {
   }
 
   afterEach(() => cleanup());
+
+  it("refetches what is on show and tells once when refused saves are parked", async () => {
+    vi.mocked(platform.toast.show).mockClear();
+    user = { id: "u1" };
+    const { queryClient } = renderController();
+    const read = vi.fn(async () => "server");
+    const onShow = new QueryObserver(queryClient, { queryKey: ["recipe"], queryFn: read });
+    const unsubscribe = onShow.subscribe(() => {});
+
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    for (const listener of conflictListeners) {
+      listener([
+        { ...pendingEntry(1), status: "conflicted" },
+        { ...pendingEntry(2), status: "conflicted" },
+      ]);
+    }
+
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+    expect(platform.toast.show).toHaveBeenCalledTimes(1);
+    expect(platform.toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "warning", title: "common.changedElsewhere.title" })
+    );
+    unsubscribe();
+  });
 
   it("reconciles the cache owner from the current identity and connectivity", async () => {
     user = { id: "u1" };

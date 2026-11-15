@@ -59,6 +59,40 @@ describe("createOfflineEngine", () => {
     expect((await engine.outbox.forOwner("u1")).map((entry) => entry.entityId)).toEqual(["g1"]);
   });
 
+  it("tells the Recovery's listeners of a recipe save refused live", async () => {
+    const engine = engineOver();
+    const told = vi.fn();
+    const recovery = engine.createRecovery({
+      transport: {},
+      verifySession: async () => "match",
+      refetchActiveQueries: async () => {},
+      topUp: async () => {},
+    });
+
+    await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    recovery.subscribeConflicts(told);
+    await new Promise((resolve) =>
+      engine
+        .outboxLink({} as never)({
+          op: {
+            type: "mutation",
+            path: "recipes.update",
+            input: { id: "r1", version: 2 },
+            context: {},
+          },
+          next: () =>
+            observable((observer) => {
+              observer.next({ result: { data: { stale: true, version: null } } });
+              observer.complete();
+            }),
+        } as never)
+        .subscribe({ complete: resolve })
+    );
+
+    expect(told).toHaveBeenCalledWith([expect.objectContaining({ status: "conflicted" })]);
+    expect(await engine.outbox.forOwner("u1", "conflicted")).toHaveLength(1);
+  });
+
   it("replays only the applied owner's queue, marked with the client's replay header", async () => {
     const engine = engineOver();
     const mutate = vi.fn(async (_input: unknown, _opts: unknown) => ({ success: true }));

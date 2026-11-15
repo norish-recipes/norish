@@ -102,6 +102,53 @@ describe("Recovery", () => {
     expect(onConflicted).not.toHaveBeenCalled();
   });
 
+  it("tells a refusal reported outside a run at once", () => {
+    const onConflicted = vi.fn();
+    const run = recovery();
+    const refused = {
+      ...entry(),
+      seq: 9,
+      attempts: 0,
+      status: "conflicted" as const,
+      createdAt: "",
+    };
+
+    run.subscribeConflicts(onConflicted);
+    run.reportConflicts([refused]);
+
+    expect(onConflicted).toHaveBeenCalledWith([refused]);
+  });
+
+  it("tells a live refusal and a batch's in one, however they fall in the run", async () => {
+    const onConflicted = vi.fn();
+    const refused = {
+      ...entry(),
+      seq: 9,
+      attempts: 0,
+      status: "conflicted" as const,
+      createdAt: "",
+    };
+    let run: ReturnType<typeof recovery> | null = null;
+
+    await store.enqueue(entry({ id: "a", path: "recipes.update", input: { id: "r1" } }));
+    submit.mockImplementation(async () => {
+      run?.reportConflicts([refused]);
+
+      return { kind: "conflict" };
+    });
+    refetchActiveQueries.mockImplementation(async () => run?.reportConflicts([refused]));
+    run = recovery();
+    run.subscribeConflicts(onConflicted);
+    await run.recover();
+    run.reportConflicts([refused]);
+
+    expect(onConflicted).toHaveBeenCalledTimes(2);
+    expect(onConflicted).toHaveBeenNthCalledWith(1, [
+      refused,
+      expect.objectContaining({ id: "a" }),
+    ]);
+  });
+
   it("still reconciles an empty Outbox on startup or reconnect", async () => {
     await recovery().recover();
 

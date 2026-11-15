@@ -280,32 +280,21 @@ describe("useRecipesMutations", () => {
       });
     });
 
-    it("refetches the recipe and tells once when the server refuses two edits as stale", async () => {
+    it("rolls a refused edit back and refetches, leaving the telling to the Outbox", async () => {
       const adapter = fakePlatformAdapter();
-      const answers = [Promise.withResolvers<unknown>(), Promise.withResolvers<unknown>()];
 
       queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
-      server.update
-        .mockImplementationOnce(() => answers[0]!.promise)
-        .mockImplementationOnce(() => answers[1]!.promise);
+      server.update.mockResolvedValue({ stale: true, version: null });
       const result = renderHook(() => useRecipesMutations(), {
         wrapper: createTestWrapper(queryClient, adapter),
       }).result;
 
-      act(() => result.current.updateRecipe("recipe-1", { name: "First", version: 1 }));
-      act(() => result.current.updateRecipe("recipe-1", { name: "Second", version: 1 }));
-      await act(async () => {
-        await vi.waitFor(() => expect(server.update).toHaveBeenCalledTimes(2));
-      });
-      await act(async () => answers[0]!.resolve({ stale: true, version: null }));
-      await act(async () => answers[1]!.resolve({ stale: true, version: null }));
+      act(() => result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }));
       await settled();
 
-      expect(adapter.toast.show).toHaveBeenCalledTimes(1);
-      expect(adapter.toast.show).toHaveBeenCalledWith(
-        expect.objectContaining({ title: "common.changedElsewhere.title" })
-      );
+      expect(opened()).toMatchObject({ name: "Original recipe", version: 1 });
       expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
+      expect(adapter.toast.show).not.toHaveBeenCalled();
     });
 
     it("keeps a second edit when the first fails, and sends the second at its own base", async () => {

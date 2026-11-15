@@ -32,6 +32,8 @@ import {
 
 import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
+import type { OutboxEntry } from "./outbox-types";
+import { isStaleResult } from "./error-classification";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
 import { runWithOutboxLock } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
@@ -65,6 +67,8 @@ interface OutboxLinkDependencies {
   wholeEdits?: ReadonlySet<string>;
   /** The lock Replay holds, so a save never changes an entry being sent. */
   locks?: () => LockManagerLike | null;
+  /** Told of a whole edit sent live and refused as stale, once it is parked Conflicted. */
+  onConflict?: (entry: OutboxEntry) => void;
 }
 
 function captureOwner(owner: () => string | null): string {
@@ -100,10 +104,10 @@ async function captureToOutbox(
   path: string,
   input: unknown,
   context: unknown
-): Promise<void> {
+): Promise<OutboxEntry> {
   const encodedInput = encodeOutboxInput(input);
 
-  await store.enqueue({
+  return store.enqueue({
     id: createClientId(),
     ownerId: captureOwner(owner),
     path,
@@ -148,6 +152,14 @@ async function queueBehindPending(deps: OutboxLinkDependencies, op: Operation): 
   });
 
   return true;
+}
+
+/** Park a live whole edit the server refused, as Replay parks one (ADR-0004). */
+async function parkRefused(deps: OutboxLinkDependencies, op: Operation): Promise<void> {
+  const entry = await captureToOutbox(deps, op.path, op.input, op.context);
+
+  await deps.store.park(entry.seq, "conflict");
+  deps.onConflict?.({ ...entry, status: "conflicted", parkedReason: "conflict" });
 }
 
 /** The Queued outcome for a save that went to the Outbox without being sent. */
@@ -213,8 +225,23 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
 
         runWithOutboxLock(() => queueBehindPending(deps, op), deps.locks?.() ?? null).then(
           (queued) => {
-            if (queued) observer.error(queuedError());
-            else if (!closed) subscription = capture({ op, next }).subscribe(observer);
+            if (queued) return observer.error(queuedError());
+            if (closed) return;
+            let answered = Promise.resolve();
+
+            subscription = capture({ op, next }).subscribe({
+              next: (value) => {
+                if (!isStaleResult("data" in value.result ? value.result.data : null)) {
+                  return observer.next(value);
+                }
+                // Parked before the answer passes on, so the reader is told of a stored entry.
+                answered = parkRefused(deps, op)
+                  .catch((error: unknown) => log.error({ error }, "Parking a refused save failed"))
+                  .then(() => observer.next(value));
+              },
+              error: (error) => observer.error(error),
+              complete: () => void answered.then(() => observer.complete()),
+            });
           },
           (persistError: unknown) => {
             log.error({ error: persistError, path: op.path }, "Outbox admission failed");
