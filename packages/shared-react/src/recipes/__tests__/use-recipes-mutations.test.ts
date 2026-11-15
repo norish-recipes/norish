@@ -250,5 +250,32 @@ describe("useRecipesMutations", () => {
         { name: "quick", version: 1 },
       ]);
     });
+
+    it("two edits queued while offline both apply when the Outbox replays them in order", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      // Offline: each write is admitted to the Outbox and answers with the Queued signal.
+      server.update.mockRejectedValue(new TypeError("Failed to fetch"));
+      const result = render();
+      // Each save starts from the recipe as the cache has it, as the editor opens it.
+      const save = async (name: string) => {
+        const opened = queryClient.getQueryData<FullRecipeDTO>(detailKey("recipe-1"))!;
+
+        act(() => result.current.updateRecipe("recipe-1", { name, version: opened.version }));
+        await settled();
+      };
+
+      await save("First edit");
+      await save("Second edit");
+
+      // The server applies a write only at the version it holds, then bumps it.
+      const stored = { name: detail.name, version: detail.version };
+
+      for (const [{ data, version }] of server.update.mock.calls as [
+        [{ data: { name: string }; version: number }],
+      ]) {
+        if (version === stored.version) Object.assign(stored, { ...data, version: version + 1 });
+      }
+      expect(stored).toEqual({ name: "Second edit", version: 3 });
+    });
   });
 });

@@ -356,6 +356,8 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
               : previous.tags,
             images: data.images ? optimisticImages(data.images) : previous.images,
             videos: data.videos ? optimisticVideos(data.videos) : previous.videos,
+            // The version this write earns, so an edit queued behind it is not stale.
+            version: previous.version + 1,
           };
         });
 
@@ -373,6 +375,8 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           invalidate();
         });
       },
+      // One edit at a time, so the server holds each one's version before the next arrives.
+      scope: { id: "recipe-updates" },
     })
   );
   const { mutate: mutateUpdate } = updateMutation;
