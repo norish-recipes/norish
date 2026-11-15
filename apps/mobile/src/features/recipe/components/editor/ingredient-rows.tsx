@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
+import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useIntl } from "react-intl";
@@ -22,7 +23,7 @@ import {
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { useTrailingRow } from "../../hooks/use-trailing-row";
-import { AddRow, DragGrip, EditorInput, RowIconButton } from "./editor-parts";
+import { AddRow, EditorInput, RowIconButton } from "./editor-parts";
 
 /**
  * A row per ingredient line with a grip; `#` starts a section. The trailing empty row to type

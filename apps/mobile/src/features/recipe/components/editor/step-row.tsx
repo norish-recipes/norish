@@ -2,6 +2,7 @@ import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
 import React, { useState } from "react";
 import { ActionSheetIOS, Pressable, Text, View } from "react-native";
+import { DragGrip } from "@/components/drag-list/drag-grip";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useIntl } from "react-intl";
@@ -22,7 +23,7 @@ import {
 } from "@norish/shared-react/recipes";
 
 import type { PendingPhoto } from "../../hooks/use-editor-uploads";
-import { DragGrip, EditorInput, RowIconButton } from "./editor-parts";
+import { EditorInput, RowIconButton } from "./editor-parts";
 import { MentionPopup } from "./mention-popup";
 import { StepPhotos } from "./step-photos";
 

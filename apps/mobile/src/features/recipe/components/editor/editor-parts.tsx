@@ -144,20 +144,3 @@ export function RowIconButton({
     </Pressable>
   );
 }
-
-/** The grip a row is dragged by: a hold lifts it. */
-export function DragGrip({ label, onDrag }: { label: string; onDrag: () => void }) {
-  const [muted] = useThemeColor(["muted"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      className="size-8 items-center justify-center"
-      delayLongPress={120}
-      hitSlop={6}
-      onLongPress={onDrag}
-    >
-      <Ionicons color={muted} name="reorder-three" size={22} />
-    </Pressable>
-  );
-}
