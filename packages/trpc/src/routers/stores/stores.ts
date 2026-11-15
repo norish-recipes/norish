@@ -149,12 +149,21 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
   await assertHouseholdAccess(ctx.user.id, ownerId);
 
   try {
-    const { deletedGroceryIds, storeDeleted, stale } = await deleteStore(
+    const { deletedGroceryIds, movedGroceries, storeDeleted, stale } = await deleteStore(
       storeId,
       version,
       deleteGroceries,
       grocerySnapshot
     );
+
+    // Lines moved to Unsorted reach the household as any other move does.
+    if (movedGroceries.length > 0) {
+      void groceries.publish(
+        "updated",
+        { changedGroceries: movedGroceries },
+        { householdKey: ctx.householdKey }
+      );
+    }
 
     if (stale) {
       log.info({ userId: ctx.user.id, storeId, version }, "Ignoring stale store delete mutation");

@@ -50,7 +50,45 @@ describe("deleteStore with a grocery snapshot", () => {
       { id: groceryId, version: 1 },
     ]);
 
-    expect(result).toEqual({ deletedGroceryIds: [groceryId], storeDeleted: true, stale: false });
+    expect(result).toEqual({
+      deletedGroceryIds: [groceryId],
+      movedGroceries: [],
+      storeDeleted: true,
+      stale: false,
+    });
     expect(await getStoreById(store.id)).toBeNull();
+  });
+
+  it("returns the lines it moved to Unsorted, at their new version", async () => {
+    const store = await createStore(crypto.randomUUID(), { userId, name: "Markt" });
+    const groceryId = crypto.randomUUID();
+
+    await createGroceries(
+      [
+        {
+          id: groceryId,
+          groceries: {
+            userId,
+            name: "melk",
+            unit: null,
+            amount: null,
+            isDone: false,
+            recipeIngredientId: null,
+            recurringGroceryId: null,
+            storeId: store.id,
+          },
+        },
+      ],
+      [userId]
+    );
+
+    const result = await deleteStore(store.id, store.version, false, [
+      { id: groceryId, version: 1 },
+    ]);
+
+    expect(result).toMatchObject({ storeDeleted: true, stale: false, deletedGroceryIds: [] });
+    expect(result.movedGroceries).toEqual([
+      expect.objectContaining({ id: groceryId, storeId: null, version: 2 }),
+    ]);
   });
 });

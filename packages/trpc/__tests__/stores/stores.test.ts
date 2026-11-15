@@ -15,6 +15,7 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
+import { createMockGrocery } from "../groceries/test-utils";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
@@ -153,6 +154,7 @@ describe("stores procedures", () => {
   it("answers a delete once decided: stale when the version moved on", async () => {
     storesRepository.deleteStore.mockResolvedValue({
       deletedGroceryIds: [],
+      movedGroceries: [],
       storeDeleted: false,
       stale: true,
     });
@@ -172,6 +174,7 @@ describe("stores procedures", () => {
   it("answers a delete that kept the Store for lines it was not shown as stale", async () => {
     storesRepository.deleteStore.mockResolvedValue({
       deletedGroceryIds: [],
+      movedGroceries: [],
       storeDeleted: false,
       stale: false,
     });
@@ -193,6 +196,7 @@ describe("stores procedures", () => {
 
     storesRepository.deleteStore.mockResolvedValue({
       deletedGroceryIds: [groceryId],
+      movedGroceries: [],
       storeDeleted: true,
       stale: false,
     });
@@ -214,6 +218,35 @@ describe("stores procedures", () => {
     expect(groceries.publish).toHaveBeenCalledWith(
       "deleted",
       { groceryIds: [groceryId] },
+      { householdKey: ctx.householdKey }
+    );
+  });
+
+  it.each([
+    ["deleting the Store", true],
+    ["keeping the Store for lines it was not shown", false],
+  ])("tells the household of the lines a delete moved to Unsorted, %s", async (_, storeDeleted) => {
+    const moved = createMockGrocery({ id: crypto.randomUUID(), storeId: null, version: 2 });
+
+    storesRepository.deleteStore.mockResolvedValue({
+      deletedGroceryIds: [],
+      movedGroceries: [moved],
+      storeDeleted,
+      stale: false,
+    });
+
+    const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await caller.delete({
+      storeId: crypto.randomUUID(),
+      version: 2,
+      deleteGroceries: false,
+      grocerySnapshot: [{ id: moved.id, version: 1 }],
+    });
+
+    expect(groceries.publish).toHaveBeenCalledWith(
+      "updated",
+      { changedGroceries: [moved] },
       { householdKey: ctx.householdKey }
     );
   });
