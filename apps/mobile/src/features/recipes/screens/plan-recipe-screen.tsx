@@ -1,6 +1,7 @@
 import React, { useDeferredValue, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
+import { formatDay } from "@/components/day-card";
 import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -28,10 +29,13 @@ const SKELETON_ROWS = [0, 1, 2, 3];
 const asSlot = (value: string | undefined): Slot =>
   TODAY_MEAL_SLOTS.find((slot) => slot === value) ?? "Dinner";
 
-/** Plan a recipe: a day, a slot, then a recipe from the search, a random one or a note. */
+/**
+ * Plan a recipe: a day, a slot, then a recipe from the search, a random one or a note. Opened
+ * on one day (`date`) it is that day's add, without the day strip.
+ */
 export function PlanRecipeScreen() {
   const intl = useIntl();
-  const params = useLocalSearchParams<{ slot?: string }>();
+  const params = useLocalSearchParams<{ slot?: string; date?: string }>();
   const [foreground] = useThemeColor(["foreground"] as const);
   const today = parseDateKey(useToday());
   const days = Array.from(
@@ -39,7 +43,7 @@ export function PlanRecipeScreen() {
     (_, offset) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
   );
   const [picked, setPicked] = useState<Date | null>(null);
-  const date = planDay(picked, days);
+  const date = params.date ? parseDateKey(params.date) : planDay(picked, days);
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
   const search = useDeferredValue(input.trim());
@@ -61,46 +65,48 @@ export function PlanRecipeScreen() {
   const header = (
     <View className="gap-3">
       {/* heroui-native has no day strip, so these chips are hand-built. */}
-      <SheetStrip
-        accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-        contentClassName="gap-2"
-        testID="plan-recipe-days"
-      >
-        {days.map((day, offset) => {
-          const selected = day.getTime() === date.getTime();
-          const label =
-            offset === 0
-              ? intl.formatMessage({ id: "calendar.mobile.today" })
-              : intl.formatDate(day, { weekday: "short" });
+      {params.date ? null : (
+        <SheetStrip
+          accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
+          contentClassName="gap-2"
+          testID="plan-recipe-days"
+        >
+          {days.map((day, offset) => {
+            const selected = day.getTime() === date.getTime();
+            const label =
+              offset === 0
+                ? intl.formatMessage({ id: "calendar.mobile.today" })
+                : intl.formatDate(day, { weekday: "short" });
 
-          return (
-            <Pressable
-              key={day.getTime()}
-              accessibilityLabel={intl.formatDate(day, {
-                weekday: "long",
-                month: "short",
-                day: "numeric",
-              })}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: selected }}
-              className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
-              testID={`plan-recipe-day-${offset}`}
-              onPress={() => setPicked(day)}
-            >
-              <Text
-                className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
+            return (
+              <Pressable
+                key={day.getTime()}
+                accessibilityLabel={intl.formatDate(day, {
+                  weekday: "long",
+                  month: "short",
+                  day: "numeric",
+                })}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
+                className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
+                testID={`plan-recipe-day-${offset}`}
+                onPress={() => setPicked(day)}
               >
-                {label}
-              </Text>
-              <Text
-                className={`text-[19px] font-semibold ${selected ? "text-accent-foreground" : "text-foreground"}`}
-              >
-                {day.getDate()}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </SheetStrip>
+                <Text
+                  className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
+                >
+                  {label}
+                </Text>
+                <Text
+                  className={`text-[19px] font-semibold ${selected ? "text-accent-foreground" : "text-foreground"}`}
+                >
+                  {day.getDate()}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </SheetStrip>
+      )}
 
       <Tabs value={slot} onValueChange={(next) => setSlot(asSlot(next))}>
         <Tabs.List className="bg-default h-10 rounded-full p-[3px]">
@@ -162,7 +168,14 @@ export function PlanRecipeScreen() {
   );
 
   return (
-    <Sheet name="plan-recipe" title={intl.formatMessage({ id: "calendar.panel.planRecipe" })}>
+    <Sheet
+      name="plan-recipe"
+      title={
+        params.date
+          ? intl.formatMessage({ id: "calendar.panel.addToDay" }, { day: formatDay(intl, date) })
+          : intl.formatMessage({ id: "calendar.panel.planRecipe" })
+      }
+    >
       <SheetList
         ListEmptyComponent={
           error ? undefined : (

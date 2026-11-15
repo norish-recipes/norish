@@ -6,7 +6,9 @@ const router = vi.hoisted(() => ({ back: vi.fn(), replace: vi.fn() }));
 const user = vi.hoisted(() => ({ current: {} as unknown }));
 const addAtOnce = vi.hoisted(() => vi.fn());
 
-vi.mock("expo-router", () => ({ useRouter: () => router }));
+const path = vi.hoisted(() => ({ current: "/" }));
+
+vi.mock("expo-router", () => ({ useRouter: () => router, usePathname: () => path.current }));
 vi.mock("@/features/recipes/components/add-at-once-host", () => ({
   useAddAtOnceStarter: () => addAtOnce,
 }));
@@ -45,6 +47,17 @@ describe("usePlanExit", () => {
       params: { recipeId: "r1" },
     });
     expect(router.back).not.toHaveBeenCalled();
+  });
+
+  it("opens the Calendar's own Add to groceries when planned from the Calendar", () => {
+    path.current = "/calendar/plan-recipe";
+    exit()("r1");
+    path.current = "/";
+
+    expect(router.replace).toHaveBeenCalledWith({
+      pathname: "/calendar/add-to-groceries",
+      params: { recipeId: "r1" },
+    });
   });
 
   it("closes and puts the lines on the list at once when the choice says so", () => {

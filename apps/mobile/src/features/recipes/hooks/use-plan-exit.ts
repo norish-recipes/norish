@@ -5,6 +5,7 @@ import { useReader } from "@norish/shared-react/reader";
 import { getAfterPlanningPreference } from "@norish/shared/lib/user-preferences";
 
 import { useAddAtOnceStarter } from "../components/add-at-once-host";
+import { useAddToGroceriesPath } from "./use-add-to-groceries-path";
 
 /**
  * How a plan sheet leaves once it has planned: it closes, or, as the "after planning" choice asks,
@@ -14,6 +15,7 @@ export function usePlanExit() {
   const router = useRouter();
   const addAtOnce = useAddAtOnceStarter();
   const choice = getAfterPlanningPreference(useReader().user);
+  const addToGroceries = useAddToGroceriesPath();
 
   return (plannedRecipeId?: string) => {
     const step = plannedRecipeId ? afterPlanningStep(choice, plannedRecipeId) : null;
@@ -27,6 +29,6 @@ export function usePlanExit() {
       return;
     }
 
-    router.replace({ pathname: "/add-to-groceries", params: { recipeId: step.recipeId } });
+    router.replace({ pathname: addToGroceries, params: { recipeId: step.recipeId } });
   };
 }

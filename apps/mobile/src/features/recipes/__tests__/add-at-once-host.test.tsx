@@ -10,7 +10,7 @@ const state = vi.hoisted(() => ({
   foodsArgs: {} as Record<string, unknown>,
 }));
 
-vi.mock("expo-router", () => ({ useRouter: () => router }));
+vi.mock("expo-router", () => ({ useRouter: () => router, usePathname: () => "/" }));
 vi.mock("@norish/shared-react/recipes", () => ({
   useRecipeQuery: () => ({ recipe: state.recipe }),
   useRecipeFoodsToBuy: (recipeId: string, original: number, initial: number) => {

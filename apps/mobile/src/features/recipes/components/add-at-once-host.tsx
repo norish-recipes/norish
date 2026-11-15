@@ -6,6 +6,8 @@ import { plannedServings } from "@norish/shared-react/calendar";
 import { useAddAtOnce } from "@norish/shared-react/groceries";
 import { useRecipeFoodsToBuy, useRecipeQuery } from "@norish/shared-react/recipes";
 
+import { useAddToGroceriesPath } from "../hooks/use-add-to-groceries-path";
+
 const AddAtOnceContext = createContext<((recipeId: string) => void) | null>(null);
 
 /** Puts a recipe's lines to buy on the list without showing the sheet; see `AddAtOnceHost`. */
@@ -27,6 +29,7 @@ function AddAtOnce({
   onDone: () => void;
 }) {
   const router = useRouter();
+  const addToGroceries = useAddToGroceriesPath();
 
   const { scaledIngredients, isLoading } = useRecipeFoodsToBuy(recipeId, servings, servings);
 
@@ -36,7 +39,7 @@ function AddAtOnce({
     onDone,
     // A Pantry that cannot be read opens the sheet, as on web.
     onOpenChange: (open) => {
-      if (open) router.push({ pathname: "/add-to-groceries", params: { recipeId } });
+      if (open) router.push({ pathname: addToGroceries, params: { recipeId } });
     },
   });
 
