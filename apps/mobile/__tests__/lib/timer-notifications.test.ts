@@ -109,27 +109,27 @@ describe("planTimerNotifications", () => {
 
 describe("the sync chain", () => {
   it("runs the next sync after one whose step threw", async () => {
-    const { syncTimerNotifications } = await import("@/lib/timer-notifications");
+    const { syncTimers } = await import("@/lib/timer-notifications");
     const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
 
     useTimerStore.setState({ timers: [timer("a", { lastTickAt: Date.now() })] });
     link.fail = true;
-    await syncTimerNotifications({ body: "", paused: "", done: "", more: String });
+    await syncTimers({ body: "", paused: "", done: "", more: String });
     link.fail = false;
     activity.mockClear();
-    await syncTimerNotifications({ body: "", paused: "", done: "", more: String });
+    await syncTimers({ body: "", paused: "", done: "", more: String });
 
     expect(activity).toHaveBeenCalledTimes(1);
   });
   it("completes the notification sync when the Live Activity step rejects, and runs the next", async () => {
-    const { syncTimerNotifications } = await import("@/lib/timer-notifications");
+    const { syncTimers } = await import("@/lib/timer-notifications");
 
     activity.mockClear();
     activity.mockRejectedValueOnce(new Error("Live Activities are not enabled"));
     await expect(
-      syncTimerNotifications({ body: "", paused: "", done: "", more: String })
+      syncTimers({ body: "", paused: "", done: "", more: String })
     ).resolves.toBeUndefined();
-    await syncTimerNotifications({ body: "", paused: "", done: "", more: String });
+    await syncTimers({ body: "", paused: "", done: "", more: String });
 
     expect(activity).toHaveBeenCalledTimes(2);
   });

@@ -69,7 +69,7 @@ function queue(step: () => Promise<void>): Promise<void> {
 }
 
 /** Brings the pending notifications and the Live Activity in line with the store's timers. */
-export function syncTimerNotifications(strings: TimerStrings): Promise<void> {
+export function syncTimers(strings: TimerStrings): Promise<void> {
   return queue(async () => {
     await syncNotifications(strings.body);
     await syncTimerActivity(

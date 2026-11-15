@@ -1,7 +1,7 @@
 import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { cookModeRoute } from "@/lib/cook-mode-route";
-import { syncTimerNotifications } from "@/lib/timer-notifications";
+import { syncTimers } from "@/lib/timer-notifications";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -68,7 +68,7 @@ function useTimerNotifications() {
     more: (count: number) => intl.formatMessage({ id: "common.timer.more" }, { count }),
   };
 
-  const sync = useEffectEvent(() => void syncTimerNotifications(strings));
+  const sync = useEffectEvent(() => void syncTimers(strings));
 
   useEffect(() => sync(), [shape, answered, body, paused, done]);
 
