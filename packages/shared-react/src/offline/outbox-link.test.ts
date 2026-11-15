@@ -1,12 +1,13 @@
+import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { observable } from "@trpc/server/observable";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { hasOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
+import { hasOutboxAdmissionFailed, isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
 import { isEncodedFormData } from "./input-codec";
-import { createOutboxLink } from "./outbox-link";
+import { createOutboxLink, MUTATION_SEND_TIMEOUT_MS } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";
 import { runReplayPass } from "./replay";
 import { OUTBOX_REPLAY_HEADER } from "./replay-client";
@@ -374,5 +375,114 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       "favorites.toggle",
     ]);
     expect(pass).toMatchObject({ removed: 1, parked: 1 });
+  });
+});
+
+describe("createOutboxLink: a send with no answer", () => {
+  beforeEach(() => {
+    enqueue.mockClear();
+    owner.mockReturnValue("u1");
+    vi.useFakeTimers();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  /** A send that answers only when the test says, and records whether it was aborted. */
+  const hung = () => {
+    const send = { answer: (_value: unknown) => {}, aborted: false };
+    const terminal = () =>
+      observable((observer) => {
+        send.answer = (value) => observer.next(value);
+
+        return () => {
+          send.aborted = true;
+        };
+      });
+
+    return { send, terminal };
+  };
+
+  it("is aborted and queued with its operation id once the timeout passes", async () => {
+    const { send, terminal } = hung();
+    const result = runLink(mutationOp(), terminal);
+
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
+
+    expect(isQueuedOutboxSignal((await result).error)).toBe(true);
+    expect(send.aborted).toBe(true);
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ operationId: "op-1" }));
+  });
+
+  it("delivers nothing of the aborted request's late answer", async () => {
+    const { send, terminal } = hung();
+    const seen: unknown[] = [];
+    const link = createOutboxLink({
+      store: { enqueue } as unknown as OutboxStore,
+      owner,
+      replayHeaderValue: REPLAY_HEADER_VALUE,
+    })({} as never);
+
+    link({ op: mutationOp(), next: terminal } as never).subscribe({
+      next: (value: unknown) => seen.push(value),
+      error: (error: unknown) => seen.push(error),
+    });
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
+    send.answer({ result: { data: { ok: true } } });
+
+    expect(seen).toHaveLength(1);
+    expect(isQueuedOutboxSignal(seen[0])).toBe(true);
+  });
+
+  it("leaves a send that answers in time alone", async () => {
+    const { send, terminal } = hung();
+    const result = runLink(mutationOp(), terminal);
+
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS - 1);
+    send.answer({ ok: true });
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
+
+    expect((await result).value).toEqual({ ok: true });
+    expect(send.aborted).toBe(false);
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("sends the next write of a scope once the one ahead is queued", async () => {
+    const link = createOutboxLink({
+      store: { enqueue } as unknown as OutboxStore,
+      owner,
+      replayHeaderValue: REPLAY_HEADER_VALUE,
+    })({} as never);
+    const first = hung();
+    const sent: string[] = [];
+    const send = (op: FakeOp, terminal: () => ReturnType<typeof observable>) => () =>
+      new Promise((resolve, reject) => {
+        sent.push(op.context.operationId as string);
+        link({ op, next: terminal } as never).subscribe({ next: resolve, error: reject });
+      });
+    const client = new QueryClient();
+    const write = (fn: () => Promise<unknown>) =>
+      new MutationObserver(client, { mutationFn: fn, scope: { id: "writes" } })
+        .mutate()
+        .catch(() => undefined);
+
+    void write(send(mutationOp(), first.terminal));
+    void write(send(mutationOp({ context: { operationId: "op-2" } }), succeedWith({ ok: true })));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sent).toEqual(["op-1"]);
+
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
+
+    expect(sent).toEqual(["op-1", "op-2"]);
+  });
+
+  it("puts no timer on an upload", async () => {
+    const { send, terminal } = hung();
+    const formData = new FormData();
+
+    formData.append("id", "33333333-3333-4333-8333-333333333333");
+    void runLink(mutationOp({ path: "recipes.uploadImage", input: formData }), terminal);
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS * 10);
+
+    expect(send.aborted).toBe(false);
+    expect(enqueue).not.toHaveBeenCalled();
   });
 });

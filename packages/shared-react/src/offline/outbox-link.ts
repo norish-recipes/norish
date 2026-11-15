@@ -21,7 +21,7 @@
 import type { HTTPHeaders, Operation, OperationLink, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import type { Unsubscribable } from "@trpc/server/observable";
-import { TRPCClientError } from "@trpc/client";
+import { isNonJsonSerializable, TRPCClientError } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -38,6 +38,9 @@ import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input
 import { isOutboxReplayContext } from "./replay-client";
 
 const log = createClientLogger("OutboxLink");
+
+/** A mutation unanswered this long is aborted and queued: a slower answer is retried by Replay. */
+export const MUTATION_SEND_TIMEOUT_MS = 20_000;
 
 function normalizeHeaders(headers: unknown): Record<string, string> {
   if (!headers || typeof headers !== "object") {
@@ -157,6 +160,10 @@ async function replaceUnsent(
 const queuedError = () =>
   new TRPCClientError("Queued behind a pending save", { cause: new TypeError("Failed to fetch") });
 
+/** A send that got no answer in time fails as one that never reached the backend. */
+const timedOutError = () =>
+  new TRPCClientError("No answer in time", { cause: new TypeError("Failed to fetch") });
+
 export function createOutboxLink<TRouter extends AnyTRPCRouter>(
   deps: OutboxLinkDependencies
 ): TRPCLink<TRouter> {
@@ -179,38 +186,55 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
   return () => {
     const capture: OperationLink<TRouter> = ({ op, next }) =>
       observable((observer) => {
+        const fail = (error: unknown) => {
+          if (
+            isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
+            !isBackendUnreachableError(error)
+          ) {
+            observer.error(error);
+
+            return;
+          }
+
+          // Queued means durably stored: hold the error until the entry is
+          // in storage, and downgrade it to a real failure if it is not.
+          void Promise.resolve()
+            .then(() => admit(op))
+            .then(
+              () => observer.error(error),
+              (persistError: unknown) => {
+                log.error(
+                  { error: persistError, path: op.path },
+                  "Outbox admission failed; presenting mutation as failed"
+                );
+                markOutboxAdmissionFailed(error);
+                observer.error(error);
+              }
+            );
+        };
+        // Uploads are exempt: their send time grows with the file, not with a hung server.
+        const timer = isNonJsonSerializable(op.input)
+          ? undefined
+          : setTimeout(() => {
+              subscription.unsubscribe();
+              fail(timedOutError());
+            }, MUTATION_SEND_TIMEOUT_MS);
         const subscription = next(op).subscribe({
-          next: (value) => observer.next(value),
+          next: (value) => {
+            clearTimeout(timer);
+            observer.next(value);
+          },
           error: (error) => {
-            if (
-              isOutboxReplayContext(op.context, deps.replayHeaderValue) ||
-              !isBackendUnreachableError(error)
-            ) {
-              observer.error(error);
-
-              return;
-            }
-
-            // Queued means durably stored: hold the error until the entry is
-            // in storage, and downgrade it to a real failure if it is not.
-            void Promise.resolve()
-              .then(() => admit(op))
-              .then(
-                () => observer.error(error),
-                (persistError: unknown) => {
-                  log.error(
-                    { error: persistError, path: op.path },
-                    "Outbox admission failed; presenting mutation as failed"
-                  );
-                  markOutboxAdmissionFailed(error);
-                  observer.error(error);
-                }
-              );
+            clearTimeout(timer);
+            fail(error);
           },
           complete: () => observer.complete(),
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+          clearTimeout(timer);
+          subscription.unsubscribe();
+        };
       });
 
     return ({ op, next }) => {
