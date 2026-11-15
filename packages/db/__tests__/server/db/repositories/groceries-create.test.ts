@@ -1,9 +1,7 @@
 // @vitest-environment node
 /**
- * A create makes room at the top of its Store by shifting every active
- * sibling down, and a shifted row is a changed row: its version moves. The
- * repository hands those rows back so nobody goes on holding the old version.
- * Two writes that move one list wait for each other.
+ * A create makes room at the top of its Store by shifting every active sibling down; the shift is
+ * not an edit of those rows, so their versions stay. Two writes that move one list wait for each other.
  */
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -63,20 +61,52 @@ describe("what a create shifts", () => {
     },
   });
 
-  it("hands back every active sibling in the Store, shifted down and at its new version", async () => {
+  it("hands back every active sibling in the Store, shifted down at the version it had", async () => {
     const first = await createGroceries([line("appel")], [userId]);
     const second = await createGroceries([line("peer")], [userId]);
 
     expect(first.shifted).toEqual([]);
     expect(second.shifted).toHaveLength(1);
-    expect(second.shifted[0]).toMatchObject({ id: first.created[0]!.id, sortOrder: 1, version: 2 });
+    expect(second.shifted[0]).toMatchObject({ id: first.created[0]!.id, sortOrder: 1, version: 1 });
 
     const [stored] = await getTestDb()
       .select()
       .from(groceries)
       .where(eq(groceries.id, first.created[0]!.id));
 
-    expect(stored).toMatchObject({ sortOrder: 1, version: 2 });
+    expect(stored).toMatchObject({ sortOrder: 1, version: 1 });
+  });
+
+  // The writes an offline client queues, each at the version its own earlier writes left the row.
+  const rename = (id: string, version: number) =>
+    updateGroceries([{ id, version, name: "havermelk" }], [userId]);
+  const tick = (id: string, version: number) =>
+    updateGroceries([{ id, version, isDone: true }], [userId]);
+
+  it("keeps an edit queued after the user's own add, at the version read before it", async () => {
+    const [melk] = (await createGroceries([line("melk")], [userId])).created;
+
+    await createGroceries([line("brood")], [userId]);
+
+    await expect(rename(melk!.id, 1)).resolves.toMatchObject([{ name: "havermelk", version: 2 }]);
+  });
+
+  it("keeps the edit after ticking another line and adding one", async () => {
+    const [melk, eieren] = (await createGroceries([line("melk"), line("eieren")], [userId]))
+      .created;
+
+    await tick(eieren!.id, 1);
+    await createGroceries([line("brood")], [userId]);
+
+    await expect(rename(melk!.id, 1)).resolves.toMatchObject([{ name: "havermelk" }]);
+  });
+
+  it("still refuses an edit after another member changed the line", async () => {
+    const [melk] = (await createGroceries([line("melk")], [userId])).created;
+
+    await updateGroceries([{ id: melk!.id, version: 1, amount: 2 }], [userId]);
+
+    await expect(rename(melk!.id, 1)).resolves.toEqual([]);
   });
 
   it("leaves a done sibling, and a sibling in another Store, alone", async () => {

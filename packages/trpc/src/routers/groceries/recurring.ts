@@ -105,8 +105,7 @@ async function announceRecurring(ctx: GroceryProcedureContext, made: CreatedRecu
     made.created.map(({ grocery }) => grocery)
   );
 
-  // The siblings it made room among carry new versions now; every screen
-  // hears so, or its next write on one of them is refused as stale.
+  // The siblings it made room among moved down; every screen hears their new sort order.
   if (made.shifted.length > 0) {
     void groceries.publish(
       "updated",

@@ -350,11 +350,9 @@ export async function createGroceriesData(
     );
   }
 
-  // Making room at the top moved every active sibling's sort order, and
-  // with it its version. A screen that goes on holding the old version has
-  // its next write on that row refused as stale (ADR-0004), so the shifted
-  // rows ride back on the answer and out to the household as an update; a
-  // row merged and then shifted is reported as the shift left it.
+  // Making room at the top moved every active sibling's sort order, so the
+  // shifted rows ride back on the answer and out to the household as an
+  // update; a row merged and then shifted is reported as the shift left it.
   if (made.shifted.length > 0) {
     const shiftedIds = new Set(made.shifted.map((grocery) => grocery.id));
 

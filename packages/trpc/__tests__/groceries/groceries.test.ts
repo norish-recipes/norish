@@ -326,12 +326,10 @@ describe("groceries openapi procedures", () => {
     expect(result.ids).toEqual([existing.id]);
   });
 
-  it("hands back and announces the siblings a create shifted, with their new versions", async () => {
-    // Making room at the top moved the siblings' sort order and version; a
-    // screen still holding the old version would have its next write on one
-    // of them refused as stale. So the answer carries them, and so does the
-    // household's updated event.
-    const sibling = createMockGrocery({ id: "sibling", name: "Peer", sortOrder: 1, version: 2 });
+  it("hands back and announces the siblings a create shifted, at their new sort order", async () => {
+    // Making room at the top moved the siblings' sort order, so the answer
+    // carries them, and so does the household's updated event.
+    const sibling = createMockGrocery({ id: "sibling", name: "Peer", sortOrder: 1 });
 
     listGroceriesByUsers.mockResolvedValue([]);
     createGroceries.mockImplementation(

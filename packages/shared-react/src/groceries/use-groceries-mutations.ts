@@ -29,7 +29,7 @@ type CreateGroceriesResult =
 type CreateRecurringResult = {
   recurringGrocery: RecurringGroceryDto;
   grocery: GroceryDto;
-  /** The siblings the new line shifted down, at their new versions. */
+  /** The siblings the new line shifted down, at their new sort order. */
   shifted?: GroceryDto[];
 };
 
@@ -205,8 +205,8 @@ function applyRecurringCreatedToCache(prev: GroceriesData, result: CreateRecurri
 
   return {
     ...prev,
-    // The siblings the new line shifted down carry new versions: what the
-    // server says they are now replaces the shift guessed here (ADR-0004).
+    // The siblings the new line shifted down: what the server says they are
+    // now replaces the shift guessed here.
     groceries: mergeGroceries(
       existingGrocery
         ? prev.groceries.map((existing) => (existing.id === grocery.id ? grocery : existing))
