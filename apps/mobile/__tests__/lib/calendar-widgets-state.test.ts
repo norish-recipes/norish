@@ -1,9 +1,7 @@
 import type { PhotoLookup, WidgetStrings } from "@/lib/calendar-widgets-state";
 import {
   calendarWidgetTimelines,
-  lineBudget,
   signedOutTimelines,
-  WEEK_LINES,
   WIDGET_DAYS,
 } from "@/lib/calendar-widgets-state";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -319,13 +317,16 @@ describe("the large widget", () => {
         kind: "note",
         name: "Leftovers",
         url: "norish://calendar?day=2026-11-15",
+        more: "+1 more",
       },
+    ]);
+    expect(week.days[6]?.lines).toEqual([
       {
         id: expect.any(String),
         kind: "recipe",
-        name: "Chili",
-        photo: "file:///widgets/recipes/Chili.jpg-thumb",
-        url: "norish://recipe/recipe-Chili",
+        name: "Tacos",
+        photo: "file:///widgets/recipes/Tacos.jpg-thumb",
+        url: "norish://recipe/recipe-Tacos",
       },
     ]);
     expect(week.days[1]).toMatchObject({ lines: [], url: "norish://calendar?day=2026-11-16" });
@@ -340,7 +341,7 @@ describe("the large widget", () => {
     expect(next.days[6]).toMatchObject({ day: "22" });
   });
 
-  it("ends a crowded day's last shown line on +N", () => {
+  it("shows a crowded day's first item and +N for the rest", () => {
     const items = ["A", "B", "C", "D", "E", "F"].map((name, index) =>
       recipe("2026-11-15", "Dinner", name, index)
     );
@@ -353,15 +354,10 @@ describe("the large widget", () => {
     const week = large[0]?.props;
 
     if (week?.kind !== "week") throw new Error("expected a week");
-    expect(week.days[0]?.lines.map((line) => [line.name, line.more])).toEqual([
-      ["A", undefined],
-      ["B", undefined],
-      ["C", undefined],
-      ["D", "+2 more"],
-    ]);
+    expect(week.days[0]?.lines.map((line) => [line.name, line.more])).toEqual([["A", "+5 more"]]);
   });
 
-  it("says what every day hides, a day held to one line too", () => {
+  it("holds a full week to one line a day, so it fits the smallest large widget", () => {
     const days = ["15", "16", "17", "18", "19", "20", "21"].map((day) => `2026-11-${day}`);
     const items = days.flatMap((date) => [
       recipe(date, "Breakfast", `Oats ${date}`),
@@ -376,24 +372,9 @@ describe("the large widget", () => {
     const week = large[0]?.props;
 
     if (week?.kind !== "week") throw new Error("expected a week");
-    expect(week.days.map((day) => day.lines.map((line) => line.more ?? line.name))).toEqual([
-      ["Oats 2026-11-15", "Curry 2026-11-15"],
-      ["Oats 2026-11-16", "Curry 2026-11-16"],
-      ["Oats 2026-11-17", "Curry 2026-11-17"],
-      ["+1 more"],
-      ["+1 more"],
-      ["+1 more"],
-      ["+1 more"],
-    ]);
-  });
-});
-
-describe("lineBudget", () => {
-  it("gives every day with items a line, then the spare lines one per day in turn", () => {
-    expect(lineBudget([5, 5, 5, 5, 5, 5, 5])).toEqual([2, 2, 2, 1, 1, 1, 1]);
-    expect(lineBudget([2, 0, 2, 1, 0, 2, 2])).toEqual([2, 0, 2, 1, 0, 2, 1]);
-    expect(lineBudget([5, 2, 0, 0, 0, 0, 0])).toEqual([3, 2, 0, 0, 0, 0, 0]);
-    expect(lineBudget([9, 0, 0, 0, 0, 0, 0])).toEqual([WEEK_LINES - 6, 0, 0, 0, 0, 0, 0]);
+    expect(week.days.map((day) => day.lines.map((line) => [line.name, line.more]))).toEqual(
+      days.map((date) => [[`Oats ${date}`, "+1 more"]])
+    );
   });
 });
 

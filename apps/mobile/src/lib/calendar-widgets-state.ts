@@ -19,8 +19,6 @@ export const WEEK_DAYS = 7;
 export const WIDGET_DATA_DAYS = WIDGET_DAYS + WEEK_DAYS - 1;
 /** The hours `nextMealSlot` changes at, after midnight. */
 export const SLOT_CHANGE_HOURS = [10, 14] as const;
-/** Lines the large widget's week fits: one per day, empty or not, and three more. */
-export const WEEK_LINES = 10;
 
 /** The planned items by date key, as the calendar query groups them. */
 export type Plan = Record<string, PlannedItemFromQuery[]>;
@@ -64,7 +62,7 @@ export type WeekLine = {
   name: string;
   photo?: string;
   url: string;
-  /** On a day's last shown line, "+N more" for the items it leaves out. */
+  /** "+N more" for the rest of its day's items. */
   more?: string;
 };
 
@@ -185,7 +183,6 @@ function weekProps(
 
     return TODAY_MEAL_SLOTS.flatMap((slot) => bySlot[slot]);
   });
-  const budget = lineBudget(items.map((day) => day.length));
 
   return {
     kind: "week",
@@ -194,8 +191,8 @@ function weekProps(
     days: dates.map((date, index) => {
       const key = dateKey(date);
       const dayItems = items[index] ?? [];
-      const shown = budget[index] ?? 0;
-      const lines: WeekLine[] = dayItems.slice(0, shown).map((item) => {
+      // One line a day: seven are what the smallest large widget (iPhone SE, 321×324 pt) fits whole.
+      const lines: WeekLine[] = dayItems.slice(0, 1).map((item) => {
         const recipe = isRecipeItem(item);
 
         return {
@@ -221,21 +218,4 @@ function weekProps(
       };
     }),
   };
-}
-
-/** Item lines per day: one for each day with items, then the spare lines one per day in turn. */
-export function lineBudget(counts: number[]): number[] {
-  const budget = counts.map((count) => Math.min(count, 1));
-  let left = WEEK_LINES - counts.length;
-
-  while (left > 0 && budget.some((lines, index) => lines < (counts[index] ?? 0))) {
-    for (let index = 0; index < budget.length && left > 0; index++) {
-      if ((budget[index] ?? 0) < (counts[index] ?? 0)) {
-        budget[index] = (budget[index] ?? 0) + 1;
-        left -= 1;
-      }
-    }
-  }
-
-  return budget;
 }
