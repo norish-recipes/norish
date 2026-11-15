@@ -64,8 +64,8 @@ interface OutboxLinkDependencies {
   replayHeaderValue: string;
   /** Procedures that save a whole entity at the version it was read at; they create nothing. */
   wholeEdits?: ReadonlySet<string>;
-  /** Told of a whole edit sent live and refused as stale, once it is parked Conflicted. */
-  onConflict?: (entry: OutboxEntry) => void;
+  /** Told of a whole edit sent live and refused as stale; nothing is stored for it. */
+  onConflict?: () => void;
 }
 
 function captureOwner(owner: () => string | null): string {
@@ -151,14 +151,6 @@ async function replaceUnsent(
   );
 
   return replaced ? "replaced" : "kept";
-}
-
-/** Park a live whole edit the server refused, as Replay parks one (ADR-0004). */
-async function parkRefused(deps: OutboxLinkDependencies, op: Operation): Promise<void> {
-  const entry = await captureToOutbox(deps, op.path, op.input, op.context);
-
-  await deps.store.park(entry.seq, "conflict");
-  deps.onConflict?.({ ...entry, status: "conflicted", parkedReason: "conflict" });
 }
 
 /** The Queued outcome for a save that went to the Outbox without being sent. */
@@ -249,22 +241,17 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
             (queued) => {
               if (queued) return observer.error(queuedError());
               if (closed) return;
-              let answered = Promise.resolve();
 
               subscription = capture({ op, next }).subscribe({
                 next: (value) => {
-                  if (!isStaleResult("data" in value.result ? value.result.data : null)) {
-                    return observer.next(value);
+                  // Refused live: nothing is stored, the reader is told once.
+                  if (isStaleResult("data" in value.result ? value.result.data : null)) {
+                    deps.onConflict?.();
                   }
-                  // Parked before the answer passes on, so the reader is told of a stored entry.
-                  answered = parkRefused(deps, op)
-                    .catch((error: unknown) =>
-                      log.error({ error }, "Parking a refused save failed")
-                    )
-                    .then(() => observer.next(value));
+                  observer.next(value);
                 },
                 error: (error) => observer.error(error),
-                complete: () => void answered.then(() => observer.complete()),
+                complete: () => observer.complete(),
               });
             },
             (persistError: unknown) => {

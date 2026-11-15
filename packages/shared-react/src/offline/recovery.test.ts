@@ -83,10 +83,7 @@ describe("Recovery", () => {
     await run.recover();
 
     expect(onConflicted).toHaveBeenCalledTimes(1);
-    expect(onConflicted).toHaveBeenCalledWith([
-      expect.objectContaining({ id: "a" }),
-      expect.objectContaining({ id: "b" }),
-    ]);
+    expect(await store.forOwner("u1", "conflicted")).toHaveLength(2);
     expect(calls).toEqual(["told", "refetch", "warm"]);
   });
 
@@ -105,48 +102,30 @@ describe("Recovery", () => {
   it("tells a refusal reported outside a run at once", () => {
     const onConflicted = vi.fn();
     const run = recovery();
-    const refused = {
-      ...entry(),
-      seq: 9,
-      attempts: 0,
-      status: "conflicted" as const,
-      createdAt: "",
-    };
 
     run.subscribeConflicts(onConflicted);
-    run.reportConflicts([refused]);
+    run.reportConflict();
 
-    expect(onConflicted).toHaveBeenCalledWith([refused]);
+    expect(onConflicted).toHaveBeenCalledTimes(1);
   });
 
   it("tells a live refusal and a batch's in one, however they fall in the run", async () => {
     const onConflicted = vi.fn();
-    const refused = {
-      ...entry(),
-      seq: 9,
-      attempts: 0,
-      status: "conflicted" as const,
-      createdAt: "",
-    };
     let run: ReturnType<typeof recovery> | null = null;
 
     await store.enqueue(entry({ id: "a", path: "recipes.update", input: { id: "r1" } }));
     submit.mockImplementation(async () => {
-      run?.reportConflicts([refused]);
+      run?.reportConflict();
 
       return { kind: "conflict" };
     });
-    refetchActiveQueries.mockImplementation(async () => run?.reportConflicts([refused]));
+    refetchActiveQueries.mockImplementation(async () => run?.reportConflict());
     run = recovery();
     run.subscribeConflicts(onConflicted);
     await run.recover();
-    run.reportConflicts([refused]);
+    run.reportConflict();
 
     expect(onConflicted).toHaveBeenCalledTimes(2);
-    expect(onConflicted).toHaveBeenNthCalledWith(1, [
-      refused,
-      expect.objectContaining({ id: "a" }),
-    ]);
   });
 
   it("still reconciles an empty Outbox on startup or reconnect", async () => {

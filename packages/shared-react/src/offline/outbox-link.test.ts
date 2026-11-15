@@ -334,16 +334,12 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     }
   );
 
-  it("parks a live save the server refused as Conflicted, and reports it", async () => {
+  it("stores nothing for a live save the server refused, and reports it", async () => {
     const result = await save(edit("Mine"), answer({ stale: true, version: null }));
 
     expect(result.value).toEqual({ result: { data: { stale: true, version: null } } });
-    expect(await store.loadAll()).toMatchObject([
-      { path: "recipes.update", input: edit("Mine"), status: "conflicted", entityId: null },
-    ]);
-    expect(onConflict).toHaveBeenCalledWith(
-      expect.objectContaining({ input: edit("Mine"), status: "conflicted" })
-    );
+    expect(await store.loadAll()).toEqual([]);
+    expect(onConflict).toHaveBeenCalledTimes(1);
   });
 
   it("leaves a replayed refusal and a stored save to Replay", async () => {

@@ -76,17 +76,17 @@ const outbox = vi.hoisted(() => {
 });
 const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const isSyncing = vi.hoisted(() => vi.fn(() => false));
-const conflictListeners = vi.hoisted(() => new Set<(entries: OutboxEntry[]) => void>());
+const conflictListeners = vi.hoisted(() => new Set<() => void>());
 const recovery = vi.hoisted(() => ({
   recover,
   isSyncing,
   subscribe: () => () => {},
-  subscribeConflicts: (listener: (entries: OutboxEntry[]) => void) => {
+  subscribeConflicts: (listener: () => void) => {
     conflictListeners.add(listener);
 
     return () => void conflictListeners.delete(listener);
   },
-  reportConflicts: () => {},
+  reportConflict: () => {},
 }));
 const liveProbes = vi.hoisted(() => {
   const listeners = new Set<() => void>();
@@ -198,7 +198,7 @@ describe("OfflineCacheController", () => {
 
   afterEach(() => cleanup());
 
-  it("refetches what is on show and tells once when refused saves are parked", async () => {
+  it("refetches what is on show and tells once when saves are refused", async () => {
     vi.mocked(platform.toast.show).mockClear();
     user = { id: "u1" };
     const { queryClient } = renderController();
@@ -207,12 +207,7 @@ describe("OfflineCacheController", () => {
     const unsubscribe = onShow.subscribe(() => {});
 
     await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
-    for (const listener of conflictListeners) {
-      listener([
-        { ...pendingEntry(1), status: "conflicted" },
-        { ...pendingEntry(2), status: "conflicted" },
-      ]);
-    }
+    for (const listener of conflictListeners) listener();
 
     await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
     expect(platform.toast.show).toHaveBeenCalledTimes(1);

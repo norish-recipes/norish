@@ -58,10 +58,10 @@ export interface Recovery {
   recover(reason?: RecoveryReason): Promise<void>;
   isSyncing(): boolean;
   subscribe(listener: () => void): () => void;
-  /** Told once per run about the entries the server refused as stale (parked Conflicted). */
-  subscribeConflicts(listener: (entries: OutboxEntry[]) => void): () => void;
+  /** Told once per run that the server refused writes as stale (Replay's are parked Conflicted). */
+  subscribeConflicts(listener: () => void): () => void;
   /** A refusal outside Replay (a live save): told now, or with the run under way. */
-  reportConflicts(entries: OutboxEntry[]): void;
+  reportConflict(): void;
 }
 
 const waitFor = (delayMs: number) =>
@@ -83,13 +83,14 @@ export function createRecovery({
   let followUpRequested = false;
   let requestedReason: RecoveryReason | null = null;
   const listeners = new Set<() => void>();
-  const conflictListeners = new Set<(entries: OutboxEntry[]) => void>();
-  // Refusals reported while a batch replays wait for it; a run tells once.
-  let heldConflicts: OutboxEntry[] | null = null;
+  const conflictListeners = new Set<() => void>();
+  // A refusal reported while a batch replays waits for it; a run tells once.
+  let replaying = false;
+  let heldConflict = false;
   let runTold = false;
 
-  function tellConflicts(entries: OutboxEntry[]): void {
-    for (const listener of conflictListeners) listener(entries);
+  function tellConflicts(): void {
+    for (const listener of conflictListeners) listener();
   }
 
   /** Coalesced triggers take the stronger reason: one resync makes the run one. */
@@ -158,13 +159,13 @@ export function createRecovery({
   }
 
   async function run(reason: RecoveryReason): Promise<void> {
-    const held: OutboxEntry[] = (heldConflicts = []);
-    const batch = await replayToTerminalBatch().finally(() => (heldConflicts = null));
-    const conflicts = [...held, ...batch.conflicted];
+    replaying = true;
+    heldConflict = false;
+    const batch = await replayToTerminalBatch().finally(() => (replaying = false));
 
-    if (conflicts.length > 0 && !runTold) {
+    if ((heldConflict || batch.conflicted.length > 0) && !runTold) {
       runTold = true;
-      tellConflicts(conflicts);
+      tellConflicts();
     }
 
     if (!batch.completed) {
@@ -225,12 +226,12 @@ export function createRecovery({
       return () => listeners.delete(listener);
     },
 
-    reportConflicts(entries) {
-      if (heldConflicts) {
-        heldConflicts.push(...entries);
+    reportConflict() {
+      if (replaying) {
+        heldConflict = true;
       } else if (!processing || !runTold) {
         runTold = processing !== null;
-        tellConflicts(entries);
+        tellConflicts();
       }
     },
 

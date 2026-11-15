@@ -96,7 +96,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       owner: cache.owner,
       replayHeaderValue,
       wholeEdits: new Set(["recipes.update"]),
-      onConflict: (entry) => recovery?.reportConflicts([entry]),
+      onConflict: () => recovery?.reportConflict(),
     }),
     probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),
     createRecovery: ({ transport, verifySession, refetchActiveQueries, topUp }) =>
