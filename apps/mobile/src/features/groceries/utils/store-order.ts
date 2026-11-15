@@ -1,8 +1,4 @@
-/**
- * The ids in the order the list holds them now, with `movedId` placed after `aboveId` (first when
- * there is none). Resolved by id, so a row a housemate added or removed during the drag is kept
- * or dropped as the list has it.
- */
+/** Replays a drop by id on the ids as they are now; `resolveDrop` moves by index in the rows shown. */
 export function movedAfter(
   currentIds: readonly string[],
   movedId: string,
