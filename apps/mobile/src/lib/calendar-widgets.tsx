@@ -19,6 +19,7 @@ import {
   font,
   foregroundStyle,
   frame,
+  layoutPriority,
   lineLimit,
   padding,
   resizable,
@@ -248,20 +249,27 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
               </Link>
               <VStack alignment="leading" spacing={4}>
                 {day.lines.map((line) => (
-                  <Link key={line.id} destination={line.url}>
-                    <HStack modifiers={[frame({ height: 20 })]} spacing={8}>
-                      {thumbnail(line)}
-                      <Text modifiers={[font({ size: 14 }), foregroundStyle(ink), lineLimit(1)]}>
-                        {line.name}
-                      </Text>
-                      <Spacer />
-                      {line.more ? (
-                        <Text modifiers={[font({ size: 13 }), foregroundStyle(muted)]}>
+                  <HStack key={line.id} modifiers={[frame({ height: 20 })]} spacing={8}>
+                    <Link destination={line.url}>
+                      <HStack spacing={8}>
+                        {thumbnail(line)}
+                        <Text modifiers={[font({ size: 14 }), foregroundStyle(ink), lineLimit(1)]}>
+                          {line.name}
+                        </Text>
+                        <Spacer />
+                      </HStack>
+                    </Link>
+                    {/* Its own target, opening the day; the name truncates before it does. */}
+                    {line.more ? (
+                      <Link destination={day.url} modifiers={[layoutPriority(1)]}>
+                        <Text
+                          modifiers={[font({ size: 13 }), foregroundStyle(muted), lineLimit(1)]}
+                        >
                           {line.more}
                         </Text>
-                      ) : null}
-                    </HStack>
-                  </Link>
+                      </Link>
+                    ) : null}
+                  </HStack>
                 ))}
               </VStack>
               <Spacer />
