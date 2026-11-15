@@ -1,5 +1,6 @@
-import { isDirtyState } from "@/lib/dirty-state";
 import { describe, expect, it } from "vitest";
+
+import { isDirtyState } from "./dirty-state";
 
 describe("isDirtyState", () => {
   it("returns false when values are identical", () => {

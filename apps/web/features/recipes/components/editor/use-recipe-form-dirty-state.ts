@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { isDirtyState } from "@/lib/dirty-state";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 import type { UnitStyle } from "@norish/shared/contracts/zod/device-preferences";
+import { isDirtyState } from "@norish/shared/lib/dirty-state";
 import { formatUnit } from "@norish/shared/lib/unit-localization";
 
 import type { ParsedIngredient } from "./ingredient-input";

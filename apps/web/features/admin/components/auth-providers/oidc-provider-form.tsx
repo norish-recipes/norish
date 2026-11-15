@@ -3,7 +3,6 @@
 import { useState } from "react";
 import SecretInput from "@/components/shared/secret-input";
 import { usePending } from "@/hooks/use-pending";
-import { isDirtyState } from "@/lib/dirty-state";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +10,7 @@ import type { AuthProviderOIDC } from "@norish/config/zod/server-config";
 import type { WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderMutations, useConfigSecret } from "@norish/shared-react/admin";
+import { isDirtyState } from "@norish/shared/lib/dirty-state";
 
 import type { ClaimMappingValues } from "./oidc-claim-mapping";
 import { useReportDirty } from "../../hooks/use-report-dirty";
