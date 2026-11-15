@@ -57,8 +57,8 @@ export type SmallWidgetProps =
 
 export type WeekLine = {
   id: string;
+  kind: "recipe" | "note" | "more";
   name: string;
-  note: boolean;
   photo: string | null;
   url: string;
 };
@@ -203,7 +203,7 @@ function weekProps(
         return {
           id: item.id,
           name: itemName(item, strings),
-          note: !recipe,
+          kind: recipe ? "recipe" : "note",
           photo: recipe && item.recipeImage ? photo(item.recipeImage, "thumb") : null,
           url: recipe ? recipeUrl(item.recipeId) : calendarDayUrl(key),
         };
@@ -213,7 +213,7 @@ function weekProps(
         lines.push({
           id: `${key}-more`,
           name: strings.more(dayItems.length - lines.length),
-          note: true,
+          kind: "more",
           photo: null,
           url: calendarDayUrl(key),
         });

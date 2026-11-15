@@ -301,15 +301,15 @@ describe("the large widget", () => {
     expect(week.days[0]?.lines).toEqual([
       {
         id: expect.any(String),
+        kind: "note",
         name: "Leftovers",
-        note: true,
         photo: null,
         url: "norish://calendar?day=2026-11-15",
       },
       {
         id: expect.any(String),
+        kind: "recipe",
         name: "Chili",
-        note: false,
         photo: "file:///widgets/recipes/Chili.jpg-thumb",
         url: "norish://recipe/recipe-Chili",
       },
@@ -340,6 +340,10 @@ describe("the large widget", () => {
 
     if (week?.kind !== "week") throw new Error("expected a week");
     expect(week.days[0]?.lines.map((line) => line.name)).toEqual(["A", "B", "C", "+3 more"]);
+    expect(week.days[0]?.lines.at(-1)).toMatchObject({
+      kind: "more",
+      url: "norish://calendar?day=2026-11-15",
+    });
   });
 });
 
