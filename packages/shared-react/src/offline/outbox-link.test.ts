@@ -397,7 +397,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     expect(result.value).toEqual({ result: { data: { stale: false, version: 4 } } });
   });
 
-  it.each(["cookbooks.update","recipes.shareUpdate"])(
+  it.each(["cookbooks.update", "recipes.shareUpdate"])(
     "leaves %s with a top-level { id, version } as it was",
     async (path) => {
       const terminal = vi.fn(unreachable);
