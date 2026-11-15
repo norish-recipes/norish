@@ -27,7 +27,11 @@ type Scrollable =
  * Keeps the focused field above the keyboard and anything floating over the content: iOS lifts a
  * field only as the keyboard opens, and never past a floating control.
  */
-export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(clearance: number) {
+export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(
+  clearance: number,
+  /** How long the container keeps resizing after the keyboard shows, as a sheet's padding does. */
+  settleMs = 0
+) {
   const scrollRef = useRef<S>(null);
   const offset = useSharedValue(0);
   const focusedRef = useRef<Measurable | null>(null);
@@ -41,7 +45,6 @@ export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(clear
     if (!focusedRef.current || !keyboard) return;
     focusedRef.current.measureInWindow((_x, y, _width, height) => {
       const overlap = y + height - (keyboard.screenY - clearance);
-
       const target: Scrollable | null = scrollRef.current;
       const to = offset.value + overlap;
 
@@ -53,10 +56,18 @@ export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(clear
   const onKeyboardShown = useEffectEvent(reveal);
 
   useEffect(() => {
-    const shown = Keyboard.addListener("keyboardDidShow", () => onKeyboardShown());
+    let settled: ReturnType<typeof setTimeout> | undefined;
+    // A scroll before the container has shrunk is clamped short, so it is asked again once settled.
+    const shown = Keyboard.addListener("keyboardDidShow", () => {
+      onKeyboardShown();
+      if (settleMs > 0) settled = setTimeout(() => onKeyboardShown(), settleMs);
+    });
 
-    return () => shown.remove();
-  }, []);
+    return () => {
+      shown.remove();
+      clearTimeout(settled);
+    };
+  }, [settleMs]);
 
   const onFieldFocus = (field: Measurable) => {
     focusedRef.current = field;

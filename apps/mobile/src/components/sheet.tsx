@@ -112,7 +112,7 @@ function SheetAction({ children }: { children: ReactNode }) {
 }
 
 /** The top of a sheet at its full height, the window's safe-area top. */
-const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
+export const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
 
 /**
  * How far the keyboard covers the sheet. UIKit lifts a sheet above it as far as its full height's

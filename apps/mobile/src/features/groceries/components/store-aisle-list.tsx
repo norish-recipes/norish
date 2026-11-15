@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
+import { FULL_SHEET_TOP } from "@/components/sheet";
 import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, useThemeColor } from "heroui-native";
@@ -23,6 +24,8 @@ type AisleItem = { aisle: EditingAisle; first: boolean };
 
 /** The sheet's actions under the list, pt-3 + 50 + pb-5, which the keyboard pushes up with it. */
 const ACTIONS_HEIGHT = 82;
+/** The sheet pads for the keyboard over 250 ms, a Reanimated change that fires no layout event. */
+const SHEET_SETTLE_MS = 300;
 
 function AisleRow({
   aisle,
@@ -85,7 +88,11 @@ export function StoreAisleList({
   const [draft, setDraft] = useState("");
   const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } = useFocusedFieldInView<
     FlatList<DragRow<null, AisleItem>>
-  >(ACTIONS_HEIGHT + 8);
+  >(
+    // A field measures from the sheet's top, the keyboard from the screen's.
+    FULL_SHEET_TOP + ACTIONS_HEIGHT + 8,
+    SHEET_SETTLE_MS
+  );
   const { canAdd, duplicate, listDuplicate } = aisleDraftState(aisles, draft);
   const rows = aisles.map((aisle, index) => ({
     kind: "item" as const,
@@ -169,10 +176,9 @@ export function StoreAisleList({
       rows={rows}
       showsVerticalScrollIndicator={false}
       testID="store-aisles"
-      // The list shrinks as the sheet makes room for the keyboard; the field follows it up.
+      // An aisle added from the field grows the list under it; the field follows it down.
       onContentSizeChange={onContentSizeChange}
       onDrop={drop}
-      onLayout={onContentSizeChange}
       onScroll={onScroll}
     />
   );
