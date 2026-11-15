@@ -77,6 +77,14 @@ export async function findGroceryFoods(
   );
 }
 
+// Each Store numbers its groceries from 0, so a tie goes to no Store first, as the page shows
+// them, then to the Store and the id.
+const LIST_ORDER = [
+  asc(groceries.sortOrder),
+  sql`${groceries.storeId} asc nulls first`,
+  asc(groceries.id),
+];
+
 export async function listGroceriesByUser(
   userId: string,
   options?: { includeDone?: boolean }
@@ -91,7 +99,7 @@ export async function listGroceriesByUser(
         ? eq(groceries.userId, userId)
         : and(eq(groceries.userId, userId), eq(groceries.isDone, false))
     )
-    .orderBy(asc(groceries.sortOrder));
+    .orderBy(...LIST_ORDER);
 
   const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
 
@@ -115,7 +123,7 @@ export async function listGroceriesByUsers(
         ? inArray(groceries.userId, userIds)
         : and(inArray(groceries.userId, userIds), eq(groceries.isDone, false))
     )
-    .orderBy(asc(groceries.sortOrder));
+    .orderBy(...LIST_ORDER);
 
   const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
 
@@ -142,11 +150,10 @@ export async function listGroceriesByHousehold(
 
 /**
  * What a create leaves behind: the rows made, and every active sibling in the
- * same Store that was shifted down to make room at the top — its sort order
- * and, with it, its version moved, and a client that goes on holding the old
- * version has its next write refused as stale (ADR-0004). The shifted rows
- * are handed back so the answer and the household's `updated` event carry
- * them.
+ * same Store shifted down to make room at the top. Making room is not an edit
+ * of the rows that move, so their versions stay and a write queued on them
+ * still lands (ADR-0004). The shifted rows are handed back so the answer and
+ * the household's `updated` event carry their new sort order.
  */
 export interface CreatedGroceries {
   created: GroceryDto[];
@@ -202,7 +209,7 @@ export async function createGroceries(
       storeGroups.set(storeKey, group);
     }
 
-    // Increment sortOrder for each store group
+    // Shift each Store's open lines down; their versions stay, as a planned item's slot-mates do.
     const shifted: GroceryDto[] = [];
 
     for (const [storeId, storeItems] of storeGroups) {
@@ -211,7 +218,6 @@ export async function createGroceries(
         .set({
           sortOrder: sql`${groceries.sortOrder} + ${storeItems.length}`,
           updatedAt: new Date(),
-          version: sql`${groceries.version} + 1`,
         })
         .where(
           and(

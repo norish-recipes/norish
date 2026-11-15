@@ -6,12 +6,11 @@
  * catalogue asks.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Queue, Worker } from "bullmq";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
 import type { ScheduledTaskJobData } from "../../src/scheduled-tasks/tasks";
-import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { initializeScheduledJobs } from "../../src/scheduled-tasks/producer";
 import { SCHEDULED_TASKS } from "../../src/scheduled-tasks/tasks";
 import { getBullConnectionOptions } from "../../src/valkey/bullmq";
@@ -20,7 +19,7 @@ let valkey: StartedValkeyContainer;
 let queue: Queue<ScheduledTaskJobData>;
 
 beforeAll(async () => {
-  valkey = await new ValkeyContainer(VALKEY_IMAGE).start();
+  valkey = await startValkey();
   queue = new Queue("scheduled-tasks", {
     connection: getBullConnectionOptions(valkeyUrl(valkey)),
   });

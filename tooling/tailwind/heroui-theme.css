@@ -47,6 +47,8 @@
     --field-placeholder: oklch(52.5% 0.012 80);
     --focus: oklch(46.37% 0.0828 150.36);
     --foreground: oklch(21.03% 0.0015 150.36);
+    /* Accent-coloured text: the accent itself in light, lifted in dark so it reads on brown. */
+    --accent-text: oklch(46.37% 0.0828 150.36);
     --muted: oklch(52.5% 0.012 80);
     --nutrition-calories: oklch(78.19% 0.159 59.91);
     --nutrition-calories-soft: color-mix(in oklch, var(--nutrition-calories) 14%, transparent);
@@ -72,6 +74,11 @@
     --surface-tertiary-foreground: oklch(21.03% 0.0015 150.36);
     --warning: oklch(78.19% 0.159 59.91);
     --warning-foreground: oklch(21.03% 0.0059 59.91);
+    --warning-ink: oklch(45% 0.11 60);
+    --shop: oklch(86% 0.15 92);
+    --shop-foreground: oklch(25% 0.03 85);
+    --plan: oklch(58.82% 0.1533 253.28);
+    --avatar: oklch(88% 0.07 75);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --font-sans: var(--font-inter);
@@ -104,6 +111,7 @@
     --field-placeholder: oklch(71.5% 0.011 80);
     --focus: oklch(46.37% 0.0828 150.36);
     --foreground: oklch(99.11% 0.0015 150.36);
+    --accent-text: oklch(74% 0.11 150);
     --muted: oklch(71.5% 0.011 80);
     --nutrition-calories: oklch(82.03% 0.1392 63.92);
     --nutrition-calories-soft: color-mix(in oklch, var(--nutrition-calories) 16%, transparent);
@@ -129,6 +137,11 @@
     --surface-tertiary-foreground: oklch(99.11% 0.0015 150.36);
     --warning: oklch(82.03% 0.1392 63.92);
     --warning-foreground: oklch(21.03% 0.0059 63.92);
+    --warning-ink: oklch(82.03% 0.1392 63.92);
+    --shop: oklch(84% 0.14 92);
+    --shop-foreground: oklch(25% 0.03 85);
+    --plan: oklch(62% 0.14 252.72);
+    --avatar: oklch(45% 0.06 70);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --font-sans: var(--font-inter);
@@ -143,6 +156,12 @@
   --color-chrome-muted: var(--chrome-muted);
   --color-cooking-cook: var(--cooking-cook);
   --color-cooking-prep: var(--cooking-prep);
+  --color-accent-text: var(--accent-text);
+  --color-warning-ink: var(--warning-ink);
+  --color-shop: var(--shop);
+  --color-shop-foreground: var(--shop-foreground);
+  --color-plan: var(--plan);
+  --color-avatar: var(--avatar);
   --color-nutrition-calories: var(--nutrition-calories);
   --color-nutrition-calories-soft: var(--nutrition-calories-soft);
   --color-nutrition-carbs: var(--nutrition-carbs);

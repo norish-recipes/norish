@@ -6,7 +6,7 @@
     "searchPlaceholder": "Search or add recipe...",
     "searchRecipesPlaceholder": "Search recipes...",
     "libraryCount": "{count, plural, one {# item} other {# items}}",
-    "addRecipe": "Add Recipe",
+    "addRecipe": "Add recipe",
     "importFromUrl": "URL",
     "importFromPaste": "Paste",
     "importFromImage": "Image",
@@ -27,7 +27,9 @@
       "all": "All",
       "recipes": "Recipes",
       "cookbooks": "Cookbooks"
-    }
+    },
+    "importingCard": "Importing…",
+    "favourited": "Favourited"
   },
   "back": {
     "all": "Back to library",
@@ -43,7 +45,8 @@
     "noResults": "No recipes found",
     "noResultsHint": "Try adjusting or clearing your filters.",
     "noCookbooks": "No cookbooks yet",
-    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order."
+    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order.",
+    "descriptionMobile": "Add your first recipe from a link, text or photos."
   },
   "card": {
     "noImage": "No image available",
@@ -67,7 +70,6 @@
     "notFoundMessage": "This recipe doesn't exist or you don't have permission to view it.",
     "prep": "prep",
     "total": "total",
-    "planMeal": "Plan meal",
     "recipeActions": "Recipe actions",
     "instructions": "Instructions",
     "cook": "Cook",
@@ -78,7 +80,9 @@
     "addedBy": "Added by {name}",
     "decreaseServings": "Fewer servings",
     "increaseServings": "More servings",
-    "multiplier": "Multiplier"
+    "multiplier": "Multiplier",
+    "rateStars": "Rate {count} out of 5",
+    "stepPhoto": "Step photo"
   },
   "actions": {
     "plan": "Plan",
@@ -86,7 +90,6 @@
     "edit": "Edit",
     "delete": "Delete",
     "share": "Share",
-    "visitOriginal": "Visit Original Recipe",
     "addToCalendar": "Add to Calendar",
     "autoTag": "Auto-tag",
     "autoTagging": "Generating tags...",
@@ -103,10 +106,12 @@
     "inferringProvenance": "Working out provenance…",
     "linkIngredients": "Link Ingredients to Steps",
     "linkingIngredients": "Linking ingredients…",
-    "enrichmentFailed": "Last run failed",
     "generateImage": "Generate Picture",
     "generatingImage": "Generating picture…",
-    "cookbooks": "Cookbooks"
+    "cookbooks": "Cookbooks",
+    "favourite": "Favourite",
+    "unfavourite": "Unfavourite",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -166,14 +171,14 @@
     "confirmMessage": "Are you sure you want to delete \"{recipeName}\"?",
     "warning": "This action cannot be undone.",
     "confirmCount": "Delete {count, plural, one {# recipe} other {# recipes}}?",
-    "keptCount": "{count, plural, one {# recipe stays} other {# recipes stay}}, because you may not delete {count, plural, one {it} other {them}}."
+    "keptCount": "{count, plural, one {# recipe stays} other {# recipes stay}}, because you may not delete {count, plural, one {it} other {them}}.",
+    "alertTitle": "Delete {name}?"
   },
   "form": {
     "createTitle": "Create Recipe",
     "editTitle": "Edit Recipe",
     "createDescription": "Add a new recipe to your collection",
     "editDescription": "Update your recipe details",
-    "initializingForm": "Initializing form...",
     "photo": "Photo",
     "basicInfo": "Basic Information",
     "ingredients": "Ingredients",
@@ -225,19 +230,12 @@
     "createRecipe": "Create Recipe",
     "saveChanges": "Save Changes",
     "uploading": "Uploading...",
-    "clickToUpload": "Click to upload or drag and drop",
-    "pasteToUpload": "to paste",
-    "imageFormats": "PNG, JPG, WEBP up to 5MB",
     "discardChangesConfirm": "You have unsaved changes. Discard them and leave this page?"
   },
   "gallery": {
-    "addImage": "Add image",
     "uploading": "Uploading...",
     "uploadFailed": "Upload failed",
-    "dragToReorder": "Drag to reorder",
-    "maxImagesReached": "Maximum {max} images allowed",
-    "maxVideosReached": "Maximum {max} videos allowed",
-    "invalidFileType": "Invalid file type"
+    "dragToReorder": "Drag to reorder"
   },
   "carousel": {
     "noImageAvailable": "No image available",
@@ -246,8 +244,14 @@
       "mute": "Mute",
       "unmute": "Unmute",
       "fullscreen": "Enter fullscreen",
-      "exitFullscreen": "Exit fullscreen"
-    }
+      "exitFullscreen": "Exit fullscreen",
+      "progress": "Video progress",
+      "play": "Play",
+      "pause": "Pause"
+    },
+    "recipeImage": "Recipe image",
+    "closeViewer": "Close image viewer",
+    "photoOf": "Photo {current} of {total}"
   },
   "validation": {
     "nameRequired": "Recipe name is required",
@@ -262,8 +266,6 @@
     "carbs": "Carbs",
     "protein": "Protein",
     "showingPortions": "Showing values for {count} {count, plural, one {portion} other {portions}}",
-    "noInfo": "No nutrition information available",
-    "estimateWithAI": "Estimate with AI",
     "estimated": "Estimated",
     "leftOut": "{count, plural, one {# line not counted} other {# lines not counted}}",
     "estimatedByAI": "estimated by AI",
@@ -276,7 +278,10 @@
       "noPieceWeight": "no piece weight yet"
     },
     "workedOutFrom": "Worked out from the ingredients, with {sources}.",
-    "householdNumbers": "your household's numbers"
+    "householdNumbers": "your household's numbers",
+    "decreasePortions": "Decrease portions",
+    "increasePortions": "Increase portions",
+    "portions": "{count, plural, one {# portion} other {# portions}}"
   },
   "measurementSystem": {
     "label": "Measurement System",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Step {number}: Describe the step...",
-    "stepPlaceholderShort": "Step {number}"
+    "stepPlaceholderShort": "Step {number}",
+    "recipeSuggestions": "Recipe suggestions",
+    "ingredientSuggestions": "Ingredient suggestions"
   },
   "stepIngredients": {
     "rowLabel": "Linked ingredients",
@@ -322,16 +329,15 @@
   },
   "toasts": {
     "imported": "Recipe imported",
-    "failed": "Recipe operation failed",
     "failedDescription": "Something went wrong while processing your recipe. Check the browser console for technical details.",
     "incomplete": "This recipe may be incomplete. Check it against the source.",
     "notARecipe": "This page doesn't look like a recipe.",
     "privateAddress": "Imports from private network addresses are not allowed on this server.",
-    "batchImported": "Recipes imported",
-    "batchImportedDescription": "{count} recipes imported from archive",
     "view": "View",
     "open": "Open",
-    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept."
+    "deleteKept": "{count, plural, one {# recipe was} other {# recipes were}} changed by someone else and kept.",
+    "deleted": "Recipe deleted",
+    "deletedDescription": "This recipe has been removed."
   },
   "tags": {
     "panel": {
@@ -346,12 +352,19 @@
     "servings": "Servings",
     "serving": "{count, plural, one {# serving} other {# servings}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Swipe to navigate steps",
-    "swipeIngredients": "Swipe left for ingredients",
-    "swipeBackToSteps": "Swipe right for steps",
     "readyAt": "Ready around {time}",
     "timers": "Timers",
-    "nextStep": "Next step"
+    "nextStep": "Next step",
+    "stepLabel": "Step {number}",
+    "previousStep": "Previous step",
+    "startTimer": "Start a {duration} timer",
+    "pauseTimer": "Pause timer, {time} left",
+    "resumeTimer": "Resume timer, {time} left",
+    "dismissTimer": "Dismiss timer",
+    "restartTimer": "Restart timer",
+    "notificationsOff": "Notifications are off for Norish, so timers only ring while the app is open.",
+    "decreaseTimer": "Take {time} off",
+    "increaseTimer": "Add {time}"
   },
   "enrichment": {
     "failed": "Enrichment failed",
@@ -374,10 +387,7 @@
   "provenance": {
     "title": "Provenance",
     "region": "Region",
-    "cuisines": "Cuisines",
-    "inferring": "Working out where this recipe comes from…",
-    "noInfo": "No provenance information yet",
-    "inferWithAI": "Work out with AI"
+    "cuisines": "Cuisines"
   },
   "import": {
     "alreadyExists": "You already have this recipe",
@@ -431,7 +441,13 @@
     "changeImage": "Change image",
     "removeImage": "Remove image",
     "imageUploadFailed": "The image could not be uploaded.",
-    "imageNeedsConnection": "Images can be changed once you are back online."
+    "imageNeedsConnection": "Images can be changed once you are back online.",
+    "rename": "Rename",
+    "deleteAlertTitle": "Delete {title}?",
+    "changeCover": "Change cover",
+    "renameTitle": "Rename cookbook",
+    "coverFromLibrary": "Choose from library",
+    "coverFromCamera": "Take photo"
   },
   "print": {
     "title": "Print recipe",
@@ -450,5 +466,78 @@
     "newCookbook": "New cookbook",
     "filedInto": "{count, plural, one {# recipe} other {# recipes}} added to {title}",
     "filedIntoMany": "{count, plural, one {# recipe} other {# recipes}} added to {cookbooks} cookbooks"
+  },
+  "addRecipe": {
+    "fromLink": "From a link",
+    "fromLinkHint": "Any recipe site or video",
+    "fromPhotos": "From photos",
+    "fromPhotosHint": "Cookbook pages or a screenshot",
+    "fromText": "From text",
+    "fromTextHint": "Paste a recipe or JSON-LD",
+    "writeYourself": "Write it yourself",
+    "writeYourselfHint": "Start from an empty recipe",
+    "importHost": "Import {host}",
+    "linkTitle": "Import from a link",
+    "textTitle": "Import from text",
+    "photosTitle": "Import from photos",
+    "camera": "Camera",
+    "photoLibrary": "Photo library",
+    "photoCount": "{count, plural, one {# photo, imported as one recipe} other {# photos, imported as one recipe}}",
+    "photoLimits": "Up to {max} photos, JPEG, PNG or WebP",
+    "removePhoto": "Remove photo {number}"
+  },
+  "shareExtension": {
+    "sending": "Sending to Norish…",
+    "sentTitle": "Importing in Norish",
+    "sentBody": "It shows up in your library in a moment.",
+    "savedTitle": "Saved for later",
+    "savedBody": "Norish imports it when your server is reachable.",
+    "signedOut": "Open Norish and sign in first.",
+    "tooOld": "Your Norish server needs an update first.",
+    "noAi": "Importing photos needs AI, which is off on your server.",
+    "failed": "Norish couldn't import this.",
+    "close": "Close",
+    "photoCount": "{count, plural, one {# photo} other {# photos}}",
+    "text": "Text"
+  },
+  "editor": {
+    "newTitle": "New recipe",
+    "editTitle": "Edit recipe",
+    "recipeName": "Recipe name",
+    "ingredient": "Ingredient",
+    "sectionHeading": "Section heading",
+    "step": "Step",
+    "steps": "Steps",
+    "notesHint": "Start a line with # for a heading; wrap words in **double asterisks** for bold.",
+    "ingredientsHint": "Type ingredients like 2 cups flour; amounts and units are read for you. Start a line with # for a section.",
+    "stepsHint": "Press return for the next step. Type @ to link an ingredient, # for a section.",
+    "addIngredient": "Add ingredient",
+    "removeIngredient": "Remove ingredient",
+    "addStep": "Add step",
+    "removeStep": "Remove step",
+    "addPhoto": "Add photo",
+    "addStepPhoto": "Add step photo",
+    "removePhoto": "Remove photo",
+    "mediaCount": "{images}/{maxImages} photos · {videos}/{maxVideos} videos",
+    "photosOffline": "Photos can be added when you are online.",
+    "tagsAndCategories": "Tags & categories",
+    "categories": "Categories",
+    "tags": "Tags",
+    "tagsHint": "Pick a suggestion or type a new tag; new tags have a dashed border.",
+    "addTag": "Add a tag",
+    "removeNamed": "Remove {name}",
+    "servingsAndTime": "Servings & time",
+    "minutes": "min",
+    "perServing": "per serving, optional",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "Source",
+    "sourceUrl": "Source URL",
+    "measurementSystem": "Measurement system",
+    "measurementHint": "Detected from your ingredients. Changing it relabels, it does not convert; use Convert after saving.",
+    "discardTitle": "Discard changes?",
+    "discardMessage": "You have unsaved changes.",
+    "keepEditing": "Keep editing",
+    "discard": "Discard"
   }
 }

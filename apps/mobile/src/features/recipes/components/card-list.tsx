@@ -1,0 +1,105 @@
+import type { ReactElement } from "react";
+import React, { createContext, useRef, useState } from "react";
+import { FlatList, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { tabListBottomInset } from "@/components/tab-list-inset";
+import { Spinner } from "heroui-native";
+
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+
+/** Scrolls the row a card sits in clear of the accessory and tab bar; a card outside a list does nothing. */
+export const RevealRowContext = createContext<() => void>(() => {});
+
+/** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
+export type FadeHeight = number | { rest: number; scrolled: number };
+
+/** Where a revealed row's top lands below the status bar. */
+const REVEAL_OFFSET = 120;
+
+/** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
+ * `empty` shows when there is no card. */
+export function CardList<Row>({
+  rows,
+  variant,
+  header,
+  empty,
+  isFetchingNextPage,
+  rowKey,
+  renderCard,
+  onEndReached,
+  fadeHeight,
+  testID,
+}: {
+  rows: Row[];
+  variant: RecipeViewMode;
+  header: ReactElement;
+  empty: ReactElement;
+  isFetchingNextPage: boolean;
+  rowKey: (row: Row) => string;
+  renderCard: (row: Row) => ReactElement;
+  onEndReached: () => void;
+  fadeHeight: FadeHeight;
+  testID?: string;
+}) {
+  const insets = useSafeAreaInsets();
+  const [scrolled, setScrolled] = useState(false);
+  const isGrid = variant === "grid";
+  const listRef = useRef<FlatList<Row>>(null);
+
+  return (
+    <View className="flex-1">
+      {/* Remounted per view: a FlatList's column count can't change under it. */}
+      <FlatList
+        key={variant}
+        ref={listRef}
+        ListEmptyComponent={empty}
+        ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
+        ListHeaderComponent={header}
+        className="flex-1"
+        columnWrapperClassName={isGrid ? "mb-3 gap-3 px-5" : undefined}
+        contentContainerStyle={{
+          paddingBottom: tabListBottomInset(insets.bottom),
+        }}
+        contentInsetAdjustmentBehavior="never"
+        data={rows}
+        keyExtractor={rowKey}
+        numColumns={isGrid ? 2 : 1}
+        renderItem={({ item, index }) => {
+          const card = renderCard(item);
+
+          return (
+            <RevealRowContext
+              value={() =>
+                listRef.current?.scrollToIndex({
+                  index: Math.floor(index / (isGrid ? 2 : 1)),
+                  viewOffset: REVEAL_OFFSET,
+                  animated: true,
+                })
+              }
+            >
+              {isGrid ? card : <View className="px-5 pb-3">{card}</View>}
+            </RevealRowContext>
+          );
+        }}
+        scrollEventThrottle={32}
+        testID={testID}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        onScroll={(event) => setScrolled(event.nativeEvent.contentOffset.y > 8)}
+      />
+      {/* Cards dissolve into the page colour before the tab bar. */}
+      <View
+        className="to-background from-background/0 absolute inset-x-0 bottom-0 bg-linear-to-b to-75%"
+        pointerEvents="none"
+        style={{
+          height:
+            typeof fadeHeight === "number"
+              ? fadeHeight
+              : scrolled
+                ? fadeHeight.scrolled
+                : fadeHeight.rest,
+        }}
+      />
+    </View>
+  );
+}

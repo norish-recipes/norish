@@ -4,7 +4,7 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
 /** The roll, slow enough to read as one thing moving rather than as a flicker. */
-export const ROLL_TRANSITION = { duration: 0.42, ease: [0.22, 0.61, 0.36, 1] } as const;
+const ROLL_TRANSITION = { duration: 0.42, ease: [0.22, 0.61, 0.36, 1] } as const;
 
 type RollingTextProps = {
   /** The rendered value. A change to it is what rolls the slots. */

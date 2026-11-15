@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "Oggi",
-    "scrollToToday": "Vai a oggi"
+    "scrollToToday": "Vai a oggi",
+    "planRecipe": "Pianifica ricetta"
+  },
+  "today": {
+    "openRecipe": "Apri ricetta",
+    "move": "Sposta…",
+    "removeTitle": "Rimuovere da oggi?",
+    "removeMessage": "{name} viene rimosso da {slot} di {day}.",
+    "moveTitle": "Sposta",
+    "moveSubtitle": "{name}, {slot} di oggi",
+    "moveToDay": "Sposta {name} a {day}"
   },
   "editNote": {
     "title": "Modifica nota",
     "noteLabel": "Nota",
     "notePlaceholder": "Inserisci nota..."
-  },
-  "navigation": {
-    "previousMonth": "Mese precedente",
-    "nextMonth": "Mese successivo",
-    "prev": "Prec",
-    "next": "Succ"
   },
   "weekdays": {
     "mon": "Lun",
@@ -50,6 +54,29 @@
     "addNote": "Aggiungi nota: {input}",
     "randomRecipe": "Ricetta casuale",
     "noRecipesFound": "Nessuna ricetta trovata.",
-    "failedToLoadRecipes": "Caricamento ricette non riuscito."
+    "failedToLoadRecipes": "Caricamento ricette non riuscito.",
+    "planRecipe": "Pianifica una ricetta",
+    "searchOrAddNote": "Cerca ricette o aggiungi una nota",
+    "random": "Ricetta casuale",
+    "planThisRecipe": "Pianifica questa ricetta",
+    "planOnDay": "Pianifica {name} per {day}",
+    "addToDay": "Aggiungi a {day}"
+  },
+  "caldav": {
+    "syncStarted": "Sincronizzazione CalDAV avviata",
+    "syncStartedDescription": "Elementi da sincronizzare: {queued}",
+    "syncStartedWithFailures": "Elementi da sincronizzare: {queued}. Non accodati: {failed}",
+    "configSaved": "Configurazione salvata",
+    "configSavedDescription": "Le impostazioni CalDAV sono state salvate.",
+    "configDeleted": "Configurazione eliminata",
+    "configDeletedDescription": "Le impostazioni CalDAV sono state rimosse.",
+    "retryStarted": "Sincronizzazione avviata",
+    "retryStartedDescription": "Nuovo tentativo per gli elementi in attesa e non riusciti…"
+  },
+  "widgets": {
+    "nothingPlanned": "Niente in programma",
+    "signIn": "Apri Norish per accedere",
+    "open": "Apri Norish",
+    "more": "+{count} altri"
   }
 }

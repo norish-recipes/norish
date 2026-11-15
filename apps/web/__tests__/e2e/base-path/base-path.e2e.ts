@@ -43,8 +43,11 @@ test("serves every surface, its assets and its media under the base path", async
   await page.getByRole("tab", { name: "Pantry" }).click();
   await expect(page).toHaveURL(at("/groceries/pantry"));
 
-  await page.goto(at("/settings?tab=user"));
+  await page.goto(at("/settings/account"));
   await expect(page.getByRole("button", { name: "Export", exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Household" }).click();
+  await expect(page).toHaveURL(at("/settings/household"));
+  await expect(page.getByRole("heading", { name: "Create household", exact: true })).toBeVisible();
 });
 
 test("serves a manifest that starts and scopes at the base path", async ({
@@ -110,15 +113,15 @@ test("sends a signed-out reader to sign in and back to where they were", async (
   const page = await anonymous.newPage();
 
   try {
-    await page.goto(at("/settings"));
+    await page.goto(at("/settings/account"));
     await expect(page).toHaveURL(
-      at(`/login?callbackUrl=${encodeURIComponent(`${BUILT_BASE_PATH}/settings`)}`)
+      at(`/login?callbackUrl=${encodeURIComponent(`${BUILT_BASE_PATH}/settings/account`)}`)
     );
 
     await page.getByLabel("Email").fill(OWNER.email);
     await page.getByLabel("Password").fill(OWNER.password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page).toHaveURL(at("/settings"), { timeout: 15_000 });
+    await expect(page).toHaveURL(at("/settings/account"), { timeout: 15_000 });
   } finally {
     await anonymous.close();
   }
@@ -178,7 +181,7 @@ test("takes the Offline home action to the base path", async ({
 });
 
 test("downloads the recipe archive under the base path", async ({ basePath: { at, page } }) => {
-  await page.goto(at("/settings?tab=user"));
+  await page.goto(at("/settings/account"));
 
   const exported = page.waitForRequest((request) =>
     new URL(request.url()).pathname.endsWith("/export/recipes")
@@ -192,6 +195,6 @@ test("downloads the recipe archive under the base path", async ({ basePath: { at
 test("signs out to the base path's login page", async ({ basePath: { at, page } }) => {
   await page.goto(at("/"));
   await page.getByRole("button", { name: "Open user menu" }).click();
-  await page.getByRole("menuitem", { name: "Logout" }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(at("/login?logout=true"));
 });

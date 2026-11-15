@@ -136,7 +136,7 @@ export function updateResolvedRecipe(
   payload: FullRecipeUpdateDTO,
   actor: ResolveActor,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<number | null>> {
   return writeResolved(
     () => withResolvedIngredients(payload, actor, recipeId),
     (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version)

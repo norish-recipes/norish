@@ -6,7 +6,6 @@ export const createPlannedItem = vi.fn();
 export const updatePlannedItem = vi.fn();
 export const deletePlannedItem = vi.fn();
 export const moveItem = vi.fn();
-export const reorderInSlot = vi.fn();
 export const getMaxSortOrder = vi.fn();
 export const getPlannedItemOwnerId = vi.fn();
 export const getPlannedItemById = vi.fn();
@@ -20,7 +19,6 @@ export function resetPlannedItemsMocks() {
   updatePlannedItem.mockReset();
   deletePlannedItem.mockReset();
   moveItem.mockReset();
-  reorderInSlot.mockReset();
   getMaxSortOrder.mockReset();
   getPlannedItemOwnerId.mockReset();
   getPlannedItemById.mockReset();

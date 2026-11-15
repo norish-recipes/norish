@@ -1,0 +1,22 @@
+# Imports a recipe from a link: Add recipe, From a link, Import. The page is a small recipe page the
+# maestro script serves on loopback, so no public website is involved. The recipe lands in the Library once.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- extendedWaitUntil:
+    visible:
+      id: add-recipe
+    timeout: 20000
+- assertNotVisible: ${NORISH_IMPORT_NAME}
+- runFlow:
+    file: subflows/import-link.yaml
+    env:
+      IMPORT_URL: ${NORISH_IMPORT_URL}
+- extendedWaitUntil:
+    visible: ${NORISH_IMPORT_NAME}
+    timeout: 60000
+- runFlow:
+    file: subflows/count.yaml
+    env:
+      COUNT_NAME: ${NORISH_IMPORT_NAME}
+- assertTrue: ${output.count == 1}

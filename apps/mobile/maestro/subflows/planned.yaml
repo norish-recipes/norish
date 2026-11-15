@@ -1,0 +1,15 @@
+# After a recipe is planned: closes the Add to groceries sheet planning opens, then waits for Today to
+# show PLANNED_NAME, which callers pass via runFlow env, on a card.
+appId: dev.norish.app
+---
+- extendedWaitUntil:
+    visible:
+      id: add-to-groceries-sheet
+    timeout: 20000
+- tapOn:
+    id: add-to-groceries-close
+- extendedWaitUntil:
+    visible:
+      id: today-card-.*
+      text: ${PLANNED_NAME}
+    timeout: 20000

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
-export interface ClipboardImagePasteOptions {
+interface ClipboardImagePasteOptions {
   enabled?: boolean;
   onFiles: (files: File[]) => void;
 }

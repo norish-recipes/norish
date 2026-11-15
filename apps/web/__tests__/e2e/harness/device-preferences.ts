@@ -23,18 +23,12 @@ export async function setDevicePreferences(
   await callTrpc(baseURL, cookies, "user.setDevicePreferences", { kind, preferences });
 }
 
-/** The reader's stored preferences document as the profile query returns it. */
-export async function readProfilePreferences(
+/** The reader's Device Preferences as their query returns them, one block per kind. */
+export async function readDevicePreferences(
   baseURL: string,
   cookies: SessionCookies
-): Promise<Record<string, unknown>> {
-  const { user } = await callTrpc<{ user: { preferences?: Record<string, unknown> } }>(
-    baseURL,
-    cookies,
-    "user.get"
-  );
-
-  return user.preferences ?? {};
+): Promise<Record<DeviceKind, Record<string, unknown>>> {
+  return callTrpc(baseURL, cookies, "user.getDevicePreferences");
 }
 
 /** Forget every reader's Device Preferences, so a scenario starts from the defaults. */

@@ -27,7 +27,9 @@
       "all": "전체",
       "recipes": "레시피",
       "cookbooks": "요리책"
-    }
+    },
+    "importingCard": "가져오는 중…",
+    "favourited": "즐겨찾기됨"
   },
   "back": {
     "all": "라이브러리로 돌아가기",
@@ -43,7 +45,8 @@
     "noResults": "레시피를 찾을 수 없습니다.",
     "noResultsHint": "필터를 조정하거나 지워보세요.",
     "noCookbooks": "아직 요리책이 없습니다",
-    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요."
+    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요.",
+    "descriptionMobile": "링크, 텍스트 또는 사진으로 첫 레시피를 추가하세요."
   },
   "card": {
     "noImage": "이미지가 없습니다.",
@@ -67,7 +70,6 @@
     "notFoundMessage": "이 레시피는 존재하지 않거나 볼 수 있는 권한이 없습니다.",
     "prep": "준비",
     "total": "총",
-    "planMeal": "식사 계획",
     "recipeActions": "레시피 작업",
     "instructions": "조리 방법",
     "cook": "요리",
@@ -78,7 +80,9 @@
     "addedBy": "{name} 님이 추가함",
     "decreaseServings": "인분 줄이기",
     "increaseServings": "인분 늘리기",
-    "multiplier": "배율"
+    "multiplier": "배율",
+    "rateStars": "5점 중 {count}점 주기",
+    "stepPhoto": "단계 사진"
   },
   "actions": {
     "plan": "계획",
@@ -86,7 +90,6 @@
     "edit": "편집",
     "delete": "삭제",
     "share": "공유",
-    "visitOriginal": "원본 레시피 보기",
     "addToCalendar": "캘린더에 추가",
     "autoTag": "자동 태그",
     "autoTagging": "태그 생성 중...",
@@ -103,10 +106,12 @@
     "inferringProvenance": "출처를 알아보는 중…",
     "linkIngredients": "재료를 단계에 연결",
     "linkingIngredients": "재료 연결 중…",
-    "enrichmentFailed": "마지막 실행 실패",
     "generateImage": "이미지 생성",
     "generatingImage": "이미지 생성 중…",
-    "cookbooks": "요리책"
+    "cookbooks": "요리책",
+    "favourite": "즐겨찾기",
+    "unfavourite": "즐겨찾기 해제",
+    "ai": "AI"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -166,14 +171,14 @@
     "confirmMessage": "정말로 \"{recipeName}\"을(를) 삭제하시겠습니까?",
     "warning": "이 작업은 취소할 수 없습니다.",
     "confirmCount": "레시피 {count}개를 삭제할까요?",
-    "keptCount": "삭제 권한이 없어 레시피 {count}개는 남습니다."
+    "keptCount": "삭제 권한이 없어 레시피 {count}개는 남습니다.",
+    "alertTitle": "{name}을(를) 삭제할까요?"
   },
   "form": {
     "createTitle": "레시피 만들기",
     "editTitle": "레시피 편집",
     "createDescription": "컬렉션에 새로운 레시피를 추가하세요",
     "editDescription": "레시피 세부정보 수정",
-    "initializingForm": "양식 초기화 중...",
     "photo": "사진",
     "basicInfo": "기본정보",
     "ingredients": "재료",
@@ -225,19 +230,12 @@
     "createRecipe": "레시피 만들기",
     "saveChanges": "변경사항 저장",
     "uploading": "업로드 중...",
-    "clickToUpload": "클릭하여 업로드하거나 드래그 앤 드롭하세요.",
-    "pasteToUpload": "붙여넣기",
-    "imageFormats": "최대 5MB의 PNG, JPG, WEBP",
     "discardChangesConfirm": "저장하지 않은 변경사항이 있습니다. 변경사항을 버리고 이 페이지를 떠나시겠어요?"
   },
   "gallery": {
-    "addImage": "이미지 추가",
     "uploading": "업로드 중...",
     "uploadFailed": "업로드 실패",
-    "dragToReorder": "드래그하여 재정렬하세요.",
-    "maxImagesReached": "이미지는 최대 {max}개까지 가능합니다.",
-    "maxVideosReached": "동영상은 최대 {max}개까지 가능합니다.",
-    "invalidFileType": "잘못된 파일 형식"
+    "dragToReorder": "드래그하여 재정렬하세요."
   },
   "carousel": {
     "noImageAvailable": "이미지가 없습니다.",
@@ -246,8 +244,14 @@
       "mute": "무음",
       "unmute": "음소거 해제",
       "fullscreen": "전체 화면으로 전환",
-      "exitFullscreen": "전체 화면 종료"
-    }
+      "exitFullscreen": "전체 화면 종료",
+      "progress": "동영상 진행률",
+      "play": "재생",
+      "pause": "일시정지"
+    },
+    "recipeImage": "레시피 이미지",
+    "closeViewer": "이미지 뷰어 닫기",
+    "photoOf": "사진 {current}/{total}"
   },
   "validation": {
     "nameRequired": "레시피 이름은 필수 항목입니다.",
@@ -262,8 +266,6 @@
     "carbs": "탄수화물",
     "protein": "단백질",
     "showingPortions": "{count, plural, one {#인분} other {#인분}} 기준 영양 정보",
-    "noInfo": "영양정보가 없습니다.",
-    "estimateWithAI": "AI로 추정",
     "estimated": "추정치",
     "leftOut": "{count, plural, other {계산되지 않은 줄 #개}}",
     "estimatedByAI": "AI 추정",
@@ -276,7 +278,10 @@
       "noPieceWeight": "개당 무게 아직 없음"
     },
     "workedOutFrom": "재료로 계산했습니다. 출처: {sources}.",
-    "householdNumbers": "우리 가구의 값"
+    "householdNumbers": "우리 가구의 값",
+    "decreasePortions": "인분 줄이기",
+    "increasePortions": "인분 늘리기",
+    "portions": "{count, plural, other {#인분}}"
   },
   "measurementSystem": {
     "label": "측정 시스템",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "{number} 단계: 단계를 설명하세요...",
-    "stepPlaceholderShort": "{number} 단계"
+    "stepPlaceholderShort": "{number} 단계",
+    "recipeSuggestions": "레시피 추천",
+    "ingredientSuggestions": "재료 추천"
   },
   "stepIngredients": {
     "rowLabel": "연결된 재료",
@@ -322,16 +329,15 @@
   },
   "toasts": {
     "imported": "레시피 가져오기 완료",
-    "failed": "레시피 작업이 실패했습니다.",
     "failedDescription": "레시피를 처리하는 중 문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요.",
     "incomplete": "이 레시피는 불완전할 수 있습니다. 원본과 비교해 확인하세요.",
     "notARecipe": "이 페이지는 레시피가 아닌 것 같습니다.",
     "privateAddress": "이 서버에서는 사설 네트워크 주소에서 가져오기가 허용되지 않습니다.",
-    "batchImported": "레시피 가져오기 완료",
-    "batchImportedDescription": "아카이브에서 {count}개 레시피를 가져왔습니다.",
     "view": "보기",
     "open": "열기",
-    "deleteKept": "다른 사람이 변경한 레시피 {count}개는 유지되었습니다."
+    "deleteKept": "다른 사람이 변경한 레시피 {count}개는 유지되었습니다.",
+    "deleted": "레시피 삭제됨",
+    "deletedDescription": "이 레시피가 삭제되었습니다."
   },
   "tags": {
     "panel": {
@@ -346,12 +352,19 @@
     "servings": "인분",
     "serving": "{count}인분",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "스와이프하여 단계를 탐색하세요",
-    "swipeIngredients": "왼쪽으로 스와이프하여 재료 보기",
-    "swipeBackToSteps": "오른쪽으로 스와이프하여 단계 보기",
     "readyAt": "{time}쯤 완성",
     "timers": "타이머",
-    "nextStep": "다음 단계"
+    "nextStep": "다음 단계",
+    "stepLabel": "{number}단계",
+    "previousStep": "이전 단계",
+    "startTimer": "{duration} 타이머 시작",
+    "pauseTimer": "타이머 일시정지, {time} 남음",
+    "resumeTimer": "타이머 재개, {time} 남음",
+    "dismissTimer": "타이머 닫기",
+    "restartTimer": "타이머 다시 시작",
+    "notificationsOff": "Norish 알림이 꺼져 있어 앱이 열려 있을 때만 타이머가 울립니다.",
+    "decreaseTimer": "{time} 줄이기",
+    "increaseTimer": "{time} 늘리기"
   },
   "enrichment": {
     "failed": "보강에 실패했습니다",
@@ -374,10 +387,7 @@
   "provenance": {
     "title": "출처",
     "region": "지역",
-    "cuisines": "요리",
-    "inferring": "이 레시피의 출처를 알아보는 중…",
-    "noInfo": "아직 출처 정보가 없습니다",
-    "inferWithAI": "AI로 알아보기"
+    "cuisines": "요리"
   },
   "import": {
     "alreadyExists": "이미 저장된 레시피입니다",
@@ -431,7 +441,13 @@
     "changeImage": "이미지 변경",
     "removeImage": "이미지 삭제",
     "imageUploadFailed": "이미지를 업로드하지 못했습니다.",
-    "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다."
+    "imageNeedsConnection": "다시 온라인 상태가 되면 이미지를 변경할 수 있습니다.",
+    "rename": "이름 변경",
+    "deleteAlertTitle": "{title}을(를) 삭제할까요?",
+    "changeCover": "표지 변경",
+    "renameTitle": "요리책 이름 변경",
+    "coverFromLibrary": "사진 보관함에서 선택",
+    "coverFromCamera": "사진 찍기"
   },
   "print": {
     "title": "레시피 인쇄",
@@ -450,5 +466,78 @@
     "newCookbook": "새 요리책",
     "filedInto": "레시피 {count}개를 {title}에 추가했습니다",
     "filedIntoMany": "레시피 {count}개를 요리책 {cookbooks}권에 추가했습니다"
+  },
+  "addRecipe": {
+    "fromLink": "링크에서",
+    "fromLinkHint": "모든 레시피 사이트 또는 동영상",
+    "fromPhotos": "사진에서",
+    "fromPhotosHint": "요리책 페이지 또는 스크린샷",
+    "fromText": "텍스트에서",
+    "fromTextHint": "레시피 또는 JSON-LD 붙여넣기",
+    "writeYourself": "직접 작성",
+    "writeYourselfHint": "빈 레시피로 시작",
+    "importHost": "{host} 가져오기",
+    "linkTitle": "링크에서 가져오기",
+    "textTitle": "텍스트에서 가져오기",
+    "photosTitle": "사진에서 가져오기",
+    "camera": "카메라",
+    "photoLibrary": "사진 보관함",
+    "photoCount": "{count, plural, other {사진 #장, 레시피 하나로 가져옴}}",
+    "photoLimits": "최대 {max}장, JPEG, PNG 또는 WebP",
+    "removePhoto": "사진 {number} 삭제"
+  },
+  "shareExtension": {
+    "sending": "Norish로 보내는 중…",
+    "sentTitle": "Norish에서 가져오는 중",
+    "sentBody": "곧 라이브러리에 표시됩니다.",
+    "savedTitle": "나중을 위해 저장됨",
+    "savedBody": "서버에 연결되면 Norish가 가져옵니다.",
+    "signedOut": "먼저 Norish를 열고 로그인하세요.",
+    "tooOld": "먼저 Norish 서버를 업데이트해야 합니다.",
+    "noAi": "사진을 가져오려면 AI가 필요하지만 서버에서 꺼져 있습니다.",
+    "failed": "Norish가 이 항목을 가져오지 못했습니다.",
+    "close": "닫기",
+    "photoCount": "{count, plural, other {사진 #장}}",
+    "text": "텍스트"
+  },
+  "editor": {
+    "newTitle": "새 레시피",
+    "editTitle": "레시피 편집",
+    "recipeName": "레시피 이름",
+    "ingredient": "재료",
+    "sectionHeading": "섹션 제목",
+    "step": "단계",
+    "steps": "단계",
+    "notesHint": "제목은 줄을 #으로 시작하고, 굵게 하려면 단어를 **별표 두 개**로 감싸세요.",
+    "ingredientsHint": "밀가루 2컵처럼 재료를 입력하면 양과 단위를 자동으로 읽습니다. 섹션은 줄을 #으로 시작하세요.",
+    "stepsHint": "다음 단계로 가려면 리턴을 누르세요. @를 입력하면 재료를 연결하고, #는 섹션입니다.",
+    "addIngredient": "재료 추가",
+    "removeIngredient": "재료 삭제",
+    "addStep": "단계 추가",
+    "removeStep": "단계 삭제",
+    "addPhoto": "사진 추가",
+    "addStepPhoto": "단계 사진 추가",
+    "removePhoto": "사진 삭제",
+    "mediaCount": "사진 {images}/{maxImages} · 동영상 {videos}/{maxVideos}",
+    "photosOffline": "온라인 상태에서 사진을 추가할 수 있습니다.",
+    "tagsAndCategories": "태그 및 카테고리",
+    "categories": "카테고리",
+    "tags": "태그",
+    "tagsHint": "제안을 고르거나 새 태그를 입력하세요. 새 태그는 점선 테두리로 표시됩니다.",
+    "addTag": "태그 추가",
+    "removeNamed": "{name} 삭제",
+    "servingsAndTime": "인분 및 시간",
+    "minutes": "분",
+    "perServing": "1인분 기준, 선택 사항",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "출처",
+    "sourceUrl": "출처 URL",
+    "measurementSystem": "단위 체계",
+    "measurementHint": "재료에서 감지되었습니다. 변경하면 표시만 바뀌고 변환되지 않습니다. 저장 후 변환을 사용하세요.",
+    "discardTitle": "변경 사항을 버릴까요?",
+    "discardMessage": "저장하지 않은 변경 사항이 있습니다.",
+    "keepEditing": "계속 편집",
+    "discard": "버리기"
   }
 }

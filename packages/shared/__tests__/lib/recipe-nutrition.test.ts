@@ -22,6 +22,7 @@ import {
   nutritionLinesOf,
   seasoningPhrases,
   suppliesNutrition,
+  workedOutSources,
   workOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
 
@@ -564,5 +565,14 @@ describe("bracketedGrams", () => {
     expect(bracketedGrams("coconut milk (15 fl oz)")).toBeNull();
     expect(bracketedGrams("(4) zoete aardappelen")).toBeNull();
     expect(bracketedGrams("onions (red)")).toBeNull();
+  });
+});
+
+describe("workedOutSources", () => {
+  it("names the datasets, then the household's numbers", () => {
+    expect(
+      workedOutSources({ credits: ["ciqual", "usda"], household: true }, "Your numbers")
+    ).toEqual(["CIQUAL 2025", "USDA FoodData Central", "Your numbers"]);
+    expect(workedOutSources({ credits: [], household: false }, "Your numbers")).toEqual([]);
   });
 });

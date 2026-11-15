@@ -13,7 +13,7 @@ const ENCODED_FORMDATA_TAG = "norish-outbox/formdata@1";
 
 type EncodedFormDataEntry = [key: string, value: string | Blob];
 
-export type EncodedFormDataInput = {
+type EncodedFormDataInput = {
   codec: typeof ENCODED_FORMDATA_TAG;
   entries: EncodedFormDataEntry[];
 };

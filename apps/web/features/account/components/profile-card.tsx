@@ -1,0 +1,154 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import UserAvatar from "@/components/shared/user-avatar";
+import { usePending } from "@/hooks/use-pending";
+import { TrashIcon } from "@heroicons/react/16/solid";
+import { PencilIcon } from "@heroicons/react/20/solid";
+import { UserCircleIcon } from "@heroicons/react/24/outline";
+import { Button, Input, Label, TextField } from "@heroui/react";
+import { useTranslations } from "next-intl";
+
+import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
+
+export default function ProfileCard() {
+  const t = useTranslations("settings.user.profile");
+  const tActions = useTranslations("common.actions");
+  const { user } = useProfileQuery();
+  const { updateName, uploadAvatar, deleteAvatar, isDeletingAvatar } = useProfileMutations();
+  const [name, setName] = useState(user?.name || "");
+  const [syncedName, setSyncedName] = useState(user?.name);
+  const [saving, whileSaving] = usePending();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (user?.name !== syncedName) {
+    setSyncedName(user?.name);
+    if (user?.name) {
+      setName(user.name);
+    }
+  }
+  const handleSaveProfile = async () => {
+    const hasNameChanges = name !== user?.name;
+    const hasImageChanges = pendingImageFile !== null;
+    if (!hasNameChanges && !hasImageChanges) {
+      return;
+    }
+    const save = async () => {
+      if (hasNameChanges) {
+        await updateName(name);
+      }
+      if (pendingImageFile) {
+        if (!(await uploadAvatar(pendingImageFile))) return;
+        setImagePreview(null);
+        setPendingImageFile(null);
+      }
+    };
+
+    await whileSaving(() => save());
+  };
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImagePreview(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    setPendingImageFile(file);
+  };
+  const handleDeleteImage = async () => {
+    setImagePreview(null);
+    setPendingImageFile(null);
+    await deleteAvatar();
+  };
+  const hasPendingChanges = name !== user?.name || pendingImageFile !== null;
+  const hasImage = imagePreview || user?.image;
+  return (
+    <SettingsCard icon={UserCircleIcon} title={t("title")}>
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <button
+            aria-label={t("avatarHint")}
+            className="cursor-pointer rounded-full transition-opacity hover:opacity-80"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <UserAvatar
+              email={user?.email}
+              image={imagePreview || user?.image}
+              name={user?.name}
+              size="lg"
+              userId={user?.id}
+            />
+          </button>
+          <input
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            type="file"
+            onChange={handleImageSelect}
+          />
+          {hasImage && (
+            <Button
+              isIconOnly
+              aria-label={t("deleteAvatar")}
+              className="absolute -bottom-1 -left-1 h-7 w-7 min-w-0 rounded-full"
+              size="sm"
+              onPress={handleDeleteImage}
+              variant="danger"
+              isPending={isDeletingAvatar}
+            >
+              <TrashIcon className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            isIconOnly
+            aria-label={t("avatarHint")}
+            className="absolute right-0 bottom-0 h-6 w-6 min-w-0 rounded-full"
+            size="sm"
+            onPress={() => fileInputRef.current?.click()}
+            variant="primary"
+          >
+            <PencilIcon className="!size-3" />
+          </Button>
+        </div>
+        <div className="flex flex-1 flex-col gap-2">
+          <TextField value={name} onChange={setName}>
+            <Label>{t("nameLabel")}</Label>
+            <Input variant="secondary" placeholder={t("namePlaceholder")} />
+          </TextField>
+          <p className="text-muted text-xs">{t("avatarHint")}</p>
+        </div>
+      </div>
+      <TextField isDisabled isReadOnly value={user?.email || ""}>
+        <Label>{t("emailLabel")}</Label>
+        <Input variant="secondary" />
+      </TextField>
+      <ActionButtonGroup>
+        <ActionButton
+          action="save"
+          isDisabled={!hasPendingChanges}
+          isPending={saving}
+          onPress={handleSaveProfile}
+        >
+          {tActions("save")}
+        </ActionButton>
+      </ActionButtonGroup>
+    </SettingsCard>
+  );
+}

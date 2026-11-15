@@ -1,57 +1,30 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { AuthShell } from "@/features/auth/components/auth-shell";
-import { styles } from "@/features/auth/styles/storage-unavailable.styles";
-import { Button, useThemeColor } from "heroui-native";
+import { StatusBadge } from "@/features/auth/components/status-badge";
+import { StatusScreen } from "@/features/auth/components/status-screen";
 import { useIntl } from "react-intl";
 
 interface StorageUnavailableScreenProps {
-  /** The failure that stopped the boot, shown verbatim as technical detail. */
-  error: unknown;
+  /** Re-reads storage; the read itself logs each failure. */
   onRetry: () => void;
 }
 
-function describeError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-}
-
-/**
- * Shown when the app cannot read its secure storage on boot.
- *
- * Without that read the app cannot tell which backend it belongs to, and
- * guessing "not configured" would drop a server the user already set up. So
- * this is a dead end the user is told about rather than a silent blank screen.
- */
-export function StorageUnavailableScreen({ error, onRetry }: StorageUnavailableScreenProps) {
+/** Shown when secure storage can't be read on boot: guessing "not configured" would drop the
+ * server already set up, so the app stops here and says so. */
+export function StorageUnavailableScreen({ onRetry }: StorageUnavailableScreenProps) {
   const intl = useIntl();
-  const [foregroundColor, mutedColor, separatorColor] = useThemeColor([
-    "foreground",
-    "muted",
-    "separator",
-  ] as const);
 
   return (
-    <AuthShell headingPrefix={intl.formatMessage({ id: "common.storageUnavailable.title" })}>
-      <Text className="font-normal" style={[styles.description, { color: foregroundColor }]}>
-        {intl.formatMessage({ id: "common.storageUnavailable.description" })}
-      </Text>
-
-      <Button style={styles.retryButton} onPress={onRetry}>
-        <Button.Label>{intl.formatMessage({ id: "common.actions.retry" })}</Button.Label>
-      </Button>
-
-      <View style={[styles.details, { borderColor: separatorColor }]}>
-        <Text className="font-semibold" style={[styles.detailsLabel, { color: mutedColor }]}>
-          {intl.formatMessage({ id: "common.storageUnavailable.detailsLabel" })}
-        </Text>
-        <Text className="font-normal" style={[styles.detailsBody, { color: mutedColor }]}>
-          {describeError(error)}
-        </Text>
-      </View>
-    </AuthShell>
+    <StatusScreen
+      action={{
+        label: intl.formatMessage({ id: "common.errorPage.retry" }),
+        testID: "storage-unavailable-retry",
+        onPress: onRetry,
+      }}
+      badge={<StatusBadge variant="storage" />}
+      description={intl.formatMessage({ id: "common.storageUnavailable.description" })}
+      descriptionTestID="storage-unavailable-description"
+      title={intl.formatMessage({ id: "common.storageUnavailable.title" })}
+      titleTestID="storage-unavailable-title"
+    />
   );
 }

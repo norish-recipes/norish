@@ -1,10 +1,14 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+
 import "@testing-library/jest-dom";
 
-import { OfflineCacheController, offlineEngine } from "@/lib/offline/engine";
+import { offlineEngine } from "@/lib/offline/engine";
+import { OfflineCacheController } from "@/lib/offline/offline-cache-controller";
 
 import type { OutboxEntry } from "@norish/shared-react/offline";
 
@@ -72,10 +76,17 @@ const outbox = vi.hoisted(() => {
 });
 const recover = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const isSyncing = vi.hoisted(() => vi.fn(() => false));
+const conflictListeners = vi.hoisted(() => new Set<() => void>());
 const recovery = vi.hoisted(() => ({
   recover,
   isSyncing,
   subscribe: () => () => {},
+  subscribeConflicts: (listener: () => void) => {
+    conflictListeners.add(listener);
+
+    return () => void conflictListeners.delete(listener);
+  },
+  reportConflict: () => {},
 }));
 const liveProbes = vi.hoisted(() => {
   const listeners = new Set<() => void>();
@@ -99,7 +110,9 @@ let user: { id: string } | null = null;
 let connectivity = { isLive: true, isOffline: false };
 let wsStatus: "idle" | "connected" | "disconnected" = "idle";
 
-vi.mock("@/context/user-context", () => ({ useUserContext: () => ({ user }) }));
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/reader-mock")).mockReader(() => ({ user }))
+);
 vi.mock("@norish/shared-react/offline/react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/offline/react")>()),
   useConnectivity: () => ({
@@ -112,7 +125,7 @@ const trpcClient = vi.hoisted(() => ({}));
 
 const trpc = vi.hoisted(() => ({}));
 
-vi.mock("@/app/providers/trpc-provider", () => ({
+vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => trpc,
   useTRPCClient: () => trpcClient,
   useConnectionStatus: () => ({ status: wsStatus }),
@@ -135,15 +148,19 @@ vi.spyOn(offlineEngine, "createWarmSet").mockImplementation(() => ({
   inspect: vi.fn(),
 }));
 
+const platform = fakePlatformAdapter();
+
 function renderController(seededUserId?: string) {
   const queryClient = new QueryClient();
 
   const result = render(
-    <QueryClientProvider client={queryClient}>
-      <OfflineCacheController seededUserId={seededUserId}>
-        <div>child</div>
-      </OfflineCacheController>
-    </QueryClientProvider>
+    <PlatformProvider adapter={platform}>
+      <QueryClientProvider client={queryClient}>
+        <OfflineCacheController seededUserId={seededUserId}>
+          <div>child</div>
+        </OfflineCacheController>
+      </QueryClientProvider>
+    </PlatformProvider>
   );
 
   return { ...result, queryClient };
@@ -180,6 +197,25 @@ describe("OfflineCacheController", () => {
   }
 
   afterEach(() => cleanup());
+
+  it("refetches what is on show and tells once when saves are refused", async () => {
+    vi.mocked(platform.toast.show).mockClear();
+    user = { id: "u1" };
+    const { queryClient } = renderController();
+    const read = vi.fn(async () => "server");
+    const onShow = new QueryObserver(queryClient, { queryKey: ["recipe"], queryFn: read });
+    const unsubscribe = onShow.subscribe(() => {});
+
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    for (const listener of conflictListeners) listener();
+
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+    expect(platform.toast.show).toHaveBeenCalledTimes(1);
+    expect(platform.toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: "warning", title: "common.changedElsewhere.title" })
+    );
+    unsubscribe();
+  });
 
   it("reconciles the cache owner from the current identity and connectivity", async () => {
     user = { id: "u1" };
@@ -264,11 +300,13 @@ describe("OfflineCacheController", () => {
     );
     user = { id: "u2" };
     view.rerender(
-      <QueryClientProvider client={view.queryClient}>
-        <OfflineCacheController>
-          <div>child</div>
-        </OfflineCacheController>
-      </QueryClientProvider>
+      <PlatformProvider adapter={platform}>
+        <QueryClientProvider client={view.queryClient}>
+          <OfflineCacheController>
+            <div>child</div>
+          </OfflineCacheController>
+        </QueryClientProvider>
+      </PlatformProvider>
     );
 
     expect(screen.queryByText("child")).not.toBeInTheDocument();
@@ -309,11 +347,13 @@ describe("OfflineCacheController", () => {
     const settle = (status: typeof wsStatus) => {
       wsStatus = status;
       view.rerender(
-        <QueryClientProvider client={view.queryClient}>
-          <OfflineCacheController>
-            <div>child</div>
-          </OfflineCacheController>
-        </QueryClientProvider>
+        <PlatformProvider adapter={platform}>
+          <QueryClientProvider client={view.queryClient}>
+            <OfflineCacheController>
+              <div>child</div>
+            </OfflineCacheController>
+          </QueryClientProvider>
+        </PlatformProvider>
       );
     };
 
@@ -336,11 +376,13 @@ describe("OfflineCacheController", () => {
 
     wsStatus = "connected";
     view.rerender(
-      <QueryClientProvider client={view.queryClient}>
-        <OfflineCacheController>
-          <div>child</div>
-        </OfflineCacheController>
-      </QueryClientProvider>
+      <PlatformProvider adapter={platform}>
+        <QueryClientProvider client={view.queryClient}>
+          <OfflineCacheController>
+            <div>child</div>
+          </OfflineCacheController>
+        </QueryClientProvider>
+      </PlatformProvider>
     );
 
     // Startup already read the live server; connecting the socket adds nothing.

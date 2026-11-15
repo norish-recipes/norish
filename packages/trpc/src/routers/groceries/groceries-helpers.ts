@@ -42,6 +42,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { AssignGroceryToStoreInputSchema } from "@norish/shared/contracts/zod";
 
+import { afterCommit } from "../../after-commit";
 import { noticeGroceries } from "../stores/pricing";
 import { assertStoreAccess } from "../stores/stores-helpers";
 
@@ -350,11 +351,9 @@ export async function createGroceriesData(
     );
   }
 
-  // Making room at the top moved every active sibling's sort order, and
-  // with it its version. A screen that goes on holding the old version has
-  // its next write on that row refused as stale (ADR-0004), so the shifted
-  // rows ride back on the answer and out to the household as an update; a
-  // row merged and then shifted is reported as the shift left it.
+  // Making room at the top moved every active sibling's sort order, so the
+  // shifted rows ride back on the answer and out to the household as an
+  // update; a row merged and then shifted is reported as the shift left it.
   if (made.shifted.length > 0) {
     const shiftedIds = new Set(made.shifted.map((grocery) => grocery.id));
 
@@ -384,7 +383,10 @@ export async function createGroceriesData(
   // A name the Store already knows is priced in this same response, with no
   // outbound request; a name it does not goes to the lookup queue, so adding
   // six things in a row stays as fast as it was. An edited name asks anew.
-  const prices = await noticeGroceries(ctx, [...editedRows, ...returnedGroceries]);
+  const prices =
+    (await afterCommit(ctx, "pricing groceries", () =>
+      noticeGroceries(ctx, [...editedRows, ...returnedGroceries])
+    )) ?? [];
 
   return {
     edited,
@@ -398,7 +400,8 @@ export async function createGroceriesData(
 
 export async function toggleGroceriesData(
   ctx: GroceryProcedureContext,
-  input: z.infer<typeof GroceryToggleSchema>
+  input: z.infer<typeof GroceryToggleSchema>,
+  { rejectMissing = false } = {}
 ) {
   const { groceries: toggles, isDone } = input;
   const groceryIds = toggles.map((grocery) => grocery.id);
@@ -406,9 +409,10 @@ export async function toggleGroceriesData(
 
   log.debug({ userId: ctx.user.id, count: groceryIds.length, isDone }, "Toggling groceries");
 
+  // A line another member deleted lost to an earlier write: it is left out and answers stale.
   const ownerIds = await getGroceryOwnerIds(groceryIds);
 
-  if (ownerIds.size !== groceryIds.length) {
+  if (rejectMissing && ownerIds.size !== groceryIds.length) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
   }
 
@@ -416,11 +420,7 @@ export async function toggleGroceriesData(
     await assertHouseholdAccess(ctx.user.id, ownerId);
   }
 
-  const existingGroceries = await getGroceriesByIds(groceryIds);
-
-  if (existingGroceries.length === 0) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Groceries not found" });
-  }
+  const existingGroceries = ownerIds.size > 0 ? await getGroceriesByIds([...ownerIds.keys()]) : [];
 
   const updatedGroceries = existingGroceries.map((grocery) => ({
     ...grocery,
@@ -434,13 +434,16 @@ export async function toggleGroceriesData(
     throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid data" });
   }
 
-  const updated = await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.userIds);
+  const updated =
+    parsed.data.length > 0
+      ? await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.userIds)
+      : [];
 
-  if (updated.length !== parsed.data.length) {
+  if (updated.length !== groceryIds.length) {
     log.info(
       {
         userId: ctx.user.id,
-        requestedCount: parsed.data.length,
+        requestedCount: groceryIds.length,
         updatedCount: updated.length,
       },
       updated.length === 0
@@ -473,15 +476,17 @@ export async function toggleGroceriesData(
 
 export async function deleteGroceriesData(
   ctx: GroceryProcedureContext,
-  input: z.infer<typeof GroceryDeleteSchema>
+  input: z.infer<typeof GroceryDeleteSchema>,
+  { rejectMissing = false } = {}
 ) {
   const groceryIds = input.groceries.map((grocery) => grocery.id);
 
   log.info({ userId: ctx.user.id, count: groceryIds.length }, "Deleting groceries");
 
+  // A line already gone is a delete that already happened: it is skipped, not stale.
   const ownerIds = await getGroceryOwnerIds(groceryIds);
 
-  if (ownerIds.size !== groceryIds.length) {
+  if (rejectMissing && ownerIds.size !== groceryIds.length) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
   }
 
@@ -489,7 +494,10 @@ export async function deleteGroceriesData(
     await assertHouseholdAccess(ctx.user.id, ownerId);
   }
 
-  const result = await deleteGroceryByIds(input.groceries, ctx.userIds);
+  const result = await deleteGroceryByIds(
+    input.groceries.filter((grocery) => ownerIds.has(grocery.id)),
+    ctx.userIds
+  );
 
   if (result.staleIds.length > 0) {
     log.info(
@@ -519,7 +527,8 @@ export async function deleteGroceriesData(
 
 export async function assignGroceryToStoreData(
   ctx: GroceryProcedureContext,
-  input: z.infer<typeof AssignGroceryToStoreInputSchema>
+  input: z.infer<typeof AssignGroceryToStoreInputSchema>,
+  { rejectMissing = false } = {}
 ) {
   const { groceryId, storeId, savePreference, version } = input;
 
@@ -531,11 +540,12 @@ export async function assignGroceryToStoreData(
   ]);
   const ownerId = ownerIds.get(groceryId);
 
-  if (!ownerId) {
+  if (rejectMissing && !ownerId) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
   }
 
-  await assertHouseholdAccess(ctx.user.id, ownerId);
+  // A line another member deleted lost to an earlier write: stale, as a changed version is.
+  if (ownerId) await assertHouseholdAccess(ctx.user.id, ownerId);
 
   if (storeId) {
     if (!storeOwnerId) {
@@ -544,13 +554,10 @@ export async function assignGroceryToStoreData(
     await assertHouseholdAccess(ctx.user.id, storeOwnerId);
   }
 
-  const [grocery] = await getGroceriesByIds([groceryId]);
-
-  if (!grocery) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
-  }
-
-  const updated = await assignGroceryToStore(groceryId, storeId, ctx.userIds, version);
+  const [grocery] = ownerId ? await getGroceriesByIds([groceryId]) : [];
+  const updated = grocery
+    ? await assignGroceryToStore(groceryId, storeId, ctx.userIds, version)
+    : null;
 
   if (!updated) {
     log.info(
@@ -572,9 +579,10 @@ export async function assignGroceryToStoreData(
 
   // Moving a grocery to another Store asks that Store a new question; the old
   // Store's answer was never about this one.
-  await noticeGroceries(ctx, [updated]);
-
-  if (savePreference) await rememberStorePreference(ctx.user.id, grocery.ingredientId, storeId);
+  await afterCommit(ctx, "pricing and remembering the Store", async () => {
+    await noticeGroceries(ctx, [updated]);
+    if (savePreference) await rememberStorePreference(ctx.user.id, updated.ingredientId, storeId);
+  });
 
   void groceries.publish(
     "updated",

@@ -4,7 +4,7 @@
     "ariaLabel": "Einstellungen-Reiter"
   },
   "tabs": {
-    "user": "Benutzer",
+    "account": "Konto",
     "household": "Haushalt",
     "caldav": "CalDAV",
     "admin": "Admin",
@@ -193,7 +193,6 @@
           "abbreviated": "Abgekürzt"
         }
       },
-      "applyError": "Einstellung konnte nicht angewendet werden",
       "afterPlanning": {
         "title": "Nach dem Planen eines Rezepts",
         "description": "Was passiert, wenn du ein Rezept planst",
@@ -279,11 +278,7 @@
         "warning": "Du wirst ein normales Mitglied und kannst keine Benutzer mehr entfernen oder Join-Codes verwalten.",
         "confirmButton": "Admin übertragen"
       },
-      "toasts": {
-        "kickFailed": "Fehler beim Entfernen des Benutzers",
-        "transferSuccess": "Admin übertragen an {name}",
-        "transferFailed": "Fehler beim Übertragen des Admin"
-      }
+      "unknown": "Unbekannt"
     },
     "joinCode": {
       "title": "Join-Code",
@@ -291,6 +286,7 @@
       "expiresIn": "Gültig bis:",
       "regenerateButton": "Neu generieren",
       "expired": "Abgelaufen",
+      "countdown": "{minutes} Min. {seconds} Sek.",
       "noCodeDescription": "Kein aktiver Join-Code. Generieren Sie einen, um neue Mitglieder einzuladen.",
       "generateButton": "Join-Code generieren",
       "copySuccess": "Join-Code kopiert",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Verbunden",
         "checking": "Wird überprüft...",
-        "disconnected": "Getrennt",
-        "unknown": "Unbekannt"
+        "disconnected": "Getrennt"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Fehlgeschlagen",
         "removed": "Entfernt"
       },
-      "emptyFiltered": "Keine {status}-Einträge gefunden",
+      "emptyFiltered": "Keine Einträge mit diesem Status",
       "emptyDefault": "Keine Synchronisierungsdatensätze gefunden",
       "errorDetails": "Fehlerdetails",
-      "pagination": "Seite {current} von {total}"
+      "pagination": "Seite {current} von {total}",
+      "paginationLabel": "Seiten des Synchronisierungsstatus"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Wähle aus, welche Sprachen Benutzer auswählen können",
       "defaultLocale": "Standardsprache",
       "defaultLocaleDescription": "Sprache für neue Benutzer und als Fallback",
-      "localesSaved": "Spracheinstellungen gespeichert",
-      "localesError": "Spracheinstellungen konnten nicht gespeichert werden",
       "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein",
       "export": {
         "title": "Rezeptarchiv",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "{name} löschen?",
       "deleteConfirm": "Das löscht das Konto dieses Benutzers dauerhaft und entfernt ihn aus seinem Haushalt. Das kann nicht rückgängig gemacht werden.",
-      "deleteSuccess": "{name} wurde gelöscht",
       "countSummary": "{count, plural, one {# Benutzer} other {# Benutzer}} insgesamt"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Zeiteinheit-Schlüsselwörter für Timer-Erkennung",
         "description": "Konfiguriere Schlüsselwörter zur Timer-Erkennung in Rezeptanweisungen. Unterstützt mehrere Sprachen.",
         "enableToggle": "Timer-Erkennung aktivieren",
+        "keywordRequired": "Mindestens ein Schlüsselwort für Stunden, Minuten oder Sekunden ist erforderlich",
         "hoursLabel": "Stunden-Schlüsselwörter",
         "hoursPlaceholder": "stunde, stunden, std, h",
         "hoursHelp": "Schlüsselwörter für Stunden (z.B. stunde, hour, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "API-Schlüssel",
       "apiKeyPlaceholder": "Gib API-Schlüssel ein",
       "temperature": "Temperatur: {value}",
+      "temperatureLabel": "Temperatur",
       "temperatureHint": "Niedriger = fokussierter, Höher = kreativer",
       "maxTokens": "Max Token",
       "requestTimeout": "Zeitüberschreitung der Anforderung (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Max. Videolänge (Sekunden)",
       "maxLengthDescription": "Längere Videos brauchen mehr Zeit und Ressourcen zum Verarbeiten",
       "maxFileSize": "Max. Videodateigröße",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Maximale Größe für heruntergeladene Videodateien",
       "ytDlpVersion": "yt-dlp-Version",
       "ytDlpVersionDescription": "Version von yt-dlp, die dieser Server ausführt. Hier nicht änderbar.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Generisch OpenAI-kompatibel"
       },
       "transcriptionEndpoint": "Endpoint-URL",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) oder http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-kompatibel Endpoint mit Whisper-Unterstützung, oder Ollama Endpoint",
       "transcriptionModel": "Modell",
       "transcriptionModelDescription": "Modell für die Transkription",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Erlaubt Importen den Zugriff auf dein lokales Netzwerk. Obscura lehnt diese in jedem Fall ab.",
       "navigationTimeout": "Navigations-Timeout (ms)",
       "navigationTimeoutDescription": "Wie lange ein Renderer zum Laden einer Seite bekommt.",
-      "saved": "Seiten-Renderer gespeichert",
-      "error": "Seiten-Renderer konnten nicht gespeichert werden",
       "connectionSuccess": "Verbindung erfolgreich"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Ungespeicherte Änderungen",
     "jsonEditor": {
       "placeholder": "Gib JSON-Konfiguration ein...",
-      "invalidJson": "Ungültiges JSON-Format",
-      "failedToSave": "Speichern fehlgeschlagen",
-      "failedToRestore": "Wiederherstellen der Standard fehlgeschlagen"
+      "invalidJson": "Ungültiges JSON-Format"
     },
     "jobQueue": {
       "title": "Job-Warteschlangen",
@@ -1327,6 +1320,13 @@
       "empty": "Noch keine Küchen.",
       "duplicate": "Eine Küche mit diesem Namen existiert bereits.",
       "saveFailed": "Diese Küche konnte nicht gespeichert werden."
+    },
+    "toasts": {
+      "localesSaved": "Spracheinstellungen gespeichert",
+      "localesError": "Spracheinstellungen konnten nicht gespeichert werden",
+      "userDeleted": "{name} wurde gelöscht",
+      "pageRenderersSaved": "Seiten-Renderer gespeichert",
+      "pageRenderersError": "Seiten-Renderer konnten nicht gespeichert werden"
     }
   },
   "archiveExport": {

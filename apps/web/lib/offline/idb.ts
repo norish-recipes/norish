@@ -16,23 +16,23 @@
  * `fake-indexeddb` in unit tests without a browser.
  */
 
-export const OFFLINE_DB_NAME = "norish-offline";
+const OFFLINE_DB_NAME = "norish-offline";
 
 /**
  * Schema version. Bump when adding an object store and extend
  * {@link applyUpgrade}; existing databases upgrade in place, so no store that
  * already holds data (notably the Outbox) is ever dropped.
  */
-export const OFFLINE_DB_VERSION = 2;
+const OFFLINE_DB_VERSION = 2;
 
 export const KEYVAL_STORE = "keyval";
 export const OUTBOX_STORE = "outbox";
 
 /** All object stores that exist at the current {@link OFFLINE_DB_VERSION}. */
-export type OfflineStoreName = typeof KEYVAL_STORE | typeof OUTBOX_STORE;
+type OfflineStoreName = typeof KEYVAL_STORE | typeof OUTBOX_STORE;
 
 /** Keypath of the Outbox store — the auto-incremented FIFO sequence number. */
-export const OUTBOX_SEQ_KEYPATH = "seq";
+const OUTBOX_SEQ_KEYPATH = "seq";
 
 function applyUpgrade(db: IDBDatabase, oldVersion: number): void {
   if (oldVersion < 1) {
@@ -59,7 +59,7 @@ function resolveFactory(factory?: IDBFactory): IDBFactory {
  * A lazily-opened connection to the offline database, exposing the minimal
  * typed operations the storage adapter needs. Create one per `IDBFactory`.
  */
-export interface OfflineIdb {
+interface OfflineIdb {
   get<T>(store: OfflineStoreName, key: IDBValidKey): Promise<T | undefined>;
   set(store: OfflineStoreName, key: IDBValidKey, value: unknown): Promise<void>;
   del(store: OfflineStoreName, key: IDBValidKey): Promise<void>;
@@ -75,6 +75,12 @@ export interface OfflineIdb {
     mode: IDBTransactionMode,
     body: (objectStore: IDBObjectStore) => IDBRequest<T>
   ): Promise<T>;
+  /** In one transaction, put what `change` returns for a keyPath record; null deletes it. */
+  change<T>(
+    store: OfflineStoreName,
+    key: IDBValidKey,
+    change: (value: T) => T | null | undefined
+  ): Promise<T | null | undefined>;
 }
 
 export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
@@ -117,6 +123,34 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
       tx.onabort = () => reject(tx.error ?? request.error);
       tx.oncomplete = () => resolve(request.result);
       request.onerror = () => reject(request.error);
+      // Commit now rather than when the page's tasks run out, so a write
+      // a `pagehide` flush starts still lands once the page unloads.
+      if (mode === "readwrite") tx.commit();
+    });
+  }
+
+  async function change<T>(
+    store: OfflineStoreName,
+    key: IDBValidKey,
+    changeValue: (value: T) => T | null | undefined
+  ): Promise<T | null | undefined> {
+    const db = await open();
+
+    return new Promise<T | null | undefined>((resolve, reject) => {
+      const tx = db.transaction(store, "readwrite");
+      const objectStore = tx.objectStore(store);
+      const request = objectStore.get(key);
+      let written: T | null | undefined;
+
+      request.onsuccess = () => {
+        written = request.result === undefined ? undefined : changeValue(request.result as T);
+        if (written) objectStore.put(written);
+        if (written === null) objectStore.delete(key);
+        tx.commit();
+      };
+      tx.onabort = () => reject(tx.error ?? request.error);
+      tx.oncomplete = () => resolve(written);
+      request.onerror = () => reject(request.error);
     });
   }
 
@@ -134,5 +168,6 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
       return run<IDBValidKey[]>(store, "readonly", (objectStore) => objectStore.getAllKeys());
     },
     transaction: run,
+    change,
   };
 }

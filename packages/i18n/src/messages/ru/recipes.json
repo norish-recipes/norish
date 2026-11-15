@@ -27,7 +27,9 @@
       "all": "Все",
       "recipes": "Рецепты",
       "cookbooks": "Кулинарные книги"
-    }
+    },
+    "importingCard": "Импорт…",
+    "favourited": "В избранном"
   },
   "back": {
     "all": "Назад к библиотеке",
@@ -43,7 +45,8 @@
     "noResults": "Рецепты не найдены",
     "noResultsHint": "Попробуйте изменить или очистить фильтры.",
     "noCookbooks": "Кулинарных книг пока нет",
-    "noCookbooksHint": "Кулинарная книга — это набор рецептов с названием. Создайте первую, чтобы упорядочить библиотеку."
+    "noCookbooksHint": "Кулинарная книга — это набор рецептов с названием. Создайте первую, чтобы упорядочить библиотеку.",
+    "descriptionMobile": "Добавьте первый рецепт из ссылки, текста или фото."
   },
   "card": {
     "noImage": "Изображение недоступно",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Такого рецепта не существует или у вас нет прав на просмотр.",
     "prep": "подготовка",
     "total": "всего",
-    "planMeal": "Запланировать",
     "recipeActions": "Действия с рецептом",
     "instructions": "Инструкция",
     "cook": "Готовить",
@@ -78,7 +80,9 @@
     "addedBy": "Добавил(а) {name}",
     "decreaseServings": "Меньше порций",
     "increaseServings": "Больше порций",
-    "multiplier": "Множитель"
+    "multiplier": "Множитель",
+    "rateStars": "Оценить на {count} из 5",
+    "stepPhoto": "Фото шага"
   },
   "actions": {
     "plan": "Запланировать",
@@ -86,7 +90,6 @@
     "edit": "Редактировать",
     "delete": "Удалить",
     "share": "Поделиться",
-    "visitOriginal": "Открыть оригинальный рецепт",
     "addToCalendar": "Добавить в календарь",
     "autoTag": "Автотеги",
     "autoTagging": "Генерация тегов...",
@@ -103,10 +106,12 @@
     "inferringProvenance": "Определяем происхождение…",
     "linkIngredients": "Связать ингредиенты с шагами",
     "linkingIngredients": "Связывание ингредиентов…",
-    "enrichmentFailed": "Последняя попытка не удалась",
     "generateImage": "Сгенерировать изображение",
     "generatingImage": "Генерация изображения…",
-    "cookbooks": "Кулинарные книги"
+    "cookbooks": "Кулинарные книги",
+    "favourite": "В избранное",
+    "unfavourite": "Убрать из избранного",
+    "ai": "ИИ"
   },
   "sharePanel": {
     "title": "Поделиться рецептом",
@@ -166,14 +171,14 @@
     "confirmMessage": "Вы уверены, что хотите удалить «{recipeName}»?",
     "warning": "Это действие нельзя отменить.",
     "confirmCount": "Удалить {count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}?",
-    "keptCount": "{count, plural, one {# рецепт останется} few {# рецепта останутся} many {# рецептов останется} other {# рецепта останется}}: у вас нет прав на удаление."
+    "keptCount": "{count, plural, one {# рецепт останется} few {# рецепта останутся} many {# рецептов останется} other {# рецепта останется}}: у вас нет прав на удаление.",
+    "alertTitle": "Удалить «{name}»?"
   },
   "form": {
     "createTitle": "Создать рецепт",
     "editTitle": "Редактировать рецепт",
     "createDescription": "Добавьте новый рецепт в вашу коллекцию",
     "editDescription": "Обновите данные рецепта",
-    "initializingForm": "Инициализация формы...",
     "photo": "Фото",
     "basicInfo": "Основная информация",
     "ingredients": "Ингредиенты",
@@ -225,19 +230,12 @@
     "createRecipe": "Создать рецепт",
     "saveChanges": "Сохранить изменения",
     "uploading": "Загрузка...",
-    "clickToUpload": "Нажмите, чтобы загрузить, или перетащите файл",
-    "pasteToUpload": "для вставки",
-    "imageFormats": "PNG, JPG, WEBP до 5 МБ",
     "discardChangesConfirm": "У вас есть несохранённые изменения. Отменить их и покинуть эту страницу?"
   },
   "gallery": {
-    "addImage": "Добавить изображение",
     "uploading": "Загрузка...",
     "uploadFailed": "Не удалось загрузить",
-    "dragToReorder": "Перетащите для изменения порядка",
-    "maxImagesReached": "Максимум {max} изображений",
-    "maxVideosReached": "Максимум {max} видео",
-    "invalidFileType": "Недопустимый тип файла"
+    "dragToReorder": "Перетащите для изменения порядка"
   },
   "carousel": {
     "noImageAvailable": "Изображение недоступно",
@@ -246,8 +244,14 @@
       "mute": "Выключить звук",
       "unmute": "Включить звук",
       "fullscreen": "Во весь экран",
-      "exitFullscreen": "Выйти из полноэкранного режима"
-    }
+      "exitFullscreen": "Выйти из полноэкранного режима",
+      "progress": "Прогресс видео",
+      "play": "Воспроизвести",
+      "pause": "Пауза"
+    },
+    "recipeImage": "Изображение рецепта",
+    "closeViewer": "Закрыть просмотр изображения",
+    "photoOf": "Фото {current} из {total}"
   },
   "validation": {
     "nameRequired": "Название рецепта обязательно",
@@ -262,8 +266,6 @@
     "carbs": "Углеводы",
     "protein": "Белки",
     "showingPortions": "Показаны значения для {count} {count, plural, one {порции} few {порций} many {порций} other {порции}}",
-    "noInfo": "Нет данных о пищевой ценности",
-    "estimateWithAI": "Оценить с помощью ИИ",
     "estimated": "Приблизительно",
     "leftOut": "{count, plural, one {# строка не учтена} few {# строки не учтены} many {# строк не учтено} other {# строки не учтено}}",
     "estimatedByAI": "оценено ИИ",
@@ -276,7 +278,10 @@
       "noPieceWeight": "пока нет веса штуки"
     },
     "workedOutFrom": "Рассчитано по ингредиентам, по данным {sources}.",
-    "householdNumbers": "значений вашей семьи"
+    "householdNumbers": "значений вашей семьи",
+    "decreasePortions": "Меньше порций",
+    "increasePortions": "Больше порций",
+    "portions": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порции}}"
   },
   "measurementSystem": {
     "label": "Система мер",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Шаг {number}: Опишите действие...",
-    "stepPlaceholderShort": "Шаг {number}"
+    "stepPlaceholderShort": "Шаг {number}",
+    "recipeSuggestions": "Предложения рецептов",
+    "ingredientSuggestions": "Предложения ингредиентов"
   },
   "stepIngredients": {
     "rowLabel": "Связанные ингредиенты",
@@ -322,16 +329,15 @@
   },
   "toasts": {
     "imported": "Рецепт импортирован",
-    "failed": "Операция с рецептом не выполнена",
     "failedDescription": "Что-то пошло не так при обработке вашего рецепта. Проверьте консоль браузера для получения технических подробностей.",
     "incomplete": "Этот рецепт может быть неполным. Сверьте его с источником.",
     "notARecipe": "Эта страница не похожа на рецепт.",
     "privateAddress": "Импорт с адресов частной сети на этом сервере запрещён.",
-    "batchImported": "Рецепты импортированы",
-    "batchImportedDescription": "{count} {count, plural, one {рецепт} few {рецепта} many {рецептов} other {рецепта}} импортировано из архива",
     "view": "Просмотр",
     "open": "Открыть",
-    "deleteKept": "{count, plural, one {# рецепт изменён} few {# рецепта изменены} many {# рецептов изменено} other {# рецепта изменено}} другим пользователем и сохранён."
+    "deleteKept": "{count, plural, one {# рецепт изменён} few {# рецепта изменены} many {# рецептов изменено} other {# рецепта изменено}} другим пользователем и сохранён.",
+    "deleted": "Рецепт удалён",
+    "deletedDescription": "Этот рецепт был удалён."
   },
   "tags": {
     "panel": {
@@ -346,12 +352,19 @@
     "servings": "Порции",
     "serving": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порций}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Проведите для навигации по шагам",
-    "swipeIngredients": "Проведите влево для ингредиентов",
-    "swipeBackToSteps": "Проведите вправо для шагов",
     "readyAt": "Готово примерно в {time}",
     "timers": "Таймеры",
-    "nextStep": "Следующий шаг"
+    "nextStep": "Следующий шаг",
+    "stepLabel": "Шаг {number}",
+    "previousStep": "Предыдущий шаг",
+    "startTimer": "Запустить таймер на {duration}",
+    "pauseTimer": "Приостановить таймер, осталось {time}",
+    "resumeTimer": "Продолжить таймер, осталось {time}",
+    "dismissTimer": "Закрыть таймер",
+    "restartTimer": "Перезапустить таймер",
+    "notificationsOff": "Уведомления Norish выключены, поэтому таймеры звонят, только пока приложение открыто.",
+    "decreaseTimer": "Убавить {time}",
+    "increaseTimer": "Добавить {time}"
   },
   "enrichment": {
     "failed": "Не удалось выполнить обогащение",
@@ -374,10 +387,7 @@
   "provenance": {
     "title": "Происхождение",
     "region": "Регион",
-    "cuisines": "Кухни",
-    "inferring": "Определяем происхождение этого рецепта…",
-    "noInfo": "Пока нет сведений о происхождении",
-    "inferWithAI": "Определить с помощью ИИ"
+    "cuisines": "Кухни"
   },
   "import": {
     "alreadyExists": "У вас уже есть этот рецепт",
@@ -431,7 +441,13 @@
     "changeImage": "Заменить изображение",
     "removeImage": "Убрать изображение",
     "imageUploadFailed": "Не удалось загрузить изображение.",
-    "imageNeedsConnection": "Изображения можно будет изменить, когда вы снова будете в сети."
+    "imageNeedsConnection": "Изображения можно будет изменить, когда вы снова будете в сети.",
+    "rename": "Переименовать",
+    "deleteAlertTitle": "Удалить «{title}»?",
+    "changeCover": "Сменить обложку",
+    "renameTitle": "Переименовать книгу рецептов",
+    "coverFromLibrary": "Выбрать из медиатеки",
+    "coverFromCamera": "Сделать снимок"
   },
   "print": {
     "title": "Печать рецепта",
@@ -450,5 +466,78 @@
     "newCookbook": "Новая кулинарная книга",
     "filedInto": "{count, plural, one {# рецепт добавлен} few {# рецепта добавлено} many {# рецептов добавлено} other {# рецепта добавлено}} в {title}",
     "filedIntoMany": "{count, plural, one {# рецепт добавлен} few {# рецепта добавлено} many {# рецептов добавлено} other {# рецепта добавлено}} в кулинарные книги: {cookbooks}"
+  },
+  "addRecipe": {
+    "fromLink": "По ссылке",
+    "fromLinkHint": "Любой сайт с рецептами или видео",
+    "fromPhotos": "Из фото",
+    "fromPhotosHint": "Страницы кулинарной книги или скриншот",
+    "fromText": "Из текста",
+    "fromTextHint": "Вставьте рецепт или JSON-LD",
+    "writeYourself": "Написать самому",
+    "writeYourselfHint": "Начать с пустого рецепта",
+    "importHost": "Импортировать {host}",
+    "linkTitle": "Импорт по ссылке",
+    "textTitle": "Импорт из текста",
+    "photosTitle": "Импорт из фото",
+    "camera": "Камера",
+    "photoLibrary": "Медиатека",
+    "photoCount": "{count, plural, one {# фото, импортируется как один рецепт} few {# фото, импортируются как один рецепт} many {# фото, импортируются как один рецепт} other {# фото, импортируются как один рецепт}}",
+    "photoLimits": "До {max} фото, JPEG, PNG или WebP",
+    "removePhoto": "Удалить фото {number}"
+  },
+  "shareExtension": {
+    "sending": "Отправка в Norish…",
+    "sentTitle": "Импорт в Norish",
+    "sentBody": "Рецепт скоро появится в вашей библиотеке.",
+    "savedTitle": "Сохранено на потом",
+    "savedBody": "Norish импортирует его, когда ваш сервер станет доступен.",
+    "signedOut": "Сначала откройте Norish и войдите.",
+    "tooOld": "Сначала нужно обновить ваш сервер Norish.",
+    "noAi": "Для импорта фото нужен ИИ, а он отключён на вашем сервере.",
+    "failed": "Norish не удалось это импортировать.",
+    "close": "Закрыть",
+    "photoCount": "{count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}",
+    "text": "Текст"
+  },
+  "editor": {
+    "newTitle": "Новый рецепт",
+    "editTitle": "Редактировать рецепт",
+    "recipeName": "Название рецепта",
+    "ingredient": "Ингредиент",
+    "sectionHeading": "Заголовок раздела",
+    "step": "Шаг",
+    "steps": "Шаги",
+    "notesHint": "Начните строку с # для заголовка; заключите слова в **двойные звёздочки** для жирного шрифта.",
+    "ingredientsHint": "Вводите ингредиенты, например 2 стакана муки; количество и единицы распознаются автоматически. Начните строку с # для раздела.",
+    "stepsHint": "Нажмите Ввод для следующего шага. Введите @, чтобы привязать ингредиент, # для раздела.",
+    "addIngredient": "Добавить ингредиент",
+    "removeIngredient": "Удалить ингредиент",
+    "addStep": "Добавить шаг",
+    "removeStep": "Удалить шаг",
+    "addPhoto": "Добавить фото",
+    "addStepPhoto": "Добавить фото шага",
+    "removePhoto": "Удалить фото",
+    "mediaCount": "Фото: {images}/{maxImages} · видео: {videos}/{maxVideos}",
+    "photosOffline": "Фото можно добавить, когда вы будете в сети.",
+    "tagsAndCategories": "Теги и категории",
+    "categories": "Категории",
+    "tags": "Теги",
+    "tagsHint": "Выберите подсказку или введите новый тег; у новых тегов пунктирная рамка.",
+    "addTag": "Добавить тег",
+    "removeNamed": "Удалить {name}",
+    "servingsAndTime": "Порции и время",
+    "minutes": "мин",
+    "perServing": "на порцию, необязательно",
+    "kcal": "ккал",
+    "grams": "г",
+    "source": "Источник",
+    "sourceUrl": "URL источника",
+    "measurementSystem": "Система мер",
+    "measurementHint": "Определено по вашим ингредиентам. Изменение меняет только подпись и не пересчитывает; после сохранения используйте Конвертировать.",
+    "discardTitle": "Отменить изменения?",
+    "discardMessage": "У вас есть несохранённые изменения.",
+    "keepEditing": "Продолжить",
+    "discard": "Отменить"
   }
 }

@@ -1,0 +1,41 @@
+# The provider error link shows Sign-in failed naming the provider, or unnamed with none. Try again
+# returns to Sign in.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- openLink: norish://auth/error?provider=${NORISH_OAUTH_PROVIDER_ID}
+- extendedWaitUntil:
+    visible:
+      id: sign-in-failed-description
+      text: ${NORISH_COPY_SIGN_IN_FAILED_NAMED}
+    timeout: 10000
+- assertVisible:
+    id: sign-in-failed-title
+    text: ${NORISH_COPY_SIGN_IN_FAILED_TITLE}
+- tapOn:
+    id: sign-in-failed-retry
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 10000
+- assertNotVisible:
+    id: sign-in-failed-title
+- openLink: norish://auth/error
+- extendedWaitUntil:
+    visible:
+      id: sign-in-failed-description
+      text: ${NORISH_COPY_SIGN_IN_FAILED_UNNAMED}
+    timeout: 10000
+- tapOn:
+    id: sign-in-failed-retry
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 10000

@@ -9,7 +9,8 @@ export const PlannedItemMoveInputSchema = z.object({
   version: z.number().int().positive(),
   targetDate: z.string(),
   targetSlot: slotSchema,
-  targetIndex: z.number().int().min(0),
+  /** Omitted: last in the target slot, as the server finds it. */
+  targetIndex: z.number().int().min(0).optional(),
 });
 
 export const PlannedItemDeleteInputSchema = z.object({

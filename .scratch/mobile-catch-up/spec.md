@@ -101,7 +101,7 @@ The server re-accepts the app's sign-in safely: the app's own scheme is trusted 
 - Imports run one way: shared folders, then features, then `src/app/`. A feature never imports another feature; routes compose them. A `no-restricted-imports` override in the app's ESLint config enforces it.
 - Domain logic shared with web stays in `@norish/shared` and `@norish/shared-react`; a feature holds only what is mobile-only.
 - Tests sit next to the code as `*.test.ts(x)`, not under `__tests__/`, which the shared ESLint config ignores.
-- The catch-up starts it with `features/auth` and `features/smoke`. Web keeps its current layout.
+- The catch-up starts it with `features/auth` and `features/smoke`. Web moves to the same layout through `.scratch/app-structure/spec.md`.
 
 ### Server sign-in
 

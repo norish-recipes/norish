@@ -4,7 +4,7 @@
     "ariaLabel": "Вкладки настроек"
   },
   "tabs": {
-    "user": "Пользователь",
+    "account": "Аккаунт",
     "household": "Семейная группа",
     "caldav": "CalDAV",
     "admin": "Администратор",
@@ -193,7 +193,6 @@
           "abbreviated": "Сокращённо"
         }
       },
-      "applyError": "Не удалось применить настройку",
       "afterPlanning": {
         "title": "После планирования рецепта",
         "description": "Что происходит, когда вы планируете рецепт",
@@ -279,11 +278,7 @@
         "warning": "Вы станете обычным участником и больше не сможете исключать пользователей или управлять кодами приглашения.",
         "confirmButton": "Передать права"
       },
-      "toasts": {
-        "kickFailed": "Не удалось исключить пользователя",
-        "transferSuccess": "Права администратора переданы пользователю {name}",
-        "transferFailed": "Не удалось передать права администратора"
-      }
+      "unknown": "Неизвестно"
     },
     "joinCode": {
       "title": "Код приглашения",
@@ -291,6 +286,7 @@
       "expiresIn": "Истекает через:",
       "regenerateButton": "Сгенерировать заново",
       "expired": "Истёк",
+      "countdown": "{minutes} мин {seconds} с",
       "noCodeDescription": "Нет активного кода приглашения. Сгенерируйте его, чтобы приглашать новых участников.",
       "generateButton": "Сгенерировать код приглашения",
       "copySuccess": "Код приглашения скопирован",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Подключено",
         "checking": "Проверка...",
-        "disconnected": "Отключено",
-        "unknown": "Неизвестно"
+        "disconnected": "Отключено"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Ошибка",
         "removed": "Удалено"
       },
-      "emptyFiltered": "Элементы со статусом «{status}» не найдены",
+      "emptyFiltered": "Нет элементов с этим статусом",
       "emptyDefault": "Записи синхронизации не найдены",
       "errorDetails": "Подробности ошибки",
-      "pagination": "Страница {current} из {total}"
+      "pagination": "Страница {current} из {total}",
+      "paginationLabel": "Страницы статуса синхронизации"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Выберите, какие языки смогут выбирать пользователи",
       "defaultLocale": "Язык по умолчанию",
       "defaultLocaleDescription": "Язык для новых пользователей и язык-резерв",
-      "localesSaved": "Языковые настройки сохранены",
-      "localesError": "Не удалось сохранить языковые настройки",
       "atLeastOneLocale": "Должен быть включён хотя бы один язык",
       "export": {
         "title": "Архив рецептов",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Удалить {name}?",
       "deleteConfirm": "Это навсегда удалит аккаунт пользователя и уберёт его из домохозяйства. Это действие нельзя отменить.",
-      "deleteSuccess": "{name} удалён(а)",
       "countSummary": "{count, plural, one {# пользователь} few {# пользователя} many {# пользователей} other {# пользователя}} всего"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Ключевые слова единиц времени для определения таймеров",
         "description": "Настройте ключевые слова, используемые для обнаружения таймеров в инструкциях рецепта. Поддерживает несколько языков.",
         "enableToggle": "Включить определение таймеров",
+        "keywordRequired": "Нужно хотя бы одно ключевое слово для часов, минут или секунд",
         "hoursLabel": "Ключевые слова часов",
         "hoursPlaceholder": "час, часа, часов, ч",
         "hoursHelp": "Ключевые слова для часов (например, hour, stunde, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "API-ключ",
       "apiKeyPlaceholder": "Введите API-ключ",
       "temperature": "Температура: {value}",
+      "temperatureLabel": "Температура",
       "temperatureHint": "Ниже = более точные ответы, выше = более творческие",
       "maxTokens": "Макс. токенов",
       "requestTimeout": "Время ожидания запроса (мс)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Макс. длина видео (секунды)",
       "maxLengthDescription": "Более длинные видео требуют больше времени и ресурсов",
       "maxFileSize": "Макс. размер видеофайла",
+      "maxFileSizeUnit": "МБ",
       "maxFileSizeDescription": "Максимальный размер загружаемых видеофайлов",
       "ytDlpVersion": "Версия yt-dlp",
       "ytDlpVersionDescription": "Версия yt-dlp, работающая на этом сервере. Здесь не изменяется.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Совместимый с OpenAI"
       },
       "transcriptionEndpoint": "URL эндпоинта",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) или http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-совместимый эндпоинт с поддержкой Whisper или эндпоинт Ollama",
       "transcriptionModel": "Модель",
       "transcriptionModelDescription": "Модель для транскрибации",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Позволяет импорту обращаться к вашей локальной сети. Obscura отклоняет их в любом случае.",
       "navigationTimeout": "Тайм-аут навигации (мс)",
       "navigationTimeoutDescription": "Сколько времени даётся рендереру на загрузку страницы.",
-      "saved": "Рендереры страниц сохранены",
-      "error": "Не удалось сохранить рендереры страниц",
       "connectionSuccess": "Подключение успешно"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Несохранённые изменения",
     "jsonEditor": {
       "placeholder": "Введите JSON-конфигурацию...",
-      "invalidJson": "Некорректный формат JSON",
-      "failedToSave": "Не удалось сохранить",
-      "failedToRestore": "Не удалось восстановить значения по умолчанию"
+      "invalidJson": "Некорректный формат JSON"
     },
     "jobQueue": {
       "title": "Очереди задач",
@@ -1327,6 +1320,13 @@
       "empty": "Кухонь пока нет.",
       "duplicate": "Кухня с таким названием уже существует.",
       "saveFailed": "Не удалось сохранить эту кухню."
+    },
+    "toasts": {
+      "localesSaved": "Языковые настройки сохранены",
+      "localesError": "Не удалось сохранить языковые настройки",
+      "userDeleted": "{name} удалён(а)",
+      "pageRenderersSaved": "Рендереры страниц сохранены",
+      "pageRenderersError": "Не удалось сохранить рендереры страниц"
     }
   },
   "archiveExport": {

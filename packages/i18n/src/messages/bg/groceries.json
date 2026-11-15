@@ -21,7 +21,6 @@
   },
   "item": {
     "unnamedItem": "Продукт без име",
-    "fromRecipes": "От {count, plural, one {# рецепта} other {# рецепти}}",
     "items": "{count, plural, one {# продукт} other {# продукта}}"
   },
   "store": {
@@ -54,7 +53,6 @@
       "violet": "Виолетово"
     },
     "confirmDelete": "Наистина ли искаш да изтриеш {storeName}?",
-    "deleteWarning": "Продуктите в този магазин ще бъдат преместени в „Некатегоризирани“.",
     "noStoresYet": "Все още няма магазини",
     "createStoreHint": "Създай магазин, за да организираш продуктите си",
     "hasItems": "Този магазин съдържа {count} продукт.",
@@ -113,26 +111,11 @@
   "panel": {
     "addTitle": "Добавяне на продукт",
     "editTitle": "Редактиране на продукт",
-    "itemName": "Име на продукта",
-    "itemNamePlaceholder": "напр. Мляко, Яйца, Хляб...",
     "selectStore": "Избери магазин",
-    "noStore": "Без магазин",
     "recurrence": "Повторение",
     "savePreference": "Запомни магазина за този продукт",
     "addAnother": "Добави още един",
     "addRepeat": "Настройване на повторение",
-    "recurrenceEnabled": "Повтарящ се",
-    "recurrenceSheet": {
-      "title": "Повторение",
-      "subtitle": "Автоматично добавяне на този продукт отново в списъка",
-      "enable": "Включи повторението",
-      "disable": "Изключи повторението",
-      "frequency": "Честота",
-      "weekly": "Ежеседмично",
-      "biweekly": "На всеки 2 седмици",
-      "monthly": "Ежемесечно",
-      "confirm": "Потвърди"
-    },
     "storeOptional": "Магазин (незадължително)",
     "autoDetectFromHistory": "Автоматично откриване от историята",
     "autoDetectOrSelect": "Автоматично откриване или избор",
@@ -143,7 +126,6 @@
     "pantryUnavailable": "Килерът не можа да бъде прочетен, затова още нищо не е отметнато. Отметнете това, което трябва да купите.",
     "loadingIngredients": "Зареждане на съставките...",
     "noIngredients": "Няма съставки.",
-    "addSelectedToGroceries": "Добави в продуктите",
     "ingredientsAdded": "Съставките са добавени в списъка с продукти.",
     "ingredientsFailed": "Добавянето на съставките в списъка с продукти не бе успешно.",
     "addToGroceries": "Добави в продуктите",
@@ -152,7 +134,9 @@
     "toBuy": "За купуване",
     "inPantry": "В килера ви",
     "weKeepThis": "Винаги имаме",
-    "keepFailed": "Не можа да бъде добавен в килера"
+    "keepFailed": "Не можа да бъде добавен в килера",
+    "addCount": "{count, plural, one {Добави # артикул} other {Добави # артикула}}",
+    "adding": "Добавяне в списъка с продукти…"
   },
   "picker": {
     "unlink": "Премахни връзката с продукта",
@@ -168,7 +152,6 @@
     "productLabel": "Продукт в {store}",
     "cannotSearch": "В този магазин не може да се търси",
     "cannotSearchHint": "Norish не можа да извлече страница за търсене от връзката на {store}. Поправете я в „Управление на магазини“ и цените ще последват.",
-    "packSize": "Размер на опаковката",
     "packAmount": "Количество в опаковка",
     "packUnit": "Единица",
     "productPage": "Страница на продукта",
@@ -196,5 +179,36 @@
     "onePack": "броено като една опаковка",
     "sale": "Промоция",
     "regularPrice": "Редовна цена {price}"
+  },
+  "mobile": {
+    "viewMode": "Изглед",
+    "viewByStore": "По магазини",
+    "viewByRecipe": "По рецепти",
+    "listSettings": "Настройки на списъка",
+    "emptyHint": "Добавете продукти с бутона по-долу.",
+    "addTitle": "Добавяне на покупки",
+    "editTitle": "Редактиране на продукт",
+    "fromRecipe": "От {recipe}",
+    "store": "Магазин",
+    "noStore": "Без магазин",
+    "automatic": "Автоматично",
+    "never": "Никога",
+    "removeRepeat": "Премахване на повторението",
+    "amountFor": "{amount} за {recipe}",
+    "expand": "Разгъване",
+    "collapse": "Свиване",
+    "itemLabel": "Продукт",
+    "decreaseInterval": "Намаляване на интервала",
+    "increaseInterval": "Увеличаване на интервала",
+    "manageStores": "Управление на магазините",
+    "addStore": "Добавяне на магазин",
+    "editStore": "Редактиране на магазин",
+    "editStoreLabel": "Редактиране на {store}",
+    "deleteStoreLabel": "Изтриване на {store}",
+    "deleteStoreTitle": "Да се изтрие ли {store}?",
+    "moveItemsToUnsorted": "Премести артикулите в Несортирани",
+    "typePrice": "Въведете цената сами",
+    "product": "Продукт",
+    "chooseProduct": "Избор на продукт"
   }
 }

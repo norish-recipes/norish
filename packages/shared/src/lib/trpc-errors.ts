@@ -2,7 +2,7 @@ import { TRPCClientError } from "@trpc/client";
 
 export function isBackendUnreachableError(error: unknown): boolean {
   if (error instanceof TRPCClientError) {
-    return isNetworkError(error.cause) || !hasHttpStatus(error);
+    return isNetworkError(error.cause) || httpStatusOf(error) === null;
   }
 
   return isNetworkError(error);
@@ -54,8 +54,9 @@ function isNetworkError(error: unknown): boolean {
   );
 }
 
-function hasHttpStatus(error: TRPCClientError<any>): boolean {
-  const data = error.data as Record<string, unknown> | undefined;
+/** The HTTP status a tRPC error carries in `error.data.httpStatus`, on `TRPCClientError` and plain shapes. */
+export function httpStatusOf(error: unknown): number | null {
+  const data = (error as { data?: { httpStatus?: unknown } } | null | undefined)?.data;
 
-  return typeof data?.httpStatus === "number";
+  return typeof data?.httpStatus === "number" ? data.httpStatus : null;
 }

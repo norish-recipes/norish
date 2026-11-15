@@ -6,7 +6,7 @@ import { userProcedures } from "@norish/trpc/routers/user/user";
 const mockDb = vi.hoisted(() => ({
   getApiKeysForUser: vi.fn(),
   getUserById: vi.fn(),
-  getUserPreferences: vi.fn(),
+  getUserPreferences: vi.fn(async () => ({})),
   updateUserPreferences: vi.fn(),
 }));
 

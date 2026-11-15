@@ -1,0 +1,130 @@
+import type { CardActions } from "@/hooks/use-card-actions";
+import React from "react";
+import { Text, View } from "react-native";
+import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
+
+import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
+
+import { useCardActionMenu } from "../hooks/use-card-action-menu";
+import { COOKBOOK_ACTION_DEFINITIONS, cookbookMenuActions } from "../utils/card-actions";
+import { CardMenu } from "./card-menu";
+import { CookbookCover } from "./cookbook-cover";
+import { Pill } from "./pill";
+
+/** A cookbook in the Library, as a row or a grid card; a long press offers Add recipes, Rename and Delete. */
+export function CookbookCard({
+  cookbook,
+  variant,
+  allergies,
+  actions,
+}: {
+  cookbook: CookbookSummaryDTO;
+  variant: RecipeViewMode;
+  allergies: string[];
+  actions: CardActions;
+}) {
+  const intl = useIntl();
+  const router = useRouter();
+  const [accent] = useThemeColor(["accent"] as const);
+  const allergySet = allergenSet(allergies);
+  const allergens = cookbook.memberTags.filter((tag) => isAllergenTag(tag, allergySet));
+  const timeLabel = formatMinutesHM(cookbook.totalMinutes ?? undefined);
+  const count = intl.formatMessage(
+    { id: "recipes.cookbooks.recipeCount" },
+    { count: cookbook.memberCount }
+  );
+  const description = cookbook.memberTitles.join(", ");
+  const size = variant === "grid" ? "footer" : "row";
+
+  const facts = (
+    <View className="flex-row gap-1.5 overflow-hidden">
+      <Pill size={size}>{count}</Pill>
+      {timeLabel ? (
+        <Pill icon="time-outline" size={size}>
+          {timeLabel}
+        </Pill>
+      ) : null}
+      {cookbook.minServings ? (
+        <Pill icon="people-outline" size={size}>
+          {cookbook.minServings}
+        </Pill>
+      ) : null}
+      {allergens.length > 0 ? (
+        <Pill icon="warning-outline" size={size} tone="warning">
+          {allergens.length === 1 ? (allergens[0] ?? "") : `+${allergens.length}`}
+        </Pill>
+      ) : null}
+    </View>
+  );
+
+  const title = (
+    <View className="min-w-0 flex-row items-center gap-1.5">
+      <Ionicons color={accent} name="book-outline" size={16} />
+      <Text className="text-foreground min-w-0 flex-1 text-base font-semibold" numberOfLines={1}>
+        {cookbook.title}
+      </Text>
+    </View>
+  );
+
+  const handlers = {
+    addRecipes: () => actions.addRecipes(cookbook),
+    rename: () => actions.renameCookbook(cookbook),
+    delete: () => actions.deleteCookbook(cookbook),
+  };
+  const { items, accessibilityProps } = useCardActionMenu(
+    cookbookMenuActions({
+      canEdit: actions.canEdit(cookbook),
+      canDelete: actions.canDelete(cookbook),
+    }),
+    (key) => COOKBOOK_ACTION_DEFINITIONS[key],
+    handlers
+  );
+  const open = () => router.push({ pathname: "/cookbook/[id]", params: { id: cookbook.id } });
+  const tap = useTapGesture({ runOnJS: true, onActivate: open });
+
+  return (
+    <View
+      accessible
+      {...accessibilityProps}
+      accessibilityLabel={cookbook.title}
+      accessibilityRole="button"
+      className={variant === "grid" ? "flex-1" : undefined}
+      testID={`cookbook-card-${cookbook.id}`}
+      onAccessibilityTap={open}
+    >
+      <CardMenu href={{ pathname: "/cookbook/[id]", params: { id: cookbook.id } }} items={items}>
+        <GestureDetector gesture={tap}>
+          {variant === "grid" ? (
+            <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">
+              <CookbookCover className="h-40 w-full" cookbook={cookbook} />
+              <View className="min-h-0 flex-1 gap-0.5 px-3 pt-2.5 pb-3">
+                {title}
+                <Text className="text-muted text-xs" numberOfLines={1}>
+                  {description}
+                </Text>
+                <View className="border-border mt-auto border-t pt-2.5">{facts}</View>
+              </View>
+            </View>
+          ) : (
+            <View className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]">
+              <CookbookCover className="h-[116px] w-[108px]" cookbook={cookbook} />
+              <View className="min-w-0 flex-1 gap-[3px] px-3.5 py-3">
+                {title}
+                <Text className="text-muted text-sm" numberOfLines={1}>
+                  {description}
+                </Text>
+                <View className="mt-auto">{facts}</View>
+              </View>
+            </View>
+          )}
+        </GestureDetector>
+      </CardMenu>
+    </View>
+  );
+}

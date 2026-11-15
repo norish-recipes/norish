@@ -13,6 +13,7 @@
       "description": "Administrer din konto"
     },
     "logout": "Log ud",
+    "signOutOffline": "Du er offline. Log ud, når du er online igen.",
     "signOutConfirm": {
       "title": "Kassér usynkroniserede ændringer?",
       "description": "{count, plural, one {# ændring foretaget offline har endnu ikke nået serveren.} other {# ændringer foretaget offline har endnu ikke nået serveren.}} Logger du ud, kasseres dette ventende arbejde permanent, og din kontos offlinedata fjernes fra denne enhed."
@@ -32,11 +33,6 @@
     "home": "Opskrifter",
     "calendar": "Kalender",
     "groceries": "Indkøbsliste"
-  },
-  "mobile": {
-    "searchPlaceholder": "Søg opskrifter...",
-    "toggleSearch": "Slå søgning til/fra",
-    "goBack": "Gå tilbage"
   },
   "archiveImporter": {
     "uploading": "Uploader…",

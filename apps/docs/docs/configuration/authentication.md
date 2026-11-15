@@ -27,7 +27,7 @@ your `AUTH_URL` as the host:
 ## Linking accounts
 
 Accounts aren't linked automatically. To add a sign-in method, go to
-**Settings => User => Sign-in methods** and press **Connect**. The provider's email doesn't have
+**Settings => Account => Sign-in methods** and press **Connect**. The provider's email doesn't have
 to match yours.
 
 ![The Sign-in methods card in user settings](/img/screenshots/settings-sign-in-methods.png)

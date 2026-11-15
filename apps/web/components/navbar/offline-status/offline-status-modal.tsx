@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC } from "@/app/providers/trpc-provider";
 import Panel from "@/components/Panel/Panel";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { usePending } from "@/hooks/use-pending";
@@ -37,9 +36,7 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
   const t = useTranslations("common.offlineStatus");
   const isMobile = useIsMobile();
 
-  // Only mount the body — and thus the data layer (useTRPC, the Outbox
-  // subscription, the cache reads) — while the modal is open, so a closed modal
-  // costs nothing and doesn't depend on the tRPC provider being present.
+  // The body holds the tRPC reads and Outbox subscription, so it mounts only while open.
   const body = isOpen ? <OfflineStatusBody /> : null;
 
   if (isMobile) {
@@ -67,7 +64,7 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
 }
 
 function OfflineStatusBody() {
-  const status = useOfflineStatus(offlineEngine, useTRPC());
+  const status = useOfflineStatus(offlineEngine);
 
   return (
     <div className="flex flex-col gap-6">

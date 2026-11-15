@@ -15,6 +15,7 @@ import { getEffectivePrompts, loadDefaultPrompts } from "@norish/shared-server/a
 import { pruneToOverrides } from "@norish/shared-server/ai/prompts/overrides";
 import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { config } from "@norish/shared-server/realtime/config";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -77,6 +78,7 @@ const updateUnits = adminProcedure.input(z.string()).mutation(async ({ input, ct
     false
   );
   forgetSpellingRules();
+  void config.publish("changed", {}, undefined);
 
   return { success: true };
 });
@@ -110,6 +112,7 @@ const updateIngredientWords = adminProcedure.input(z.string()).mutation(async ({
     false
   );
   forgetSpellingRules();
+  void config.publish("changed", {}, undefined);
 
   return { success: true };
 });
@@ -141,6 +144,7 @@ const updateRecurrenceConfig = adminProcedure.input(z.string()).mutation(async (
     ctx.user.id,
     false
   );
+  void config.publish("changed", {}, undefined);
 
   return { success: true };
 });
@@ -201,6 +205,7 @@ const updateTimerKeywords = adminProcedure
       ctx.user.id,
       false
     );
+    void config.publish("changed", {}, undefined);
 
     return { success: true };
   });

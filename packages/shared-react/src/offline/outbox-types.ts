@@ -44,6 +44,8 @@ export interface OutboxEntry {
   createdAt: string;
   /** Replay attempts so far (drives the bounded 5xx retry). */
   attempts: number;
+  /** The store (one per process or tab) whose Replay is sending it; a save leaves it alone. */
+  sending?: string;
   /** Current lifecycle state. */
   status: OutboxEntryStatus;
   /** Set when {@link status} is `parked` or `conflicted`. */

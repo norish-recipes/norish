@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { DEVICE_PREFERENCE_DEFAULTS } from "@norish/shared/contracts/zod/device-preferences";
 import { userProcedures } from "@norish/trpc/routers/user/user";
 
 import type { Context } from "../../src/context";
@@ -13,7 +14,7 @@ const mockDb = vi.hoisted(() => ({
 }));
 
 vi.mock("@norish/db", () => ({
-  getApiKeysForUser: vi.fn(),
+  getApiKeysForUser: vi.fn(async () => []),
   getUserById: mockDb.getUserById,
   getUserPreferences: mockDb.getUserPreferences,
   updateUserPreferences: mockDb.updateUserPreferences,
@@ -77,6 +78,31 @@ describe("user preference procedures", () => {
     mockDb.getUserById.mockResolvedValue({ id: "user-1", version: 4 });
     mockDb.updateUserPreferences.mockResolvedValue({ stale: false });
     mockDb.setUserDevicePreferences.mockResolvedValue(undefined);
+  });
+
+  describe("get", () => {
+    it("carries the person's choices and leaves the Device Preferences to their own query", async () => {
+      const result = await createCaller().get();
+
+      expect(result.user.preferences).toEqual({ locale: "en" });
+    });
+  });
+
+  describe("getDevicePreferences", () => {
+    it("answers each Device Kind's block, the defaults where none is stored", async () => {
+      const result = await createCaller().getDevicePreferences();
+
+      expect(result).toEqual({
+        phone: { groceryViewMode: "recipe" },
+        desktop: DEVICE_PREFERENCE_DEFAULTS,
+      });
+    });
+
+    it("refuses a signed-out request", async () => {
+      await expect(createCaller(false).getDevicePreferences()).rejects.toMatchObject({
+        code: "UNAUTHORIZED",
+      });
+    });
   });
 
   describe("updatePreferences", () => {

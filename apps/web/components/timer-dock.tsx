@@ -2,11 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTimersEnabledQuery } from "@/hooks/config";
 import { useDockedTimers } from "@/hooks/use-docked-timers";
 import { useFloatingDock } from "@/hooks/use-floating-dock";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
-import { useTimerStore } from "@/stores/timers";
+import { showTimerNotification } from "@/lib/timer-notification";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -21,6 +20,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import useSound from "use-sound";
 
+import type { Timer } from "@norish/shared-react/recipes/timers";
+import { useTimersEnabledQuery } from "@norish/shared-react/config";
+import {
+  timerAdjustStep,
+  useTimerStore,
+  useTimerTicker,
+} from "@norish/shared-react/recipes/timers";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -30,21 +36,10 @@ const logger = createClientLogger("timer-dock");
 
 // Global tick loop component - only runs when timers are active
 export function TimerTicker() {
-  const tick = useTimerStore((state) => state.tick);
-  const timers = useTimerStore((state) => state.timers);
+  const t = useTranslations("common.timer");
 
-  // Check if there are any running timers
-  const hasRunningTimers = timers.some((t) => t.status === "running");
-  useEffect(() => {
-    // Only start interval if there are running timers
-    if (!hasRunningTimers) {
-      return;
-    }
-    const interval = setInterval(() => {
-      tick();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [tick, hasRunningTimers]);
+  useTimerTicker((timer) => showTimerNotification(timer, t("notification_body")));
+
   return null;
 }
 export function TimerDock({
@@ -288,20 +283,12 @@ export function TimerDock({
   );
 }
 
-// Helper for smart increment
-function getSmartIncrement(originalDurationMs: number): number {
-  const minutes = originalDurationMs / 1000 / 60;
-  if (minutes < 5) return 10 * 1000; // 10s
-  if (minutes < 20) return 60 * 1000; // 1m
-
-  return 5 * 60 * 1000; // 5m
-}
 function TimerRow({
   timer,
   t,
   isLast,
 }: {
-  timer: import("@/stores/timers").Timer;
+  timer: Timer;
   t: (key: string) => string;
   isLast: boolean;
 }) {
@@ -312,7 +299,7 @@ function TimerRow({
   const adjustTimer = useTimerStore((state) => state.adjustTimer);
   const isCompleted = timer.status === "completed";
   const isRunning = timer.status === "running";
-  const smartIncrement = getSmartIncrement(timer.originalDurationMs);
+  const smartIncrement = timerAdjustStep(timer.originalDurationMs);
   const handleTimerClick = () => {
     router.push(`/recipes/${timer.recipeId}`);
   };

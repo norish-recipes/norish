@@ -6,8 +6,8 @@ import { AppState } from "react-native";
 import { createMMKV } from "react-native-mmkv";
 import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
-import { getBackendBaseUrl } from "@/lib/network/backend-base-url";
-import { useConnectionStatus, useTRPC, useTRPCClient } from "@/lib/trpc/trpc-provider";
+import { getServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
+import { focusManager } from "@tanstack/react-query";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -16,24 +16,52 @@ import {
   OfflineController as SharedOfflineController,
   useConnectivity,
 } from "@norish/shared-react/offline/react";
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { useConnectionStatus } from "@norish/shared-react/trpc";
+import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
+import { appGroupInbox } from "./app-group-inbox";
 import { createMmkvStorage } from "./mmkv-storage";
+import { withSavedShares } from "./share-inbox";
 import { uploadFiles } from "./upload-files";
 
 /** Marks the app's replays in server logs. */
-export const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
+const OUTBOX_REPLAY_HEADER_VALUE = "mobile-outbox";
 
-export const offlineEngine = createOfflineEngine({
-  storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
-  replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
-  probeUrl: () => `${getBackendBaseUrl()}${HEALTH_PROBE_PATH}`,
-  buster: APP_VERSION,
-  calendarRanges: () => {
-    const { start, end } = getInitialDateRange("mobile");
+/** Reads restored from an earlier launch may predate a change made elsewhere. */
+const LAUNCHED_AT = Date.now();
 
-    return [{ startISO: dateKey(start), endISO: dateKey(end) }];
-  },
+export const offlineEngine = withSavedShares(
+  createOfflineEngine({
+    storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
+    replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
+    probeUrl: () => `${getServerAddress()}${HEALTH_PROBE_PATH}`,
+    buster: APP_VERSION,
+    calendarRanges: () => [getInitialCalendarRange("mobile")],
+    // As web: a read restored from an earlier launch refetches when it mounts, fresh or not.
+    refetchOnMount: (query) => (query.state.dataUpdatedAt < LAUNCHED_AT ? "always" : true),
+  }),
+  appGroupInbox,
+  () => getServerAddress()
+);
+
+// React Native has no window focus, so the foreground is focus: stale reads refetch on return.
+// iOS `inactive` (Face ID, the share sheet, the switcher peek) is not leaving, so it changes nothing.
+focusManager.setEventListener((setFocused) => {
+  const subscription = AppState.addEventListener("change", (state) => {
+    if (state === "active") setFocused(true);
+    else if (state === "background") setFocused(false);
+  });
+
+  return () => subscription.remove();
+});
+
+// Query keys carry no Server Address, so a new one drops every cached answer, signed-out
+// reads such as `config.authProviders` included, before the next server's screens read them.
+subscribeServerAddressChange(() => offlineEngine.queryClient.clear());
+
+// Saves are throttled, so leaving the foreground saves now: a kill from the switcher sends no event.
+AppState.addEventListener("change", (state) => {
+  if (state !== "active") void offlineEngine.cache.flush();
 });
 
 // A network change or a return to the foreground only brings the next probe forward, because
@@ -67,9 +95,10 @@ export function ConnectivityProvider({ children }: { children: React.ReactNode }
   );
 }
 
-// The auth client is one per server address, so this reads the current session without the context.
+// The auth client is one per server address until a sign-out resets it, and the context rereads
+// it then, so this reads the current session without the context.
 const getSessionUserId = async () =>
-  (await getAuthClient(getBackendBaseUrl()).getSession()).data?.user?.id ?? null;
+  (await getAuthClient(getServerAddress()).getSession()).data?.user?.id ?? null;
 
 /** The shared offline controller over the app's engine, below auth and tRPC. */
 export function OfflineController({
@@ -82,8 +111,6 @@ export function OfflineController({
 }) {
   const connectivity = useConnectivity();
   const { status: wsStatus } = useConnectionStatus();
-  const trpc = useTRPC();
-  const trpcClient = useTRPCClient();
 
   return (
     <SharedOfflineController
@@ -91,8 +118,6 @@ export function OfflineController({
       engine={offlineEngine}
       getSessionUserId={getSessionUserId}
       sessionUserId={sessionUserId}
-      transport={trpcClient}
-      trpc={trpc}
       wsStatus={wsStatus}
     >
       {children}

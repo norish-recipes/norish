@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { TimerChip } from "@/components/recipe/timer-chip";
+import { TimerChip } from "@/components/timer-chip";
 import ReactMarkdown from "react-markdown";
 
 import type { TimerKeywords, TimerMatch } from "@norish/shared/lib/timer-parser";
+import { recipeTimerId } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
-import { parseTimerDurations } from "@norish/shared/lib/timer-parser";
+import {
+  markTimers,
+  parseTimerDurations,
+  TIMER_HREF_PREFIX,
+} from "@norish/shared/lib/timer-parser";
 
 const logger = createClientLogger("smart-markdown-renderer");
-const TIMER_HREF_PREFIX = "norish-timer:";
-const MARKDOWN_LABEL_ESCAPE = /[\\\[\]]/g;
 
-export type SmartMarkdownLinkMode = "private" | "public" | "disabled";
+type SmartMarkdownLinkMode = "private" | "public" | "disabled";
 
 export type SmartMarkdownTimerConfig = {
   enabled: boolean;
@@ -22,7 +25,7 @@ export type SmartMarkdownTimerConfig = {
   keywords?: TimerKeywords;
 };
 
-export interface SmartMarkdownRendererProps {
+interface SmartMarkdownRendererProps {
   text: string;
   className?: string;
   disableLinks?: boolean;
@@ -58,13 +61,13 @@ export default function SmartMarkdownRenderer({
       String(index),
       {
         durationMs: match.durationSeconds * 1000,
-        id: `${timerConfig?.recipeId ?? "recipe"}-s${timerConfig?.stepIndex ?? 0}-${index}`,
+        id: recipeTimerId(timerConfig?.recipeId ?? "recipe", timerConfig?.stepIndex ?? 0, index),
         label: `Step ${(timerConfig?.stepIndex ?? 0) + 1} Timer`,
         originalText: match.originalText,
       },
     ])
   );
-  const processedText = preprocessText(applyTimerMarkup(text, timerMatches), resolvedLinkMode);
+  const processedText = preprocessText(markTimers(text, timerMatches), resolvedLinkMode);
 
   return (
     <span className={className}>
@@ -206,30 +209,6 @@ function parseTimerMatches(
 
     return [];
   }
-}
-
-function applyTimerMarkup(text: string, timerMatches: TimerMatch[]): string {
-  if (timerMatches.length === 0) return text;
-
-  let result = "";
-  let currentIndex = 0;
-
-  timerMatches
-    .slice()
-    .sort((a, b) => a.startIndex - b.startIndex)
-    .forEach((match, index) => {
-      if (match.startIndex < currentIndex) return;
-
-      result += text.slice(currentIndex, match.startIndex);
-      result += `[${escapeMarkdownLabel(match.originalText)}](${TIMER_HREF_PREFIX}${index})`;
-      currentIndex = match.endIndex;
-    });
-
-  return result + text.slice(currentIndex);
-}
-
-function escapeMarkdownLabel(value: string): string {
-  return value.replace(MARKDOWN_LABEL_ESCAPE, "\\$&");
 }
 
 function transformMarkdownUrl(url: string): string {

@@ -128,12 +128,9 @@ const create = authedProcedure
       .then(async (household) => {
         await addUserToHousehold({ householdId: household.id, userId: ctx.user.id });
 
-        // Auto-generate join code for new household
-        await regenerateJoinCode(household.id);
-
         log.info({ userId: ctx.user.id, householdId: household.id }, "Household created");
 
-        // Get full household data with users (after join code generated)
+        // Get full household data with users
         const fullHousehold = await getHouseholdForUser(ctx.user.id);
         const userIds = fullHousehold?.users.map((u) => u.id) ?? [];
         const allergiesRows = await getAllergiesForUsers(userIds);

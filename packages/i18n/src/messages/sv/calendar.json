@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "Idag",
-    "scrollToToday": "Gå till idag"
+    "scrollToToday": "Gå till idag",
+    "planRecipe": "Planera recept"
+  },
+  "today": {
+    "openRecipe": "Öppna recept",
+    "move": "Flytta…",
+    "removeTitle": "Ta bort från idag?",
+    "removeMessage": "{name} tas bort från {slot} på {day}.",
+    "moveTitle": "Flytta",
+    "moveSubtitle": "{name}, dagens {slot}",
+    "moveToDay": "Flytta {name} till {day}"
   },
   "editNote": {
     "title": "Redigera anteckning",
     "noteLabel": "Anteckning",
     "notePlaceholder": "Skriv en anteckning..."
-  },
-  "navigation": {
-    "previousMonth": "Föregående månad",
-    "nextMonth": "Nästa månad",
-    "prev": "Föregående",
-    "next": "Nästa"
   },
   "weekdays": {
     "mon": "mån",
@@ -50,6 +54,29 @@
     "addNote": "Lägg till anteckning: {input}",
     "randomRecipe": "Slumpa recept",
     "noRecipesFound": "Inga recept hittades.",
-    "failedToLoadRecipes": "Det gick inte att hämta recepten."
+    "failedToLoadRecipes": "Det gick inte att hämta recepten.",
+    "planRecipe": "Planera ett recept",
+    "searchOrAddNote": "Sök recept eller lägg till en anteckning",
+    "random": "Slumpmässigt recept",
+    "planThisRecipe": "Planera det här receptet",
+    "planOnDay": "Planera {name} på {day}",
+    "addToDay": "Lägg till på {day}"
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronisering startad",
+    "syncStartedDescription": "Objekt att synkronisera: {queued}",
+    "syncStartedWithFailures": "Objekt att synkronisera: {queued}. Kunde inte köas: {failed}",
+    "configSaved": "Konfigurationen sparad",
+    "configSavedDescription": "Dina CalDAV-inställningar har sparats.",
+    "configDeleted": "Konfigurationen borttagen",
+    "configDeletedDescription": "Dina CalDAV-inställningar har tagits bort.",
+    "retryStarted": "Synkronisering startad",
+    "retryStartedDescription": "Försöker igen med väntande och misslyckade objekt…"
+  },
+  "widgets": {
+    "nothingPlanned": "Inget planerat",
+    "signIn": "Öppna Norish för att logga in",
+    "open": "Öppna Norish",
+    "more": "+{count} till"
   }
 }

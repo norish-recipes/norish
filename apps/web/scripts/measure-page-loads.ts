@@ -3,34 +3,38 @@ import { connect, createServer } from "node:net";
 import { parseArgs } from "node:util";
 import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
-import { chromium, devices } from "@playwright/test";
+import { chromium } from "@playwright/test";
 
+import { signIn } from "../__tests__/e2e/harness/auth";
+import { cookieHeader, queryTrpc } from "../__tests__/e2e/harness/trpc";
 import { RECIPE_FILTERS_COOKIE } from "../lib/recipe-filters-cookie";
+import { account, accountOptions, newPhone, PHONE } from "./api";
 
 const { values: args } = parseArgs({
   options: {
-    base: { type: "string", default: "http://localhost:3400" },
-    email: { type: "string" },
-    password: { type: "string" },
+    ...accountOptions("http://localhost:3400"),
     runs: { type: "string", default: "15" },
     sw: { type: "string", default: "block" },
     share: { type: "string" },
     only: { type: "string" },
+    scripts: { type: "boolean", default: false },
   },
 });
-
-if (!args.email || !args.password) throw new Error("--email and --password are required");
+const { email, password } = account(args);
 
 const RUNS = Number(args.runs);
 // "fetch": the worker fetches documents itself, as it does where navigation preload is off.
 const SERVICE_WORKER = args.sw === "allow" || args.sw === "fetch";
-const PHONE = devices["Pixel 7"];
 const DOWN_BYTES_PER_SECOND = 1_600_000 / 8;
 const UP_BYTES_PER_SECOND = 750_000 / 8;
 const MARK_TIMEOUT_MS = 30_000;
 
 type Marks = Record<string, string>;
-type Sample = { firstPaint: number; marks: Record<string, number | null> };
+type Sample = {
+  firstPaint: number;
+  scripts: Array<[url: string, bytes: number]>;
+  marks: Record<string, number | null>;
+};
 
 // =============================================================================
 // The link: one shared queue per direction, so parallel requests split the bandwidth
@@ -110,36 +114,18 @@ const target = new URL(args.base);
 const base = await startProxy(target);
 
 throttled = false;
-const signIn = await fetch(`${args.base}/api/auth/sign-in/email`, {
-  method: "POST",
-  headers: { "content-type": "application/json", origin: args.base },
-  body: JSON.stringify({ email: args.email, password: args.password }),
-});
-
-if (!signIn.ok) throw new Error(`Sign-in failed: ${signIn.status}`);
-// Cookies name a host, not a port, so the proxy's origin carries them too.
-const cookies = signIn.headers.getSetCookie().map((header) => {
-  const [pair = ""] = header.split(";");
-  const at = pair.indexOf("=");
-
-  return { name: pair.slice(0, at), value: pair.slice(at + 1), url: base };
-});
-
+// Cookies name a host, not a port, so the session's reach the proxy's origin too.
+const session = await signIn(args.base, { email, password });
 // A returning reader's browser has told the server its Library filters, here the defaults.
-cookies.push({ name: RECIPE_FILTERS_COOKIE, value: encodeURIComponent("{}"), url: base });
-const cookieHeader = cookies.map(({ name, value }) => `${name}=${value}`).join("; ");
-
-async function query<T>(procedure: string, input: unknown): Promise<T> {
-  const response = await fetch(
-    `${args.base}/api/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify({ json: input }))}`,
-    { headers: { cookie: cookieHeader } }
-  );
-
-  return ((await response.json()) as { result: { data: { json: T } } }).result.data.json;
-}
+const cookies: Parameters<BrowserContext["addCookies"]>[0] = [
+  ...session,
+  { name: RECIPE_FILTERS_COOKIE, value: encodeURIComponent("{}"), url: base },
+];
 
 // The newest recipe and the first cookbook in the Library's default order.
-const library = await query<{ items: Array<{ kind: string; recipe?: { id: string } }> }>(
+const library = await queryTrpc<{ items: Array<{ kind: string; recipe?: { id: string } }> }>(
+  args.base,
+  session,
   "library.list",
   { limit: 50 }
 );
@@ -205,8 +191,8 @@ const PAGES: Array<{ name: string; url: string | undefined; marks: Marks }> = [
     marks: { fromYourRecipes: '[data-testid="pantry-suggestions"]' },
   },
   {
-    name: "/settings?tab=user",
-    url: "/settings?tab=user",
+    name: "/settings/account",
+    url: "/settings/account",
     marks: { name: 'input[placeholder="Your name"][value]:not([value=""])' },
   },
 ];
@@ -242,18 +228,8 @@ function watchMarks({ marks, tap }: { marks: Marks; tap: boolean }) {
   requestAnimationFrame(tick);
 }
 
-async function newContext(browser: Browser): Promise<BrowserContext> {
-  const context = await browser.newContext({
-    ...PHONE,
-    baseURL: base,
-    serviceWorkers: SERVICE_WORKER ? "allow" : "block",
-  });
-
-  await context.addCookies(cookies);
-  // tsx keeps function names with a helper the functions sent to the page still call.
-  await context.addInitScript({ content: "globalThis.__name = (target) => target;" });
-
-  return context;
+function newContext(browser: Browser): Promise<BrowserContext> {
+  return newPhone(browser, base, cookies, { serviceWorkers: SERVICE_WORKER ? "allow" : "block" });
 }
 
 async function readMarks(page: Page, marks: Marks): Promise<Record<string, number | null>> {
@@ -297,7 +273,14 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
 
     await context.addInitScript(watchMarks, { marks, tap: false });
     const cdp = await context.newCDPSession(page);
+    // The encoded size of every script the load downloads.
+    const scripts: Array<Promise<[string, number]>> = [];
 
+    page.on("requestfinished", (request) => {
+      if (request.resourceType() === "script") {
+        scripts.push(request.sizes().then((sizes) => [request.url(), sizes.responseBodySize]));
+      }
+    });
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     throttled = true;
     await page.goto(url);
@@ -312,6 +295,7 @@ async function load(browser: Browser, url: string, marks: Marks): Promise<Sample
 
     return {
       firstPaint,
+      scripts: await Promise.all(scripts),
       marks: Object.fromEntries(
         Object.entries(found).map(([name, at]) => [
           name,
@@ -350,6 +334,7 @@ async function tap(browser: Browser): Promise<Sample> {
 
     return {
       firstPaint: Number.NaN,
+      scripts: [],
       marks: Object.fromEntries(
         Object.entries(found).map(([name, at]) => [name, at === null ? null : at - tappedAt])
       ),
@@ -363,7 +348,7 @@ async function tap(browser: Browser): Promise<Sample> {
 async function documentSize(url: string): Promise<number> {
   const response = await fetch(`${args.base}${url}`, {
     headers: {
-      cookie: cookieHeader,
+      cookie: cookieHeader(cookies),
       "user-agent": PHONE.userAgent,
       accept: "text/html",
       "sec-fetch-dest": "document",
@@ -411,8 +396,8 @@ const only = args.only?.split(",");
 const lines = [
   `Service worker ${args.sw}, ${RUNS} runs, median (spread) in ms.`,
   "",
-  "| Page | First paint | Content | Document (KB gzip) |",
-  "| ---- | ----------: | ------- | -----------------: |",
+  "| Page | First paint | Content | Document (KB gzip) | JS (KB) |",
+  "| ---- | ----------: | ------- | -----------------: | ------: |",
 ];
 
 try {
@@ -421,16 +406,26 @@ try {
     const samples = await sampled(() => load(browser, url, marks));
     const size = ((await documentSize(url)) / 1024).toFixed(1);
 
+    const js = summary(
+      samples.map((sample) => sample.scripts.reduce((total, [, bytes]) => total + bytes, 0) / 1024)
+    );
+
     lines.push(
-      `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${marksSummary(marks, samples)} | ${size} |`
+      `| ${name} | ${summary(samples.map((sample) => sample.firstPaint))} | ${marksSummary(marks, samples)} | ${size} | ${js} |`
     );
     process.stdout.write(`${lines.at(-1)}\n`);
+    if (args.scripts) {
+      // The last load's scripts, largest first.
+      for (const [url, bytes] of samples.at(-1)!.scripts.sort(([, a], [, b]) => b - a)) {
+        process.stdout.write(`  ${(bytes / 1024).toFixed(1)} KB ${new URL(url).pathname}\n`);
+      }
+    }
   }
 
   if (!only || only.includes("tap")) {
     const samples = await sampled(() => tap(browser));
 
-    lines.push(`| tap to a recipe | — | ${marksSummary(RECIPE_MARKS, samples)} | — |`);
+    lines.push(`| tap to a recipe | — | ${marksSummary(RECIPE_MARKS, samples)} | — | — |`);
   }
 } finally {
   await browser.close();

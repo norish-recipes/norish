@@ -4,9 +4,9 @@
 import type { Query } from "@tanstack/react-query";
 import {
   persistQueryClientRestore,
-  persistQueryClientSubscribe,
+  persistQueryClientSave,
 } from "@tanstack/query-persist-client-core";
-import { QueryClient } from "@tanstack/react-query";
+import { partialMatchKey, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
@@ -22,17 +22,34 @@ export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const QUERY_STALE_TIME_MS = 1000 * 60 * 5;
 
+/** Each save serializes the whole cache, so a burst of changes saves once per this interval. */
+export const PERSIST_THROTTLE_MS = 1000;
+
 /** Placeholder owner before any user is confirmed; never actually persisted. */
 const ANON_OWNER = "__anon__";
 
 export type RefetchOnMount = boolean | "always" | ((query: Query) => boolean | "always");
 
+// Names tRPC's path keys; it never sends a request or touches a client.
+const keys = createTRPCOptionsProxy<AppRouter>({
+  client: createTRPCClient<AppRouter>({ links: [] }),
+  queryClient: () => new QueryClient(),
+});
+
 /**
- * Persist usable read data even when its latest background refetch failed. Admin reads stay out:
- * they hold other users' details and, in a query's input, a key being typed.
+ * Reads never written to storage: admin reads hold other users' details and, in a query's input, a
+ * key being typed; the CalDAV password is a decrypted secret and its connection check a live probe.
  */
+const NEVER_PERSISTED = [
+  keys.admin.pathKey(),
+  keys.caldav.getPassword.pathKey(),
+  keys.caldav.checkConnection.pathKey(),
+];
+
+/** Persist usable read data even when its latest background refetch failed. */
 const shouldDehydrateQuery = (query: { queryKey: readonly unknown[]; state: { data: unknown } }) =>
-  query.state.data !== undefined && (query.queryKey[0] as string[] | undefined)?.[0] !== "admin";
+  query.state.data !== undefined &&
+  !NEVER_PERSISTED.some((key) => partialMatchKey(query.queryKey, key));
 
 /** The engine's QueryClient defaults; a client renders its server pass with its own copy. */
 export function createOfflineQueryClient({
@@ -63,14 +80,20 @@ export function createOfflineQueryClient({
   // however it got in: the Warm Set, the page the reader opened, or the seed a
   // create writes Live or Offline.
   // The reads a reader opens or makes that must outlive a trip Offline: a recipe
-  // and a cookbook (ADR-0008). tRPC builds their path keys, so each matches every
-  // id; the proxy only names keys and never sends a request.
-  const keys = createTRPCOptionsProxy<AppRouter>({
-    client: createTRPCClient<AppRouter>({ links: [] }),
-    queryClient,
-  });
-
-  for (const pathKey of [keys.recipes.get.pathKey(), keys.cookbooks.get.pathKey()]) {
+  // and a cookbook (ADR-0008). tRPC builds their path keys, so each matches every id.
+  for (const pathKey of [
+    keys.recipes.get.pathKey(),
+    keys.cookbooks.get.pathKey(),
+    // And the groceries list's reads, which no observer holds while the Pantry view shows.
+    keys.groceries.list.pathKey(),
+    keys.stores.list.pathKey(),
+    keys.stores.groceryPrices.pathKey(),
+    keys.stores.aisleLinks.pathKey(),
+    // And a surface's previous icons read, which its icons show while a changed set is read.
+    keys.ingredients.icons.pathKey(),
+    // And the Library's grid, which no observer holds through a long cooking session.
+    keys.library.list.pathKey(),
+  ]) {
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
 
@@ -94,9 +117,11 @@ export interface CacheManager {
   resetOfflineCopy(cause: "manual" | "sign-out"): Promise<void>;
   /** Observe the one applied-owner value. */
   subscribe(listener: () => void): () => void;
+  /** Save a throttled pending change now, as the app leaves the foreground. */
+  flush(): Promise<void>;
 }
 
-export interface CacheManagerOptions {
+interface CacheManagerOptions {
   storage: OfflineStorage;
   /** A restored cache from a different app version is dropped wholesale, never migrated. */
   buster: string | undefined;
@@ -118,17 +143,42 @@ export function createCacheManager({
 
   let appliedOwner: string | null = null;
   let unsubscribe: (() => void) | null = null;
+  let flushPending: () => Promise<void> = async () => undefined;
   let inFlight: Promise<void> = Promise.resolve();
   const appliedListeners = new Set<() => void>();
 
   function subscribeToPersistence(): void {
     unsubscribe?.();
-    unsubscribe = persistQueryClientSubscribe({
-      queryClient,
-      persister,
-      buster,
-      dehydrateOptions: { shouldDehydrateQuery },
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const save = async () => {
+      if (timer === null) return;
+      clearTimeout(timer);
+      timer = null;
+      await persistQueryClientSave({
+        queryClient,
+        persister,
+        buster,
+        // The Outbox is the durable write queue (ADR-0009); a restored paused mutation has no
+        // mutationFn and would block its scope.
+        dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation: () => false },
+      });
+    };
+    // A trailing throttle: the first change of a burst schedules one save for the whole burst.
+    // Mutations are never persisted, so only the query cache's changes count.
+    const stopListening = queryClient.getQueryCache().subscribe(({ type }) => {
+      if (timer === null && (type === "added" || type === "removed" || type === "updated")) {
+        timer = setTimeout(() => void save(), PERSIST_THROTTLE_MS);
+      }
     });
+
+    flushPending = save;
+    unsubscribe = () => {
+      // A save still pending after a clear would write the purged cache back.
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      stopListening();
+    };
   }
 
   function clearClient(): void {
@@ -275,6 +325,8 @@ export function createCacheManager({
 
       return inFlight;
     },
+
+    flush: () => flushPending(),
 
     subscribe(listener) {
       appliedListeners.add(listener);

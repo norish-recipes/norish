@@ -63,6 +63,18 @@ export type DevicePreferences = z.output<typeof DevicePreferencesSchema>;
 
 export const DEVICE_PREFERENCE_DEFAULTS: DevicePreferences = DevicePreferencesSchema.parse({});
 
+export type DeviceBlocks = Record<DeviceKind, DevicePreferences>;
+
+/** Each Device Kind's stored block, the defaults where none is stored. */
+export function deviceBlocks(
+  stored: Partial<Record<DeviceKind, DevicePreferences | undefined>>
+): DeviceBlocks {
+  return {
+    phone: stored.phone ?? DEVICE_PREFERENCE_DEFAULTS,
+    desktop: stored.desktop ?? DEVICE_PREFERENCE_DEFAULTS,
+  };
+}
+
 const shape = DevicePreferencesSchema.shape;
 
 /** Each choice without its fallback, so a write rejects a value outside its set. */

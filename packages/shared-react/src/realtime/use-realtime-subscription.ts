@@ -7,19 +7,17 @@
  * subscription is skipped, and `lastEventId` is resent by tRPC's WebSocket
  * link on reconnect without this hook knowing.
  *
- * One reaction to a subscription that fell out of order (`REALTIME_LAGGED`):
- * start a fresh subscription with no cursor, and refetch the domain —
- * `onLag`, or invalidate `lagQueryKeys` — once its Cursor Mark says it is
- * live. The server registers the subscription before it sends that mark, so
- * every event from then on reaches the subscription and every one before it
- * is in the refetch; refetching at the lag instead left a gap between the
- * two, in which an event reached neither. Anything that is neither a Cursor
- * Mark nor an envelope is a programming error, not a case to tolerate.
+ * Every fresh subscription (a mount, `enabled` turning true, the reset after
+ * `REALTIME_LAGGED`) carries no cursor, so a change made before the server
+ * registered it reaches neither the subscription nor a read taken earlier.
+ * The server registers the listener before it sends the first Cursor Mark, so
+ * the hook rereads `liveQueryKeys` then. Anything that is neither a Cursor Mark
+ * nor an envelope is a programming error.
  */
 
-import type { QueryKey } from "@tanstack/react-query";
-import { useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import type { Query, QueryClient, QueryKey } from "@tanstack/react-query";
+import { useState } from "react";
+import { CancelledError, partialMatchKey, useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { useSubscription } from "@trpc/tanstack-react-query";
 
@@ -39,12 +37,11 @@ export function isRealtimeLagged(err: unknown): boolean {
  * A subscription procedure as `useTRPC()` decorates it, reduced to the one
  * call this hook makes. The router's own types satisfy it structurally.
  */
-export interface RealtimeSubscriptionProcedure {
+interface RealtimeSubscriptionProcedure {
   subscriptionOptions(
     input: undefined,
     opts: {
       enabled?: boolean;
-      onStarted?: () => void;
       onData: (data: unknown) => void;
       onError: (err: unknown) => void;
     }
@@ -54,11 +51,8 @@ export interface RealtimeSubscriptionProcedure {
 export interface RealtimeSubscriptionHandlers<P> {
   /** Every event of the procedure, validated server-side against its catalogue schema. */
   onEvent: (payload: P, meta: RealtimeEventMeta) => void;
-  /** Invalidated when the subscription lags, unless `onLag` takes over. */
-  lagQueryKeys?: QueryKey[];
-  onLag?: () => void;
-  /** Once the server has the subscription: events from here on reach it. */
-  onStarted?: () => void;
+  /** Every read `onEvent` patches or invalidates: reread once each fresh subscription is live. */
+  liveQueryKeys?: QueryKey[];
   enabled?: boolean;
 }
 
@@ -80,31 +74,125 @@ function isTrackedItem(data: unknown): data is TrackedItem {
   );
 }
 
+/** Per QueryClient: the reads due in the current window. */
+const dueByClient = new WeakMap<QueryClient, QueryKey[]>();
+
+/**
+ * Reads due within one window are invalidated together, so each matching query refetches once.
+ * ponytail: a fixed 50 ms window, so marks spread wider refetch once per window; flush once
+ * every open subscribe has its mark if that shows up as duplicate refetches.
+ */
+const LIVE_WINDOW_MS = 50;
+
+function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
+  const due = dueByClient.get(queryClient);
+
+  if (queryKeys.length === 0) return;
+  if (due) {
+    due.push(...queryKeys);
+
+    return;
+  }
+  dueByClient.set(queryClient, [...queryKeys]);
+  setTimeout(() => {
+    const flushed = dueByClient.get(queryClient) ?? [];
+
+    dueByClient.delete(queryClient);
+    const isDue = (query: Query) => flushed.some((key) => partialMatchKey(query.queryKey, key));
+
+    rereadOnceWritesSettle(queryClient, isDue);
+  }, LIVE_WINDOW_MS);
+}
+
+/**
+ * Rereads the matching reads once no write is pending, after any matching read in flight settles.
+ */
+export function rereadOnceWritesSettle(
+  queryClient: QueryClient,
+  predicate: (query: Query) => boolean
+): void {
+  const inFlight = queryClient.getQueryCache().findAll({ predicate, fetchStatus: "fetching" });
+
+  // A fetch in flight may predate the reason, and its success clears an invalidation made now:
+  // each waits for its own, so one that never settles (paused offline) holds back no other.
+  for (const query of inFlight) {
+    const again = () => invalidateOnceWritesSettle(queryClient, (held) => held === query);
+
+    void query.promise?.then(again, again);
+  }
+  invalidateOnceWritesSettle(
+    queryClient,
+    (query) => predicate(query) && query.state.fetchStatus !== "fetching"
+  );
+}
+
+/**
+ * Invalidates the matching reads once no write is pending. A write's `cancelQueries` reverts a
+ * read to its fetch-start state and nothing refetches it, so a reverted one goes again.
+ */
+function invalidateOnceWritesSettle(
+  queryClient: QueryClient,
+  predicate: (query: Query) => boolean
+): void {
+  afterWrites(queryClient, () => {
+    const due = queryClient.getQueryCache().findAll({ predicate });
+    // A next-page fetch keeps the other pages as they were: replace it, never join it.
+    const cancelRefetch = due.some((query) => query.state.fetchMeta?.fetchMore);
+    const watch = (query: Query, promise = query.promise) =>
+      void promise?.catch((error: unknown) => {
+        if (!(error instanceof CancelledError)) return;
+        if (error.revert) invalidateOnceWritesSettle(queryClient, (held) => held === query);
+        // A silent cancel hands the read to a newer fetch, whose outcome counts instead.
+        else if (query.promise !== promise) watch(query);
+      });
+
+    void queryClient.invalidateQueries({ predicate }, { cancelRefetch });
+    due.forEach((query) => watch(query));
+  });
+}
+
+/** Runs `run` once no write is pending. An Outbox write fails its mutation, so it never counts. */
+function afterWrites(queryClient: QueryClient, run: () => void): void {
+  if (queryClient.isMutating() === 0) return run();
+  const stop = queryClient.getMutationCache().subscribe(() => {
+    if (queryClient.isMutating() > 0) return;
+    stop();
+    run();
+  });
+}
+
+/**
+ * A fresh subscription's reread: armed by its subscribe, taken by its first Cursor Mark.
+ * Not a ref: the React Compiler skips a hook that reads one in callbacks `subscriptionOptions` gets.
+ */
+function createLiveLatch() {
+  let pending = false;
+
+  return {
+    arm: () => {
+      pending = true;
+    },
+    take: () => {
+      const wasPending = pending;
+
+      pending = false;
+
+      return wasPending;
+    },
+  };
+}
+
 export function useRealtimeSubscription<P>(
   procedure: RealtimeSubscriptionProcedure,
   handlers: RealtimeSubscriptionHandlers<P>
 ) {
   const queryClient = useQueryClient();
-  // A lag the fresh subscription has yet to catch up on.
-  const catchUpPending = useRef(false);
-
-  const catchUp = () => {
-    if (handlers.onLag) {
-      handlers.onLag();
-
-      return;
-    }
-
-    for (const queryKey of handlers.lagQueryKeys ?? []) {
-      void queryClient.invalidateQueries({ queryKey });
-    }
-  };
+  const [liveLatch] = useState(createLiveLatch);
 
   // tRPC reads `"enabled" in opts`, not its value: a key that is present but
   // undefined disables the subscription. Only a stated choice is passed on.
   const options = procedure.subscriptionOptions(undefined, {
     ...(handlers.enabled === undefined ? {} : { enabled: handlers.enabled }),
-    ...(handlers.onStarted ? { onStarted: handlers.onStarted } : {}),
     onData: (data) => {
       if (!isTrackedItem(data)) {
         throw new TypeError("Expected a tracked realtime item");
@@ -113,12 +201,9 @@ export function useRealtimeSubscription<P>(
       const item = data.data;
 
       // A Cursor Mark carries no event: the transport tracks it, handlers never
-      // see it. It does say the subscription is live, which a lag waits for.
+      // see it. It does say the subscription is live, which the reread waits for.
       if (isCursorMark(item)) {
-        if (catchUpPending.current) {
-          catchUpPending.current = false;
-          catchUp();
-        }
+        if (liveLatch.take()) rereadInWindow(queryClient, handlers.liveQueryKeys ?? []);
 
         return;
       }
@@ -129,15 +214,22 @@ export function useRealtimeSubscription<P>(
     onError: (err) => {
       if (!isRealtimeLagged(err)) return;
 
-      // A fresh subscription, no cursor; the refetch follows its Cursor Mark.
-      catchUpPending.current = true;
+      // A fresh subscription, no cursor; the reread follows its Cursor Mark.
       subscription.reset();
     },
-  });
+  }) as Parameters<typeof useSubscription>[0];
 
-  // The one cast of the idiom: `subscriptionOptions` is typed by the router's
-  // output, which the structural procedure type above deliberately leaves open.
-  const subscription = useSubscription(options as Parameters<typeof useSubscription>[0]);
+  // The one cast of the idiom, above: `subscriptionOptions` is typed by the router's
+  // output, which the structural procedure type deliberately leaves open.
+  const subscription = useSubscription({
+    ...options,
+    // A reconnect resends on the same subscribe; only a new subscribe is fresh.
+    subscribe: (observer) => {
+      liveLatch.arm();
+
+      return options.subscribe(observer);
+    },
+  });
 
   return subscription;
 }

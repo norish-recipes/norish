@@ -37,17 +37,17 @@ import {
  * outcome that carries its own `status`, and a second field of that name
  * would silently overwrite it.
  */
-export type ArchiveDownloadFailure =
+type ArchiveDownloadFailure =
   | { reason: "unauthorized" }
   | { reason: "forbidden" }
   | { reason: "failed"; httpStatus?: number; error?: unknown };
 
-export type ArchiveDownloadOutcome =
+type ArchiveDownloadOutcome =
   | { status: "streamed"; bytes: number }
   | { status: "handedOff" }
   | ({ status: "failed" } & ArchiveDownloadFailure);
 
-export type ArchiveDownloadRequest = {
+type ArchiveDownloadRequest = {
   /** The export URL, already carrying its scope */
   url: string;
   /** Used only if the response declines to name the file itself */
@@ -93,7 +93,7 @@ function failureFor(httpStatus: number): ArchiveDownloadFailure {
  * and Safari all can now, but the check is cheap and the fallback is real, so
  * it is asked rather than assumed.
  */
-export function supportsTransferableStreams(): boolean {
+function supportsTransferableStreams(): boolean {
   try {
     const stream = new ReadableStream();
     const channel = new MessageChannel();

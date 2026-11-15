@@ -15,18 +15,21 @@ import {
   markGroceryUndoneProcedure,
 } from "../../src/routers/groceries/groceries";
 import { createGroceriesData } from "../../src/routers/groceries/groceries-helpers";
+import { recurringGroceriesProcedures } from "../../src/routers/groceries/recurring";
 import { router } from "../../src/trpc";
 import { createMockCallerContext } from "../calendar/test-utils";
 // Import mocks for assertions
 import {
   assignGroceryToStore,
   createGroceries,
+  deleteDoneInStore,
   deleteGroceryByIds,
   getGroceriesByIds,
   getGroceryOwnerIds,
   getRecipeInfoForGroceries,
   listGroceriesByUsers,
   lockGroceryList,
+  markAllDoneInStore,
   reorderGroceriesInStore,
   updateGroceries,
 } from "../mocks/db";
@@ -36,7 +39,10 @@ import { resolveGroceryNames } from "../mocks/ingredient-groceries";
 import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
-import { listRecurringGroceriesByUsers } from "../mocks/recurring-groceries";
+import {
+  createRecurringGroceries,
+  listRecurringGroceriesByUsers,
+} from "../mocks/recurring-groceries";
 // Import test utilities
 import {
   createMockAuthedContext,
@@ -326,12 +332,10 @@ describe("groceries openapi procedures", () => {
     expect(result.ids).toEqual([existing.id]);
   });
 
-  it("hands back and announces the siblings a create shifted, with their new versions", async () => {
-    // Making room at the top moved the siblings' sort order and version; a
-    // screen still holding the old version would have its next write on one
-    // of them refused as stale. So the answer carries them, and so does the
-    // household's updated event.
-    const sibling = createMockGrocery({ id: "sibling", name: "Peer", sortOrder: 1, version: 2 });
+  it("hands back and announces the siblings a create shifted, at their new sort order", async () => {
+    // Making room at the top moved the siblings' sort order, so the answer
+    // carries them, and so does the household's updated event.
+    const sibling = createMockGrocery({ id: "sibling", name: "Peer", sortOrder: 1 });
 
     listGroceriesByUsers.mockResolvedValue([]);
     createGroceries.mockImplementation(
@@ -403,6 +407,37 @@ describe("groceries openapi procedures", () => {
 
     expect(result).toEqual({ success: true, stale: true });
   });
+
+  it.each([
+    [
+      "markGroceryDone",
+      (c: ReturnType<typeof caller>, id: string) => c.markGroceryDone({ id, version: 1 }),
+    ],
+    [
+      "markGroceryUndone",
+      (c: ReturnType<typeof caller>, id: string) => c.markGroceryUndone({ id, version: 1 }),
+    ],
+    [
+      "deleteGrocery",
+      (c: ReturnType<typeof caller>, id: string) => c.deleteGrocery({ id, version: 1 }),
+    ],
+    [
+      "assignGroceryToStore",
+      (c: ReturnType<typeof caller>, id: string) =>
+        c.assignGroceryToStore({ id, version: 1, storeId: null, savePreference: false }),
+    ],
+  ])("%s answers NOT_FOUND for a grocery that does not exist", async (_, call) => {
+    getGroceryOwnerIds.mockResolvedValue(new Map());
+    getGroceriesByIds.mockResolvedValue([]);
+
+    await expect(call(caller(), crypto.randomUUID())).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  function caller() {
+    return openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
+  }
 
   it("marks a grocery as undone and returns the updated grocery", async () => {
     const groceryId = crypto.randomUUID();
@@ -629,7 +664,7 @@ describe("stale grocery updates", () => {
 
     await flushAsync();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, stale: true });
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, groceryId, version: 4 },
       "Stale grocery update; requesting client refresh"
@@ -689,6 +724,31 @@ describe("stale grocery updates", () => {
       "ingredient:oat milk",
       storeId
     );
+  });
+
+  it("answers stored when the work after the commit fails, and logs it", async () => {
+    const groceryId = crypto.randomUUID();
+    const storeId = crypto.randomUUID();
+
+    getGroceryOwnerIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    assertHouseholdAccess.mockResolvedValue(undefined);
+    updateGroceries.mockResolvedValue([
+      createMockGrocery({ id: groceryId, name: "Oat Milk", storeId }),
+    ]);
+    storesRepository.upsertIngredientStorePreference.mockRejectedValueOnce(new Error("down"));
+
+    const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.update({ groceryId, raw: "Oat milk", version: 4, storeId })
+    ).resolves.toEqual({ success: true, stale: false });
+    expect(trpcLogger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ err: expect.any(Error) }),
+      expect.stringContaining("after")
+    );
+    expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+      userId: ctx.user.id,
+    });
   });
 
   it("asks the Store a grocery was dragged into what it knows about it", async () => {
@@ -751,7 +811,7 @@ describe("stale grocery updates", () => {
     // Let the .then() chain in the handler run
     await flushAsync();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, stale: false });
 
     // Verify storeId was included in the update data passed to the DB layer
     const updates = updateGroceries.mock.calls[0][0] as Array<{ storeId: unknown }>;
@@ -778,7 +838,7 @@ describe("stale grocery updates", () => {
 
     await flushAsync();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, stale: false });
 
     // Verify storeId=null was passed to the DB layer (setting item to unsorted)
     const updates = updateGroceries.mock.calls[0][0] as Array<{ storeId: unknown }>;
@@ -802,7 +862,7 @@ describe("stale grocery updates", () => {
 
     await flushAsync();
 
-    expect(result).toEqual({ success: true });
+    expect(result).toEqual({ success: true, stale: false });
 
     // Verify storeId was not set on the update data
     const updates = updateGroceries.mock.calls[0][0] as Array<Record<string, unknown>>;
@@ -1056,4 +1116,148 @@ describe("grocery names through Ingredient Aliases", () => {
       )
     );
   });
+});
+
+// ADR-0004: a write refused for its version answers `stale: true` once it is decided, so Replay parks it.
+describe("a grocery write answers whether it was refused as stale", () => {
+  const mockUser = createMockUser();
+  const mockHousehold = createMockHousehold();
+  let ctx: ReturnType<typeof createMockAuthedContext>;
+  const id = crypto.randomUUID();
+  const row = createMockGrocery({ id });
+
+  beforeEach(() => {
+    storesRepository.getStoreOwnerId.mockResolvedValue("user-1");
+    listGroceriesByUsers.mockResolvedValue([]);
+    ctx = createMockAuthedContext(mockUser, mockHousehold);
+    getGroceryOwnerIds.mockResolvedValue(new Map([[id, ctx.user.id]]));
+    getGroceriesByIds.mockResolvedValue([row]);
+    assertHouseholdAccess.mockResolvedValue(undefined);
+  });
+
+  const caller = () => groceriesProcedures.createCaller(createMockCallerContext(ctx));
+  const writes: Array<[string, (applied: boolean) => void, () => Promise<unknown>]> = [
+    [
+      "update",
+      (applied) => updateGroceries.mockResolvedValue(applied ? [row] : []),
+      () => caller().update({ groceryId: id, raw: "Oat milk", version: 1 }),
+    ],
+    [
+      "toggle",
+      (applied) => updateGroceries.mockResolvedValue(applied ? [row] : []),
+      () => caller().toggle({ groceries: [{ id, version: 1 }], isDone: true }),
+    ],
+    [
+      "delete",
+      (applied) =>
+        deleteGroceryByIds.mockImplementation(async (items: Array<{ id: string }>) => {
+          const ids = items.map((item) => item.id);
+
+          return applied ? { deletedIds: ids, staleIds: [] } : { deletedIds: [], staleIds: ids };
+        }),
+      () => caller().delete({ groceries: [{ id, version: 1 }] }),
+    ],
+    [
+      "assignToStore",
+      (applied) => assignGroceryToStore.mockResolvedValue(applied ? row : null),
+      () => caller().assignToStore({ groceryId: id, version: 1, storeId: null }),
+    ],
+    [
+      "reorderInStore",
+      (applied) => reorderGroceriesInStore.mockResolvedValue(applied ? [row] : []),
+      () => caller().reorderInStore({ updates: [{ id, version: 1, sortOrder: 0 }] }),
+    ],
+    [
+      "markAllDone",
+      (applied) => markAllDoneInStore.mockResolvedValue(applied ? [row] : []),
+      () => caller().markAllDone({ storeId: null, groceries: [{ id, version: 1 }] }),
+    ],
+    [
+      "deleteDone",
+      (applied) => deleteDoneInStore.mockResolvedValue(applied ? [id] : []),
+      () => caller().deleteDone({ storeId: null, groceries: [{ id, version: 1 }] }),
+    ],
+  ];
+
+  it.each(writes)("%s answers stale: true when refused", async (_, answer, write) => {
+    answer(false);
+
+    await expect(write()).resolves.toEqual({ success: true, stale: true });
+  });
+
+  it.each(writes)("%s answers stale: false when stored", async (_, answer, write) => {
+    answer(true);
+
+    await expect(write()).resolves.toEqual({ success: true, stale: false });
+  });
+
+  it.each(writes)(
+    "%s rejects a write that failed, so Replay parks it",
+    async (_, answer, write) => {
+      answer(true);
+      getGroceryOwnerIds.mockRejectedValue(new Error("database down"));
+      markAllDoneInStore.mockRejectedValue(new Error("database down"));
+      deleteDoneInStore.mockRejectedValue(new Error("database down"));
+
+      await expect(write()).rejects.toThrow();
+      // The app's own client toasts the rejection; a `failed` event would toast it twice.
+      expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+        userId: ctx.user.id,
+      });
+    }
+  );
+
+  it("createRecurring rejects a failed write without a second toast", async () => {
+    createRecurringGroceries.mockRejectedValue(new Error("database down"));
+
+    await expect(
+      recurringGroceriesProcedures.createCaller(createMockCallerContext(ctx)).createRecurring({
+        name: "Milk",
+        amount: 1,
+        unit: null,
+        recurrenceRule: "week",
+        recurrenceInterval: 1,
+        recurrenceWeekday: null,
+        nextPlannedFor: "2026-11-16",
+      })
+    ).rejects.toThrow();
+    expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+      userId: ctx.user.id,
+    });
+  });
+
+  const deletes = ["delete", "deleteDone"];
+
+  it.each(writes.filter(([name]) => !deletes.includes(name)))(
+    "%s answers stale: true for a line another member deleted",
+    async (_, answer, write) => {
+      answer(false);
+      getGroceryOwnerIds.mockResolvedValue(new Map());
+      getGroceriesByIds.mockResolvedValue([]);
+
+      await expect(write()).resolves.toEqual({ success: true, stale: true });
+    }
+  );
+
+  it.each(writes.filter(([name]) => deletes.includes(name)))(
+    "%s of a line already gone succeeds as a no-op",
+    async (_, answer, write) => {
+      answer(false);
+      getGroceryOwnerIds.mockResolvedValue(new Map());
+      getGroceriesByIds.mockResolvedValue([]);
+
+      await expect(write()).resolves.toEqual({ success: true, stale: false });
+    }
+  );
+
+  it.each(writes.filter(([name]) => !["markAllDone", "deleteDone"].includes(name)))(
+    "%s refuses a line of another household",
+    async (_, answer, write) => {
+      answer(true);
+      getGroceryOwnerIds.mockResolvedValue(new Map([[id, "stranger"]]));
+      assertHouseholdAccess.mockRejectedValue(new Error("FORBIDDEN"));
+
+      await expect(write()).rejects.toThrow("FORBIDDEN");
+    }
+  );
 });

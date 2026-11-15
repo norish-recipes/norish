@@ -13,6 +13,7 @@ import type { UnitsMap } from "@norish/config/zod/server-config";
 import defaultUnits from "@norish/config/units.default.json";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import {
+  createUnitFormatter,
   flattenForLibrary,
   foldUnitWord,
   formatUnit,
@@ -313,5 +314,43 @@ describe("Unit Localization", () => {
     it("writes units out by default", () => {
       expect(formatUnit("gram", "en", units, 500)).toBe("grams");
     });
+  });
+});
+
+describe("createUnitFormatter", () => {
+  const { formatAmountUnit, formatUnitOnly } = createUnitFormatter({
+    locale: "en",
+    units: unitsConfig,
+  });
+
+  it("joins an amount to a short unit and spaces it from a longer one", () => {
+    const abbreviated = createUnitFormatter({
+      locale: "en",
+      units: unitsConfig,
+      unitStyle: "abbreviated",
+    });
+
+    expect(abbreviated.formatAmountUnit(500, "gram")).toBe("500g");
+    expect(abbreviated.formatAmountUnit(1.25, "tablespoon")).toBe("1.3 tbsp");
+    expect(formatAmountUnit(500, "gram")).toBe("500 grams");
+  });
+
+  it("reads a unitless amount as a count, and shows a unit with no amount alone", () => {
+    expect(formatAmountUnit(3, null)).toBe("3\u00D7");
+    expect(formatAmountUnit(0, null)).toBe("0\u00D7");
+    expect(formatAmountUnit(null, null)).toBe("");
+    expect(formatAmountUnit(null, "cup")).toBe("cup");
+  });
+
+  it("formats a unit alone, in the reader's style", () => {
+    expect(formatUnitOnly(null)).toBe("");
+    expect(formatUnitOnly("tablespoon", 2)).toBe("tablespoons");
+    expect(
+      createUnitFormatter({
+        locale: "en",
+        units: unitsConfig,
+        unitStyle: "abbreviated",
+      }).formatUnitOnly("tablespoon", 2)
+    ).toBe("tbsp");
   });
 });

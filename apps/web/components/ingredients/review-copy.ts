@@ -1,10 +1,7 @@
 import type { useTranslations } from "next-intl";
-import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 
-import { isCatalogueRefusal } from "@norish/shared/contracts/ingredient-catalogue";
+import type { AIChange } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-
-import type { AIChange } from "./types";
 
 type Translate = ReturnType<typeof useTranslations<"settings.ingredients">>;
 
@@ -35,16 +32,4 @@ export function changeMessage(t: Translate, change: AIChange, locale: string): s
           })
         : t("changedByAI.spellingRemoved", { from: change.from ?? "" });
   }
-}
-
-/** Say why the server refused an edit to the catalogue, in the viewer's words. */
-export function showRefusal(t: Translate, error: unknown, context: string): void {
-  const refusal = error instanceof Error ? error.message : null;
-
-  showSafeErrorToast({
-    title: t("errors.title"),
-    description: isCatalogueRefusal(refusal) ? t(`errors.${refusal}`) : t("errors.unknown"),
-    error,
-    context: `ingredients:${context}`,
-  });
 }

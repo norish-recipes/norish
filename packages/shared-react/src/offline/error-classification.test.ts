@@ -14,9 +14,13 @@ describe("classifyReplayError", () => {
     );
   });
 
-  it("classifies a 5xx as ambiguous (bounded retry)", () => {
+  it("classifies a 5xx, 408 or 429 as ambiguous (bounded retry)", () => {
     expect(classifyReplayError({ data: { httpStatus: 500 } })).toBe("ambiguous");
     expect(classifyReplayError({ data: { httpStatus: 503 } })).toBe("ambiguous");
+    expect(classifyReplayError({ data: { httpStatus: 408 } })).toBe("ambiguous");
+    expect(classifyReplayError({ data: { httpStatus: 429, code: "TOO_MANY_REQUESTS" } })).toBe(
+      "ambiguous"
+    );
   });
 
   it("classifies a 4xx (or statusless) rejection as deterministic (park, keep draining)", () => {

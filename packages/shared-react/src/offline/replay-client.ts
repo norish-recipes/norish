@@ -25,7 +25,7 @@ type TraversableClientNode = Record<string, unknown> | ((...args: never[]) => un
 export type OutboxMutationClient = TraversableClientNode;
 
 /** Context handed to a replayed mutation; the Outbox link keys off it. */
-export interface OutboxReplayContext {
+interface OutboxReplayContext {
   operationId?: string;
   headers: Record<string, string>;
   skipOutboxCapture: true;

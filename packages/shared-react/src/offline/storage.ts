@@ -26,9 +26,12 @@ export interface OfflineStorage {
     add(entry: Omit<OutboxEntry, "seq">): Promise<number>;
     /** Every entry, in ascending seq (FIFO) order, blobs readable again. */
     all(): Promise<OutboxEntry[]>;
-    get(seq: number): Promise<OutboxEntry | undefined>;
-    /** Replace an existing entry (status, attempts); its stored blobs stay valid. */
-    put(entry: OutboxEntry): Promise<void>;
+    /** Atomically replaces an entry with what `change` returns, uploads kept; null deletes it,
+     * undefined writes nothing. Resolves with the entry as written, null, or undefined. */
+    change(
+      seq: number,
+      change: (entry: OutboxEntry) => OutboxEntry | null | undefined
+    ): Promise<OutboxEntry | null | undefined>;
     /** Delete an entry and whatever blobs were stored for it. */
     remove(seq: number): Promise<void>;
     /** Hear changes another context sharing this storage made (another browser tab). */

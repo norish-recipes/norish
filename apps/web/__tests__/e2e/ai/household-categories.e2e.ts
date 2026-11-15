@@ -5,9 +5,9 @@
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 
-import type { AIE2EStack, SessionCookies } from "./fixture";
+import type { AIE2EStack } from "./fixture";
 import { userIdOf } from "../harness/accounts";
-import { signIn } from "../harness/auth";
+import { signedInContext, signIn } from "../harness/auth";
 import { seedRecipe, waitForRecipe } from "../harness/recipes";
 import { callTrpc } from "../harness/trpc";
 import { expect, MEMBER, OWNER, test } from "./fixture";
@@ -15,13 +15,12 @@ import { expect, MEMBER, OWNER, test } from "./fixture";
 async function openPage(
   browser: Browser,
   stack: AIE2EStack,
-  cookies: SessionCookies | null
+  user: typeof OWNER | null
 ): Promise<{ context: BrowserContext; page: Page }> {
-  const context = await browser.newContext({
-    baseURL: stack.baseURL,
-    storageState: { cookies: cookies ?? [], origins: [] },
-    viewport: { width: 1280, height: 1200 },
-  });
+  const viewport = { width: 1280, height: 1200 };
+  const context = user
+    ? await signedInContext(browser, stack.baseURL, user, { viewport })
+    : await browser.newContext({ baseURL: stack.baseURL, viewport });
 
   return { context, page: await context.newPage() };
 }
@@ -63,7 +62,7 @@ test("a household adds Drinks from the form and filters by it; another is never 
     delete: "household",
   });
 
-  const a = await openPage(browser, aiStack, aCookies);
+  const a = await openPage(browser, aiStack, MEMBER);
   // A second tab of household A, already on the Library while the recipe is saved.
   const library = await a.context.newPage();
 
@@ -106,7 +105,7 @@ test("a household adds Drinks from the form and filters by it; another is never 
     await a.context.close();
   }
 
-  const b = await openPage(browser, aiStack, aiStack.ownerCookies);
+  const b = await openPage(browser, aiStack, OWNER);
 
   try {
     await b.page.goto(`/recipes/edit/${bRecipeId}`);

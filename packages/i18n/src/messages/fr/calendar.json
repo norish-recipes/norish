@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "Aujourd'hui",
-    "scrollToToday": "Aller à aujourd'hui"
+    "scrollToToday": "Aller à aujourd'hui",
+    "planRecipe": "Planifier une recette"
+  },
+  "today": {
+    "openRecipe": "Ouvrir la recette",
+    "move": "Déplacer…",
+    "removeTitle": "Retirer d'aujourd'hui ?",
+    "removeMessage": "{name} est retiré de {slot} ({day}).",
+    "moveTitle": "Déplacer",
+    "moveSubtitle": "{name}, {slot} d'aujourd'hui",
+    "moveToDay": "Déplacer {name} au {day}"
   },
   "editNote": {
     "title": "Modifier la note",
     "noteLabel": "Note",
     "notePlaceholder": "Entrez une note..."
-  },
-  "navigation": {
-    "previousMonth": "Mois précédent",
-    "nextMonth": "Mois suivant",
-    "prev": "Précédent",
-    "next": "Suivant"
   },
   "weekdays": {
     "mon": "Lun",
@@ -50,6 +54,29 @@
     "addNote": "Ajouter une note : {input}",
     "randomRecipe": "Recette aléatoire",
     "noRecipesFound": "Pas de recette trouvée.",
-    "failedToLoadRecipes": "Impossible de charger les recettes."
+    "failedToLoadRecipes": "Impossible de charger les recettes.",
+    "planRecipe": "Planifier une recette",
+    "searchOrAddNote": "Rechercher des recettes ou ajouter une note",
+    "random": "Recette au hasard",
+    "planThisRecipe": "Planifier cette recette",
+    "planOnDay": "Planifier {name} le {day}",
+    "addToDay": "Ajouter à {day}"
+  },
+  "caldav": {
+    "syncStarted": "Synchronisation CalDAV démarrée",
+    "syncStartedDescription": "Éléments à synchroniser : {queued}",
+    "syncStartedWithFailures": "Éléments à synchroniser : {queued}. Non mis en file d'attente : {failed}",
+    "configSaved": "Configuration enregistrée",
+    "configSavedDescription": "Vos paramètres CalDAV ont été enregistrés.",
+    "configDeleted": "Configuration supprimée",
+    "configDeletedDescription": "Vos paramètres CalDAV ont été supprimés.",
+    "retryStarted": "Synchronisation lancée",
+    "retryStartedDescription": "Nouvelle tentative pour les éléments en attente et en échec…"
+  },
+  "widgets": {
+    "nothingPlanned": "Rien de prévu",
+    "signIn": "Ouvrez Norish pour vous connecter",
+    "open": "Ouvrir Norish",
+    "more": "+{count} de plus"
   }
 }

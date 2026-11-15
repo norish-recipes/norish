@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocaleCookie } from "@/hooks/user/use-locale-cookie";
+import { useLocaleCookie } from "@/hooks/use-locale-cookie";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 import { Button, Dropdown, Label, Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -60,4 +60,3 @@ export function AuthLanguageSelector() {
     </Dropdown>
   );
 }
-export default AuthLanguageSelector;

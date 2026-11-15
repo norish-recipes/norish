@@ -21,6 +21,7 @@
 
 import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
+import type { OutboxEntry } from "./outbox-types";
 import type { ReplaySubmit } from "./replay";
 import { runWithOutboxLock } from "./leader";
 import { runReplayPass } from "./replay";
@@ -51,12 +52,16 @@ interface RecoveryDependencies {
  * the page itself and `queued` that a write was just admitted while Live, so
  * the reads are current either way; `resync` means they may have fallen behind.
  */
-export type RecoveryReason = "startup" | "resync" | "queued";
+type RecoveryReason = "startup" | "resync" | "queued";
 
 export interface Recovery {
   recover(reason?: RecoveryReason): Promise<void>;
   isSyncing(): boolean;
   subscribe(listener: () => void): () => void;
+  /** Told once per run that the server refused writes as stale (Replay's are parked Conflicted). */
+  subscribeConflicts(listener: () => void): () => void;
+  /** A refusal outside Replay (a live save): told now, or with the run under way. */
+  reportConflict(): void;
 }
 
 const waitFor = (delayMs: number) =>
@@ -78,6 +83,15 @@ export function createRecovery({
   let followUpRequested = false;
   let requestedReason: RecoveryReason | null = null;
   const listeners = new Set<() => void>();
+  const conflictListeners = new Set<() => void>();
+  // A refusal reported while a batch replays waits for it; a run tells once.
+  let replaying = false;
+  let heldConflict = false;
+  let runTold = false;
+
+  function tellConflicts(): void {
+    for (const listener of conflictListeners) listener();
+  }
 
   /** Coalesced triggers take the stronger reason: one resync makes the run one. */
   function request(reason: RecoveryReason): void {
@@ -88,12 +102,15 @@ export function createRecovery({
     for (const listener of listeners) listener();
   }
 
-  async function replayToTerminalBatch(): Promise<{ completed: boolean; sent: boolean }> {
+  type Batch = { completed: boolean; sent: boolean; conflicted: OutboxEntry[] };
+
+  async function replayToTerminalBatch(): Promise<Batch> {
     const batchOwner = owner();
     let sent = false;
+    const conflicted: OutboxEntry[] = [];
 
     if (!batchOwner) {
-      return { completed: false, sent };
+      return { completed: false, sent, conflicted };
     }
 
     while (owner() === batchOwner) {
@@ -119,10 +136,11 @@ export function createRecovery({
       }, locks());
 
       if (!attempt) {
-        return { completed: false, sent };
+        return { completed: false, sent, conflicted };
       }
 
       sent ||= attempt.removed > 0 || attempt.parked > 0;
+      conflicted.push(...attempt.conflicted);
 
       if (attempt.halted === "retry" && attempt.retryAfterMs !== null) {
         await wait(attempt.retryAfterMs);
@@ -134,14 +152,21 @@ export function createRecovery({
         continue;
       }
 
-      return { completed: attempt.halted === null, sent };
+      return { completed: attempt.halted === null, sent, conflicted };
     }
 
-    return { completed: false, sent };
+    return { completed: false, sent, conflicted };
   }
 
   async function run(reason: RecoveryReason): Promise<void> {
-    const batch = await replayToTerminalBatch();
+    replaying = true;
+    heldConflict = false;
+    const batch = await replayToTerminalBatch().finally(() => (replaying = false));
+
+    if ((heldConflict || batch.conflicted.length > 0) && !runTold) {
+      runTold = true;
+      tellConflicts();
+    }
 
     if (!batch.completed) {
       return;
@@ -181,6 +206,7 @@ export function createRecovery({
         return processing;
       }
 
+      runTold = false;
       processing = runRequestedRecoveries().finally(() => {
         processing = null;
         notify();
@@ -198,6 +224,21 @@ export function createRecovery({
       listeners.add(listener);
 
       return () => listeners.delete(listener);
+    },
+
+    reportConflict() {
+      if (replaying) {
+        heldConflict = true;
+      } else if (!processing || !runTold) {
+        runTold = processing !== null;
+        tellConflicts();
+      }
+    },
+
+    subscribeConflicts(listener) {
+      conflictListeners.add(listener);
+
+      return () => conflictListeners.delete(listener);
     },
   };
 }

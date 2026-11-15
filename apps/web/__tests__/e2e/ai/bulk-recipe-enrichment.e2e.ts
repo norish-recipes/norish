@@ -90,7 +90,7 @@ async function importRecipe(name: string, extraction: unknown): Promise<void> {
 
 /** Open the Bulk Enrichment panel of the AI & Processing card. */
 async function openBulkPanel(): Promise<Locator> {
-  await page.goto("/settings?tab=admin");
+  await page.goto("/settings/admin");
 
   const trigger = page.getByRole("button", { name: /^Bulk enrichment/ }).first();
 

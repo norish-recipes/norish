@@ -30,6 +30,8 @@ const h = vi.hoisted(() => ({
 
 vi.mock("./connectivity", () => ({ useConnectivity: () => h.connectivity }));
 
+vi.mock("../../trpc", () => ({ useTRPC: () => ({}) }));
+
 vi.mock("./recovery-context", () => ({
   useRecovery: () => ({
     recover: h.recover,
@@ -53,10 +55,8 @@ const engine = {
   },
   createWarmSet: () => ({ topUp: h.warmSetTopUp, inspect: h.warmSetInspect }),
 };
-const trpc = {};
-
 function renderStatus() {
-  return renderHook(() => useOfflineStatus(engine, trpc));
+  return renderHook(() => useOfflineStatus(engine));
 }
 
 function setConnectivity(posture: "live" | "offline" | "offline-forced") {

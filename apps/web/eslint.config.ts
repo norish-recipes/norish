@@ -1,8 +1,32 @@
 import { defineConfig } from "eslint/config";
 
 import { baseConfig, restrictEnvAccess } from "../../tooling/eslint/base.ts";
+import { restrictFeatures, restrictTRPC } from "../../tooling/eslint/features.ts";
 import { nextjsConfig } from "../../tooling/eslint/nextjs.ts";
-import { reactConfig } from "../../tooling/eslint/react.ts";
+import { compiledReactConfig, reactConfig } from "../../tooling/eslint/react.ts";
+
+// Next's app/ file conventions: the files that render or handle a route.
+const nextRouteFiles = [
+  "page",
+  "layout",
+  "template",
+  "loading",
+  "error",
+  "global-error",
+  "not-found",
+  "global-not-found",
+  "forbidden",
+  "unauthorized",
+  "default",
+  "route",
+  "icon",
+  "apple-icon",
+  "opengraph-image",
+  "twitter-image",
+  "sitemap",
+  "robots",
+  "manifest",
+];
 
 export default defineConfig(
   {
@@ -10,6 +34,7 @@ export default defineConfig(
   },
   baseConfig,
   reactConfig,
+  compiledReactConfig,
   nextjsConfig,
   restrictEnvAccess,
   {
@@ -30,13 +55,17 @@ export default defineConfig(
     ],
   },
   {
+    // baseConfig ignores every workspace's scripts/; this one's top-level scripts are linted.
+    ignores: ["!scripts/*"],
+  },
+  {
     // The E2E suites are Node/Playwright code that happens to live in a React
     // app, so three rules aimed at the app itself misfire here.
     files: ["__tests__/e2e/**/*.ts"],
     rules: {
-      // Playwright names its fixture callback `use`, and the React Hooks rule
-      // reads every call of it as the `use` hook. Nothing here is a component.
-      "@eslint-react/rules-of-hooks": "off",
+      // Playwright names its fixture callback `use`, and the Rules of Hooks
+      // read every call of it as the `use` hook. Nothing here is a component.
+      "react-hooks/rules-of-hooks": "off",
       // `async ({}, use) => {}` is how a fixture declares it takes no fixtures.
       "no-empty-pattern": "off",
       // The harness composes the environment of a real server child process,
@@ -59,7 +88,7 @@ export default defineConfig(
   {
     // A skeleton's rows are placeholders: they have no identity and never
     // reorder, so their position is the only key they have.
-    files: ["components/skeleton/**/*.tsx"],
+    files: ["components/skeleton/**/*.tsx", "features/*/components/**/*-skeleton.tsx"],
     rules: { "@eslint-react/no-array-index-key": "off" },
   },
   {
@@ -68,5 +97,11 @@ export default defineConfig(
     // app anyway. The secure-context restriction is about shipped client code.
     files: ["__tests__/e2e/**/*.ts"],
     rules: { "no-restricted-syntax": "off" },
-  }
+  },
+  restrictFeatures(import.meta.dirname, {
+    featuresDir: "features",
+    appDir: "app",
+    routeFiles: [`app/**/{${nextRouteFiles.join(",")}}.{js,jsx,ts,tsx}`],
+  }),
+  restrictTRPC()
 );

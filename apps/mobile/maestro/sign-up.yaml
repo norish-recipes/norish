@@ -1,0 +1,61 @@
+# Creates an Account on a server with sign-ups open and lands signed in, after checking the
+# mismatch error and the links between Sign in and Sign up. Each run signs up a new email.
+appId: dev.norish.app
+---
+- evalScript: ${output.email = 'signup-' + Date.now() + '@norish.test'}
+- runFlow:
+    file: subflows/connect.yaml
+    env:
+      NORISH_CONNECT_URL: ${NORISH_SERVER_URL}
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+# Sign in links to Sign up, and Sign up links back.
+- tapOn:
+    id: login-sign-up-link
+- extendedWaitUntil:
+    visible:
+      id: register-name
+    timeout: 10000
+- tapOn:
+    id: register-sign-in-link
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 10000
+- tapOn:
+    id: login-sign-up-link
+- extendedWaitUntil:
+    visible:
+      id: register-name
+    timeout: 10000
+- tapOn:
+    id: register-name
+- inputText: Maestro Signup
+- tapOn:
+    id: register-email
+- inputText: ${output.email}
+- tapOn:
+    id: register-password
+- inputText: ${NORISH_PASSWORD}
+- tapOn:
+    id: register-confirm-password
+- inputText: ${NORISH_PASSWORD}-different
+- tapOn:
+    id: register-submit
+- extendedWaitUntil:
+    visible:
+      id: register-error
+      text: ${NORISH_COPY_PASSWORD_MISMATCH}
+    timeout: 5000
+# Erases the 10 characters of -different, which leaves the matching password, and submits.
+- tapOn:
+    id: register-confirm-password
+- eraseText: 10
+- tapOn:
+    id: register-submit
+- extendedWaitUntil:
+    visible:
+      id: recipes-screen
+    timeout: 20000

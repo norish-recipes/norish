@@ -106,7 +106,7 @@ export async function waitForAIPasses(stack: Pick<AIE2EStack, "baseURL" | "owner
 
 /** The Ingredient catalogue panel of the admin AI & Processing card, opened. */
 export async function openCataloguePanel(page: Page): Promise<Locator> {
-  await page.goto("/settings?tab=admin");
+  await page.goto("/settings/admin");
   const trigger = page.getByRole("button", { name: /^Ingredient catalogue/ }).first();
 
   await trigger.scrollIntoViewIfNeeded();

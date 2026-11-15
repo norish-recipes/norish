@@ -4,7 +4,7 @@
     "ariaLabel": "تبويبات الإعدادات"
   },
   "tabs": {
-    "user": "المستخدم",
+    "account": "الحساب",
     "household": "المنزل",
     "caldav": "CalDAV",
     "admin": "الإدارة",
@@ -193,7 +193,6 @@
           "abbreviated": "مختصرة"
         }
       },
-      "applyError": "تعذّر تطبيق التفضيل",
       "afterPlanning": {
         "title": "بعد تخطيط وصفة",
         "description": "ما الذي يحدث عند تخطيط وصفة",
@@ -279,11 +278,7 @@
         "warning": "ستصبح عضوًا عاديًا ولن تتمكن من إزالة المستخدمين أو إدارة رموز الانضمام.",
         "confirmButton": "نقل الصلاحيات"
       },
-      "toasts": {
-        "kickFailed": "تعذّرت إزالة المستخدم",
-        "transferSuccess": "نُقلت صلاحيات المسؤول إلى {name}",
-        "transferFailed": "تعذّر نقل صلاحيات المسؤول"
-      }
+      "unknown": "غير معروف"
     },
     "joinCode": {
       "title": "رمز الانضمام",
@@ -291,6 +286,7 @@
       "expiresIn": "ينتهي بعد:",
       "regenerateButton": "إنشاء رمز جديد",
       "expired": "منتهي",
+      "countdown": "{minutes} د {seconds} ث",
       "noCodeDescription": "لا يوجد رمز انضمام فعّال. أنشئ رمزًا لدعوة أعضاء جدد.",
       "generateButton": "إنشاء رمز انضمام",
       "copySuccess": "تم نسخ رمز الانضمام",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "متصل",
         "checking": "جارٍ الفحص...",
-        "disconnected": "غير متصل",
-        "unknown": "غير معروف"
+        "disconnected": "غير متصل"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "فشل",
         "removed": "أُزيل"
       },
-      "emptyFiltered": "لا توجد عناصر بحالة {status}",
+      "emptyFiltered": "لا توجد عناصر بهذه الحالة",
       "emptyDefault": "لا توجد سجلات مزامنة",
       "errorDetails": "تفاصيل الخطأ",
-      "pagination": "الصفحة {current} من {total}"
+      "pagination": "الصفحة {current} من {total}",
+      "paginationLabel": "صفحات حالة المزامنة"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "اختر اللغات التي يمكن للمستخدمين الاختيار منها",
       "defaultLocale": "اللغة الافتراضية",
       "defaultLocaleDescription": "اللغة المستخدمة للمستخدمين الجدد وكلغة احتياطية",
-      "localesSaved": "تم حفظ إعدادات اللغة",
-      "localesError": "تعذّر حفظ إعدادات اللغة",
       "atLeastOneLocale": "يجب تفعيل لغة واحدة على الأقل",
       "export": {
         "title": "أرشيف الوصفات",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "حذف {name}؟",
       "deleteConfirm": "سيؤدي هذا إلى حذف حساب المستخدم نهائيًا وإزالته من منزله. لا يمكن التراجع عن ذلك.",
-      "deleteSuccess": "تم حذف {name}",
       "countSummary": "المجموع: {count, plural, zero {لا يوجد مستخدمون} one {مستخدم واحد} two {مستخدمان} few {# مستخدمين} many {# مستخدمًا} other {# مستخدم}}"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "كلمات وحدات الوقت لاكتشاف المؤقّتات",
         "description": "اضبط الكلمات المستخدمة لاكتشاف المؤقّتات في خطوات الوصفة. يدعم عدة لغات.",
         "enableToggle": "تفعيل اكتشاف المؤقّتات",
+        "keywordRequired": "مطلوب كلمة مفتاحية واحدة على الأقل للساعات أو الدقائق أو الثواني",
         "hoursLabel": "كلمات الساعات",
         "hoursPlaceholder": "ساعة، ساعات، س",
         "hoursHelp": "كلمات للساعات (مثال: ساعة، hour، stunde، heure)",
@@ -971,6 +965,7 @@
       "apiKey": "مفتاح API",
       "apiKeyPlaceholder": "أدخل مفتاح API",
       "temperature": "درجة الحرارة (Temperature): {value}",
+      "temperatureLabel": "درجة الحرارة",
       "temperatureHint": "أقل = أكثر دقة، أعلى = أكثر إبداعًا",
       "maxTokens": "الحد الأقصى للتوكنز",
       "requestTimeout": "مهلة الطلب (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "الحد الأقصى لطول الفيديو (بالثواني)",
       "maxLengthDescription": "تستغرق الفيديوهات الأطول وقتًا وموارد أكثر للمعالجة",
       "maxFileSize": "الحد الأقصى لحجم ملف الفيديو",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "الحجم الأقصى لملفات الفيديو التي يتم تنزيلها",
       "ytDlpVersion": "إصدار yt-dlp",
       "ytDlpVersionDescription": "إصدار yt-dlp الذي يعمل على هذا الخادم. لا يمكن تغييره من هنا.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "متوافق مع OpenAI (عام)"
       },
       "transcriptionEndpoint": "رابط نقطة الوصول (Endpoint)",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) أو http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "نقطة وصول متوافقة مع OpenAI تدعم Whisper، أو نقطة وصول Ollama",
       "transcriptionModel": "النموذج",
       "transcriptionModelDescription": "النموذج المستخدم للتفريغ النصي",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "السماح لعمليات الاستيراد بالوصول إلى شبكتك المحلية. يرفض Obscura هذه العناوين في كل الأحوال.",
       "navigationTimeout": "مهلة التنقل (ms)",
       "navigationTimeoutDescription": "المدة الممنوحة للعارض لتحميل صفحة.",
-      "saved": "تم حفظ عارضات الصفحات",
-      "error": "تعذّر حفظ عارضات الصفحات",
       "connectionSuccess": "نجح الاتصال"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "تغييرات غير محفوظة",
     "jsonEditor": {
       "placeholder": "أدخل إعدادات JSON...",
-      "invalidJson": "صيغة JSON غير صالحة",
-      "failedToSave": "تعذّر الحفظ",
-      "failedToRestore": "تعذّرت استعادة الإعدادات الافتراضية"
+      "invalidJson": "صيغة JSON غير صالحة"
     },
     "jobQueue": {
       "title": "قوائم المهام",
@@ -1327,6 +1320,13 @@
       "empty": "لا توجد مطابخ بعد.",
       "duplicate": "يوجد مطبخ بهذا الاسم بالفعل.",
       "saveFailed": "تعذّر حفظ هذا المطبخ."
+    },
+    "toasts": {
+      "localesSaved": "تم حفظ إعدادات اللغة",
+      "localesError": "تعذّر حفظ إعدادات اللغة",
+      "userDeleted": "تم حذف {name}",
+      "pageRenderersSaved": "تم حفظ عارضات الصفحات",
+      "pageRenderersError": "تعذّر حفظ عارضات الصفحات"
     }
   },
   "archiveExport": {

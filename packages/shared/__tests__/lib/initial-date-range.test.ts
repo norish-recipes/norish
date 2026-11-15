@@ -1,23 +1,38 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { dateKey, getInitialDateRange } from "@norish/shared/lib/helpers";
+import { getInitialCalendarRange, parseDateKey } from "@norish/shared/lib/helpers";
 
-const keys = (range: { start: Date; end: Date }) => [dateKey(range.start), dateKey(range.end)];
-
-describe("getInitialDateRange", () => {
+describe("getInitialCalendarRange", () => {
   it("opens the calendar on the weeks around the given day, Monday to Sunday", () => {
     // Friday 16 October 2026.
-    expect(keys(getInitialDateRange("mobile", "2026-10-16"))).toEqual(["2026-09-28", "2026-11-01"]);
-    expect(keys(getInitialDateRange("desktop", "2026-10-16"))).toEqual([
-      "2026-10-12",
-      "2026-10-18",
-    ]);
+    expect(getInitialCalendarRange("mobile", "2026-10-16")).toEqual({
+      startISO: "2026-09-28",
+      endISO: "2026-11-01",
+    });
+    expect(getInitialCalendarRange("desktop", "2026-10-16")).toEqual({
+      startISO: "2026-10-12",
+      endISO: "2026-10-18",
+    });
   });
 
   it("puts a Sunday in the week that started the Monday before", () => {
-    expect(keys(getInitialDateRange("desktop", "2026-10-18"))).toEqual([
-      "2026-10-12",
-      "2026-10-18",
+    expect(getInitialCalendarRange("desktop", "2026-10-18")).toEqual({
+      startISO: "2026-10-12",
+      endISO: "2026-10-18",
+    });
+  });
+});
+
+describe("parseDateKey", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("reads a date key as local midnight on that day", () => {
+    // West of UTC, where a UTC parse lands on the evening before.
+    vi.stubEnv("TZ", "America/New_York");
+    const date = parseDateKey("2026-03-29");
+
+    expect([date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()]).toEqual([
+      2026, 2, 29, 0,
     ]);
   });
 });

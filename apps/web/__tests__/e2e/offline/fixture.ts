@@ -8,6 +8,7 @@ import type { SessionCookies } from "../harness/auth";
 import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { hydratingBrowser } from "../harness/hydration";
+import { readOfflineStore } from "../harness/offline-store";
 import { ProductionStack } from "../harness/production-stack";
 import { seedRecipe } from "../harness/recipes";
 import { callTrpc } from "../harness/trpc";
@@ -155,9 +156,16 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
         const page = await context.newPage();
         let state: BackendState = "live";
 
+        // Overwrite before clearing the rest: an open page that reconnects in a cookieless
+        // gap gets a 4401 and assigns /login, aborting the caller's next goto.
         const selectIdentity = async (identity: "a" | "b") => {
-          await context!.clearCookies();
-          await context!.addCookies(identity === "a" ? cookiesA : cookiesB);
+          const incoming = identity === "a" ? cookiesA : cookiesB;
+          const names = new Set(incoming.map(({ name }) => name));
+
+          await context!.addCookies(incoming);
+          for (const { name, domain, path } of await context!.cookies()) {
+            if (!names.has(name)) await context!.clearCookies({ name, domain, path });
+          }
         };
         const transition = async (next: BackendState) => {
           if (state === next) return;
@@ -194,6 +202,19 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
     { scope: "worker" },
   ],
 });
+
+/** A queued change as the page's IndexedDB holds it. */
+export type OutboxEntry = { ownerId: string; path: string; status: string };
+
+/** All Outbox entries in the page's IndexedDB, FIFO. */
+export async function readOutbox(target: Page): Promise<OutboxEntry[]> {
+  return (await readOfflineStore(target, "outbox")) as OutboxEntry[];
+}
+
+/** Whether this browser's saved copy of its reads holds `fragment`. */
+export async function persistedReadsHold(target: Page, fragment: string): Promise<boolean> {
+  return JSON.stringify(await readOfflineStore(target, "keyval")).includes(fragment);
+}
 
 export { expect };
 export type { SessionCookies };

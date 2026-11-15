@@ -27,7 +27,9 @@
       "all": "Усе",
       "recipes": "Рецепти",
       "cookbooks": "Кулінарні книги"
-    }
+    },
+    "importingCard": "Імпорт…",
+    "favourited": "В обраному"
   },
   "back": {
     "all": "Назад до бібліотеки",
@@ -43,7 +45,8 @@
     "noResults": "Рецептів не знайдено",
     "noResultsHint": "Спробуйте змінити або скинути фільтри.",
     "noCookbooks": "Кулінарних книг ще немає",
-    "noCookbooksHint": "Кулінарна книга — це набір рецептів із назвою. Створіть першу, щоб навести лад у бібліотеці."
+    "noCookbooksHint": "Кулінарна книга — це набір рецептів із назвою. Створіть першу, щоб навести лад у бібліотеці.",
+    "descriptionMobile": "Додайте свій перший рецепт із посилання, тексту чи фото."
   },
   "card": {
     "noImage": "Зображення немає",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Цього рецепта не існує або у вас немає дозволу на його перегляд.",
     "prep": "підготовка",
     "total": "загалом",
-    "planMeal": "Запланувати страву",
     "recipeActions": "Дії з рецептом",
     "instructions": "Інструкції",
     "cook": "Готувати",
@@ -78,7 +80,9 @@
     "addedBy": "Автор: {name}",
     "decreaseServings": "Менше порцій",
     "increaseServings": "Більше порцій",
-    "multiplier": "Множник"
+    "multiplier": "Множник",
+    "rateStars": "Оцінити на {count} із 5",
+    "stepPhoto": "Фото кроку"
   },
   "actions": {
     "plan": "Запланувати",
@@ -86,7 +90,6 @@
     "edit": "Редагувати",
     "delete": "Видалити",
     "share": "Поділитися",
-    "visitOriginal": "Відкрити оригінальний рецепт",
     "addToCalendar": "Додати в календар",
     "autoTag": "Згенерувати теги",
     "autoTagging": "Генеруємо теги...",
@@ -103,10 +106,12 @@
     "inferringProvenance": "Визначаємо походження…",
     "linkIngredients": "Пов’язати інгредієнти з кроками",
     "linkingIngredients": "Пов’язуємо інгредієнти…",
-    "enrichmentFailed": "Останній запуск не вдався",
     "generateImage": "Згенерувати зображення",
     "generatingImage": "Генеруємо зображення…",
-    "cookbooks": "Кулінарні книги"
+    "cookbooks": "Кулінарні книги",
+    "favourite": "В обране",
+    "unfavourite": "Прибрати з обраного",
+    "ai": "ШІ"
   },
   "sharePanel": {
     "title": "Поділитися рецептом",
@@ -166,14 +171,14 @@
     "confirmMessage": "Ви впевнені, що хочете видалити «{recipeName}»?",
     "warning": "Цю дію не можна скасувати.",
     "confirmCount": "Видалити {count, plural, one {# рецепт} few {# рецепти} many {# рецептів} other {# рецепта}}?",
-    "keptCount": "{count, plural, one {# рецепт залишиться} few {# рецепти залишаться} many {# рецептів залишиться} other {# рецепта залишиться}}: у вас немає прав на видалення."
+    "keptCount": "{count, plural, one {# рецепт залишиться} few {# рецепти залишаться} many {# рецептів залишиться} other {# рецепта залишиться}}: у вас немає прав на видалення.",
+    "alertTitle": "Видалити «{name}»?"
   },
   "form": {
     "createTitle": "Створити рецепт",
     "editTitle": "Редагувати рецепт",
     "createDescription": "Додайте новий рецепт до своєї колекції",
     "editDescription": "Оновіть дані рецепта",
-    "initializingForm": "Готуємо форму...",
     "photo": "Фото",
     "basicInfo": "Основна інформація",
     "ingredients": "Інгредієнти",
@@ -225,19 +230,12 @@
     "createRecipe": "Створити рецепт",
     "saveChanges": "Зберегти зміни",
     "uploading": "Завантаження...",
-    "clickToUpload": "Натисніть, щоб завантажити, або перетягніть файл",
-    "pasteToUpload": "щоб вставити",
-    "imageFormats": "PNG, JPG, WEBP до 5 МБ",
     "discardChangesConfirm": "У вас є незбережені зміни. Відкинути їх і піти з цієї сторінки?"
   },
   "gallery": {
-    "addImage": "Додати зображення",
     "uploading": "Завантаження...",
     "uploadFailed": "Не вдалося завантажити",
-    "dragToReorder": "Перетягніть, щоб змінити порядок",
-    "maxImagesReached": "Можна додати не більше {max} зображень",
-    "maxVideosReached": "Можна додати не більше {max} відео",
-    "invalidFileType": "Непідтримуваний тип файлу"
+    "dragToReorder": "Перетягніть, щоб змінити порядок"
   },
   "carousel": {
     "noImageAvailable": "Зображення немає",
@@ -246,8 +244,14 @@
       "mute": "Вимкнути звук",
       "unmute": "Увімкнути звук",
       "fullscreen": "На весь екран",
-      "exitFullscreen": "Вийти з повноекранного режиму"
-    }
+      "exitFullscreen": "Вийти з повноекранного режиму",
+      "progress": "Прогрес відео",
+      "play": "Відтворити",
+      "pause": "Пауза"
+    },
+    "recipeImage": "Зображення рецепта",
+    "closeViewer": "Закрити перегляд зображення",
+    "photoOf": "Фото {current} із {total}"
   },
   "validation": {
     "nameRequired": "Вкажіть назву рецепта",
@@ -262,8 +266,6 @@
     "carbs": "Вуглеводи",
     "protein": "Білки",
     "showingPortions": "Значення для {count} {count, plural, one {порції} few {порцій} many {порцій} other {порції}}",
-    "noInfo": "Даних про поживну цінність немає",
-    "estimateWithAI": "Оцінити за допомогою ШІ",
     "estimated": "Оцінка",
     "leftOut": "{count, plural, one {# рядок не враховано} few {# рядки не враховано} many {# рядків не враховано} other {# рядка не враховано}}",
     "estimatedByAI": "оцінено ШІ",
@@ -276,7 +278,10 @@
       "noPieceWeight": "ваги штуки ще немає"
     },
     "workedOutFrom": "Розраховано за інгредієнтами; використано: {sources}.",
-    "householdNumbers": "дані вашого домогосподарства"
+    "householdNumbers": "дані вашого домогосподарства",
+    "decreasePortions": "Менше порцій",
+    "increasePortions": "Більше порцій",
+    "portions": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}"
   },
   "measurementSystem": {
     "label": "Система мір",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Крок {number}: опишіть крок...",
-    "stepPlaceholderShort": "Крок {number}"
+    "stepPlaceholderShort": "Крок {number}",
+    "recipeSuggestions": "Пропозиції рецептів",
+    "ingredientSuggestions": "Пропозиції інгредієнтів"
   },
   "stepIngredients": {
     "rowLabel": "Пов’язані інгредієнти",
@@ -322,16 +329,15 @@
   },
   "toasts": {
     "imported": "Рецепт імпортовано",
-    "failed": "Не вдалося обробити рецепт",
     "failedDescription": "Під час обробки рецепта щось пішло не так. Технічні подробиці дивіться в консолі браузера.",
     "incomplete": "Цей рецепт може бути неповним. Звірте його з джерелом.",
     "notARecipe": "Ця сторінка не схожа на рецепт.",
     "privateAddress": "Імпорт з адрес приватної мережі на цьому сервері заборонено.",
-    "batchImported": "Рецепти імпортовано",
-    "batchImportedDescription": "Імпортовано рецептів з архіву: {count}",
     "view": "Переглянути",
     "open": "Відкрити",
-    "deleteKept": "{count, plural, one {# рецепт змінено} few {# рецепти змінено} many {# рецептів змінено} other {# рецепта змінено}} іншим користувачем і збережено."
+    "deleteKept": "{count, plural, one {# рецепт змінено} few {# рецепти змінено} many {# рецептів змінено} other {# рецепта змінено}} іншим користувачем і збережено.",
+    "deleted": "Рецепт видалено",
+    "deletedDescription": "Цей рецепт було видалено."
   },
   "tags": {
     "panel": {
@@ -346,12 +352,19 @@
     "servings": "Порції",
     "serving": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Проводьте, щоб перемикати кроки",
-    "swipeIngredients": "Проведіть уліво до інгредієнтів",
-    "swipeBackToSteps": "Проведіть управо до кроків",
     "readyAt": "Буде готово близько {time}",
     "timers": "Таймери",
-    "nextStep": "Наступний крок"
+    "nextStep": "Наступний крок",
+    "stepLabel": "Крок {number}",
+    "previousStep": "Попередній крок",
+    "startTimer": "Запустити таймер на {duration}",
+    "pauseTimer": "Призупинити таймер, залишилося {time}",
+    "resumeTimer": "Продовжити таймер, залишилося {time}",
+    "dismissTimer": "Закрити таймер",
+    "restartTimer": "Перезапустити таймер",
+    "notificationsOff": "Сповіщення Norish вимкнено, тож таймери дзвонять, лише поки застосунок відкритий.",
+    "decreaseTimer": "Зменшити на {time}",
+    "increaseTimer": "Додати {time}"
   },
   "enrichment": {
     "failed": "Не вдалося доповнити рецепт",
@@ -374,10 +387,7 @@
   "provenance": {
     "title": "Походження",
     "region": "Регіон",
-    "cuisines": "Кухні",
-    "inferring": "З’ясовуємо, звідки походить цей рецепт…",
-    "noInfo": "Даних про походження ще немає",
-    "inferWithAI": "Визначити за допомогою ШІ"
+    "cuisines": "Кухні"
   },
   "import": {
     "alreadyExists": "Цей рецепт у вас уже є",
@@ -431,7 +441,13 @@
     "changeImage": "Змінити зображення",
     "removeImage": "Прибрати зображення",
     "imageUploadFailed": "Не вдалося завантажити зображення.",
-    "imageNeedsConnection": "Зображення можна буде змінити, коли ви знову будете онлайн."
+    "imageNeedsConnection": "Зображення можна буде змінити, коли ви знову будете онлайн.",
+    "rename": "Перейменувати",
+    "deleteAlertTitle": "Видалити «{title}»?",
+    "changeCover": "Змінити обкладинку",
+    "renameTitle": "Перейменувати кулінарну книгу",
+    "coverFromLibrary": "Вибрати з медіатеки",
+    "coverFromCamera": "Зробити фото"
   },
   "print": {
     "title": "Друк рецепта",
@@ -450,5 +466,78 @@
     "newCookbook": "Нова кулінарна книга",
     "filedInto": "{count, plural, one {# рецепт додано} few {# рецепти додано} many {# рецептів додано} other {# рецепта додано}} до {title}",
     "filedIntoMany": "{count, plural, one {# рецепт додано} few {# рецепти додано} many {# рецептів додано} other {# рецепта додано}} до кулінарних книг: {cookbooks}"
+  },
+  "addRecipe": {
+    "fromLink": "За посиланням",
+    "fromLinkHint": "Будь-який сайт із рецептами або відео",
+    "fromPhotos": "З фото",
+    "fromPhotosHint": "Сторінки кулінарної книги або знімок екрана",
+    "fromText": "З тексту",
+    "fromTextHint": "Вставте рецепт або JSON-LD",
+    "writeYourself": "Написати самостійно",
+    "writeYourselfHint": "Почати з порожнього рецепта",
+    "importHost": "Імпортувати {host}",
+    "linkTitle": "Імпорт за посиланням",
+    "textTitle": "Імпорт із тексту",
+    "photosTitle": "Імпорт із фото",
+    "camera": "Камера",
+    "photoLibrary": "Медіатека",
+    "photoCount": "{count, plural, one {# фото, імпортується як один рецепт} few {# фото, імпортуються як один рецепт} many {# фото, імпортуються як один рецепт} other {# фото, імпортуються як один рецепт}}",
+    "photoLimits": "До {max} фото, JPEG, PNG або WebP",
+    "removePhoto": "Видалити фото {number}"
+  },
+  "shareExtension": {
+    "sending": "Надсилання в Norish…",
+    "sentTitle": "Імпорт у Norish",
+    "sentBody": "Рецепт незабаром з’явиться у вашій бібліотеці.",
+    "savedTitle": "Збережено на потім",
+    "savedBody": "Norish імпортує його, коли ваш сервер стане доступним.",
+    "signedOut": "Спершу відкрийте Norish і увійдіть.",
+    "tooOld": "Спершу потрібно оновити ваш сервер Norish.",
+    "noAi": "Для імпорту фото потрібен ШІ, а він вимкнений на вашому сервері.",
+    "failed": "Norish не вдалося це імпортувати.",
+    "close": "Закрити",
+    "photoCount": "{count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}",
+    "text": "Текст"
+  },
+  "editor": {
+    "newTitle": "Новий рецепт",
+    "editTitle": "Редагувати рецепт",
+    "recipeName": "Назва рецепта",
+    "ingredient": "Інгредієнт",
+    "sectionHeading": "Заголовок розділу",
+    "step": "Крок",
+    "steps": "Кроки",
+    "notesHint": "Почніть рядок із # для заголовка; оточіть слова **подвійними зірочками** для жирного шрифту.",
+    "ingredientsHint": "Вводьте інгредієнти, наприклад 2 склянки борошна; кількість і одиниці розпізнаються автоматично. Почніть рядок із # для розділу.",
+    "stepsHint": "Натисніть Enter для наступного кроку. Введіть @, щоб прив’язати інгредієнт, # для розділу.",
+    "addIngredient": "Додати інгредієнт",
+    "removeIngredient": "Видалити інгредієнт",
+    "addStep": "Додати крок",
+    "removeStep": "Видалити крок",
+    "addPhoto": "Додати фото",
+    "addStepPhoto": "Додати фото кроку",
+    "removePhoto": "Видалити фото",
+    "mediaCount": "Фото: {images}/{maxImages} · відео: {videos}/{maxVideos}",
+    "photosOffline": "Фото можна додати, коли ви будете в мережі.",
+    "tagsAndCategories": "Теги та категорії",
+    "categories": "Категорії",
+    "tags": "Теги",
+    "tagsHint": "Виберіть підказку або введіть новий тег; нові теги мають пунктирну рамку.",
+    "addTag": "Додати тег",
+    "removeNamed": "Видалити {name}",
+    "servingsAndTime": "Порції та час",
+    "minutes": "хв",
+    "perServing": "на порцію, необов’язково",
+    "kcal": "ккал",
+    "grams": "г",
+    "source": "Джерело",
+    "sourceUrl": "URL джерела",
+    "measurementSystem": "Система мір",
+    "measurementHint": "Визначено за вашими інгредієнтами. Зміна лише змінює підпис і не перераховує; після збереження скористайтеся Конвертувати.",
+    "discardTitle": "Скасувати зміни?",
+    "discardMessage": "У вас є незбережені зміни.",
+    "keepEditing": "Продовжити",
+    "discard": "Скасувати"
   }
 }

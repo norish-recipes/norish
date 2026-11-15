@@ -27,7 +27,9 @@
       "all": "Tout",
       "recipes": "Recettes",
       "cookbooks": "Livres de cuisine"
-    }
+    },
+    "importingCard": "Importation…",
+    "favourited": "Favori"
   },
   "back": {
     "all": "Retour à la bibliothèque",
@@ -43,7 +45,8 @@
     "noResults": "Aucune recette trouvée",
     "noResultsHint": "Essayez d’ajuster ou de réinitialiser vos filtres.",
     "noCookbooks": "Aucun livre de cuisine pour l’instant",
-    "noCookbooksHint": "Un livre de cuisine est un ensemble de recettes intitulé. Créez le premier pour organiser votre bibliothèque."
+    "noCookbooksHint": "Un livre de cuisine est un ensemble de recettes intitulé. Créez le premier pour organiser votre bibliothèque.",
+    "descriptionMobile": "Ajoutez votre première recette depuis un lien, un texte ou des photos."
   },
   "card": {
     "noImage": "Aucune image disponible",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Cette recette n'existe pas ou vous n'avez pas la permission de la consulter.",
     "prep": "préparation",
     "total": "total",
-    "planMeal": "Planifier un repas",
     "recipeActions": "Actions de la recette",
     "instructions": "Instructions",
     "cook": "Cuisiner",
@@ -78,7 +80,9 @@
     "addedBy": "Ajouté par {name}",
     "decreaseServings": "Moins de portions",
     "increaseServings": "Plus de portions",
-    "multiplier": "Multiplicateur"
+    "multiplier": "Multiplicateur",
+    "rateStars": "Noter {count} sur 5",
+    "stepPhoto": "Photo de l’étape"
   },
   "actions": {
     "plan": "Planifier",
@@ -86,7 +90,6 @@
     "edit": "Modifier",
     "delete": "Supprimer",
     "share": "Partager",
-    "visitOriginal": "Voir la recette originale",
     "addToCalendar": "Ajouter au calendrier",
     "autoTag": "Auto‑taguer",
     "autoTagging": "Génération des tags...",
@@ -103,10 +106,12 @@
     "inferringProvenance": "Détermination de la provenance…",
     "linkIngredients": "Lier les ingrédients aux étapes",
     "linkingIngredients": "Liaison des ingrédients…",
-    "enrichmentFailed": "Dernière tentative échouée",
     "generateImage": "Générer une image",
     "generatingImage": "Génération de l'image…",
-    "cookbooks": "Livres de cuisine"
+    "cookbooks": "Livres de cuisine",
+    "favourite": "Favori",
+    "unfavourite": "Retirer des favoris",
+    "ai": "IA"
   },
   "sharePanel": {
     "title": "Partager la recette",
@@ -166,14 +171,14 @@
     "confirmMessage": "Êtes-vous sûr de vouloir supprimer \"{recipeName}\" ?",
     "warning": "Cette action ne peut pas être annulée.",
     "confirmCount": "Supprimer {count, plural, one {# recette} other {# recettes}} ?",
-    "keptCount": "{count, plural, one {# recette reste} other {# recettes restent}}, car vous n’avez pas le droit de {count, plural, one {la} other {les}} supprimer."
+    "keptCount": "{count, plural, one {# recette reste} other {# recettes restent}}, car vous n’avez pas le droit de {count, plural, one {la} other {les}} supprimer.",
+    "alertTitle": "Supprimer {name} ?"
   },
   "form": {
     "createTitle": "Créer une recette",
     "editTitle": "Modifier la recette",
     "createDescription": "Ajoutez une nouvelle recette à votre collection",
     "editDescription": "Modifiez les détails de votre recette",
-    "initializingForm": "Initialisation du formulaire...",
     "photo": "Photo",
     "basicInfo": "Informations de base",
     "ingredients": "Ingrédients",
@@ -225,19 +230,12 @@
     "createRecipe": "Créer la recette",
     "saveChanges": "Enregistrer les modifications",
     "uploading": "Téléversement...",
-    "clickToUpload": "Cliquez pour téléverser ou glissez-déposez",
-    "pasteToUpload": "pour coller",
-    "imageFormats": "PNG, JPG, WEBP jusqu’à 5 Mo",
     "discardChangesConfirm": "Vous avez des modifications non enregistrées. Les ignorer et quitter cette page ?"
   },
   "gallery": {
-    "addImage": "Ajouter une image",
     "uploading": "Téléversement...",
     "uploadFailed": "Échec du téléversement",
-    "dragToReorder": "Glissez les images pour réorganiser",
-    "maxImagesReached": "Maximum {max} images autorisées",
-    "maxVideosReached": "Maximum {max} vidéos autorisées",
-    "invalidFileType": "Type de fichier invalide"
+    "dragToReorder": "Glissez les images pour réorganiser"
   },
   "carousel": {
     "noImageAvailable": "Aucune image disponible",
@@ -246,8 +244,14 @@
       "mute": "Couper le son",
       "unmute": "Activer le son",
       "fullscreen": "Plein écran",
-      "exitFullscreen": "Quitter le plein écran"
-    }
+      "exitFullscreen": "Quitter le plein écran",
+      "progress": "Progression de la vidéo",
+      "play": "Lire",
+      "pause": "Mettre en pause"
+    },
+    "recipeImage": "Image de la recette",
+    "closeViewer": "Fermer la visionneuse",
+    "photoOf": "Photo {current} sur {total}"
   },
   "validation": {
     "nameRequired": "Le nom de la recette est requis",
@@ -262,8 +266,6 @@
     "carbs": "Glucides",
     "protein": "Protéines",
     "showingPortions": "Affichage des valeurs pour {count} {count, plural, one {portion} other {portions}}",
-    "noInfo": "Aucune information nutritionnelle disponible",
-    "estimateWithAI": "Estimer avec l’IA",
     "estimated": "Estimé",
     "leftOut": "{count, plural, one {# ligne non comptée} other {# lignes non comptées}}",
     "estimatedByAI": "estimé par l'IA",
@@ -276,7 +278,10 @@
       "noPieceWeight": "pas encore de poids par pièce"
     },
     "workedOutFrom": "Calculé à partir des ingrédients, avec {sources}.",
-    "householdNumbers": "les valeurs de votre foyer"
+    "householdNumbers": "les valeurs de votre foyer",
+    "decreasePortions": "Moins de portions",
+    "increasePortions": "Plus de portions",
+    "portions": "{count, plural, one {# portion} other {# portions}}"
   },
   "measurementSystem": {
     "label": "Système de mesure",
@@ -291,7 +296,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Étape {number} : Décrivez l’étape...",
-    "stepPlaceholderShort": "Étape {number}"
+    "stepPlaceholderShort": "Étape {number}",
+    "recipeSuggestions": "Suggestions de recettes",
+    "ingredientSuggestions": "Suggestions d'ingrédients"
   },
   "stepIngredients": {
     "rowLabel": "Ingrédients liés",
@@ -322,16 +329,15 @@
   },
   "toasts": {
     "imported": "Recette importée",
-    "failed": "Échec de l'opération",
     "failedDescription": "Une erreur s'est produite pendant le traitement de votre recette. Consultez la console du navigateur pour les détails techniques.",
     "incomplete": "Cette recette est peut-être incomplète. Comparez-la avec la source.",
     "notARecipe": "Cette page ne semble pas être une recette.",
     "privateAddress": "Les imports depuis des adresses de réseau privé ne sont pas autorisés sur ce serveur.",
-    "batchImported": "Recettes importées",
-    "batchImportedDescription": "{count} recettes importées depuis l'archive",
     "view": "Voir",
     "open": "Ouvrir",
-    "deleteKept": "{count, plural, one {# recette a été modifiée} other {# recettes ont été modifiées}} par quelqu’un d’autre et {count, plural, one {conservée} other {conservées}}."
+    "deleteKept": "{count, plural, one {# recette a été modifiée} other {# recettes ont été modifiées}} par quelqu’un d’autre et {count, plural, one {conservée} other {conservées}}.",
+    "deleted": "Recette supprimée",
+    "deletedDescription": "Cette recette a été supprimée."
   },
   "tags": {
     "panel": {
@@ -346,12 +352,19 @@
     "servings": "Portions",
     "serving": "{count, plural, one {# portion} other {# portions}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Glissez pour naviguer entre les étapes",
-    "swipeIngredients": "Glissez à gauche pour les ingrédients",
-    "swipeBackToSteps": "Glissez à droite pour les étapes",
     "readyAt": "Prêt vers {time}",
     "timers": "Minuteurs",
-    "nextStep": "Étape suivante"
+    "nextStep": "Étape suivante",
+    "stepLabel": "Étape {number}",
+    "previousStep": "Étape précédente",
+    "startTimer": "Lancer un minuteur de {duration}",
+    "pauseTimer": "Mettre le minuteur en pause, {time} restantes",
+    "resumeTimer": "Reprendre le minuteur, {time} restantes",
+    "dismissTimer": "Fermer le minuteur",
+    "restartTimer": "Relancer le minuteur",
+    "notificationsOff": "Les notifications sont désactivées pour Norish : les minuteurs ne sonnent que lorsque l’app est ouverte.",
+    "decreaseTimer": "Retirer {time}",
+    "increaseTimer": "Ajouter {time}"
   },
   "enrichment": {
     "failed": "L'enrichissement a échoué",
@@ -374,10 +387,7 @@
   "provenance": {
     "title": "Provenance",
     "region": "Région",
-    "cuisines": "Cuisines",
-    "inferring": "Recherche de l'origine de cette recette…",
-    "noInfo": "Pas encore d'informations de provenance",
-    "inferWithAI": "Déterminer avec l'AI"
+    "cuisines": "Cuisines"
   },
   "import": {
     "alreadyExists": "Vous avez déjà cette recette",
@@ -431,7 +441,13 @@
     "changeImage": "Changer l'image",
     "removeImage": "Retirer l'image",
     "imageUploadFailed": "L'image n'a pas pu être envoyée.",
-    "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne."
+    "imageNeedsConnection": "Les images pourront être modifiées une fois de retour en ligne.",
+    "rename": "Renommer",
+    "deleteAlertTitle": "Supprimer {title} ?",
+    "changeCover": "Changer la couverture",
+    "renameTitle": "Renommer le livre de cuisine",
+    "coverFromLibrary": "Choisir dans la photothèque",
+    "coverFromCamera": "Prendre une photo"
   },
   "print": {
     "title": "Imprimer la recette",
@@ -450,5 +466,78 @@
     "newCookbook": "Nouveau livre de recettes",
     "filedInto": "{count, plural, one {# recette ajoutée} other {# recettes ajoutées}} à {title}",
     "filedIntoMany": "{count, plural, one {# recette ajoutée} other {# recettes ajoutées}} à {cookbooks} livres de recettes"
+  },
+  "addRecipe": {
+    "fromLink": "Depuis un lien",
+    "fromLinkHint": "N'importe quel site de recettes ou vidéo",
+    "fromPhotos": "Depuis des photos",
+    "fromPhotosHint": "Pages de livre de cuisine ou capture d'écran",
+    "fromText": "Depuis du texte",
+    "fromTextHint": "Collez une recette ou du JSON-LD",
+    "writeYourself": "L'écrire vous-même",
+    "writeYourselfHint": "Partir d'une recette vide",
+    "importHost": "Importer {host}",
+    "linkTitle": "Importer depuis un lien",
+    "textTitle": "Importer depuis du texte",
+    "photosTitle": "Importer depuis des photos",
+    "camera": "Appareil photo",
+    "photoLibrary": "Photothèque",
+    "photoCount": "{count, plural, one {# photo, importée comme une seule recette} other {# photos, importées comme une seule recette}}",
+    "photoLimits": "Jusqu'à {max} photos, JPEG, PNG ou WebP",
+    "removePhoto": "Retirer la photo {number}"
+  },
+  "shareExtension": {
+    "sending": "Envoi vers Norish…",
+    "sentTitle": "Importation dans Norish",
+    "sentBody": "Elle apparaît dans votre bibliothèque dans un instant.",
+    "savedTitle": "Enregistré pour plus tard",
+    "savedBody": "Norish l’importera dès que votre serveur sera joignable.",
+    "signedOut": "Ouvrez Norish et connectez-vous d’abord.",
+    "tooOld": "Votre serveur Norish doit d’abord être mis à jour.",
+    "noAi": "Importer des photos nécessite l’IA, qui est désactivée sur votre serveur.",
+    "failed": "Norish n’a pas pu importer ceci.",
+    "close": "Fermer",
+    "photoCount": "{count, plural, one {# photo} other {# photos}}",
+    "text": "Texte"
+  },
+  "editor": {
+    "newTitle": "Nouvelle recette",
+    "editTitle": "Modifier la recette",
+    "recipeName": "Nom de la recette",
+    "ingredient": "Ingrédient",
+    "sectionHeading": "Titre de section",
+    "step": "Étape",
+    "steps": "Étapes",
+    "notesHint": "Commencez une ligne par # pour un titre ; entourez des mots de **doubles astérisques** pour le gras.",
+    "ingredientsHint": "Saisissez des ingrédients comme 2 tasses de farine ; les quantités et unités sont lues pour vous. Commencez une ligne par # pour une section.",
+    "stepsHint": "Appuyez sur Entrée pour l’étape suivante. Tapez @ pour lier un ingrédient, # pour une section.",
+    "addIngredient": "Ajouter un ingrédient",
+    "removeIngredient": "Retirer l’ingrédient",
+    "addStep": "Ajouter une étape",
+    "removeStep": "Retirer l’étape",
+    "addPhoto": "Ajouter une photo",
+    "addStepPhoto": "Ajouter une photo d’étape",
+    "removePhoto": "Retirer la photo",
+    "mediaCount": "{images}/{maxImages} photos · {videos}/{maxVideos} vidéos",
+    "photosOffline": "Les photos peuvent être ajoutées une fois en ligne.",
+    "tagsAndCategories": "Tags et catégories",
+    "categories": "Catégories",
+    "tags": "Tags",
+    "tagsHint": "Choisissez une suggestion ou saisissez un nouveau tag ; les nouveaux tags ont une bordure en pointillés.",
+    "addTag": "Ajouter un tag",
+    "removeNamed": "Retirer {name}",
+    "servingsAndTime": "Portions et durée",
+    "minutes": "min",
+    "perServing": "par portion, facultatif",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "Source",
+    "sourceUrl": "URL de la source",
+    "measurementSystem": "Système de mesure",
+    "measurementHint": "Détecté à partir de vos ingrédients. Le changer renomme sans convertir ; utilisez Convertir après l’enregistrement.",
+    "discardTitle": "Abandonner les modifications ?",
+    "discardMessage": "Vous avez des modifications non enregistrées.",
+    "keepEditing": "Continuer",
+    "discard": "Abandonner"
   }
 }

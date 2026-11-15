@@ -13,6 +13,7 @@
       "description": "Gestionar tu cuenta"
     },
     "logout": "Cerrar sesión",
+    "signOutOffline": "No tienes conexión. Cierra sesión cuando vuelvas a estar en línea.",
     "signOutConfirm": {
       "title": "¿Descartar los cambios sin sincronizar?",
       "description": "{count, plural, one {# cambio hecho sin conexión aún no ha llegado al servidor.} other {# cambios hechos sin conexión aún no han llegado al servidor.}} Al cerrar sesión, este trabajo pendiente se descartará permanentemente y los datos sin conexión de tu cuenta se eliminarán de este dispositivo."
@@ -32,11 +33,6 @@
     "home": "Recetas",
     "calendar": "Calendario",
     "groceries": "Ingredientes"
-  },
-  "mobile": {
-    "searchPlaceholder": "Buscar recetas...",
-    "toggleSearch": "Abrir buscador",
-    "goBack": "Volver"
   },
   "archiveImporter": {
     "uploading": "Subiendo…",

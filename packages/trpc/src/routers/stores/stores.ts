@@ -85,12 +85,10 @@ export const createStoreProcedure = authedProcedure
 const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ ctx, input }) => {
   log.debug({ userId: ctx.user.id, storeId: input.id }, "Updating store");
 
-  // Check ownership
   const ownerId = await getStoreOwnerId(input.id);
 
-  if (!ownerId) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-  }
+  // A Store another member deleted lost to an earlier write: stale, as a changed version is.
+  if (!ownerId) return { success: true, stale: true };
   await assertHouseholdAccess(ctx.user.id, ownerId);
 
   // Check for duplicate name if name is being changed
@@ -117,7 +115,7 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
         "Ignoring stale store update mutation"
       );
 
-      return input.id;
+      return { success: true, stale: true };
     }
 
     log.info({ userId: ctx.user.id, storeId: updatedStore.id }, "Store updated");
@@ -128,11 +126,12 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
       },
       { householdKey: ctx.householdKey }
     );
+
+    return { success: true, stale: false };
   } catch (err) {
     log.error({ err, userId: ctx.user.id, storeId: input.id }, "Failed to update store");
+    throw err;
   }
-
-  return input.id;
 });
 
 const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, input }) => {
@@ -143,60 +142,72 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
     "Deleting store"
   );
 
-  // Check ownership
   const ownerId = await getStoreOwnerId(storeId);
 
-  if (!ownerId) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-  }
+  // A Store already gone is a delete that already happened: a no-op, not stale.
+  if (!ownerId) return { success: true, stale: false };
   await assertHouseholdAccess(ctx.user.id, ownerId);
 
-  deleteStore(storeId, version, deleteGroceries, grocerySnapshot)
-    .then(({ deletedGroceryIds, storeDeleted, stale }) => {
-      if (stale) {
-        log.info({ userId: ctx.user.id, storeId, version }, "Ignoring stale store delete mutation");
+  try {
+    const { deletedGroceryIds, movedGroceries, storeDeleted, stale } = await deleteStore(
+      storeId,
+      version,
+      deleteGroceries,
+      grocerySnapshot
+    );
 
-        return;
-      }
-
-      log.info(
-        {
-          userId: ctx.user.id,
-          storeId,
-          deletedGroceryCount: deletedGroceryIds.length,
-          storeDeleted,
-        },
-        "Store delete processed"
+    // Lines moved to Unsorted reach the household as any other move does.
+    if (movedGroceries.length > 0) {
+      void groceries.publish(
+        "updated",
+        { changedGroceries: movedGroceries },
+        { householdKey: ctx.householdKey }
       );
+    }
 
-      if (storeDeleted) {
-        // Emit store deleted event
-        void stores.publish(
-          "deleted",
-          {
-            storeId,
-            deletedGroceryIds,
-          },
-          { householdKey: ctx.householdKey }
-        );
-      }
+    if (stale) {
+      log.info({ userId: ctx.user.id, storeId, version }, "Ignoring stale store delete mutation");
 
-      // If groceries were deleted, also emit grocery deleted event
-      if (deletedGroceryIds.length > 0) {
-        void groceries.publish(
-          "deleted",
-          {
-            groceryIds: deletedGroceryIds,
-          },
-          { householdKey: ctx.householdKey }
-        );
-      }
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete store");
-    });
+      return { success: true, stale: true };
+    }
 
-  return storeId;
+    log.info(
+      {
+        userId: ctx.user.id,
+        storeId,
+        deletedGroceryCount: deletedGroceryIds.length,
+        storeDeleted,
+      },
+      "Store delete processed"
+    );
+
+    if (storeDeleted) {
+      void stores.publish(
+        "deleted",
+        {
+          storeId,
+          deletedGroceryIds,
+        },
+        { householdKey: ctx.householdKey }
+      );
+    }
+
+    if (deletedGroceryIds.length > 0) {
+      void groceries.publish(
+        "deleted",
+        {
+          groceryIds: deletedGroceryIds,
+        },
+        { householdKey: ctx.householdKey }
+      );
+    }
+
+    // A Store kept for lines this delete was not shown lost to their writer.
+    return { success: true, stale: !storeDeleted };
+  } catch (err) {
+    log.error({ err, userId: ctx.user.id, storeId }, "Failed to delete store");
+    throw err;
+  }
 });
 
 const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx, input }) => {
@@ -207,13 +218,13 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
   try {
     const reorderedStores = await reorderStores(storeUpdates);
 
-    if (reorderedStores.length === 0) {
+    if (reorderedStores.length === 0 && storeUpdates.length > 0) {
       log.info(
         { userId: ctx.user.id, requestedStoreCount: storeUpdates.length },
         "Ignoring stale store reorder mutation"
       );
 
-      return storeUpdates.map((s) => s.id);
+      return { success: true, stale: true };
     }
 
     if (reorderedStores.length !== storeUpdates.length) {
@@ -236,11 +247,12 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
       },
       { householdKey: ctx.householdKey }
     );
+
+    return { success: true, stale: reorderedStores.length !== storeUpdates.length };
   } catch (err) {
     log.error({ err, userId: ctx.user.id }, "Failed to reorder stores");
+    throw err;
   }
-
-  return storeUpdates.map((s) => s.id);
 });
 
 const getGroceryCount = authedProcedure.input(storeIdInputSchema).query(async ({ ctx, input }) => {

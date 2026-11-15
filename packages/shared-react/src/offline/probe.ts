@@ -7,7 +7,7 @@ import { REACHABILITY_DEADLINE_MS } from "./reachability";
 export const HEALTH_PROBE_PATH = "/api/v1/health/ready";
 
 /** Give up on a single probe after this long; a hung request counts as Offline. */
-export const HEALTH_PROBE_TIMEOUT_MS = REACHABILITY_DEADLINE_MS;
+const HEALTH_PROBE_TIMEOUT_MS = REACHABILITY_DEADLINE_MS;
 
 export interface ProbeOptions {
   /** Abort the probe from the outside (e.g. on unmount). */

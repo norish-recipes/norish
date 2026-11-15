@@ -80,6 +80,14 @@ export function createMmkvStorage({
   const writeEntry = (entry: OutboxEntry) =>
     write(OUTBOX_PREFIX + entry.seq, { ...entry, input: mapUploads(entry.input, fileName) });
 
+  async function removeEntry(seq: number) {
+    const names = storedNames(read<OutboxEntry>(OUTBOX_PREFIX + seq)?.input);
+
+    mmkv.remove(OUTBOX_PREFIX + seq);
+    // Best effort: the entry is already gone, and a stray copy must not fail a Replay.
+    await deleteCopies(names);
+  }
+
   /** Copy every upload into app storage; rejects, leaving no copy behind, if one can't be. */
   async function copyUploads(input: unknown, seq: number) {
     const names: string[] = [];
@@ -105,7 +113,8 @@ export function createMmkvStorage({
 
         await files.copy(value.uri, name);
         names.push(name);
-        entries.push([key, { ...value, uri: name }]);
+        // Read field by field: a native File's fields are getters, which a spread would drop.
+        entries.push([key, { uri: name, name: value.name, type: value.type }]);
       }
     } catch (error) {
       await deleteCopies(names);
@@ -168,15 +177,17 @@ export function createMmkvStorage({
         keysWith(OUTBOX_PREFIX)
           .map((key) => readEntry(key)!)
           .sort((a, b) => a.seq - b.seq),
-      get: async (seq) => readEntry(OUTBOX_PREFIX + seq),
-      put: async (entry) => writeEntry(entry),
-      async remove(seq) {
-        const names = storedNames(read<OutboxEntry>(OUTBOX_PREFIX + seq)?.input);
+      // Read and written with no await between, so nothing else runs in the middle.
+      change: async (seq, change) => {
+        const stored = readEntry(OUTBOX_PREFIX + seq);
+        const next = stored && change(stored);
 
-        mmkv.remove(OUTBOX_PREFIX + seq);
-        // Best effort: the entry is already gone, and a stray copy must not fail a Replay.
-        await deleteCopies(names);
+        if (next) writeEntry(next);
+        if (next === null) await removeEntry(seq);
+
+        return next;
       },
+      remove: removeEntry,
     },
   };
 }

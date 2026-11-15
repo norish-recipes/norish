@@ -5,11 +5,10 @@
  * waiting on its run loop's command or a QUIT the dead socket never answers.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Queue } from "bullmq";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 
-import { freezableProxy, VALKEY_IMAGE } from "../../../shared-server/__tests__/helpers/valkey";
+import { freezableProxy, startValkey } from "../../../shared-server/__tests__/helpers/valkey";
 import { closeWorkers, createWorker } from "../../src/create-worker";
 import { QUEUE_NAMES } from "../../src/queue-names";
 import { closeBullConnection, getBullClient } from "../../src/valkey/bullmq";
@@ -28,7 +27,7 @@ let container: StartedValkeyContainer;
 let proxy: ReturnType<typeof freezableProxy>;
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   proxy = freezableProxy({ host: container.getHost(), port: container.getPort() });
   config.url = await proxy.listen();
 });

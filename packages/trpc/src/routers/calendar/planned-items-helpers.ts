@@ -164,19 +164,22 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
   return { id: newItem.id, item: itemPayload };
 }
 
+/** The REST API answers a missing plan with 404; the app's delete of one already gone is a no-op. */
 export async function deleteCalendarItem(
   ctx: CalendarProcedureContext,
-  input: import("zod").infer<typeof PlannedItemDeleteInputSchema>
+  input: import("zod").infer<typeof PlannedItemDeleteInputSchema>,
+  { rejectMissing = false } = {}
 ) {
   const { itemId, version } = input;
   const item = await getPlannedItemById(itemId);
 
-  if (!item) {
+  if (!item && rejectMissing) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Planned item not found",
     });
   }
+  if (!item) return { success: true, stale: false };
 
   await assertHouseholdAccess(ctx.user.id, item.userId);
 

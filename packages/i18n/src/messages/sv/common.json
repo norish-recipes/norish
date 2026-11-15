@@ -40,7 +40,6 @@
   "status": {
     "loading": "Läser in...",
     "saving": "Sparar...",
-    "deleting": "Tar bort...",
     "error": "Fel",
     "success": "Klart",
     "noResults": "Inga resultat hittades",
@@ -68,7 +67,8 @@
     "categories": "Kategorier",
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
-    "clearFilters": "Rensa filter"
+    "clearFilters": "Rensa filter",
+    "minRating": "Lägsta betyg"
   },
   "time": {
     "minutes": "min",
@@ -76,7 +76,8 @@
   },
   "validation": {
     "required": "Det här fältet är obligatoriskt",
-    "invalidUrl": "Ange en giltig webbadress"
+    "invalidUrl": "Ange en giltig webbadress",
+    "invalidEmail": "Ange en giltig e-postadress"
   },
   "errors": {
     "operationFailed": "Åtgärden misslyckades",
@@ -92,9 +93,6 @@
   },
   "connection": {
     "connecting": "Ansluter till Norish...",
-    "checkInternet": "Kontrollera din internetanslutning",
-    "offlineBanner": "Du är offline. Sparade data visas",
-    "serverUnreachableBanner": "Det går inte att nå Norish-servern. Sparade data visas",
     "live": "Ansluten",
     "offline": "Offline",
     "openDetails": "Anslutningsinformation"
@@ -151,10 +149,7 @@
       "analyzing": "Analyserar dina bilder, vänta...",
       "failed": "Importen misslyckades",
       "selectedCount": "{count} bilder valda – de kombineras till ett recept",
-      "library": "Bildbibliotek",
-      "takePhoto": "Ta foto",
-      "counter": "{count} / {max} foton",
-      "importFromCount": "Importera från {count, plural, one {# foto} other {# foton}}"
+      "library": "Bildbibliotek"
     },
     "menu": {
       "description": "Importera från en webbadress, skanna ett foto eller börja från grunden."
@@ -218,15 +213,16 @@
   },
   "timer": {
     "done": "Klart",
+    "paused": "Pausad",
     "done_action": "Klart",
     "one": "Timer",
     "other": "Timrar",
     "label_one": "1 timer",
     "label_other": "{count} timrar",
-    "notification_title": "Timern är klar",
-    "notification_body": "{label} är klar!",
+    "notification_body": "Timern är klar",
     "notifications_disabled": "Aviseringar är avstängda",
-    "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden."
+    "notifications_disabled_hint": "Aktivera aviseringar i webbläsarens inställningar för att få en avisering när en timer blir klar i bakgrunden.",
+    "more": "+{count} till"
   },
   "offlineStatus": {
     "title": "Anslutning och offline",
@@ -292,14 +288,30 @@
     "title": "Du är offline",
     "description": "Åtgärden har köats. Norish slutför den automatiskt när du är online igen."
   },
+  "changedElsewhere": {
+    "title": "Inte sparat: det ändrades någon annanstans först"
+  },
   "storageUnavailable": {
-    "title": "Det gick inte att starta",
-    "description": "Norish kunde inte läsa sin säkra lagring och kan därför inte avgöra vilken server appen tillhör. Inget har ändrats. Försök igen eller starta om appen.",
-    "detailsLabel": "Teknisk information"
+    "title": "Lagring otillgänglig",
+    "description": "Norish kunde inte läsa nyckelringen på den här iPhonen.",
+    "badgeLabel": "Lagring otillgänglig. Tryck för att spela upp igen."
   },
   "aiKeyRejected": {
     "title": "En AI-nyckel har slutat fungera",
     "description": "Leverantören har nekat API-nyckeln för {blocks} sedan {since}. Spara en ny nyckel för att få dessa AI-funktioner att fungera igen.",
+    "openSettings": "Öppna inställningar"
+  },
+  "household": {
+    "adminTransferred": "Administratörsbehörigheten har överförts till {name}",
+    "unknownMember": "Okänd",
+    "removedTitle": "Borttagen från hushållet",
+    "removedDescription": "En administratör har tagit bort dig från hushållet."
+  },
+  "photos": {
+    "pickFailedTitle": "Det gick inte att välja foto",
+    "pickFailedMessage": "Försök igen eller välj ett annat foto.",
+    "cameraDeniedTitle": "Kameraåtkomst är avstängd",
+    "cameraDeniedMessage": "Tillåt kameraåtkomst i Inställningar för att ta ett foto.",
     "openSettings": "Öppna inställningar"
   }
 }

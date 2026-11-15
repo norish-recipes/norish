@@ -12,6 +12,10 @@ import { parseIngredientWithDefaults, stripBracketed } from "./helpers";
 /**
  * Normalize ingredient name: lowercase, strip qualifiers like (diced), [optional].
  */
+/** Lines in the order the list shows them, a missing sort order first. */
+export const bySortOrder = (a: { sortOrder?: number | null }, b: { sortOrder?: number | null }) =>
+  (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+
 export function normalizeIngredientNameForGrouping(name: string | null): string {
   if (!name) return "";
 
@@ -139,7 +143,7 @@ export function groupGroceriesByIngredient(
     const groups: GroceryGroup[] = [];
 
     for (const { aisleId, normalizedName, normalizedUnit, items } of nameGroups.values()) {
-      const sortedItems = [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+      const sortedItems = [...items].sort(bySortOrder);
 
       // One unit, so one total; a line that states no amount stands for one of
       // whatever its group counts.
@@ -197,4 +201,31 @@ function getDisplayName(name: string | null): string {
   if (!name) return "Unknown item";
 
   return stripBracketed(name).replace(/\s+/g, " ").trim() || "Unknown item";
+}
+
+/** Inline sources with amounts: "Recipe A (300g), Recipe B"; lines added by hand are named once,
+ * amounts together ("Manual Items (2×, 1×)"), a line with no amount as the total counts it. */
+export function formatInlineSourceBreakdown(
+  sources: GroupedGrocerySource[],
+  formatFn: (amount: number | null | undefined, unit: string | null | undefined) => string,
+  manualLabel: string
+): string {
+  const named = (name: string, amounts: string[]) =>
+    amounts.length > 0 ? `${name} (${amounts.join(", ")})` : name;
+  const amountOf = (source: GroupedGrocerySource) =>
+    formatFn(shownAmount(source.grocery), source.grocery.unit);
+  const manual = sources.filter((source) => !source.recipeName);
+  const entries = sources.flatMap((source) =>
+    source.recipeName ? [named(source.recipeName, [amountOf(source)].filter(Boolean))] : []
+  );
+
+  if (manual.length > 0) {
+    const amounts = manual.map((source) =>
+      formatFn(shownAmount(source.grocery) ?? 1, source.grocery.unit)
+    );
+
+    entries.push(named(manualLabel, amounts.filter(Boolean)));
+  }
+
+  return entries.join(", ");
 }

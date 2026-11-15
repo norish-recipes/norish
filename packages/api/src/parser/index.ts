@@ -20,6 +20,7 @@ import {
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import {
+  NO_RECIPE_FOUND_REASON,
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
@@ -102,7 +103,7 @@ const NON_RECIPE_FAILURE_CODES = new Set(["NoSchemaFoundInWildMode", "RecipeSche
 
 function getStructuredFailureMessage(code: string): string {
   if (NON_RECIPE_FAILURE_CODES.has(code)) {
-    return "Page does not appear to contain a recipe.";
+    return NO_RECIPE_FOUND_REASON;
   }
 
   return `Python parser failed: ${code}`;

@@ -500,7 +500,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: false });
       expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
       expect(groceries.publish).toHaveBeenCalledWith(
         "deleted",
@@ -526,7 +526,7 @@ describe("recurring groceries procedures", () => {
         version: 4,
       });
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: true });
       await flushAsync();
 
       expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
@@ -566,7 +566,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: false });
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
         {
           id: "r1",
@@ -642,7 +642,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: true });
       expect(groceries.publish).toHaveBeenCalledWith(
         "stale",
         {
@@ -676,7 +676,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: false });
       // Parsed ingredient comes from the mocked parseIngredientWithDefaults
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
         {
@@ -776,7 +776,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: true });
       expect(groceries.publish).toHaveBeenCalledWith(
         "stale",
         {
@@ -827,7 +827,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: false });
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
         groceryId: "g1",
         groceryVersion: 3,
@@ -901,7 +901,7 @@ describe("recurring groceries procedures", () => {
 
       await flushAsync();
 
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ success: true, stale: true });
       expect(groceries.publish).toHaveBeenCalledWith(
         "stale",
         {
@@ -948,6 +948,32 @@ describe("recurring groceries procedures", () => {
       const result = await getRecurringGroceryById("non-existent");
 
       expect(result).toBeNull();
+    });
+  });
+});
+
+describe("a failed repeat edit rejects, so Replay parks it", () => {
+  const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
+  const caller = () => recurringGroceriesProcedures.createCaller(createMockCallerContext(ctx));
+  const versions = {
+    recurringGroceryId: crypto.randomUUID(),
+    recurringVersion: 2,
+    groceryId: crypto.randomUUID(),
+    groceryVersion: 3,
+  };
+
+  it.each([
+    ["updateRecurring", () => caller().updateRecurring({ ...versions, data: { amount: 2 } })],
+    ["detachRecurring", () => caller().detachRecurring({ ...versions, raw: "Oat milk" })],
+    ["deleteRecurring", () => caller().deleteRecurring({ recurringGroceryId: "r1", version: 2 })],
+    ["checkRecurring", () => caller().checkRecurring({ ...versions, isDone: true })],
+  ])("%s", async (_, write) => {
+    getRecurringGroceryOwnerId.mockResolvedValue(null);
+
+    await expect(write()).rejects.toThrow("Recurring grocery not found");
+    // The app's own client toasts the rejection; a `failed` event would toast it twice.
+    expect(groceries.publish).not.toHaveBeenCalledWith("failed", expect.anything(), {
+      userId: ctx.user.id,
     });
   });
 });

@@ -20,11 +20,11 @@ This Next.js has breaking changes from your training data: read the relevant gui
 ## Repo Shape
 
 - `apps/web` - web app and its custom server, run from source through tsx
-- `apps/mobile` - Expo app, started with `pnpm dev:mobile`. `expo install --check` is the authority for its Expo pins, except React, which follows the catalog (`expo.install.exclude`): SDK 58 pins 19.3.0 and React Native 0.88 runs on 19.3.1
+- `apps/mobile` - Expo app, started with `pnpm dev:mobile`. `expo install --check` is the authority for its Expo pins, except React and React DOM, which follow the catalog (`expo.install.exclude`): SDK 58 pins 19.3.0 and React Native 0.88 runs on 19.3.1
 - `packages/api` - server domain logic
 - `packages/trpc` - tRPC routers and API surface
-- `packages/db` - schema and repositories
-- `packages/shared-react` - shared hooks and contexts
+- `packages/db` - repositories and migrations; the Drizzle tables are in `packages/db-schema`
+- `packages/shared-react` - React logic both apps share, by domain
 - `packages/shared`, `packages/shared-server`, `packages/ui`, `packages/config`, `packages/i18n`, `packages/auth`, `packages/queue` - shared package layer
 - `tooling/` - shared lint, format, TypeScript, Tailwind, GitHub, and monorepo tooling
 - `apps/quick-import-extension` - a git submodule of [Norish-Quick-Import-Extension](https://github.com/AfoxDesignz/Norish-Quick-Import-Extension), checked out here for visibility only. It is not maintained from this repo: it sits outside the pnpm workspace, no gate reaches it, and a change there is a PR to that repository rather than a commit here. Leave it out of repo-wide work such as dependency sweeps.
@@ -34,8 +34,9 @@ This Next.js has breaking changes from your training data: read the relevant gui
 Everything under `packages/shared-server/src/ai/` is AI: `runtime/` (the one
 seam that talks to a model — see ADR-0015), `prompts/` (the administrator-editable
 prompts and their loader), `enrichment/` (the features whose input is a stored
-recipe and whose output is a domain claim), and `resolution/` (the features whose
-input is a name and whose output is which catalogue entry it is — ADR-0037). `shared-server` deliberately holds
+recipe and whose output is a domain claim), `resolution/` (the features whose
+input is a name and whose output is which catalogue entry it is — ADR-0037), and
+`providers/` (the models a provider offers, for admin settings). `shared-server` deliberately holds
 these real domain features as well as infrastructure; the `runtime`/`enrichment`
 split says which is which. Recipe extraction is not AI code — it is an
 import-pipeline feature that happens to use AI and lives with the parser in
@@ -47,6 +48,7 @@ sections (never passing a finished prompt string — ADR-0016).
 
 - Keep root scripts and config minimal; workspace ownership should stay inside the owning app, package, or tooling workspace.
 - Prefer existing shared abstractions before adding new ones.
+- Placing code or state in `apps/web`, `apps/mobile` or `packages/shared-react` follows "App architecture" in `CONTRIBUTING.md`. The [architecture page](https://docs.norish.dev/development/architecture) (`apps/docs/docs/development/architecture.md`) maps every workspace and traces a read, a write and a realtime update.
 - Use `@/` imports where the workspace already supports them.
 - Use the existing logger patterns instead of `console.log`.
 - Avoid `as any`, `@ts-ignore`, and `@ts-expect-error`.

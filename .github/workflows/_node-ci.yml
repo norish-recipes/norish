@@ -7,6 +7,8 @@ env:
   SKIP_ENV_VALIDATION: "1"
   AUTH_URL: http://localhost:3000
   OBSCURA_ENDPOINT: ws://localhost:9222
+  # turbo.json caps local runs at 3; runners keep turbo's default of 10.
+  TURBO_CONCURRENCY: "10"
 
 on:
   workflow_call:

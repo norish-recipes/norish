@@ -72,13 +72,12 @@ export function createIdbStorage(factory?: IDBFactory): OfflineStorage {
       // getAll returns records in ascending key (seq) order — i.e. FIFO.
       all: () =>
         idb.transaction<OutboxEntry[]>(OUTBOX_STORE, "readonly", (store) => store.getAll()),
-      get: (seq) =>
-        idb.transaction<OutboxEntry | undefined>(OUTBOX_STORE, "readonly", (store) =>
-          store.get(seq)
-        ),
-      async put(entry) {
-        await idb.transaction(OUTBOX_STORE, "readwrite", (store) => store.put(entry));
-        changed();
+      async change(seq, change) {
+        const written = await idb.change<OutboxEntry>(OUTBOX_STORE, seq, change);
+
+        if (written !== undefined) changed();
+
+        return written;
       },
       async remove(seq) {
         await idb.transaction(OUTBOX_STORE, "readwrite", (store) => store.delete(seq));

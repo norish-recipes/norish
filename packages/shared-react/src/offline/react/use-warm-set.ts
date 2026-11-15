@@ -1,16 +1,13 @@
 "use client";
 
-import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { useMemo } from "react";
-
-import type { AppRouter } from "@norish/trpc/client";
 
 import type { OfflineEngine } from "../engine";
 import type { WarmSet } from "../warm-set";
+import { useTRPC } from "../../trpc";
 
-export function useWarmSet(
-  engine: Pick<OfflineEngine, "createWarmSet">,
-  trpc: TRPCOptionsProxy<AppRouter>
-): WarmSet {
+export function useWarmSet(engine: Pick<OfflineEngine, "createWarmSet">): WarmSet {
+  const trpc = useTRPC();
+
   return useMemo(() => engine.createWarmSet(trpc), [engine, trpc]);
 }

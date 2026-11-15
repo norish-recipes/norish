@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { connect, createServer } from "node:net";
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import type { AddressInfo, Socket } from "node:net";
+import { ValkeyContainer } from "@testcontainers/valkey";
 import { GenericContainer, Wait } from "testcontainers";
 
 /**
@@ -23,6 +24,16 @@ function composeValkeyImage(): string {
   return image;
 }
 
+/**
+ * Docker Desktop's VM is shared by every workspace's suites under turbo, so a
+ * start can take longer than testcontainers' 60 s default.
+ */
+export const CONTAINER_START_TIMEOUT_MS = 180_000;
+
+export function startValkey() {
+  return new ValkeyContainer(VALKEY_IMAGE).withStartupTimeout(CONTAINER_START_TIMEOUT_MS).start();
+}
+
 /** The Redis image 0.25 shipped, which an install may keep: code with Lua runs on both. */
 export const REDIS_IMAGE = "redis:8.10.1";
 
@@ -31,6 +42,7 @@ export async function startServer(image: string) {
   const container = await new GenericContainer(image)
     .withExposedPorts(6379)
     .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
+    .withStartupTimeout(CONTAINER_START_TIMEOUT_MS)
     .start();
 
   return {

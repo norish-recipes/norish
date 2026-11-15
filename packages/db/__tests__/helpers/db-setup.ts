@@ -98,6 +98,7 @@ async function startReusedContainer(attempt = 1): Promise<StartedPostgreSqlConta
       .withUsername("test")
       .withPassword("test")
       .withDatabase("postgres")
+      .withStartupTimeout(180_000) // a shared Docker VM starts it slower than the 60 s default
       .withReuse() // Reuse container across test runs
       .start();
   } catch (error) {

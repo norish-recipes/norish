@@ -9,6 +9,7 @@ import type { Page } from "@playwright/test";
 
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
 
+import { closePanel, rowFor } from "../harness/groceries";
 import { expect, test } from "./fixture";
 import { createPlainStore } from "./grocery-aisles-support";
 
@@ -36,18 +37,13 @@ async function addGrocery(name: string): Promise<void> {
   await page.getByRole("button", { name: /Auto-detect from history/ }).click();
   await page.getByRole("option", { name: STORE }).click();
   await page.getByRole("button", { name: "Add", exact: true }).click();
-  await expect(page.locator(`[data-grocery-name="${name}"]`).first()).toBeVisible();
-  await page.getByRole("button", { name: "Close panel" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-}
-
-function rowFor(name: string) {
-  return page.locator(`[data-grocery-name="${name}"]`).first();
+  await expect(rowFor(page, name)).toBeVisible();
+  await closePanel(page);
 }
 
 /** The visible checkbox of a row, clicked the way a shopper clicks it. */
 function checkboxOf(name: string) {
-  return rowFor(name).locator('[data-slot="checkbox"]').first();
+  return rowFor(page, name).locator('[data-slot="checkbox"]').first();
 }
 
 /**
@@ -89,7 +85,7 @@ test("a grocery ticked after another was added to its Store stays done", async (
   // Long enough for a stale-driven refetch, were there one, to have un-done it.
   await page.waitForTimeout(3000);
   await openDoneRow();
-  await expect(rowFor("versie-appel").getByRole("checkbox")).toBeChecked();
+  await expect(rowFor(page, "versie-appel").getByRole("checkbox")).toBeChecked();
   expect((await findNewestGroceryNamed("versie-appel"))?.isDone).toBe(true);
 });
 
@@ -103,5 +99,5 @@ test("and so does the one added last, with nothing moved since", async () => {
     .toBe(true);
   await page.waitForTimeout(3000);
   await openDoneRow();
-  await expect(rowFor("versie-peer").getByRole("checkbox")).toBeChecked();
+  await expect(rowFor(page, "versie-peer").getByRole("checkbox")).toBeChecked();
 });

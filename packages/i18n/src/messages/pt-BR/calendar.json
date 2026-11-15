@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "Hoje",
-    "scrollToToday": "Ir para hoje"
+    "scrollToToday": "Ir para hoje",
+    "planRecipe": "Planejar receita"
+  },
+  "today": {
+    "openRecipe": "Abrir receita",
+    "move": "Mover…",
+    "removeTitle": "Remover de hoje?",
+    "removeMessage": "{name} sai de {slot} de {day}.",
+    "moveTitle": "Mover",
+    "moveSubtitle": "{name}, {slot} de hoje",
+    "moveToDay": "Mover {name} para {day}"
   },
   "editNote": {
     "title": "Editar nota",
     "noteLabel": "Nota",
     "notePlaceholder": "Insira uma nota..."
-  },
-  "navigation": {
-    "previousMonth": "Mês anterior",
-    "nextMonth": "Próximo mês",
-    "prev": "Anterior",
-    "next": "Próximo"
   },
   "weekdays": {
     "mon": "seg",
@@ -50,6 +54,29 @@
     "addNote": "Adicionar nota: {input}",
     "randomRecipe": "Receita aleatória",
     "noRecipesFound": "Nenhuma receita encontrada.",
-    "failedToLoadRecipes": "Falha ao carregar receitas."
+    "failedToLoadRecipes": "Falha ao carregar receitas.",
+    "planRecipe": "Planejar uma receita",
+    "searchOrAddNote": "Busque receitas ou adicione uma nota",
+    "random": "Receita aleatória",
+    "planThisRecipe": "Planejar esta receita",
+    "planOnDay": "Planejar {name} em {day}",
+    "addToDay": "Adicionar a {day}"
+  },
+  "caldav": {
+    "syncStarted": "Sincronização CalDAV iniciada",
+    "syncStartedDescription": "Itens a sincronizar: {queued}",
+    "syncStartedWithFailures": "Itens a sincronizar: {queued}. Não foi possível enfileirar: {failed}",
+    "configSaved": "Configuração salva",
+    "configSavedDescription": "Suas configurações de CalDAV foram salvas.",
+    "configDeleted": "Configuração excluída",
+    "configDeletedDescription": "Suas configurações de CalDAV foram removidas.",
+    "retryStarted": "Sincronização iniciada",
+    "retryStartedDescription": "Tentando novamente os itens pendentes e com falha…"
+  },
+  "widgets": {
+    "nothingPlanned": "Nada planejado",
+    "signIn": "Abra o Norish para entrar",
+    "open": "Abrir o Norish",
+    "more": "+{count} a mais"
   }
 }

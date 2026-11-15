@@ -9,9 +9,10 @@
  * We keep this. The real Norish server, database, Valkey, tRPC and realtime
  * are all in the path; nothing outbound is.
  */
-import type { Locator, Page } from "@playwright/test";
+import type { Locator, Page, Request } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
+import { rowFor } from "../harness/groceries";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
 import { resetCatalogueScenario } from "./ingredient-catalogue-support";
@@ -221,4 +222,77 @@ test("adding a recipe teaches the Pantry a staple, and a kept line on the list s
   await expect
     .poll(() => readPantryNames(stack))
     .toEqual(["chicken breast", "garlic", "olive oil"]);
+});
+
+test("a switch loads no page; a first switch to the Pantry reads it once; the views and switches after it read nothing realtime keeps current nor config", async () => {
+  // The list's reads, and the Pantry's, which the subscriptions keep current while mounted.
+  const keptCurrent = [
+    "groceries.list",
+    "stores.list",
+    "stores.groceryPrices",
+    "stores.aisleLinks",
+    "pantry.list",
+  ];
+  const reads: string[] = [];
+  const pageLoads: string[] = [];
+  const noteRead = (request: Request) => {
+    const { pathname } = new URL(request.url());
+    const headers = request.headers();
+
+    // The switch only rewrites the address: no document, and no RSC beyond a link's prefetch.
+    if (
+      request.isNavigationRequest() ||
+      (headers.rsc === "1" && !headers["next-router-prefetch"])
+    ) {
+      pageLoads.push(pathname);
+    }
+
+    if (!pathname.includes("/api/trpc/")) return;
+    const procedures = pathname.slice(pathname.lastIndexOf("/") + 1).split(",");
+
+    // Reference data, which the config subscription keeps current too.
+    reads.push(
+      ...procedures.filter((read) => keptCurrent.includes(read) || read.startsWith("config."))
+    );
+  };
+  const showsView = (view: string) =>
+    expect(page.locator(`[data-grocery-view="${view}"]`).first()).toBeAttached();
+
+  // The Cache Warmer reads the Pantry too, before or after this listens, by when it tops up:
+  // it runs only in the tab holding the leader lock, so held here every read is the page's.
+  await page.addInitScript(() => {
+    void navigator.locks.request("norish-outbox-replay", () => new Promise(() => {}));
+  });
+  await page.goto("/groceries");
+  // A tick, so the list is no longer the copy the server sent with the page.
+  await rowFor(page, "olive oil", { visible: true })
+    .locator('[data-slot="checkbox"]')
+    .first()
+    .click();
+  await expect
+    .poll(() => readGroceries(stack))
+    .not.toContainEqual(expect.objectContaining({ name: "olive oil", isDone: false }));
+
+  page.on("request", noteRead);
+  await page.getByRole("button", { name: "View Mode" }).click();
+  await page.getByRole("menuitem", { name: "By Recipe" }).click();
+  await showsView("recipe");
+  await page.getByRole("button", { name: "View Mode" }).click();
+  await page.getByRole("menuitem", { name: "By Store" }).click();
+  await showsView("store");
+  // A full load of the list seeds only the list, so the Pantry is read on its first visit.
+  await page.getByRole("tab", { name: "Pantry" }).click();
+  await expect(keptRow("olive oil")).toBeVisible();
+  await page.getByRole("tab", { name: "List" }).click();
+  await showsView("store");
+  await page.getByRole("tab", { name: "Pantry" }).click();
+  await expect(keptRow("olive oil")).toBeVisible();
+  await page.getByRole("tab", { name: "List" }).click();
+  await showsView("store");
+  // Long enough for a read on mount, were there one, to have gone out.
+  await page.waitForTimeout(1_000);
+  page.off("request", noteRead);
+
+  expect(reads).toEqual(["pantry.list"]);
+  expect(pageLoads).toEqual([]);
 });

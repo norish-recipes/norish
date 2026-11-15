@@ -1,18 +1,14 @@
 import type { Page, WebSocket as PageSocket } from "@playwright/test";
-import { request } from "@playwright/test";
+import { expect, request } from "@playwright/test";
 import { WebSocket as RawSocket } from "ws";
 
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
 
-import type { Identity, RealtimeStack, SessionCookies } from "./fixture";
-import { callTrpc } from "../harness/trpc";
-import { waitForSocket } from "./fixture";
+import type { Identity, RealtimeStack } from "./fixture";
+import { closePanel, rowFor } from "../harness/groceries";
+import { callTrpc, cookieHeader } from "../harness/trpc";
 
 const TRPC_JSON = { "content-type": "application/json" };
-
-function cookieHeader(cookies: SessionCookies): string {
-  return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
-}
 
 /** Call one tRPC mutation over HTTP as the context's user, the way the app does. */
 export async function callMutation<T = unknown>(
@@ -49,21 +45,16 @@ export interface HouseholdRow {
   joinCode: string | null;
 }
 
-/**
- * The household as `identity` reads it, once the asynchronous create/join has landed. Create
- * inserts the household and then replaces its code (version 2), so only version 2 on counts.
- */
+/** The household as `identity` reads it: null until the asynchronous create or join has made them a member. */
 export async function readHousehold(
   stack: RealtimeStack,
   identity: Identity
 ): Promise<HouseholdRow | null> {
   const { household } = await callTrpc<{
-    household: { id: string; version: number; joinCode?: string | null } | null;
+    household: { id: string; joinCode?: string | null } | null;
   }>(stack.baseURL, stack.cookies[identity], "households.get");
 
-  return household && household.version > 1
-    ? { id: household.id, joinCode: household.joinCode ?? null }
-    : null;
+  return household ? { id: household.id, joinCode: household.joinCode ?? null } : null;
 }
 
 /** The newest grocery by this name: a new grocery takes the top of its store's list. */
@@ -129,11 +120,48 @@ export function recordFrames(page: Page): FrameLog {
   return log;
 }
 
-/** Open `/groceries` and wait until the page's socket is connected. */
-export async function openGroceries(page: Page): Promise<void> {
-  await page.goto("/groceries");
-  await page.getByRole("button", { name: "Add Item" }).waitFor();
-  await waitForSocket(page, 1);
+/** Which of the named subscriptions the server has yet to send their first item, the Cursor Mark. */
+export function pathsNotLive(log: FrameLog, paths: string[]): string[] {
+  const pathOf = new Map<string, string>();
+  const liveIds = new Set<string>();
+
+  for (const frame of log.frames) {
+    let messages: unknown;
+
+    try {
+      messages = JSON.parse(frame.payload);
+    } catch {
+      continue;
+    }
+
+    for (const message of [messages].flat() as Array<{
+      id?: number | string;
+      method?: string;
+      params?: { path?: string };
+      result?: { type?: string };
+    }>) {
+      const key = `${frame.socket}:${message.id}`;
+
+      if (frame.direction === "sent" && message.method === "subscription") {
+        pathOf.set(key, message.params?.path ?? "");
+      } else if (frame.direction === "sent" && message.method === "subscription.stop") {
+        liveIds.delete(key);
+      } else if (frame.direction === "received" && message.result?.type === "data") {
+        liveIds.add(key);
+      }
+    }
+  }
+  const live = new Set([...liveIds].map((key) => pathOf.get(key) ?? ""));
+
+  return paths.filter((path) => !live.has(path));
+}
+
+/**
+ * Until the server has sent each named subscription its first item, the Cursor Mark: it
+ * listens before it sends one, so an event published after it reaches the page.
+ */
+export async function waitForLive(log: FrameLog, paths: string[]): Promise<void> {
+  await expect.poll(() => pathsNotLive(log, paths), { timeout: 30_000 }).toEqual([]);
 }
 
 /** Add a grocery through the panel, the way a cook does, and wait for its row. */
@@ -142,12 +170,7 @@ export async function addGrocery(page: Page, name: string): Promise<void> {
   await page.getByPlaceholder("e.g., 2 lbs chicken breast").fill(name);
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await rowFor(page, name).waitFor();
-  await page.getByRole("button", { name: "Close panel" }).click();
-  await page.getByRole("dialog").waitFor({ state: "hidden" });
-}
-
-export function rowFor(page: Page, name: string) {
-  return page.locator(`[data-grocery-name="${name}"]`).first();
+  await closePanel(page);
 }
 
 /**

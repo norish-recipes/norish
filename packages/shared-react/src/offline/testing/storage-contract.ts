@@ -3,15 +3,20 @@
  * engine's own Outbox store and cache manager, so no adapter quietly behaves differently.
  */
 
+import { observable } from "@trpc/server/observable";
 import { describe, expect, it, vi } from "vitest";
 
+import type { ReplayOutcome } from "../error-classification";
+import type { LockManagerLike } from "../leader";
 import type { NewOutboxEntry } from "../outbox-types";
 import type { OfflineStorage } from "../storage";
 import { createCacheManager } from "../cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "../last-warmed";
+import { createOutboxLink } from "../outbox-link";
 import { createOutboxStore } from "../outbox-store";
+import { runReplayPass } from "../replay";
 
-export interface StorageContractHarness {
+interface StorageContractHarness {
   /** A fresh, empty adapter over its own backing store. */
   create(): OfflineStorage | Promise<OfflineStorage>;
   /** An upload value as this client's FormData holds it. */
@@ -142,6 +147,23 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         expect(requeued!.parkedReason).toBeUndefined();
       });
 
+      it("changes an entry in one step, or leaves it when the change declines", async () => {
+        const store = await outboxOf();
+        const queued = await store.enqueue(entry());
+        const claim = (seq: number) =>
+          store.change(seq, (stored) =>
+            stored.sending ? undefined : { ...stored, sending: store.process }
+          );
+
+        const [first, second] = await Promise.all([claim(queued.seq), claim(queued.seq)]);
+
+        expect(first).toMatchObject({ seq: queued.seq, sending: store.process });
+        expect(second).toBeUndefined();
+        expect((await store.forOwner("u1"))[0]).toMatchObject({ sending: store.process });
+        await store.remove(queued.seq);
+        expect(await claim(queued.seq)).toBeUndefined();
+      });
+
       it("ignores an update to an entry that is gone", async () => {
         const store = await outboxOf();
         const gone = await store.enqueue(entry());
@@ -150,6 +172,124 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         await store.update(gone.seq, { attempts: 1 });
 
         expect(await store.size()).toBe(0);
+      });
+    });
+
+    describe("a save of an entry marked as being sent", () => {
+      const recipeId = "11111111-1111-4111-8111-111111111111";
+      const edit = (name: string, version: number) => ({ id: recipeId, version, data: { name } });
+      const held: LockManagerLike = { request: (_name, _options, granted) => granted(null) };
+      const free: LockManagerLike = { request: (_name, _options, granted) => granted({}) };
+
+      /** Replay marks the queued save and sends it; the process dies before an answer. */
+      async function killedWhileSending() {
+        const storage = await harness.create();
+        const before = createOutboxStore(storage.outbox);
+
+        await before.enqueue(
+          entry({ path: "recipes.update", input: edit("First", 3), entityId: null })
+        );
+        void runReplayPass({ store: before, ownerId: "u1", submit: () => new Promise(() => {}) });
+        await vi.waitFor(async () => expect((await before.loadAll())[0]?.sending).toBeTruthy());
+
+        return storage;
+      }
+
+      /** After a relaunch (a new store over the same storage), save the recipe again. */
+      async function saveAgain(storage: OfflineStorage, locks: LockManagerLike | null) {
+        const store = createOutboxStore(storage.outbox);
+        const link = createOutboxLink({
+          store,
+          owner: () => "u1",
+          replayHeaderValue: "contract",
+          wholeEdits: new Set(["recipes.update"]),
+          locks: () => locks,
+        })({} as never);
+
+        await new Promise<void>((resolve) =>
+          link({
+            op: {
+              id: 1,
+              type: "mutation",
+              path: "recipes.update",
+              input: edit("Second", 4),
+              context: { operationId: "op-2" },
+            },
+            next: () => observable((observer) => observer.error(new TypeError("Failed to fetch"))),
+          } as never).subscribe({ next: () => resolve(), error: () => resolve() })
+        );
+
+        return (await store.loadAll()).map((stored) => stored.input);
+      }
+
+      it.each([
+        ["with no lock manager", null],
+        ["while no context holds the Replay lock", free],
+      ])("lets a save replace what the killed send left marked, %s", async (_case, locks) => {
+        expect(await saveAgain(await killedWhileSending(), locks)).toEqual([edit("Second", 3)]);
+      });
+
+      it("keeps the mark while another context holds the Replay lock", async () => {
+        expect(await saveAgain(await killedWhileSending(), held)).toEqual([
+          edit("First", 3),
+          edit("Second", 4),
+        ]);
+      });
+
+      /** Another context (no lock manager) is sending the save when this one saves again. */
+      async function replacedWhileSent(kind: ReplayOutcome["kind"], replace = true) {
+        const storage = await harness.create();
+        const sender = createOutboxStore(storage.outbox);
+        let answer: (outcome: ReplayOutcome) => void = () => {};
+
+        await sender.enqueue(
+          entry({ path: "recipes.update", input: edit("First", 3), entityId: null })
+        );
+        const pass = runReplayPass({
+          store: sender,
+          ownerId: "u1",
+          submit: () => new Promise((resolve) => (answer = resolve)),
+        });
+
+        await vi.waitFor(async () => expect((await sender.loadAll())[0]?.sending).toBeTruthy());
+        if (replace) await saveAgain(storage, null);
+        answer({ kind });
+        await pass;
+        const left = (await sender.loadAll()).map(({ input, status, sending, attempts }) => ({
+          input,
+          status,
+          sending,
+          attempts,
+        }));
+        const sent: unknown[] = [];
+
+        await runReplayPass({
+          store: sender,
+          ownerId: "u1",
+          submit: (next) => {
+            sent.push(next.input);
+
+            return Promise.resolve({ kind: "success" });
+          },
+        });
+
+        return { left, sent };
+      }
+
+      it.each<ReplayOutcome["kind"]>(["success", "conflict", "deterministic", "ambiguous"])(
+        "keeps a save that replaced the entry during a send ending %s, and sends it next",
+        async (kind) => {
+          expect(await replacedWhileSent(kind)).toEqual({
+            left: [
+              { input: edit("Second", 3), status: "pending", sending: undefined, attempts: 0 },
+            ],
+            sent: [edit("Second", 3)],
+          });
+        }
+      );
+
+      it("removes a sent entry nothing replaced", async () => {
+        expect(await replacedWhileSent("success", false)).toEqual({ left: [], sent: [] });
       });
     });
 
@@ -200,19 +340,21 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
 
     describe("purge on account switch", () => {
       const cacheOf = (storage: OfflineStorage) => createCacheManager({ storage, buster: "test" });
+      // A stand-in read, not a tRPC one.
+      const GREETING = ["greeting"];
 
-      /** Adopt `owner` and wait until a read it made has been persisted. */
+      /** Adopt `owner` and save a read it made. */
       async function readAs(storage: OfflineStorage, owner: string, value: string) {
         const manager = cacheOf(storage);
 
         await manager.reconcileIdentity({ sessionUserId: owner, isOffline: false });
-        manager.queryClient.setQueryData(["greeting"], value);
-        await vi.waitFor(async () => {
-          const restored = cacheOf(storage);
+        manager.queryClient.setQueryData(GREETING, value);
+        await manager.flush();
 
-          await restored.reconcileIdentity({ sessionUserId: owner, isOffline: false });
-          expect(restored.queryClient.getQueryData(["greeting"])).toBe(value);
-        });
+        const restored = cacheOf(storage);
+
+        await restored.reconcileIdentity({ sessionUserId: owner, isOffline: false });
+        expect(restored.queryClient.getQueryData(GREETING)).toBe(value);
 
         return manager;
       }
@@ -227,7 +369,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         await relaunched.reconcileIdentity({ sessionUserId: null, isOffline: true });
 
         expect(relaunched.owner()).toBe("u1");
-        expect(relaunched.queryClient.getQueryData(["greeting"])).toBe("kept for u1");
+        expect(relaunched.queryClient.getQueryData(GREETING)).toBe("kept for u1");
       });
 
       it("purges the departed owner's reads but leaves their Outbox dormant", async () => {
@@ -240,7 +382,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
 
         await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
 
-        expect(manager.queryClient.getQueryData(["greeting"])).toBeUndefined();
+        expect(manager.queryClient.getQueryData(GREETING)).toBeUndefined();
         expect(await readLastWarmedAt("u1", storage.keyval)).toBeNull();
         expect(await outbox.size("u1")).toBe(1);
 
@@ -250,7 +392,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         expect(relaunched.owner()).toBe("u2");
 
         await relaunched.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
-        expect(relaunched.queryClient.getQueryData(["greeting"])).toBeUndefined();
+        expect(relaunched.queryClient.getQueryData(GREETING)).toBeUndefined();
       });
 
       it("forgets the owner on sign-out", async () => {

@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "I dag",
-    "scrollToToday": "Gå til i dag"
+    "scrollToToday": "Gå til i dag",
+    "planRecipe": "Planlæg opskrift"
+  },
+  "today": {
+    "openRecipe": "Åbn opskrift",
+    "move": "Flyt…",
+    "removeTitle": "Fjern fra i dag?",
+    "removeMessage": "{name} fjernes fra {slot} på {day}.",
+    "moveTitle": "Flyt",
+    "moveSubtitle": "{name}, dagens {slot}",
+    "moveToDay": "Flyt {name} til {day}"
   },
   "editNote": {
     "title": "Rediger note",
     "noteLabel": "Note",
     "notePlaceholder": "Skriv note..."
-  },
-  "navigation": {
-    "previousMonth": "Forrige måned",
-    "nextMonth": "Næste måned",
-    "prev": "Forrige",
-    "next": "Næste"
   },
   "weekdays": {
     "mon": "Man",
@@ -50,6 +54,29 @@
     "addNote": "Tilføj note: {input}",
     "randomRecipe": "Tilfældig opskrift",
     "noRecipesFound": "Ingen opskrifter fundet.",
-    "failedToLoadRecipes": "Kunne ikke indlæse opskrifter."
+    "failedToLoadRecipes": "Kunne ikke indlæse opskrifter.",
+    "planRecipe": "Planlæg en opskrift",
+    "searchOrAddNote": "Søg efter opskrifter eller tilføj en note",
+    "random": "Tilfældig opskrift",
+    "planThisRecipe": "Planlæg denne opskrift",
+    "planOnDay": "Planlæg {name} på {day}",
+    "addToDay": "Tilføj til {day}"
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronisering startet",
+    "syncStartedDescription": "Elementer der skal synkroniseres: {queued}",
+    "syncStartedWithFailures": "Elementer der skal synkroniseres: {queued}. Kunne ikke sættes i kø: {failed}",
+    "configSaved": "Konfiguration gemt",
+    "configSavedDescription": "Dine CalDAV-indstillinger er gemt.",
+    "configDeleted": "Konfiguration slettet",
+    "configDeletedDescription": "Dine CalDAV-indstillinger er fjernet.",
+    "retryStarted": "Synkronisering startet",
+    "retryStartedDescription": "Prøver ventende og mislykkede elementer igen…"
+  },
+  "widgets": {
+    "nothingPlanned": "Intet planlagt",
+    "signIn": "Åbn Norish for at logge ind",
+    "open": "Åbn Norish",
+    "more": "+{count} mere"
   }
 }

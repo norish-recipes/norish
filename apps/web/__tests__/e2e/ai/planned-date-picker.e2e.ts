@@ -7,7 +7,8 @@
 import type { Locator } from "@playwright/test";
 
 import type { AIE2EStack } from "./fixture";
-import { callTrpc, queryTrpc } from "../harness/trpc";
+import { planForTonight, removePlans } from "../harness/plans";
+import { queryTrpc } from "../harness/trpc";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
 
@@ -24,19 +25,6 @@ async function plannedDay(stack: AIE2EStack, recipeId: string): Promise<number |
   return date ? Number(date.slice(8, 10)) : undefined;
 }
 
-/** Plans the recipe as the owner's dinner today, in the browser's own calendar. */
-async function planForTonight(stack: AIE2EStack, recipeId: string): Promise<void> {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-
-  await callTrpc(stack.baseURL, stack.ownerCookies, "calendar.createItem", {
-    date: today,
-    slot: "Dinner",
-    itemType: "recipe",
-    recipeId,
-  });
-}
-
 for (const pointer of ["mouse", "touch"] as const) {
   test(`a planned recipe moves to another day through its date picker with a ${pointer}`, async ({
     browser,
@@ -45,8 +33,6 @@ for (const pointer of ["mouse", "touch"] as const) {
     const name = `Picker Stew ${pointer} ${Date.now()}`;
 
     const recipeId = await seedRecipe(name);
-
-    await planForTonight(aiStack, recipeId);
     const context = await browser.newContext({
       baseURL: aiStack.baseURL,
       storageState: { cookies: aiStack.ownerCookies, origins: [] },
@@ -57,6 +43,7 @@ for (const pointer of ["mouse", "touch"] as const) {
     const press = (target: Locator) => (pointer === "touch" ? target.tap() : target.click());
 
     try {
+      await planForTonight(aiStack.baseURL, aiStack.ownerCookies, recipeId);
       await page.goto("/calendar");
       await press(page.getByText(name).first());
       const panel = page.getByRole("dialog");
@@ -77,6 +64,11 @@ for (const pointer of ["mouse", "touch"] as const) {
       await expect.poll(() => plannedDay(aiStack, recipeId)).toBe(target);
     } finally {
       await context.close();
+      await removePlans(
+        aiStack.baseURL,
+        aiStack.ownerCookies,
+        (plan) => plan.recipeId === recipeId
+      );
     }
   });
 }

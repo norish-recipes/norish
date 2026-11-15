@@ -5,7 +5,7 @@ import { isUpdateAvailable } from "@norish/shared/lib/version";
 /** The current release's minor, so it moves with each release: 0.27.0-beta needs 0.27.0. */
 export const MINIMUM_SERVER_VERSION = APP_VERSION.replace(/^(\d+\.\d+)\..*$/, "$1.0");
 
-export type ServerHealthVerdict = "ok" | "too-old" | "not-norish";
+type ServerHealthVerdict = "ok" | "too-old" | "not-norish";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -21,4 +21,9 @@ export function classifyServerHealth(health: unknown): ServerHealthVerdict {
   return typeof version === "string" && !isUpdateAvailable(version, MINIMUM_SERVER_VERSION)
     ? "ok"
     : "too-old";
+}
+
+/** The version a Norish health response reports, when it reports one. */
+export function serverVersionOf(health: unknown): string | undefined {
+  return isRecord(health) && typeof health.version === "string" ? health.version : undefined;
 }

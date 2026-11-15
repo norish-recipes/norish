@@ -44,6 +44,17 @@ describe("runReplayPass", () => {
     store = createOutboxStore(createMemoryStorage().outbox);
   });
 
+  it("drops a stored entry of an excluded procedure without sending it", async () => {
+    await store.enqueue(entry({ id: "a", path: "admin.testAIEndpoint", input: { apiKey: "k" } }));
+    await store.enqueue(entry({ id: "b", path: "groceries.toggle" }));
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submitted).toEqual(["b"]);
+    expect(await store.loadAll()).toEqual([]);
+  });
+
   it("removes every entry on a clean drain, in FIFO order", async () => {
     await store.enqueue(entry({ id: "a" }));
     await store.enqueue(entry({ id: "b" }));
@@ -167,6 +178,101 @@ describe("runReplayPass", () => {
 
     expect(submitted).toEqual([]); // nothing submittable — the only pending entry depends on a parked create
     expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toContain("tick");
+  });
+
+  it.each([
+    ["a cookbook", "cookbooks.update", "cookbooks.setMembership", { cookbookId: "c1" }],
+    ["a planned item", "calendar.updateItem", "calendar.deleteItem", { itemId: "c1" }],
+  ])(
+    "sends the writes after %s edit parked as Conflicted: its entity exists",
+    async (_, path, laterPath, laterInput) => {
+      await store.enqueue(entry({ id: "edit", path, input: { id: "c1" }, entityId: "c1" }));
+      await store.enqueue(entry({ id: "later", path: laterPath, input: laterInput }));
+      const { submit, submitted } = stubSubmit({ edit: "conflict" });
+
+      await runReplayPass({ store, submit, ownerId: "u1" });
+
+      expect(submitted).toEqual(["edit", "later"]);
+      expect((await store.loadAll()).map((e) => [e.id, e.status])).toEqual([
+        ["edit", "conflicted"],
+      ]);
+    }
+  );
+
+  it("sends a write behind an edit Conflicted in an earlier pass", async () => {
+    const edit = await store.enqueue(
+      entry({ id: "edit", path: "cookbooks.update", input: { id: "c1" }, entityId: "c1" })
+    );
+
+    await store.park(edit.seq, "conflict");
+    await store.enqueue(entry({ id: "later", input: { cookbookId: "c1" } }));
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submitted).toEqual(["later"]);
+  });
+
+  it("releases a stored write parked behind a Conflicted edit, and keeps one behind a parked create", async () => {
+    const edit = await store.enqueue(
+      entry({ id: "edit", path: "stores.update", input: { id: "s1" }, entityId: "s1" })
+    );
+    const create = await store.enqueue(
+      entry({ id: "create", path: "groceries.create", input: { id: "g1" }, entityId: "g1" })
+    );
+    const freed = await store.enqueue(entry({ id: "freed", input: { storeId: "s1" } }));
+    const held = await store.enqueue(entry({ id: "held", input: { id: "g1", storeId: "s1" } }));
+
+    await store.park(edit.seq, "conflict");
+    await store.park(create.seq, "deterministic");
+    await store.park(freed.seq, "dependency");
+    await store.park(held.seq, "dependency");
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submitted).toEqual(["freed"]);
+    expect((await store.loadAll()).map((e) => [e.id, e.status, e.parkedReason])).toEqual([
+      ["edit", "conflicted", "conflict"],
+      ["create", "parked", "deterministic"],
+      ["held", "parked", "dependency"],
+    ]);
+  });
+
+  it("parks a dependent edit with a replace that lands while it parks", async () => {
+    const storage = createMemoryStorage();
+    const { change } = storage.outbox;
+
+    store = createOutboxStore(storage.outbox);
+    const create = await store.enqueue(
+      entry({ id: "create", path: "recipes.create", input: { id: "r1" }, entityId: "r1" })
+    );
+
+    await store.park(create.seq, "deterministic");
+    const edit = await store.enqueue(
+      entry({ id: "edit", path: "recipes.update", input: { id: "r1", name: "First" } })
+    );
+    let replaced = false;
+    // A save replaces the edit just before the pass's first write to it.
+    const replace = async () => {
+      if (replaced) return;
+      replaced = true;
+      await change(edit.seq, (stored) => ({ ...stored, input: { id: "r1", name: "Second" } }));
+    };
+
+    storage.outbox.change = async (seq, next) => {
+      await replace();
+
+      return change(seq, next);
+    };
+    await runReplayPass({ store, submit: stubSubmit({}).submit, ownerId: "u1" });
+
+    expect(replaced).toBe(true);
+    expect((await storage.outbox.all()).at(-1)).toMatchObject({
+      input: { id: "r1", name: "Second" },
+      status: "parked",
+      parkedReason: "dependency",
+    });
   });
 
   it("only touches the given owner's entries", async () => {

@@ -9,6 +9,7 @@
     "ios": "expo run:ios",
     "maestro": "node scripts/maestro.mjs",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .gitignore --ignore-path .prettierignore",
     "typecheck": "pnpm exec tsc --noEmit",
     "test": "vitest run --config ./vitest.config.mts"
   },
@@ -21,6 +22,8 @@
     "@expo/metro-runtime": "~58.0.17",
     "@expo/ui": "~58.0.27",
     "@expo/vector-icons": "^15.1.1",
+    "@formatjs/intl-displaynames": "^8.0.3",
+    "@formatjs/intl-listformat": "^9.0.3",
     "@formatjs/intl-pluralrules": "^7.0.2",
     "@norish/i18n": "workspace:*",
     "@norish/shared": "workspace:*",
@@ -32,17 +35,26 @@
     "@trpc/server": "catalog:",
     "better-auth": "catalog:",
     "expo": "~58.0.23",
+    "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.15",
     "expo-dev-client": "~58.0.18",
+    "expo-device": "~58.0.5",
     "expo-file-system": "~58.0.13",
     "expo-font": "~58.0.11",
+    "expo-haptics": "~58.0.8",
+    "expo-image-manipulator": "~58.0.16",
+    "expo-image-picker": "~58.0.10",
+    "expo-keep-awake": "~58.0.4",
     "expo-linking": "~58.0.16",
     "expo-network": "~58.0.4",
+    "expo-notifications": "~58.1.9",
     "expo-router": "~58.0.30",
     "expo-secure-store": "~58.0.2",
     "expo-splash-screen": "~58.0.13",
     "expo-system-ui": "~58.0.7",
+    "expo-video": "~58.0.14",
     "expo-web-browser": "~58.0.7",
+    "expo-widgets": "~58.0.28",
     "heroui-native": "1.0.11",
     "react": "catalog:",
     "react-intl": "^10.1.22",
@@ -51,6 +63,7 @@
     "react-native-mmkv": "^4.3.2",
     "react-native-nitro-modules": "^0.37.2",
     "react-native-reanimated": "4.7.1",
+    "react-native-reorderable-list": "^0.18.3",
     "react-native-safe-area-context": "~5.11.1",
     "react-native-screens": "~4.30.1",
     "react-native-svg": "15.16.0",
@@ -58,23 +71,37 @@
     "superjson": "catalog:",
     "tailwind-merge": "^3.7.0",
     "tailwind-variants": "^3.3.1",
-    "uniwind": "^1.13.1"
+    "uniwind": "^1.13.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@bacons/apple-targets": "5.0.0",
     "@norish/eslint-config": "workspace:*",
+    "@norish/prettier-config": "workspace:*",
     "@testcontainers/postgresql": "catalog:",
     "@testcontainers/valkey": "catalog:",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "catalog:",
     "eslint": "catalog:",
+    "jsdom": "catalog:",
+    "prettier": "catalog:",
+    "react-dom": "catalog:",
     "react-native-svg-transformer": "^1.5.3",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
+  "prettier": "@norish/prettier-config",
   "expo": {
     "install": {
       "exclude": [
-        "react"
+        "react",
+        "react-dom"
+      ]
+    },
+    "autolinking": {
+      "exclude": [
+        "@bacons/apple-targets"
       ]
     }
   }

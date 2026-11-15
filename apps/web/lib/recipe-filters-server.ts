@@ -7,7 +7,7 @@ import { RECIPE_FILTERS_COOKIE, recipeFiltersFromCookie } from "@/lib/recipe-fil
 import {
   canonicalRecipeFilters,
   toRecipesQueryFilters,
-} from "@norish/shared-react/filter-contract";
+} from "@norish/shared/contracts/filter-contract";
 
 /**
  * The reader's Library filters for this request, read once; undefined without the cookie, when the

@@ -1,0 +1,23 @@
+import React from "react";
+import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { Stack } from "expo-router";
+
+import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
+import { useToday } from "@norish/shared-react/reader";
+
+/** The Calendar tab's stack: the timeline draws its own title; the planned-item sheet, add-to-day
+ * and Add to groceries present over it. Its sheets read the timeline's range too. */
+export function CalendarStack() {
+  useCalendarSubscription();
+
+  return (
+    <CalendarRangeProvider today={useToday()}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="item" options={FIT_SHEET_OPTIONS} />
+        <Stack.Screen name="plan-recipe" options={SHEET_OPTIONS} />
+        <Stack.Screen name="add-to-groceries" options={SHEET_OPTIONS} />
+      </Stack>
+    </CalendarRangeProvider>
+  );
+}

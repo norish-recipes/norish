@@ -40,7 +40,6 @@
   "status": {
     "loading": "جارٍ التحميل...",
     "saving": "جارٍ الحفظ...",
-    "deleting": "جارٍ الحذف...",
     "error": "خطأ",
     "success": "تم بنجاح",
     "noResults": "لا توجد نتائج",
@@ -68,7 +67,8 @@
     "categories": "التصنيفات",
     "sortByTitle": "الاسم",
     "sortByDate": "التاريخ",
-    "clearFilters": "مسح عوامل التصفية"
+    "clearFilters": "مسح عوامل التصفية",
+    "minRating": "الحد الأدنى للتقييم"
   },
   "time": {
     "minutes": "د",
@@ -76,7 +76,8 @@
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
-    "invalidUrl": "يرجى إدخال رابط صحيح"
+    "invalidUrl": "يرجى إدخال رابط صحيح",
+    "invalidEmail": "الرجاء إدخال عنوان بريد إلكتروني صالح"
   },
   "errors": {
     "operationFailed": "فشلت العملية",
@@ -92,9 +93,6 @@
   },
   "connection": {
     "connecting": "جارٍ الاتصال بـ Norish...",
-    "checkInternet": "يرجى التحقق من اتصالك بالإنترنت",
-    "offlineBanner": "أنت غير متصل، تُعرض البيانات المحفوظة",
-    "serverUnreachableBanner": "تعذّر الوصول إلى خادم Norish، تُعرض البيانات المحفوظة",
     "live": "متصل",
     "offline": "غير متصل",
     "openDetails": "تفاصيل الاتصال"
@@ -151,10 +149,7 @@
       "analyzing": "جارٍ تحليل الصور، يرجى الانتظار...",
       "failed": "فشل الاستيراد",
       "selectedCount": "تم اختيار {count} صور - سيتم دمجها في وصفة واحدة",
-      "library": "المعرض",
-      "takePhoto": "التقاط صورة",
-      "counter": "{count} / {max} صور",
-      "importFromCount": "استيراد من {count, plural, zero {# صور} one {صورة واحدة} two {صورتين} few {# صور} many {# صورة} other {# صورة}}"
+      "library": "المعرض"
     },
     "menu": {
       "description": "استورد من رابط، أو صوّر وصفة، أو ابدأ من الصفر."
@@ -218,15 +213,16 @@
   },
   "timer": {
     "done": "انتهى",
+    "paused": "متوقف مؤقتًا",
     "done_action": "تم",
     "one": "مؤقّت",
     "other": "مؤقّتات",
     "label_one": "مؤقّت واحد",
     "label_other": "{count} مؤقّتات",
-    "notification_title": "انتهى المؤقّت",
-    "notification_body": "انتهى {label}!",
+    "notification_body": "انتهى المؤقّت",
     "notifications_disabled": "الإشعارات معطّلة",
-    "notifications_disabled_hint": "فعّل الإشعارات من إعدادات المتصفح لتصلك التنبيهات عند انتهاء المؤقّتات في الخلفية."
+    "notifications_disabled_hint": "فعّل الإشعارات من إعدادات المتصفح لتصلك التنبيهات عند انتهاء المؤقّتات في الخلفية.",
+    "more": "+{count} أخرى"
   },
   "offlineStatus": {
     "title": "الاتصال والعمل دون إنترنت",
@@ -292,14 +288,30 @@
     "title": "أنت غير متصل",
     "description": "أُضيف إلى قائمة الانتظار — سيُكمله Norish تلقائيًا عند عودة الاتصال."
   },
+  "changedElsewhere": {
+    "title": "لم يُحفظ: تم تغييره في مكان آخر أولاً"
+  },
   "storageUnavailable": {
-    "title": "تعذّر التشغيل",
-    "description": "تعذّر على Norish قراءة تخزينه الآمن، لذلك لا يعرف الخادم الذي ينتمي إليه. لم يتغيّر أي شيء. حاول مجددًا، أو أعد تشغيل التطبيق.",
-    "detailsLabel": "التفاصيل التقنية"
+    "title": "التخزين غير متاح",
+    "description": "تعذّر على Norish قراءة سلسلة مفاتيح هذا الـ iPhone.",
+    "badgeLabel": "التخزين غير متاح. اضغط لإعادة التشغيل."
   },
   "aiKeyRejected": {
     "title": "توقّف أحد مفاتيح الذكاء الاصطناعي عن العمل",
     "description": "يرفض المزوّد مفتاح الـ API الخاص بـ {blocks} منذ {since}. احفظ مفتاحًا جديدًا لتعود ميزات الذكاء الاصطناعي إلى العمل.",
+    "openSettings": "فتح الإعدادات"
+  },
+  "household": {
+    "adminTransferred": "نُقلت صلاحيات المسؤول إلى {name}",
+    "unknownMember": "غير معروف",
+    "removedTitle": "تمت إزالتك من الأسرة",
+    "removedDescription": "أزالك أحد المسؤولين من الأسرة."
+  },
+  "photos": {
+    "pickFailedTitle": "تعذّر اختيار الصورة",
+    "pickFailedMessage": "حاول مرة أخرى أو اختر صورة أخرى.",
+    "cameraDeniedTitle": "الوصول إلى الكاميرا متوقف",
+    "cameraDeniedMessage": "اسمح بالوصول إلى الكاميرا في الإعدادات لالتقاط صورة.",
     "openSettings": "فتح الإعدادات"
   }
 }

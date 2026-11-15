@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isVideoUrl } from "@norish/shared/lib/helpers";
+import { addDays, allergenSet, dateKey, isVideoUrl } from "@norish/shared/lib/helpers";
 
 describe("isVideoUrl", () => {
   it.each([
@@ -72,5 +72,20 @@ describe("isVideoUrl", () => {
     expect(isVideoUrl("Chocolate cake with 200g flour")).toBe(false);
     expect(isVideoUrl("ftp://youtube.com/watch?v=abc")).toBe(false);
     expect(isVideoUrl("")).toBe(false);
+  });
+});
+
+describe("allergenSet", () => {
+  it("lower-cases the allergies", () => {
+    expect([...allergenSet(["Lactose", "GLUTEN"])]).toEqual(["lactose", "gluten"]);
+  });
+});
+
+describe("addDays", () => {
+  it("moves the calendar day across a month end, at the hour asked", () => {
+    const moved = addDays(new Date(2026, 10, 29, 18, 30), 3, 10);
+
+    expect([dateKey(moved), moved.getHours(), moved.getMinutes()]).toEqual(["2026-12-02", 10, 0]);
+    expect(dateKey(addDays(new Date(2026, 0, 1), -1))).toBe("2025-12-31");
   });
 });

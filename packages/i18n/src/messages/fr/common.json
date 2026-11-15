@@ -40,7 +40,6 @@
   "status": {
     "loading": "Chargement...",
     "saving": "Sauvegarde...",
-    "deleting": "Suppression...",
     "error": "Erreur",
     "success": "Succès",
     "noResults": "Auncun resultat trouvé",
@@ -68,7 +67,8 @@
     "categories": "Catégories",
     "sortByTitle": "Titre",
     "sortByDate": "Date",
-    "clearFilters": "Effacer les filtres"
+    "clearFilters": "Effacer les filtres",
+    "minRating": "Note minimale"
   },
   "time": {
     "minutes": "min",
@@ -76,7 +76,8 @@
   },
   "validation": {
     "required": "Ce champ est requis",
-    "invalidUrl": "Entrez une URL valide"
+    "invalidUrl": "Entrez une URL valide",
+    "invalidEmail": "Saisissez une adresse e-mail valide"
   },
   "errors": {
     "operationFailed": "L'opération a échoué",
@@ -92,9 +93,6 @@
   },
   "connection": {
     "connecting": "Connection à Norish...",
-    "checkInternet": "Veuillez vérifier votre connexion internet",
-    "offlineBanner": "Vous êtes hors ligne, affichage des données en cache",
-    "serverUnreachableBanner": "Impossible de contacter le serveur Norish, affichage des données en cache",
     "live": "Connecté",
     "offline": "Hors ligne",
     "openDetails": "Détails de la connexion"
@@ -151,10 +149,7 @@
       "analyzing": "Analyse de vos images, veuillez patienter...",
       "failed": "Importation échouée",
       "selectedCount": "{count} images sélectionnées - elles seront combinées en une seule recette",
-      "library": "Bibliotheque",
-      "takePhoto": "Prendre une photo",
-      "counter": "{count} / {max} photos",
-      "importFromCount": "Importer depuis {count, plural, one {# photo} other {# photos}}"
+      "library": "Bibliotheque"
     },
     "menu": {
       "description": "Importer depuis une URL, scanner une photo ou partir de zero."
@@ -218,15 +213,16 @@
   },
   "timer": {
     "done": "Terminé",
+    "paused": "En pause",
     "done_action": "Terminé",
     "one": "Minuteur",
     "other": "Minuteurs",
     "label_one": "1 minuteur",
     "label_other": "{count} minuteurs",
-    "notification_title": "Minuteur terminé",
-    "notification_body": "{label} est prêt !",
+    "notification_body": "Minuteur terminé",
     "notifications_disabled": "Les notifications sont désactivées",
-    "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan."
+    "notifications_disabled_hint": "Activez les notifications dans les paramètres de votre navigateur pour recevoir des alertes lorsque les minuteurs se terminent en arrière-plan.",
+    "more": "+{count} de plus"
   },
   "offlineStatus": {
     "title": "Connexion et hors ligne",
@@ -292,14 +288,30 @@
     "title": "Vous êtes hors ligne",
     "description": "Mis en file d'attente — Norish terminera automatiquement dès que vous serez de nouveau en ligne."
   },
+  "changedElsewhere": {
+    "title": "Non enregistré : modifié ailleurs entre-temps"
+  },
   "storageUnavailable": {
-    "title": "Démarrage impossible",
-    "description": "Norish n'a pas pu lire son stockage sécurisé et ne sait donc pas à quel serveur cette application est rattachée. Rien n'a été modifié. Réessayez ou redémarrez l'application.",
-    "detailsLabel": "Détails techniques"
+    "title": "Stockage indisponible",
+    "description": "Norish n'a pas pu lire le trousseau de cet iPhone.",
+    "badgeLabel": "Stockage indisponible. Touchez pour rejouer."
   },
   "aiKeyRejected": {
     "title": "Une clé d'IA ne fonctionne plus",
     "description": "Le fournisseur refuse la clé API pour {blocks} depuis le {since}. Enregistrez une nouvelle clé pour que ces fonctions d'IA marchent à nouveau.",
     "openSettings": "Ouvrir les paramètres"
+  },
+  "household": {
+    "adminTransferred": "Privilèges admin transférés à {name}",
+    "unknownMember": "Inconnu",
+    "removedTitle": "Retiré du foyer",
+    "removedDescription": "Un administrateur vous a retiré du foyer."
+  },
+  "photos": {
+    "pickFailedTitle": "Impossible de choisir la photo",
+    "pickFailedMessage": "Réessayez ou choisissez une autre photo.",
+    "cameraDeniedTitle": "L’accès à l’appareil photo est désactivé",
+    "cameraDeniedMessage": "Autorisez l’accès à l’appareil photo dans les Réglages pour prendre une photo.",
+    "openSettings": "Ouvrir les réglages"
   }
 }

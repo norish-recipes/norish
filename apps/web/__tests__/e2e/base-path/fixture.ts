@@ -7,7 +7,7 @@ import { updateUserAvatar } from "@norish/db/repositories/users";
 
 import type { SessionCookies } from "../harness/auth";
 import { userIdOf } from "../harness/accounts";
-import { signIn } from "../harness/auth";
+import { signedInContext } from "../harness/auth";
 import { BUILT_BASE_PATH } from "../harness/build";
 import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
@@ -104,13 +104,12 @@ export const test = base.extend<Record<never, never>, { basePath: BasePathHarnes
       try {
         await stack.start();
 
-        const cookies = await signIn(stack.baseURL, OWNER);
+        context = await signedInContext(browser, stack.baseURL, OWNER, {
+          serviceWorkers: "allow",
+        });
+        const cookies = await context.cookies();
 
         await seed(stack, cookies);
-        context = await browser.newContext({
-          serviceWorkers: "allow",
-          storageState: { cookies, origins: [] },
-        });
 
         const strays: string[] = [];
 

@@ -1,14 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { useCookbooksMutations, useEditableCookbooksQuery } from "@/hooks/cookbooks";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Button, Input, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
+
+import { useCookbookMembership } from "@norish/shared-react/recipes";
 
 type MiniCookbooksProps = {
   open: boolean;
@@ -19,9 +19,6 @@ type MiniCookbooksProps = {
   excludeCookbookId?: string;
   onSaved?: (filed: Array<{ id: string; title: string }>) => void;
 };
-
-/** A cookbook the reader has asked for but that does not exist yet. */
-type PendingCookbook = { key: number; title: string };
 
 /** Sized to its list, scrolling past this. */
 const PANEL_HEIGHT = "max-h-[75dvh]";
@@ -45,83 +42,8 @@ const PANEL_HEIGHT = "max-h-[75dvh]";
  * derive from state its own action mutates rebuilds mid-exit and steals focus
  * from whatever the action opened.
  */
-export default function MiniCookbooks({
-  open,
-  onOpenChange,
-  recipeIds,
-  excludeCookbookId,
-  onSaved,
-}: MiniCookbooksProps) {
+export default function MiniCookbooks({ open, onOpenChange, ...content }: MiniCookbooksProps) {
   const t = useTranslations("recipes.cookbooks");
-  const tActions = useTranslations("common.actions");
-  const tSelection = useTranslations("recipes.selection");
-  const singleId = recipeIds.length === 1 ? recipeIds[0]! : null;
-  const query = useEditableCookbooksQuery(open ? singleId : null);
-  const cookbooks = query.cookbooks.filter((cookbook) => cookbook.id !== excludeCookbookId);
-  const { isLoading } = query;
-  const newLabel = singleId ? t("newWithRecipe") : tSelection("newCookbook");
-  const { createCookbook, setMembership } = useCookbooksMutations();
-  const [newTitle, setNewTitle] = useState("");
-  /** Only the cookbooks the reader has actually changed their mind about. */
-  const [staged, setStaged] = useState<Record<string, boolean>>({});
-  const [pending, setPending] = useState<PendingCookbook[]>([]);
-  // Monotonic, so removing a row cannot hand its key to the next one.
-  const nextKeyRef = useRef(0);
-  const [wasOpen, setWasOpen] = useState(open);
-
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (!open) {
-      setNewTitle("");
-      setStaged({});
-      setPending([]);
-    }
-  }
-
-  const stageNew = () => {
-    const title = newTitle.trim();
-
-    if (!title) return;
-    setNewTitle("");
-    setPending((previous) => [...previous, { key: nextKeyRef.current++, title }]);
-  };
-
-  const toggle = (cookbookId: string, isMember: boolean) => {
-    setStaged((previous) => ({ ...previous, [cookbookId]: isMember }));
-  };
-
-  const isDirty =
-    pending.length > 0 ||
-    cookbooks.some(
-      (cookbook) => cookbook.id in staged && staged[cookbook.id] !== cookbook.containsRecipe
-    );
-
-  const save = async () => {
-    const filed: Array<{ id: string; title: string }> = [];
-
-    for (const cookbook of cookbooks) {
-      const next = staged[cookbook.id];
-
-      if (next === undefined || next === cookbook.containsRecipe) continue;
-
-      setMembership({ cookbookId: cookbook.id, recipeIds, isMember: next, cookbook });
-      if (next) filed.push(cookbook);
-    }
-
-    onOpenChange(false);
-
-    // Only what is on screen as a pending row. Adding it is the moment the
-    // reader confirms a new cookbook, and a half-typed title is not that.
-    const created = await Promise.all(
-      pending.map((entry) =>
-        createCookbook({ title: entry.title, recipeIds })
-          .then((id) => (id ? { id, title: entry.title } : null))
-          .catch(() => null)
-      )
-    );
-
-    onSaved?.([...filed, ...created.filter((entry) => entry !== null)]);
-  };
 
   return (
     <Panel
@@ -130,113 +52,139 @@ export default function MiniCookbooks({
       title={t("panelTitle")}
       onOpenChange={onOpenChange}
     >
-      {open ? (
-        <Panel.Body className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center gap-2">
-            <Input
-              fullWidth
-              data-testid="new-cookbook-title"
-              placeholder={newLabel}
-              style={{ fontSize: "16px" }}
-              value={newTitle}
-              variant="secondary"
-              onChange={(event) => setNewTitle(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") stageNew();
-              }}
-            />
-            <Button
-              isIconOnly
-              aria-label={newLabel}
-              className="shrink-0 rounded-full"
-              isDisabled={newTitle.trim().length === 0}
-              size="md"
-              variant="primary"
-              onPress={stageNew}
-            >
-              <PlusIcon className="size-4" />
-            </Button>
-          </div>
-
-          <Separator className="bg-surface-tertiary/40 my-3" />
-
-          {isLoading ? (
-            <div className="text-muted p-4 text-base">…</div>
-          ) : cookbooks.length === 0 && pending.length === 0 ? (
-            <div className="text-muted flex flex-1 items-center justify-center px-4 text-center text-base">
-              {t("noneEditable")}
-            </div>
-          ) : (
-            <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
-              {pending.map((entry) => (
-                <div
-                  key={entry.key}
-                  className="flex items-center gap-3 rounded-lg px-2 py-2"
-                  data-pending-cookbook={entry.title}
-                >
-                  <span className="bg-surface-secondary h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-                    <CookbookCover emptyIconClassName="h-5 w-5" images={[]} title={entry.title} />
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-base font-semibold">{entry.title}</span>
-                    <span className="text-muted text-xs">{t("willBeCreated")}</span>
-                  </span>
-                  <Button
-                    isIconOnly
-                    aria-label={tActions("remove")}
-                    className="shrink-0 rounded-full"
-                    size="sm"
-                    variant="tertiary"
-                    onPress={() =>
-                      setPending((previous) => previous.filter((item) => item.key !== entry.key))
-                    }
-                  >
-                    <XMarkIcon className="size-4" />
-                  </Button>
-                </div>
-              ))}
-
-              {cookbooks.map((cookbook) => {
-                const isMember = staged[cookbook.id] ?? cookbook.containsRecipe;
-
-                return (
-                  <SelectableRow
-                    key={cookbook.id}
-                    data-cookbook-toggle={cookbook.title}
-                    isSelected={isMember}
-                    media={
-                      <CookbookCover
-                        emptyIconClassName="h-5 w-5"
-                        image={cookbook.image}
-                        images={cookbook.coverImages}
-                        title={cookbook.title}
-                      />
-                    }
-                    subtitle={t("recipeCount", { count: cookbook.memberCount })}
-                    title={cookbook.title}
-                    onToggle={() => toggle(cookbook.id, !isMember)}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </Panel.Body>
-      ) : null}
-
-      {open ? (
-        <Panel.Footer>
-          <ActionButtonGroup>
-            <ActionButton
-              action="save"
-              data-testid="save-cookbook-membership"
-              isDisabled={!isDirty}
-              onPress={() => void save()}
-            >
-              {tActions("save")}
-            </ActionButton>
-          </ActionButtonGroup>
-        </Panel.Footer>
-      ) : null}
+      <MiniCookbooksContent {...content} onOpenChange={onOpenChange} />
     </Panel>
+  );
+}
+
+/** The panel's content, mounted while it is open: each opening starts with nothing staged. */
+function MiniCookbooksContent({
+  onOpenChange,
+  recipeIds,
+  excludeCookbookId,
+  onSaved,
+}: Omit<MiniCookbooksProps, "open">) {
+  const t = useTranslations("recipes.cookbooks");
+  const tActions = useTranslations("common.actions");
+  const tSelection = useTranslations("recipes.selection");
+  const newLabel = recipeIds.length === 1 ? t("newWithRecipe") : tSelection("newCookbook");
+  const {
+    cookbooks,
+    isLoading,
+    isMember: isStaged,
+    toggle,
+    newTitle,
+    setNewTitle,
+    pending,
+    stageNew,
+    unstage,
+    isDirty,
+    save,
+  } = useCookbookMembership({ recipeIds, excludeCookbookId, onSaved });
+
+  return (
+    <>
+      <Panel.Body className="flex min-h-0 flex-1 flex-col">
+        <div className="flex items-center gap-2">
+          <Input
+            fullWidth
+            data-testid="new-cookbook-title"
+            placeholder={newLabel}
+            style={{ fontSize: "16px" }}
+            value={newTitle}
+            variant="secondary"
+            onChange={(event) => setNewTitle(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") stageNew();
+            }}
+          />
+          <Button
+            isIconOnly
+            aria-label={newLabel}
+            className="shrink-0 rounded-full"
+            isDisabled={newTitle.trim().length === 0}
+            size="md"
+            variant="primary"
+            onPress={stageNew}
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+        </div>
+
+        <Separator className="bg-surface-tertiary/40 my-3" />
+
+        {isLoading ? (
+          <div className="text-muted p-4 text-base">…</div>
+        ) : cookbooks.length === 0 && pending.length === 0 ? (
+          <div className="text-muted flex flex-1 items-center justify-center px-4 text-center text-base">
+            {t("noneEditable")}
+          </div>
+        ) : (
+          <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
+            {pending.map((entry) => (
+              <div
+                key={entry.key}
+                className="flex items-center gap-3 rounded-lg px-2 py-2"
+                data-pending-cookbook={entry.title}
+              >
+                <span className="bg-surface-secondary h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                  <CookbookCover emptyIconClassName="h-5 w-5" images={[]} title={entry.title} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-base font-semibold">{entry.title}</span>
+                  <span className="text-muted text-xs">{t("willBeCreated")}</span>
+                </span>
+                <Button
+                  isIconOnly
+                  aria-label={tActions("remove")}
+                  className="shrink-0 rounded-full"
+                  size="sm"
+                  variant="tertiary"
+                  onPress={() => unstage(entry.key)}
+                >
+                  <XMarkIcon className="size-4" />
+                </Button>
+              </div>
+            ))}
+
+            {cookbooks.map((cookbook) => {
+              const isMember = isStaged(cookbook.id);
+
+              return (
+                <SelectableRow
+                  key={cookbook.id}
+                  data-cookbook-toggle={cookbook.title}
+                  isSelected={isMember}
+                  media={
+                    <CookbookCover
+                      emptyIconClassName="h-5 w-5"
+                      image={cookbook.image}
+                      images={cookbook.coverImages}
+                      title={cookbook.title}
+                    />
+                  }
+                  subtitle={t("recipeCount", { count: cookbook.memberCount })}
+                  title={cookbook.title}
+                  onToggle={() => toggle(cookbook.id, !isMember)}
+                />
+              );
+            })}
+          </div>
+        )}
+      </Panel.Body>
+
+      <Panel.Footer>
+        <ActionButtonGroup>
+          <ActionButton
+            action="save"
+            data-testid="save-cookbook-membership"
+            isDisabled={!isDirty}
+            onPress={() => void save(() => onOpenChange(false))}
+          >
+            {tActions("save")}
+          </ActionButton>
+        </ActionButtonGroup>
+      </Panel.Footer>
+    </>
   );
 }

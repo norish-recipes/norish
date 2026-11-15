@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "오늘",
-    "scrollToToday": "오늘로 이동"
+    "scrollToToday": "오늘로 이동",
+    "planRecipe": "레시피 계획"
+  },
+  "today": {
+    "openRecipe": "레시피 열기",
+    "move": "이동…",
+    "removeTitle": "오늘에서 제거할까요?",
+    "removeMessage": "{day} {slot}에서 {name}을(를) 제거합니다.",
+    "moveTitle": "이동",
+    "moveSubtitle": "{name}, 오늘의 {slot}",
+    "moveToDay": "{name}을(를) {day}(으)로 이동"
   },
   "editNote": {
     "title": "메모 편집",
     "noteLabel": "메모",
     "notePlaceholder": "메모 입력..."
-  },
-  "navigation": {
-    "previousMonth": "이전 달",
-    "nextMonth": "다음 달",
-    "prev": "이전",
-    "next": "다음"
   },
   "weekdays": {
     "mon": "월",
@@ -50,6 +54,29 @@
     "addNote": "메모 추가: {input}",
     "randomRecipe": "무작위 레시피",
     "noRecipesFound": "레시피를 찾을 수 없습니다.",
-    "failedToLoadRecipes": "레시피를 불러오지 못했습니다."
+    "failedToLoadRecipes": "레시피를 불러오지 못했습니다.",
+    "planRecipe": "레시피 계획하기",
+    "searchOrAddNote": "레시피를 검색하거나 메모를 추가하세요",
+    "random": "무작위 레시피",
+    "planThisRecipe": "이 레시피 계획하기",
+    "planOnDay": "{day}에 {name} 계획하기",
+    "addToDay": "{day}에 추가"
+  },
+  "caldav": {
+    "syncStarted": "CalDAV 동기화 시작됨",
+    "syncStartedDescription": "동기화할 항목: {queued}",
+    "syncStartedWithFailures": "동기화할 항목: {queued}. 대기열에 추가하지 못함: {failed}",
+    "configSaved": "구성이 저장됨",
+    "configSavedDescription": "CalDAV 설정이 저장되었습니다.",
+    "configDeleted": "구성이 삭제됨",
+    "configDeletedDescription": "CalDAV 설정이 제거되었습니다.",
+    "retryStarted": "동기화 시작됨",
+    "retryStartedDescription": "대기 중이거나 실패한 항목을 다시 시도하는 중…"
+  },
+  "widgets": {
+    "nothingPlanned": "계획 없음",
+    "signIn": "로그인하려면 Norish를 여세요",
+    "open": "Norish 열기",
+    "more": "+{count}개 더"
   }
 }

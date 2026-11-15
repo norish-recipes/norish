@@ -1,16 +1,25 @@
 {
-  "page": { "title": "Kalendarz" },
-  "mobile": { "today": "Dziś", "scrollToToday": "Przejdź do dziś" },
+  "page": {
+    "title": "Kalendarz"
+  },
+  "mobile": {
+    "today": "Dziś",
+    "scrollToToday": "Przejdź do dziś",
+    "planRecipe": "Zaplanuj przepis"
+  },
+  "today": {
+    "openRecipe": "Otwórz przepis",
+    "move": "Przenieś…",
+    "removeTitle": "Usunąć z dzisiaj?",
+    "removeMessage": "{name} zostanie usunięty z posiłku {slot} ({day}).",
+    "moveTitle": "Przenieś",
+    "moveSubtitle": "{name}, {slot} dzisiaj",
+    "moveToDay": "Przenieś {name} na {day}"
+  },
   "editNote": {
     "title": "Edytuj notatkę",
     "noteLabel": "Notatka",
     "notePlaceholder": "Wpisz notatkę..."
-  },
-  "navigation": {
-    "previousMonth": "Poprzedni miesiąc",
-    "nextMonth": "Następny miesiąc",
-    "prev": "Poprz",
-    "next": "Nast"
   },
   "weekdays": {
     "mon": "Pn",
@@ -32,7 +41,11 @@
     "recipe": "Przepis",
     "note": "Notatka"
   },
-  "editPlannedRecipe": { "title": "Edytuj zaplanowany przepis", "date": "Data", "slot": "Posiłek" },
+  "editPlannedRecipe": {
+    "title": "Edytuj zaplanowany przepis",
+    "date": "Data",
+    "slot": "Posiłek"
+  },
   "panel": {
     "addToCalendar": "Dodaj do kalendarza",
     "addRecipe": "Dodaj przepis",
@@ -41,6 +54,29 @@
     "addNote": "Dodaj notatkę: {input}",
     "randomRecipe": "Losowy przepis",
     "noRecipesFound": "Nie znaleziono przepisów.",
-    "failedToLoadRecipes": "Nie udało się załadować przepisów."
+    "failedToLoadRecipes": "Nie udało się załadować przepisów.",
+    "planRecipe": "Zaplanuj przepis",
+    "searchOrAddNote": "Szukaj przepisów lub dodaj notatkę",
+    "random": "Losowy przepis",
+    "planThisRecipe": "Zaplanuj ten przepis",
+    "planOnDay": "Zaplanuj {name} na {day}",
+    "addToDay": "Dodaj do: {day}"
+  },
+  "caldav": {
+    "syncStarted": "Rozpoczęto synchronizację CalDAV",
+    "syncStartedDescription": "Elementy do synchronizacji: {queued}",
+    "syncStartedWithFailures": "Elementy do synchronizacji: {queued}. Nie udało się dodać do kolejki: {failed}",
+    "configSaved": "Konfiguracja zapisana",
+    "configSavedDescription": "Twoje ustawienia CalDAV zostały zapisane.",
+    "configDeleted": "Konfiguracja usunięta",
+    "configDeletedDescription": "Twoje ustawienia CalDAV zostały usunięte.",
+    "retryStarted": "Synchronizacja rozpoczęta",
+    "retryStartedDescription": "Ponawianie oczekujących i nieudanych elementów…"
+  },
+  "widgets": {
+    "nothingPlanned": "Nic nie zaplanowano",
+    "signIn": "Otwórz Norish, aby się zalogować",
+    "open": "Otwórz Norish",
+    "more": "+{count} więcej"
   }
 }

@@ -23,7 +23,7 @@
 import type { OfflineStorage } from "./storage";
 
 /** Prefix for a per-owner persisted query-cache blob in the `keyval` store. */
-export const QUERY_CACHE_KEY_PREFIX = "query-cache:";
+const QUERY_CACHE_KEY_PREFIX = "query-cache:";
 const LAST_WARMED_KEY_PREFIX = "last-warmed:";
 
 /** `keyval` key under which a given owner's dehydrated cache lives. */

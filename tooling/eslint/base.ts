@@ -67,7 +67,6 @@ export const baseConfig = defineConfig(
       "**/coverage",
       "**/.next",
       "**/build",
-      "lib/logger.ts",
       "!**/.commitlintrc.cjs",
       "!**/.lintstagedrc.cjs",
       "!**/jest.config.js",

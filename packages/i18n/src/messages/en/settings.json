@@ -4,7 +4,7 @@
     "ariaLabel": "Settings tabs"
   },
   "tabs": {
-    "user": "User",
+    "account": "Account",
     "household": "Household",
     "caldav": "CalDAV",
     "admin": "Admin",
@@ -193,7 +193,6 @@
           "abbreviated": "Abbreviated"
         }
       },
-      "applyError": "Failed to apply preference",
       "afterPlanning": {
         "title": "After planning a recipe",
         "description": "What happens when you plan a recipe",
@@ -279,11 +278,7 @@
         "warning": "You will become a regular member and will no longer be able to kick users or manage join codes.",
         "confirmButton": "Transfer admin"
       },
-      "toasts": {
-        "kickFailed": "Failed to kick user",
-        "transferSuccess": "Transferred admin to {name}",
-        "transferFailed": "Failed to transfer admin"
-      }
+      "unknown": "Unknown"
     },
     "joinCode": {
       "title": "Join code",
@@ -291,6 +286,7 @@
       "expiresIn": "Expires in:",
       "regenerateButton": "Regenerate",
       "expired": "Expired",
+      "countdown": "{minutes}m {seconds}s",
       "noCodeDescription": "No active join code. Generate one to invite new members.",
       "generateButton": "Generate join code",
       "copySuccess": "Join code copied",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Connected",
         "checking": "Checking...",
-        "disconnected": "Disconnected",
-        "unknown": "Unknown"
+        "disconnected": "Disconnected"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Failed",
         "removed": "Removed"
       },
-      "emptyFiltered": "No {status} items found",
+      "emptyFiltered": "No items with this status",
       "emptyDefault": "No sync records found",
       "errorDetails": "Error details",
-      "pagination": "Page {current} of {total}"
+      "pagination": "Page {current} of {total}",
+      "paginationLabel": "Sync status pages"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Select which languages users can choose from",
       "defaultLocale": "Default language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
-      "localesSaved": "Language settings saved",
-      "localesError": "Failed to save language settings",
       "atLeastOneLocale": "At least one language must be enabled",
       "export": {
         "title": "Recipe archive",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Delete {name}?",
       "deleteConfirm": "This permanently deletes the user's account and removes them from their household. This cannot be undone.",
-      "deleteSuccess": "{name} was deleted",
       "countSummary": "{count, plural, one {# user} other {# users}} total"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Time unit keywords for timer detection",
         "description": "Configure keywords used to detect timers in recipe instructions. Supports multiple languages.",
         "enableToggle": "Enable timer detection",
+        "keywordRequired": "At least one keyword required in hours, minutes, or seconds",
         "hoursLabel": "Hour keywords",
         "hoursPlaceholder": "hour, hours, hr, hrs, h",
         "hoursHelp": "Keywords for hours (e.g., hour, stunde, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "API key",
       "apiKeyPlaceholder": "Enter API key",
       "temperature": "Temperature: {value}",
+      "temperatureLabel": "Temperature",
       "temperatureHint": "Lower = more focused, Higher = more creative",
       "maxTokens": "Max tokens",
       "requestTimeout": "Request timeout (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Max video length (seconds)",
       "maxLengthDescription": "Longer videos take more time and resources to process",
       "maxFileSize": "Max video file size",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Maximum size for downloaded video files",
       "ytDlpVersion": "yt-dlp version",
       "ytDlpVersionDescription": "Version of yt-dlp this server is running. Not changeable here.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Generic OpenAI-compatible"
       },
       "transcriptionEndpoint": "Endpoint URL",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) or http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "OpenAI-compatible endpoint with Whisper support, or Ollama endpoint",
       "transcriptionModel": "Model",
       "transcriptionModelDescription": "Model to use for transcription",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Let imports reach your local network. Obscura refuses these either way.",
       "navigationTimeout": "Navigation timeout (ms)",
       "navigationTimeoutDescription": "How long a renderer is given to load a page.",
-      "saved": "Page renderers saved",
-      "error": "Failed to save page renderers",
       "connectionSuccess": "Connection successful"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Unsaved changes",
     "jsonEditor": {
       "placeholder": "Enter JSON configuration...",
-      "invalidJson": "Invalid JSON format",
-      "failedToSave": "Failed to save",
-      "failedToRestore": "Failed to restore defaults"
+      "invalidJson": "Invalid JSON format"
     },
     "jobQueue": {
       "title": "Job queues",
@@ -1327,6 +1320,13 @@
       "empty": "No Cuisines yet.",
       "duplicate": "A Cuisine with that name already exists.",
       "saveFailed": "Could not save that Cuisine."
+    },
+    "toasts": {
+      "localesSaved": "Language settings saved",
+      "localesError": "Failed to save language settings",
+      "userDeleted": "{name} was deleted",
+      "pageRenderersSaved": "Page renderers saved",
+      "pageRenderersError": "Failed to save page renderers"
     }
   },
   "archiveExport": {

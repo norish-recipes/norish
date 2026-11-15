@@ -154,7 +154,7 @@ describe("aisles and aisle links", () => {
       expect(ours!.aisles[0]).toMatchObject({ name: "Zuivel en kaas", version: version + 1 });
     });
 
-    it("bumps an aisle's version only when its name or place changed", async () => {
+    it("bumps an aisle's version only when its name changed, never for its place", async () => {
       const saved = await updateStore({
         id: storeId,
         aisles: [
@@ -186,9 +186,23 @@ describe("aisles and aisle links", () => {
         ],
       });
 
-      expect(moved!.aisles.map((aisle) => [aisle.id, aisle.version])).toEqual([
-        [BROOD, brood!.version + 1],
-        [ZUIVEL, zuivel!.version + 1],
+      expect(moved!.aisles.map((aisle) => [aisle.id, aisle.sortOrder, aisle.version])).toEqual([
+        [BROOD, 0, brood!.version],
+        [ZUIVEL, 1, zuivel!.version],
+      ]);
+
+      // A rename made against the version held before the move still lands.
+      const renamed = await updateStore({
+        id: storeId,
+        aisles: [
+          { id: BROOD, name: "Bakkerij", version: brood!.version },
+          { id: ZUIVEL, name: "Zuivel", version: zuivel!.version },
+        ],
+      });
+
+      expect(renamed!.aisles.map((aisle) => [aisle.name, aisle.version])).toEqual([
+        ["Bakkerij", brood!.version + 1],
+        ["Zuivel", zuivel!.version],
       ]);
     });
 
@@ -224,6 +238,32 @@ describe("aisles and aisle links", () => {
       const [reordered] = await reorderStores([{ id: storeId, version: store!.version }]);
 
       expect(names(reordered!.aisles)).toEqual(["Zuivel"]);
+    });
+
+    it("renumbers the Stores a reorder is given and leaves their versions alone", async () => {
+      const other = await createStore(crypto.randomUUID(), { userId, name: "Dirk" });
+      const [markt] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
+
+      const first = await reorderStores([
+        { id: other.id, version: other.version },
+        { id: storeId, version: markt!.version },
+      ]);
+
+      expect(first.map((store) => [store.id, store.sortOrder, store.version])).toEqual([
+        [other.id, 0, other.version],
+        [storeId, 1, markt!.version],
+      ]);
+
+      // A second reorder from the same held versions lands too.
+      const second = await reorderStores([
+        { id: storeId, version: markt!.version },
+        { id: other.id, version: other.version },
+      ]);
+
+      expect(second.map((store) => store.sortOrder)).toEqual([0, 1]);
+      await expect(reorderStores([{ id: storeId, version: markt!.version + 5 }])).resolves.toEqual(
+        []
+      );
     });
 
     it("refuses two aisles whose names differ only in case", async () => {

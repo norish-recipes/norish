@@ -5,14 +5,13 @@
  * has finished, whatever the job history keeps.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Queue, Worker } from "bullmq";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 
-import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { QUEUE_NAMES } from "../../src/queue-names";
 import { addImportJob } from "../../src/recipe-import/producer";
 import { getBullConnectionOptions } from "../../src/valkey/bullmq";
@@ -35,7 +34,7 @@ let container: StartedValkeyContainer;
 let queue: Queue<RecipeImportJobData>;
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   queue = new Queue(QUEUE_NAMES.RECIPE_IMPORT, {
     connection: getBullConnectionOptions(valkeyUrl(container)),
   });

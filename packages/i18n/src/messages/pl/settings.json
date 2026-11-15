@@ -4,7 +4,7 @@
     "ariaLabel": "Karty ustawień"
   },
   "tabs": {
-    "user": "Użytkownik",
+    "account": "Konto",
     "household": "Gospodarstwo domowe",
     "caldav": "CalDAV",
     "admin": "Administrator",
@@ -193,7 +193,6 @@
           "abbreviated": "Skróty"
         }
       },
-      "applyError": "Nie udało się zastosować preferencji",
       "afterPlanning": {
         "title": "Po zaplanowaniu przepisu",
         "description": "Co się dzieje, gdy planujesz przepis",
@@ -279,11 +278,7 @@
         "warning": "Staniesz się zwykłym członkiem i nie będziesz już mógł/mogła usuwać użytkowników ani zarządzać kodami dołączenia.",
         "confirmButton": "Przekaż administratora"
       },
-      "toasts": {
-        "kickFailed": "Nie udało się usunąć użytkownika",
-        "transferSuccess": "Przekazano administratora użytkownikowi {name}",
-        "transferFailed": "Nie udało się przekazać administratora"
-      }
+      "unknown": "Nieznany"
     },
     "joinCode": {
       "title": "Kod dołączenia",
@@ -291,6 +286,7 @@
       "expiresIn": "Wygasa za:",
       "regenerateButton": "Wygeneruj ponownie",
       "expired": "Wygasł",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Brak aktywnego kodu dołączenia. Wygeneruj go, aby zaprosić nowych członków.",
       "generateButton": "Wygeneruj kod dołączenia",
       "copySuccess": "Skopiowano kod dołączenia",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Połączono",
         "checking": "Sprawdzanie...",
-        "disconnected": "Rozłączono",
-        "unknown": "Nieznany"
+        "disconnected": "Rozłączono"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Nieudane",
         "removed": "Usunięto"
       },
-      "emptyFiltered": "Brak elementów o statusie: {status}",
+      "emptyFiltered": "Brak elementów o tym statusie",
       "emptyDefault": "Brak rekordów synchronizacji",
       "errorDetails": "Szczegóły błędu",
-      "pagination": "Strona {current} z {total}"
+      "pagination": "Strona {current} z {total}",
+      "paginationLabel": "Strony statusu synchronizacji"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Wybierz, które języki będą dostępne dla użytkowników",
       "defaultLocale": "Domyślny język",
       "defaultLocaleDescription": "Język używany dla nowych użytkowników i jako zapasowy",
-      "localesSaved": "Zapisano ustawienia językowe",
-      "localesError": "Nie udało się zapisać ustawień językowych",
       "atLeastOneLocale": "Musi być włączony co najmniej jeden język",
       "export": {
         "title": "Archiwum przepisów",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Usunąć {name}?",
       "deleteConfirm": "To trwale usunie konto użytkownika i usunie go z gospodarstwa domowego. Tej operacji nie można cofnąć.",
-      "deleteSuccess": "{name} został(a) usunięty(a)",
       "countSummary": "{count, plural, one {# użytkownik} few {# użytkowników} many {# użytkowników} other {# użytkownika}} łącznie"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Słowa kluczowe jednostek czasu do wykrywania timerów",
         "description": "Skonfiguruj słowa kluczowe używane do wykrywania timerów w instrukcjach. Obsługuje wiele języków.",
         "enableToggle": "Włącz wykrywanie timerów",
+        "keywordRequired": "Wymagane jest co najmniej jedno słowo kluczowe dla godzin, minut lub sekund",
         "hoursLabel": "Słowa kluczowe godzin",
         "hoursPlaceholder": "godzina, godziny, godzin, godz., h",
         "hoursHelp": "Słowa kluczowe dla godzin (np. hour, stunde, heure, uur)",
@@ -971,6 +965,7 @@
       "apiKey": "Klucz API",
       "apiKeyPlaceholder": "Wpisz klucz API",
       "temperature": "Temperatura: {value}",
+      "temperatureLabel": "Temperatura",
       "temperatureHint": "Niżej = bardziej precyzyjne, Wyżej = bardziej kreatywne",
       "maxTokens": "Maks. tokenów",
       "requestTimeout": "Limit czasu żądania (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Maks. długość wideo (sekundy)",
       "maxLengthDescription": "Dłuższe wideo wymaga więcej czasu i zasobów",
       "maxFileSize": "Maks. rozmiar pliku wideo",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Maksymalny rozmiar pobieranego pliku wideo",
       "ytDlpVersion": "Wersja yt-dlp",
       "ytDlpVersionDescription": "Wersja yt-dlp uruchomiona na tym serwerze. Nie można jej tu zmienić.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Ogólny kompatybilny z OpenAI"
       },
       "transcriptionEndpoint": "URL endpointu",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) lub http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Endpoint kompatybilny z OpenAI z obsługą Whisper lub endpoint Ollama",
       "transcriptionModel": "Model",
       "transcriptionModelDescription": "Model używany do transkrypcji",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Pozwala importom docierać do Twojej sieci lokalnej. Obscura i tak je odrzuca.",
       "navigationTimeout": "Limit czasu nawigacji (ms)",
       "navigationTimeoutDescription": "Ile czasu renderer ma na załadowanie strony.",
-      "saved": "Renderery stron zapisane",
-      "error": "Nie udało się zapisać rendererów stron",
       "connectionSuccess": "Połączenie udane"
     },
     "imageGenerationConfig": {
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Niezapisane zmiany",
     "jsonEditor": {
       "placeholder": "Wpisz konfigurację JSON...",
-      "invalidJson": "Nieprawidłowy format JSON",
-      "failedToSave": "Nie udało się zapisać",
-      "failedToRestore": "Nie udało się przywrócić domyślnych"
+      "invalidJson": "Nieprawidłowy format JSON"
     },
     "jobQueue": {
       "title": "Kolejki zadań",
@@ -1327,6 +1320,13 @@
       "empty": "Brak kuchni.",
       "duplicate": "Kuchnia o tej nazwie już istnieje.",
       "saveFailed": "Nie udało się zapisać tej kuchni."
+    },
+    "toasts": {
+      "localesSaved": "Zapisano ustawienia językowe",
+      "localesError": "Nie udało się zapisać ustawień językowych",
+      "userDeleted": "{name} został(a) usunięty(a)",
+      "pageRenderersSaved": "Renderery stron zapisane",
+      "pageRenderersError": "Nie udało się zapisać rendererów stron"
     }
   },
   "archiveExport": {

@@ -1,7 +1,5 @@
-import type { EnabledLocale } from "@norish/shared-react/hooks";
+import type { EnabledLocale } from "@norish/shared-react/config";
 import { DEFAULT_LOCALE, getValidLocale, isValidLocale } from "@norish/i18n/config";
-
-type LocaleDisplayMap = Record<string, string>;
 
 function getLocaleDisplayName(localeCode: string): string {
   try {
@@ -57,12 +55,29 @@ export function resolveLocaleSelection(
   return enabledLocales[0]?.code ?? DEFAULT_LOCALE;
 }
 
-export function buildLocaleDisplayMap(locales: EnabledLocale[]): LocaleDisplayMap {
-  const displayMap: LocaleDisplayMap = {};
+/** The enabled locale nearest a device language tag: an exact match, else the first of its language. */
+export function matchDeviceLocale(
+  deviceLocale: string,
+  enabledLocales: EnabledLocale[]
+): string | null {
+  const codes = enabledLocales.map((locale) => locale.code);
+  const exact = codes.find((code) => code.toLowerCase() === deviceLocale.toLowerCase());
 
-  for (const locale of locales) {
-    displayMap[locale.code] = locale.name || getLocaleDisplayName(locale.code);
-  }
+  if (exact) return exact;
 
-  return displayMap;
+  const language = deviceLocale.split("-")[0]?.toLowerCase();
+  // iOS names Norwegian Bokmål and Nynorsk `nb` and `nn`; the catalogue has one `no`.
+  const base = language === "nb" || language === "nn" ? "no" : language;
+
+  // German devices get the informal variant, not the catalogue's first German one.
+  if (base === "de" && codes.includes("de-informal")) return "de-informal";
+
+  return codes.find((code) => code.split("-")[0] === base) ?? null;
+}
+
+/** The app's iOS language (`AppleLanguages`, which the per-app language sets), else `fallback`. */
+export function deviceLanguage(appleLanguages: unknown, fallback: string): string {
+  const first: unknown = Array.isArray(appleLanguages) ? appleLanguages[0] : undefined;
+
+  return typeof first === "string" ? first : fallback;
 }

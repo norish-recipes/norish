@@ -3,16 +3,20 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
+import type { CalendarRange } from "@norish/shared/lib/helpers";
 import type { AppRouter } from "@norish/trpc/client";
-
-import type { LockManagerLike } from "./leader";
-import type { OfflineStorage } from "./storage";
-import { DEFAULT_RECIPE_FILTERS, toRecipesQueryFilters } from "../contexts/recipes/filter-contract";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  toRecipesQueryFilters,
+} from "@norish/shared/contracts/filter-contract";
 import {
   byNextCursor,
   cookbookRecipesInput,
   libraryListInput,
-} from "../contexts/recipes/list-queries";
+} from "@norish/shared/contracts/list-queries";
+
+import type { LockManagerLike } from "./leader";
+import type { OfflineStorage } from "./storage";
 import { CACHE_MAX_AGE_MS } from "./cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { runIfLeader } from "./leader";
@@ -26,10 +30,9 @@ const WARM_FULL_RECIPE_COUNT = 50;
 const WARM_COOKBOOK_LIST_LIMIT = 200;
 
 type WarmSetTRPC = TRPCOptionsProxy<AppRouter>;
-export type CalendarRange = { startISO: string; endISO: string };
 export type WarmedRecipe = { id: string; image?: string | null };
 
-export type WarmSetTopUpResult = "complete" | "partial" | "not-leader";
+type WarmSetTopUpResult = "complete" | "partial" | "not-leader";
 
 export interface WarmSetInventory {
   recipes: number;
@@ -224,8 +227,8 @@ async function warmLists(
     // What the household has at home; without it an offline recipe adds every
     // staple to the list.
     queryClient.query(withWarmGcTime(trpc.pantry.list.queryOptions())),
-    // The profile; it carries the reader's Device Preferences for Offline start-up.
-    queryClient.query(withWarmGcTime(trpc.user.get.queryOptions())),
+    // The reader's Device Preferences, so Offline start-up draws them.
+    queryClient.query(withWarmGcTime(trpc.user.getDevicePreferences.queryOptions())),
     ...calendarRanges.map((range) =>
       queryClient.query(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)))
     ),

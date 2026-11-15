@@ -4,18 +4,22 @@
   },
   "mobile": {
     "today": "Tänään",
-    "scrollToToday": "Siirry tähän päivään"
+    "scrollToToday": "Siirry tähän päivään",
+    "planRecipe": "Suunnittele resepti"
+  },
+  "today": {
+    "openRecipe": "Avaa resepti",
+    "move": "Siirrä…",
+    "removeTitle": "Poistetaanko tältä päivältä?",
+    "removeMessage": "{name} poistetaan kohdasta {slot}, {day}.",
+    "moveTitle": "Siirrä",
+    "moveSubtitle": "{name}, tämän päivän {slot}",
+    "moveToDay": "Siirrä {name} päivälle {day}"
   },
   "editNote": {
     "title": "Muokkaa huomautusta",
     "noteLabel": "Huomautus",
     "notePlaceholder": "Kirjoita huomautus..."
-  },
-  "navigation": {
-    "previousMonth": "Edellinen kuukausi",
-    "nextMonth": "Seuraava kuukausi",
-    "prev": "Edell.",
-    "next": "Seur."
   },
   "weekdays": {
     "mon": "Ma",
@@ -50,6 +54,29 @@
     "addNote": "Lisää huomautus: {input}",
     "randomRecipe": "Satunnainen resepti",
     "noRecipesFound": "Reseptejä ei löytynyt.",
-    "failedToLoadRecipes": "Reseptien lataaminen epäonnistui."
+    "failedToLoadRecipes": "Reseptien lataaminen epäonnistui.",
+    "planRecipe": "Suunnittele resepti",
+    "searchOrAddNote": "Hae reseptejä tai lisää muistiinpano",
+    "random": "Satunnainen resepti",
+    "planThisRecipe": "Suunnittele tämä resepti",
+    "planOnDay": "Suunnittele {name} päivälle {day}",
+    "addToDay": "Lisää päivälle {day}"
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronointi aloitettu",
+    "syncStartedDescription": "Synkronoitavat kohteet: {queued}",
+    "syncStartedWithFailures": "Synkronoitavat kohteet: {queued}. Jonoon lisääminen epäonnistui: {failed}",
+    "configSaved": "Määritys tallennettu",
+    "configSavedDescription": "CalDAV-asetuksesi on tallennettu.",
+    "configDeleted": "Määritys poistettu",
+    "configDeletedDescription": "CalDAV-asetuksesi on poistettu.",
+    "retryStarted": "Synkronointi aloitettu",
+    "retryStartedDescription": "Yritetään uudelleen odottavia ja epäonnistuneita kohteita…"
+  },
+  "widgets": {
+    "nothingPlanned": "Ei mitään suunniteltu",
+    "signIn": "Avaa Norish kirjautuaksesi",
+    "open": "Avaa Norish",
+    "more": "+{count} lisää"
   }
 }

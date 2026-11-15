@@ -1,7 +1,6 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useCalendarContext } from "@/app/(app)/calendar/context";
 import MiniRecipes from "@/components/Panel/consumers/mini-recipes";
 import { useReaderToday } from "@/components/reader-today";
 import TodaysMealsSkeleton from "@/components/skeleton/todays-meals-skeleton";
@@ -10,10 +9,14 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { Slot } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
+import { useTodaysMeals } from "@norish/shared-react/calendar";
+import {
+  firstSlotFrom,
+  nextMealSlot,
+  slotTranslationKeys,
+} from "@norish/shared-react/calendar/todays-meals";
 
 import TodayMealSlotCard from "./today-meal-slot-card";
-import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "./todays-meals-constants";
-import { firstSlotFrom, groupTodayItemsBySlot, nextMealSlot } from "./todays-meals-helpers";
 
 type TodaysMealsContentProps = {
   visibility: TodaySectionVisibility;
@@ -24,8 +27,7 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
   const tCalendar = useTranslations("calendar");
   const tSlots = useTranslations("common.slots");
   const todayKey = useReaderToday();
-  const todayDate = useMemo(() => new Date(`${todayKey}T00:00:00`), [todayKey]);
-  const { plannedItemsByDate, isLoading } = useCalendarContext();
+  const { todayDate, itemsBySlot, visibleSlots, isLoading } = useTodaysMeals(todayKey, visibility);
   const [planningSlot, setPlanningSlot] = useState<Slot | undefined>(undefined);
   const [planningOpen, setPlanningOpen] = useState(false);
 
@@ -38,16 +40,6 @@ export default function TodaysMealsContent({ visibility }: TodaysMealsContentPro
       }).format(todayDate),
     [locale, todayDate]
   );
-
-  const itemsBySlot = useMemo(
-    () => groupTodayItemsBySlot(plannedItemsByDate[todayKey] ?? []),
-    [plannedItemsByDate, todayKey]
-  );
-
-  const visibleSlots =
-    visibility === "planned"
-      ? TODAY_MEAL_SLOTS.filter((slot) => itemsBySlot[slot].length > 0)
-      : TODAY_MEAL_SLOTS;
 
   // A phone shows two and a half slots, so the row opens on the next meal
   // rather than always on breakfast. Once, when the day's plan has loaded.

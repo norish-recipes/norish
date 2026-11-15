@@ -17,24 +17,29 @@
  * expired session) come last, in the order their damage allows.
  */
 import { randomUUID } from "node:crypto";
-import type { BrowserContext, Page, Response } from "@playwright/test";
+import type { BrowserContext, BrowserContextOptions, Page, Response } from "@playwright/test";
+
+import { dateKey } from "@norish/shared/lib/helpers";
 
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
+import { openGroceries, rowFor } from "../harness/groceries";
+import { removePlans } from "../harness/plans";
+import { swipeOpenTo } from "../harness/pointer";
+import { readRecipe, seedRecipe } from "../harness/recipes";
 import { dropSocket, expect, socketLedger, test, waitForSocket } from "./fixture";
 import {
   addGrocery,
   callMutation,
   callQuery,
-  openGroceries,
   rawSocket,
   readGrocery,
   readHousehold,
   recordFrames,
   revokeSessions,
-  rowFor,
   sessionHeaders,
   valkeyClientCount,
+  waitForLive,
 } from "./support";
 
 test.describe.configure({ mode: "serial" });
@@ -97,9 +102,11 @@ test.beforeAll(async ({ realtimeStack }) => {
   await delay(1_000);
 
   await openGroceries(pageA);
+  await waitForSocket(pageA, 1);
   contextB = await stack.newContext("b");
   pageB = await contextB.newPage();
   await openGroceries(pageB);
+  await waitForSocket(pageB, 1);
 });
 
 test.afterAll(async () => {
@@ -161,6 +168,60 @@ test("grocery create, update and delete reach the other browser without a reload
 
   expect(deleted.ok).toBe(true);
   await expect(rowFor(pageB, "realtime-melk-hernoemd")).toHaveCount(0);
+});
+
+test("a change made before a fresh screen's subscriptions are live shows once they are", async () => {
+  // Random: a Playwright timeout skips the `finally`, and a fixed name would fail the retry.
+  const name = `realtime-in-de-kloof-${randomUUID().slice(0, 8)}`;
+  const context = await stack.newContext("a");
+  const page = await context.newPage();
+  // Hold what the page sends on its socket: the server takes no subscription until released.
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => (release = resolve));
+  const held: string[] = [];
+  const listReads: string[] = [];
+
+  await page.routeWebSocket(/\/trpc$/, (socket) => {
+    const server = socket.connectToServer();
+
+    socket.onMessage(async (message) => {
+      held.push(String(message));
+      await released;
+      server.send(message);
+    });
+  });
+
+  try {
+    // The list arrives with the document and hydrates; its subscriptions wait on the socket.
+    await openGroceries(page);
+    await expect.poll(() => held.some((m) => m.includes("groceries.onCreated"))).toBe(true);
+    page.on("request", (request) => {
+      if (request.url().includes("groceries.list")) listReads.push(request.url());
+    });
+
+    // A's live browser hears a grocery added inside the gap: after the read, before the listener.
+    const created = await callMutation(pageA, stack.baseURL, "groceries.create", [
+      { name, amount: null, unit: null, isDone: false },
+    ]);
+
+    expect(created.ok).toBe(true);
+    await expect(rowFor(pageA, name)).toBeVisible();
+    await expect(rowFor(page, name)).toHaveCount(0);
+    // Nothing else read the list in the gap: only the go-live can bring the row.
+    expect(listReads).toEqual([]);
+
+    release();
+    await expect(rowFor(page, name)).toBeVisible();
+  } finally {
+    await context.close();
+    const row = await readGrocery(name);
+
+    if (row) {
+      await callMutation(pageA, stack.baseURL, "groceries.delete", {
+        groceries: [{ id: row.id, version: row.version }],
+      });
+    }
+  }
 });
 
 test("a typed name joining two foods is a grocery each, in both browsers", async () => {
@@ -280,6 +341,253 @@ test("a validation failure toasts only the browser that caused it", async () => 
   await expect(pageA.getByText("Operation failed")).toHaveCount(0);
 });
 
+/**
+ * A fresh browser of A's on `path`, once `live` subscriptions listen, after `then` (opening a panel,
+ * say) if given; closed with `context.close()`.
+ */
+async function openAs(
+  path: string,
+  live: string[],
+  {
+    cookies = [],
+    then,
+    options,
+  }: {
+    cookies?: Array<{ name: string; value: string }>;
+    then?: (page: Page) => Promise<void>;
+    options?: BrowserContextOptions;
+  } = {}
+) {
+  const context = await stack.newContext("a", options);
+
+  await context.addCookies(cookies.map((cookie) => ({ ...cookie, url: stack.baseURL })));
+  const page = await context.newPage();
+  const frames = recordFrames(page);
+
+  await page.goto(path);
+  await then?.(page);
+  await waitForLive(frames, live);
+  frames.stop();
+
+  return { context, page };
+}
+
+test("a housemate filing the open recipe into a cookbook shows on its cookbooks card", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-ingelegd-recept");
+  const created = await callMutation<{ id: string }>(pageB, stack.baseURL, "cookbooks.create", {
+    title: "realtime-kookboek",
+    recipeIds: [],
+  });
+
+  expect(created.ok).toBe(true);
+  const { context, page } = await openAs(`/recipes/${recipeId}`, ["cookbooks.onMembershipChanged"]);
+
+  try {
+    await expect(page.getByRole("heading", { name: "realtime-ingelegd-recept" })).toBeVisible();
+    await expect(page.getByTestId("cookbooks-card")).toHaveCount(0);
+
+    const filed = await callMutation(pageB, stack.baseURL, "cookbooks.setMembership", {
+      cookbookId: created.data!.id,
+      recipeIds: [recipeId],
+      isMember: true,
+    });
+
+    expect(filed.ok).toBe(true);
+    await expect(
+      page.locator('[data-cookbook-chip="realtime-kookboek"]').filter({ visible: true })
+    ).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate's Pantry change reorders a Library sorted by pantry share", async () => {
+  // Half of the first is in the Pantry and a third of the second; B's add makes it two thirds.
+  await seedRecipe(stack.userIds.a, "realtime-voorraad-eerst", [
+    "realtime-rijst",
+    "realtime-bonen",
+  ]);
+  await seedRecipe(stack.userIds.a, "realtime-voorraad-tweede", [
+    "realtime-linzen",
+    "realtime-kikkererwten",
+    "realtime-gerst",
+  ]);
+  for (const name of ["realtime-rijst", "realtime-linzen"]) {
+    expect((await callMutation(pageA, stack.baseURL, "pantry.add", { name })).ok).toBe(true);
+  }
+
+  const { context, page } = await openAs("/", ["pantry.onAdded"], {
+    cookies: [
+      { name: "norish-recipe-filters", value: encodeURIComponent('{"showPantryOnly":true}') },
+    ],
+  });
+  const order = async () =>
+    (await page.locator("[data-recipe-card]").allTextContents()).flatMap((text) =>
+      ["realtime-voorraad-eerst", "realtime-voorraad-tweede"].filter((name) => text.includes(name))
+    );
+
+  try {
+    await expect.poll(order).toEqual(["realtime-voorraad-eerst", "realtime-voorraad-tweede"]);
+
+    const added = await callMutation(pageB, stack.baseURL, "pantry.add", {
+      name: "realtime-kikkererwten",
+    });
+
+    expect(added.ok).toBe(true);
+    await expect.poll(order).toEqual(["realtime-voorraad-tweede", "realtime-voorraad-eerst"]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate renaming a planned recipe shows the new name on an open calendar", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-gepland-recept");
+  const planned = await callMutation(pageA, stack.baseURL, "calendar.createItem", {
+    date: dateKey(new Date()),
+    slot: "Dinner",
+    itemType: "recipe",
+    recipeId,
+  });
+
+  expect(planned.ok).toBe(true);
+  const { context, page } = await openAs("/calendar", ["recipes.onUpdated"]);
+
+  try {
+    await expect(page.getByText("realtime-gepland-recept").first()).toBeVisible();
+
+    const recipe = (await readRecipe(stack.baseURL, stack.cookies.b, recipeId))!;
+    const renamed = await callMutation(pageB, stack.baseURL, "recipes.update", {
+      id: recipeId,
+      version: recipe.version,
+      data: { name: "realtime-hernoemd-recept" },
+    });
+
+    expect(renamed.ok).toBe(true);
+    await expect(page.getByText("realtime-hernoemd-recept").first()).toBeVisible();
+    await expect(page.getByText("realtime-gepland-recept")).toHaveCount(0);
+  } finally {
+    await context.close();
+    await removePlans(stack.baseURL, stack.cookies.a, (plan) => plan.recipeId === recipeId);
+  }
+});
+
+/** The recipe page's Add to Groceries panel. */
+const addToGroceries = (page: Page) => page.getByRole("dialog", { name: "Add to Groceries" });
+
+async function openAddToGroceries(page: Page) {
+  await page.getByRole("button", { name: "Add", exact: true }).first().click();
+  await expect(addToGroceries(page)).toBeVisible();
+}
+
+test("a housemate's grocery marks a kept line on the list in Add to Groceries on a recipe", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-boodschappen-recept", [
+    "realtime-azijn",
+  ]);
+
+  expect(
+    (await callMutation(pageA, stack.baseURL, "pantry.add", { name: "realtime-azijn" })).ok
+  ).toBe(true);
+  const { context, page } = await openAs(`/recipes/${recipeId}`, ["groceries.onCreated"], {
+    then: openAddToGroceries,
+  });
+
+  try {
+    const held = addToGroceries(page).getByTestId("pantry-section");
+
+    await expect(held.getByRole("checkbox", { name: "realtime-azijn" })).toBeVisible();
+    await expect(held.getByTestId("on-the-list")).toHaveCount(0);
+
+    const created = await callMutation(pageB, stack.baseURL, "groceries.create", [
+      { name: "realtime-azijn", amount: null, unit: null, isDone: false },
+    ]);
+
+    expect(created.ok).toBe(true);
+    await expect(held.getByTestId("on-the-list")).toHaveCount(1);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate's Pantry add while Add to Groceries is closed shows when it opens again", async () => {
+  const recipeId = await seedRecipe(stack.userIds.a, "realtime-olijfolie-recept", [
+    "realtime-olijfolie",
+  ]);
+  const { context, page } = await openAs(`/recipes/${recipeId}`, ["pantry.onAdded"], {
+    then: openAddToGroceries,
+  });
+  const line = (section: string) =>
+    addToGroceries(page).getByTestId(section).getByRole("checkbox", { name: "realtime-olijfolie" });
+
+  try {
+    await expect(line("to-buy-section")).toBeChecked();
+    await page.keyboard.press("Escape");
+    await expect(addToGroceries(page)).toHaveCount(0);
+
+    const kept = await callMutation(pageB, stack.baseURL, "pantry.add", {
+      name: "realtime-olijfolie",
+    });
+
+    expect(kept.ok).toBe(true);
+    await openAddToGroceries(page);
+    await expect(line("pantry-section")).toBeVisible();
+    await expect(line("pantry-section")).not.toBeChecked();
+    await expect(line("to-buy-section")).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a housemate's Pantry add while the Library's Add to Groceries is away shows on return", async () => {
+  const name = "realtime-roomboter-recept";
+  const recipeId = await seedRecipe(stack.userIds.a, name, ["realtime-roomboter"]);
+  // A phone: a card's actions open with a swipe.
+  const { context, page } = await openAs("/", ["pantry.onAdded"], {
+    options: { hasTouch: true, viewport: { width: 390, height: 1600 } },
+  });
+  const card = page.locator("[data-recipe-card]").filter({ hasText: name });
+  const line = (section: string) =>
+    addToGroceries(page).getByTestId(section).getByRole("checkbox", { name: "realtime-roomboter" });
+  const openFromCard = async () => {
+    await swipeOpenTo(page, card, "View groceries");
+    await expect(addToGroceries(page)).toBeVisible();
+  };
+
+  try {
+    await openFromCard();
+    await expect(line("to-buy-section")).toBeChecked();
+    await page.keyboard.press("Escape");
+    await expect(addToGroceries(page)).toHaveCount(0);
+    // Past the tick in which a read forgets what kept it current, with the Library still mounted.
+    await delay(500);
+
+    await card.getByText(name).first().click();
+    await expect(page).toHaveURL(new RegExp(`/recipes/${recipeId}`));
+    await expect(page.getByRole("heading", { name })).toBeVisible();
+
+    const kept = await callMutation(pageB, stack.baseURL, "pantry.add", {
+      name: "realtime-roomboter",
+    });
+
+    expect(kept.ok).toBe(true);
+    await expect
+      .poll(async () =>
+        (await callQuery<Array<{ name: string }>>(pageB, stack.baseURL, "pantry.list")).map(
+          (food) => food.name
+        )
+      )
+      .toContain("realtime-roomboter");
+
+    await page.goBack();
+    await expect(card).toBeVisible();
+    await openFromCard();
+    await expect(line("pantry-section")).toBeVisible();
+    await expect(line("pantry-section")).not.toBeChecked();
+    await expect(line("to-buy-section")).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
 test("a browser back from a network gap gets what it missed through Resume, before Recovery's refetch answers", async () => {
   const frames = recordFrames(pageB);
   const before = await socketLedger(pageB);
@@ -345,9 +653,11 @@ test("the server's Valkey connection count does not depend on how many browsers 
   try {
     for (let index = 0; index < 5; index += 1) {
       const context = await stack.newContext("b");
+      const page = await context.newPage();
 
       extra.push(context);
-      await openGroceries(await context.newPage());
+      await openGroceries(page);
+      await waitForSocket(page, 1);
     }
 
     expect(await settledValkeyClientCount()).toBe(withTwo);

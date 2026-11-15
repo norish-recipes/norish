@@ -400,6 +400,17 @@ describe("calendar planned recipe openapi procedures", () => {
 
     expect(result).toEqual({ success: true, stale: false });
   });
+
+  it("answers 404 for a planned recipe that does not exist", async () => {
+    getPlannedItemById.mockResolvedValue(null);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.deletePlannedRecipe({ itemId: crypto.randomUUID(), version: 1 })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(deletePlannedItem).not.toHaveBeenCalled();
+  });
 });
 
 describe("calendar planned items procedures", () => {

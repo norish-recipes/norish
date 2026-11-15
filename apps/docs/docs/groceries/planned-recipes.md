@@ -8,7 +8,7 @@ description: What happens after you plan a recipe.
 
 When you plan a recipe from the calendar, the **Today** section or a recipe's
 **Add to calendar**, the groceries panel opens. Change this under
-**Settings => User => Preferences => After planning a recipe**:
+**Settings => Account => Preferences => After planning a recipe**:
 
 - **Nothing**: only plan the recipe.
 - **Open groceries panel**: the default.

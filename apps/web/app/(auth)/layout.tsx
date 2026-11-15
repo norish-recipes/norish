@@ -1,16 +1,17 @@
-import { BaseProviders } from "../providers/base-providers";
-import { AuthMarks } from "./components/auth-marks";
+import { AuthMarks } from "@/features/auth/components/auth-marks";
+import { readRequestDeviceKind } from "@/lib/request-profile";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+import { BaseProviders } from "../providers/base-providers";
+
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <BaseProviders>
+    <BaseProviders deviceKind={await readRequestDeviceKind()}>
       <div
         className="bg-background relative flex items-center justify-center overflow-hidden p-4 [view-transition-name:auth-screen]"
         style={{ minHeight: "calc(100vh - env(safe-area-inset-top))" }}
       >
-        {/* marks.css gates its draw and turn rules on `.js`, so a reader
-            without scripting gets finished, still drawings. Set it before
-            first paint so the strokes can draw themselves once on arrival. */}
+        {/* marks.css gates its draw on `.js` (no scripting = finished drawings); set before
+            first paint so the strokes draw once on arrival. */}
         <script
           // A constant, and React escapes a script's text children, so it goes in as raw HTML.
           // eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml
