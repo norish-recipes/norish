@@ -176,6 +176,36 @@ describe("the editor's rows round-trip a stored recipe", () => {
     expect(payload.prepMinutes).toBeUndefined();
   });
 
+  it("keeps each reference on its line when a cleared row is still in the form", () => {
+    const lines = ["A", "B", "C", "D"].map((name, order) => ({
+      ...editorIngredientsOf(stored, labeller)[0]!,
+      id: `ing-${name}`,
+      ingredientName: name,
+      order,
+    }));
+    // B was cleared and not yet left, so the lines skip its order.
+    const ingredients = lines.filter((ing) => ing.ingredientName !== "B");
+    const steps = [
+      {
+        ...seededForm().steps[1]!,
+        stepIngredients: [
+          { ingredientOrder: 2, share: 1, order: 0 },
+          { ingredientOrder: 3, share: 0.5, order: 1 },
+          { ingredientOrder: 1, share: 1, order: 2 },
+        ],
+      },
+    ];
+    const payload = valid({ ...seededForm(), ingredients, steps });
+    const nameAt = (order: number) =>
+      payload.recipeIngredients.find((ing) => ing.order === order)?.ingredientName;
+
+    expect(payload.steps[0]?.stepIngredients.map((ref) => nameAt(ref.ingredientOrder))).toEqual([
+      "C",
+      "D",
+    ]);
+    expect(payload.steps[0]?.stepIngredients.map((ref) => ref.order)).toEqual([0, 1]);
+  });
+
   it("is not dirty until something changes", () => {
     expect(isRecipeFormDirty(seededForm(), "edit", stored, labeller)).toBe(false);
     expect(isRecipeFormDirty({ ...seededForm(), notes: "" }, "edit", stored, labeller)).toBe(true);

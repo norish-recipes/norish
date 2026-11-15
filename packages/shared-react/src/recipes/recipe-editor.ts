@@ -233,6 +233,15 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
 
 /** What a save sends for the form, shared by create and update; servings must be valid. */
 export function recipeFormPayload(form: RecipeFormState & { servings: number }) {
+  // Lines are renumbered below; each reference follows its line, one to a line not saved goes.
+  const renumbered = new Map(form.ingredients.map((ing, idx) => [ing.order, idx]));
+  const refsOf = (refs: StepIngredientRef[]) =>
+    refs.flatMap((ref) => {
+      const to = renumbered.get(ref.ingredientOrder);
+
+      return to === undefined ? [] : [{ ...ref, ingredientOrder: to }];
+    });
+
   return {
     name: form.name.trim(),
     description: form.description.trim() || null,
@@ -270,7 +279,7 @@ export function recipeFormPayload(form: RecipeFormState & { servings: number }) 
       systemUsed: step.systemUsed,
       version: step.version,
       images: step.images || [],
-      stepIngredients: step.stepIngredients || [],
+      stepIngredients: refsOf(step.stepIngredients ?? []),
     })),
     images: form.media
       .filter((item) => item.type === "image")
