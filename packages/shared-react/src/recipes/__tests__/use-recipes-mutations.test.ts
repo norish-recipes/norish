@@ -2,7 +2,11 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
-import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 
 import type { InfiniteRecipeData } from "../library-cache";
 import { useRecipesMutations } from "../use-recipes-mutations";
@@ -16,8 +20,13 @@ vi.mock("../../trpc", () => {
   const key =
     (...path: string[]) =>
     (input?: unknown) => [path, ...(input === undefined ? [] : [{ input }])];
-  const procedure = (mutationFn: (input: unknown) => unknown) => ({
-    mutationOptions: (options?: object) => ({ ...options, mutationFn }),
+  const procedure = (name: string, mutationFn: (input: unknown) => unknown) => ({
+    mutationKey: () => [["recipes", name]],
+    mutationOptions: (options?: object) => ({
+      ...options,
+      mutationKey: [["recipes", name]],
+      mutationFn,
+    }),
   });
 
   return {
@@ -26,10 +35,10 @@ vi.mock("../../trpc", () => {
         list: { queryKey: key("recipes", "list"), pathKey: key("recipes", "list") },
         get: { queryKey: key("recipes", "get") },
         getPending: { queryKey: key("recipes", "getPending") },
-        create: procedure(server.create),
-        update: procedure(server.update),
-        delete: procedure(vi.fn()),
-        convertMeasurements: procedure(vi.fn()),
+        create: procedure("create", server.create),
+        update: procedure("update", server.update),
+        delete: procedure("delete", vi.fn()),
+        convertMeasurements: procedure("convertMeasurements", vi.fn()),
       },
       library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
       cookbooks: { recipes: { pathKey: key("cookbooks", "recipes") } },
@@ -251,31 +260,86 @@ describe("useRecipesMutations", () => {
       ]);
     });
 
-    it("two edits queued while offline both apply when the Outbox replays them in order", async () => {
+    const opened = () => queryClient.getQueryData<FullRecipeDTO>(detailKey("recipe-1"));
+
+    it("keeps the version the server gave, and sends the one the edit was made on", async () => {
+      expect(await update({ version: 4 }, { name: "Renamed", version: 4 })).toMatchObject({
+        name: "Renamed",
+        version: 4,
+      });
+      expect(server.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "recipe-1", version: 4 }),
+        expect.anything()
+      );
+    });
+
+    it("does not show an edit made on a version the cache has moved past", async () => {
+      expect(await update({ version: 6 }, { name: "Mine", version: 5 })).toMatchObject({
+        name: "Original recipe",
+        version: 6,
+      });
+    });
+
+    it("refetches the recipe and tells once when the server refuses two edits as stale", async () => {
+      const adapter = fakePlatformAdapter();
+      const answers = [Promise.withResolvers<unknown>(), Promise.withResolvers<unknown>()];
+
       queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
-      // Offline: each write is admitted to the Outbox and answers with the Queued signal.
-      server.update.mockRejectedValue(new TypeError("Failed to fetch"));
+      server.update
+        .mockImplementationOnce(() => answers[0]!.promise)
+        .mockImplementationOnce(() => answers[1]!.promise);
+      const result = renderHook(() => useRecipesMutations(), {
+        wrapper: createTestWrapper(queryClient, adapter),
+      }).result;
+
+      act(() => result.current.updateRecipe("recipe-1", { name: "First", version: 1 }));
+      act(() => result.current.updateRecipe("recipe-1", { name: "Second", version: 1 }));
+      await act(async () => {
+        await vi.waitFor(() => expect(server.update).toHaveBeenCalledTimes(2));
+      });
+      await act(async () => answers[0]!.resolve({ stale: true, version: null }));
+      await act(async () => answers[1]!.resolve({ stale: true, version: null }));
+      await settled();
+
+      expect(adapter.toast.show).toHaveBeenCalledTimes(1);
+      expect(adapter.toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "common.changedElsewhere.title" })
+      );
+      expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
+    });
+
+    it("keeps a second edit when the first fails, and sends the second at its own base", async () => {
+      const first = Promise.withResolvers<never>();
+
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update
+        .mockImplementationOnce(() => first.promise)
+        .mockImplementationOnce(() => new Promise(() => {}));
       const result = render();
-      // Each save starts from the recipe as the cache has it, as the editor opens it.
-      const save = async (name: string) => {
-        const opened = queryClient.getQueryData<FullRecipeDTO>(detailKey("recipe-1"))!;
 
-        act(() => result.current.updateRecipe("recipe-1", { name, version: opened.version }));
-        await settled();
-      };
+      act(() => result.current.updateRecipe("recipe-1", { name: "First", version: 1 }));
+      act(() => result.current.updateRecipe("recipe-1", { name: "Second", version: 1 }));
+      await act(async () => first.reject(new Error("Bad recipe")));
+      await act(async () => {
+        await vi.waitFor(() => expect(server.update).toHaveBeenCalledTimes(2));
+      });
 
-      await save("First edit");
-      await save("Second edit");
+      expect(opened()).toMatchObject({ name: "Second", version: 1 });
+      expect(server.update).toHaveBeenLastCalledWith(
+        expect.objectContaining({ version: 1, data: expect.objectContaining({ name: "Second" }) }),
+        expect.anything()
+      );
+    });
 
-      // The server applies a write only at the version it holds, then bumps it.
-      const stored = { name: detail.name, version: detail.version };
+    it("sends an edit of another recipe while one is still waiting", async () => {
+      server.update.mockReturnValue(new Promise(() => {}));
+      const result = render();
 
-      for (const [{ data, version }] of server.update.mock.calls as [
-        [{ data: { name: string }; version: number }],
-      ]) {
-        if (version === stored.version) Object.assign(stored, { ...data, version: version + 1 });
-      }
-      expect(stored).toEqual({ name: "Second edit", version: 3 });
+      act(() => result.current.updateRecipe("recipe-1", { name: "One", version: 1 }));
+      act(() => result.current.updateRecipe("recipe-2", { name: "Two", version: 1 }));
+      await act(async () => {
+        await vi.waitFor(() => expect(server.update).toHaveBeenCalledTimes(2));
+      });
     });
   });
 });

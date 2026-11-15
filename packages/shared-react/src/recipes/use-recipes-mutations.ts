@@ -14,6 +14,7 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
+import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -266,6 +267,7 @@ export type RecipesMutationsResult = {
 export function useRecipesMutations(onError?: RecipesMutationErrorHandler): RecipesMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { toast } = usePlatform();
   const { setAllRecipesData, invalidate } = useRecipesCacheHelpers();
 
   const recipesPath = [trpc.recipes.list.queryKey({})[0]];
@@ -324,9 +326,27 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
     })
   );
   const { mutate: mutateCreate } = createMutation;
+
+  type UpdateVariables = { id: string; version: number };
+  // The other edits of this recipe still waiting for an answer; `sameBase` those made on its version.
+  const otherPendingEdits = (variables: UpdateVariables, sameBase: boolean) =>
+    queryClient.getMutationCache().findAll({
+      mutationKey: trpc.recipes.update.mutationKey(),
+      status: "pending",
+      predicate: ({ state }) => {
+        const other = state.variables as UpdateVariables | undefined;
+
+        return (
+          state.variables !== variables &&
+          other?.id === variables.id &&
+          (!sameBase || other.version === variables.version)
+        );
+      },
+    }).length > 0;
+
   const updateMutation = useMutation(
     trpc.recipes.update.mutationOptions({
-      onMutate: async ({ id, data }) => {
+      onMutate: async ({ id, version, data }) => {
         const detailQueryKey = trpc.recipes.get.queryKey({ id });
 
         await queryClient.cancelQueries({ queryKey: detailQueryKey });
@@ -334,7 +354,8 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
         const previousDetail = queryClient.getQueryData<FullRecipeDTO | null>(detailQueryKey);
 
         queryClient.setQueryData<FullRecipeDTO | null | undefined>(detailQueryKey, (previous) => {
-          if (!previous) return previous;
+          // An edit made on a version the cache has moved past is refused; it is never shown.
+          if (!previous || previous.version !== version) return previous;
 
           return {
             ...previous,
@@ -356,15 +377,22 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
               : previous.tags,
             images: data.images ? optimisticImages(data.images) : previous.images,
             videos: data.videos ? optimisticVideos(data.videos) : previous.videos,
-            // The version this write earns, so an edit queued behind it is not stale.
-            version: previous.version + 1,
           };
         });
 
         return { detailQueryKey, previousDetail };
       },
-      onError: (error, _variables, context) => {
+      // Refused: someone changed it first. Show theirs, and tell once for edits on the same base.
+      onSuccess: (answer, variables) => {
+        if (!answer.stale) return;
+        void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id: variables.id }) });
+        if (otherPendingEdits(variables, true)) return;
+        toast.show({ severity: "warning", title: toast.translate("common.changedElsewhere.title") });
+      },
+      onError: (error, variables, context) => {
         handleRecipesMutationError(error, "update", onError, () => {
+          // A later edit's state is on top; its own answer settles the recipe.
+          if (otherPendingEdits(variables, false)) return;
           const updateContext = context as UpdateMutationContext | undefined;
 
           if (updateContext?.detailQueryKey) {
@@ -375,8 +403,6 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           invalidate();
         });
       },
-      // One edit at a time, so the server holds each one's version before the next arrives.
-      scope: { id: "recipe-updates" },
     })
   );
   const { mutate: mutateUpdate } = updateMutation;
