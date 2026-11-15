@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { DragRow, Drop } from "./resolve-drop";
 import { resolveDrop } from "./resolve-drop";
@@ -9,6 +9,8 @@ type Held<H, T> = {
   /** The `rows` this was held over: once they change, the list shows them again. */
   over: DragRow<H, T>[];
   dragging: boolean;
+  /** A refused drop, shown for one commit so the list moves the row back as a reorder. */
+  refused?: boolean;
 };
 
 /**
@@ -25,15 +27,22 @@ export function useHeldRows<H, T>(
   if (held && !current) setHeld(null);
   const shown = current?.shown ?? rows;
 
+  // The list has already moved the row; only rows in a new order move it back.
+  useEffect(() => {
+    if (held?.refused) setHeld(null);
+  }, [held]);
+
   return {
     shown,
     lift: () => setHeld({ shown, over: rows, dragging: true }),
     /** `from` and `to` count in the rows shown at the lift; `onDrop` returning false puts it back. */
     drop: (from: number, to: number) => {
       const drop = resolveDrop(shown, from, to);
-      const kept = drop !== null && onDrop(drop) !== false;
 
-      setHeld(kept ? { shown: drop.rows, over: rows, dragging: false } : null);
+      if (!drop) return setHeld(null);
+      const kept = onDrop(drop) !== false;
+
+      setHeld({ shown: drop.rows, over: rows, dragging: false, refused: !kept });
     },
     /** A drag that ended where it began. */
     settle: () => setHeld(null),
