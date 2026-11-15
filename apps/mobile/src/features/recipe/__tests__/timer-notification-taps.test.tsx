@@ -13,6 +13,12 @@ vi.mock("expo-router", () => ({ useRouter: () => ({ push }) }));
 vi.mock("expo-haptics", () => ({}));
 vi.mock("react-intl", () => ({ useIntl: () => ({ formatMessage: () => "" }) }));
 vi.mock("@norish/shared-react/config", () => ({ useTimersEnabledQuery: () => ({}) }));
+const activity = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/lib/timer-activity", () => ({ syncTimerActivity: activity }));
+vi.mock("expo-linking", () => ({
+  createURL: (path: string, { queryParams }: { queryParams: { step: string } }) =>
+    `norish://${path}?step=${queryParams.step}`,
+}));
 vi.mock("expo-notifications", () => ({
   DEFAULT_ACTION_IDENTIFIER: "default",
   setNotificationHandler: vi.fn(),

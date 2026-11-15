@@ -31,6 +31,12 @@ vi.mock("react-intl", () => ({ useIntl: () => ({ formatMessage: () => "Timer com
 vi.mock("@norish/shared-react/config", () => ({
   useTimersEnabledQuery: () => ({ timersEnabled: true }),
 }));
+const activity = vi.hoisted(() => vi.fn(async (_plan: { kind: string }) => {}));
+vi.mock("@/lib/timer-activity", () => ({ syncTimerActivity: activity }));
+vi.mock("expo-linking", () => ({
+  createURL: (path: string, { queryParams }: { queryParams: { step: string } }) =>
+    `norish://${path}?step=${queryParams.step}`,
+}));
 vi.mock("expo-notifications", () => ({
   SchedulableTriggerInputTypes: { DATE: "date" },
   setNotificationHandler: vi.fn(),
@@ -105,6 +111,45 @@ describe("useRecipeTimers' notifications", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(native.pending).toEqual(new Set());
+  });
+
+  it("starts the Live Activity with the first timer and ends it after a sync in flight at sign-out", async () => {
+    act(() => useTimerStore.getState().clearAll());
+    native.permission = null;
+    renderHook(() => useRecipeTimers());
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    activity.mockClear();
+
+    act(() => {
+      useTimerStore
+        .getState()
+        .addTimer({ id: "la", recipeId: "r", label: "Step 1", durationMs: 60_000, stepIndex: 2 });
+      useTimerStore.getState().startTimer("la");
+    });
+    await waitFor(() =>
+      expect(activity).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          kind: "show",
+          props: expect.objectContaining({ url: "norish:///recipe/r/cook?step=2" }),
+        })
+      )
+    );
+
+    let answer = () => {};
+
+    native.permission = new Promise((resolve) => (answer = resolve));
+    act(() => useTimerStore.getState().pauseTimer("la"));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const ended = endRecipeTimers();
+
+    answer();
+    await ended;
+
+    // The pause's sync ran before the end, so the end is the last thing the activity saw.
+    expect(activity.mock.calls.map(([plan]) => plan.kind)).toEqual(
+      expect.arrayContaining(["show", "end"])
+    );
+    expect(activity).toHaveBeenLastCalledWith({ kind: "end" });
   });
 
   it("subscribes to the app's foreground once, however often it renders", () => {

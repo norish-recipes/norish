@@ -41,12 +41,14 @@ export async function askTimerNotifications(): Promise<void> {
   }
 }
 
-/** Keeps one pending notification per running timer at its end, rescheduled on every change. */
+/** Keeps one pending notification per running timer and the Live Activity in step with every change. */
 function useTimerNotifications() {
   const intl = useIntl();
-  // Ticks leave each running timer's end unchanged, so this changes only on start, pause, adjust and the rest.
+  // A tick moves neither a running timer's end nor a stopped one's time; start, pause, reset, adjust and finish do.
   const shape = useTimerStore((state) =>
-    state.timers.map((timer) => `${timer.id}:${timer.status}:${timerEndsAt(timer)}`).join("|")
+    state.timers
+      .map((timer) => `${timer.id}:${timer.status}:${timerEndsAt(timer) ?? timer.remainingMs}`)
+      .join("|")
   );
   const answered = useSyncExternalStore(
     (listener) => {
@@ -57,10 +59,18 @@ function useTimerNotifications() {
     () => answers
   );
   const body = intl.formatMessage({ id: "common.timer.notification_body" });
+  const paused = intl.formatMessage({ id: "common.timer.paused" });
+  const done = intl.formatMessage({ id: "common.timer.done" });
+  const strings = {
+    body,
+    paused,
+    done,
+    more: (count: number) => intl.formatMessage({ id: "common.timer.more" }, { count }),
+  };
 
-  const sync = useEffectEvent(() => void syncTimerNotifications(body));
+  const sync = useEffectEvent(() => void syncTimerNotifications(strings));
 
-  useEffect(() => void syncTimerNotifications(body), [shape, answered, body]);
+  useEffect(() => sync(), [shape, answered, body, paused, done]);
 
   // A grant in Settings arrives with no event, so a return to the foreground syncs again.
   useEffect(() => {

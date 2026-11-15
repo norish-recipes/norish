@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
 
+const activity = vi.hoisted(() => vi.fn(async () => {}));
+vi.mock("@/lib/timer-activity", () => ({ syncTimerActivity: activity }));
+vi.mock("expo-linking", () => ({
+  createURL: (path: string, { queryParams }: { queryParams: { step: string } }) =>
+    `norish://${path}?step=${queryParams.step}`,
+}));
 vi.mock("expo-notifications", () => ({}));
 
 const NOW = 1_000_000;

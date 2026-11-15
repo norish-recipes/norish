@@ -4,6 +4,11 @@ import type { Timer } from "@norish/shared-react/recipes/timers";
 import { timerEndsAt, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
+import type { TimerActivityStrings } from "./timer-activity-state";
+import { cookModeUrl } from "./cook-mode-route";
+import { syncTimerActivity } from "./timer-activity";
+import { timerActivityPlan } from "./timer-activity-state";
+
 const log = createClientLogger("recipe-timers");
 
 const PREFIX = "timer:";
@@ -54,17 +59,27 @@ export function planTimerNotifications(
   return { cancel, schedule: wanted.filter((entry) => !pending.has(entry.identifier)) };
 }
 
+export type TimerStrings = Omit<TimerActivityStrings, "link"> & { body: string };
+
 // One sync or end at a time, so two quick changes never schedule a timer twice and an end follows any sync.
 let syncing = Promise.resolve();
 
-/** Schedules and cancels so the pending notifications match the store's running timers. */
-export function syncTimerNotifications(body: string): Promise<void> {
-  syncing = syncing.then(() => runSync(body));
+/** Brings the pending notifications and the Live Activity in line with the store's timers. */
+export function syncTimerNotifications(strings: TimerStrings): Promise<void> {
+  syncing = syncing.then(async () => {
+    await syncNotifications(strings.body);
+    await syncTimerActivity(
+      timerActivityPlan(useTimerStore.getState().timers, Date.now(), {
+        ...strings,
+        link: cookModeUrl,
+      })
+    );
+  });
 
   return syncing;
 }
 
-async function runSync(body: string): Promise<void> {
+async function syncNotifications(body: string): Promise<void> {
   try {
     const pending = await Notifications.getAllScheduledNotificationsAsync();
     const { cancel, schedule } = planTimerNotifications(
@@ -97,11 +112,13 @@ async function runSync(body: string): Promise<void> {
   }
 }
 
-/** Recipe Timers belong to the session: its end drops them, their notifications and the last tap. */
+/** Recipe Timers belong to the session: its end drops them, their notifications, the last tap and the Live Activity. */
 export function endRecipeTimers(): Promise<void> {
   useTimerStore.getState().clearAll();
   Notifications.clearLastNotificationResponse();
-  const ending = syncing.then(cancelTimerNotifications);
+  const ending = syncing.then(() =>
+    Promise.all([cancelTimerNotifications(), syncTimerActivity({ kind: "end" })]).then(() => {})
+  );
 
   // A failed end must not stop the next session's syncs.
   syncing = ending.catch(() => {});
