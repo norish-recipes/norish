@@ -6,14 +6,13 @@ import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod"
 import type { CalendarRange } from "@norish/shared/lib/helpers";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
+import type { InfiniteRecipeData } from "../recipes/library-cache";
 import type { CachedCalendarRange, CalendarMutationsResult } from "./types";
-import {
-  invalidateUnlessPreserved,
-  shouldPreserveOptimisticUpdate,
-} from "../offline/optimistic-updates";
+import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import { usePlatform } from "../platform/platform";
 import { rereadOnceWritesSettle } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
-import { moveItemInRange, moveTargetIndex } from "./calendar-cache-merge";
+import { moveItemInRange, moveTargetIndex, upsertItemInRange } from "./calendar-cache-merge";
 import { useCalendarCacheHelpers } from "./use-calendar-cache";
 
 type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => PlannedItemFromQuery[];
@@ -22,6 +21,7 @@ type RangeUpdate = (items: PlannedItemFromQuery[], range: CalendarRange) => Plan
 export function useCalendarMutations(): CalendarMutationsResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { session } = usePlatform();
   const {
     cachedRanges,
     writeRange,
@@ -71,10 +71,6 @@ export function useCalendarMutations(): CalendarMutationsResult {
     else rereadAllRanges();
   };
 
-  // One plan write at a time: each is its own request, and two can reach the server in either
-  // order, so the second waits for the first's answer.
-  const planWrites = { id: "calendar-plan-writes" };
-
   // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
   const findItem = (itemId: string) =>
     cachedRanges()
@@ -85,15 +81,63 @@ export function useCalendarMutations(): CalendarMutationsResult {
         undefined
       );
 
+  // One plan write at a time: each is its own request, and two can reach the server in either
+  // order, so the second waits for the first's answer.
+  const planWrites = { id: "calendar-plan-writes" };
+
+  // A planned recipe's name and photo as the cached recipe lists or its page hold them.
+  const cachedRecipe = (recipeId: string) => {
+    const listed = queryClient
+      .getQueriesData<InfiniteRecipeData>({ queryKey: trpc.recipes.list.pathKey() })
+      .flatMap(([, data]) => data?.pages?.flatMap((page) => page.recipes) ?? [])
+      .find((recipe) => recipe.id === recipeId);
+    const page = queryClient.getQueryData(trpc.recipes.get.queryKey({ id: recipeId }));
+
+    return {
+      recipeName: listed?.name ?? page?.name ?? null,
+      recipeImage: listed?.image ?? page?.images[0]?.image ?? null,
+      servings: listed?.servings ?? page?.servings ?? null,
+      calories: listed?.calories ?? page?.calories ?? null,
+    };
+  };
+
   const { mutate: mutateCreate } = useMutation(
     trpc.calendar.createItem.mutationOptions({
-      // The created item is placed in every cached range from the response
-      // itself: the realtime echo is the fast path, not the guarantee (ADR-0011).
+      // Shown at once, last in its slot, under the id the client minted; the answer and the
+      // created echo replace it by that id (ADR-0011).
+      onMutate: ({ id, date, slot, itemType, recipeId, title }) => {
+        const recipe = recipeId ? cachedRecipe(recipeId) : null;
+
+        return writeAcrossRanges((items, range) =>
+          id
+            ? upsertItemInRange(
+                items,
+                {
+                  id,
+                  userId: session.user?.id ?? "",
+                  date,
+                  slot,
+                  sortOrder: moveTargetIndex(items, { id }, date, slot),
+                  itemType,
+                  recipeId: recipeId ?? null,
+                  title: title ?? null,
+                  version: 1,
+                  recipeName: recipe?.recipeName ?? null,
+                  recipeImage: recipe?.recipeImage ?? null,
+                  servings: recipe?.servings ?? null,
+                  calories: recipe?.calories ?? null,
+                },
+                range
+              )
+            : items
+        );
+      },
       onSuccess: (result) => {
         if (result.item) upsertItemAcrossRanges(result.item);
       },
-      // Queued for Replay when the backend is unreachable — nothing to refetch.
-      onError: invalidateUnlessPreserved(rereadAllRanges),
+      onError: rollBack,
+      // A move or edit of the new plan waits for it to be stored.
+      scope: planWrites,
     })
   );
 

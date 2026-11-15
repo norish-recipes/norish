@@ -71,7 +71,11 @@ const trpc = {
     onItemUpdated: procedure("onItemUpdated"),
     onFailed: procedure("onFailed"),
   },
-  recipes: { onUpdated: procedure("recipes.onUpdated") },
+  recipes: {
+    onUpdated: procedure("recipes.onUpdated"),
+    list: { pathKey: () => [["recipes", "list"]] },
+    get: { queryKey: (input: { id: string }) => [["recipes", "get"], { input, type: "query" }] },
+  },
 };
 
 vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
@@ -359,8 +363,15 @@ describe("calendar cache convergence across ranges", () => {
   it("places the actor's own created item from the mutation result, and the echo is then a no-op", async () => {
     let mutations: ReturnType<typeof useCalendarMutations> | null = null;
 
+    // The server honours the client-minted id (ADR-0003).
+    let minted = "";
+
     queryClient.setMutationDefaults([["calendar", "createItem"]], {
-      mutationFn: async () => ({ id: "item-1", item: payload() }),
+      mutationFn: async (input: { id: string }) => {
+        minted = input.id;
+
+        return { id: minted, item: payload({ id: minted }) };
+      },
     });
 
     ({ unmount } = renderHookWithClient(queryClient, () => {
@@ -370,15 +381,15 @@ describe("calendar cache convergence across ranges", () => {
 
     await act(async () => {
       mutations!.planRecipe("2026-09-23", "Dinner", "recipe-1");
-      await vi.waitFor(() => expect(idsIn(queryClient, CALENDAR_PAGE)).toContain("item-1"));
+      await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
     });
 
-    expect(idsIn(queryClient, THIS_WEEK)).toEqual(["item-0", "item-1"]);
+    expect(idsIn(queryClient, THIS_WEEK)).toEqual(["item-0", minted]);
 
-    act(() => handler("onItemCreated")(trackedEvent({ item: payload() })));
+    act(() => handler("onItemCreated")(trackedEvent({ item: payload({ id: minted }) })));
 
-    expect(idsIn(queryClient, THIS_WEEK)).toEqual(["item-0", "item-1"]);
-    expect(idsIn(queryClient, CALENDAR_PAGE)).toEqual(["item-0", "item-1"]);
+    expect(idsIn(queryClient, THIS_WEEK)).toEqual(["item-0", minted]);
+    expect(idsIn(queryClient, CALENDAR_PAGE)).toEqual(["item-0", minted]);
   });
 });
 

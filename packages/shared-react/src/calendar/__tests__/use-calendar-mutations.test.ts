@@ -1,9 +1,13 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+import {
+  createTestQueryClient,
+  createTestWrapper,
+  fakePlatformAdapter,
+} from "@norish/shared-react/platform/testing";
 
-import { applyMoveEchoInRange } from "../calendar-cache-merge";
+import { applyMoveEchoInRange, upsertItemInRange } from "../calendar-cache-merge";
 import { useCalendarMutations } from "../use-calendar-mutations";
 
 const mockCreateItemMutate = vi.fn();
@@ -13,6 +17,10 @@ const mockUpdateItemMutate = vi.fn();
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
+    recipes: {
+      list: { pathKey: () => [["recipes", "list"]] },
+      get: { queryKey: (input: { id: string }) => [["recipes", "get"], { input, type: "query" }] },
+    },
     calendar: {
       listItems: {
         // The shape tRPC mints, which the cross-range writes read the range back from.
@@ -153,6 +161,95 @@ describe("useCalendarMutations", () => {
     });
   });
 
+  describe("a plan made before its answer", () => {
+    const READER = { id: "user-1" } as never;
+    const planned = () => queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
+    const render = () =>
+      renderHook(() => useCalendarMutations(), {
+        wrapper: createTestWrapper(queryClient, fakePlatformAdapter("phone", READER)),
+      });
+
+    beforeEach(() => {
+      queryClient.setQueryData(getQueryKey(), [
+        createMockItem({ id: "lunch-1", slot: "Lunch", sortOrder: 0 }),
+      ]);
+      queryClient.setQueryData([["recipes", "list"], { input: {}, type: "infinite" }], {
+        pages: [
+          {
+            recipes: [
+              { id: "r-soup", name: "Soup", image: "/soup.jpg", servings: 2, calories: 300 },
+            ],
+            total: 1,
+            nextCursor: null,
+          },
+        ],
+        pageParams: [0],
+      });
+    });
+
+    it("shows at once, last in its slot, with its recipe's name and photo", () => {
+      mockCreateItemMutate.mockReturnValue(new Promise(() => {}));
+      const { result } = render();
+
+      act(() => result.current.planRecipe("2025-01-15", "Lunch", "r-soup"));
+
+      expect(planned().at(-1)).toMatchObject({
+        userId: "user-1",
+        slot: "Lunch",
+        sortOrder: 1,
+        recipeName: "Soup",
+        recipeImage: "/soup.jpg",
+        servings: 2,
+        version: 1,
+      });
+    });
+
+    it("shows a note with its text", () => {
+      mockCreateItemMutate.mockReturnValue(new Promise(() => {}));
+      const { result } = render();
+
+      act(() => result.current.planNote("2025-01-15", "Dinner", "Leftovers"));
+
+      expect(planned().find((item) => item.slot === "Dinner")).toMatchObject({
+        itemType: "note",
+        title: "Leftovers",
+      });
+    });
+
+    it("is one plan once the answer and the created echo land", async () => {
+      mockCreateItemMutate.mockImplementation(async (input: { id: string }) => ({
+        id: input.id,
+        item: { ...createMockItem({ id: input.id, slot: "Lunch", sortOrder: 1 }), title: null },
+      }));
+      const { result } = render();
+
+      act(() => result.current.planRecipe("2025-01-15", "Lunch", "r-soup"));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+      const { id } = mockCreateItemMutate.mock.calls[0]![0] as { id: string };
+
+      // The created echo, as the subscription merges it.
+      queryClient.setQueryData(
+        getQueryKey(),
+        upsertItemInRange(planned(), createMockItem({ id, slot: "Lunch", sortOrder: 1 }), {
+          startISO,
+          endISO,
+        })
+      );
+      expect(planned().filter((item) => item.id === id)).toHaveLength(1);
+      expect(planned().map((item) => item.id)).toEqual(["lunch-1", id]);
+    });
+
+    it("goes again when the create fails", async () => {
+      mockCreateItemMutate.mockRejectedValue(new Error("refused"));
+      const { result } = render();
+
+      act(() => result.current.planNote("2025-01-15", "Lunch", "Leftovers"));
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(planned().map((item) => item.id)).toEqual(["lunch-1"]);
+    });
+  });
+
   describe("deleteItem", () => {
     it("applies optimistic update removing item from cache", async () => {
       const item1 = createMockItem({ id: "item-1" });
@@ -266,7 +363,9 @@ describe("useCalendarMutations", () => {
 
     it("a move with no index sends none and shows the plan last in its slot", async () => {
       const moved = createMockItem({ id: "b-1", slot: "Breakfast", sortOrder: 0 });
-      const lunch = [0, 1].map((n) => createMockItem({ id: `l-${n}`, slot: "Lunch", sortOrder: n }));
+      const lunch = [0, 1].map((n) =>
+        createMockItem({ id: `l-${n}`, slot: "Lunch", sortOrder: n })
+      );
 
       queryClient.setQueryData(getQueryKey(), [moved, ...lunch]);
       mockMoveItemMutate.mockResolvedValue({ success: true, moved: true, stale: false });

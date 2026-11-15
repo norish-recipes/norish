@@ -1,5 +1,5 @@
 /**
- * Render a hook under a QueryClient, the way the hook tests here do it:
+ * Render a hook under a QueryClient and a fake platform, the way the hook tests here do it:
  * `createRoot` and `act`, no extra library.
  */
 
@@ -7,6 +7,9 @@ import type { QueryClient } from "@tanstack/react-query";
 import React, { act } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
+
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
 
 export function renderHookWithClient(queryClient: QueryClient, useHook: () => void) {
   const container = document.createElement("div");
@@ -23,9 +26,11 @@ export function renderHookWithClient(queryClient: QueryClient, useHook: () => vo
 
   act(() => {
     root.render(
-      <QueryClientProvider client={queryClient}>
-        <Probe />
-      </QueryClientProvider>
+      <PlatformProvider adapter={fakePlatformAdapter()}>
+        <QueryClientProvider client={queryClient}>
+          <Probe />
+        </QueryClientProvider>
+      </PlatformProvider>
     );
   });
 

@@ -40,6 +40,10 @@ const procedure = (mutationFn: (input: unknown) => unknown) => ({
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
+    recipes: {
+      list: { pathKey: () => [["recipes", "list"]] },
+      get: { queryKey: (input: { id: string }) => [["recipes", "get"], { input, type: "query" }] },
+    },
     calendar: {
       listItems: {
         queryKey: (input?: { startISO: string; endISO: string }) =>
@@ -260,8 +264,10 @@ describe("plan writes made offline, replayed", () => {
     }
   });
 
-  async function offline(steps: Array<(m: M) => void>) {
+  /** Each step on the cache the last left; resolves to what the range then shows. */
+  async function offline(steps: Array<(m: M, shown: PlannedItemFromQuery[]) => void>) {
     const queryClient = createTestQueryClient();
+    const shown = () => queryClient.getQueryData<PlannedItemFromQuery[]>(RANGE_KEY) ?? [];
 
     queryClient.setQueryData(RANGE_KEY, cached());
 
@@ -270,12 +276,14 @@ describe("plan writes made offline, replayed", () => {
         wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
       });
 
-      act(() => step(result.current));
+      act(() => step(result.current, shown()));
       await act(async () => {
         await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
       });
       unmount();
     }
+
+    return shown();
   }
 
   const replay = (client: ReturnType<typeof serverOf>["client"]) =>
@@ -354,11 +362,16 @@ describe("plan writes made offline, replayed", () => {
     expect(server.db.get("toast")).toMatchObject({ sortOrder: 0, version: 2 });
   });
 
-  it("plan, then move the planned item: both are stored", async () => {
-    await offline([(m) => m.planNote("2026-11-11", "Lunch", "Leftovers")]);
+  it("plan, then move the planned item: shown at once on its new day, and both stored", async () => {
+    const leftovers = (shown: PlannedItemFromQuery[]) =>
+      shown.find((item) => item.title === "Leftovers");
+    const shown = await offline([
+      (m) => m.planNote("2026-11-11", "Lunch", "Leftovers"),
+      (m, before) => m.moveItem(leftovers(before)!.id, "2026-11-12", "Lunch"),
+    ]);
     const id = await plannedId();
 
-    await offline([(m) => m.moveItem(id, "2026-11-12", "Lunch", 0)]);
+    expect(leftovers(shown)).toMatchObject({ id, date: "2026-11-12", version: 2 });
     const server = serverOf(rows());
 
     expect(await replay(server.client)).toMatchObject({ removed: 2, conflicted: [] });
