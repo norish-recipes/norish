@@ -103,6 +103,9 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   const uploads = useEditorUploads(recipeId);
   const { form, set } = editor;
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
+  // A photo still uploading is not in the form yet, and a second tap would save twice.
+  const [saving, setSaving] = useState(false);
+  const busy = saving || uploads.isUploading;
   const text = (id: string) => intl.formatMessage({ id });
   const error = (field: "name" | "ingredients" | "steps" | "servings") => {
     const key = editor.errors[field];
@@ -130,6 +133,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   const { scrollRef, onScroll, onFieldFocus } = useFocusedFieldInView(PILL + 10 + 12);
 
   const save = () => {
+    if (busy) return;
     const payload = editor.submit();
 
     if (!payload) {
@@ -139,6 +143,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
       return;
     }
     guard.allowNavigation();
+    setSaving(true);
     try {
       if (mode === "create") {
         createRecipe({ ...payload, id: recipeId });
@@ -148,6 +153,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
         router.back();
       }
     } catch (failure) {
+      setSaving(false);
       guard.disallowNavigation();
       editor.failSubmit(failure instanceof Error ? failure.message : String(failure));
     }
@@ -308,7 +314,9 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               mode === "create" ? "common.actions.create" : "common.actions.save"
             )}
             accessibilityRole="button"
-            className="flex-row items-center justify-center gap-2 rounded-full"
+            accessibilityState={{ disabled: busy }}
+            className={`flex-row items-center justify-center gap-2 rounded-full ${busy ? "opacity-50" : ""}`}
+            disabled={busy}
             style={{ height: PILL }}
             testID="recipe-editor-save"
             onPress={save}
