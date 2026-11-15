@@ -42,14 +42,8 @@ export function GroceriesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const confirm = useConfirm();
-  const {
-    groceries,
-    recurringGroceries,
-    recipeMap,
-    isLoading,
-    isRead,
-    getRecipeNameForGrocery,
-  } = useGroceriesQuery();
+  const { groceries, recurringGroceries, recipeMap, isLoading, isRead, getRecipeNameForGrocery } =
+    useGroceriesQuery();
   const { stores, isLoading: storesLoading, isRead: storesRead } = useStoresQuery();
   const { aisleFor } = useStoreAisles();
   const aislesLoading = useAisleLinksLoading();
