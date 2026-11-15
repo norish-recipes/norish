@@ -136,6 +136,7 @@ vi.mock("../hooks/use-focused-field-in-view", async () => {
 
   return {
     FocusedFieldContext: createContext(null),
+    PopupOpenContext: createContext(null),
     useFocusedFieldInView: () => ({ scrollRef: { current: null }, onFieldFocus: () => {} }),
   };
 });

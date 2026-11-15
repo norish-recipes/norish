@@ -15,6 +15,9 @@ type Measurable = {
 /** Reports a field that took focus, so the editor can bring it into view. */
 export const FocusedFieldContext = createContext<((field: Measurable) => void) | null>(null);
 
+/** Reports a popup opening in the content, so the pill floating over it lets taps through. */
+export const PopupOpenContext = createContext<((open: boolean) => void) | null>(null);
+
 /** The drag scroll view's ref, typed with the methods its instance has at runtime. */
 type ScrollHandle = ComponentRef<typeof DragScrollView> & ComponentRef<typeof ScrollView>;
 

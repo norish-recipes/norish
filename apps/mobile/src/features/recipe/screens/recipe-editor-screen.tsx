@@ -36,7 +36,11 @@ import { StepRows } from "../components/editor/step-rows";
 import { FadeEdge } from "../components/fade-edge";
 import { SectionCard } from "../components/tint";
 import { useEditorUploads } from "../hooks/use-editor-uploads";
-import { FocusedFieldContext, useFocusedFieldInView } from "../hooks/use-focused-field-in-view";
+import {
+  FocusedFieldContext,
+  PopupOpenContext,
+  useFocusedFieldInView,
+} from "../hooks/use-focused-field-in-view";
 
 const PILL = 56;
 
@@ -133,6 +137,8 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } = useFocusedFieldInView(
     PILL + 10 + 12
   );
+  // The `@` popup can sit under the pill when the content cannot scroll it clear: it gets the tap.
+  const [popupOpen, setPopupOpen] = useState(false);
 
   const save = () => {
     if (busy) return;
@@ -175,122 +181,124 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
         onContentSizeChange={onContentSizeChange}
         onScroll={onScroll}
       >
-        <FocusedFieldContext value={onFieldFocus}>
-          <View className="gap-4 px-5">
-            {editor.errors.submit ? (
-              <View className="bg-danger-soft rounded-2xl px-4 py-3">
-                <Text className="text-danger text-[15px]">{editor.errors.submit}</Text>
-              </View>
-            ) : null}
-            <MediaStrip
-              media={form.media}
-              uploads={uploads}
-              onChange={(media) => set("media", media)}
-            />
-            <SectionCard>
-              <EditorField first error={error("name")} label={text("recipes.editor.recipeName")}>
-                <EditorInput
-                  ref={nameRef}
-                  accessibilityLabel={text("recipes.editor.recipeName")}
-                  placeholder={text("recipes.form.recipeNamePlaceholder")}
-                  testID="editor-name"
-                  value={form.name}
-                  onChangeText={(name) => set("name", name)}
-                />
-              </EditorField>
-              <EditorField label={text("recipes.form.description")}>
+        <PopupOpenContext value={setPopupOpen}>
+          <FocusedFieldContext value={onFieldFocus}>
+            <View className="gap-4 px-5">
+              {editor.errors.submit ? (
+                <View className="bg-danger-soft rounded-2xl px-4 py-3">
+                  <Text className="text-danger text-[15px]">{editor.errors.submit}</Text>
+                </View>
+              ) : null}
+              <MediaStrip
+                media={form.media}
+                uploads={uploads}
+                onChange={(media) => set("media", media)}
+              />
+              <SectionCard>
+                <EditorField first error={error("name")} label={text("recipes.editor.recipeName")}>
+                  <EditorInput
+                    ref={nameRef}
+                    accessibilityLabel={text("recipes.editor.recipeName")}
+                    placeholder={text("recipes.form.recipeNamePlaceholder")}
+                    testID="editor-name"
+                    value={form.name}
+                    onChangeText={(name) => set("name", name)}
+                  />
+                </EditorField>
+                <EditorField label={text("recipes.form.description")}>
+                  <EditorInput
+                    multiline
+                    accessibilityLabel={text("recipes.form.description")}
+                    placeholder={text("recipes.form.descriptionPlaceholder")}
+                    testID="editor-description"
+                    value={form.description}
+                    onChangeText={(description) => set("description", description)}
+                  />
+                </EditorField>
+              </SectionCard>
+              <SectionCard
+                right={
+                  <TitleWithHint
+                    hint={text("recipes.editor.notesHint")}
+                    title={text("recipes.form.notes")}
+                  />
+                }
+              >
                 <EditorInput
                   multiline
-                  accessibilityLabel={text("recipes.form.description")}
-                  placeholder={text("recipes.form.descriptionPlaceholder")}
-                  testID="editor-description"
-                  value={form.description}
-                  onChangeText={(description) => set("description", description)}
+                  accessibilityLabel={text("recipes.form.notes")}
+                  placeholder={text("recipes.form.notesPlaceholder")}
+                  testID="editor-notes"
+                  value={form.notes}
+                  onChangeText={(notes) => set("notes", notes)}
                 />
-              </EditorField>
-            </SectionCard>
-            <SectionCard
-              right={
-                <TitleWithHint
-                  hint={text("recipes.editor.notesHint")}
-                  title={text("recipes.form.notes")}
+              </SectionCard>
+              <SectionCard
+                right={
+                  <TitleWithHint
+                    hint={text("recipes.editor.ingredientsHint")}
+                    title={text("recipes.form.ingredients")}
+                  />
+                }
+              >
+                <IngredientRows
+                  ingredients={form.ingredients}
+                  systemUsed={form.systemUsed}
+                  onChange={(ingredients) => set("ingredients", ingredients)}
+                  onLinesMoved={(moves) => {
+                    editor.moveLines(moves);
+                    setLineMoves(moves);
+                  }}
                 />
-              }
-            >
-              <EditorInput
-                multiline
-                accessibilityLabel={text("recipes.form.notes")}
-                placeholder={text("recipes.form.notesPlaceholder")}
-                testID="editor-notes"
-                value={form.notes}
-                onChangeText={(notes) => set("notes", notes)}
+                {error("ingredients") ? (
+                  <Text className="text-danger pt-2 text-[13px] font-medium">
+                    {error("ingredients")}
+                  </Text>
+                ) : null}
+              </SectionCard>
+              <SectionCard
+                right={
+                  <TitleWithHint
+                    hint={text("recipes.editor.stepsHint")}
+                    title={text("recipes.editor.steps")}
+                  />
+                }
+              >
+                <StepRows
+                  ingredients={form.ingredients}
+                  lineMoves={lineMoves}
+                  steps={form.steps}
+                  systemUsed={form.systemUsed}
+                  uploads={uploads}
+                  onChange={(steps) => set("steps", steps)}
+                />
+                {error("steps") ? (
+                  <Text className="text-danger pt-2 text-[13px] font-medium">{error("steps")}</Text>
+                ) : null}
+              </SectionCard>
+              <TagsAndCategoriesCard
+                categoryLabel={categoryLabel}
+                categoryOptions={editor.categoryOptions}
+                form={form}
+                set={set}
+                onAddCategory={editor.addCategory}
+                onToggleCategory={editor.toggleCategory}
               />
-            </SectionCard>
-            <SectionCard
-              right={
-                <TitleWithHint
-                  hint={text("recipes.editor.ingredientsHint")}
-                  title={text("recipes.form.ingredients")}
-                />
-              }
-            >
-              <IngredientRows
-                ingredients={form.ingredients}
+              <ServingsAndTimeCard error={error("servings")} form={form} set={set} />
+              <NutritionCard form={form} set={set} />
+              <ProvenanceCard
+                value={form.provenance}
+                onChange={(provenance) => set("provenance", provenance)}
+              />
+              <SourceCard
                 systemUsed={form.systemUsed}
-                onChange={(ingredients) => set("ingredients", ingredients)}
-                onLinesMoved={(moves) => {
-                  editor.moveLines(moves);
-                  setLineMoves(moves);
-                }}
+                url={form.url}
+                onSystemChange={editor.changeSystem}
+                onUrlChange={(url) => set("url", url)}
               />
-              {error("ingredients") ? (
-                <Text className="text-danger pt-2 text-[13px] font-medium">
-                  {error("ingredients")}
-                </Text>
-              ) : null}
-            </SectionCard>
-            <SectionCard
-              right={
-                <TitleWithHint
-                  hint={text("recipes.editor.stepsHint")}
-                  title={text("recipes.editor.steps")}
-                />
-              }
-            >
-              <StepRows
-                ingredients={form.ingredients}
-                lineMoves={lineMoves}
-                steps={form.steps}
-                systemUsed={form.systemUsed}
-                uploads={uploads}
-                onChange={(steps) => set("steps", steps)}
-              />
-              {error("steps") ? (
-                <Text className="text-danger pt-2 text-[13px] font-medium">{error("steps")}</Text>
-              ) : null}
-            </SectionCard>
-            <TagsAndCategoriesCard
-              categoryLabel={categoryLabel}
-              categoryOptions={editor.categoryOptions}
-              form={form}
-              set={set}
-              onAddCategory={editor.addCategory}
-              onToggleCategory={editor.toggleCategory}
-            />
-            <ServingsAndTimeCard error={error("servings")} form={form} set={set} />
-            <NutritionCard form={form} set={set} />
-            <ProvenanceCard
-              value={form.provenance}
-              onChange={(provenance) => set("provenance", provenance)}
-            />
-            <SourceCard
-              systemUsed={form.systemUsed}
-              url={form.url}
-              onSystemChange={editor.changeSystem}
-              onUrlChange={(url) => set("url", url)}
-            />
-          </View>
-        </FocusedFieldContext>
+            </View>
+          </FocusedFieldContext>
+        </PopupOpenContext>
       </DragScrollView>
       <FadeEdge color={background} edge="top" height={insets.top + 70} solidFraction={0.55} />
       <View
@@ -308,7 +316,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
       <KeyboardAvoidingView
         behavior="padding"
         className="absolute right-5 bottom-0 left-5"
-        pointerEvents="box-none"
+        pointerEvents={popupOpen ? "none" : "box-none"}
       >
         {/* The avoiding view sets its own padding, so the gap is a view of its own. */}
         <View style={{ paddingBottom: pillGap }}>

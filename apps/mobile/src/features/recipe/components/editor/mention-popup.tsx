@@ -1,10 +1,10 @@
-import React, { use } from "react";
+import React, { use, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useIntl } from "react-intl";
 
 import type { IngredientSuggestion } from "@norish/shared-react/recipes";
 
-import { FocusedFieldContext } from "../../hooks/use-focused-field-in-view";
+import { FocusedFieldContext, PopupOpenContext } from "../../hooks/use-focused-field-in-view";
 import { IngredientIcon } from "../ingredient-icon";
 
 /** The lines an `@` query matches, under the step's field; a tap links one to the step. */
@@ -19,6 +19,13 @@ export function MentionPopup({
 }) {
   const intl = useIntl();
   const reportFocus = use(FocusedFieldContext);
+  const reportOpen = use(PopupOpenContext);
+
+  useEffect(() => {
+    reportOpen?.(true);
+
+    return () => reportOpen?.(false);
+  }, [reportOpen]);
 
   return (
     <View
