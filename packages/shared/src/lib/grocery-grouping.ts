@@ -12,6 +12,10 @@ import { parseIngredientWithDefaults, stripBracketed } from "./helpers";
 /**
  * Normalize ingredient name: lowercase, strip qualifiers like (diced), [optional].
  */
+/** Lines in the order the list shows them, a missing sort order first. */
+export const bySortOrder = (a: { sortOrder?: number | null }, b: { sortOrder?: number | null }) =>
+  (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+
 export function normalizeIngredientNameForGrouping(name: string | null): string {
   if (!name) return "";
 
@@ -139,7 +143,7 @@ export function groupGroceriesByIngredient(
     const groups: GroceryGroup[] = [];
 
     for (const { aisleId, normalizedName, normalizedUnit, items } of nameGroups.values()) {
-      const sortedItems = [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+      const sortedItems = [...items].sort(bySortOrder);
 
       // One unit, so one total; a line that states no amount stands for one of
       // whatever its group counts.

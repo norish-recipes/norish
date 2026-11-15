@@ -12,6 +12,7 @@ export {
   buildGroupItemsState,
   buildItemsState,
   findContainerForItem,
+  openBySortOrder,
   storeGroupItems,
   storeItems,
   UNSORTED_CONTAINER,

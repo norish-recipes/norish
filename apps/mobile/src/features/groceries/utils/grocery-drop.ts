@@ -15,6 +15,7 @@ import {
   findContainerForItem,
   groceriesByStore,
   moveKey,
+  openBySortOrder,
   planListDrop,
   planRecipeReorder,
   UNSORTED_CONTAINER,
@@ -130,10 +131,7 @@ export function planRecipeDrop(
     .flatMap((row) =>
       row.kind === "item" && row.value.type === "line" ? [row.value.grocery.id] : []
     );
-  const open = section.groceries
-    .filter((grocery) => !grocery.isDone)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    .map((grocery) => grocery.id);
+  const open = openBySortOrder(section.groceries).map((grocery) => grocery.id);
   const done = new Set(section.groceries.filter((grocery) => grocery.isDone).map((g) => g.id));
 
   if (landed.slice(0, landed.indexOf(item.grocery.id)).some((id) => done.has(id))) return null;

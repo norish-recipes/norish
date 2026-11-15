@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import type { AisleResolver } from "@norish/shared-react/groceries";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 import {
   aisleContainerId,
   lineOf,
@@ -155,7 +156,7 @@ function StoreSectionComponent({
   const doneGroceries = useMemo(() => {
     return groceries
       .filter((g) => g.isDone || transitioningIds.has(g.id))
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+      .sort(bySortOrder);
   }, [groceries, transitioningIds]);
 
   // The block's shape, read off the drag state (ADR-0031).

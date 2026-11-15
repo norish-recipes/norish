@@ -22,6 +22,7 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
+import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 import { planRecipeReorder } from "@norish/shared-react/groceries";
 
 import { GroceryDragOverlay } from "./dnd/grocery-drag-overlay";
@@ -40,7 +41,7 @@ function sortGroceries(groceries: GroceryDto[], transitioningIds: Set<string>): 
       return aEffectiveDone ? 1 : -1;
     }
 
-    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    return bySortOrder(a, b);
   });
 }
 

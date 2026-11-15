@@ -3,7 +3,14 @@ import type { DragRow } from "@/components/drag-list/resolve-drop";
 import type { PricedLine, RecipeGroceries } from "@norish/shared-react/groceries";
 import type { AisleDto, GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
-import { lineOf, lineOfGroup, placeInAisles } from "@norish/shared-react/groceries";
+import {
+  groceriesByStore,
+  lineOf,
+  lineOfGroup,
+  openBySortOrder,
+  placeInAisles,
+} from "@norish/shared-react/groceries";
+import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 
 /** Which corners of its section's card a row rounds: the heading the top, the last row the bottom. */
 export type Edge = { top: boolean; bottom: boolean };
@@ -39,8 +46,6 @@ export type ListRow = DragRow<ListHeading, ListItem>;
 export const UNSORTED_KEY = "unsorted";
 
 export const sectionKeyOf = (storeId: string | null) => storeId ?? UNSORTED_KEY;
-
-const bySortOrder = (a: GroceryDto, b: GroceryDto) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
 
 /** A section's rows with the card's corners set: the first rounds the top, the last the bottom. */
 function sealed(rows: DragRow<Heading, Item>[]): ListRow[] {
@@ -79,19 +84,16 @@ export function storeListRows({
   doneOpen,
   collapsed,
 }: StoreListInput): ListRow[] {
-  const storeIds = new Set(stores.map((store) => store.id));
-  // A grocery whose Store is gone sits under Unsorted, as on web.
-  const storeIdOf = (grocery: GroceryDto) =>
-    grocery.storeId && storeIds.has(grocery.storeId) ? grocery.storeId : null;
+  const byStore = groceriesByStore(groceries, stores);
   const sections: (StoreDto | null)[] = [
-    ...(groceries.some((grocery) => storeIdOf(grocery) === null) ? [null] : []),
+    ...(byStore.get(null)?.length ? [null] : []),
     ...[...stores].sort((a, b) => a.sortOrder - b.sortOrder),
   ];
 
   return sections.flatMap((store) => {
     const storeId = store?.id ?? null;
     const key = sectionKeyOf(storeId);
-    const own = groceries.filter((grocery) => storeIdOf(grocery) === storeId);
+    const own = byStore.get(storeId) ?? [];
     const storeGroups = groups?.get(storeId) ?? [];
     const isCollapsed = collapsed.has(key);
     const heading: DragRow<Heading, Item> = {
@@ -140,7 +142,7 @@ export function storeListRows({
       }
       doneRows.push(...storeGroups.filter((group) => group.allDone).map(groupItem));
     } else {
-      const open = own.filter((grocery) => !grocery.isDone).sort(bySortOrder);
+      const open = openBySortOrder(own);
       const { unfiled, blocks } = placeInAisles(store, open, (grocery) =>
         aisleFor(storeId, grocery.ingredientId)
       );
@@ -189,8 +191,8 @@ export function recipeListRows(
   const storeById = new Map(stores.map((store) => [store.id, store]));
 
   return recipes.flatMap(({ recipeId, recipeName, groceries }) => {
-    const open = groceries.filter((grocery) => !grocery.isDone);
-    const done = groceries.filter((grocery) => grocery.isDone);
+    const open = openBySortOrder(groceries);
+    const done = groceries.filter((grocery) => grocery.isDone).sort(bySortOrder);
     const line = (grocery: GroceryDto): DragRow<Heading, Item> => ({
       kind: "item",
       key: `line:${grocery.id}`,
@@ -209,8 +211,8 @@ export function recipeListRows(
           ids: groceries.map((grocery) => grocery.id),
         },
       },
-      ...open.sort(bySortOrder).map(line),
-      ...done.sort(bySortOrder).map(line),
+      ...open.map(line),
+      ...done.map(line),
     ]);
   });
 }

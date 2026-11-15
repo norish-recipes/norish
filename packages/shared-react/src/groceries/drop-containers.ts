@@ -1,6 +1,7 @@
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { sortAisles } from "@norish/shared/lib/aisles";
+import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 
 import { placeInAisles } from "./aisle-blocks";
 
@@ -127,6 +128,10 @@ function fillContainers<T>(
   return items;
 }
 
+/** The lines not yet done, in the order the list shows them. */
+export const openBySortOrder = <T extends GroceryDto>(groceries: readonly T[]) =>
+  groceries.filter((grocery) => !grocery.isDone).sort(bySortOrder);
+
 /**
  * One Store's containers and its open groceries in each, by sort order: a grocery sits
  * where its Store files its Ingredient, which nothing on the row says (ADR-0031, ADR-0037).
@@ -137,14 +142,10 @@ export function storeItems(
   stores: StoreDto[],
   aisleFor: AisleResolver
 ): ItemsState {
-  const open = groceries
-    .filter((grocery) => !grocery.isDone)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
   return fillContainers(
     storeId,
     stores,
-    open,
+    openBySortOrder(groceries),
     (grocery) => aisleFor(storeId, grocery.ingredientId),
     (grocery) => grocery.id
   );
