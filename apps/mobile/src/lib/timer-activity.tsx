@@ -1,4 +1,5 @@
 import type { LiveActivityEnvironment } from "expo-widgets";
+import type { ReactNode } from "react";
 import { Platform } from "react-native";
 import { Divider, HStack, Image, ProgressView, Spacer, Text, VStack } from "@expo/ui/swift-ui";
 import {
@@ -23,6 +24,7 @@ import type {
   TimerActivityProps,
   TimerActivityRow,
 } from "./timer-activity-state";
+import { keepStarts } from "./timer-activity-state";
 
 const log = createClientLogger("recipe-timers");
 
@@ -34,76 +36,76 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
   const accent = dark ? "#76BE86" : "#336640";
   const muted = dark ? "#A7A29C" : "#6E6A63";
   const surface = dark ? "#1C1A16" : "#FBF8F0";
-  const go = "#7FDB8E";
-  // Stale means every running timer passed its end while the app slept.
-  const done = props.done || environment.isStale === true;
+  const islandGreen = "#7FDB8E";
+
+  // Stale means every running timer passed its end while the app slept: those rows read Done.
+  const listed = props.rows.map((row): TimerActivityRow =>
+    row.state === "running" && environment.isStale === true
+      ? { id: row.id, recipe: row.recipe, step: row.step, state: "done" }
+      : row
+  );
+  const interval = (row: { startsAt: number; endsAt: number }) => ({
+    lower: new Date(row.startsAt),
+    upper: new Date(row.endsAt),
+  });
+  const linked = (child: ReactNode) => <HStack modifiers={[widgetURL(props.url)]}>{child}</HStack>;
 
   const ring = (row: TimerActivityRow, size: number, color: string) => {
-    if (done) return <Image color={color} size={size} systemName="checkmark.circle.fill" />;
+    if (row.state === "done")
+      return <Image color={color} size={size} systemName="checkmark.circle.fill" />;
     const style = [
       progressViewStyle("circular"),
       labelsHidden(),
       // The timer form draws its own time inside the ring; the row already shows it.
       foregroundStyle("clear"),
-      tint(color),
+      tint(row.state === "paused" ? muted : color),
       frame({ width: size, height: size }),
     ];
 
-    return row.endsAt === null ? (
-      <ProgressView modifiers={style} value={(row.remainingMs ?? 0) / row.durationMs} />
+    return row.state === "paused" ? (
+      <ProgressView modifiers={style} value={row.remainingMs / row.durationMs} />
     ) : (
-      <ProgressView
-        countsDown
-        modifiers={style}
-        timerInterval={{
-          lower: new Date(row.endsAt - row.durationMs),
-          upper: new Date(row.endsAt),
-        }}
-      />
+      <ProgressView countsDown modifiers={style} timerInterval={interval(row)} />
     );
   };
 
-  const left = (row: TimerActivityRow, size: number, color: string) => {
-    const label = done ? props.doneLabel : row.label;
-
-    // "Paused" and "Done" are words, so they stay body-sized beside a countdown.
-    if (label !== null || row.endsAt === null)
+  // The time left, or "Paused" and "Done", which stay body-sized beside a countdown.
+  const readout = (row: TimerActivityRow, size: number, color: string) => {
+    if (row.state === "running")
       return (
         <Text
+          countsDown
           modifiers={[
-            font({ size: 15, weight: "semibold" }),
-            foregroundStyle(done ? color : muted),
+            font({ size, weight: "semibold" }),
+            monospacedDigit(),
+            foregroundStyle(color),
+            frame({ width: size * 4, alignment: "trailing" }),
           ]}
-        >
-          {label ?? ""}
-        </Text>
+          timerInterval={interval(row)}
+        />
       );
+    const paused = row.state === "paused";
 
     return (
       <Text
-        countsDown
         modifiers={[
-          font({ size, weight: "semibold" }),
-          monospacedDigit(),
-          foregroundStyle(color),
-          frame({ width: size * 4, alignment: "trailing" }),
+          font({ size: 15, weight: "semibold" }),
+          foregroundStyle(paused ? muted : color),
         ]}
-        timerInterval={{
-          lower: new Date(row.endsAt - row.durationMs),
-          upper: new Date(row.endsAt),
-        }}
-      />
+      >
+        {paused ? props.pausedLabel : props.doneLabel}
+      </Text>
     );
   };
 
   const rows = (stepColor: string, color: string) => (
     <VStack spacing={0}>
-      {props.rows.map((row, index) => (
+      {listed.map((row, index) => (
         <VStack key={row.id} spacing={0}>
           {index > 0 ? <Divider /> : null}
           {/* iOS caps a Lock Screen activity at 160 pt: three 42 pt rows and the "+N" line fit. */}
           <HStack modifiers={[frame({ height: 42 })]} spacing={12}>
-            {ring(row, 26, row.endsAt === null && !done ? muted : color)}
+            {ring(row, 26, color)}
             <VStack alignment="leading" spacing={1}>
               <Text modifiers={[font({ size: 15, weight: "semibold" }), lineLimit(1)]}>
                 {row.recipe}
@@ -115,7 +117,7 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
               ) : null}
             </VStack>
             <Spacer />
-            {left(row, 22, color)}
+            {readout(row, 22, color)}
           </HStack>
         </VStack>
       ))}
@@ -130,7 +132,7 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
     </VStack>
   );
 
-  const first = props.rows[0];
+  const first = listed[0];
 
   return {
     banner: (
@@ -144,16 +146,12 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
         {rows(muted, accent)}
       </VStack>
     ),
-    compactLeading: first ? (
-      <HStack modifiers={[widgetURL(props.url)]}>{ring(first, 23, go)}</HStack>
-    ) : undefined,
-    compactTrailing: first ? left(first, 16, go) : undefined,
-    minimal: first ? (
-      <HStack modifiers={[widgetURL(props.url)]}>{ring(first, 23, go)}</HStack>
-    ) : undefined,
+    compactLeading: first ? linked(ring(first, 23, islandGreen)) : undefined,
+    compactTrailing: first ? readout(first, 16, islandGreen) : undefined,
+    minimal: first ? linked(ring(first, 23, islandGreen)) : undefined,
     expandedBottom: (
       <VStack modifiers={[padding({ horizontal: 12 }), widgetURL(props.url)]}>
-        {rows("#FFFFFF9E", go)}
+        {rows("#FFFFFF9E", islandGreen)}
       </VStack>
     ),
   };
@@ -163,7 +161,7 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
 const factory =
   Platform.OS === "ios" ? createLiveActivity("RecipeTimers", timerActivityLayout) : null;
 
-let pushed: string | null = null;
+let shown: { content: string; props: TimerActivityProps } | null = null;
 
 /** Starts, updates or ends the one Live Activity so it shows `plan`; an unchanged plan is not pushed. */
 export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> {
@@ -176,19 +174,20 @@ export async function syncTimerActivity(plan: TimerActivityPlan): Promise<void> 
     await Promise.all(extra.map((stale) => stale.end("immediate")));
 
     if (plan.kind === "show") {
-      const content = JSON.stringify(plan);
+      const props = keepStarts(plan.props, shown?.props ?? null);
+      const content = JSON.stringify({ props, staleAt: plan.staleAt });
 
-      if (activity && content === pushed) return;
+      if (activity && content === shown?.content) return;
       const staleDate = plan.staleAt === null ? undefined : new Date(plan.staleAt);
 
-      if (activity) await activity.update(plan.props, staleDate);
-      else factory.start(plan.props, undefined, staleDate);
-      pushed = content;
+      if (activity) await activity.update(props, staleDate);
+      else factory.start(props, undefined, staleDate);
+      shown = { content, props };
 
       return;
     }
 
-    pushed = null;
+    shown = null;
     if (!activity) return;
     // Done stays on the Lock Screen until iOS clears it; a removal or a session end goes at once.
     if (plan.kind === "done") await activity.end("default", plan.props);

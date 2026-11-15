@@ -11,6 +11,7 @@ const native = vi.hoisted(() => ({
 vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
 vi.mock("@expo/ui/swift-ui", () => ({}));
 vi.mock("@expo/ui/swift-ui/modifiers", () => ({}));
+vi.mock("expo-linking", () => ({}));
 vi.mock("expo-widgets", () => ({
   createLiveActivity: () => ({
     getInstances: () => native.instances,
@@ -23,15 +24,15 @@ const { syncTimerActivity } = await import("@/lib/timer-activity");
 const props = (url: string): TimerActivityProps => ({
   rows: [],
   more: null,
-  done: false,
+  pausedLabel: "Paused",
   doneLabel: "Done",
   url,
 });
-const show = (url: string, staleAt: number | null = null): TimerActivityPlan => ({
-  kind: "show",
-  props: props(url),
-  staleAt,
-});
+const show = (
+  url: string,
+  staleAt: number | null = null,
+  running: string[] = ["t1"]
+): TimerActivityPlan => ({ kind: "show", props: props(url), staleAt, running });
 const fake = (): Fake => ({ update: vi.fn(async () => {}), end: vi.fn(async () => {}) });
 
 describe("syncTimerActivity", () => {
@@ -78,8 +79,8 @@ describe("syncTimerActivity", () => {
     const done = fake();
 
     native.instances = [done];
-    await syncTimerActivity({ kind: "done", props: { ...props("a"), done: true } });
-    expect(done.end).toHaveBeenCalledWith("default", { ...props("a"), done: true });
+    await syncTimerActivity({ kind: "done", props: props("a") });
+    expect(done.end).toHaveBeenCalledWith("default", props("a"));
 
     const gone = fake();
 

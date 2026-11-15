@@ -1,11 +1,10 @@
 import * as Notifications from "expo-notifications";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
-import { timerEndsAt, useTimerStore } from "@norish/shared-react/recipes/timers";
+import { runningTimers, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
-import type { TimerActivityStrings } from "./timer-activity-state";
-import { cookModeUrl } from "./cook-mode-route";
+import type { TimerStrings } from "./timer-activity-state";
 import { syncTimerActivity } from "./timer-activity";
 import { timerActivityPlan } from "./timer-activity-state";
 
@@ -35,13 +34,11 @@ export function planTimerNotifications(
   now: number
 ): { cancel: string[]; schedule: { identifier: string; timer: Timer; endsAt: number }[] } {
   const byId = new Map(timers.map((timer) => [timer.id, timer]));
-  const wanted = timers.flatMap((timer) => {
-    const endsAt = timerEndsAt(timer);
-
-    return endsAt !== null && endsAt > now
-      ? [{ identifier: timerNotificationId(timer.id, endsAt), timer, endsAt }]
-      : [];
-  });
+  const wanted = runningTimers(timers, now).map(({ timer, endsAt }) => ({
+    identifier: timerNotificationId(timer.id, endsAt),
+    timer,
+    endsAt,
+  }));
   const wantedIds = new Set(wanted.map((entry) => entry.identifier));
   const cancel = scheduled.filter((identifier) => {
     const parsed = parseId(identifier);
@@ -59,8 +56,6 @@ export function planTimerNotifications(
   return { cancel, schedule: wanted.filter((entry) => !pending.has(entry.identifier)) };
 }
 
-export type TimerStrings = Omit<TimerActivityStrings, "link"> & { body: string };
-
 // One sync or end at a time, so two quick changes never schedule a timer twice and an end follows any sync.
 let syncing = Promise.resolve();
 
@@ -69,10 +64,7 @@ export function syncTimerNotifications(strings: TimerStrings): Promise<void> {
   syncing = syncing.then(async () => {
     await syncNotifications(strings.body);
     await syncTimerActivity(
-      timerActivityPlan(useTimerStore.getState().timers, Date.now(), {
-        ...strings,
-        link: cookModeUrl,
-      })
+      timerActivityPlan(useTimerStore.getState().timers, Date.now(), strings)
     );
   });
 
