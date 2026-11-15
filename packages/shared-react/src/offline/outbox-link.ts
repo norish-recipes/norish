@@ -10,6 +10,8 @@
  * (ADR-0009). If admission fails, the propagated error is marked so those
  * same consumers present a real failure and roll back instead.
  *
+ * Mutations of {@link isUncaptured} procedures pass straight through: never stored or timed.
+ *
  * Replayed mutations carry a marker context and are skipped, so a replay is
  * never re-captured.
  *
@@ -38,6 +40,7 @@ import { isStaleResult } from "./error-classification";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
 import { runIfLeader } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
+import { isUncaptured } from "./uncaptured";
 
 const log = createClientLogger("OutboxLink");
 
@@ -239,7 +242,7 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
       });
 
     return ({ op, next }) => {
-      if (op.type !== "mutation") {
+      if (op.type !== "mutation" || isUncaptured(op.path)) {
         return next(op);
       }
 

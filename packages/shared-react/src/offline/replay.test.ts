@@ -44,6 +44,17 @@ describe("runReplayPass", () => {
     store = createOutboxStore(createMemoryStorage().outbox);
   });
 
+  it("drops a stored entry of an excluded procedure without sending it", async () => {
+    await store.enqueue(entry({ id: "a", path: "admin.testAIEndpoint", input: { apiKey: "k" } }));
+    await store.enqueue(entry({ id: "b", path: "groceries.toggle" }));
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submitted).toEqual(["b"]);
+    expect(await store.loadAll()).toEqual([]);
+  });
+
   it("removes every entry on a clean drain, in FIFO order", async () => {
     await store.enqueue(entry({ id: "a" }));
     await store.enqueue(entry({ id: "b" }));

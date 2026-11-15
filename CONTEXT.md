@@ -364,7 +364,7 @@ The process that makes the Live view trustworthy whenever queued work may exist:
 _Avoid_: Reconnect Sequence (too narrow; Recovery is not limited to an Offline-to-Live transition)
 
 **Outbox**:
-The persisted queue of mutations that could not reach the backend, held for Replay. Admission is universal — any mutation qualifies, with no per-feature list. An admission while Live is a reachability hint: it asks the connectivity loop to probe at once, and the Live verdict that follows drains the queue. Flows outside the data API (authentication) are outside the Outbox.
+The persisted queue of mutations that could not reach the backend, held for Replay. Admission is universal — any mutation qualifies — except the admin settings and the procedures whose input is a credential, which fail with their own error and are never stored. An admission while Live is a reachability hint: it asks the connectivity loop to probe at once, and the Live verdict that follows drains the queue. Flows outside the data API (authentication) are outside the Outbox.
 
 **Queued**:
 The third outcome of a mutation, beside success and failure: the change is held in the Outbox and presented to the user as tentatively applied. Server-side-effect mutations (e.g. import-from-URL) simply run at Replay time.

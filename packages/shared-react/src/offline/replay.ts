@@ -16,6 +16,7 @@ import type { ReplayOutcome } from "./error-classification";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry, ParkedReason } from "./outbox-types";
 import { parkedPatch } from "./outbox-store";
+import { isUncaptured } from "./uncaptured";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;
@@ -99,6 +100,11 @@ export async function runReplayPass({
   ownerId: string;
 }): Promise<ReplayPassResult> {
   const parkedEntityIds = new Set<string>();
+
+  // An entry stored before its procedure was excluded is dropped unsent, whatever its status.
+  for (const entry of await store.forOwner(ownerId)) {
+    if (isUncaptured(entry.path)) await store.remove(entry.seq);
+  }
 
   // Seed from already-parked entries so a pending edit behind a create parked in
   // an earlier pass parks with it too.

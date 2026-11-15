@@ -77,6 +77,40 @@ describe("createOutboxLink", () => {
     );
   });
 
+  it("passes an excluded admin mutation's network failure through without storing its input", async () => {
+    const failure = new TypeError("Failed to fetch");
+    const result = await runLink(
+      mutationOp({ path: "admin.testAIEndpoint", input: { apiKey: "sk-secret" } }),
+      errorWith(failure)
+    );
+
+    expect(result.error).toBe(failure);
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("excludes a caldav password and a site auth token value, not the procedures beside them", async () => {
+    const failure = new TypeError("Failed to fetch");
+
+    for (const path of ["caldav.saveConfig", "siteAuthTokens.create", "households.join"]) {
+      await runLink(mutationOp({ path, input: { id: "x" } }), errorWith(failure));
+    }
+    expect(enqueue).not.toHaveBeenCalled();
+
+    await runLink(mutationOp({ path: "caldav.deleteConfig" }), errorWith(failure));
+    await runLink(mutationOp({ path: "households.leave" }), errorWith(failure));
+    expect(enqueue).toHaveBeenCalledTimes(2);
+  });
+
+  it("excludes procedures of the admin router only", async () => {
+    const failure = new TypeError("Failed to fetch");
+
+    await runLink(mutationOp({ path: "administrators.x" }), errorWith(failure));
+    await runLink(mutationOp({ path: "groceries.adminThing" }), errorWith(failure));
+    await runLink(mutationOp({ path: "recipes.update", input: { id: "r1" } }), errorWith(failure));
+
+    expect(enqueue).toHaveBeenCalledTimes(3);
+  });
+
   it("does not capture a deterministic (non-unreachable) failure", async () => {
     const result = await runLink(mutationOp(), errorWith({ data: { httpStatus: 400 } }));
 
@@ -363,7 +397,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     expect(result.value).toEqual({ result: { data: { stale: false, version: 4 } } });
   });
 
-  it.each(["siteAuthTokens.update", "recipes.shareUpdate"])(
+  it.each(["cookbooks.update","recipes.shareUpdate"])(
     "leaves %s with a top-level { id, version } as it was",
     async (path) => {
       const terminal = vi.fn(unreachable);
