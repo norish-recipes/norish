@@ -90,7 +90,7 @@ export function ProductStep({
   const intl = useIntl();
   const text = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values);
   const [muted, danger] = useThemeColor(["muted", "danger"] as const);
-  const [typing, setTyping] = useState(field.hasTypedPrice);
+  const [typing, setTyping] = useState(false);
   const rowsOf = (rows: ProductRow[]) =>
     rows.map((row, index) => (
       <ProductOption
@@ -121,14 +121,17 @@ export function ProductStep({
       onClose={onBack}
     >
       <SheetScrollView contentClassName="gap-4">
-        <View className="bg-default h-[52px] flex-row items-center gap-2.5 rounded-[18px] px-4">
-          <Ionicons color={muted} name="search" size={18} />
-          <TextField className="flex-1">
+        <View className="justify-center">
+          <View className="absolute left-4 z-10" pointerEvents="none">
+            <Ionicons color={muted} name="search" size={18} />
+          </View>
+          <TextField>
             <Input
+              autoFocus
               accessibilityLabel={text("groceries.picker.searchPlaceholder")}
               autoCapitalize="none"
               autoCorrect={false}
-              className="h-[52px] border-0 bg-transparent px-0 text-[17px]"
+              className="h-[52px] rounded-[18px] pr-4 pl-11 text-[17px]"
               editable={field.canSearch}
               placeholder={text(
                 field.canSearch
