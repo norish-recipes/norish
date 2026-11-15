@@ -13,7 +13,7 @@ export function usePantryQuery(): PantryQueryResult {
   // from an empty Pantry by the items alone.
   const isUnavailable = error != null && data === undefined;
 
-  return { items, error, isLoading, isFetching, isUnavailable };
+  return { items, error, isLoading, isFetching, isUnavailable, isRead: data !== undefined };
 }
 
 /** The Pantry's item for one Ingredient, or null: its reader re-renders only when that item changes. */

@@ -62,9 +62,13 @@ function Probe({ name }: { name: string }) {
 
 /** Whether the hook says nothing is known, as the add-to-groceries panel asks. */
 function StatusProbe() {
-  const { isUnavailable } = usePantryQuery();
+  const { isUnavailable, isRead } = usePantryQuery();
 
-  return <span data-testid="pantry-status">{isUnavailable ? "unavailable" : "known"}</span>;
+  return (
+    <span data-testid="pantry-status">
+      {isUnavailable ? "unavailable" : isRead ? "known" : "unread"}
+    </span>
+  );
 }
 
 describe("mergePantryAdded / mergePantryRemoved", () => {
@@ -115,6 +119,19 @@ describe("usePantryQuery", () => {
 
     await waitFor(() => expect(screen.getAllByTestId("pantry")[0]?.textContent).toBe("Olive Oil"));
     expect(screen.getAllByTestId("pantry")[1]?.textContent).toBe("not in the pantry");
+  });
+
+  it("is unread until the query holds an answer, an empty Pantry included", async () => {
+    server.items = () => [];
+
+    render(
+      <QueryClientProvider client={client}>
+        <StatusProbe />
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByTestId("pantry-status").textContent).toBe("unread");
+    await waitFor(() => expect(screen.getByTestId("pantry-status").textContent).toBe("known"));
   });
 
   it("says nothing is known when the Pantry cannot be read and nothing is cached", async () => {

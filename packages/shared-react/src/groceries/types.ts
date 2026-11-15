@@ -123,6 +123,8 @@ export type PantryQueryResult = {
    * known, which an empty `items` alone would misreport as nothing at home.
    */
   isUnavailable: boolean;
+  /** The query holds an answer, so an empty `items` is a Pantry with nothing in it. */
+  isRead: boolean;
 };
 
 /** A food picked rather than typed: kept as picked, shown by its names until the server answers. */
