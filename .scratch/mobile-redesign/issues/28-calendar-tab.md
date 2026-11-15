@@ -4,7 +4,7 @@
 
 **Blocked by:** 19, 27
 
-**Status:** open
+**Status:** done
 
 - [x] Moved first, in separate commits, web switched over with its unit tests: the drop rule of `use-calendar-dnd.ts`.
 - [x] The timeline of day cards, two weeks either side, growing at the edges, opened on today with a way back, Today ringed; empty and offline states.
@@ -22,3 +22,23 @@
 - Verified, not changed: a write to a plan whose create is parked is itself parked as a `dependency` and never sent: `referencesParkedEntity` matches the move's `itemId` string, and the real link files the create under its plan id (Replay test through the real Outbox link).
 - Simulator (iPhone 18 Pro, iOS 27.2, own server :3400, throwaway Postgres and Valkey, light and dark): a row held while a plan was added above and another removed over the API: no crash, the held rows stayed still and the drop landed by id, last in its slot. A drop at the top edge after auto-scroll, which left the content length unchanged, still grew the timeline into September on the next scroll. In the sheet, 27 Dec (six weeks out): stored last in its slot (second plan there at sortOrder 1), and the sheet stayed open on its new date. Server stopped: planned Chili on today, shown at once with name and servings; dragged to Nov 17; relaunched offline, still there; server back: both stored (v2), shown once. Note text edited and stored. Plan recipe from the accessory on 10 Dec and on 20 Oct (past): both stored. Largest text size: day tops, slot labels and item rows grow without clipping. Seen, not changed: the plan sheet offline cannot list recipes it never read online ("Failed to load recipes"); at the largest sizes the glass Today pill and the Plan recipe accessory clip their text (fixed heights); the first tap on Save with the keyboard up only dismisses it. The tRPC route runs from the built `.next`, so the :3400 instance needed `next build` to see a schema change.
 - 2026-11-15 (re-review fixes): an optimistic plan or no-index move lands after its owner's plans only (`moveTargetIndex` counts the owner, as the server does); a rolled-back plan, move, edit or remove shows "The calendar change was not saved"; `reach` is gone: the planned-item sheet moves the plan and closes when its day is past the range, staying open inside it; a strip day midnight took off the plan sheet's strip falls back to today, a date-chip day stays; Today scrolls by the rows the list shows (`DragList` `shownRef`); the header pills cap their text at 2x. `onFailed` was already gone from `calendar-cache.test.tsx` (af31670ab). Simulator (iPhone 18 Pro, iOS 27.2, own server :3400, throwaway Postgres and Valkey, housemate with three Dinners on Nov 17): my Chili showed second and stayed there (sortOrder 0); a recipe deleted in the DB under an open plan sheet: the plan vanished with the toast; Nov 20 from the date picker: stored, sheet stayed open; 20 March 2027: stored, sheet closed, timeline still ended at Dec 21 after normal growth; the Today pill whole at the largest size and Today scrolled back. Not reproduced: three single taps on Save with the keyboard up all saved; the plan sheet's search result took one tap. Seen, not changed: planning a recipe deleted on the server still opens Add to groceries for it.
+
+### Review log (2026-11-15)
+
+Range `5beab18b0..203b74dd0`. Standards on Sonnet low, Spec on Opus high; fixes `17a61dfa0..6a018d950`, re-reviewed on Opus high, second round `f5089bba3..203b74dd0`. The Spec review found web's drag and timelines unchanged, the client's version predictions matching the server (a move bumps the moved plan only) and every listed offline sequence landing on Replay.
+
+Fixed, first round (16): the layout taken from the latest rows while the list showed held ones (misplaced rows, a crash on a removed row); growth stalling after a drag held at an edge; a no-op move skipping its version check; a sheet move outside the loaded range landing first and closing the sheet as gone (a move with no index lands last, as the server finds it); a plan made offline showing nothing (an optimistic entry in the shared hook, for web and Today too, superseding ticket 11's choice); a note's text editable; any day from the plan sheet through a native date chip at the end of the strip (the board draws only the strip); row heights following the text size; the dead `failed` event; the Replay test through the real Outbox link; the Recipes feature no longer reading the Calendar's URL; one typed map of tab routes; shared row key, row day and item height; shared day title, slot tabs, thumbnail and title row; the plan sheet's `date` computed once; the drag list's events split from its held rows.
+
+Checked, no change: a move of a plan whose create was refused is parked behind it and never sent (a test through the real link proves it).
+
+Fixed, second round (6): the optimistic order counting housemates' plans where the server counts the owner's; a refused calendar write rolled back without a word; the sheet widening the range for good (it no longer widens: it closes when the plan leaves the loaded range); a strip day that left the strip at midnight; Today's row index during a held drop; the header pills at the largest text size.
+
+Rejected (2): a plan removed right after it was made flickering back once (it converges); the Plan recipe accessory clipping at the largest text size (the native accessory every tab shares).
+
+Not reproduced: Save in the note editor needing two taps with the keyboard up.
+
+Deviations for the maintainer: no photo in the planned-item sheet's header; no target-day ring or ghost while dragging; the sheet's date and slot move at once and land last, where web's panel lands first.
+
+Seen and left: planning a recipe deleted on the server meanwhile still opens Add to groceries before the create is refused; offline, the plan sheet lists only recipes it had loaded.
+
+Final state `203b74dd0`: all 11 gates exit 0; lint warnings at the baseline in every package, mobile at zero.
