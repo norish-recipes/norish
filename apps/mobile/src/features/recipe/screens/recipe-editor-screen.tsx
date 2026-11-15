@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DragScrollView } from "@/components/drag-list/drag-list";
 import { GlassCloseButton, GlassSurface } from "@/components/glass";
 import { useCategoryLabel } from "@/hooks/use-category-label";
+import { FocusedFieldContext, useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -35,12 +36,8 @@ import { ProvenanceCard, SourceCard } from "../components/editor/provenance-card
 import { StepRows } from "../components/editor/step-rows";
 import { FadeEdge } from "../components/fade-edge";
 import { SectionCard } from "../components/tint";
+import { PopupOpenContext } from "../hooks/popup-open-context";
 import { useEditorUploads } from "../hooks/use-editor-uploads";
-import {
-  FocusedFieldContext,
-  PopupOpenContext,
-  useFocusedFieldInView,
-} from "../hooks/use-focused-field-in-view";
 
 const PILL = 56;
 

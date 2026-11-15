@@ -12,21 +12,23 @@ type Measurable = {
   ) => void;
 };
 
-/** Reports a field that took focus, so the editor can bring it into view. */
+/** Reports a field that took focus, so the screen can bring it into view. */
 export const FocusedFieldContext = createContext<((field: Measurable) => void) | null>(null);
-
-/** Reports a popup opening in the content, so the pill floating over it lets taps through. */
-export const PopupOpenContext = createContext<((open: boolean) => void) | null>(null);
 
 /** The drag scroll view's ref, typed with the methods its instance has at runtime. */
 type ScrollHandle = ComponentRef<typeof DragScrollView> & ComponentRef<typeof ScrollView>;
 
+/** A scroll view scrolls to a y, a list (a `DragList` is one) to an offset. */
+type Scrollable =
+  | { scrollTo: (to: { y: number; animated: boolean }) => void }
+  | { scrollToOffset: (to: { offset: number; animated: boolean }) => void };
+
 /**
- * Keeps the focused field above the keyboard and the floating pill. iOS lifts a field above the
- * keyboard only as the keyboard opens, and never past a control floating over the content.
+ * Keeps the focused field above the keyboard and anything floating over the content: iOS lifts a
+ * field only as the keyboard opens, and never past a floating control.
  */
-export function useFocusedFieldInView(clearance: number) {
-  const scrollRef = useRef<ScrollHandle>(null);
+export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(clearance: number) {
+  const scrollRef = useRef<S>(null);
   const offset = useSharedValue(0);
   const focusedRef = useRef<Measurable | null>(null);
   const onScroll = useAnimatedScrollHandler((event) => {
@@ -40,7 +42,12 @@ export function useFocusedFieldInView(clearance: number) {
     focusedRef.current.measureInWindow((_x, y, _width, height) => {
       const overlap = y + height - (keyboard.screenY - clearance);
 
-      if (overlap > 0) scrollRef.current?.scrollTo({ y: offset.value + overlap, animated: true });
+      const target: Scrollable | null = scrollRef.current;
+      const to = offset.value + overlap;
+
+      if (overlap <= 0 || !target) return;
+      if ("scrollToOffset" in target) target.scrollToOffset({ offset: to, animated: true });
+      else target.scrollTo({ y: to, animated: true });
     });
   };
   const onKeyboardShown = useEffectEvent(reveal);

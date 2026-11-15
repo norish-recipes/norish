@@ -10,7 +10,7 @@ vi.mock("react-native-reanimated", () => ({
   useSharedValue: (value: number) => ({ value }),
 }));
 
-const { useFocusedFieldInView } = await import("../hooks/use-focused-field-in-view");
+const { useFocusedFieldInView } = await import("@/hooks/use-focused-field-in-view");
 
 describe("useFocusedFieldInView", () => {
   it("brings the focused field up again once the content grows under it", () => {

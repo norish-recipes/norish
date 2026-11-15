@@ -131,12 +131,11 @@ vi.mock("../components/editor/provenance-cards", () => ({
   ProvenanceCard: () => null,
   SourceCard: () => null,
 }));
-vi.mock("../hooks/use-focused-field-in-view", async () => {
+vi.mock("@/hooks/use-focused-field-in-view", async () => {
   const { createContext } = await import("react");
 
   return {
     FocusedFieldContext: createContext(null),
-    PopupOpenContext: createContext(null),
     useFocusedFieldInView: () => ({ scrollRef: { current: null }, onFieldFocus: () => {} }),
   };
 });

@@ -1,11 +1,10 @@
 import type { ComponentProps, ReactNode } from "react";
 import React, { use } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { withUniwind } from "uniwind";
-
-import { FocusedFieldContext } from "../../hooks/use-focused-field-in-view";
 
 /** An icon coloured by a class, as `text-accent-text`, which has no theme colour hook. */
 export const ClassIcon = withUniwind(Ionicons, {
