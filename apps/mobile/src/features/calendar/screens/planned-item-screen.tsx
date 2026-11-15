@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Skeleton, Tabs } from "heroui-native";
+import { Button, Input, Skeleton, Tabs, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -22,7 +22,10 @@ import {
 import { usePlatform } from "@norish/shared-react/platform";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
-/** A planned item's sheet: its date and slot, which move it at once, its recipe, its groceries, and Remove. */
+/**
+ * A planned item's sheet: a note's text with Save, its date and slot, which move it at once, its
+ * recipe, its groceries, and Remove.
+ */
 export function PlannedItemScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,11 +56,18 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const intl = useIntl();
   const router = useRouter();
   const { navigation } = usePlatform();
-  const { moveItem, deleteItem } = useCalendarMutations();
+  const { moveItem, deleteItem, updateItem } = useCalendarMutations();
   const { reach } = useCalendarRangeQuery();
   const { title, subtitle } = usePlannedItemText()(item);
   const accent = useAccentTextColor();
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
+  // A note's text, saved on Save as web's note panel does.
+  const [note, setNote] = useState(item.title ?? "");
+  const noteChanged = !recipeId && note.trim().length > 0 && note.trim() !== item.title;
+  const saveNote = () => {
+    updateItem(item.id, note.trim());
+    router.back();
+  };
   // Another day or slot: last there, as a drag puts it. The range reaches the day, so it stays on show.
   const moveTo = (day: string, slot: Slot) => {
     if (day === item.date && slot === item.slot) return;
@@ -85,6 +95,21 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
             </Button>
           ) : null}
           <Sheet.Actions>
+            {recipeId ? null : (
+              <Sheet.Action>
+                <Button
+                  className="h-[50px]"
+                  isDisabled={!noteChanged}
+                  testID="planned-item-save"
+                  variant="primary"
+                  onPress={saveNote}
+                >
+                  <Button.Label className="font-semibold">
+                    {intl.formatMessage({ id: "common.actions.save" })}
+                  </Button.Label>
+                </Button>
+              </Sheet.Action>
+            )}
             {recipeId ? (
               <Sheet.Action>
                 <Button
@@ -120,6 +145,20 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
       title={title}
     >
       <SheetBody>
+        {recipeId ? null : (
+          <TextField className="mb-3">
+            <Input
+              accessibilityLabel={intl.formatMessage({ id: "calendar.editNote.noteLabel" })}
+              className="h-12 rounded-full px-4 text-base"
+              placeholder={intl.formatMessage({ id: "calendar.editNote.notePlaceholder" })}
+              returnKeyType="done"
+              testID="planned-item-note"
+              value={note}
+              onChangeText={setNote}
+              onSubmitEditing={noteChanged ? saveNote : undefined}
+            />
+          </TextField>
+        )}
         <View className="bg-default overflow-hidden rounded-[22px]">
           <View className="h-[52px] flex-row items-center justify-between pr-3 pl-4">
             <Text className="text-foreground text-base">
