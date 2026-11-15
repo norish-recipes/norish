@@ -4,7 +4,7 @@
 
 **Blocked by:** 20
 
-**Status:** open
+**Status:** done
 
 - [x] Moved first, in separate commits, web switched over: `use-unsaved-navigation-guard` and the editor logic web keeps in `recipe-editor-screen.tsx`.
 - [x] Full screen, glass close, Save or Create as the bottom pill; cards in the page's order; a row per ingredient with a grip; `#` sections; the `@` ingredient popup in steps; photos from the library or camera.
@@ -50,3 +50,21 @@ Re-review fixes (2026-11-15): the save path's lock and the in-process lock are g
 Engine review fixes (2026-11-15): a failed live save is its own entry (`7aa929ab2`); a refused or failed edit behind a waiting one refetches once it settles (`1c2299596`); a send mark from a gone process is ignored (`ca77fd330`); entry writes are atomic (`7e57cc7f6`); only the scoped grocery writes time out (`d536f066b`). Simulator (iPhone 18 Pro, iOS 27.2, own server on :3400 behind a proxy, throwaway Postgres and Valkey): two offline saves sent one update holding the second (v1→v2); with a server rename in between the server's name stood and showed, one toast; a save with the server paused (SIGSTOP) 50 s was sent once and landed when it resumed (v3→v4), with no abort and no replay.
 
 Engine re-review fixes (2026-11-15): a finished send acts on its entry only while it still holds that send's operation (one atomic `change`, which can now delete); an edit that replaced it meanwhile stays pending, unmarked, and is sent next (`83fd3ac17`). So another context's mark still counts as stale with no lock manager: replacing a live send now costs at most a refusal with the toast, never a lost edit. A refused or failed edit behind one that was queued refetches nothing: its own state is taken back if still shown, and Recovery refetches after Replay (`27764e1a2`). Proved by the storage contract (memory, IndexedDB, MMKV) and the hook test; no simulator run.
+
+### Review log (2026-11-15)
+
+Range `47089bcc2..8d443a41c` (the editor, then the queued-edit work shared with tickets 24 and 25's engine rounds). Standards on Sonnet low, Spec on Opus high; five fix rounds and two engine rounds, each engine change re-reviewed on Opus high. The Spec review found the move out of web's editor faithful: form, validation, sections, references, both payloads, dirty tracking and the navigation guard unchanged.
+
+Editor, fixed: step photos landing on the wrong step; references re-pointed when Save beat a blur (the payload renumbers them with the lines, web too); an upload overwriting later media or step changes (web too); Save during an upload or a second tap; the edit route's permission check and a recipe that vanishes while open; real-row round-trip tests on web and mobile; one owner for reference moves; web's step image logging; the emptied-row rule and `useFoodsByName` shared with web; one trailing-row hook, step rows split; HEIC library photos (the one picker hook asks for a compatible format); the `@` popup under the Save pill; a field hidden behind the pill after Return; Save stuck after an upload threw; two uploads in one tick dropping a photo; every sheet's keyboard padding on Reanimated, after a global `LayoutAnimation` crashed a closing sheet.
+
+Queued edits, as decided (option A) and built: `recipes.update` answers `{ stale, version }` once stored; the client sends only versions the server gave it; a new save replaces a never-sent, never-attempted pending entry for the same recipe that is not being sent, in one atomic store change, and keeps its base version; a failed live save is its own entry; Replay marks an entry while sending it and settles a finished send only on the entry it sent; a mark from a dead process is ignored; a refused save is told once, live (nothing stored) and on Replay (Parked as Conflicted), and what is on show refetches; a refused edit parks nothing else; the stored version reaches the cache only on that save's own state; a queued edit stays on screen when one behind it is refused.
+
+Tried and removed on the way: a predicted `version + 1` (it let a second edit overwrite another member's change); per-entity ordering and version rewrite in the Outbox link; coalescing a failed live save; a lock on the save path.
+
+Accepted (Mike): an edit that may already have reached the server, or was sent live, followed by another edit of that recipe may be refused, with the toast.
+
+Rejected: Maestro flows here (ticket 30); photos orphaned by a discarded create (as on web); commit subjects over 70 characters; a timer chip index moved by the parser's sort.
+
+Open with the maintainer: mobile has no screen for Parked or Conflicted Outbox entries, so they stay and count in sign-out's "N changes". Found and left, pre-existing: the Outbox stores the input of every mutation that fails on the network, the admin AI test's API key included.
+
+Final state `8d443a41c`: all 11 gates exit 0, mobile lint without warnings.

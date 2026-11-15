@@ -4,7 +4,7 @@
 
 **Blocked by:** 19, 24
 
-**Status:** open
+**Status:** done
 
 - [x] Moved first, in separate commits, web switched over with its unit tests: `dnd/drop-plan.ts` and the arranging logic of `use-list-dnd.ts`.
 - [x] Reorder within a Store, move to another Store or Unsorted, file into an Aisle (Aisle Link), a grouped line as one; store and recipe views.
@@ -23,3 +23,17 @@
 - 2026-11-15 (engine review): the send timeout is opt-in and covers only the writes sharing the `grocery-writes` scope (toggle, checkRecurring, update, updateRecurring, detachRecurring, delete, deleteRecurring, assignToStore, reorderInStore, markAllDone, deleteDone), live and replayed; uploads, admin tests, recipe saves and every other mutation have no timeout again (`d536f066b`). Simulator (iPhone 18 Pro, iOS 27.2, own :3400): three ticks with the server paused, 75 s, kill, relaunch, resume: all three stored once (each version +1), each replayed twice under one operationId with the second answered idempotently. A first run killed at 56 s lost the third tick: the scope sends one at a time, so it was still in flight, not yet in the Outbox.
 
 Mike, 2026-11-15: the grocery write queue and its 20-second send timeout stay as built. Known limit: writes waiting behind a stalled request reach the Outbox one timeout apart, so an app kill in between loses the ones not yet sent.
+
+### Review log (2026-11-15)
+
+Range `6944fbd3d..8d443a41c`. Standards on Sonnet low, Spec on Opus high; fixes `506cee92b..2a930a03f`, re-reviewed on Opus high, `1067a2d68..1a88d4830`, then the engine round `d536f066b` after a review of the timeout. The Spec review found the move out of web clean and every kind of drop resolving as web's does.
+
+Fixed, first round (7): an expanded group collapsing when lifted; a write made right after a drop being refused (every versioned grocery write goes out in the order it was made, one scope, web too); one keyed drop plan for both apps; one sort order and one by-Store rule; the by-recipe rule beside `planRecipeReorder`; a list item carrying its key and done state; comments.
+
+Fixed, second round (5): a request with no answer holding every later write (a 20-second send timeout, then narrowed to exactly the eleven scoped grocery writes after it was found to catch every mutation in both apps); an older realtime echo overwriting newer optimistic state; a group folding closed when a drop re-keys it; an order test that proved nothing; a real drop driven through the screen in a test.
+
+Rejected (7): a stale drop made online without a toast (the policy for live grocery writes); a drop onto a Store heading landing first where web appends; a tagged container id; commit subjects over 70 characters; creates in the write queue (each write reads its version at call time, so queueing a merging add first would refuse every tick behind it); two unsettled writes hiding another member's update until the refetch every path ends in; the board's ghost row, drop line and highlighted Aisle heading (not in the spec's wording; the library moves rows live).
+
+Known limits: writes waiting behind a stalled request reach the Outbox one timeout apart; a tick of the exact line an in-flight add merges into can be refused.
+
+Final state `8d443a41c`: all 11 gates exit 0, mobile lint without warnings.
