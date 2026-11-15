@@ -21,7 +21,7 @@
 import type { HTTPHeaders, Operation, OperationLink, TRPCLink } from "@trpc/client";
 import type { AnyTRPCRouter } from "@trpc/server";
 import type { Unsubscribable } from "@trpc/server/observable";
-import { isNonJsonSerializable, TRPCClientError } from "@trpc/client";
+import { TRPCClientError } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -39,7 +39,7 @@ import { isOutboxReplayContext } from "./replay-client";
 
 const log = createClientLogger("OutboxLink");
 
-/** A mutation unanswered this long is aborted and queued: a slower answer is retried by Replay. */
+/** An opted-in write unanswered this long is aborted and queued: Replay sends it again. */
 export const MUTATION_SEND_TIMEOUT_MS = 20_000;
 
 function normalizeHeaders(headers: unknown): Record<string, string> {
@@ -67,6 +67,8 @@ interface OutboxLinkDependencies {
   replayHeaderValue: string;
   /** Procedures that save a whole entity at the version it was read at; they create nothing. */
   wholeEdits?: ReadonlySet<string>;
+  /** Procedures whose send, live or replayed, is aborted after {@link MUTATION_SEND_TIMEOUT_MS}. */
+  timedWrites?: ReadonlySet<string>;
   /** Told of a whole edit sent live and refused as stale; nothing is stored for it. */
   onConflict?: () => void;
 }
@@ -196,13 +198,12 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
               }
             );
         };
-        // Uploads are exempt: their send time grows with the file, not with a hung server.
-        const timer = isNonJsonSerializable(op.input)
-          ? undefined
-          : setTimeout(() => {
+        const timer = deps.timedWrites?.has(op.path)
+          ? setTimeout(() => {
               subscription.unsubscribe();
               fail(timedOutError());
-            }, MUTATION_SEND_TIMEOUT_MS);
+            }, MUTATION_SEND_TIMEOUT_MS)
+          : undefined;
         const subscription = next(op).subscribe({
           next: (value) => {
             clearTimeout(timer);

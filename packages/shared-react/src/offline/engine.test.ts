@@ -7,6 +7,7 @@ import type { LockManagerLike } from "./leader";
 import type { OutboxEntry } from "./outbox-types";
 import type { OfflineStorage } from "./storage";
 import { createOfflineEngine } from "./engine";
+import { MUTATION_SEND_TIMEOUT_MS } from "./outbox-link";
 import { runReplayPass } from "./replay";
 import { OUTBOX_REPLAY_HEADER } from "./replay-client";
 import { createMemoryStorage } from "./testing/memory-storage";
@@ -96,6 +97,30 @@ describe("createOfflineEngine", () => {
 
     expect(isQueuedOutboxSignal(error)).toBe(true);
     expect((await engine.outbox.forOwner("u1")).map((entry) => entry.entityId)).toEqual(["g1"]);
+  });
+
+  it("times out the grocery writes that share one scope, and no other mutation", async () => {
+    const engine = engineOver();
+
+    await engine.cache.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    vi.useFakeTimers();
+    try {
+      for (const path of ["groceries.toggle", "recipes.update", "admin.testAIEndpoint"]) {
+        engine
+          .outboxLink({} as never)({
+            op: { type: "mutation", path, input: { id: path }, context: {} },
+            next: () => observable(() => {}),
+          } as never)
+          .subscribe({ error: () => {} });
+      }
+      await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS * 10);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect((await engine.outbox.loadAll()).map((entry) => entry.path)).toEqual([
+      "groceries.toggle",
+    ]);
   });
 
   it("tells the Recovery's listeners of a recipe save refused live, and stores nothing", async () => {

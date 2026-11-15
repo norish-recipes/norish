@@ -430,6 +430,16 @@ describe("createOutboxLink: a send with no answer", () => {
   });
   afterEach(() => vi.useRealTimers());
 
+  const timedLink = () =>
+    createOutboxLink({
+      store: { enqueue } as unknown as OutboxStore,
+      owner,
+      replayHeaderValue: REPLAY_HEADER_VALUE,
+      timedWrites: new Set(["groceries.toggle"]),
+    })({} as never);
+  const toggle = (overrides: Partial<FakeOp> = {}) =>
+    mutationOp({ path: "groceries.toggle", input: { groceries: [{ id: "g1" }] }, ...overrides });
+
   /** A send that answers only when the test says, and records whether it was aborted. */
   const hung = () => {
     const send = { answer: (_value: unknown) => {}, aborted: false };
@@ -445,30 +455,34 @@ describe("createOutboxLink: a send with no answer", () => {
     return { send, terminal };
   };
 
-  it("is aborted and queued with its operation id once the timeout passes", async () => {
+  function run(op: FakeOp, terminal: () => ReturnType<typeof observable>) {
+    const seen: unknown[] = [];
+
+    timedLink()({ op, next: terminal } as never).subscribe({
+      next: (value: unknown) => seen.push(value),
+      error: (error: unknown) => seen.push(error),
+    });
+
+    return seen;
+  }
+
+  it("aborts and queues an opted-in write with its operation id once the timeout passes", async () => {
     const { send, terminal } = hung();
-    const result = runLink(mutationOp(), terminal);
+    const seen = run(toggle(), terminal);
 
     await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
 
-    expect(isQueuedOutboxSignal((await result).error)).toBe(true);
+    expect(isQueuedOutboxSignal(seen[0])).toBe(true);
     expect(send.aborted).toBe(true);
-    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ operationId: "op-1" }));
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "groceries.toggle", operationId: "op-1" })
+    );
   });
 
   it("delivers nothing of the aborted request's late answer", async () => {
     const { send, terminal } = hung();
-    const seen: unknown[] = [];
-    const link = createOutboxLink({
-      store: { enqueue } as unknown as OutboxStore,
-      owner,
-      replayHeaderValue: REPLAY_HEADER_VALUE,
-    })({} as never);
+    const seen = run(toggle(), terminal);
 
-    link({ op: mutationOp(), next: terminal } as never).subscribe({
-      next: (value: unknown) => seen.push(value),
-      error: (error: unknown) => seen.push(error),
-    });
     await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
     send.answer({ result: { data: { ok: true } } });
 
@@ -478,23 +492,19 @@ describe("createOutboxLink: a send with no answer", () => {
 
   it("leaves a send that answers in time alone", async () => {
     const { send, terminal } = hung();
-    const result = runLink(mutationOp(), terminal);
+    const seen = run(toggle(), terminal);
 
     await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS - 1);
     send.answer({ ok: true });
     await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
 
-    expect((await result).value).toEqual({ ok: true });
+    expect(seen).toEqual([{ ok: true }]);
     expect(send.aborted).toBe(false);
     expect(enqueue).not.toHaveBeenCalled();
   });
 
-  it("sends the next write of a scope once the one ahead is queued", async () => {
-    const link = createOutboxLink({
-      store: { enqueue } as unknown as OutboxStore,
-      owner,
-      replayHeaderValue: REPLAY_HEADER_VALUE,
-    })({} as never);
+  it("sends the next grocery write once the toggle ahead is queued", async () => {
+    const link = timedLink();
     const first = hung();
     const sent: string[] = [];
     const send = (op: FakeOp, terminal: () => ReturnType<typeof observable>) => () =>
@@ -504,29 +514,53 @@ describe("createOutboxLink: a send with no answer", () => {
       });
     const client = new QueryClient();
     const write = (fn: () => Promise<unknown>) =>
-      new MutationObserver(client, { mutationFn: fn, scope: { id: "writes" } })
+      new MutationObserver(client, { mutationFn: fn, scope: { id: "grocery-writes" } })
         .mutate()
         .catch(() => undefined);
 
-    void write(send(mutationOp(), first.terminal));
-    void write(send(mutationOp({ context: { operationId: "op-2" } }), succeedWith({ ok: true })));
+    void write(send(toggle(), first.terminal));
+    void write(send(toggle({ context: { operationId: "op-2" } }), succeedWith({ ok: true })));
     await vi.advanceTimersByTimeAsync(0);
     expect(sent).toEqual(["op-1"]);
 
     await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS);
 
     expect(sent).toEqual(["op-1", "op-2"]);
+    expect(enqueue).toHaveBeenCalledTimes(1);
   });
 
-  it("puts no timer on an upload", async () => {
+  it.each([
+    ["admin.testAIEndpoint", { provider: "ollama", apiKey: "secret" }],
+    ["recipes.update", { id: "r1", version: 1, data: { name: "Slow" } }],
+    ["groceries.create", { id: "g1", name: "Milk" }],
+  ])("puts no timer on %s, which is not opted in", async (path, input) => {
     const { send, terminal } = hung();
-    const formData = new FormData();
+    const seen = run(mutationOp({ path, input }), terminal);
 
-    formData.append("id", "33333333-3333-4333-8333-333333333333");
-    void runLink(mutationOp({ path: "recipes.uploadImage", input: formData }), terminal);
+    await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS * 10);
+    send.answer({ ok: true });
+
+    expect(seen).toEqual([{ ok: true }]);
+    expect(send.aborted).toBe(false);
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("times out a replayed opted-in write, and only that", async () => {
+    const replay = { headers: { [OUTBOX_REPLAY_HEADER]: REPLAY_HEADER_VALUE } };
+    const timed = hung();
+    const untimed = hung();
+    const timedSeen = run(toggle({ context: replay }), timed.terminal);
+    const untimedSeen = run(
+      mutationOp({ path: "recipes.delete", context: replay }),
+      untimed.terminal
+    );
+
     await vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS * 10);
 
-    expect(send.aborted).toBe(false);
+    expect(timed.send.aborted).toBe(true);
+    expect(isQueuedOutboxSignal(timedSeen[0])).toBe(true);
+    expect(untimed.send.aborted).toBe(false);
+    expect(untimedSeen).toEqual([]);
     expect(enqueue).not.toHaveBeenCalled();
   });
 });
