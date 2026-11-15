@@ -48,6 +48,7 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
     lower: new Date(row.startsAt),
     upper: new Date(row.endsAt),
   });
+  // Every island region carries the link: the activity's own URL is fixed when it starts.
   const linked = (child: ReactNode) => <HStack modifiers={[widgetURL(props.url)]}>{child}</HStack>;
 
   const ring = (row: TimerActivityRow, size: number, color: string) => {
@@ -147,7 +148,7 @@ const timerActivityLayout = (props: TimerActivityProps, environment: LiveActivit
       </VStack>
     ),
     compactLeading: first ? linked(ring(first, 23, islandGreen)) : undefined,
-    compactTrailing: first ? readout(first, 16, islandGreen) : undefined,
+    compactTrailing: first ? linked(readout(first, 16, islandGreen)) : undefined,
     minimal: first ? linked(ring(first, 23, islandGreen)) : undefined,
     expandedBottom: (
       <VStack modifiers={[padding({ horizontal: 12 }), widgetURL(props.url)]}>
