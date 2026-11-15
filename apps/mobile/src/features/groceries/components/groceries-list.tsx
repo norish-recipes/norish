@@ -13,7 +13,7 @@ import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
-import { CardSlice } from "./card-slice";
+import { CardSlice, ItemSlice } from "./card-slice";
 import { DoneRow } from "./done-row";
 import { GroceryRow } from "./grocery-row";
 import { GroupRow } from "./group-row";
@@ -131,7 +131,7 @@ export function GroceriesList({
       const recurringId = only?.grocery.recurringGroceryId;
 
       return (
-        <CardSlice edge={edge}>
+        <ItemSlice edge={edge}>
           <GroupRow
             group={item.group}
             store={item.store}
@@ -143,14 +143,14 @@ export function GroceriesList({
             onEdit={actions.edit}
             onToggle={actions.toggle}
           />
-        </CardSlice>
+        </ItemSlice>
       );
     }
 
     const { grocery, store } = item;
 
     return (
-      <CardSlice edge={edge}>
+      <ItemSlice edge={edge}>
         <GroceryRow
           grocery={grocery}
           store={store}
@@ -166,7 +166,7 @@ export function GroceriesList({
           onEdit={actions.edit}
           onToggle={(id, isDone) => actions.toggle([id], isDone)}
         />
-      </CardSlice>
+      </ItemSlice>
     );
   };
 

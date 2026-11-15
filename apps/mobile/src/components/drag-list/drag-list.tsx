@@ -18,6 +18,9 @@ import { useHeldRows } from "./use-held-rows";
 
 export type { Drop, DragRow };
 
+/** True inside the row a drag is carrying, for its lifted look. */
+export { useIsActive as useIsLifted } from "react-native-reorderable-list";
+
 /** The scroll view a `nested` list sits in, so a drag scrolls the page around it. */
 export { ScrollViewContainer as DragScrollView };
 
