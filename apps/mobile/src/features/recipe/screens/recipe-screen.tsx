@@ -47,7 +47,6 @@ function RecipeSkeleton() {
 
 /** The recipe read from the Warm Set or the server, sections in the order the board sets. */
 function RecipePage() {
-  const router = useRouter();
   const recipe = useLoadedPageRecipe();
   const scheme = useResolvedColorScheme();
   const [colorMode] = useDevicePreference("recipePageColor");
@@ -67,15 +66,6 @@ function RecipePage() {
       <Stack.Screen
         options={{
           title: scrolled ? recipe.name : "",
-          unstable_headerLeftItems: () => [
-            {
-              type: "button",
-              label: "",
-              icon: { type: "sfSymbol", name: "chevron.left" },
-              identifier: "recipe-back",
-              onPress: () => router.back(),
-            },
-          ],
           unstable_headerRightItems: () => headerItems,
         }}
       />
@@ -112,10 +102,35 @@ function RecipePage() {
 }
 
 export function RecipeScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipe, error } = useRecipeQuery(id);
+  const page =
+    !recipe && isRecipeNotFound(error) ? (
+      <RecipeNotFound />
+    ) : recipe ? (
+      <RecipePage key={recipe.id} />
+    ) : (
+      <RecipeSkeleton />
+    );
 
-  if (!recipe && isRecipeNotFound(error)) return <RecipeNotFound />;
-
-  return recipe ? <RecipePage key={recipe.id} /> : <RecipeSkeleton />;
+  // Back in every state, a missing recipe too; the stack's anchor puts the list under a link.
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          unstable_headerLeftItems: () => [
+            {
+              type: "button",
+              label: "",
+              icon: { type: "sfSymbol", name: "chevron.left" },
+              identifier: "recipe-back",
+              onPress: () => router.back(),
+            },
+          ],
+        }}
+      />
+      {page}
+    </>
+  );
 }
