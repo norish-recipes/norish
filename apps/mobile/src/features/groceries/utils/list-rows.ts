@@ -22,13 +22,13 @@ export type Heading =
       ids: string[];
     }
   | { type: "aisle"; aisle: AisleDto; count: number }
+  /** The folded tail of a section: how many are done, and whether they are showing below. */
+  | { type: "done"; sectionKey: string; count: number; open: boolean }
   | { type: "recipe"; recipeId: string | null; name: string; open: number; ids: string[] };
 
 export type Item =
   | { type: "line"; grocery: GroceryDto; store: StoreDto | null }
-  | { type: "group"; group: GroceryGroup; store: StoreDto | null }
-  /** The folded tail of a section: how many are done, and whether they are showing below. */
-  | { type: "done"; sectionKey: string; count: number; open: boolean };
+  | { type: "group"; group: GroceryGroup; store: StoreDto | null };
 
 export type ListRow = DragRow<Heading, Item> & { edge: Edge };
 
@@ -162,7 +162,7 @@ export function storeListRows({
 
       body.push(
         {
-          kind: "item",
+          kind: "heading",
           key: `done:${key}`,
           value: { type: "done", sectionKey: key, count: doneRows.length, open },
         },

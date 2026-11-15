@@ -1,3 +1,4 @@
+import { resolveDrop } from "@/components/drag-list/resolve-drop";
 import { recipeListRows, storeListRows } from "@/features/groceries/utils/list-rows";
 import { describe, expect, it } from "vitest";
 
@@ -96,6 +97,31 @@ describe("storeListRows", () => {
       "done:s",
       "line:b",
     ]);
+  });
+
+  it("makes the done fold a heading, so a drop among done rows lands under it, not an aisle", () => {
+    const rows = storeListRows({
+      ...base,
+      stores: [store("s", 0, ["veg"])],
+      groceries: [
+        line("a", "s"),
+        line("b", "s", { isDone: true }),
+        line("c", "s", { isDone: true }),
+      ],
+      aisleFor: (_store, ingredientId) => (ingredientId === "i-a" ? "veg" : null),
+      doneOpen: new Set(["s"]),
+    });
+    const done = rows.find((row) => row.key === "done:s");
+
+    expect(done?.kind).toBe("heading");
+
+    const drop = resolveDrop(
+      rows,
+      rows.findIndex((row) => row.key === "line:c"),
+      rows.findIndex((row) => row.key === "line:b")
+    );
+
+    expect(drop?.heading).toMatchObject({ type: "done" });
   });
 
   it("folds a collapsed section to its heading", () => {

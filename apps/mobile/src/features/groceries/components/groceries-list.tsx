@@ -64,6 +64,19 @@ export function GroceriesList({
         );
       }
 
+      if (heading.type === "done") {
+        return (
+          <CardSlice edge={edge}>
+            <DoneRow
+              count={heading.count}
+              open={heading.open}
+              sectionKey={heading.sectionKey}
+              onToggle={() => actions.toggleDone(heading.sectionKey)}
+            />
+          </CardSlice>
+        );
+      }
+
       const gap = index > 0;
 
       if (heading.type === "recipe") {
@@ -100,19 +113,6 @@ export function GroceriesList({
     }
 
     const item = row.value;
-
-    if (item.type === "done") {
-      return (
-        <CardSlice edge={edge}>
-          <DoneRow
-            count={item.count}
-            open={item.open}
-            sectionKey={item.sectionKey}
-            onToggle={() => actions.toggleDone(item.sectionKey)}
-          />
-        </CardSlice>
-      );
-    }
 
     if (item.type === "group") {
       const only = item.group.sources.length === 1 ? item.group.sources[0] : undefined;
