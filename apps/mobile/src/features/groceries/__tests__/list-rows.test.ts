@@ -133,7 +133,7 @@ describe("storeListRows", () => {
     });
 
     expect(keys(rows)).toEqual(["store:s"]);
-    expect(rows[0]?.edge).toEqual({ top: true, bottom: true });
+    expect(rows[0]?.value.edge).toEqual({ top: true, bottom: true });
   });
 
   it("rounds the heading's top and the last row's bottom, and nothing between", () => {
@@ -143,7 +143,7 @@ describe("storeListRows", () => {
       groceries: [line("a", "s"), line("b", "s")],
     });
 
-    expect(rows.map((row) => row.edge)).toEqual([
+    expect(rows.map((row) => row.value.edge)).toEqual([
       { top: true, bottom: false },
       { top: false, bottom: false },
       { top: false, bottom: true },

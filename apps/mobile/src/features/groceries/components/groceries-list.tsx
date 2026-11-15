@@ -1,13 +1,15 @@
+import type { Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
 import React from "react";
-import { FlatList, View } from "react-native";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
-import type { ListRow } from "../utils/list-rows";
+import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
@@ -29,7 +31,10 @@ export type ListActions = {
   clear: (name: string, ids: string[]) => void;
 };
 
-/** The list's rows, virtualised: headings, grocery rows and the done tails, each a slice of its section's card. */
+/**
+ * The list's rows, virtualised: headings, grocery rows and the done tails, each a slice of its
+ * section's card. Holding an open row lifts it; a done one stays put.
+ */
 export function GroceriesList({
   rows,
   header,
@@ -38,6 +43,7 @@ export function GroceriesList({
   recurringById,
   storeNameOnLines,
   actions,
+  onDrop,
 }: {
   rows: ListRow[];
   header: ReactElement;
@@ -47,6 +53,8 @@ export function GroceriesList({
   /** The list by recipe names each line's Store under it, where a Store's list never does. */
   storeNameOnLines: boolean;
   actions: ListActions;
+  /** A held row let go; false puts it back. */
+  onDrop: (drop: Drop<ListHeading, ListItem>) => boolean;
 }) {
   const insets = useSafeAreaInsets();
   const recurrence = useRecurrenceLabel();
@@ -56,69 +64,67 @@ export function GroceriesList({
     recipeName: string | null
   ) => (recurring ? recurrence(recurrencePatternOf(recurring)) : recipeName);
 
-  const renderRow = ({ item: row, index }: { item: ListRow; index: number }) => {
-    const { edge } = row;
+  const renderHeading = (heading: ListHeading, index: number) => {
+    const { edge } = heading;
 
-    if (row.kind === "heading") {
-      const heading = row.value;
-
-      if (heading.type === "aisle") {
-        return (
-          <CardSlice edge={edge}>
-            <AisleHeadingRow count={heading.count} name={heading.aisle.name} />
-          </CardSlice>
-        );
-      }
-
-      if (heading.type === "done") {
-        return (
-          <CardSlice edge={edge}>
-            <DoneRow
-              count={heading.count}
-              open={heading.open}
-              sectionKey={heading.sectionKey}
-              onToggle={() => actions.toggleDone(heading.sectionKey)}
-            />
-          </CardSlice>
-        );
-      }
-
-      const gap = index > 0;
-
-      if (heading.type === "recipe") {
-        return (
-          <CardSlice className="bg-default" edge={edge} gap={gap} separated={false}>
-            <RecipeHeadingRow
-              heading={heading}
-              onClear={() => actions.clear(heading.name, heading.ids)}
-            />
-          </CardSlice>
-        );
-      }
-
-      const storeId = heading.store?.id ?? null;
-      const key = sectionKeyOf(storeId);
-
+    if (heading.type === "aisle") {
       return (
-        <CardSlice className="bg-default" edge={edge} gap={gap} separated={false}>
-          <StoreHeadingRow
-            actions={
-              heading.ids.length > 0
-                ? {
-                    markAllDone: () => actions.markAllDone(storeId),
-                    deleteDone: () => actions.deleteDone(storeId),
-                    clearAll: () => actions.clear(heading.store?.name ?? "", heading.ids),
-                  }
-                : undefined
-            }
-            heading={heading}
-            onToggleCollapsed={() => actions.toggleCollapsed(key)}
+        <CardSlice edge={edge}>
+          <AisleHeadingRow count={heading.count} name={heading.aisle.name} />
+        </CardSlice>
+      );
+    }
+
+    if (heading.type === "done") {
+      return (
+        <CardSlice edge={edge}>
+          <DoneRow
+            count={heading.count}
+            open={heading.open}
+            sectionKey={heading.sectionKey}
+            onToggle={() => actions.toggleDone(heading.sectionKey)}
           />
         </CardSlice>
       );
     }
 
-    const item = row.value;
+    const gap = index > 0;
+
+    if (heading.type === "recipe") {
+      return (
+        <CardSlice className="bg-default" edge={edge} gap={gap} separated={false}>
+          <RecipeHeadingRow
+            heading={heading}
+            onClear={() => actions.clear(heading.name, heading.ids)}
+          />
+        </CardSlice>
+      );
+    }
+
+    const storeId = heading.store?.id ?? null;
+    const key = sectionKeyOf(storeId);
+
+    return (
+      <CardSlice className="bg-default" edge={edge} gap={gap} separated={false}>
+        <StoreHeadingRow
+          actions={
+            heading.ids.length > 0
+              ? {
+                  markAllDone: () => actions.markAllDone(storeId),
+                  deleteDone: () => actions.deleteDone(storeId),
+                  clearAll: () => actions.clear(heading.store?.name ?? "", heading.ids),
+                }
+              : undefined
+          }
+          heading={heading}
+          onToggleCollapsed={() => actions.toggleCollapsed(key)}
+        />
+      </CardSlice>
+    );
+  };
+
+  const renderItem = (item: ListItem, drag: () => void) => {
+    const { edge } = item;
 
     if (item.type === "group") {
       const only = item.group.sources.length === 1 ? item.group.sources[0] : undefined;
@@ -133,6 +139,7 @@ export function GroceriesList({
               recurringId ? recurringById.get(recurringId) : null,
               only?.recipeName ?? null
             )}
+            onDrag={item.group.allDone ? undefined : drag}
             onEdit={actions.edit}
             onToggle={actions.toggle}
           />
@@ -155,6 +162,7 @@ export function GroceriesList({
                   recipeNameFor(grocery)
                 )
           }
+          onDrag={grocery.isDone ? undefined : drag}
           onEdit={actions.edit}
           onToggle={(id, isDone) => actions.toggle([id], isDone)}
         />
@@ -164,16 +172,17 @@ export function GroceriesList({
 
   return (
     <View className="flex-1">
-      <FlatList
+      <DragList
         ListEmptyComponent={empty ?? undefined}
         ListHeaderComponent={header}
         className="flex-1"
         contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
         contentInsetAdjustmentBehavior="never"
-        data={rows}
-        keyExtractor={(row) => row.key}
-        renderItem={renderRow}
+        renderHeading={renderHeading}
+        renderItem={renderItem}
+        rows={rows}
         testID="groceries-list"
+        onDrop={onDrop}
       />
       {/* Rows dissolve into the page colour before the tab bar. */}
       <View

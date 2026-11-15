@@ -44,6 +44,8 @@ vi.mock("@norish/shared-react/groceries", () => ({
   useStorePricesSubscription: () => undefined,
   useStoresQuery: () => read.stores,
   useStoresSubscription: () => undefined,
+  useFileGroceryName: () => vi.fn(),
+  writeDrop: vi.fn(),
 }));
 vi.mock("../components/groceries-list", () => ({
   GroceriesList: ({ empty }: { empty: React.ReactNode }) => empty,
@@ -54,6 +56,7 @@ vi.mock("../components/groceries-states", () => ({
 }));
 vi.mock("../components/list-settings-menu", () => ({ ListSettingsMenu: () => null }));
 vi.mock("../utils/list-rows", () => ({ recipeListRows: () => [], storeListRows: () => [] }));
+vi.mock("../utils/grocery-drop", () => ({ planRecipeDrop: vi.fn(), planStoreDrop: vi.fn() }));
 
 const { GroceriesScreen } = await import("../screens/groceries-screen");
 

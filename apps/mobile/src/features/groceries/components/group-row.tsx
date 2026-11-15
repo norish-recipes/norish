@@ -25,6 +25,7 @@ export function GroupRow({
   subline,
   onToggle,
   onEdit,
+  onDrag,
 }: {
   group: GroceryGroup;
   store: StoreDto | null;
@@ -32,6 +33,8 @@ export function GroupRow({
   subline: string | null;
   onToggle: (ids: string[], isDone: boolean) => void;
   onEdit: (id: string) => void;
+  /** Lifts the group as one; left out on a done group, which stays put. */
+  onDrag?: () => void;
 }) {
   const intl = useIntl();
   const { formatAmountUnit } = useUnitFormatter(intl.locale);
@@ -64,6 +67,7 @@ export function GroupRow({
           accessibilityState={only ? undefined : { expanded: open }}
           className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
           testID={`group-${group.primaryId}`}
+          onLongPress={onDrag}
           onPress={() => (only ? onEdit(only.grocery.id) : setOpen(!open))}
         >
           <View className="min-w-0 flex-1 gap-0.5">

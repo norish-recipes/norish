@@ -9,6 +9,7 @@ import { useIngredientsSubscription, useUnitsQuery } from "@norish/shared-react/
 import {
   groupGroceriesByRecipe,
   useAisleLinksLoading,
+  useFileGroceryName,
   useGroceriesMutations,
   useGroceriesQuery,
   useGroceriesSubscription,
@@ -17,14 +18,17 @@ import {
   useStorePricesSubscription,
   useStoresQuery,
   useStoresSubscription,
+  writeDrop,
 } from "@norish/shared-react/groceries";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
 
 import type { ListActions } from "../components/groceries-list";
+import type { GroceryDrop } from "../utils/grocery-drop";
 import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { ListSettingsMenu } from "../components/list-settings-menu";
+import { planRecipeDrop, planStoreDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows } from "../utils/list-rows";
 
 /** Adds or removes `key`: the sets of folded sections and of open done tails. */
@@ -48,8 +52,14 @@ export function GroceriesScreen() {
   const { aisleFor } = useStoreAisles();
   const aislesLoading = useAisleLinksLoading();
   const { units } = useUnitsQuery();
-  const { toggleGroceries, deleteGroceries, markAllDoneInStore, deleteDoneInStore } =
-    useGroceriesMutations();
+  const {
+    toggleGroceries,
+    deleteGroceries,
+    markAllDoneInStore,
+    deleteDoneInStore,
+    reorderGroceriesInStore,
+  } = useGroceriesMutations();
+  const fileGroceryName = useFileGroceryName();
   // Device Preferences: the reader's own choice on this device, as on web.
   const [view, setView] = useDevicePreference("groceryViewMode");
   const [grouped, setGrouped] = useDevicePreference("groceryGroupSimilar");
@@ -66,28 +76,33 @@ export function GroceriesScreen() {
   // Until a read holds data an empty list is unread, not empty: a failed first read stays a skeleton.
   const unread = groceries.length === 0 && !(isRead && (view === "recipe" || storesRead));
   const loading = isLoading || storesLoading || aislesLoading || unread;
+  const groups =
+    view === "store" && grouped
+      ? groupGroceriesByIngredient(groceries, getRecipeNameForGrocery, units, (grocery) =>
+          aisleFor(grocery.storeId, grocery.ingredientId)
+        )
+      : null;
+  const recipes =
+    view === "recipe"
+      ? groupGroceriesByRecipe(
+          groceries,
+          recipeMap,
+          intl.formatMessage({ id: "groceries.empty.manual" })
+        )
+      : [];
   const rows =
     view === "store"
-      ? storeListRows({
-          stores,
-          groceries,
-          aisleFor,
-          groups: grouped
-            ? groupGroceriesByIngredient(groceries, getRecipeNameForGrocery, units, (grocery) =>
-                aisleFor(grocery.storeId, grocery.ingredientId)
-              )
-            : null,
-          doneOpen,
-          collapsed,
-        })
-      : recipeListRows(
-          groupGroceriesByRecipe(
-            groceries,
-            recipeMap,
-            intl.formatMessage({ id: "groceries.empty.manual" })
-          ),
-          stores
-        );
+      ? storeListRows({ stores, groceries, aisleFor, groups, doneOpen, collapsed })
+      : recipeListRows(recipes, stores);
+  // Planned against the list as it is when the row lands, and written as web writes a drop.
+  const drop = (landed: GroceryDrop) => {
+    const plan =
+      view === "store"
+        ? planStoreDrop({ drop: landed, groceries, stores, aisleFor, groups })
+        : planRecipeDrop(landed, recipes);
+
+    return plan !== null && writeDrop(plan, reorderGroceriesInStore, fileGroceryName);
+  };
   const nothing = groceries.length === 0 && (view === "recipe" || stores.length === 0);
 
   const clear = (name: string | null, ids: string[]) =>
@@ -160,6 +175,7 @@ export function GroceriesScreen() {
         recurringById={new Map(recurringGroceries.map((recurring) => [recurring.id, recurring]))}
         rows={loading ? [] : nothing ? [] : rows}
         storeNameOnLines={view === "recipe"}
+        onDrop={drop}
       />
     </View>
   );

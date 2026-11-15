@@ -30,7 +30,11 @@ export type Item =
   | { type: "line"; grocery: GroceryDto; store: StoreDto | null }
   | { type: "group"; group: GroceryGroup; store: StoreDto | null };
 
-export type ListRow = DragRow<Heading, Item> & { edge: Edge };
+/** A row's value with its corners; held in the value, so a drag list's renderers see them. */
+export type ListHeading = Heading & { edge: Edge };
+export type ListItem = Item & { edge: Edge };
+
+export type ListRow = DragRow<ListHeading, ListItem>;
 
 export const UNSORTED_KEY = "unsorted";
 
@@ -40,10 +44,13 @@ const bySortOrder = (a: GroceryDto, b: GroceryDto) => (a.sortOrder ?? 0) - (b.so
 
 /** A section's rows with the card's corners set: the first rounds the top, the last the bottom. */
 function sealed(rows: DragRow<Heading, Item>[]): ListRow[] {
-  return rows.map((row, index) => ({
-    ...row,
-    edge: { top: index === 0, bottom: index === rows.length - 1 },
-  }));
+  return rows.map((row, index): ListRow => {
+    const edge = { top: index === 0, bottom: index === rows.length - 1 };
+
+    if (row.kind === "heading") return { ...row, value: { ...row.value, edge } };
+
+    return { ...row, value: { ...row.value, edge } };
+  });
 }
 
 type StoreListInput = {
