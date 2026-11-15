@@ -52,7 +52,7 @@ const log = createClientLogger("calendar-widgets");
 const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => {
   "widget";
   const dark = environment.colorScheme === "dark";
-  // The board's widget tokens in sRGB; an 8-digit hex is ARGB.
+  // The board's widget tokens in sRGB; an 8-digit hex is RGBA here.
   const ground = dark ? "#201E1A" : "#FFFFFF";
   const ink = dark ? "#FBFCFC" : "#181918";
   const muted = dark ? "#AEAAA3" : "#615D56";
@@ -106,7 +106,7 @@ const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => 
       )}
     </VStack>,
     <Spacer key="space" />,
-    <VStack key="slot">{label(props.slot, props.photo ? "#D9FFFFFF" : accent)}</VStack>,
+    <VStack key="slot">{label(props.slot, props.photo ? "#FFFFFFD9" : accent)}</VStack>,
     <VStack key="name">{title(props.name, props.photo ? "#FFFFFF" : ink)}</VStack>,
   ];
 
@@ -129,7 +129,7 @@ const mealLayout = (props: SmallWidgetProps, environment: WidgetEnvironment) => 
         modifiers={[
           foregroundStyle({
             type: "linearGradient",
-            colors: ["#73000000", "#00000000", "#00000000", "#9E000000"],
+            colors: ["#00000073", "#00000000", "#00000000", "#0000009E"],
             startPoint: { x: 0.5, y: 0 },
             endPoint: { x: 0.5, y: 1 },
           }),
@@ -157,8 +157,8 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
   const muted = dark ? "#AEAAA3" : "#615D56";
   const accent = dark ? "#76C788" : "#336640";
   const soft = dark ? "#2D2B27" : "#ECE7DE";
-  // The accent at half strength, as ARGB.
-  const ring = dark ? "#8C76C788" : "#80336640";
+  // The accent at half strength, as RGBA.
+  const ring = dark ? "#76C7888C" : "#33664080";
 
   if (props.kind === "message") {
     return (
@@ -194,12 +194,25 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
       <VStack spacing={0}>
         {props.days.map((day) => (
           <ZStack key={day.key}>
-            {day.today ? (
+            {/* Under the row: its empty space opens the day, and today carries the ring. */}
+            <Link destination={day.url}>
               <RoundedRectangle
                 cornerRadius={12}
-                modifiers={[strokeBorder({ content: ring, style: { lineWidth: 2 } })]}
+                modifiers={[
+                  foregroundStyle("#00000000"),
+                  ...(day.today
+                    ? [
+                        strokeBorder({
+                          content: ring,
+                          style: { lineWidth: 2 },
+                          shape: "roundedRectangle",
+                          cornerRadius: 12,
+                        }),
+                      ]
+                    : []),
+                ]}
               />
-            ) : null}
+            </Link>
             <HStack
               alignment="top"
               modifiers={[padding({ vertical: 7, horizontal: 8 })]}
@@ -207,7 +220,7 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
             >
               <Link destination={day.url}>
                 <HStack
-                  modifiers={[frame({ width: 54, height: 20, alignment: "leading" })]}
+                  modifiers={[frame({ width: 62, height: 20, alignment: "leading" })]}
                   spacing={4}
                 >
                   <Text
@@ -255,10 +268,7 @@ const weekLayout = (props: LargeWidgetProps, environment: WidgetEnvironment) => 
                   </Link>
                 ))}
               </VStack>
-              {/* A day's empty space opens the day. */}
-              <Link destination={day.url}>
-                <Rectangle modifiers={[foregroundStyle("#00000000"), frame({ height: 20 })]} />
-              </Link>
+              <Spacer />
             </HStack>
           </ZStack>
         ))}
