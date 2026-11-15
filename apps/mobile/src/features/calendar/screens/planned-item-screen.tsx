@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -117,7 +118,10 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
                   testID="planned-item-groceries"
                   variant="secondary"
                   onPress={() =>
-                    router.replace({ pathname: "/calendar/add-to-groceries", params: { recipeId } })
+                    router.replace({
+                      pathname: TAB_ROUTES.calendar.addToGroceries,
+                      params: { recipeId },
+                    })
                   }
                 >
                   <Button.Label>{intl.formatMessage({ id: "navbar.nav.groceries" })}</Button.Label>

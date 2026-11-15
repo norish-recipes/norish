@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
@@ -99,7 +100,10 @@ export function CalendarScreen() {
             <DayHeadingRow
               heading={heading}
               onAdd={() =>
-                router.push({ pathname: "/calendar/plan-recipe", params: { date: heading.dayKey } })
+                router.push({
+                  pathname: TAB_ROUTES.calendar.planRecipe,
+                  params: { date: heading.dayKey },
+                })
               }
             />
           ) : (
@@ -110,7 +114,9 @@ export function CalendarScreen() {
           <PlannedItemRow
             row={row}
             onDrag={drag}
-            onOpen={() => router.push({ pathname: "/calendar/item", params: { id: row.item.id } })}
+            onOpen={() =>
+              router.push({ pathname: TAB_ROUTES.calendar.item, params: { id: row.item.id } })
+            }
           />
         )}
         rows={rows}

@@ -2,6 +2,7 @@ import React from "react";
 import { FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { tabListBottomInset } from "@/components/tab-list-inset";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -22,7 +23,7 @@ export function PantryScreen() {
       <TitleRow title={intl.formatMessage({ id: "groceries.page.pantry" })}>
         <ListSwitch
           value="pantry"
-          onChange={(value) => value === "list" && router.dismissTo("/groceries")}
+          onChange={(value) => value === "list" && router.dismissTo(TAB_ROUTES.groceries.root)}
         />
       </TitleRow>
       <View className="px-5 pb-3.5">

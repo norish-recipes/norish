@@ -4,6 +4,7 @@ import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-acces
 import { PlanRecipeAccessory } from "@/features/shell/components/plan-recipe-accessory";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { usePathname } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
@@ -15,9 +16,10 @@ export function ShellTabs() {
   const hidden = useTabBarHidden();
   const path = usePathname();
   // The Pantry (and its food sheet) draws no accessory: nothing is added to the list from there.
-  const onPantry = path.startsWith("/groceries/pantry") || path.startsWith("/groceries/food");
-  const onGroceries = path.startsWith("/groceries");
-  const onCalendar = path.startsWith("/calendar");
+  const onPantry =
+    path.startsWith(TAB_ROUTES.groceries.pantry) || path.startsWith(TAB_ROUTES.groceries.food);
+  const onGroceries = path.startsWith(TAB_ROUTES.groceries.root);
+  const onCalendar = path.startsWith(TAB_ROUTES.calendar.root);
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>

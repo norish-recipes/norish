@@ -1,7 +1,9 @@
+import { TAB_ROUTES } from "./tab-routes";
+
 /** The Add to groceries route; a page passes the servings it shows, a card leaves them to the recipe. */
 export function addToGroceriesRoute(recipeId: string, servings?: number) {
   return {
-    pathname: "/add-to-groceries" as const,
+    pathname: TAB_ROUTES.recipes.addToGroceries,
     params: servings === undefined ? { recipeId } : { recipeId, servings: String(servings) },
   };
 }

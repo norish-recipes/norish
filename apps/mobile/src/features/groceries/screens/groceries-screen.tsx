@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useConfirm } from "@/hooks/use-confirm";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -160,12 +161,12 @@ export function GroceriesScreen() {
                   )
                 }
                 onGrouped={setGrouped}
-                onManageStores={() => router.push("/groceries/stores")}
+                onManageStores={() => router.push(TAB_ROUTES.groceries.stores)}
                 onView={setView}
               />
               <ListSwitch
                 value="list"
-                onChange={(value) => value === "pantry" && router.push("/groceries/pantry")}
+                onChange={(value) => value === "pantry" && router.push(TAB_ROUTES.groceries.pantry)}
               />
             </View>
           </TitleRow>

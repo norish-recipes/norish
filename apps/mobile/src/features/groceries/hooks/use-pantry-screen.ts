@@ -1,6 +1,7 @@
 import type { ComponentRef } from "react";
 import { useRef, useState } from "react";
 import { TextInput } from "react-native";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -63,7 +64,7 @@ export function usePantryScreen() {
     fieldRef.current?.focus();
   };
   const actions: PantryActions = {
-    open: (item) => router.push({ pathname: "/groceries/food", params: { id: item.id } }),
+    open: (item) => router.push({ pathname: TAB_ROUTES.groceries.food, params: { id: item.id } }),
     putOnTheList: (item) => {
       const { name, undo } = putOnList(item);
 

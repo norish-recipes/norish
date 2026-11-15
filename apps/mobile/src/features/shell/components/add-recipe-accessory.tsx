@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { usePathname, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -33,7 +34,7 @@ export function AddRecipeAccessory() {
       testID={cookbookId ? "cookbook-add-recipes-accessory" : "add-recipe"}
       onPress={() =>
         cookbookId
-          ? router.push({ pathname: "/cookbook-add-recipes", params: { cookbookId } })
+          ? router.push({ pathname: TAB_ROUTES.recipes.cookbookAddRecipes, params: { cookbookId } })
           : router.push("/add-recipe")
       }
     >

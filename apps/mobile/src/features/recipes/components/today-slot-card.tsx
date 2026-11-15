@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
 import { SLOT_GLYPHS } from "@/components/slot-icons";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -56,7 +57,7 @@ export function TodayAddCard({ slot }: { slot: Slot }) {
       accessibilityRole="button"
       className={`bg-default items-center justify-center gap-2 ${TODAY_CARD}`}
       testID={`today-add-${slot}`}
-      onPress={() => router.push({ pathname: "/plan-recipe", params: { slot } })}
+      onPress={() => router.push({ pathname: TAB_ROUTES.recipes.planRecipe, params: { slot } })}
     >
       <SlotChip slot={slot} />
       <Ionicons color={muted} name="add" size={26} />
