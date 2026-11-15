@@ -13,7 +13,13 @@ import { useToday } from "@norish/shared-react/reader";
 import type { TimelineRow } from "../utils/timeline-rows";
 import { CalendarHeader } from "../components/calendar-header";
 import { DayHeadingRow, PlannedItemRow, SlotLabelRow } from "../components/timeline-row";
-import { hasGapAbove, planTimelineDrop, rowLayouts, timelineRows } from "../utils/timeline-rows";
+import {
+  dayRowKey,
+  planTimelineDrop,
+  rowDay,
+  rowLayout,
+  timelineRows,
+} from "../utils/timeline-rows";
 
 const SKELETONS = [0, 1, 2, 3];
 
@@ -42,14 +48,13 @@ export function CalendarScreen() {
   // Stable: FlatList refuses a new viewability callback after its first render.
   const [onViewable] = useState(() => {
     const changed: ViewableChange = ({ viewableItems }) =>
-      setShownDays([...new Set(viewableItems.map(({ item }) => dayOf(item)))]);
+      setShownDays([...new Set(viewableItems.map(({ item }) => rowDay(item)))]);
 
     return changed;
   });
 
   const rows = timelineRows(days, calendarData, todayKey);
-  const layouts = rowLayouts(rows);
-  const todayIndex = rows.findIndex((row) => row.key === `day:${todayKey}`);
+  const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
   const growUnlessHeld = (direction: "past" | "future") => {
     if (!heldRef.current) grow(direction);
@@ -84,15 +89,15 @@ export function CalendarScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
         contentInsetAdjustmentBehavior="never"
-        getItemLayout={(_, index) => ({ ...layouts[index]!, index })}
+        // The rows the list shows, which a held row keeps still while `rows` moves on.
+        getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index), index })}
         initialNumToRender={12}
         initialScrollIndex={todayIndex < 0 ? undefined : todayIndex}
         // Rows added above keep the ones on screen where they are.
         maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-        renderHeading={(heading, index) =>
+        renderHeading={(heading) =>
           heading.type === "day" ? (
             <DayHeadingRow
-              gap={hasGapAbove(rows[index]!, index)}
               heading={heading}
               onAdd={() =>
                 router.push({ pathname: "/calendar/plan-recipe", params: { date: heading.dayKey } })
@@ -132,6 +137,3 @@ export function CalendarScreen() {
     </View>
   );
 }
-
-const dayOf = (row: TimelineRow) =>
-  row.kind === "heading" ? row.value.dayKey : row.value.item.date;

@@ -14,7 +14,7 @@ import { usePlannedItemText } from "@norish/shared-react/calendar";
 import { isRecipeItem, slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
 
 import type { TimelineHeading, TimelineItem } from "../utils/timeline-rows";
-import { rowHeight, TIMELINE } from "../utils/timeline-rows";
+import { itemHeight, TIMELINE } from "../utils/timeline-rows";
 
 /** Today's ring, drawn over each of its card's slices: the sides, and the top or bottom at its ends. */
 function TodayRing({ edge }: { edge: Edge }) {
@@ -29,11 +29,9 @@ function TodayRing({ edge }: { edge: Edge }) {
 /** A day card's top: the date, Today named, and the add that opens add-to-day. */
 export function DayHeadingRow({
   heading,
-  gap,
   onAdd,
 }: {
   heading: Extract<TimelineHeading, { type: "day" }>;
-  gap: boolean;
   onAdd: () => void;
 }) {
   const intl = useIntl();
@@ -42,7 +40,7 @@ export function DayHeadingRow({
   const edge = { top: true, bottom: heading.empty };
 
   return (
-    <CardSlice edge={edge} gap={gap} separated={false}>
+    <CardSlice edge={edge} gap={heading.gap} separated={false}>
       <View
         className={`flex-row items-center gap-2 px-4 ${heading.empty ? "" : "border-separator border-b"}`}
         style={{ marginTop: TIMELINE.dayTop, height: TIMELINE.dayHeader }}
@@ -124,7 +122,7 @@ export function PlannedItemRow({
         accessibilityRole="button"
         className="justify-start px-4"
         style={{
-          height: rowHeight({ kind: "item", key: "", value: row }),
+          height: itemHeight(row),
           paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
         }}
         testID={`calendar-item-${row.item.id}`}

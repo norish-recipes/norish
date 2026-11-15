@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 import type { TimelineHeading, TimelineItem, TimelineRow } from "../utils/timeline-rows";
-import { planTimelineDrop, rowLayouts, TIMELINE, timelineRows } from "../utils/timeline-rows";
+import {
+  dayRowKey,
+  itemHeight,
+  planTimelineDrop,
+  rowDay,
+  rowLayout,
+  TIMELINE,
+  timelineRows,
+} from "../utils/timeline-rows";
 
 function planned(id: string, date: string, slot: Slot, sortOrder = 0): PlannedItemFromQuery {
   return {
@@ -55,17 +63,27 @@ describe("timelineRows", () => {
     ]);
   });
 
-  it("marks today, empty days and where a card ends", () => {
-    expect(heading("day:2026-11-12")).toMatchObject({ isToday: true, empty: true });
-    expect(heading("day:2026-11-11")).toMatchObject({ isToday: false, empty: false });
+  it("marks today, empty days, the gap above every card but the first, and where a card ends", () => {
+    expect(heading("day:2026-11-12")).toMatchObject({ isToday: true, empty: true, gap: true });
+    expect(heading("day:2026-11-11")).toMatchObject({ isToday: false, empty: false, gap: false });
     expect(item("eggs")).toMatchObject({ firstInSlot: true, lastOfDay: false });
     expect(item("stew")).toMatchObject({ firstInSlot: false, lastOfDay: true });
   });
+
+  it("keys a day's row by its day, and tells each row's day", () => {
+    expect(rows.find((row) => row.key === dayRowKey("2026-11-12"))?.kind).toBe("heading");
+    expect(rows.map(rowDay).slice(4, 8)).toEqual([
+      "2026-11-11",
+      "2026-11-11",
+      "2026-11-12",
+      "2026-11-13",
+    ]);
+  });
 });
 
-describe("rowLayouts", () => {
+describe("rowLayout", () => {
   it("stacks the rows with a gap above every card but the first", () => {
-    const layouts = rowLayouts(rows);
+    const layouts = rows.map((_, index) => rowLayout(rows, index));
     const day = TIMELINE.dayTop + TIMELINE.dayHeader;
 
     expect(layouts[0]).toEqual({ offset: 0, length: day });
@@ -73,6 +91,23 @@ describe("rowLayouts", () => {
     expect(layouts[5]!.length).toBe(TIMELINE.photo + TIMELINE.itemGap + TIMELINE.cardBottom);
     expect(layouts[6]!.length).toBe(TIMELINE.gap + day + TIMELINE.emptyBottom);
     expect(layouts[7]!.offset).toBe(layouts[6]!.offset + layouts[6]!.length);
+    expect(layouts[5]!.length).toBe(itemHeight(item("stew")));
+  });
+
+  it("lays out the rows it is given, whatever the plan is now", () => {
+    // Held under a drag: another member's plan lands above, another's leaves the last day.
+    const now = timelineRows(
+      days,
+      { ...data, "2026-11-11": [...data["2026-11-11"], planned("pie", "2026-11-11", "Lunch")] },
+      "2026-11-12"
+    );
+    const last = rows.length - 1;
+
+    expect(rowLayout(now, now.length - 1).offset).toBeGreaterThan(rowLayout(rows, last).offset);
+    expect(rowLayout(rows, last)).toEqual({
+      offset: rows.slice(0, last).reduce((sum, _, index) => sum + rowLayout(rows, index).length, 0),
+      length: itemHeight(item("toast")),
+    });
   });
 });
 

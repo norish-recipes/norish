@@ -15,7 +15,10 @@ type CalendarData = Record<string, PlannedItemFromQuery[]>;
 export type TimelineHeading = {
   dayKey: string;
   isToday: boolean;
-} & ({ type: "day"; date: Date; empty: boolean } | { type: "slot"; slot: Slot });
+} & (
+  | { type: "day"; date: Date; empty: boolean; /** A gap above: every card but the first. */ gap: boolean }
+  | { type: "slot"; slot: Slot }
+);
 
 /** A planned item's row; the first in its slot sits under the label, the last ends its card. */
 export type TimelineItem = {
@@ -44,9 +47,16 @@ export const TIMELINE = {
   cardBottom: 14,
 } as const;
 
+/** A day top's row key. */
+export const dayRowKey = (dayKey: string) => `day:${dayKey}`;
+
+/** The day a row belongs to. */
+export const rowDay = (row: TimelineRow) =>
+  row.kind === "heading" ? row.value.dayKey : row.value.item.date;
+
 /** One row per day top, filled slot and planned item, from the first day to the last. */
 export function timelineRows(days: Date[], data: CalendarData, todayKey: string): TimelineRow[] {
-  return days.flatMap((date): TimelineRow[] => {
+  return days.flatMap((date, dayIndex): TimelineRow[] => {
     const key = dateKey(date);
     const isToday = key === todayKey;
     const bySlot = groupTodayItemsBySlot(data[key] ?? []);
@@ -56,8 +66,15 @@ export function timelineRows(days: Date[], data: CalendarData, todayKey: string)
     return [
       {
         kind: "heading",
-        key: `day:${key}`,
-        value: { type: "day", dayKey: key, isToday, date, empty: slots.length === 0 },
+        key: dayRowKey(key),
+        value: {
+          type: "day",
+          dayKey: key,
+          isToday,
+          date,
+          empty: slots.length === 0,
+          gap: dayIndex > 0,
+        },
       },
       ...slots.flatMap((slot): TimelineRow[] => [
         {
@@ -80,36 +97,43 @@ export function timelineRows(days: Date[], data: CalendarData, todayKey: string)
   });
 }
 
-/** A row's height without the gap above a card; `rowOffsets` adds that. */
-export function rowHeight(row: TimelineRow): number {
-  if (row.kind === "item") {
-    const { firstInSlot, lastOfDay } = row.value;
+/** A planned item's row: its line, the gap above it in its slot, the card's close under the last. */
+export function itemHeight({ firstInSlot, lastOfDay }: TimelineItem): number {
+  return TIMELINE.photo + (firstInSlot ? 0 : TIMELINE.itemGap) + (lastOfDay ? TIMELINE.cardBottom : 0);
+}
 
-    return (
-      TIMELINE.photo + (firstInSlot ? 0 : TIMELINE.itemGap) + (lastOfDay ? TIMELINE.cardBottom : 0)
-    );
-  }
+/** A row's height without the gap above a card; `rowLayout` adds that. */
+export function rowHeight(row: TimelineRow): number {
+  if (row.kind === "item") return itemHeight(row.value);
   if (row.value.type === "slot") return TIMELINE.slotLabel;
 
   return TIMELINE.dayTop + TIMELINE.dayHeader + (row.value.empty ? TIMELINE.emptyBottom : 0);
 }
 
-/** Whether a gap sits above the row: every card's top but the first. */
-export const hasGapAbove = (row: TimelineRow, index: number) =>
-  index > 0 && row.kind === "heading" && row.value.type === "day";
+const rowLength = (row: TimelineRow) =>
+  rowHeight(row) + (row.kind === "heading" && row.value.type === "day" && row.value.gap ? TIMELINE.gap : 0);
 
-/** Each row's top edge and full length, its gap included. */
-export function rowLayouts(rows: TimelineRow[]) {
-  let offset = 0;
+// Per rows array: a list asks for every row's layout, so each set is added up once.
+const layoutsOf = new WeakMap<ArrayLike<TimelineRow>, { offset: number; length: number }[]>();
 
-  return rows.map((row, index) => {
-    const length = rowHeight(row) + (hasGapAbove(row, index) ? TIMELINE.gap : 0);
-    const layout = { offset, length };
+/** Row `index`'s top edge and full length, its gap included, among `rows`: the rows the list shows. */
+export function rowLayout(rows: ArrayLike<TimelineRow>, index: number) {
+  let layouts = layoutsOf.get(rows);
 
-    offset += length;
+  if (!layouts) {
+    let offset = 0;
 
-    return layout;
-  });
+    layouts = Array.from(rows, (row) => {
+      const layout = { offset, length: rowLength(row) };
+
+      offset += layout.length;
+
+      return layout;
+    });
+    layoutsOf.set(rows, layouts);
+  }
+
+  return layouts[index] ?? { offset: 0, length: 0 };
 }
 
 /**
