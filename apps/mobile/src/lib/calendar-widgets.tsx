@@ -43,6 +43,7 @@ import type {
 import { clearPhotos, renderWithPhotos } from "./calendar-widget-photos";
 import { calendarWidgetTimelines, signedOutTimelines, todayUrl } from "./calendar-widgets-state";
 import { lastPushed } from "./last-pushed";
+import { serialQueue } from "./serial-queue";
 
 const log = createClientLogger("calendar-widgets");
 
@@ -299,15 +300,10 @@ const pushed = lastPushed<WidgetTimelines>();
 let ended = false;
 // Bumped by a session end: a refresh started before it writes no photo and pushes nothing.
 let generation = 0;
-let chain: Promise<void> = Promise.resolve();
-
-function queue(task: () => Promise<void>): Promise<void> {
-  chain = chain.then(task).catch((error: unknown) => {
-    log.warn({ error }, "Could not update the calendar widgets");
-  });
-
-  return chain;
-}
+const widgetPushes = serialQueue((error) =>
+  log.warn({ error }, "Could not update the calendar widgets")
+);
+const queue = widgetPushes.run;
 
 function push(timelines: WidgetTimelines) {
   if (!widgets || pushed.holds(timelines)) return;
@@ -350,7 +346,7 @@ export function clearCalendarWidgets(signIn: string): Promise<void> {
   ended = true;
   generation += 1;
   // The next session's pushes do not queue behind a download the ended one left running.
-  chain = Promise.resolve();
+  widgetPushes.reset();
 
   return queue(async () => {
     push(signedOutTimelines({ signIn }));

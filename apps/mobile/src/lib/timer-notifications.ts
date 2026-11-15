@@ -5,6 +5,7 @@ import { runningTimers, useTimerStore } from "@norish/shared-react/recipes/timer
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { TimerStrings } from "./timer-activity-state";
+import { serialQueue } from "./serial-queue";
 import { syncTimerActivity } from "./timer-activity";
 import { timerActivityPlan } from "./timer-activity-state";
 
@@ -57,16 +58,9 @@ export function planTimerNotifications(
 }
 
 // One sync or end at a time, so two quick changes never schedule a timer twice and an end follows any sync.
-let syncing = Promise.resolve();
-
-/** Runs `step` after the queued ones; a failure is logged, so it never stops the next. */
-function queue(step: () => Promise<void>): Promise<void> {
-  syncing = syncing
-    .then(step)
-    .catch((error: unknown) => log.warn({ error }, "Could not sync the Recipe Timers"));
-
-  return syncing;
-}
+const { run: queue } = serialQueue((error) =>
+  log.warn({ error }, "Could not sync the Recipe Timers")
+);
 
 /** Brings the pending notifications and the Live Activity in line with the store's timers. */
 export function syncTimers(strings: TimerStrings): Promise<void> {
