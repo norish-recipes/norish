@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Platform } from "react-native";
-import { useSignedOutWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
+import { clearCalendarWidgets } from "@/lib/calendar-widgets";
 import { Stack } from "expo-router";
+import { useIntl } from "react-intl";
 
 export default function AuthLayout() {
-  useSignedOutWidgets();
+  const signIn = useIntl().formatMessage({ id: "calendar.widgets.signIn" });
+
+  // Signed out, both widgets say "Open Norish to sign in" in the app's language and hold no photos.
+  useEffect(() => void clearCalendarWidgets(signIn), [signIn]);
 
   return (
     <Stack

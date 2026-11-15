@@ -1,10 +1,6 @@
 import { useEffect, useEffectEvent, useState } from "react";
 import { AppState } from "react-native";
-import {
-  clearCalendarWidgets,
-  startCalendarWidgets,
-  syncCalendarWidgets,
-} from "@/lib/calendar-widgets";
+import { startCalendarWidgets, syncCalendarWidgets } from "@/lib/calendar-widgets";
 import { WIDGET_DATA_DAYS } from "@/lib/calendar-widgets-state";
 import { hashKey, useQueryClient } from "@tanstack/react-query";
 import { useIntl } from "react-intl";
@@ -81,11 +77,4 @@ export function useCalendarWidgets() {
 
     return () => subscription.remove();
   }, []);
-}
-
-/** Signed out, both widgets say "Open Norish to sign in" in the app's language and hold no photos. */
-export function useSignedOutWidgets() {
-  const signIn = useIntl().formatMessage({ id: "calendar.widgets.signIn" });
-
-  useEffect(() => void clearCalendarWidgets(signIn), [signIn]);
 }
