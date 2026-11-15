@@ -165,9 +165,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: e2e-results-${{ matrix.shard }}
-          path: apps/web/__tests__/e2e/.results
+          path: ${{ runner.temp }}/norish-e2e-results
           retention-days: 7
           if-no-files-found: ignore
-          # Everything lives under dot-directories, which the action skips
-          # by default — without this the upload silently finds nothing.
+          # Playwright keeps .last-run.json and in-flight artifacts under dot-names.
           include-hidden-files: true
