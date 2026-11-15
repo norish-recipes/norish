@@ -25,6 +25,7 @@
 - Limit: the extension renders with no clock and one stale date, so without a push a finished row among running ones stays first at 0:00 until the app runs.
 - Maintainer device check, added: tap the island compact (leading and trailing), minimal and expanded: each opens cook mode on the soonest step; swipe the activity away, then pause or adjust: it stays away; start a timer: it returns.
 - Ticket 30: docs and release notes for the Live Activity (what it shows, the tap, Done, that it needs Live Activities allowed in Settings).
+- Correction (2026-11-15, ticket 29): `expo-widgets` reads an 8-digit hex as RGBA (alpha last), not ARGB as noted above.
 
 ### Review log (2026-11-15)
 
