@@ -180,6 +180,65 @@ describe("runReplayPass", () => {
     expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toContain("tick");
   });
 
+  it.each([
+    ["a cookbook", "cookbooks.update", "cookbooks.setMembership", { cookbookId: "c1" }],
+    ["a planned item", "calendar.updateItem", "calendar.deleteItem", { itemId: "c1" }],
+  ])(
+    "sends the writes after %s edit parked as Conflicted: its entity exists",
+    async (_, path, laterPath, laterInput) => {
+      await store.enqueue(entry({ id: "edit", path, input: { id: "c1" }, entityId: "c1" }));
+      await store.enqueue(entry({ id: "later", path: laterPath, input: laterInput }));
+      const { submit, submitted } = stubSubmit({ edit: "conflict" });
+
+      await runReplayPass({ store, submit, ownerId: "u1" });
+
+      expect(submitted).toEqual(["edit", "later"]);
+      expect((await store.loadAll()).map((e) => [e.id, e.status])).toEqual([
+        ["edit", "conflicted"],
+      ]);
+    }
+  );
+
+  it("sends a write behind an edit Conflicted in an earlier pass", async () => {
+    const edit = await store.enqueue(
+      entry({ id: "edit", path: "cookbooks.update", input: { id: "c1" }, entityId: "c1" })
+    );
+
+    await store.park(edit.seq, "conflict");
+    await store.enqueue(entry({ id: "later", input: { cookbookId: "c1" } }));
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submitted).toEqual(["later"]);
+  });
+
+  it("releases a stored write parked behind a Conflicted edit, and keeps one behind a parked create", async () => {
+    const edit = await store.enqueue(
+      entry({ id: "edit", path: "stores.update", input: { id: "s1" }, entityId: "s1" })
+    );
+    const create = await store.enqueue(
+      entry({ id: "create", path: "groceries.create", input: { id: "g1" }, entityId: "g1" })
+    );
+    const freed = await store.enqueue(entry({ id: "freed", input: { storeId: "s1" } }));
+    const held = await store.enqueue(entry({ id: "held", input: { id: "g1", storeId: "s1" } }));
+
+    await store.park(edit.seq, "conflict");
+    await store.park(create.seq, "deterministic");
+    await store.park(freed.seq, "dependency");
+    await store.park(held.seq, "dependency");
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1" });
+
+    expect(submitted).toEqual(["freed"]);
+    expect((await store.loadAll()).map((e) => [e.id, e.status, e.parkedReason])).toEqual([
+      ["edit", "conflicted", "conflict"],
+      ["create", "parked", "deterministic"],
+      ["held", "parked", "dependency"],
+    ]);
+  });
+
   it("parks a dependent edit with a replace that lands while it parks", async () => {
     const storage = createMemoryStorage();
     const { change } = storage.outbox;

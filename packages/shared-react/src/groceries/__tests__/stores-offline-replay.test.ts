@@ -2,8 +2,10 @@
  * Store writes made offline, replayed in order against a server with the repository's version
  * rules: an edit at the Store's version stores and bumps it (a renamed Aisle bumps too), a reorder
  * renumbers without bumping, and a write at another version changes nothing and answers stale.
+ * Each write is Queued by the real Outbox link, so it is stored as the app stores it.
  */
 import { act, renderHook } from "@testing-library/react";
+import { observable } from "@trpc/server/observable";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AisleInput, StoreDto } from "@norish/shared/contracts";
@@ -15,12 +17,14 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import type { OutboxEntry } from "../../offline/outbox-types";
+import { createOutboxLink } from "../../offline/outbox-link";
 import { createOutboxStore } from "../../offline/outbox-store";
 import { runReplayPass } from "../../offline/replay";
 import { replayOutboxEntry } from "../../offline/replay-client";
 import { createMemoryStorage } from "../../offline/testing/memory-storage";
 
 const sends = vi.hoisted(() => ({
+  create: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
   reorder: vi.fn(),
@@ -35,7 +39,7 @@ vi.mock("../../trpc", () => ({
     groceries: { list: { queryKey: () => ["groceries", "list"] } },
     stores: {
       list: { queryKey: () => ["stores", "list"] },
-      create: procedure(vi.fn()),
+      create: procedure(sends.create),
       update: procedure(sends.update),
       delete: procedure(sends.delete),
       reorder: procedure(sends.reorder),
@@ -85,8 +89,47 @@ const held = (): StoreDto[] => [
 function serverOf(rows: StoreDto[]) {
   const db = new Map(rows.map((row) => [row.id, structuredClone(row)]));
   const stale = (id: string, version: number) => db.get(id)?.version !== version;
+  const sent: string[] = [];
+  const groceryVersions = new Map([["g1", 1]]);
   const client = {
+    groceries: {
+      update: {
+        mutate: async (input: { groceryId: string; version: number }): Promise<Answer> => {
+          sent.push("groceries.update");
+          const refused = groceryVersions.get(input.groceryId) !== input.version;
+
+          if (!refused) groceryVersions.set(input.groceryId, input.version + 1);
+
+          return { success: true, stale: refused };
+        },
+      },
+    },
     stores: {
+      create: {
+        mutate: async (input: { id: string; name: string }): Promise<string> => {
+          sent.push("stores.create");
+          if ([...db.values()].some((row) => row.name === input.name)) {
+            throw new Error("A store with this name already exists");
+          }
+          db.set(input.id, {
+            ...structuredClone(rows[1]!),
+            id: input.id,
+            name: input.name,
+            sortOrder: db.size,
+            version: 1,
+          });
+
+          return input.id;
+        },
+      },
+      chooseProduct: {
+        mutate: async (input: { storeId: string }): Promise<{ success: true }> => {
+          sent.push("stores.chooseProduct");
+          if (!db.has(input.storeId)) throw new Error("Store not found");
+
+          return { success: true };
+        },
+      },
       update: {
         mutate: async (input: {
           id: string;
@@ -94,6 +137,7 @@ function serverOf(rows: StoreDto[]) {
           name?: string;
           aisles?: AisleInput[];
         }): Promise<Answer> => {
+          sent.push("stores.update");
           if (stale(input.id, input.version)) return { success: true, stale: true };
           const row = db.get(input.id)!;
 
@@ -130,6 +174,7 @@ function serverOf(rows: StoreDto[]) {
         mutate: async (input: {
           stores: Array<{ id: string; version: number }>;
         }): Promise<Answer> => {
+          sent.push("stores.reorder");
           const current = input.stores.filter(({ id, version }) => !stale(id, version));
 
           input.stores.forEach(({ id, version }, index) => {
@@ -141,6 +186,7 @@ function serverOf(rows: StoreDto[]) {
       },
       delete: {
         mutate: async (input: { storeId: string; version: number }): Promise<Answer> => {
+          sent.push("stores.delete");
           if (!db.has(input.storeId)) return { success: true, stale: false };
           if (stale(input.storeId, input.version)) return { success: true, stale: true };
           db.delete(input.storeId);
@@ -151,35 +197,36 @@ function serverOf(rows: StoreDto[]) {
     },
   };
 
-  return { db, client };
+  return { db, client, sent };
 }
 
 describe("store writes made offline, replayed", () => {
   const store = createOutboxStore(createMemoryStorage().outbox);
-  let queued = 0;
+  const link = createOutboxLink({
+    store,
+    owner: () => OWNER,
+    replayHeaderValue: "test-outbox",
+    wholeEdits: new Set(["recipes.update"]),
+  })({} as never);
+
+  // Unreachable: the write fails as the transport fails it, and the Outbox link Queues it.
+  const queue = (path: string, input: unknown) =>
+    new Promise<never>((_, reject) =>
+      link({
+        op: { id: 1, type: "mutation", path, input, context: {} },
+        next: () => observable((observer) => observer.error(new TypeError("Failed to fetch"))),
+      } as never).subscribe({ error: reject })
+    );
 
   beforeEach(async () => {
     for (const entry of await store.loadAll()) await store.remove(entry.seq);
     for (const [path, send] of Object.entries(sends)) {
       send.mockReset();
-      // Unreachable: the write is Queued, as the Outbox link admits it.
-      send.mockImplementation(async (input: unknown) => {
-        queued += 1;
-        await store.enqueue({
-          id: `entry-${queued}`,
-          ownerId: OWNER,
-          path: `stores.${path}`,
-          input: structuredClone(input),
-          entityId: null,
-          operationId: null,
-          headers: {},
-        });
-        throw new TypeError("Failed to fetch");
-      });
+      send.mockImplementation((input: unknown) => queue(`stores.${path}`, input));
     }
   });
 
-  async function offline(steps: Array<(m: M, stores: StoreDto[]) => void>) {
+  async function offline(steps: Array<(m: M, stores: StoreDto[]) => unknown>) {
     const queryClient = createTestQueryClient();
 
     queryClient.setQueryData(["stores", "list"], held());
@@ -194,7 +241,9 @@ describe("store writes made offline, replayed", () => {
         wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
       });
 
-      act(() => step(result.current, queryClient.getQueryData<StoreDto[]>(["stores", "list"])!));
+      await act(async () => {
+        await step(result.current, queryClient.getQueryData<StoreDto[]>(["stores", "list"])!);
+      });
       await act(async () => {
         await vi.waitFor(() => expect(queryClient.isMutating()).toBe(0));
       });
@@ -232,6 +281,21 @@ describe("store writes made offline, replayed", () => {
   const renameDairy = editAisles((aisles) =>
     aisles.map((a) => (a.id === "dairy" ? { ...a, name: "Milk" } : a))
   );
+  const addFruit = editAisles((aisles) => [...aisles, { id: "fruit", name: "Fruit" }]);
+  const create = (name: string) => (m: M) => m.createStore({ name });
+  // The newest Store of that name: a create the server refuses may share one.
+  const idOf = (stores: StoreDto[], name: string) => stores.findLast((s) => s.name === name)!.id;
+  // Writes other screens make about the Store, Queued the way theirs are.
+  const groceryToLidl = () =>
+    queue("groceries.update", { groceryId: "g1", version: 1, raw: "melk", storeId: "lidl" }).catch(
+      () => undefined
+    );
+  const chooseForLidl = () =>
+    queue("stores.chooseProduct", {
+      storeId: "lidl",
+      name: "melk",
+      choice: { kind: "typed", price: 0.89, currency: "EUR" },
+    }).catch(() => undefined);
 
   it.each([
     ["reorder, then reorder", [swap, back], { order: ["lidl", "dirk"], name: "Lidl" }],
@@ -282,6 +346,77 @@ describe("store writes made offline, replayed", () => {
       ["Bread", 0],
       ["Milk", 1],
     ]);
+  });
+
+  it("an Aisle add: stored after the Aisles there were", async () => {
+    await offline([addFruit]);
+    const server = serverOf(held());
+
+    const pass = await replay(server.client);
+
+    expect(pass).toMatchObject({ removed: 1, parked: 0, conflicted: [] });
+    expect(server.db.get("lidl")?.aisles.map((a) => [a.id, a.sortOrder, a.version])).toEqual([
+      ["dairy", 0, 1],
+      ["bread", 1, 1],
+      ["fruit", 2, 1],
+    ]);
+  });
+
+  it("a Store created offline, then edited, then reordered: every write is stored", async () => {
+    await offline([
+      create("Jumbo"),
+      (m, stores) => m.updateStore({ id: idOf(stores, "Jumbo"), name: "Jumbo XL" }),
+      (m, stores) => m.reorderStores([idOf(stores, "Jumbo XL"), "lidl", "dirk"]),
+    ]);
+    const server = serverOf(held());
+
+    const pass = await replay(server.client);
+
+    expect(pass).toMatchObject({ removed: 3, parked: 0, conflicted: [] });
+    expect(
+      [...server.db.values()].sort((a, b) => a.sortOrder - b.sortOrder).map((s) => s.name)
+    ).toEqual(["Jumbo XL", "Lidl", "Dirk"]);
+  });
+
+  it("parks the writes about a Store whose create was refused, as one story", async () => {
+    await offline([
+      create("Dirk"),
+      (m, stores) => m.updateStore({ id: idOf(stores, "Dirk"), name: "Dirk Noord" }),
+    ]);
+    const server = serverOf(held());
+
+    const pass = await replay(server.client);
+
+    expect(server.sent).toEqual(["stores.create"]);
+    expect(pass).toMatchObject({ removed: 0, parked: 2 });
+    expect((await store.loadAll()).map((e) => [e.path, e.parkedReason])).toEqual([
+      ["stores.create", "deterministic"],
+      ["stores.update", "dependency"],
+    ]);
+  });
+
+  it("sends every later write about a Store whose edit was refused, each decided on its own", async () => {
+    await offline([rename("Lidl Centrum"), swap, groceryToLidl, chooseForLidl, remove]);
+    const server = serverOf(held());
+
+    server.db.get("lidl")!.name = "Lidl Noord";
+    server.db.get("lidl")!.version = 2;
+    const pass = await replay(server.client);
+
+    expect(server.sent).toEqual([
+      "stores.update",
+      "stores.reorder",
+      "groceries.update",
+      "stores.chooseProduct",
+      "stores.delete",
+    ]);
+    // The rename lost to the other member; the rest stood on the Store's version they held.
+    expect(pass).toMatchObject({ removed: 4, parked: 1 });
+    expect((await store.loadAll()).map((e) => [e.path, e.status])).toEqual([
+      ["stores.update", "conflicted"],
+    ]);
+    expect(server.db.has("lidl")).toBe(false);
+    expect(server.db.get("dirk")?.sortOrder).toBe(0);
   });
 
   it("parks an edit as Conflicted, once, when another member changed the Store meanwhile", async () => {

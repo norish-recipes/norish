@@ -6,7 +6,8 @@
  * conflict/deterministic/exhausted failure parks it and keeps draining, and an
  * unreachable/unauthorized failure halts the queue with nothing skipped. A
  * parked create parks the edits that depend on it, so a broken chain is shown as
- * one story rather than a cascade of unrelated failures.
+ * one story rather than a cascade of unrelated failures. A Conflicted entry parks none: its
+ * entity exists, and the server's version checks decide each later write.
  *
  * Recovery owns single-flight execution, leader election, retry continuation,
  * and final cache reconciliation; this module is only the FIFO Replay pass.
@@ -106,12 +107,24 @@ export async function runReplayPass({
     if (isUncaptured(entry.path)) await store.remove(entry.seq);
   }
 
-  // Seed from already-parked entries so a pending edit behind a create parked in
-  // an earlier pass parks with it too.
+  // Seed from parked entries, so an edit behind a create parked earlier parks too. A Conflicted
+  // entity exists on the server: it seeds none, and a write once parked behind it is released.
   for (const entry of await store.forOwner(ownerId)) {
-    if (entry.status !== "pending" && entry.entityId) {
-      parkedEntityIds.add(entry.entityId);
+    if (entry.status === "pending" || entry.status === "conflicted") continue;
+
+    if (
+      entry.parkedReason === "dependency" &&
+      !referencesParkedEntity(entry.input, parkedEntityIds)
+    ) {
+      await store.change(entry.seq, (stored) =>
+        stored.status === "parked" && stored.parkedReason === "dependency"
+          ? { ...stored, status: "pending", parkedReason: undefined }
+          : undefined
+      );
+      continue;
     }
+
+    if (entry.entityId) parkedEntityIds.add(entry.entityId);
   }
 
   let removed = 0;
@@ -127,8 +140,8 @@ export async function runReplayPass({
     return { removed, parked, conflicted, remaining, halted, retryAfterMs };
   };
 
-  const countParked = (entry: OutboxEntry) => {
-    if (entry.entityId) {
+  const countParked = (entry: OutboxEntry, reason: ParkedReason) => {
+    if (entry.entityId && reason !== "conflict") {
       parkedEntityIds.add(entry.entityId);
     }
 
@@ -138,7 +151,7 @@ export async function runReplayPass({
   for (const entry of await store.forOwner(ownerId, "pending")) {
     if (referencesParkedEntity(entry.input, parkedEntityIds)) {
       await store.park(entry.seq, "dependency");
-      countParked(entry);
+      countParked(entry, "dependency");
 
       continue;
     }
@@ -166,7 +179,7 @@ export async function runReplayPass({
     const park = async (reason: ParkedReason) => {
       const parks = await settle(parkedPatch(reason));
 
-      if (parks) countParked(entry);
+      if (parks) countParked(entry, reason);
 
       return parks;
     };
