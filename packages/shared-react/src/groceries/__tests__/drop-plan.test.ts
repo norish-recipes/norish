@@ -14,6 +14,7 @@ import {
   moveKey,
   planDrop,
   planKeyedDrop,
+  planRecipeDrop,
   planRecipeReorder,
   writeDrop,
 } from "../drop-plan";
@@ -372,6 +373,34 @@ describe("keyedLines and keyedGroups", () => {
 
     expect(list.items[BAKKER]).toEqual(["kaas"]);
     expect(list.linesOf("kaas")).toEqual(kaas);
+  });
+});
+
+describe("planRecipeDrop", () => {
+  const line = (id: string, sortOrder: number, isDone = false) =>
+    ({ id, sortOrder, isDone }) as unknown as GroceryDto;
+  const LINES = [line("a", 0), line("b", 1), line("c", 2), line("done", 3, true)];
+
+  it("reorders the open lines as the drop left them", () => {
+    expect(planRecipeDrop(LINES, ["c", "a", "b", "done"], "c")?.updates).toEqual([
+      { id: "c", sortOrder: 0 },
+      { id: "a", sortOrder: 1 },
+      { id: "b", sortOrder: 2 },
+    ]);
+  });
+
+  it("keeps a line that arrived mid-drag after the ones the drop placed", () => {
+    expect(planRecipeDrop([...LINES, line("new", 4)], ["b", "a", "c"], "b")?.updates).toEqual([
+      { id: "b", sortOrder: 0 },
+      { id: "a", sortOrder: 1 },
+      { id: "c", sortOrder: 2 },
+      { id: "new", sortOrder: 3 },
+    ]);
+  });
+
+  it("puts back a drop below a done line, or one that changes nothing", () => {
+    expect(planRecipeDrop(LINES, ["b", "c", "done", "a"], "a")).toBeNull();
+    expect(planRecipeDrop(LINES, ["a", "b", "c", "done"], "b")).toBeNull();
   });
 });
 

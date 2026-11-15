@@ -3,7 +3,7 @@
  * it is now says what that means.
  */
 import { resolveDrop } from "@/components/drag-list/resolve-drop";
-import { planRecipeDrop, planStoreDrop } from "@/features/groceries/utils/grocery-drop";
+import { planRecipeRowDrop, planStoreRowDrop } from "@/features/groceries/utils/grocery-drop";
 import { recipeListRows, storeListRows } from "@/features/groceries/utils/list-rows";
 import { describe, expect, it } from "vitest";
 
@@ -80,7 +80,7 @@ function storeDrop(
   const at = (k: string) => rows.findIndex((row) => row.key === k);
   const drop = resolveDrop(rows, at(key), at(toKey));
 
-  return planStoreDrop({
+  return planStoreRowDrop({
     drop: drop!,
     groceries: now,
     stores: STORES,
@@ -89,7 +89,7 @@ function storeDrop(
   });
 }
 
-describe("planStoreDrop", () => {
+describe("planStoreRowDrop", () => {
   it("renumbers a Store for a reorder within it and files nothing", () => {
     // Rows: store:markt, apples, pears, aisle dairy, cheese; pears moves above apples.
     expect(storeDrop("line:pears", "line:apples")).toEqual({
@@ -166,7 +166,7 @@ describe("planStoreDrop", () => {
   });
 });
 
-describe("planRecipeDrop", () => {
+describe("planRecipeRowDrop", () => {
   const fromSoup = (id: string) => ({ recipeIngredientId: `ri-${id}` });
   const recipeMap = Object.fromEntries(
     ["leek", "stock", "salt"].map((id) => [`ri-${id}`, { recipeId: "r1", recipeName: "Soup" }])
@@ -183,7 +183,7 @@ describe("planRecipeDrop", () => {
     const rows = recipeListRows(recipes, STORES);
     const at = (k: string) => rows.findIndex((row) => row.key === k);
 
-    return planRecipeDrop(resolveDrop(rows, at(key), at(toKey))!, recipes);
+    return planRecipeRowDrop(resolveDrop(rows, at(key), at(toKey))!, recipes);
   }
 
   it("reorders a recipe's open lines and moves none to another Store", () => {

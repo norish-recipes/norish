@@ -28,7 +28,7 @@ import type { GroceryDrop } from "../utils/grocery-drop";
 import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { ListSettingsMenu } from "../components/list-settings-menu";
-import { planRecipeDrop, planStoreDrop } from "../utils/grocery-drop";
+import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows } from "../utils/list-rows";
 
 /** Adds or removes `key`: the sets of folded sections and of open done tails. */
@@ -98,8 +98,8 @@ export function GroceriesScreen() {
   const drop = (landed: GroceryDrop) => {
     const plan =
       view === "store"
-        ? planStoreDrop({ drop: landed, groceries, stores, aisleFor, groups })
-        : planRecipeDrop(landed, recipes);
+        ? planStoreRowDrop({ drop: landed, groceries, stores, aisleFor, groups })
+        : planRecipeRowDrop(landed, recipes);
 
     return plan !== null && writeDrop(plan, reorderGroceriesInStore, fileGroceryName);
   };

@@ -13,9 +13,8 @@ import {
   groceriesByStore,
   keyedGroups,
   keyedLines,
-  openBySortOrder,
   planKeyedDrop,
-  planRecipeReorder,
+  planRecipeDrop,
   UNSORTED_CONTAINER,
 } from "@norish/shared-react/groceries";
 
@@ -42,7 +41,7 @@ type StoreDropInput = {
 };
 
 /** A by-Store drop, after the nearest row above it still on the list; null puts it back. */
-export function planStoreDrop({
+export function planStoreRowDrop({
   drop,
   groceries,
   stores,
@@ -77,11 +76,8 @@ export function planStoreDrop({
   return planKeyedDrop({ ...list, key, target, index, stores, aisleFor });
 }
 
-/**
- * A by-recipe drop: web reorders a recipe's open lines and nothing else, so a drop into another
- * recipe or among the done lines puts it back. Lines that arrived mid-drag keep their place after.
- */
-export function planRecipeDrop(
+/** A by-recipe drop: the lines under the recipe's heading as the drop left them. */
+export function planRecipeRowDrop(
   drop: GroceryDrop,
   recipes: readonly RecipeGroceries[]
 ): DropPlan | null {
@@ -90,7 +86,7 @@ export function planRecipeDrop(
   if (item.type !== "line" || heading?.type !== "recipe") return null;
 
   const section = recipes.find(({ groceries }) =>
-    groceries.some((grocery) => grocery.id === item.grocery.id)
+    groceries.some((grocery) => grocery.id === item.key)
   );
 
   if (!section || section.recipeId !== heading.recipeId) return null;
@@ -99,18 +95,7 @@ export function planRecipeDrop(
   const next = drop.rows.findIndex((row, index) => index > start && row.kind === "heading");
   const landed = drop.rows
     .slice(start + 1, next === -1 ? undefined : next)
-    .flatMap((row) =>
-      row.kind === "item" && row.value.type === "line" ? [row.value.grocery.id] : []
-    );
-  const open = openBySortOrder(section.groceries).map((grocery) => grocery.id);
-  const done = new Set(section.groceries.filter((grocery) => grocery.isDone).map((g) => g.id));
+    .flatMap((row) => (row.kind === "item" ? [row.value.key] : []));
 
-  if (landed.slice(0, landed.indexOf(item.grocery.id)).some((id) => done.has(id))) return null;
-
-  const order = landed.filter((id) => open.includes(id));
-  const ids = [...order, ...open.filter((id) => !order.includes(id))];
-
-  if (ids.every((id, index) => open[index] === id)) return null;
-
-  return { updates: planRecipeReorder(ids), filings: [] };
+  return planRecipeDrop(section.groceries, landed, item.key);
 }

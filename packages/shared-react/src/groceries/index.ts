@@ -25,6 +25,7 @@ export {
   moveKey,
   planDrop,
   planKeyedDrop,
+  planRecipeDrop,
   planRecipeReorder,
   writeDrop,
 } from "./drop-plan";

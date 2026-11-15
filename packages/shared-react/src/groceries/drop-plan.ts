@@ -13,6 +13,7 @@ import {
   buildGroupItemsState,
   buildItemsState,
   findContainerForItem,
+  openBySortOrder,
   placeOfContainer,
   storeContainers,
 } from "./drop-containers";
@@ -215,6 +216,28 @@ export function writeDrop(
 /** A recipe's open lines in the order a drop left them, numbered from the top; no Store changes. */
 export function planRecipeReorder(ids: readonly string[]): ReorderUpdate[] {
   return ids.map((id, sortOrder) => ({ id, sortOrder }));
+}
+
+/**
+ * A by-recipe drop reorders the recipe's open lines as `landed` (its ids as the drop left them)
+ * holds them; null for a drop below a done line, or one that changes nothing.
+ */
+export function planRecipeDrop(
+  lines: readonly GroceryDto[],
+  landed: readonly string[],
+  id: string
+): DropPlan | null {
+  const open = openBySortOrder(lines).map((grocery) => grocery.id);
+  const done = new Set(lines.filter((grocery) => grocery.isDone).map((grocery) => grocery.id));
+
+  if (landed.slice(0, landed.indexOf(id)).some((other) => done.has(other))) return null;
+
+  const order = landed.filter((other) => open.includes(other));
+  const ids = [...order, ...open.filter((other) => !order.includes(other))];
+
+  if (ids.every((other, index) => open[index] === other)) return null;
+
+  return { updates: planRecipeReorder(ids), filings: [] };
 }
 
 /** The list under each Store, Unsorted (null) first; a line whose Store is gone sits under Unsorted. */
