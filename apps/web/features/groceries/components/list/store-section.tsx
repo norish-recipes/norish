@@ -8,7 +8,6 @@ import { useTranslations } from "next-intl";
 
 import type { AisleResolver } from "@norish/shared-react/groceries";
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
-import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 import {
   aisleContainerId,
   lineOf,
@@ -16,6 +15,7 @@ import {
   UNSORTED_CONTAINER,
   useStoreTotal,
 } from "@norish/shared-react/groceries";
+import { bySortOrder } from "@norish/shared/lib/grocery-grouping";
 
 import { useDndGroceryContext } from "./dnd/dnd-grocery-provider";
 import { SortableAisleContainer } from "./dnd/sortable-aisle-container";
@@ -154,9 +154,7 @@ function StoreSectionComponent({
 
   // Done groceries (including transitioning) - sorted by sortOrder
   const doneGroceries = useMemo(() => {
-    return groceries
-      .filter((g) => g.isDone || transitioningIds.has(g.id))
-      .sort(bySortOrder);
+    return groceries.filter((g) => g.isDone || transitioningIds.has(g.id)).sort(bySortOrder);
   }, [groceries, transitioningIds]);
 
   // The block's shape, read off the drag state (ADR-0031).
