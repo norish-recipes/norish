@@ -55,11 +55,11 @@ export function AuthProviders({ children }: { children: ReactNode }) {
   return (
     <MobileIntlProvider signedIn={signedIn}>
       <MobilePlatformProvider
-        endSession={async (scope) => {
+        endSession={async (scope, widgetSignIn) => {
           // Faded out while still signed in, so the ending's unmount happens out of sight.
           await fadeOutSignedIn();
           setEnding(true);
-          await endSession(authClient, scope);
+          await endSession(authClient, scope, widgetSignIn);
         }}
         session={session}
       >

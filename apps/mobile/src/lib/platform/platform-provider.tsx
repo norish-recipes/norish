@@ -13,6 +13,7 @@ import type {
   PlatformAdapter,
   PlatformSession,
   PlatformStorage,
+  SessionScope,
 } from "@norish/shared-react/platform";
 import { createIntlMessageTranslator } from "@norish/i18n";
 import { PlatformProvider } from "@norish/shared-react/platform";
@@ -46,7 +47,8 @@ export function MobilePlatformProvider({
   session,
 }: {
   children: ReactNode;
-  endSession: PlatformAdapter["endSession"];
+  /** As the adapter's, given the line the cleared widgets show in the app's language. */
+  endSession: (scope: SessionScope, widgetSignIn: string) => Promise<void>;
   session: PlatformSession;
 }) {
   const intl = useIntl();
@@ -102,7 +104,7 @@ export function MobilePlatformProvider({
     storage: mmkvStorage,
     deviceKind,
     session,
-    endSession,
+    endSession: (scope) => endSession(scope, intl.formatMessage({ id: "calendar.widgets.signIn" })),
     // After the clear: the session reads pending until this, so the sign-in stack mounts on the empty cache.
     leave: () => publishSignedOut(serverAddress),
     offlineEngine,

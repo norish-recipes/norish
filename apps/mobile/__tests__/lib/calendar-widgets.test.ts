@@ -13,6 +13,8 @@ const native = vi.hoisted(() => ({
   folder: new Set<string>(),
   downloads: [] as string[],
   failDownload: false,
+  // Set, a download waits for it: a stalled connection.
+  stall: null as Promise<void> | null,
 }));
 
 const warn = vi.hoisted(() => vi.fn());
@@ -50,6 +52,7 @@ vi.mock("expo-file-system", () => {
     }
     static downloadFileAsync = async (url: string) => {
       native.downloads.push(url);
+      await native.stall;
       if (native.failDownload) throw new Error("offline");
     };
   }
@@ -135,6 +138,7 @@ describe("syncCalendarWidgets", () => {
     native.folder.clear();
     native.downloads.length = 0;
     native.failDownload = false;
+    native.stall = null;
     warn.mockClear();
   });
 
@@ -209,7 +213,7 @@ describe("clearCalendarWidgets", () => {
     await syncCalendarWidgets(plan(), strings);
     native.small.mockClear();
 
-    await clearCalendarWidgets();
+    await clearCalendarWidgets("Open Norish to sign in");
     await syncCalendarWidgets(plan("/recipes/b/late.jpg"), strings);
 
     expect(native.small).toHaveBeenCalledTimes(1);
@@ -219,6 +223,32 @@ describe("clearCalendarWidgets", () => {
         props: { kind: "message", text: "Open Norish to sign in", url: "norish://" },
       },
     ]);
+    expect(native.folder.size).toBe(0);
+  });
+
+  it("does not wait for a photo download, and drops the photo it brings", async () => {
+    let unstall = () => {};
+
+    native.stall = new Promise((resolve) => (unstall = resolve));
+    native.downloads.length = 0;
+    native.folder.clear();
+    startCalendarWidgets();
+    const syncing = syncCalendarWidgets(plan(), strings);
+
+    await vi.waitFor(() => expect(native.downloads).toHaveLength(1));
+    native.small.mockClear();
+    const cleared = clearCalendarWidgets("Open Norish to sign in");
+    const settled = await Promise.race([
+      cleared.then(() => "cleared"),
+      new Promise((resolve) => setTimeout(() => resolve("waiting"), 50)),
+    ]);
+
+    expect(settled).toBe("cleared");
+    expect(firstSmall(0)).toMatchObject({ kind: "message", text: "Open Norish to sign in" });
+    unstall();
+    await syncing;
+
+    expect(native.small).toHaveBeenCalledTimes(1);
     expect(native.folder.size).toBe(0);
   });
 });

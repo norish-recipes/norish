@@ -300,7 +300,8 @@ const PHOTO_POINTS: Record<PhotoSize, number> = { meal: 170, thumb: 20 };
 let shown: string | null = null;
 // Set by a session end, so a push still on its way when the session ended shows nothing.
 let ended = false;
-let lastSignIn = "";
+// Bumped by a session end: a refresh started before it writes no photo and pushes nothing.
+let generation = 0;
 let chain: Promise<void> = Promise.resolve();
 
 function queue(task: () => Promise<void>): Promise<void> {
@@ -347,17 +348,18 @@ export function syncCalendarWidgets(
   strings: WidgetStrings
 ): Promise<void> {
   if (!widgets) return Promise.resolve();
-  lastSignIn = strings.signIn;
+  const started = generation;
 
-  return queue(() => refresh(plan, strings, new Set()));
+  return queue(() => refresh(plan, strings, new Set(), started));
 }
 
 async function refresh(
   plan: Record<string, PlannedItemFromQuery[]>,
   strings: WidgetStrings,
-  failed: Set<string>
+  failed: Set<string>,
+  started: number
 ): Promise<void> {
-  if (ended) return;
+  if (ended || started !== generation) return;
   const folder = photoFolder();
   const present = new Set(folder?.list().map((entry) => entry.name) ?? []);
   const wanted = new Map<string, { image: string; size: PhotoSize }>();
@@ -384,18 +386,19 @@ async function refresh(
   let fetched = false;
 
   for (const [image, sizes] of missing) {
-    if (ended) return;
-    if (await fetchPhoto(folder, image, sizes)) fetched = true;
+    if (started !== generation) return;
+    if (await fetchPhoto(folder, image, sizes, started)) fetched = true;
     else sizes.forEach(({ name }) => failed.add(name));
   }
-  if (fetched) await refresh(plan, strings, failed);
+  if (fetched) await refresh(plan, strings, failed, started);
 }
 
 /** Downloads a photo, crops it square and scales it to each size's pixels: WidgetKit refuses larger. */
 async function fetchPhoto(
   folder: Directory,
   image: string,
-  sizes: { name: string; size: PhotoSize }[]
+  sizes: { name: string; size: PhotoSize }[],
+  started: number
 ): Promise<boolean> {
   const source = serverImage(getServerAddress(), image);
   const download = new File(Paths.cache, `widget-${sizes[0]?.name ?? "photo"}`);
@@ -419,6 +422,12 @@ async function fetchPhoto(
         .renderAsync();
       const saved = await square.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
 
+      // A session ended during the download: its photo is not the next session's to keep.
+      if (started !== generation) {
+        new File(saved.uri).delete();
+
+        return false;
+      }
       new File(saved.uri).move(new File(folder, name));
     }
 
@@ -433,12 +442,15 @@ async function fetchPhoto(
 }
 
 /**
- * Leaves both widgets on the signed-out line and removes their photos, so nothing of the household
- * stays on the Home Screen. `signIn` defaults to the last line pushed; Sign in pushes its own.
+ * Leaves both widgets on `signIn`, the signed-out line, and removes their photos at once, so nothing
+ * of the household stays on the Home Screen; a refresh still downloading is dropped, not awaited.
  */
-export function clearCalendarWidgets(signIn = lastSignIn): Promise<void> {
+export function clearCalendarWidgets(signIn: string): Promise<void> {
   if (!widgets) return Promise.resolve();
   ended = true;
+  generation += 1;
+  // The next session's pushes do not queue behind a download the ended one left running.
+  chain = Promise.resolve();
 
   return queue(async () => {
     push(signedOutTimelines({ signIn }));

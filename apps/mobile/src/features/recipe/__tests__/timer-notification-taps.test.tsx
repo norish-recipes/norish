@@ -92,7 +92,7 @@ describe("useTimerNotificationTaps", () => {
     presented.add("timer:r-s1-0@4").add("other");
     launch = response("timer:r-s1-0@4", { recipeId: "r", step: 1 });
 
-    await endSession({ signOut: async () => {} }, "everywhere");
+    await endSession({ signOut: async () => {} }, "everywhere", "Sign in");
     renderHook(() => useTimerNotificationTaps());
 
     expect(push).not.toHaveBeenCalled();

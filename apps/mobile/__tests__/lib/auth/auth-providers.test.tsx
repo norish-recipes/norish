@@ -31,7 +31,7 @@ const clients = vi.hoisted(
 );
 const seen = vi.hoisted(() => ({
   sessions: [] as PlatformSession[],
-  endSession: null as ((scope: SessionScope) => Promise<void>) | null,
+  endSession: null as ((scope: SessionScope, widgetSignIn: string) => Promise<void>) | null,
   releaseSignOut: () => {},
   leave: () => {},
   // How many sessions the platform had been handed when the offline clear and the leave ran.
@@ -93,7 +93,7 @@ vi.mock("@/lib/platform/platform-provider", async () => {
     MobilePlatformProvider: (props: {
       children: ReactNode;
       session: PlatformSession;
-      endSession: (scope: SessionScope) => Promise<void>;
+      endSession: (scope: SessionScope, widgetSignIn: string) => Promise<void>;
     }) => {
       seen.sessions.push(props.session);
       seen.endSession = props.endSession;
@@ -102,7 +102,7 @@ vi.mock("@/lib/platform/platform-provider", async () => {
       const adapter = {
         ...fakePlatformAdapter(),
         session: props.session,
-        endSession: props.endSession,
+        endSession: (scope: SessionScope) => props.endSession(scope, "Sign in"),
         leave: () => {
           seen.leftAt = seen.sessions.length;
           seen.leave();
@@ -169,7 +169,7 @@ describe("AuthProviders", () => {
       const from = seen.sessions.length;
       let ending = Promise.resolve();
 
-      act(() => void (ending = seen.endSession?.(scope) ?? ending));
+      act(() => void (ending = seen.endSession?.(scope, "Sign in") ?? ending));
       // The signed-in screen fades out first, still signed in.
       expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id);
       // Once the signed-in screen has faded out, a sign-out waits on the server, with the old

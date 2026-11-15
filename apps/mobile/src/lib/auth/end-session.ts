@@ -15,8 +15,15 @@ type SignOutClient = {
   signOut: (options: { fetchOptions: { signal: AbortSignal } }) => Promise<unknown>;
 };
 
-/** Ends the session on the server too when `scope` is everywhere and it answers, and on this device always. */
-export async function endSession(authClient: SignOutClient, scope: SessionScope): Promise<void> {
+/**
+ * Ends the session on the server too when `scope` is everywhere and it answers, and on this device
+ * always; `widgetSignIn` is the line the cleared widgets show.
+ */
+export async function endSession(
+  authClient: SignOutClient,
+  scope: SessionScope,
+  widgetSignIn: string
+): Promise<void> {
   // A 401 may be a passing server error, so Session Expiry ends only the device's copy.
   if (scope === "everywhere") await signOutRemotely(authClient);
 
@@ -30,7 +37,7 @@ export async function endSession(authClient: SignOutClient, scope: SessionScope)
   }
 
   // Neither rejects: a failed end is logged and the next session's syncs still run.
-  await Promise.all([endRecipeTimers(), clearCalendarWidgets()]);
+  await Promise.all([endRecipeTimers(), clearCalendarWidgets(widgetSignIn)]);
 }
 
 async function signOutRemotely(authClient: SignOutClient): Promise<void> {
