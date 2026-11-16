@@ -192,7 +192,7 @@ const proxy = net.createServer((client) => {
 });
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
-  // `POST /reset`, `POST /recipe` (a JSON body), `GET /count?name=` and `GET /groceries` answer in JSON.
+  // `POST /reset`, `POST /recipe` (a JSON body), `GET /count?name=`, `GET /groceries` and `GET /pantry` answer in JSON.
   const route = new URL(request.url ?? "/", "http://control");
   const body = await new Promise((resolve) => {
     const chunks = [];
@@ -214,6 +214,12 @@ const control = createServer(async (request, response) => {
       response.write(
         JSON.stringify({
           names: await seed.groceryNames(Number(route.searchParams.get("min") ?? 0)),
+        })
+      );
+    } else if (route.pathname === "/pantry") {
+      response.write(
+        JSON.stringify({
+          names: await seed.pantryNames(Number(route.searchParams.get("min") ?? 0)),
         })
       );
     } else if (route.pathname === "/cut") {

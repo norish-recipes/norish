@@ -62,6 +62,19 @@ export function serveRecipePage(host) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// What `read` answers once it holds at least `min` names, for a write still on its way.
+async function namesOnceThere(read, min) {
+  const deadline = Date.now() + 15_000;
+  let found = await read();
+
+  while (found.length < min && Date.now() < deadline) {
+    await sleep(250);
+    found = await read();
+  }
+
+  return found;
+}
+
 // `trpc` posts a mutation, `query` reads one; both throw on a failed call.
 export function seeder({ trpc, query }) {
   const recipes = async (search) => {
@@ -71,7 +84,7 @@ export function seeder({ trpc, query }) {
   };
 
   return {
-    // Every recipe, cookbook and grocery the account has, so a flow starts from nothing.
+    // Every recipe, cookbook, grocery and pantry food the account has, so a flow starts from nothing.
     async reset() {
       const stale = (await recipes()).map(({ id, version }) => ({ id, version }));
 
@@ -88,6 +101,8 @@ export function seeder({ trpc, query }) {
           groceries: groceries.map(({ id, version }) => ({ id, version })),
         });
       }
+
+      for (const { id } of await query("pantry.list")) await trpc("pantry.remove", { id });
     },
     // A recipe as the recipe form saves one; answers its id.
     createRecipe({ name, ingredients = [], steps = [], tags = [], minutes }) {
@@ -119,18 +134,13 @@ export function seeder({ trpc, query }) {
       return (await recipes(name)).filter((recipe) => recipe.name === name).length;
     },
     // The grocery names once there are at least `min` of them, for a write still on its way.
-    async groceryNames(min = 0) {
-      const deadline = Date.now() + 15_000;
-      const names = async () =>
-        (await query("groceries.list")).groceries.map((grocery) => grocery.name);
-      let found = await names();
-
-      while (found.length < min && Date.now() < deadline) {
-        await sleep(250);
-        found = await names();
-      }
-
-      return found;
-    },
+    groceryNames: (min = 0) =>
+      namesOnceThere(
+        async () => (await query("groceries.list")).groceries.map((grocery) => grocery.name),
+        min
+      ),
+    // The same for the Pantry's foods.
+    pantryNames: (min = 0) =>
+      namesOnceThere(async () => (await query("pantry.list")).map((item) => item.name), min),
   };
 }
