@@ -14,9 +14,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { GlassCloseButton } from "@/components/glass";
 import { settleTo } from "@/lib/motion/settle-to";
-import { useServerImage } from "@/lib/network/server-url";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { VideoView } from "expo-video";
 
+import { useServerVideoPlayer } from "../hooks/use-server-video-player";
 import type { Item } from "../utils/hero-items";
 import { counterLabel, dismisses, pageAt } from "../utils/viewer-pages";
 import { ZoomableImage } from "./zoomable-image";
@@ -29,8 +29,7 @@ function ViewerVideo({
   active: boolean;
 }) {
   const { width, height } = useWindowDimensions();
-  const toImage = useServerImage();
-  const player = useVideoPlayer(toImage(item.path), (created) => {
+  const player = useServerVideoPlayer(item.path, (created) => {
     created.loop = true;
   });
 

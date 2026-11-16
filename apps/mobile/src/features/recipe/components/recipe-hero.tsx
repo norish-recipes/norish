@@ -8,9 +8,8 @@ import { GlassIconButton } from "@/components/glass";
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
-import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { VideoView } from "expo-video";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 import { scheduleOnRN } from "react-native-worklets";
@@ -18,6 +17,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 import type { Item } from "../utils/hero-items";
+import { useServerVideoPlayer } from "../hooks/use-server-video-player";
 import { heroItems } from "../utils/hero-items";
 import { pageAt } from "../utils/viewer-pages";
 import { MediaViewer } from "./media-viewer";
@@ -120,11 +120,10 @@ function VideoPage({
 
 function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width: number }) {
   const intl = useIntl();
-  const toImage = useServerImage();
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [view, setView] = useState<VideoView | null>(null);
-  const player = useVideoPlayer(toImage(item.path), (created) => {
+  const player = useServerVideoPlayer(item.path, (created) => {
     created.muted = true;
     created.loop = true;
     created.play();
