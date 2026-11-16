@@ -1,3 +1,4 @@
+import type { Measurable } from "@/hooks/use-focused-field-in-view";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import Animated from "react-native-reanimated";
@@ -6,7 +7,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { Measurable } from "../hooks/use-leave-to-done";
+import { DONE_ROW_HEIGHT } from "../utils/list-rows";
 
 /** The folded tail of a section: how many are done, opening on tap; the count swells as a ticked line joins it. */
 export function DoneRow({
@@ -32,7 +33,8 @@ export function DoneRow({
       ref={(view) => viewRef(view)}
       accessibilityRole="button"
       accessibilityState={{ expanded: open }}
-      className="h-11 flex-row items-center gap-2 px-4"
+      className="flex-row items-center gap-2 px-4"
+      style={{ height: DONE_ROW_HEIGHT }}
       testID={`done-heading-${sectionKey}`}
       onPress={onToggle}
     >

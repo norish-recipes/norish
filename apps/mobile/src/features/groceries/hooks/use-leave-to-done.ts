@@ -1,33 +1,28 @@
+import type { Measurable } from "@/hooks/use-focused-field-in-view";
 import type { ExitAnimationsValues, LayoutAnimation } from "react-native-reanimated";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useReducedMotion, useSharedValue } from "react-native-reanimated";
 import { settleTo } from "@/lib/motion/settle-to";
 
 import type { ListItem, ListRow } from "../utils/list-rows";
-import { sectionKeyOf } from "../utils/list-rows";
+import { DONE_ROW_HEIGHT, sectionKeyOf } from "../utils/list-rows";
 
-/** Where a ticked row heads: the window y of its section's Done row, and the row it is for. */
+/** Where a ticked row heads: the window y of its section's Done row's middle before the row leaves. */
 type Aim = { key: string; y: number };
 
-/** Half of the Done row's 44 pt. */
-const HALF_DONE_ROW = 22;
 /** How long an aim stays, which an unmount of the row outlasts. */
 const AIM_MS = 800;
 
-export type Measurable = {
-  measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void;
-};
-
-/**
- * A ticked row leaves towards its section's Done row on the app's spring and shrinks as it goes
- * (a fade under Reduce Motion); every other row leaves by fading. The target is the Done row, or
- * where it will appear, under the section's last open row.
- */
+/** A ticked row flies to its section's Done row, or where it appears under the last open row, and
+ * shrinks (a fade under Reduce Motion); every other row fades. */
 export function useLeaveToDone(rows: readonly ListRow[]) {
   const reduceMotion = useReducedMotion();
   const aim = useSharedValue<Aim | null>(null);
   const doneViewsRef = useRef(new Map<string, Measurable | null>());
   const itemViewsRef = useRef(new Map<string, Measurable | null>());
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const exitingFor =
     (key: string) =>
@@ -45,7 +40,8 @@ export function useLeaveToDone(rows: readonly ListRow[]) {
             {
               translateY:
                 toward && !reduceMotion
-                  ? settleTo(target.y - values.currentGlobalOriginY - values.currentHeight / 2, {
+                  ? // The row's middle meets the Done row, which rises by the row's height as it goes.
+                    settleTo(target.y - values.currentGlobalOriginY - 1.5 * values.currentHeight, {
                       reduceMotion,
                     })
                   : 0,
@@ -79,9 +75,10 @@ export function useLeaveToDone(rows: readonly ListRow[]) {
     if (!ticking || !inStore || !below) return tick();
 
     below.measureInWindow((_x, y, _w, h) => {
-      aim.set({ key: item.key, y: doneRow ? y + h / 2 : y + h + HALF_DONE_ROW });
+      aim.set({ key: item.key, y: doneRow ? y + h / 2 : y + h + DONE_ROW_HEIGHT / 2 });
       tick();
-      setTimeout(() => aim.set(null), AIM_MS);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => aim.set(null), AIM_MS);
     });
   };
 

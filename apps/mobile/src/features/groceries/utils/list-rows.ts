@@ -47,6 +47,9 @@ export const UNSORTED_KEY = "unsorted";
 
 export const sectionKeyOf = (storeId: string | null) => storeId ?? UNSORTED_KEY;
 
+/** The Done row's height, whose middle a row leaving towards it aims at. */
+export const DONE_ROW_HEIGHT = 44;
+
 const lineRow = (grocery: GroceryDto, store: StoreDto | null): DragRow<Heading, Item> => ({
   kind: "item",
   key: `line:${grocery.id}`,
