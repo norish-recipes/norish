@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { formatTimerMs } from "@norish/shared/lib/helpers";
 import { createClientLogger } from "@norish/shared/lib/logger";
 
 import type { PlatformStorage } from "../platform";
@@ -246,6 +247,25 @@ export function timerGlance(timers: readonly Timer[]) {
     soonest: sorted.find((timer) => timer.status !== "completed"),
     anyDone: sorted.some((timer) => timer.status === "completed"),
   };
+}
+
+/** A timer's remaining time split for a spoken duration, the seconds rounded up. */
+export function spokenDuration(remainingMs: number) {
+  const seconds = Math.ceil(remainingMs / 1000);
+
+  return {
+    hours: Math.floor(seconds / 3600),
+    minutes: Math.floor((seconds % 3600) / 60),
+    seconds: seconds % 60,
+  };
+}
+
+/** The characters a timer's countdown needs: the longest of its time left and its full duration. */
+export function countdownSlots(timer: Timer): number {
+  return Math.max(
+    formatTimerMs(timer.remainingMs).length,
+    formatTimerMs(timer.originalDurationMs).length
+  );
 }
 
 /** The timers still counting down at `now`, with their ends, in store order. */

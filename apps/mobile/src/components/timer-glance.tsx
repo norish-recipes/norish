@@ -6,7 +6,7 @@ import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
-import { timerGlance } from "@norish/shared-react/recipes/timers";
+import { countdownSlots, spokenDuration, timerGlance } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { TimerRing } from "./timer-ring";
@@ -19,16 +19,8 @@ export function useTimersLabel(timers: readonly Timer[]): string {
 
   if (!soonest) return `${name}, ${intl.formatMessage({ id: "common.timer.done" })}`;
 
-  const seconds = Math.ceil(soonest.remainingMs / 1000);
   const time = intl
-    .formatMessage(
-      { id: "recipes.cookMode.spokenTime" },
-      {
-        hours: Math.floor(seconds / 3600),
-        minutes: Math.floor((seconds % 3600) / 60),
-        seconds: seconds % 60,
-      }
-    )
+    .formatMessage({ id: "recipes.cookMode.spokenTime" }, spokenDuration(soonest.remainingMs))
     .trim();
   const left = intl.formatMessage({ id: "recipes.cookMode.timersLeft" }, { time });
 
@@ -48,14 +40,6 @@ export function TimerGlance({ timers }: { timers: readonly Timer[] }) {
   const [foreground, muted, accent] = useThemeColor(["foreground", "muted", "accent"] as const);
   const { soonest, anyDone } = timerGlance(timers);
   const paused = soonest?.status === "paused";
-  // The countdown keeps the width of the longest it shows, so its first digit dropping out moves nothing.
-  const slots = soonest
-    ? Math.max(
-        formatTimerMs(soonest.remainingMs).length,
-        formatTimerMs(soonest.originalDurationMs).length
-      )
-    : 0;
-
   return (
     <>
       {soonest ? (
@@ -76,7 +60,7 @@ export function TimerGlance({ timers }: { timers: readonly Timer[] }) {
         <RollingText
           className={`${paused ? "text-muted" : "text-foreground"} text-base font-semibold`}
           rising={false}
-          slots={slots}
+          slots={countdownSlots(soonest)}
           value={formatTimerMs(soonest.remainingMs)}
         />
       ) : (

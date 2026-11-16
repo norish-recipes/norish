@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Timer } from "../timers";
-import { sortTimers, timerGlance } from "../timers";
+import { countdownSlots, sortTimers, spokenDuration, timerGlance } from "../timers";
 
 const timer = (
   id: string,
@@ -83,5 +83,19 @@ describe("timerGlance", () => {
       soonest: undefined,
       anyDone: true,
     });
+  });
+});
+
+describe("spokenDuration", () => {
+  it("splits the time left into hours, minutes and seconds, rounding up", () => {
+    expect(spokenDuration(3_725_000)).toEqual({ hours: 1, minutes: 2, seconds: 5 });
+    expect(spokenDuration(59_100)).toEqual({ hours: 0, minutes: 1, seconds: 0 });
+  });
+});
+
+describe("countdownSlots", () => {
+  it("is as wide as the longest of the time left and the full duration", () => {
+    expect(countdownSlots(timer("a", "running", 599_000))).toBe(5);
+    expect(countdownSlots({ ...timer("b", "running", 9_000), originalDurationMs: 9_000 })).toBe(4);
   });
 });
