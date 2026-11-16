@@ -1,6 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GlassSurface } from "@/components/glass";
+import { TimerGlance } from "@/components/timer-glance";
+import { timerGlance } from "@/lib/timer-order";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -8,10 +10,7 @@ import { useIntl } from "react-intl";
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useRecipePageStore } from "@norish/shared-react/recipes";
 import { useTimerStore } from "@norish/shared-react/recipes/timers";
-import { formatTimerMs } from "@norish/shared/lib/helpers";
 
-import { sortTimers } from "./timer-list";
-import { TimerRing } from "./timer-ring";
 import { useTint } from "./tint";
 
 export type CookView = "steps" | "ingredients";
@@ -61,15 +60,12 @@ function BarButton({
 
 /** The clock in the bar; with timers it shows the soonest one's ring and time, and a dot for any done. */
 function TimersButton({ onPress }: { onPress: () => void }) {
-  const intl = useIntl();
   const tint = useTint();
-  const timers = sortTimers(useTimerStore((state) => state.timers));
-  const [foreground, accent] = useThemeColor(["foreground", "accent"] as const);
-  const soonest = timers.find((timer) => timer.status !== "completed");
-  const anyDone = timers.some((timer) => timer.status === "completed");
-  const label = intl.formatMessage({ id: "recipes.cookMode.timers" });
+  const { any, soonest, anyDone } = timerGlance(useTimerStore((state) => state.timers));
+  const [foreground] = useThemeColor(["foreground"] as const);
+  const label = useIntl().formatMessage({ id: "recipes.cookMode.timers" });
 
-  if (timers.length === 0) {
+  if (!any) {
     return (
       <BarButton disabled label={label} testID="cook-timers" onPress={onPress}>
         <Ionicons color={foreground} name="timer-outline" size={21} />
@@ -86,24 +82,7 @@ function TimersButton({ onPress }: { onPress: () => void }) {
       testID="cook-timers"
       onPress={onPress}
     >
-      {soonest ? (
-        <TimerRing
-          color={foreground}
-          left={soonest.remainingMs / soonest.originalDurationMs}
-          size={20}
-          stroke={2.6}
-        />
-      ) : (
-        <Ionicons color={accent} name="checkmark-circle" size={20} />
-      )}
-      <Text
-        className="text-foreground text-base font-semibold"
-        style={{ fontVariant: ["tabular-nums"] }}
-      >
-        {soonest
-          ? formatTimerMs(soonest.remainingMs)
-          : intl.formatMessage({ id: "common.timer.done" })}
-      </Text>
+      <TimerGlance soonest={soonest} />
       {anyDone && soonest ? (
         <View className="bg-accent absolute top-0.5 right-0.5 size-[9px] rounded-full" />
       ) : null}

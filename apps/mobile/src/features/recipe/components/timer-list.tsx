@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { GlassSurface } from "@/components/glass";
+import { TimerRing } from "@/components/timer-ring";
+import { sortTimers } from "@/lib/timer-order";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native";
@@ -11,18 +13,7 @@ import type { Timer } from "@norish/shared-react/recipes/timers";
 import { timerAdjustStep, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
-import { TimerRing } from "./timer-ring";
 import { useTint } from "./tint";
-
-/** Finished timers first, to be dealt with, then the soonest to finish; as web's dock sorts them. */
-export function sortTimers(timers: readonly Timer[]): Timer[] {
-  return [...timers].sort((a, b) => {
-    if (a.status === "completed" && b.status !== "completed") return -1;
-    if (b.status === "completed" && a.status !== "completed") return 1;
-
-    return a.remainingMs - b.remainingMs;
-  });
-}
 
 function RoundAction({
   icon,
@@ -161,15 +152,33 @@ function useNotificationsRefused(): boolean {
   return refused;
 }
 
-/** The clock pill's popover: every timer on the device, with pause, adjust, restart and dismiss. */
-export function TimerList({ bottom, onClose }: { bottom: number; onClose: () => void }) {
+/** Every timer on the device, with pause, adjust, restart and dismiss; `onEmpty` when the last goes. */
+export function TimerRows({ onEmpty }: { onEmpty: () => void }) {
   const intl = useIntl();
   const timers = sortTimers(useTimerStore((state) => state.timers));
   const refused = useNotificationsRefused();
 
   useEffect(() => {
-    if (timers.length === 0) onClose();
-  }, [timers.length, onClose]);
+    if (timers.length === 0) onEmpty();
+  }, [timers.length, onEmpty]);
+
+  return (
+    <>
+      {timers.map((timer, index) => (
+        <TimerRow key={timer.id} first={index === 0} timer={timer} />
+      ))}
+      {refused ? (
+        <Text className="text-muted border-separator border-t px-4 py-2.5 text-[13px]">
+          {intl.formatMessage({ id: "recipes.cookMode.notificationsOff" })}
+        </Text>
+      ) : null}
+    </>
+  );
+}
+
+/** The clock pill's popover in cook mode: the timer rows over a scrim. */
+export function TimerList({ bottom, onClose }: { bottom: number; onClose: () => void }) {
+  const intl = useIntl();
 
   return (
     <>
@@ -194,14 +203,7 @@ export function TimerList({ bottom, onClose }: { bottom: number; onClose: () => 
         testID="timer-list"
       >
         <GlassSurface radius={26} />
-        {timers.map((timer, index) => (
-          <TimerRow key={timer.id} first={index === 0} timer={timer} />
-        ))}
-        {refused ? (
-          <Text className="text-muted border-separator border-t px-4 py-2.5 text-[13px]">
-            {intl.formatMessage({ id: "recipes.cookMode.notificationsOff" })}
-          </Text>
-        ) : null}
+        <TimerRows onEmpty={onClose} />
       </Animated.View>
     </>
   );

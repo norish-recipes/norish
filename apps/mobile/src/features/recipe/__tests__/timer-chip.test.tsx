@@ -35,7 +35,7 @@ vi.mock("@norish/shared-react/recipes", () => ({
   useLoadedPageRecipe: () => ({ id: "r", name: "Stew" }),
 }));
 vi.mock("../hooks/use-recipe-timers", () => ({ askTimerNotifications: async () => {} }));
-vi.mock("../components/timer-ring", () => ({ TimerRing: () => null }));
+vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
 vi.mock("../components/tint", () => ({ useTint: () => null }));
 
 const { TimerChipButton } = await import("../components/timer-chip");

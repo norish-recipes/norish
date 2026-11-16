@@ -2,6 +2,7 @@ import type { ComponentRef, RefObject } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { TimerRing } from "@/components/timer-ring";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -12,7 +13,6 @@ import { recipeTimerId, useTimerStore } from "@norish/shared-react/recipes/timer
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { askTimerNotifications } from "../hooks/use-recipe-timers";
-import { TimerRing } from "./timer-ring";
 import { useTint } from "./tint";
 
 const SIZES = {
