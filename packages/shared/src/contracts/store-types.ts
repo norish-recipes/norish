@@ -26,4 +26,12 @@ export const LIBRARY_TYPE_FILTERS: readonly LibraryTypeFilter[] = [
   "cookbooks",
 ] as const;
 
+/** The kinds of row a Library list can hold. */
+export type LibraryKind = "recipe" | "cookbook";
+
+/** Whether the `lens` lists `kind`: the Cookbooks lens holds no recipes, the Recipes lens no cookbooks. */
+export function lensHoldsKind(lens: LibraryTypeFilter, kind: LibraryKind) {
+  return lens === "all" || lens === `${kind}s`;
+}
+
 export const DEFAULT_LIBRARY_TYPE_FILTER: LibraryTypeFilter = "all";

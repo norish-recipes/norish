@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
+import { libraryListInput } from "@norish/shared/contracts/list-queries";
+
 import { libraryQueryHolds } from "../library-cache";
 
-const key = (libraryType?: string) => [
+// The key tRPC builds for the Library query: its input is `libraryListInput`'s own.
+const key = (type?: LibraryTypeFilter) => [
   ["library", "list"],
-  { input: libraryType ? { libraryType } : {}, type: "infinite" },
+  { input: libraryListInput(type ? { type } : {}), type: "infinite" },
 ];
 
 describe("libraryQueryHolds", () => {

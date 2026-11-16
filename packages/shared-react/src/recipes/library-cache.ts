@@ -3,8 +3,11 @@ import type { InfiniteData } from "@tanstack/react-query";
 import type {
   CookbookSummaryDTO,
   LibraryItemDTO,
+  LibraryKind,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import { lensHoldsKind } from "@norish/shared/contracts";
+import type { LibraryListInput } from "@norish/shared/contracts/list-queries";
 
 import type { InfiniteCookbookData } from "./cookbook-types";
 
@@ -22,14 +25,11 @@ export type InfiniteRecipeData = InfiniteData<{
   nextCursor: number | null;
 }>;
 
-/** Whether the Library query at `queryKey` lists `kind`: the Cookbooks lens holds no recipes, nor Recipes any cookbook. */
-export function libraryQueryHolds(
-  queryKey: readonly unknown[],
-  kind: LibraryItemDTO["kind"]
-): boolean {
-  const params = queryKey[1] as { input?: { libraryType?: string } } | undefined;
+/** Whether the Library query at `queryKey` lists `kind`, by the lens its input names. */
+export function libraryQueryHolds(queryKey: readonly unknown[], kind: LibraryKind): boolean {
+  const params = queryKey[1] as { input?: Partial<LibraryListInput> } | undefined;
 
-  return params?.input?.libraryType !== (kind === "recipe" ? "cookbooks" : "recipes");
+  return lensHoldsKind(params?.input?.type ?? "all", kind);
 }
 
 /**
