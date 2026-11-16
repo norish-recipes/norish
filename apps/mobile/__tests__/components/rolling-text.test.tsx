@@ -31,7 +31,8 @@ describe("RollingText", () => {
   it("pads a number to its slots from the left so a short value keeps its place", () => {
     const { container } = render(<RollingText rising slots={5} value="9:59" />);
 
-    expect(container.textContent?.startsWith("  ")).toBe(true);
+    // A figure space is a digit wide, so the blank slot keeps the row's width.
+    expect(container.textContent?.startsWith("\u2007\u2007")).toBe(true);
   });
 
   it("draws plain text under Reduce Motion", () => {

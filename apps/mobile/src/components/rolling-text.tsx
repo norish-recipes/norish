@@ -23,7 +23,7 @@ function slide(fromY: number, toY: number, fromOpacity: number, toOpacity: numbe
   };
 }
 
-/** One character's place in the row: a changed character rolls out and the new one rolls in. */
+/** One character's place: a changed character rolls out and the new one rolls in. */
 function Slot({
   character,
   rising,
@@ -37,7 +37,7 @@ function Slot({
 
   return (
     <View className="overflow-hidden">
-      {/* In flow, unseen: it sizes the slot so the rolling characters can sit on top. */}
+      {/* In flow, unseen: sizes the slot for the rolling characters on top. */}
       <Text
         className={`${className} opacity-0`}
         style={{ fontVariant: ["tabular-nums"] }}
@@ -66,10 +66,8 @@ function Slot({
   );
 }
 
-/**
- * Text whose characters roll like an odometer: the ones that did not change stay still, the rest
- * travel the way the value moved. Only the part that changes belongs in here, not the word beside it.
- */
+/** Text whose characters roll like an odometer: unchanged ones stay still, the rest travel the way
+ * the value moved. Only the part that changes belongs in here, not the word beside it. */
 export function RollingText({
   value,
   rising,
@@ -100,15 +98,16 @@ export function RollingText({
   const characters = toSlots(value, slots, keyFrom);
 
   return (
-    // One label for the row: read out character by character it would say "five, zero".
+    // One label for the row: read per character it would say "five, zero".
     <View accessible accessibilityLabel={value} className="flex-row">
       <LayoutAnimationConfig skipEntering>
         {characters.map((character, index) => (
           <Slot
-            // A slot is its place from the side the value grows on, so a changed character rolls in place.
-            // eslint-disable-next-line @eslint-react/no-array-index-key
+            // A slot is its place from the side the value grows on, so a character rolls in place.
+            // eslint-disable-next-line @eslint-react/no-array-index-key -- a slot is its place in the row
             key={keyFrom === "right" ? characters.length - index : index}
-            character={character === " " ? " " : character}
+            // A figure space is a digit wide, so an empty slot holds the row's width.
+            character={character === " " ? "\u2007" : character}
             className={className}
             rising={rising}
           />
