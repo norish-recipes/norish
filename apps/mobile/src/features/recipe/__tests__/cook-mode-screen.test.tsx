@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const query = vi.hoisted(() => ({ recipe: null as object | null, error: null as unknown }));
 const back = vi.hoisted(() => vi.fn());
+const setHostOptions = vi.hoisted(() => vi.fn());
 
 type Props = { testID?: string; children?: ReactNode; onPress?: () => void };
 const host = ({ testID, children, onPress }: Props) => (
@@ -37,6 +38,7 @@ vi.mock("@/lib/network/server-url", () => ({}));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "missing" }),
   useRouter: () => ({ back }),
+  useNavigation: () => ({ getParent: () => ({ setOptions: setHostOptions }) }),
 }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 vi.mock("react-intl", () => ({
@@ -70,6 +72,15 @@ describe("CookModeScreen before its recipe loads", () => {
     query.recipe = null;
     query.error = null;
     back.mockClear();
+    setHostOptions.mockClear();
+  });
+
+  it("turns off the hosting route's back swipe while open, so a swipe never pops cook mode", () => {
+    const { unmount } = render(<CookModeScreen />);
+
+    expect(setHostOptions).toHaveBeenLastCalledWith({ gestureEnabled: false });
+    unmount();
+    expect(setHostOptions).toHaveBeenLastCalledWith({ gestureEnabled: true });
   });
 
   it("closes while the recipe is still loading, offline without it too", () => {

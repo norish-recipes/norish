@@ -19,7 +19,7 @@ import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerImage } from "@/lib/network/server-url";
 import * as Haptics from "expo-haptics";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
@@ -187,12 +187,30 @@ function CookMode() {
   );
 }
 
+/**
+ * Off while cook mode is open: the Recipes stack's full-screen back swipe would pop the recipe
+ * route under it (deep-linked, cook mode isn't a modal over it) before the screen's own fling.
+ */
+function useNoHostBackSwipe() {
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const host = navigation.getParent();
+
+    host?.setOptions({ gestureEnabled: false });
+
+    return () => host?.setOptions({ gestureEnabled: true });
+  }, [navigation]);
+}
+
 /** Cook mode once its recipe loads; until then, or when it is gone, a close so a notification tap never strands. */
 export function CookModeScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipe, error } = useRecipeQuery(id);
   const { top } = useSafeAreaInsets();
+
+  useNoHostBackSwipe();
 
   if (recipe) return <CookMode />;
 
