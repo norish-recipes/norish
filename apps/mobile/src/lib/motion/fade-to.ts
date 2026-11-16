@@ -16,7 +16,7 @@ export function useFadeTo(opacity: number, riseDelay = 0, fallMs?: number) {
   const shown = useSharedValue(opacity);
 
   useEffect(() => {
-    const settle = settleTo(opacity, reduceMotion, { overshootClamping: true });
+    const settle = settleTo(opacity, { reduceMotion, overshootClamping: true });
 
     if (opacity > shown.get()) shown.set(withDelay(riseDelay, settle));
     else shown.set(fallMs === undefined ? settle : withTiming(opacity, { duration: fallMs }));

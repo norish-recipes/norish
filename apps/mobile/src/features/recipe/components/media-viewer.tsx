@@ -67,8 +67,8 @@ export function MediaViewer({
     };
 
     // Under Reduce Motion the viewer fades where it is instead of flying down.
-    if (reduceMotion) fade.set(settleTo(0, true, undefined, done));
-    else dragY.set(settleTo(height, false, { velocity }, done));
+    if (reduceMotion) fade.set(settleTo(0, { reduceMotion: true }, done));
+    else dragY.set(settleTo(height, { reduceMotion: false, velocity }, done));
   };
   const pan = usePanGesture({
     enabled: !zoomed,
@@ -81,7 +81,7 @@ export function MediaViewer({
     onDeactivate: (event) => {
       "worklet";
       if (dismisses(event.translationY, event.velocityY)) close(event.velocityY);
-      else dragY.set(settleTo(0, reduceMotion, { velocity: event.velocityY }));
+      else dragY.set(settleTo(0, { reduceMotion, velocity: event.velocityY }));
     },
   });
   const backdrop = useAnimatedStyle(() => ({

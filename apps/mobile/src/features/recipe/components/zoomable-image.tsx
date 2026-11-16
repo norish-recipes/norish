@@ -45,9 +45,9 @@ export function ZoomableImage({
 
   const settle = (to: number, toX: number, toY: number) => {
     "worklet";
-    scale.set(settleTo(to, reduceMotion));
-    x.set(settleTo(toX, reduceMotion));
-    y.set(settleTo(toY, reduceMotion));
+    scale.set(settleTo(to, { reduceMotion }));
+    x.set(settleTo(toX, { reduceMotion }));
+    y.set(settleTo(toY, { reduceMotion }));
     startScale.set(to);
     startX.set(toX);
     startY.set(toY);
