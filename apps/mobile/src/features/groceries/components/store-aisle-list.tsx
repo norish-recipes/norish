@@ -42,7 +42,7 @@ function AisleRow({
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <View className="bg-surface border-separator h-12 flex-row items-center gap-2 border-b pr-2 pl-2.5">
+    <View className="bg-default border-separator h-12 flex-row items-center gap-2 border-b pr-2 pl-2.5">
       <DragGrip
         label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
         testID="aisle-grip"
@@ -50,7 +50,7 @@ function AisleRow({
       />
       <Input
         accessibilityLabel={aisle.name}
-        className="h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none"
+        className="ios:shadow-none ios:outline-transparent ios:focus:outline-transparent h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none focus:border-0"
         maxLength={AISLE_NAME_MAX}
         testID="aisle-row-name"
         value={aisle.name}
@@ -114,12 +114,12 @@ export function StoreAisleList({
       ListFooterComponent={
         <View className="px-4">
           <View
-            className={`bg-surface overflow-hidden ${rows.length > 0 ? "rounded-b-[22px]" : "rounded-[22px]"}`}
+            className={`bg-default overflow-hidden ${rows.length > 0 ? "rounded-b-[22px]" : "rounded-[22px]"}`}
           >
             <View className="h-12 flex-row items-center gap-2 pr-2 pl-4">
               <Input
                 accessibilityLabel={text("groceries.storeManager.addAisle")}
-                className="h-10 flex-1 border-0 bg-transparent px-0 text-base shadow-none"
+                className="ios:shadow-none ios:outline-transparent ios:focus:outline-transparent h-10 flex-1 border-0 bg-transparent px-0 text-base shadow-none focus:border-0"
                 maxLength={AISLE_NAME_MAX}
                 placeholder={text("groceries.storeManager.aisleNamePlaceholder")}
                 returnKeyType="done"
@@ -136,7 +136,7 @@ export function StoreAisleList({
                 accessibilityLabel={text("groceries.storeManager.addAisle")}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !canAdd }}
-                className={`bg-default size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
+                className={`bg-surface size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
                 disabled={!canAdd}
                 testID="aisle-add"
                 onPress={add}
@@ -161,7 +161,7 @@ export function StoreAisleList({
       renderHeading={() => null}
       renderItem={({ aisle, first }, drag) => (
         <View className="px-4">
-          <View className={`bg-surface overflow-hidden ${first ? "rounded-t-[22px]" : ""}`}>
+          <View className={`bg-default overflow-hidden ${first ? "rounded-t-[22px]" : ""}`}>
             <AisleRow
               aisle={aisle}
               onDrag={drag}
