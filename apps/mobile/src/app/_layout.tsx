@@ -258,8 +258,8 @@ function AuthenticatedEffects() {
 
 /** Sheets the accessory presents over whichever tab it was pressed on: Add recipe and its imports,
  * the timer list; the editor's lists present over them. From text's field takes the sheet's height. */
-const SHEETS = ["import-text", "editor-choice", "timers"] as const;
-const FIT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
+const SHEETS = ["import-text", "editor-choice"] as const;
+const FIT_SHEETS = ["add-recipe", "import-link", "import-photos", "timers"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
