@@ -30,7 +30,7 @@ export function pantryAddSubmit(
   locale: string,
   rules: SpellingRules
 ): string | PickedFood | null {
-  const named = foodNamedAsTyped(typed, matches, locale, rules);
+  const named = foodNamedAsTyped(typed, matches, rules);
 
   return named ? pickedFood(named) : canAdd ? typed : null;
 }
@@ -44,7 +44,7 @@ export function pantryAddRows(
   locale: string,
   rules: SpellingRules
 ): PantryAddRow[] {
-  const custom = canAdd && !foodNamedAsTyped(typed, matches, locale, rules);
+  const custom = canAdd && !foodNamedAsTyped(typed, matches, rules);
   const count = matches.length + (custom ? 1 : 0);
   const rows: PantryAddRow[] = matches.map((food, index) => ({
     key: `match:${food.id}`,

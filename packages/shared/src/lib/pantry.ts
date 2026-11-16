@@ -35,10 +35,6 @@ export function pantryIngredientFor(
   },
   rules: SpellingRules = BASE_SPELLING_RULES
 ): PantryIngredientDto | null {
-  const key = foodKey(line.ingredientName, rules);
-  // Read up to a note as the resolver does ("olie om te bakken" is olie); only the resolver knows
-  // whether the words after it name a food ("kip met rijst"), which syncing settles.
-  const noted = notedParts(key, rules)?.head;
   const ids = line.ingredientId ? [line.ingredientId, ...(line.alternativeIds ?? [])] : [];
 
   return (
@@ -47,13 +43,28 @@ export function pantryIngredientFor(
       // and meanwhile is matched on its name like any unresolved text.
       ids.length > 0 && item.ingredientId
         ? ids.some((id) => item.ingredientId === id || item.ancestorIds.includes(id))
-        : key !== "" &&
-          [item.name, ...Object.values(item.localeNames ?? {})].some(
-            (name) =>
-              sameFood(name, line.ingredientName, rules) ||
-              (noted !== undefined && sameFood(name, noted, rules))
-          )
+        : textNamesFood(line.ingredientName, item, rules)
     ) ?? null
+  );
+}
+
+/** Whether `text` names `food` by spelling alone, the rule `pantryIngredientFor` uses for text:
+ * any of the food's names, plurals counted, read up to a note. */
+export function textNamesFood(
+  text: string | null | undefined,
+  food: { name: string; localeNames?: LocaleNames },
+  rules: SpellingRules = BASE_SPELLING_RULES
+): boolean {
+  const key = foodKey(text, rules);
+  // Read up to a note as the resolver does ("olie om te bakken" is olie); only the resolver knows
+  // whether the words after it name a food ("kip met rijst"), which syncing settles.
+  const noted = notedParts(key, rules)?.head;
+
+  return (
+    key !== "" &&
+    [food.name, ...Object.values(food.localeNames ?? {})].some(
+      (name) => sameFood(name, text, rules) || (noted !== undefined && sameFood(name, noted, rules))
+    )
   );
 }
 
