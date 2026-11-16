@@ -4,7 +4,7 @@
 
 **Blocked by:** 34
 
-**Status:** open
+**Status:** done
 
 - [x] The add and edit sheet keeps its own height when the keyboard opens and rides up on it, with no jump to the full detent.
 - [x] No field's focus ring or edge is clipped on any sheet (Mike, 2026-11-16: seen on the new-cookbook sheet too, "a lot of items have this with inputs"): fixed once in the shared `Sheet` body and `SheetInput`, not per sheet, and every sheet with a field checked on the simulator, focused and unfocused.
@@ -22,3 +22,23 @@
 - Motion: a row fades in only the first time the list shows it after its first load (`useFreshRows`), including the first item into an empty list. A ticked row with Done folded flies to where its Done row will be once the row has left (`useLeaveToDone`), and shrinks; the count pops. The flight, drag haptics and Reduce Motion are not seen on a simulator.
 - Each tab list sits in `TabListMarker`, so the bottom accessory minimises on Groceries, Pantry and Calendar as on Recipes, and still does on Groceries after a visit to the Pantry and on Calendar after an item sheet. Its bottom iOS edge effect is off; the list's own fade stays. Recipes after a recipe was not seen.
 - Maestro on the iPhone 17: add-to-groceries, pantry-add-from-sheet, cookbook-create-add and plan-from-today pass. Shots are in scratchpad `t36/round4/`.
+
+### Review log (2026-11-17)
+
+Range `b6b5a9f5d..2818f3511`. Standards on Sonnet low, Spec on Opus medium; implemented on Sonnet medium, the third fix round on Opus medium; reviewed twice; every round checked on an iOS 27.2 simulator.
+
+Fixed, first review (15): the add and edit grocery sheets as fit sheets (a fixed half height was tried first); Add to pantry and the other search sheets on one glass detent, because UIKit lifts a multi-detent sheet to the opaque full height when the keyboard rises; the pantry add rows' name rule, Return keeping the matching food, the length cap; only new rows fading in; a ticked row leaving towards Done; grocery amounts back to web's medium weight (recipe rows bold); the Maestro flow tapping the exact food and checking what was kept; comments.
+
+Fixed, from the simulator (2): the tab bar never minimising on Groceries, the Pantry and Calendar (a wrapper View hid the list from it; `TabListMarker`); Import text and Manage stores jumping with the keyboard.
+
+Fixed, second review (13): fit sheets scrolling within the room above the keyboard; the keyboard padding feeding itself (test: 162, then 462); the name rule through the Pantry field's own `sameFood`; the success haptic on keeping a food, in one place; rows fading in only the first time the list shows them; the ticked row's aim and its timer; iOS's edge effect off under the tab lists; one marker component and mock; one set of layout presets in lib/motion; the pantry add rows' shape; comments and a named height.
+
+Closed after checking: the bar keeps minimising on Groceries after a visit to the Pantry; web's Pantry still reads the i18n keys; the focus ring is whole on every sheet seen.
+
+For the maintainer to judge: search sheets (Add to pantry, plan a recipe, cookbook add recipes, new cookbook, add to cookbook, Manage stores, the editor's choice) are one half-height glass detent that cannot be dragged to full, replacing the 0.62 and full pair for them; with the keyboard up and large text their lists have little room.
+
+Not seen on the simulator: the product step, drag pickup and drop and a refused tick (the device tool has no drag), a small phone, haptics. At the largest text size the Delete label and the store rows overflow their fixed heights (their own styling).
+
+`bb790b914` does not pass its tests alone (fixed in `0d47a8054`).
+
+Final state `2818f3511`: all 11 gates exit 0, mobile lint has no warnings.
