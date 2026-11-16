@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   choiceRoute,
   clearChoice,
+  parseMultiple,
   requestChoice,
   takeChoice,
 } from "../components/editor/choice-request";
@@ -35,5 +36,14 @@ describe("choice slot", () => {
       multiple: "1",
     });
     expect(choiceRoute({ name: "a", title: "A" }).params).toEqual({ name: "a", title: "A" });
+  });
+
+  it("reads multiple back from the route", () => {
+    const { multiple } = choiceRoute({ name: "a", title: "A", multiple: true }).params as {
+      multiple?: string;
+    };
+
+    expect(parseMultiple(multiple)).toBe(true);
+    expect(parseMultiple(undefined)).toBe(false);
   });
 });

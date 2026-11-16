@@ -8,15 +8,18 @@ import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ChoiceParams } from "../components/editor/choice-request";
-import { takeChoice } from "../components/editor/choice-request";
+import { parseMultiple, takeChoice } from "../components/editor/choice-request";
 
 /** A searchable list over the editor, for its country and cuisines: its name, title and mode from the route, the rest from `requestChoice`. */
 export function EditorChoiceScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const { name, title, multiple } = useLocalSearchParams<
-    Pick<ChoiceParams, "name" | "title"> & { multiple?: string }
-  >();
+  const {
+    name,
+    title,
+    multiple: multipleParam,
+  } = useLocalSearchParams<Pick<ChoiceParams, "name" | "title"> & { multiple?: string }>();
+  const multiple = parseMultiple(multipleParam);
   const [request] = useState(takeChoice);
   const [selected, setSelected] = useState(request?.selected ?? []);
   const [query, setQuery] = useState("");

@@ -36,8 +36,11 @@ export const clearChoice = () => {
   pending = null;
 };
 
+/** The route's `multiple` is a string param: "1" or absent. */
 export const choiceRoute = ({ name, title, multiple }: ChoiceParams) =>
   ({
     pathname: "/editor-choice",
     params: multiple ? { name, title, multiple: "1" } : { name, title },
   }) as const;
+
+export const parseMultiple = (multiple?: string) => multiple === "1";
