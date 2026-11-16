@@ -4,7 +4,7 @@
 
 **Blocked by:** 34
 
-**Status:** open
+**Status:** done
 
 - [x] The recipe page keeps the native tab bar; its bottom accessory reads Cook and opens cook mode, with the timer beside it while a Recipe Timer exists, minimising on scroll as on every tab; the label cross-fades on push and pop (Mike, 2026-11-16, final; the Home and Cook toolbar and the floating controls go, no Home button, `recipe-bottom-bar.tsx` deleted). On every tab the accessory's timer has no fill of its own and the action keeps its label beside it wherever it fits. Header items pinned while scrolling, no scroll-edge title bar.
 - [x] Glass servings and portion steppers; the calorie card matches the canvas.
@@ -28,3 +28,27 @@
 - Not seen: the heart pop (synthetic taps never read as a double tap: the viewer opened or nothing), a viewer pinch-then-shrink on the device, haptics (a simulator cannot play them), a video poster.
 - The media viewer route reads the recipe with `useRecipeQuery` and leaves (back) when it has nothing to show (a gone recipe, a step without photos or none by that number), with a close while a cold link loads. Cook mode's pill host needs no `ignoreSafeArea` (the push it guarded is gone). The morph's timings are one `MORPH` table in `use-morph-frame.ts`; the heart pop's shadow colour comes from `text-black/30`.
 - Seen on the iPhone 17 Release build (own :3400, frames in the scratchpad `t32/round8/`): A → its cookbook → A, both pops end on Cook; push and pop at 0.05 s with a timer, expanded and minimised, no label flash; a planned item's Go to recipe cross-fades Add recipe → Cook; a link to a missing step and a cold viewer link land on the recipe page; cook mode's pill presenting and morphing without `ignoreSafeArea`; each tab's action beside the timer. `recipe-controls.yaml` and `timer-from-accessory.yaml` each passed three runs in a row. Not seen: the heart pop's shadow (synthetic taps never double-tap), the viewer with photos (the seed has none).
+
+### Review log (2026-11-16)
+
+Range `6db31b9e7..cafce0c18`. Standards on Sonnet low, Spec on Opus medium; implemented on Sonnet medium, later rounds on Opus medium; reviewed three times; every round checked on an iOS 27.2 simulator.
+
+The bottom of the page changed direction three times at the maintainer's word: a native Home and Cook `Stack.Toolbar` (as first specced), floating glass Cook and timer pill, and finally the native tab bar with Cook as its accessory and the timer beside it. The spec's "Recipe page" and accessory rule say the final form. Cook mode kept the timer pill that morphs into its list.
+
+Fixed, first review (14): the zoom clamp after a pinch (test first); steppers disabled at their limit with no haptic; the heart pop on its exiting animation; one spring-or-fade helper; hex literals; the icon prefetch on the page's own read; the daily reference moved into mobile; a pantry row carrying its food id; one id rule per icon list; formatted stepper labels; one video-source hook; the Maestro timer flow.
+
+Fixed, second direction and its simulator pass (11): the app-wide status bar flag replaced by the viewer as a route; the Servings fields and every other white squared sheet field as muted capsules (`SheetInput`); the pill morph (one glass shape whose frame springs); timer list rows taking their taps; the last timer closing the list; cook mode's Next clipping; the pill's jump after a push.
+
+Fixed, final review (14): the viewer trapping the user with nothing to show and throwing before the recipe loads (test first); the shown-recipe mark keyed by route (test first); the label flash before it is measured (test first); a recipe opened from another tab; the pill's leftover props and safe-area escape; one fade helper; one morph table; path parsers and viewer params beside the route builders; one accessory action table; names; a colour literal.
+
+Closed after checking: a tap in the step-photo viewer does not tick the step behind it; the strike on a checked ingredient is instant on web too; the board draws the amount column with the name hanging beside it.
+
+Rejected (1): inlining `counterLabel` and `pageAt`; they are separate so the viewer's index and "n / m" have the unit tests the spec asks for. Rejected (1): offline with no cached recipe the viewer leaves at once rather than showing a close button; there is nothing it could show, and the recipe page it lands on has the offline state.
+
+For the maintainer to judge: after a cancelled back swipe Cook fades back about 0.5 s late (iOS reports the cancel late); the viewer's backdrop stays black while dragging down (a see-through drag needs the app-wide status bar flag back); the nutrition card's two new strings are translated in 18 locales by the implementer, unreviewed; a recipe opened from Calendar or Groceries while the Recipes tab has a cookbook open shows "Add recipe" for its loading frames; the store editor's keyboard can cover the aisle field (not this ticket's code).
+
+Not seen on the simulator: the heart pop (synthetic taps never read as a double tap), opening a recipe from a timer notification, Reduce Motion on the final accessory, German or Dutch labels, haptics.
+
+Outside the ticket: `expo install --check` reports eleven Expo packages a patch or two behind their pins (not `expo-image`, the one this ticket added).
+
+Final state `cafce0c18`: all 11 gates exit 0, mobile lint has no warnings.
