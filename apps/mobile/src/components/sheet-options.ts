@@ -26,6 +26,15 @@ export const SHEET_OPTIONS = {
   contentStyle: { backgroundColor: "transparent", bottom: 0 },
 } as const satisfies NativeStackNavigationOptions;
 
+/** A form sheet that keeps one height: it rises with the keyboard instead of expanding, and its
+ *  body scrolls. */
+export const FORM_SHEET_OPTIONS = {
+  ...SHEET_OPTIONS,
+  sheetGrabberVisible: false,
+  sheetAllowedDetents: [0.5],
+  sheetExpandsWhenScrolledToEdge: false,
+} as const satisfies NativeStackNavigationOptions;
+
 /** A sheet as tall as its content, which does not resize. */
 export const FIT_SHEET_OPTIONS = {
   ...FORM_SHEET,

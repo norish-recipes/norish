@@ -33,7 +33,7 @@ export const SHEET_INSET = 16;
 const TITLE_INSET = 24;
 
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
-  `${inset ? "px-4" : ""} pb-4 ${contentClassName}`;
+  `${inset ? "px-4" : ""} pt-1 pb-4 ${contentClassName}`;
 
 /** What both scrolling bodies share: they fill the sheet and meet the keyboard the same way. */
 const SCROLLER = {
