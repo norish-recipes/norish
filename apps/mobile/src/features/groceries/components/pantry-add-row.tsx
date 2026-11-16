@@ -6,6 +6,7 @@ import type { PickedFood } from "@norish/shared-react/groceries";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { PantryAddRow } from "../utils/pantry-add-rows";
+import { pickedFood } from "../utils/pantry-add-rows";
 import { FoodRow, RowButton } from "./pantry-rows";
 
 /** One row of the Add to pantry sheet: a food it found, or the text as typed; a tap on its + keeps it. */
@@ -18,12 +19,7 @@ export function PantryAddRowView({
 }) {
   const intl = useIntl();
   const name = row.type === "match" ? ingredientDisplayName(row.food, intl.locale) : row.name;
-  const keep = () =>
-    onKeep(
-      row.type === "match"
-        ? { ingredientId: row.food.id, name: row.food.name, localeNames: row.food.localeNames }
-        : row.name
-    );
+  const keep = () => onKeep(row.type === "match" ? pickedFood(row.food) : row.name);
 
   return (
     <CardSlice className="bg-default" edge={row.edge}>

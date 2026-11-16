@@ -5,15 +5,15 @@ import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import { successNotification } from "@/lib/haptics";
 import { useIntl } from "react-intl";
 
 import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantryField, usePantryQuery } from "@norish/shared-react/groceries";
 import { useIngredientIcons, usePantryCatalogue } from "@norish/shared-react/ingredients";
+import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
 import { PantryAddRowView } from "../components/pantry-add-row";
-import { pantryAddRows } from "../utils/pantry-add-rows";
+import { pantryAddRows, pantryAddSubmit } from "../utils/pantry-add-rows";
 
 /** Add to pantry: search the Ingredients, keep one, or keep the text as typed; the sheet stays open for the next. */
 export function PantryAddScreen() {
@@ -27,14 +27,15 @@ export function PantryAddScreen() {
     new Set(items.map((item) => item.ingredientId))
   );
   const fieldRef = useFocusOnMount<SheetSearchInput>();
-  const rows = pantryAddRows(typed, matches, canAdd);
+  const rows = pantryAddRows(typed, matches, canAdd, intl.locale, rules);
   const label = intl.formatMessage({ id: "groceries.pantry.fieldPlaceholder" });
 
   useIngredientIcons(matches.map((food) => food.id));
 
-  const keepFood: typeof keep = (food) => {
-    keep(food);
-    successNotification();
+  const submit = () => {
+    const food = pantryAddSubmit(typed, matches, canAdd, intl.locale, rules);
+
+    if (food) keep(food);
   };
 
   return (
@@ -42,31 +43,30 @@ export function PantryAddScreen() {
       <IngredientIconSlots rows={rows}>
         <SheetList
           ListEmptyComponent={
-            <View>
-              {typed === "" ? null : (
-                <Text className="text-muted px-5 py-6 text-center" testID="pantry-add-none">
-                  {intl.formatMessage({ id: "common.status.noResults" })}
-                </Text>
-              )}
-            </View>
+            typed === "" ? undefined : (
+              <Text className="text-muted px-5 py-6 text-center" testID="pantry-add-none">
+                {intl.formatMessage({ id: "common.status.noResults" })}
+              </Text>
+            )
           }
           ListHeaderComponent={
             <View className="px-5 pb-3">
               <SheetSearchField
                 fieldRef={fieldRef}
                 label={label}
+                maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
                 testID="pantry-add-field"
                 value={draft}
                 // Taking nothing until the Pantry is read: a food added then could double one kept.
                 onChange={isRead ? setDraft : undefined}
-                onSubmit={() => canAdd && keepFood(typed)}
+                onSubmit={submit}
               />
             </View>
           }
           data={rows}
           inset={false}
           keyExtractor={(row) => row.key}
-          renderItem={({ item }) => <PantryAddRowView row={item} onKeep={keepFood} />}
+          renderItem={({ item }) => <PantryAddRowView row={item} onKeep={keep} />}
           testID="pantry-add-list"
         />
       </IngredientIconSlots>

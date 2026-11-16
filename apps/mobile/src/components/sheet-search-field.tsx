@@ -11,6 +11,7 @@ export function SheetSearchField({
   testID,
   value,
   fieldRef,
+  maxLength,
   onChange,
   onSubmit,
 }: {
@@ -18,6 +19,7 @@ export function SheetSearchField({
   testID: string;
   value?: string;
   fieldRef?: ComponentProps<typeof SearchField.Input>["ref"];
+  maxLength?: number;
   onChange?: (value: string) => void;
   onSubmit?: () => void;
 }) {
@@ -30,6 +32,7 @@ export function SheetSearchField({
           accessibilityLabel={label}
           autoCorrect={false}
           className="bg-default h-12 rounded-3xl"
+          maxLength={maxLength}
           placeholder={label}
           returnKeyType="search"
           testID={testID}
