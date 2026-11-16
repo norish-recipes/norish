@@ -164,7 +164,8 @@ export function seeder({ trpc, query }) {
         count: entries.length,
         catalogue: entries.some((entry) => ids.has(entry.ingredientId)),
         custom: entries.some(
-          (entry) => entry.name.toLowerCase() === custom.toLowerCase() && !ids.has(entry.ingredientId)
+          (entry) =>
+            entry.name.toLowerCase() === custom.toLowerCase() && !ids.has(entry.ingredientId)
         ),
       };
     },
