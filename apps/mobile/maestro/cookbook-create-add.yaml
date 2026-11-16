@@ -23,6 +23,10 @@ appId: dev.norish.app
 - waitForAnimationToEnd
 - tapOn:
     id: cookbook-add-recipes-row-${output.soup}
+# A tap that never landed fails here, not as an empty cookbook later; iOS gives the state as text.
+- assertVisible:
+    id: cookbook-add-recipes-row-${output.soup}
+    text: "checkbox, checked"
 # Create is the sheet's native header item, which has no id.
 - tapOn: Create
 # The new cookbook is on the Cookbooks lens and opens with its one recipe.
