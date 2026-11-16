@@ -36,7 +36,7 @@ describe("RollingText", () => {
   });
 
   it("keeps a word's spaces and grows it at its end", () => {
-    const { container } = render(<RollingText word rising value="a b" />);
+    const { container } = render(<RollingText growth="end" rising value="a b" />);
 
     expect(container.textContent).toBe("aa  bb");
   });

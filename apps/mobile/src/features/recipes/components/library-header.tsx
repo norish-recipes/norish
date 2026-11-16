@@ -98,8 +98,8 @@ function LibraryHeading({ type }: { type: LibraryTypeFilter }) {
   return (
     <View testID="library-heading">
       <RollingText
-        word
         className="text-foreground text-2xl font-semibold"
+        growth="end"
         rising={shown.rising}
         value={intl.formatMessage({ id: HEADING_KEYS[type] })}
       />
