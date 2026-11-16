@@ -8,6 +8,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /** A Pressable that springs smaller under the finger. */
 export function PressableScale({
+  onPress,
   onPressIn,
   onPressOut,
   ...props
@@ -18,6 +19,10 @@ export function PressableScale({
     <AnimatedPressable
       {...props}
       style={style}
+      onPress={(event) => {
+        press(false, true);
+        onPress?.(event);
+      }}
       onPressIn={(event) => {
         press(true);
         onPressIn?.(event);
