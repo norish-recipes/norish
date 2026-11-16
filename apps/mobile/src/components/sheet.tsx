@@ -29,6 +29,13 @@ type BodyLayout = {
 /** The body's side inset in points, the `px-4` below: for a layout that sizes itself to the sheet. */
 export const SHEET_INSET = 16;
 
+/** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
+const TITLE_INSET = 24;
+/** What the subtitle clears above the body. */
+const SUBTITLE_CLEARANCE = 12;
+/** The subtitle's line height, `text-sm` tightened so one line stays a single row. */
+const SUBTITLE_LINE_HEIGHT = 17;
+
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pb-4 ${contentClassName}`;
 
@@ -100,7 +107,11 @@ export function SheetRow({
   className?: string;
   children: ReactNode;
 }) {
-  return <View className={`px-2 ${className}`}>{children}</View>;
+  return (
+    <View className={className} style={{ paddingHorizontal: TITLE_INSET - SHEET_INSET }}>
+      {children}
+    </View>
+  );
 }
 
 /** Several actions in one row; each `Sheet.Action` takes an equal share. */
@@ -149,17 +160,20 @@ export function Sheet({
   name,
   title,
   subtitle,
+  back = false,
   onClose,
   confirm,
   actions,
   children,
 }: {
-  /** The testID prefix: `<name>-sheet` on the sheet, `<name>-close` on the header's close. */
+  /** The testID prefix: `<name>-sheet` on the sheet. */
   name: string;
   title: string;
   /** A muted line above the body: the header's system title has no subtitle. */
   subtitle?: string;
-  /** What the close item does; going back by default. */
+  /** A step inside a sheet: the header's left item is a Back chevron. */
+  back?: boolean;
+  /** What the left item does; going back by default. */
   onClose?: () => void;
   /** The header's confirm item, for a sheet that saves. */
   confirm?: HeaderConfirm;
@@ -186,13 +200,21 @@ export function Sheet({
       onLayout={onLayout}
     >
       <ModalHeader
+        back={back}
         confirm={confirm}
-        name={name}
         title={title}
         onClose={onClose ?? (() => router.back())}
       />
       {subtitle ? (
-        <Text className="text-muted px-6 pb-3 text-sm leading-[17px]" numberOfLines={1}>
+        <Text
+          className="text-muted text-sm"
+          numberOfLines={1}
+          style={{
+            paddingHorizontal: TITLE_INSET,
+            paddingBottom: SUBTITLE_CLEARANCE,
+            lineHeight: SUBTITLE_LINE_HEIGHT,
+          }}
+        >
           {subtitle}
         </Text>
       ) : null}

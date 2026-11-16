@@ -59,7 +59,6 @@ export function AddGroceriesScreen() {
         disabled: !trimmed,
         onPress: submit,
       }}
-      confirmed={form.confirmedPattern}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField
@@ -73,6 +72,7 @@ export function AddGroceriesScreen() {
       }
       name="add-grocery"
       noStoreLabelId="groceries.mobile.automatic"
+      repeat={form.confirmedPattern}
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.addTitle" })}
@@ -91,7 +91,7 @@ export function AddGroceriesScreen() {
       }
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}
-      onConfirmed={(pattern) => form.setConfirmedPattern(pattern)}
+      onRepeat={(pattern) => form.setConfirmedPattern(pattern)}
       onStore={setStoreId}
     />
   );

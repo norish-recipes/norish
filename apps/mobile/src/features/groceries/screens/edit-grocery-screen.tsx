@@ -133,7 +133,6 @@ function EditSheet({
         disabled: !trimmed || !productValid,
         onPress: submit,
       }}
-      confirmed={form.confirmedPattern}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField
@@ -166,12 +165,13 @@ function EditSheet({
           />
         ) : null
       }
+      repeat={form.confirmedPattern}
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}
-      onConfirmed={(pattern) => form.setConfirmedPattern(pattern)}
+      onRepeat={(pattern) => form.setConfirmedPattern(pattern)}
       onStore={setStoreId}
     />
   );

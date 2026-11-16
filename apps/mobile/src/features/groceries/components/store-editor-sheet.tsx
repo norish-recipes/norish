@@ -43,6 +43,7 @@ export function StoreEditorSheet({
 
   return (
     <Sheet
+      back
       confirm={{
         label: text(editing.id ? "common.actions.save" : "groceries.storeManager.create"),
         disabled: !canSaveStore(editing),

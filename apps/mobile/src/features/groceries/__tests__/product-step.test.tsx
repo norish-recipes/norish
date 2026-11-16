@@ -66,8 +66,22 @@ vi.mock("@/components/sheet", async () => {
     createElement("div", null, children);
 
   return {
-    Sheet: ({ children, actions }: { children?: React.ReactNode; actions?: React.ReactNode }) =>
-      createElement("div", null, children, actions),
+    Sheet: ({
+      children,
+      actions,
+      confirm,
+    }: {
+      children?: React.ReactNode;
+      actions?: React.ReactNode;
+      confirm?: { onPress?: () => void };
+    }) =>
+      createElement(
+        "div",
+        null,
+        children,
+        actions,
+        createElement("button", { "data-testid": "header-confirm", onClick: confirm?.onPress })
+      ),
     SheetScrollView: box,
   };
 });
@@ -149,7 +163,8 @@ describe("the product step", () => {
     fireEvent.change(screen.getByTestId("product-price"), { target: { value: "2,49" } });
 
     expect(f.editPrice).toHaveBeenCalledWith("2,49");
-    fireEvent.click(screen.getByTestId("product-done"));
+    expect(screen.queryByTestId("product-type-price")).toBeNull();
+    fireEvent.click(screen.getByTestId("header-confirm"));
     expect(onBack).toHaveBeenCalled();
   });
 

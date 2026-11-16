@@ -16,7 +16,7 @@ export function CookbookTitleSheet({
   onChange,
   onSubmit,
 }: {
-  /** The testID prefix of the sheet, its field and its header items. */
+  /** The testID prefix of the sheet and its field. */
   name: string;
   title: string;
   /** Absent while the cookbook loads. */
@@ -38,7 +38,7 @@ export function CookbookTitleSheet({
       confirm={{
         label: intl.formatMessage({ id: submitLabelId }),
         disabled,
-        onPress: () => onSubmit?.(),
+        onPress: onSubmit,
       }}
       name={name}
       title={title}

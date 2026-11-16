@@ -2,31 +2,32 @@ import React from "react";
 import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
-/** The header's confirm item: a sheet's Save, an editor's Create. */
+/** The header's confirm item: a sheet's Save, an editor's Create. Without `onPress` it is disabled. */
 export type HeaderConfirm = {
   label: string;
-  onPress: () => void;
+  onPress?: () => void;
   disabled?: boolean;
 };
 
 /**
  * The one native header of a sheet or modal screen: the system title, a glass Close on the left
- * and, where the screen saves, a prominent confirm item on the right. Render it inside the screen.
+ * (a Back chevron with `back`, for a step inside a sheet) and, where the screen saves, a
+ * prominent confirm item on the right. Render it inside the screen.
  */
 export function ModalHeader({
-  name,
   title,
+  back = false,
   onClose,
   confirm,
 }: {
-  /** The identifier prefix: `<name>-close` and `<name>-confirm` on the items. */
-  name: string;
   title: string;
+  /** The left item goes back to the sheet's form instead of closing the sheet. */
+  back?: boolean;
   onClose: () => void;
   confirm?: HeaderConfirm;
 }) {
   const intl = useIntl();
-  const closeLabel = intl.formatMessage({ id: "common.actions.close" });
+  const leftLabel = intl.formatMessage({ id: back ? "common.actions.back" : "common.actions.close" });
 
   return (
     <Stack.Screen
@@ -36,10 +37,9 @@ export function ModalHeader({
         unstable_headerLeftItems: () => [
           {
             type: "button",
-            label: closeLabel,
-            accessibilityLabel: closeLabel,
-            icon: { type: "sfSymbol", name: "xmark" },
-            identifier: `${name}-close`,
+            label: leftLabel,
+            accessibilityLabel: leftLabel,
+            icon: { type: "sfSymbol", name: back ? "chevron.backward" : "xmark" },
             onPress: onClose,
           },
         ],
@@ -51,9 +51,8 @@ export function ModalHeader({
                   label: confirm.label,
                   accessibilityLabel: confirm.label,
                   variant: "prominent",
-                  disabled: confirm.disabled,
-                  identifier: `${name}-confirm`,
-                  onPress: confirm.onPress,
+                  disabled: confirm.disabled || !confirm.onPress,
+                  onPress: confirm.onPress ?? (() => {}),
                 },
               ]
             : [],

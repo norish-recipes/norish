@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
+import type { HeaderConfirm } from "@/components/modal-header";
 import { Sheet, SheetList } from "@/components/sheet";
 
 import type { PickRowPosition } from "./pick-row";
@@ -18,10 +19,8 @@ export type PickList<Item> = {
   onEndReached?: () => void;
 };
 
-/**
- * A sheet of things to tick: `header` over the rows of `list`, the one `action` as the header's confirm,
- * which stays off without an `onPress`. Without a `list` the rows are skeletons.
- */
+/** A sheet of things to tick: `header` over `list`'s rows, `action` as the header's confirm
+ * (off without an `onPress`). Without a `list` the rows are skeletons. */
 export function PickSheet<Item>({
   name,
   title,
@@ -36,20 +35,13 @@ export function PickSheet<Item>({
   subtitle?: string;
   header: ReactElement;
   list?: PickList<Item>;
-  action: {
-    label: string;
-    onPress?: () => void;
-  };
+  action: HeaderConfirm;
 }) {
   const items = list?.items ?? [];
 
   return (
     <Sheet
-      confirm={{
-        label: action.label,
-        disabled: !action.onPress,
-        onPress: () => action.onPress?.(),
-      }}
+      confirm={action}
       name={name}
       subtitle={subtitle}
       title={title}

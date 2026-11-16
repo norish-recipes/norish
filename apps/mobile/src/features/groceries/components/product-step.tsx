@@ -102,18 +102,20 @@ export function ProductStep({
 
   return (
     <Sheet
+      back
       actions={
-        <Button
-          className="h-[50px]"
-          testID={typing ? "product-done" : "product-type-price"}
-          variant={typing ? "primary" : "secondary"}
-          onPress={typing ? onBack : () => setTyping(true)}
-        >
-          <Button.Label className="font-semibold">
-            {text(typing ? "common.actions.done" : "groceries.mobile.typePrice")}
-          </Button.Label>
-        </Button>
+        typing ? undefined : (
+          <Button
+            className="h-[50px]"
+            testID="product-type-price"
+            variant="secondary"
+            onPress={() => setTyping(true)}
+          >
+            <Button.Label className="font-semibold">{text("groceries.mobile.typePrice")}</Button.Label>
+          </Button>
+        )
       }
+      confirm={{ label: text("common.actions.done"), onPress: onBack }}
       name="grocery-product"
       title={text("groceries.picker.productLabel", { store: store.name })}
       onClose={onBack}
