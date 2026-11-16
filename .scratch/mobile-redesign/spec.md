@@ -387,3 +387,78 @@ The Calendar tab is web's timeline of day cards with the "Plan recipe" accessory
 ## Out of Scope
 
 - CalDAV on mobile, a month view, a medium widget, widgets that fetch for themselves, Android.
+
+# Part 6: Refinement
+
+Settled in a `/grilling` session on 2026-11-15, after using Parts 1–5 on a device. Nothing here changes CONTEXT.md's vocabulary.
+
+## Problem Statement
+
+The screens work but don't feel native or finished. The Recipe page and every sheet draw their own bars and buttons, motion is mostly a plain fade, timers can't be handled outside cook mode, loaders are mixed and off-centre, and a list of small faults (swipe rows scrolling the list, clipped focus rings, a fullscreen button that does nothing, a planned-item sheet that saves on every change) adds up.
+
+## Solution
+
+Native iOS navigation everywhere a screen has a counterpart, motion that follows the finger and springs, one rule for the bottom accessory, and each listed fault fixed in its area's ticket.
+
+## Implementation Decisions
+
+### Rules
+
+- **Native first.** Native headers, toolbars and sheet headers wherever iOS has them. Two exceptions keep their canvas design: the tab roots' TitleRow (Recipes, Groceries, Pantry, Calendar) and cook mode's full-screen chrome. Controls in a TitleRow sit in glass.
+- **Accessory rule.** The bottom accessory is the tab's one add action, labelled for what's on screen: Add recipe or Add cookbook on Recipes, Add items or Add to pantry on Groceries, Plan recipe on Calendar. No duplicate plus buttons in headers. Calendar's per-day "+" stays because it carries a date. While any Recipe Timer exists, the accessory also holds a timer capsule.
+- **Motion.** Springs instead of timed eases; gestures follow the finger and are interruptible; haptics where something changes; Reduce Motion gets fades or nothing. Web's micro-animations (the inventory below) are the floor, not the target. Motion lives in each area's ticket.
+- **Loaders.** One shared loader on the native iOS activity indicator that centres itself, in a list above the tab bar and accessory. A skeleton wherever the data's shape is known.
+
+### Web's motion, the floor
+
+Rolling digits for servings, ingredient amounts, nutrition and portions (`components/shared/rolling-text.tsx`); step number → check scale-swap; ingredient check fade and strike; the double-tap heart pop; the selection bar sliding up; sections and rows animating in, out and on reorder; chevron rotations; the timer dock morphing into its list; a removed item animating out.
+
+### Recipe Timers outside cook mode
+
+- The capsule in the accessory shows the soonest countdown and a ring and opens the timer list as a sheet (pause/resume, ±, reset, remove). With no timers the accessory shows its add action alone.
+- A long press on a timer chip opens Reset and Remove. A tap stays start, pause or resume.
+
+### Recipe page
+
+- Back and actions stay native header items, pinned while scrolling, with no scroll-edge title bar. Home and Cook move to a native `Stack.Toolbar`, replacing `recipe-bottom-bar.tsx`.
+- The servings and portion steppers are glass, like the conversion menu. The calorie card matches the canvas.
+- A tap on the hero opens a full-screen viewer of every image and video, from the one tapped: pinch zoom, swipe down to dismiss, "n / m". The video fullscreen button works.
+- Server images (icons, photos, avatars) load through `expo-image` with its memory and disk cache; a recipe's icons are prefetched as the page opens. A food with no icon shows nothing: an empty slot of the icon's width only when another row in that list has an icon, otherwise no slot.
+
+### Cook mode
+
+- The vertical step column follows the finger: the next peek rises into the centre and grows to full size while the current shrinks into the upper peek; release springs with the gesture's velocity; a light haptic per step. Prev/next and peek taps run the same spring. Steps ↔ Ingredients crossfade-slide.
+
+### Sheets and the editor
+
+- Every sheet uses the native sheet header: system title, native glass close, Save as a confirm item where the sheet saves. The recipe editor gets a native header with Close and Save. Hand-built titles, `GlassCloseButton` and the extra back buttons go. Content height changes animate.
+
+### Recipes tab
+
+- The accessory reads Add cookbook while the library shows Cookbooks; the library's own plus button goes. The avatar sits in glass.
+- The Recipes/Cookbooks and grid/list toggles animate their selection with a haptic; the heading word rolls. The content underneath swaps without a morph.
+- Grid cards show every tag, allergens first, in a row that scrolls sideways, as web's.
+- Opening a swipe row never scrolls the list; an open row closes on scroll or a tap anywhere else.
+
+### Groceries
+
+- The add and edit sheet keeps its own height when the keyboard opens and rides up on it. The field's focus ring is not clipped.
+- On Pantry the accessory reads Add to pantry and opens a sheet that searches existing Ingredients, adding one of them or a custom entry. The Pantry's top field only filters.
+- A checked item springs into Done; drag has pickup and drop haptics.
+
+### Calendar
+
+- The planned-item sheet is a draft: date, slot and note commit on Save; Cancel or swipe down discards. Remove asks to confirm, then the item animates out.
+- One move UI, the plan sheet's 14-day strip plus its date picker, then the slot tabs, for Move from Today and Calendar's planned-item sheet. Calendar's Add gets the same strip. The day-cards list stays only for planning a recipe from the recipe.
+
+### Loading
+
+- The shared loader replaces every `ActivityIndicator` and `Spinner`; the library's load-more footer is centred. While a session restores at launch, the splash logo stays until the shell or Sign in is ready, with the loader under it only after about a second.
+
+## Testing Decisions
+
+- Gates per ticket. Logic that moves or is new (the move UI's draft, the accessory's label, the icon slot rule) gets unit tests. Existing Maestro flows stay green and are updated where a hand-built button became native; new flows: stop a timer from the accessory, the planned-item draft and Save, add to pantry from the sheet. Motion and haptics are checked by hand on the simulator and a device.
+
+## Out of Scope
+
+- A canvas audit, a Connecting-to-server screen, a native large title on the tab roots, morphing cards between grid and list.
