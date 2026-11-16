@@ -17,7 +17,6 @@ export function RecipeToolbar({ recipeId }: { recipeId: string }) {
         onPress={() => router.navigate("/")}
       />
       <Stack.Toolbar.Button
-        icon="flame"
         variant="prominent"
         onPress={() => router.push(cookModeRoute(recipeId))}
       >
