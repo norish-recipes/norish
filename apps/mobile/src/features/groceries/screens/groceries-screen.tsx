@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { TitleRow } from "@/components/title-row";
 import { useConfirm } from "@/hooks/use-confirm";
+import { lightImpact } from "@/lib/haptics";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -131,7 +132,10 @@ export function GroceriesScreen() {
       onConfirm: () => deleteGroceries(ids),
     });
   const actions: ListActions = {
-    toggle: (ids, isDone) => toggleGroceries(ids, isDone),
+    toggle: (ids, isDone) => {
+      lightImpact();
+      toggleGroceries(ids, isDone);
+    },
     edit: (id) => router.push({ pathname: "/groceries/edit", params: { id } }),
     toggleCollapsed: (key) => setCollapsed(flipped(collapsed, key)),
     toggleDone: (key) => setDoneOpen(flipped(doneOpen, key)),

@@ -1,10 +1,12 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
+import Animated from "react-native-reanimated";
+import { usePopOnChange } from "@/lib/motion/pop-on-change";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-/** The folded tail of a section: how many are done, opening on tap. */
+/** The folded tail of a section: how many are done, opening on tap; the count swells as a ticked line joins it. */
 export function DoneRow({
   count,
   open,
@@ -18,6 +20,7 @@ export function DoneRow({
 }) {
   const intl = useIntl();
   const [muted] = useThemeColor(["muted"] as const);
+  const pop = usePopOnChange(count);
 
   return (
     <Pressable
@@ -27,9 +30,11 @@ export function DoneRow({
       testID={`done-heading-${sectionKey}`}
       onPress={onToggle}
     >
-      <Text className="text-muted flex-1 text-[15px]">
-        {intl.formatMessage({ id: "groceries.store.done" }, { count })}
-      </Text>
+      <Animated.View className="flex-1 flex-row" style={pop}>
+        <Text className="text-muted text-[15px]">
+          {intl.formatMessage({ id: "groceries.store.done" }, { count })}
+        </Text>
+      </Animated.View>
       <Ionicons color={muted} name={open ? "chevron-up" : "chevron-down"} size={16} />
     </Pressable>
   );

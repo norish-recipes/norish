@@ -2,10 +2,12 @@ import type { Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
+import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
+import { sprung } from "@/lib/motion/spring";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
@@ -20,6 +22,10 @@ import { GroceryRow } from "./grocery-row";
 import { GroupRow } from "./group-row";
 import { RecipeHeadingRow } from "./recipe-heading-row";
 import { StoreHeadingRow } from "./store-heading-row";
+
+// Rows and headings fade in and out, and the rest spring into the space they leave or take.
+const ROW_MOTION = { entering: sprung(FadeIn.springify()), exiting: sprung(FadeOut.springify()) };
+const ROW_LAYOUT = sprung(LinearTransition.springify());
 
 export type ListActions = {
   toggle: (ids: string[], isDone: boolean) => void;
@@ -183,8 +189,13 @@ export function GroceriesList({
         className="flex-1"
         contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
         contentInsetAdjustmentBehavior="never"
-        renderHeading={renderHeading}
-        renderItem={renderItem}
+        itemLayoutAnimation={ROW_LAYOUT}
+        renderHeading={(heading, index) => (
+          <Animated.View {...ROW_MOTION}>{renderHeading(heading, index)}</Animated.View>
+        )}
+        renderItem={(item, drag) => (
+          <Animated.View {...ROW_MOTION}>{renderItem(item, drag)}</Animated.View>
+        )}
         rows={rows}
         testID="groceries-list"
         onDrop={onDrop}
