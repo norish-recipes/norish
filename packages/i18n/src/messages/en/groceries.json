@@ -135,8 +135,7 @@
     "inPantry": "In your pantry",
     "weKeepThis": "We keep this",
     "keepFailed": "That could not be added to your pantry",
-    "addCount": "{count, plural, one {Add # item} other {Add # items}}",
-    "adding": "Adding to the grocery list…"
+    "addCount": "{count, plural, one {Add # item} other {Add # items}}"
   },
   "picker": {
     "unlink": "Unlink product",

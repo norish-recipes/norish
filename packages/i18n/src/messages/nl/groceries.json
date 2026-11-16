@@ -135,8 +135,7 @@
     "inPantry": "In je voorraadkast",
     "weKeepThis": "Hebben we altijd",
     "keepFailed": "Dat kon niet aan je voorraadkast worden toegevoegd",
-    "addCount": "{count, plural, one {# item toevoegen} other {# items toevoegen}}",
-    "adding": "Toevoegen aan boodschappenlijst…"
+    "addCount": "{count, plural, one {# item toevoegen} other {# items toevoegen}}"
   },
   "picker": {
     "unlink": "Product ontkoppelen",
