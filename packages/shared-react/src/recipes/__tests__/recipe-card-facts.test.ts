@@ -25,7 +25,7 @@ describe("recipeCardFacts", () => {
     expect(facts.allergySet.has("lactose")).toBe(true);
   });
 
-  it("keeps every tag, allergens first, when there are more than a card used to show", () => {
+  it("keeps every tag, allergens first, however many there are", () => {
     const tags = ["a", "b", "c", "d", "e"].map((name) => ({ name }));
 
     expect(recipeCardFacts(recipe({ tags }), ["D", "e"]).tagNames).toEqual([
