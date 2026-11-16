@@ -155,14 +155,14 @@ export function Line({
         <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
           {amount ? (
             <AnimatedNumber
-              className={`${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} font-semibold ${checked ? "text-muted line-through" : "text-foreground"}`}
+              className={`${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} font-bold ${checked ? "text-muted line-through" : "text-foreground"}`}
               value={amount}
             />
           ) : null}
           <Text
             className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
           >
-            {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
+            {unit ? <Text className="text-accent-text font-bold">{`${unit} `}</Text> : null}
             <InlineMarkdown disableLinks={checked} text={name} />
           </Text>
         </View>

@@ -26,7 +26,7 @@ export function AmountName({
       numberOfLines={numberOfLines}
     >
       {amount ? (
-        <Text className={`font-medium ${done ? "text-muted" : "text-accent-text"}`}>
+        <Text className={`font-bold ${done ? "text-muted" : "text-accent-text"}`}>
           {`${amount} `}
         </Text>
       ) : null}
