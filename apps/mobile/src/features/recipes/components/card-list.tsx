@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,14 +11,14 @@ import { Spinner } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
-import { cardLines } from "../utils/card-lines";
+import { cardCell } from "../utils/card-cell";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
 
 /** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
- * `empty` shows when there is no card. A grid's pairs are single-column lines, so the list stays
- * one list across views: its header keeps its state and the lines animate in, out and on reorder. */
+ * `empty` shows when there is no card. Each card is a cell of one single-column list in both views,
+ * so its header keeps its state and a card entering or leaving animates the others into place. */
 export function CardList<Row>({
   rows,
   variant,
@@ -64,20 +64,16 @@ export function CardList<Row>({
           paddingBottom: tabListBottomInset(insets.bottom),
         }}
         contentInsetAdjustmentBehavior="never"
-        data={cardLines(rows, isGrid ? 2 : 1)}
+        data={rows}
         itemLayoutAnimation={sprung(LinearTransition.springify())}
-        keyExtractor={(line) => line.map(rowKey).join("|")}
-        renderItem={({ item: line }) => (
+        keyExtractor={rowKey}
+        renderItem={({ item, index }) => (
           <Animated.View
-            className={isGrid ? "mb-3 flex-row gap-3 px-5" : "px-5 pb-3"}
             entering={sprung(FadeIn.springify())}
             exiting={sprung(FadeOut.springify())}
+            style={cardCell(isGrid, index)}
           >
-            {line.map((row) => (
-              <Fragment key={rowKey(row)}>{renderCard(row)}</Fragment>
-            ))}
-            {/* A grid's last card keeps its half of the line. */}
-            {isGrid && line.length === 1 ? <View className="flex-1" /> : null}
+            {renderCard(item)}
           </Animated.View>
         )}
         scrollEventThrottle={32}
