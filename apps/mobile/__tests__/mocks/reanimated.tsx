@@ -14,7 +14,8 @@ const sharedValue = <T,>(value: T) => {
   return box;
 };
 
-export default { View: host, ScrollView: host };
+export default { View: host, ScrollView: host, Text: host };
+export const LayoutAnimationConfig = ({ children }: { children?: ReactNode }) => children;
 export const ReduceMotion = { System: "system", Always: "always", Never: "never" };
 export const FadeIn = animation;
 export const FadeOut = animation;
@@ -22,6 +23,9 @@ export const FadeInLeft = animation;
 export const FadeInRight = animation;
 export const FadeOutLeft = animation;
 export const FadeOutRight = animation;
+export const LinearTransition = animation;
+export const ZoomIn = animation;
+export const ZoomOut = animation;
 export const useReducedMotion = () => false;
 export const useSharedValue = sharedValue;
 export const useDerivedValue = <T,>(compute: () => T) => sharedValue(compute());
