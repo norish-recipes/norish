@@ -6,7 +6,7 @@
 
 **Status:** open
 
-- [x] Home and Cook as a native `Stack.Toolbar`, centred; `recipe-bottom-bar.tsx` deleted. Header items pinned while scrolling, no scroll-edge title bar.
+- [ ] The recipe page keeps the tab bar; its bottom accessory reads Cook and opens cook mode, with the timer capsule beside it while a Recipe Timer exists (Mike, 2026-11-16: replaces the Home and Cook `Stack.Toolbar`, which goes with `recipe-bottom-bar.tsx`; no Home button). Cook mode and the editor still hide the tab bar. Header items pinned while scrolling, no scroll-edge title bar.
 - [x] Glass servings and portion steppers; the calorie card matches the canvas.
 - [x] A hero tap opens a full-screen viewer of every image and video from the one tapped: pinch zoom, swipe down to dismiss, "n / m". The video fullscreen button works (it sits under the transparent nav bar today).
 - [x] `expo-image` (via `expo install`) for every server image app-wide, memory and disk cache; a recipe's icons prefetched as the page opens.
