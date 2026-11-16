@@ -13,10 +13,12 @@ import {
 } from "@norish/shared-react/recipes";
 import { formatAmountAsDecimal } from "@norish/shared/lib/format-amount";
 
+import { RecipeSheetGate } from "../components/recipe-sheet-gate";
+
 const MULTIPLIERS = [0.5, 1, 2, 3, 4];
 
 /** The Servings sheet: type the servings or a multiplier, or pick one; each change scales the page. */
-export function RecipeServingsScreen() {
+function ServingsSheet() {
   const intl = useIntl();
   const router = useRouter();
   const recipe = useLoadedPageRecipe();
@@ -95,5 +97,15 @@ export function RecipeServingsScreen() {
         </View>
       </SheetBody>
     </Sheet>
+  );
+}
+
+export function RecipeServingsScreen() {
+  const intl = useIntl();
+
+  return (
+    <RecipeSheetGate name="recipe-servings" title={intl.formatMessage({ id: "recipes.form.servings" })}>
+      <ServingsSheet />
+    </RecipeSheetGate>
   );
 }

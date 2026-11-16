@@ -15,13 +15,15 @@ import {
   useRecipeSharesQuery,
 } from "@norish/shared-react/recipes";
 
+import { RecipeSheetGate } from "../components/recipe-sheet-gate";
+
 type Expiry = CreateRecipeShareInputDto["expiresIn"];
 
 const EXPIRIES: Expiry[] = ["1day", "1week", "1month", "1year", "forever"];
 const STATUS_COLOR = { active: "success", expired: "warning", revoked: "default" } as const;
 
 /** Public links for the recipe: pick when one expires, create it, copy it, and manage the others. */
-export function RecipeShareScreen() {
+function ShareSheet() {
   const intl = useIntl();
   const { toast } = usePlatform();
   const toUrl = useServerUrl();
@@ -176,5 +178,18 @@ export function RecipeShareScreen() {
         )}
       </SheetScrollView>
     </Sheet>
+  );
+}
+
+export function RecipeShareScreen() {
+  const intl = useIntl();
+
+  return (
+    <RecipeSheetGate
+      name="recipe-share"
+      title={intl.formatMessage({ id: "recipes.sharePanel.title" })}
+    >
+      <ShareSheet />
+    </RecipeSheetGate>
   );
 }
