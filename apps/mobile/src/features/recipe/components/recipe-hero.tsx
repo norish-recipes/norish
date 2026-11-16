@@ -1,5 +1,5 @@
 import type { VideoPlayer } from "expo-video";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
@@ -11,7 +11,9 @@ import { sprung } from "@/lib/motion/spring";
 import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+import { scheduleOnRN } from "react-native-worklets";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
@@ -52,26 +54,23 @@ function Fade({ color }: { color: string }) {
   );
 }
 
-/** A heart that pops over the photo on a double tap, then leaves; `key` it per tap. */
-function HeartPop() {
-  const [shown, setShown] = useState(true);
+/** A heart that pops over the photo and, a beat later, `onDone` takes it away so it leaves. */
+function HeartPop({ onDone }: { onDone: () => void }) {
+  const [color] = useThemeColor(["accent-foreground"] as const);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShown(false), 650);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return shown ? (
+  return (
     <Animated.View
       className="absolute inset-x-0 top-[150px] items-center"
-      entering={sprung(ZoomIn.springify())}
-      exiting={sprung(ZoomOut.springify())}
+      entering={sprung(ZoomIn.springify()).withCallback((finished) => {
+        "worklet";
+        if (finished) scheduleOnRN(onDone);
+      })}
+      exiting={sprung(ZoomOut.springify()).delay(250)}
       pointerEvents="none"
     >
-      <Ionicons color="#ffffff" name="heart" size={88} style={HEART_SHADOW} />
+      <Ionicons color={color} name="heart" size={88} style={HEART_SHADOW} />
     </Animated.View>
-  ) : null;
+  );
 }
 
 function Pill({ children }: { children: string }) {
@@ -201,7 +200,7 @@ export function RecipeHero({
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
   const [viewing, setViewing] = useState<number | null>(null);
-  const [heart, setHeart] = useState(0);
+  const [heart, setHeart] = useState<number | null>(null);
   const items = heroItems(recipe);
   const doubleTap = useTapGesture({
     numberOfTaps: 2,
@@ -209,7 +208,7 @@ export function RecipeHero({
     onActivate: () => {
       if (!onDoubleTap) return;
       lightImpact();
-      setHeart((count) => count + 1);
+      setHeart((count) => (count ?? 0) + 1);
       onDoubleTap();
     },
   });
@@ -274,7 +273,7 @@ export function RecipeHero({
             ))}
           </View>
         ) : null}
-        {heart > 0 ? <HeartPop key={heart} /> : null}
+        {heart === null ? null : <HeartPop key={heart} onDone={() => setHeart(null)} />}
         {viewing === null ? null : (
           <MediaViewer
             items={items}
