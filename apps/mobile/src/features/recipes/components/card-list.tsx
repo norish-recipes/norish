@@ -11,14 +11,18 @@ import { Spinner } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
-import { cardCell } from "../utils/card-cell";
+import { cardChunks } from "../utils/card-chunks";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
 
+/** How many cards a grid cell holds: they wrap two to a line inside it and reorder there, so a card
+ * leaving moves the others in its cell; only a card crossing into the next cell is drawn anew. */
+const GRID_CELL = 8;
+
 /** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
- * `empty` shows when there is no card. Each card is a cell of one single-column list in both views,
- * so its header keeps its state and a card entering or leaving animates the others into place. */
+ * `empty` shows when there is no card. It is one list in both views, so its header keeps its state,
+ * and a card entering or leaving animates the others into place. */
 export function CardList<Row>({
   rows,
   variant,
@@ -64,18 +68,34 @@ export function CardList<Row>({
           paddingBottom: tabListBottomInset(insets.bottom),
         }}
         contentInsetAdjustmentBehavior="never"
-        data={rows}
+        data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
         itemLayoutAnimation={sprung(LinearTransition.springify())}
-        keyExtractor={rowKey}
-        renderItem={({ item, index }) => (
-          <Animated.View
-            entering={sprung(FadeIn.springify())}
-            exiting={sprung(FadeOut.springify())}
-            style={cardCell(isGrid, index)}
-          >
-            {renderCard(item)}
-          </Animated.View>
-        )}
+        keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
+        renderItem={({ item: chunk }) =>
+          isGrid ? (
+            <View className="flex-row flex-wrap px-3.5">
+              {chunk.map((row) => (
+                <Animated.View
+                  key={rowKey(row)}
+                  className="w-1/2 flex-row px-1.5 pb-3"
+                  entering={sprung(FadeIn.springify())}
+                  exiting={sprung(FadeOut.springify())}
+                  layout={sprung(LinearTransition.springify())}
+                >
+                  {renderCard(row)}
+                </Animated.View>
+              ))}
+            </View>
+          ) : (
+            <Animated.View
+              className="px-5 pb-3"
+              entering={sprung(FadeIn.springify())}
+              exiting={sprung(FadeOut.springify())}
+            >
+              {chunk[0] ? renderCard(chunk[0]) : null}
+            </Animated.View>
+          )
+        }
         scrollEventThrottle={32}
         testID={testID}
         onEndReached={onEndReached}
