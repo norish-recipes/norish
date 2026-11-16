@@ -28,10 +28,13 @@ appId: dev.norish.app
 - tapOn:
     id: pantry-add-field
 - inputText: milk
+# The catalogue's answer replaces the typed row, so the tap waits for the food's own row.
 - extendedWaitUntil:
-    visible: Add milk to your pantry
+    visible:
+      id: pantry-match-.*
     timeout: 20000
-- tapOn: Add milk to your pantry
+- tapOn:
+    id: pantry-match-.*
 - evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=1').body).names}
 - assertTrue: ${output.pantry.length == 1}
 # The field empties for the next food; a typed name that is no food of the catalogue is kept as typed.
