@@ -4,7 +4,7 @@ import { TimerCapsule } from "@/components/timer-capsule";
 import { sprung } from "@/lib/motion/spring";
 import { NativeTabs } from "expo-router/native-tabs";
 
-import type { AccessoryProps, AddAction } from "../utils/accessory-plan";
+import type { AccessoryPlan, AccessoryProps, AddAction } from "../utils/accessory-plan";
 import { AddGroceriesAccessory } from "./add-groceries-accessory";
 import { AddRecipeAccessory } from "./add-recipe-accessory";
 import { PlanRecipeAccessory } from "./plan-recipe-accessory";
@@ -16,7 +16,7 @@ const ADD: Record<AddAction, React.ComponentType<AccessoryProps>> = {
 };
 
 /** The accessory's row: the tab's add action, and the timer capsule springing in beside it. */
-export function ShellAccessory({ add, capsule }: { add: AddAction | null; capsule: boolean }) {
+export function ShellAccessory({ plan: { add, capsule } }: { plan: AccessoryPlan }) {
   const Add = add ? ADD[add] : null;
   // Inline beside the collapsed tab bar, the accessory is too narrow for a label and a countdown.
   const inline = NativeTabs.BottomAccessory.usePlacement() === "inline";

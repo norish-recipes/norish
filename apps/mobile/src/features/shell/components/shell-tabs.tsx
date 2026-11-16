@@ -22,7 +22,7 @@ export function ShellTabs() {
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
       {hidden || !plan ? null : (
         <NativeTabs.BottomAccessory>
-          <ShellAccessory add={plan.add} capsule={plan.capsule} />
+          <ShellAccessory plan={plan} />
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
