@@ -23,6 +23,7 @@ export type StepPager = {
 /**
  * The step column's `position`: the step it shows, fractional mid-page. A drag moves it, a
  * release springs it with the finger's velocity; a step change from anywhere else springs too.
+ * When `still` (Reduce Motion) the column holds and a release only decides the step.
  */
 export function useStepPager({
   count,
@@ -42,6 +43,8 @@ export function useStepPager({
   const scrollAt = useSharedValue(0);
   const scrollMax = useSharedValue(0);
   const dragStart = useSharedValue(0);
+  // Where the drag has taken the column; `position` follows it unless `still`.
+  const dragged = useSharedValue(0);
   // The translation the drag started paging at; null while the step's text still scrolls.
   const pagingFrom = useSharedValue<number | null>(null);
   const reach: StepReach = {
@@ -61,13 +64,13 @@ export function useStepPager({
 
   // Claims the touch only once it drags, so a tap (a peek's press) never stops a spring.
   const pan = usePanGesture({
-    enabled: !still,
     activeOffsetY: [-10, 10],
     failOffsetX: [-20, 20],
     onActivate: (event) => {
       "worklet";
       cancelAnimation(position);
       dragStart.set(position.get());
+      dragged.set(position.get());
       const y = event.y - event.translationY;
       const onStep = y > PEEK_SLOT && y < height.get() - PEEK_SLOT;
 
@@ -87,14 +90,16 @@ export function useStepPager({
       }
       const next = dragStart.get() - (event.translationY - from) / DRAG_DISTANCE;
 
-      position.set(Math.min(reach.last, Math.max(reach.first, next)));
+      dragged.set(Math.min(reach.last, Math.max(reach.first, next)));
+      if (!still) position.set(dragged.get());
     },
     onDeactivate: (event) => {
       "worklet";
       const velocity = pagingFrom.get() === null ? 0 : -event.velocityY / DRAG_DISTANCE;
-      const target = settleTarget(position.get(), velocity, reach);
+      const target = settleTarget(dragged.get(), velocity, reach);
 
       if (target !== current) scheduleOnRN(onStepChange, target);
+      if (still) return;
       goal.set(target);
       position.set(withSpring(target, { ...SPRING, velocity }));
     },

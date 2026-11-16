@@ -129,20 +129,15 @@ function CookMode() {
   }, [params.step]);
 
   const reduceMotion = useReducedMotion();
-  const fling = (direction: Directions, onActivate: () => void, { enabled = true } = {}) => ({
+  // The step column's own pan pages the steps, under Reduce Motion too.
+  const fling = (direction: Directions, onActivate: () => void) => ({
     direction,
-    enabled,
     runOnJS: true,
     onActivate,
   });
-  // The step column's drag pages the steps; under Reduce Motion, where it holds still, a fling does.
-  const stepFling = (direction: Directions, delta: number) =>
-    fling(direction, () => goTo(current + delta), { enabled: reduceMotion && view === "steps" });
-  const up = useFlingGesture(stepFling(Directions.UP, 1));
-  const down = useFlingGesture(stepFling(Directions.DOWN, -1));
   const left = useFlingGesture(fling(Directions.LEFT, () => setView("ingredients")));
   const right = useFlingGesture(fling(Directions.RIGHT, () => setView("steps")));
-  const swipe = useCompetingGestures(up, down, left, right);
+  const swipe = useCompetingGestures(left, right);
 
   return (
     <TintContext value={tint}>

@@ -24,10 +24,11 @@ vi.mock("react-native-gesture-handler", () => ({
 }));
 
 const { useStepPager } = await import("../hooks/use-step-pager");
-const { PEEK_SLOT } = await import("../utils/cook-pager");
+const { DRAG_DISTANCE, PEEK_SLOT } = await import("../utils/cook-pager");
 
 const HEIGHT = 600;
 const PEEK_Y = HEIGHT - PEEK_SLOT / 2;
+const TEXT_Y = HEIGHT / 2;
 
 // The pan's callbacks for one touch, in the order the gesture handler calls them.
 function touch(y: number, moves: number[], velocityY = 0) {
@@ -64,5 +65,27 @@ describe("useStepPager", () => {
 
     expect(onStepChange).not.toHaveBeenCalled();
     expect(pager.position.get()).toBe(1.3);
+  });
+
+  it("pages under Reduce Motion from a peek fling without moving the column", () => {
+    const { pager, onStepChange } = mount(2, true);
+
+    touch(PEEK_Y, [-12, -40], -6 * DRAG_DISTANCE);
+
+    expect(onStepChange).toHaveBeenCalledWith(3);
+    expect(pager.position.get()).toBe(2);
+  });
+
+  it("pages under Reduce Motion from the text only at its scroll edge", () => {
+    const { pager, onStepChange } = mount(2, true);
+
+    pager.scrollMax.set(400);
+    pager.scrollAt.set(120);
+    touch(TEXT_Y, [-12, -40], -6 * DRAG_DISTANCE);
+    expect(onStepChange).not.toHaveBeenCalled();
+
+    pager.scrollAt.set(400);
+    touch(TEXT_Y, [-12, -40], -6 * DRAG_DISTANCE);
+    expect(onStepChange).toHaveBeenCalledWith(3);
   });
 });
