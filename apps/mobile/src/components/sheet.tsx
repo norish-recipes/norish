@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
-import type {
-  FlatListProps,
-  KeyboardEvent,
-  LayoutChangeEvent,
-  ScrollViewProps,
-} from "react-native";
+import type { FlatListProps, KeyboardEvent, ScrollViewProps } from "react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, Keyboard, ScrollView, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
+import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
@@ -77,9 +71,21 @@ export function SheetList<T>({
   );
 }
 
-/** A sheet's body that does not scroll, as tall as its content: the body of a fit sheet. */
+/** A fit sheet's body: as tall as its content until the sheet runs out of room, then it scrolls. */
 export function SheetBody({ children, ...layout }: BodyLayout & { children: ReactNode }) {
-  return <View className={contentClass(layout)}>{children}</View>;
+  return (
+    <>
+      {/* Kept first: react-native-screens stretches a sheet's first-child scroll view to the sheet. */}
+      <View collapsable={false} />
+      <ScrollView
+        {...SCROLLER}
+        className="shrink grow-0"
+        contentContainerClassName={contentClass(layout)}
+      >
+        {children}
+      </ScrollView>
+    </>
+  );
 }
 
 /** A horizontal strip that runs to the sheet's sides, its content starting on the sheet's inset. */
@@ -125,12 +131,16 @@ function SheetAction({ children }: { children: ReactNode }) {
 /** The top of a sheet at its full height, the window's safe-area top. */
 export const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
 
-/**
- * How far the keyboard covers the sheet. UIKit lifts a sheet above it as far as its full height's
- * top; JS layout starts at the sheet's own top, so the sheet's height places its bottom.
- */
-function useKeyboardOverlap() {
-  const [height, setHeight] = useState(0);
+/** The native header's height over a sheet's content, measured on iOS 26 and 27. */
+const SHEET_HEADER = 70;
+
+/** Where a sheet's content starts at the sheet's full height, under the native header. */
+export const SHEET_BODY_TOP = FULL_SHEET_TOP + SHEET_HEADER;
+
+/** The most the content can take: down to the keyboard or the screen's bottom. UIKit lifts a sheet
+ * that then fits onto the keyboard, so nothing laid out feeds back into it. */
+function useSheetRoom() {
+  const { height } = useWindowDimensions();
   const [keyboardTop, setKeyboardTop] = useState<number | null>(null);
 
   useEffect(() => {
@@ -144,16 +154,12 @@ function useKeyboardOverlap() {
     return () => subscriptions.forEach((subscription) => subscription.remove());
   }, []);
 
-  return {
-    overlap:
-      keyboardTop === null ? 0 : Math.max(0, Math.round(FULL_SHEET_TOP + height - keyboardTop)),
-    onLayout: (event: LayoutChangeEvent) => setHeight(event.nativeEvent.layout.height),
-  };
+  return (keyboardTop ?? height) - SHEET_BODY_TOP;
 }
 
 /**
  * The one sheet layout: the native header (title, Close, and Save where it saves), the body, the
- * actions pinned below. The keyboard's overlap pads the bottom so it covers none.
+ * actions pinned below, all held to the room above the keyboard.
  */
 export function Sheet({
   name,
@@ -181,24 +187,13 @@ export function Sheet({
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
   children?: ReactNode;
 }) {
-  const { overlap, onLayout } = useKeyboardOverlap();
+  const room = useSheetRoom();
 
   useMarkSheetOpen();
-  // Animated on this view only: a global LayoutAnimation left armed by a picker's keyboard events
-  // animated the sheet's unmount, which Reanimated's layout animations abort on.
-  const keyboardStyle = useAnimatedStyle(() => ({
-    paddingBottom: withTiming(overlap, { duration: 250 }),
-  }));
 
   return (
     // Not flattened, so react-native-screens never resizes the body directly.
-    <Animated.View
-      className="grow"
-      collapsable={false}
-      style={keyboardStyle}
-      testID={`${name}-sheet`}
-      onLayout={onLayout}
-    >
+    <View className="grow" collapsable={false} style={{ maxHeight: room }} testID={`${name}-sheet`}>
       <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
       {subtitle ? (
         <Text
@@ -211,7 +206,7 @@ export function Sheet({
       ) : null}
       {children}
       {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
-    </Animated.View>
+    </View>
   );
 }
 
