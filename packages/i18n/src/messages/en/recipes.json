@@ -409,7 +409,7 @@
     "total": "Total"
   },
   "cookbooks": {
-    "addCookbook": "Add Cookbook",
+    "addCookbook": "Add cookbook",
     "createTitle": "New cookbook",
     "editTitle": "Edit cookbook",
     "titleLabel": "Title",

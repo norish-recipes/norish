@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
+
 import { accessoryPlan, accessoryScreen, labelFits } from "../utils/accessory-plan";
 
 // The action a plan holds, by its test id; Add recipe by its name.
-const holds = (path: string, hasTimers: boolean, recipeId?: string) => {
-  const plan = accessoryPlan({ path, recipeId }, hasTimers);
+const holds = (
+  path: string,
+  hasTimers: boolean,
+  recipeId?: string,
+  lens: LibraryTypeFilter = "all"
+) => {
+  const plan = accessoryPlan({ path, recipeId }, hasTimers, lens);
 
   return (
     plan && {
@@ -40,9 +47,34 @@ describe("accessoryPlan", () => {
       add: "cook-recipe",
       capsule: true,
     });
-    expect(accessoryPlan({ path: "/recipe/abc", recipeId: "abc" }, false)?.add).toMatchObject({
+    expect(accessoryPlan({ path: "/recipe/abc", recipeId: "abc" }, false, "all")?.add).toMatchObject({
       route: { pathname: "/recipe/[id]/cook", params: { id: "abc" } },
     });
+  });
+});
+
+describe("accessoryPlan on the Cookbooks lens", () => {
+  it("reads Add cookbook, into New cookbook, at the Recipes root, beside a timer too", () => {
+    expect(holds("/", false, undefined, "cookbooks")).toEqual({
+      add: "add-cookbook",
+      capsule: false,
+    });
+    expect(holds("/", true, undefined, "cookbooks")).toEqual({ add: "add-cookbook", capsule: true });
+    expect(accessoryPlan({ path: "/" }, false, "cookbooks")?.add).toMatchObject({
+      route: "/new-cookbook",
+    });
+  });
+
+  it("keeps the other lenses on Add recipe", () => {
+    expect(holds("/", false, undefined, "recipes")?.add).toBe("addRecipe");
+    expect(holds("/", false, undefined, "all")?.add).toBe("addRecipe");
+  });
+
+  it("leaves every other screen to its own action", () => {
+    expect(holds("/groceries", false, undefined, "cookbooks")?.add).toBe("add-grocery");
+    expect(holds("/calendar", false, undefined, "cookbooks")?.add).toBe("plan-recipe-accessory");
+    expect(holds("/cookbook/c1", false, undefined, "cookbooks")?.add).toBe("addRecipe");
+    expect(holds("/recipe/abc", false, "abc", "cookbooks")?.add).toBe("cook-recipe");
   });
 });
 

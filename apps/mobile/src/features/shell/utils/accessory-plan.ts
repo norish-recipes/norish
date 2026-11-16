@@ -3,6 +3,8 @@ import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import { cookModeRoute, TAB_ROUTES } from "@/lib/tab-routes";
 
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
+
 /** The screen the accessory is for: its path, and its recipe when that is a shown recipe's page. */
 export type AccessoryScreen = { path: string; recipeId?: string };
 
@@ -37,6 +39,13 @@ const TAB_ACTIONS: Record<(typeof PATH_TABS)[number], Action> = {
   },
 };
 
+const ADD_COOKBOOK: Action = {
+  icon: "add-circle-outline",
+  labelId: "recipes.cookbooks.addCookbook",
+  testID: "add-cookbook",
+  route: TAB_ROUTES.recipes.newCookbook,
+};
+
 const cookAction = (recipeId: string): Action => ({
   icon: "play-circle-outline",
   labelId: "recipes.detail.cook",
@@ -61,11 +70,13 @@ export function accessoryScreen(
   return { path: tabOf(lastNonRecipePath) ? TAB_ROUTES.recipes.root : lastNonRecipePath };
 }
 
-/** The accessory for `screen`, or null when it holds nothing: Cook on a recipe, the capsule alone
- * on the Pantry and its food sheet. */
+/** The accessory for `screen`, or null when it holds nothing: Cook on a recipe, Add cookbook while
+ * the Library at the Recipes root shows `lens` Cookbooks, the capsule alone on the Pantry and its
+ * food sheet. */
 export function accessoryPlan(
   { path, recipeId }: AccessoryScreen,
-  hasTimers: boolean
+  hasTimers: boolean,
+  lens: LibraryTypeFilter
 ): AccessoryPlan | null {
   const tab = tabOf(path);
   const add: AccessoryPlan["add"] = recipeId
@@ -74,7 +85,9 @@ export function accessoryPlan(
       ? null
       : tab
         ? TAB_ACTIONS[tab]
-        : "addRecipe";
+        : path === TAB_ROUTES.recipes.root && lens === "cookbooks"
+          ? ADD_COOKBOOK
+          : "addRecipe";
 
   return add || hasTimers ? { add, capsule: hasTimers } : null;
 }

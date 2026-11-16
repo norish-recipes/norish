@@ -74,25 +74,6 @@ export function FiltersButton() {
   );
 }
 
-/** The Cookbooks lens's green plus, which opens New cookbook. */
-function NewCookbookButton() {
-  const intl = useIntl();
-  const router = useRouter();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
-      accessibilityRole="button"
-      className="bg-accent size-9 items-center justify-center rounded-full"
-      testID="library-new-cookbook"
-      onPress={() => router.push("/new-cookbook")}
-    >
-      <Ionicons color={accentForeground} name="add" size={22} />
-    </Pressable>
-  );
-}
-
 /**
  * The Library's heading and its grid or list toggle, the lenses and the Filters button. `scoped`,
  * for a cookbook's page, keeps only the toggle and Filters, at the page's right.
@@ -141,7 +122,6 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
           );
         })}
         <View className="ml-auto flex-row items-center gap-2">
-          {filters.libraryType === "cookbooks" ? <NewCookbookButton /> : null}
           <FiltersButton />
         </View>
       </View>

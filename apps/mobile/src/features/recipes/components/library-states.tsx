@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { EmptyCard } from "@/components/empty-card";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
+import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -58,7 +59,7 @@ export function CookbooksEmpty() {
         accessibilityRole="button"
         className="bg-accent h-11 flex-row items-center justify-center gap-2 rounded-full"
         testID="library-cookbooks-empty-new"
-        onPress={() => router.push("/new-cookbook")}
+        onPress={() => router.push(TAB_ROUTES.recipes.newCookbook)}
       >
         <Ionicons color={accentForeground} name="add" size={20} />
         <Text className="text-accent-foreground text-[15px] font-semibold">

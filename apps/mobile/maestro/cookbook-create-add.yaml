@@ -13,7 +13,7 @@ appId: dev.norish.app
 - tapOn:
     id: library-lens-cookbooks
 - tapOn:
-    id: library-new-cookbook
+    id: add-cookbook
 - extendedWaitUntil:
     visible:
       id: new-cookbook-title

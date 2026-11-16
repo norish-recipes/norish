@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ShellAccessory } from "@/features/shell/components/shell-accessory";
 import { accessoryPlan, accessoryScreen } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
 import { recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
@@ -25,10 +26,11 @@ export function ShellTabs() {
     recipeId ? TAB_ROUTES.recipes.root : path
   );
   const shown = useShownRecipe();
+  const lens = useLibraryLens();
   const { recipe } = useRecipeQuery(shown);
   // A loading or missing recipe keeps the last other screen's action.
   const screen = accessoryScreen(path, recipeId, lastNonRecipePath, recipe ? shown : null);
-  const plan = accessoryPlan(screen, hasTimers);
+  const plan = accessoryPlan(screen, hasTimers, lens);
 
   if (!recipeId && path !== lastNonRecipePath) setLastNonRecipePath(path);
 

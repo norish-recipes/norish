@@ -10,6 +10,7 @@ export const TAB_ROUTES = {
     share: "/recipe/[id]/share",
     viewer: "/recipe/[id]/viewer",
     cookbook: "/cookbook/[id]",
+    newCookbook: "/new-cookbook",
     planRecipe: "/plan-recipe",
     addToGroceries: "/add-to-groceries",
     cookbookAddRecipes: "/cookbook-add-recipes",
