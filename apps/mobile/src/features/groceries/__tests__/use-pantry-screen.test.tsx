@@ -3,7 +3,9 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const keep = vi.hoisted(() => vi.fn());
+const successNotification = vi.hoisted(() => vi.fn());
 
+vi.mock("@/lib/haptics", () => ({ successNotification }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
@@ -43,5 +45,6 @@ describe("the Pantry field", () => {
     act(() => result.current.actions.keep({ ingredientId: "i1", name: "Olives" }));
 
     expect(keep).toHaveBeenCalledWith({ ingredientId: "i1", name: "Olives" });
+    expect(successNotification).toHaveBeenCalledOnce();
   });
 });

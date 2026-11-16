@@ -6,7 +6,6 @@ import { useIntl } from "react-intl";
 import { useSpellingRules } from "@norish/shared-react/config";
 import {
   useOnTheList,
-  usePantryField,
   usePantryQuery,
   usePantrySuggestions,
   usePutOnTheList,
@@ -17,6 +16,7 @@ import { searchPantry, uncoveredSuggestions } from "@norish/shared/lib/pantry";
 
 import type { PantryActions } from "../components/pantry-rows";
 import { pantryRows } from "../utils/pantry-rows";
+import { useKeepingField } from "./use-keeping-field";
 
 /** The Pantry screen's state: what the field narrows (it only filters), what is folded, and what a row does. */
 export function usePantryScreen() {
@@ -28,7 +28,7 @@ export function usePantryScreen() {
   const { suggestions } = usePantrySuggestions();
   const onTheList = useOnTheList(items);
   const putOnList = usePutOnTheList(intl.locale);
-  const { draft, setDraft, typed, keep } = usePantryField(items, intl.locale, rules);
+  const { draft, setDraft, typed, keep } = useKeepingField(items, intl.locale, rules);
   const [startedEmpty, setStartedEmpty] = useState<boolean | null>(null);
   const [folded, setFolded] = useState<boolean | null>(null);
   const [showAll, setShowAll] = useState(false);

@@ -8,7 +8,7 @@ import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useIntl } from "react-intl";
 
 import { useSpellingRules } from "@norish/shared-react/config";
-import { usePantryField, usePantryQuery } from "@norish/shared-react/groceries";
+import { usePantryQuery } from "@norish/shared-react/groceries";
 import {
   foodNamedAsTyped,
   useIngredientIcons,
@@ -17,6 +17,7 @@ import {
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
 import { PantryAddRowView } from "../components/pantry-add-row";
+import { useKeepingField } from "../hooks/use-keeping-field";
 import { pantryAddRows, pickedFood } from "../utils/pantry-add-rows";
 
 /** Add to pantry: search the Ingredients, keep one, or keep the text as typed; the sheet stays open for the next. */
@@ -24,7 +25,7 @@ export function PantryAddScreen() {
   const intl = useIntl();
   const rules = useSpellingRules();
   const { items, isRead } = usePantryQuery();
-  const { draft, setDraft, typed, canAdd, keep } = usePantryField(items, intl.locale, rules);
+  const { draft, setDraft, typed, canAdd, keep } = useKeepingField(items, intl.locale, rules);
   const matches = usePantryCatalogue(
     typed,
     intl.locale,

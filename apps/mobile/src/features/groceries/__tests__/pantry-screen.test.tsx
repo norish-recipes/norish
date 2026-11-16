@@ -45,6 +45,7 @@ vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0 }),
 }));
 vi.mock("@/components/tab-list-inset", () => ({ tabListBottomInset: () => 0 }));
+vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), dismissTo: vi.fn() }));
