@@ -7,7 +7,11 @@ import type { PendingRecipeDTO } from "@norish/shared/contracts";
 
 import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
 import { useTRPC } from "../trpc";
-import { applyRecipeUpdateToLibrary, applyRecipeUpdateToMembers } from "./library-cache";
+import {
+  applyRecipeUpdateToLibrary,
+  applyRecipeUpdateToMembers,
+  libraryQueryHolds,
+} from "./library-cache";
 
 export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 
@@ -72,6 +76,8 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
       for (const [key] of queryClient.getQueriesData<InfiniteLibraryData>({
         queryKey: trpc.library.list.pathKey(),
       })) {
+        if (!libraryQueryHolds(key, "recipe")) continue;
+
         queryClient.setQueryData<InfiniteLibraryData>(key, (previous) =>
           applyRecipeUpdateToLibrary(previous, updater)
         );

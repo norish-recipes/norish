@@ -22,6 +22,16 @@ export type InfiniteRecipeData = InfiniteData<{
   nextCursor: number | null;
 }>;
 
+/** Whether the Library query at `queryKey` lists `kind`: the Cookbooks lens holds no recipes, nor Recipes any cookbook. */
+export function libraryQueryHolds(
+  queryKey: readonly unknown[],
+  kind: LibraryItemDTO["kind"]
+): boolean {
+  const params = queryKey[1] as { input?: { libraryType?: string } } | undefined;
+
+  return params?.input?.libraryType !== (kind === "recipe" ? "cookbooks" : "recipes");
+}
+
 /**
  * Reconcile one kind's rows back into the Library's interleaved pages.
  *
