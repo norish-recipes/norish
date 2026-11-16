@@ -6,6 +6,7 @@ import { motion, useMotionValue } from "motion/react";
 
 import {
   allergenSet,
+  dedupeTagsByName,
   isAllergenTag,
   sortTagsWithAllergyPriority,
 } from "@norish/shared/lib/helpers";
@@ -14,23 +15,6 @@ interface RecipeTagsProps {
   tags: { name: string }[];
   /** List of allergy tag names - these will be styled as warnings and sorted first */
   allergies?: string[];
-}
-
-function dedupeTagsByName(tags: { name: string }[]) {
-  const seen = new Set<string>();
-  const deduped: { name: string }[] = [];
-
-  for (const tag of tags) {
-    const name = tag.name.trim();
-    const key = name.toLowerCase();
-
-    if (!name || seen.has(key)) continue;
-
-    seen.add(key);
-    deduped.push({ name });
-  }
-
-  return deduped;
 }
 
 export default function RecipeTags({ tags, allergies = [] }: RecipeTagsProps) {

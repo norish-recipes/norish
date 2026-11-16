@@ -517,6 +517,23 @@ export function normalizeUrl(url: string): string {
   }
 }
 
+/** The tags with a blank name dropped and each name, trimmed, kept once (case-insensitive) in its first place. */
+export function dedupeTagsByName(tags: readonly ({ name?: string | null } | null | undefined)[]) {
+  const seen = new Set<string>();
+  const deduped: { name: string }[] = [];
+
+  for (const tag of tags) {
+    const name = tag?.name?.trim();
+
+    if (!name || seen.has(name.toLowerCase())) continue;
+
+    seen.add(name.toLowerCase());
+    deduped.push({ name });
+  }
+
+  return deduped;
+}
+
 /** The allergies lower-cased, for a case-insensitive lookup. */
 export function allergenSet(allergies: readonly string[]): Set<string> {
   return new Set(allergies.map((allergy) => allergy.toLowerCase()));
