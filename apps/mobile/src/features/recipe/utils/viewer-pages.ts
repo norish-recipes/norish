@@ -12,6 +12,9 @@ export function pageAt(offset: number, width: number, count: number): number {
 /** The viewer's "n / m" for the zero-based page. */
 export const counterLabel = (page: number, count: number) => `${page + 1} / ${count}`;
 
-/** Whether a downward drag or flick that just ended closes the viewer. */
-export const dismisses = (translationY: number, velocityY: number) =>
-  translationY > DISMISS_DISTANCE || velocityY > DISMISS_VELOCITY;
+/** Whether a downward drag or flick that just ended closes the viewer; the drag's worklet calls it. */
+export function dismisses(translationY: number, velocityY: number) {
+  "worklet";
+
+  return translationY > DISMISS_DISTANCE || velocityY > DISMISS_VELOCITY;
+}
