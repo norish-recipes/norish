@@ -281,7 +281,9 @@
     "householdNumbers": "your household's numbers",
     "decreasePortions": "Decrease portions",
     "increasePortions": "Increase portions",
-    "portions": "{count, plural, one {# portion} other {# portions}}"
+    "portions": "{count, plural, one {# portion} other {# portions}}",
+    "percentOfReference": "{percent}% of {amount}",
+    "percentOfDailyReference": "{percent}% of {amount} daily reference"
   },
   "measurementSystem": {
     "label": "Measurement System",

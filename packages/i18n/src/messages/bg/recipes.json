@@ -281,7 +281,9 @@
     "householdNumbers": "стойностите на вашето домакинство",
     "decreasePortions": "По-малко порции",
     "increasePortions": "Повече порции",
-    "portions": "{count, plural, one {# порция} other {# порции}}"
+    "portions": "{count, plural, one {# порция} other {# порции}}",
+    "percentOfReference": "{percent}% от {amount}",
+    "percentOfDailyReference": "{percent}% от дневната референция {amount}"
   },
   "measurementSystem": {
     "label": "Мерна система",

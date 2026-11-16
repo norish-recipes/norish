@@ -281,7 +281,9 @@
     "householdNumbers": "우리 가구의 값",
     "decreasePortions": "인분 줄이기",
     "increasePortions": "인분 늘리기",
-    "portions": "{count, plural, other {#인분}}"
+    "portions": "{count, plural, other {#인분}}",
+    "percentOfReference": "{amount}의 {percent}%",
+    "percentOfDailyReference": "하루 기준 {amount}의 {percent}%"
   },
   "measurementSystem": {
     "label": "측정 시스템",

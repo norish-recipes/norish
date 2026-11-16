@@ -281,7 +281,9 @@
     "householdNumbers": "أرقام منزلك",
     "decreasePortions": "حصص أقل",
     "increasePortions": "حصص أكثر",
-    "portions": "{count, plural, one {# حصة} two {# حصتان} few {# حصص} many {# حصة} other {# حصة}}"
+    "portions": "{count, plural, one {# حصة} two {# حصتان} few {# حصص} many {# حصة} other {# حصة}}",
+    "percentOfReference": "{percent}% من {amount}",
+    "percentOfDailyReference": "{percent}% من المرجع اليومي {amount}"
   },
   "measurementSystem": {
     "label": "نظام القياس",

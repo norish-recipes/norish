@@ -281,7 +281,9 @@
     "householdNumbers": "kotitaloutesi arvot",
     "decreasePortions": "Vähemmän annoksia",
     "increasePortions": "Enemmän annoksia",
-    "portions": "{count, plural, one {# annos} other {# annosta}}"
+    "portions": "{count, plural, one {# annos} other {# annosta}}",
+    "percentOfReference": "{percent} % määrästä {amount}",
+    "percentOfDailyReference": "{percent} % päiväviitearvosta {amount}"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",

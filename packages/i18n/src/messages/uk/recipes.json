@@ -281,7 +281,9 @@
     "householdNumbers": "дані вашого домогосподарства",
     "decreasePortions": "Менше порцій",
     "increasePortions": "Більше порцій",
-    "portions": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}"
+    "portions": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}",
+    "percentOfReference": "{percent}% від {amount}",
+    "percentOfDailyReference": "{percent}% від добової норми {amount}"
   },
   "measurementSystem": {
     "label": "Система мір",

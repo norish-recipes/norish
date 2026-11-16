@@ -281,7 +281,9 @@
     "householdNumbers": "wartości twojego gospodarstwa",
     "decreasePortions": "Mniej porcji",
     "increasePortions": "Więcej porcji",
-    "portions": "{count, plural, one {# porcja} few {# porcje} many {# porcji} other {# porcji}}"
+    "portions": "{count, plural, one {# porcja} few {# porcje} many {# porcji} other {# porcji}}",
+    "percentOfReference": "{percent}% z {amount}",
+    "percentOfDailyReference": "{percent}% dziennego wzorca {amount}"
   },
   "measurementSystem": {
     "label": "System miar",

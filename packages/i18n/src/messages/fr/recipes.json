@@ -281,7 +281,9 @@
     "householdNumbers": "les valeurs de votre foyer",
     "decreasePortions": "Moins de portions",
     "increasePortions": "Plus de portions",
-    "portions": "{count, plural, one {# portion} other {# portions}}"
+    "portions": "{count, plural, one {# portion} other {# portions}}",
+    "percentOfReference": "{percent} % de {amount}",
+    "percentOfDailyReference": "{percent} % de la référence quotidienne de {amount}"
   },
   "measurementSystem": {
     "label": "Système de mesure",

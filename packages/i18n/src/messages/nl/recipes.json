@@ -281,7 +281,9 @@
     "householdNumbers": "de waarden van je huishouden",
     "decreasePortions": "Minder porties",
     "increasePortions": "Meer porties",
-    "portions": "{count, plural, one {# portie} other {# porties}}"
+    "portions": "{count, plural, one {# portie} other {# porties}}",
+    "percentOfReference": "{percent}% van {amount}",
+    "percentOfDailyReference": "{percent}% van de dagelijkse referentie van {amount}"
   },
   "measurementSystem": {
     "label": "Meetsysteem",

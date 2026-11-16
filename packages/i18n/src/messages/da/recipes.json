@@ -281,7 +281,9 @@
     "householdNumbers": "din husstands værdier",
     "decreasePortions": "Færre portioner",
     "increasePortions": "Flere portioner",
-    "portions": "{count, plural, one {# portion} other {# portioner}}"
+    "portions": "{count, plural, one {# portion} other {# portioner}}",
+    "percentOfReference": "{percent} % af {amount}",
+    "percentOfDailyReference": "{percent} % af den daglige reference på {amount}"
   },
   "measurementSystem": {
     "label": "Målesystem",

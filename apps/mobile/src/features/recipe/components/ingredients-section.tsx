@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { AnimatedNumber } from "@/components/animated-number";
+import { GlassStepper } from "@/components/glass-stepper";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
 import { useCardActions } from "@/hooks/use-card-actions";
@@ -28,35 +30,7 @@ import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { ingredientRows, plainText } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
-import { SectionCard, useTint } from "./tint";
-
-function RoundButton({
-  icon,
-  label,
-  testID,
-  onPress,
-}: {
-  icon: "add" | "remove";
-  label: string;
-  testID: string;
-  onPress: () => void;
-}) {
-  const tint = useTint();
-  const [foreground] = useThemeColor(["foreground"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className="bg-default size-9 items-center justify-center rounded-full"
-      style={tint ? { backgroundColor: tint.soft } : undefined}
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons color={foreground} name={icon} size={17} />
-    </Pressable>
-  );
-}
+import { SectionCard } from "./tint";
 
 /** The servings stepper; the number opens the Servings sheet. */
 export function ServingsControl() {
@@ -67,13 +41,13 @@ export function ServingsControl() {
   const setServings = useRecipePageStore((state) => state.setServings);
 
   return (
-    <View className="flex-row items-center gap-1">
-      <RoundButton
-        icon="remove"
-        label={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
-        testID="recipe-servings-decrease"
-        onPress={() => setServings(servingsDown(servings))}
-      />
+    <GlassStepper
+      decreaseLabelId="recipes.detail.decreaseServings"
+      increaseLabelId="recipes.detail.increaseServings"
+      testID="recipe-servings"
+      onDecrement={() => setServings(servingsDown(servings))}
+      onIncrement={() => setServings(servingsUp(servings))}
+    >
       <Pressable
         accessibilityLabel={intl.formatMessage(
           { id: "recipes.detail.servingsCount" },
@@ -84,15 +58,12 @@ export function ServingsControl() {
         testID="recipe-servings-value"
         onPress={() => router.push(recipeRoute(recipe.id, "servings"))}
       >
-        <Text className="text-foreground text-base font-semibold">{formatServings(servings)}</Text>
+        <AnimatedNumber
+          className="text-foreground text-base font-semibold"
+          value={formatServings(servings)}
+        />
       </Pressable>
-      <RoundButton
-        icon="add"
-        label={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
-        testID="recipe-servings-increase"
-        onPress={() => setServings(servingsUp(servings))}
-      />
-    </View>
+    </GlassStepper>
   );
 }
 

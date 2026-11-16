@@ -68,20 +68,17 @@ function Slot({
   );
 }
 
-/** Text whose characters roll like an odometer: unchanged ones stay still, the rest travel the way
- * the value moved. Only the part that changes belongs in here, not the word beside it. */
+/** A number whose characters roll like an odometer: unchanged ones stay still, the rest travel the
+ * way the value moved. Only the part that changes belongs in here, not the word beside it. */
 export function RollingText({
   value,
   rising,
-  keyFrom = "right",
   slots,
   className = "",
 }: {
   value: string;
   /** Whether the value moved forward, so the characters roll up. */
   rising: boolean;
-  /** The end the slots are keyed from: a number grows leftwards, a word rightwards. */
-  keyFrom?: "left" | "right";
   /** Slots to render whatever the value's length, so none is made or lost mid-roll. */
   slots?: number;
   /** The text's classes: its size, weight and colour. */
@@ -97,7 +94,7 @@ export function RollingText({
     );
   }
 
-  const characters = toSlots(value, slots, keyFrom);
+  const characters = toSlots(value, slots, "right");
 
   return (
     // One label for the row: read per character it would say "five, zero".
@@ -105,9 +102,9 @@ export function RollingText({
       <LayoutAnimationConfig skipEntering>
         {characters.map((character, index) => (
           <Slot
-            // A slot is its place from the side the value grows on, so a character rolls in place.
+            // A slot is its place from the right, where a number grows, so a character rolls in place.
             // eslint-disable-next-line @eslint-react/no-array-index-key -- a slot is its place in the row
-            key={keyFrom === "right" ? characters.length - index : index}
+            key={characters.length - index}
             // A figure space is a digit wide, so an empty slot holds the row's width.
             character={character === " " ? "\u2007" : character}
             className={className}

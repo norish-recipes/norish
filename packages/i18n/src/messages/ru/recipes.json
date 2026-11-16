@@ -281,7 +281,9 @@
     "householdNumbers": "значений вашей семьи",
     "decreasePortions": "Меньше порций",
     "increasePortions": "Больше порций",
-    "portions": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порции}}"
+    "portions": "{count, plural, one {# порция} few {# порции} many {# порций} other {# порции}}",
+    "percentOfReference": "{percent}% от {amount}",
+    "percentOfDailyReference": "{percent}% от суточной нормы {amount}"
   },
   "measurementSystem": {
     "label": "Система мер",
