@@ -5,7 +5,6 @@ import { GlassSurface } from "@/components/glass";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
-import { useIntl } from "react-intl";
 
 const HEIGHT = 40;
 
@@ -13,11 +12,13 @@ function Step({
   icon,
   label,
   testID,
+  disabled,
   onPress,
 }: {
   icon: "add" | "remove";
   label: string;
   testID: string;
+  disabled: boolean;
   onPress: () => void;
 }) {
   const [foreground] = useThemeColor(["foreground"] as const);
@@ -26,8 +27,10 @@ function Step({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       className="items-center justify-center"
-      style={{ width: HEIGHT, height: HEIGHT }}
+      disabled={disabled}
+      style={{ width: HEIGHT, height: HEIGHT, opacity: disabled ? 0.35 : 1 }}
       testID={testID}
       onPress={() => {
         lightImpact();
@@ -40,37 +43,42 @@ function Step({
 }
 
 /** A minus and a plus in one glass capsule around `children`, the value; `testID` prefixes the
- * steps' (`-decrease`, `-increase`). The value's press, if any, is the caller's own. */
+ * steps' (`-decrease`, `-increase`). A step that cannot move is disabled, so it gives no haptic.
+ * The value's press, if any, is the caller's own. */
 export function GlassStepper({
   children,
-  decreaseLabelId,
-  increaseLabelId,
+  decreaseLabel,
+  increaseLabel,
+  canDecrement = true,
+  canIncrement = true,
   testID,
   onDecrement,
   onIncrement,
 }: {
   children: ReactNode;
-  decreaseLabelId: string;
-  increaseLabelId: string;
+  decreaseLabel: string;
+  increaseLabel: string;
+  canDecrement?: boolean;
+  canIncrement?: boolean;
   testID: string;
   onDecrement: () => void;
   onIncrement: () => void;
 }) {
-  const intl = useIntl();
-
   return (
     <View className="flex-row items-center rounded-full" style={{ height: HEIGHT }}>
       <GlassSurface radius={HEIGHT / 2} />
       <Step
         icon="remove"
-        label={intl.formatMessage({ id: decreaseLabelId })}
+        disabled={!canDecrement}
+        label={decreaseLabel}
         testID={`${testID}-decrease`}
         onPress={onDecrement}
       />
       {children}
       <Step
         icon="add"
-        label={intl.formatMessage({ id: increaseLabelId })}
+        disabled={!canIncrement}
+        label={increaseLabel}
         testID={`${testID}-increase`}
         onPress={onIncrement}
       />

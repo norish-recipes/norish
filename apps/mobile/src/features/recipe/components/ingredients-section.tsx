@@ -45,8 +45,9 @@ export function ServingsControl() {
 
   return (
     <GlassStepper
-      decreaseLabelId="recipes.detail.decreaseServings"
-      increaseLabelId="recipes.detail.increaseServings"
+      canDecrement={servingsDown(servings) !== servings}
+      decreaseLabel={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
+      increaseLabel={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
       testID="recipe-servings"
       onDecrement={() => setServings(servingsDown(servings))}
       onIncrement={() => setServings(servingsUp(servings))}

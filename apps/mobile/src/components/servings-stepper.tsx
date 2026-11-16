@@ -2,8 +2,9 @@ import React from "react";
 import { View } from "react-native";
 import { AnimatedNumber } from "@/components/animated-number";
 import { GlassStepper } from "@/components/glass-stepper";
+import { useIntl } from "react-intl";
 
-import { formatServings } from "@norish/shared-react/recipes";
+import { formatServings, servingsDown } from "@norish/shared-react/recipes";
 
 /** Servings with a glass minus and plus either side of the number; `testID` prefixes the three. */
 export function ServingsStepper({
@@ -17,10 +18,13 @@ export function ServingsStepper({
   onIncrement: () => void;
   testID: string;
 }) {
+  const intl = useIntl();
+
   return (
     <GlassStepper
-      decreaseLabelId="recipes.detail.decreaseServings"
-      increaseLabelId="recipes.detail.increaseServings"
+      canDecrement={servingsDown(servings) !== servings}
+      decreaseLabel={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
+      increaseLabel={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
       testID={testID}
       onDecrement={onDecrement}
       onIncrement={onIncrement}

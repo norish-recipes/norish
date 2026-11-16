@@ -192,8 +192,9 @@ export function NutritionSection() {
       right={
         shown && !estimating ? (
           <GlassStepper
-            decreaseLabelId="recipes.nutrition.decreasePortions"
-            increaseLabelId="recipes.nutrition.increasePortions"
+            canDecrement={portions > 1}
+            decreaseLabel={intl.formatMessage({ id: "recipes.nutrition.decreasePortions" })}
+            increaseLabel={intl.formatMessage({ id: "recipes.nutrition.increasePortions" })}
             testID="recipe-portions"
             onDecrement={() => step(-1)}
             onIncrement={() => step(1)}
