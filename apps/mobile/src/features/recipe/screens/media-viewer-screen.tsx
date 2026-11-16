@@ -1,8 +1,10 @@
+import type { ViewerParams, ViewerStep } from "@/lib/tab-routes";
 import React, { useEffect } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
 import { useHideTabBar } from "@/lib/tab-bar-visibility";
+import { viewerParamsOf } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -12,18 +14,16 @@ import { resolveCookingModeSteps, useRecipeQuery } from "@norish/shared-react/re
 import { MediaViewer } from "../components/media-viewer";
 import { heroItems, imageItems } from "../utils/hero-items";
 
-type Params = { id: string; start?: string; step?: string; cook?: string };
-
-function viewerItems(recipe: FullRecipeDTO, { step, cook }: Params) {
+function viewerItems(recipe: FullRecipeDTO, step: ViewerStep | undefined) {
   const system = recipe.systemUsed ?? "metric";
 
-  if (step === undefined && cook === undefined) return heroItems(recipe);
+  if (step === undefined) return heroItems(recipe);
 
   const photos =
-    cook === undefined
-      ? recipe.steps?.find((s) => s.order === Number(step) && s.systemUsed === system)?.images
+    "order" in step
+      ? recipe.steps?.find((s) => s.order === step.order && s.systemUsed === system)?.images
       : resolveCookingModeSteps(recipe.steps ?? [], system).find(
-          (s) => s.stepNumber === Number(cook)
+          (s) => s.stepNumber === step.stepNumber
         )?.images;
 
   return imageItems(photos ?? []);
@@ -34,10 +34,11 @@ function viewerItems(recipe: FullRecipeDTO, { step, cook }: Params) {
 export function MediaViewerScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const params = useLocalSearchParams<Params>();
-  const { recipe, isLoading } = useRecipeQuery(params.id);
+  const { id, ...params } = useLocalSearchParams<ViewerParams & { id: string }>();
+  const { start, step } = viewerParamsOf(params);
+  const { recipe, isLoading } = useRecipeQuery(id);
   const { top } = useSafeAreaInsets();
-  const items = recipe ? viewerItems(recipe, params) : [];
+  const items = recipe ? viewerItems(recipe, step) : [];
   const empty = !isLoading && items.length === 0;
 
   useHideTabBar();
@@ -64,11 +65,9 @@ export function MediaViewerScreen() {
     <MediaViewer
       items={items}
       label={
-        params.step === undefined && params.cook === undefined
-          ? recipe.name
-          : intl.formatMessage({ id: "recipes.detail.stepPhoto" })
+        step === undefined ? recipe.name : intl.formatMessage({ id: "recipes.detail.stepPhoto" })
       }
-      start={Math.min(Number(params.start) || 0, items.length - 1)}
+      start={Math.min(start, items.length - 1)}
       onClose={() => router.back()}
     />
   );

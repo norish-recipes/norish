@@ -52,6 +52,9 @@ export const cookbookIdOf = (path: string) => /^\/cookbook\/([^/]+)$/.exec(path)
 /** Whose photos the viewer shows: the page's step by `order`, or cook mode's by `stepNumber`. */
 export type ViewerStep = { order: number } | { stepNumber: number };
 
+/** The viewer route's own params: `step` names a page step, `cook` a cook-mode step. */
+export type ViewerParams = { start?: string; step?: string; cook?: string };
+
 /** The full-screen media viewer: the hero's items, or one step's photos, from `start`. */
 export const mediaViewerRoute = (recipeId: string, start: number, step?: ViewerStep) =>
   ({
@@ -59,10 +62,25 @@ export const mediaViewerRoute = (recipeId: string, start: number, step?: ViewerS
     params: {
       id: recipeId,
       start: String(start),
-      ...(step && "order" in step ? { step: String(step.order) } : {}),
-      ...(step && "stepNumber" in step ? { cook: String(step.stepNumber) } : {}),
+      ...(step === undefined
+        ? {}
+        : "order" in step
+          ? { step: String(step.order) }
+          : { cook: String(step.stepNumber) }),
     },
   }) as const;
+
+/** `mediaViewerRoute`'s params read back: where to start, and the step, none for the hero. */
+export function viewerParamsOf({ start, step, cook }: ViewerParams) {
+  const viewerStep: ViewerStep | undefined =
+    step !== undefined
+      ? { order: Number(step) }
+      : cook !== undefined
+        ? { stepNumber: Number(cook) }
+        : undefined;
+
+  return { start: Number(start) || 0, step: viewerStep };
+}
 
 /** Cook mode, on the timer's step when a notification or the Live Activity opens it. */
 export const cookModeRoute = (recipeId: string, step?: number) =>
