@@ -16,9 +16,10 @@ import { useTint } from "./tint";
 
 export type CookView = "steps" | "ingredients";
 
-/** The bar's height above the screen's foot, where the timer list opens above it. */
-export const BAR_BOTTOM = 26;
-export const BAR_HEIGHT = 56;
+/** The bar sits on the 34 pt home-indicator inset: the glass Host stops at the safe area, so a
+ * lower bar's glass is shorter than its frame and the centred content sits low in it. */
+export const BAR_BOTTOM = 34;
+export const BAR_HEIGHT = 48;
 
 function BarButton({
   label,
