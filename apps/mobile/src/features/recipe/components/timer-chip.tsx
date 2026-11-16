@@ -1,9 +1,10 @@
 import type { ComponentRef, RefObject } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { ActionSheetIOS, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { TimerRing } from "@/components/timer-ring";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Haptics from "expo-haptics";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -27,7 +28,7 @@ type ChipProps = {
   size: keyof typeof SIZES;
 };
 
-/** A step duration's timer: a tap starts, pauses or resumes it, and taps a finished one away. */
+/** A step duration's timer: a tap starts, pauses or resumes it or taps a done one away; a long press offers Reset and Remove. */
 function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const intl = useIntl();
   const recipe = useLoadedPageRecipe();
@@ -36,6 +37,7 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const addTimer = useTimerStore((state) => state.addTimer);
   const startTimer = useTimerStore((state) => state.startTimer);
   const pauseTimer = useTimerStore((state) => state.pauseTimer);
+  const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
   const left = timer ? formatTimerMs(timer.remainingMs) : "";
 
@@ -50,10 +52,32 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
         stepIndex,
       });
       startTimer(id);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       void askTimerNotifications();
     } else if (timer.status === "running") pauseTimer(id);
-    else if (timer.status === "paused") startTimer(id);
-    else removeTimer(id);
+    else if (timer.status === "paused") {
+      startTimer(id);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else removeTimer(id);
+  };
+
+  const longPress = () => {
+    if (!timer) return;
+
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["common.actions.reset", "common.actions.remove", "common.actions.cancel"].map(
+          (id) => intl.formatMessage({ id })
+        ),
+        destructiveButtonIndex: 1,
+        cancelButtonIndex: 2,
+      },
+      (choice) => {
+        if (choice === 0) resetTimer(id);
+        else if (choice === 1) removeTimer(id);
+      }
+    );
   };
 
   // The duration first, then what a tap does: VoiceOver and Maestro find a chip by it.
@@ -74,7 +98,7 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
             ),
       ].join(", ");
 
-  return { timer, left, label, press };
+  return { timer, left, label, press, longPress };
 }
 
 /** The chip drawn in the step's Text; inline views miss the accessibility tree, so TimerChipButton takes taps. */
@@ -155,7 +179,7 @@ export function TimerChip({
 
 /** The chip's button, laid over where the Text drew it: the step's text stays one flow. */
 export function TimerChipButton({ frame, ...props }: ChipProps & { frame: LayoutRectangle }) {
-  const { label, press } = useChipTimer(props);
+  const { label, press, longPress } = useChipTimer(props);
 
   return (
     <Pressable
@@ -169,6 +193,7 @@ export function TimerChipButton({ frame, ...props }: ChipProps & { frame: Layout
         height: frame.height,
       }}
       testID={`timer-chip-${props.stepIndex}-${props.index}`}
+      onLongPress={longPress}
       onPress={press}
     />
   );
