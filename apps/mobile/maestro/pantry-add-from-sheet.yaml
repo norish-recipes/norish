@@ -28,13 +28,17 @@ appId: dev.norish.app
 - tapOn:
     id: pantry-add-field
 - inputText: milk
-# The catalogue's answer replaces the typed row, so the tap waits for the food's own row.
+# The catalogue's answer replaces the typed row, so the tap waits for the food's own row, named exactly.
 - extendedWaitUntil:
     visible:
-      id: pantry-match-.*
+      id: pantry-match-[0-9a-f]{8}-.*
+      text: ^Add milk to your pantry$
     timeout: 20000
+# The sheet rises with the keyboard, so the tap waits for it to stop.
+- waitForAnimationToEnd
 - tapOn:
-    id: pantry-match-.*
+    id: pantry-match-[0-9a-f]{8}-.*
+    text: ^Add milk to your pantry$
 - evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=1').body).names}
 - assertTrue: ${output.pantry.length == 1}
 # The field empties for the next food; a typed name that is no food of the catalogue is kept as typed.
@@ -49,6 +53,9 @@ appId: dev.norish.app
     id: pantry-add-custom
 - evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=2').body).names}
 - assertTrue: ${output.pantry.length == 2}
+# One entry is the catalogue's milk, the other the text as typed.
+- evalScript: ${output.kept = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry-kept?search=milk&custom=tahini&min=2').body)}
+- assertTrue: ${output.kept.count == 2 && output.kept.catalogue && output.kept.custom}
 # The sheet closes on its Close item, and the Pantry behind it holds both.
 - tapOn: Close
 - extendedWaitUntil:

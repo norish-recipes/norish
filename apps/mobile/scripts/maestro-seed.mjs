@@ -142,5 +142,31 @@ export function seeder({ trpc, query }) {
     // The same for the Pantry's foods.
     pantryNames: (min = 0) =>
       namesOnceThere(async () => (await query("pantry.list")).map((item) => item.name), min),
+    // How the Pantry holds a food kept from the catalogue (the one `search` names exactly) and one kept as typed.
+    async pantryKept(search, custom, min) {
+      const entries = [];
+
+      await namesOnceThere(async () => {
+        entries.splice(0, entries.length, ...(await query("pantry.list")));
+
+        return entries;
+      }, min);
+
+      const { items } = await query("ingredients.list", {
+        search,
+        locale: "en",
+        listedOnly: false,
+      });
+      const found = items.filter((food) => food.name.toLowerCase() === search.toLowerCase());
+      const ids = new Set(found.map((food) => food.id));
+
+      return {
+        count: entries.length,
+        catalogue: entries.some((entry) => ids.has(entry.ingredientId)),
+        custom: entries.some(
+          (entry) => entry.name.toLowerCase() === custom.toLowerCase() && !ids.has(entry.ingredientId)
+        ),
+      };
+    },
   };
 }
