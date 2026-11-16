@@ -49,6 +49,7 @@ vi.mock("@trpc/client", () => ({
     data = { code: "NOT_FOUND" };
   },
 }));
+vi.mock("@norish/shared-react/config", () => ({}));
 vi.mock("@norish/shared-react/ingredients", () => ({}));
 vi.mock("@norish/shared-react/reader", () => ({}));
 vi.mock("@norish/shared-react/recipes", () => ({ useRecipeQuery: () => query }));
@@ -58,6 +59,7 @@ for (const path of [
   "../components/cook-steps",
   "../components/fade-edge",
   "../components/timer-list",
+  "../components/timer-pill",
   "../components/tint",
   "../utils/dish-tint",
 ]) {

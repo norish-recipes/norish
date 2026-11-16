@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GlassSurface } from "@/components/glass";
-import { TimerGlance, useTimersLabel, useTimersName } from "@/components/timer-glance";
+import { useTimersName } from "@/components/timer-glance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -17,6 +17,7 @@ export type CookView = "steps" | "ingredients";
 // On the 34 pt home-indicator inset: the glass Host stops at the safe area and would cut a lower bar.
 export const BAR_BOTTOM = 34;
 export const BAR_HEIGHT = 48;
+export const BAR_SIDE = 20;
 
 function BarButton({
   label,
@@ -57,34 +58,31 @@ function BarButton({
   );
 }
 
-/** The clock in the bar; with timers it shows the soonest one's ring and time, and a dot for any done. */
-function TimersButton({ onPress }: { onPress: () => void }) {
-  const tint = useTint();
+const PILL_HEIGHT = 40;
+
+/** Where cook mode lays the timer pill over the bar: after the group's padding, Previous and the
+ * pill's margin, centred in the bar. */
+export const COOK_PILL = {
+  left: BAR_SIDE + 4 + 46 + 2,
+  bottom: BAR_BOTTOM + (BAR_HEIGHT - PILL_HEIGHT) / 2,
+  height: PILL_HEIGHT,
+};
+
+/** The clock in the bar; with timers, the place the timer pill floats over. */
+function TimersButton({ pillWidth }: { pillWidth: number }) {
   const timers = useTimerStore((state) => state.timers);
   const [foreground] = useThemeColor(["foreground"] as const);
   const name = useTimersName();
-  const timersLabel = useTimersLabel(timers);
 
   if (!timerGlance(timers).hasTimers) {
     return (
-      <BarButton disabled label={name} testID="cook-timers" onPress={onPress}>
+      <BarButton disabled label={name} testID="cook-timers" onPress={() => {}}>
         <Ionicons color={foreground} name="timer-outline" size={21} />
       </BarButton>
     );
   }
 
-  return (
-    <Pressable
-      accessibilityLabel={timersLabel}
-      accessibilityRole="button"
-      className="bg-default mx-0.5 h-10 flex-row items-center gap-1.5 rounded-full pr-3 pl-[9px]"
-      style={tint ? { backgroundColor: tint.soft } : undefined}
-      testID="cook-timers"
-      onPress={onPress}
-    >
-      <TimerGlance timers={timers} />
-    </Pressable>
-  );
+  return <View className="mx-0.5" style={{ width: pillWidth, height: PILL_HEIGHT }} />;
 }
 
 export function CookBar({
@@ -94,7 +92,7 @@ export function CookBar({
   readyAt,
   onStepChange,
   onViewChange,
-  onTimersOpen,
+  pillWidth,
   onDone,
 }: {
   current: number;
@@ -103,7 +101,8 @@ export function CookBar({
   readyAt: number | null;
   onStepChange: (step: number) => void;
   onViewChange: (view: CookView) => void;
-  onTimersOpen: () => void;
+  /** The timer pill's width, whose place the bar keeps. */
+  pillWidth: number;
   onDone: () => void;
 }) {
   const intl = useIntl();
@@ -122,7 +121,10 @@ export function CookBar({
   );
 
   return (
-    <View className="absolute right-5 left-5 gap-3" style={{ bottom: BAR_BOTTOM }}>
+    <View
+      className="absolute gap-3"
+      style={{ bottom: BAR_BOTTOM, left: BAR_SIDE, right: BAR_SIDE }}
+    >
       <View className="gap-2">
         <View
           accessibilityLabel={counter}
@@ -162,7 +164,7 @@ export function CookBar({
           >
             <Ionicons color={foreground} name="chevron-up" size={21} />
           </BarButton>
-          {timersEnabled ? <TimersButton onPress={onTimersOpen} /> : null}
+          {timersEnabled ? <TimersButton pillWidth={pillWidth} /> : null}
           <BarButton
             label={intl.formatMessage({
               id:

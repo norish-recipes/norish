@@ -1,0 +1,66 @@
+# The recipe page's floating controls: Cook alone without a timer; with one, the timer pill opens the
+# timer list in place, and Cook lands in cook mode, whose own pill opens the same list.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Pill Stew", "key": "stew", "steps": ["Simmer for 10 minutes."]}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.stew}
+    timeout: 20000
+- tapOn:
+    id: recipe-card-${output.stew}
+- extendedWaitUntil:
+    visible:
+      id: recipe-cook
+    timeout: 20000
+- assertNotVisible:
+    id: recipe-timer-pill
+- tapOn:
+    id: timer-chip-0-0
+# The first timer asks for notification permission; the prompt is the system's, so it is tapped by its label.
+- tapOn:
+    text: Allow
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: recipe-timer-pill
+    timeout: 20000
+- tapOn:
+    id: recipe-timer-pill
+- extendedWaitUntil:
+    visible:
+      id: timer-list
+    timeout: 20000
+- tapOn: Pause timer.*
+- assertVisible: Resume timer.*
+# A tap beside the list closes it back into the pill.
+- tapOn:
+    id: timer-list-scrim
+    point: 50%,15%
+- extendedWaitUntil:
+    notVisible:
+      id: timer-list
+    timeout: 20000
+- tapOn:
+    id: recipe-cook
+- extendedWaitUntil:
+    visible:
+      id: cook-mode
+    timeout: 20000
+- tapOn:
+    id: cook-timers
+- extendedWaitUntil:
+    visible:
+      id: timer-list
+    timeout: 20000
+# Dismissing the last timer closes the list and takes the pill away.
+- tapOn: Dismiss timer
+- extendedWaitUntil:
+    notVisible:
+      id: timer-list
+    timeout: 20000
+- assertNotVisible:
+    id: timer-row-.*

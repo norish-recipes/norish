@@ -34,7 +34,6 @@ vi.mock("react-intl", () => ({
     formatMessage: ({ id }: { id: string }) => id,
   }),
 }));
-vi.mock("@/components/glass", () => ({ GlassSurface: () => null }));
 vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
 vi.mock("../components/tint", () => ({ useTint: () => null }));
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import {
   Directions,
   GestureDetector,
@@ -23,6 +23,7 @@ import { sprung } from "@/lib/motion/spring";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
+import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import {
@@ -36,12 +37,13 @@ import { formatMinutesHM } from "@norish/shared/lib/helpers";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
 import type { CookView } from "../components/cook-bar";
-import { BAR_BOTTOM, BAR_HEIGHT, CookBar } from "../components/cook-bar";
+import { BAR_BOTTOM, BAR_HEIGHT, BAR_SIDE, COOK_PILL, CookBar } from "../components/cook-bar";
 import { CookIngredients } from "../components/cook-ingredients";
 import { CookSteps, CROSSFADE_IN, CROSSFADE_OUT } from "../components/cook-steps";
 import { FadeEdge } from "../components/fade-edge";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
-import { TimerList } from "../components/timer-list";
+import { TimerScrim } from "../components/timer-list";
+import { TimerPill } from "../components/timer-pill";
 import { TintContext } from "../components/tint";
 import { dishTint } from "../utils/dish-tint";
 
@@ -117,6 +119,9 @@ function CookMode() {
   const [step, setStep] = useState(() => clampStep(Number(params.step ?? 0) || 0, steps.length));
   const [view, setView] = useState<CookView>("steps");
   const [timersOpen, setTimersOpen] = useState(false);
+  const [pillWidth, setPillWidth] = useState(0);
+  const { timersEnabled } = useTimersEnabledQuery();
+  const { width } = useWindowDimensions();
   const [checked, setChecked] = useState<ReadonlySet<number>>(() => new Set());
   const [readyAt] = useState(() =>
     recipe.totalMinutes && recipe.totalMinutes > 0
@@ -178,18 +183,26 @@ function CookMode() {
         <View className="absolute top-0 right-0 left-0">
           <CookHeader onClose={() => router.back()} />
         </View>
+        {timersOpen ? <TimerScrim onClose={() => setTimersOpen(false)} /> : null}
         <CookBar
           current={current}
+          pillWidth={pillWidth}
           readyAt={readyAt}
           total={steps.length}
           view={view}
           onDone={() => router.back()}
           onStepChange={goTo}
-          onTimersOpen={() => setTimersOpen(true)}
           onViewChange={setView}
         />
-        {timersOpen ? (
-          <TimerList bottom={BAR_BOTTOM + BAR_HEIGHT + 12} onClose={() => setTimersOpen(false)} />
+        {timersEnabled ? (
+          <TimerPill
+            {...COOK_PILL}
+            listWidth={width - COOK_PILL.left - BAR_SIDE}
+            open={timersOpen}
+            testID="cook-timers"
+            onOpenChange={setTimersOpen}
+            onWidthChange={setPillWidth}
+          />
         ) : null}
       </View>
     </TintContext>

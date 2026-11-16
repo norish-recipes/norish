@@ -1,8 +1,8 @@
 import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { GlassSurface } from "@/components/glass";
 import { TimerRing } from "@/components/timer-ring";
+import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native";
@@ -175,35 +175,25 @@ export function AllTimers({ onEmpty }: { onEmpty: () => void }) {
   );
 }
 
-/** The clock pill's popover in cook mode: the timer rows over a scrim. */
-export function TimerList({ bottom, onClose }: { bottom: number; onClose: () => void }) {
+/** The scrim under an open timer pill: a tap anywhere else closes the list. */
+export function TimerScrim({ onClose }: { onClose: () => void }) {
   const intl = useIntl();
 
   return (
-    <>
-      <Animated.View
-        className="absolute inset-0"
-        entering={FadeIn.duration(150)}
-        exiting={FadeOut.duration(150)}
-      >
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
-          className="flex-1 bg-black/10"
-          testID="timer-list-scrim"
-          onPress={onClose}
-        />
-      </Animated.View>
-      <Animated.View
-        accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.timers" })}
-        className="absolute right-5 left-5 overflow-hidden rounded-[26px] py-1"
-        entering={FadeIn.duration(180)}
-        exiting={FadeOut.duration(150)}
-        style={{ bottom }}
-        testID="timer-list"
-      >
-        <GlassSurface radius={26} />
-        <AllTimers onEmpty={onClose} />
-      </Animated.View>
-    </>
+    <Animated.View
+      className="absolute inset-0"
+      entering={FadeIn.duration(150)}
+      exiting={FadeOut.duration(150)}
+    >
+      <Pressable
+        accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
+        className="flex-1 bg-black/10"
+        testID="timer-list-scrim"
+        onPress={() => {
+          lightImpact();
+          onClose();
+        }}
+      />
+    </Animated.View>
   );
 }

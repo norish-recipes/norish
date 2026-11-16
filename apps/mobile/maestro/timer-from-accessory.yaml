@@ -27,9 +27,8 @@ appId: dev.norish.app
 - tapOn:
     text: Allow
     optional: true
-# A native toolbar item has no usable id, and its accessibility name is its SF Symbol's, "home".
-- tapOn:
-    text: Home
+# A native header item exposes no id; its accessibility name is "Back".
+- tapOn: Back
 - extendedWaitUntil:
     visible:
       id: timer-capsule

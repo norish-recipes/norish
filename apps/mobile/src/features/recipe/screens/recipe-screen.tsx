@@ -19,10 +19,10 @@ import { NotesSection } from "../components/notes-section";
 import { NutritionSection } from "../components/nutrition-section";
 import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
+import { RecipeControls } from "../components/recipe-controls";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
-import { RecipeToolbar } from "../components/recipe-toolbar";
 import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
 import { TintContext } from "../components/tint";
@@ -91,7 +91,7 @@ function RecipePage() {
           </View>
         </View>
       </ScrollView>
-      <RecipeToolbar recipeId={recipe.id} />
+      <RecipeControls recipeId={recipe.id} />
     </TintContext>
   );
 }
