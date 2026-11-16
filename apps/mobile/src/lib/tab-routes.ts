@@ -8,6 +8,7 @@ export const TAB_ROUTES = {
     servings: "/recipe/[id]/servings",
     edit: "/recipe/[id]/edit",
     share: "/recipe/[id]/share",
+    viewer: "/recipe/[id]/viewer",
     planRecipe: "/plan-recipe",
     addToGroceries: "/add-to-groceries",
     cookbookAddRecipes: "/cookbook-add-recipes",
@@ -36,6 +37,21 @@ export const recipeRoute = (
   id: string,
   route: "recipe" | "servings" | "edit" | "share" = "recipe"
 ) => ({ pathname: TAB_ROUTES.recipes[route], params: { id } }) as const;
+
+/** Whose photos the viewer shows: the page's step by `order`, or cook mode's by `stepNumber`. */
+export type ViewerStep = { order: number } | { stepNumber: number };
+
+/** The full-screen media viewer: the hero's items, or one step's photos, from `start`. */
+export const mediaViewerRoute = (recipeId: string, start: number, step?: ViewerStep) =>
+  ({
+    pathname: TAB_ROUTES.recipes.viewer,
+    params: {
+      id: recipeId,
+      start: String(start),
+      ...(step && "order" in step ? { step: String(step.order) } : {}),
+      ...(step && "stepNumber" in step ? { cook: String(step.stepNumber) } : {}),
+    },
+  }) as const;
 
 /** Cook mode, on the timer's step when a notification or the Live Activity opens it. */
 export const cookModeRoute = (recipeId: string, step?: number) =>

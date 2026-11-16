@@ -9,7 +9,9 @@ import { GlassIconButton } from "@/components/glass";
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
+import { mediaViewerRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { VideoView } from "expo-video";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -20,7 +22,6 @@ import type { Item } from "../utils/hero-items";
 import { useServerVideoPlayer } from "../hooks/use-server-video-player";
 import { heroItems } from "../utils/hero-items";
 import { pageAt } from "../utils/viewer-pages";
-import { MediaViewer } from "./media-viewer";
 
 export const HERO_HEIGHT = 430;
 
@@ -191,14 +192,14 @@ export function RecipeHero({
   pageColor,
   onDoubleTap,
 }: {
-  recipe: Pick<FullRecipeDTO, "images" | "videos" | "name">;
+  recipe: Pick<FullRecipeDTO, "id" | "images" | "videos" | "name">;
   pageColor: string;
   onDoubleTap?: () => void;
 }) {
   const intl = useIntl();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
-  const [viewing, setViewing] = useState<number | null>(null);
+  const router = useRouter();
   const [heart, setHeart] = useState<number | null>(null);
   const items = heroItems(recipe);
   const doubleTap = useTapGesture({
@@ -211,7 +212,10 @@ export function RecipeHero({
       onDoubleTap();
     },
   });
-  const tap = useTapGesture({ runOnJS: true, onActivate: () => setViewing(page) });
+  const tap = useTapGesture({
+    runOnJS: true,
+    onActivate: () => router.push(mediaViewerRoute(recipe.id, page)),
+  });
   // A single tap waits for a second one to fail, so a favourite never opens the viewer.
   const gesture = useExclusiveGestures(doubleTap, tap);
 
@@ -273,14 +277,6 @@ export function RecipeHero({
           </View>
         ) : null}
         {heart === null ? null : <HeartPop key={heart} onDone={() => setHeart(null)} />}
-        {viewing === null ? null : (
-          <MediaViewer
-            items={items}
-            label={recipe.name}
-            start={viewing}
-            onClose={() => setViewing(null)}
-          />
-        )}
       </View>
     </GestureDetector>
   );

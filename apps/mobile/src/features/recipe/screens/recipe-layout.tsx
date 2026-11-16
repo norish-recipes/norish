@@ -46,6 +46,17 @@ export function RecipeLayout() {
         <Stack.Screen name="share" options={SHEET_OPTIONS} />
         <Stack.Screen name="edit" options={EDITOR_OPTIONS} />
         <Stack.Screen
+          name="viewer"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            animation: "fade",
+            gestureEnabled: false,
+            statusBarStyle: "light",
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
+        <Stack.Screen
           name="cook"
           options={{ headerShown: false, presentation: "fullScreenModal" }}
         />

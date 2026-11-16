@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, StatusBar, Text, useWindowDimensions, View } from "react-native";
-import {
-  GestureDetector,
-  GestureHandlerRootView,
-  usePanGesture,
-} from "react-native-gesture-handler";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -97,59 +93,55 @@ export function MediaViewer({
   }));
 
   return (
-    <Modal statusBarTranslucent transparent animationType="fade" onRequestClose={() => close()}>
-      <GestureHandlerRootView className="flex-1">
-        {/* The black backdrop needs light status text in light mode too; closing restores it. */}
-        <StatusBar barStyle="light-content" />
-        <Animated.View className="absolute inset-0 bg-black" style={backdrop} />
-        <GestureDetector gesture={pan}>
-          <Animated.View className="flex-1" style={content}>
-            <ScrollView
-              horizontal
-              pagingEnabled
-              contentOffset={{ x: start * width, y: 0 }}
-              scrollEnabled={!zoomed && items.length > 1}
-              showsHorizontalScrollIndicator={false}
-              testID="media-viewer-pages"
-              onMomentumScrollEnd={(event) =>
-                setPage(pageAt(event.nativeEvent.contentOffset.x, width, items.length))
-              }
+    <View className="flex-1">
+      <Animated.View className="absolute inset-0 bg-black" style={backdrop} />
+      <GestureDetector gesture={pan}>
+        <Animated.View className="flex-1" style={content}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            contentOffset={{ x: start * width, y: 0 }}
+            scrollEnabled={!zoomed && items.length > 1}
+            showsHorizontalScrollIndicator={false}
+            testID="media-viewer-pages"
+            onMomentumScrollEnd={(event) =>
+              setPage(pageAt(event.nativeEvent.contentOffset.x, width, items.length))
+            }
+          >
+            {items.map((item, index) =>
+              item.kind === "image" ? (
+                <ZoomableImage
+                  key={item.key}
+                  label={label}
+                  path={item.path}
+                  zoomed={zoomed && index === page}
+                  onZoomed={setZoomed}
+                />
+              ) : (
+                <ViewerVideo key={item.key} active={index === page} item={item} />
+              )
+            )}
+          </ScrollView>
+          <View
+            className="absolute inset-x-0 flex-row items-center justify-between px-5"
+            pointerEvents="box-none"
+            style={{ top: insets.top + 6 }}
+          >
+            <View className="size-10" />
+            <Text
+              className="text-accent-foreground text-[17px] font-semibold"
+              testID="media-viewer-count"
             >
-              {items.map((item, index) =>
-                item.kind === "image" ? (
-                  <ZoomableImage
-                    key={item.key}
-                    label={label}
-                    path={item.path}
-                    zoomed={zoomed && index === page}
-                    onZoomed={setZoomed}
-                  />
-                ) : (
-                  <ViewerVideo key={item.key} active={index === page} item={item} />
-                )
-              )}
-            </ScrollView>
-            <View
-              className="absolute inset-x-0 flex-row items-center justify-between px-5"
-              pointerEvents="box-none"
-              style={{ top: insets.top + 6 }}
-            >
-              <View className="size-10" />
-              <Text
-                className="text-accent-foreground text-[17px] font-semibold"
-                testID="media-viewer-count"
-              >
-                {counterLabel(page, items.length)}
-              </Text>
-              <GlassCloseButton
-                color="accent-foreground"
-                testID="media-viewer-close"
-                onPress={() => close()}
-              />
-            </View>
-          </Animated.View>
-        </GestureDetector>
-      </GestureHandlerRootView>
-    </Modal>
+              {counterLabel(page, items.length)}
+            </Text>
+            <GlassCloseButton
+              color="accent-foreground"
+              testID="media-viewer-close"
+              onPress={() => close()}
+            />
+          </View>
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 }

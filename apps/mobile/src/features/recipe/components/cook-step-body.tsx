@@ -38,6 +38,7 @@ export function StepBody({ step }: { step: ResolvedCookingModeStep }) {
         <StepPhotos
           images={step.images}
           label={intl.formatMessage({ id: "recipes.detail.stepPhoto" })}
+          step={{ stepNumber: step.stepNumber }}
         />
       ) : null}
     </View>

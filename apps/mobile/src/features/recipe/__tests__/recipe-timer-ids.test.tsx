@@ -41,7 +41,7 @@ vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
 vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
-vi.mock("../components/media-viewer", () => ({ MediaViewer: () => null }));
+vi.mock("expo-router", () => ({ useRouter: () => ({ push: () => {} }) }));
 vi.mock("@/lib/haptics", () => ({ lightImpact: () => {} }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),

@@ -1,3 +1,4 @@
+import type { ViewerStep } from "@/lib/tab-routes";
 import type { ComponentRef } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useRef, useState } from "react";
@@ -7,7 +8,9 @@ import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-ico
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
+import { mediaViewerRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -26,7 +29,6 @@ import { useStepTimers } from "../hooks/use-step-timers";
 import { imageItems } from "../utils/hero-items";
 import { plainText, stepRows } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
-import { MediaViewer } from "./media-viewer";
 import { TimerChip, TimerChipButton } from "./timer-chip";
 import { SectionCard, useTint } from "./tint";
 
@@ -35,36 +37,35 @@ type Step = Recipe["steps"][number];
 type Line = ReturnType<typeof usePageIngredients>[number];
 
 /** A step's own photos as small thumbnails; one opens the viewer on it. */
-export function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
-  const [open, setOpen] = useState<number | null>(null);
+export function StepPhotos({
+  images,
+  label,
+  step,
+}: {
+  images: { image: string }[];
+  label: string;
+  step: ViewerStep;
+}) {
+  const router = useRouter();
+  const { id } = useLoadedPageRecipe();
 
   return (
-    <>
-      <View className="flex-row flex-wrap gap-2">
-        {imageItems(images).map((item, index) => (
-          <Pressable
-            key={item.key}
-            accessibilityLabel={`${label} ${index + 1}`}
-            accessibilityRole="button"
-            onPress={() => setOpen(index)}
-          >
-            <ServerImage
-              className="bg-default size-16 rounded-lg"
-              contentFit="cover"
-              path={item.path}
-            />
-          </Pressable>
-        ))}
-      </View>
-      {open === null ? null : (
-        <MediaViewer
-          items={imageItems(images)}
-          label={label}
-          start={open}
-          onClose={() => setOpen(null)}
-        />
-      )}
-    </>
+    <View className="flex-row flex-wrap gap-2">
+      {imageItems(images).map((item, index) => (
+        <Pressable
+          key={item.key}
+          accessibilityLabel={`${label} ${index + 1}`}
+          accessibilityRole="button"
+          onPress={() => router.push(mediaViewerRoute(id, index, step))}
+        >
+          <ServerImage
+            className="bg-default size-16 rounded-lg"
+            contentFit="cover"
+            path={item.path}
+          />
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
@@ -277,6 +278,7 @@ function StepLine({
           <StepPhotos
             images={step.images}
             label={intl.formatMessage({ id: "recipes.detail.stepPhoto" })}
+            step={{ order: step.order }}
           />
         ) : null}
       </View>
