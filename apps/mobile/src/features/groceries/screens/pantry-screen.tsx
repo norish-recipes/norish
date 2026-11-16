@@ -1,6 +1,7 @@
 import React from "react";
 import { FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TitleRow } from "@/components/title-row";
 import { TAB_ROUTES } from "@/lib/tab-routes";
@@ -11,6 +12,7 @@ import { FindField } from "../components/find-field";
 import { ListSwitch } from "../components/list-switch";
 import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
 import { usePantryScreen } from "../hooks/use-pantry-screen";
+import { rowFoodId } from "../utils/pantry-rows";
 
 /** The Pantry: the foods the household keeps, narrowed and added to from one field. */
 export function PantryScreen() {
@@ -46,32 +48,34 @@ export function PantryScreen() {
   );
 
   return (
-    <View className="bg-background flex-1" testID="pantry-screen">
-      <FlatList
-        ListEmptyComponent={
-          isUnavailable ? (
-            <Text className="text-muted px-5 py-6 text-center" testID="pantry-unavailable">
-              {intl.formatMessage({ id: "groceries.pantry.unavailable" })}
-            </Text>
-          ) : (
-            <PantrySkeleton />
-          )
-        }
-        ListHeaderComponent={header}
-        contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
-        contentInsetAdjustmentBehavior="never"
-        data={isRead ? rows : []}
-        keyExtractor={(row) => row.key}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => <PantryRowView actions={actions} row={item} />}
-        testID="pantry-list"
-      />
-      {/* Rows dissolve into the page colour before the tab bar. */}
-      <View
-        className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
-        pointerEvents="none"
-      />
-    </View>
+    <IngredientIconSlots ids={rows.map(rowFoodId)}>
+      <View className="bg-background flex-1" testID="pantry-screen">
+        <FlatList
+          ListEmptyComponent={
+            isUnavailable ? (
+              <Text className="text-muted px-5 py-6 text-center" testID="pantry-unavailable">
+                {intl.formatMessage({ id: "groceries.pantry.unavailable" })}
+              </Text>
+            ) : (
+              <PantrySkeleton />
+            )
+          }
+          ListHeaderComponent={header}
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+          contentInsetAdjustmentBehavior="never"
+          data={isRead ? rows : []}
+          keyExtractor={(row) => row.key}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => <PantryRowView actions={actions} row={item} />}
+          testID="pantry-list"
+        />
+        {/* Rows dissolve into the page colour before the tab bar. */}
+        <View
+          className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
+          pointerEvents="none"
+        />
+      </View>
+    </IngredientIconSlots>
   );
 }

@@ -65,7 +65,10 @@ vi.mock("../components/list-switch", () => ({
     return null;
   },
 }));
-vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
+vi.mock("@/components/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconSlots: ({ children }: { children: React.ReactNode }) => children,
+}));
 vi.mock("@norish/shared-react/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
 

@@ -86,3 +86,17 @@ export function pantryRows(
 
   return rows;
 }
+
+/** The Ingredient a row shows the icon of; null for the rows that name no food. */
+export function rowFoodId(row: PantryRow): string | null {
+  switch (row.type) {
+    case "kept":
+      return row.item.ingredientId || null;
+    case "match":
+      return row.food.id;
+    case "suggestion":
+      return row.food.ingredientId;
+    default:
+      return null;
+  }
+}

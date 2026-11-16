@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
 
-import { pantryRows as rowsOf } from "../utils/pantry-rows";
+import { rowFoodId, pantryRows as rowsOf } from "../utils/pantry-rows";
 
 const kept = (name: string): PantryIngredientDto => ({
   id: `p-${name}`,
@@ -96,5 +96,22 @@ describe("pantryRows", () => {
     expect(
       types(pantryRows({ ...base, offered, showAll: true })).filter((t) => t === "suggestion")
     ).toHaveLength(SUGGESTIONS_SHOWN + 2);
+  });
+});
+
+describe("rowFoodId", () => {
+  it("is the food a row shows the icon of, and null for rows naming no food", () => {
+    const edge = { top: true, bottom: true };
+
+    expect(rowFoodId({ key: "a", type: "kept", item: kept("salt"), onList: false, edge })).toBe(
+      "i-salt"
+    );
+    expect(rowFoodId({ key: "b", type: "match", food: { id: "m1", name: "Rice" }, edge })).toBe(
+      "m1"
+    );
+    expect(rowFoodId({ key: "c", type: "suggestion", food: suggestion("kale"), edge })).toBe(
+      "s-kale"
+    );
+    expect(rowFoodId({ key: "d", type: "more" })).toBeNull();
   });
 });

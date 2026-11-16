@@ -2,7 +2,7 @@ import type { ComponentRef } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { ServerImage } from "@/components/server-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -173,35 +173,39 @@ export function StepChips({
   );
 
   return (
-    <View className="flex-row flex-wrap gap-1.5">
-      {resolved.map((item) => {
-        const label = [
-          item.amount != null ? formatAmount(item.amount, mode) : "",
-          item.unit ? formatUnitOnly(item.unit, item.amount) : "",
-          plainText(item.name),
-        ]
-          .filter(Boolean)
-          .join(" ");
+    <IngredientIconSlots
+      ids={resolved.map((item) => lineAt.get(item.ingredientOrder)?.ingredientId)}
+    >
+      <View className="flex-row flex-wrap gap-1.5">
+        {resolved.map((item) => {
+          const label = [
+            item.amount != null ? formatAmount(item.amount, mode) : "",
+            item.unit ? formatUnitOnly(item.unit, item.amount) : "",
+            plainText(item.name),
+          ]
+            .filter(Boolean)
+            .join(" ");
 
-        return (
-          <View
-            key={item.ingredientOrder}
-            className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
-            style={tint ? { backgroundColor: tint.soft } : undefined}
-          >
-            {namesNoFood(item.name) ? null : (
+          return (
+            <View
+              key={item.ingredientOrder}
+              className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
+              style={tint ? { backgroundColor: tint.soft } : undefined}
+            >
               <IngredientIcon
-                ingredientId={lineAt.get(item.ingredientOrder)?.ingredientId}
+                ingredientId={
+                  namesNoFood(item.name) ? null : lineAt.get(item.ingredientOrder)?.ingredientId
+                }
                 size={large ? 26 : 22}
               />
-            )}
-            <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
-              {label}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
+              <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
+                {label}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </IngredientIconSlots>
   );
 }
 

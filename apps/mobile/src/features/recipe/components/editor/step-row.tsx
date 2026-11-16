@@ -3,7 +3,7 @@ import type { TextInput } from "react-native";
 import React, { useState } from "react";
 import { ActionSheetIOS, Pressable, Text, View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useIntl } from "react-intl";
 
@@ -161,28 +161,33 @@ export function StepRow({
           <MentionPopup foods={foods} matches={matches} onPick={pickMention} />
         ) : null}
         {!heading && row.stepIngredients.length > 0 ? (
-          <View className="flex-row flex-wrap gap-1.5">
-            {row.stepIngredients.map((ref) => {
-              const line = chipLines.find((candidate) => candidate.order === ref.ingredientOrder);
+          <IngredientIconSlots ids={chipLines.map((line) => foods.get(line.ingredientName))}>
+            <View className="flex-row flex-wrap gap-1.5">
+              {row.stepIngredients.map((ref) => {
+                const line = chipLines.find((candidate) => candidate.order === ref.ingredientOrder);
 
-              return line ? (
-                <Pressable
-                  key={ref.ingredientOrder}
-                  accessibilityLabel={text("recipes.stepIngredients.shareLabel", {
-                    name: line.ingredientName,
-                  })}
-                  accessibilityRole="button"
-                  className="bg-default h-7 flex-row items-center gap-1 rounded-full px-2.5"
-                  onPress={() => editChip(line)}
-                >
-                  <IngredientIcon ingredientId={foods.get(line.ingredientName) ?? null} size={18} />
-                  <Text className="text-foreground text-[13px] font-medium">
-                    {stepChipLabel(line, ref.share)}
-                  </Text>
-                </Pressable>
-              ) : null;
-            })}
-          </View>
+                return line ? (
+                  <Pressable
+                    key={ref.ingredientOrder}
+                    accessibilityLabel={text("recipes.stepIngredients.shareLabel", {
+                      name: line.ingredientName,
+                    })}
+                    accessibilityRole="button"
+                    className="bg-default h-7 flex-row items-center gap-1 rounded-full px-2.5"
+                    onPress={() => editChip(line)}
+                  >
+                    <IngredientIcon
+                      ingredientId={foods.get(line.ingredientName) ?? null}
+                      size={18}
+                    />
+                    <Text className="text-foreground text-[13px] font-medium">
+                      {stepChipLabel(line, ref.share)}
+                    </Text>
+                  </Pressable>
+                ) : null;
+              })}
+            </View>
+          </IngredientIconSlots>
         ) : null}
         {row.images.length > 0 || pendingPhotos.length > 0 ? (
           <StepPhotos

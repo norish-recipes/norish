@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { useIntl } from "react-intl";
 
 import type { IngredientRow, LineMoves, ParsedIngredient } from "@norish/shared-react/recipes";
@@ -82,11 +82,9 @@ export function IngredientRows({
         className={`min-h-12 flex-row items-center gap-2.5 py-2 ${index === 0 ? "" : "border-separator border-t"}`}
         testID={`editor-ingredient-${index}`}
       >
-        <View className="w-7 items-center">
-          {heading ? null : (
-            <IngredientIcon ingredientId={foods.get(foodNames[index] ?? "") ?? null} />
-          )}
-        </View>
+        {heading ? null : (
+          <IngredientIcon ingredientId={foods.get(foodNames[index] ?? "") ?? null} />
+        )}
         <View className="flex-1">
           <EditorInput
             {...trailingRow.inputProps(row, index)}
@@ -130,36 +128,38 @@ export function IngredientRows({
   };
 
   return (
-    <View>
-      <DragList
-        nested
-        // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
-        keyboardShouldPersistTaps="handled"
-        renderHeading={() => null}
-        renderItem={renderRow}
-        rows={trailingRow.visibleRows.map((row) => ({
-          kind: "item" as const,
-          key: row.id,
-          value: row,
-        }))}
-        onDrop={(drop) =>
-          commit(
-            normalizeIngredientRows(
-              inDraggedOrder(
-                drop.rows.map((entry) => entry.value),
-                rows
+    <IngredientIconSlots ids={[...foods.values()]}>
+      <View>
+        <DragList
+          nested
+          // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
+          keyboardShouldPersistTaps="handled"
+          renderHeading={() => null}
+          renderItem={renderRow}
+          rows={trailingRow.visibleRows.map((row) => ({
+            kind: "item" as const,
+            key: row.id,
+            value: row,
+          }))}
+          onDrop={(drop) =>
+            commit(
+              normalizeIngredientRows(
+                inDraggedOrder(
+                  drop.rows.map((entry) => entry.value),
+                  rows
+                )
               )
             )
-          )
-        }
-      />
-      {trailingRow.canAdd ? (
-        <AddRow
-          label={intl.formatMessage({ id: "recipes.editor.addIngredient" })}
-          testID="editor-add-ingredient"
-          onPress={trailingRow.add}
+          }
         />
-      ) : null}
-    </View>
+        {trailingRow.canAdd ? (
+          <AddRow
+            label={intl.formatMessage({ id: "recipes.editor.addIngredient" })}
+            testID="editor-add-ingredient"
+            onPress={trailingRow.add}
+          />
+        ) : null}
+      </View>
+    </IngredientIconSlots>
   );
 }

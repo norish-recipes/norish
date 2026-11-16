@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { recipeRoute } from "@/lib/tab-routes";
@@ -171,9 +171,10 @@ export function Line({
       onPress={() => onToggle(index)}
     >
       <RoundTick selected={checked} />
-      {namesNoFood(name) ? null : (
-        <IngredientIcon ingredientId={ingredientId} size={large ? 34 : undefined} />
-      )}
+      <IngredientIcon
+        ingredientId={namesNoFood(name) ? null : ingredientId}
+        size={large ? 34 : undefined}
+      />
       <Text
         className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
       >
@@ -205,46 +206,48 @@ export function IngredientsSection() {
   };
 
   return (
-    <SectionCard
-      right={
-        <View className="flex-row items-center gap-1.5">
-          {recipe.servings ? <ServingsControl /> : null}
-          <OptionsMenu />
-        </View>
-      }
-      testID="recipe-ingredients"
-      title={intl.formatMessage({ id: "recipes.detail.ingredients" })}
-    >
-      {rows.map((row) =>
-        row.kind === "heading" ? (
-          <Text
-            key={row.key}
-            className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
-          >
-            {row.text}
-          </Text>
-        ) : (
-          <Line
-            key={row.key}
-            amount={formatAmount(row.line.amount, mode)}
-            checked={checked.has(row.index)}
-            index={row.index}
-            ingredientId={row.line.ingredientId}
-            name={row.line.ingredientName}
-            unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
-            onToggle={toggle}
-          />
-        )
-      )}
-      <Button
-        className="mt-3 rounded-full"
-        testID="recipe-add-to-groceries"
-        variant="primary"
-        onPress={() => actions.addToGroceries(recipe, servings)}
+    <IngredientIconSlots ids={display.map((line) => line.ingredientId)}>
+      <SectionCard
+        right={
+          <View className="flex-row items-center gap-1.5">
+            {recipe.servings ? <ServingsControl /> : null}
+            <OptionsMenu />
+          </View>
+        }
+        testID="recipe-ingredients"
+        title={intl.formatMessage({ id: "recipes.detail.ingredients" })}
       >
-        <Ionicons color={accentForeground} name="bag-outline" size={18} />
-        <Button.Label>{intl.formatMessage({ id: "recipes.detail.addToGroceries" })}</Button.Label>
-      </Button>
-    </SectionCard>
+        {rows.map((row) =>
+          row.kind === "heading" ? (
+            <Text
+              key={row.key}
+              className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
+            >
+              {row.text}
+            </Text>
+          ) : (
+            <Line
+              key={row.key}
+              amount={formatAmount(row.line.amount, mode)}
+              checked={checked.has(row.index)}
+              index={row.index}
+              ingredientId={row.line.ingredientId}
+              name={row.line.ingredientName}
+              unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
+              onToggle={toggle}
+            />
+          )
+        )}
+        <Button
+          className="mt-3 rounded-full"
+          testID="recipe-add-to-groceries"
+          variant="primary"
+          onPress={() => actions.addToGroceries(recipe, servings)}
+        >
+          <Ionicons color={accentForeground} name="bag-outline" size={18} />
+          <Button.Label>{intl.formatMessage({ id: "recipes.detail.addToGroceries" })}</Button.Label>
+        </Button>
+      </SectionCard>
+    </IngredientIconSlots>
   );
 }

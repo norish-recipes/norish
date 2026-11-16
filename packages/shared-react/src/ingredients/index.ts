@@ -9,6 +9,7 @@ export {
   useIngredientIconMutations,
   useIngredientIcons,
   useIngredientsNamed,
+  useListHasIcon,
 } from "./use-ingredient-icons";
 export { useIngredientMutations } from "./use-ingredient-mutations";
 export { usePantryCatalogue } from "./use-pantry-catalogue";

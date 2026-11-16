@@ -120,7 +120,10 @@ vi.mock("@/hooks/use-photo-source-sheet", () => ({
   },
 }));
 vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
-vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
+vi.mock("@/components/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconSlots: ({ children }: { children: React.ReactNode }) => children,
+}));
 vi.mock("../components/fade-edge", () => ({ FadeEdge: () => null }));
 vi.mock("../components/tint", () => ({ SectionCard: ({ children }: Props) => children }));
 vi.mock("../components/editor/detail-cards", () => ({

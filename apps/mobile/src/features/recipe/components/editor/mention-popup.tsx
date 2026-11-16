@@ -1,6 +1,6 @@
 import React, { use } from "react";
 import { Pressable, Text, View } from "react-native";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
 import { useIntl } from "react-intl";
 
@@ -20,27 +20,29 @@ export function MentionPopup({
   const reportFocus = use(FocusedFieldContext);
 
   return (
-    <View
-      accessibilityLabel={intl.formatMessage({ id: "recipes.stepInput.ingredientSuggestions" })}
-      className="bg-surface border-border overflow-hidden rounded-2xl border shadow-lg"
-      testID="editor-mention-popup"
-      // The popup opens under the field, so it brings itself clear of the keyboard.
-      onLayout={(event) => {
-        if (typeof event.currentTarget !== "number") reportFocus?.(event.currentTarget);
-      }}
-    >
-      {matches.map((suggestion, position) => (
-        <Pressable
-          key={suggestion.key}
-          accessibilityRole="button"
-          className={`min-h-11 flex-row items-center gap-2.5 px-3.5 ${position === 0 ? "" : "border-separator border-t"}`}
-          testID={`editor-mention-${suggestion.ingredientOrder}`}
-          onPress={() => onPick(suggestion)}
-        >
-          <IngredientIcon ingredientId={foods.get(suggestion.label) ?? null} size={22} />
-          <Text className="text-foreground text-base">{suggestion.label}</Text>
-        </Pressable>
-      ))}
-    </View>
+    <IngredientIconSlots ids={matches.map((suggestion) => foods.get(suggestion.label))}>
+      <View
+        accessibilityLabel={intl.formatMessage({ id: "recipes.stepInput.ingredientSuggestions" })}
+        className="bg-surface border-border overflow-hidden rounded-2xl border shadow-lg"
+        testID="editor-mention-popup"
+        // The popup opens under the field, so it brings itself clear of the keyboard.
+        onLayout={(event) => {
+          if (typeof event.currentTarget !== "number") reportFocus?.(event.currentTarget);
+        }}
+      >
+        {matches.map((suggestion, position) => (
+          <Pressable
+            key={suggestion.key}
+            accessibilityRole="button"
+            className={`min-h-11 flex-row items-center gap-2.5 px-3.5 ${position === 0 ? "" : "border-separator border-t"}`}
+            testID={`editor-mention-${suggestion.ingredientOrder}`}
+            onPress={() => onPick(suggestion)}
+          >
+            <IngredientIcon ingredientId={foods.get(suggestion.label) ?? null} size={22} />
+            <Text className="text-foreground text-base">{suggestion.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </IngredientIconSlots>
   );
 }

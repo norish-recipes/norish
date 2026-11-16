@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
+import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { useIntl } from "react-intl";
 
 import {
@@ -37,50 +38,52 @@ export function CookIngredients({
   };
 
   return (
-    <ScrollView
-      contentContainerClassName="px-5 pt-6 pb-48"
-      showsVerticalScrollIndicator={false}
-      testID="cook-ingredients"
-    >
-      <View className="flex-row items-baseline justify-between">
-        <Text className="text-foreground text-[28px] font-semibold tracking-[-0.6px]">
-          {intl.formatMessage({ id: "recipes.cookMode.ingredients" })}
-        </Text>
-        {recipe.servings ? (
-          <Text className="text-muted text-base">
-            {intl.formatMessage(
-              { id: "recipes.cookMode.serving" },
-              { count: formatServings(servings) }
-            )}
+    <IngredientIconSlots ids={display.map((line) => line.ingredientId)}>
+      <ScrollView
+        contentContainerClassName="px-5 pt-6 pb-48"
+        showsVerticalScrollIndicator={false}
+        testID="cook-ingredients"
+      >
+        <View className="flex-row items-baseline justify-between">
+          <Text className="text-foreground text-[28px] font-semibold tracking-[-0.6px]">
+            {intl.formatMessage({ id: "recipes.cookMode.ingredients" })}
           </Text>
-        ) : null}
-      </View>
-      <View className="mt-3.5 mb-1.5 flex-row items-center justify-between">
-        {recipe.servings ? <ServingsControl /> : <View />}
-        <OptionsMenu />
-      </View>
-      {ingredientRows(display, recipe.systemUsed).map((row) =>
-        row.kind === "heading" ? (
-          <Text
-            key={row.key}
-            className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
-          >
-            {row.text}
-          </Text>
-        ) : (
-          <Line
-            key={row.key}
-            large
-            amount={formatAmount(row.line.amount, mode)}
-            checked={checked.has(row.index)}
-            index={row.index}
-            ingredientId={row.line.ingredientId}
-            name={row.line.ingredientName}
-            unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
-            onToggle={toggle}
-          />
-        )
-      )}
-    </ScrollView>
+          {recipe.servings ? (
+            <Text className="text-muted text-base">
+              {intl.formatMessage(
+                { id: "recipes.cookMode.serving" },
+                { count: formatServings(servings) }
+              )}
+            </Text>
+          ) : null}
+        </View>
+        <View className="mt-3.5 mb-1.5 flex-row items-center justify-between">
+          {recipe.servings ? <ServingsControl /> : <View />}
+          <OptionsMenu />
+        </View>
+        {ingredientRows(display, recipe.systemUsed).map((row) =>
+          row.kind === "heading" ? (
+            <Text
+              key={row.key}
+              className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
+            >
+              {row.text}
+            </Text>
+          ) : (
+            <Line
+              key={row.key}
+              large
+              amount={formatAmount(row.line.amount, mode)}
+              checked={checked.has(row.index)}
+              index={row.index}
+              ingredientId={row.line.ingredientId}
+              name={row.line.ingredientName}
+              unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
+              onToggle={toggle}
+            />
+          )
+        )}
+      </ScrollView>
+    </IngredientIconSlots>
   );
 }
