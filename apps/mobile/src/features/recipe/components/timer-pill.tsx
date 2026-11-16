@@ -92,7 +92,8 @@ export function TimerPill({
   const reduceMotion = useReducedMotion();
   const timers = useTimerStore((state) => state.timers);
   const label = useTimersLabel(timers);
-  const { large, drawn } = useMorphFrame(open);
+  // Under Reduce Motion the glass steps back once the rows have faded, with nothing to wait out.
+  const { large, drawn } = useMorphFrame(open, reduceMotion ? HIDE_MS : undefined);
   const { height: screenHeight } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
   const [pillWidth, setPillWidth] = useState(0);

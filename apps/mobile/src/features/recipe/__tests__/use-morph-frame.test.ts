@@ -54,4 +54,15 @@ describe("useMorphFrame", () => {
 
     expect(result.current).toEqual({ large: true, drawn: true });
   });
+
+  it("under Reduce Motion shrinks as soon as the glass has stepped back", () => {
+    const { result, rerender } = renderHook(({ open }) => useMorphFrame(open, HIDE_MS), {
+      initialProps: { open: true },
+    });
+
+    rerender({ open: false });
+    act(() => vi.advanceTimersByTime(HIDE_MS));
+
+    expect(result.current).toEqual({ large: false, drawn: false });
+  });
 });

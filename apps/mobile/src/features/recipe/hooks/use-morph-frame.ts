@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 export const HIDE_MS = 100;
 /** Long enough for the host to take its grown size before the list is drawn in it. */
 export const GROW_MS = 100;
-/** Past the app's spring and Reduce Motion's fade, so the list has shrunk back before the host does. */
+/** Past the app's spring, so the list has shrunk back before the host does. */
 export const SETTLE_MS = 500;
 
 /** When a morphing host's frame is `large` and when its open state is `drawn`: the frame must not
  * change while SwiftUI animates, or a removed shape keeps the old frame's place as a ghost. */
-export function useMorphFrame(open: boolean) {
+export function useMorphFrame(open: boolean, settleMs = SETTLE_MS) {
   const [large, setLarge] = useState(open);
   const [drawn, setDrawn] = useState(open);
   const [was, setWas] = useState(open);
@@ -21,7 +21,7 @@ export function useMorphFrame(open: boolean) {
 
   useEffect(() => {
     if (!open) {
-      const shrink = setTimeout(() => setLarge(false), SETTLE_MS);
+      const shrink = setTimeout(() => setLarge(false), settleMs);
 
       return () => clearTimeout(shrink);
     }
@@ -33,7 +33,7 @@ export function useMorphFrame(open: boolean) {
       clearTimeout(grow);
       clearTimeout(draw);
     };
-  }, [open]);
+  }, [open, settleMs]);
 
   return { large, drawn };
 }
