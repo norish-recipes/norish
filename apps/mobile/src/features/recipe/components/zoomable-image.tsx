@@ -11,11 +11,10 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { ServerImage } from "@/components/server-image";
-import { SPRING } from "@/lib/motion/spring";
+import { settleTo } from "@/lib/motion/settle-to";
 
 import { clampOffset } from "../utils/zoom-offset";
 
@@ -46,9 +45,9 @@ export function ZoomableImage({
 
   const settle = (to: number, toX: number, toY: number) => {
     "worklet";
-    scale.set(reduceMotion ? to : withSpring(to, SPRING));
-    x.set(reduceMotion ? toX : withSpring(toX, SPRING));
-    y.set(reduceMotion ? toY : withSpring(toY, SPRING));
+    scale.set(settleTo(to, reduceMotion));
+    x.set(settleTo(toX, reduceMotion));
+    y.set(settleTo(toY, reduceMotion));
     startScale.set(to);
     startX.set(toX);
     startY.set(toY);

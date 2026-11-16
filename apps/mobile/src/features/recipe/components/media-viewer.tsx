@@ -9,21 +9,17 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
-  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { GlassCloseButton } from "@/components/glass";
-import { SPRING } from "@/lib/motion/spring";
+import { settleTo } from "@/lib/motion/settle-to";
 import { useServerImage } from "@/lib/network/server-url";
 import { useVideoPlayer, VideoView } from "expo-video";
 
 import type { Item } from "../utils/hero-items";
 import { counterLabel, dismisses, pageAt } from "../utils/viewer-pages";
 import { ZoomableImage } from "./zoomable-image";
-
-const FADE_MS = 160;
 
 function ViewerVideo({
   item,
@@ -75,8 +71,9 @@ export function MediaViewer({
       if (finished) scheduleOnRN(onClose);
     };
 
-    if (reduceMotion) fade.set(withTiming(0, { duration: FADE_MS }, done));
-    else dragY.set(withSpring(height, { ...SPRING, velocity }, done));
+    // Under Reduce Motion the viewer fades where it is instead of flying down.
+    if (reduceMotion) fade.set(settleTo(0, true, undefined, done));
+    else dragY.set(settleTo(height, false, { velocity }, done));
   };
   const pan = usePanGesture({
     enabled: !zoomed,
@@ -89,7 +86,7 @@ export function MediaViewer({
     onDeactivate: (event) => {
       "worklet";
       if (dismisses(event.translationY, event.velocityY)) close(event.velocityY);
-      else dragY.set(withSpring(0, { ...SPRING, velocity: event.velocityY }));
+      else dragY.set(settleTo(0, reduceMotion, { velocity: event.velocityY }));
     },
   });
   const backdrop = useAnimatedStyle(() => ({
