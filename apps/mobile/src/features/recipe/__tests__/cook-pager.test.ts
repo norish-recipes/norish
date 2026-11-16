@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  HANDOVER,
   PEEK_OPACITY,
   PEEK_SCALE,
   PEEK_SLOT,
@@ -31,11 +32,22 @@ describe("slotPose", () => {
     expect(COLUMN / 2 + below.y - (PEEK_SCALE * PEEK) / 2).toBeCloseTo(COLUMN - PEEK_SLOT);
   });
 
-  it("fades a full step out as it shrinks, not over the peek that rises", () => {
+  it("fades a full step out as it shrinks, before its peek fades in", () => {
     const outgoing = slotPose(-0.5, COLUMN, PEEK);
 
-    expect(outgoing.fullOpacity).toBeCloseTo(0.5);
+    expect(outgoing.fullOpacity).toBeGreaterThan(0.4);
+    expect(outgoing.peekOpacity).toBe(0);
     expect(outgoing.scale).toBeCloseTo((1 + PEEK_SCALE) / 2);
+    expect(slotPose(HANDOVER, COLUMN, PEEK)).toMatchObject({ fullOpacity: 0, peekOpacity: 0 });
+    expect(slotPose(0.85, COLUMN, PEEK).peekOpacity).toBeCloseTo(PEEK_OPACITY / 2);
+  });
+
+  it("never shows a slot's full step and its peek at once", () => {
+    for (let offset = -2; offset <= 2; offset += 0.01) {
+      const { fullOpacity, peekOpacity } = slotPose(offset, COLUMN, PEEK);
+
+      expect(Math.min(fullOpacity, peekOpacity)).toBeCloseTo(0, 9);
+    }
   });
 
   it("moves continuously from a peek to off screen and hides there", () => {

@@ -6,6 +6,8 @@ export const PEEK_SLOT = 96;
 export const DRAG_DISTANCE = 220;
 /** Seconds of release velocity a settle carries the column on. */
 export const VELOCITY_CARRY = 0.2;
+/** How far out a full step is gone and its peek starts, so the two layers never show together. */
+export const HANDOVER = 0.7;
 
 /** The steps a drag from the current one can reach. */
 export type StepReach = { first: number; last: number };
@@ -21,8 +23,8 @@ function clamp(value: number, min: number, max: number) {
 
 /**
  * The pose of a step `offset` steps from the column's position: 0 centred at full size, -1 the
- * upper peek, +1 the lower. `y` moves the step's centre from the column's; the full step fades
- * into its peek on the way out, so a step reaching the centre is already the step at rest.
+ * upper peek, +1 the lower. `y` moves the step's centre from the column's; the full step is gone
+ * by `HANDOVER` and its peek fades in after, so a slot never shows its text twice.
  */
 export function slotPose(offset: number, column: number, peekHeight: number): SlotPose {
   "worklet";
@@ -35,8 +37,9 @@ export function slotPose(offset: number, column: number, peekHeight: number): Sl
   return {
     y: Math.sign(offset) * (away * peekCentre + beyond * PEEK_SLOT),
     scale: 1 - away * (1 - PEEK_SCALE),
-    fullOpacity: 1 - away,
-    peekOpacity: PEEK_OPACITY * (away - beyond),
+    // Eased out, so mid-page the full step is as visible as a linear fade over the whole page.
+    fullOpacity: 1 - clamp(away / HANDOVER, 0, 1) ** 2,
+    peekOpacity: PEEK_OPACITY * (clamp((away - HANDOVER) / (1 - HANDOVER), 0, 1) - beyond),
   };
 }
 
