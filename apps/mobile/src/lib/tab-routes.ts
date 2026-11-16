@@ -9,6 +9,7 @@ export const TAB_ROUTES = {
     edit: "/recipe/[id]/edit",
     share: "/recipe/[id]/share",
     viewer: "/recipe/[id]/viewer",
+    cookbook: "/cookbook/[id]",
     planRecipe: "/plan-recipe",
     addToGroceries: "/add-to-groceries",
     cookbookAddRecipes: "/cookbook-add-recipes",
@@ -37,6 +38,16 @@ export const recipeRoute = (
   id: string,
   route: "recipe" | "servings" | "edit" | "share" = "recipe"
 ) => ({ pathname: TAB_ROUTES.recipes[route], params: { id } }) as const;
+
+/** The recipe whose page, or a route its stack presents, `path` is: `recipeRoute` read back. */
+export const recipeIdOf = (path: string) => /^\/recipe\/([^/]+)(?:\/|$)/.exec(path)?.[1];
+
+/** A cookbook's page. */
+export const cookbookRoute = (id: string) =>
+  ({ pathname: TAB_ROUTES.recipes.cookbook, params: { id } }) as const;
+
+/** The cookbook whose page `path` is: `cookbookRoute` read back. */
+export const cookbookIdOf = (path: string) => /^\/cookbook\/([^/]+)$/.exec(path)?.[1];
 
 /** Whose photos the viewer shows: the page's step by `order`, or cook mode's by `stepNumber`. */
 export type ViewerStep = { order: number } | { stepNumber: number };

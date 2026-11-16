@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ShellAccessory } from "@/features/shell/components/shell-accessory";
-import { accessoryPlan, recipePageId, shownPath } from "@/features/shell/utils/accessory-plan";
+import { accessoryPlan, shownPath } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useShownRecipe } from "@/lib/shown-recipe";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
-import { TAB_ROUTES } from "@/lib/tab-routes";
+import { recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
 import { usePathname } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
@@ -20,14 +20,14 @@ export function ShellTabs() {
   const hidden = useTabBarHidden();
   const hasTimers = useTimerStore((state) => state.timers.length > 0);
   // A link straight to a recipe has the list under it.
-  const [below, setBelow] = useState(() => (recipePageId(path) ? TAB_ROUTES.recipes.root : path));
+  const [below, setBelow] = useState(() => (recipeIdOf(path) ? TAB_ROUTES.recipes.root : path));
   const shown = useShownRecipe();
   const { recipe } = useRecipeQuery(shown);
   // A loading or missing recipe keeps the action of the screen below.
   const labelled = shownPath(path, below, recipe ? shown : null);
   const plan = accessoryPlan(labelled, hasTimers);
 
-  if (!recipePageId(path) && path !== below) setBelow(path);
+  if (!recipeIdOf(path) && path !== below) setBelow(path);
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>

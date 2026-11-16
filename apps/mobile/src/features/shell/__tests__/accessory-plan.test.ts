@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accessoryPlan, labelFits, recipePageId, shownPath } from "../utils/accessory-plan";
+import { accessoryPlan, labelFits, shownPath } from "../utils/accessory-plan";
 
 describe("accessoryPlan", () => {
   it("holds the tab's add action alone while no timer exists", () => {
@@ -48,15 +48,6 @@ describe("shownPath", () => {
 
   it("passes every other path through", () => {
     expect(shownPath("/groceries", "/", "abc")).toBe("/groceries");
-  });
-});
-
-describe("recipePageId", () => {
-  it("names the recipe a path belongs to", () => {
-    expect(recipePageId("/recipe/abc")).toBe("abc");
-    expect(recipePageId("/recipe/abc/cook")).toBe("abc");
-    expect(recipePageId("/recipes")).toBeUndefined();
-    expect(recipePageId("/")).toBeUndefined();
   });
 });
 

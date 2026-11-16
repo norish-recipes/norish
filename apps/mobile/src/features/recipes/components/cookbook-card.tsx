@@ -2,6 +2,7 @@ import type { CardActions } from "@/hooks/use-card-actions";
 import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
+import { cookbookRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -85,7 +86,7 @@ export function CookbookCard({
     (key) => COOKBOOK_ACTION_DEFINITIONS[key],
     handlers
   );
-  const open = () => router.push({ pathname: "/cookbook/[id]", params: { id: cookbook.id } });
+  const open = () => router.push(cookbookRoute(cookbook.id));
   const tap = useTapGesture({ runOnJS: true, onActivate: open });
 
   return (
@@ -98,7 +99,7 @@ export function CookbookCard({
       testID={`cookbook-card-${cookbook.id}`}
       onAccessibilityTap={open}
     >
-      <CardMenu href={{ pathname: "/cookbook/[id]", params: { id: cookbook.id } }} items={items}>
+      <CardMenu href={cookbookRoute(cookbook.id)} items={items}>
         <GestureDetector gesture={tap}>
           {variant === "grid" ? (
             <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">

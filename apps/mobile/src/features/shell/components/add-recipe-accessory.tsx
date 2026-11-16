@@ -1,6 +1,6 @@
 import React from "react";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
-import { TAB_ROUTES } from "@/lib/tab-routes";
+import { cookbookIdOf, TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -14,7 +14,7 @@ import { AccessoryAction } from "./accessory-action";
 export function AddRecipeAccessory({ inline, path }: AccessoryProps) {
   const intl = useIntl();
   const router = useRouter();
-  const pathId = /^\/cookbook\/([^/]+)$/.exec(path)?.[1];
+  const pathId = cookbookIdOf(path);
   const { cookbook } = useCookbookQuery(pathId ?? "");
   const { canEdit } = useOwnerRights();
   const cookbookId = cookbook && canEdit(cookbook) ? cookbook.id : undefined;

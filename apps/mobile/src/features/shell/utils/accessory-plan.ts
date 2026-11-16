@@ -1,4 +1,4 @@
-import { TAB_ROUTES } from "@/lib/tab-routes";
+import { recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
 
 /** What an action takes: `inline` when the accessory sits beside the minimised tab bar, where the
  * label goes if it does not fit; `path` is the screen the accessory is labelled for. */
@@ -14,13 +14,10 @@ export type AccessoryPlan = { add: AddAction | null; capsule: boolean };
 const PATH_TABS = ["groceries", "calendar"] as const satisfies readonly AddAction[];
 const WITHOUT_ADD = [TAB_ROUTES.groceries.pantry, TAB_ROUTES.groceries.food];
 
-/** The id of the recipe whose page, or one of its routes, `path` is. */
-export const recipePageId = (path: string) => /^\/recipe\/([^/]+)(?:\/|$)/.exec(path)?.[1];
-
 /** The path the accessory is labelled for: a recipe's once its page is shown with the recipe on it,
  * until then the screen below it (`below`, the last path that was not a recipe's). */
 export function shownPath(path: string, below: string, shownRecipe: string | null) {
-  const id = recipePageId(path);
+  const id = recipeIdOf(path);
 
   if (id === undefined || id === shownRecipe) return path;
 
@@ -34,7 +31,7 @@ export function shownPath(path: string, below: string, shownRecipe: string | nul
  * the Pantry and its food sheet. */
 export function accessoryPlan(path: string, hasTimers: boolean): AccessoryPlan | null {
   const add: AddAction | null =
-    recipePageId(path) !== undefined
+    recipeIdOf(path) !== undefined
       ? "cook"
       : WITHOUT_ADD.some((route) => path.startsWith(route))
         ? null
