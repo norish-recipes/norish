@@ -74,9 +74,8 @@ export function accessoryScreen(
   return { path: tabOf(lastNonRecipePath) ? TAB_ROUTES.recipes.root : lastNonRecipePath };
 }
 
-/** The accessory for `screen`, or null when it holds nothing: Cook on a recipe, Add cookbook while
- * the Library at the Recipes root shows `lens` Cookbooks, the capsule alone on the Pantry and its
- * food sheet. */
+/** The accessory for `screen`, or null when it holds nothing: Cook on a recipe, Add cookbook on the
+ * Cookbooks `lens`, the capsule alone on the Pantry. */
 export function accessoryPlan(
   { path, recipeId }: AccessoryScreen,
   hasTimers: boolean,

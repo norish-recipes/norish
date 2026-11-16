@@ -11,10 +11,8 @@ const PRESS_DELAY_MS = 90;
 /** How long a quick tap's dip lasts before it springs back. */
 const TAP_DIP_MS = 70;
 
-/** Press feedback: `style` for the control, `press(true)` when a finger lands on it and
- * `press(false)` when it lifts or the gesture is taken; `press(false, true)` when the lift was a tap.
- * A held press dips after a delay, a tap that lifted sooner dips and returns, and a touch that
- * scrolls or swipes away plays nothing. Reduce Motion leaves it still. */
+/** Press feedback: `press(true)` on touch, `press(false)` on lift or cancel, `press(false, true)` on a
+ * tap. A held press dips, a quick tap dips and returns, a scroll or swipe plays nothing. */
 export function usePressScale() {
   const reduceMotion = useReducedMotion();
   const scale = useSharedValue(1);

@@ -1,11 +1,8 @@
 /** How far a finger travels, in pt, before the strip decides whether the drag is its own. */
 export const STRIP_SLOP = 8;
 
-/**
- * Who a drag that began on the tag strip belongs to, once it has travelled `STRIP_SLOP`: the strip
- * when it moves sideways and the strip can scroll that way (`scrollX` of `max`), else the card's
- * swipe or, for a vertical drag, the list. `wait` until the finger has moved far enough.
- */
+/** Who a drag on the tag strip belongs to: the strip when it is sideways and the strip can scroll
+ * that way (`scrollX` of `max`), else the card's swipe or the list; `wait` within `STRIP_SLOP`. */
 export function stripIntent(dx: number, dy: number, scrollX: number, max: number) {
   "worklet";
 
