@@ -2,24 +2,20 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { NativeTabs } from "expo-router/native-tabs";
+import { useIntl } from "react-intl";
 
+import type { Action } from "../utils/accessory-plan";
 import { ACTION_ICON, labelFits } from "../utils/accessory-plan";
 
-/** One action in the accessory: its icon and label, the label dropped inline when its measured
- * width does not fit the room the timer leaves. */
-export function AccessoryAction({
-  icon,
-  label,
-  inline,
-  testID,
-  onPress,
-}: {
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  inline: boolean;
-  testID: string;
-  onPress: () => void;
-}) {
+/** One action in the accessory: its icon and label, the label dropped beside the minimised tab bar
+ * when its measured width does not fit the room the timer leaves. */
+export function AccessoryAction({ action: { icon, labelId, testID, route } }: { action: Action }) {
+  const intl = useIntl();
+  const router = useRouter();
+  const inline = NativeTabs.BottomAccessory.usePlacement() === "inline";
+  const label = intl.formatMessage({ id: labelId });
   const accent = useAccentTextColor();
   const [room, setRoom] = useState<number | null>(null);
   const [labelWidth, setLabelWidth] = useState<number | null>(null);
@@ -33,7 +29,7 @@ export function AccessoryAction({
       className="h-full flex-row items-center justify-center gap-2"
       testID={testID}
       onLayout={(event) => setRoom(event.nativeEvent.layout.width)}
-      onPress={onPress}
+      onPress={() => router.push(route)}
     >
       <Ionicons color={accent} name={icon} size={ACTION_ICON} />
       {/* Unmeasured, it keeps its place unseen: drawn first and dropped after, it would flash. */}

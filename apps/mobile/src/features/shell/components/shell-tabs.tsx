@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ShellAccessory } from "@/features/shell/components/shell-accessory";
-import { accessoryPlan, shownPath } from "@/features/shell/utils/accessory-plan";
+import { accessoryPlan, accessoryScreen } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useShownRecipe } from "@/lib/shown-recipe";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
@@ -19,21 +19,24 @@ export function ShellTabs() {
   const path = usePathname();
   const hidden = useTabBarHidden();
   const hasTimers = useTimerStore((state) => state.timers.length > 0);
+  const recipeId = recipeIdOf(path);
   // A link straight to a recipe has the list under it.
-  const [below, setBelow] = useState(() => (recipeIdOf(path) ? TAB_ROUTES.recipes.root : path));
+  const [lastNonRecipePath, setLastNonRecipePath] = useState(() =>
+    recipeId ? TAB_ROUTES.recipes.root : path
+  );
   const shown = useShownRecipe();
   const { recipe } = useRecipeQuery(shown);
-  // A loading or missing recipe keeps the action of the screen below.
-  const labelled = shownPath(path, below, recipe ? shown : null);
-  const plan = accessoryPlan(labelled, hasTimers);
+  // A loading or missing recipe keeps the last other screen's action.
+  const screen = accessoryScreen(path, recipeId, lastNonRecipePath, recipe ? shown : null);
+  const plan = accessoryPlan(screen, hasTimers);
 
-  if (!recipeIdOf(path) && path !== below) setBelow(path);
+  if (!recipeId && path !== lastNonRecipePath) setLastNonRecipePath(path);
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
       {hidden || !plan ? null : (
         <NativeTabs.BottomAccessory>
-          <ShellAccessory path={labelled} plan={plan} />
+          <ShellAccessory path={screen.path} plan={plan} />
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
