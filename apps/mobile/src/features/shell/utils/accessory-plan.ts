@@ -1,7 +1,8 @@
 import { TAB_ROUTES } from "@/lib/tab-routes";
 
-/** What an add action takes: `compact` drops its label to the icon, where the accessory is narrow. */
-export type AccessoryProps = { compact: boolean };
+/** What an action takes: `inline` when the accessory sits beside the minimised tab bar, where the
+ * label goes if it does not fit. */
+export type AccessoryProps = { inline: boolean };
 
 /** Which tab's add action the accessory holds. */
 export type AddAction = "recipes" | "groceries" | "calendar";
@@ -20,4 +21,14 @@ export function accessoryPlan(path: string, hasTimers: boolean): AccessoryPlan |
     : (PATH_TABS.find((tab) => path.startsWith(TAB_ROUTES[tab].root)) ?? "recipes");
 
   return add || hasTimers ? { add, capsule: hasTimers } : null;
+}
+
+/** The action icon's size. */
+export const ACTION_ICON = 22;
+const GAP = 8;
+const SIDES = 12;
+
+/** Whether an action's label fits beside its icon in `room` pt; true until both are measured. */
+export function labelFits(room: number | null, labelWidth: number | null) {
+  return room === null || labelWidth === null || SIDES * 2 + ACTION_ICON + GAP + labelWidth <= room;
 }

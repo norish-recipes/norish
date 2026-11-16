@@ -5,20 +5,38 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 const state = vi.hoisted(() => ({ pathname: "/cookbook/c1", canEdit: true }));
 
+// Layout reports the room and the label's width from `layout`, as UIKit would after a pass.
+const layout = vi.hoisted(() => ({ room: 300, label: 100 }));
+
 vi.mock("react-native", async () => {
-  const { createElement } = await import("react");
+  const { createElement, useEffect } = await import("react");
+  type Measured = { onLayout?: (event: { nativeEvent: { layout: { width: number } } }) => void };
+  const useMeasured = ({ onLayout }: Measured, width: number) =>
+    useEffect(() => onLayout?.({ nativeEvent: { layout: { width } } }), []);
 
   return {
-    Pressable: ({
-      children,
-      accessibilityLabel,
-      onPress,
-    }: {
-      children: React.ReactNode;
-      accessibilityLabel: string;
-      onPress: () => void;
-    }) => createElement("button", { "aria-label": accessibilityLabel, onClick: onPress }, children),
-    Text: ({ children }: { children: React.ReactNode }) => createElement("span", null, children),
+    Pressable: (
+      props: Measured & {
+        children: React.ReactNode;
+        accessibilityLabel: string;
+        onPress: () => void;
+      }
+    ) => {
+      useMeasured(props, layout.room);
+
+      return createElement(
+        "button",
+        { "aria-label": props.accessibilityLabel, onClick: props.onPress },
+        props.children
+      );
+    },
+    Text: (props: Measured & { children: React.ReactNode }) => {
+      useMeasured(props, layout.label);
+
+      // The hidden measuring copy is told apart by its onLayout.
+      return props.onLayout ? null : createElement("span", null, props.children);
+    },
+    View: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   };
 });
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
@@ -44,12 +62,13 @@ const { AddRecipeAccessory } = await import("@/features/shell/components/add-rec
 describe("the Add recipe accessory", () => {
   beforeEach(() => {
     router.push.mockClear();
+    layout.room = 300;
     state.pathname = "/cookbook/c1";
   });
 
   it("offers a cookbook's picker to a reader who may edit it", () => {
     state.canEdit = true;
-    render(<AddRecipeAccessory compact={false} />);
+    render(<AddRecipeAccessory inline={false} />);
     fireEvent.click(screen.getByRole("button", { name: "recipes.cookbooks.addRecipes" }));
 
     expect(router.push).toHaveBeenCalledWith({
@@ -60,15 +79,27 @@ describe("the Add recipe accessory", () => {
 
   it("opens Add recipe on a cookbook the reader may not edit", () => {
     state.canEdit = false;
-    render(<AddRecipeAccessory compact={false} />);
+    render(<AddRecipeAccessory inline={false} />);
     fireEvent.click(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }));
 
     expect(router.push).toHaveBeenCalledWith("/add-recipe");
   });
 
-  it("keeps its name for VoiceOver but draws only the icon when compact", () => {
+  it("keeps its label inline where it fits", () => {
     state.canEdit = false;
-    render(<AddRecipeAccessory compact />);
+    state.pathname = "/";
+    render(<AddRecipeAccessory inline />);
+
+    expect(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }).textContent).toBe(
+      "recipes.dashboard.addRecipe"
+    );
+  });
+
+  it("keeps its name for VoiceOver but draws only the icon inline when the label does not fit", () => {
+    state.canEdit = false;
+    layout.room = 120;
+    state.pathname = "/";
+    render(<AddRecipeAccessory inline />);
 
     expect(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }).textContent).toBe(
       ""

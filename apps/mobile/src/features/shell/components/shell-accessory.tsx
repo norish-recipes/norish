@@ -18,14 +18,13 @@ const ADD: Record<AddAction, React.ComponentType<AccessoryProps>> = {
 /** The accessory's row: the tab's add action, and the timer capsule springing in beside it. */
 export function ShellAccessory({ plan: { add, capsule } }: { plan: AccessoryPlan }) {
   const Add = add ? ADD[add] : null;
-  // Inline beside the collapsed tab bar, the accessory is too narrow for a label and a countdown.
   const inline = NativeTabs.BottomAccessory.usePlacement() === "inline";
 
   return (
     <Animated.View className="h-full flex-row items-center justify-center">
       {Add ? (
         <Animated.View className="h-full flex-1" layout={sprung(LinearTransition.springify())}>
-          <Add compact={inline && capsule} />
+          <Add inline={inline} />
         </Animated.View>
       ) : null}
       {capsule ? (
