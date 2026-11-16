@@ -3,7 +3,7 @@ import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { ActionSheetIOS, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { TimerRing } from "@/components/timer-ring";
-import { lightImpact, mediumImpact } from "@/lib/haptics";
+import { mediumImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -14,6 +14,7 @@ import { recipeTimerId, useTimerStore } from "@norish/shared-react/recipes/timer
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { askTimerNotifications } from "../hooks/use-recipe-timers";
+import { toggleTimer } from "../utils/toggle-timer";
 import { useTint } from "./tint";
 
 const SIZES = {
@@ -36,18 +37,11 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const id = recipeTimerId(recipe.id, stepIndex, index);
   const timer = useTimerStore((state) => state.timers.find((entry) => entry.id === id));
   const addTimer = useTimerStore((state) => state.addTimer);
-  const startTimer = useTimerStore((state) => state.startTimer);
-  const pauseTimer = useTimerStore((state) => state.pauseTimer);
   const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
   const left = timer ? formatTimerMs(timer.remainingMs) : "";
 
   const press = () => {
-    if (timer?.status === "running") {
-      pauseTimer(id);
-
-      return;
-    }
     if (timer?.status === "completed") {
       removeTimer(id);
 
@@ -63,8 +57,7 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
         stepIndex,
       });
     }
-    startTimer(id);
-    lightImpact();
+    toggleTimer(id, timer?.status === "running");
     if (!timer) void askTimerNotifications();
   };
 

@@ -3,7 +3,6 @@ import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { GlassSurface } from "@/components/glass";
 import { TimerRing } from "@/components/timer-ring";
-import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native";
@@ -13,6 +12,7 @@ import type { Timer } from "@norish/shared-react/recipes/timers";
 import { sortTimers, timerAdjustStep, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
+import { toggleTimer } from "../utils/toggle-timer";
 import { useTint } from "./tint";
 
 function RoundAction({
@@ -45,8 +45,6 @@ function RoundAction({
 
 function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
   const intl = useIntl();
-  const startTimer = useTimerStore((state) => state.startTimer);
-  const pauseTimer = useTimerStore((state) => state.pauseTimer);
   const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
   const adjustTimer = useTimerStore((state) => state.adjustTimer);
@@ -96,8 +94,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
           label={intl.formatMessage({ id: "recipes.cookMode.restartTimer" })}
           onPress={() => {
             resetTimer(timer.id);
-            startTimer(timer.id);
-            lightImpact();
+            toggleTimer(timer.id, false);
           }}
         />
       ) : (
@@ -123,15 +120,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
               },
               { time: formatTimerMs(timer.remainingMs) }
             )}
-            onPress={() => {
-              if (timer.status === "running") {
-                pauseTimer(timer.id);
-
-                return;
-              }
-              startTimer(timer.id);
-              lightImpact();
-            }}
+            onPress={() => toggleTimer(timer.id, timer.status === "running")}
           />
         </>
       )}
