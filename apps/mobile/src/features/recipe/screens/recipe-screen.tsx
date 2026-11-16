@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { Stack, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
+import { useSheetOpen } from "@/lib/tab-bar-visibility";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
 
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
@@ -56,7 +57,7 @@ function RecipePage() {
   const [scrolled, setScrolled] = useState(false);
   const headerItems = useRecipeHeaderItems();
   // A sheet over the page is glass, which would show the bar through it.
-  const focused = useIsFocused();
+  const sheetOpen = useSheetOpen();
   const tint = colorMode === "dish" ? dishTint(recipe.dishColor, scheme) : null;
 
   useAutoConversion();
@@ -98,7 +99,7 @@ function RecipePage() {
           </View>
         </View>
       </ScrollView>
-      {focused ? <RecipeBottomBar page={tint?.page ?? background} recipeId={recipe.id} /> : null}
+      {sheetOpen ? null : <RecipeBottomBar page={tint?.page ?? background} recipeId={recipe.id} />}
     </TintContext>
   );
 }

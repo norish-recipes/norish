@@ -13,9 +13,6 @@ import {
 
 import { ScreenKeepAwake } from "../components/screen-keep-awake";
 
-// The sheets of the Recipes stack the page opens; the bar stays away while one is over it.
-const PAGE_SHEETS = ["add-to-groceries", "plan", "add-to-cookbook"] as const;
-
 /** What the page keeps current: the recipe, its shares, its enrichment and the foods' icons. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   useRecipeSubscription(recipeId);
@@ -31,7 +28,7 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
 export function RecipeLayout() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  useHideTabBar(PAGE_SHEETS);
+  useHideTabBar();
 
   return (
     <RecipePageProvider recipeId={id}>

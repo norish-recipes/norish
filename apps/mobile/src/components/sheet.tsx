@@ -9,7 +9,8 @@ import React, { useEffect, useState } from "react";
 import { FlatList, Keyboard, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { initialWindowMetrics } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+
+import { useSheetOpenFlag } from "@/lib/tab-bar-visibility";
 
 import type { HeaderConfirm } from "./modal-header";
 import { ModalHeader } from "./modal-header";
@@ -29,12 +30,8 @@ type BodyLayout = {
 /** The body's side inset in points, the `px-4` below: for a layout that sizes itself to the sheet. */
 export const SHEET_INSET = 16;
 
-/** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
+/** Where the native title starts, which the subtitle (`px-6`) and a `SheetRow` line up with. */
 const TITLE_INSET = 24;
-/** What the subtitle clears above the body. */
-const SUBTITLE_CLEARANCE = 12;
-/** The subtitle's line height, `text-sm` tightened so one line stays a single row. */
-const SUBTITLE_LINE_HEIGHT = 17;
 
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pb-4 ${contentClassName}`;
@@ -182,8 +179,9 @@ export function Sheet({
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
   children?: ReactNode;
 }) {
-  const router = useRouter();
   const { overlap, onLayout } = useKeyboardOverlap();
+
+  useSheetOpenFlag();
   // Animated on this view only: a global LayoutAnimation left armed by a picker's keyboard events
   // animated the sheet's unmount, which Reanimated's layout animations abort on.
   const keyboardStyle = useAnimatedStyle(() => ({
@@ -199,21 +197,11 @@ export function Sheet({
       testID={`${name}-sheet`}
       onLayout={onLayout}
     >
-      <ModalHeader
-        back={back}
-        confirm={confirm}
-        title={title}
-        onClose={onClose ?? (() => router.back())}
-      />
+      <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
       {subtitle ? (
         <Text
-          className="text-muted text-sm"
+          className="text-muted px-6 pb-3 text-sm leading-[17px]"
           numberOfLines={1}
-          style={{
-            paddingHorizontal: TITLE_INSET,
-            paddingBottom: SUBTITLE_CLEARANCE,
-            lineHeight: SUBTITLE_LINE_HEIGHT,
-          }}
         >
           {subtitle}
         </Text>

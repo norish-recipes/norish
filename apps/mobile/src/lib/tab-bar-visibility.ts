@@ -1,61 +1,46 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { useIsFocused, useNavigation, useRoute } from "expo-router";
+import { useIsFocused } from "expo-router";
 
 let hiders = 0;
+let sheets = 0;
 const listeners = new Set<() => void>();
 
-const change = (by: number) => {
-  hiders += by;
+const change = (counter: "hiders" | "sheets", by: number) => {
+  if (counter === "hiders") hiders += by;
+  else sheets += by;
   listeners.forEach((listener) => listener());
 };
 
-/** Whether a screen over the tabs asked for the tab bar to go: the recipe page, which has its own chrome. */
-export function useTabBarHidden(): boolean {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
+const useStore = <T>(snapshot: () => T) =>
+  useSyncExternalStore((listener) => {
+    listeners.add(listener);
 
-      return () => void listeners.delete(listener);
-    },
-    () => hiders > 0
-  );
+    return () => void listeners.delete(listener);
+  }, snapshot);
+
+/** Whether the tab bar goes: a screen with its own chrome is in front, or a sheet is open. */
+export const useTabBarHidden = () => useStore(() => hiders + sheets > 0);
+
+/** Whether a sheet is over the page: its glass shows what is under it, such as a page's bottom bar. */
+export const useSheetOpen = () => useStore(() => sheets > 0);
+
+/** Counts the caller in `counter` while `active`. */
+function useCounted(counter: "hiders" | "sheets", active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+
+    change(counter, 1);
+
+    return () => change(counter, -1);
+  }, [counter, active]);
 }
 
-/** Hides the tab bar for as long as the calling screen is mounted and in front, or has only the
- * named sheets of its stack over it while its tab is in front. */
-export function useHideTabBar(sheets: readonly string[] = []) {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const focused = useIsFocused();
-  const underSheet = useSyncExternalStore(
-    (listener) => {
-      const parent = navigation.getParent();
-      const unsubscribes = [
-        navigation.addListener("state", listener),
-        parent?.addListener("focus", listener),
-        parent?.addListener("blur", listener),
-      ];
+/** Hides the tab bar while the calling screen is mounted and in front: the recipe page, which has its own chrome. */
+export function useHideTabBar() {
+  useCounted("hiders", useIsFocused());
+}
 
-      return () => unsubscribes.forEach((unsubscribe) => unsubscribe?.());
-    },
-    () => {
-      const routes = navigation.getState()?.routes ?? [];
-      const above = routes.slice(routes.findIndex(({ key }) => key === route.key) + 1);
-
-      return (
-        above.length > 0 &&
-        above.every(({ name }) => sheets.includes(name)) &&
-        (navigation.getParent()?.isFocused() ?? true)
-      );
-    }
-  );
-  const hidden = focused || underSheet;
-
-  useEffect(() => {
-    if (!hidden) return;
-
-    change(1);
-
-    return () => change(-1);
-  }, [hidden]);
+/** Marks a sheet open for as long as it is mounted: the shared `Sheet` calls this. */
+export function useSheetOpenFlag() {
+  useCounted("sheets", true);
 }

@@ -51,27 +51,3 @@ export function addToGroceriesRoute(recipeId: string, servings?: number) {
     params: servings === undefined ? { recipeId } : { recipeId, servings: String(servings) },
   };
 }
-
-/** The paths of the sheets over the tabs; the glass shows what is under it, so the bar goes while one is open. */
-export const SHEET_PATHS: readonly string[] = [
-  "/filters",
-  "/plan",
-  "/plan-recipe",
-  "/add-to-groceries",
-  "/add-to-cookbook",
-  "/cookbook-add-recipes",
-  "/new-cookbook",
-  "/cookbook-rename",
-  "/groceries/add",
-  "/groceries/edit",
-  "/groceries/stores",
-  "/groceries/food",
-  "/calendar/item",
-  "/calendar/plan-recipe",
-  "/calendar/add-to-groceries",
-  "/add-recipe",
-  "/import-link",
-  "/import-photos",
-  "/import-text",
-  "/editor-choice",
-];
