@@ -53,13 +53,7 @@ export function ViewToggle() {
             restClassName="h-[30px] w-[38px]"
             selected={view === mode}
           >
-            {(picked) => (
-              <Ionicons
-                color={picked ? foreground : muted}
-                name={icon}
-                size={17}
-              />
-            )}
+            {(picked) => <Ionicons color={picked ? foreground : muted} name={icon} size={17} />}
           </SelectFade>
         </PressableScale>
       ))}

@@ -47,7 +47,9 @@ describe("accessoryPlan", () => {
       add: "cook-recipe",
       capsule: true,
     });
-    expect(accessoryPlan({ path: "/recipe/abc", recipeId: "abc" }, false, "all")?.add).toMatchObject({
+    expect(
+      accessoryPlan({ path: "/recipe/abc", recipeId: "abc" }, false, "all")?.add
+    ).toMatchObject({
       route: { pathname: "/recipe/[id]/cook", params: { id: "abc" } },
     });
   });
@@ -59,7 +61,10 @@ describe("accessoryPlan on the Cookbooks lens", () => {
       add: "add-cookbook",
       capsule: false,
     });
-    expect(holds("/", true, undefined, "cookbooks")).toEqual({ add: "add-cookbook", capsule: true });
+    expect(holds("/", true, undefined, "cookbooks")).toEqual({
+      add: "add-cookbook",
+      capsule: true,
+    });
     expect(accessoryPlan({ path: "/" }, false, "cookbooks")?.add).toMatchObject({
       route: "/new-cookbook",
     });

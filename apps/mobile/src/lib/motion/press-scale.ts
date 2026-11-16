@@ -15,7 +15,8 @@ export function usePressScale() {
   return {
     style,
     press: (down: boolean) => {
-      if (!reduceMotion) scale.set(settleTo(down ? PRESSED : 1, false, { overshootClamping: true }));
+      if (!reduceMotion)
+        scale.set(settleTo(down ? PRESSED : 1, false, { overshootClamping: true }));
     },
   };
 }

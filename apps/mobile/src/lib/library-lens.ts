@@ -1,6 +1,7 @@
-import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useEffect } from "react";
 import { createMark } from "@/lib/mark";
+
+import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
 // A mark, as the tab bar's accessory and the Library live in separate trees; the Library clears it
 // when it unmounts.
