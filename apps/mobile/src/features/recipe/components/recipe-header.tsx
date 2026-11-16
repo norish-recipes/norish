@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { AnimatedNumber } from "@/components/animated-number";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -50,13 +51,28 @@ function Description({ text }: { text: string }) {
   );
 }
 
-function Fact({ icon, children, color }: { icon: string; children: string; color?: string }) {
+/** One fact of the glance bar; `rolling` ones are figures that change under the reader. */
+function Fact({
+  icon,
+  children,
+  color,
+  rolling = false,
+}: {
+  icon: string;
+  children: string;
+  color?: string;
+  rolling?: boolean;
+}) {
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
     <View className="flex-1 flex-row items-center justify-center gap-[7px]">
       <Ionicons color={color ?? muted} name={icon as "time-outline"} size={18} />
-      <Text className="text-foreground text-base font-semibold tabular-nums">{children}</Text>
+      {rolling ? (
+        <AnimatedNumber className="text-foreground text-base font-semibold" value={children} />
+      ) : (
+        <Text className="text-foreground text-base font-semibold tabular-nums">{children}</Text>
+      )}
     </View>
   );
 }
@@ -129,9 +145,13 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
         {recipe.totalMinutes || facts.timeLabel ? (
           <Fact icon="time-outline">{facts.timeLabel ?? ""}</Fact>
         ) : null}
-        {recipe.servings ? <Fact icon="people-outline">{formatServings(servings)}</Fact> : null}
+        {recipe.servings ? (
+          <Fact rolling icon="people-outline">
+            {formatServings(servings)}
+          </Fact>
+        ) : null}
         {showNutrition && kcal != null ? (
-          <Fact color={calories} icon="flame-outline">
+          <Fact rolling color={calories} icon="flame-outline">
             {String(Math.round(kcal))}
           </Fact>
         ) : null}

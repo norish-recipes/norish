@@ -1,12 +1,15 @@
 import type { VideoPlayer } from "expo-video";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
+import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { GlassIconButton } from "@/components/glass";
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
+import { sprung } from "@/lib/motion/spring";
 import { useServerImage } from "@/lib/network/server-url";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useIntl } from "react-intl";
 
@@ -18,6 +21,11 @@ import { pageAt } from "../utils/viewer-pages";
 import { MediaViewer } from "./media-viewer";
 
 export const HERO_HEIGHT = 430;
+
+const HEART_SHADOW = {
+  textShadowColor: "rgba(0, 0, 0, 0.3)",
+  textShadowRadius: 12,
+} as const;
 
 /** The player is a native object, so it is set from outside the component. */
 const muteVideo = (player: VideoPlayer, muted: boolean) => {
@@ -42,6 +50,28 @@ function Fade({ color }: { color: string }) {
       </Svg>
     </View>
   );
+}
+
+/** A heart that pops over the photo on a double tap, then leaves; `key` it per tap. */
+function HeartPop() {
+  const [shown, setShown] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShown(false), 650);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return shown ? (
+    <Animated.View
+      className="absolute inset-x-0 top-[150px] items-center"
+      entering={sprung(ZoomIn.springify())}
+      exiting={sprung(ZoomOut.springify())}
+      pointerEvents="none"
+    >
+      <Ionicons color="#ffffff" name="heart" size={88} style={HEART_SHADOW} />
+    </Animated.View>
+  ) : null;
 }
 
 function Pill({ children }: { children: string }) {
@@ -171,6 +201,7 @@ export function RecipeHero({
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
   const [viewing, setViewing] = useState<number | null>(null);
+  const [heart, setHeart] = useState(0);
   const items = heroItems(recipe);
   const doubleTap = useTapGesture({
     numberOfTaps: 2,
@@ -178,6 +209,7 @@ export function RecipeHero({
     onActivate: () => {
       if (!onDoubleTap) return;
       lightImpact();
+      setHeart((count) => count + 1);
       onDoubleTap();
     },
   });
@@ -242,6 +274,7 @@ export function RecipeHero({
             ))}
           </View>
         ) : null}
+        {heart > 0 ? <HeartPop key={heart} /> : null}
         {viewing === null ? null : (
           <MediaViewer
             items={items}

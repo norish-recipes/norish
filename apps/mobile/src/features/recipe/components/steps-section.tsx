@@ -2,8 +2,11 @@ import type { ComponentRef } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { ServerImage } from "@/components/server-image";
+import { lightImpact } from "@/lib/haptics";
+import { sprung } from "@/lib/motion/spring";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -226,6 +229,10 @@ function StepLine({
 }) {
   const intl = useIntl();
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
+  const toggle = () => {
+    lightImpact();
+    onToggle(number);
+  };
 
   return (
     // Not one button, so VoiceOver reaches the step's timer chips; the number is the toggle.
@@ -233,7 +240,7 @@ function StepLine({
       accessible={false}
       className="flex-row gap-3"
       testID={`recipe-step-${number}`}
-      onPress={() => onToggle(number)}
+      onPress={toggle}
     >
       <Pressable
         accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number })}
@@ -241,13 +248,21 @@ function StepLine({
         accessibilityState={{ selected: done }}
         className="bg-accent size-7 items-center justify-center rounded-full"
         testID={`recipe-step-${number}-toggle`}
-        onPress={() => onToggle(number)}
+        onPress={toggle}
       >
-        {done ? (
-          <Ionicons color={accentForeground} name="checkmark" size={16} />
-        ) : (
-          <Text className="text-accent-foreground text-sm font-semibold">{number}</Text>
-        )}
+        {/* The number and the check swap by scale; each is laid over the other while one leaves. */}
+        <Animated.View
+          key={done ? "check" : "number"}
+          className="absolute"
+          entering={sprung(ZoomIn.springify())}
+          exiting={sprung(ZoomOut.springify())}
+        >
+          {done ? (
+            <Ionicons color={accentForeground} name="checkmark" size={16} />
+          ) : (
+            <Text className="text-accent-foreground text-sm font-semibold">{number}</Text>
+          )}
+        </Animated.View>
       </Pressable>
       <View className="min-w-0 flex-1 gap-3">
         <StepText

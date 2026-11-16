@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
 import { GlassStepper } from "@/components/glass-stepper";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
 import { useCardActions } from "@/hooks/use-card-actions";
+import { lightImpact } from "@/lib/haptics";
+import { useFadeTo } from "@/lib/motion/fade-to";
 import { recipeRoute } from "@/lib/tab-routes";
 import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
@@ -130,29 +133,43 @@ export function Line({
   large?: boolean;
 }) {
   const plain = plainText(name);
+  const fade = useFadeTo(checked ? 0.5 : 1);
 
   return (
     <Pressable
       accessibilityLabel={[amount, unit, plain].filter(Boolean).join(" ")}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
-      style={{ opacity: checked ? 0.5 : 1 }}
       testID={`recipe-ingredient-${index}`}
-      onPress={() => onToggle(index)}
+      onPress={() => {
+        lightImpact();
+        onToggle(index);
+      }}
     >
-      <RoundTick selected={checked} />
-      <IngredientIcon
-        ingredientId={namesNoFood(name) ? null : ingredientId}
-        size={large ? 34 : undefined}
-      />
-      <Text
-        className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
+      <Animated.View
+        className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
+        style={fade}
       >
-        {amount ? <Text className="font-semibold">{`${amount} `}</Text> : null}
-        {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
-        <InlineMarkdown disableLinks={checked} text={name} />
-      </Text>
+        <RoundTick selected={checked} />
+        <IngredientIcon
+          ingredientId={namesNoFood(name) ? null : ingredientId}
+          size={large ? 34 : undefined}
+        />
+        <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
+          {amount ? (
+            <AnimatedNumber
+              className={`${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} font-semibold ${checked ? "text-muted line-through" : "text-foreground"}`}
+              value={amount}
+            />
+          ) : null}
+          <Text
+            className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
+          >
+            {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
+            <InlineMarkdown disableLinks={checked} text={name} />
+          </Text>
+        </View>
+      </Animated.View>
     </Pressable>
   );
 }
