@@ -2,6 +2,7 @@ import type { FlatList, FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollViewMarker } from "react-native-screens/experimental";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
@@ -100,60 +101,63 @@ export function CalendarScreen() {
   return (
     <View className="bg-background flex-1" testID="calendar-screen">
       {header}
-      <DragList
-        ref={listRef}
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
-        contentInsetAdjustmentBehavior="never"
-        // The rows the list shows, which a held row keeps still while `rows` moves on.
-        getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
-        initialNumToRender={12}
-        initialScrollIndex={openIndex < 0 ? undefined : openIndex}
-        // Rows added above keep the ones on screen where they are.
-        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-        renderHeading={(heading) =>
-          heading.type === "day" ? (
-            <DayHeadingRow
-              heading={heading}
-              onAdd={() =>
-                router.push({
-                  pathname: TAB_ROUTES.calendar.planRecipe,
-                  params: { date: heading.dayKey },
-                })
+      {/* The marker tells the tab bar which list to minimise on; a wrapping View hides it. */}
+      <ScrollViewMarker style={{ flex: 1 }}>
+        <DragList
+          ref={listRef}
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+          contentInsetAdjustmentBehavior="never"
+          // The rows the list shows, which a held row keeps still while `rows` moves on.
+          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
+          initialNumToRender={12}
+          initialScrollIndex={openIndex < 0 ? undefined : openIndex}
+          // Rows added above keep the ones on screen where they are.
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+          renderHeading={(heading) =>
+            heading.type === "day" ? (
+              <DayHeadingRow
+                heading={heading}
+                onAdd={() =>
+                  router.push({
+                    pathname: TAB_ROUTES.calendar.planRecipe,
+                    params: { date: heading.dayKey },
+                  })
+                }
+              />
+            ) : (
+              <SlotLabelRow heading={heading} />
+            )
+          }
+          renderItem={(row, drag) => (
+            <PlannedItemRow
+              row={row}
+              onDrag={drag}
+              onOpen={() =>
+                router.push({ pathname: TAB_ROUTES.calendar.item, params: { id: row.item.id } })
               }
             />
-          ) : (
-            <SlotLabelRow heading={heading} />
-          )
-        }
-        renderItem={(row, drag) => (
-          <PlannedItemRow
-            row={row}
-            onDrag={drag}
-            onOpen={() =>
-              router.push({ pathname: TAB_ROUTES.calendar.item, params: { id: row.item.id } })
-            }
-          />
-        )}
-        rows={rows}
-        shownRef={shownRowsRef}
-        testID="calendar-list"
-        viewabilityConfig={VIEWABILITY}
-        onDrop={(drop) => {
-          const plan = planTimelineDrop(drop, calendarData);
+          )}
+          rows={rows}
+          shownRef={shownRowsRef}
+          testID="calendar-list"
+          viewabilityConfig={VIEWABILITY}
+          onDrop={(drop) => {
+            const plan = planTimelineDrop(drop, calendarData);
 
-          if (!plan) return false;
-          moveItem(plan.itemId, plan.date, plan.slot, plan.index);
+            if (!plan) return false;
+            moveItem(plan.itemId, plan.date, plan.slot, plan.index);
 
-          return true;
-        }}
-        onEndReached={() => growth.reached("future")}
-        onEndReachedThreshold={GROW_THRESHOLD}
-        onHeldChange={growth.heldChange}
-        onStartReached={() => growth.reached("past")}
-        onStartReachedThreshold={GROW_THRESHOLD}
-        onViewableItemsChanged={onViewable}
-      />
+            return true;
+          }}
+          onEndReached={() => growth.reached("future")}
+          onEndReachedThreshold={GROW_THRESHOLD}
+          onHeldChange={growth.heldChange}
+          onStartReached={() => growth.reached("past")}
+          onStartReachedThreshold={GROW_THRESHOLD}
+          onViewableItemsChanged={onViewable}
+        />
+      </ScrollViewMarker>
     </View>
   );
 }

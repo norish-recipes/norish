@@ -4,6 +4,7 @@ import React from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollViewMarker } from "react-native-screens/experimental";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
@@ -189,35 +190,38 @@ export function GroceriesList({
 
   return (
     <View className="flex-1">
-      <DragList
-        ListEmptyComponent={empty ?? undefined}
-        ListHeaderComponent={header}
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
-        contentInsetAdjustmentBehavior="never"
-        itemLayoutAnimation={ROW_LAYOUT}
-        renderHeading={(heading, index) => (
-          <Animated.View
-            entering={fresh.has(heading) ? ROW_ENTERING : undefined}
-            exiting={HEADING_EXITING}
-          >
-            {renderHeading(heading, index)}
-          </Animated.View>
-        )}
-        renderItem={(item, drag) => (
-          <Animated.View
-            ref={itemRef(item.key)}
-            collapsable={false}
-            entering={fresh.has(item) ? ROW_ENTERING : undefined}
-            exiting={exitingFor(item.key)}
-          >
-            {renderItem(item, drag)}
-          </Animated.View>
-        )}
-        rows={rows}
-        testID="groceries-list"
-        onDrop={onDrop}
-      />
+      {/* The marker tells the tab bar which list to minimise on; a wrapping View hides it. */}
+      <ScrollViewMarker style={{ flex: 1 }}>
+        <DragList
+          ListEmptyComponent={empty ?? undefined}
+          ListHeaderComponent={header}
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+          contentInsetAdjustmentBehavior="never"
+          itemLayoutAnimation={ROW_LAYOUT}
+          renderHeading={(heading, index) => (
+            <Animated.View
+              entering={fresh.has(heading) ? ROW_ENTERING : undefined}
+              exiting={HEADING_EXITING}
+            >
+              {renderHeading(heading, index)}
+            </Animated.View>
+          )}
+          renderItem={(item, drag) => (
+            <Animated.View
+              ref={itemRef(item.key)}
+              collapsable={false}
+              entering={fresh.has(item) ? ROW_ENTERING : undefined}
+              exiting={exitingFor(item.key)}
+            >
+              {renderItem(item, drag)}
+            </Animated.View>
+          )}
+          rows={rows}
+          testID="groceries-list"
+          onDrop={onDrop}
+        />
+      </ScrollViewMarker>
       {/* Rows dissolve into the page colour before the tab bar. */}
       <View
         className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
