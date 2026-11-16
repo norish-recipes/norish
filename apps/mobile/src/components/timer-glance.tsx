@@ -45,6 +45,7 @@ export function TimerGlance({ timers }: { timers: readonly Timer[] }) {
   const [foreground, muted, accent] = useThemeColor(["foreground", "muted", "accent"] as const);
   const { soonest, anyDone } = timerGlance(timers);
   const paused = soonest?.status === "paused";
+
   return (
     <>
       {soonest ? (
