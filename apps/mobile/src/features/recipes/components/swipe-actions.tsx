@@ -95,16 +95,17 @@ export function SwipeActions({
         containerStyle={isGrid ? { flex: 1, borderRadius: 24 } : undefined}
         overshootRight={false}
         renderRightActions={(progress, translation, methods) => (
-          <ActionsPanel
-            actions={actions}
-            dragging={dragging}
-            isGrid={isGrid}
-            isOpen={isOpen}
-            methods={methods}
-            progress={progress}
-            translation={translation}
-            width={width}
-          />
+          <>
+            <ThresholdTick dragging={dragging} translation={translation} />
+            <ActionsPanel
+              actions={actions}
+              isGrid={isGrid}
+              isOpen={isOpen}
+              methods={methods}
+              progress={progress}
+              width={width}
+            />
+          </>
         )}
         requireToFail={stripGesture}
         rightThreshold={OPEN_THRESHOLD}
@@ -127,35 +128,41 @@ export function SwipeActions({
   );
 }
 
-/** The panel sits behind the card, so it is clear until the card moves: a lifting card then shows nothing behind it. */
-function ActionsPanel({
-  actions,
+/** A tick where a release would open the row, each way the finger crosses it; the settle plays none. */
+function ThresholdTick({
   dragging,
-  isGrid,
-  isOpen,
-  methods,
-  progress,
   translation,
-  width,
 }: {
-  actions: SwipeAction[];
   dragging: SharedValue<boolean>;
-  isGrid: boolean;
-  isOpen: boolean;
-  methods: SwipeableMethods;
-  progress: SharedValue<number>;
   translation: SharedValue<number>;
-  width: number;
 }) {
-  const visibility = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
-
-  // A tick where a release would open the row, each way the finger crosses it.
   useAnimatedReaction(
     () => translation.get() < -OPEN_THRESHOLD,
     (past, was) => {
       if (was !== null && past !== was && dragging.get()) scheduleOnRN(lightImpact);
     }
   );
+
+  return null;
+}
+
+/** The panel sits behind the card, so it is clear until the card moves: a lifting card then shows nothing behind it. */
+function ActionsPanel({
+  actions,
+  isGrid,
+  isOpen,
+  methods,
+  progress,
+  width,
+}: {
+  actions: SwipeAction[];
+  isGrid: boolean;
+  isOpen: boolean;
+  methods: SwipeableMethods;
+  progress: SharedValue<number>;
+  width: number;
+}) {
+  const visibility = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
 
   return (
     <Animated.View
