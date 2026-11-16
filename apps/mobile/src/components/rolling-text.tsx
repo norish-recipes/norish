@@ -97,7 +97,9 @@ export function RollingText({
     );
   }
 
-  const characters = toSlots(value, slots, growth === "end" ? "left" : "right");
+  // A figure space is a digit wide, so an empty number slot holds the row's width.
+  const characters =
+    growth === "end" ? toSlots(value, slots, "left") : toSlots(value, slots, "right", "\u2007");
 
   return (
     // One label for the row: read per character it would say "five, zero".
@@ -108,8 +110,7 @@ export function RollingText({
             // A slot is its place from where the value grows, so a character rolls in place.
             // eslint-disable-next-line @eslint-react/no-array-index-key -- a slot is its place in the row
             key={growth === "end" ? index : characters.length - index}
-            // A figure space is a digit wide, so an empty number slot holds the row's width.
-            character={character === " " && growth === "start" ? "\u2007" : character}
+            character={character}
             className={className}
             rising={rising}
           />

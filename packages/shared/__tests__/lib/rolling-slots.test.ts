@@ -8,6 +8,10 @@ describe("toSlots", () => {
     expect(toSlots("ab", 4, "left")).toEqual(["a", "b", " ", " "]);
   });
 
+  it("pads with the blank it is given and keeps the value's own spaces", () => {
+    expect(toSlots("4 ½", 5, "right", "\u2007")).toEqual(["\u2007", "\u2007", "4", " ", "½"]);
+  });
+
   it("keeps a value longer than the slots whole", () => {
     expect(toSlots("1000", 2, "right")).toEqual(["1", "0", "0", "0"]);
   });
