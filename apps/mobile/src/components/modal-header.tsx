@@ -27,7 +27,9 @@ export function ModalHeader({
   confirm?: HeaderConfirm;
 }) {
   const intl = useIntl();
-  const leftLabel = intl.formatMessage({ id: back ? "common.actions.back" : "common.actions.close" });
+  const leftLabel = intl.formatMessage({
+    id: back ? "common.actions.back" : "common.actions.close",
+  });
 
   return (
     <Stack.Screen

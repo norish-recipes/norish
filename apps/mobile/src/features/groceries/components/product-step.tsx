@@ -111,7 +111,9 @@ export function ProductStep({
             variant="secondary"
             onPress={() => setTyping(true)}
           >
-            <Button.Label className="font-semibold">{text("groceries.mobile.typePrice")}</Button.Label>
+            <Button.Label className="font-semibold">
+              {text("groceries.mobile.typePrice")}
+            </Button.Label>
           </Button>
         )
       }

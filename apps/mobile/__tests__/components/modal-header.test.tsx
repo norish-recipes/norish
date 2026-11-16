@@ -61,7 +61,7 @@ describe("ModalHeader", () => {
     const { rerender } = render(
       <ModalHeader
         confirm={{ label: "Save", disabled: true, onPress }}
-       
+
         title="Rename"
         onClose={vi.fn()}
       />
@@ -74,7 +74,7 @@ describe("ModalHeader", () => {
     rerender(
       <ModalHeader
         confirm={{ label: "Save", onPress }}
-       
+
         title="Rename"
         onClose={vi.fn()}
       />

@@ -1,7 +1,7 @@
+import type { HeaderConfirm } from "@/components/modal-header";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
-import type { HeaderConfirm } from "@/components/modal-header";
 import { Sheet, SheetList } from "@/components/sheet";
 
 import type { PickRowPosition } from "./pick-row";
@@ -40,12 +40,7 @@ export function PickSheet<Item>({
   const items = list?.items ?? [];
 
   return (
-    <Sheet
-      confirm={action}
-      name={name}
-      subtitle={subtitle}
-      title={title}
-    >
+    <Sheet confirm={action} name={name} subtitle={subtitle} title={title}>
       <SheetList
         ListEmptyComponent={
           list ? (

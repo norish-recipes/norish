@@ -104,7 +104,10 @@ export function RecipeServingsScreen() {
   const intl = useIntl();
 
   return (
-    <RecipeSheetGate name="recipe-servings" title={intl.formatMessage({ id: "recipes.form.servings" })}>
+    <RecipeSheetGate
+      name="recipe-servings"
+      title={intl.formatMessage({ id: "recipes.form.servings" })}
+    >
       <ServingsSheet />
     </RecipeSheetGate>
   );
