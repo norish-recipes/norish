@@ -256,8 +256,10 @@ function AuthenticatedEffects() {
   return null;
 }
 
-/** The import sheets as tall as their content; From text's field takes the sheet's height. */
-const FIT_IMPORT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
+/** Add recipe and its imports present over whichever tab the accessory was pressed on; the editor's
+ * country and cuisine lists present over it. From text's field takes the sheet's height. */
+const SHEETS = ["import-text", "editor-choice"] as const;
+const FIT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
@@ -265,13 +267,12 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
-        {/* Add recipe and its imports present over whichever tab the accessory was pressed on. */}
-        {FIT_IMPORT_SHEETS.map((name) => (
+        {SHEETS.map((name) => (
+          <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
+        ))}
+        {FIT_SHEETS.map((name) => (
           <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
         ))}
-        <Stack.Screen name="import-text" options={SHEET_OPTIONS} />
-        {/* The editor's country and cuisine lists present over it, from the new recipe or the edit. */}
-        <Stack.Screen name="editor-choice" options={SHEET_OPTIONS} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
