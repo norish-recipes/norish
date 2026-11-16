@@ -1,9 +1,9 @@
 import type { ComponentRef, ReactNode } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { Fragment, useRef, useState } from "react";
-import { Image, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { IngredientIcon } from "@/components/ingredient-icon";
-import { useServerImage } from "@/lib/network/server-url";
+import { ServerImage } from "@/components/server-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -37,7 +37,6 @@ function byPlace<T>(items: T[], render: (item: T, index: number) => ReactNode) {
 
 /** A step's own photos as small thumbnails; one opens the pages in full. */
 export function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
-  const toImage = useServerImage();
   const { width } = useWindowDimensions();
   const [open, setOpen] = useState<number | null>(null);
 
@@ -50,10 +49,10 @@ export function StepPhotos({ images, label }: { images: { image: string }[]; lab
             accessibilityRole="button"
             onPress={() => setOpen(index)}
           >
-            <Image
+            <ServerImage
               className="bg-default size-16 rounded-lg"
-              resizeMode="cover"
-              source={toImage(image.image)}
+              contentFit="cover"
+              path={image.image}
             />
           </Pressable>
         ))}
@@ -72,9 +71,9 @@ export function StepPhotos({ images, label }: { images: { image: string }[]; lab
             showsHorizontalScrollIndicator={false}
           >
             {byPlace(images, (image) => (
-              <Image
-                resizeMode="contain"
-                source={toImage(image.image)}
+              <ServerImage
+                contentFit="contain"
+                path={image.image}
                 style={{ width, height: width * 1.2 }}
               />
             ))}

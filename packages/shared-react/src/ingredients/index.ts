@@ -5,6 +5,7 @@ export { useIngredientFor } from "./use-ingredient-for";
 export {
   useFoodsByName,
   useIngredientIconAddress,
+  useIngredientIconAnswer,
   useIngredientIconMutations,
   useIngredientIcons,
   useIngredientsNamed,

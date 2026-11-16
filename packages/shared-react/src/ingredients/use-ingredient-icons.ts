@@ -21,16 +21,25 @@ import { useCatalogueFailure } from "./use-catalogue-failure";
 /** Each food's icon by its Ingredient's id, null where it has none: one read's answer. */
 type IconAnswer = inferRouterOutputs<AppRouter>["ingredients"]["icons"];
 
-/** One read of a surface's foods' icons; each icon selects its own with `useIngredientIconAddress`. */
-export function useIngredientIcons(ids: readonly (string | null | undefined)[]): void {
+function useIconsRead(ids: readonly (string | null | undefined)[], notifyOnChangeProps: "data"[]) {
   const trpc = useTRPC();
   const wanted = iconIds(ids);
 
-  useQuery({
+  return useQuery({
     ...trpc.ingredients.icons.queryOptions({ ids: wanted }),
     enabled: wanted.length > 0,
-    notifyOnChangeProps: [],
-  });
+    notifyOnChangeProps,
+  }).data;
+}
+
+/** One read of a surface's foods' icons; each icon selects its own with `useIngredientIconAddress`. */
+export function useIngredientIcons(ids: readonly (string | null | undefined)[]): void {
+  useIconsRead(ids, []);
+}
+
+/** The same read, answered to the caller (and re-rendering it) for a surface that acts on every address. */
+export function useIngredientIconAnswer(ids: readonly (string | null | undefined)[]) {
+  return useIconsRead(ids, ["data"]);
 }
 
 /**

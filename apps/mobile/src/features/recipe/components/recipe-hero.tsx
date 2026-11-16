@@ -1,10 +1,11 @@
 import type { VideoPlayer } from "expo-video";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { GlassIconButton } from "@/components/glass";
+import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
 import { useServerImage } from "@/lib/network/server-url";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -61,17 +62,12 @@ function VideoPage({
   pageColor: string;
 }) {
   const intl = useIntl();
-  const toImage = useServerImage();
   const [started, setStarted] = useState(false);
 
   return (
     <View style={{ width, height: HERO_HEIGHT }}>
       {item.poster ? (
-        <Image
-          resizeMode="cover"
-          source={toImage(item.poster)}
-          style={{ width, height: HERO_HEIGHT }}
-        />
+        <ServerImage contentFit="cover" path={item.poster} style={{ width, height: HERO_HEIGHT }} />
       ) : (
         <View className="bg-default" style={{ width, height: HERO_HEIGHT }} />
       )}
@@ -172,7 +168,6 @@ export function RecipeHero({
   onDoubleTap?: () => void;
 }) {
   const intl = useIntl();
-  const toImage = useServerImage();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
   const items = heroItems(recipe);
@@ -211,10 +206,10 @@ export function RecipeHero({
           {items.map((item) =>
             item.kind === "image" ? (
               <View key={item.key} style={{ width, height: HERO_HEIGHT }}>
-                <Image
+                <ServerImage
                   accessibilityLabel={recipe.name}
-                  resizeMode="cover"
-                  source={toImage(item.path)}
+                  contentFit="cover"
+                  path={item.path}
                   style={{ width, height: HERO_HEIGHT }}
                   testID="recipe-photo"
                 />

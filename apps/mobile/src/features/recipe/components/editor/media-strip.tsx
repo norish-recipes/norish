@@ -3,8 +3,8 @@ import type { SetStateAction } from "react";
 import React from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { GlassCloseButton, GlassSurface } from "@/components/glass";
+import { ServerImage } from "@/components/server-image";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
-import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -40,7 +40,6 @@ export function MediaStrip({
   onChange: (media: SetStateAction<RecipeGalleryMedia[]>) => void;
 }) {
   const intl = useIntl();
-  const toImage = useServerImage();
   const [foreground, border, warningForeground] = useThemeColor([
     "foreground",
     "border",
@@ -83,8 +82,8 @@ export function MediaStrip({
             style={{ width: TILE, height: TILE }}
             testID={`editor-media-${index}`}
           >
-            <Image
-              source={toImage(item.type === "video" ? (item.thumbnail ?? item.src) : item.src)}
+            <ServerImage
+              path={item.type === "video" ? (item.thumbnail ?? item.src) : item.src}
               style={{ width: TILE, height: TILE }}
             />
             {index === 0 ? (

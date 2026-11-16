@@ -1,6 +1,6 @@
 import React from "react";
-import { Image, View } from "react-native";
-import { useServerImage } from "@/lib/network/server-url";
+import { View } from "react-native";
+import { ServerImage } from "@/components/server-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -22,11 +22,10 @@ export function CookbookCover({
   onSheet?: boolean;
 }) {
   const ground = onSheet ? "bg-surface" : "bg-default";
-  const toImage = useServerImage();
   const [muted] = useThemeColor(["muted"] as const);
   const photos = cookbook.image ? [cookbook.image] : cookbook.coverImages.slice(0, 4);
   const tile = (uri: string, tileClass: string) => (
-    <Image key={uri} className={`${ground} ${tileClass}`} source={toImage(uri)} />
+    <ServerImage key={uri} className={`${ground} ${tileClass}`} path={uri} />
   );
 
   if (photos.length === 0) {

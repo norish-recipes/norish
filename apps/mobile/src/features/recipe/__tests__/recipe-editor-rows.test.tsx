@@ -119,7 +119,7 @@ vi.mock("@/hooks/use-photo-source-sheet", () => ({
     state.pendingPick = () => onPicked([{ uri: "/recipes/r/steps/new.jpg" }]);
   },
 }));
-vi.mock("@/lib/network/server-url", () => ({ useServerImage: () => (path: string) => path }));
+vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
 vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
 vi.mock("../components/fade-edge", () => ({ FadeEdge: () => null }));
 vi.mock("../components/tint", () => ({ SectionCard: ({ children }: Props) => children }));

@@ -4,7 +4,6 @@ import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
 
-import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useDevicePreference, useHiddenItemVisibility } from "@norish/shared-react/reader";
 import {
   useAutoConversion,
@@ -26,6 +25,7 @@ import { RecipeToolbar } from "../components/recipe-toolbar";
 import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
 import { TintContext } from "../components/tint";
+import { useIngredientIconPrefetch } from "../hooks/use-icon-prefetch";
 import { useRecipeHeaderItems } from "../hooks/use-recipe-menu";
 import { dishTint } from "../utils/dish-tint";
 
@@ -55,7 +55,7 @@ function RecipePage() {
 
   useAutoConversion();
   // Every surface of the page names the recipe's foods: its lines and the steps' chips.
-  useIngredientIcons(recipe.recipeIngredients.map((line) => line.ingredientId));
+  useIngredientIconPrefetch(recipe.recipeIngredients.map((line) => line.ingredientId));
 
   return (
     <TintContext value={tint}>

@@ -40,7 +40,7 @@ vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("@/lib/network/server-url", () => ({ useServerImage: () => () => null }));
+vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useLoadedPageRecipe: () => RECIPE,

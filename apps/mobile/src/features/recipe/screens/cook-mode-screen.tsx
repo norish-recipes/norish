@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import {
   Directions,
   GestureDetector,
@@ -15,11 +15,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
+import { ServerImage } from "@/components/server-image";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
-import { useServerImage } from "@/lib/network/server-url";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
@@ -62,7 +62,6 @@ function viewSwitch(side: "left" | "right", reduceMotion: boolean) {
 function CookHeader({ onClose }: { onClose: () => void }) {
   const categoryLabel = useCategoryLabel();
   const recipe = useLoadedPageRecipe();
-  const toImage = useServerImage();
   const { top } = useSafeAreaInsets();
   const image = primaryRecipeImage(recipe);
   const subtitle = [
@@ -75,7 +74,7 @@ function CookHeader({ onClose }: { onClose: () => void }) {
   return (
     <View className="flex-row items-center gap-3 pr-4 pl-5" style={{ paddingTop: top + 6 }}>
       {image ? (
-        <Image className="bg-default size-[46px] rounded-[14px]" source={toImage(image)} />
+        <ServerImage className="bg-default size-[46px] rounded-[14px]" path={image} />
       ) : null}
       <View className="min-w-0 flex-1 gap-px">
         <Text className="text-foreground text-[17px] font-semibold" numberOfLines={1}>

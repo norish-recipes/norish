@@ -10,10 +10,13 @@ vi.mock("react-native", async () => {
   return {
     View: ({ className, children }: { className?: string; children?: React.ReactNode }) =>
       createElement("div", { "data-testid": "slot", className }, children),
-    Image: () => createElement("img", { "data-testid": "image" }),
   };
 });
-vi.mock("@/lib/network/server-url", () => ({ useServerImage: () => (address: string) => address }));
+vi.mock("@/components/server-image", async () => {
+  const { createElement } = await import("react");
+
+  return { ServerImage: () => createElement("img", { "data-testid": "image" }) };
+});
 vi.mock("@norish/shared-react/ingredients", () => ({
   useIngredientIconAddress: () => state.address,
 }));

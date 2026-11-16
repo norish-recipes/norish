@@ -1,6 +1,6 @@
 import React from "react";
-import { Image, View } from "react-native";
-import { useServerImage } from "@/lib/network/server-url";
+import { View } from "react-native";
+import { ServerImage } from "@/components/server-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -16,7 +16,6 @@ export function CardPhoto({
   onSheet?: boolean;
 }) {
   const ground = onSheet ? "bg-surface" : "bg-default";
-  const toImage = useServerImage();
   const [muted] = useThemeColor(["muted"] as const);
 
   if (!image) {
@@ -27,5 +26,5 @@ export function CardPhoto({
     );
   }
 
-  return <Image className={`${ground} ${className}`} resizeMode="cover" source={toImage(image)} />;
+  return <ServerImage className={`${ground} ${className}`} contentFit="cover" path={image} />;
 }
