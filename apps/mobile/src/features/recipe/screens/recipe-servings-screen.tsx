@@ -45,33 +45,30 @@ function ServingsBody() {
 
   return (
     <SheetBody contentClassName="gap-3">
-      <View className="flex-row gap-3">
-        <View className="flex-1 flex-row items-center gap-2">
-          <TextField className="flex-1">
-            <SheetInput
-              accessibilityLabel={intl.formatMessage({ id: "recipes.form.servings" })}
-              inputMode="decimal"
-              testID="recipe-servings-input"
-              value={draft.servings}
-              onChangeText={(text) => type("servings", text)}
-            />
-          </TextField>
-          <Text className="text-muted text-sm">
-            {intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
-          </Text>
-        </View>
-        <View className="w-28 flex-row items-center gap-2">
-          <Text className="text-muted text-base">×</Text>
-          <TextField className="flex-1">
-            <SheetInput
-              accessibilityLabel={intl.formatMessage({ id: "recipes.detail.multiplier" })}
-              inputMode="decimal"
-              testID="recipe-multiplier-input"
-              value={draft.multiplier}
-              onChangeText={(text) => type("multiplier", text)}
-            />
-          </TextField>
-        </View>
+      {/* As the board draws them: the word and the × inside the capsules, the values bold. */}
+      <View className="flex-row gap-2.5">
+        <TextField className="flex-1">
+          <SheetInput
+            accessibilityLabel={intl.formatMessage({ id: "recipes.form.servings" })}
+            className="text-lg font-semibold"
+            inputMode="decimal"
+            suffix={intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
+            testID="recipe-servings-input"
+            value={draft.servings}
+            onChangeText={(text) => type("servings", text)}
+          />
+        </TextField>
+        <TextField className="w-[120px]">
+          <SheetInput
+            accessibilityLabel={intl.formatMessage({ id: "recipes.detail.multiplier" })}
+            className="text-lg font-semibold"
+            inputMode="decimal"
+            prefix="×"
+            testID="recipe-multiplier-input"
+            value={draft.multiplier}
+            onChangeText={(text) => type("multiplier", text)}
+          />
+        </TextField>
       </View>
       <View className="flex-row gap-2">
         {MULTIPLIERS.map((multiplier) => (
