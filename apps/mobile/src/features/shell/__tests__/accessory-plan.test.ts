@@ -60,13 +60,13 @@ describe("labelFits", () => {
   });
 
   it("keeps the label when sides, icon, gap and label fit the room", () => {
-    // 12 + 22 + 8 + 80 + 12 = 134
-    expect(labelFits(134, 80)).toBe(true);
-    expect(labelFits(133, 80)).toBe(false);
+    // 6 + 22 + 8 + 80 + 6 = 122
+    expect(labelFits(122, 80)).toBe(true);
+    expect(labelFits(121, 80)).toBe(false);
   });
 
   it("drops a long translation where a short label fits", () => {
     expect(labelFits(150, 40)).toBe(true);
-    expect(labelFits(150, 140)).toBe(false);
+    expect(labelFits(150, 120)).toBe(false);
   });
 });

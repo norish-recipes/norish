@@ -18,7 +18,7 @@ export function TimerCapsule({ divided }: { divided: boolean }) {
       <Pressable
         accessibilityLabel={label}
         accessibilityRole="button"
-        className="h-11 min-w-11 flex-row items-center gap-1.5 pr-4 pl-3"
+        className="h-11 min-w-11 flex-row items-center gap-1.5 pr-3 pl-2.5"
         testID="timer-capsule"
         onPress={() => router.push("/timers")}
       >
