@@ -1,5 +1,13 @@
 // What the flows ask of the throwaway server over the control port: clean slate, a recipe, a count.
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+// The recipe form's own line parser, through the web workspace's tsx.
+const fromWeb = createRequire(path.join(import.meta.dirname, "../../web/package.json"));
+
+(await import(fromWeb.resolve("tsx/esm/api"))).register();
+const { parseIngredientWithDefaults } = await import("@norish/shared/lib/helpers");
 
 export const PAGE_NAME = "Maestro Lemon Cake";
 
@@ -88,13 +96,17 @@ export function seeder({ trpc, query }) {
         systemUsed: "metric",
         servings: 2,
         ...(minutes && { totalMinutes: minutes }),
-        recipeIngredients: ingredients.map((ingredientName, order) => ({
-          ingredientName,
-          ingredientId: null,
-          amount: null,
-          unit: null,
-          order,
-        })),
+        recipeIngredients: ingredients.map((text, order) => {
+          const [parsed] = parseIngredientWithDefaults(text);
+
+          return {
+            ingredientName: parsed?.description || text,
+            ingredientId: null,
+            amount: parsed?.quantity ? Number(parsed.quantity) : null,
+            unit: parsed?.unitOfMeasure || null,
+            order,
+          };
+        }),
         steps: steps.map((step, order) => ({ step, order, systemUsed: "metric" })),
         tags: tags.map((tag) => ({ name: tag })),
         cuisines: [],
