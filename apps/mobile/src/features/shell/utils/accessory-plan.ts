@@ -16,8 +16,8 @@ export type Action = {
   route: Href;
 };
 
-/** What the accessory holds: an action, and the timer capsule beside it while a timer exists. Add
- * recipe depends on the cookbook it is on, so it is `"addRecipe"`, drawn by a component of its own. */
+/** What the accessory holds: an action, and the timer capsule while a timer exists; `"addRecipe"`
+ * depends on the cookbook, so a component of its own draws it. */
 export type AccessoryPlan = { add: Action | "addRecipe"; capsule: boolean };
 
 // Recipes is every other path.

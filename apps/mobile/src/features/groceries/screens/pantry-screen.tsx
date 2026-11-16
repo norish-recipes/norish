@@ -13,7 +13,7 @@ import { ListSwitch } from "../components/list-switch";
 import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
 import { usePantryScreen } from "../hooks/use-pantry-screen";
 
-/** The Pantry: the foods the household keeps, narrowed and added to from one field. */
+/** The Pantry: the foods the household keeps, narrowed by its field, which only filters. */
 export function PantryScreen() {
   const intl = useIntl();
   const router = useRouter();
