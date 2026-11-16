@@ -1,7 +1,7 @@
 import type { CardActions } from "@/hooks/use-card-actions";
 import type { ReactNode } from "react";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { CardPhoto } from "@/components/card-photo";
@@ -28,6 +28,7 @@ import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
 import { Pill } from "./pill";
 import { SwipeActions } from "./swipe-actions";
+import { TagStrip, useTagStrip } from "./tag-strip";
 
 type Props = {
   recipe: RecipeDashboardDTO;
@@ -84,6 +85,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
     },
   });
   const { style, press } = usePressScale();
+  const strip = useTagStrip();
   const singleTap = useTapGesture({
     runOnJS: true,
     requireToFail: doubleTap,
@@ -93,7 +95,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
   });
 
   return (
-    <SwipeActions actions={swipe} variant={variant}>
+    <SwipeActions actions={swipe} stripGesture={strip.gesture} variant={variant}>
       <View
         accessible
         {...accessibilityProps}
@@ -115,6 +117,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
                 isFavorite={isFavorite}
                 photoGesture={doubleTap}
                 recipe={recipe}
+                strip={strip}
               />
             </Animated.View>
           </GestureDetector>
@@ -130,6 +133,8 @@ type CardProps = {
   isFavorite: boolean;
   /** The double tap the photo owns. */
   photoGesture: ReturnType<typeof useTapGesture>;
+  /** The grid card's sideways tag strip. */
+  strip: ReturnType<typeof useTagStrip>;
 };
 
 function DoubleTapPhoto({
@@ -201,7 +206,7 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
   );
 }
 
-function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
+function GridCard({ recipe, facts, isFavorite, photoGesture, strip }: CardProps) {
   const { description, tagNames, allergySet, timeLabel, servings } = facts;
 
   return (
@@ -210,13 +215,7 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
         <CardPhoto className="h-40 w-full" image={recipe.image} />
         {isFavorite ? <FavouriteMark size={32} /> : null}
         {/* Every tag, allergens first, in a row that scrolls sideways as web's does. */}
-        <ScrollView
-          horizontal
-          className="absolute inset-x-0 bottom-0"
-          contentContainerClassName="gap-1.5 p-2"
-          showsHorizontalScrollIndicator={false}
-          testID={`recipe-card-tags-${recipe.id}`}
-        >
+        <TagStrip strip={strip} testID={`recipe-card-tags-${recipe.id}`}>
           {tagNames.map((tag) => {
             const allergen = isAllergenTag(tag, allergySet);
 
@@ -231,7 +230,7 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
               </Pill>
             );
           })}
-        </ScrollView>
+        </TagStrip>
       </DoubleTapPhoto>
       <View className="min-h-0 flex-1 px-3 pt-2.5 pb-3">
         <Text className="text-foreground text-sm leading-[19px] font-semibold" numberOfLines={2}>
