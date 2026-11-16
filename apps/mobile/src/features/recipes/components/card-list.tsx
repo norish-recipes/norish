@@ -71,8 +71,8 @@ export function CardList<Row>({
           paddingBottom: tabListBottomInset(insets.bottom),
         }}
         contentInsetAdjustmentBehavior="never"
-        initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
         data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
+        initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
         itemLayoutAnimation={sprung(LinearTransition.springify())}
         keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
         maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}

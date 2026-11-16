@@ -6,8 +6,8 @@ import type {
   LibraryKind,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
-import { lensHoldsKind } from "@norish/shared/contracts";
 import type { LibraryListInput } from "@norish/shared/contracts/list-queries";
+import { lensHoldsKind } from "@norish/shared/contracts";
 
 import type { InfiniteCookbookData } from "./cookbook-types";
 
