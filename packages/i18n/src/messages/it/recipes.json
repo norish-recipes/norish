@@ -364,7 +364,9 @@
     "restartTimer": "Riavvia il timer",
     "notificationsOff": "Le notifiche di Norish sono disattivate, quindi i timer suonano solo con l’app aperta.",
     "decreaseTimer": "Togli {time}",
-    "increaseTimer": "Aggiungi {time}"
+    "increaseTimer": "Aggiungi {time}",
+    "timersLeft": "Timer, mancano {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# ora } other {# ore }}{minutes, plural, =0 {} one {# minuto } other {# minuti }}{seconds, plural, =0 {} one {# secondo } other {# secondi }}"
   },
   "enrichment": {
     "failed": "Arricchimento non riuscito",

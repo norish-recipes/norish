@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { GlassSurface } from "@/components/glass";
 import { TimerRing } from "@/components/timer-ring";
-import { sortTimers } from "@/lib/timer-order";
+import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
-import { timerAdjustStep, useTimerStore } from "@norish/shared-react/recipes/timers";
+import { sortTimers, timerAdjustStep, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { useTint } from "./tint";
@@ -97,6 +97,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
           onPress={() => {
             resetTimer(timer.id);
             startTimer(timer.id);
+            lightImpact();
           }}
         />
       ) : (
@@ -122,9 +123,15 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
               },
               { time: formatTimerMs(timer.remainingMs) }
             )}
-            onPress={() =>
-              timer.status === "running" ? pauseTimer(timer.id) : startTimer(timer.id)
-            }
+            onPress={() => {
+              if (timer.status === "running") {
+                pauseTimer(timer.id);
+
+                return;
+              }
+              startTimer(timer.id);
+              lightImpact();
+            }}
           />
         </>
       )}
@@ -158,9 +165,12 @@ export function TimerRows({ onEmpty }: { onEmpty: () => void }) {
   const timers = sortTimers(useTimerStore((state) => state.timers));
   const refused = useNotificationsRefused();
 
+  // An event, so a caller's new function each render doesn't re-run the effect and close twice.
+  const empty = useEffectEvent(onEmpty);
+
   useEffect(() => {
-    if (timers.length === 0) onEmpty();
-  }, [timers.length, onEmpty]);
+    if (timers.length === 0) empty();
+  }, [timers.length]);
 
   return (
     <>

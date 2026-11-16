@@ -364,7 +364,9 @@
     "restartTimer": "Käynnistä ajastin uudelleen",
     "notificationsOff": "Norishin ilmoitukset ovat pois päältä, joten ajastimet hälyttävät vain sovelluksen ollessa auki.",
     "decreaseTimer": "Vähennä {time}",
-    "increaseTimer": "Lisää {time}"
+    "increaseTimer": "Lisää {time}",
+    "timersLeft": "Ajastimet, {time} jäljellä",
+    "spokenTime": "{hours, plural, =0 {} one {# tunti } other {# tuntia }}{minutes, plural, =0 {} one {# minuutti } other {# minuuttia }}{seconds, plural, =0 {} one {# sekunti } other {# sekuntia }}"
   },
   "enrichment": {
     "failed": "Rikastus epäonnistui",

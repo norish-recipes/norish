@@ -364,7 +364,9 @@
     "restartTimer": "타이머 다시 시작",
     "notificationsOff": "Norish 알림이 꺼져 있어 앱이 열려 있을 때만 타이머가 울립니다.",
     "decreaseTimer": "{time} 줄이기",
-    "increaseTimer": "{time} 늘리기"
+    "increaseTimer": "{time} 늘리기",
+    "timersLeft": "타이머, {time} 남음",
+    "spokenTime": "{hours, plural, =0 {} other {#시간 }}{minutes, plural, =0 {} other {#분 }}{seconds, plural, =0 {} other {#초 }}"
   },
   "enrichment": {
     "failed": "보강에 실패했습니다",

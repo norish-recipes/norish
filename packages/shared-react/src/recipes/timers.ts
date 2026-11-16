@@ -222,6 +222,32 @@ export function timerEndsAt(timer: Timer): number | null {
     : null;
 }
 
+const STATUS_RANK: Record<TimerStatus, number> = { completed: 0, running: 1, paused: 2 };
+
+/** Done timers first, to be dealt with, then the soonest running, then the soonest paused. */
+export function sortTimers(timers: readonly Timer[]): Timer[] {
+  return [...timers].sort((a, b) => {
+    if (a.status !== b.status) return STATUS_RANK[a.status] - STATUS_RANK[b.status];
+
+    // A running timer's wall-clock end beats its remaining time, which is stale between ticks.
+    const aEnds = timerEndsAt(a);
+    const bEnds = timerEndsAt(b);
+
+    return aEnds !== null && bEnds !== null ? aEnds - bEnds : a.remainingMs - b.remainingMs;
+  });
+}
+
+/** What one glance at the timers shows: the soonest not yet done (maybe paused), and whether any is done. */
+export function timerGlance(timers: readonly Timer[]) {
+  const sorted = sortTimers(timers);
+
+  return {
+    any: sorted.length > 0,
+    soonest: sorted.find((timer) => timer.status !== "completed"),
+    anyDone: sorted.some((timer) => timer.status === "completed"),
+  };
+}
+
 /** The timers still counting down at `now`, with their ends, in store order. */
 export function runningTimers(
   timers: readonly Timer[],

@@ -364,7 +364,9 @@
     "restartTimer": "Перезапустити таймер",
     "notificationsOff": "Сповіщення Norish вимкнено, тож таймери дзвонять, лише поки застосунок відкритий.",
     "decreaseTimer": "Зменшити на {time}",
-    "increaseTimer": "Додати {time}"
+    "increaseTimer": "Додати {time}",
+    "timersLeft": "Таймери, залишилося {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# година } few {# години } many {# годин } other {# години }}{minutes, plural, =0 {} one {# хвилина } few {# хвилини } many {# хвилин } other {# хвилини }}{seconds, plural, =0 {} one {# секунда } few {# секунди } many {# секунд } other {# секунди }}"
   },
   "enrichment": {
     "failed": "Не вдалося доповнити рецепт",

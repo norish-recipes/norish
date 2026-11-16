@@ -364,7 +364,9 @@
     "restartTimer": "Uruchom minutnik ponownie",
     "notificationsOff": "Powiadomienia Norish są wyłączone, więc minutniki dzwonią tylko przy otwartej aplikacji.",
     "decreaseTimer": "Odejmij {time}",
-    "increaseTimer": "Dodaj {time}"
+    "increaseTimer": "Dodaj {time}",
+    "timersLeft": "Minutniki, zostało {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# godzina } few {# godziny } many {# godzin } other {# godziny }}{minutes, plural, =0 {} one {# minuta } few {# minuty } many {# minut } other {# minuty }}{seconds, plural, =0 {} one {# sekunda } few {# sekundy } many {# sekund } other {# sekundy }}"
   },
   "enrichment": {
     "failed": "Wzbogacanie nie powiodło się",

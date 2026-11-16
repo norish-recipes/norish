@@ -1,5 +1,5 @@
 import type { Timer } from "@norish/shared-react/recipes/timers";
-import { runningTimers, timerEndsAt } from "@norish/shared-react/recipes/timers";
+import { runningTimers, sortTimers, timerEndsAt } from "@norish/shared-react/recipes/timers";
 
 import { routeUrl } from "./route-url";
 import { TAB_ROUTES } from "./tab-routes";
@@ -66,11 +66,10 @@ export function timerActivityPlan(
   now: number,
   strings: TimerStrings
 ): TimerActivityPlan {
-  // A stable sort, so timers ending together keep their store order.
-  const running = runningTimers(timers, now).sort((a, b) => a.endsAt - b.endsAt);
-  const paused = timers
-    .filter((timer) => timer.status === "paused")
-    .sort((a, b) => a.remainingMs - b.remainingMs);
+  // The shared order is stable, so timers ending together keep their store order.
+  const sorted = sortTimers(timers);
+  const running = runningTimers(sorted, now);
+  const paused = sorted.filter((timer) => timer.status === "paused");
   const rows: TimerActivityRow[] = [
     ...running.map(({ timer, endsAt }) => ({
       ...activityRow(timer),

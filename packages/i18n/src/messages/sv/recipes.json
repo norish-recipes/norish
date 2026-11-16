@@ -364,7 +364,9 @@
     "restartTimer": "Starta om timern",
     "notificationsOff": "Notiser är avstängda för Norish, så timrar ringer bara medan appen är öppen.",
     "decreaseTimer": "Dra av {time}",
-    "increaseTimer": "Lägg till {time}"
+    "increaseTimer": "Lägg till {time}",
+    "timersLeft": "Timrar, {time} kvar",
+    "spokenTime": "{hours, plural, =0 {} one {# timme } other {# timmar }}{minutes, plural, =0 {} one {# minut } other {# minuter }}{seconds, plural, =0 {} one {# sekund } other {# sekunder }}"
   },
   "enrichment": {
     "failed": "Kompletteringen misslyckades",

@@ -364,7 +364,9 @@
     "restartTimer": "Start tidtakeren på nytt",
     "notificationsOff": "Varsler er slått av for Norish, så tidtakere ringer bare mens appen er åpen.",
     "decreaseTimer": "Trekk fra {time}",
-    "increaseTimer": "Legg til {time}"
+    "increaseTimer": "Legg til {time}",
+    "timersLeft": "Tidtakere, {time} igjen",
+    "spokenTime": "{hours, plural, =0 {} one {# time } other {# timer }}{minutes, plural, =0 {} one {# minutt } other {# minutter }}{seconds, plural, =0 {} one {# sekund } other {# sekunder }}"
   },
   "enrichment": {
     "failed": "Berikelse mislyktes",

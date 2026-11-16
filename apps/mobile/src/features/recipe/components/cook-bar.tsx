@@ -1,15 +1,14 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GlassSurface } from "@/components/glass";
-import { TimerGlance } from "@/components/timer-glance";
-import { timerGlance } from "@/lib/timer-order";
+import { TimerGlance, useTimersLabel } from "@/components/timer-glance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useRecipePageStore } from "@norish/shared-react/recipes";
-import { useTimerStore } from "@norish/shared-react/recipes/timers";
+import { timerGlance, useTimerStore } from "@norish/shared-react/recipes/timers";
 
 import { useTint } from "./tint";
 
@@ -61,11 +60,14 @@ function BarButton({
 /** The clock in the bar; with timers it shows the soonest one's ring and time, and a dot for any done. */
 function TimersButton({ onPress }: { onPress: () => void }) {
   const tint = useTint();
-  const { any, soonest, anyDone } = timerGlance(useTimerStore((state) => state.timers));
+  const timers = useTimerStore((state) => state.timers);
   const [foreground] = useThemeColor(["foreground"] as const);
-  const label = useIntl().formatMessage({ id: "recipes.cookMode.timers" });
+  const intl = useIntl();
+  const timersLabel = useTimersLabel(timers);
 
-  if (!any) {
+  if (!timerGlance(timers).any) {
+    const label = intl.formatMessage({ id: "recipes.cookMode.timers" });
+
     return (
       <BarButton disabled label={label} testID="cook-timers" onPress={onPress}>
         <Ionicons color={foreground} name="timer-outline" size={21} />
@@ -75,17 +77,14 @@ function TimersButton({ onPress }: { onPress: () => void }) {
 
   return (
     <Pressable
-      accessibilityLabel={label}
+      accessibilityLabel={timersLabel}
       accessibilityRole="button"
       className="bg-default mx-0.5 h-10 flex-row items-center gap-1.5 rounded-full pr-3 pl-[9px]"
       style={tint ? { backgroundColor: tint.soft } : undefined}
       testID="cook-timers"
       onPress={onPress}
     >
-      <TimerGlance soonest={soonest} />
-      {anyDone && soonest ? (
-        <View className="bg-accent absolute top-0.5 right-0.5 size-[9px] rounded-full" />
-      ) : null}
+      <TimerGlance timers={timers} />
     </Pressable>
   );
 }

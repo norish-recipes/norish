@@ -364,7 +364,9 @@
     "restartTimer": "Перезапустить таймер",
     "notificationsOff": "Уведомления Norish выключены, поэтому таймеры звонят, только пока приложение открыто.",
     "decreaseTimer": "Убавить {time}",
-    "increaseTimer": "Добавить {time}"
+    "increaseTimer": "Добавить {time}",
+    "timersLeft": "Таймеры, осталось {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# час } few {# часа } many {# часов } other {# часа }}{minutes, plural, =0 {} one {# минута } few {# минуты } many {# минут } other {# минуты }}{seconds, plural, =0 {} one {# секунда } few {# секунды } many {# секунд } other {# секунды }}"
   },
   "enrichment": {
     "failed": "Не удалось выполнить обогащение",

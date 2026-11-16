@@ -364,7 +364,9 @@
     "restartTimer": "Relancer le minuteur",
     "notificationsOff": "Les notifications sont désactivées pour Norish : les minuteurs ne sonnent que lorsque l’app est ouverte.",
     "decreaseTimer": "Retirer {time}",
-    "increaseTimer": "Ajouter {time}"
+    "increaseTimer": "Ajouter {time}",
+    "timersLeft": "Minuteurs, {time} restantes",
+    "spokenTime": "{hours, plural, =0 {} one {# heure } other {# heures }}{minutes, plural, =0 {} one {# minute } other {# minutes }}{seconds, plural, =0 {} one {# seconde } other {# secondes }}"
   },
   "enrichment": {
     "failed": "L'enrichissement a échoué",
