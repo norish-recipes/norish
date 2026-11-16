@@ -13,6 +13,8 @@
 
 ## Comments
 
-- 2026-11-16: One `drag` shared value (in steps) drives three fixed-height slots (`utils/cook-pager.ts`, unit-tested); any step change, a release's own included, restarts from the old pose and springs to rest, so buttons, peek taps and notification taps share the spring and a new touch cancels it. Light haptic fires on each step change.
-- Decided: peeks are fixed 96 pt slots with text only (no chips), the current step fills the middle and centres its content; under Reduce Motion the pan is off, a vertical fling pages and the Steps/Ingredients swap crossfades (otherwise it fade-slides).
-- Not seen: no simulator run. Hand-check on a device: drag follows the finger and a flick snaps with its velocity; a drag started on the step text isn't stolen by its ScrollView (long steps scroll, drag from a peek then); first/last step; haptic per step; Reduce Motion on.
+- 2026-11-16: One `position` shared value (the step shown, fractional mid-page) poses a slot per step, keyed by step, ±2 mounted (`slotPose` in `utils/cook-pager.ts`, unit-tested). A slot fades its full step into its peek (text + chips) on the way out, so a commit moves nothing; a jump of several steps springs as one page (`springStart`).
+- A release decides its step at once (haptic in the screen's `goTo`, once per change); a touch mid-flight lands on a step on finalize. The step's ScrollView runs simultaneously with the pan (`useNativeGesture`); the pan pages from a peek at once, from the text only at its scroll edge; `bounces={false}`.
+- Reduce Motion: no pan, the column is keyed by step and crossfades (`ReduceMotion.Never`); vertical flings page under Reduce Motion and from Ingredients.
+- Seen on an iOS 27.2 iPhone 17 Release build (own :3400 stack): drag follows the finger both ways, flicks carry, no jump at commit, first/last step hold, a long step scrolls then pages, buttons and both peeks page (peeks use gesture handler's Pressable; RN's missed the posed bottom peek), Steps ↔ Ingredients and Reduce Motion crossfade.
+- Not seen working: a vertical fling over Ingredients; its ScrollView (unchanged since before the ticket) takes the swipe. A tap truly mid-flight wasn't reproducible with agent-device. Mid-page, a step's full and peek layers briefly overlap as a faint double.
