@@ -80,7 +80,7 @@ function ReferenceBar({
           width: `${Math.min(percent, 100)}%`,
           height,
           borderRadius: height / 2,
-          backgroundColor: color,
+          ...(color ? { backgroundColor: color } : null),
         }}
       />
     </View>
