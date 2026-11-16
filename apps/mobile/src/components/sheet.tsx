@@ -29,7 +29,7 @@ type BodyLayout = {
 /** The body's side inset in points, the `px-4` below: for a layout that sizes itself to the sheet. */
 export const SHEET_INSET = 16;
 
-/** Where the native title starts, which the subtitle (`px-6`) and a `SheetRow` line up with. */
+/** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
 const TITLE_INSET = 24;
 
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
@@ -198,7 +198,11 @@ export function Sheet({
     >
       <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
       {subtitle ? (
-        <Text className="text-muted px-6 pb-3 text-sm leading-[17px]" numberOfLines={1}>
+        <Text
+          className="text-muted pb-3 text-sm leading-[17px]"
+          numberOfLines={1}
+          style={{ paddingHorizontal: TITLE_INSET }}
+        >
           {subtitle}
         </Text>
       ) : null}
