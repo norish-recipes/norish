@@ -99,7 +99,7 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
 
 const { RecipeEditorScreen } = await import("@/features/recipe/screens/recipe-editor-screen");
 
-const save = () => fireEvent.click(screen.getByTestId("recipe-editor-confirm"));
+const save = () => fireEvent.click(screen.getByTestId("header-confirm"));
 
 const stored = { id: "recipe-1", version: 4 } as FullRecipeDTO;
 

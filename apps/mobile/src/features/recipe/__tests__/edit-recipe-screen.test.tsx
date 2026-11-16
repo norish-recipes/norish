@@ -49,14 +49,25 @@ vi.mock("@norish/shared-react/recipes", () => ({
   useRecipeQuery: () => ({ recipe: state.recipe, error: state.error }),
 }));
 vi.mock("../screens/recipe-editor-screen", async () => {
-  const { EditorHeader } = await import("../components/editor/editor-header");
+  const { EditorFrame } = await import("../components/editor/editor-frame");
+  const { RecipeNotFound } = await import("../components/recipe-not-found");
 
+  // The states the real screen shows, in its one frame.
   return {
-    RecipeEditorScreen: () => <div data-testid="recipe-editor" />,
-    RecipeEditorSkeleton: () => (
-      <div data-testid="recipe-editor-skeleton">
-        <EditorHeader mode="edit" />
-      </div>
+    RecipeEditorScreen: ({
+      initialData,
+      notFound,
+    }: {
+      initialData?: unknown;
+      notFound?: boolean;
+    }) => (
+      <EditorFrame mode="edit">
+        {notFound ? (
+          <RecipeNotFound />
+        ) : (
+          <div data-testid={initialData ? "recipe-editor" : "recipe-editor-skeleton"} />
+        )}
+      </EditorFrame>
     ),
   };
 });
@@ -79,7 +90,7 @@ describe("EditRecipeScreen", () => {
     render(<EditRecipeScreen />);
 
     expect(screen.getByTestId("recipe-editor-skeleton")).toBeTruthy();
-    fireEvent.click(screen.getByTestId("recipe-editor-close"));
+    fireEvent.click(screen.getByTestId("header-close"));
     expect(state.back).toHaveBeenCalledOnce();
   });
 
@@ -92,7 +103,7 @@ describe("EditRecipeScreen", () => {
     view.rerender(<EditRecipeScreen />);
 
     expect(screen.getByTestId("recipe-not-found")).toBeTruthy();
-    fireEvent.click(screen.getByTestId("recipe-editor-close"));
+    fireEvent.click(screen.getByTestId("header-close"));
     expect(state.back).toHaveBeenCalledOnce();
   });
 

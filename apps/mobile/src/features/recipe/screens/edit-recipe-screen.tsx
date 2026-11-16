@@ -5,9 +5,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
 
-import { EditorHeader } from "../components/editor/editor-header";
-import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
-import { RecipeEditorScreen, RecipeEditorSkeleton } from "./recipe-editor-screen";
+import { isRecipeNotFound } from "../components/recipe-not-found";
+import { RecipeEditorScreen } from "./recipe-editor-screen";
 
 /** Edit: the editor on the recipe from the Warm Set or the server, for a reader who may edit it;
  * a skeleton until then, and the not-found state once it is deleted while open. */
@@ -26,16 +25,15 @@ export function EditRecipeScreen() {
     if (refused) router.dismissTo(recipeRoute(id));
   }, [refused, router, id]);
 
-  if (recipe && !checking && !refused) {
-    return <RecipeEditorScreen key={recipe.id} initialData={recipe} mode="edit" />;
-  }
+  const ready = recipe && !checking && !refused ? recipe : undefined;
 
-  return !recipe && (loaded || isRecipeNotFound(error)) ? (
-    <>
-      <EditorHeader mode="edit" />
-      <RecipeNotFound />
-    </>
-  ) : (
-    <RecipeEditorSkeleton mode="edit" />
+  // Keyed by what it holds, so the recipe arriving opens the editor on it.
+  return (
+    <RecipeEditorScreen
+      key={ready?.id ?? "pending"}
+      initialData={ready}
+      mode="edit"
+      notFound={!recipe && (loaded || isRecipeNotFound(error))}
+    />
   );
 }

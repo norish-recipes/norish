@@ -270,6 +270,8 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
           <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
         ))}
         <Stack.Screen name="import-text" options={SHEET_OPTIONS} />
+        {/* The editor's country and cuisine lists present over it, from the new recipe or the edit. */}
+        <Stack.Screen name="editor-choice" options={SHEET_OPTIONS} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />

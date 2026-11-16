@@ -11,7 +11,7 @@ import { usePreventRemove } from "expo-router/react-navigation";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { LineMoves } from "@norish/shared-react/recipes";
+import type { LineMoves, RecipeEditorMode } from "@norish/shared-react/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
@@ -27,45 +27,56 @@ import {
   ServingsAndTimeCard,
   TagsAndCategoriesCard,
 } from "../components/editor/detail-cards";
-import { EditorHeader } from "../components/editor/editor-header";
+import { EditorFrame } from "../components/editor/editor-frame";
 import { EditorField, EditorInput, TitleWithHint } from "../components/editor/editor-parts";
 import { IngredientRows } from "../components/editor/ingredient-rows";
 import { MediaStrip } from "../components/editor/media-strip";
 import { ProvenanceCard, SourceCard } from "../components/editor/provenance-cards";
 import { StepRows } from "../components/editor/step-rows";
+import { RecipeNotFound } from "../components/recipe-not-found";
 import { SectionCard } from "../components/tint";
 import { useEditorUploads } from "../hooks/use-editor-uploads";
 
 /** Below the last field and above the keyboard, kept clear when a field is brought into view. */
 const FIELD_CLEARANCE = 12;
+/** Between the native header and the first card. */
+const CONTENT_TOP_CLEARANCE = 8;
+/** Below the last card, past the home indicator. */
+const CONTENT_BOTTOM_CLEARANCE = 48;
 
-type EditorProps = { mode: "create" | "edit"; initialData?: FullRecipeDTO };
-
-/** The skeleton an edit shows while its recipe is read, under the editor's header. */
-export function RecipeEditorSkeleton({ mode }: { mode: EditorProps["mode"] }) {
-  return (
-    <View className="bg-background flex-1 gap-4 px-5 pt-4" testID="recipe-editor-skeleton">
-      <EditorHeader mode={mode} />
-      <Skeleton className="h-[104px] w-[104px] rounded-[20px]" />
-      <Skeleton className="h-36 w-full rounded-3xl" />
-      <Skeleton className="h-64 w-full rounded-3xl" />
-    </View>
-  );
-}
+type EditorProps = { mode: RecipeEditorMode; initialData?: FullRecipeDTO };
 
 /** The recipe editor, for Write it yourself and Edit: cards in the page's order, Save or Create in
- * the native header. Leaving with changes asks first, from the close item and the back swipe alike. */
-export function RecipeEditorScreen({ mode, initialData }: EditorProps) {
+ * the native header. Without a recipe to edit it is a skeleton, or `notFound` once the recipe is gone. */
+export function RecipeEditorScreen({
+  mode,
+  initialData,
+  notFound = false,
+}: EditorProps & { notFound?: boolean }) {
   // The recipe as it opened: a save carries its version, so an edit made meanwhile elsewhere
   // conflicts rather than being overwritten.
   const [opened] = useState(initialData);
   const { recipeId } = useRecipeId(mode, opened?.id);
 
+  if (notFound) {
+    return (
+      <EditorFrame mode={mode}>
+        <RecipeNotFound />
+      </EditorFrame>
+    );
+  }
+
   // The id is minted on the first client render; the editor needs it for photo uploads.
   return recipeId ? (
     <Editor initialData={opened} mode={mode} recipeId={recipeId} />
   ) : (
-    <RecipeEditorSkeleton mode={mode} />
+    <EditorFrame mode={mode} testID="recipe-editor-skeleton">
+      <View className="gap-4 px-5 pt-4">
+        <Skeleton className="h-[104px] w-[104px] rounded-[20px]" />
+        <Skeleton className="h-36 w-full rounded-3xl" />
+        <Skeleton className="h-64 w-full rounded-3xl" />
+      </View>
+    </EditorFrame>
   );
 }
 
@@ -135,12 +146,14 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   };
 
   return (
-    <View className="bg-background flex-1" testID="recipe-editor">
-      <EditorHeader mode={mode} saving={busy} onSave={save} />
+    <EditorFrame mode={mode} saving={busy} testID="recipe-editor" onSave={save}>
       <DragScrollView
         ref={scrollRef}
         automaticallyAdjustKeyboardInsets
-        contentContainerStyle={{ paddingTop: 8, paddingBottom: 48 }}
+        contentContainerStyle={{
+          paddingTop: CONTENT_TOP_CLEARANCE,
+          paddingBottom: CONTENT_BOTTOM_CLEARANCE,
+        }}
         contentInsetAdjustmentBehavior="never"
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
@@ -266,6 +279,6 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
           </View>
         </FocusedFieldContext>
       </DragScrollView>
-    </View>
+    </EditorFrame>
   );
 }

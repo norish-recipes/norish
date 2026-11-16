@@ -275,7 +275,7 @@ type Payload = {
 
 const input = (id: string) => screen.getByTestId(id) as HTMLTextAreaElement;
 const type = (id: string, text: string) => fireEvent.change(input(id), { target: { value: text } });
-const save = () => fireEvent.click(screen.getByTestId("recipe-editor-confirm"));
+const save = () => fireEvent.click(screen.getByTestId("header-confirm"));
 const saved = () => state.update.mock.calls.at(-1)?.[1] as Payload;
 /** Which line, by id, each step's references point at in the payload. */
 const refIds = (payload: Payload) =>
@@ -397,7 +397,7 @@ describe("RecipeEditorScreen with its real rows", () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />);
     save();
 
-    expect(screen.getByTestId("recipe-editor-confirm")).toHaveProperty("disabled", true);
+    expect(screen.getByTestId("header-confirm")).toHaveProperty("disabled", true);
     expect(state.update).not.toHaveBeenCalled();
   });
 
