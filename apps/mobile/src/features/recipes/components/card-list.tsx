@@ -19,6 +19,11 @@ export type FadeHeight = number | { rest: number; scrolled: number };
 /** How many cards a grid cell holds: they wrap two to a line inside it and reorder there, so a card
  * leaving moves the others in its cell; only a card crossing into the next cell is drawn anew. */
 const GRID_CELL = 8;
+// A cell is 8 cards where a list row is one, so the grid mounts about the 20 cards a pair-row
+// list did: two cells at first, one more with each batch.
+const GRID_INITIAL_CELLS = 2;
+const GRID_BATCH_CELLS = 1;
+const LIST_BATCH = 10;
 
 /** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
  * `empty` shows when there is no card. It is one list in both views, so its header keeps its state,
@@ -68,9 +73,11 @@ export function CardList<Row>({
           paddingBottom: tabListBottomInset(insets.bottom),
         }}
         contentInsetAdjustmentBehavior="never"
+        initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
         data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
         itemLayoutAnimation={sprung(LinearTransition.springify())}
         keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
+        maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}
         renderItem={({ item: chunk }) =>
           isGrid ? (
             <View className="flex-row flex-wrap px-3.5">
