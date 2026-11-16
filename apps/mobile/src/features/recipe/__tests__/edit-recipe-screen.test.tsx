@@ -28,6 +28,7 @@ vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 vi.mock("@/components/modal-header", () => import("../../../../__tests__/mocks/modal-header"));
+vi.mock("@/lib/tab-bar-visibility", () => ({ useHideTabBar: () => {} }));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "recipe-1" }),
   useRouter: () => ({ back: state.back, dismissTo: state.dismissTo }),

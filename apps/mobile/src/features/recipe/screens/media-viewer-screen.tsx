@@ -1,4 +1,5 @@
 import React from "react";
+import { useHideTabBar } from "@/lib/tab-bar-visibility";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -26,6 +27,8 @@ export function MediaViewerScreen() {
           (s) => s.stepNumber === Number(cook)
         )?.images;
   const items = hero ? heroItems(recipe) : imageItems(photos ?? []);
+
+  useHideTabBar();
 
   if (items.length === 0) return null;
 

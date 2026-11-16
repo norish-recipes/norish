@@ -1,5 +1,5 @@
-# The recipe page's floating controls: Cook alone without a timer; with one, the timer pill opens the
-# timer list in place, and Cook lands in cook mode, whose own pill opens the same list.
+# The recipe page's accessory: Cook alone without a timer, the timer beside it once one runs, and
+# Cook landing in cook mode, whose own pill opens the timer list in place.
 appId: dev.norish.app
 ---
 - runFlow:
@@ -14,10 +14,10 @@ appId: dev.norish.app
     id: recipe-card-${output.stew}
 - extendedWaitUntil:
     visible:
-      id: recipe-cook
+      id: cook-recipe
     timeout: 20000
 - assertNotVisible:
-    id: recipe-timer-pill
+    id: timer-capsule
 - tapOn:
     id: timer-chip-0-0
 # The first timer asks for notification permission; the prompt is the system's, so it is tapped by its label.
@@ -26,10 +26,18 @@ appId: dev.norish.app
     optional: true
 - extendedWaitUntil:
     visible:
-      id: recipe-timer-pill
+      id: timer-capsule
+    timeout: 20000
+- assertVisible:
+    id: cook-recipe
+- tapOn:
+    id: cook-recipe
+- extendedWaitUntil:
+    visible:
+      id: cook-mode
     timeout: 20000
 - tapOn:
-    id: recipe-timer-pill
+    id: cook-timers
 - extendedWaitUntil:
     visible:
       id: timer-list
@@ -43,12 +51,6 @@ appId: dev.norish.app
 - extendedWaitUntil:
     notVisible:
       id: timer-list
-    timeout: 20000
-- tapOn:
-    id: recipe-cook
-- extendedWaitUntil:
-    visible:
-      id: cook-mode
     timeout: 20000
 - tapOn:
     id: cook-timers

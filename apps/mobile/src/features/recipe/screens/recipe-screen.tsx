@@ -1,5 +1,7 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { tabListBottomInset } from "@/components/tab-list-inset";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
@@ -19,7 +21,6 @@ import { NotesSection } from "../components/notes-section";
 import { NutritionSection } from "../components/nutrition-section";
 import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
-import { RecipeControls } from "../components/recipe-controls";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
@@ -51,6 +52,7 @@ function RecipePage() {
   const { toggleFavorite } = useFavoritesMutation();
   const [background] = useThemeColor(["background"] as const);
   const headerItems = useRecipeHeaderItems();
+  const { bottom } = useSafeAreaInsets();
   const tint = colorMode === "dish" ? dishTint(recipe.dishColor, scheme) : null;
 
   useAutoConversion();
@@ -77,7 +79,7 @@ function RecipePage() {
           recipe={recipe}
           onDoubleTap={showFavorites ? () => toggleFavorite(recipe.id) : undefined}
         />
-        <View className="-mt-12 gap-4 pb-32">
+        <View className="-mt-12 gap-4" style={{ paddingBottom: tabListBottomInset(bottom) }}>
           <RecipeHeader recipe={recipe} />
           <View className="gap-4 px-5">
             <NotesSection />
@@ -91,7 +93,6 @@ function RecipePage() {
           </View>
         </View>
       </ScrollView>
-      <RecipeControls recipeId={recipe.id} />
     </TintContext>
   );
 }

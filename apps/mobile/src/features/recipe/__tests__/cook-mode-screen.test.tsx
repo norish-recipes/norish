@@ -35,6 +35,7 @@ vi.mock("@/components/glass", () => ({
 }));
 vi.mock("@/hooks/use-resolved-color-scheme", () => ({}));
 vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
+vi.mock("@/lib/tab-bar-visibility", () => ({ useHideTabBar: () => {} }));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "missing" }),
   useRouter: () => ({ back }),

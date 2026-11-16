@@ -20,6 +20,7 @@ import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
+import { useHideTabBar } from "@/lib/tab-bar-visibility";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
@@ -233,6 +234,7 @@ export function CookModeScreen() {
   const { top } = useSafeAreaInsets();
 
   useNoHostBackSwipe();
+  useHideTabBar();
 
   if (recipe) return <CookMode />;
 

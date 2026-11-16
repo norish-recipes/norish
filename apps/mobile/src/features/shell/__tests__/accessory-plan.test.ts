@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { accessoryPlan, labelFits } from "../utils/accessory-plan";
+import { accessoryPlan, labelFits, recipePageId, shownPath } from "../utils/accessory-plan";
 
 describe("accessoryPlan", () => {
   it("holds the tab's add action alone while no timer exists", () => {
@@ -20,6 +20,36 @@ describe("accessoryPlan", () => {
     expect(accessoryPlan("/groceries/pantry", false)).toBeNull();
     expect(accessoryPlan("/groceries/food", false)).toBeNull();
     expect(accessoryPlan("/groceries/pantry", true)).toEqual({ add: null, capsule: true });
+  });
+
+  it("reads Cook on a recipe's page and its sheets", () => {
+    expect(accessoryPlan("/recipe/abc", false)).toEqual({ add: "cook", capsule: false });
+    expect(accessoryPlan("/recipe/abc/servings", true)).toEqual({ add: "cook", capsule: true });
+  });
+});
+
+describe("shownPath", () => {
+  it("labels a recipe once its page is shown with that recipe", () => {
+    expect(shownPath("/recipe/abc", "/", "abc")).toBe("/recipe/abc");
+    expect(shownPath("/recipe/abc/share", "/", "abc")).toBe("/recipe/abc/share");
+  });
+
+  it("keeps the screen below while the page is sliding in, loading or missing", () => {
+    expect(shownPath("/recipe/abc", "/cookbook/c1", null)).toBe("/cookbook/c1");
+    expect(shownPath("/recipe/abc", "/", "other")).toBe("/");
+  });
+
+  it("passes every other path through", () => {
+    expect(shownPath("/groceries", "/", "abc")).toBe("/groceries");
+  });
+});
+
+describe("recipePageId", () => {
+  it("names the recipe a path belongs to", () => {
+    expect(recipePageId("/recipe/abc")).toBe("abc");
+    expect(recipePageId("/recipe/abc/cook")).toBe("abc");
+    expect(recipePageId("/recipes")).toBeUndefined();
+    expect(recipePageId("/")).toBeUndefined();
   });
 });
 

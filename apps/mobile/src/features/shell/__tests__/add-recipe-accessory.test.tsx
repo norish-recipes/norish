@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
-const state = vi.hoisted(() => ({ pathname: "/cookbook/c1", canEdit: true }));
+const state = vi.hoisted(() => ({ canEdit: true }));
 
 // Layout reports the room and the label's width from `layout`, as UIKit would after a pass.
 const layout = vi.hoisted(() => ({ room: 300, label: 100 }));
@@ -44,7 +44,7 @@ vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#00
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("expo-router", () => ({ usePathname: () => state.pathname, useRouter: () => router }));
+vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("@norish/shared-react/recipes", () => ({
   useCookbookQuery: (id: string) => ({ cookbook: id ? { id, userId: "owner" } : undefined }),
 }));
@@ -63,12 +63,11 @@ describe("the Add recipe accessory", () => {
   beforeEach(() => {
     router.push.mockClear();
     layout.room = 300;
-    state.pathname = "/cookbook/c1";
   });
 
   it("offers a cookbook's picker to a reader who may edit it", () => {
     state.canEdit = true;
-    render(<AddRecipeAccessory inline={false} />);
+    render(<AddRecipeAccessory inline={false} path="/cookbook/c1" />);
     fireEvent.click(screen.getByRole("button", { name: "recipes.cookbooks.addRecipes" }));
 
     expect(router.push).toHaveBeenCalledWith({
@@ -79,7 +78,7 @@ describe("the Add recipe accessory", () => {
 
   it("opens Add recipe on a cookbook the reader may not edit", () => {
     state.canEdit = false;
-    render(<AddRecipeAccessory inline={false} />);
+    render(<AddRecipeAccessory inline={false} path="/cookbook/c1" />);
     fireEvent.click(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }));
 
     expect(router.push).toHaveBeenCalledWith("/add-recipe");
@@ -87,8 +86,7 @@ describe("the Add recipe accessory", () => {
 
   it("keeps its label inline where it fits", () => {
     state.canEdit = false;
-    state.pathname = "/";
-    render(<AddRecipeAccessory inline />);
+    render(<AddRecipeAccessory inline path="/" />);
 
     expect(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }).textContent).toBe(
       "recipes.dashboard.addRecipe"
@@ -98,8 +96,7 @@ describe("the Add recipe accessory", () => {
   it("keeps its name for VoiceOver but draws only the icon inline when the label does not fit", () => {
     state.canEdit = false;
     layout.room = 120;
-    state.pathname = "/";
-    render(<AddRecipeAccessory inline />);
+    render(<AddRecipeAccessory inline path="/" />);
 
     expect(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }).textContent).toBe(
       ""

@@ -45,7 +45,7 @@ function useCounted(store: ReturnType<typeof counterStore>, active: boolean) {
   }, [store, active]);
 }
 
-/** Hides the tab bar while the calling screen is mounted and in front: the recipe page, which has its own chrome. */
+/** Hides the tab bar while the calling screen is mounted and in front: cook mode, the editor and the media viewer, which have their own chrome. */
 export function useHideTabBar() {
   useCounted(hiders, useIsFocused());
 }

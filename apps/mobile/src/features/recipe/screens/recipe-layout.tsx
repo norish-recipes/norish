@@ -1,6 +1,6 @@
 import React from "react";
 import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
-import { useHideTabBar } from "@/lib/tab-bar-visibility";
+import { useMarkRecipeShown } from "@/lib/shown-recipe";
 import { Stack, useLocalSearchParams } from "expo-router";
 
 import { useIngredientsSubscription } from "@norish/shared-react/config";
@@ -28,7 +28,7 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
 export function RecipeLayout() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  useHideTabBar();
+  useMarkRecipeShown(id);
 
   return (
     <RecipePageProvider recipeId={id}>

@@ -1,7 +1,7 @@
 import React from "react";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import { usePathname, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import { useCookbookQuery } from "@norish/shared-react/recipes";
@@ -11,10 +11,10 @@ import { AccessoryAction } from "./accessory-action";
 
 /** The bottom accessory: Add recipes opens the picker on a cookbook the Reader may edit; elsewhere
  * Add recipe opens the Add recipe sheet. */
-export function AddRecipeAccessory({ inline }: AccessoryProps) {
+export function AddRecipeAccessory({ inline, path }: AccessoryProps) {
   const intl = useIntl();
   const router = useRouter();
-  const pathId = /^\/cookbook\/([^/]+)$/.exec(usePathname())?.[1];
+  const pathId = /^\/cookbook\/([^/]+)$/.exec(path)?.[1];
   const { cookbook } = useCookbookQuery(pathId ?? "");
   const { canEdit } = useOwnerRights();
   const cookbookId = cookbook && canEdit(cookbook) ? cookbook.id : undefined;

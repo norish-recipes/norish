@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useHideTabBar } from "@/lib/tab-bar-visibility";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -24,6 +25,8 @@ export function EditRecipeScreen() {
   useEffect(() => {
     if (refused) router.dismissTo(recipeRoute(id));
   }, [refused, router, id]);
+
+  useHideTabBar();
 
   const ready = recipe && !checking && !refused ? recipe : undefined;
 

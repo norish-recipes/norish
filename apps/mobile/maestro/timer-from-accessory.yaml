@@ -1,5 +1,6 @@
-# Starts a Recipe Timer on the Recipe page and stops it from the timer capsule on another tab: the
-# capsule springs in beside the add action, opens the timer list, and goes when its last timer does.
+# Starts a Recipe Timer on the Recipe page and stops it from the accessory's timer on another tab: it
+# springs in beside Cook on the recipe and the add action elsewhere, opens the timer list, and goes
+# when its last timer does.
 appId: dev.norish.app
 ---
 - runFlow:
@@ -27,14 +28,20 @@ appId: dev.norish.app
 - tapOn:
     text: Allow
     optional: true
-# A native header item exposes no id; its accessibility name is "Back".
-- tapOn: Back
 - extendedWaitUntil:
     visible:
       id: timer-capsule
     timeout: 20000
 - assertVisible:
-    id: add-recipe
+    id: cook-recipe
+# A native header item exposes no id; its accessibility name is "Back".
+- tapOn: Back
+- extendedWaitUntil:
+    visible:
+      id: add-recipe
+    timeout: 20000
+- assertVisible:
+    id: timer-capsule
 # Another tab shows it too.
 - tapOn:
     id: tab-groceries
