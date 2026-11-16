@@ -11,6 +11,7 @@
       "bundleIdentifier": "dev.norish.app",
       "supportsTablet": false,
       "infoPlist": {
+        "UIViewControllerBasedStatusBarAppearance": false,
         "CFBundleLocalizations": [
           "en",
           "nl",
