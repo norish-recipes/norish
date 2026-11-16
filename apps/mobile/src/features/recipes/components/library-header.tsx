@@ -55,18 +55,21 @@ export function ViewToggle() {
   const thumbOpacity = useSharedValue(1);
   const shownIndexRef = useRef(index);
 
-  useEffect(() => {
-    if (shownIndexRef.current === index) return;
+  // The thumb leaves on the press, before the list redraws, and again for a change made elsewhere.
+  const moveThumb = (to: number) => {
+    if (shownIndexRef.current === to) return;
 
-    shownIndexRef.current = index;
+    shownIndexRef.current = to;
     if (reduceMotion) {
-      x.set(index * STEP);
+      x.set(to * STEP);
       thumbOpacity.set(0);
       thumbOpacity.set(settleTo(1, { reduceMotion: true }));
     } else {
-      x.set(settleTo(index * STEP, { reduceMotion: false }));
+      x.set(settleTo(to * STEP, { reduceMotion: false }));
     }
-  }, [index, reduceMotion, x, thumbOpacity]);
+  };
+
+  useEffect(() => moveThumb(index));
 
   const thumb = useAnimatedStyle(() => ({
     opacity: thumbOpacity.get(),
@@ -90,6 +93,7 @@ export function ViewToggle() {
           testID={`library-view-${mode}`}
           onPress={() => {
             if (view !== mode) lightImpact();
+            moveThumb(at);
             setView(mode);
           }}
         >
