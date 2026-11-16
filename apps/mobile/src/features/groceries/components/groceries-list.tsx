@@ -47,6 +47,7 @@ export type ListActions = {
  * section's card. Holding an open row lifts it; a done one stays put. */
 export function GroceriesList({
   rows,
+  loaded,
   header,
   empty,
   recipeNameFor,
@@ -57,6 +58,8 @@ export function GroceriesList({
   onDrop,
 }: {
   rows: ListRow[];
+  /** False while the list waits on its first read, so its first rows don't animate in. */
+  loaded: boolean;
   header: ReactElement;
   empty: ReactElement | null;
   recipeNameFor: (grocery: GroceryDto) => string | null;
@@ -71,7 +74,7 @@ export function GroceriesList({
 }) {
   const insets = useSafeAreaInsets();
   const recurrence = useRecurrenceLabel();
-  const fresh = useFreshRows(rows);
+  const fresh = useFreshRows(rows, loaded);
   const { exitingFor, leaveThen, doneRef, itemRef } = useLeaveToDone(rows);
   // What sits under a row's name: how it repeats, else the recipe it came from.
   const sublineOf = (

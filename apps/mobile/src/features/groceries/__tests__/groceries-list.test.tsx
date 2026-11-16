@@ -129,6 +129,7 @@ function Screen({ rows = rowsKeyed("milk") }: { rows?: ListRow[] }) {
     <GroceriesList
       actions={actions}
       empty={null}
+      loaded
       header={<></>}
       openGroups={openGroups}
       recipeNameFor={() => null}

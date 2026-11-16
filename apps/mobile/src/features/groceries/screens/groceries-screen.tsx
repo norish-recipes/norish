@@ -175,6 +175,7 @@ export function GroceriesScreen() {
             </View>
           </TitleRow>
         }
+        loaded={!loading}
         openGroups={openGroups}
         recipeNameFor={getRecipeNameForGrocery}
         recurringById={new Map(recurringGroceries.map((recurring) => [recurring.id, recurring]))}
