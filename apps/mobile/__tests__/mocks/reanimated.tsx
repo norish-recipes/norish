@@ -34,6 +34,8 @@ export const useAnimatedReaction = () => {};
 export const useAnimatedRef = () => ({ current: null });
 export const useScrollOffset = () => sharedValue(0);
 export const withSpring = (value: number) => value;
+export const withTiming = (value: number) => value;
+export const withDelay = (_delay: number, value: number) => value;
 export const cancelAnimation = () => {};
 export const useAnimatedScrollHandler = () => undefined;
 export const Easing = { bezierFn: () => (t: number) => t };

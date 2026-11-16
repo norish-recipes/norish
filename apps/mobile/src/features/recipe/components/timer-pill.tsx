@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, useWindowDimensions } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -102,7 +102,15 @@ export function TimerPill({
   const pillFade = useLayerFade(pillShown, PILL_RETURN_MS);
   const listFade = useLayerFade(drawn, CONTENT_DELAY_MS);
 
-  if (!timerGlance(timers).hasTimers) return null;
+  const hasTimers = timerGlance(timers).hasTimers;
+  const close = useEffectEvent(() => onOpenChange(false));
+
+  // The list goes with its last timer before its own empty check can run, so the pill closes it.
+  useEffect(() => {
+    if (open && !hasTimers) close();
+  }, [open, hasTimers]);
+
+  if (!hasTimers) return null;
 
   const inset = large ? left - listLeft : 0;
   const room = screenHeight - bottom - top;
