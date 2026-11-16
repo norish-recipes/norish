@@ -1,7 +1,9 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { GlassSurface } from "@/components/glass";
 import { useTimersName } from "@/components/timer-glance";
+import { useFadeTo } from "@/lib/motion/fade-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -10,6 +12,7 @@ import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useRecipePageStore } from "@norish/shared-react/recipes";
 import { timerGlance, useTimerStore } from "@norish/shared-react/recipes/timers";
 
+import { LIST_SHRUNK_MS } from "./timer-pill";
 import { useTint } from "./tint";
 
 export type CookView = "steps" | "ingredients";
@@ -58,6 +61,8 @@ function BarButton({
   );
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 const PILL_HEIGHT = 40;
 
 /** Where cook mode lays the timer pill over the bar: after the group's padding, Previous and the
@@ -93,6 +98,7 @@ export function CookBar({
   onStepChange,
   onViewChange,
   pillWidth,
+  nextHidden,
   onDone,
 }: {
   current: number;
@@ -103,6 +109,8 @@ export function CookBar({
   onViewChange: (view: CookView) => void;
   /** The timer pill's width, whose place the bar keeps. */
   pillWidth: number;
+  /** While the timer list covers it: its tint would glow through the list's glass. */
+  nextHidden: boolean;
   onDone: () => void;
 }) {
   const intl = useIntl();
@@ -115,6 +123,10 @@ export function CookBar({
     "accent-foreground",
   ] as const);
   const last = current >= total - 1;
+  const nextFade = useFadeTo(nextHidden ? 0 : 1, LIST_SHRUNK_MS);
+  const nextLabel = intl.formatMessage({
+    id: last ? "common.actions.done" : "recipes.cookMode.nextStep",
+  });
   const counter = intl.formatMessage(
     { id: "recipes.cookMode.stepCounter" },
     { current: current + 1, total }
@@ -189,10 +201,13 @@ export function CookBar({
             />
           </BarButton>
         </View>
-        <Pressable
+        <AnimatedPressable
+          accessibilityElementsHidden={nextHidden}
+          accessibilityLabel={nextLabel}
           accessibilityRole="button"
           className="flex-1 flex-row items-center justify-center gap-2 rounded-full"
-          style={{ height: BAR_HEIGHT }}
+          disabled={nextHidden}
+          style={[{ height: BAR_HEIGHT }, nextFade]}
           testID="cook-next"
           onPress={() => {
             if (last) {
@@ -205,13 +220,9 @@ export function CookBar({
           }}
         >
           <GlassSurface radius={BAR_HEIGHT / 2} tint={accent} />
-          <Text className="text-accent-foreground text-[17px] font-semibold">
-            {intl.formatMessage({
-              id: last ? "common.actions.done" : "recipes.cookMode.nextStep",
-            })}
-          </Text>
+          <Text className="text-accent-foreground text-[17px] font-semibold">{nextLabel}</Text>
           <Ionicons color={accentForeground} name={last ? "checkmark" : "chevron-down"} size={20} />
-        </Pressable>
+        </AnimatedPressable>
       </View>
     </View>
   );

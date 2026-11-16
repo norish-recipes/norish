@@ -186,6 +186,7 @@ function CookMode() {
         {timersOpen ? <TimerScrim onClose={() => setTimersOpen(false)} /> : null}
         <CookBar
           current={current}
+          nextHidden={timersOpen}
           pillWidth={pillWidth}
           readyAt={readyAt}
           total={steps.length}

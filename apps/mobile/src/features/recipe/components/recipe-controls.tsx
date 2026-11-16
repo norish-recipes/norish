@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { useWindowDimensions } from "react-native";
+import Animated from "react-native-reanimated";
+import { useFadeTo } from "@/lib/motion/fade-to";
 import { cookModeRoute } from "@/lib/tab-routes";
 import { Button, Host } from "@expo/ui/swift-ui";
 import {
@@ -14,7 +16,7 @@ import { useIntl } from "react-intl";
 
 import { BAR_BOTTOM, BAR_HEIGHT } from "./cook-bar";
 import { TimerScrim } from "./timer-list";
-import { TimerPill } from "./timer-pill";
+import { LIST_SHRUNK_MS, TimerPill } from "./timer-pill";
 
 const SIDE = 20;
 
@@ -26,11 +28,18 @@ export function RecipeControls({ recipeId }: { recipeId: string }) {
   const { width } = useWindowDimensions();
   const [accent] = useThemeColor(["accent"] as const);
   const [timersOpen, setTimersOpen] = useState(false);
+  // The open list covers Cook, whose tint would glow through the list's glass.
+  const cookFade = useFadeTo(timersOpen ? 0 : 1, LIST_SHRUNK_MS);
 
   return (
     <>
       {timersOpen ? <TimerScrim onClose={() => setTimersOpen(false)} /> : null}
-      <View className="absolute" style={{ bottom: BAR_BOTTOM, right: SIDE }}>
+      <Animated.View
+        accessibilityElementsHidden={timersOpen}
+        className="absolute"
+        pointerEvents={timersOpen ? "none" : "auto"}
+        style={[{ bottom: BAR_BOTTOM, right: SIDE }, cookFade]}
+      >
         <Host matchContents>
           <Button
             label={intl.formatMessage({ id: "recipes.detail.cook" })}
@@ -43,7 +52,7 @@ export function RecipeControls({ recipeId }: { recipeId: string }) {
             onPress={() => router.push(cookModeRoute(recipeId))}
           />
         </Host>
-      </View>
+      </Animated.View>
       <TimerPill
         bottom={BAR_BOTTOM}
         height={BAR_HEIGHT}
