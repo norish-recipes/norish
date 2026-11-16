@@ -1,7 +1,13 @@
 import React from "react";
 import { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { FadeIn, FadeOut, ReduceMotion, useReducedMotion } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LayoutAnimationConfig,
+  ReduceMotion,
+  useReducedMotion,
+} from "react-native-reanimated";
 
 import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
 
@@ -56,7 +62,7 @@ function StepColumn({
 }
 
 /** The current step large in the middle, its neighbours faded. Under Reduce Motion the column
- * holds and a step change crossfades a new one in. */
+ * holds and a step change crossfades; the view switch's own fade skips that one. */
 export function CookSteps({
   steps,
   current,
@@ -81,8 +87,15 @@ export function CookSteps({
   }
 
   return (
-    <Animated.View key={current} className="flex-1" entering={CROSSFADE_IN} exiting={CROSSFADE_OUT}>
-      <StepColumn reduceMotion current={current} steps={steps} onStepChange={onStepChange} />
-    </Animated.View>
+    <LayoutAnimationConfig skipEntering skipExiting>
+      <Animated.View
+        key={current}
+        className="flex-1"
+        entering={CROSSFADE_IN}
+        exiting={CROSSFADE_OUT}
+      >
+        <StepColumn reduceMotion current={current} steps={steps} onStepChange={onStepChange} />
+      </Animated.View>
+    </LayoutAnimationConfig>
   );
 }
