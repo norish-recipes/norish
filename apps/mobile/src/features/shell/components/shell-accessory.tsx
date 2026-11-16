@@ -30,7 +30,7 @@ export function ShellAccessory({ plan: { add, capsule } }: { plan: AccessoryPlan
       ) : null}
       {capsule ? (
         <Animated.View entering={sprung(ZoomIn.springify())} exiting={sprung(ZoomOut.springify())}>
-          <TimerCapsule />
+          <TimerCapsule divided={!!Add} />
         </Animated.View>
       ) : null}
     </Animated.View>
