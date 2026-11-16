@@ -2,6 +2,8 @@ import type { NativeStackNavigationProp } from "expo-router/native-stack";
 import { useLayoutEffect, useSyncExternalStore } from "react";
 import { useNavigation, useRoute } from "expo-router";
 
+// Module state, as the one tab bar and every recipe page live in separate trees; a page clears its
+// own mark when it unmounts, so a mark never outlives the page that set it.
 let shown: { key: string; id: string } | null = null;
 const listeners = new Set<() => void>();
 
