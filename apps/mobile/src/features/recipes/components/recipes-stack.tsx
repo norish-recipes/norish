@@ -1,5 +1,5 @@
 import React from "react";
-import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { Stack } from "expo-router";
 
@@ -7,15 +7,10 @@ import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
 // The sheets whose content can outgrow 62%; Rename fits its field.
-const SHEETS = [
-  "filters",
-  "plan-recipe",
-  "plan",
-  "add-to-groceries",
-  "add-to-cookbook",
-  "cookbook-add-recipes",
-  "new-cookbook",
-] as const;
+const SHEETS = ["filters", "plan", "add-to-groceries", "add-to-cookbook"] as const;
+
+// The sheets with a search field above a list of recipes.
+const SEARCH_SHEETS = ["plan-recipe", "cookbook-add-recipes", "new-cookbook"] as const;
 
 const FIT_SHEETS = ["cookbook-rename"] as const;
 
@@ -41,6 +36,9 @@ export function RecipesStack() {
           <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
           {SHEETS.map((name) => (
             <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
+          ))}
+          {SEARCH_SHEETS.map((name) => (
+            <Stack.Screen key={name} name={name} options={SEARCH_SHEET_OPTIONS} />
           ))}
           {FIT_SHEETS.map((name) => (
             <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />

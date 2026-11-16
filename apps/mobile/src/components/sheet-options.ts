@@ -26,9 +26,9 @@ export const SHEET_OPTIONS = {
   contentStyle: { backgroundColor: "transparent", bottom: 0 },
 } as const satisfies NativeStackNavigationOptions;
 
-/** A form sheet that keeps one height: it rises with the keyboard instead of expanding, and its
- *  body scrolls. */
-export const FORM_SHEET_OPTIONS = {
+/** A sheet with a search field and a list: one detent, because UIKit expands a sheet that has
+ *  more to the full height, drawn opaque, when the keyboard rises; this one rises with it. */
+export const SEARCH_SHEET_OPTIONS = {
   ...SHEET_OPTIONS,
   sheetGrabberVisible: false,
   sheetAllowedDetents: [0.5],

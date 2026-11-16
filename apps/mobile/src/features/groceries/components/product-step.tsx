@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Sheet, SheetScrollView } from "@/components/sheet";
+import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, TextField, useThemeColor } from "heroui-native";
@@ -123,7 +123,7 @@ export function ProductStep({
       title={text("groceries.picker.productLabel", { store: store.name })}
       onClose={onBack}
     >
-      <SheetScrollView contentClassName="gap-4">
+      <SheetBody contentClassName="gap-4">
         <View className="justify-center">
           <View className="absolute left-4 z-10" pointerEvents="none">
             <Ionicons color={muted} name="search" size={18} />
@@ -235,7 +235,7 @@ export function ProductStep({
             )}
           </Text>
         ) : null}
-      </SheetScrollView>
+      </SheetBody>
     </Sheet>
   );
 }

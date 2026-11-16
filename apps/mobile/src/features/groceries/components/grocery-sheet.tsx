@@ -1,7 +1,7 @@
 import type { HeaderConfirm } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
-import { Sheet, SheetScrollView } from "@/components/sheet";
+import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { Button } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -111,7 +111,7 @@ export function GrocerySheet({
   const steps: Record<Step, ReactNode> = {
     form: (
       <Sheet actions={actions} confirm={confirm} name={name} subtitle={subtitle} title={title}>
-        <SheetScrollView contentClassName="gap-3">
+        <SheetBody contentClassName="gap-3">
           {field}
           <RepeatPills
             confirmed={repeat}
@@ -147,7 +147,7 @@ export function GrocerySheet({
             />
             {trailingRows}
           </FormCard>
-        </SheetScrollView>
+        </SheetBody>
       </Sheet>
     ),
     repeat: (

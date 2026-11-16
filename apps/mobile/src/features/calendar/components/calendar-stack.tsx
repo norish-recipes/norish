@@ -1,5 +1,5 @@
 import React from "react";
-import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { Stack } from "expo-router";
 
 import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
@@ -15,7 +15,7 @@ export function CalendarStack() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="item" options={FIT_SHEET_OPTIONS} />
-        <Stack.Screen name="plan-recipe" options={SHEET_OPTIONS} />
+        <Stack.Screen name="plan-recipe" options={SEARCH_SHEET_OPTIONS} />
         <Stack.Screen name="add-to-groceries" options={SHEET_OPTIONS} />
       </Stack>
     </CalendarRangeProvider>
