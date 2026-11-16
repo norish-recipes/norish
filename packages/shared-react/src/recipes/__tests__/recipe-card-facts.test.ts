@@ -25,6 +25,18 @@ describe("recipeCardFacts", () => {
     expect(facts.allergySet.has("lactose")).toBe(true);
   });
 
+  it("keeps every tag, allergens first, when there are more than a card used to show", () => {
+    const tags = ["a", "b", "c", "d", "e"].map((name) => ({ name }));
+
+    expect(recipeCardFacts(recipe({ tags }), ["D", "e"]).tagNames).toEqual([
+      "d",
+      "e",
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
   it("sums prep and cook time when there is no total", () => {
     expect(recipeCardFacts(recipe(), []).timeLabel).toBe("30m");
     expect(recipeCardFacts(recipe({ totalMinutes: 75 }), []).timeLabel).toBe("1:15h");

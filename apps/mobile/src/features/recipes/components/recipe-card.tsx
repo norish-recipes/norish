@@ -1,7 +1,7 @@
 import type { CardActions } from "@/hooks/use-card-actions";
 import type { ReactNode } from "react";
 import React from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { CardPhoto } from "@/components/card-photo";
@@ -110,7 +110,12 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
         <CardMenu href={recipeRoute(recipe.id)} items={items}>
           <GestureDetector gesture={singleTap}>
             <Animated.View className={variant === "grid" ? "flex-1" : undefined} style={style}>
-              <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
+              <Card
+                facts={facts}
+                isFavorite={isFavorite}
+                photoGesture={doubleTap}
+                recipe={recipe}
+              />
             </Animated.View>
           </GestureDetector>
         </CardMenu>
@@ -204,8 +209,15 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
       <DoubleTapPhoto className="h-40" gesture={photoGesture}>
         <CardPhoto className="h-40 w-full" image={recipe.image} />
         {isFavorite ? <FavouriteMark size={32} /> : null}
-        <View className="absolute inset-x-0 bottom-0 flex-row gap-1.5 overflow-hidden p-2">
-          {tagNames.slice(0, 3).map((tag) => {
+        {/* Every tag, allergens first, in a row that scrolls sideways as web's does. */}
+        <ScrollView
+          horizontal
+          className="absolute inset-x-0 bottom-0"
+          contentContainerClassName="gap-1.5 p-2"
+          showsHorizontalScrollIndicator={false}
+          testID={`recipe-card-tags-${recipe.id}`}
+        >
+          {tagNames.map((tag) => {
             const allergen = isAllergenTag(tag, allergySet);
 
             return (
@@ -219,7 +231,7 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
               </Pill>
             );
           })}
-        </View>
+        </ScrollView>
       </DoubleTapPhoto>
       <View className="min-h-0 flex-1 px-3 pt-2.5 pb-3">
         <Text className="text-foreground text-sm leading-[19px] font-semibold" numberOfLines={2}>
