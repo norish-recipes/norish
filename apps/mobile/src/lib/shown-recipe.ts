@@ -1,12 +1,12 @@
 import type { NativeStackNavigationProp } from "expo-router/native-stack";
 import { useLayoutEffect, useSyncExternalStore } from "react";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRoute } from "expo-router";
 
-let shown: string | null = null;
+let shown: { key: string; id: string } | null = null;
 const listeners = new Set<() => void>();
 
-function show(id: string | null) {
-  shown = id;
+function show(next: { key: string; id: string } | null) {
+  shown = next;
   listeners.forEach((listener) => listener());
 }
 
@@ -18,26 +18,27 @@ export const useShownRecipe = () =>
 
       return () => void listeners.delete(listener);
     },
-    () => shown
+    () => shown?.id ?? null
   );
 
-/** Marks recipe `id` shown on its screen's `transitionStart`, which UIKit's viewWillAppear and
- * viewWillDisappear send as the native slide begins, later than the route changes. */
+/** Marks recipe `id` shown on its screen's `transitionStart` (UIKit's viewWill(Dis)appear, as the
+ * slide begins), keyed by the route: one recipe can be in the stack twice. */
 export function useMarkRecipeShown(id: string) {
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
+  const { key } = useRoute();
 
   useLayoutEffect(() => {
+    const clear = () => shown?.key === key && show(null);
     const stops = [
-      navigation.addListener("transitionStart", ({ data }) => {
-        if (!data.closing) show(id);
-        else if (shown === id) show(null);
-      }),
-      navigation.addListener("gestureCancel", () => show(id)),
+      navigation.addListener("transitionStart", ({ data }) =>
+        data.closing ? clear() : show({ key, id })
+      ),
+      navigation.addListener("gestureCancel", () => show({ key, id })),
     ];
 
     return () => {
       stops.forEach((stop) => stop());
-      if (shown === id) show(null);
+      clear();
     };
-  }, [navigation, id]);
+  }, [navigation, key, id]);
 }
