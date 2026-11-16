@@ -46,6 +46,10 @@ const ADD_COOKBOOK: Action = {
   route: TAB_ROUTES.recipes.newCookbook,
 };
 
+/** What the Recipes tab adds: a cookbook while the Library at its root shows the Cookbooks lens, else a recipe. */
+const recipesAdd = (path: string, lens: LibraryTypeFilter): Action | "addRecipe" =>
+  path === TAB_ROUTES.recipes.root && lens === "cookbooks" ? ADD_COOKBOOK : "addRecipe";
+
 const cookAction = (recipeId: string): Action => ({
   icon: "play-circle-outline",
   labelId: "recipes.detail.cook",
@@ -85,9 +89,7 @@ export function accessoryPlan(
       ? null
       : tab
         ? TAB_ACTIONS[tab]
-        : path === TAB_ROUTES.recipes.root && lens === "cookbooks"
-          ? ADD_COOKBOOK
-          : "addRecipe";
+        : recipesAdd(path, lens);
 
   return add || hasTimers ? { add, capsule: hasTimers } : null;
 }
