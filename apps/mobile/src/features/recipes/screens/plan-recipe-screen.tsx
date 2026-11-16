@@ -3,13 +3,14 @@ import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
 import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
+import { SheetSearchField } from "@/components/sheet-search-field";
 import { asSlot, SlotTabs } from "@/components/slot-tabs";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { Button, SearchField, Skeleton, Spinner, useThemeColor } from "heroui-native";
+import { Button, Skeleton, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useSlotPlanning } from "@norish/shared-react/calendar";
@@ -124,20 +125,12 @@ export function PlanRecipeScreen() {
 
       <SlotTabs testID="plan-recipe-slot" value={slot} onChange={setSlot} />
 
-      <SearchField value={input} onChange={setInput}>
-        <SearchField.Group>
-          <SearchField.SearchIcon />
-          <SearchField.Input
-            accessibilityLabel={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
-            autoCorrect={false}
-            className="bg-default h-12 rounded-3xl"
-            placeholder={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
-            returnKeyType="search"
-            testID="plan-recipe-search"
-          />
-          <SearchField.ClearButton />
-        </SearchField.Group>
-      </SearchField>
+      <SheetSearchField
+        label={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
+        testID="plan-recipe-search"
+        value={input}
+        onChange={setInput}
+      />
 
       <View className={`bg-default ${first}`}>
         {hasNote ? (

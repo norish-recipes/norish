@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Sheet, SheetList } from "@/components/sheet";
+import { SheetSearchField } from "@/components/sheet-search-field";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { ChoiceParams } from "../components/editor/choice-request";
 import { takeChoice } from "../components/editor/choice-request";
 
-/** A searchable list over the editor, for its country and cuisines: what it asked for in `requestChoice`. */
+/** A searchable list over the editor, for its country and cuisines: its name, title and mode from the route, the rest from `requestChoice`. */
 export function EditorChoiceScreen() {
   const intl = useIntl();
   const router = useRouter();
+  const { name, title, multiple } = useLocalSearchParams<
+    Pick<ChoiceParams, "name" | "title"> & { multiple?: string }
+  >();
   const [request] = useState(takeChoice);
   const [selected, setSelected] = useState(request?.selected ?? []);
   const [query, setQuery] = useState("");
-  const [muted, accent] = useThemeColor(["muted", "accent"] as const);
+  const [accent] = useThemeColor(["accent"] as const);
 
   // A relaunch restores the route without the request that opened it.
   useEffect(() => {
@@ -32,7 +37,7 @@ export function EditorChoiceScreen() {
   const pick = (key: string) => {
     const ticked = selected.includes(key);
 
-    if (!request.multiple) {
+    if (!multiple) {
       request.onChange(ticked ? [] : [key]);
       router.back();
 
@@ -45,21 +50,16 @@ export function EditorChoiceScreen() {
   };
 
   return (
-    <Sheet name={request.name} title={request.title}>
+    <Sheet name={name} title={title}>
       <SheetList
         ListHeaderComponent={
-          <View className="bg-default mb-2 h-10 flex-row items-center gap-2 rounded-full px-3.5">
-            <Ionicons color={muted} name="search" size={16} />
-            <TextInput
-              accessibilityLabel={intl.formatMessage({ id: "common.actions.search" })}
-              autoCorrect={false}
-              className="text-foreground flex-1 py-0 text-base"
-              placeholder={intl.formatMessage({ id: "common.actions.search" })}
-              placeholderTextColor={muted}
-              testID={`${request.name}-search`}
-              value={query}
-              onChangeText={setQuery}
-            />
+          <View className="pb-2">
+          <SheetSearchField
+            label={intl.formatMessage({ id: "common.actions.search" })}
+            testID={`${name}-search`}
+            value={query}
+            onChange={setQuery}
+          />
           </View>
         }
         data={shown}
@@ -72,7 +72,7 @@ export function EditorChoiceScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: ticked }}
               className={`min-h-12 flex-row items-center justify-between ${index === 0 ? "" : "border-separator border-t"}`}
-              testID={`${request.name}-${item.key}`}
+              testID={`${name}-${item.key}`}
               onPress={() => pick(item.key)}
             >
               <Text className="text-foreground flex-1 text-[17px]">{item.label}</Text>
