@@ -2,7 +2,8 @@ import React from "react";
 import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS } from "@/components/sheet-options";
 import { Stack } from "expo-router";
 
-/** The Groceries tab's stack: the list draws its own title and has no native header; Add items, the edit sheet, Manage stores and the Pantry's add sheet present over it, and the Pantry replaces it with a fade. */
+/** The Groceries tab's stack: the list draws its own title; its sheets present over it, and the
+ * Pantry is pushed on it with a fade. */
 export function GroceriesStack() {
   return (
     <Stack screenOptions={{ headerShown: false }}>

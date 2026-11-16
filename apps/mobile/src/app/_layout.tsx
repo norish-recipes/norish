@@ -260,8 +260,8 @@ function AuthenticatedEffects() {
   return null;
 }
 
-/** Sheets the accessory presents over whichever tab it was pressed on: Add recipe and its imports,
- * the timer list; the editor's lists present over them. The editor's choice has a search field over a list. */
+/** Sheets the accessory presents over any tab: Add recipe, its imports and the timer list. The
+ * editor's choice, a search field over a list, presents over the editor. */
 const FIT_SHEETS = ["add-recipe", "import-link", "import-text", "import-photos", "timers"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
