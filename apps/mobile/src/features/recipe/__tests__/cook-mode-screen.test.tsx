@@ -23,6 +23,11 @@ vi.mock("react-native", () => ({
   StyleSheet: { absoluteFill: {} },
 }));
 vi.mock("react-native-gesture-handler", () => ({}));
+vi.mock("react-native-reanimated", () => {
+  const animation: object = new Proxy(() => animation, { get: () => () => animation });
+
+  return { default: {}, ReduceMotion: { Never: 0 }, FadeIn: animation, FadeOut: animation };
+});
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0 }) }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/components/glass", () => ({

@@ -6,6 +6,16 @@ import {
   useCompetingGestures,
   useFlingGesture,
 } from "react-native-gesture-handler";
+import Animated, {
+  FadeIn,
+  FadeInLeft,
+  FadeInRight,
+  FadeOut,
+  FadeOutLeft,
+  FadeOutRight,
+  ReduceMotion,
+  useReducedMotion,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
 import { useCategoryLabel } from "@/hooks/use-category-label";
@@ -35,6 +45,10 @@ import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found
 import { TimerList } from "../components/timer-list";
 import { TintContext } from "../components/tint";
 import { dishTint } from "../utils/dish-tint";
+
+// Layout animations snap under Reduce Motion, so its crossfade opts out of that.
+const CROSSFADE_IN = FadeIn.duration(200).reduceMotion(ReduceMotion.Never);
+const CROSSFADE_OUT = FadeOut.duration(200).reduceMotion(ReduceMotion.Never);
 
 function CookHeader({ onClose }: { onClose: () => void }) {
   const categoryLabel = useCategoryLabel();
@@ -114,22 +128,33 @@ function CookMode() {
     if (params.step !== undefined) setStep(Number(params.step) || 0);
   }, [params.step]);
 
-  const fling = (direction: Directions, onActivate: () => void) => ({
+  const reduceMotion = useReducedMotion();
+  const fling = (direction: Directions, onActivate: () => void, enabled = true) => ({
     direction,
+    enabled,
     runOnJS: true,
     onActivate,
   });
+  // The step column's own drag pages the steps; a fling stands in for it under Reduce Motion.
   const up = useFlingGesture(
-    fling(Directions.UP, () => {
-      setView("steps");
-      goTo(current + 1);
-    })
+    fling(
+      Directions.UP,
+      () => {
+        setView("steps");
+        goTo(current + 1);
+      },
+      reduceMotion
+    )
   );
   const down = useFlingGesture(
-    fling(Directions.DOWN, () => {
-      setView("steps");
-      goTo(current - 1);
-    })
+    fling(
+      Directions.DOWN,
+      () => {
+        setView("steps");
+        goTo(current - 1);
+      },
+      reduceMotion
+    )
   );
   const left = useFlingGesture(fling(Directions.LEFT, () => setView("ingredients")));
   const right = useFlingGesture(fling(Directions.RIGHT, () => setView("steps")));
@@ -141,11 +166,22 @@ function CookMode() {
         <GestureDetector gesture={swipe}>
           <View className="flex-1" style={{ paddingTop: 140, paddingBottom: 190 }}>
             {view === "ingredients" ? (
-              <View className="absolute inset-0" style={{ top: 130 }}>
+              <Animated.View
+                className="absolute inset-0"
+                entering={reduceMotion ? CROSSFADE_IN : FadeInRight.duration(260)}
+                exiting={reduceMotion ? CROSSFADE_OUT : FadeOutRight.duration(200)}
+                style={{ top: 130 }}
+              >
                 <CookIngredients checked={checked} onCheckedChange={setChecked} />
-              </View>
+              </Animated.View>
             ) : (
-              <CookSteps current={current} steps={steps} onStepChange={goTo} />
+              <Animated.View
+                className="flex-1"
+                entering={reduceMotion ? CROSSFADE_IN : FadeInLeft.duration(260)}
+                exiting={reduceMotion ? CROSSFADE_OUT : FadeOutLeft.duration(200)}
+              >
+                <CookSteps current={current} steps={steps} onStepChange={goTo} />
+              </Animated.View>
             )}
           </View>
         </GestureDetector>

@@ -28,7 +28,18 @@ vi.mock("react-native", () => ({
 vi.mock("react-native-reanimated", () => ({
   default: { View: host },
   FadeIn: { duration: () => ({}) },
+  useReducedMotion: () => false,
+  useSharedValue: (value: number) => ({ get: () => value, set: () => {} }),
+  useAnimatedStyle: () => ({}),
+  withSpring: (value: number) => value,
+  cancelAnimation: () => {},
 }));
+vi.mock("react-native-gesture-handler", () => ({
+  GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  usePanGesture: () => ({}),
+}));
+vi.mock("react-native-worklets", () => ({ scheduleOnRN: () => {} }));
+vi.mock("expo-haptics", () => ({ impactAsync: () => {}, ImpactFeedbackStyle: { Light: 0 } }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 vi.mock("react-intl", () => ({
