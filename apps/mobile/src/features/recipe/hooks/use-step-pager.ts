@@ -4,13 +4,13 @@ import { useEffect } from "react";
 import { usePanGesture } from "react-native-gesture-handler";
 import { cancelAnimation, useSharedValue, withSpring } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
+import { SPRING } from "@/lib/motion/spring";
 
 import {
   clampToReach,
   DRAG_DISTANCE,
   onStep,
   settleTarget,
-  SPRING,
   springStart,
   stepReach,
 } from "../utils/cook-pager";

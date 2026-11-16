@@ -1,4 +1,3 @@
-import type { ComplexAnimationBuilder } from "react-native-reanimated";
 import React, { useEffect, useState } from "react";
 import { Image, Text, View } from "react-native";
 import {
@@ -18,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { sprung } from "@/lib/motion/spring";
 import { useServerImage } from "@/lib/network/server-url";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
@@ -43,15 +43,11 @@ import { FadeEdge } from "../components/fade-edge";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { TimerList } from "../components/timer-list";
 import { TintContext } from "../components/tint";
-import { SPRING } from "../utils/cook-pager";
 import { dishTint } from "../utils/dish-tint";
 
 // The column clears the header above, and the bar with its progress row below.
 const COLUMN_TOP = 140;
 const COLUMN_BOTTOM = BAR_BOTTOM + BAR_HEIGHT + 108;
-
-const sprung = <T extends ComplexAnimationBuilder>(builder: T) =>
-  builder.damping(SPRING.damping).stiffness(SPRING.stiffness).mass(SPRING.mass);
 
 /** The Steps ↔ Ingredients switch: a view slides in from `side` on the pager's spring. */
 function viewSwitch(side: "left" | "right", reduceMotion: boolean) {

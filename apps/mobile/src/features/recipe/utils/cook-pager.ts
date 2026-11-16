@@ -9,9 +9,6 @@ export const VELOCITY_CARRY = 0.2;
 /** How far out a full step is gone and its peek starts, so the two layers never show together. */
 export const HANDOVER = 0.7;
 
-// Critically damped: a release lands on its step without overshooting into the next.
-export const SPRING = { damping: 30, stiffness: 260, mass: 1 };
-
 /** The steps a drag from the current one can reach. */
 export type StepReach = { first: number; last: number };
 
