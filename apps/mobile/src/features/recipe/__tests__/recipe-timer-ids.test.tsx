@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { recipeTimerId } from "@norish/shared-react/recipes/timers";
 
-const host = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+const host = ({ testID, children }: { testID?: string; children?: ReactNode }) => (
+  <div data-testid={testID}>{children}</div>
+);
 const STEPS = [
   "# Sauce",
   "Simmer for 10 minutes.",
@@ -25,21 +27,14 @@ vi.mock("react-native", () => ({
   Modal: host,
   useWindowDimensions: () => ({ width: 400, fontScale: 1 }),
 }));
-vi.mock("react-native-reanimated", () => ({
-  default: { View: host },
-  FadeIn: { duration: () => ({}) },
-  useReducedMotion: () => false,
-  useSharedValue: (value: number) => ({ get: () => value, set: () => {} }),
-  useAnimatedStyle: () => ({}),
-  withSpring: (value: number) => value,
-  cancelAnimation: () => {},
-}));
+vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
 vi.mock("react-native-gesture-handler", () => ({
   GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  Pressable: host,
+  useNativeGesture: () => ({}),
   usePanGesture: () => ({}),
 }));
-vi.mock("react-native-worklets", () => ({ scheduleOnRN: () => {} }));
-vi.mock("expo-haptics", () => ({ impactAsync: () => {}, ImpactFeedbackStyle: { Light: 0 } }));
+vi.mock("react-native-worklets", () => ({ scheduleOnRN: () => {}, scheduleOnUI: () => {} }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 vi.mock("react-intl", () => ({
@@ -74,7 +69,8 @@ const { StepsSection } = await import("../components/steps-section");
 const { CookSteps } = await import("../components/cook-steps");
 const { resolveCookingModeSteps } = await import("@norish/shared-react/recipes");
 
-const shownIds = () => screen.getAllByTestId("timer").map((chip) => chip.textContent);
+const shownIds = (root: Pick<typeof screen, "getAllByTestId"> = screen) =>
+  root.getAllByTestId("timer").map((chip) => chip.textContent);
 
 describe("Recipe Timer ids on mobile", () => {
   it("are the same on the Recipe page and in cook mode for a recipe with headings", () => {
@@ -85,7 +81,8 @@ describe("Recipe Timer ids on mobile", () => {
     const steps = resolveCookingModeSteps(STEPS, "metric");
     const cook = steps.flatMap((_, current) => {
       render(<CookSteps current={current} steps={steps} onStepChange={() => {}} />);
-      const ids = shownIds();
+      // The steps either side are mounted too, posed as peeks; only the current one is read.
+      const ids = shownIds(within(screen.getByTestId("cook-step")));
 
       cleanup();
 

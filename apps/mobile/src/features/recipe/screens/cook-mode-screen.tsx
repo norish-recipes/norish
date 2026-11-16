@@ -7,13 +7,10 @@ import {
   useFlingGesture,
 } from "react-native-gesture-handler";
 import Animated, {
-  FadeIn,
   FadeInLeft,
   FadeInRight,
-  FadeOut,
   FadeOutLeft,
   FadeOutRight,
-  ReduceMotion,
   useReducedMotion,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,6 +18,7 @@ import { GlassCloseButton } from "@/components/glass";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerImage } from "@/lib/network/server-url";
+import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
@@ -39,16 +37,12 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import type { CookView } from "../components/cook-bar";
 import { BAR_BOTTOM, BAR_HEIGHT, CookBar } from "../components/cook-bar";
 import { CookIngredients } from "../components/cook-ingredients";
-import { CookSteps } from "../components/cook-steps";
+import { CookSteps, CROSSFADE_IN, CROSSFADE_OUT } from "../components/cook-steps";
 import { FadeEdge } from "../components/fade-edge";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { TimerList } from "../components/timer-list";
 import { TintContext } from "../components/tint";
 import { dishTint } from "../utils/dish-tint";
-
-// Layout animations snap under Reduce Motion, so its crossfade opts out of that.
-const CROSSFADE_IN = FadeIn.duration(200).reduceMotion(ReduceMotion.Never);
-const CROSSFADE_OUT = FadeOut.duration(200).reduceMotion(ReduceMotion.Never);
 
 function CookHeader({ onClose }: { onClose: () => void }) {
   const categoryLabel = useCategoryLabel();
@@ -118,7 +112,13 @@ function CookMode() {
   const tint = colorMode === "dish" ? dishTint(recipe.dishColor, scheme) : null;
   const page = tint?.page ?? background;
   const current = clampStep(step, steps.length);
-  const goTo = (next: number) => setStep(clampStep(next, steps.length));
+  // A light haptic once a step change is decided: a button, a peek tap, a fling or a release.
+  const goTo = (next: number) => {
+    const target = clampStep(next, steps.length);
+
+    if (target !== current) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStep(target);
+  };
 
   useCookKeepAwake();
   useIngredientIcons(recipe.recipeIngredients.map((line) => line.ingredientId));

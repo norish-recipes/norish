@@ -4,9 +4,15 @@ export const PEEK_OPACITY = 0.22;
 export const PEEK_SLOT = 96;
 /** The finger travel that moves the column by one step. */
 export const DRAG_DISTANCE = 220;
+/** Seconds of release velocity a settle carries the column on. */
+export const VELOCITY_CARRY = 0.2;
 
-type Pose = { opacity: number; y: number; scale: number };
+/** The steps a drag from the current one can reach. */
+export type StepReach = { first: number; last: number };
 
+export type SlotPose = { y: number; scale: number; fullOpacity: number; peekOpacity: number };
+
+// Reanimated's own clamp needs its native initializers, which a plain unit test doesn't load.
 function clamp(value: number, min: number, max: number) {
   "worklet";
 
@@ -14,42 +20,36 @@ function clamp(value: number, min: number, max: number) {
 }
 
 /**
- * Where the three slots sit for a drag of `drag` steps: +1 is the next step fully in the
- * centre, -1 the previous one. `region` is the current step's height.
+ * The pose of a step `offset` steps from the column's position: 0 centred at full size, -1 the
+ * upper peek, +1 the lower. `y` moves the step's centre from the column's; the full step fades
+ * into its peek on the way out, so a step reaching the centre is already the step at rest.
  */
-export function pagerPose(
-  drag: number,
-  region: number
-): { top: Pose; current: Pose; bottom: Pose } {
+export function slotPose(offset: number, column: number, peekHeight: number): SlotPose {
   "worklet";
 
-  const next = clamp(drag, 0, 1);
-  const back = clamp(-drag, 0, 1);
-  const away = next + back;
-  const grow = (amount: number) => PEEK_SCALE + amount * (1 - PEEK_SCALE);
+  const away = clamp(Math.abs(offset), 0, 1);
+  const beyond = clamp(Math.abs(offset) - 1, 0, 1);
+  // A resting peek's inner edge sits on its slot's inner edge.
+  const peekCentre = column / 2 - PEEK_SLOT + (PEEK_SCALE * peekHeight) / 2;
 
   return {
-    top: {
-      y: (back - next) * PEEK_SLOT,
-      scale: grow(back),
-      opacity: next > 0 ? PEEK_OPACITY * (1 - next) : PEEK_OPACITY + back * (1 - PEEK_OPACITY),
-    },
-    current: {
-      y: back * region - next * PEEK_SLOT,
-      scale: 1 - away * (1 - PEEK_SCALE),
-      opacity: 1 - away * (1 - PEEK_OPACITY),
-    },
-    bottom: {
-      y: back * PEEK_SLOT - next * region,
-      scale: grow(next),
-      opacity: next > 0 ? PEEK_OPACITY + next * (1 - PEEK_OPACITY) : PEEK_OPACITY * (1 - back),
-    },
+    y: Math.sign(offset) * (away * peekCentre + beyond * PEEK_SLOT),
+    scale: 1 - away * (1 - PEEK_SCALE),
+    fullOpacity: 1 - away,
+    peekOpacity: PEEK_OPACITY * (away - beyond),
   };
 }
 
-/** The step offset a release snaps to: where the velocity carries `drag`, within `min`..`max`. */
-export function settleTarget(drag: number, velocity: number, min: number, max: number) {
+/** The step a release snaps to: where the velocity carries `position`, within `reach`. */
+export function settleTarget(position: number, velocity: number, reach: StepReach) {
   "worklet";
 
-  return clamp(Math.round(drag + velocity * 0.2), min, max);
+  return clamp(Math.round(position + velocity * VELOCITY_CARRY), reach.first, reach.last);
+}
+
+/** Where a spring to `to` starts, so a jump of several steps runs as one page in its direction. */
+export function springStart(from: number, to: number) {
+  "worklet";
+
+  return Math.abs(to - from) > 1 ? to - Math.sign(to - from) : from;
 }
