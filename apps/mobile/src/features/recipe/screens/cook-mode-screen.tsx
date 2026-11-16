@@ -135,16 +135,9 @@ function CookMode() {
     runOnJS: true,
     onActivate,
   });
-  // The step column's drag pages the steps it shows; a fling pages from Ingredients or under Reduce Motion.
+  // The step column's drag pages the steps; under Reduce Motion, where it holds still, a fling does.
   const stepFling = (direction: Directions, delta: number) =>
-    fling(
-      direction,
-      () => {
-        setView("steps");
-        goTo(current + delta);
-      },
-      { enabled: reduceMotion || view === "ingredients" }
-    );
+    fling(direction, () => goTo(current + delta), { enabled: reduceMotion && view === "steps" });
   const up = useFlingGesture(stepFling(Directions.UP, 1));
   const down = useFlingGesture(stepFling(Directions.DOWN, -1));
   const left = useFlingGesture(fling(Directions.LEFT, () => setView("ingredients")));
