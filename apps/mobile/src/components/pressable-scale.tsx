@@ -4,22 +4,20 @@ import { Pressable } from "react-native";
 import Animated from "react-native-reanimated";
 import { usePressScale } from "@/lib/motion/press-scale";
 
-/** A Pressable that springs smaller under the finger. `className` styles the scaling surface. */
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/** A Pressable that springs smaller under the finger. */
 export function PressableScale({
-  className,
-  children,
   onPressIn,
   onPressOut,
   ...props
-}: Omit<ComponentProps<typeof Pressable>, "style" | "children"> & {
-  className?: string;
-  children: React.ReactNode;
-}) {
+}: Omit<ComponentProps<typeof Pressable>, "style">) {
   const { style, press } = usePressScale();
 
   return (
-    <Pressable
+    <AnimatedPressable
       {...props}
+      style={style}
       onPressIn={(event) => {
         press(true);
         onPressIn?.(event);
@@ -28,10 +26,6 @@ export function PressableScale({
         press(false);
         onPressOut?.(event);
       }}
-    >
-      <Animated.View className={className} style={style}>
-        {children}
-      </Animated.View>
-    </Pressable>
+    />
   );
 }

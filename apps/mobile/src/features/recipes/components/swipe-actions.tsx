@@ -1,18 +1,25 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { use, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
-import { RevealRowContext } from "./card-list";
+import { OPEN_THRESHOLD, openRow, pastOpenThreshold } from "../utils/open-row";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -49,9 +56,6 @@ const CIRCLE_SHADOW = {
   shadowOffset: { width: 0, height: 2 },
 };
 
-// Module scope: one card is open at a time, and the tRPC remount must not strand a stale ref.
-let openRow: SwipeableMethods | null = null;
-
 /** The card's swipe-left actions: coloured circles on the page with a neutral label under each. */
 export function SwipeActions({
   variant,
@@ -64,59 +68,94 @@ export function SwipeActions({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const rowRef = useRef<SwipeableMethods>(null);
-  const revealRow = use(RevealRowContext);
+  // Whether a finger is dragging the card, so the threshold's haptic is not played by the settle.
+  const dragging = useSharedValue(false);
   const isGrid = variant === "grid";
   const width = isGrid ? GRID_PANEL + GRID_GAP : LIST_GAP + LIST_BUTTON * actions.length;
 
+  // A row that unmounts open (deleted, or the list swapped) must not stay the open one.
+  useEffect(() => {
+    const row = rowRef.current;
+
+    return () => {
+      if (row) openRow.closed(row);
+    };
+  }, []);
+
   return (
-    <ReanimatedSwipeable
-      ref={rowRef}
-      containerStyle={isGrid ? { flex: 1, borderRadius: 24 } : undefined}
-      overshootRight={false}
-      renderRightActions={(progress, _translation, methods) => (
-        <ActionsPanel
-          actions={actions}
-          isGrid={isGrid}
-          isOpen={isOpen}
-          methods={methods}
-          progress={progress}
-          width={width}
-        />
-      )}
-      rightThreshold={40}
-      onSwipeableClose={() => {
-        setIsOpen(false);
-        if (openRow === rowRef.current) openRow = null;
-      }}
-      onSwipeableOpen={() => setIsOpen(true)}
-      onSwipeableWillOpen={() => {
-        if (openRow !== rowRef.current) openRow?.close();
-        openRow = rowRef.current;
-        revealRow();
+    // A touch on this row closes any other open one, and stops there: the list closes on any other.
+    <View
+      className={isGrid ? "flex-1" : undefined}
+      onTouchStart={(event) => {
+        event.stopPropagation();
+        if (rowRef.current) openRow.closeOpen(rowRef.current);
       }}
     >
-      {children}
-    </ReanimatedSwipeable>
+      <ReanimatedSwipeable
+        ref={rowRef}
+        containerStyle={isGrid ? { flex: 1, borderRadius: 24 } : undefined}
+        overshootRight={false}
+        renderRightActions={(progress, translation, methods) => (
+          <ActionsPanel
+            actions={actions}
+            dragging={dragging}
+            isGrid={isGrid}
+            isOpen={isOpen}
+            methods={methods}
+            progress={progress}
+            translation={translation}
+            width={width}
+          />
+        )}
+        rightThreshold={OPEN_THRESHOLD}
+        onSwipeableClose={() => {
+          setIsOpen(false);
+          if (rowRef.current) openRow.closed(rowRef.current);
+        }}
+        onSwipeableCloseStartDrag={() => dragging.set(true)}
+        onSwipeableOpen={() => setIsOpen(true)}
+        onSwipeableOpenStartDrag={() => dragging.set(true)}
+        onSwipeableWillClose={() => dragging.set(false)}
+        onSwipeableWillOpen={() => {
+          dragging.set(false);
+          if (rowRef.current) openRow.opened(rowRef.current);
+        }}
+      >
+        {children}
+      </ReanimatedSwipeable>
+    </View>
   );
 }
 
 /** The panel sits behind the card, so it is clear until the card moves: a lifting card then shows nothing behind it. */
 function ActionsPanel({
   actions,
+  dragging,
   isGrid,
   isOpen,
   methods,
   progress,
+  translation,
   width,
 }: {
   actions: SwipeAction[];
+  dragging: SharedValue<boolean>;
   isGrid: boolean;
   isOpen: boolean;
   methods: SwipeableMethods;
   progress: SharedValue<number>;
+  translation: SharedValue<number>;
   width: number;
 }) {
   const visibility = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
+
+  // A tick where a release would open the row, each way the finger crosses it.
+  useAnimatedReaction(
+    () => pastOpenThreshold(translation.get()),
+    (past, was) => {
+      if (was !== null && past !== was && dragging.get()) scheduleOnRN(lightImpact);
+    }
+  );
 
   return (
     <Animated.View
@@ -154,7 +193,7 @@ function ActionButton({
   const icon = action.key === "groceries" && shopForeground ? shopForeground : onColour;
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityLabel={action.label}
       accessibilityRole="button"
       className={
@@ -170,6 +209,6 @@ function ActionButton({
         <Ionicons color={icon} name={ICONS[action.key]} size={isGrid ? 19 : 20} />
       </View>
       <Text className="text-muted text-xs font-medium">{action.label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
