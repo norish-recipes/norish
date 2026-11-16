@@ -134,8 +134,7 @@
     "toBuy": "À acheter",
     "inPantry": "Dans votre garde-manger",
     "weKeepThis": "On en a toujours",
-    "keepFailed": "Impossible de l'ajouter au garde-manger",
-    "addCount": "{count, plural, one {Ajouter # article} other {Ajouter # articles}}"
+    "keepFailed": "Impossible de l'ajouter au garde-manger"
   },
   "picker": {
     "unlink": "Dissocier le produit",

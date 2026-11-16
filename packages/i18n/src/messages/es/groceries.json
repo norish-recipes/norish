@@ -134,8 +134,7 @@
     "toBuy": "Por comprar",
     "inPantry": "En tu despensa",
     "weKeepThis": "Siempre lo tenemos",
-    "keepFailed": "No se pudo añadir a la despensa",
-    "addCount": "{count, plural, one {Añadir # artículo} other {Añadir # artículos}}"
+    "keepFailed": "No se pudo añadir a la despensa"
   },
   "picker": {
     "unlink": "Desvincular producto",

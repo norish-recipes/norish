@@ -134,8 +134,7 @@
     "toBuy": "Skal købes",
     "inPantry": "I dit spisekammer",
     "weKeepThis": "Har vi altid",
-    "keepFailed": "Det kunne ikke tilføjes til spisekammeret",
-    "addCount": "{count, plural, one {Tilføj # vare} other {Tilføj # varer}}"
+    "keepFailed": "Det kunne ikke tilføjes til spisekammeret"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",

@@ -140,7 +140,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
   return (
     <Sheet
       confirm={{
-        label: intl.formatMessage({ id: "groceries.panel.addCount" }, { count: ticked }),
+        label: intl.formatMessage({ id: "common.actions.add" }),
         disabled: isAdding,
         onPress:
           loading || ticked === 0
@@ -215,7 +215,7 @@ export function AddToGroceriesScreen() {
     <GroceriesSheet key={recipe.id} recipe={recipe} />
   ) : (
     <Sheet
-      confirm={{ label: intl.formatMessage({ id: "groceries.panel.addCount" }, { count: 0 }) }}
+      confirm={{ label: intl.formatMessage({ id: "common.actions.add" }) }}
       name="add-to-groceries"
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
