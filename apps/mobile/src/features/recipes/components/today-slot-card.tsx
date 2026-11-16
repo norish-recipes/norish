@@ -1,8 +1,11 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 import { PlannedThumb } from "@/components/planned-thumb";
+import { PressableScale } from "@/components/pressable-scale";
 import { SLOT_GLYPHS } from "@/components/slot-icons";
+import { usePressScale } from "@/lib/motion/press-scale";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -52,7 +55,7 @@ export function TodayAddCard({ slot }: { slot: Slot }) {
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityLabel={`${intl.formatMessage({ id: "recipes.dashboard.addRecipe" })}, ${intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}`}
       accessibilityRole="button"
       className={`bg-default items-center justify-center gap-2 ${TODAY_CARD}`}
@@ -64,7 +67,7 @@ export function TodayAddCard({ slot }: { slot: Slot }) {
       <Text className="text-foreground text-[15px] font-medium">
         {intl.formatMessage({ id: "recipes.dashboard.addRecipe" })}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -87,7 +90,13 @@ export function TodayPlannedCard({
     (key) => TODAY_ACTION_DEFINITIONS[key],
     handlers
   );
-  const tap = useTapGesture({ runOnJS: true, onActivate: handlers.open });
+  const { style, press } = usePressScale();
+  const tap = useTapGesture({
+    runOnJS: true,
+    onBegin: () => press(true),
+    onFinalize: () => press(false),
+    onActivate: handlers.open,
+  });
 
   return (
     <View
@@ -100,7 +109,7 @@ export function TodayPlannedCard({
     >
       <CardMenu href={href} items={items}>
         <GestureDetector gesture={tap}>
-          <View className={`bg-surface ${TODAY_CARD}`} collapsable={false}>
+          <Animated.View className={`bg-surface ${TODAY_CARD}`} collapsable={false} style={style}>
             <PlannedThumb className={TODAY_CARD_PHOTO} glyphSize={30} item={item} />
             <SlotChip slot={slot} />
             {overflow > 0 ? (
@@ -116,7 +125,7 @@ export function TodayPlannedCard({
                 </Text>
               ) : null}
             </View>
-          </View>
+          </Animated.View>
         </GestureDetector>
       </CardMenu>
     </View>

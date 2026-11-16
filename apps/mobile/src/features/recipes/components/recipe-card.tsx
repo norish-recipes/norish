@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 import { CardPhoto } from "@/components/card-photo";
 import { lightImpact } from "@/lib/haptics";
+import { usePressScale } from "@/lib/motion/press-scale";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useIntl } from "react-intl";
 
@@ -81,7 +83,14 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
       handlers.favourite();
     },
   });
-  const singleTap = useTapGesture({ runOnJS: true, requireToFail: doubleTap, onActivate: open });
+  const { style, press } = usePressScale();
+  const singleTap = useTapGesture({
+    runOnJS: true,
+    requireToFail: doubleTap,
+    onBegin: () => press(true),
+    onFinalize: () => press(false),
+    onActivate: open,
+  });
 
   return (
     <SwipeActions actions={swipe} variant={variant}>
@@ -100,7 +109,9 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
       >
         <CardMenu href={recipeRoute(recipe.id)} items={items}>
           <GestureDetector gesture={singleTap}>
-            <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
+            <Animated.View className={variant === "grid" ? "flex-1" : undefined} style={style}>
+              <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
+            </Animated.View>
           </GestureDetector>
         </CardMenu>
       </View>
