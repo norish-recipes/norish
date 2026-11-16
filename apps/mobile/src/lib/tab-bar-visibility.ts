@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useIsFocused } from "expo-router";
 
-/** A mounted-count with its subscribers: the tab bar hides on one count, the page's bottom bar on the other. */
+/** A mounted-count with its subscribers: the tab bar hides on either. */
 const counterStore = () => {
   let count = 0;
   const listeners = new Set<() => void>();
@@ -33,9 +33,6 @@ export const useTabBarHidden = () =>
     },
     () => hiders.count() + sheets.count() > 0
   );
-
-/** Whether a sheet is over the page: its glass shows what is under it, such as a page's bottom bar. */
-export const useSheetOpen = () => useSyncExternalStore(sheets.subscribe, () => sheets.count() > 0);
 
 /** Counts the caller in `store` while `active`. */
 function useCounted(store: ReturnType<typeof counterStore>, active: boolean) {
