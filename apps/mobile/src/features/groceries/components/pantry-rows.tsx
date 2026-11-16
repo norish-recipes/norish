@@ -154,7 +154,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
                 />
               )
             }
-            ingredientId={item.ingredientId || null}
+            ingredientId={row.foodId}
             name={ingredientDisplayName(item, intl.locale)}
             testID={`pantry-food-${item.id}`}
             onPress={() => actions.open(item)}
@@ -201,7 +201,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
                 }
               />
             }
-            ingredientId={food.id}
+            ingredientId={row.foodId}
             name={name}
             testID={`pantry-match-row-${food.id}`}
           />
@@ -250,7 +250,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
                 onPress={() => actions.keep(food)}
               />
             }
-            ingredientId={food.ingredientId}
+            ingredientId={row.foodId}
             name={name}
             subline={intl.formatMessage(
               { id: "groceries.pantry.inRecipes" },

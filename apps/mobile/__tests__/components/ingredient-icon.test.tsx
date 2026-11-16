@@ -40,7 +40,7 @@ describe("IngredientIcon", () => {
 
   it("draws nothing for a food with no icon where no food of its list has one", () => {
     render(
-      <IngredientIconSlots ids={["i1"]}>
+      <IngredientIconSlots rows={[{ foodId: "i1" }]}>
         <IngredientIcon ingredientId="i1" />
       </IngredientIconSlots>
     );
@@ -52,7 +52,7 @@ describe("IngredientIcon", () => {
   it("keeps an empty slot for a food with no icon where another food of its list has one", () => {
     state.listHasIcon = true;
     render(
-      <IngredientIconSlots ids={["i1", "i2"]}>
+      <IngredientIconSlots rows={[{ foodId: "i1" }, { foodId: "i2" }]}>
         <IngredientIcon ingredientId="i1" />
       </IngredientIconSlots>
     );

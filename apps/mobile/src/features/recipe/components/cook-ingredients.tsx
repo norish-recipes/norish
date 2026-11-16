@@ -37,8 +37,10 @@ export function CookIngredients({
     onCheckedChange(next);
   };
 
+  const rows = ingredientRows(display, recipe.systemUsed);
+
   return (
-    <IngredientIconSlots ids={display.map((line) => line.ingredientId)}>
+    <IngredientIconSlots rows={rows}>
       <ScrollView
         contentContainerClassName="px-5 pt-6 pb-48"
         showsVerticalScrollIndicator={false}
@@ -61,7 +63,7 @@ export function CookIngredients({
           {recipe.servings ? <ServingsControl /> : <View />}
           <OptionsMenu />
         </View>
-        {ingredientRows(display, recipe.systemUsed).map((row) =>
+        {rows.map((row) =>
           row.kind === "heading" ? (
             <Text
               key={row.key}
@@ -76,7 +78,7 @@ export function CookIngredients({
               amount={formatAmount(row.line.amount, mode)}
               checked={checked.has(row.index)}
               index={row.index}
-              ingredientId={row.line.ingredientId}
+              foodId={row.foodId}
               name={row.line.ingredientName}
               unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
               onToggle={toggle}

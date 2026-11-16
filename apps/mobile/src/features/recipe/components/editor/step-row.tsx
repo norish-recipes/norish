@@ -96,6 +96,11 @@ export function StepRow({
       : null;
   const matches = match ? matchIngredientSuggestions(suggestions, match.query) : [];
 
+  const chipFoods = chipLines.map((line) => ({
+    line,
+    foodId: foods.get(line.ingredientName) ?? null,
+  }));
+
   const pickMention = (suggestion: IngredientSuggestion) => {
     if (!match) return;
     const inserted = replaceTrigger(row.text, match, suggestion.label);
@@ -161,12 +166,13 @@ export function StepRow({
           <MentionPopup foods={foods} matches={matches} onPick={pickMention} />
         ) : null}
         {!heading && row.stepIngredients.length > 0 ? (
-          <IngredientIconSlots ids={chipLines.map((line) => foods.get(line.ingredientName))}>
+          <IngredientIconSlots rows={chipFoods}>
             <View className="flex-row flex-wrap gap-1.5">
               {row.stepIngredients.map((ref) => {
-                const line = chipLines.find((candidate) => candidate.order === ref.ingredientOrder);
+                const chip = chipFoods.find(({ line }) => line.order === ref.ingredientOrder);
+                const line = chip?.line;
 
-                return line ? (
+                return chip && line ? (
                   <Pressable
                     key={ref.ingredientOrder}
                     accessibilityLabel={text("recipes.stepIngredients.shareLabel", {
@@ -176,10 +182,7 @@ export function StepRow({
                     className="bg-default h-7 flex-row items-center gap-1 rounded-full px-2.5"
                     onPress={() => editChip(line)}
                   >
-                    <IngredientIcon
-                      ingredientId={foods.get(line.ingredientName) ?? null}
-                      size={18}
-                    />
+                    <IngredientIcon ingredientId={chip.foodId} size={18} />
                     <Text className="text-foreground text-[13px] font-medium">
                       {stepChipLabel(line, ref.share)}
                     </Text>

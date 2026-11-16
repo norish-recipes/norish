@@ -47,7 +47,7 @@ export function PantryScreen() {
   );
 
   return (
-    <IngredientIconSlots ids={rows.map((row) => row.foodId)}>
+    <IngredientIconSlots rows={rows}>
       <View className="bg-background flex-1" testID="pantry-screen">
         <FlatList
           ListEmptyComponent={

@@ -1,3 +1,5 @@
+import { namesNoFood } from "@norish/shared/lib/ingredient-text";
+
 /** A `#` line in the ingredients or steps titles the lines under it. */
 const headingText = (text: string) => {
   const trimmed = text.trim();
@@ -5,14 +7,20 @@ const headingText = (text: string) => {
   return trimmed.startsWith("#") ? trimmed.replace(/^#+\s*/, "") : null;
 };
 
-type Ingredient = { ingredientName: string; systemUsed: string; order: number };
+type Ingredient = {
+  ingredientName: string;
+  ingredientId?: string | null;
+  systemUsed: string;
+  order: number;
+};
 type Step = { step: string; systemUsed: string; order: number };
 
 export type IngredientRow<T extends Ingredient> =
-  | { kind: "heading"; key: number; text: string }
-  | { kind: "line"; key: number; index: number; line: T };
+  | { kind: "heading"; key: number; text: string; foodId?: undefined }
+  | { kind: "line"; key: number; index: number; line: T; foodId: string | null };
 
-/** The recipe's lines in its own measurement system, in order; headings carry no index. */
+/** The recipe's lines in its own measurement system, in order; headings carry no index. A line's
+ * `foodId` is the Ingredient its icon shows, none where the text names no food. */
 export function ingredientRows<T extends Ingredient>(
   ingredients: readonly T[],
   systemUsed: string
@@ -26,7 +34,13 @@ export function ingredientRows<T extends Ingredient>(
       const heading = headingText(line.ingredientName);
 
       return heading === null
-        ? { kind: "line", key: line.order, index: index++, line }
+        ? {
+            kind: "line",
+            key: line.order,
+            index: index++,
+            line,
+            foodId: namesNoFood(line.ingredientName) ? null : (line.ingredientId ?? null),
+          }
         : { kind: "heading", key: line.order, text: heading };
     });
 }

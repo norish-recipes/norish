@@ -29,7 +29,6 @@ import {
   useUnitFormatter,
 } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
-import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { ingredientRows, plainText } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
@@ -119,7 +118,7 @@ export function Line({
   amount,
   unit,
   name,
-  ingredientId,
+  foodId,
   checked,
   onToggle,
   large = false,
@@ -128,7 +127,7 @@ export function Line({
   amount: string;
   unit: string;
   name: string;
-  ingredientId: string | null | undefined;
+  foodId: string | null;
   checked: boolean;
   onToggle: (index: number) => void;
   large?: boolean;
@@ -152,10 +151,7 @@ export function Line({
         style={fade}
       >
         <RoundTick selected={checked} />
-        <IngredientIcon
-          ingredientId={namesNoFood(name) ? null : ingredientId}
-          size={large ? 34 : undefined}
-        />
+        <IngredientIcon ingredientId={foodId} size={large ? 34 : undefined} />
         <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
           {amount ? (
             <AnimatedNumber
@@ -195,7 +191,7 @@ export function IngredientsSection() {
   };
 
   return (
-    <IngredientIconSlots ids={display.map((line) => line.ingredientId)}>
+    <IngredientIconSlots rows={rows}>
       <SectionCard
         right={
           <View className="flex-row items-center gap-1.5">
@@ -220,7 +216,7 @@ export function IngredientsSection() {
               amount={formatAmount(row.line.amount, mode)}
               checked={checked.has(row.index)}
               index={row.index}
-              ingredientId={row.line.ingredientId}
+              foodId={row.foodId}
               name={row.line.ingredientName}
               unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
               onToggle={toggle}

@@ -175,12 +175,15 @@ export function StepChips({
     lines.filter((line) => line.systemUsed === systemUsed).map((line) => [line.order, line])
   );
 
+  const chips = resolved.map((item) => ({
+    item,
+    foodId: namesNoFood(item.name) ? null : (lineAt.get(item.ingredientOrder)?.ingredientId ?? null),
+  }));
+
   return (
-    <IngredientIconSlots
-      ids={resolved.map((item) => lineAt.get(item.ingredientOrder)?.ingredientId)}
-    >
+    <IngredientIconSlots rows={chips}>
       <View className="flex-row flex-wrap gap-1.5">
-        {resolved.map((item) => {
+        {chips.map(({ item, foodId }) => {
           const label = [
             item.amount != null ? formatAmount(item.amount, mode) : "",
             item.unit ? formatUnitOnly(item.unit, item.amount) : "",
@@ -195,12 +198,7 @@ export function StepChips({
               className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
               style={tint ? { backgroundColor: tint.soft } : undefined}
             >
-              <IngredientIcon
-                ingredientId={
-                  namesNoFood(item.name) ? null : lineAt.get(item.ingredientOrder)?.ingredientId
-                }
-                size={large ? 26 : 22}
-              />
+              <IngredientIcon ingredientId={foodId} size={large ? 26 : 22} />
               <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
                 {label}
               </Text>

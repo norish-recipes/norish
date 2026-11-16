@@ -9,15 +9,19 @@ import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 /** Whether another food of the list has an icon, so a food without one keeps an empty slot. */
 const IconSlotContext = createContext(false);
 
-/** Wraps a list of foods: `ids` are the foods' Ingredient ids, whose icons say whether the list has slots. */
+/** Wraps a list of rows: each row's `foodId` is its food's Ingredient id, whose icon says whether the list has slots. */
 export function IngredientIconSlots({
-  ids,
+  rows,
   children,
 }: {
-  ids: readonly (string | null | undefined)[];
+  rows: readonly { foodId?: string | null }[];
   children: ReactNode;
 }) {
-  return <IconSlotContext value={useListHasIcon(ids)}>{children}</IconSlotContext>;
+  return (
+    <IconSlotContext value={useListHasIcon(rows.map((row) => row.foodId))}>
+      {children}
+    </IconSlotContext>
+  );
 }
 
 /** A food's icon; where it has none, an empty slot of its size if its list has icons, else nothing. */

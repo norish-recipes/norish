@@ -68,6 +68,7 @@ export function IngredientRows({
     return namesNoFood(name) || isHeadingText(name) ? "" : name;
   });
   const foods = useFoodsByName(foodNames);
+  const lineFoods = foodNames.map((name) => ({ foodId: foods.get(name) ?? null }));
 
   useIngredientIcons([...foods.values()]);
 
@@ -83,7 +84,7 @@ export function IngredientRows({
         testID={`editor-ingredient-${index}`}
       >
         {heading ? null : (
-          <IngredientIcon ingredientId={foods.get(foodNames[index] ?? "") ?? null} />
+          <IngredientIcon ingredientId={lineFoods[index]?.foodId} />
         )}
         <View className="flex-1">
           <EditorInput
@@ -128,7 +129,7 @@ export function IngredientRows({
   };
 
   return (
-    <IngredientIconSlots ids={[...foods.values()]}>
+    <IngredientIconSlots rows={lineFoods}>
       <View>
         <DragList
           nested

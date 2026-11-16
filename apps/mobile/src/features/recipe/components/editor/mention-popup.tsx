@@ -18,9 +18,13 @@ export function MentionPopup({
 }) {
   const intl = useIntl();
   const reportFocus = use(FocusedFieldContext);
+  const choices = matches.map((suggestion) => ({
+    suggestion,
+    foodId: foods.get(suggestion.label) ?? null,
+  }));
 
   return (
-    <IngredientIconSlots ids={matches.map((suggestion) => foods.get(suggestion.label))}>
+    <IngredientIconSlots rows={choices}>
       <View
         accessibilityLabel={intl.formatMessage({ id: "recipes.stepInput.ingredientSuggestions" })}
         className="bg-surface border-border overflow-hidden rounded-2xl border shadow-lg"
@@ -30,7 +34,7 @@ export function MentionPopup({
           if (typeof event.currentTarget !== "number") reportFocus?.(event.currentTarget);
         }}
       >
-        {matches.map((suggestion, position) => (
+        {choices.map(({ suggestion, foodId }, position) => (
           <Pressable
             key={suggestion.key}
             accessibilityRole="button"
@@ -38,7 +42,7 @@ export function MentionPopup({
             testID={`editor-mention-${suggestion.ingredientOrder}`}
             onPress={() => onPick(suggestion)}
           >
-            <IngredientIcon ingredientId={foods.get(suggestion.label) ?? null} size={22} />
+            <IngredientIcon ingredientId={foodId} size={22} />
             <Text className="text-foreground text-base">{suggestion.label}</Text>
           </Pressable>
         ))}
