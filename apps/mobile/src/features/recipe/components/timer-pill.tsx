@@ -1,17 +1,11 @@
 import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, useWindowDimensions } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TimerGlance, useTimersLabel } from "@/components/timer-glance";
 import { lightImpact } from "@/lib/haptics";
+import { useFadeTo } from "@/lib/motion/fade-to";
 import { NATIVE_SPRING } from "@/lib/motion/native-spring";
-import { settleTo } from "@/lib/motion/settle-to";
 import { Host, HStack, Rectangle, RNHostView } from "@expo/ui/swift-ui";
 import {
   Animation,
@@ -43,22 +37,6 @@ const PILL_RETURN_MS = 50;
 export const LIST_SHRUNK_MS = 400;
 // Reduce Motion: the glass takes its size in one step, after the rows have faded on a close.
 const STEP_AFTER_FADE = Animation.linear({ duration: 0 }).delay(HIDE_MS / 1000);
-
-/** A layer's opacity: in after `delay` once shown, out at once. */
-function useLayerFade(shown: boolean, delay: number) {
-  const reduceMotion = useReducedMotion();
-  const opacity = useSharedValue(shown ? 1 : 0);
-
-  useEffect(() => {
-    opacity.set(
-      shown
-        ? withDelay(delay, settleTo(1, reduceMotion, { overshootClamping: true }))
-        : withTiming(0, { duration: HIDE_MS })
-    );
-  }, [shown, delay, reduceMotion, opacity]);
-
-  return useAnimatedStyle(() => ({ opacity: opacity.get() }));
-}
 
 /** The soonest timer on a glass pill that grows into the glass timer list and shrinks back: one
  * glass shape whose frame springs between the two, the pill and the rows fading across inside. */
@@ -100,8 +78,8 @@ export function TimerPill({
   const [listHeight, setListHeight] = useState(0);
   // Hidden from the tap until the small host is back, so no copy of it shows while the host moves.
   const pillShown = !open && !large;
-  const pillFade = useLayerFade(pillShown, PILL_RETURN_MS);
-  const listFade = useLayerFade(drawn, CONTENT_DELAY_MS);
+  const pillFade = useFadeTo(pillShown ? 1 : 0, PILL_RETURN_MS, HIDE_MS);
+  const listFade = useFadeTo(drawn ? 1 : 0, CONTENT_DELAY_MS, HIDE_MS);
 
   const hasTimers = timerGlance(timers).hasTimers;
   const close = useEffectEvent(() => onOpenChange(false));
