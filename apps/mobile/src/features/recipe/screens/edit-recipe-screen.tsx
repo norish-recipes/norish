@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlassCloseButton } from "@/components/glass";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
 
+import { EditorHeader } from "../components/editor/editor-header";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { RecipeEditorScreen, RecipeEditorSkeleton } from "./recipe-editor-screen";
 
@@ -15,7 +13,6 @@ import { RecipeEditorScreen, RecipeEditorSkeleton } from "./recipe-editor-screen
  * a skeleton until then, and the not-found state once it is deleted while open. */
 export function EditRecipeScreen() {
   const router = useRouter();
-  const { top } = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipe, error } = useRecipeQuery(id);
   const { isLoading: checking, canEditRecipe } = useRecipePermissions();
@@ -33,16 +30,12 @@ export function EditRecipeScreen() {
     return <RecipeEditorScreen key={recipe.id} initialData={recipe} mode="edit" />;
   }
 
-  return (
-    <View className="bg-background flex-1">
-      {!recipe && (loaded || isRecipeNotFound(error)) ? (
-        <RecipeNotFound />
-      ) : (
-        <RecipeEditorSkeleton />
-      )}
-      <View className="absolute left-4" style={{ top: top + 6 }}>
-        <GlassCloseButton testID="recipe-editor-close" onPress={() => router.back()} />
-      </View>
-    </View>
+  return !recipe && (loaded || isRecipeNotFound(error)) ? (
+    <>
+      <EditorHeader mode="edit" />
+      <RecipeNotFound />
+    </>
+  ) : (
+    <RecipeEditorSkeleton mode="edit" />
   );
 }

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
@@ -13,7 +13,6 @@ const state = vi.hoisted(() => ({
   back: vi.fn(),
   dismissTo: vi.fn(),
   alert: vi.fn(),
-  save: undefined as (() => void) | undefined,
   preventRemove: undefined as
     { prevent: boolean; callback: (event: { repeat: () => void }) => void } | undefined,
 }));
@@ -26,19 +25,6 @@ vi.mock("react-native", () => ({
     metrics: () => null,
   },
   KeyboardAvoidingView: ({ children }: { children: ReactNode }) => children,
-  Pressable: ({
-    testID,
-    onPress,
-    children,
-  }: {
-    testID?: string;
-    onPress: () => void;
-    children: ReactNode;
-  }) => {
-    if (testID === "recipe-editor-save") state.save = onPress;
-
-    return children;
-  },
   Text: () => null,
   View: ({ children }: { children?: ReactNode }) => children ?? null,
 }));
@@ -65,9 +51,8 @@ vi.mock("expo-router/react-navigation", () => ({
 vi.mock("@/components/drag-list/drag-list", () => ({
   DragScrollView: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock("@/components/glass", () => ({ GlassCloseButton: () => null, GlassSurface: () => null }));
+vi.mock("@/components/modal-header", () => import("../../../../__tests__/mocks/modal-header"));
 vi.mock("@/hooks/use-category-label", () => ({ useCategoryLabel: () => (name: string) => name }));
-vi.mock("../components/fade-edge", () => ({ FadeEdge: () => null }));
 vi.mock("../components/tint", () => ({
   SectionCard: ({ children }: { children: ReactNode }) => children,
 }));
@@ -114,6 +99,8 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
 
 const { RecipeEditorScreen } = await import("@/features/recipe/screens/recipe-editor-screen");
 
+const save = () => fireEvent.click(screen.getByTestId("recipe-editor-confirm"));
+
 const stored = { id: "recipe-1", version: 4 } as FullRecipeDTO;
 
 describe("RecipeEditorScreen", () => {
@@ -128,7 +115,7 @@ describe("RecipeEditorScreen", () => {
   it("saves nothing while the form is invalid", () => {
     state.payload = null;
     render(<RecipeEditorScreen mode="create" />);
-    state.save?.();
+    save();
 
     expect(state.create).not.toHaveBeenCalled();
     expect(state.dismissTo).not.toHaveBeenCalled();
@@ -136,7 +123,7 @@ describe("RecipeEditorScreen", () => {
 
   it("creates under the minted id and opens the recipe", () => {
     render(<RecipeEditorScreen mode="create" />);
-    state.save?.();
+    save();
 
     expect(state.create).toHaveBeenCalledWith({ name: "Soup", id: "new-id" });
     expect(state.dismissTo).toHaveBeenCalledWith({
@@ -147,7 +134,7 @@ describe("RecipeEditorScreen", () => {
 
   it("updates at the version the editor opened on and goes back", () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />);
-    state.save?.();
+    save();
 
     expect(state.update).toHaveBeenCalledWith("recipe-1", { name: "Soup", version: 4 });
     expect(state.back).toHaveBeenCalledOnce();
@@ -174,7 +161,7 @@ describe("RecipeEditorScreen", () => {
 
   it("lets its own save leave without asking", () => {
     render(<RecipeEditorScreen mode="create" />);
-    state.save?.();
+    save();
     const repeat = vi.fn();
 
     state.preventRemove?.callback({ repeat });

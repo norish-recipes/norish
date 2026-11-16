@@ -19,7 +19,6 @@ vi.mock("react-native", () => ({
   View: ({ testID, children }: Props) => <div data-testid={testID}>{children}</div>,
   Text: ({ children }: Props) => <span>{children}</span>,
 }));
-vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0 }) }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({
   Skeleton: () => null,
@@ -28,11 +27,7 @@ vi.mock("heroui-native", () => ({
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("@/components/glass", () => ({
-  GlassCloseButton: ({ testID, onPress }: Props) => (
-    <button data-testid={testID} type="button" onClick={onPress} />
-  ),
-}));
+vi.mock("@/components/modal-header", () => import("../../../../__tests__/mocks/modal-header"));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "recipe-1" }),
   useRouter: () => ({ back: state.back, dismissTo: state.dismissTo }),
@@ -53,10 +48,18 @@ vi.mock("@norish/shared-react/reader", () => ({
 vi.mock("@norish/shared-react/recipes", () => ({
   useRecipeQuery: () => ({ recipe: state.recipe, error: state.error }),
 }));
-vi.mock("../screens/recipe-editor-screen", () => ({
-  RecipeEditorScreen: () => <div data-testid="recipe-editor" />,
-  RecipeEditorSkeleton: () => <div data-testid="recipe-editor-skeleton" />,
-}));
+vi.mock("../screens/recipe-editor-screen", async () => {
+  const { EditorHeader } = await import("../components/editor/editor-header");
+
+  return {
+    RecipeEditorScreen: () => <div data-testid="recipe-editor" />,
+    RecipeEditorSkeleton: () => (
+      <div data-testid="recipe-editor-skeleton">
+        <EditorHeader mode="edit" />
+      </div>
+    ),
+  };
+});
 
 const { EditRecipeScreen } = await import("../screens/edit-recipe-screen");
 

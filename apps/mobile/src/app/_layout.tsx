@@ -8,7 +8,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
-import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
@@ -264,7 +264,7 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="recipe/new" />
+        <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
         {/* Add recipe and its imports present over whichever tab the accessory was pressed on. */}
         {FIT_IMPORT_SHEETS.map((name) => (
           <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />

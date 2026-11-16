@@ -1,5 +1,5 @@
 import React from "react";
-import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { useHideTabBar } from "@/lib/tab-bar-visibility";
 import { Stack, useLocalSearchParams } from "expo-router";
 
@@ -47,7 +47,7 @@ export function RecipeLayout() {
         <Stack.Screen name="index" options={{ title: "" }} />
         <Stack.Screen name="servings" options={FIT_SHEET_OPTIONS} />
         <Stack.Screen name="share" options={SHEET_OPTIONS} />
-        <Stack.Screen name="edit" options={{ headerShown: false }} />
+        <Stack.Screen name="edit" options={EDITOR_OPTIONS} />
         <Stack.Screen
           name="cook"
           options={{ headerShown: false, presentation: "fullScreenModal" }}
