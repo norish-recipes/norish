@@ -6,7 +6,6 @@ import { useNavigation, useRoute } from "expo-router";
 // A mark, as the one tab bar and every recipe page live in separate trees; a page clears its own
 // mark when it unmounts, so a mark never outlives the page that set it.
 const shown = createMark<{ key: string; id: string } | null>(null);
-const show = shown.set;
 
 /** The recipe whose page is on screen, from the start of its slide in to the start of its slide out. */
 export const useShownRecipe = () => shown.use()?.id ?? null;
@@ -18,12 +17,12 @@ export function useMarkRecipeShown(id: string) {
   const { key } = useRoute();
 
   useLayoutEffect(() => {
-    const clear = () => shown.get()?.key === key && show(null);
+    const clear = () => shown.update((current) => (current?.key === key ? null : current));
     const stops = [
       navigation.addListener("transitionStart", ({ data }) =>
-        data.closing ? clear() : show({ key, id })
+        data.closing ? clear() : shown.set({ key, id })
       ),
-      navigation.addListener("gestureCancel", () => show({ key, id })),
+      navigation.addListener("gestureCancel", () => shown.set({ key, id })),
     ];
 
     return () => {

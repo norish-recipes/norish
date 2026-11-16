@@ -11,12 +11,15 @@ export function createMark<T>(initial: T) {
     return () => void listeners.delete(listener);
   };
 
+  const set = (next: T) => {
+    value = next;
+    listeners.forEach((listener) => listener());
+  };
+
   return {
-    get: () => value,
-    set(next: T) {
-      value = next;
-      listeners.forEach((listener) => listener());
-    },
+    set,
+    /** Sets the mark from its current value, as a clear that only applies to its own value. */
+    update: (change: (current: T) => T) => set(change(value)),
     use: () => useSyncExternalStore(subscribe, () => value),
   };
 }
