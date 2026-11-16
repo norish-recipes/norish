@@ -9,11 +9,13 @@ import { useIntl } from "react-intl";
 
 import { useCookbookQuery } from "@norish/shared-react/recipes";
 
+import type { AccessoryProps } from "../utils/accessory-plan";
+
 /**
  * The tab bar's bottom accessory: Add recipes opens the picker on a cookbook the Reader may edit;
  * everywhere else Add recipe opens the Add recipe sheet.
  */
-export function AddRecipeAccessory() {
+export function AddRecipeAccessory({ compact }: AccessoryProps) {
   const intl = useIntl();
   const router = useRouter();
   const accent = useAccentTextColor();
@@ -39,7 +41,7 @@ export function AddRecipeAccessory() {
       }
     >
       <Ionicons color={accent} name="add-circle-outline" size={22} />
-      <Text className="text-foreground text-base font-semibold">{label}</Text>
+      {compact ? null : <Text className="text-foreground text-base font-semibold">{label}</Text>}
     </Pressable>
   );
 }

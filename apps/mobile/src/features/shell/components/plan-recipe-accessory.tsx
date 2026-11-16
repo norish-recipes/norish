@@ -6,8 +6,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
+import type { AccessoryProps } from "../utils/accessory-plan";
+
 /** The tab bar's bottom accessory on Calendar: Plan recipe opens the plan sheet with its day picker. */
-export function PlanRecipeAccessory() {
+export function PlanRecipeAccessory({ compact }: AccessoryProps) {
   const intl = useIntl();
   const router = useRouter();
   const accent = useAccentTextColor();
@@ -23,7 +25,7 @@ export function PlanRecipeAccessory() {
       onPress={() => router.push(TAB_ROUTES.calendar.planRecipe)}
     >
       <Ionicons color={accent} name="calendar-outline" size={22} />
-      <Text className="text-foreground text-base font-semibold">{label}</Text>
+      {compact ? null : <Text className="text-foreground text-base font-semibold">{label}</Text>}
     </Pressable>
   );
 }

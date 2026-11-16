@@ -2,13 +2,14 @@ import React from "react";
 import Animated, { LinearTransition, ZoomIn, ZoomOut } from "react-native-reanimated";
 import { TimerCapsule } from "@/components/timer-capsule";
 import { sprung } from "@/lib/motion/spring";
+import { NativeTabs } from "expo-router/native-tabs";
 
-import type { AddAction } from "../utils/accessory-plan";
+import type { AccessoryProps, AddAction } from "../utils/accessory-plan";
 import { AddGroceriesAccessory } from "./add-groceries-accessory";
 import { AddRecipeAccessory } from "./add-recipe-accessory";
 import { PlanRecipeAccessory } from "./plan-recipe-accessory";
 
-const ADD = {
+const ADD: Record<AddAction, React.ComponentType<AccessoryProps>> = {
   recipes: AddRecipeAccessory,
   groceries: AddGroceriesAccessory,
   calendar: PlanRecipeAccessory,
@@ -17,12 +18,14 @@ const ADD = {
 /** The accessory's row: the tab's add action, and the timer capsule springing in beside it. */
 export function ShellAccessory({ add, capsule }: { add: AddAction | null; capsule: boolean }) {
   const Add = add ? ADD[add] : null;
+  // Inline beside the collapsed tab bar, the accessory is too narrow for a label and a countdown.
+  const inline = NativeTabs.BottomAccessory.usePlacement() === "inline";
 
   return (
     <Animated.View className="h-full flex-row items-center justify-center">
       {Add ? (
         <Animated.View className="h-full flex-1" layout={sprung(LinearTransition.springify())}>
-          <Add />
+          <Add compact={inline && capsule} />
         </Animated.View>
       ) : null}
       {capsule ? (

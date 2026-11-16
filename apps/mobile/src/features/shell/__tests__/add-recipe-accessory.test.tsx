@@ -49,7 +49,7 @@ describe("the Add recipe accessory", () => {
 
   it("offers a cookbook's picker to a reader who may edit it", () => {
     state.canEdit = true;
-    render(<AddRecipeAccessory />);
+    render(<AddRecipeAccessory compact={false} />);
     fireEvent.click(screen.getByRole("button", { name: "recipes.cookbooks.addRecipes" }));
 
     expect(router.push).toHaveBeenCalledWith({
@@ -60,9 +60,18 @@ describe("the Add recipe accessory", () => {
 
   it("opens Add recipe on a cookbook the reader may not edit", () => {
     state.canEdit = false;
-    render(<AddRecipeAccessory />);
+    render(<AddRecipeAccessory compact={false} />);
     fireEvent.click(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }));
 
     expect(router.push).toHaveBeenCalledWith("/add-recipe");
+  });
+
+  it("keeps its name for VoiceOver but draws only the icon when compact", () => {
+    state.canEdit = false;
+    render(<AddRecipeAccessory compact />);
+
+    expect(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }).textContent).toBe(
+      ""
+    );
   });
 });

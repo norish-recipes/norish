@@ -6,8 +6,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
+import type { AccessoryProps } from "../utils/accessory-plan";
+
 /** The tab bar's bottom accessory on Groceries: Add items opens the add sheet. */
-export function AddGroceriesAccessory() {
+export function AddGroceriesAccessory({ compact }: AccessoryProps) {
   const intl = useIntl();
   const router = useRouter();
   const accent = useAccentTextColor();
@@ -23,7 +25,7 @@ export function AddGroceriesAccessory() {
       onPress={() => router.push(TAB_ROUTES.groceries.add)}
     >
       <Ionicons color={accent} name="add-circle-outline" size={22} />
-      <Text className="text-foreground text-base font-semibold">{label}</Text>
+      {compact ? null : <Text className="text-foreground text-base font-semibold">{label}</Text>}
     </Pressable>
   );
 }
