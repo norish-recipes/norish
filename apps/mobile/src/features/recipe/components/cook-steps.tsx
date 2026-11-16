@@ -19,15 +19,15 @@ const WINDOW = 2;
 function StepColumn({
   steps,
   current,
-  still,
+  reduceMotion,
   onStepChange,
 }: {
   steps: ResolvedCookingModeStep[];
   current: number;
-  still: boolean;
+  reduceMotion: boolean;
   onStepChange: (step: number) => void;
 }) {
-  const pager = useStepPager({ count: steps.length, current, still, onStepChange });
+  const pager = useStepPager({ count: steps.length, current, reduceMotion, onStepChange });
   const first = Math.max(current - WINDOW, 0);
 
   return (
@@ -36,25 +36,27 @@ function StepColumn({
         className="mx-5 flex-1"
         onLayout={(event) => pager.height.set(event.nativeEvent.layout.height)}
       >
-        {steps.slice(first, current + WINDOW + 1).map((step, offset) => (
-          <StepSlot
-            key={step.stepNumber}
-            index={first + offset}
-            pager={pager}
-            side={first + offset - current}
-            step={step}
-            onPeekPress={() => onStepChange(first + offset)}
-          />
-        ))}
+        {steps.slice(first, current + WINDOW + 1).map((step, offset) => {
+          const index = first + offset;
+
+          return (
+            <StepSlot
+              key={step.stepNumber}
+              current={current}
+              index={index}
+              pager={pager}
+              step={step}
+              onPeekPress={() => onStepChange(index)}
+            />
+          );
+        })}
       </View>
     </GestureDetector>
   );
 }
 
-/**
- * Cook mode's steps: the current one large in the middle, the steps either side faded. Under
- * Reduce Motion the column doesn't move; each step change crossfades a new one in.
- */
+/** The current step large in the middle, its neighbours faded. Under Reduce Motion the column
+ * holds and a step change crossfades a new one in. */
 export function CookSteps({
   steps,
   current,
@@ -68,12 +70,19 @@ export function CookSteps({
 
   if (!steps[current]) return null;
   if (!reduceMotion) {
-    return <StepColumn current={current} steps={steps} still={false} onStepChange={onStepChange} />;
+    return (
+      <StepColumn
+        current={current}
+        reduceMotion={false}
+        steps={steps}
+        onStepChange={onStepChange}
+      />
+    );
   }
 
   return (
     <Animated.View key={current} className="flex-1" entering={CROSSFADE_IN} exiting={CROSSFADE_OUT}>
-      <StepColumn still current={current} steps={steps} onStepChange={onStepChange} />
+      <StepColumn reduceMotion current={current} steps={steps} onStepChange={onStepChange} />
     </Animated.View>
   );
 }

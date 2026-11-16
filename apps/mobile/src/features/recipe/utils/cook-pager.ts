@@ -9,8 +9,15 @@ export const VELOCITY_CARRY = 0.2;
 /** How far out a full step is gone and its peek starts, so the two layers never show together. */
 export const HANDOVER = 0.7;
 
+// Critically damped: a release lands on its step without overshooting into the next.
+export const SPRING = { damping: 30, stiffness: 260, mass: 1 };
+
 /** The steps a drag from the current one can reach. */
 export type StepReach = { first: number; last: number };
+
+export function stepReach(current: number, count: number): StepReach {
+  return { first: Math.max(current - 1, 0), last: Math.min(current + 1, count - 1) };
+}
 
 export type SlotPose = { y: number; scale: number; fullOpacity: number; peekOpacity: number };
 
@@ -21,11 +28,21 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-/**
- * The pose of a step `offset` steps from the column's position: 0 centred at full size, -1 the
- * upper peek, +1 the lower. `y` moves the step's centre from the column's; the full step is gone
- * by `HANDOVER` and its peek fades in after, so a slot never shows its text twice.
- */
+export function clampToReach(position: number, reach: StepReach) {
+  "worklet";
+
+  return clamp(position, reach.first, reach.last);
+}
+
+/** Whether a touch at `y` lands on the current step rather than a peek slot. */
+export function onStep(y: number, column: number) {
+  "worklet";
+
+  return y > PEEK_SLOT && y < column - PEEK_SLOT;
+}
+
+/** A step `offset` steps from the column's position: 0 centred full size, ±1 a peek. The full
+ * step is gone by `HANDOVER` before its peek fades in, so a slot never shows its text twice. */
 export function slotPose(offset: number, column: number, peekHeight: number): SlotPose {
   "worklet";
 
@@ -47,7 +64,7 @@ export function slotPose(offset: number, column: number, peekHeight: number): Sl
 export function settleTarget(position: number, velocity: number, reach: StepReach) {
   "worklet";
 
-  return clamp(Math.round(position + velocity * VELOCITY_CARRY), reach.first, reach.last);
+  return clampToReach(Math.round(position + velocity * VELOCITY_CARRY), reach);
 }
 
 /** Where a spring to `to` starts, so a jump of several steps runs as one page in its direction. */

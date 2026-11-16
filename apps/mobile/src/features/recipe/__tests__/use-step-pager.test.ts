@@ -43,9 +43,9 @@ function touch(y: number, moves: number[], velocityY = 0) {
   pan.config.onFinalize?.(at(moves.at(-1) ?? 0));
 }
 
-function mount(current: number, still: boolean) {
+function mount(current: number, reduceMotion: boolean) {
   const onStepChange = vi.fn();
-  const hook = renderHook(() => useStepPager({ count: 5, current, still, onStepChange }));
+  const hook = renderHook(() => useStepPager({ count: 5, current, reduceMotion, onStepChange }));
 
   hook.result.current.height.set(HEIGHT);
 

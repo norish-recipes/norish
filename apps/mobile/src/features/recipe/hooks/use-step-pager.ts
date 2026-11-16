@@ -5,11 +5,15 @@ import { usePanGesture } from "react-native-gesture-handler";
 import { cancelAnimation, useSharedValue, withSpring } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 
-import type { StepReach } from "../utils/cook-pager";
-import { DRAG_DISTANCE, PEEK_SLOT, settleTarget, springStart } from "../utils/cook-pager";
-
-// Critically damped: a release lands on its step without overshooting into the next.
-const SPRING = { damping: 30, stiffness: 260, mass: 1 };
+import {
+  clampToReach,
+  DRAG_DISTANCE,
+  onStep,
+  settleTarget,
+  SPRING,
+  springStart,
+  stepReach,
+} from "../utils/cook-pager";
 
 /** What the pan reads and writes, shared by the column's slots. */
 export type StepPager = {
@@ -20,20 +24,17 @@ export type StepPager = {
   pan: PanGesture;
 };
 
-/**
- * The step column's `position`: the step it shows, fractional mid-page. A drag moves it, a
- * release springs it with the finger's velocity; a step change from anywhere else springs too.
- * When `still` (Reduce Motion) the column holds and a release only decides the step.
- */
+/** The column's `position`, fractional mid-page: a drag moves it, a release or step change springs
+ * it. Under `reduceMotion` it holds and a release only decides the step. */
 export function useStepPager({
   count,
   current,
-  still,
+  reduceMotion,
   onStepChange,
 }: {
   count: number;
   current: number;
-  still: boolean;
+  reduceMotion: boolean;
   onStepChange: (step: number) => void;
 }): StepPager {
   const position = useSharedValue(current);
@@ -43,14 +44,11 @@ export function useStepPager({
   const scrollAt = useSharedValue(0);
   const scrollMax = useSharedValue(0);
   const dragStart = useSharedValue(0);
-  // Where the drag has taken the column; `position` follows it unless `still`.
+  // Where the drag has taken the column; `position` follows it unless `reduceMotion`.
   const dragged = useSharedValue(0);
   // The translation the drag started paging at; null while the step's text still scrolls.
   const pagingFrom = useSharedValue<number | null>(null);
-  const reach: StepReach = {
-    first: Math.max(current - 1, 0),
-    last: Math.min(current + 1, count - 1),
-  };
+  const reach = stepReach(current, count);
 
   useEffect(() => {
     scheduleOnUI(() => {
@@ -71,10 +69,9 @@ export function useStepPager({
       cancelAnimation(position);
       dragStart.set(position.get());
       dragged.set(position.get());
-      const y = event.y - event.translationY;
-      const onStep = y > PEEK_SLOT && y < height.get() - PEEK_SLOT;
+      const startY = event.y - event.translationY;
 
-      pagingFrom.set(onStep ? null : event.translationY);
+      pagingFrom.set(onStep(startY, height.get()) ? null : event.translationY);
     },
     onUpdate: (event) => {
       "worklet";
@@ -90,8 +87,8 @@ export function useStepPager({
       }
       const next = dragStart.get() - (event.translationY - from) / DRAG_DISTANCE;
 
-      dragged.set(Math.min(reach.last, Math.max(reach.first, next)));
-      if (!still) position.set(dragged.get());
+      dragged.set(clampToReach(next, reach));
+      if (!reduceMotion) position.set(dragged.get());
     },
     onDeactivate: (event) => {
       "worklet";
@@ -99,7 +96,7 @@ export function useStepPager({
       const target = settleTarget(dragged.get(), velocity, reach);
 
       if (target !== current) scheduleOnRN(onStepChange, target);
-      if (still) return;
+      if (reduceMotion) return;
       goal.set(target);
       position.set(withSpring(target, { ...SPRING, velocity }));
     },

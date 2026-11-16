@@ -16,8 +16,7 @@ import { useTint } from "./tint";
 
 export type CookView = "steps" | "ingredients";
 
-/** The bar sits on the 34 pt home-indicator inset: the glass Host stops at the safe area, so a
- * lower bar's glass is shorter than its frame and the centred content sits low in it. */
+// On the 34 pt home-indicator inset: the glass Host stops at the safe area and would cut a lower bar.
 export const BAR_BOTTOM = 34;
 export const BAR_HEIGHT = 48;
 

@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clampToReach,
   HANDOVER,
+  onStep,
   PEEK_OPACITY,
   PEEK_SCALE,
   PEEK_SLOT,
   settleTarget,
   slotPose,
   springStart,
+  stepReach,
 } from "../utils/cook-pager";
 
 const COLUMN = 600;
@@ -75,6 +78,30 @@ describe("settleTarget", () => {
   it("stays within the steps a drag can reach", () => {
     expect(settleTarget(3.9, 5, { first: 2, last: 3 })).toBe(3);
     expect(settleTarget(0.1, -5, { first: 0, last: 1 })).toBe(0);
+  });
+});
+
+describe("stepReach", () => {
+  it("reaches one step either side, within the recipe", () => {
+    expect(stepReach(2, 5)).toEqual({ first: 1, last: 3 });
+    expect(stepReach(0, 5)).toEqual({ first: 0, last: 1 });
+    expect(stepReach(4, 5)).toEqual({ first: 3, last: 4 });
+  });
+
+  it("holds a drag within that reach", () => {
+    const reach = stepReach(2, 5);
+
+    expect(clampToReach(0.4, reach)).toBe(1);
+    expect(clampToReach(2.6, reach)).toBe(2.6);
+    expect(clampToReach(3.7, reach)).toBe(3);
+  });
+});
+
+describe("onStep", () => {
+  it("tells the current step's region from the peek slots", () => {
+    expect(onStep(COLUMN / 2, COLUMN)).toBe(true);
+    expect(onStep(PEEK_SLOT / 2, COLUMN)).toBe(false);
+    expect(onStep(COLUMN - PEEK_SLOT / 2, COLUMN)).toBe(false);
   });
 });
 

@@ -17,24 +17,23 @@ import type { StepPager } from "../hooks/use-step-pager";
 import { PEEK_SLOT, slotPose } from "../utils/cook-pager";
 import { PeekBody, StepBody } from "./cook-step-body";
 
-/**
- * One step, posed by its distance from the pager's position: full in the middle region, or as
- * its peek. Keyed by step, so a step change moves no slot.
- */
+/** One step, posed by its distance from the pager's position: full in the middle or as its
+ * peek. Keyed by step, so a step change moves no slot. */
 export function StepSlot({
   step,
   index,
-  side,
+  current,
   pager,
   onPeekPress,
 }: {
   step: ResolvedCookingModeStep;
   index: number;
-  side: number;
+  current: number;
   pager: StepPager;
   onPeekPress: () => void;
 }) {
   const intl = useIntl();
+  const side = index - current;
   const isCurrent = side === 0;
   const isPeek = Math.abs(side) === 1;
   const peekHeight = useSharedValue(0);
@@ -60,11 +59,12 @@ export function StepSlot({
   });
 
   useAnimatedReaction(
-    () => (isCurrent ? [scrollAt.get(), Math.max(0, content.get() - viewport.get())] : null),
+    () =>
+      isCurrent ? { at: scrollAt.get(), max: Math.max(0, content.get() - viewport.get()) } : null,
     (edge) => {
       if (!edge) return;
-      pager.scrollAt.set(edge[0] ?? 0);
-      pager.scrollMax.set(edge[1] ?? 0);
+      pager.scrollAt.set(edge.at);
+      pager.scrollMax.set(edge.max);
     },
     [isCurrent]
   );
