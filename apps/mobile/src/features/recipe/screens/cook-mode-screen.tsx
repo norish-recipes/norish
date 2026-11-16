@@ -197,7 +197,8 @@ function CookMode() {
         {timersEnabled ? (
           <TimerPill
             {...COOK_PILL}
-            listWidth={width - COOK_PILL.left - BAR_SIDE}
+            listLeft={BAR_SIDE}
+            listWidth={width - BAR_SIDE * 2}
             open={timersOpen}
             testID="cook-timers"
             onOpenChange={setTimersOpen}
