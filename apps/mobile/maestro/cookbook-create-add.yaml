@@ -19,6 +19,8 @@ appId: dev.norish.app
       id: new-cookbook-title
     timeout: 20000
 - inputText: Weeknight Dinners
+- hideKeyboard
+- waitForAnimationToEnd
 - tapOn:
     id: cookbook-add-recipes-row-${output.soup}
 # Create is the sheet's native header item, which has no id.
