@@ -17,7 +17,12 @@ const lightImpact = vi.fn();
 vi.mock("react-native", () => ({
   View: host,
   Pressable: ({ children, accessibilityLabel, disabled, testID, onPress }: Props) => (
-    <button aria-label={accessibilityLabel} data-testid={testID} disabled={disabled} onClick={onPress}>
+    <button
+      aria-label={accessibilityLabel}
+      data-testid={testID}
+      disabled={disabled}
+      onClick={onPress}
+    >
       {children}
     </button>
   ),

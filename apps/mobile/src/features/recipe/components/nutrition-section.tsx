@@ -16,9 +16,9 @@ import {
 import { workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 
 import type { NutritionFigures } from "../utils/stored-nutrition";
+import { DAILY_REFERENCE, percentOfReference } from "../utils/nutrition-reference";
 import { aroundCount } from "../utils/portions-label";
 import { plainText } from "../utils/recipe-rows";
-import { DAILY_REFERENCE, percentOfReference } from "../utils/nutrition-reference";
 import { storedNutrition } from "../utils/stored-nutrition";
 import { SectionCard } from "./tint";
 

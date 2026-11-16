@@ -4,6 +4,7 @@ import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { scheduleOnRN } from "react-native-worklets";
 import { GlassIconButton } from "@/components/glass";
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
@@ -12,7 +13,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { VideoView } from "expo-video";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
-import { scheduleOnRN } from "react-native-worklets";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 

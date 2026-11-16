@@ -83,9 +83,7 @@ export function IngredientRows({
         className={`min-h-12 flex-row items-center gap-2.5 py-2 ${index === 0 ? "" : "border-separator border-t"}`}
         testID={`editor-ingredient-${index}`}
       >
-        {heading ? null : (
-          <IngredientIcon ingredientId={lineFoods[index]?.foodId} />
-        )}
+        {heading ? null : <IngredientIcon ingredientId={lineFoods[index]?.foodId} />}
         <View className="flex-1">
           <EditorInput
             {...trailingRow.inputProps(row, index)}

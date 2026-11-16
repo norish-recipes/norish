@@ -13,6 +13,7 @@ import {
 } from "@norish/shared-react/recipes";
 
 import { CookbooksSection } from "../components/cookbooks-section";
+import { PrefetchIngredientIcons } from "../components/ingredient-icon-prefetch";
 import { IngredientsSection } from "../components/ingredients-section";
 import { NotesSection } from "../components/notes-section";
 import { NutritionSection } from "../components/nutrition-section";
@@ -20,7 +21,6 @@ import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
-import { PrefetchIngredientIcons } from "../components/ingredient-icon-prefetch";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { RecipeToolbar } from "../components/recipe-toolbar";
 import { SourceSection } from "../components/source-section";

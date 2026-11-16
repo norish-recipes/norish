@@ -16,8 +16,8 @@ import { GlassCloseButton } from "@/components/glass";
 import { settleTo } from "@/lib/motion/settle-to";
 import { VideoView } from "expo-video";
 
-import { useServerVideoPlayer } from "../hooks/use-server-video-player";
 import type { Item } from "../utils/hero-items";
+import { useServerVideoPlayer } from "../hooks/use-server-video-player";
 import { counterLabel, dismisses, pageAt } from "../utils/viewer-pages";
 import { ZoomableImage } from "./zoomable-image";
 
@@ -135,7 +135,10 @@ export function MediaViewer({
               style={{ top: insets.top + 6 }}
             >
               <View className="size-10" />
-              <Text className="text-[17px] text-accent-foreground font-semibold" testID="media-viewer-count">
+              <Text
+                className="text-accent-foreground text-[17px] font-semibold"
+                testID="media-viewer-count"
+              >
                 {counterLabel(page, items.length)}
               </Text>
               <GlassCloseButton

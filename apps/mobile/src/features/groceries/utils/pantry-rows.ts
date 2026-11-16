@@ -41,7 +41,8 @@ export function pantryRows(
   const rows: PantryRow[] = [];
 
   if (items.length === 0) rows.push({ key: "note", foodId: null, type: "note", text: "empty" });
-  else if (kept.length === 0) rows.push({ key: "note", foodId: null, type: "note", text: "noMatch" });
+  else if (kept.length === 0)
+    rows.push({ key: "note", foodId: null, type: "note", text: "noMatch" });
   else {
     kept.forEach((item, index) =>
       rows.push({

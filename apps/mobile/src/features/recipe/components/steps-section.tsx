@@ -177,7 +177,9 @@ export function StepChips({
 
   const chips = resolved.map((item) => ({
     item,
-    foodId: namesNoFood(item.name) ? null : (lineAt.get(item.ingredientOrder)?.ingredientId ?? null),
+    foodId: namesNoFood(item.name)
+      ? null
+      : (lineAt.get(item.ingredientOrder)?.ingredientId ?? null),
   }));
 
   return (
