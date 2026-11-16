@@ -27,8 +27,9 @@ appId: dev.norish.app
 - tapOn:
     text: Allow
     optional: true
+# The native toolbar's items carry no id, so Home is tapped by its label.
 - tapOn:
-    id: recipe-home
+    text: Home
 - extendedWaitUntil:
     visible:
       id: timer-capsule

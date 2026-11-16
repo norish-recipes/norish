@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { ScrollView, View } from "react-native";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { useSheetOpen } from "@/lib/tab-bar-visibility";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
 
@@ -20,18 +19,15 @@ import { NotesSection } from "../components/notes-section";
 import { NutritionSection } from "../components/nutrition-section";
 import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
-import { RecipeBottomBar } from "../components/recipe-bottom-bar";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
+import { RecipeToolbar } from "../components/recipe-toolbar";
 import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
 import { TintContext } from "../components/tint";
 import { useRecipeHeaderItems } from "../hooks/use-recipe-menu";
 import { dishTint } from "../utils/dish-tint";
-
-/** The scroll offset past which the recipe's name takes the header. */
-const TITLE_OFFSET = 330;
 
 function RecipeSkeleton() {
   return (
@@ -54,10 +50,7 @@ function RecipePage() {
   const { showFavorites } = useHiddenItemVisibility();
   const { toggleFavorite } = useFavoritesMutation();
   const [background] = useThemeColor(["background"] as const);
-  const [scrolled, setScrolled] = useState(false);
   const headerItems = useRecipeHeaderItems();
-  // A sheet over the page is glass, which would show the bar through it.
-  const sheetOpen = useSheetOpen();
   const tint = colorMode === "dish" ? dishTint(recipe.dishColor, scheme) : null;
 
   useAutoConversion();
@@ -68,17 +61,16 @@ function RecipePage() {
     <TintContext value={tint}>
       <Stack.Screen
         options={{
-          title: scrolled ? recipe.name : "",
+          // The header floats over the photo: its items stay pinned, with no bar or title behind them.
+          scrollEdgeEffects: { top: "hidden" },
           unstable_headerRightItems: () => headerItems,
         }}
       />
       <ScrollView
         contentInsetAdjustmentBehavior="never"
-        scrollEventThrottle={64}
         showsVerticalScrollIndicator={false}
         style={{ backgroundColor: tint?.page ?? background }}
         testID="recipe-screen"
-        onScroll={(event) => setScrolled(event.nativeEvent.contentOffset.y > TITLE_OFFSET)}
       >
         <RecipeHero
           pageColor={tint?.page ?? background}
@@ -99,7 +91,7 @@ function RecipePage() {
           </View>
         </View>
       </ScrollView>
-      {sheetOpen ? null : <RecipeBottomBar page={tint?.page ?? background} recipeId={recipe.id} />}
+      <RecipeToolbar recipeId={recipe.id} />
     </TintContext>
   );
 }
