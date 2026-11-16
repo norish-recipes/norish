@@ -12,7 +12,7 @@ import { useCuisinesQuery } from "@norish/shared-react/config";
 import { countryFlagEmoji, listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
 import { SectionCard } from "../tint";
-import { requestChoice } from "./choice-request";
+import { choiceRoute, requestChoice } from "./choice-request";
 import { AddChip, RemovableChip } from "./detail-cards";
 import { EditorField, EditorInput } from "./editor-parts";
 
@@ -34,8 +34,6 @@ export function ProvenanceCard({
     const countries = listCountryOptions(intl.locale);
 
     requestChoice({
-      name: "editor-country",
-      title: text("recipes.form.originCountry"),
       choices: countries.map((option) => ({
         key: option.code,
         label: `${countryFlagEmoji(option.code) ?? ""} ${option.name}`.trim(),
@@ -50,18 +48,17 @@ export function ProvenanceCard({
             : null,
         }),
     });
-    router.push("/editor-choice");
+    router.push(choiceRoute({ name: "editor-country", title: text("recipes.form.originCountry") }));
   };
   const pickCuisines = () => {
     requestChoice({
-      name: "editor-cuisine",
-      title: text("recipes.form.cuisines"),
       choices: cuisines.map((cuisine) => ({ key: cuisine.id, label: cuisine.name })),
       selected: value.cuisineIds,
-      multiple: true,
       onChange: (cuisineIds) => patch({ cuisineIds }),
     });
-    router.push("/editor-choice");
+    router.push(
+      choiceRoute({ name: "editor-cuisine", title: text("recipes.form.cuisines"), multiple: true })
+    );
   };
   const flag = countryFlagEmoji(value.originCountry);
   const cuisineName = (id: string) => cuisines.find((cuisine) => cuisine.id === id)?.name ?? id;
