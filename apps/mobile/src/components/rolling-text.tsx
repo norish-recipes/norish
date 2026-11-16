@@ -10,6 +10,8 @@ import { SPRING } from "@/lib/motion/spring";
 
 import { toSlots } from "@norish/shared/lib/rolling-slots";
 
+const TABULAR = { fontVariant: ["tabular-nums"] } as const;
+
 /** A layout animation moving a character from one place and opacity to another, on the app's spring. */
 function slide(fromY: number, toY: number, fromOpacity: number, toOpacity: number) {
   "worklet";
@@ -40,7 +42,7 @@ function Slot({
       {/* In flow, unseen: sizes the slot for the rolling characters on top. */}
       <Text
         className={`${className} opacity-0`}
-        style={{ fontVariant: ["tabular-nums"] }}
+        style={TABULAR}
         onLayout={(event) => height.set(event.nativeEvent.layout.height)}
       >
         {character}
@@ -58,7 +60,7 @@ function Slot({
 
           return slide(0, rising ? -height.get() : height.get(), 1, 0);
         }}
-        style={{ fontVariant: ["tabular-nums"] }}
+        style={TABULAR}
       >
         {character}
       </Animated.Text>
@@ -89,7 +91,7 @@ export function RollingText({
 
   if (reduceMotion) {
     return (
-      <Text className={className} style={{ fontVariant: ["tabular-nums"] }}>
+      <Text className={className} style={TABULAR}>
         {value}
       </Text>
     );

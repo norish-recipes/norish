@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { GlassSurface } from "@/components/glass";
-import { TimerGlance, useTimersLabel } from "@/components/timer-glance";
+import { TimerGlance, useTimersLabel, useTimersName } from "@/components/timer-glance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -62,14 +62,12 @@ function TimersButton({ onPress }: { onPress: () => void }) {
   const tint = useTint();
   const timers = useTimerStore((state) => state.timers);
   const [foreground] = useThemeColor(["foreground"] as const);
-  const intl = useIntl();
+  const name = useTimersName();
   const timersLabel = useTimersLabel(timers);
 
   if (!timerGlance(timers).any) {
-    const label = intl.formatMessage({ id: "recipes.cookMode.timers" });
-
     return (
-      <BarButton disabled label={label} testID="cook-timers" onPress={onPress}>
+      <BarButton disabled label={name} testID="cook-timers" onPress={onPress}>
         <Ionicons color={foreground} name="timer-outline" size={21} />
       </BarButton>
     );

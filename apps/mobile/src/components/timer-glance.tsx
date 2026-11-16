@@ -11,11 +11,16 @@ import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { TimerRing } from "./timer-ring";
 
+/** The timers' name, as a screen reader and the empty cook bar say it. */
+export function useTimersName(): string {
+  return useIntl().formatMessage({ id: "recipes.cookMode.timers" });
+}
+
 /** What a screen reader says of the timers: the soonest as a spoken duration, its state, any done. */
 export function useTimersLabel(timers: readonly Timer[]): string {
   const intl = useIntl();
   const { soonest, anyDone } = timerGlance(timers);
-  const name = intl.formatMessage({ id: "recipes.cookMode.timers" });
+  const name = useTimersName();
 
   if (!soonest) return `${name}, ${intl.formatMessage({ id: "common.timer.done" })}`;
 
