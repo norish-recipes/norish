@@ -405,7 +405,7 @@ Native iOS navigation everywhere a screen has a counterpart, motion that follows
 ### Rules
 
 - **Native first.** Native headers, toolbars and sheet headers wherever iOS has them. Two exceptions keep their canvas design: the tab roots' TitleRow (Recipes, Groceries, Pantry, Calendar) and cook mode's full-screen chrome. Controls in a TitleRow sit in glass.
-- **Accessory rule.** The bottom accessory is the tab's one add action, labelled for what's on screen: Add recipe or Add cookbook on Recipes, Cook on a recipe, Add items or Add to pantry on Groceries, Plan recipe on Calendar. No duplicate plus buttons in headers. Calendar's per-day "+" stays because it carries a date. While any Recipe Timer exists, the accessory also holds a timer capsule.
+- **Accessory rule.** The bottom accessory is the tab's one add action, labelled for what's on screen: Add recipe or Add cookbook on Recipes, Add items or Add to pantry on Groceries, Plan recipe on Calendar. No duplicate plus buttons in headers. Calendar's per-day "+" stays because it carries a date. While any Recipe Timer exists, the accessory also holds a timer capsule.
 - **Motion.** Springs instead of timed eases; gestures follow the finger and are interruptible; haptics where something changes; Reduce Motion gets fades or nothing. Web's micro-animations (the inventory below) are the floor, not the target. Motion lives in each area's ticket.
 - **Loaders.** One shared loader on the native iOS activity indicator that centres itself, in a list above the tab bar and accessory. A skeleton wherever the data's shape is known.
 
@@ -420,7 +420,7 @@ Rolling digits for servings, ingredient amounts, nutrition and portions (`compon
 
 ### Recipe page
 
-- Back and actions stay native header items, pinned while scrolling, with no scroll-edge title bar. The recipe page keeps the tab bar, and its bottom accessory reads Cook and opens cook mode (Mike, 2026-11-16, replacing the Home and Cook toolbar first specced here). `recipe-bottom-bar.tsx` goes and there is no Home button: the Recipes tab goes home. Cook mode and the editor still hide the tab bar.
+- Back and actions stay native header items, pinned while scrolling, with no scroll-edge title bar. At the bottom the page floats two glass controls, as web's recipe page does but mirrored: Cook on the right, and on the left a timer pill while a Recipe Timer exists, which opens the timer list with the glass morph (Mike, 2026-11-16; a Cook bottom accessory was tried and dropped because the accessory's label cannot follow the push). The tab bar stays hidden on the recipe page; `recipe-bottom-bar.tsx` goes and there is no Home button.
 - The servings and portion steppers are glass, like the conversion menu. The calorie card matches the canvas.
 - A tap on the hero opens a full-screen viewer of every image and video, from the one tapped: pinch zoom, swipe down to dismiss, "n / m". The video fullscreen button works.
 - Server images (icons, photos, avatars) load through `expo-image` with its memory and disk cache; a recipe's icons are prefetched as the page opens. A food with no icon shows nothing: an empty slot of the icon's width only when another row in that list has an icon, otherwise no slot.
