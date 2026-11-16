@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { Button, Input, TextField, useThemeColor } from "heroui-native";
+import { Input, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
@@ -23,10 +22,7 @@ export function RecipeServingsScreen() {
   const recipe = useLoadedPageRecipe();
   const servings = usePageServings();
   const setServings = useRecipePageStore((state) => state.setServings);
-  const [foreground, accentForeground] = useThemeColor([
-    "foreground",
-    "accent-foreground",
-  ] as const);
+  const [foreground] = useThemeColor(["foreground"] as const);
   const original = recipe.servings || 1;
   const drafts = (next: number) => ({
     servings: formatAmountAsDecimal(next),
@@ -45,23 +41,7 @@ export function RecipeServingsScreen() {
   };
 
   return (
-    <Sheet
-      actions={
-        <Button
-          className="h-12"
-          testID="recipe-servings-done"
-          variant="primary"
-          onPress={() => router.back()}
-        >
-          <Ionicons color={accentForeground} name="checkmark" size={18} />
-          <Button.Label className="font-semibold">
-            {intl.formatMessage({ id: "common.actions.done" })}
-          </Button.Label>
-        </Button>
-      }
-      name="recipe-servings"
-      title={intl.formatMessage({ id: "recipes.form.servings" })}
-    >
+    <Sheet name="recipe-servings" title={intl.formatMessage({ id: "recipes.form.servings" })}>
       <SheetBody contentClassName="gap-3">
         <View className="flex-row gap-3">
           <View className="flex-1 flex-row items-center gap-2">

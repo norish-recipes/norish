@@ -1,3 +1,4 @@
+import type { HeaderConfirm } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
 import { Sheet, SheetScrollView } from "@/components/sheet";
@@ -40,6 +41,7 @@ export function GrocerySheet({
   onConfirmDetected,
   onConfirmed,
   trailingRows,
+  confirm,
   actions,
 }: {
   /** The testID prefix: `<name>-sheet`. */
@@ -66,8 +68,10 @@ export function GrocerySheet({
   onConfirmDetected: () => void;
   onConfirmed: (pattern: RecurrencePattern | null) => void;
   trailingRows?: ReactNode;
-  /** The form view's pinned actions. */
-  actions: ReactNode;
+  /** The form view's header item, Save. */
+  confirm: HeaderConfirm;
+  /** The form view's pinned actions, if any. */
+  actions?: ReactNode;
 }) {
   const intl = useIntl();
   const recurrence = useRecurrenceLabel();
@@ -104,7 +108,7 @@ export function GrocerySheet({
   );
   const steps: Record<Step, ReactNode> = {
     form: (
-      <Sheet actions={actions} name={name} subtitle={subtitle} title={title}>
+      <Sheet actions={actions} confirm={confirm} name={name} subtitle={subtitle} title={title}>
         <SheetScrollView contentClassName="gap-3">
           {field}
           <RepeatPills
@@ -147,40 +151,28 @@ export function GrocerySheet({
     repeat: (
       <Sheet
         actions={
-          <Sheet.Actions>
-            {confirmed ? (
-              <Sheet.Action>
-                <Button
-                  className="h-12"
-                  testID="repeat-clear"
-                  variant="secondary"
-                  onPress={() => {
-                    onConfirmed(null);
-                    back();
-                  }}
-                >
-                  <Button.Label className="font-medium">
-                    {text("common.actions.remove")}
-                  </Button.Label>
-                </Button>
-              </Sheet.Action>
-            ) : null}
-            <Sheet.Action>
-              <Button
-                className="h-12"
-                isDisabled={!draft}
-                testID="repeat-done"
-                variant="primary"
-                onPress={() => {
-                  onConfirmed(draft);
-                  back();
-                }}
-              >
-                <Button.Label className="font-semibold">{text("common.actions.done")}</Button.Label>
-              </Button>
-            </Sheet.Action>
-          </Sheet.Actions>
+          confirmed ? (
+            <Button
+              className="h-12"
+              testID="repeat-clear"
+              variant="secondary"
+              onPress={() => {
+                onConfirmed(null);
+                back();
+              }}
+            >
+              <Button.Label className="font-medium">{text("common.actions.remove")}</Button.Label>
+            </Button>
+          ) : undefined
         }
+        confirm={{
+          label: text("common.actions.done"),
+          disabled: !draft,
+          onPress: () => {
+            onConfirmed(draft);
+            back();
+          },
+        }}
         name={`${name}-repeat`}
         title={text("common.recurrence.title")}
         onClose={back}

@@ -25,8 +25,6 @@ export function NewCookbookScreen() {
     <RecipePickSheet
       action={{
         label: intl.formatMessage({ id: "common.actions.create" }),
-        icon: "add",
-        testID: "new-cookbook-submit",
         onPress: canCreate ? submit : undefined,
       }}
       emptyId="recipes.cookbooks.noRecipesToAdd"

@@ -84,8 +84,30 @@ vi.mock("@/components/sheet", async () => {
   const { createElement } = await import("react");
   const pass = ({ children }: { children?: React.ReactNode }) => children;
   const Sheet = Object.assign(
-    ({ children, actions }: { children?: React.ReactNode; actions?: React.ReactNode }) =>
-      createElement("div", null, children, actions),
+    ({
+      children,
+      actions,
+      name,
+      confirm,
+    }: {
+      children?: React.ReactNode;
+      actions?: React.ReactNode;
+      name: string;
+      confirm?: { disabled?: boolean; onPress: () => void };
+    }) =>
+      createElement(
+        "div",
+        null,
+        children,
+        actions,
+        confirm
+          ? createElement("button", {
+              "data-testid": `${name}-confirm`,
+              disabled: confirm.disabled,
+              onClick: confirm.onPress,
+            })
+          : null
+      ),
     { Actions: pass, Action: pass }
   );
 
@@ -144,7 +166,7 @@ describe("PlannedItemScreen", () => {
   it("edits a note's text and saves it", () => {
     render(<PlannedItemScreen />);
     const field = screen.getByTestId("planned-item-note");
-    const save = screen.getByTestId("planned-item-save");
+    const save = screen.getByTestId("planned-item-confirm");
 
     expect(field).toHaveProperty("value", "Leftovers");
     expect(save).toHaveProperty("disabled", true);
@@ -161,7 +183,7 @@ describe("PlannedItemScreen", () => {
     render(<PlannedItemScreen />);
 
     expect(screen.queryByTestId("planned-item-note")).toBeNull();
-    expect(screen.queryByTestId("planned-item-save")).toBeNull();
+    expect(screen.queryByTestId("planned-item-confirm")).toBeNull();
   });
 
   it("moves to a picked day in the range last in its slot and stays open on it", () => {

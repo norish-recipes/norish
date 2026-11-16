@@ -1,9 +1,7 @@
-import type { ComponentProps, ReactElement } from "react";
+import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
 import { Sheet, SheetList } from "@/components/sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
 
 import type { PickRowPosition } from "./pick-row";
 import { PickRowSkeleton } from "./pick-row";
@@ -21,7 +19,7 @@ export type PickList<Item> = {
 };
 
 /**
- * A sheet of things to tick: `header` over the rows of `list`, the one `action` pinned below,
+ * A sheet of things to tick: `header` over the rows of `list`, the one `action` as the header's confirm,
  * which stays off without an `onPress`. Without a `list` the rows are skeletons.
  */
 export function PickSheet<Item>({
@@ -40,28 +38,18 @@ export function PickSheet<Item>({
   list?: PickList<Item>;
   action: {
     label: string;
-    icon: ComponentProps<typeof Ionicons>["name"];
-    testID: string;
     onPress?: () => void;
   };
 }) {
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
   const items = list?.items ?? [];
 
   return (
     <Sheet
-      actions={
-        <Button
-          className="h-[50px] rounded-full"
-          isDisabled={!action.onPress}
-          testID={action.testID}
-          variant="primary"
-          onPress={action.onPress}
-        >
-          <Ionicons color={accentForeground} name={action.icon} size={20} />
-          <Button.Label className="text-base font-semibold">{action.label}</Button.Label>
-        </Button>
-      }
+      confirm={{
+        label: action.label,
+        disabled: !action.onPress,
+        onPress: () => action.onPress?.(),
+      }}
       name={name}
       subtitle={subtitle}
       title={title}

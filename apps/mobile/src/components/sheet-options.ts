@@ -1,13 +1,22 @@
 import type { NativeStackNavigationOptions } from "expo-router/native-stack";
 
-/** Shared by both: a form sheet on the native glass, with the screen drawing its own header. */
+/** A screen whose native header a `ModalHeader` fills: the stack's own, over the content. */
+export const EDITOR_OPTIONS = {
+  headerShown: true,
+  headerTransparent: false,
+  headerShadowVisible: false,
+} as const satisfies NativeStackNavigationOptions;
+
+/** Shared by both: a form sheet on the native glass, its header declared by `Sheet`. */
 const FORM_SHEET = {
+  ...EDITOR_OPTIONS,
   presentation: "formSheet",
-  headerShown: false,
+  // The glass shows through the header, as through the rest of the sheet.
+  headerStyle: { backgroundColor: "transparent" },
 } as const satisfies NativeStackNavigationOptions;
 
 /** Opens at 62% and expands by drag or by scrolling to the edge; `bottom: 0` makes the content
- *  fill the sheet at every detent, so `Sheet` pins its header and actions with flexbox. */
+ *  fill the sheet at every detent, so `Sheet` pins its actions with flexbox. */
 export const SHEET_OPTIONS = {
   ...FORM_SHEET,
   sheetGrabberVisible: true,

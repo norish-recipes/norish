@@ -112,39 +112,27 @@ function EditSheet({
   return (
     <GrocerySheet
       actions={
-        <Sheet.Actions>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              testID="edit-grocery-delete"
-              variant="secondary"
-              onPress={() => {
-                remove();
-                router.back();
-              }}
-            >
-              <Button.Label className="text-danger font-medium">
-                {intl.formatMessage({ id: "common.actions.delete" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              isDisabled={!trimmed || !productValid}
-              testID="edit-grocery-save"
-              variant="primary"
-              onPress={submit}
-            >
-              <Button.Label className="font-semibold">
-                {intl.formatMessage({ id: "common.actions.save" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
+        <Button
+          className="h-[50px]"
+          testID="edit-grocery-delete"
+          variant="secondary"
+          onPress={() => {
+            remove();
+            router.back();
+          }}
+        >
+          <Button.Label className="text-danger font-medium">
+            {intl.formatMessage({ id: "common.actions.delete" })}
+          </Button.Label>
+        </Button>
       }
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.save" }),
+        disabled: !trimmed || !productValid,
+        onPress: submit,
+      }}
       confirmed={form.confirmedPattern}
       detected={detectedPattern?.pattern ?? null}
       field={

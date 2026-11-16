@@ -21,8 +21,8 @@ appId: dev.norish.app
 - inputText: Weeknight Dinners
 - tapOn:
     id: cookbook-add-recipes-row-${output.soup}
-- tapOn:
-    id: new-cookbook-submit
+# Create is the sheet's native header item, which has no id.
+- tapOn: Create
 # The new cookbook is on the Cookbooks lens and opens with its one recipe.
 - extendedWaitUntil:
     visible: Weeknight Dinners
@@ -46,8 +46,7 @@ appId: dev.norish.app
     timeout: 20000
 - tapOn:
     id: cookbook-add-recipes-row-${output.tart}
-- tapOn:
-    id: cookbook-add-recipes-add
+- tapOn: Add.*
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.tart}

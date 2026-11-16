@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useRouter } from "expo-router";
-import { Button, Input, Switch } from "heroui-native";
+import { Input, Switch } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
@@ -52,21 +52,13 @@ export function AddGroceriesScreen() {
 
   return (
     <GrocerySheet
-      actions={
-        <Button
-          className="h-[50px] rounded-full"
-          isDisabled={!trimmed}
-          testID="add-grocery-submit"
-          variant="primary"
-          onPress={submit}
-        >
-          <Button.Label className="text-base font-semibold">
-            {intl.formatMessage({ id: "common.actions.add" })}
-          </Button.Label>
-        </Button>
-      }
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.add" }),
+        disabled: !trimmed,
+        onPress: submit,
+      }}
       confirmed={form.confirmedPattern}
       detected={detectedPattern?.pattern ?? null}
       field={

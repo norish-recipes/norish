@@ -91,21 +91,6 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
             </Button>
           ) : null}
           <Sheet.Actions>
-            {recipeId ? null : (
-              <Sheet.Action>
-                <Button
-                  className="h-[50px]"
-                  isDisabled={!noteChanged}
-                  testID="planned-item-save"
-                  variant="primary"
-                  onPress={saveNote}
-                >
-                  <Button.Label className="font-semibold">
-                    {intl.formatMessage({ id: "common.actions.save" })}
-                  </Button.Label>
-                </Button>
-              </Sheet.Action>
-            )}
             {recipeId ? (
               <Sheet.Action>
                 <Button
@@ -138,6 +123,15 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
             </Sheet.Action>
           </Sheet.Actions>
         </View>
+      }
+      confirm={
+        recipeId
+          ? undefined
+          : {
+              label: intl.formatMessage({ id: "common.actions.save" }),
+              disabled: !noteChanged,
+              onPress: saveNote,
+            }
       }
       name="planned-item"
       subtitle={subtitle ?? undefined}

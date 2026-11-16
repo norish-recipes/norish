@@ -5,7 +5,7 @@ describe("sheet route options", () => {
   it("opens a resizable sheet at 62% with a grabber and expands to full on scroll", () => {
     expect(SHEET_OPTIONS).toMatchObject({
       presentation: "formSheet",
-      headerShown: false,
+      headerShown: true,
       sheetGrabberVisible: true,
       sheetAllowedDetents: [0.62, 1],
       sheetInitialDetentIndex: 0,
@@ -20,7 +20,7 @@ describe("sheet route options", () => {
   it("sizes a fitting sheet to its content, without a grabber or a second height", () => {
     expect(FIT_SHEET_OPTIONS).toMatchObject({
       presentation: "formSheet",
-      headerShown: false,
+      headerShown: true,
       sheetGrabberVisible: false,
       sheetAllowedDetents: "fitToContents",
       contentStyle: { backgroundColor: "transparent" },

@@ -46,8 +46,6 @@ export function AddToCookbookScreen() {
     <PickSheet
       action={{
         label: intl.formatMessage({ id: "common.actions.save" }),
-        icon: "checkmark",
-        testID: "add-to-cookbook-save",
         onPress: isDirty ? () => void save(() => router.back()) : undefined,
       }}
       header={

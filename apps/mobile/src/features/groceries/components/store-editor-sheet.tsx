@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { Sheet } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, Input, TextField, useThemeColor } from "heroui-native";
+import { Input, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { EditingStore } from "@norish/shared-react/groceries";
@@ -43,33 +43,11 @@ export function StoreEditorSheet({
 
   return (
     <Sheet
-      actions={
-        <Sheet.Actions>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              testID="store-editor-cancel"
-              variant="secondary"
-              onPress={onBack}
-            >
-              <Button.Label className="font-medium">{text("common.actions.cancel")}</Button.Label>
-            </Button>
-          </Sheet.Action>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              isDisabled={!canSaveStore(editing)}
-              testID="store-editor-save"
-              variant="primary"
-              onPress={onSave}
-            >
-              <Button.Label className="font-semibold">
-                {text(editing.id ? "common.actions.save" : "groceries.storeManager.create")}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
-      }
+      confirm={{
+        label: text(editing.id ? "common.actions.save" : "groceries.storeManager.create"),
+        disabled: !canSaveStore(editing),
+        onPress: onSave,
+      }}
       name="store-editor"
       title={text(editing.id ? "groceries.mobile.editStore" : "groceries.mobile.addStore")}
       onClose={onBack}

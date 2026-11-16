@@ -11,7 +11,8 @@ import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated"
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { GlassCloseButton } from "./glass";
+import type { HeaderConfirm } from "./modal-header";
+import { ModalHeader } from "./modal-header";
 
 /** The props a body takes from the sheet rather than from the screen. */
 type SheetOwnedProps =
@@ -91,7 +92,7 @@ export function SheetStrip({
   );
 }
 
-/** A row whose content lines up with the sheet's title. */
+/** A row whose content lines up with the sheet's subtitle. */
 export function SheetRow({
   className = "",
   children,
@@ -141,23 +142,27 @@ function useKeyboardOverlap() {
 }
 
 /**
- * The one sheet layout: title, subtitle and close on top, the body between, the actions pinned
- * below. They are flex siblings, and the keyboard's overlap pads the bottom so it covers none.
+ * The one sheet layout: the native header (title, Close, and Save where it saves), the body, the
+ * actions pinned below. The keyboard's overlap pads the bottom so it covers none.
  */
 export function Sheet({
   name,
   title,
   subtitle,
   onClose,
+  confirm,
   actions,
   children,
 }: {
-  /** The testID prefix: `<name>-sheet` on the sheet, `<name>-close` on the close button. */
+  /** The testID prefix: `<name>-sheet` on the sheet, `<name>-close` on the header's close. */
   name: string;
   title: string;
+  /** A muted line above the body: the header's system title has no subtitle. */
   subtitle?: string;
-  /** What the close button does; going back by default. */
+  /** What the close item does; going back by default. */
   onClose?: () => void;
+  /** The header's confirm item, for a sheet that saves. */
+  confirm?: HeaderConfirm;
   /** One element, or a `Sheet.Actions` of `Sheet.Action`s sharing the row. */
   actions?: ReactNode;
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
@@ -180,23 +185,17 @@ export function Sheet({
       testID={`${name}-sheet`}
       onLayout={onLayout}
     >
-      {/* Top-aligned so the close button never moves; pt-1.5 centres the title on the button. */}
-      <View className="flex-row items-start justify-between gap-2.5 px-4 pt-[27px] pb-3.5">
-        <View className="min-w-0 flex-1 pt-1.5 pl-2">
-          <Text
-            accessibilityRole="header"
-            className="text-foreground text-[22px] leading-7 font-semibold"
-          >
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text className="text-muted text-sm leading-[17px]" numberOfLines={1}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
-        <GlassCloseButton testID={`${name}-close`} onPress={onClose ?? (() => router.back())} />
-      </View>
+      <ModalHeader
+        confirm={confirm}
+        name={name}
+        title={title}
+        onClose={onClose ?? (() => router.back())}
+      />
+      {subtitle ? (
+        <Text className="text-muted px-6 pb-3 text-sm leading-[17px]" numberOfLines={1}>
+          {subtitle}
+        </Text>
+      ) : null}
       {children}
       {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
     </Animated.View>
