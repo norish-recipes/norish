@@ -22,7 +22,12 @@ export const recipePageId = (path: string) => /^\/recipe\/([^/]+)(?:\/|$)/.exec(
 export function shownPath(path: string, below: string, shownRecipe: string | null) {
   const id = recipePageId(path);
 
-  return id === undefined || id === shownRecipe ? path : below;
+  if (id === undefined || id === shownRecipe) return path;
+
+  // A recipe opens on the Recipes tab, though the way in was another tab's.
+  return PATH_TABS.some((tab) => below.startsWith(TAB_ROUTES[tab].root))
+    ? TAB_ROUTES.recipes.root
+    : below;
 }
 
 /** The accessory at `path`, or null when it holds nothing: Cook on a recipe, the capsule alone on

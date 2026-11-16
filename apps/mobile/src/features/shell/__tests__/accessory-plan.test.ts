@@ -39,6 +39,13 @@ describe("shownPath", () => {
     expect(shownPath("/recipe/abc", "/", "other")).toBe("/");
   });
 
+  it("keeps the Recipes tab's own action under a recipe opened from another tab", () => {
+    expect(accessoryPlan(shownPath("/recipe/abc", "/calendar/item", null), false)?.add).toBe(
+      "recipes"
+    );
+    expect(shownPath("/recipe/abc", "/groceries", null)).toBe("/");
+  });
+
   it("passes every other path through", () => {
     expect(shownPath("/groceries", "/", "abc")).toBe("/groceries");
   });
