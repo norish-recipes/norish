@@ -7,7 +7,8 @@ import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
 /** A catalogue food a search found. */
 type Match = { id: string; name: string; localeNames?: Record<string, string> };
 
-export type PantryRow = { key: string } & (
+/** A row; `foodId` is the Ingredient whose icon it shows, null for rows that name no food. */
+export type PantryRow = { key: string; foodId: string | null } & (
   | { type: "kept"; item: PantryIngredientDto; onList: boolean; edge: Edge }
   | { type: "note"; text: "empty" | "noMatch" }
   | { type: "label"; text: "fromCatalogue" }
@@ -39,12 +40,13 @@ export function pantryRows(
 ): PantryRow[] {
   const rows: PantryRow[] = [];
 
-  if (items.length === 0) rows.push({ key: "note", type: "note", text: "empty" });
-  else if (kept.length === 0) rows.push({ key: "note", type: "note", text: "noMatch" });
+  if (items.length === 0) rows.push({ key: "note", foodId: null, type: "note", text: "empty" });
+  else if (kept.length === 0) rows.push({ key: "note", foodId: null, type: "note", text: "noMatch" });
   else {
     kept.forEach((item, index) =>
       rows.push({
         key: `kept:${item.id}`,
+        foodId: item.ingredientId || null,
         type: "kept",
         item,
         onList: onTheList.includes(item.id),
@@ -54,10 +56,11 @@ export function pantryRows(
   }
 
   if (matches.length > 0) {
-    rows.push({ key: "label", type: "label", text: "fromCatalogue" });
+    rows.push({ key: "label", foodId: null, type: "label", text: "fromCatalogue" });
     matches.forEach((food, index) =>
       rows.push({
         key: `match:${food.id}`,
+        foodId: food.id,
         type: "match",
         food,
         edge: edgeAt(index, matches.length),
@@ -66,37 +69,24 @@ export function pantryRows(
   }
 
   if (typed === "" && offered.length > 0) {
-    rows.push({ key: "suggestions", type: "suggestions", open: suggestionsOpen });
+    rows.push({ key: "suggestions", foodId: null, type: "suggestions", open: suggestionsOpen });
     if (suggestionsOpen) {
       const shown = showAll ? offered : offered.slice(0, SUGGESTIONS_SHOWN);
 
       shown.forEach((food, index) =>
         rows.push({
           key: `suggestion:${food.ingredientId}`,
+          foodId: food.ingredientId,
           type: "suggestion",
           food,
           edge: edgeAt(index, shown.length),
         })
       );
       if (!showAll && offered.length > SUGGESTIONS_SHOWN) {
-        rows.push({ key: "more", type: "more" });
+        rows.push({ key: "more", foodId: null, type: "more" });
       }
     }
   }
 
   return rows;
-}
-
-/** The Ingredient a row shows the icon of; null for the rows that name no food. */
-export function rowFoodId(row: PantryRow): string | null {
-  switch (row.type) {
-    case "kept":
-      return row.item.ingredientId || null;
-    case "match":
-      return row.food.id;
-    case "suggestion":
-      return row.food.ingredientId;
-    default:
-      return null;
-  }
 }

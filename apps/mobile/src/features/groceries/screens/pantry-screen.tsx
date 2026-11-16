@@ -12,7 +12,6 @@ import { FindField } from "../components/find-field";
 import { ListSwitch } from "../components/list-switch";
 import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
 import { usePantryScreen } from "../hooks/use-pantry-screen";
-import { rowFoodId } from "../utils/pantry-rows";
 
 /** The Pantry: the foods the household keeps, narrowed and added to from one field. */
 export function PantryScreen() {
@@ -48,7 +47,7 @@ export function PantryScreen() {
   );
 
   return (
-    <IngredientIconSlots ids={rows.map(rowFoodId)}>
+    <IngredientIconSlots ids={rows.map((row) => row.foodId)}>
       <View className="bg-background flex-1" testID="pantry-screen">
         <FlatList
           ListEmptyComponent={

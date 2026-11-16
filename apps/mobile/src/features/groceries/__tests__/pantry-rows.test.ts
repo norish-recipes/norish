@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
 
-import { rowFoodId, pantryRows as rowsOf } from "../utils/pantry-rows";
+import { pantryRows as rowsOf } from "../utils/pantry-rows";
 
 const kept = (name: string): PantryIngredientDto => ({
   id: `p-${name}`,
@@ -99,19 +99,30 @@ describe("pantryRows", () => {
   });
 });
 
-describe("rowFoodId", () => {
-  it("is the food a row shows the icon of, and null for rows naming no food", () => {
-    const edge = { top: true, bottom: true };
+describe("a row's foodId", () => {
+  it("is the food it shows the icon of, and null for rows naming no food", () => {
+    const rows = pantryRows({
+      ...base,
+      items: [kept("salt")],
+      kept: [kept("salt")],
+      matches: [{ id: "m1", name: "Rice" }],
+      offered: [suggestion("kale")],
+    });
 
-    expect(rowFoodId({ key: "a", type: "kept", item: kept("salt"), onList: false, edge })).toBe(
-      "i-salt"
-    );
-    expect(rowFoodId({ key: "b", type: "match", food: { id: "m1", name: "Rice" }, edge })).toBe(
-      "m1"
-    );
-    expect(rowFoodId({ key: "c", type: "suggestion", food: suggestion("kale"), edge })).toBe(
-      "s-kale"
-    );
-    expect(rowFoodId({ key: "d", type: "more" })).toBeNull();
+    expect(rows.map((row) => [row.type, row.foodId])).toEqual([
+      ["kept", "i-salt"],
+      ["label", null],
+      ["match", "m1"],
+      ["suggestions", null],
+      ["suggestion", "s-kale"],
+    ]);
+  });
+
+  it("names the suggestion's food and none for the more row", () => {
+    const offered = Array.from({ length: SUGGESTIONS_SHOWN + 1 }, (_, i) => suggestion(`f${i}`));
+    const rows = pantryRows({ ...base, items: [kept("a")], kept: [kept("a")], offered });
+
+    expect(rows.find((row) => row.type === "suggestion")?.foodId).toBe("s-f0");
+    expect(rows.at(-1)).toMatchObject({ type: "more", foodId: null });
   });
 });
