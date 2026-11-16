@@ -1,3 +1,4 @@
+import type { ComplexAnimationBuilder } from "react-native-reanimated";
 import React, { useEffect, useState } from "react";
 import { Image, Text, View } from "react-native";
 import {
@@ -42,7 +43,25 @@ import { FadeEdge } from "../components/fade-edge";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { TimerList } from "../components/timer-list";
 import { TintContext } from "../components/tint";
+import { SPRING } from "../utils/cook-pager";
 import { dishTint } from "../utils/dish-tint";
+
+// The column clears the header above, and the bar with its progress row below.
+const COLUMN_TOP = 140;
+const COLUMN_BOTTOM = BAR_BOTTOM + BAR_HEIGHT + 108;
+
+const sprung = <T extends ComplexAnimationBuilder>(builder: T) =>
+  builder.damping(SPRING.damping).stiffness(SPRING.stiffness).mass(SPRING.mass);
+
+/** The Steps ↔ Ingredients switch: a view slides in from `side` on the pager's spring. */
+function viewSwitch(side: "left" | "right", reduceMotion: boolean) {
+  if (reduceMotion) return { entering: CROSSFADE_IN, exiting: CROSSFADE_OUT };
+  if (side === "left") {
+    return { entering: sprung(FadeInLeft.springify()), exiting: sprung(FadeOutLeft.springify()) };
+  }
+
+  return { entering: sprung(FadeInRight.springify()), exiting: sprung(FadeOutRight.springify()) };
+}
 
 function CookHeader({ onClose }: { onClose: () => void }) {
   const categoryLabel = useCategoryLabel();
@@ -143,22 +162,17 @@ function CookMode() {
     <TintContext value={tint}>
       <View className="flex-1" style={{ backgroundColor: page }} testID="cook-mode">
         <GestureDetector gesture={swipe}>
-          <View className="flex-1" style={{ paddingTop: 140, paddingBottom: 190 }}>
+          <View className="flex-1" style={{ paddingTop: COLUMN_TOP, paddingBottom: COLUMN_BOTTOM }}>
             {view === "ingredients" ? (
               <Animated.View
                 className="absolute inset-0"
-                entering={reduceMotion ? CROSSFADE_IN : FadeInRight.duration(260)}
-                exiting={reduceMotion ? CROSSFADE_OUT : FadeOutRight.duration(200)}
-                style={{ top: 130 }}
+                style={{ top: COLUMN_TOP - 10 }}
+                {...viewSwitch("right", reduceMotion)}
               >
                 <CookIngredients checked={checked} onCheckedChange={setChecked} />
               </Animated.View>
             ) : (
-              <Animated.View
-                className="flex-1"
-                entering={reduceMotion ? CROSSFADE_IN : FadeInLeft.duration(260)}
-                exiting={reduceMotion ? CROSSFADE_OUT : FadeOutLeft.duration(200)}
-              >
+              <Animated.View className="flex-1" {...viewSwitch("left", reduceMotion)}>
                 <CookSteps current={current} steps={steps} onStepChange={goTo} />
               </Animated.View>
             )}
@@ -187,10 +201,8 @@ function CookMode() {
   );
 }
 
-/**
- * Off while cook mode is open: the Recipes stack's full-screen back swipe would pop the recipe
- * route under it (deep-linked, cook mode isn't a modal over it) before the screen's own fling.
- */
+/** Turns off the Recipes stack's full-screen back swipe while open: it would pop the recipe route
+ * under deep-linked cook mode before the screen's own fling. */
 function useNoHostBackSwipe() {
   const navigation = useNavigation();
 

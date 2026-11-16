@@ -52,8 +52,8 @@ vi.mock("@trpc/client", () => ({
 vi.mock("@norish/shared-react/ingredients", () => ({}));
 vi.mock("@norish/shared-react/reader", () => ({}));
 vi.mock("@norish/shared-react/recipes", () => ({ useRecipeQuery: () => query }));
+vi.doMock("../components/cook-bar", () => ({ BAR_BOTTOM: 34, BAR_HEIGHT: 48 }));
 for (const path of [
-  "../components/cook-bar",
   "../components/cook-ingredients",
   "../components/cook-steps",
   "../components/fade-edge",
