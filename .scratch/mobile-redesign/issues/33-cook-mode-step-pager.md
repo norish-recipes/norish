@@ -33,6 +33,6 @@ Fixed, re-review (10): the Steps ↔ Ingredients switch sprung; comments over tw
 
 Removed after checking: the vertical fling on Ingredients, which never fired on a device (its list takes the swipe). Closed after checking: reanimated's `clamp` cannot load in the plain unit test, so `cook-pager.ts` keeps its own.
 
-For the maintainer to judge: the bar is 48 pt on the home-indicator inset, the size its glass already drew, where the board draws 56 pt.
+Decided (Mike, 2026-11-16): the bar stays 48 pt on the home-indicator inset; the CookMode board was changed to 48 pt (canvas v83).
 
 Final state `893bc7b50`: all 11 gates exit 0, mobile lint has no warnings.
