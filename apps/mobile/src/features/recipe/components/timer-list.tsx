@@ -149,7 +149,7 @@ function useNotificationsRefused(): boolean {
 }
 
 /** Every timer on the device, with pause, adjust, restart and dismiss; `onEmpty` when the last goes. */
-export function TimerRows({ onEmpty }: { onEmpty: () => void }) {
+export function AllTimers({ onEmpty }: { onEmpty: () => void }) {
   const intl = useIntl();
   const timers = sortTimers(useTimerStore((state) => state.timers));
   const refused = useNotificationsRefused();
@@ -202,7 +202,7 @@ export function TimerList({ bottom, onClose }: { bottom: number; onClose: () => 
         testID="timer-list"
       >
         <GlassSurface radius={26} />
-        <TimerRows onEmpty={onClose} />
+        <AllTimers onEmpty={onClose} />
       </Animated.View>
     </>
   );

@@ -56,7 +56,7 @@ describe("sortTimers", () => {
 
 describe("timerGlance", () => {
   it("has nothing without timers", () => {
-    expect(timerGlance([])).toEqual({ any: false, soonest: undefined, anyDone: false });
+    expect(timerGlance([])).toEqual({ hasTimers: false, soonest: undefined, anyDone: false });
   });
 
   it("picks the soonest running timer and flags a done one beside it", () => {
@@ -67,7 +67,7 @@ describe("timerGlance", () => {
       timer("done", "completed", 0),
     ]);
 
-    expect(glance).toEqual({ any: true, soonest, anyDone: true });
+    expect(glance).toEqual({ hasTimers: true, soonest, anyDone: true });
   });
 
   it("shows a paused timer only when none is running", () => {
@@ -79,7 +79,7 @@ describe("timerGlance", () => {
 
   it("has no countdown when every timer is done", () => {
     expect(timerGlance([timer("done", "completed", 0)])).toMatchObject({
-      any: true,
+      hasTimers: true,
       soonest: undefined,
       anyDone: true,
     });

@@ -38,7 +38,7 @@ vi.mock("@/components/glass", () => ({ GlassSurface: () => null }));
 vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
 vi.mock("../components/tint", () => ({ useTint: () => null }));
 
-const { TimerRows } = await import("../components/timer-list");
+const { AllTimers } = await import("../components/timer-list");
 const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
 
 const timer = (id: string, status: "running" | "paused" | "completed") => ({
@@ -51,7 +51,7 @@ const timer = (id: string, status: "running" | "paused" | "completed") => ({
   lastTickAt: null,
 });
 
-describe("TimerRows", () => {
+describe("AllTimers", () => {
   beforeEach(() => {
     useTimerStore.setState({ timers: [] });
     haptics.impact.mockClear();
@@ -59,17 +59,17 @@ describe("TimerRows", () => {
 
   it("calls onEmpty once however often the empty list re-renders", () => {
     const onEmpty = vi.fn();
-    const { rerender } = render(<TimerRows onEmpty={() => onEmpty()} />);
+    const { rerender } = render(<AllTimers onEmpty={() => onEmpty()} />);
 
-    rerender(<TimerRows onEmpty={() => onEmpty()} />);
-    rerender(<TimerRows onEmpty={() => onEmpty()} />);
+    rerender(<AllTimers onEmpty={() => onEmpty()} />);
+    rerender(<AllTimers onEmpty={() => onEmpty()} />);
 
     expect(onEmpty).toHaveBeenCalledTimes(1);
   });
 
   it("gives a haptic when Resume or Restart starts a timer", () => {
     useTimerStore.setState({ timers: [timer("a", "paused"), timer("b", "completed")] });
-    render(<TimerRows onEmpty={() => {}} />);
+    render(<AllTimers onEmpty={() => {}} />);
 
     fireEvent.click(screen.getByLabelText("recipes.cookMode.resumeTimer"));
     fireEvent.click(screen.getByLabelText("recipes.cookMode.restartTimer"));

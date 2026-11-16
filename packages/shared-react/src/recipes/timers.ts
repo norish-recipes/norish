@@ -243,7 +243,7 @@ export function timerGlance(timers: readonly Timer[]) {
   const sorted = sortTimers(timers);
 
   return {
-    any: sorted.length > 0,
+    hasTimers: sorted.length > 0,
     soonest: sorted.find((timer) => timer.status !== "completed"),
     anyDone: sorted.some((timer) => timer.status === "completed"),
   };

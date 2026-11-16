@@ -65,7 +65,7 @@ function TimersButton({ onPress }: { onPress: () => void }) {
   const name = useTimersName();
   const timersLabel = useTimersLabel(timers);
 
-  if (!timerGlance(timers).any) {
+  if (!timerGlance(timers).hasTimers) {
     return (
       <BarButton disabled label={name} testID="cook-timers" onPress={onPress}>
         <Ionicons color={foreground} name="timer-outline" size={21} />

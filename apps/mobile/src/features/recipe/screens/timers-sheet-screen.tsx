@@ -4,7 +4,7 @@ import { Sheet } from "@/components/sheet";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
-import { TimerRows } from "../components/timer-list";
+import { AllTimers } from "../components/timer-list";
 
 /** The most of the window the rows take before they scroll, as the shared sheets' first detent. */
 const MAX_HEIGHT_SHARE = 0.62;
@@ -23,7 +23,7 @@ export function TimersSheetScreen() {
         style={{ maxHeight: height * MAX_HEIGHT_SHARE }}
       >
         <View className="pb-4">
-          <TimerRows onEmpty={() => router.back()} />
+          <AllTimers onEmpty={() => router.back()} />
         </View>
       </ScrollView>
     </Sheet>
