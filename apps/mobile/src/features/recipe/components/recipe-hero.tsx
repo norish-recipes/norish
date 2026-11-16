@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { VideoView } from "expo-video";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+import { useResolveClassNames } from "uniwind";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
@@ -24,11 +25,6 @@ import { heroItems } from "../utils/hero-items";
 import { pageAt } from "../utils/viewer-pages";
 
 export const HERO_HEIGHT = 430;
-
-const HEART_SHADOW = {
-  textShadowColor: "rgba(0, 0, 0, 0.3)",
-  textShadowRadius: 12,
-} as const;
 
 /** The player is a native object, so it is set from outside the component. */
 const muteVideo = (player: VideoPlayer, muted: boolean) => {
@@ -58,6 +54,8 @@ function Fade({ color }: { color: string }) {
 /** A heart that pops over the photo and, a beat later, `onDone` takes it away so it leaves. */
 function HeartPop({ onDone }: { onDone: () => void }) {
   const [color] = useThemeColor(["accent-foreground"] as const);
+  // An icon takes no class; its shadow's colour comes from one.
+  const { color: shadow } = useResolveClassNames("text-black/30");
 
   return (
     <Animated.View
@@ -69,7 +67,12 @@ function HeartPop({ onDone }: { onDone: () => void }) {
       exiting={sprung(ZoomOut.springify()).delay(250)}
       pointerEvents="none"
     >
-      <Ionicons color={color} name="heart" size={88} style={HEART_SHADOW} />
+      <Ionicons
+        color={color}
+        name="heart"
+        size={88}
+        style={{ textShadowColor: shadow, textShadowRadius: 12 }}
+      />
     </Animated.View>
   );
 }
