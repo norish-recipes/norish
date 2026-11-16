@@ -12,9 +12,11 @@ appId: dev.norish.app
     timeout: 20000
 - assertVisible:
     id: recipe-card-${output.kept}
-# The Library is short, so the last row has to rest clear of the Add recipe accessory in both views.
+# A swiped row no longer scrolls itself clear, so the Library is scrolled up before each swipe to rest
+# the row clear of the Add recipe accessory in both views.
 - tapOn:
     id: library-view-grid
+- scroll
 - swipe:
     from:
       id: recipe-card-${output.doomed}
@@ -27,6 +29,7 @@ appId: dev.norish.app
     id: recipe-card-${output.doomed}
 - tapOn:
     id: library-view-list
+- scroll
 - swipe:
     from:
       id: recipe-card-${output.doomed}
