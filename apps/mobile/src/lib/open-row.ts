@@ -24,12 +24,11 @@ export function useOpenRow(ref: RefObject<Row | null>) {
   useEffect(() => () => release(row), [row]);
 
   return {
+    row,
     opened() {
       closeOpenRow(row);
       open = row;
     },
     closed: () => release(row),
-    /** A touch on this row closes any other open one. */
-    touched: () => closeOpenRow(row),
   };
 }

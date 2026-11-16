@@ -34,7 +34,7 @@ describe("the open swipe row", () => {
     const first = claim();
 
     first.result.current.opened();
-    first.result.current.touched();
+    closeOpenRow(first.result.current.row);
     expect(first.close).not.toHaveBeenCalled();
     first.result.current.closed();
     closeOpenRow();

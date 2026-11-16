@@ -13,7 +13,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact } from "@/lib/haptics";
-import { useOpenRow } from "@/lib/open-row";
+import { closeOpenRow, useOpenRow } from "@/lib/open-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -87,7 +87,7 @@ export function SwipeActions({
       className={isGrid ? "flex-1" : undefined}
       onTouchStart={(event) => {
         event.stopPropagation();
-        openRow.touched();
+        closeOpenRow(openRow.row);
       }}
     >
       <ReanimatedSwipeable
