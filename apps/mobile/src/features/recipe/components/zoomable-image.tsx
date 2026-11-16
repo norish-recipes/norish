@@ -17,6 +17,8 @@ import { scheduleOnRN } from "react-native-worklets";
 import { ServerImage } from "@/components/server-image";
 import { SPRING } from "@/lib/motion/spring";
 
+import { clampOffset } from "../utils/zoom-offset";
+
 const MAX_SCALE = 4;
 const DOUBLE_TAP_SCALE = 2.5;
 
@@ -53,23 +55,22 @@ export function ZoomableImage({
     scheduleOnRN(onZoomed, to > 1);
   };
 
-  /** How far the picture may travel while zoomed: half of what overhangs the screen. */
-  const reach = (side: number, current: number) => {
-    "worklet";
-
-    return (side * (current - 1)) / 2;
-  };
-
   const pinch = usePinchGesture({
     onUpdate: (event) => {
       "worklet";
-      scale.set(Math.min(MAX_SCALE, Math.max(0.6, startScale.get() * event.scale)));
+      const next = Math.min(MAX_SCALE, Math.max(0.6, startScale.get() * event.scale));
+
+      scale.set(next);
+      x.set(clampOffset(x.get(), width, next));
+      y.set(clampOffset(y.get(), height, next));
     },
     onDeactivate: () => {
       "worklet";
       if (scale.get() <= 1.05) settle(1, 0, 0);
       else {
         startScale.set(scale.get());
+        startX.set(x.get());
+        startY.set(y.get());
         scheduleOnRN(onZoomed, true);
       }
     },
@@ -83,11 +84,8 @@ export function ZoomableImage({
     },
     onUpdate: (event) => {
       "worklet";
-      const limitX = reach(width, scale.get());
-      const limitY = reach(height, scale.get());
-
-      x.set(Math.min(limitX, Math.max(-limitX, startX.get() + event.translationX)));
-      y.set(Math.min(limitY, Math.max(-limitY, startY.get() + event.translationY)));
+      x.set(clampOffset(startX.get() + event.translationX, width, scale.get()));
+      y.set(clampOffset(startY.get() + event.translationY, height, scale.get()));
     },
   });
   const doubleTap = useTapGesture({
