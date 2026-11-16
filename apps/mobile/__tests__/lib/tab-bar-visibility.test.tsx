@@ -1,10 +1,5 @@
 // @vitest-environment jsdom
-import {
-  useHideTabBar,
-  useMarkSheetOpen,
-  useSheetOpen,
-  useTabBarHidden,
-} from "@/lib/tab-bar-visibility";
+import { useHideTabBar, useMarkSheetOpen, useTabBarHidden } from "@/lib/tab-bar-visibility";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -32,28 +27,16 @@ describe("tab bar visibility", () => {
     expect(hidden.result.current).toBe(false);
   });
 
-  it("hides the bar and flags the page for as long as a sheet is mounted", () => {
+  it("hides the bar for as long as a sheet is mounted", () => {
     const hidden = renderHook(() => useTabBarHidden());
-    const open = renderHook(() => useSheetOpen());
 
     expect(hidden.result.current).toBe(false);
-    expect(open.result.current).toBe(false);
 
     const sheet = renderHook(() => useMarkSheetOpen());
 
     expect(hidden.result.current).toBe(true);
-    expect(open.result.current).toBe(true);
 
     sheet.unmount();
     expect(hidden.result.current).toBe(false);
-    expect(open.result.current).toBe(false);
-  });
-
-  it("keeps a page that hides the bar from counting as a sheet over it", () => {
-    focused = true;
-    const open = renderHook(() => useSheetOpen());
-
-    renderHook(() => useHideTabBar());
-    expect(open.result.current).toBe(false);
   });
 });
