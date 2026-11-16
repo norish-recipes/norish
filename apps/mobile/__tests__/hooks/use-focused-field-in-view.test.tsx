@@ -14,10 +14,7 @@ vi.mock("react-native", () => ({
     },
   },
 }));
-vi.mock("react-native-reanimated", () => ({
-  useAnimatedScrollHandler: () => () => {},
-  useSharedValue: (value: number) => ({ value }),
-}));
+vi.mock("react-native-reanimated", () => import("../mocks/reanimated"));
 
 const { useFocusedFieldInView } = await import("@/hooks/use-focused-field-in-view");
 

@@ -1,12 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("react-native-reanimated", () => ({
-  Extrapolation: { CLAMP: "clamp" },
-  interpolate: (x: number, [from, to]: number[], [low, high]: number[]) =>
-    (low ?? 0) +
-    Math.min(Math.max((x - (from ?? 0)) / ((to ?? 1) - (from ?? 0)), 0), 1) *
-      ((high ?? 1) - (low ?? 0)),
-}));
+vi.mock("react-native-reanimated", () => import("../../mocks/reanimated"));
 
 const { progress } = await import("@/lib/motion/progress");
 

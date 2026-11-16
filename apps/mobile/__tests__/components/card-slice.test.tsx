@@ -13,7 +13,7 @@ vi.mock("react-native", async () => {
     View: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   };
 });
-vi.mock("react-native-reanimated", () => ({ useReducedMotion: () => false }));
+vi.mock("react-native-reanimated", () => import("../mocks/reanimated"));
 vi.mock("@/components/drag-list/drag-list", () => ({ useIsLifted: () => lift.lifted }));
 
 function Folding() {

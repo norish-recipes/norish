@@ -45,10 +45,7 @@ vi.mock("react-native", () => ({
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-vi.mock("react-native-reanimated", () => ({
-  useAnimatedScrollHandler: () => undefined,
-  useSharedValue: (value: number) => ({ value }),
-}));
+vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({
   Skeleton: () => null,
