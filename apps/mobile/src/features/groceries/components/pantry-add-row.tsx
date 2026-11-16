@@ -3,10 +3,8 @@ import { CardSlice } from "@/components/card-slice";
 import { useIntl } from "react-intl";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
-import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { PantryAddRow } from "../utils/pantry-add-rows";
-import { pickedFood } from "../utils/pantry-add-rows";
 import { FoodRow, RowButton } from "./pantry-rows";
 
 /** One row of the Add to pantry sheet: a food it found, or the text as typed; a tap on its + keeps it. */
@@ -18,8 +16,6 @@ export function PantryAddRowView({
   onKeep: (food: string | PickedFood) => void;
 }) {
   const intl = useIntl();
-  const name = row.type === "match" ? ingredientDisplayName(row.food, intl.locale) : row.name;
-  const keep = () => onKeep(row.type === "match" ? pickedFood(row.food) : row.name);
 
   return (
     <CardSlice className="bg-default" edge={row.edge}>
@@ -28,15 +24,15 @@ export function PantryAddRowView({
           <RowButton
             accent
             icon="add"
-            label={intl.formatMessage({ id: "groceries.pantry.addFood" }, { name })}
-            testID={row.type === "match" ? `pantry-match-${row.food.id}` : "pantry-add-custom"}
-            onPress={keep}
+            label={intl.formatMessage({ id: "groceries.pantry.addFood" }, { name: row.name })}
+            testID={row.testIDs.button}
+            onPress={() => onKeep(row.keeps)}
           />
         }
         ingredientId={row.foodId}
-        name={name}
-        testID={row.type === "match" ? `pantry-match-row-${row.food.id}` : "pantry-add-custom-row"}
-        onPress={keep}
+        name={row.name}
+        testID={row.testIDs.row}
+        onPress={() => onKeep(row.keeps)}
       />
     </CardSlice>
   );

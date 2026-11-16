@@ -1,89 +1,48 @@
 import { describe, expect, it } from "vitest";
 
+import { foodNamedAsTyped } from "@norish/shared-react/ingredients";
 import { BASE_SPELLING_RULES } from "@norish/shared/lib/spelling-keys";
 
-import { pantryAddRows, pantryAddSubmit } from "../utils/pantry-add-rows";
+import { pantryAddRows, pickedFood } from "../utils/pantry-add-rows";
 
-const RULES = BASE_SPELLING_RULES;
 const olives = { id: "i-olives", name: "Olives", localeNames: {} };
 const oil = { id: "i-oil", name: "Olive oil", localeNames: {} };
-const egg = { id: "i-egg", name: "Egg", localeNames: {} };
+const milk = { id: "i-milk", name: "Milk", localeNames: { nl: "Melk" } };
 
 describe("pantryAddRows", () => {
   it("lists the catalogue foods, then the typed text as a custom entry", () => {
-    const rows = pantryAddRows("oli", [olives, oil], true, "en", RULES);
+    const rows = pantryAddRows([olives, oil], "oli", "en");
 
-    expect(rows.map((row) => [row.type, row.foodId])).toEqual([
-      ["match", "i-olives"],
-      ["match", "i-oil"],
-      ["custom", null],
+    expect(rows.map((row) => [row.foodId, row.name, row.testIDs.button])).toEqual([
+      ["i-olives", "Olives", "pantry-match-i-olives"],
+      ["i-oil", "Olive oil", "pantry-match-i-oil"],
+      [null, "oli", "pantry-add-custom"],
     ]);
-    expect(rows.at(-1)).toMatchObject({ name: "oli" });
+    expect(rows.map((row) => row.keeps)).toEqual([pickedFood(olives), pickedFood(oil), "oli"]);
+  });
+
+  it("names a found food in the viewer's language", () => {
+    expect(pantryAddRows([milk], null, "nl")[0]?.name).toBe("Melk");
   });
 
   it("rounds the first and last row of the one card", () => {
-    expect(pantryAddRows("oli", [olives, oil], true, "en", RULES).map((row) => row.edge)).toEqual(
-      [
-        { top: true, bottom: false },
-        { top: false, bottom: false },
-        { top: false, bottom: true },
-      ]
-    );
-    expect(pantryAddRows("oli", [olives], false, "en", RULES)[0]?.edge).toEqual({
-      top: true,
-      bottom: true,
-    });
+    expect(pantryAddRows([olives, oil], "oli", "en").map((row) => row.edge)).toEqual([
+      { top: true, bottom: false },
+      { top: false, bottom: false },
+      { top: false, bottom: true },
+    ]);
+    expect(pantryAddRows([olives], null, "en")[0]?.edge).toEqual({ top: true, bottom: true });
   });
 
-  it("offers no custom entry beside a food that is named as typed", () => {
-    expect(pantryAddRows("Olives", [olives], true, "en", RULES).map((row) => row.type)).toEqual([
-      "match",
+  it("offers no custom row when the text names a found food", () => {
+    const typed = "eggs";
+    const egg = { id: "i-egg", name: "Egg", localeNames: {} };
+    const named = foodNamedAsTyped(typed, [egg], BASE_SPELLING_RULES);
+
+    expect(named?.id).toBe("i-egg");
+    expect(pantryAddRows([egg], named ? null : typed, "en").map((row) => row.foodId)).toEqual([
+      "i-egg",
     ]);
-  });
-
-  it("offers no custom entry beside a food any of whose names is the text, plurals counted", () => {
-    const milk = { id: "i-milk", name: "Milk", localeNames: { nl: "Melk" } };
-
-    expect(pantryAddRows("melk", [milk], true, "nl", RULES).map((row) => row.type)).toEqual([
-      "match",
-    ]);
-    expect(pantryAddRows("milk", [milk], true, "nl", RULES).map((row) => row.type)).toEqual([
-      "match",
-    ]);
-    expect(pantryAddRows("eggs", [egg], true, "en", RULES).map((row) => row.type)).toEqual([
-      "match",
-    ]);
-    expect(
-      pantryAddRows(
-        "cafe",
-        [{ id: "i-cafe", name: "Café", localeNames: {} }],
-        true,
-        "en",
-        RULES
-      ).map((r) => r.type)
-    ).toEqual(["match"]);
-  });
-
-  it("offers no custom entry for text the Pantry already keeps, and nothing for no text", () => {
-    expect(pantryAddRows("olives", [olives], false, "en", RULES).map((row) => row.type)).toEqual([
-      "match",
-    ]);
-    expect(pantryAddRows("", [], false, "en", RULES)).toEqual([]);
-  });
-});
-
-describe("pantryAddSubmit", () => {
-  it("keeps the found food named as typed rather than the text beside it", () => {
-    const milk = { id: "i-milk", name: "Milk", localeNames: { nl: "Melk" } };
-
-    expect(pantryAddSubmit("melk", [milk], true, "nl", RULES)).toMatchObject({
-      ingredientId: "i-milk",
-    });
-    expect(pantryAddSubmit("eggs", [egg], true, "en", RULES)).toMatchObject({ ingredientId: "i-egg" });
-  });
-
-  it("keeps the text when no food is named so and it can be added, else nothing", () => {
-    expect(pantryAddSubmit("oli", [olives], true, "en", RULES)).toBe("oli");
-    expect(pantryAddSubmit("oli", [olives], false, "en", RULES)).toBeNull();
+    expect(pantryAddRows([], null, "en")).toEqual([]);
   });
 });

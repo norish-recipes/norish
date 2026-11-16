@@ -3,16 +3,21 @@ import { edgeAt } from "@/components/card-edges";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
 import type { IngredientItem } from "@norish/shared-react/ingredients";
-import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
-import { foodNamedAsTyped } from "@norish/shared-react/ingredients";
+import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** A catalogue food a search found. */
 export type Match = Pick<IngredientItem, "id" | "name" | "localeNames">;
 
-/** A row of the Add to pantry sheet: a catalogue food, or the text as typed. */
-export type PantryAddRow =
-  | { key: string; foodId: string; type: "match"; food: Match; edge: Edge }
-  | { key: "custom"; foodId: null; type: "custom"; name: string; edge: Edge };
+/** A row of the Add to pantry sheet, a found food or the text as typed: what it shows and keeps. */
+export type PantryAddRow = {
+  key: string;
+  foodId: string | null;
+  name: string;
+  keeps: string | PickedFood;
+  /** The row's own and its + button's. */
+  testIDs: { row: string; button: string };
+  edge: Edge;
+};
 
 /** A found food as the Pantry keeps it. */
 export const pickedFood = (food: Match): PickedFood => ({
@@ -21,45 +26,29 @@ export const pickedFood = (food: Match): PickedFood => ({
   localeNames: food.localeNames,
 });
 
-/** What Return keeps for `typed`: the found food named so, else the text itself while it can be
- * added; null for neither. */
-export function pantryAddSubmit(
-  typed: string,
-  matches: readonly Match[],
-  canAdd: boolean,
-  locale: string,
-  rules: SpellingRules
-): string | PickedFood | null {
-  const named = foodNamedAsTyped(typed, matches, rules);
-
-  return named ? pickedFood(named) : canAdd ? typed : null;
-}
-
-/** The sheet's rows for `typed`: the catalogue foods it finds, then the text itself as a custom
- * entry while that is not already kept (`canAdd`) and no found food is named so. */
+/** The sheet's rows: the catalogue foods found, then `custom`, the text as typed, when offered. */
 export function pantryAddRows(
-  typed: string,
   matches: readonly Match[],
-  canAdd: boolean,
-  locale: string,
-  rules: SpellingRules
+  custom: string | null,
+  locale: string
 ): PantryAddRow[] {
-  const custom = canAdd && !foodNamedAsTyped(typed, matches, rules);
-  const count = matches.length + (custom ? 1 : 0);
+  const count = matches.length + (custom === null ? 0 : 1);
   const rows: PantryAddRow[] = matches.map((food, index) => ({
     key: `match:${food.id}`,
     foodId: food.id,
-    type: "match",
-    food,
+    name: ingredientDisplayName(food, locale),
+    keeps: pickedFood(food),
+    testIDs: { row: `pantry-match-row-${food.id}`, button: `pantry-match-${food.id}` },
     edge: edgeAt(index, count),
   }));
 
-  if (custom) {
+  if (custom !== null) {
     rows.push({
       key: "custom",
       foodId: null,
-      type: "custom",
-      name: typed,
+      name: custom,
+      keeps: custom,
+      testIDs: { row: "pantry-add-custom-row", button: "pantry-add-custom" },
       edge: edgeAt(matches.length, count),
     });
   }

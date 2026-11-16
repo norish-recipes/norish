@@ -9,11 +9,15 @@ import { useIntl } from "react-intl";
 
 import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantryField, usePantryQuery } from "@norish/shared-react/groceries";
-import { useIngredientIcons, usePantryCatalogue } from "@norish/shared-react/ingredients";
+import {
+  foodNamedAsTyped,
+  useIngredientIcons,
+  usePantryCatalogue,
+} from "@norish/shared-react/ingredients";
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
 import { PantryAddRowView } from "../components/pantry-add-row";
-import { pantryAddRows, pantryAddSubmit } from "../utils/pantry-add-rows";
+import { pantryAddRows, pickedFood } from "../utils/pantry-add-rows";
 
 /** Add to pantry: search the Ingredients, keep one, or keep the text as typed; the sheet stays open for the next. */
 export function PantryAddScreen() {
@@ -27,13 +31,16 @@ export function PantryAddScreen() {
     new Set(items.map((item) => item.ingredientId))
   );
   const fieldRef = useFocusOnMount<SheetSearchInput>();
-  const rows = pantryAddRows(typed, matches, canAdd, intl.locale, rules);
+  const named = foodNamedAsTyped(typed, matches, rules);
+  // The text as typed, offered while it is not kept already and no found food is named so.
+  const custom = canAdd && !named ? typed : null;
+  const rows = pantryAddRows(matches, custom, intl.locale);
   const label = intl.formatMessage({ id: "groceries.pantry.fieldPlaceholder" });
 
   useIngredientIcons(matches.map((food) => food.id));
 
   const submit = () => {
-    const food = pantryAddSubmit(typed, matches, canAdd, intl.locale, rules);
+    const food = named ? pickedFood(named) : custom;
 
     if (food) keep(food);
   };
