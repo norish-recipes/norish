@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { FlatList, Keyboard, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { initialWindowMetrics } from "react-native-safe-area-context";
-import { useSheetOpenFlag } from "@/lib/tab-bar-visibility";
+import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
 import type { HeaderConfirm } from "./modal-header";
 import { ModalHeader } from "./modal-header";
@@ -180,7 +180,7 @@ export function Sheet({
 }) {
   const { overlap, onLayout } = useKeyboardOverlap();
 
-  useSheetOpenFlag();
+  useMarkSheetOpen();
   // Animated on this view only: a global LayoutAnimation left armed by a picker's keyboard events
   // animated the sheet's unmount, which Reanimated's layout animations abort on.
   const keyboardStyle = useAnimatedStyle(() => ({

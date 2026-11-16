@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import {
   useHideTabBar,
+  useMarkSheetOpen,
   useSheetOpen,
-  useSheetOpenFlag,
   useTabBarHidden,
 } from "@/lib/tab-bar-visibility";
 import { renderHook } from "@testing-library/react";
@@ -39,7 +39,7 @@ describe("tab bar visibility", () => {
     expect(hidden.result.current).toBe(false);
     expect(open.result.current).toBe(false);
 
-    const sheet = renderHook(() => useSheetOpenFlag());
+    const sheet = renderHook(() => useMarkSheetOpen());
 
     expect(hidden.result.current).toBe(true);
     expect(open.result.current).toBe(true);
