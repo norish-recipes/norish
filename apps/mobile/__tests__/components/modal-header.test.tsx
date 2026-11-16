@@ -79,7 +79,7 @@ describe("ModalHeader", () => {
     );
 
     expect(declared().unstable_headerRightItems()).toMatchObject([
-      { label: "Save", variant: "prominent", disabled: true, onPress },
+      { label: "Save", variant: "prominent", disabled: true },
     ]);
 
     rerender(
@@ -92,5 +92,24 @@ describe("ModalHeader", () => {
     );
 
     expect(declared().unstable_headerRightItems()[0]?.disabled).toBe(false);
+  });
+
+  it("fires the latest handler from an item the native header has not yet replaced", () => {
+    const stale = vi.fn();
+    const latest = vi.fn();
+    const { rerender } = render(
+      <ModalHeader confirm={{ label: "Create", onPress: stale }} title="New" onClose={vi.fn()} />
+    );
+    const nativeItem = declared().unstable_headerRightItems()[0] as unknown as {
+      onPress: () => void;
+    };
+
+    rerender(
+      <ModalHeader confirm={{ label: "Create", onPress: latest }} title="New" onClose={vi.fn()} />
+    );
+    nativeItem.onPress();
+
+    expect(stale).not.toHaveBeenCalled();
+    expect(latest).toHaveBeenCalledOnce();
   });
 });

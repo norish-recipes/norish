@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -29,6 +29,13 @@ export function ModalHeader({
 }) {
   const intl = useIntl();
   const router = useRouter();
+  // The native item is replaced a moment after a render: it calls this, so a press in that gap still runs the latest handler.
+  const confirmRef = useRef(confirm?.onPress);
+
+  useEffect(() => {
+    confirmRef.current = confirm?.onPress;
+  });
+
   const leftLabel = intl.formatMessage({
     id: back ? "common.actions.back" : "common.actions.close",
   });
@@ -57,7 +64,7 @@ export function ModalHeader({
                   variant: "prominent",
                   disabled: confirm.disabled || !confirm.onPress,
                   // The native item type requires a handler; `disabled` above keeps it from firing.
-                  onPress: confirm.onPress ?? (() => {}),
+                  onPress: () => confirmRef.current?.(),
                 },
               ]
             : [],
