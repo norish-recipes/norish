@@ -82,7 +82,7 @@ vi.mock("@/components/sheet", async () => {
         actions,
         createElement("button", { "data-testid": "header-confirm", onClick: confirm?.onPress })
       ),
-    SheetScrollView: box,
+    SheetBody: box,
   };
 });
 vi.mock("../components/form-parts", () => ({
