@@ -6,9 +6,10 @@ import Animated, {
   scrollTo,
   useAnimatedReaction,
   useAnimatedRef,
+  useReducedMotion,
   useSharedValue,
-  withDecay,
 } from "react-native-reanimated";
+import { decayTo } from "@/lib/motion/decay-to";
 
 import { stripIntent } from "../utils/tag-strip-intent";
 
@@ -17,6 +18,9 @@ export function useTagStrip() {
   const scrollX = useSharedValue(0);
   const startX = useSharedValue(0);
   const max = useSharedValue(0);
+  const width = useSharedValue(0);
+  const contentWidth = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
   const origin = useSharedValue({ x: 0, y: 0 });
   const decided = useSharedValue(false);
 
@@ -59,11 +63,29 @@ export function useTagStrip() {
     },
     onDeactivate: (event) => {
       "worklet";
-      scrollX.set(withDecay({ velocity: -event.velocityX, clamp: [0, max.get()] }));
+      scrollX.set(
+        decayTo(scrollX.get(), {
+          velocity: -event.velocityX,
+          clamp: [0, max.get()],
+          reduceMotion,
+        })
+      );
     },
   });
 
-  return { gesture, scrollX, max };
+  // The extent is the content past the width, whichever of the two is measured last.
+  const measure = (set: (value: number) => void) => (value: number) => {
+    set(value);
+    max.set(Math.max(contentWidth.get() - width.get(), 0));
+  };
+
+  return {
+    gesture,
+    scrollX,
+    max,
+    setWidth: measure((value) => width.set(value)),
+    setContentWidth: measure((value) => contentWidth.set(value)),
+  };
 }
 
 /** A row of tags that scrolls sideways under `strip`'s gesture, clipped by its parent. */
@@ -77,7 +99,6 @@ export function TagStrip({
   children: ReactNode;
 }) {
   const scroll = useAnimatedRef<ScrollView>();
-  const width = useSharedValue(0);
 
   useAnimatedReaction(
     () => strip.scrollX.get(),
@@ -94,10 +115,8 @@ export function TagStrip({
         scrollEnabled={false}
         showsHorizontalScrollIndicator={false}
         testID={testID}
-        onContentSizeChange={(contentWidth) =>
-          strip.max.set(Math.max(contentWidth - width.get(), 0))
-        }
-        onLayout={(event) => width.set(event.nativeEvent.layout.width)}
+        onContentSizeChange={strip.setContentWidth}
+        onLayout={(event) => strip.setWidth(event.nativeEvent.layout.width)}
       >
         {children}
       </Animated.ScrollView>
