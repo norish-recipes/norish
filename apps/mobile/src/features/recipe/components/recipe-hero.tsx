@@ -5,8 +5,8 @@ import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { GlassIconButton } from "@/components/glass";
+import { lightImpact } from "@/lib/haptics";
 import { useServerImage } from "@/lib/network/server-url";
-import * as Haptics from "expo-haptics";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useIntl } from "react-intl";
 
@@ -181,7 +181,7 @@ export function RecipeHero({
     runOnJS: true,
     onActivate: () => {
       if (!onDoubleTap) return;
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      lightImpact();
       onDoubleTap();
     },
   });

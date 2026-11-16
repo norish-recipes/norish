@@ -4,8 +4,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
+import { lightImpact } from "@/lib/haptics";
 import { recipeRoute } from "@/lib/tab-routes";
-import * as Haptics from "expo-haptics";
 import { useIntl } from "react-intl";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
@@ -77,7 +77,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
     maxDelay: 250,
     runOnJS: true,
     onActivate: () => {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      lightImpact();
       handlers.favourite();
     },
   });

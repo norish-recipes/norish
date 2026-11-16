@@ -1,11 +1,9 @@
 import type { ReorderableListReorderEvent } from "react-native-reorderable-list";
 import { useEffect, useRef, useState } from "react";
 import { scheduleOnRN } from "react-native-worklets";
-import * as Haptics from "expo-haptics";
+import { mediumImpact } from "@/lib/haptics";
 
 import type { HeldRows } from "./use-held-rows";
-
-const mediumImpact = () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
 /** The library's drag events, built once (it rebuilds every row's drag handler when they change):
  * each lift, drop and settle reaches the held rows, then the host's `onHeldChange`. */

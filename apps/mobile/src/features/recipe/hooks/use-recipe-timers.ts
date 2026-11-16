@@ -1,8 +1,8 @@
 import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
+import { successNotification } from "@/lib/haptics";
 import { cookModeRoute } from "@/lib/tab-routes";
 import { syncTimers } from "@/lib/timer-notifications";
-import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -120,7 +120,7 @@ export function useRecipeTimers() {
   const clearAll = useTimerStore((state) => state.clearAll);
   const hasTimers = useTimerStore((state) => state.timers.length > 0);
 
-  useTimerTicker(() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+  useTimerTicker(successNotification);
   useTimerNotifications();
   useTimerNotificationTaps();
 

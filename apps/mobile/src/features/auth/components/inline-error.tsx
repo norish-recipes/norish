@@ -9,8 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { FADE_IN, RISE_IN } from "@/features/auth/utils/motion";
+import { errorNotification } from "@/lib/haptics";
 import Feather from "@expo/vector-icons/Feather";
-import * as Haptics from "expo-haptics";
 import { FieldError, useThemeColor } from "heroui-native";
 
 /** A failed attempt; each one is a new object, so the same message shakes again. */
@@ -51,7 +51,7 @@ export function InlineError({ error, testID }: { error: InlineErrorState; testID
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (error) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    if (error) errorNotification();
   }, [error]);
 
   return (

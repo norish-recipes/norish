@@ -3,8 +3,8 @@ import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { ActionSheetIOS, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { TimerRing } from "@/components/timer-ring";
+import { lightImpact, mediumImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as Haptics from "expo-haptics";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -28,7 +28,8 @@ type ChipProps = {
   size: keyof typeof SIZES;
 };
 
-/** A step duration's timer: a tap starts, pauses or resumes it or taps a done one away; a long press offers Reset and Remove. */
+/** A step duration's timer: a tap starts, pauses, resumes or dismisses it; a long press offers
+ * Reset and Remove. */
 function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const intl = useIntl();
   const recipe = useLoadedPageRecipe();
@@ -42,6 +43,16 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const left = timer ? formatTimerMs(timer.remainingMs) : "";
 
   const press = () => {
+    if (timer?.status === "running") {
+      pauseTimer(id);
+
+      return;
+    }
+    if (timer?.status === "completed") {
+      removeTimer(id);
+
+      return;
+    }
     if (!timer) {
       addTimer({
         id,
@@ -51,25 +62,23 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
         recipeName: recipe.name,
         stepIndex,
       });
-      startTimer(id);
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      void askTimerNotifications();
-    } else if (timer.status === "running") pauseTimer(id);
-    else if (timer.status === "paused") {
-      startTimer(id);
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } else removeTimer(id);
+    }
+    startTimer(id);
+    lightImpact();
+    if (!timer) void askTimerNotifications();
   };
 
   const longPress = () => {
     if (!timer) return;
 
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    mediumImpact();
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: ["common.actions.reset", "common.actions.remove", "common.actions.cancel"].map(
-          (id) => intl.formatMessage({ id })
-        ),
+        options: [
+          intl.formatMessage({ id: "common.actions.reset" }),
+          intl.formatMessage({ id: "common.actions.remove" }),
+          intl.formatMessage({ id: "common.actions.cancel" }),
+        ],
         destructiveButtonIndex: 1,
         cancelButtonIndex: 2,
       },

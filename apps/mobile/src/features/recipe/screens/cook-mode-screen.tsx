@@ -17,9 +17,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassCloseButton } from "@/components/glass";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
 import { useServerImage } from "@/lib/network/server-url";
-import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
@@ -131,7 +131,7 @@ function CookMode() {
   const goTo = (next: number) => {
     const target = clampStep(next, steps.length);
 
-    if (target !== current) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (target !== current) lightImpact();
     setStep(target);
   };
 
