@@ -10,11 +10,17 @@ import { StepChips, StepPhotos, StepText } from "./steps-section";
 
 const STEP_TEXT = "text-foreground text-[28px] leading-[44px] font-medium tracking-[-0.3px]";
 
+/** A step's ingredient and timer chips at cook mode's size. */
+function CookStepChips({ step }: { step: ResolvedCookingModeStep }) {
+  const recipe = useLoadedPageRecipe();
+  const lines = usePageIngredients();
+
+  return <StepChips large lines={lines} step={step} systemUsed={recipe.systemUsed ?? "metric"} />;
+}
+
 /** A cook mode step at full size: heading, text, chips and photos. */
 export function StepBody({ step }: { step: ResolvedCookingModeStep }) {
   const intl = useIntl();
-  const recipe = useLoadedPageRecipe();
-  const lines = usePageIngredients();
 
   return (
     <View className="gap-5 py-2">
@@ -27,7 +33,7 @@ export function StepBody({ step }: { step: ResolvedCookingModeStep }) {
         stepIndex={step.stepNumber - 1}
         text={step.text}
       />
-      <StepChips large lines={lines} step={step} systemUsed={recipe.systemUsed ?? "metric"} />
+      <CookStepChips step={step} />
       {step.images.length > 0 ? (
         <StepPhotos
           images={step.images}
@@ -40,15 +46,12 @@ export function StepBody({ step }: { step: ResolvedCookingModeStep }) {
 
 /** A step as its peek: two lines of text and its chips. */
 export function PeekBody({ step }: { step: ResolvedCookingModeStep }) {
-  const recipe = useLoadedPageRecipe();
-  const lines = usePageIngredients();
-
   return (
     <View className="gap-3 py-3">
       <Text className={STEP_TEXT} numberOfLines={2}>
         {plainText(step.text)}
       </Text>
-      <StepChips large lines={lines} step={step} systemUsed={recipe.systemUsed ?? "metric"} />
+      <CookStepChips step={step} />
     </View>
   );
 }
