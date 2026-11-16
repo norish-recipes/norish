@@ -6,16 +6,21 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { Measurable } from "../hooks/use-leave-to-done";
+
 /** The folded tail of a section: how many are done, opening on tap; the count swells as a ticked line joins it. */
 export function DoneRow({
   count,
   open,
   sectionKey,
+  viewRef,
   onToggle,
 }: {
   count: number;
   open: boolean;
   sectionKey: string;
+  /** Hands the row's view to the list, which measures it for a row leaving towards it. */
+  viewRef: (view: Measurable | null) => void;
   onToggle: () => void;
 }) {
   const intl = useIntl();
@@ -24,6 +29,7 @@ export function DoneRow({
 
   return (
     <Pressable
+      ref={(view) => viewRef(view)}
       accessibilityRole="button"
       accessibilityState={{ expanded: open }}
       className="h-11 flex-row items-center gap-2 px-4"

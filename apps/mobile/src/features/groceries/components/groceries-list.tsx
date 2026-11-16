@@ -14,6 +14,8 @@ import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
+import { useFreshRows } from "../hooks/use-fresh-rows";
+import { useLeaveToDone } from "../hooks/use-leave-to-done";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { isGroupOpen, sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
@@ -23,8 +25,9 @@ import { GroupRow } from "./group-row";
 import { RecipeHeadingRow } from "./recipe-heading-row";
 import { StoreHeadingRow } from "./store-heading-row";
 
-// Rows and headings fade in and out, and the rest spring into the space they leave or take.
-const ROW_MOTION = { entering: sprung(FadeIn.springify()), exiting: sprung(FadeOut.springify()) };
+// A row new to the list fades in and a heading fades out; the rest spring into the space they leave or take.
+const ROW_ENTERING = sprung(FadeIn.springify());
+const HEADING_EXITING = sprung(FadeOut.springify());
 const ROW_LAYOUT = sprung(LinearTransition.springify());
 
 export type ListActions = {
@@ -67,6 +70,8 @@ export function GroceriesList({
 }) {
   const insets = useSafeAreaInsets();
   const recurrence = useRecurrenceLabel();
+  const fresh = useFreshRows(rows);
+  const { exitingFor, leaveThen, doneRef, itemRef } = useLeaveToDone(rows);
   // What sits under a row's name: how it repeats, else the recipe it came from.
   const sublineOf = (
     recurring: RecurringGroceryDto | null | undefined,
@@ -91,6 +96,7 @@ export function GroceriesList({
             count={heading.count}
             open={heading.open}
             sectionKey={heading.sectionKey}
+            viewRef={doneRef(heading.sectionKey)}
             onToggle={() => actions.toggleDone(heading.sectionKey)}
           />
         </CardSlice>
@@ -151,7 +157,7 @@ export function GroceriesList({
             )}
             onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
-            onToggle={actions.toggle}
+            onToggle={(ids, isDone) => leaveThen(item, isDone, () => actions.toggle(ids, isDone))}
             onToggleOpen={() => actions.toggleGroup(item.group)}
           />
         </ItemSlice>
@@ -175,7 +181,7 @@ export function GroceriesList({
           }
           onDrag={item.done ? undefined : drag}
           onEdit={actions.edit}
-          onToggle={(id, isDone) => actions.toggle([id], isDone)}
+          onToggle={(id, isDone) => leaveThen(item, isDone, () => actions.toggle([id], isDone))}
         />
       </ItemSlice>
     );
@@ -191,10 +197,22 @@ export function GroceriesList({
         contentInsetAdjustmentBehavior="never"
         itemLayoutAnimation={ROW_LAYOUT}
         renderHeading={(heading, index) => (
-          <Animated.View {...ROW_MOTION}>{renderHeading(heading, index)}</Animated.View>
+          <Animated.View
+            entering={fresh.has(heading) ? ROW_ENTERING : undefined}
+            exiting={HEADING_EXITING}
+          >
+            {renderHeading(heading, index)}
+          </Animated.View>
         )}
         renderItem={(item, drag) => (
-          <Animated.View {...ROW_MOTION}>{renderItem(item, drag)}</Animated.View>
+          <Animated.View
+            ref={itemRef(item.key)}
+            collapsable={false}
+            entering={fresh.has(item) ? ROW_ENTERING : undefined}
+            exiting={exitingFor(item.key)}
+          >
+            {renderItem(item, drag)}
+          </Animated.View>
         )}
         rows={rows}
         testID="groceries-list"
