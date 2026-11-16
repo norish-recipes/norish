@@ -46,7 +46,7 @@ appId: dev.norish.app
     timeout: 20000
 - tapOn:
     id: cookbook-add-recipes-row-${output.tart}
-- tapOn: Add.*
+- tapOn: Add 1 recipe
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.tart}
