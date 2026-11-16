@@ -1,9 +1,7 @@
 /**
- * A write on a grocery is guarded by the version the screen holds (ADR-0004),
- * so every screen must learn a row's new version whenever the server moves
- * it — including the siblings a create shifts down to make room at the top.
- * Before this was so, a grocery ticked after another had been added to its
- * Store was refused as stale and read as un-done again after the refetch.
+ * A write on a grocery is guarded by the version the screen holds (ADR-0004).
+ * A create shifts its Store's open lines down without bumping their versions,
+ * so a line ticked after another was added is not refused as stale and un-done.
  */
 import type { Page } from "@playwright/test";
 
@@ -16,6 +14,9 @@ import { createPlainStore } from "./grocery-aisles-support";
 const STORE = "Versies";
 
 let page: Page;
+
+// The second test ticks the line the first one added, on the same page.
+test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async ({ browser, aiStack }) => {
   await createPlainStore(aiStack, STORE);
@@ -69,11 +70,13 @@ test("a grocery ticked after another was added to its Store stays done", async (
   await page.goto("/groceries");
   await addGrocery("versie-appel");
   // A second line in the same Store, added without a reload in between: the
-  // first was shifted down to make room, and its version moved with it.
+  // first is shifted down to make room, its version left where the screen holds it.
   await addGrocery("versie-peer");
   await expect
-    .poll(() => findNewestGroceryNamed("versie-appel").then((row) => row?.version))
-    .toBe(2);
+    .poll(() =>
+      findNewestGroceryNamed("versie-appel").then((row) => [row?.sortOrder, row?.version])
+    )
+    .toEqual([1, 1]);
 
   await checkboxOf("versie-appel").click();
 

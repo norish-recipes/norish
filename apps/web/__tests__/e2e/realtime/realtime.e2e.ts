@@ -23,7 +23,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
-import { openGroceries, rowFor } from "../harness/groceries";
+import { closePanel, openGroceries, rowFor } from "../harness/groceries";
 import { removePlans } from "../harness/plans";
 import { swipeOpenTo } from "../harness/pointer";
 import { readRecipe, seedRecipe } from "../harness/recipes";
@@ -322,19 +322,33 @@ test("a rename, a repeating grocery and a Pantry add naming two foods are a row 
 });
 
 test("a validation failure toasts only the browser that caused it", async () => {
-  // A Store that does not exist: the insert fails on its foreign key, the
-  // router announces `failed` to the one user, and nobody else.
-  const failed = await callMutation(pageB, stack.baseURL, "groceries.create", [
-    {
-      id: randomUUID(),
-      name: "kapotte-boodschap",
-      unit: null,
-      amount: null,
-      storeId: randomUUID(),
-    },
-  ]);
+  // The app's own add, sent for a Store that does not exist: the server refuses it and B's client
+  // toasts the rejection; no event is published, so A has nothing to show.
+  await pageB.route("**/api/trpc/groceries.create**", async (route) => {
+    const body = route.request().postDataJSON() as { json: object[] };
 
-  expect(failed.ok).toBe(false);
+    body.json = body.json.map((row) => ({ ...row, storeId: randomUUID() }));
+    await route.continue({ postData: JSON.stringify(body) });
+  });
+  await pageB.getByRole("button", { name: "Add Item" }).click();
+  await pageB.getByPlaceholder("e.g., 2 lbs chicken breast").fill("kapotte-boodschap");
+  await pageB.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(pageB.getByText("Operation failed").first()).toBeVisible();
+  await expect(rowFor(pageB, "kapotte-boodschap")).toHaveCount(0);
+  await pageB.unroute("**/api/trpc/groceries.create**");
+  await closePanel(pageB);
+  await expect(pageB.getByText("Operation failed")).toHaveCount(0);
+
+  // The REST API's write has no client to toast it: the server announces `failed` to its user alone.
+  const apiKey = await callMutation<{ key: string }>(pageB, stack.baseURL, "user.apiKeys.create", {
+    name: "realtime-api",
+  });
+  const failed = await pageB.request.post(`${stack.baseURL}/api/v1/groceries`, {
+    headers: { "x-api-key": apiKey.data!.key },
+    data: { name: "kapotte-boodschap", unit: null, amount: null, storeId: randomUUID() },
+  });
+
+  expect(failed.ok()).toBe(false);
   await expect(pageB.getByText("Operation failed").first()).toBeVisible();
   // Long enough for a household-scoped event to have reached A, were it one.
   await pageA.waitForTimeout(2_000);
