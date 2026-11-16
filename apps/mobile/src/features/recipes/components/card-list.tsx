@@ -1,16 +1,17 @@
 import type { ReactElement } from "react";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { sprung } from "@/lib/motion/spring";
+import { closeOpenRow } from "@/lib/open-row";
+import { useIsFocused } from "expo-router";
 import { Spinner } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import { cardLines } from "../utils/card-lines";
-import { openRow } from "../utils/open-row";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
@@ -44,10 +45,16 @@ export function CardList<Row>({
   const insets = useSafeAreaInsets();
   const [scrolled, setScrolled] = useState(false);
   const isGrid = variant === "grid";
+  const focused = useIsFocused();
+
+  // Leaving the screen, for another tab or a sheet over it, closes the open row.
+  useEffect(() => {
+    if (!focused) closeOpenRow();
+  }, [focused]);
 
   return (
     // A touch that no row took closes the open one.
-    <View className="flex-1" onTouchStart={() => openRow.closeOpen()}>
+    <View className="flex-1" onTouchStart={() => closeOpenRow()}>
       <Animated.FlatList
         ListEmptyComponent={empty}
         ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
@@ -78,7 +85,7 @@ export function CardList<Row>({
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
         onScroll={(event) => setScrolled(event.nativeEvent.contentOffset.y > 8)}
-        onScrollBeginDrag={() => openRow.closeOpen()}
+        onScrollBeginDrag={() => closeOpenRow()}
       />
       {/* Cards dissolve into the page colour before the tab bar. */}
       <View

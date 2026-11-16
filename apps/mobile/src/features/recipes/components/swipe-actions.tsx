@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
@@ -13,13 +13,13 @@ import { scheduleOnRN } from "react-native-worklets";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact } from "@/lib/haptics";
+import { useOpenRow } from "@/lib/open-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
-import { OPEN_THRESHOLD, openRow, pastOpenThreshold } from "../utils/open-row";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -40,6 +40,10 @@ const GROUND: Record<SwipeAction["key"], string> = {
   plan: "bg-plan",
   delete: "bg-danger",
 };
+
+// How far a card is dragged, in pt, for a release to open it: ReanimatedSwipeable opens when the
+// drag (plus a toss from its velocity) passes `-rightThreshold`, so the tick uses the same value.
+const OPEN_THRESHOLD = 40;
 
 // List circles are 48 pt in a 208 pt panel, grid circles 44 pt in an 80 pt one; the card stops
 // 8 / 4 pt short of the panel.
@@ -68,19 +72,11 @@ export function SwipeActions({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const rowRef = useRef<SwipeableMethods>(null);
+  const openRow = useOpenRow(rowRef);
   // Whether a finger is dragging the card, so the threshold's haptic is not played by the settle.
   const dragging = useSharedValue(false);
   const isGrid = variant === "grid";
   const width = isGrid ? GRID_PANEL + GRID_GAP : LIST_GAP + LIST_BUTTON * actions.length;
-
-  // A row that unmounts open (deleted, or the list swapped) must not stay the open one.
-  useEffect(() => {
-    const row = rowRef.current;
-
-    return () => {
-      if (row) openRow.closed(row);
-    };
-  }, []);
 
   return (
     // A touch on this row closes any other open one, and stops there: the list closes on any other.
@@ -88,7 +84,7 @@ export function SwipeActions({
       className={isGrid ? "flex-1" : undefined}
       onTouchStart={(event) => {
         event.stopPropagation();
-        if (rowRef.current) openRow.closeOpen(rowRef.current);
+        openRow.touched();
       }}
     >
       <ReanimatedSwipeable
@@ -110,7 +106,7 @@ export function SwipeActions({
         rightThreshold={OPEN_THRESHOLD}
         onSwipeableClose={() => {
           setIsOpen(false);
-          if (rowRef.current) openRow.closed(rowRef.current);
+          openRow.closed();
         }}
         onSwipeableCloseStartDrag={() => dragging.set(true)}
         onSwipeableOpen={() => setIsOpen(true)}
@@ -118,7 +114,7 @@ export function SwipeActions({
         onSwipeableWillClose={() => dragging.set(false)}
         onSwipeableWillOpen={() => {
           dragging.set(false);
-          if (rowRef.current) openRow.opened(rowRef.current);
+          openRow.opened();
         }}
       >
         {children}
@@ -151,7 +147,7 @@ function ActionsPanel({
 
   // A tick where a release would open the row, each way the finger crosses it.
   useAnimatedReaction(
-    () => pastOpenThreshold(translation.get()),
+    () => translation.get() < -OPEN_THRESHOLD,
     (past, was) => {
       if (was !== null && past !== was && dragging.get()) scheduleOnRN(lightImpact);
     }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { closeOpenRow } from "@/lib/open-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
@@ -29,7 +30,10 @@ export function AccessoryAction({ action: { icon, labelId, testID, route } }: { 
       className="h-full flex-row items-center justify-center gap-2"
       testID={testID}
       onLayout={(event) => setRoom(event.nativeEvent.layout.width)}
-      onPress={() => router.push(route)}
+      onPress={() => {
+        closeOpenRow();
+        router.push(route);
+      }}
     >
       <Ionicons color={accent} name={icon} size={ACTION_ICON} />
       {/* Unmeasured, it keeps its place unseen: drawn first and dropped after, it would flash. */}
