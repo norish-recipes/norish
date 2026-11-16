@@ -26,6 +26,9 @@ vi.mock("react-native", async () => {
 
   return { View: tag("div"), Text: tag("span"), Pressable: tag("button") };
 });
+vi.mock("react-native-screens/experimental", () => ({
+  ScrollViewMarker: ({ children }: { children: React.ReactNode }) => children,
+}));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ bottom: 0 }) }));
 vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
 vi.mock("react-intl", () => ({
