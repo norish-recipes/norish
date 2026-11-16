@@ -256,9 +256,9 @@ function AuthenticatedEffects() {
   return null;
 }
 
-/** Add recipe and its imports present over whichever tab the accessory was pressed on; the editor's
- * country and cuisine lists present over it. From text's field takes the sheet's height. */
-const SHEETS = ["import-text", "editor-choice"] as const;
+/** Sheets the accessory presents over whichever tab it was pressed on: Add recipe and its imports,
+ * the timer list; the editor's lists present over them. From text's field takes the sheet's height. */
+const SHEETS = ["import-text", "editor-choice", "timers"] as const;
 const FIT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
