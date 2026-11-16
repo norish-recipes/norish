@@ -39,9 +39,10 @@ const VIEWS = [
 
 const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
 
-// A segment's width and the gap to the next, in pt: the thumb moves by one step.
-const SEGMENT = 38;
-const STEP = SEGMENT + 2;
+// A segment's size and the gap to the next, in pt: the thumb is one segment and moves by one step.
+const SEGMENT = { width: 38, height: 30 };
+const GAP = 2;
+const STEP = SEGMENT.width + GAP;
 
 /** The grid or list toggle, the reader's own choice on this device: a thumb springs to the picked
  * segment, or fades in there under Reduce Motion. */
@@ -77,11 +78,11 @@ export function ViewToggle() {
   }));
 
   return (
-    <View className="bg-default h-9 flex-row gap-0.5 rounded-full p-[3px]">
+    <View className="bg-default h-9 flex-row rounded-full p-[3px]" style={{ gap: GAP }}>
       <Animated.View
-        className="bg-surface absolute top-[3px] left-[3px] h-[30px] w-[38px] rounded-full"
+        className="bg-surface absolute top-[3px] left-[3px] rounded-full"
         pointerEvents="none"
-        style={thumb}
+        style={[SEGMENT, thumb]}
       />
       {VIEWS.map(({ mode, icon, label }, at) => (
         <PressableScale
@@ -89,7 +90,6 @@ export function ViewToggle() {
           accessibilityLabel={intl.formatMessage({ id: label })}
           accessibilityRole="button"
           accessibilityState={{ selected: view === mode }}
-          className="h-[30px] w-[38px] items-center justify-center"
           testID={`library-view-${mode}`}
           onPress={() => {
             if (view !== mode) lightImpact();
@@ -97,7 +97,9 @@ export function ViewToggle() {
             setView(mode);
           }}
         >
-          <SegmentIcon icon={icon} picked={at} rest={muted} selectedColor={foreground} x={x} />
+          <View className="items-center justify-center" style={SEGMENT}>
+            <SegmentIcon icon={icon} picked={at} rest={muted} selectedColor={foreground} x={x} />
+          </View>
         </PressableScale>
       ))}
     </View>
