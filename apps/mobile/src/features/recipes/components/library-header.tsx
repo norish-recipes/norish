@@ -1,5 +1,9 @@
-import React from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Text, View } from "react-native";
+import { PressableScale } from "@/components/pressable-scale";
+import { RollingText } from "@/components/rolling-text";
+import { SelectFade } from "@/components/select-fade";
+import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -32,17 +36,32 @@ export function ViewToggle() {
   return (
     <View className="bg-default h-9 flex-row gap-0.5 rounded-full p-[3px]">
       {VIEWS.map(({ mode, icon, label }) => (
-        <Pressable
+        <PressableScale
           key={mode}
           accessibilityLabel={intl.formatMessage({ id: label })}
           accessibilityRole="button"
           accessibilityState={{ selected: view === mode }}
-          className={`h-[30px] w-[38px] items-center justify-center rounded-full ${view === mode ? "bg-surface" : ""}`}
           testID={`library-view-${mode}`}
-          onPress={() => setView(mode)}
+          onPress={() => {
+            if (view !== mode) lightImpact();
+            setView(mode);
+          }}
         >
-          <Ionicons color={view === mode ? foreground : muted} name={icon} size={17} />
-        </Pressable>
+          <SelectFade
+            className="items-center justify-center rounded-full"
+            pickedClassName="bg-surface"
+            restClassName="h-[30px] w-[38px]"
+            selected={view === mode}
+          >
+            {(picked) => (
+              <Ionicons
+                color={picked ? foreground : muted}
+                name={icon}
+                size={17}
+              />
+            )}
+          </SelectFade>
+        </PressableScale>
       ))}
     </View>
   );
@@ -56,7 +75,7 @@ export function FiltersButton() {
   const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityLabel={intl.formatMessage({ id: "common.filters.title" })}
       accessibilityRole="button"
       className="bg-surface border-border size-9 items-center justify-center rounded-full border"
@@ -70,7 +89,32 @@ export function FiltersButton() {
           testID="library-filters-active"
         />
       ) : null}
-    </Pressable>
+    </PressableScale>
+  );
+}
+
+/** The Library's heading word, rolling to the lens's word the way the lens moved in LIBRARY_TYPE_FILTERS. */
+function LibraryHeading({ type }: { type: LibraryTypeFilter }) {
+  const intl = useIntl();
+  const index = LIBRARY_TYPE_FILTERS.indexOf(type);
+  const [shown, setShown] = useState({ index, rising: true });
+
+  if (shown.index !== index) setShown({ index, rising: index > shown.index });
+
+  // Slots for the longest word, so none is made or lost mid-roll.
+  const slots = Math.max(
+    ...LIBRARY_TYPE_FILTERS.map((each) => intl.formatMessage({ id: HEADING_KEYS[each] }).length)
+  );
+
+  return (
+    <View testID="library-heading">
+      <RollingText
+        className="text-foreground text-2xl font-semibold"
+        rising={shown.rising}
+        slots={slots}
+        value={intl.formatMessage({ id: HEADING_KEYS[type] })}
+      />
+    </View>
   );
 }
 
@@ -95,9 +139,7 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
   return (
     <View className="gap-3.5 pt-7 pb-4">
       <View className="flex-row items-center justify-between px-5">
-        <Text className="text-foreground text-2xl font-semibold" testID="library-heading">
-          {intl.formatMessage({ id: HEADING_KEYS[filters.libraryType] })}
-        </Text>
+        <LibraryHeading type={filters.libraryType} />
         <ViewToggle />
       </View>
       <View className="flex-row items-center gap-2 px-5">
@@ -105,20 +147,32 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
           const selected = filters.libraryType === type;
 
           return (
-            <Pressable
+            <PressableScale
               key={type}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              className={`h-9 justify-center rounded-full px-4 ${selected ? "bg-accent" : "bg-surface border-border border"}`}
               testID={`library-lens-${type}`}
-              onPress={() => setFilters({ libraryType: type })}
+              onPress={() => {
+                if (!selected) lightImpact();
+                setFilters({ libraryType: type });
+              }}
             >
-              <Text
-                className={`text-[15px] font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
+              <SelectFade
+                className="items-center justify-center rounded-full"
+                inset="-inset-px"
+                pickedClassName="bg-accent"
+                restClassName="bg-surface border-border h-9 border px-4"
+                selected={selected}
               >
-                {intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` })}
-              </Text>
-            </Pressable>
+                {(picked) => (
+                  <Text
+                    className={`text-[15px] font-medium ${picked ? "text-accent-foreground" : "text-foreground"}`}
+                  >
+                    {intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` })}
+                  </Text>
+                )}
+              </SelectFade>
+            </PressableScale>
           );
         })}
         <View className="ml-auto flex-row items-center gap-2">
