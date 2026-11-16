@@ -6,13 +6,16 @@ const router = vi.hoisted(() => ({ push: vi.fn() }));
 const state = vi.hoisted(() => ({ canEdit: true }));
 
 // Layout reports the room and the label's width from `layout`, as UIKit would after a pass.
-const layout = vi.hoisted(() => ({ room: 300, label: 100 }));
+// A null room is a pass that has not run yet.
+const layout = vi.hoisted(() => ({ room: 300 as number | null, label: 100 }));
 
 vi.mock("react-native", async () => {
   const { createElement, useEffect } = await import("react");
   type Measured = { onLayout?: (event: { nativeEvent: { layout: { width: number } } }) => void };
-  const useMeasured = ({ onLayout }: Measured, width: number) =>
-    useEffect(() => onLayout?.({ nativeEvent: { layout: { width } } }), []);
+  const useMeasured = ({ onLayout }: Measured, width: number | null) =>
+    useEffect(() => {
+      if (width !== null) onLayout?.({ nativeEvent: { layout: { width } } });
+    }, []);
 
   return {
     Pressable: (
@@ -30,11 +33,13 @@ vi.mock("react-native", async () => {
         props.children
       );
     },
-    Text: (props: Measured & { children: React.ReactNode }) => {
+    Text: (props: Measured & { children: React.ReactNode; className?: string }) => {
       useMeasured(props, layout.label);
 
       // The hidden measuring copy is told apart by its onLayout.
-      return props.onLayout ? null : createElement("span", null, props.children);
+      return props.onLayout
+        ? null
+        : createElement("span", { className: props.className }, props.children);
     },
     View: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   };
@@ -101,5 +106,13 @@ describe("the Add recipe accessory", () => {
     expect(screen.getByRole("button", { name: "recipes.dashboard.addRecipe" }).textContent).toBe(
       ""
     );
+  });
+
+  it("holds its label invisible inline until the room is measured, so it never flashes", () => {
+    state.canEdit = false;
+    layout.room = null;
+    render(<AddRecipeAccessory inline path="/" />);
+
+    expect(screen.getByText("recipes.dashboard.addRecipe").className).toContain("opacity-0");
   });
 });

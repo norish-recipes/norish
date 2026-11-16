@@ -44,7 +44,9 @@ const GAP = 8;
 // Clear of the capsule's curve at the label's height.
 const SIDES = 6;
 
-/** Whether an action's label fits beside its icon in `room` pt; true until both are measured. */
+/** Whether an action's label fits beside its icon in `room` pt; null until both are measured. */
 export function labelFits(room: number | null, labelWidth: number | null) {
-  return room === null || labelWidth === null || SIDES * 2 + ACTION_ICON + GAP + labelWidth <= room;
+  if (room === null || labelWidth === null) return null;
+
+  return SIDES * 2 + ACTION_ICON + GAP + labelWidth <= room;
 }

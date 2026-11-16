@@ -23,7 +23,7 @@ export function AccessoryAction({
   const accent = useAccentTextColor();
   const [room, setRoom] = useState<number | null>(null);
   const [labelWidth, setLabelWidth] = useState<number | null>(null);
-  const showLabel = !inline || labelFits(room, labelWidth);
+  const fits = inline ? labelFits(room, labelWidth) : true;
 
   return (
     <Pressable
@@ -36,8 +36,12 @@ export function AccessoryAction({
       onPress={onPress}
     >
       <Ionicons color={accent} name={icon} size={ACTION_ICON} />
-      {showLabel ? (
-        <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
+      {/* Unmeasured, it keeps its place unseen: drawn first and dropped after, it would flash. */}
+      {fits !== false ? (
+        <Text
+          className={`text-foreground text-base font-semibold ${fits === null ? "opacity-0" : ""}`}
+          numberOfLines={1}
+        >
           {label}
         </Text>
       ) : null}

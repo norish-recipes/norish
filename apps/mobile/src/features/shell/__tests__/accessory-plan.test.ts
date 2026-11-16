@@ -54,9 +54,9 @@ describe("recipePageId", () => {
 });
 
 describe("labelFits", () => {
-  it("shows the label until the room and the label are measured", () => {
-    expect(labelFits(null, 80)).toBe(true);
-    expect(labelFits(120, null)).toBe(true);
+  it("does not know until the room and the label are measured", () => {
+    expect(labelFits(null, 80)).toBeNull();
+    expect(labelFits(120, null)).toBeNull();
   });
 
   it("keeps the label when sides, icon, gap and label fit the room", () => {
