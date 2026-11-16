@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { choiceRoute, clearChoice, requestChoice, takeChoice } from "../components/editor/choice-request";
+import {
+  choiceRoute,
+  clearChoice,
+  requestChoice,
+  takeChoice,
+} from "../components/editor/choice-request";
 
 const slot = { choices: [{ key: "nl", label: "Netherlands" }], selected: [], onChange: () => {} };
 

@@ -54,12 +54,12 @@ export function EditorChoiceScreen() {
       <SheetList
         ListHeaderComponent={
           <View className="pb-2">
-          <SheetSearchField
-            label={intl.formatMessage({ id: "common.actions.search" })}
-            testID={`${name}-search`}
-            value={query}
-            onChange={setQuery}
-          />
+            <SheetSearchField
+              label={intl.formatMessage({ id: "common.actions.search" })}
+              testID={`${name}-search`}
+              value={query}
+              onChange={setQuery}
+            />
           </View>
         }
         data={shown}

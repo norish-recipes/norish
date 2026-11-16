@@ -9,7 +9,6 @@ import React, { useEffect, useState } from "react";
 import { FlatList, Keyboard, ScrollView, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { initialWindowMetrics } from "react-native-safe-area-context";
-
 import { useSheetOpenFlag } from "@/lib/tab-bar-visibility";
 
 import type { HeaderConfirm } from "./modal-header";
@@ -199,10 +198,7 @@ export function Sheet({
     >
       <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
       {subtitle ? (
-        <Text
-          className="text-muted px-6 pb-3 text-sm leading-[17px]"
-          numberOfLines={1}
-        >
+        <Text className="text-muted px-6 pb-3 text-sm leading-[17px]" numberOfLines={1}>
           {subtitle}
         </Text>
       ) : null}
