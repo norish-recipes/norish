@@ -156,6 +156,8 @@ export function TimerPill({
     <Host
       matchContents
       alignment="bottomLeading"
+      // Mid-push the screen's safe area reaches the host and lifts the pill until the push settles.
+      ignoreSafeArea="all"
       style={{ position: "absolute", left: large ? listLeft : left, bottom }}
     >
       {large ? (
