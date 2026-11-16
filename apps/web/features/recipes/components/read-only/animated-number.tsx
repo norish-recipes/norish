@@ -4,18 +4,13 @@ import { useState } from "react";
 import { RollingText } from "@/components/shared/rolling-text";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
+import { valueMagnitude } from "@norish/shared/lib/rolling-slots";
+
 type AnimatedNumberProps = {
   /** The rendered value. A change to it is what rolls the digits. */
   value: string;
   className?: string;
 };
-
-/** The leading number in a formatted value, for deciding which way to roll. */
-function magnitude(value: string): number {
-  const match = value.match(/-?\d+(?:[.,]\d+)?/);
-
-  return match ? Number(match[0].replace(",", ".")) : 0;
-}
 
 /**
  * A number that changes under the reader — an ingredient amount, a serving
@@ -38,7 +33,7 @@ export function AnimatedNumber({ value, className = "" }: AnimatedNumberProps) {
 
   if (value !== previous) {
     setPrevious(value);
-    setIsRising(magnitude(value) >= magnitude(previous));
+    setIsRising(valueMagnitude(value) >= valueMagnitude(previous));
   }
 
   if (prefersReducedMotion) {

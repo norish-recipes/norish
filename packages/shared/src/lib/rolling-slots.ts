@@ -7,3 +7,10 @@ export function toSlots(value: string, slots: number | undefined, keyFrom: "left
 
   return keyFrom === "right" ? [...blanks, ...characters] : [...characters, ...blanks];
 }
+
+/** The leading number of a formatted value, to tell which way it moved: 0 where there is none. */
+export function valueMagnitude(value: string): number {
+  const match = value.match(/-?\d+(?:[.,]\d+)?/);
+
+  return match ? Number(match[0].replace(",", ".")) : 0;
+}
