@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 /** The header's confirm item: a sheet's Save, an editor's Create. Without `onPress` it is disabled. */
@@ -23,10 +23,12 @@ export function ModalHeader({
   title: string;
   /** The left item goes back to the sheet's form instead of closing the sheet. */
   back?: boolean;
-  onClose: () => void;
+  /** Going back by default. */
+  onClose?: () => void;
   confirm?: HeaderConfirm;
 }) {
   const intl = useIntl();
+  const router = useRouter();
   const leftLabel = intl.formatMessage({
     id: back ? "common.actions.back" : "common.actions.close",
   });
@@ -42,7 +44,7 @@ export function ModalHeader({
             label: leftLabel,
             accessibilityLabel: leftLabel,
             icon: { type: "sfSymbol", name: back ? "chevron.backward" : "xmark" },
-            onPress: onClose,
+            onPress: onClose ?? (() => router.back()),
           },
         ],
         unstable_headerRightItems: () =>
@@ -54,6 +56,7 @@ export function ModalHeader({
                   accessibilityLabel: confirm.label,
                   variant: "prominent",
                   disabled: confirm.disabled || !confirm.onPress,
+                  // The native item type requires a handler; `disabled` above keeps it from firing.
                   onPress: confirm.onPress ?? (() => {}),
                 },
               ]

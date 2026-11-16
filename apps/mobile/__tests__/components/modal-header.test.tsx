@@ -2,7 +2,10 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const screen = vi.hoisted(() => ({ options: null as Record<string, unknown> | null }));
+const screen = vi.hoisted(() => ({
+  options: null as Record<string, unknown> | null,
+  back: vi.fn(),
+}));
 
 type Item = { label: string; icon?: { name: string }; variant?: string; disabled?: boolean };
 type Options = {
@@ -12,6 +15,7 @@ type Options = {
 };
 
 vi.mock("expo-router", () => ({
+  useRouter: () => ({ back: screen.back }),
   Stack: {
     Screen: ({ options }: { options: Record<string, unknown> }) => {
       screen.options = options;
@@ -39,6 +43,13 @@ describe("ModalHeader", () => {
       { label: "common.actions.close", onPress: onClose },
     ]);
     expect(declared().unstable_headerRightItems()).toEqual([]);
+  });
+
+  it("goes back by default", () => {
+    render(<ModalHeader title="Rename" />);
+
+    (declared().unstable_headerLeftItems()[0] as unknown as { onPress: () => void }).onPress();
+    expect(screen.back).toHaveBeenCalledOnce();
   });
 
   it("shows a Back chevron instead of Close for a step", () => {

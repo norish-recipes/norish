@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import React from "react";
+import React, { useEffect } from "react";
 import { View } from "react-native";
 import { ModalHeader } from "@/components/modal-header";
-import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import type { RecipeEditorMode } from "@norish/shared-react/recipes";
+
+import { clearChoice } from "./choice-request";
 
 /** The editor's ground and its native header, the one place the header is declared: it shows in
  * every state, with Save or Create once there is a form (`onSave`). */
@@ -23,9 +24,10 @@ export function EditorFrame({
   children: ReactNode;
 }) {
   const intl = useIntl();
-  const router = useRouter();
   const create = mode === "create";
-  const text = (id: string) => intl.formatMessage({ id });
+
+  // A choice the editor asked for and no sheet took does not outlive the editor.
+  useEffect(() => clearChoice, []);
 
   return (
     <View className="bg-background flex-1" testID={testID}>
@@ -33,14 +35,17 @@ export function EditorFrame({
         confirm={
           onSave
             ? {
-                label: text(create ? "common.actions.create" : "common.actions.save"),
+                label: intl.formatMessage({
+                  id: create ? "common.actions.create" : "common.actions.save",
+                }),
                 disabled: saving,
                 onPress: onSave,
               }
             : undefined
         }
-        title={text(create ? "recipes.editor.newTitle" : "recipes.editor.editTitle")}
-        onClose={() => router.back()}
+        title={intl.formatMessage({
+          id: create ? "recipes.editor.newTitle" : "recipes.editor.editTitle",
+        })}
       />
       {children}
     </View>
