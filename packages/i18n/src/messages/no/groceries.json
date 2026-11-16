@@ -93,6 +93,7 @@
     "unavailable": "Spiskammeret kunne ikke leses. Ingenting er endret; prøv igjen når du er tilkoblet.",
     "fieldLabel": "Finn eller legg til en matvare",
     "fieldPlaceholder": "Finn eller legg til, f.eks. olivenolje",
+    "findPlaceholder": "Finn en vare i spiskammeret",
     "add": "Legg til i spiskammeret",
     "fromCatalogue": "Legg til en matvare",
     "addFood": "Legg {name} i spiskammeret",

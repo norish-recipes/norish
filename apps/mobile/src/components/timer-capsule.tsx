@@ -6,15 +6,15 @@ import { useRouter } from "expo-router";
 import { useTimerStore } from "@norish/shared-react/recipes/timers";
 
 /** The accessory's timer: the soonest countdown and ring on the accessory's own glass, after a
- * hairline when an action sits beside it, opening the timer list as a sheet. */
-export function TimerCapsule({ divided }: { divided: boolean }) {
+ * hairline from the action beside it, opening the timer list as a sheet. */
+export function TimerCapsule() {
   const router = useRouter();
   const timers = useTimerStore((state) => state.timers);
   const label = useTimersLabel(timers);
 
   return (
     <View className="flex-row items-center">
-      {divided ? <View className="bg-separator h-6 w-px" /> : null}
+      <View className="bg-separator h-6 w-px" />
       <Pressable
         accessibilityLabel={label}
         accessibilityRole="button"

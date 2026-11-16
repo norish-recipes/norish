@@ -36,7 +36,7 @@ export function ShellTabs() {
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
-      {hidden || !plan ? null : (
+      {hidden ? null : (
         <NativeTabs.BottomAccessory>
           <ShellAccessory path={screen.path} plan={plan} />
         </NativeTabs.BottomAccessory>

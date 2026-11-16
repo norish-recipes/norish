@@ -20,6 +20,7 @@ export const TAB_ROUTES = {
     add: "/groceries/add",
     stores: "/groceries/stores",
     pantry: "/groceries/pantry",
+    pantryAdd: "/groceries/pantry-add",
     food: "/groceries/food",
   },
   calendar: {

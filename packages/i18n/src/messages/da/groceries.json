@@ -93,6 +93,7 @@
     "unavailable": "Spisekammeret kunne ikke læses. Intet er ændret; prøv igen, når du er online.",
     "fieldLabel": "Find eller tilføj en madvare",
     "fieldPlaceholder": "Find eller tilføj, f.eks. olivenolie",
+    "findPlaceholder": "Find en vare i dit køkkenskab",
     "add": "Tilføj til spisekammer",
     "fromCatalogue": "Tilføj en madvare",
     "addFood": "Tilføj {name} til spisekammeret",

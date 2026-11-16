@@ -93,6 +93,7 @@
     "unavailable": "Não foi possível ler sua despensa. Nada mudou; tente de novo quando estiver online.",
     "fieldLabel": "Buscar ou adicionar um alimento",
     "fieldPlaceholder": "Buscar ou adicionar, ex.: azeite",
+    "findPlaceholder": "Buscar um alimento na despensa",
     "add": "Adicionar à despensa",
     "fromCatalogue": "Adicionar um alimento",
     "addFood": "Adicionar {name} à despensa",

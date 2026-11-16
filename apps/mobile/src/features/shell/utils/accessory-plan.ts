@@ -16,13 +16,14 @@ export type Action = {
   route: Href;
 };
 
-/** What the accessory holds: an action, the timer capsule, or both. Add recipe depends on the
- * cookbook it is on, so it is `"addRecipe"`, drawn by a component of its own. */
-export type AccessoryPlan = { add: Action | "addRecipe" | null; capsule: boolean };
+/** What the accessory holds: an action, and the timer capsule beside it while a timer exists. Add
+ * recipe depends on the cookbook it is on, so it is `"addRecipe"`, drawn by a component of its own. */
+export type AccessoryPlan = { add: Action | "addRecipe"; capsule: boolean };
 
 // Recipes is every other path.
 const PATH_TABS = ["groceries", "calendar"] as const;
-const WITHOUT_ADD = [TAB_ROUTES.groceries.pantry, TAB_ROUTES.groceries.food];
+// The Pantry and the sheets it opens (`/groceries/pantry` prefixes the add sheet).
+const PANTRY_PATHS = [TAB_ROUTES.groceries.pantry, TAB_ROUTES.groceries.food];
 
 const TAB_ACTIONS: Record<(typeof PATH_TABS)[number], Action> = {
   groceries: {
@@ -37,6 +38,13 @@ const TAB_ACTIONS: Record<(typeof PATH_TABS)[number], Action> = {
     testID: "plan-recipe-accessory",
     route: TAB_ROUTES.calendar.planRecipe,
   },
+};
+
+const ADD_TO_PANTRY: Action = {
+  icon: "add-circle-outline",
+  labelId: "groceries.pantry.add",
+  testID: "add-pantry",
+  route: TAB_ROUTES.groceries.pantryAdd,
 };
 
 const ADD_COOKBOOK: Action = {
@@ -57,6 +65,8 @@ const cookAction = (recipeId: string): Action => ({
   route: cookModeRoute(recipeId),
 });
 
+const onPantry = (path: string) => PANTRY_PATHS.some((route) => path.startsWith(route));
+
 const tabOf = (path: string) => PATH_TABS.find((tab) => path.startsWith(TAB_ROUTES[tab].root));
 
 /** The screen the accessory is for at `path`, whose recipe is `recipeId`: the recipe's once its page
@@ -74,23 +84,23 @@ export function accessoryScreen(
   return { path: tabOf(lastNonRecipePath) ? TAB_ROUTES.recipes.root : lastNonRecipePath };
 }
 
-/** The accessory for `screen`, or null when it holds nothing: Cook on a recipe, Add cookbook on the
- * Cookbooks `lens`, the capsule alone on the Pantry. */
+/** The accessory for `screen`: Cook on a recipe, Add cookbook on the Cookbooks `lens`, Add to
+ * pantry on the Pantry, else the tab's own action. */
 export function accessoryPlan(
   { path, recipeId }: AccessoryScreen,
   hasTimers: boolean,
   lens: LibraryTypeFilter
-): AccessoryPlan | null {
+): AccessoryPlan {
   const tab = tabOf(path);
   const add: AccessoryPlan["add"] = recipeId
     ? cookAction(recipeId)
-    : WITHOUT_ADD.some((route) => path.startsWith(route))
-      ? null
+    : onPantry(path)
+      ? ADD_TO_PANTRY
       : tab
         ? TAB_ACTIONS[tab]
         : recipesAdd(path, lens);
 
-  return add || hasTimers ? { add, capsule: hasTimers } : null;
+  return { add, capsule: hasTimers };
 }
 
 /** The action icon's size. */

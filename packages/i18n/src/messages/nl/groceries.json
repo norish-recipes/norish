@@ -93,6 +93,7 @@
     "unavailable": "Je voorraadkast kon niet worden gelezen. Er is niets veranderd; probeer het opnieuw als je weer online bent.",
     "fieldLabel": "Zoek of voeg een product toe",
     "fieldPlaceholder": "Zoek of voeg toe, bijv. olijfolie",
+    "findPlaceholder": "Zoek een product in je voorraad",
     "add": "Toevoegen aan voorraadkast",
     "fromCatalogue": "Product toevoegen",
     "addFood": "{name} toevoegen aan je voorraadkast",

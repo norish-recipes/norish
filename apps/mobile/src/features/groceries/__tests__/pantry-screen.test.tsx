@@ -79,7 +79,6 @@ vi.mock("@norish/shared-react/platform", () => ({
 }));
 vi.mock("@norish/shared-react/ingredients", () => ({
   useIngredientIcons: () => undefined,
-  usePantryCatalogue: () => [],
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
   useOnTheList: () => [],

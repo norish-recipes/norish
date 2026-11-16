@@ -93,6 +93,7 @@
     "unavailable": "팬트리를 불러오지 못했습니다. 변경된 내용은 없습니다. 다시 온라인이 되면 시도해 주세요.",
     "fieldLabel": "식품 찾기 또는 추가",
     "fieldPlaceholder": "찾기 또는 추가, 예: 올리브유",
+    "findPlaceholder": "식료품 저장실에서 식품 찾기",
     "add": "팬트리에 추가",
     "fromCatalogue": "식품 추가",
     "addFood": "{name}을(를) 팬트리에 추가",

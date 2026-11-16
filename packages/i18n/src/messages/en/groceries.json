@@ -93,6 +93,7 @@
     "unavailable": "Your pantry could not be read. Nothing has changed; try again when you are back online.",
     "fieldLabel": "Find or add a food",
     "fieldPlaceholder": "Find or add a food, e.g. olive oil",
+    "findPlaceholder": "Find a food in your pantry",
     "add": "Add to pantry",
     "fromCatalogue": "Add a food",
     "addFood": "Add {name} to your pantry",

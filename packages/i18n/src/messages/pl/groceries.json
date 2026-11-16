@@ -93,6 +93,7 @@
     "unavailable": "Nie udało się odczytać spiżarni. Nic się nie zmieniło; spróbuj ponownie po powrocie do sieci.",
     "fieldLabel": "Znajdź lub dodaj produkt",
     "fieldPlaceholder": "Znajdź lub dodaj, np. oliwa z oliwek",
+    "findPlaceholder": "Znajdź produkt w spiżarni",
     "add": "Dodaj do spiżarni",
     "fromCatalogue": "Dodaj produkt",
     "addFood": "Dodaj {name} do spiżarni",

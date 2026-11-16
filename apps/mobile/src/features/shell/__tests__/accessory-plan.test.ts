@@ -13,12 +13,10 @@ const holds = (
 ) => {
   const plan = accessoryPlan({ path, recipeId }, hasTimers, lens);
 
-  return (
-    plan && {
-      add: plan.add && typeof plan.add === "object" ? plan.add.testID : plan.add,
-      capsule: plan.capsule,
-    }
-  );
+  return {
+    add: typeof plan.add === "object" ? plan.add.testID : plan.add,
+    capsule: plan.capsule,
+  };
 };
 
 describe("accessoryPlan", () => {
@@ -35,10 +33,15 @@ describe("accessoryPlan", () => {
     expect(holds("/settings", true)).toEqual({ add: "addRecipe", capsule: true });
   });
 
-  it("shows nothing on the Pantry without a timer, and the capsule alone with one", () => {
-    expect(holds("/groceries/pantry", false)).toBeNull();
-    expect(holds("/groceries/food", false)).toBeNull();
-    expect(holds("/groceries/pantry", true)).toEqual({ add: null, capsule: true });
+  it("reads Add to pantry, into the Pantry's add sheet, on the Pantry and its sheets", () => {
+    expect(holds("/groceries/pantry", false)).toEqual({ add: "add-pantry", capsule: false });
+    expect(holds("/groceries/pantry-add", false)?.add).toBe("add-pantry");
+    expect(holds("/groceries/food", false)?.add).toBe("add-pantry");
+    expect(holds("/groceries/pantry", true)).toEqual({ add: "add-pantry", capsule: true });
+    expect(accessoryPlan({ path: "/groceries/pantry" }, false, "all").add).toMatchObject({
+      labelId: "groceries.pantry.add",
+      route: "/groceries/pantry-add",
+    });
   });
 
   it("reads Cook, into that recipe's cook mode, on a shown recipe's page and its sheets", () => {
@@ -47,11 +50,11 @@ describe("accessoryPlan", () => {
       add: "cook-recipe",
       capsule: true,
     });
-    expect(
-      accessoryPlan({ path: "/recipe/abc", recipeId: "abc" }, false, "all")?.add
-    ).toMatchObject({
-      route: { pathname: "/recipe/[id]/cook", params: { id: "abc" } },
-    });
+    expect(accessoryPlan({ path: "/recipe/abc", recipeId: "abc" }, false, "all").add).toMatchObject(
+      {
+        route: { pathname: "/recipe/[id]/cook", params: { id: "abc" } },
+      }
+    );
   });
 });
 
@@ -65,7 +68,7 @@ describe("accessoryPlan on the Cookbooks lens", () => {
       add: "add-cookbook",
       capsule: true,
     });
-    expect(accessoryPlan({ path: "/" }, false, "cookbooks")?.add).toMatchObject({
+    expect(accessoryPlan({ path: "/" }, false, "cookbooks").add).toMatchObject({
       route: "/new-cookbook",
     });
   });

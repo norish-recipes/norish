@@ -4,15 +4,10 @@ import { edgeAt } from "@/components/card-edges";
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
 
-/** A catalogue food a search found. */
-type Match = { id: string; name: string; localeNames?: Record<string, string> };
-
 /** A row; `foodId` is the Ingredient whose icon it shows, null for rows that name no food. */
 export type PantryRow = { key: string; foodId: string | null } & (
   | { type: "kept"; item: PantryIngredientDto; onList: boolean; edge: Edge }
   | { type: "note"; text: "empty" | "noMatch" }
-  | { type: "label"; text: "fromCatalogue" }
-  | { type: "match"; food: Match; edge: Edge }
   | { type: "suggestions"; open: boolean }
   | { type: "suggestion"; food: PantrySuggestionDto; edge: Edge }
   | { type: "more" }
@@ -25,7 +20,6 @@ export type PantryFoods = {
   /** What the field narrows it to. */
   kept: readonly PantryIngredientDto[];
   onTheList: readonly string[];
-  matches: readonly Match[];
   offered: readonly PantrySuggestionDto[];
 };
 
@@ -33,9 +27,9 @@ export type PantryFoods = {
 export type PantryView = { typed: string; suggestionsOpen: boolean; showAll: boolean };
 
 /** The Pantry's rows, flat so one virtualised list holds them: the kept foods (or why there are
- * none), the catalogue foods the text finds, and while the field is empty "From your recipes". */
+ * none), and while the field is empty "From your recipes". */
 export function pantryRows(
-  { items, kept, onTheList, matches, offered }: PantryFoods,
+  { items, kept, onTheList, offered }: PantryFoods,
   { typed, suggestionsOpen, showAll }: PantryView
 ): PantryRow[] {
   const rows: PantryRow[] = [];
@@ -52,19 +46,6 @@ export function pantryRows(
         item,
         onList: onTheList.includes(item.id),
         edge: edgeAt(index, kept.length),
-      })
-    );
-  }
-
-  if (matches.length > 0) {
-    rows.push({ key: "label", foodId: null, type: "label", text: "fromCatalogue" });
-    matches.forEach((food, index) =>
-      rows.push({
-        key: `match:${food.id}`,
-        foodId: food.id,
-        type: "match",
-        food,
-        edge: edgeAt(index, matches.length),
       })
     );
   }

@@ -93,6 +93,7 @@
     "unavailable": "Ihre Vorratskammer konnte nicht gelesen werden. Es hat sich nichts geändert; versuchen Sie es erneut, wenn Sie wieder online sind.",
     "fieldLabel": "Lebensmittel suchen oder hinzufügen",
     "fieldPlaceholder": "Suchen oder hinzufügen, z. B. Olivenöl",
+    "findPlaceholder": "Lebensmittel in der Vorratskammer suchen",
     "add": "Zur Vorratskammer hinzufügen",
     "fromCatalogue": "Lebensmittel hinzufügen",
     "addFood": "{name} zur Vorratskammer hinzufügen",

@@ -28,15 +28,7 @@ export function PantryScreen() {
         />
       </TitleRow>
       <View className="px-5 pb-3.5">
-        {/* Drawn while the Pantry loads but taking nothing: a food added then could double one kept. */}
-        <FindField
-          canAdd={field.canAdd}
-          disabled={!isRead}
-          fieldRef={field.ref}
-          value={field.draft}
-          onAdd={field.add}
-          onChange={field.setDraft}
-        />
+        <FindField disabled={!isRead} value={field.draft} onChange={field.setDraft} />
         {field.draft.trim() === "" ? (
           <Text className="text-muted px-2 pt-2 text-sm">
             {intl.formatMessage({ id: "groceries.pantry.hint" })}

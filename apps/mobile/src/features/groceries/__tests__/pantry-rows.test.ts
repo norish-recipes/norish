@@ -25,7 +25,6 @@ const base = {
   items: [] as PantryIngredientDto[],
   kept: [] as PantryIngredientDto[],
   onTheList: [] as string[],
-  matches: [] as { id: string; name: string }[],
   offered: [] as PantrySuggestionDto[],
   typed: "",
   suggestionsOpen: true,
@@ -64,19 +63,17 @@ describe("pantryRows", () => {
     ]);
   });
 
-  it("offers catalogue foods under the kept ones, and suggestions only for an empty field", () => {
-    const match = { id: "m", name: "Olives" };
+  it("offers suggestions only for an empty field", () => {
     const offered = [suggestion("rice")];
     const searching = pantryRows({
       ...base,
       items: [kept("salt")],
       kept: [kept("salt")],
-      matches: [match],
       offered,
-      typed: "oli",
+      typed: "sa",
     });
 
-    expect(types(searching)).toEqual(["kept", "label", "match"]);
+    expect(types(searching)).toEqual(["kept"]);
     expect(
       types(pantryRows({ ...base, items: [kept("salt")], kept: [kept("salt")], offered }))
     ).toEqual(["kept", "suggestions", "suggestion"]);
@@ -105,14 +102,11 @@ describe("a row's foodId", () => {
       ...base,
       items: [kept("salt")],
       kept: [kept("salt")],
-      matches: [{ id: "m1", name: "Rice" }],
       offered: [suggestion("kale")],
     });
 
     expect(rows.map((row) => [row.type, row.foodId])).toEqual([
       ["kept", "i-salt"],
-      ["label", null],
-      ["match", "m1"],
       ["suggestions", null],
       ["suggestion", "s-kale"],
     ]);

@@ -93,6 +93,7 @@
     "unavailable": "Impossibile leggere la dispensa. Non è cambiato nulla; riprova quando torni online.",
     "fieldLabel": "Cerca o aggiungi un alimento",
     "fieldPlaceholder": "Cerca o aggiungi, es. olio d'oliva",
+    "findPlaceholder": "Cerca un alimento nella dispensa",
     "add": "Aggiungi alla dispensa",
     "fromCatalogue": "Aggiungi un alimento",
     "addFood": "Aggiungi {name} alla dispensa",

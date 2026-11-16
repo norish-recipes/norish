@@ -173,41 +173,6 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
         </CardSlice>
       );
     }
-    case "label":
-      return (
-        <Text className={`${SECTION_LABEL} px-7 pt-[18px] pb-2`}>
-          {intl.formatMessage({ id: "groceries.pantry.fromCatalogue" })}
-        </Text>
-      );
-    case "match": {
-      const food = row.food;
-      const name = ingredientDisplayName(food, intl.locale);
-
-      return (
-        <CardSlice edge={row.edge}>
-          <FoodRow
-            end={
-              <RowButton
-                accent
-                icon="add"
-                label={addLabel(name)}
-                testID={`pantry-match-${food.id}`}
-                onPress={() =>
-                  actions.keep({
-                    ingredientId: food.id,
-                    name: food.name,
-                    localeNames: food.localeNames,
-                  })
-                }
-              />
-            }
-            ingredientId={row.foodId}
-            name={name}
-            testID={`pantry-match-row-${food.id}`}
-          />
-        </CardSlice>
-      );
-    }
     case "suggestions":
       return (
         <View className="px-7 pt-[18px] pb-2">

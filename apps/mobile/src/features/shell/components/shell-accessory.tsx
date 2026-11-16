@@ -25,26 +25,24 @@ export function ShellAccessory({
 }) {
   return (
     <Animated.View className="h-full flex-row items-center justify-center">
-      {add ? (
-        <Animated.View className="h-full flex-1" layout={sprung(LinearTransition.springify())}>
-          {/* Keyed by the action, the old one fades out over the new; Reduce Motion swaps them. */}
-          <Animated.View
-            key={add === "addRecipe" ? add : add.testID}
-            entering={sprung(FadeIn.springify())}
-            exiting={sprung(FadeOut.springify())}
-            style={StyleSheet.absoluteFill}
-          >
-            {add === "addRecipe" ? (
-              <AddRecipeAccessory path={path} />
-            ) : (
-              <AccessoryAction action={add} />
-            )}
-          </Animated.View>
+      <Animated.View className="h-full flex-1" layout={sprung(LinearTransition.springify())}>
+        {/* Keyed by the action, the old one fades out over the new; Reduce Motion swaps them. */}
+        <Animated.View
+          key={add === "addRecipe" ? add : add.testID}
+          entering={sprung(FadeIn.springify())}
+          exiting={sprung(FadeOut.springify())}
+          style={StyleSheet.absoluteFill}
+        >
+          {add === "addRecipe" ? (
+            <AddRecipeAccessory path={path} />
+          ) : (
+            <AccessoryAction action={add} />
+          )}
         </Animated.View>
-      ) : null}
+      </Animated.View>
       {capsule ? (
         <Animated.View entering={sprung(ZoomIn.springify())} exiting={sprung(ZoomOut.springify())}>
-          <TimerCapsule divided={!!add} />
+          <TimerCapsule />
         </Animated.View>
       ) : null}
     </Animated.View>

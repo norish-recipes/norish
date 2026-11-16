@@ -93,6 +93,7 @@
     "unavailable": "Det gick inte att läsa ditt skafferi. Inget har ändrats. Försök igen när du är online.",
     "fieldLabel": "Sök efter eller lägg till ett livsmedel",
     "fieldPlaceholder": "Sök efter eller lägg till ett livsmedel, t.ex. olivolja",
+    "findPlaceholder": "Hitta en vara i skafferiet",
     "add": "Lägg till i skafferiet",
     "fromCatalogue": "Lägg till livsmedel",
     "addFood": "Lägg till {name} i skafferiet",
