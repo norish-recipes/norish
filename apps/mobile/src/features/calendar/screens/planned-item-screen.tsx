@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import { SlotTabs } from "@/components/slot-tabs";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Input, Skeleton, TextField } from "heroui-native";
+import { Button, Skeleton, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
@@ -140,9 +141,8 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
       <SheetBody>
         {recipeId ? null : (
           <TextField className="mb-3">
-            <Input
+            <SheetInput
               accessibilityLabel={intl.formatMessage({ id: "calendar.editNote.noteLabel" })}
-              className="h-12 rounded-full px-4 text-base"
               placeholder={intl.formatMessage({ id: "calendar.editNote.notePlaceholder" })}
               returnKeyType="done"
               testID="planned-item-note"

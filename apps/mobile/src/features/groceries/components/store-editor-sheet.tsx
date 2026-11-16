@@ -2,8 +2,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { Sheet } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Input, TextField, useThemeColor } from "heroui-native";
+import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { EditingStore } from "@norish/shared-react/groceries";
@@ -13,7 +14,7 @@ import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 import { StoreAisleList } from "./store-aisle-list";
 import { StoreColorPicker } from "./store-color-picker";
 
-const FIELD = "h-[52px] rounded-[18px] px-4 text-[17px]";
+const FIELD = "h-[52px] text-[17px]";
 
 /** The Store being added or edited: its name, shop link, colour and Aisles, held by the manager
  * and written only on Save. Aisles reorder by holding a row. */
@@ -59,7 +60,7 @@ export function StoreEditorSheet({
           <View className="px-4">
             {label("groceries.storeManager.storeName")}
             <TextField>
-              <Input
+              <SheetInput
                 accessibilityLabel={text("groceries.storeManager.storeName")}
                 className={FIELD}
                 placeholder={text("groceries.storeManager.storeNamePlaceholder")}
@@ -73,7 +74,7 @@ export function StoreEditorSheet({
             <View className="h-4" />
             {label("groceries.storeManager.shopLink", "groceries.storeManager.shopLinkHint")}
             <TextField>
-              <Input
+              <SheetInput
                 accessibilityLabel={text("groceries.storeManager.shopLink")}
                 autoCapitalize="none"
                 autoCorrect={false}

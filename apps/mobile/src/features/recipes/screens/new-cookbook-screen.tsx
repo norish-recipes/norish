@@ -1,5 +1,6 @@
 import type { ComponentRef } from "react";
 import React from "react";
+import { SheetInput } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useRouter } from "expo-router";
 import { Input, TextField } from "heroui-native";
@@ -41,10 +42,9 @@ export function NewCookbookScreen() {
       title={intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
     >
       <TextField>
-        <Input
+        <SheetInput
           ref={fieldRef}
           accessibilityLabel={intl.formatMessage({ id: "recipes.cookbooks.titleLabel" })}
-          className="bg-default h-12 rounded-full px-4 text-base"
           placeholder={intl.formatMessage({ id: "recipes.cookbooks.titlePlaceholder" })}
           returnKeyType="done"
           testID="new-cookbook-title"

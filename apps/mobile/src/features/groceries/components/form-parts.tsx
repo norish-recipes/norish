@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { SheetInput } from "@/components/sheet-input";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, TextField, useThemeColor } from "heroui-native";
@@ -30,10 +31,10 @@ export function NameField({
 
   return (
     <TextField>
-      <Input
+      <SheetInput
         ref={fieldRef}
         accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.itemLabel" })}
-        className="h-[52px] rounded-[18px] px-4 text-[17px]"
+        className="h-[52px] text-[17px]"
         placeholder={intl.formatMessage({ id: placeholderId })}
         returnKeyType="done"
         testID={testID}

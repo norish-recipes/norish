@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SheetBody } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import { useRouter } from "expo-router";
-import { Input, TextField, useThemeColor } from "heroui-native";
+import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
@@ -47,7 +48,7 @@ function ServingsBody() {
       <View className="flex-row gap-3">
         <View className="flex-1 flex-row items-center gap-2">
           <TextField className="flex-1">
-            <Input
+            <SheetInput
               accessibilityLabel={intl.formatMessage({ id: "recipes.form.servings" })}
               inputMode="decimal"
               testID="recipe-servings-input"
@@ -62,7 +63,7 @@ function ServingsBody() {
         <View className="w-28 flex-row items-center gap-2">
           <Text className="text-muted text-base">×</Text>
           <TextField className="flex-1">
-            <Input
+            <SheetInput
               accessibilityLabel={intl.formatMessage({ id: "recipes.detail.multiplier" })}
               inputMode="decimal"
               testID="recipe-multiplier-input"

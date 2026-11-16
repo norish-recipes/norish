@@ -1,6 +1,7 @@
 import type { ComponentRef } from "react";
 import React from "react";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { Input, Skeleton, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -48,10 +49,9 @@ export function CookbookTitleSheet({
           <Skeleton className="h-12 rounded-full" testID={`${name}-title-skeleton`} />
         ) : (
           <TextField>
-            <Input
+            <SheetInput
               ref={fieldRef}
               accessibilityLabel={intl.formatMessage({ id: "recipes.cookbooks.titleLabel" })}
-              className="h-12 rounded-full px-4 text-base"
               placeholder={intl.formatMessage({ id: "recipes.cookbooks.titlePlaceholder" })}
               returnKeyType="done"
               testID={`${name}-title`}
