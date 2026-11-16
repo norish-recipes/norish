@@ -2,7 +2,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { useMorphFrame, GROW_MS, HIDE_MS, SETTLE_MS } = await import("../hooks/use-morph-frame");
+const { useMorphFrame, MORPH } = await import("../hooks/use-morph-frame");
 
 describe("useMorphFrame", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -18,10 +18,10 @@ describe("useMorphFrame", () => {
     rerender({ open: true });
     expect(result.current).toEqual({ large: false, drawn: false });
 
-    act(() => vi.advanceTimersByTime(HIDE_MS));
+    act(() => vi.advanceTimersByTime(MORPH.hide));
     expect(result.current).toEqual({ large: true, drawn: false });
 
-    act(() => vi.advanceTimersByTime(GROW_MS));
+    act(() => vi.advanceTimersByTime(MORPH.grow));
     expect(result.current).toEqual({ large: true, drawn: true });
   });
 
@@ -35,7 +35,7 @@ describe("useMorphFrame", () => {
     rerender({ open: false });
     expect(result.current).toEqual({ large: true, drawn: false });
 
-    act(() => vi.advanceTimersByTime(SETTLE_MS - 1));
+    act(() => vi.advanceTimersByTime(MORPH.settle - 1));
     expect(result.current.large).toBe(true);
     act(() => vi.advanceTimersByTime(1));
     expect(result.current).toEqual({ large: false, drawn: false });
@@ -50,18 +50,18 @@ describe("useMorphFrame", () => {
     act(() => vi.advanceTimersByTime(100));
     rerender({ open: true });
     expect(result.current.large).toBe(true);
-    act(() => vi.advanceTimersByTime(SETTLE_MS));
+    act(() => vi.advanceTimersByTime(MORPH.settle));
 
     expect(result.current).toEqual({ large: true, drawn: true });
   });
 
   it("under Reduce Motion shrinks as soon as the glass has stepped back", () => {
-    const { result, rerender } = renderHook(({ open }) => useMorphFrame(open, HIDE_MS), {
+    const { result, rerender } = renderHook(({ open }) => useMorphFrame(open, MORPH.hide), {
       initialProps: { open: true },
     });
 
     rerender({ open: false });
-    act(() => vi.advanceTimersByTime(HIDE_MS));
+    act(() => vi.advanceTimersByTime(MORPH.hide));
 
     expect(result.current).toEqual({ large: false, drawn: false });
   });

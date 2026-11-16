@@ -12,8 +12,8 @@ import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useRecipePageStore } from "@norish/shared-react/recipes";
 import { timerGlance, useTimerStore } from "@norish/shared-react/recipes/timers";
 
+import { MORPH } from "../hooks/use-morph-frame";
 import { nextLabelFits } from "../utils/next-label";
-import { LIST_SHRUNK_MS } from "./timer-pill";
 import { useTint } from "./tint";
 
 export type CookView = "steps" | "ingredients";
@@ -124,7 +124,7 @@ export function CookBar({
     "accent-foreground",
   ] as const);
   const last = current >= total - 1;
-  const nextFade = useFadeTo(nextHidden ? 0 : 1, LIST_SHRUNK_MS);
+  const nextFade = useFadeTo(nextHidden ? 0 : 1, MORPH.listShrunk);
   const nextLabel = intl.formatMessage({
     id: last ? "common.actions.done" : "recipes.cookMode.nextStep",
   });

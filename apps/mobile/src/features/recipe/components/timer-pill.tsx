@@ -22,21 +22,14 @@ import { useIntl } from "react-intl";
 
 import { timerGlance, useTimerStore } from "@norish/shared-react/recipes/timers";
 
-import { HIDE_MS, useMorphFrame } from "../hooks/use-morph-frame";
+import { MORPH, useMorphFrame } from "../hooks/use-morph-frame";
 import { AllTimers } from "./timer-list";
 
 const LIST_RADIUS = 26;
-// Content shows once the glass has grown most of the way, so no row hangs outside it.
-const CONTENT_DELAY_MS = 240;
 // The rows are gone before the glass starts to shrink past them.
-const SHRINK = NATIVE_SPRING.delay(HIDE_MS / 1000);
-// The countdown returns once the small host has replaced the large one.
-const PILL_RETURN_MS = 50;
-
-/** When a closing list has shrunk back into the pill, for what it covered to return. */
-export const LIST_SHRUNK_MS = 400;
+const SHRINK = NATIVE_SPRING.delay(MORPH.hide / 1000);
 // Reduce Motion: the glass takes its size in one step, after the rows have faded on a close.
-const STEP_AFTER_FADE = Animation.linear({ duration: 0 }).delay(HIDE_MS / 1000);
+const STEP_AFTER_FADE = Animation.linear({ duration: 0 }).delay(MORPH.hide / 1000);
 
 /** The soonest timer on a glass pill that grows into the glass timer list and shrinks back: one
  * glass shape whose frame springs between the two, the pill and the rows fading across inside. */
@@ -71,15 +64,15 @@ export function TimerPill({
   const timers = useTimerStore((state) => state.timers);
   const label = useTimersLabel(timers);
   // Under Reduce Motion the glass steps back once the rows have faded, with nothing to wait out.
-  const { large, drawn } = useMorphFrame(open, reduceMotion ? HIDE_MS : undefined);
+  const { large, drawn } = useMorphFrame(open, reduceMotion ? MORPH.hide : undefined);
   const { height: screenHeight } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
   const [pillWidth, setPillWidth] = useState(0);
   const [listHeight, setListHeight] = useState(0);
   // Hidden from the tap until the small host is back, so no copy of it shows while the host moves.
   const pillShown = !open && !large;
-  const pillFade = useFadeTo(pillShown ? 1 : 0, PILL_RETURN_MS, HIDE_MS);
-  const listFade = useFadeTo(drawn ? 1 : 0, CONTENT_DELAY_MS, HIDE_MS);
+  const pillFade = useFadeTo(pillShown ? 1 : 0, MORPH.pillReturn, MORPH.hide);
+  const listFade = useFadeTo(drawn ? 1 : 0, MORPH.contentDelay, MORPH.hide);
 
   const hasTimers = timerGlance(timers).hasTimers;
   const close = useEffectEvent(() => onOpenChange(false));

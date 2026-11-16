@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
 
-/** How long the pill's content takes to fade, so no copy of it shows while its host moves. */
-export const HIDE_MS = 100;
-/** Long enough for the host to take its grown size before the list is drawn in it. */
-export const GROW_MS = 100;
-/** Past the app's spring, so the list has shrunk back before the host does. */
-export const SETTLE_MS = 500;
+/** The timer pill's morph into its list and back, in ms from the tap. */
+export const MORPH = {
+  /** The pill's content fades, so no copy of it shows while its host moves. */
+  hide: 100,
+  /** The host takes its grown size before the list is drawn in it. */
+  grow: 100,
+  /** The rows show once the glass has grown most of the way, so none hangs outside it. */
+  contentDelay: 240,
+  /** On a close, the countdown returns once the small host has replaced the large one. */
+  pillReturn: 50,
+  /** A closing list has shrunk back into the pill, for what it covered to return. */
+  listShrunk: 400,
+  /** Past the app's spring, so the list has shrunk back before the host does. */
+  settle: 500,
+} as const;
 
 /** When a morphing host's frame is `large` and when its open state is `drawn`: the frame must not
  * change while SwiftUI animates, or a removed shape keeps the old frame's place as a ghost. */
-export function useMorphFrame(open: boolean, settleMs = SETTLE_MS) {
+export function useMorphFrame(open: boolean, settleMs: number = MORPH.settle) {
   const [large, setLarge] = useState(open);
   const [drawn, setDrawn] = useState(open);
   const [was, setWas] = useState(open);
@@ -26,8 +35,8 @@ export function useMorphFrame(open: boolean, settleMs = SETTLE_MS) {
       return () => clearTimeout(shrink);
     }
 
-    const grow = setTimeout(() => setLarge(true), HIDE_MS);
-    const draw = setTimeout(() => setDrawn(true), HIDE_MS + GROW_MS);
+    const grow = setTimeout(() => setLarge(true), MORPH.hide);
+    const draw = setTimeout(() => setDrawn(true), MORPH.hide + MORPH.grow);
 
     return () => {
       clearTimeout(grow);
