@@ -1,37 +1,28 @@
 import React from "react";
-import { AddGroceriesAccessory } from "@/features/shell/components/add-groceries-accessory";
-import { AddRecipeAccessory } from "@/features/shell/components/add-recipe-accessory";
-import { PlanRecipeAccessory } from "@/features/shell/components/plan-recipe-accessory";
+import { ShellAccessory } from "@/features/shell/components/shell-accessory";
+import { accessoryPlan } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
-import { TAB_ROUTES } from "@/lib/tab-routes";
 import { usePathname } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
-/** The signed-in tabs: the system tab bar, Search as its own tab, Add recipe (Add items on Groceries, Plan recipe on Calendar) above it. */
+import { useTimerStore } from "@norish/shared-react/recipes/timers";
+
+/** The signed-in tabs: the system tab bar, Search as its own tab, the tab's add action and the timer capsule above it. */
 export function ShellTabs() {
   const intl = useIntl();
   const accent = useAccentTextColor();
   const path = usePathname();
   const hidden = useTabBarHidden();
-  // The Pantry (and its food sheet) draws no accessory: nothing is added to the list from there.
-  const onPantry =
-    path.startsWith(TAB_ROUTES.groceries.pantry) || path.startsWith(TAB_ROUTES.groceries.food);
-  const onGroceries = path.startsWith(TAB_ROUTES.groceries.root);
-  const onCalendar = path.startsWith(TAB_ROUTES.calendar.root);
+  const hasTimers = useTimerStore((state) => state.timers.length > 0);
+  const plan = accessoryPlan(path, hasTimers);
 
   return (
     <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
-      {hidden || onPantry ? null : (
+      {hidden || !plan ? null : (
         <NativeTabs.BottomAccessory>
-          {onGroceries ? (
-            <AddGroceriesAccessory />
-          ) : onCalendar ? (
-            <PlanRecipeAccessory />
-          ) : (
-            <AddRecipeAccessory />
-          )}
+          <ShellAccessory add={plan.add} capsule={plan.capsule} />
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
