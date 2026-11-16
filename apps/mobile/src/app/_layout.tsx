@@ -8,7 +8,11 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash } from "@/components/launch";
-import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import {
+  EDITOR_OPTIONS,
+  FIT_SHEET_OPTIONS,
+  SEARCH_SHEET_OPTIONS,
+} from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
@@ -257,9 +261,8 @@ function AuthenticatedEffects() {
 }
 
 /** Sheets the accessory presents over whichever tab it was pressed on: Add recipe and its imports,
- * the timer list; the editor's lists present over them. From text's field takes the sheet's height. */
-const SHEETS = ["import-text", "editor-choice"] as const;
-const FIT_SHEETS = ["add-recipe", "import-link", "import-photos", "timers"] as const;
+ * the timer list; the editor's lists present over them. The editor's choice has a search field over a list. */
+const FIT_SHEETS = ["add-recipe", "import-link", "import-text", "import-photos", "timers"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
@@ -267,9 +270,7 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
-        {SHEETS.map((name) => (
-          <Stack.Screen key={name} name={name} options={SHEET_OPTIONS} />
-        ))}
+        <Stack.Screen name="editor-choice" options={SEARCH_SHEET_OPTIONS} />
         {FIT_SHEETS.map((name) => (
           <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
         ))}
