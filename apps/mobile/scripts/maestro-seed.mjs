@@ -65,7 +65,7 @@ export function seeder({ trpc, query }) {
       }
     },
     // A recipe as the recipe form saves one; answers its id.
-    createRecipe({ name, ingredients = [], tags = [], minutes }) {
+    createRecipe({ name, ingredients = [], steps = [], tags = [], minutes }) {
       return trpc("recipes.create", {
         name,
         systemUsed: "metric",
@@ -78,7 +78,7 @@ export function seeder({ trpc, query }) {
           unit: null,
           order,
         })),
-        steps: [],
+        steps: steps.map((step, order) => ({ step, order, systemUsed: "metric" })),
         tags: tags.map((tag) => ({ name: tag })),
         cuisines: [],
         categories: [],
