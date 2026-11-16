@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Modal, ScrollView, StatusBar, Text, useWindowDimensions, View } from "react-native";
 import {
   GestureDetector,
   GestureHandlerRootView,
@@ -100,6 +100,8 @@ export function MediaViewer({
   return (
     <Modal statusBarTranslucent transparent animationType="fade" onRequestClose={() => close()}>
       <GestureHandlerRootView className="flex-1">
+        {/* The black backdrop needs light status text in light mode too; closing restores it. */}
+        <StatusBar barStyle="light-content" />
         <Animated.View className="absolute inset-0 bg-black" style={backdrop} />
         <GestureDetector gesture={pan}>
           <Animated.View className="flex-1" style={content}>
@@ -134,11 +136,11 @@ export function MediaViewer({
               style={{ top: insets.top + 6 }}
             >
               <View className="size-10" />
-              <Text className="text-[17px] font-semibold text-white" testID="media-viewer-count">
+              <Text className="text-[17px] text-accent-foreground font-semibold" testID="media-viewer-count">
                 {counterLabel(page, items.length)}
               </Text>
               <GlassCloseButton
-                color="#ffffff"
+                color="accent-foreground"
                 testID="media-viewer-close"
                 onPress={() => close()}
               />

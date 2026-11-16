@@ -55,11 +55,11 @@ export function GlassIconButton({
   label: string;
   testID: string;
   size?: keyof typeof SIZES;
-  /** The glyph's colour where the theme's foreground does not read, as on a black viewer. */
-  color?: string;
+  /** The glyph's theme colour where the foreground does not read, as on a black viewer. */
+  color?: "accent-foreground";
   onPress: () => void;
 }) {
-  const [foreground] = useThemeColor(["foreground"] as const);
+  const [glyphColor] = useThemeColor([color ?? "foreground"] as const);
   const { frame: side, glyph } = SIZES[size];
 
   return (
@@ -74,7 +74,7 @@ export function GlassIconButton({
         onPress={onPress}
       >
         <Image
-          color={color ?? foreground}
+          color={glyphColor}
           modifiers={[frame({ width: side, height: side })]}
           size={glyph}
           systemName={symbol}
