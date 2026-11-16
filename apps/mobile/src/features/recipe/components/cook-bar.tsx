@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { GlassSurface } from "@/components/glass";
@@ -12,6 +12,7 @@ import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import { useRecipePageStore } from "@norish/shared-react/recipes";
 import { timerGlance, useTimerStore } from "@norish/shared-react/recipes/timers";
 
+import { nextLabelFits } from "../utils/next-label";
 import { LIST_SHRUNK_MS } from "./timer-pill";
 import { useTint } from "./tint";
 
@@ -127,6 +128,8 @@ export function CookBar({
   const nextLabel = intl.formatMessage({
     id: last ? "common.actions.done" : "recipes.cookMode.nextStep",
   });
+  const [nextWidth, setNextWidth] = useState(0);
+  const [labelWidth, setLabelWidth] = useState(0);
   const counter = intl.formatMessage(
     { id: "recipes.cookMode.stepCounter" },
     { current: current + 1, total }
@@ -209,6 +212,7 @@ export function CookBar({
           disabled={nextHidden}
           style={[{ height: BAR_HEIGHT }, nextFade]}
           testID="cook-next"
+          onLayout={({ nativeEvent }) => setNextWidth(nativeEvent.layout.width)}
           onPress={() => {
             if (last) {
               onDone();
@@ -220,7 +224,25 @@ export function CookBar({
           }}
         >
           <GlassSurface radius={BAR_HEIGHT / 2} tint={accent} />
-          <Text className="text-accent-foreground text-[17px] font-semibold">{nextLabel}</Text>
+          {/* Measured at its own width, so a long word or a wide timer pill drops it, not clips it. */}
+          <View
+            accessibilityElementsHidden
+            className="absolute top-0 left-0 w-[1000px] items-start opacity-0"
+            importantForAccessibility="no-hide-descendants"
+            pointerEvents="none"
+          >
+            <Text
+              className="text-[17px] font-semibold"
+              onLayout={({ nativeEvent }) => setLabelWidth(nativeEvent.layout.width)}
+            >
+              {nextLabel}
+            </Text>
+          </View>
+          {nextLabelFits(nextWidth, labelWidth) ? (
+            <Text className="text-accent-foreground text-[17px] font-semibold" numberOfLines={1}>
+              {nextLabel}
+            </Text>
+          ) : null}
           <Ionicons color={accentForeground} name={last ? "checkmark" : "chevron-down"} size={20} />
         </AnimatedPressable>
       </View>
