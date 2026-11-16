@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Pressable, useWindowDimensions, View } from "react-native";
+import { Pressable, useWindowDimensions } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -12,14 +12,17 @@ import { TimerGlance, useTimersLabel } from "@/components/timer-glance";
 import { lightImpact } from "@/lib/haptics";
 import { NATIVE_SPRING } from "@/lib/motion/native-spring";
 import { settleTo } from "@/lib/motion/settle-to";
-import { Host, Rectangle, RNHostView } from "@expo/ui/swift-ui";
+import { Host, HStack, Rectangle, RNHostView } from "@expo/ui/swift-ui";
 import {
   Animation,
   animation,
+  contentShape,
   foregroundStyle,
   frame,
   glassEffect,
   offset,
+  onTapGesture,
+  shapes,
 } from "@expo/ui/swift-ui/modifiers";
 import { useIntl } from "react-intl";
 
@@ -116,10 +119,10 @@ export function TimerPill({
     <Animated.View
       accessibilityElementsHidden={!pillShown}
       // Its own width, never the host's: the bar keeps exactly this much room for it.
-      className={large ? "absolute bottom-0" : "self-start"}
+      className="self-start"
       importantForAccessibility={pillShown ? "auto" : "no-hide-descendants"}
       pointerEvents={pillShown ? "auto" : "none"}
-      style={[large ? { left: inset } : null, pillFade]}
+      style={pillFade}
       onLayout={({ nativeEvent }) => {
         setPillWidth(nativeEvent.layout.width);
         onWidthChange?.(nativeEvent.layout.width);
@@ -143,14 +146,29 @@ export function TimerPill({
 
   return (
     <Host
+      matchContents
       alignment="bottomLeading"
-      matchContents={!large}
-      // Grown to the room the list may take before it is drawn, and kept so until it has shrunk back.
-      style={[
-        { position: "absolute", left, bottom },
-        large ? { left: listLeft, width: listWidth, height: room } : null,
-      ]}
+      style={{ position: "absolute", left: large ? listLeft : left, bottom }}
     >
+      {large ? (
+        // Grown to the room the list may take before it is drawn, and kept so until it has shrunk back.
+        // A tap there closes the list, as the scrim does elsewhere: the host takes those touches.
+        <Rectangle
+          modifiers={[
+            foregroundStyle("#00000000"),
+            frame({ width: listWidth, height: room }),
+            ...(drawn
+              ? [
+                  contentShape(shapes.rectangle()),
+                  onTapGesture(() => {
+                    lightImpact();
+                    onOpenChange(false);
+                  }),
+                ]
+              : []),
+          ]}
+        />
+      ) : null}
       {pillWidth > 0 ? (
         // The one glass shape, behind the content: it springs from the pill to the list and back.
         <Rectangle
@@ -163,34 +181,31 @@ export function TimerPill({
             }),
             // Over the pill until the list is drawn.
             offset({ x: drawn ? 0 : inset }),
-            ...(glassAnimation
-              ? [animation(glassAnimation, glassWidth * 10_000 + glassHeight)]
-              : []),
+            // Keyed on open and the list's height only: the host growing must not animate the glass.
+            ...(glassAnimation ? [animation(glassAnimation, drawn ? 1 + listHeight : 0)] : []),
           ]}
         />
       ) : null}
-      {/* Its own host per size: a host whose child is swapped keeps the old child's size. */}
-      <RNHostView key={large ? "list" : "pill"} matchContents>
-        {large ? (
-          <View pointerEvents="box-none" style={{ width: listWidth, height: room }}>
-            {pill}
-            <Animated.View
-              accessibilityElementsHidden={!drawn}
-              accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.timers" })}
-              className="absolute bottom-0 left-0 py-1"
-              importantForAccessibility={drawn ? "auto" : "no-hide-descendants"}
-              pointerEvents={drawn ? "auto" : "none"}
-              style={[{ width: listWidth }, listFade]}
-              testID={drawn ? "timer-list" : undefined}
-              onLayout={({ nativeEvent }) => setListHeight(nativeEvent.layout.height)}
-            >
-              <AllTimers onEmpty={() => onOpenChange(false)} />
-            </Animated.View>
-          </View>
-        ) : (
-          pill
-        )}
-      </RNHostView>
+      {/* Each in a host of its own size: rows inside one screen-tall hosted view got no touches. */}
+      <HStack modifiers={[offset({ x: inset })]}>
+        <RNHostView matchContents>{pill}</RNHostView>
+      </HStack>
+      {large ? (
+        <RNHostView matchContents>
+          <Animated.View
+            accessibilityElementsHidden={!drawn}
+            accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.timers" })}
+            className="py-1"
+            importantForAccessibility={drawn ? "auto" : "no-hide-descendants"}
+            pointerEvents={drawn ? "auto" : "none"}
+            style={[{ width: listWidth }, listFade]}
+            testID={drawn ? "timer-list" : undefined}
+            onLayout={({ nativeEvent }) => setListHeight(nativeEvent.layout.height)}
+          >
+            <AllTimers onEmpty={() => onOpenChange(false)} />
+          </Animated.View>
+        </RNHostView>
+      ) : null}
     </Host>
   );
 }
