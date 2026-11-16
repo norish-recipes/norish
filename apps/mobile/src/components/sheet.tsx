@@ -29,6 +29,9 @@ type BodyLayout = {
 /** The body's side inset in points, the `px-4` below: for a layout that sizes itself to the sheet. */
 export const SHEET_INSET = 16;
 
+/** A tall field's height on a fit sheet, which is as tall as its content, so no field can fill it. */
+export const FIT_SHEET_FIELD_HEIGHT = 200;
+
 /** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
 const TITLE_INSET = 24;
 

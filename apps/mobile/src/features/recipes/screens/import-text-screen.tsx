@@ -2,7 +2,7 @@ import type { ComponentRef } from "react";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { HintButton } from "@/components/hint-button";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { FieldError, Label, TextArea, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -64,8 +64,9 @@ export function ImportTextScreen() {
           <TextArea
             ref={fieldRef}
             scrollEnabled
-            className="bg-default ios:shadow-none h-[200px] rounded-3xl px-4 py-3.5 text-base leading-[23px]"
+            className="bg-default ios:shadow-none rounded-3xl px-4 py-3.5 text-base leading-[23px]"
             placeholder={intl.formatMessage({ id: "common.import.paste.placeholder" })}
+            style={{ height: FIT_SHEET_FIELD_HEIGHT }}
             testID="import-text-field"
             textAlignVertical="top"
             value={text}
