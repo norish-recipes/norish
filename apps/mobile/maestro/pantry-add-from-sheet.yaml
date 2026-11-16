@@ -29,9 +29,9 @@ appId: dev.norish.app
     id: pantry-add-field
 - inputText: milk
 - extendedWaitUntil:
-    visible: Add Milk to your pantry
+    visible: Add milk to your pantry
     timeout: 20000
-- tapOn: Add Milk to your pantry
+- tapOn: Add milk to your pantry
 - evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=1').body).names}
 - assertTrue: ${output.pantry.length == 1}
 # The field empties for the next food; a typed name that is no food of the catalogue is kept as typed.
@@ -52,5 +52,5 @@ appId: dev.norish.app
     notVisible:
       id: pantry-add-sheet
     timeout: 20000
-- assertVisible: Milk
-- assertVisible: Tahini
+- assertVisible: milk
+- assertVisible: tahini

@@ -26,6 +26,10 @@ describe("pantryAddRows", () => {
     expect(pantryAddRows("olive", [olives], false)[0]?.edge).toEqual({ top: true, bottom: true });
   });
 
+  it("offers no custom entry beside a food that is named as typed", () => {
+    expect(pantryAddRows("Olives", [olives], true).map((row) => row.type)).toEqual(["match"]);
+  });
+
   it("offers no custom entry for text the Pantry already keeps, and nothing for no text", () => {
     expect(pantryAddRows("olives", [olives], false).map((row) => row.type)).toEqual(["match"]);
     expect(pantryAddRows("", [], false)).toEqual([]);
