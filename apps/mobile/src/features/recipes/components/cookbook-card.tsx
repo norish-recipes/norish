@@ -1,9 +1,7 @@
 import type { CardActions } from "@/hooks/use-card-actions";
 import React from "react";
 import { Text, View } from "react-native";
-import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
-import { usePressScale } from "@/lib/motion/press-scale";
+import { PressTap } from "@/components/press-tap";
 import { cookbookRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -89,13 +87,6 @@ export function CookbookCard({
     handlers
   );
   const open = () => router.push(cookbookRoute(cookbook.id));
-  const { style, press } = usePressScale();
-  const tap = useTapGesture({
-    runOnJS: true,
-    onBegin: () => press(true),
-    onFinalize: () => press(false),
-    onActivate: open,
-  });
 
   return (
     <View
@@ -108,33 +99,31 @@ export function CookbookCard({
       onAccessibilityTap={open}
     >
       <CardMenu href={cookbookRoute(cookbook.id)} items={items}>
-        <GestureDetector gesture={tap}>
-          <Animated.View style={style}>
-            {variant === "grid" ? (
-              <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">
-                <CookbookCover className="h-40 w-full" cookbook={cookbook} />
-                <View className="min-h-0 flex-1 gap-0.5 px-3 pt-2.5 pb-3">
-                  {title}
-                  <Text className="text-muted text-xs" numberOfLines={1}>
-                    {description}
-                  </Text>
-                  <View className="border-border mt-auto border-t pt-2.5">{facts}</View>
-                </View>
+        <PressTap onPress={open}>
+          {variant === "grid" ? (
+            <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">
+              <CookbookCover className="h-40 w-full" cookbook={cookbook} />
+              <View className="min-h-0 flex-1 gap-0.5 px-3 pt-2.5 pb-3">
+                {title}
+                <Text className="text-muted text-xs" numberOfLines={1}>
+                  {description}
+                </Text>
+                <View className="border-border mt-auto border-t pt-2.5">{facts}</View>
               </View>
-            ) : (
-              <View className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]">
-                <CookbookCover className="h-[116px] w-[108px]" cookbook={cookbook} />
-                <View className="min-w-0 flex-1 gap-[3px] px-3.5 py-3">
-                  {title}
-                  <Text className="text-muted text-sm" numberOfLines={1}>
-                    {description}
-                  </Text>
-                  <View className="mt-auto">{facts}</View>
-                </View>
+            </View>
+          ) : (
+            <View className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]">
+              <CookbookCover className="h-[116px] w-[108px]" cookbook={cookbook} />
+              <View className="min-w-0 flex-1 gap-[3px] px-3.5 py-3">
+                {title}
+                <Text className="text-muted text-sm" numberOfLines={1}>
+                  {description}
+                </Text>
+                <View className="mt-auto">{facts}</View>
               </View>
-            )}
-          </Animated.View>
-        </GestureDetector>
+            </View>
+          )}
+        </PressTap>
       </CardMenu>
     </View>
   );

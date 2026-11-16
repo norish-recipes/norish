@@ -3,10 +3,9 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
 import { CardPhoto } from "@/components/card-photo";
+import { PressTap } from "@/components/press-tap";
 import { lightImpact } from "@/lib/haptics";
-import { usePressScale } from "@/lib/motion/press-scale";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useIntl } from "react-intl";
 
@@ -84,15 +83,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
       handlers.favourite();
     },
   });
-  const { style, press } = usePressScale();
   const strip = useTagStrip();
-  const singleTap = useTapGesture({
-    runOnJS: true,
-    requireToFail: doubleTap,
-    onBegin: () => press(true),
-    onFinalize: () => press(false),
-    onActivate: open,
-  });
 
   return (
     <SwipeActions actions={swipe} stripGesture={strip.gesture} variant={variant}>
@@ -110,17 +101,19 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
         onAccessibilityTap={open}
       >
         <CardMenu href={recipeRoute(recipe.id)} items={items}>
-          <GestureDetector gesture={singleTap}>
-            <Animated.View className={variant === "grid" ? "flex-1" : undefined} style={style}>
-              <Card
-                facts={facts}
-                isFavorite={isFavorite}
-                photoGesture={doubleTap}
-                recipe={recipe}
-                strip={strip}
-              />
-            </Animated.View>
-          </GestureDetector>
+          <PressTap
+            className={variant === "grid" ? "flex-1" : undefined}
+            requireToFail={doubleTap}
+            onPress={open}
+          >
+            <Card
+              facts={facts}
+              isFavorite={isFavorite}
+              photoGesture={doubleTap}
+              recipe={recipe}
+              strip={strip}
+            />
+          </PressTap>
         </CardMenu>
       </View>
     </SwipeActions>

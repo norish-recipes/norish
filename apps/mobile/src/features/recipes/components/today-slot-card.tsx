@@ -1,11 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
 import { PlannedThumb } from "@/components/planned-thumb";
+import { PressTap } from "@/components/press-tap";
 import { PressableScale } from "@/components/pressable-scale";
 import { SLOT_GLYPHS } from "@/components/slot-icons";
-import { usePressScale } from "@/lib/motion/press-scale";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -90,13 +88,6 @@ export function TodayPlannedCard({
     (key) => TODAY_ACTION_DEFINITIONS[key],
     handlers
   );
-  const { style, press } = usePressScale();
-  const tap = useTapGesture({
-    runOnJS: true,
-    onBegin: () => press(true),
-    onFinalize: () => press(false),
-    onActivate: handlers.open,
-  });
 
   return (
     <View
@@ -108,25 +99,27 @@ export function TodayPlannedCard({
       onAccessibilityTap={handlers.open}
     >
       <CardMenu href={href} items={items}>
-        <GestureDetector gesture={tap}>
-          <Animated.View className={`bg-surface ${TODAY_CARD}`} collapsable={false} style={style}>
-            <PlannedThumb className={TODAY_CARD_PHOTO} glyphSize={30} item={item} />
-            <SlotChip slot={slot} />
-            {overflow > 0 ? (
-              <PhotoChip semibold className="absolute top-2.5 right-2.5" label={`+${overflow}`} />
-            ) : null}
-            <View className="gap-0.5 px-3.5 pt-3">
-              <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
-                {title}
+        <PressTap
+          className={`bg-surface ${TODAY_CARD}`}
+          collapsable={false}
+          onPress={handlers.open}
+        >
+          <PlannedThumb className={TODAY_CARD_PHOTO} glyphSize={30} item={item} />
+          <SlotChip slot={slot} />
+          {overflow > 0 ? (
+            <PhotoChip semibold className="absolute top-2.5 right-2.5" label={`+${overflow}`} />
+          ) : null}
+          <View className="gap-0.5 px-3.5 pt-3">
+            <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text className="text-muted text-sm" numberOfLines={1}>
+                {subtitle}
               </Text>
-              {subtitle ? (
-                <Text className="text-muted text-sm" numberOfLines={1}>
-                  {subtitle}
-                </Text>
-              ) : null}
-            </View>
-          </Animated.View>
-        </GestureDetector>
+            ) : null}
+          </View>
+        </PressTap>
       </CardMenu>
     </View>
   );
