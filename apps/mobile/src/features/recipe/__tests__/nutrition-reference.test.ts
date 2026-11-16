@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DAILY_REFERENCE, percentOfReference } from "@norish/shared/lib/nutrition-reference";
+import { DAILY_REFERENCE, percentOfReference } from "../utils/nutrition-reference";
 
 describe("percentOfReference", () => {
   it("rounds to whole percent of the reference", () => {
