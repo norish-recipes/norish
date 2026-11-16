@@ -2,13 +2,13 @@ import type { Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
-import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollViewMarker } from "react-native-screens/experimental";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
-import { sprung } from "@/lib/motion/spring";
+import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
@@ -25,11 +25,6 @@ import { GroceryRow } from "./grocery-row";
 import { GroupRow } from "./group-row";
 import { RecipeHeadingRow } from "./recipe-heading-row";
 import { StoreHeadingRow } from "./store-heading-row";
-
-// A row new to the list fades in and a heading fades out; the rest spring into the space they leave or take.
-const ROW_ENTERING = sprung(FadeIn.springify());
-const HEADING_EXITING = sprung(FadeOut.springify());
-const ROW_LAYOUT = sprung(LinearTransition.springify());
 
 export type ListActions = {
   toggle: (ids: string[], isDone: boolean) => void;
@@ -201,11 +196,11 @@ export function GroceriesList({
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
           contentInsetAdjustmentBehavior="never"
-          itemLayoutAnimation={ROW_LAYOUT}
+          itemLayoutAnimation={SPRING_LAYOUT}
           renderHeading={(heading, index) => (
             <Animated.View
-              entering={fresh.has(heading) ? ROW_ENTERING : undefined}
-              exiting={HEADING_EXITING}
+              entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
+              exiting={SPRING_FADE_OUT}
             >
               {renderHeading(heading, index)}
             </Animated.View>
@@ -214,7 +209,7 @@ export function GroceriesList({
             <Animated.View
               ref={itemRef(item.key)}
               collapsable={false}
-              entering={fresh.has(item) ? ROW_ENTERING : undefined}
+              entering={fresh.has(item) ? SPRING_FADE_IN : undefined}
               exiting={exitingFor(item.key)}
             >
               {renderItem(item, drag)}

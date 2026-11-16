@@ -3,11 +3,11 @@ import type { ComponentRef } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
-import { sprung } from "@/lib/motion/spring";
+import { SPRING_ZOOM_IN, SPRING_ZOOM_OUT } from "@/lib/motion/layout";
 import { mediaViewerRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -255,8 +255,8 @@ function StepLine({
         <Animated.View
           key={done ? "check" : "number"}
           className="absolute"
-          entering={sprung(ZoomIn.springify())}
-          exiting={sprung(ZoomOut.springify())}
+          entering={SPRING_ZOOM_IN}
+          exiting={SPRING_ZOOM_OUT}
         >
           {done ? (
             <Ionicons color={accentForeground} name="checkmark" size={16} />

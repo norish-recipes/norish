@@ -1,10 +1,10 @@
 import type { ReactElement } from "react";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { tabListBottomInset } from "@/components/tab-list-inset";
-import { sprung } from "@/lib/motion/spring";
+import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
 import { useIsFocused } from "expo-router";
 import { Spinner } from "heroui-native";
@@ -73,7 +73,7 @@ export function CardList<Row>({
         contentInsetAdjustmentBehavior="never"
         data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
         initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
-        itemLayoutAnimation={sprung(LinearTransition.springify())}
+        itemLayoutAnimation={SPRING_LAYOUT}
         keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
         maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}
         renderItem={({ item: chunk }) =>
@@ -83,9 +83,9 @@ export function CardList<Row>({
                 <Animated.View
                   key={rowKey(row)}
                   className="w-1/2 flex-row px-1.5 pb-3"
-                  entering={sprung(FadeIn.springify())}
-                  exiting={sprung(FadeOut.springify())}
-                  layout={sprung(LinearTransition.springify())}
+                  entering={SPRING_FADE_IN}
+                  exiting={SPRING_FADE_OUT}
+                  layout={SPRING_LAYOUT}
                 >
                   {renderCard(row)}
                 </Animated.View>
@@ -94,8 +94,8 @@ export function CardList<Row>({
           ) : (
             <Animated.View
               className="px-5 pb-3"
-              entering={sprung(FadeIn.springify())}
-              exiting={sprung(FadeOut.springify())}
+              entering={SPRING_FADE_IN}
+              exiting={SPRING_FADE_OUT}
             >
               {chunk[0] ? renderCard(chunk[0]) : null}
             </Animated.View>
