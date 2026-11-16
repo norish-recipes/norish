@@ -20,12 +20,12 @@ import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
+import { PrefetchIngredientIcons } from "../components/ingredient-icon-prefetch";
 import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
 import { RecipeToolbar } from "../components/recipe-toolbar";
 import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
 import { TintContext } from "../components/tint";
-import { useIngredientIconPrefetch } from "../hooks/use-icon-prefetch";
 import { useRecipeHeaderItems } from "../hooks/use-recipe-menu";
 import { dishTint } from "../utils/dish-tint";
 
@@ -54,11 +54,11 @@ function RecipePage() {
   const tint = colorMode === "dish" ? dishTint(recipe.dishColor, scheme) : null;
 
   useAutoConversion();
-  // Every surface of the page names the recipe's foods: its lines and the steps' chips.
-  useIngredientIconPrefetch(recipe.recipeIngredients.map((line) => line.ingredientId));
 
   return (
     <TintContext value={tint}>
+      {/* The page's lines and the steps' chips name the same foods, so one read covers them. */}
+      <PrefetchIngredientIcons ids={recipe.recipeIngredients.map((line) => line.ingredientId)} />
       <Stack.Screen
         options={{
           // The header floats over the photo: its items stay pinned, with no bar or title behind them.
