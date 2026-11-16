@@ -65,6 +65,16 @@ describe("useTimersLabel", () => {
   });
 });
 
+describe("useTimersLabel with a timer done", () => {
+  it("says a timer is done beside the running one, not only when all are", () => {
+    render(<Label timers={[timer("running", 125_000), timer("completed", 0)]} />);
+
+    expect(screen.getByTestId("label").textContent).toBe(
+      "recipes.cookMode.timersLeft recipes.cookMode.spokenTime 0 2 5, common.timer.done"
+    );
+  });
+});
+
 describe("TimerGlance", () => {
   it("keeps the width of the timer's longest countdown, so 10:00 to 9:59 moves nothing", () => {
     const { container } = render(<TimerGlance timers={[timer("running", 599_000)]} />);

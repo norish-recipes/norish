@@ -14,7 +14,7 @@ import { TimerRing } from "./timer-ring";
 /** What a screen reader says of the timers: the soonest as a spoken duration, its state, any done. */
 export function useTimersLabel(timers: readonly Timer[]): string {
   const intl = useIntl();
-  const { soonest } = timerGlance(timers);
+  const { soonest, anyDone } = timerGlance(timers);
   const name = intl.formatMessage({ id: "recipes.cookMode.timers" });
 
   if (!soonest) return `${name}, ${intl.formatMessage({ id: "common.timer.done" })}`;
@@ -32,9 +32,13 @@ export function useTimersLabel(timers: readonly Timer[]): string {
     .trim();
   const left = intl.formatMessage({ id: "recipes.cookMode.timersLeft" }, { time });
 
-  return soonest.status === "paused"
-    ? `${left}, ${intl.formatMessage({ id: "common.timer.paused" })}`
-    : left;
+  return [
+    left,
+    soonest.status === "paused" ? intl.formatMessage({ id: "common.timer.paused" }) : null,
+    anyDone ? intl.formatMessage({ id: "common.timer.done" }) : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 /** The soonest timer's ring and rolling countdown (muted, play ring, when paused), a check and Done
