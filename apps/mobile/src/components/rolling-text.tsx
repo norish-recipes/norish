@@ -74,6 +74,7 @@ export function RollingText({
   value,
   rising,
   slots,
+  word = false,
   className = "",
 }: {
   value: string;
@@ -81,6 +82,8 @@ export function RollingText({
   rising: boolean;
   /** Slots to render whatever the value's length, so none is made or lost mid-roll. */
   slots?: number;
+  /** A word grows at its end and keeps its real spaces; a number grows at its start. */
+  word?: boolean;
   /** The text's classes: its size, weight and colour. */
   className?: string;
 }) {
@@ -94,7 +97,7 @@ export function RollingText({
     );
   }
 
-  const characters = toSlots(value, slots, "right");
+  const characters = toSlots(value, slots, word ? "left" : "right");
 
   return (
     // One label for the row: read per character it would say "five, zero".
@@ -102,11 +105,11 @@ export function RollingText({
       <LayoutAnimationConfig skipEntering>
         {characters.map((character, index) => (
           <Slot
-            // A slot is its place from the right, where a number grows, so a character rolls in place.
+            // A slot is its place from where the value grows, so a character rolls in place.
             // eslint-disable-next-line @eslint-react/no-array-index-key -- a slot is its place in the row
-            key={characters.length - index}
-            // A figure space is a digit wide, so an empty slot holds the row's width.
-            character={character === " " ? "\u2007" : character}
+            key={word ? index : characters.length - index}
+            // A figure space is a digit wide, so an empty number slot holds the row's width.
+            character={character === " " && !word ? "\u2007" : character}
             className={className}
             rising={rising}
           />

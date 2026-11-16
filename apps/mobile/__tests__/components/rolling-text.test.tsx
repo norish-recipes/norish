@@ -35,6 +35,12 @@ describe("RollingText", () => {
     expect(container.textContent?.startsWith("\u2007\u2007")).toBe(true);
   });
 
+  it("keeps a word's spaces and grows it at its end", () => {
+    const { container } = render(<RollingText word rising value="a b" />);
+
+    expect(container.textContent).toBe("aa  bb");
+  });
+
   it("draws plain text under Reduce Motion", () => {
     motion.reduced = true;
     const { container } = render(<RollingText rising value="10:00" />);

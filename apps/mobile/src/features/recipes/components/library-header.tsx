@@ -95,17 +95,12 @@ function LibraryHeading({ type }: { type: LibraryTypeFilter }) {
 
   if (shown.index !== index) setShown({ index, rising: index > shown.index });
 
-  // Slots for the longest word, so none is made or lost mid-roll.
-  const slots = Math.max(
-    ...LIBRARY_TYPE_FILTERS.map((each) => intl.formatMessage({ id: HEADING_KEYS[each] }).length)
-  );
-
   return (
     <View testID="library-heading">
       <RollingText
         className="text-foreground text-2xl font-semibold"
         rising={shown.rising}
-        slots={slots}
+        word
         value={intl.formatMessage({ id: HEADING_KEYS[type] })}
       />
     </View>
