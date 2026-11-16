@@ -38,9 +38,10 @@ vi.mock("react-native", async () => {
       ),
   };
 });
-vi.mock("react-native-screens/experimental", () => ({
-  ScrollViewMarker: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock(
+  "@/components/tab-list-marker",
+  () => import("../../../../__tests__/mocks/tab-list-marker")
+);
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0 }),
 }));

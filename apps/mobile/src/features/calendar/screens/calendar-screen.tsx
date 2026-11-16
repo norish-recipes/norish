@@ -2,10 +2,10 @@ import type { FlatList, FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ScrollViewMarker } from "react-native-screens/experimental";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
+import { TabListMarker } from "@/components/tab-list-marker";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -101,8 +101,7 @@ export function CalendarScreen() {
   return (
     <View className="bg-background flex-1" testID="calendar-screen">
       {header}
-      {/* The marker tells the tab bar which list to minimise on; a wrapping View hides it. */}
-      <ScrollViewMarker style={{ flex: 1 }}>
+      <TabListMarker>
         <DragList
           ref={listRef}
           className="flex-1"
@@ -157,7 +156,7 @@ export function CalendarScreen() {
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
         />
-      </ScrollViewMarker>
+      </TabListMarker>
     </View>
   );
 }

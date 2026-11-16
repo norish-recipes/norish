@@ -1,9 +1,9 @@
 import React from "react";
 import { FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ScrollViewMarker } from "react-native-screens/experimental";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { tabListBottomInset } from "@/components/tab-list-inset";
+import { TabListMarker } from "@/components/tab-list-marker";
 import { TitleRow } from "@/components/title-row";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
@@ -42,8 +42,7 @@ export function PantryScreen() {
   return (
     <IngredientIconSlots rows={rows}>
       <View className="bg-background flex-1" testID="pantry-screen">
-        {/* The marker tells the tab bar which list to minimise on; a wrapping View hides it. */}
-        <ScrollViewMarker style={{ flex: 1 }}>
+        <TabListMarker>
           <FlatList
             ListEmptyComponent={
               isUnavailable ? (
@@ -64,7 +63,7 @@ export function PantryScreen() {
             renderItem={({ item }) => <PantryRowView actions={actions} row={item} />}
             testID="pantry-list"
           />
-        </ScrollViewMarker>
+        </TabListMarker>
         {/* Rows dissolve into the page colour before the tab bar. */}
         <View
           className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"

@@ -4,10 +4,10 @@ import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ScrollViewMarker } from "react-native-screens/experimental";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
+import { TabListMarker } from "@/components/tab-list-marker";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
@@ -188,8 +188,7 @@ export function GroceriesList({
 
   return (
     <View className="flex-1">
-      {/* The marker tells the tab bar which list to minimise on; a wrapping View hides it. */}
-      <ScrollViewMarker style={{ flex: 1 }}>
+      <TabListMarker>
         <DragList
           ListEmptyComponent={empty ?? undefined}
           ListHeaderComponent={header}
@@ -219,7 +218,7 @@ export function GroceriesList({
           testID="groceries-list"
           onDrop={onDrop}
         />
-      </ScrollViewMarker>
+      </TabListMarker>
       {/* Rows dissolve into the page colour before the tab bar. */}
       <View
         className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
