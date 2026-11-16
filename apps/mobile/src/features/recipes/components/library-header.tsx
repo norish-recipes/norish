@@ -1,9 +1,19 @@
-import React, { useState } from "react";
-import { Text, View } from "react-native";
+import type { ComponentProps } from "react";
+import type { SharedValue } from "react-native-reanimated";
+import React, { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
+import Animated, {
+  interpolateColor,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+} from "react-native-reanimated";
 import { PressableScale } from "@/components/pressable-scale";
 import { RollingText } from "@/components/rolling-text";
 import { SelectFade } from "@/components/select-fade";
 import { lightImpact } from "@/lib/haptics";
+import { settleTo } from "@/lib/motion/settle-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -27,38 +37,92 @@ const VIEWS = [
   { mode: "list", icon: "list-outline", label: "recipes.dashboard.viewMode.list" },
 ] as const satisfies readonly { mode: RecipeViewMode; icon: string; label: string }[];
 
-/** The grid or list toggle, the reader's own choice on this device. */
+const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
+
+// A segment's width and the gap to the next, in pt: the thumb moves by one step.
+const SEGMENT = 38;
+const STEP = SEGMENT + 2;
+
+/** The grid or list toggle, the reader's own choice on this device: a thumb springs to the picked
+ * segment, or fades in there under Reduce Motion. */
 export function ViewToggle() {
   const intl = useIntl();
+  const reduceMotion = useReducedMotion();
   const [view, setView] = useDevicePreference("recipeViewMode");
   const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
+  const index = VIEWS.findIndex(({ mode }) => mode === view);
+  const x = useSharedValue(index * STEP);
+  const thumbOpacity = useSharedValue(1);
+  const shownIndexRef = useRef(index);
+
+  useEffect(() => {
+    if (shownIndexRef.current === index) return;
+
+    shownIndexRef.current = index;
+    if (reduceMotion) {
+      x.set(index * STEP);
+      thumbOpacity.set(0);
+      thumbOpacity.set(settleTo(1, { reduceMotion: true }));
+    } else {
+      x.set(settleTo(index * STEP, { reduceMotion: false }));
+    }
+  }, [index, reduceMotion, x, thumbOpacity]);
+
+  const thumb = useAnimatedStyle(() => ({
+    opacity: thumbOpacity.get(),
+    transform: [{ translateX: x.get() }],
+  }));
 
   return (
     <View className="bg-default h-9 flex-row gap-0.5 rounded-full p-[3px]">
-      {VIEWS.map(({ mode, icon, label }) => (
+      <Animated.View
+        className="bg-surface absolute top-[3px] left-[3px] h-[30px] w-[38px] rounded-full"
+        pointerEvents="none"
+        style={thumb}
+      />
+      {VIEWS.map(({ mode, icon, label }, at) => (
         <PressableScale
           key={mode}
           accessibilityLabel={intl.formatMessage({ id: label })}
           accessibilityRole="button"
           accessibilityState={{ selected: view === mode }}
+          className="h-[30px] w-[38px] items-center justify-center"
           testID={`library-view-${mode}`}
           onPress={() => {
             if (view !== mode) lightImpact();
             setView(mode);
           }}
         >
-          <SelectFade
-            className="items-center justify-center rounded-full"
-            pickedClassName="bg-surface"
-            restClassName="h-[30px] w-[38px]"
-            selected={view === mode}
-          >
-            {(picked) => <Ionicons color={picked ? foreground : muted} name={icon} size={17} />}
-          </SelectFade>
+          <SegmentIcon icon={icon} picked={at} rest={muted} selectedColor={foreground} x={x} />
         </PressableScale>
       ))}
     </View>
   );
+}
+
+/** A segment's icon, `selectedColor` while the thumb is over segment `picked` and `rest` away from it. */
+function SegmentIcon({
+  icon,
+  picked,
+  rest,
+  selectedColor,
+  x,
+}: {
+  icon: ComponentProps<typeof Ionicons>["name"];
+  picked: number;
+  rest: string;
+  selectedColor: string;
+  x: SharedValue<number>;
+}) {
+  const props = useAnimatedProps(() => ({
+    color: interpolateColor(
+      x.get(),
+      [(picked - 1) * STEP, picked * STEP, (picked + 1) * STEP],
+      [rest, selectedColor, rest]
+    ),
+  }));
+
+  return <AnimatedIonicons animatedProps={props} color={rest} name={icon} size={17} />;
 }
 
 /** The Filters button, marked while any filter is on. */
@@ -115,6 +179,10 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
   const intl = useIntl();
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
+  const [foreground, accentForeground] = useThemeColor([
+    "foreground",
+    "accent-foreground",
+  ] as const);
 
   if (scoped) {
     return (
@@ -147,18 +215,19 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
               }}
             >
               <SelectFade
-                className="items-center justify-center rounded-full"
-                inset="-inset-px"
-                pickedClassName="bg-accent"
-                restClassName="bg-surface border-border h-9 border px-4"
+                look={{
+                  shape: "items-center justify-center rounded-full",
+                  rest: "bg-surface border-border h-9 border px-4",
+                  picked: "bg-accent",
+                  tone: { rest: foreground, picked: accentForeground },
+                  inset: "-inset-px",
+                }}
                 selected={selected}
               >
-                {(picked) => (
-                  <Text
-                    className={`text-[15px] font-medium ${picked ? "text-accent-foreground" : "text-foreground"}`}
-                  >
+                {(color) => (
+                  <Animated.Text className="text-[15px] font-medium" style={color}>
                     {intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` })}
-                  </Text>
+                  </Animated.Text>
                 )}
               </SelectFade>
             </PressableScale>
