@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** open
+**Status:** done
 
 - [x] The vertical step column follows a drag: the next peek rises into the centre and grows to full size and opacity while the current shrinks into the upper peek, and the reverse going back.
 - [x] Release springs with the gesture's velocity and snaps to a step; a light haptic per step. Prev/next and peek taps run the same spring. Interruptible mid-flight.
@@ -20,3 +20,19 @@
 - Seen on an iOS 27.2 iPhone 18 Pro Release build (own :3400 stack), Reduce Motion on and off: drag both ways, flicks, first/last step hold, a long step scrolls then pages (from a peek at once), buttons, peek taps of any length and double peek taps 60-300 ms apart in both directions, Steps ↔ Ingredients by the toggle. The switch springs on `SPRING` (crossfade under Reduce Motion).
 - The bar is 48 pt and sits on the 34 pt home-indicator inset (`BAR_BOTTOM`): the glass Host stops at the safe area, so a 56 pt bar at 26 pt drew 48 pt of glass with its content 4 pt low.
 - Opened by a deep link, cook mode isn't a modal over the recipe route, so the Recipes stack's full-screen back swipe popped the whole route before the screen's fling. `CookModeScreen` turns the host route's `gestureEnabled` off while open (`__tests__/cook-mode-screen.test.tsx`); a right swipe on Ingredients returns to Steps, close is the × or Done.
+
+### Review log (2026-11-16)
+
+Range `1288c1807..893bc7b50`. Standards on Sonnet low, Spec on Opus medium; implemented on Sonnet medium, fix rounds on Opus medium (escalated after the first Spec review), each fix round checked on an iOS 27.2 simulator; re-reviewed on the final state.
+
+Fixed, first review (16): the incoming step jumping at commit and the outgoing step overlapping it (pager rewritten on one `position`); the haptic firing after the spring; chips missing from the peeks; Reduce Motion snapping instead of crossfading; multi-step jumps stalling; the pan fighting the step's scroll; the three duplicated animated styles, the two fling blocks and `fling`'s boolean; bound names and the velocity constant; one shared reanimated mock for every test; `cook-steps.tsx` split into hook, slot, body and column (first rejected because the reviewer said to leave it; the maintainer overruled); doubled text mid-page.
+
+Fixed, from the simulator (4): a peek tap right after a page change (the pan claimed every touch); Reduce Motion fling over a long step (one pan for both modes); cook mode opened by a link being popped by the Recipes stack's back swipe; the bar's content 4 pt low in its glass (maintainer's device note).
+
+Fixed, re-review (10): the Steps ↔ Ingredients switch sprung; comments over two lines; the chips, clamp and view-switch duplications; a double fade under Reduce Motion; peek and bar geometry with one owner; `still` → `reduceMotion`; slot props.
+
+Removed after checking: the vertical fling on Ingredients, which never fired on a device (its list takes the swipe). Closed after checking: reanimated's `clamp` cannot load in the plain unit test, so `cook-pager.ts` keeps its own.
+
+For the maintainer to judge: the bar is 48 pt on the home-indicator inset, the size its glass already drew, where the board draws 56 pt.
+
+Final state `893bc7b50`: all 11 gates exit 0, mobile lint has no warnings.
