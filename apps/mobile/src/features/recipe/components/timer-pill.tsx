@@ -65,7 +65,7 @@ function useLayerFade(shown: boolean, delay: number) {
 export function TimerPill({
   open,
   left,
-  listLeft = left,
+  listLeft,
   bottom,
   height,
   listWidth,
@@ -77,8 +77,8 @@ export function TimerPill({
   /** Where the pill's bottom-left corner sits in the screen; the host is absolute there, as a
    * child outside its parent's bounds gets no touches. */
   left: number;
-  /** Where the open list's left edge sits, when it reaches further left than the pill. */
-  listLeft?: number;
+  /** Where the open list's left edge sits. */
+  listLeft: number;
   bottom: number;
   height: number;
   /** The list grows up from the pill to this width, from `listLeft`. */
@@ -86,7 +86,7 @@ export function TimerPill({
   testID: string;
   onOpenChange: (open: boolean) => void;
   /** The closed pill's width, for a bar that keeps the pill's place. */
-  onWidthChange?: (width: number) => void;
+  onWidthChange: (width: number) => void;
 }) {
   const intl = useIntl();
   const reduceMotion = useReducedMotion();
@@ -134,7 +134,7 @@ export function TimerPill({
       style={pillFade}
       onLayout={({ nativeEvent }) => {
         setPillWidth(nativeEvent.layout.width);
-        onWidthChange?.(nativeEvent.layout.width);
+        onWidthChange(nativeEvent.layout.width);
       }}
     >
       <Pressable

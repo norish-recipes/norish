@@ -65,9 +65,11 @@ describe("TimerPill", () => {
         bottom={34}
         height={48}
         left={20}
+        listLeft={20}
         listWidth={360}
         testID="pill"
         onOpenChange={onOpenChange}
+        onWidthChange={() => {}}
       />
     );
     act(() => useTimerStore.setState({ timers: [] }));
