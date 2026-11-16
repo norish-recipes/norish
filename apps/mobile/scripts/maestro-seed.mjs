@@ -17,6 +17,21 @@ function recipePage() {
   return `<!doctype html><html><head><title>${PAGE_NAME}</title><script type="application/ld+json">${JSON.stringify(recipe)}</script></head><body><h1>${PAGE_NAME}</h1></body></html>`;
 }
 
+// The flows' foods in the Open Food Facts taxonomy format; their built-in icons are keyed by these ids.
+const CATALOGUE = [
+  "egg, eggs",
+  "flour",
+  "butter",
+  "milk",
+  "onion, onions",
+  "lemon, lemons",
+  "beef",
+  "salt",
+  "sugar",
+]
+  .map((names) => `en: ${names}\n`)
+  .join("\n");
+
 // A page that is not a recipe, for the failed import's toast.
 function notesPage() {
   return "<!doctype html><html><head><title>Weekend notes</title></head><body><h1>Weekend notes</h1><p>Buy milk. Call the plumber.</p></body></html>";
@@ -24,7 +39,9 @@ function notesPage() {
 
 export function serveRecipePage(host) {
   const page = createServer((request, response) => {
-    const body = { "/recipe": recipePage(), "/notes": notesPage() }[request.url];
+    const body = { "/recipe": recipePage(), "/notes": notesPage(), "/catalogue": CATALOGUE }[
+      request.url
+    ];
 
     response.writeHead(body === undefined ? 404 : 200, {
       "content-type": "text/html; charset=utf-8",

@@ -40,6 +40,8 @@ async function freePort() {
   return port;
 }
 
+const recipePage = await serveRecipePage(LOOPBACK);
+
 // Without NORISH_SERVER_URL the flows get the web build on throwaway Postgres and Valkey
 // containers, which Testcontainers removes even when this run dies.
 async function startServer() {
@@ -73,7 +75,8 @@ async function startServer() {
       UPLOADS_DIR: await mkdtemp(path.join(os.tmpdir(), "norish-maestro-")),
       PASSWORD_AUTH_ENABLED: "true",
       AUTH_RATE_LIMIT_ENABLED: "false",
-      INGREDIENT_CATALOGUE_URL: "",
+      // A few foods from loopback, so recipes resolve to catalogue foods and show their icons.
+      INGREDIENT_CATALOGUE_URL: `http://${LOOPBACK}:${recipePage.address().port}/catalogue`,
       // The import flows' recipe page answers on loopback.
       ALLOW_PRIVATE_ADDRESSES: "true",
       LOG_LEVEL: "error",
@@ -139,7 +142,6 @@ const query = async (procedure, input) => {
   return data.result.data.json;
 };
 const seed = seeder({ trpc, query });
-const recipePage = await serveRecipePage(LOOPBACK);
 
 const credentials = { email: env.NORISH_EMAIL, password: env.NORISH_PASSWORD };
 
