@@ -1,8 +1,7 @@
 import type { VideoPlayer } from "expo-video";
 import React, { useState } from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
-import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { GlassIconButton } from "@/components/glass";
 import { ServerImage } from "@/components/server-image";
@@ -15,6 +14,8 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 import type { Item } from "../utils/hero-items";
 import { heroItems } from "../utils/hero-items";
+import { pageAt } from "../utils/viewer-pages";
+import { MediaViewer } from "./media-viewer";
 
 export const HERO_HEIGHT = 430;
 
@@ -91,7 +92,6 @@ function VideoPage({
 function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width: number }) {
   const intl = useIntl();
   const toImage = useServerImage();
-  const insets = useSafeAreaInsets();
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [view, setView] = useState<VideoView | null>(null);
@@ -139,7 +139,7 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
           }}
         />
       </View>
-      <View className="absolute left-[68px]" style={{ top: insets.top + 6 }}>
+      <View className="absolute top-[322px] left-[68px]">
         <GlassIconButton
           label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.fullscreen" })}
           symbol="arrow.up.left.and.arrow.down.right"
@@ -170,6 +170,7 @@ export function RecipeHero({
   const intl = useIntl();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
+  const [viewing, setViewing] = useState<number | null>(null);
   const items = heroItems(recipe);
   const doubleTap = useTapGesture({
     numberOfTaps: 2,
@@ -180,6 +181,9 @@ export function RecipeHero({
       onDoubleTap();
     },
   });
+  const tap = useTapGesture({ runOnJS: true, onActivate: () => setViewing(page) });
+  // A single tap waits for a second one to fail, so a favourite never opens the viewer.
+  const gesture = useExclusiveGestures(doubleTap, tap);
 
   if (items.length === 0) {
     return (
@@ -192,7 +196,7 @@ export function RecipeHero({
   }
 
   return (
-    <GestureDetector gesture={doubleTap}>
+    <GestureDetector gesture={gesture}>
       <View style={{ height: HERO_HEIGHT }} testID="recipe-hero">
         <ScrollView
           horizontal
@@ -200,7 +204,7 @@ export function RecipeHero({
           scrollEnabled={items.length > 1}
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={(event) =>
-            setPage(Math.round(event.nativeEvent.contentOffset.x / width))
+            setPage(pageAt(event.nativeEvent.contentOffset.x, width, items.length))
           }
         >
           {items.map((item) =>
@@ -238,6 +242,14 @@ export function RecipeHero({
             ))}
           </View>
         ) : null}
+        {viewing === null ? null : (
+          <MediaViewer
+            items={items}
+            label={recipe.name}
+            start={viewing}
+            onClose={() => setViewing(null)}
+          />
+        )}
       </View>
     </GestureDetector>
   );

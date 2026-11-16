@@ -48,12 +48,15 @@ export function GlassIconButton({
   label,
   testID,
   size = "regular",
+  color,
   onPress,
 }: {
   symbol: ComponentProps<typeof Image>["systemName"];
   label: string;
   testID: string;
   size?: keyof typeof SIZES;
+  /** The glyph's colour where the theme's foreground does not read, as on a black viewer. */
+  color?: string;
   onPress: () => void;
 }) {
   const [foreground] = useThemeColor(["foreground"] as const);
@@ -71,7 +74,7 @@ export function GlassIconButton({
         onPress={onPress}
       >
         <Image
-          color={foreground}
+          color={color ?? foreground}
           modifiers={[frame({ width: side, height: side })]}
           size={glyph}
           systemName={symbol}

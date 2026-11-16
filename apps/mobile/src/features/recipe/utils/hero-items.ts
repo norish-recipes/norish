@@ -24,3 +24,7 @@ export function heroItems(recipe: Pick<FullRecipeDTO, "images" | "videos">): Ite
     })),
   ];
 }
+
+/** A step's photos as viewer items, keyed by place: the same picture can sit twice in a step. */
+export const imageItems = (images: readonly { image: string }[]): Item[] =>
+  images.map(({ image }, index) => ({ kind: "image", key: `photo-${index}`, path: image }));

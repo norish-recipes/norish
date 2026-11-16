@@ -1,7 +1,7 @@
-import type { ComponentRef, ReactNode } from "react";
+import type { ComponentRef } from "react";
 import type { LayoutRectangle } from "react-native";
-import React, { Fragment, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { ServerImage } from "@/components/server-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -20,8 +20,10 @@ import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
 import { useStepTimers } from "../hooks/use-step-timers";
+import { imageItems } from "../utils/hero-items";
 import { plainText, stepRows } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
+import { MediaViewer } from "./media-viewer";
 import { TimerChip, TimerChipButton } from "./timer-chip";
 import { SectionCard, useTint } from "./tint";
 
@@ -29,22 +31,16 @@ type Recipe = ReturnType<typeof useLoadedPageRecipe>;
 type Step = Recipe["steps"][number];
 type Line = ReturnType<typeof usePageIngredients>[number];
 
-/** Keys a step's photos by place: the same picture can sit twice, so only its place tells them apart. */
-function byPlace<T>(items: T[], render: (item: T, index: number) => ReactNode) {
-  // eslint-disable-next-line @eslint-react/no-array-index-key -- the same picture can sit here twice
-  return items.map((item, index) => <Fragment key={index}>{render(item, index)}</Fragment>);
-}
-
-/** A step's own photos as small thumbnails; one opens the pages in full. */
+/** A step's own photos as small thumbnails; one opens the viewer on it. */
 export function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
-  const { width } = useWindowDimensions();
   const [open, setOpen] = useState<number | null>(null);
 
   return (
     <>
       <View className="flex-row flex-wrap gap-2">
-        {byPlace(images, (image, index) => (
+        {imageItems(images).map((item, index) => (
           <Pressable
+            key={item.key}
             accessibilityLabel={`${label} ${index + 1}`}
             accessibilityRole="button"
             onPress={() => setOpen(index)}
@@ -52,34 +48,19 @@ export function StepPhotos({ images, label }: { images: { image: string }[]; lab
             <ServerImage
               className="bg-default size-16 rounded-lg"
               contentFit="cover"
-              path={image.image}
+              path={item.path}
             />
           </Pressable>
         ))}
       </View>
-      <Modal
-        transparent
-        animationType="fade"
-        visible={open !== null}
-        onRequestClose={() => setOpen(null)}
-      >
-        <Pressable className="flex-1 justify-center bg-black/90" onPress={() => setOpen(null)}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            contentOffset={{ x: (open ?? 0) * width, y: 0 }}
-            showsHorizontalScrollIndicator={false}
-          >
-            {byPlace(images, (image) => (
-              <ServerImage
-                contentFit="contain"
-                path={image.image}
-                style={{ width, height: width * 1.2 }}
-              />
-            ))}
-          </ScrollView>
-        </Pressable>
-      </Modal>
+      {open === null ? null : (
+        <MediaViewer
+          items={imageItems(images)}
+          label={label}
+          start={open}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </>
   );
 }
