@@ -27,7 +27,7 @@ appId: dev.norish.app
 - tapOn:
     text: Allow
     optional: true
-# The native toolbar's items carry no id, so Home is tapped by its label.
+# A native toolbar item has no usable id, and its accessibility name is its SF Symbol's, "home".
 - tapOn:
     text: Home
 - extendedWaitUntil:
