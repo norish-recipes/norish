@@ -77,8 +77,8 @@ export function CookIngredients({
               large
               amount={formatAmount(row.line.amount, mode)}
               checked={checked.has(row.index)}
-              index={row.index}
               foodId={row.foodId}
+              index={row.index}
               name={row.line.ingredientName}
               unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
               onToggle={toggle}

@@ -68,16 +68,16 @@ export function GlassStepper({
     <View className="flex-row items-center rounded-full" style={{ height: HEIGHT }}>
       <GlassSurface radius={HEIGHT / 2} />
       <Step
-        icon="remove"
         disabled={!canDecrement}
+        icon="remove"
         label={decreaseLabel}
         testID={`${testID}-decrease`}
         onPress={onDecrement}
       />
       {children}
       <Step
-        icon="add"
         disabled={!canIncrement}
+        icon="add"
         label={increaseLabel}
         testID={`${testID}-increase`}
         onPress={onIncrement}
