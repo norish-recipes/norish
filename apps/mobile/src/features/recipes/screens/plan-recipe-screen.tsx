@@ -1,13 +1,12 @@
 import React, { useDeferredValue, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
-import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
+import { MoveFields } from "@/components/move-fields";
+import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
-import { asSlot, SlotTabs } from "@/components/slot-tabs";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import { DatePicker, Host } from "@expo/ui/swift-ui";
-import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
+import { asSlot } from "@/components/slot-tabs";
+import { sameDay, stripDays } from "@/components/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { Button, Skeleton, Spinner, useThemeColor } from "heroui-native";
@@ -20,12 +19,10 @@ import {
   useRecipeListSubscription,
   useRecipesQuery,
 } from "@norish/shared-react/recipes";
-import { addDays, parseDateKey } from "@norish/shared/lib/helpers";
+import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { usePlanExit } from "../hooks/use-plan-exit";
 
-/** The days on the strip, today first; its last chip picks any other. */
-const DAYS = 14;
 const SKELETON_ROWS = [0, 1, 2, 3];
 
 /** Plan a recipe: a day (strip or date chip), a slot, then a recipe from the search, a random one
@@ -34,13 +31,13 @@ export function PlanRecipeScreen() {
   const intl = useIntl();
   const params = useLocalSearchParams<{ slot?: string; date?: string }>();
   const [foreground] = useThemeColor(["foreground"] as const);
-  const accentText = useAccentTextColor();
   const today = parseDateKey(useToday());
   const day = params.date ? parseDateKey(params.date) : null;
-  const days = Array.from({ length: DAYS }, (_, offset) => addDays(today, offset));
+  const days = stripDays(today);
+  const onStrip = (picked: Date) => days.some((stripped) => sameDay(stripped, picked));
   const [picked, setPicked] = useState<{ day: Date; fromStrip: boolean } | null>(null);
   // Today until a day is picked; a strip day that midnight took off the strip is today again.
-  const stripped = picked?.fromStrip && !days.some((d) => d.getTime() === picked.day.getTime());
+  const stripped = picked?.fromStrip && !onStrip(picked.day);
   const date = day ?? (picked && !stripped ? picked.day : today);
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
@@ -62,68 +59,14 @@ export function PlanRecipeScreen() {
 
   const header = (
     <View className="gap-3">
-      {/* heroui-native has no day strip, so these chips are hand-built. */}
-      {day ? null : (
-        <SheetStrip
-          accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-          contentClassName="gap-2"
-          testID="plan-recipe-days"
-        >
-          {days.map((day, offset) => {
-            const selected = day.getTime() === date.getTime();
-            const label =
-              offset === 0
-                ? intl.formatMessage({ id: "calendar.mobile.today" })
-                : intl.formatDate(day, { weekday: "short" });
-
-            return (
-              <Pressable
-                key={day.getTime()}
-                accessibilityLabel={intl.formatDate(day, {
-                  weekday: "long",
-                  month: "short",
-                  day: "numeric",
-                })}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
-                testID={`plan-recipe-day-${offset}`}
-                onPress={() => setPicked({ day, fromStrip: true })}
-              >
-                <Text
-                  className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
-                >
-                  {label}
-                </Text>
-                <Text
-                  className={`text-[19px] font-semibold ${selected ? "text-accent-foreground" : "text-foreground"}`}
-                >
-                  {day.getDate()}
-                </Text>
-              </Pressable>
-            );
-          })}
-          <View className="h-16 justify-center">
-            <Host matchContents>
-              <DatePicker
-                modifiers={[
-                  accessibilityIdentifier("plan-recipe-other-day"),
-                  ...(accentText ? [tint(accentText)] : []),
-                ]}
-                selection={date}
-                onDateChange={(next) =>
-                  setPicked({
-                    day: new Date(next.getFullYear(), next.getMonth(), next.getDate()),
-                    fromStrip: false,
-                  })
-                }
-              />
-            </Host>
-          </View>
-        </SheetStrip>
-      )}
-
-      <SlotTabs testID="plan-recipe-slot" value={slot} onChange={setSlot} />
+      <MoveFields
+        date={date}
+        days={!day}
+        slot={slot}
+        testID="plan-recipe"
+        onDateChange={(next, fromStrip) => setPicked({ day: next, fromStrip })}
+        onSlotChange={setSlot}
+      />
 
       <SheetSearchField
         label={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}

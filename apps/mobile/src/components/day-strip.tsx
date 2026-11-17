@@ -1,0 +1,95 @@
+import React, { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { DatePicker, Host } from "@expo/ui/swift-ui";
+import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
+import { useIntl } from "react-intl";
+
+import { useToday } from "@norish/shared-react/reader";
+import { parseDateKey } from "@norish/shared/lib/helpers";
+
+import { SheetStrip } from "./sheet";
+import { sameDay, stripDays } from "./strip-days";
+
+/** A chip's width and the gap after it, for the offset that brings a later day into view. */
+const CHIP = 52;
+const GAP = 8;
+
+/** The days from today as chips, then the date picker for any other day; `onChange` says which
+ * of the two picked. Each chip's testID is `${testID}-day-${offset}`, the picker's `${testID}-other-day`. */
+export function DayStrip({
+  date,
+  testID,
+  onChange,
+}: {
+  date: Date;
+  testID: string;
+  onChange: (day: Date, fromChip: boolean) => void;
+}) {
+  const intl = useIntl();
+  const accentText = useAccentTextColor();
+  const days = stripDays(parseDateKey(useToday()));
+  // Opens with the picked day in view, not scrolled back to today.
+  const [start] = useState(() =>
+    Math.max(0, days.findIndex((day) => sameDay(day, date)) * (CHIP + GAP) - CHIP)
+  );
+
+  return (
+    // heroui-native has no day strip, so these chips are hand-built.
+    <SheetStrip
+      accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
+      contentClassName="gap-2"
+      contentOffset={{ x: start, y: 0 }}
+      testID={`${testID}-days`}
+    >
+      {days.map((day, offset) => {
+        const selected = sameDay(day, date);
+        const label =
+          offset === 0
+            ? intl.formatMessage({ id: "calendar.mobile.today" })
+            : intl.formatDate(day, { weekday: "short" });
+
+        return (
+          <Pressable
+            key={day.getTime()}
+            accessibilityLabel={intl.formatDate(day, {
+              weekday: "long",
+              month: "short",
+              day: "numeric",
+            })}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected }}
+            className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
+            testID={`${testID}-day-${offset}`}
+            onPress={() => onChange(day, true)}
+          >
+            <Text
+              className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
+            >
+              {label}
+            </Text>
+            <Text
+              className={`text-[19px] font-semibold ${selected ? "text-accent-foreground" : "text-foreground"}`}
+            >
+              {day.getDate()}
+            </Text>
+          </Pressable>
+        );
+      })}
+      <View className="h-16 justify-center">
+        <Host matchContents>
+          <DatePicker
+            modifiers={[
+              accessibilityIdentifier(`${testID}-other-day`),
+              ...(accentText ? [tint(accentText)] : []),
+            ]}
+            selection={date}
+            onDateChange={(next) =>
+              onChange(new Date(next.getFullYear(), next.getMonth(), next.getDate()), false)
+            }
+          />
+        </Host>
+      </View>
+    </SheetStrip>
+  );
+}
