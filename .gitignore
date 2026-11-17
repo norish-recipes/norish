@@ -86,6 +86,7 @@ docker-compose.yml
 
 **/ios
 **/android
+!apps/mobile/modules/*/ios
 
 **/.expo
 **/dist

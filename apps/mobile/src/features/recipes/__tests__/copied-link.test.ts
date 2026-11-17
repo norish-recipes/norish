@@ -20,6 +20,18 @@ describe("copiedLinkToOffer", () => {
     );
   });
 
+  it("offers a link copied as plain text once iOS says it probably is a web link", () => {
+    expect(copiedLinkToOffer({ hasUrl: true, url: `${RECIPE}\n`, serverAddress: SERVER })).toBe(
+      RECIPE
+    );
+  });
+
+  it("offers nothing for copied text that is a sentence, even one holding a link", () => {
+    const text = `Try this soup ${RECIPE}`;
+
+    expect(copiedLinkToOffer({ hasUrl: true, url: text, serverAddress: SERVER })).toBeNull();
+  });
+
   it("offers nothing when the clipboard holds no URL", () => {
     expect(copiedLinkToOffer({ hasUrl: false, url: null, serverAddress: SERVER })).toBeNull();
     expect(copiedLinkToOffer({ hasUrl: false, url: RECIPE, serverAddress: SERVER })).toBeNull();
