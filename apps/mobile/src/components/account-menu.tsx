@@ -8,10 +8,10 @@ import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { useServerImage } from "@/lib/network/server-url";
 import { useAppearancePreference } from "@/lib/preferences/appearance-preference-context";
 import { Button, Divider, Host, Label, Menu, Picker, RNHostView } from "@expo/ui/swift-ui";
-import { accessibilityLabel, disabled, pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
+import { accessibilityLabel, pickerStyle, tag, tint } from "@expo/ui/swift-ui/modifiers";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Avatar } from "heroui-native";
+import { Avatar, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
@@ -46,6 +46,7 @@ export function AccountMenu() {
   const { isOffline } = useConnectivity();
   const toImage = useServerImage();
   const status = useStatusLine();
+  const [success, warning] = useThemeColor(["success", "warning"] as const);
   const signOut = useConfirmedSignOut();
   const { mode, setMode } = useAppearancePreference();
   const { locale, options, setLocale } = useMobileLocaleSettings();
@@ -92,10 +93,12 @@ export function AccountMenu() {
           }
           modifiers={[accessibilityLabel(label)]}
         >
+          {/* Enabled, as a disabled row greys its tint: the dot in the status colour, a tap only closes. */}
           <Button
             label={status}
-            modifiers={[disabled(true)]}
-            systemImage={isOffline ? "exclamationmark.circle" : "checkmark.circle"}
+            modifiers={[tint(isOffline ? warning : success)]}
+            systemImage="circle.fill"
+            onPress={() => {}}
           />
           <Divider />
           <Picker
