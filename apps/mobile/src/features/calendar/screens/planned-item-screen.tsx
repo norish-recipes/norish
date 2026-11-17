@@ -6,20 +6,16 @@ import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
 import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
+import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
-import {
-  useCalendarRangeQuery,
-  usePlannedItemDraft,
-  usePlannedItemText,
-} from "@norish/shared-react/calendar";
+import { useCalendarRangeQuery, usePlannedItemText } from "@norish/shared-react/calendar";
 import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
 import { usePlatform } from "@norish/shared-react/platform";
-import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 /** A planned item's sheet: a draft of its note's text, day and slot that Save writes as one change
  * and Close drops, its recipe, its groceries, and Remove after a confirm. */
@@ -41,12 +37,8 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const { navigation } = usePlatform();
   const confirmRemove = useConfirmRemovePlanned();
   const { title, subtitle } = usePlannedItemText()(item);
-  const { draft, changes, setTitle, setDate, setSlot, save } = usePlannedItemDraft(item);
+  const { draft, changes, setTitle, saveAndClose, confirm, fields } = usePlannedItemSheet(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
-  const saveAndClose = () => {
-    save();
-    router.back();
-  };
 
   return (
     <Sheet
@@ -98,11 +90,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
           </Sheet.Actions>
         </View>
       }
-      confirm={{
-        label: intl.formatMessage({ id: "common.actions.save" }),
-        disabled: !changes,
-        onPress: saveAndClose,
-      }}
+      confirm={confirm}
       name="planned-item"
       subtitle={subtitle ?? undefined}
       title={title}
@@ -121,13 +109,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
             />
           </TextField>
         )}
-        <MoveFields
-          date={parseDateKey(draft.date)}
-          slot={draft.slot}
-          testID="planned-item"
-          onDateChange={(day) => setDate(dateKey(day))}
-          onSlotChange={setSlot}
-        />
+        <MoveFields {...fields} testID="planned-item" />
       </SheetBody>
     </Sheet>
   );

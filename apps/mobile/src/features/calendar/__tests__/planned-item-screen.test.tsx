@@ -249,6 +249,21 @@ describe("PlannedItemScreen", () => {
     });
   });
 
+  it("follows a housemate's change while untouched, and then saves only what was touched", () => {
+    const { rerender } = render(<PlannedItemScreen />);
+
+    held.items = [{ ...note, title: "Pea soup", slot: "Dinner", version: 2 }];
+    rerender(<PlannedItemScreen />);
+
+    expect(screen.getByTestId("planned-item-note")).toHaveProperty("value", "Pea soup");
+    expect(screen.getByTestId("planned-item-confirm")).toHaveProperty("disabled", true);
+
+    fireEvent.click(screen.getByTestId("planned-item-day-1"));
+    fireEvent.click(screen.getByTestId("planned-item-confirm"));
+
+    expect(held.saveItem).toHaveBeenCalledExactlyOnceWith("note-1", { date: "2026-11-13" });
+  });
+
   it("removes only once the confirm is accepted", () => {
     render(<PlannedItemScreen />);
     fireEvent.click(screen.getByTestId("planned-item-remove"));

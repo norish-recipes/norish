@@ -22,16 +22,16 @@ export function DayStrip({
   testID,
   onChange,
 }: {
-  date: Date;
+  /** The picked day's date key. */
+  date: string;
   testID: string;
-  onChange: (day: Date, fromChip: boolean) => void;
+  onChange: (day: string, fromChip: boolean) => void;
 }) {
   const intl = useIntl();
   const accentText = useAccentTextColor();
   const days = stripDays(useToday());
-  const picked = dateKey(date);
   // Opens with the picked day in view, not scrolled back to today.
-  const [start] = useState(() => Math.max(0, days.indexOf(picked) * (CHIP + GAP) - CHIP));
+  const [start] = useState(() => Math.max(0, days.indexOf(date) * (CHIP + GAP) - CHIP));
 
   return (
     // heroui-native has no day strip, so these chips are hand-built.
@@ -43,7 +43,7 @@ export function DayStrip({
     >
       {days.map((key, offset) => {
         const day = parseDateKey(key);
-        const selected = key === picked;
+        const selected = key === date;
         const label =
           offset === 0
             ? intl.formatMessage({ id: "calendar.mobile.today" })
@@ -61,7 +61,7 @@ export function DayStrip({
             accessibilityState={{ checked: selected }}
             className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
             testID={`${testID}-day-${offset}`}
-            onPress={() => onChange(day, true)}
+            onPress={() => onChange(key, true)}
           >
             <Text
               className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
@@ -83,10 +83,8 @@ export function DayStrip({
               accessibilityIdentifier(`${testID}-other-day`),
               ...(accentText ? [tint(accentText)] : []),
             ]}
-            selection={date}
-            onDateChange={(next) =>
-              onChange(new Date(next.getFullYear(), next.getMonth(), next.getDate()), false)
-            }
+            selection={parseDateKey(date)}
+            onDateChange={(next) => onChange(dateKey(next), false)}
           />
         </Host>
       </View>

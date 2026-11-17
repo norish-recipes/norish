@@ -19,7 +19,7 @@ import {
   useRecipeListSubscription,
   useRecipesQuery,
 } from "@norish/shared-react/recipes";
-import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
+import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { usePlanExit } from "../hooks/use-plan-exit";
 
@@ -31,13 +31,12 @@ export function PlanRecipeScreen() {
   const intl = useIntl();
   const params = useLocalSearchParams<{ slot?: string; date?: string }>();
   const [foreground] = useThemeColor(["foreground"] as const);
-  const today = parseDateKey(useToday());
-  const day = params.date ? parseDateKey(params.date) : null;
-  const days = stripDays(dateKey(today));
-  const onStrip = (picked: Date) => days.includes(dateKey(picked));
-  const [picked, setPicked] = useState<{ day: Date; fromStrip: boolean } | null>(null);
+  const today = useToday();
+  const day = params.date ?? null;
+  const days = stripDays(today);
+  const [picked, setPicked] = useState<{ day: string; fromStrip: boolean } | null>(null);
   // Today until a day is picked; a strip day that midnight took off the strip is today again.
-  const stripped = picked?.fromStrip && !onStrip(picked.day);
+  const stripped = picked?.fromStrip && !days.includes(picked.day);
   const date = day ?? (picked && !stripped ? picked.day : today);
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
@@ -46,7 +45,7 @@ export function PlanRecipeScreen() {
   const { getRandomRecipe } = useRandomRecipe();
   const exit = usePlanExit();
   const { isRandomLoading, planRecipe, planRandom, planNote } = useSlotPlanning({
-    date,
+    date: parseDateKey(date),
     slot,
     getRandomRecipe,
     close: exit,
@@ -106,7 +105,10 @@ export function PlanRecipeScreen() {
       name="plan-recipe"
       title={
         day
-          ? intl.formatMessage({ id: "calendar.panel.addToDay" }, { day: formatDay(intl, day) })
+          ? intl.formatMessage(
+              { id: "calendar.panel.addToDay" },
+              { day: formatDay(intl, parseDateKey(day)) }
+            )
           : intl.formatMessage({ id: "calendar.panel.planRecipe" })
       }
     >

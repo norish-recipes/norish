@@ -16,12 +16,13 @@ export function MoveFields({
   onDateChange,
   onSlotChange,
 }: {
-  date: Date;
+  /** The picked day's date key. */
+  date: string;
   slot: Slot;
   /** The prefix of every control's testID. */
   testID: string;
   days?: boolean;
-  onDateChange: (day: Date, fromChip: boolean) => void;
+  onDateChange: (day: string, fromChip: boolean) => void;
   onSlotChange: (slot: Slot) => void;
 }) {
   return (
