@@ -3,7 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"]
+      "env": ["DATABASE_URL", "MASTER_KEY", "AUTH_URL"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/apps/docs/docs/reference/openapi.json"]
     },
     "build": {
       "dependsOn": ["topo"]
