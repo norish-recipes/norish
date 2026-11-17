@@ -358,8 +358,8 @@ export function DragList<H, T>({
   onContentSizeChange,
   ...rest
 }: DragListProps<H, T>) {
-  const held = useHeldRows(rows, onDrop);
-  const { shown } = held;
+  const heldRows = useHeldRows(rows, onDrop);
+  const { shown } = heldRows;
   const outer = use(PageContext);
   const page = nested ? outer : null;
   const [lifted, setLifted] = useState<string | null>(null);
@@ -378,12 +378,12 @@ export function DragList<H, T>({
       events: {
         lifted: (key) => {
           mediumImpact();
-          held.lift();
+          heldRows.lift();
           setLifted(key);
           setDropped(null);
         },
         finished: (key, gap) => {
-          const kept = held.drop(key, gap);
+          const kept = heldRows.drop(key, gap);
 
           if (kept) mediumImpact();
           setLifted(null);
@@ -391,9 +391,9 @@ export function DragList<H, T>({
         },
         rule: landAt
           ? (key, gap) => {
-              const drop = held.dropOf(key, gap);
+              const drop = heldRows.dropOf(key, gap);
 
-              return drop && landAt(drop, held.shown);
+              return drop && landAt(drop, heldRows.shown);
             }
           : undefined,
       },

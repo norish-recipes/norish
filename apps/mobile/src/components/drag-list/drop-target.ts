@@ -70,9 +70,8 @@ export function sectionAt(sections: readonly (string | null)[], gap: number) {
   return sections[0] === "" ? "" : null;
 }
 
-/** What a finger at content `y` targets while the row at `from` is held: the line under the row
- * above the gap (else over the row below), none where it would land in place, and the outline
- * around the section's laid-out cards. */
+/** What a finger at content `y` targets while row `from` is held: a line at the gap (none where it
+ * lands in place) and an outline around its section's drawn cards. */
 export function targetAt(
   slots: readonly Slot[],
   sections: readonly (string | null)[],
