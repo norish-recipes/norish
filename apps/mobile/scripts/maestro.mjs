@@ -201,9 +201,8 @@ const bounds = (route) => ({
 });
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
-  // `POST /reset`, `POST /recipe`, `POST /grocery`, `POST /store`, `POST /plan` and `POST /pantry-add`
-  // (a JSON body each), `GET /count?name=`, `GET /groceries`, `GET /grocery`, `GET /stores`, `GET /aisle`,
-  // `GET /day?offset=`, `GET /planned`, `GET /pantry` and `GET /pantry-kept` answer in JSON.
+  // The seeding and reading routes the flows call, each answering in JSON: POST seeds from a JSON
+  // body (/reset, /recipe, /grocery, /store, /plan, /pantry-add), GET reads (/count, /groceries, ...).
   const route = new URL(request.url ?? "/", "http://control");
   const body = await new Promise((resolve) => {
     const chunks = [];

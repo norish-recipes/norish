@@ -278,10 +278,8 @@ async function selectCurrent(trx: Transaction, itemId: string, version?: number)
   return current ?? null;
 }
 
-/**
- * Writes the locked item's new title and place in one update with one bump; a move renumbers both
- * slots. The item is always written, so a refused edit never reaches here to leave a renumbering.
- */
+/** Writes the item's new title and place in one update with one bump; a move renumbers both slots.
+ * The item is always written, so a refused edit never reaches here to leave a renumbering. */
 async function writeEdit(
   trx: Transaction,
   current: PlannedItem,

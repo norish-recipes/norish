@@ -9,11 +9,8 @@ export type HeaderConfirm = {
   disabled?: boolean;
 };
 
-/**
- * The one native header of a sheet or modal screen: the system title, a glass Close on the left
- * (a Back chevron with `back`, for a step inside a sheet) and, where the screen saves, a
- * prominent confirm item on the right. Render it inside the screen.
- */
+/** A sheet's or modal's one native header, rendered inside the screen: the title, a glass Close
+ * on the left (Back with `back`, inside a sheet) and, where it saves, a confirm on the right. */
 export function ModalHeader({
   title,
   back = false,

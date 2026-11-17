@@ -43,8 +43,7 @@ function Step({
 }
 
 /** A minus and a plus in one glass capsule around `children`, the value; `testID` prefixes the
- * steps' (`-decrease`, `-increase`). A step that cannot move is disabled, so it gives no haptic.
- * The value's press, if any, is the caller's own. */
+ * steps' (`-decrease`, `-increase`). A step that cannot move is disabled, so gives no haptic. */
 export function GlassStepper({
   children,
   decreaseLabel,

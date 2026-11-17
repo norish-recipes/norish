@@ -272,10 +272,8 @@ async function storedPayload(itemId: string) {
   return stored ? buildPlannedItemPayload(stored) : null;
 }
 
-/**
- * One edit's text, day and slot under one version check and one bump; a new day or slot lands
- * last there. The household hears one event: a move carries the new text too.
- */
+/** One edit's text, day and slot under one version check and one bump; a new day or slot lands
+ * last there. The household hears one event: a move carries the new text too. */
 export async function editCalendarItem(
   ctx: CalendarProcedureContext,
   input: z.infer<typeof PlannedItemEditInputSchema>

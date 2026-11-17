@@ -8,10 +8,8 @@ import { isRecipeItem } from "./todays-meals";
 /** What the planned-item sheet edits before it saves. */
 export type PlannedItemDraft = { title: string; date: string; slot: Slot };
 
-/**
- * What Save writes: each touched field that differs from the live item. Null when none does, or
- * when a note's touched text is blank, which a note cannot be.
- */
+/** What Save writes: each touched field that differs from the live item. Null when none does, or
+ * when a note's touched text is blank, which a note cannot be. */
 export function plannedItemChanges(
   item: PlannedItemFromQuery,
   touched: Partial<PlannedItemDraft>

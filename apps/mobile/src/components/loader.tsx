@@ -3,10 +3,8 @@ import { ActivityIndicator, View } from "react-native";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-/**
- * The app's one loader, the native activity indicator, in the slot the caller gives it (a button's
- * pending state, a row's trailing slot); `centred` fills its parent and sits in the middle.
- */
+/** The app's one loader, the native activity indicator, in the slot the caller gives it (a
+ * button's pending state, a row's end); `centred` fills its parent and sits in the middle. */
 export function Loader({
   centred = false,
   size = "small",

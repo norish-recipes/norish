@@ -72,10 +72,8 @@ function useIconAnswers() {
   return { subscribe, read };
 }
 
-/**
- * One food's icon address from a surface's own read, else the newest earlier one that answered it,
- * so an icon keeps the previous read's while a changed set is read; undefined until one answers it.
- */
+/** One food's icon address from a surface's own read, else the newest earlier read that answered
+ * it, so a changed set keeps the previous icon while it loads; undefined until one answers. */
 export function useIngredientIconAddress(ingredientId: string): string | null | undefined {
   const { subscribe, read } = useIconAnswers();
 
