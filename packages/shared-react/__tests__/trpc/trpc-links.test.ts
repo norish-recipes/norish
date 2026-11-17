@@ -31,7 +31,9 @@ vi.mock("@trpc/client", async () => {
   };
 });
 
+const { createTRPCUntypedClient } = await import("@trpc/client");
 const {
+  MAX_BATCH_URL_LENGTH,
   createTRPCClientLinks,
   isUnauthorizedTRPCError,
   isUnauthorizedWebSocketClose,
@@ -157,5 +159,39 @@ describe("isUnauthorizedTRPCError", () => {
     expect(isUnauthorizedTRPCError({ data: { code: "FORBIDDEN", httpStatus: 403 } })).toBe(false);
     expect(isUnauthorizedTRPCError({ message: "401 unauthorized" })).toBe(false);
     expect(isUnauthorizedTRPCError(null)).toBe(false);
+  });
+});
+
+describe("batched reads", () => {
+  it("split into requests whose URLs stay under the limit, every read answered", async () => {
+    const urls: string[] = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        const ops = new URL(url).pathname.split("/api/trpc/")[1]!.split(",");
+
+        return Response.json(ops.map(() => ({ result: { data: { json: null } } })));
+      })
+    );
+    const client = createTRPCUntypedClient({
+      links: createTRPCClientLinks({
+        logger,
+        getBaseUrl: () => "http://localhost:3000",
+        includeSubscriptions: false,
+        enableLoggerLink: false,
+      }),
+    });
+
+    // A warm set's worth of reads, all issued in one tick.
+    const reads = Array.from({ length: 300 }, () =>
+      client.query("recipes.get", { id: crypto.randomUUID() })
+    );
+
+    await expect(Promise.all(reads)).resolves.toHaveLength(300);
+    expect(urls.length).toBeGreaterThan(1);
+    for (const url of urls) expect(url.length).toBeLessThanOrEqual(MAX_BATCH_URL_LENGTH);
+    vi.unstubAllGlobals();
   });
 });
