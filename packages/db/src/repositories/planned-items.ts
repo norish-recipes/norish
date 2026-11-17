@@ -246,6 +246,7 @@ export type PlannedItemEdit = { title?: string; date?: string; slot?: PlannedIte
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+// Locked: a second write at the same version waits here, then finds no row at that version.
 async function selectCurrent(trx: Transaction, itemId: string, version?: number) {
   const conditions = [eq(plannedItems.id, itemId)];
 
@@ -255,23 +256,24 @@ async function selectCurrent(trx: Transaction, itemId: string, version?: number)
     .select()
     .from(plannedItems)
     .where(and(...conditions))
-    .limit(1);
+    .limit(1)
+    .for("update");
 
   return current ?? null;
 }
 
-/** Writes the item's new title and place in one update with one bump; a move renumbers both slots. */
+/**
+ * Writes the locked item's new title and place in one update with one bump; a move renumbers both
+ * slots. The item is always written, so a refused edit never reaches here to leave a renumbering.
+ */
 async function writeEdit(
   trx: Transaction,
   current: PlannedItem,
   title: string | undefined,
-  move: { date: string; slot: PlannedItemSlot; index?: number } | undefined,
-  version?: number
+  move: { date: string; slot: PlannedItemSlot; index?: number } | undefined
 ): Promise<MutationOutcome<PlannedItem>> {
   const itemId = current.id;
-  const guard = version
-    ? and(eq(plannedItems.id, itemId), eq(plannedItems.version, version))
-    : eq(plannedItems.id, itemId);
+  const guard = eq(plannedItems.id, itemId);
   const written = {
     ...(title === undefined ? {} : { title }),
     updatedAt: new Date(),
@@ -281,7 +283,7 @@ async function writeEdit(
   if (!move) {
     const [row] = await trx.update(plannedItems).set(written).where(guard).returning();
 
-    return row ? appliedOutcome(row) : staleOutcome();
+    return appliedOutcome(writtenRow(row));
   }
 
   const { date: targetDate, slot: targetSlot, index: targetIndex } = move;
@@ -358,7 +360,14 @@ async function writeEdit(
     }
   }
 
-  return moved ? appliedOutcome(moved) : staleOutcome();
+  return appliedOutcome(writtenRow(moved));
+}
+
+// The row is locked, so a missing one is a broken invariant: throwing rolls the transaction back.
+function writtenRow(row: PlannedItem | null | undefined): PlannedItem {
+  if (!row) throw new Error("Locked planned item was not written");
+
+  return row;
 }
 
 export async function moveItem(
@@ -374,13 +383,11 @@ export async function moveItem(
 
     if (!current) return staleOutcome();
 
-    return writeEdit(
-      trx,
-      current,
-      undefined,
-      { date: targetDate, slot: targetSlot, index: targetIndex },
-      version
-    );
+    return writeEdit(trx, current, undefined, {
+      date: targetDate,
+      slot: targetSlot,
+      index: targetIndex,
+    });
   });
 }
 
@@ -401,7 +408,7 @@ export async function editPlannedItem(
 
     if (!move && edit.title === undefined) return appliedOutcome(current);
 
-    return writeEdit(trx, current, edit.title, move, version);
+    return writeEdit(trx, current, edit.title, move);
   });
 }
 

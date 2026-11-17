@@ -11,6 +11,7 @@ import {
   editPlannedItem,
   getPlannedItemById,
   listPlannedItemsBySlot,
+  moveItem,
 } from "@norish/db/repositories/planned-items";
 
 import { createTestUser } from "../helpers/db-test-helpers";
@@ -133,5 +134,37 @@ describe("editPlannedItem", () => {
     );
 
     expect(result.stale).toBe(true);
+  });
+});
+
+describe("two writes at one version", () => {
+  // Each answer is applied or stale; the loser leaves no renumbering behind.
+  async function race(writes: (soupId: string) => Promise<{ stale: boolean }>[]) {
+    const soup = await plan("Dinner", "Soup");
+
+    await plan("Dinner", "Salad");
+    await plan("Lunch", "Toast", nextDay);
+    // The pool is reset per suite: warm two connections so the writes really overlap.
+    await Promise.all([getPlannedItemById(soup.id), getPlannedItemById(soup.id)]);
+    const results = await Promise.all(writes(soup.id));
+
+    expect(results.map(({ stale }) => stale).sort()).toEqual([false, true]);
+    expect((await titlesIn(nextDay, "Lunch")).map(([, sortOrder]) => sortOrder)).toEqual([0, 1]);
+    expect(await titlesIn(date, "Dinner")).toEqual([["Salad", 0]]);
+    expect(await getPlannedItemById(soup.id)).toMatchObject({ version: 2 });
+  }
+
+  it("an edit and a move: one applies, the other writes nothing", async () => {
+    await race((id) => [
+      editPlannedItem(id, { date: nextDay, slot: "Lunch" }, 1),
+      moveItem(id, nextDay, "Lunch", 0, 1),
+    ]);
+  });
+
+  it("two moves: one applies, the other writes nothing", async () => {
+    await race((id) => [
+      moveItem(id, nextDay, "Lunch", 0, 1),
+      moveItem(id, nextDay, "Lunch", 1, 1),
+    ]);
   });
 });
