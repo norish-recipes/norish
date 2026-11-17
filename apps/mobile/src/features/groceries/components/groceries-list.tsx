@@ -8,6 +8,7 @@ import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TabListMarker } from "@/components/tab-list-marker";
+import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
@@ -15,7 +16,6 @@ import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
-import { useFreshRows } from "../hooks/use-fresh-rows";
 import { useLeaveToDone } from "../hooks/use-leave-to-done";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { isGroupOpen, sectionKeyOf } from "../utils/list-rows";

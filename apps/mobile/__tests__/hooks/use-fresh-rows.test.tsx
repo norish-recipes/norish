@@ -2,30 +2,12 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import { useFreshRows } from "../../src/hooks/use-fresh-rows";
 
-import type { ListRow } from "../utils/list-rows";
-import { useFreshRows } from "../hooks/use-fresh-rows";
-import { storeListRows } from "../utils/list-rows";
+type Row = { kind: "item"; key: string; value: object };
 
-const store = {
-  id: "s",
-  name: "s",
-  sortOrder: 0,
-  color: "primary",
-  aisles: [],
-} as unknown as StoreDto;
-const line = (id: string) =>
-  ({ id, name: id, storeId: "s", isDone: false, sortOrder: 0 }) as unknown as GroceryDto;
-const rowsOf = (...ids: string[]) =>
-  storeListRows({
-    stores: [store],
-    groceries: ids.map(line),
-    groups: null,
-    doneOpen: new Set(),
-    collapsed: new Set(),
-    aisleFor: () => null,
-  });
+const rowsOf = (...ids: string[]): Row[] =>
+  ids.map((id) => ({ kind: "item", key: `line:${id}`, value: { id } }));
 
 describe("useFreshRows", () => {
   it("animates no row of the first load, then only a row new to the list", () => {
@@ -112,7 +94,7 @@ describe("useFreshRows", () => {
 
         return fresh;
       },
-      { initialProps: { rows: [] as ListRow[] } }
+      { initialProps: { rows: [] as Row[] } }
     );
     const next = rowsOf("a");
 
@@ -125,10 +107,30 @@ describe("useFreshRows", () => {
 
   it("animates no row of the first load that follows the empty list shown while loading", () => {
     const { result, rerender } = renderHook(({ rows, loaded }) => useFreshRows(rows, loaded), {
-      initialProps: { rows: [] as ListRow[], loaded: false },
+      initialProps: { rows: [] as Row[], loaded: false },
     });
 
     rerender({ rows: rowsOf("a", "b"), loaded: true });
     expect(result.current.size).toBe(0);
+  });
+
+  it("animates no row that arrives with a new epoch, such as the days a list grew by", () => {
+    const seen: ReadonlySet<object>[] = [];
+    const { rerender } = renderHook(
+      ({ rows, epoch }) => {
+        const fresh = useFreshRows(rows, true, epoch);
+
+        seen.push(fresh);
+
+        return fresh;
+      },
+      { initialProps: { rows: rowsOf("a"), epoch: "7..21" } }
+    );
+
+    rerender({ rows: rowsOf("z", "a", "b"), epoch: "1..28" });
+    expect(seen.every((fresh) => fresh.size === 0)).toBe(true);
+
+    rerender({ rows: rowsOf("z", "a", "b", "c"), epoch: "1..28" });
+    expect(seen.some((fresh) => fresh.size === 1)).toBe(true);
   });
 });
