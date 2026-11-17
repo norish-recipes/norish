@@ -203,3 +203,29 @@ export function planTimelineDrop(drop: Drop<TimelineHeading, TimelineItem>, data
 
   return target && { itemId: item.id, ...target };
 }
+
+/** The gap in `rows` (the rows shown) a drop lands in by `planTimelineDrop`: last in its slot on
+ * its day, or where that slot's label goes. Null for a drop that means nothing. */
+export function timelineLanding(
+  drop: Drop<TimelineHeading, TimelineItem>,
+  rows: readonly TimelineRow[],
+  data: CalendarData
+) {
+  const plan = planTimelineDrop(drop, data);
+
+  if (!plan) return null;
+  const order = TODAY_MEAL_SLOTS.indexOf(plan.slot);
+  let gap: number | null = null;
+
+  rows.forEach((row, index) => {
+    const slot =
+      row.kind === "item" ? row.value.item.slot : row.value.type === "slot" ? row.value.slot : null;
+
+    // The day's top, its earlier slots and this slot come before it.
+    if (rowDay(row) === plan.date && (slot === null || TODAY_MEAL_SLOTS.indexOf(slot) <= order)) {
+      gap = index + 1;
+    }
+  });
+
+  return gap;
+}

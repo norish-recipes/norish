@@ -32,6 +32,7 @@ import {
   planTimelineDrop,
   rowDay,
   rowLayout,
+  timelineLanding,
   timelineRows,
 } from "../utils/timeline-rows";
 import { todayDirection } from "../utils/today-control";
@@ -161,14 +162,14 @@ export function CalendarScreen() {
           contentInset={{ top: barBottom }}
           contentInsetAdjustmentBehavior="never"
           contentOffset={{ x: 0, y: openingAt ?? 0 }}
-          // A drop lands on its day by the rule, so the day is outlined and no line drawn.
-          dropLine={false}
           edgeInsets={{ top: barBottom, bottom: tabListBottomInset(bar.homeIndicator) }}
           // The rows the list shows, which a held row keeps still while `rows` moves on.
           getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
           initialScrollIndex={openIndex < 0 ? undefined : openIndex}
           itemLayoutAnimation={settled ? SPRING_LAYOUT : undefined}
+          // As web: a drop lands on its day by the rule, which outlines the day and draws no line.
+          landAt={(drop, shown) => timelineLanding(drop, shown, calendarData)}
           // Rows added above keep the ones on screen where they are.
           maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderHeading={(heading) => (

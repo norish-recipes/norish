@@ -260,19 +260,8 @@ function LayerScrollView({
 }
 
 /** The card a drag carries, over the rows, following the finger. */
-function LiftedCard({
-  top,
-  opacity,
-  children,
-}: {
-  top: SharedValue<number>;
-  opacity: SharedValue<number>;
-  children: ReactNode;
-}) {
-  const style = useAnimatedStyle(() => ({
-    opacity: opacity.get(),
-    transform: [{ translateY: top.get() }],
-  }));
+function LiftedCard({ top, children }: { top: SharedValue<number>; children: ReactNode }) {
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: top.get() }] }));
 
   return (
     <Animated.View
@@ -343,8 +332,9 @@ type DragListProps<H, T> = Omit<
   sectionOf?: (heading: H, key: string) => string | null;
   /** Whether an item can be lifted; all can by default. */
   canLift?: (item: T) => boolean;
-  /** False where a drop lands by a rule rather than where the line would show it. */
-  dropLine?: boolean;
+  /** Where a drop lands by a rule rather than where the card is: its gap in `rows` (the rows
+   * shown), or null where it changes nothing. The list then draws no line, only the outline. */
+  landAt?: (drop: Drop<H, T>, rows: DragRow<H, T>[]) => number | null;
   /** The bars over the list's ends, inside which auto-scroll starts; by default its `contentInset`.
    * The top one is also where scrolling up stops. */
   edgeInsets?: { top?: number; bottom?: number };
@@ -378,7 +368,7 @@ export function DragList<H, T>({
   onHeldChange,
   sectionOf,
   canLift,
-  dropLine = true,
+  landAt,
   edgeInsets,
   itemLayoutAnimation,
   nested = false,
@@ -403,7 +393,6 @@ export function DragList<H, T>({
   // How far the finger has moved since the lift; a sheet's gestures count from its own top.
   const travel = useSharedValue(0);
   const cardTop = useSharedValue(0);
-  const cardOpacity = useSharedValue(1);
   const target = useSharedValue<Target | null>(null);
   const section = useSharedValue<string | null>(null);
   const contentHeight = useSharedValue(0);
@@ -433,9 +422,12 @@ export function DragList<H, T>({
   const latestRef = useRef({
     lifted: (_key: string) => {},
     finished: (_key: string, _gap: number | null) => {},
+    ruled: (_key: string, _gap: number | null) => {},
   });
   const onLifted = (key: string) => latestRef.current.lifted(key);
   const onFinished = (key: string, gap: number | null) => latestRef.current.finished(key, gap);
+  const onRuled = (key: string, gap: number | null) => latestRef.current.ruled(key, gap);
+  const ruled = landAt !== undefined;
 
   // The drop's commit placed its row without the layout animation; later changes animate again.
   useEffect(() => {
@@ -496,7 +488,6 @@ export function DragList<H, T>({
     dragging.set(true);
     travel.set(0);
     cardTop.set(cell.top);
-    cardOpacity.set(1);
     target.set(null);
     section.set(order.get()[indexOf(key)]?.section ?? null);
     scheduleOnRN(onLifted, key);
@@ -508,24 +499,31 @@ export function DragList<H, T>({
     if (lift.get()?.key === key) travel.set(translation);
   };
 
-  const release = (key: string, canceled: boolean) => {
+  // The card slides to where the row lands, or back to its place, then the drop commits.
+  const settle = (key: string, gap: number | null) => {
     "worklet";
     const held = lift.get();
 
-    if (held?.key !== key || !dragging.get()) return;
-    dragging.set(false);
-    const landing = canceled ? null : target.get();
-    const gap = landing?.gap ?? null;
+    if (held?.key !== key) return;
     const done = () => {
       "worklet";
       lift.set(null);
       scheduleOnRN(onFinished, key, gap);
     };
 
+    cardTop.set(timedTo(landingTop(slotsNow(), gap, indexOf(key), held), SETTLE_MS, {}, done));
+  };
+
+  const release = (key: string, canceled: boolean) => {
+    "worklet";
+    if (lift.get()?.key !== key || !dragging.get()) return;
+    dragging.set(false);
+    const gap = canceled ? null : (target.get()?.gap ?? null);
+
     target.set(null);
-    // Without a line the row lands by a rule, not where the card is: it fades there instead.
-    if (landing && !dropLine) cardOpacity.set(timedTo(0, SETTLE_MS, { keep: true }, done));
-    else cardTop.set(timedTo(landingTop(slotsNow(), gap, indexOf(key), held), SETTLE_MS, {}, done));
+    // A list with a rule asks it where the row lands first.
+    if (ruled && gap !== null) scheduleOnRN(onRuled, key, gap);
+    else settle(key, gap);
   };
 
   const frame = useFrameCallback(({ timeSincePreviousFrame }) => {
@@ -581,7 +579,7 @@ export function DragList<H, T>({
     const now = targetAt(slotsNow(), sections, indexOf(held.key), cardY + held.height / 2);
 
     cardTop.set(cardY);
-    target.set(dropLine || !now ? now : { ...now, line: null });
+    target.set(ruled && now ? { ...now, line: null } : now);
     if (now && now.section !== section.get()) {
       section.set(now.section);
       scheduleOnRN(lightImpact);
@@ -604,6 +602,11 @@ export function DragList<H, T>({
         frame.setActive(false);
         setLifted(null);
         setDropped(kept ? key : null);
+      },
+      ruled: (key, gap) => {
+        const drop = held.dropOf(key, gap);
+
+        scheduleOnUI(settle, key, drop && landAt ? landAt(drop, held.shown) : null);
       },
     };
   });
@@ -635,9 +638,7 @@ export function DragList<H, T>({
       pointerEvents="none"
     >
       {liftedRow?.kind === "item" ? (
-        <LiftedCard opacity={cardOpacity} top={cardTop}>
-          {renderItem(liftedRow.value)}
-        </LiftedCard>
+        <LiftedCard top={cardTop}>{renderItem(liftedRow.value)}</LiftedCard>
       ) : null}
       {/* Over the card, which the finger keeps over the gap. */}
       <DropMarks target={target} />

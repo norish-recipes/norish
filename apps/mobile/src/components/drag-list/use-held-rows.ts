@@ -23,14 +23,20 @@ export function useHeldRows<H, T>(
   if (held && !current) setHeld(null);
   const shown = current?.shown ?? rows;
 
+  /** The row `key` let go into `gap` of the rows shown since the lift; null where nothing moves. */
+  const dropOf = (key: string, gap: number | null) => {
+    const from = shown.findIndex((row) => row.key === key);
+
+    return gap === null || from < 0 ? null : dropAt(shown, from, gap);
+  };
+
   return {
     shown,
+    dropOf,
     lift: () => setHeld({ shown, over: rows, dragging: true }),
-    /** The row `key` let go into `gap` of the rows shown since the lift; `onDrop` returning false
-     * puts it back. True when the drop was kept. */
+    /** Commits `dropOf(key, gap)`; `onDrop` returning false puts it back. True when it was kept. */
     drop: (key: string, gap: number | null) => {
-      const from = shown.findIndex((row) => row.key === key);
-      const drop = gap === null || from < 0 ? null : dropAt(shown, from, gap);
+      const drop = dropOf(key, gap);
       const kept = drop !== null && onDrop(drop) !== false;
 
       setHeld(kept ? { shown: drop.rows, over: rows, dragging: false } : null);
