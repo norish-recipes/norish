@@ -203,7 +203,7 @@ export const createRecipeProcedure = authedProcedure
       tags: ["Recipes"],
       summary: "Create a recipe",
       description:
-        "Creates a recipe directly from structured recipe data without parser transformation.",
+        "Creates a recipe directly from structured recipe data without parser transformation. Responds after the recipe is stored and returns an error if storing fails. Repeating a create with an ID already created by the same user returns that recipe's ID.",
       errorResponses: {
         401: "Missing or invalid API credentials",
       },
