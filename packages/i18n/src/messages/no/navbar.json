@@ -22,6 +22,10 @@
       "updateAvailable": "v{version} tilgjengelig"
     }
   },
+  "accountMenu": {
+    "allSettings": "Alle innstillinger",
+    "offlineLabel": "{name}, frakoblet"
+  },
   "theme": {
     "title": "Tema",
     "loading": "Laster…",

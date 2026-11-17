@@ -22,6 +22,10 @@
       "updateAvailable": "Доступна версия v{version}"
     }
   },
+  "accountMenu": {
+    "allSettings": "Все настройки",
+    "offlineLabel": "{name}, не в сети"
+  },
   "theme": {
     "title": "Тема",
     "loading": "Загрузка…",

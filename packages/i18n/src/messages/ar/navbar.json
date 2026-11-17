@@ -22,6 +22,10 @@
       "updateAvailable": "الإصدار v{version} متاح"
     }
   },
+  "accountMenu": {
+    "allSettings": "كل الإعدادات",
+    "offlineLabel": "{name}، غير متصل"
+  },
   "theme": {
     "title": "المظهر",
     "loading": "جارٍ التحميل…",

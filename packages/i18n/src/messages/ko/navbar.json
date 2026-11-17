@@ -22,6 +22,10 @@
       "updateAvailable": "v{version} 사용 가능"
     }
   },
+  "accountMenu": {
+    "allSettings": "모든 설정",
+    "offlineLabel": "{name}, 오프라인"
+  },
   "theme": {
     "title": "테마",
     "loading": "불러오는 중…",

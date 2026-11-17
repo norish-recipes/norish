@@ -22,6 +22,10 @@
       "updateAvailable": "v{version} available"
     }
   },
+  "accountMenu": {
+    "allSettings": "All settings",
+    "offlineLabel": "{name}, Offline"
+  },
   "theme": {
     "title": "Theme",
     "loading": "Loading…",
