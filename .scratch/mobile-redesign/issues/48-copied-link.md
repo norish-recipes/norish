@@ -28,3 +28,9 @@
   10. reject: a written convention for local native modules; nobody asked, and one module is not a pattern yet.
 - Review round 1 fixes, simulator (iPhone 18 Pro, iOS 27.2, Release, Notes is not installed so plain text was copied from Safari's address bar). The simulator cannot show the paste prompt: `pasted` logs "Paste requires user authorization. Prompting...", then tccd "service not protected: kTCCServicePasteboard" and the read fails with "Operation not authorized" under Ask. So Allow and Deny were set in Settings › Norish › Paste from Other Apps instead; the prompt itself stays for Mike's iPhone.
 - Allow: a URL copied from Safari's address bar, the same link as text, a sentence holding a link, and a bare `example.com/...` each showed "Import ‹host›" (https:// added to the bare one); a link to the dev server showed no row. Deny: link as text and sentence showed no row. The log shows one pasteboard read per sheet open, so the string read covers a copied URL.
+- Review round 2 (the fix range), dispositions:
+  1. fix: the hand-written link search is wrong on real text: an uppercase scheme gets a second `https://`, a closing bracket in a path is cut, curly quotes stay on the link, `notes.txt` or `Node.js` counts as a bare domain and wins over the real link, a non-ASCII domain is cut, a port is dropped. iOS already knows which link it detected: the module returns `detectValues(for: [.probableWebURL])` and the search goes. Off iOS the old rule stays (the whole text is the link).
+  2. fix: `isWebLink` is case-sensitive, so a scheme that is not lowercase is not seen as one.
+  3. fix: `copiedLinkToOffer`'s `hasUrl` parameter is always true in the app.
+  4. fix: tests for the cases in 1 and 2.
+  5. reject: a read in flight finishing after the sheet closes; a pasteboard read cannot be cancelled and the state guard is already there.
