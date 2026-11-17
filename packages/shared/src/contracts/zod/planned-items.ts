@@ -24,6 +24,15 @@ export const PlannedItemUpdateInputSchema = z.object({
   title: z.string().min(1),
 });
 
+/** One edit of a planned item: whichever of its text, day and slot changed, written together. */
+export const PlannedItemEditInputSchema = z.object({
+  itemId: z.uuid(),
+  version: z.number().int().positive(),
+  title: z.string().min(1).optional(),
+  date: z.string().optional(),
+  slot: slotSchema.optional(),
+});
+
 export const PlannedItemEventPayloadSchema = z.object({
   id: z.string(),
   date: z.string(),

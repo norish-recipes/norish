@@ -9,7 +9,6 @@ import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
 type PlannedItem = typeof plannedItems.$inferSelect;
 type PlannedItemInsert = typeof plannedItems.$inferInsert;
-type PlannedItemUpdate = Partial<PlannedItemInsert>;
 type PlannedItemSlot = PlannedItem["slot"];
 
 export type PlannedItemWithRecipe = PlannedItem & {
@@ -185,30 +184,6 @@ export async function createPlannedItem(input: PlannedItemInsert): Promise<Plann
   return row;
 }
 
-export async function updatePlannedItem(
-  id: string,
-  updates: PlannedItemUpdate,
-  version?: number
-): Promise<MutationOutcome<PlannedItem>> {
-  const whereConditions = [eq(plannedItems.id, id)];
-
-  if (version) {
-    whereConditions.push(eq(plannedItems.version, version));
-  }
-
-  const [row] = await db
-    .update(plannedItems)
-    .set({ ...updates, updatedAt: new Date(), version: sql`${plannedItems.version} + 1` })
-    .where(and(...whereConditions))
-    .returning();
-
-  if (!row) {
-    return staleOutcome();
-  }
-
-  return appliedOutcome(row);
-}
-
 export async function deletePlannedItem(
   id: string,
   version?: number
@@ -266,6 +241,126 @@ export async function deletePlannedItemsBefore(beforeDate: string): Promise<numb
   return result.rowCount ?? 0;
 }
 
+/** What one edit of a planned item writes; a date or slot as it is moves nothing. */
+export type PlannedItemEdit = { title?: string; date?: string; slot?: PlannedItemSlot };
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function selectCurrent(trx: Transaction, itemId: string, version?: number) {
+  const conditions = [eq(plannedItems.id, itemId)];
+
+  if (version) conditions.push(eq(plannedItems.version, version));
+
+  const [current] = await trx
+    .select()
+    .from(plannedItems)
+    .where(and(...conditions))
+    .limit(1);
+
+  return current ?? null;
+}
+
+/** Writes the item's new title and place in one update with one bump; a move renumbers both slots. */
+async function writeEdit(
+  trx: Transaction,
+  current: PlannedItem,
+  title: string | undefined,
+  move: { date: string; slot: PlannedItemSlot; index?: number } | undefined,
+  version?: number
+): Promise<MutationOutcome<PlannedItem>> {
+  const itemId = current.id;
+  const guard = version
+    ? and(eq(plannedItems.id, itemId), eq(plannedItems.version, version))
+    : eq(plannedItems.id, itemId);
+  const written = {
+    ...(title === undefined ? {} : { title }),
+    updatedAt: new Date(),
+    version: sql`${plannedItems.version} + 1`,
+  };
+
+  if (!move) {
+    const [row] = await trx.update(plannedItems).set(written).where(guard).returning();
+
+    return row ? appliedOutcome(row) : staleOutcome();
+  }
+
+  const { date: targetDate, slot: targetSlot, index: targetIndex } = move;
+  const sourceItems = await trx
+    .select()
+    .from(plannedItems)
+    .where(
+      and(
+        eq(plannedItems.userId, current.userId),
+        eq(plannedItems.date, current.date),
+        eq(plannedItems.slot, current.slot)
+      )
+    )
+    .orderBy(asc(plannedItems.sortOrder));
+
+  const sameSlot = current.date === targetDate && current.slot === targetSlot;
+  const targetItems = sameSlot
+    ? sourceItems
+    : await trx
+        .select()
+        .from(plannedItems)
+        .where(
+          and(
+            eq(plannedItems.userId, current.userId),
+            eq(plannedItems.date, targetDate),
+            eq(plannedItems.slot, targetSlot)
+          )
+        )
+        .orderBy(asc(plannedItems.sortOrder));
+
+  const sourceWithout = sourceItems.filter((item) => item.id !== itemId);
+  const nextTargetItems = sameSlot ? [...sourceWithout] : [...targetItems];
+  const clampedIndex = Math.max(
+    0,
+    Math.min(targetIndex ?? nextTargetItems.length, nextTargetItems.length)
+  );
+
+  nextTargetItems.splice(clampedIndex, 0, { ...current, date: targetDate, slot: targetSlot });
+
+  if (!sameSlot) {
+    for (let i = 0; i < sourceWithout.length; i += 1) {
+      const item = sourceWithout[i];
+
+      if (!item) continue;
+
+      await trx
+        .update(plannedItems)
+        .set({ sortOrder: i, updatedAt: new Date() })
+        .where(eq(plannedItems.id, item.id))
+        .returning();
+    }
+  }
+
+  let moved: PlannedItem | null = null;
+
+  for (let i = 0; i < nextTargetItems.length; i += 1) {
+    const item = nextTargetItems[i];
+
+    if (!item) continue;
+    const isMoved = item.id === itemId;
+    // Only the moved plan's version moves: slot-mates' order changes, they were not written.
+    const [row] = await trx
+      .update(plannedItems)
+      .set(
+        isMoved
+          ? { ...written, sortOrder: i, date: targetDate, slot: targetSlot }
+          : { sortOrder: i, updatedAt: new Date() }
+      )
+      .where(isMoved ? guard : eq(plannedItems.id, item.id))
+      .returning();
+
+    if (row && isMoved) {
+      moved = row;
+    }
+  }
+
+  return moved ? appliedOutcome(moved) : staleOutcome();
+}
+
 export async function moveItem(
   itemId: string,
   targetDate: string,
@@ -275,108 +370,38 @@ export async function moveItem(
   version?: number
 ): Promise<MutationOutcome<PlannedItem>> {
   return await db.transaction(async (trx) => {
-    const currentWhereConditions = [eq(plannedItems.id, itemId)];
-
-    if (version) {
-      currentWhereConditions.push(eq(plannedItems.version, version));
-    }
-
-    const [current] = await trx
-      .select()
-      .from(plannedItems)
-      .where(and(...currentWhereConditions))
-      .limit(1);
+    const current = await selectCurrent(trx, itemId, version);
 
     if (!current) return staleOutcome();
 
-    const sourceItems = await trx
-      .select()
-      .from(plannedItems)
-      .where(
-        and(
-          eq(plannedItems.userId, current.userId),
-          eq(plannedItems.date, current.date),
-          eq(plannedItems.slot, current.slot)
-        )
-      )
-      .orderBy(asc(plannedItems.sortOrder));
-
-    const sameSlot = current.date === targetDate && current.slot === targetSlot;
-    const targetItems = sameSlot
-      ? sourceItems
-      : await trx
-          .select()
-          .from(plannedItems)
-          .where(
-            and(
-              eq(plannedItems.userId, current.userId),
-              eq(plannedItems.date, targetDate),
-              eq(plannedItems.slot, targetSlot)
-            )
-          )
-          .orderBy(asc(plannedItems.sortOrder));
-
-    const sourceWithout = sourceItems.filter((item) => item.id !== itemId);
-    const nextTargetItems = sameSlot ? [...sourceWithout] : [...targetItems];
-    const clampedIndex = Math.max(
-      0,
-      Math.min(targetIndex ?? nextTargetItems.length, nextTargetItems.length)
+    return writeEdit(
+      trx,
+      current,
+      undefined,
+      { date: targetDate, slot: targetSlot, index: targetIndex },
+      version
     );
+  });
+}
 
-    nextTargetItems.splice(clampedIndex, 0, { ...current, date: targetDate, slot: targetSlot });
+/** Title, date and slot under one version check; nothing to change writes nothing. */
+export async function editPlannedItem(
+  itemId: string,
+  edit: PlannedItemEdit,
+  version: number
+): Promise<MutationOutcome<PlannedItem>> {
+  return await db.transaction(async (trx) => {
+    const current = await selectCurrent(trx, itemId, version);
 
-    if (!sameSlot) {
-      for (let i = 0; i < sourceWithout.length; i += 1) {
-        const item = sourceWithout[i];
+    if (!current) return staleOutcome();
 
-        if (!item) continue;
+    const date = edit.date ?? current.date;
+    const slot = edit.slot ?? current.slot;
+    const move = date !== current.date || slot !== current.slot ? { date, slot } : undefined;
 
-        await trx
-          .update(plannedItems)
-          .set({ sortOrder: i, updatedAt: new Date() })
-          .where(eq(plannedItems.id, item.id))
-          .returning();
-      }
-    }
+    if (!move && edit.title === undefined) return appliedOutcome(current);
 
-    let moved: PlannedItem | null = null;
-
-    for (let i = 0; i < nextTargetItems.length; i += 1) {
-      const item = nextTargetItems[i];
-
-      if (!item) continue;
-      const isMoved = item.id === itemId;
-      // Only the moved plan's version moves: slot-mates' order changes, they were not written.
-      const updateData = isMoved
-        ? {
-            sortOrder: i,
-            updatedAt: new Date(),
-            date: targetDate,
-            slot: targetSlot,
-            version: sql`${plannedItems.version} + 1`,
-          }
-        : { sortOrder: i, updatedAt: new Date() };
-
-      const [row] = await trx
-        .update(plannedItems)
-        .set(updateData)
-        .where(
-          isMoved && version
-            ? and(eq(plannedItems.id, item.id), eq(plannedItems.version, version))
-            : eq(plannedItems.id, item.id)
-        )
-        .returning();
-
-      if (row && isMoved) {
-        moved = row;
-      }
-    }
-
-    if (!moved) {
-      return staleOutcome();
-    }
-
-    return appliedOutcome(moved);
+    return writeEdit(trx, current, edit.title, move, version);
   });
 }
 

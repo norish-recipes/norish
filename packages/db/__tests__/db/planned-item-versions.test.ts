@@ -9,10 +9,10 @@ import type { Slot } from "@norish/shared/contracts";
 import {
   createPlannedItem,
   deletePlannedItem,
+  editPlannedItem,
   getPlannedItemById,
   listPlannedItemsBySlot,
   moveItem,
-  updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
 
 import { createTestUser } from "../helpers/db-test-helpers";
@@ -40,12 +40,12 @@ async function slotOf(slot: Slot) {
   );
 }
 
-/** The slot-mate's next move, update and delete, each sent with its old version, all apply. */
+/** The slot-mate's next move, edit and delete, each sent with its old version, all apply. */
 async function expectWritableAt(id: string, version: number) {
   const moved = await moveItem(id, date, "Snack", 0, version);
 
   expect(moved.stale).toBe(false);
-  const updated = await updatePlannedItem(id, { title: "renamed" }, version + 1);
+  const updated = await editPlannedItem(id, { title: "renamed" }, version + 1);
 
   expect(updated.stale).toBe(false);
   expect((await deletePlannedItem(id, version + 2)).stale).toBe(false);

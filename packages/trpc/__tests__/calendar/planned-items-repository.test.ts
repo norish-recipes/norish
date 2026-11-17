@@ -10,9 +10,7 @@ import {
   listPlannedItemsBySlot,
   listPlannedItemsByUserAndDateRange,
   moveItem,
-  updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
-import { plannedItems } from "@norish/db/schema/planned-items";
 
 vi.mock("@norish/db/drizzle", () => ({
   db: {
@@ -132,37 +130,6 @@ describe("planned items repository", () => {
 
       expect(values).toHaveBeenCalledWith({ ...input, sortOrder: 0 });
       expect(result).toEqual({ id: "new-item" });
-    });
-  });
-
-  describe("updatePlannedItem", () => {
-    it("updates item fields atomically", async () => {
-      const updates = { title: "Updated" };
-      const returning = vi.fn().mockResolvedValue([{ id: "item-1", title: "Updated" }]);
-      const set = vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ returning }) });
-
-      dbMock.update.mockReturnValue({ set } as any);
-
-      const result = await updatePlannedItem("item-1", updates as any);
-
-      expect(dbMock.update).toHaveBeenCalledWith(plannedItems);
-      expect(set).toHaveBeenCalledWith(expect.objectContaining({ title: "Updated" }));
-      expect(result).toEqual({
-        applied: true,
-        stale: false,
-        value: { id: "item-1", title: "Updated" },
-      });
-    });
-
-    it("returns stale outcome when item not found", async () => {
-      const returning = vi.fn().mockResolvedValue([]);
-      const set = vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ returning }) });
-
-      dbMock.update.mockReturnValue({ set } as any);
-
-      const result = await updatePlannedItem("item-1", { title: "Updated" } as any);
-
-      expect(result).toEqual({ applied: false, stale: true, value: undefined });
     });
   });
 

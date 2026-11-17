@@ -7,11 +7,11 @@ import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-it
 import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   deletePlannedItem,
+  editPlannedItem,
   getPlannedItemById,
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
-  updatePlannedItem,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
 import {
@@ -141,7 +141,7 @@ describe("calendar planned items stale handling", () => {
     const item = createPlannedItem();
 
     getPlannedItemById.mockResolvedValue(item);
-    updatePlannedItem.mockResolvedValue({ stale: true });
+    editPlannedItem.mockResolvedValue({ stale: true });
 
     const caller = plannedItemsProcedures.createCaller(ctx as any);
     const result = await caller.updateItem({
@@ -154,7 +154,7 @@ describe("calendar planned items stale handling", () => {
     expect(result).not.toHaveProperty("item");
     expect(trpcLogger.info).toHaveBeenCalledWith(
       { userId: ctx.user.id, itemId: item.id, version: item.version },
-      "Ignoring stale calendar update mutation"
+      "Ignoring stale calendar edit mutation"
     );
     expect(calendar.publish).not.toHaveBeenCalled();
   });
@@ -182,7 +182,7 @@ describe("calendar planned items stale handling", () => {
       const result = await caller().updateItem({ itemId: GONE, version: 2, title: "Soup" });
 
       expect(result).toEqual({ success: true, stale: true });
-      expect(updatePlannedItem).not.toHaveBeenCalled();
+      expect(editPlannedItem).not.toHaveBeenCalled();
     });
 
     it("answers a delete as done, not stale", async () => {
@@ -195,7 +195,7 @@ describe("calendar planned items stale handling", () => {
   });
 
   it("rejects an update that failed, telling no one else", async () => {
-    updatePlannedItem.mockRejectedValue(new Error("database down"));
+    editPlannedItem.mockRejectedValue(new Error("database down"));
 
     const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -245,7 +245,7 @@ describe("calendar planned items stale handling", () => {
     const updated = createPlannedItem({ ...item, title: "Updated note", version: 5 });
 
     getPlannedItemById.mockResolvedValue(item);
-    updatePlannedItem.mockResolvedValue({ stale: false, value: updated });
+    editPlannedItem.mockResolvedValue({ stale: false, value: updated });
     getPlannedItemWithRecipeById.mockResolvedValue(withRecipe(updated));
 
     const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));

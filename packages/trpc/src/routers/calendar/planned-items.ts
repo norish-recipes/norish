@@ -1,17 +1,15 @@
 import { z } from "zod";
 
-import type { SlotItemSortUpdate } from "@norish/shared/contracts/zod";
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   getPlannedItemById,
   getPlannedItemWithRecipeById,
-  listPlannedItemsWithRecipeBySlot,
   moveItem,
-  updatePlannedItem,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   PlannedItemDeleteInputSchema,
+  PlannedItemEditInputSchema,
   PlannedItemMoveInputSchema,
   PlannedItemUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
@@ -23,10 +21,12 @@ import {
   buildPlannedItemPayload,
   createCalendarItem,
   deleteCalendarItem,
+  editCalendarItem,
   endOfServerWeek,
   getServerToday,
   listItemsByRange,
   listPlannedRecipesByRange,
+  publishItemMoved,
   startOfServerWeek,
 } from "./planned-items-helpers";
 import {
@@ -38,7 +38,6 @@ import {
   plannedRecipeListItemSchema,
   plannedRecipeMutationOutputSchema,
 } from "./planned-items-openapi-types";
-import { publishCalendarItemEvent } from "./publish";
 
 export const listTodayPlannedRecipesProcedure = authedProcedure
   .meta({
@@ -197,54 +196,14 @@ export const plannedItemsProcedures = router({
       return { success: true, moved: false, stale: true };
     }
 
-    const movedItem = moveResult.value;
-
-    const isCrossSlot = item.date !== targetDate || item.slot !== targetSlot;
-
-    const movedItemWithRecipe = await getPlannedItemWithRecipeById(movedItem.id);
+    const movedItemWithRecipe = await getPlannedItemWithRecipeById(moveResult.value.id);
 
     // Stored all the same: no item in the answer makes the client reread.
     if (!movedItemWithRecipe) return { success: true, moved: true, stale: false };
 
-    const targetSlotItems = await listPlannedItemsWithRecipeBySlot(
-      ctx.userIds,
-      targetDate,
-      targetSlot
-    );
-    const targetSlotSortUpdates: SlotItemSortUpdate[] = targetSlotItems.map((i) => ({
-      id: i.id,
-      sortOrder: i.sortOrder,
-    }));
-
-    let sourceSlotSortUpdates: SlotItemSortUpdate[] | null = null;
-
-    if (isCrossSlot) {
-      const sourceSlotItems = await listPlannedItemsWithRecipeBySlot(
-        ctx.userIds,
-        item.date,
-        item.slot
-      );
-
-      sourceSlotSortUpdates = sourceSlotItems.map((i) => ({
-        id: i.id,
-        sortOrder: i.sortOrder,
-      }));
-    }
-
     const itemPayload = buildPlannedItemPayload(movedItemWithRecipe);
 
-    await publishCalendarItemEvent(
-      "itemMoved",
-      {
-        item: itemPayload,
-        targetSlotItems: targetSlotSortUpdates,
-        sourceSlotItems: sourceSlotSortUpdates,
-        oldDate: item.date,
-        oldSlot: item.slot,
-        oldSortOrder: item.sortOrder,
-      },
-      ctx.householdKey
-    );
+    await publishItemMoved(ctx, item, itemPayload);
 
     // The moved item rides the answer, as a create's does: the echo is the fast path (ADR-0011).
     return { success: true, moved: true, stale: false, item: itemPayload };
@@ -262,35 +221,9 @@ export const plannedItemsProcedures = router({
 
   updateItem: authedProcedure
     .input(PlannedItemUpdateInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { itemId, title, version } = input;
-      const householdKey = ctx.householdKey;
-      const userId = ctx.user.id;
+    .mutation(async ({ ctx, input }) => editCalendarItem(ctx, input)),
 
-      const item = await getPlannedItemById(itemId);
-
-      if (!item) return { success: true, stale: true };
-
-      await assertHouseholdAccess(ctx.user.id, item.userId);
-
-      // A failure here rejects, so the client rolls back and Replay never takes it as stored.
-      const updateResult = await updatePlannedItem(itemId, { title }, version);
-
-      if (updateResult.stale) {
-        log.info({ userId, itemId, version }, "Ignoring stale calendar update mutation");
-
-        return { success: true, stale: true };
-      }
-
-      const itemWithRecipe = await getPlannedItemWithRecipeById(updateResult.value.id);
-
-      // Stored all the same: no item in the answer makes the client reread.
-      if (!itemWithRecipe) return { success: true, stale: false };
-
-      const itemPayload = buildPlannedItemPayload(itemWithRecipe);
-
-      await publishCalendarItemEvent("itemUpdated", { item: itemPayload }, householdKey);
-
-      return { success: true, stale: false, item: itemPayload };
-    }),
+  editItem: authedProcedure
+    .input(PlannedItemEditInputSchema)
+    .mutation(async ({ ctx, input }) => editCalendarItem(ctx, input)),
 });
