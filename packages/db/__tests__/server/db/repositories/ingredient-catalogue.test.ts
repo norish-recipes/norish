@@ -60,10 +60,19 @@ describe("listCatalogueIngredients search", () => {
     await testBase.teardown();
   });
 
-  const names = async (search: ReturnType<typeof parseIngredientSearch>) =>
-    (await listCatalogueIngredients({ search, flaggedOnly: false, limit: 10, offset: 0 })).map(
-      (row) => row.name
-    );
+  const names = async (
+    search: ReturnType<typeof parseIngredientSearch>,
+    languages: readonly string[] = ["en"]
+  ) =>
+    (
+      await listCatalogueIngredients({
+        search,
+        languages,
+        flaggedOnly: false,
+        limit: 10,
+        offset: 0,
+      })
+    ).map((row) => row.name);
 
   it("finds the text anywhere in a name, the exact name first", async () => {
     expect(await names(parseIngredientSearch("onion"))).toEqual(["Onion", "Red onion"]);
@@ -113,7 +122,7 @@ describe("listCatalogueIngredients search", () => {
     const search = parseIngredientSearch("onion")!;
 
     for (const word of ["o%n", "o_ion", "on\\ion"]) {
-      expect(await names({ ...search, words: [word] })).toEqual([]);
+      expect(await names({ ...search, fold: word, words: [word] })).toEqual([]);
     }
     expect(await names(parseIngredientSearch("oni%on_"))).toEqual(["Onion", "Red onion"]);
   });
@@ -144,6 +153,25 @@ describe("listCatalogueIngredients search", () => {
     expect(await names(parseIngredientSearch("kn"))).toEqual(["Garlic", "Aknot"]);
     // Several words rank by the first one typed.
     expect(await names(parseIngredientSearch("h o"))).toEqual(["Hokmaal", "Chocolate"]);
+  });
+
+  it("finds a name in any script by part of it, as foldName folds the typed text", async () => {
+    await getTestDb()
+      .insert(schema.ingredients)
+      .values(
+        ["김치찌개", "ゴボウ", "Crème brûlée", "Extra virgin olive oil"].map((name) => ({
+          name,
+          createdAt: new Date(),
+        }))
+      );
+
+    expect(await names(parseIngredientSearch("김치"))).toEqual(["김치찌개"]);
+    expect(await names(parseIngredientSearch("ボウ"))).toEqual(["ゴボウ"]);
+    expect(await names(parseIngredientSearch("brulee"))).toEqual(["Crème brûlée"]);
+    expect(await names(parseIngredientSearch("brûlée crè"))).toEqual(["Crème brûlée"]);
+    expect(await names(parseIngredientSearch("oil virgin extra"))).toEqual([
+      "Extra virgin olive oil",
+    ]);
   });
 
   it("finds a food by a translation, and not once the field is off", async () => {

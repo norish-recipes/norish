@@ -70,10 +70,15 @@ export interface CatalogueOwner {
   ownerId: string | null;
 }
 
-/** `foldName` in SQL, for a name with no fold column: accents dropped, lowercased, and every
- * other run of characters one space. */
+/** The non-ASCII marks `foldName` drops (`\p{Diacritic}`), as a regex class Postgres reads. */
+const DIACRITICS = `[${Array.from({ length: 0xff80 }, (_, i) => String.fromCodePoint(i + 0x80))
+  .filter((char) => /\p{Diacritic}/u.test(char))
+  .join("")}]`;
+
+/** `foldName` in SQL, for a name with no fold column: marks dropped, recomposed, lowercased, and
+ * every other run of characters one space. */
 function folded(value: AnyPgColumn): SQL {
-  return sql`btrim(regexp_replace(regexp_replace(normalize(lower(${value}), NFD), '[\u0300-\u036f]', '', 'g'), '[^[:alnum:]]+', ' ', 'g'))`;
+  return sql`btrim(regexp_replace(lower(normalize(regexp_replace(normalize(${value}, NFD), ${sql.raw(`'${DIACRITICS}'`)}, '', 'g'), NFC)), '[^[:alnum:]]+', ' ', 'g'))`;
 }
 
 /** Whether a folded text holds `word` as written (`start`: at the start of one of its words). */
@@ -85,31 +90,43 @@ function holds(text: SQL, word: string, start = false): SQL {
     : sql`${text} like ${`%${escaped}%`}`;
 }
 
-/** Whether any text the search looks in (the folded name, its translations, the parent's) passes
- * `test`. */
+/** Whether any text the search looks in (a name, its translations, the parent's) passes `test`,
+ * a name folded (`name`: tested its own way). */
 function anySearchedText(
   search: IngredientSearch,
   parents: { id: AnyPgColumn; name: AnyPgColumn },
-  test: (text: SQL) => SQL
+  test: (text: SQL) => SQL,
+  name: (column: AnyPgColumn) => SQL = (column) => test(folded(column))
 ): SQL {
   const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
     sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${test(sql`${ingredientAliases.fold}`)})`;
 
   const byField: Record<IngredientSearchField, SQL> = {
-    name: test(folded(ingredients.name)),
+    name: name(ingredients.name),
     translations: spellingOf(ingredients.id),
-    parent: or(test(folded(parents.name)), spellingOf(sql`${parents.id}`)) ?? sql`false`,
+    parent: or(name(parents.name), spellingOf(sql`${parents.id}`)) ?? sql`false`,
   };
 
   return or(...search.fields.map((field) => byField[field])) ?? sql`false`;
 }
 
-/** A searched text that is the fold exactly, or (contains) holds every typed word, in any order. */
+/** A searched text that is the fold exactly, or (contains) holds every typed word, in any order;
+ * a name also by its lowercased phrase, as before folding (a C-locale database folds non-ASCII away). */
 function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; name: AnyPgColumn }) {
-  return anySearchedText(search, parents, (text) =>
+  const test = (text: SQL) =>
     search.match === "exact"
       ? sql`${text} = ${search.fold}`
-      : (and(...search.words.map((word) => holds(text, word))) ?? sql`true`)
+      : (and(...search.words.map((word) => holds(text, word))) ?? sql`true`);
+  const phrase = (text: SQL) =>
+    search.match === "exact"
+      ? sql`${text} = ${search.fold}`
+      : sql`${text} like ${`%${escapeLike(search.fold)}%`}`;
+
+  return anySearchedText(
+    search,
+    parents,
+    test,
+    (column) => or(test(folded(column)), phrase(sql`lower(${column})`)) ?? sql`false`
   );
 }
 
