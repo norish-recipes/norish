@@ -17,6 +17,7 @@ type EditNotePanelProps = {
   onOpenChange: (open: boolean) => void;
   note: PlannedItemFromQuery;
 };
+
 /** A note's draft: Save writes its text, day and slot as one change, only what was touched. */
 export function EditNotePanel({ open, onOpenChange, note }: EditNotePanelProps) {
   const { planNote, deleteItem, saveItem } = useCalendarMutations();
@@ -42,6 +43,7 @@ export function EditNotePanel({ open, onOpenChange, note }: EditNotePanelProps) 
       setSlot(value.toString() as Slot);
     }
   };
+
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
       <Panel.Body>
