@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useThemeColor } from "heroui-native";
 
 /** The grip a row is dragged by: a hold lifts it. */
@@ -24,7 +24,7 @@ export function DragGrip({
       testID={testID}
       onLongPress={onDrag}
     >
-      <Ionicons color={muted} name="reorder-three" size={22} />
+      <MaterialCommunityIcons color={muted} name="drag" size={22} />
     </Pressable>
   );
 }

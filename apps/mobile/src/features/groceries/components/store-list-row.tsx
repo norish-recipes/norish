@@ -4,6 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { useIsLifted } from "@/components/drag-list/drag-list";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -79,7 +80,7 @@ export function StoreListRow({
             onLongPress={onDrag}
             onPress={onEdit}
           >
-            <Ionicons color={muted} name="reorder-two-outline" size={22} />
+            <MaterialCommunityIcons color={muted} name="drag" size={22} />
             <View className="size-3.5 rounded-full" style={{ backgroundColor: color }} />
             <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
               {store.name}

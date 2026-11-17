@@ -106,7 +106,7 @@ export function GroceriesScreen() {
 
     return plan !== null && writeDrop(plan, reorderGroceriesInStore, fileGroceryName);
   };
-  const nothing = groceries.length === 0 && (view === "recipe" || stores.length === 0);
+  const nothing = groceries.length === 0;
 
   const clear = (name: string | null, ids: string[]) =>
     confirm({

@@ -78,6 +78,7 @@ vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
 vi.mock("uniwind", () => ({ withUniwind: () => () => null }));
 vi.mock("heroui-native", () => ({
   Skeleton: () => null,

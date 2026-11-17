@@ -76,7 +76,7 @@ function LineSection({
   controls: GroceryLineControls<ScaledFood>;
 }) {
   const intl = useIntl();
-  const { formatAmountUnit } = useUnitFormatter(intl.locale);
+  const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
 
   return (
     <GroceryLinesSection
@@ -94,7 +94,7 @@ function LineSection({
       {lines.map((item, index) => (
         <GroceryLineRow
           key={item.id}
-          amount={formatAmountUnit(item.amount, item.unit)}
+          amount={formatSpacedAmountUnit(item.amount, item.unit)}
           canKeep={controls.canKeep(item)}
           first={index === 0}
           name={item.ingredientName}

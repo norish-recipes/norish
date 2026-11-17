@@ -43,7 +43,7 @@ vi.mock("@/components/amount-name", () => ({
 }));
 vi.mock("@/components/tab-list-inset", () => ({ tabListBottomInset: () => 0 }));
 vi.mock("@norish/shared-react/recipes", () => ({
-  useUnitFormatter: () => ({ formatAmountUnit: (amount: number | null) => String(amount) }),
+  useUnitFormatter: () => ({ formatSpacedAmountUnit: (amount: number | null) => String(amount) }),
 }));
 vi.mock("@norish/shared-react/groceries", () => ({ lineOf: vi.fn(), lineOfGroup: vi.fn() }));
 vi.mock("../hooks/use-recurrence-label", () => ({ useRecurrenceLabel: () => () => "" }));

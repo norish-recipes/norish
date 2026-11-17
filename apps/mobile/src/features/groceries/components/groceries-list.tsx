@@ -168,6 +168,7 @@ export function GroceriesList({
     return (
       <ItemSlice edge={edge}>
         <GroceryRow
+          dotted={storeNameOnLines}
           grocery={grocery}
           store={store}
           subline={
