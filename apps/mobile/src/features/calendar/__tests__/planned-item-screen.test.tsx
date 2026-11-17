@@ -4,147 +4,42 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
+import { picks } from "../../../../__tests__/mocks/plan-sheet";
+
 const held = vi.hoisted(() => ({
   items: [] as PlannedItemFromQuery[],
   saveItem: vi.fn(),
   deleteItem: vi.fn(),
   confirm: vi.fn(),
   back: vi.fn(),
-  pickDate: (_date: Date) => {},
-  pickSlot: (_slot: string) => {},
 }));
 
-vi.mock("react-native", async () => {
-  const { createElement } = await import("react");
-
-  return {
-    Text: ({ children }: { children?: React.ReactNode }) => createElement("span", null, children),
-    View: ({ children }: { children?: React.ReactNode }) => createElement("div", null, children),
-    Pressable: ({
-      children,
-      testID,
-      onPress,
-    }: {
-      children?: React.ReactNode;
-      testID?: string;
-      onPress?: () => void;
-    }) => createElement("button", { "data-testid": testID, onClick: onPress }, children),
-  };
-});
-vi.mock("heroui-native", async () => {
-  const { createElement } = await import("react");
-  const pass = ({ children }: { children?: React.ReactNode }) => children;
-  const Button = ({
-    children,
-    testID,
-    isDisabled,
-    onPress,
-  }: {
-    children?: React.ReactNode;
-    testID?: string;
-    isDisabled?: boolean;
-    onPress?: () => void;
-  }) =>
-    createElement(
-      "button",
-      { "data-testid": testID, disabled: isDisabled, onClick: onPress },
-      children
-    );
-
-  Button.Label = pass;
-  const Tabs = Object.assign(
-    ({
-      children,
-      onValueChange,
-    }: {
-      children?: React.ReactNode;
-      onValueChange: (slot: string) => void;
-    }) => {
-      held.pickSlot = onValueChange;
-
-      return children;
-    },
-    {
-      List: pass,
-      Indicator: () => null,
-      Trigger: ({ testID, value }: { testID?: string; value: string }) =>
-        createElement("button", { "data-testid": testID, onClick: () => held.pickSlot(value) }),
-      Label: pass,
-    }
-  );
-
-  return {
-    Button,
-    Tabs,
-    TextField: pass,
-    Skeleton: () => null,
-    Input: ({
-      testID,
-      value,
-      onChangeText,
-    }: {
-      testID?: string;
-      value?: string;
-      onChangeText?: (text: string) => void;
-    }) =>
-      createElement("input", {
-        "data-testid": testID,
-        value,
-        onChange: (event: { target: { value: string } }) => onChangeText?.(event.target.value),
-      }),
-  };
-});
-vi.mock("@expo/ui/swift-ui", () => ({
-  Host: ({ children }: { children?: React.ReactNode }) => children,
-  DatePicker: ({ onDateChange }: { onDateChange: (date: Date) => void }) => {
-    held.pickDate = onDateChange;
-
-    return null;
-  },
-}));
-vi.mock("@expo/ui/swift-ui/modifiers", () => ({ accessibilityIdentifier: vi.fn(), tint: vi.fn() }));
+vi.mock(
+  "react-native",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).reactNative
+);
+vi.mock(
+  "heroui-native",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).heroui
+);
+vi.mock(
+  "@expo/ui/swift-ui",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).swiftUi
+);
+vi.mock(
+  "@expo/ui/swift-ui/modifiers",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).swiftUiModifiers
+);
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
-vi.mock("@/components/sheet", async () => {
-  const { createElement } = await import("react");
-  const pass = ({ children }: { children?: React.ReactNode }) => children;
-  const Sheet = Object.assign(
-    ({
-      children,
-      actions,
-      name,
-      confirm,
-    }: {
-      children?: React.ReactNode;
-      actions?: React.ReactNode;
-      name: string;
-      confirm?: { disabled?: boolean; onPress: () => void };
-    }) =>
-      createElement(
-        "div",
-        null,
-        children,
-        actions,
-        confirm
-          ? createElement("button", {
-              "data-testid": `${name}-confirm`,
-              disabled: confirm.disabled,
-              onClick: confirm.onPress,
-            })
-          : null
-      ),
-    { Actions: pass, Action: pass }
-  );
-
-  return { Sheet, SheetBody: pass, SheetStrip: pass };
-});
+vi.mock(
+  "@/components/sheet",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).sheet
+);
 vi.mock("@/hooks/use-confirm", () => ({ useConfirm: () => held.confirm }));
-vi.mock("react-intl", () => ({
-  useIntl: () => ({
-    formatMessage: ({ id }: { id: string }) => id,
-    formatDate: () => "d",
-    locale: "en",
-  }),
-}));
+vi.mock(
+  "react-intl",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).reactIntl
+);
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "note-1" }),
   useRouter: () => ({ back: held.back, replace: vi.fn() }),
@@ -155,11 +50,9 @@ vi.mock("@norish/shared-react/platform", () => ({
 }));
 vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-12" }));
 // The draft is the real one; only the writes it hands to are held.
-vi.mock("../../../../../../packages/shared-react/src/calendar/use-calendar-mutations", () => ({
-  useCalendarMutations: () => ({ saveItem: held.saveItem, deleteItem: held.deleteItem }),
-}));
 vi.mock("@norish/shared-react/calendar", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/calendar")>()),
+  useCalendarMutations: () => ({ saveItem: held.saveItem, deleteItem: held.deleteItem }),
   useCalendarRangeQuery: () => ({
     calendarData: { "2026-11-12": held.items },
     isRead: true,
@@ -221,7 +114,7 @@ describe("PlannedItemScreen", () => {
 
   it("moves to a day the date picker picks, beyond the strip", () => {
     render(<PlannedItemScreen />);
-    act(() => held.pickDate(new Date(2027, 2, 24, 9, 30)));
+    act(() => picks.date(new Date(2027, 2, 24, 9, 30)));
     fireEvent.click(screen.getByTestId("planned-item-confirm"));
 
     expect(held.saveItem).toHaveBeenCalledWith("note-1", {
