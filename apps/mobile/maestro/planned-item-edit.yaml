@@ -27,9 +27,9 @@ appId: dev.norish.app
     file: subflows/planned.yaml
     env:
       PLANNED_NAME: Edit Plan Soup
-- evalScript: ${output.target = output.slot == 'Snack' ? 'Breakfast' : 'Snack'}
+- evalScript: "${output.target = output.slot == 'Snack' ? 'Breakfast' : 'Snack'}"
 # Local calendar day, as the app reads it.
-- evalScript: ${output.tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv')}
+- evalScript: "${var day = new Date(); day.setDate(day.getDate() + 1); output.tomorrow = day.getFullYear() + '-' + ('0' + (day.getMonth() + 1)).slice(-2) + '-' + ('0' + day.getDate()).slice(-2)}"
 - tapOn:
     id: tab-calendar
 - extendedWaitUntil:
