@@ -32,8 +32,31 @@ export function CardSlice({
   );
 }
 
-const sliceClass = (edge: Edge, className: string, separated: boolean) =>
-  `overflow-hidden ${className} ${edge.top ? "rounded-t-3xl" : separated ? "border-separator border-t" : ""} ${edge.bottom ? "rounded-b-3xl" : ""}`;
+/** A page's cards, and a sheet's tighter ones; `lifted` is the card a drag carries. */
+const SIZES = {
+  page: {
+    inset: "px-5",
+    liftedInset: "px-3.5",
+    top: "rounded-t-3xl",
+    bottom: "rounded-b-3xl",
+    lifted: "rounded-[20px]",
+  },
+  sheet: {
+    inset: "px-4",
+    liftedInset: "px-4",
+    top: "rounded-t-[22px]",
+    bottom: "rounded-b-[22px]",
+    lifted: "rounded-[22px]",
+  },
+};
+
+const sliceClass = (
+  edge: Edge,
+  className: string,
+  separated: boolean,
+  size: (typeof SIZES)[keyof typeof SIZES] = SIZES.page
+) =>
+  `overflow-hidden ${className} ${edge.top ? size.top : separated ? "border-separator border-t" : ""} ${edge.bottom ? size.bottom : ""}`;
 
 const TILT = { transform: [{ rotate: "-1.5deg" }] };
 
@@ -42,21 +65,31 @@ export function ItemSlice({
   edge,
   separated = true,
   className = "bg-surface",
+  size = "page",
   children,
 }: {
   edge: Edge;
   separated?: boolean;
   className?: string;
+  size?: keyof typeof SIZES;
   children: ReactNode;
 }) {
   const lifted = useIsLifted();
   const reduceMotion = useReducedMotion();
   const onCardLayout = useDragCard();
+  const sized = SIZES[size];
 
   return (
-    <View className={lifted ? "px-3.5" : "px-5"} style={lifted && !reduceMotion ? TILT : undefined}>
+    <View
+      className={lifted ? sized.liftedInset : sized.inset}
+      style={lifted && !reduceMotion ? TILT : undefined}
+    >
       <View
-        className={lifted ? "bg-surface rounded-[20px]" : sliceClass(edge, className, separated)}
+        className={
+          lifted
+            ? `overflow-hidden ${className} ${sized.lifted}`
+            : sliceClass(edge, className, separated, sized)
+        }
         onLayout={onCardLayout}
       >
         {children}

@@ -2,8 +2,9 @@ import type { DragListHandle, Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { ItemSlice } from "@/components/card-slice";
 import { DragGrip } from "@/components/drag-list/drag-grip";
-import { DragList, useDragCard, useIsLifted } from "@/components/drag-list/drag-list";
+import { DragList } from "@/components/drag-list/drag-list";
 import { FULL_SHEET_TOP } from "@/components/sheet";
 import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -40,42 +41,33 @@ function AisleRow({
 }) {
   const intl = useIntl();
   const [muted] = useThemeColor(["muted"] as const);
-  const lifted = useIsLifted();
-  const onCardLayout = useDragCard();
 
   return (
-    <View className="px-4">
-      <View
-        className={`bg-default overflow-hidden ${lifted ? "rounded-[22px]" : first ? "rounded-t-[22px]" : ""}`}
-        onLayout={onCardLayout}
-      >
-        <View
-          className={`bg-default border-separator h-12 flex-row items-center gap-2 pr-2 pl-2.5 ${lifted ? "" : "border-b"}`}
+    <ItemSlice className="bg-default" edge={{ top: first, bottom: false }} size="sheet">
+      <View className="h-12 flex-row items-center gap-2 pr-2 pl-2.5">
+        <DragGrip
+          label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
+          testID="aisle-grip"
+        />
+        <Input
+          accessibilityLabel={aisle.name}
+          className="ios:shadow-none ios:outline-transparent ios:focus:outline-transparent h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none focus:border-0"
+          maxLength={AISLE_NAME_MAX}
+          testID="aisle-row-name"
+          value={aisle.name}
+          onChangeText={onRename}
+        />
+        <Pressable
+          accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.removeAisle" })}
+          accessibilityRole="button"
+          className="size-8 items-center justify-center"
+          testID="aisle-remove"
+          onPress={onRemove}
         >
-          <DragGrip
-            label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
-            testID="aisle-grip"
-          />
-          <Input
-            accessibilityLabel={aisle.name}
-            className="ios:shadow-none ios:outline-transparent ios:focus:outline-transparent h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none focus:border-0"
-            maxLength={AISLE_NAME_MAX}
-            testID="aisle-row-name"
-            value={aisle.name}
-            onChangeText={onRename}
-          />
-          <Pressable
-            accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.removeAisle" })}
-            accessibilityRole="button"
-            className="size-8 items-center justify-center"
-            testID="aisle-remove"
-            onPress={onRemove}
-          >
-            <Ionicons color={muted} name="close" size={18} />
-          </Pressable>
-        </View>
+          <Ionicons color={muted} name="close" size={18} />
+        </Pressable>
       </View>
-    </View>
+    </ItemSlice>
   );
 }
 
@@ -123,7 +115,7 @@ export function StoreAisleList({
       ListFooterComponent={
         <View className="px-4">
           <View
-            className={`bg-default overflow-hidden ${rows.length > 0 ? "rounded-b-[22px]" : "rounded-[22px]"}`}
+            className={`bg-default overflow-hidden ${rows.length > 0 ? "border-separator rounded-b-[22px] border-t" : "rounded-[22px]"}`}
           >
             <View className="h-12 flex-row items-center gap-2 pr-2 pl-4">
               <Input
