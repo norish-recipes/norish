@@ -2,9 +2,9 @@ import type { PanGesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useEffect } from "react";
 import { usePanGesture } from "react-native-gesture-handler";
-import { cancelAnimation, useSharedValue, withSpring } from "react-native-reanimated";
+import { cancelAnimation, useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { SPRING } from "@/lib/motion/spring";
+import { settleTo } from "@/lib/motion/settle-to";
 
 import {
   clampToReach,
@@ -56,9 +56,9 @@ export function useStepPager({
       if (goal.get() === current) return;
       goal.set(current);
       position.set(springStart(position.get(), current));
-      position.set(withSpring(current, SPRING));
+      position.set(settleTo(current, { reduceMotion }));
     });
-  }, [current, goal, position]);
+  }, [current, goal, position, reduceMotion]);
 
   // Claims the touch only once it drags, so a tap (a peek's press) never stops a spring.
   const pan = usePanGesture({
@@ -98,7 +98,7 @@ export function useStepPager({
       if (target !== current) scheduleOnRN(onStepChange, target);
       if (reduceMotion) return;
       goal.set(target);
-      position.set(withSpring(target, { ...SPRING, velocity }));
+      position.set(settleTo(target, { reduceMotion, velocity }));
     },
   });
 

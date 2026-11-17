@@ -4,9 +4,8 @@ import Animated, {
   LayoutAnimationConfig,
   useReducedMotion,
   useSharedValue,
-  withSpring,
 } from "react-native-reanimated";
-import { SPRING } from "@/lib/motion/spring";
+import { springTo } from "@/lib/motion/spring";
 
 import { toSlots } from "@norish/shared/lib/rolling-slots";
 
@@ -19,8 +18,8 @@ function slide(fromY: number, toY: number, fromOpacity: number, toOpacity: numbe
   return {
     initialValues: { transform: [{ translateY: fromY }], opacity: fromOpacity },
     animations: {
-      transform: [{ translateY: withSpring(toY, SPRING) }],
-      opacity: withSpring(toOpacity, { ...SPRING, overshootClamping: true }),
+      transform: [{ translateY: springTo(toY) }],
+      opacity: springTo(toOpacity, { overshootClamping: true }),
     },
   };
 }

@@ -5,11 +5,10 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
-  withTiming,
 } from "react-native-reanimated";
 import { FADE_IN, RISE_IN } from "@/features/auth/utils/motion";
 import { errorNotification } from "@/lib/haptics";
+import { stepsThrough } from "@/lib/motion/timed";
 import Feather from "@expo/vector-icons/Feather";
 import { FieldError, useThemeColor } from "heroui-native";
 
@@ -34,7 +33,7 @@ export function ErrorShake({
 
   useEffect(() => {
     if (error && !reduceMotion) {
-      offset.set(withSequence(...SHAKE_OFFSETS.map((to) => withTiming(to, { duration: 50 }))));
+      offset.set(stepsThrough(SHAKE_OFFSETS, 50));
     }
   }, [error, offset, reduceMotion]);
 

@@ -6,7 +6,7 @@ import "@/lib/i18n/plural-rules";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { LaunchProvider, LaunchSplash, useLaunchPhase } from "@/components/launch";
 import { Loader } from "@/components/loader";
 import {
@@ -16,7 +16,6 @@ import {
 } from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
-import { FADE_OUT_TIMING } from "@/features/auth/utils/motion";
 import { useCalendarWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
 import { useRecipeTimers } from "@/features/recipe/hooks/use-recipe-timers";
 import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
@@ -25,10 +24,11 @@ import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
-import { useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
+import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { resolveSessionView } from "@/lib/boot/session-view";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
+import { timedTo } from "@/lib/motion/timed";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
@@ -214,7 +214,8 @@ function SessionStack() {
 function SignedInFade({ children }: { children: React.ReactNode }) {
   const fading = useSignedInFadingOut();
   const style = useAnimatedStyle(() => ({
-    opacity: withTiming(fading ? 0 : 1, FADE_OUT_TIMING),
+    // A plain fade, kept under Reduce Motion.
+    opacity: timedTo(fading ? 0 : 1, SESSION_END_FADE_MS, { keep: true }),
   }));
 
   // Not interactive while it fades: the session it shows is already ending.

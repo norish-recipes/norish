@@ -1,6 +1,5 @@
-import { withSpring, withTiming } from "react-native-reanimated";
-
-import { SPRING } from "./spring";
+import { springTo } from "./spring";
+import { timedTo } from "./timed";
 
 const REDUCED_MS = 150;
 
@@ -15,7 +14,5 @@ export function settleTo(
 ) {
   "worklet";
 
-  return reduceMotion
-    ? withTiming(to, { duration: REDUCED_MS }, callback)
-    : withSpring(to, { ...SPRING, ...config }, callback);
+  return reduceMotion ? timedTo(to, REDUCED_MS, {}, callback) : springTo(to, config, callback);
 }
