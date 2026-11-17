@@ -33,7 +33,10 @@ export function CardSlice({
 }
 
 /** A page's cards, and a sheet's tighter ones; `lifted` is the card a drag carries. */
-const SIZES = {
+const SIZES: Record<
+  "page" | "sheet",
+  { inset: string; liftedInset?: string; top: string; bottom: string; lifted: string }
+> = {
   page: {
     inset: "px-5",
     liftedInset: "px-3.5",
@@ -43,7 +46,6 @@ const SIZES = {
   },
   sheet: {
     inset: "px-4",
-    liftedInset: "px-4",
     top: "rounded-t-[22px]",
     bottom: "rounded-b-[22px]",
     lifted: "rounded-[22px]",
@@ -81,7 +83,7 @@ export function ItemSlice({
 
   return (
     <View
-      className={lifted ? sized.liftedInset : sized.inset}
+      className={lifted ? (sized.liftedInset ?? sized.inset) : sized.inset}
       style={lifted && !reduceMotion ? TILT : undefined}
     >
       <View
