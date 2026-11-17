@@ -26,10 +26,11 @@ export function useHeldRows<H, T>(
   return {
     shown,
     lift: () => setHeld({ shown, over: rows, dragging: true }),
-    /** The row at `from` let go into `gap`, both counted in the rows shown at the lift; `onDrop`
-     * returning false puts it back. True when the drop was kept. */
-    drop: (from: number, gap: number | null) => {
-      const drop = gap === null ? null : dropAt(shown, from, gap);
+    /** The row `key` let go into `gap` of the rows shown since the lift; `onDrop` returning false
+     * puts it back. True when the drop was kept. */
+    drop: (key: string, gap: number | null) => {
+      const from = shown.findIndex((row) => row.key === key);
+      const drop = gap === null || from < 0 ? null : dropAt(shown, from, gap);
       const kept = drop !== null && onDrop(drop) !== false;
 
       setHeld(kept ? { shown: drop.rows, over: rows, dragging: false } : null);
