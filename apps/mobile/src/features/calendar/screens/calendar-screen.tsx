@@ -98,13 +98,11 @@ export function CalendarScreen() {
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
   const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
 
-  // Opened on a day or today: the list's initial scroll puts it at the very top, which the first
-  // laid-out content moves down to just under the status bar.
-  const openedRef = useRef(false);
+  // Opened on a day or today: the list's initial scroll puts it at the very top, which the content
+  // moves down to just under the status bar, again as rows above load, until the reader scrolls.
+  const touchedRef = useRef(false);
   const settleOpening = () => {
-    if (openedRef.current || openIndex < 0) return;
-    openedRef.current = true;
-    scrollToRow(openIndex, false);
+    if (!touchedRef.current && openIndex >= 0) scrollToRow(openIndex, false);
   };
 
   // A link while the timeline is open scrolls to its day, every time it is tapped.
@@ -214,6 +212,9 @@ export function CalendarScreen() {
           onEndReachedThreshold={GROW_THRESHOLD}
           onHeldChange={growth.heldChange}
           onScroll={onScroll}
+          onScrollBeginDrag={() => {
+            touchedRef.current = true;
+          }}
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
