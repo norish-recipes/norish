@@ -75,7 +75,7 @@ export function PlanRecipeScreen() {
         onChange={setInput}
       />
 
-      <View className={`bg-default ${first}`}>
+      <View className={`bg-surface ${first}`}>
         {hasNote ? (
           <ActionRow
             icon="document-text-outline"
@@ -110,13 +110,13 @@ export function PlanRecipeScreen() {
               { id: "calendar.panel.addToDay" },
               { day: formatDay(intl, parseDateKey(day)) }
             )
-          : intl.formatMessage({ id: "calendar.panel.planRecipe" })
+          : intl.formatMessage({ id: "calendar.mobile.planRecipe" })
       }
     >
       <SheetList
         ListEmptyComponent={
           error ? undefined : (
-            <View className="bg-default border-separator rounded-b-[22px] border-t">
+            <View className="bg-surface border-separator rounded-b-[22px] border-t">
               {isLoading ? (
                 SKELETON_ROWS.map((row) => (
                   <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
@@ -138,7 +138,7 @@ export function PlanRecipeScreen() {
         renderItem={({ item: recipe, index }) => (
           <Button
             accessibilityLabel={recipe.name}
-            className={`border-separator bg-default h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+            className={`border-separator bg-surface h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
             testID={`plan-recipe-${recipe.id}`}
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
@@ -147,7 +147,7 @@ export function PlanRecipeScreen() {
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>
-            <View className="bg-surface size-8 items-center justify-center rounded-full">
+            <View className="bg-default size-8 items-center justify-center rounded-full">
               <Ionicons color={foreground} name="add" size={17} />
             </View>
           </Button>
@@ -182,7 +182,7 @@ function ActionRow({
       variant="ghost"
       onPress={onPress}
     >
-      <View className="bg-surface size-11 items-center justify-center rounded-xl">
+      <View className="bg-default size-11 items-center justify-center rounded-xl">
         {busy ? <Loader /> : <Ionicons color={accent} name={icon} size={20} />}
       </View>
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>

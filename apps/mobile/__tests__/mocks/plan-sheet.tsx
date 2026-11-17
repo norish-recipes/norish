@@ -62,6 +62,7 @@ export const heroui = {
   Tabs,
   TextField: pass,
   Skeleton: () => null,
+  useThemeColor: () => [],
   Input: ({
     testID,
     value,

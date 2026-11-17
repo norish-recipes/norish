@@ -1,15 +1,17 @@
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { MoveFields } from "@/components/move-fields";
 import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
+import { PlannedThumb } from "@/components/planned-thumb";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
 import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
 import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, TextField } from "heroui-native";
+import { Button, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -39,6 +41,11 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const { title, subtitle } = usePlannedItemText()(item);
   const { draft, changes, setTitle, saveAndClose, confirm, fields } = usePlannedItemSheet(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
+  const [accentForeground, foreground, danger] = useThemeColor([
+    "accent-foreground",
+    "foreground",
+    "danger",
+  ] as const);
 
   return (
     <Sheet
@@ -54,6 +61,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
                 navigation.toRecipe(recipeId);
               }}
             >
+              <Ionicons color={accentForeground} name="book-outline" size={19} />
               <Button.Label className="font-semibold">
                 {intl.formatMessage({ id: "calendar.timeline.goToRecipe" })}
               </Button.Label>
@@ -73,6 +81,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
                     })
                   }
                 >
+                  <Ionicons color={foreground} name="cart-outline" size={19} />
                   <Button.Label>{intl.formatMessage({ id: "navbar.nav.groceries" })}</Button.Label>
                 </Button>
               </Sheet.Action>
@@ -84,6 +93,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
                 variant="danger-soft"
                 onPress={() => confirmRemove(item)}
               >
+                <Ionicons color={danger} name="trash-outline" size={19} />
                 <Button.Label>{intl.formatMessage({ id: "common.actions.remove" })}</Button.Label>
               </Button>
             </Sheet.Action>
@@ -92,10 +102,16 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
       }
       confirm={confirm}
       name="planned-item"
-      subtitle={subtitle ?? undefined}
+      subtitle={recipeId ? undefined : (subtitle ?? undefined)}
       title={title}
     >
       <SheetBody>
+        {recipeId ? (
+          <View className="flex-row items-center gap-3.5 px-2 pb-3">
+            <PlannedThumb className="size-14 rounded-2xl" item={item} />
+            {subtitle ? <Text className="text-muted flex-1 text-base">{subtitle}</Text> : null}
+          </View>
+        ) : null}
         {recipeId ? null : (
           <TextField className="mb-3">
             <SheetInput
