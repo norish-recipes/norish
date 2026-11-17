@@ -23,9 +23,6 @@ export const FADE_OUT_TIMING = {
   reduceMotion: ReduceMotion.Never,
 };
 
-// A pending spinner waits this long before fading in, so a quick session read never shows one.
-export const PENDING_FADE_IN = FADE_IN.delay(400);
-
 /** Runs a badge's clock from 0 to `duration` after `delay`; callers skip it under Reduce Motion. */
 export function playBadge(clock: SharedValue<number>, duration: number, delay: number) {
   clock.set(0);

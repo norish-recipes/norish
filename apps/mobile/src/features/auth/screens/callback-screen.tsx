@@ -1,14 +1,11 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
-import { Brand, useSplashBrandTop } from "@/components/brand";
+import { Brand, LOADER_GAP, useSplashBrandTop } from "@/components/brand";
 import { Loader } from "@/components/loader";
 import { useSigningIn } from "@/features/auth/hooks/use-signing-in";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
 import { Stack, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
-
-// How far the loader sits under the slogan.
-const SPINNER_GAP = 40;
 
 // Only an outside norish://auth/callback link opens this, as the sign-in sheet keeps its own
 // return; a session leaves it through Stack.Protected, none by the deadline goes to Sign-in failed.
@@ -28,7 +25,7 @@ export function AuthCallbackScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="absolute inset-x-0 items-center" style={{ top }}>
         <Brand />
-        <View style={{ marginTop: SPINNER_GAP }}>
+        <View style={{ marginTop: LOADER_GAP }}>
           <Loader
             inline
             label={intl.formatMessage({ id: "auth.callback.signingIn" })}

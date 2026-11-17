@@ -17,6 +17,9 @@ const BRAND_HEIGHT = LOGO_HEIGHT + 12 + 20;
 // Sign-in and sign-up draw the logo smaller, under their prefix line.
 const COMPACT_LOGO_WIDTH = 144;
 
+/** How far a loader sits under the splash brand's slogan. */
+export const LOADER_GAP = 40;
+
 /** The splash brand's top in window points: the native splash centres the group on the window. */
 export function useSplashBrandTop() {
   return (useWindowDimensions().height - BRAND_HEIGHT) / 2;

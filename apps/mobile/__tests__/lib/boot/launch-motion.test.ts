@@ -1,4 +1,9 @@
-import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/launch-motion";
+import {
+  resolveLaunchLoader,
+  resolveLaunchMotion,
+  resolveSloganStart,
+  stepLaunchClock,
+} from "@/lib/boot/launch-motion";
 import { describe, expect, it } from "vitest";
 
 describe("resolveLaunchMotion", () => {
@@ -58,5 +63,21 @@ describe("stepLaunchClock", () => {
 
   it("never moves back when the stop point is behind it", () => {
     expect(stepLaunchClock(1200, 16.7, 900)).toBe(1200);
+  });
+});
+
+describe("resolveLaunchLoader", () => {
+  it("waits for the hold to end before showing", () => {
+    expect(resolveLaunchLoader(false, false, null)).toBe(false);
+    expect(resolveLaunchLoader(false, true, null)).toBe(true);
+  });
+
+  it("never shows once a handoff is decided in time", () => {
+    expect(resolveLaunchLoader(false, true, "fade")).toBe(false);
+    expect(resolveLaunchLoader(false, true, "glide")).toBe(false);
+  });
+
+  it("stays shown through the handoff", () => {
+    expect(resolveLaunchLoader(true, true, "fade")).toBe(true);
   });
 });
