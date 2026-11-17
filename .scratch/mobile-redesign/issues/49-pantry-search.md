@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] Reproduce first: the Pantry field (`pantry-screen.tsx`, `usePantryScreen`) and the Add to pantry sheet (`pantry-add-screen.tsx`, `usePantryCatalogue`) on Mike's report that search "doesn't work". A failing test captures what breaks.
 - [x] Search matches partial hits (part of a word, any word of the name), as recipe search does; reuse the shared matcher recipe search uses rather than a new one.
@@ -41,3 +41,5 @@
 - Round 2 fixes: the where is "every typed word in the folded name, a translation (any language) or the parent's, OR the pre-ticket `lower(name) like '%<fold>%'`". The SQL fold now matches `foldName`: NFD, the `\p{Diacritic}` ranges stripped, NFC, lowercase; an ASCII name skips straight to the last step, and for a contains test is only lowercased.
 - The ranking is one `least(...)`: 0 exact fold, 1 a word starting with the first typed word, 2 the rest, over the folded name (one lateral fold per matched row) and the translations in `catalogueLanguagesFor(locale)` or none (two uncorrelated `in` sets, hashed once). Then flagged, `lower(name)`, id. English "tom": tomatoes before prawn; Vietnamese "tom": prawn first.
 - Dev DB EXPLAIN ANALYZE (6,290 foods, 72k spellings), start → now: "t" 14.8 → 20.6 ms, "olive oil" 11.1 → 23.4 ms (with JIT off: 4.9 → 10.2 ms). What's left is the fold over non-ASCII names and the reader's-language rank.
+- Release notes: `e36e4f5dc`, `df0b4717b` (0.27.0-beta, Fixes and Improvements). Exit gate on `df0b4717b`: all seven gates exit 0.
+- Accepted: the catalogue search costs more than before the ticket (`EXPLAIN ANALYZE` on the dev database: "t" 14.8 → 20.6 ms, "olive oil" 11.1 → 23.4 ms); what is left is the fold of non-ASCII names and the rank by the reader's languages.
