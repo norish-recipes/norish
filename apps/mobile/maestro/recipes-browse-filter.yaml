@@ -12,8 +12,9 @@ appId: dev.norish.app
     timeout: 20000
 - assertVisible:
     id: recipe-card-${output.berry}
-- assertNotVisible:
-    id: library-filters-active
+- assertVisible:
+    text: Filters
+    selected: false
 # The grid shows the same cards; the list brings them back.
 - tapOn:
     id: library-view-grid
@@ -36,7 +37,7 @@ appId: dev.norish.app
     id: recipe-card-${output.alpha}
 # A tag filter keeps only the recipes with it.
 - tapOn:
-    id: library-filters-button
+    text: Filters
 - scrollUntilVisible:
     element:
       id: filters-tag-soup
@@ -47,7 +48,8 @@ appId: dev.norish.app
     id: filters-apply
 - extendedWaitUntil:
     visible:
-      id: library-filters-active
+      text: Filters
+      selected: true
     timeout: 10000
 - assertVisible:
     id: recipe-card-${output.alpha}
@@ -55,12 +57,13 @@ appId: dev.norish.app
     id: recipe-card-${output.berry}
 # Clear filters applies at once and brings everything back.
 - tapOn:
-    id: library-filters-button
+    text: Filters
 - tapOn:
     id: filters-reset
 - extendedWaitUntil:
-    notVisible:
-      id: library-filters-active
+    visible:
+      text: Filters
+      selected: false
     timeout: 10000
 - assertVisible:
     id: recipe-card-${output.alpha}
@@ -68,7 +71,7 @@ appId: dev.norish.app
     id: recipe-card-${output.berry}
 # Another tag swaps the list.
 - tapOn:
-    id: library-filters-button
+    text: Filters
 - scrollUntilVisible:
     element:
       id: filters-tag-dessert
@@ -79,7 +82,8 @@ appId: dev.norish.app
     id: filters-apply
 - extendedWaitUntil:
     visible:
-      id: library-filters-active
+      text: Filters
+      selected: true
     timeout: 10000
 - assertVisible:
     id: recipe-card-${output.berry}
@@ -87,11 +91,11 @@ appId: dev.norish.app
     id: recipe-card-${output.alpha}
 # Favourites only matches nothing here: the no-results card shows, not the empty Library.
 - tapOn:
-    id: library-filters-button
+    text: Filters
 - tapOn:
     id: filters-reset
 - tapOn:
-    id: library-filters-button
+    text: Filters
 - tapOn:
     id: filters-favorites
 - tapOn:
@@ -101,6 +105,7 @@ appId: dev.norish.app
       id: library-no-results
     timeout: 10000
 - assertVisible:
-    id: library-filters-active
+    text: Filters
+    selected: true
 - assertNotVisible:
     id: library-empty

@@ -1,5 +1,5 @@
 # Opens the Calendar with the server unreachable: the days and their planned items come from what the
-# app kept, the Calendar says it is offline, and once the server returns the pill goes.
+# app kept, and they are still on screen once the server returns.
 appId: dev.norish.app
 ---
 - runFlow:
@@ -25,16 +25,8 @@ appId: dev.norish.app
     element:
       id: calendar-item-.*
       text: Offline Plan Roast.*
-# The Calendar opens on today's card; the Offline pill lives in the title row above it.
-- repeat:
-    times: 6
-    commands:
-      - swipe:
-          start: 50%,25%
-          end: 50%,85%
-          duration: 150
 - assertNotVisible:
-    id: calendar-offline
+    id: account-offline-dot
 # Leaving the app saves what it has read.
 - pressKey: home
 - runFlow:
@@ -57,23 +49,23 @@ appId: dev.norish.app
     element:
       id: calendar-item-.*
       text: Offline Plan Roast.*
-- repeat:
-    times: 6
-    commands:
-      - swipe:
-          start: 50%,25%
-          end: 50%,85%
-          duration: 150
+# The avatar carries the Offline dot while the server is out of reach.
 - extendedWaitUntil:
     visible:
-      id: calendar-offline
-    timeout: 90000
+      id: account-offline-dot
+    timeout: 30000
 - runFlow:
     file: subflows/proxy.yaml
     env:
       PROXY_ACTION: restore
-# The Offline backoff tops out at 30 seconds between probes.
+# The Offline backoff tops out at 30 seconds between probes; the plan stays on screen through it,
+# and the dot clears with the connection.
+- extendedWaitUntil:
+    visible:
+      id: calendar-item-.*
+      text: Offline Plan Roast.*
+    timeout: 90000
 - extendedWaitUntil:
     notVisible:
-      id: calendar-offline
+      id: account-offline-dot
     timeout: 90000

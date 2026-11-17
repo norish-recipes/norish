@@ -13,10 +13,10 @@ appId: dev.norish.app
     id: tab-groceries
 - extendedWaitUntil:
     visible:
-      id: groceries-settings
+      text: List settings
     timeout: 20000
 - tapOn:
-    id: groceries-settings
+    text: List settings
 - tapOn: Manage stores
 - extendedWaitUntil:
     visible:

@@ -34,14 +34,14 @@ appId: dev.norish.app
 - assertTrue: ${!output.bread.done}
 # Clear list is in the settings menu; cancelling keeps both.
 - tapOn:
-    id: groceries-settings
+    text: List settings
 - tapOn: Clear list
 - tapOn: Cancel
 - assertVisible:
     id: (group|grocery)-tick-.*
     text: .*Tick Bread.*
 - tapOn:
-    id: groceries-settings
+    text: List settings
 - tapOn: Clear list
 - tapOn: Clear
 - extendedWaitUntil:
