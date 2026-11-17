@@ -7,7 +7,8 @@ import path from "node:path";
 const fromWeb = createRequire(path.join(import.meta.dirname, "../../web/package.json"));
 
 (await import(fromWeb.resolve("tsx/esm/api"))).register();
-const { parseIngredientWithDefaults } = await import("@norish/shared/lib/helpers");
+const { addDays, dateKey, parseIngredientWithDefaults } =
+  await import("@norish/shared/lib/helpers");
 
 export const PAGE_NAME = "Maestro Lemon Cake";
 
@@ -139,19 +140,18 @@ export function seeder({ trpc, query }) {
         async () => (await query("groceries.list")).groceries.map((grocery) => grocery.name),
         min
       ),
+    // The local day `offset` days from today, as the app keys it.
+    dayKey: (offset) => dateKey(addDays(new Date(), offset)),
     // Where the first plan of recipe `name` stands: now without a `date`, else once it is on `date` in `slot` or after 15 s.
     async plannedWhere(name, date, slot) {
-      const day = (offset) => {
-        const at = new Date();
-
-        at.setDate(at.getDate() + offset);
-
-        return at.toLocaleDateString("sv");
+      const range = {
+        startISO: dateKey(addDays(new Date(), -7)),
+        endISO: dateKey(addDays(new Date(), 60)),
       };
       const deadline = Date.now() + 15_000;
 
       for (;;) {
-        const items = await query("calendar.listItems", { startISO: day(-7), endISO: day(60) });
+        const items = await query("calendar.listItems", range);
         const found = items.find((item) => item.recipeName === name);
 
         if (!date || (found?.date === date && found.slot === slot) || Date.now() > deadline) {

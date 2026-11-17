@@ -28,8 +28,7 @@ appId: dev.norish.app
     env:
       PLANNED_NAME: Edit Plan Soup
 - evalScript: "${output.target = output.slot == 'Snack' ? 'Breakfast' : 'Snack'}"
-# Local calendar day, as the app reads it.
-- evalScript: "${var day = new Date(); day.setDate(day.getDate() + 1); output.tomorrow = day.getFullYear() + '-' + ('0' + (day.getMonth() + 1)).slice(-2) + '-' + ('0' + day.getDate()).slice(-2)}"
+- evalScript: ${output.tomorrow = json(http.get(NORISH_PROXY_CONTROL_URL + '/day?offset=1').body).key}
 - tapOn:
     id: tab-calendar
 - extendedWaitUntil:
