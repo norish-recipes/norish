@@ -65,3 +65,8 @@
 - Seen fine: cook subtitle, filled timer chip, Pantry search ring, eight Store swatches in one row, done step's faded chips, the soft top edge on Calendar and Pantry.
 - Open: "Every other weeks on Friday" (the plural unit after "every other") is in the shared formatter; the locales differ on the unit's number, so it needs a key per locale. A long step in cook mode keeps its chips below the visible text until it is scrolled.
 - Maestro on the iPhone 17: `calendar-drag` 3 of 3, `calendar-plan-accessory`, `calendar-remove`, `planned-item-edit`, `cook-mode`, `groceries-add-repeat` once each pass. `calendar-offline` fails since the title row moved into the list: the Offline pill sits in that row, which the Calendar opens scrolled past, so the flow cannot see it. Open question for Mike: keep the pill in the scrolling title row (and have the flow reach it) or show it where it stays in view.
+
+### Recipe media server fixes (2026-11-17)
+
+- Photos lost after create: `recipes.create` answered its id before the recipe was stored, so an upload in that window took the pending-recipe path, returned success and was never linked (no row, no Dish Colour). Create now answers once stored (9a406f21b); an API client or a photo added on the page right after saving could hit it. The lost files are unreferenced and the orphaned-media cleanup removes them.
+- No realtime after media writes: gallery image and video uploads and removals now publish `updated` with the stored recipe, as edits do (050c181a3); reorders already went through `recipes.update`.
