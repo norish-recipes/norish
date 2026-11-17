@@ -159,13 +159,31 @@ describe("dropAt", () => {
 });
 
 describe("landingTop", () => {
+  const own = (index: number) => ({ top: index * 50, height: 50 });
+  const gapOf = (from: number, y: number) => targetAt(slots, sections, from, y)?.gap ?? null;
+
   it("lands where the rows close up behind the row, or make room in front", () => {
-    expect(landingTop(slots, targetAt(slots, sections, 1, 240), 1)).toBe(200);
-    expect(landingTop(slots, targetAt(slots, sections, 4, 60), 4)).toBe(50);
+    expect(landingTop(slots, gapOf(1, 240), 1, own(1))).toBe(200);
+    expect(landingTop(slots, gapOf(4, 60), 4, own(4))).toBe(50);
   });
 
   it("goes back to its own place when it lands in place or snaps back", () => {
-    expect(landingTop(slots, null, 4)).toBe(200);
-    expect(landingTop(slots, targetAt(slots, sections, 1, 60), 1)).toBe(50);
+    expect(landingTop(slots, null, 4, own(4))).toBe(200);
+    expect(landingTop(slots, gapOf(1, 60), 1, own(1))).toBe(50);
+  });
+
+  it("lands under the last drawn row when the finger is past the rendered rows", () => {
+    // Rows 3 and 4 left the window; the held row (5) is still drawn.
+    const window = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
+    const gap = gapAt(window, 160);
+
+    expect(gap).toBe(3);
+    expect(landingTop(window, gap, 5, own(5))).toBe(150);
+  });
+
+  it("goes back to the held row's own top after its cell left the window", () => {
+    const window = slots.map((slot, index) => (index === 4 ? null : slot));
+
+    expect(landingTop(window, null, 4, own(4))).toBe(200);
   });
 });

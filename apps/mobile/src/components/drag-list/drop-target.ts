@@ -118,19 +118,22 @@ export function dropAt<H, T>(rows: DragRow<H, T>[], from: number, gap: number): 
   return to === from ? null : resolveDrop(rows, from, to);
 }
 
-/** Where the held row's cell top lands for `target`, in the content as it is now: rows between
- * close up behind it, or make room in front. Its own top when it lands in place or snaps back. */
-export function landingTop(slots: readonly Slot[], target: Target | null, from: number) {
+/** Where the held row's cell top lands for `gap`, in the content as it is now: rows between close
+ * up behind it, or make room in front. `own` is where it was, its top when it lands in place. */
+export function landingTop(
+  slots: readonly Slot[],
+  gap: number | null,
+  from: number,
+  own: { top: number; height: number }
+) {
   "worklet";
-  const own = slots[from];
-  const start = own?.top ?? 0;
+  if (gap === null || gap === from || gap === from + 1) return own.top;
+  // The gap is next to a drawn row (see `gapAt`): the edge between the two rows either side.
+  const above = slots[gap - 1];
+  const below = slots[gap];
+  const edge = above ? above.top + above.height : below ? below.top : null;
 
-  if (!own || !target || target.gap === from || target.gap === from + 1) return start;
-  if (target.gap > from) {
-    const above = slots[target.gap - 1];
+  if (edge === null) return own.top;
 
-    return above ? above.top + above.height - own.height : start;
-  }
-
-  return slots[target.gap]?.top ?? start;
+  return gap > from ? edge - own.height : edge;
 }

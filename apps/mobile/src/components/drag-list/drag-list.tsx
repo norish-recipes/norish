@@ -525,7 +525,7 @@ export function DragList<H, T>({
     target.set(null);
     // Without a line the row lands by a rule, not where the card is: it fades there instead.
     if (landing && !dropLine) cardOpacity.set(timedTo(0, SETTLE_MS, { keep: true }, done));
-    else cardTop.set(timedTo(landingTop(slotsNow(), landing, indexOf(key)), SETTLE_MS, {}, done));
+    else cardTop.set(timedTo(landingTop(slotsNow(), gap, indexOf(key), held), SETTLE_MS, {}, done));
   };
 
   const frame = useFrameCallback(({ timeSincePreviousFrame }) => {
