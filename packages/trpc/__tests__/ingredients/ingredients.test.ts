@@ -643,7 +643,7 @@ describe("the list", () => {
       expect.objectContaining({
         search: {
           fold: "onion",
-          pattern: "%onion%",
+          words: ["onion"],
           match: "contains",
           fields: ["name", "translations"],
         },
