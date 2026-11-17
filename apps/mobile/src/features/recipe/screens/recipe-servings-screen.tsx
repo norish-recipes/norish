@@ -84,7 +84,7 @@ function ServingsBody() {
             key={multiplier}
             accessibilityRole="button"
             accessibilityState={{ selected: picked === multiplier }}
-            className={`h-10 flex-1 items-center justify-center rounded-full ${picked === multiplier ? "bg-accent" : "bg-default"}`}
+            className={`h-10 flex-1 items-center justify-center rounded-full ${picked === multiplier ? "bg-accent" : "bg-fill"}`}
             testID={`recipe-multiplier-${multiplier}`}
             onPress={() => {
               setServings(original * multiplier);

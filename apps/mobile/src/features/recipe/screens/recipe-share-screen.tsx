@@ -105,7 +105,7 @@ function ShareRow({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="bg-default size-11 items-center justify-center rounded-full"
+      className="bg-fill size-11 items-center justify-center rounded-full"
       onPress={onPress}
     >
       <Ionicons color={color} name={icon} size={20} />
@@ -185,7 +185,7 @@ function ShareBody({
               key={expiry}
               accessibilityRole="button"
               accessibilityState={{ selected: expiresIn === expiry }}
-              className={`h-10 items-center justify-center rounded-full px-4 ${expiresIn === expiry ? "bg-accent" : "bg-surface"}`}
+              className={`h-10 items-center justify-center rounded-full px-4 ${expiresIn === expiry ? "bg-accent" : "bg-fill"}`}
               testID={`recipe-share-expiry-${expiry}`}
               onPress={() => setExpiresIn(expiry)}
             >
@@ -205,7 +205,7 @@ function ShareBody({
       ) : rows.length === 0 ? (
         <Text className="text-muted text-sm">{t("empty")}</Text>
       ) : (
-        <View className="bg-surface overflow-hidden rounded-[22px]">
+        <View className="bg-fill overflow-hidden rounded-[22px]">
           {rows.map((share, index) => (
             <ShareRow
               key={share.id}
@@ -223,7 +223,7 @@ function ShareBody({
 /** Two link rows' worth of placeholders, in the rows' own layout. */
 function ShareRowsSkeleton() {
   return (
-    <View className="bg-surface overflow-hidden rounded-[22px]">
+    <View className="bg-fill overflow-hidden rounded-[22px]">
       {[0, 1].map((row) => (
         <View
           key={row}

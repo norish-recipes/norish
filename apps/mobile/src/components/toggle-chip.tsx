@@ -28,7 +28,7 @@ export function ToggleChip({
     <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : "bg-default"}`}
+      className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : "bg-fill"}`}
       testID={testID}
       onPress={onPress}
     >

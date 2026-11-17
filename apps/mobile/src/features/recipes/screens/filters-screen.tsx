@@ -205,13 +205,13 @@ export function FiltersScreen() {
         <FilterSection
           title={intl.formatMessage({ id: "common.filters.tags" })}
           trailing={
-            <View className="bg-default flex-row gap-0.5 rounded-full p-[3px]">
+            <View className="bg-fill flex-row gap-0.5 rounded-full p-[3px]">
               {MODES.map(({ value, label }) => (
                 <Pressable
                   key={value}
                   accessibilityRole="button"
                   accessibilityState={{ selected: draft.filterMode === value }}
-                  className={`h-[26px] justify-center rounded-full px-3 ${draft.filterMode === value ? "bg-surface" : ""}`}
+                  className={`h-[26px] justify-center rounded-full px-3 ${draft.filterMode === value ? "bg-thumb" : ""}`}
                   testID={`filters-mode-${value}`}
                   onPress={() => update({ filterMode: value })}
                 >

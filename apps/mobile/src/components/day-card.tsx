@@ -96,7 +96,7 @@ function SlotMenu({
   const [accent] = useThemeColor(["accent"] as const);
 
   return (
-    <View className="bg-surface size-9 overflow-hidden rounded-full">
+    <View className="bg-fill size-9 overflow-hidden rounded-full">
       <Host matchContents>
         <Menu
           label={
@@ -149,7 +149,7 @@ export function DayCard({
 
   return (
     <View
-      className={`bg-default rounded-3xl pr-2 pl-3.5 ${DAY_CARD_CLASS.card}`}
+      className={`bg-fill rounded-3xl pr-2 pl-3.5 ${DAY_CARD_CLASS.card}`}
       testID={`day-card-${dateKey}`}
     >
       {isToday ? (
@@ -190,7 +190,7 @@ function SlotGlyph({ slot }: { slot: Slot }) {
 }
 
 /** A day card's shape while the plan is still being read: its date and one planned row; `className` is its fill. */
-export function DayCardSkeleton({ className = "bg-default" }: { className?: string }) {
+export function DayCardSkeleton({ className = "bg-fill" }: { className?: string }) {
   return (
     <View
       className={`${className} rounded-3xl pt-[19px] pl-3.5 ${DAY_CARD_CLASS.skeleton}`}

@@ -66,7 +66,7 @@ export function AddToCookbookScreen() {
             accessibilityLabel={newLabel}
             accessibilityRole="button"
             accessibilityState={{ disabled: !canStage }}
-            className={`size-12 items-center justify-center rounded-full ${canStage ? "bg-accent" : "bg-default"}`}
+            className={`size-12 items-center justify-center rounded-full ${canStage ? "bg-accent" : "bg-fill"}`}
             disabled={!canStage}
             testID="add-to-cookbook-new-add"
             onPress={stageNew}
@@ -93,7 +93,7 @@ export function AddToCookbookScreen() {
                     className={pickRowClass(position)}
                     testID={`add-to-cookbook-pending-${item.entry.key}`}
                   >
-                    <View className="bg-surface size-11 items-center justify-center rounded-xl">
+                    <View className="bg-fill size-11 items-center justify-center rounded-xl">
                       <Ionicons color={muted} name="book-outline" size={20} />
                     </View>
                     <View className="min-w-0 flex-1">
@@ -107,7 +107,7 @@ export function AddToCookbookScreen() {
                     <Pressable
                       accessibilityLabel={intl.formatMessage({ id: "common.actions.remove" })}
                       accessibilityRole="button"
-                      className="bg-surface size-8 items-center justify-center rounded-full"
+                      className="bg-fill size-8 items-center justify-center rounded-full"
                       testID={`add-to-cookbook-unstage-${item.entry.key}`}
                       onPress={() => unstage(item.entry.key)}
                     >

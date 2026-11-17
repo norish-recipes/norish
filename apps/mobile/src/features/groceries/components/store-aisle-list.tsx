@@ -43,7 +43,7 @@ function AisleRow({
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <ItemSlice className="bg-default" edge={{ top: first, bottom: false }} size="sheet">
+    <ItemSlice className="bg-fill" edge={{ top: first, bottom: false }} size="sheet">
       <View className="h-12 flex-row items-center gap-2 pr-2 pl-2.5">
         <DragGrip
           label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
@@ -115,7 +115,7 @@ export function StoreAisleList({
       ListFooterComponent={
         <View className="px-4">
           <View
-            className={`bg-default overflow-hidden ${rows.length > 0 ? "border-separator rounded-b-[22px] border-t" : "rounded-[22px]"}`}
+            className={`bg-fill overflow-hidden ${rows.length > 0 ? "border-separator rounded-b-[22px] border-t" : "rounded-[22px]"}`}
           >
             <View className="h-12 flex-row items-center gap-2 pr-2 pl-4">
               <Input
@@ -137,7 +137,7 @@ export function StoreAisleList({
                 accessibilityLabel={text("groceries.storeManager.addAisle")}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !canAdd }}
-                className={`bg-surface size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
+                className={`bg-fill size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
                 disabled={!canAdd}
                 testID="aisle-add"
                 onPress={add}
