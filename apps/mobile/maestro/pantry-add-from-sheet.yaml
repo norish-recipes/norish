@@ -1,8 +1,12 @@
 # Adds foods to the Pantry from the Add to pantry sheet: the accessory reads Add to pantry, the sheet
-# finds a catalogue food and keeps it, then keeps a typed name as a custom entry. The server has both.
+# finds a catalogue food and keeps it, keeps a typed name as a custom entry, then keeps the food the
+# empty field offers "From your recipes". The server has all three.
 appId: dev.norish.app
 ---
-- runFlow: subflows/start.yaml
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Pantry Omelette", "key": "omelette", "ingredients": ["2 eggs"]}]'
 - tapOn:
     id: tab-groceries
 - extendedWaitUntil:
@@ -24,6 +28,11 @@ appId: dev.norish.app
     visible:
       id: pantry-add-sheet
     timeout: 20000
+# With the field empty the recipe's one food is suggested, with its recipe count.
+- extendedWaitUntil:
+    visible: (?i)from your recipes
+    timeout: 20000
+- assertVisible: .*in 1 recipe
 # A catalogue food: type it, keep its row.
 - tapOn:
     id: pantry-add-field
@@ -53,10 +62,22 @@ appId: dev.norish.app
     id: pantry-add-custom
 - evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=2').body).names}
 - assertTrue: ${output.pantry.length == 2}
-# One entry is the catalogue's milk, the other the text as typed.
-- evalScript: ${output.kept = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry-kept?search=milk&custom=tahini&min=2').body)}
-- assertTrue: ${output.kept.count == 2 && output.kept.catalogue && output.kept.custom}
-# The sheet closes on its Close item, and the Pantry behind it holds both.
+# The field empties again and offers the suggestion still; a tap keeps it and it leaves.
+- extendedWaitUntil:
+    visible: (?i)from your recipes
+    timeout: 20000
+- waitForAnimationToEnd
+- tapOn:
+    id: pantry-match-[0-9a-f]{8}-.*
+- evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=3').body).names}
+- assertTrue: ${output.pantry.length == 3}
+- extendedWaitUntil:
+    notVisible: (?i)from your recipes
+    timeout: 20000
+# The suggested food, the catalogue's milk and the text as typed.
+- evalScript: ${output.kept = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry-kept?search=milk&custom=tahini&min=3').body)}
+- assertTrue: ${output.kept.count == 3 && output.kept.catalogue && output.kept.custom}
+# The sheet closes on its Close item, and the Pantry behind it holds them.
 - tapOn: Close
 - extendedWaitUntil:
     notVisible:
