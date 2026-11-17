@@ -7,7 +7,8 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
-import { LaunchProvider, LaunchSplash } from "@/components/launch";
+import { LaunchProvider, LaunchSplash, useLaunchPhase } from "@/components/launch";
+import { Loader } from "@/components/loader";
 import {
   EDITOR_OPTIONS,
   FIT_SHEET_OPTIONS,
@@ -26,6 +27,7 @@ import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
+import { resolveSessionView } from "@/lib/boot/session-view";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
@@ -176,13 +178,14 @@ function RootLayoutContent() {
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/** The stack, wrapped in the offline controller while signed in; only the ground while the
- * session restores, under the splash and its loader. */
+/** The stack, wrapped in the offline controller while signed in; the ground while the session
+ * restores under the splash, then the loader while one ends. */
 function SessionStack() {
   const { session } = usePlatform();
   const { colors } = useTheme();
   const signedIn = session.user !== null;
   const pending = session.isPending && !signedIn;
+  const view = resolveSessionView(pending, signedIn, useLaunchPhase());
 
   const app = (
     <>
@@ -194,13 +197,13 @@ function SessionStack() {
   // One themed ground under every phase, so a session ending never shows the bare window.
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {pending ? null : signedIn ? (
+      {view === "loader" ? <Loader centred /> : null}
+      {view === "signed-in" ? (
         <SignedInFade>
           <AuthenticatedProviders>{app}</AuthenticatedProviders>
         </SignedInFade>
-      ) : (
-        app
-      )}
+      ) : null}
+      {view === "signed-out" ? app : null}
       <LaunchVersionCheck enabled={!pending} />
       <LaunchSplash handoff={pending ? null : "fade"} />
     </View>
