@@ -2,15 +2,16 @@ import React, { useEffect, useState } from "react";
 import { ShellAccessory } from "@/features/shell/components/shell-accessory";
 import { accessoryPlan, accessoryScreen, shellTab } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useOwnerRights } from "@/hooks/use-owner-rights";
 import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
-import { recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
+import { cookbookIdOf, recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
 import { usePathname } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
-import { useRecipeQuery } from "@norish/shared-react/recipes";
+import { useCookbookQuery, useRecipeQuery } from "@norish/shared-react/recipes";
 import { useTimerStore } from "@norish/shared-react/recipes/timers";
 
 // Longer than UIKit's tab switch, which applies a minimise behaviour changed within it only after.
@@ -33,7 +34,14 @@ export function ShellTabs() {
   const { recipe } = useRecipeQuery(shown);
   // A loading or missing recipe keeps the last other screen's action.
   const screen = accessoryScreen(path, recipeId, lastNonRecipePath, recipe ? shown : null);
-  const plan = accessoryPlan(screen, hasTimers, lens);
+  const { cookbook } = useCookbookQuery(cookbookIdOf(screen.path) ?? "");
+  const { canEdit } = useOwnerRights();
+  const plan = accessoryPlan(
+    screen,
+    hasTimers,
+    lens,
+    cookbook && canEdit(cookbook) ? cookbook.id : null
+  );
   const tab = shellTab(path);
   // UIKit keeps one minimised state for every tab: a switch holds the bar expanded through the
   // switch, after which it follows the new tab's list.
@@ -55,7 +63,7 @@ export function ShellTabs() {
     >
       {hidden ? null : (
         <NativeTabs.BottomAccessory>
-          <ShellAccessory path={screen.path} plan={plan} />
+          <ShellAccessory plan={plan} />
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">

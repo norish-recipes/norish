@@ -4,33 +4,31 @@ import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
 import { accessoryPlan, accessoryScreen, shellTab } from "../utils/accessory-plan";
 
-// The action a plan holds, by its test id; Add recipe by its name.
+// The action a plan holds, by its test id.
 const holds = (
   path: string,
   hasTimers: boolean,
   recipeId?: string,
-  lens: LibraryTypeFilter = "all"
+  lens: LibraryTypeFilter = "all",
+  editableCookbook: string | null = null
 ) => {
-  const plan = accessoryPlan({ path, recipeId }, hasTimers, lens);
+  const plan = accessoryPlan({ path, recipeId }, hasTimers, lens, editableCookbook);
 
-  return {
-    add: typeof plan.add === "object" ? plan.add.testID : plan.add,
-    capsule: plan.capsule,
-  };
+  return { add: plan.add.testID, capsule: plan.capsule };
 };
 
 describe("accessoryPlan", () => {
   it("holds the tab's add action alone while no timer exists", () => {
-    expect(holds("/", false)).toEqual({ add: "addRecipe", capsule: false });
+    expect(holds("/", false)).toEqual({ add: "add-recipe", capsule: false });
     expect(holds("/groceries", false)).toEqual({ add: "add-grocery", capsule: false });
     expect(holds("/calendar", false)).toEqual({ add: "plan-recipe-accessory", capsule: false });
   });
 
   it("adds the timer capsule on every tab while a timer exists", () => {
-    expect(holds("/", true)).toEqual({ add: "addRecipe", capsule: true });
+    expect(holds("/", true)).toEqual({ add: "add-recipe", capsule: true });
     expect(holds("/groceries/stores", true)).toEqual({ add: "add-grocery", capsule: true });
     expect(holds("/calendar", true)).toEqual({ add: "plan-recipe-accessory", capsule: true });
-    expect(holds("/settings", true)).toEqual({ add: "addRecipe", capsule: true });
+    expect(holds("/settings", true)).toEqual({ add: "add-recipe", capsule: true });
   });
 
   it("reads Add to pantry, into the Pantry's add sheet, on the Pantry and its sheets", () => {
@@ -74,15 +72,41 @@ describe("accessoryPlan on the Cookbooks lens", () => {
   });
 
   it("keeps the other lenses on Add recipe", () => {
-    expect(holds("/", false, undefined, "recipes")?.add).toBe("addRecipe");
-    expect(holds("/", false, undefined, "all")?.add).toBe("addRecipe");
+    expect(holds("/", false, undefined, "recipes")?.add).toBe("add-recipe");
+    expect(holds("/", false, undefined, "all")?.add).toBe("add-recipe");
   });
 
   it("leaves every other screen to its own action", () => {
     expect(holds("/groceries", false, undefined, "cookbooks")?.add).toBe("add-grocery");
     expect(holds("/calendar", false, undefined, "cookbooks")?.add).toBe("plan-recipe-accessory");
-    expect(holds("/cookbook/c1", false, undefined, "cookbooks")?.add).toBe("addRecipe");
+    expect(holds("/cookbook/c1", false, undefined, "cookbooks")?.add).toBe("add-recipe");
     expect(holds("/recipe/abc", false, "abc", "cookbooks")?.add).toBe("cook-recipe");
+  });
+});
+
+describe("accessoryPlan on a cookbook", () => {
+  it("reads Add recipes, into the cookbook's picker, on a cookbook the Reader may edit", () => {
+    expect(holds("/cookbook/c1", false, undefined, "all", "c1")).toEqual({
+      add: "cookbook-add-recipes-accessory",
+      capsule: false,
+    });
+    expect(accessoryPlan({ path: "/cookbook/c1" }, false, "all", "c1").add).toMatchObject({
+      labelId: "recipes.cookbooks.addRecipes",
+      route: { pathname: "/cookbook-add-recipes", params: { cookbookId: "c1" } },
+    });
+  });
+
+  it("reads Add recipe on a cookbook the Reader may not edit, and off its page", () => {
+    expect(holds("/cookbook/c1", false)?.add).toBe("add-recipe");
+    expect(holds("/cookbook/c2", false, undefined, "all", "c1")?.add).toBe("add-recipe");
+    expect(holds("/", false, undefined, "all", "c1")?.add).toBe("add-recipe");
+  });
+
+  it("keys the cookbook's action apart from Add recipe, so the switch cross-fades", () => {
+    const library = accessoryPlan({ path: "/" }, false, "all").add;
+    const cookbook = accessoryPlan({ path: "/cookbook/c1" }, false, "all", "c1").add;
+
+    expect(library.testID).not.toBe(cookbook.testID);
   });
 });
 
@@ -108,7 +132,7 @@ describe("accessoryScreen", () => {
   it("keeps the Recipes tab's own action under a recipe opened from another tab", () => {
     const screen = accessoryScreen("/recipe/abc", "abc", "/calendar/item", null);
 
-    expect(holds(screen.path, false)?.add).toBe("addRecipe");
+    expect(holds(screen.path, false)?.add).toBe("add-recipe");
     expect(accessoryScreen("/recipe/abc", "abc", "/groceries", null)).toEqual({ path: "/" });
   });
 

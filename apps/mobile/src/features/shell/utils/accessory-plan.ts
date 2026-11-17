@@ -1,7 +1,7 @@
 import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
-import { cookModeRoute, TAB_ROUTES } from "@/lib/tab-routes";
+import { cookbookIdOf, cookModeRoute, TAB_ROUTES } from "@/lib/tab-routes";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
@@ -16,9 +16,8 @@ export type Action = {
   route: Href;
 };
 
-/** What the accessory holds: an action, and the timer capsule while a timer exists; `"addRecipe"`
- * depends on the cookbook, so a component of its own draws it. */
-export type AccessoryPlan = { add: Action | "addRecipe"; capsule: boolean };
+/** What the accessory holds: an action, and the timer capsule while a timer exists. */
+export type AccessoryPlan = { add: Action; capsule: boolean };
 
 // Recipes is every other path.
 const PATH_TABS = ["groceries", "calendar"] as const;
@@ -54,9 +53,29 @@ const ADD_COOKBOOK: Action = {
   route: TAB_ROUTES.recipes.newCookbook,
 };
 
-/** What the Recipes tab adds: a cookbook while the Library at its root shows the Cookbooks lens, else a recipe. */
-const recipesAdd = (path: string, lens: LibraryTypeFilter): Action | "addRecipe" =>
-  path === TAB_ROUTES.recipes.root && lens === "cookbooks" ? ADD_COOKBOOK : "addRecipe";
+const ADD_RECIPE: Action = {
+  icon: "add-circle-outline",
+  labelId: "recipes.dashboard.addRecipe",
+  testID: "add-recipe",
+  route: "/add-recipe",
+};
+
+const addRecipesTo = (cookbookId: string): Action => ({
+  icon: "add-circle-outline",
+  labelId: "recipes.cookbooks.addRecipes",
+  testID: "cookbook-add-recipes-accessory",
+  route: { pathname: TAB_ROUTES.recipes.cookbookAddRecipes, params: { cookbookId } },
+});
+
+/** What the Recipes tab adds: a cookbook on the Cookbooks lens at the root, recipes to a cookbook
+ * the Reader may edit on its page, else a recipe. */
+const recipesAdd = (path: string, lens: LibraryTypeFilter, editableCookbook: string | null) => {
+  if (path === TAB_ROUTES.recipes.root && lens === "cookbooks") return ADD_COOKBOOK;
+
+  return editableCookbook && cookbookIdOf(path) === editableCookbook
+    ? addRecipesTo(editableCookbook)
+    : ADD_RECIPE;
+};
 
 const cookAction = (recipeId: string): Action => ({
   icon: "play-circle-outline",
@@ -93,21 +112,22 @@ export function accessoryScreen(
   return { path: tabOf(lastNonRecipePath) ? TAB_ROUTES.recipes.root : lastNonRecipePath };
 }
 
-/** The accessory for `screen`: Cook on a recipe, Add cookbook on the Cookbooks `lens`, Add to
- * pantry on the Pantry, else the tab's own action. */
+/** The accessory for `screen`: Cook on a recipe, Add to pantry on the Pantry, else the tab's own
+ * action; `editableCookbook` is the cookbook on screen when the Reader may edit it. */
 export function accessoryPlan(
   { path, recipeId }: AccessoryScreen,
   hasTimers: boolean,
-  lens: LibraryTypeFilter
+  lens: LibraryTypeFilter,
+  editableCookbook: string | null = null
 ): AccessoryPlan {
   const tab = tabOf(path);
-  const add: AccessoryPlan["add"] = recipeId
+  const add = recipeId
     ? cookAction(recipeId)
     : onPantry(path)
       ? ADD_TO_PANTRY
       : tab
         ? TAB_ACTIONS[tab]
-        : recipesAdd(path, lens);
+        : recipesAdd(path, lens, editableCookbook);
 
   return { add, capsule: hasTimers };
 }
