@@ -43,8 +43,9 @@ type ViewableChange = NonNullable<FlatListProps<TimelineRow>["onViewableItemsCha
 /** How far from an edge, in screens, the timeline grows that edge. */
 const GROW_THRESHOLD = 2;
 
-/** The collapsed native bar below the status bar: where a day scrolled to sits under it. */
-const BAR_HEIGHT = 44;
+/** The native bar's height under the status bar (54 pt on iOS 27): fixed, as the measured header
+ * height arrives a few renders late and the list opens on its first. */
+const BAR_HEIGHT = 54;
 
 /** A row counts as shown once half of it is on screen; one object, as FlatList asks. */
 const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
@@ -67,7 +68,8 @@ export function CalendarScreen() {
   const growth = useHeldGrowth(grow);
   const bar = useTabScroll();
   // A day scrolled to sits just under the bar, not behind it.
-  const listTop = insets.top + BAR_HEIGHT + 12;
+  const barBottom = insets.top + BAR_HEIGHT;
+  const listTop = barBottom + 12;
   const scrollToRow = (index: number, animated: boolean) => {
     listRef.current?.scrollToOffset({
       offset: openingOffset(shownRowsRef.current, index, fontScale, 0, listTop),
@@ -102,6 +104,15 @@ export function CalendarScreen() {
   if (isRead && openingAt === null) {
     setOpeningAt(openIndex < 0 ? 0 : openingOffset(rows, openIndex, fontScale, 0, listTop));
   }
+
+  // An opening `contentOffset` sends no scroll event, which the list's window (under
+  // `initialScrollIndex`) and the title wait for: a half-point scroll after the first layout sends it.
+  const openedRef = useRef(false);
+  const sendOpeningScroll = () => {
+    if (openedRef.current || openingAt === null) return;
+    openedRef.current = true;
+    listRef.current?.scrollToOffset({ offset: openingAt + 0.5, animated: false });
+  };
 
   // A link while the timeline is open scrolls to its day, every time it is tapped.
   useCalendarLinkArrivals((linked) => {
@@ -149,7 +160,9 @@ export function CalendarScreen() {
           ref={listRef}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(bar.homeIndicator) }}
-          contentInsetAdjustmentBehavior="automatic"
+          // The bar's inset set here, not by UIKit, which shifts an offset given before it applies.
+          contentInset={{ top: barBottom }}
+          contentInsetAdjustmentBehavior="never"
           contentOffset={{ x: 0, y: openingAt ?? 0 }}
           // The rows the list shows, which a held row keeps still while `rows` moves on.
           getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
@@ -196,6 +209,7 @@ export function CalendarScreen() {
             </Animated.View>
           )}
           rows={rows}
+          scrollIndicatorInsets={{ top: barBottom }}
           shownRef={shownRowsRef}
           testID="calendar-list"
           viewabilityConfig={VIEWABILITY}
@@ -210,6 +224,7 @@ export function CalendarScreen() {
           onEndReached={() => growth.reached("future")}
           onEndReachedThreshold={GROW_THRESHOLD}
           onHeldChange={growth.heldChange}
+          onLayout={sendOpeningScroll}
           onScroll={bar.onScroll}
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
