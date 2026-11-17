@@ -925,10 +925,22 @@ export async function createRecipeWithRefs(
     const [inserted] = await tx
       .insert(recipes)
       .values(toInsert)
-      .onConflictDoNothing({ target: [recipes.url, recipes.userId] })
+      .onConflictDoNothing()
       .returning({ id: recipes.id });
 
     if (!inserted) {
+      // A replayed create: its id is already stored, answered as the same owner's recipe.
+      const sameId = await tx.query.recipes.findFirst({
+        where: eq(recipes.id, recipeId),
+        columns: { userId: true },
+      });
+
+      if (sameId) {
+        if (sameId.userId !== (userId ?? null)) throw new Error("Recipe id is already taken");
+
+        return { status: "existing", recipeId };
+      }
+
       const existing = await tx.query.recipes.findFirst({
         where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId ?? "")),
         columns: { id: true },
