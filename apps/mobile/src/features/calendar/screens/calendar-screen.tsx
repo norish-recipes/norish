@@ -23,9 +23,9 @@ import { useCalendarLinkArrivals } from "../hooks/use-calendar-link-arrivals";
 import { useHeldGrowth } from "../hooks/use-held-growth";
 import {
   dayRowKey,
+  hiddenAbove,
   planTimelineDrop,
   rowDay,
-  hiddenAbove,
   rowLayout,
   timelineRows,
 } from "../utils/timeline-rows";
