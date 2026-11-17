@@ -122,18 +122,18 @@ export function sortPantryIngredients<
   );
 }
 
-/** Whether a kept food goes by a name containing any of the folded words, in any language. */
+/** Whether a kept food goes by a name, in any language, containing every one of the folded words. */
 function hasNameContaining(item: PantryIngredientDto, words: readonly string[]): boolean {
   return [item.name, ...Object.values(item.localeNames)].some((name) => {
     const folded = foldName(name);
 
-    return words.some((word) => folded.includes(word));
+    return words.every((word) => folded.includes(word));
   });
 }
 
-/** The Pantry the field narrows: every kept food whose name, in any language, contains a word of
- * the text (recipe search ORs its words too), or that the text names as a food, in the reader's
- * order. No text keeps them all. */
+/** The Pantry the field narrows: every kept food with a name, in any language, holding every word
+ * of the text in any order, or that the text names as a food, in the reader's order. No text keeps
+ * them all. */
 export function searchPantry(
   items: readonly PantryIngredientDto[],
   text: string,
