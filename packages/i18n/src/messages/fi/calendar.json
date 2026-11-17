@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "Avaa resepti",
     "move": "Siirrä…",
-    "removeTitle": "Poistetaanko tältä päivältä?",
     "removeMessage": "{name} poistetaan kohdasta {slot}, {day}.",
     "moveTitle": "Siirrä",
     "moveSubtitle": "{name}, tämän päivän {slot}"

@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "Відкрити рецепт",
     "move": "Перемістити…",
-    "removeTitle": "Прибрати із сьогоднішнього плану?",
     "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day}).",
     "moveTitle": "Перемістити",
     "moveSubtitle": "«{name}», {slot} сьогодні"

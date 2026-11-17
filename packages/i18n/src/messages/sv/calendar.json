@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "Öppna recept",
     "move": "Flytta…",
-    "removeTitle": "Ta bort från idag?",
     "removeMessage": "{name} tas bort från {slot} på {day}.",
     "moveTitle": "Flytta",
     "moveSubtitle": "{name}, dagens {slot}"

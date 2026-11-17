@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "Ouvrir la recette",
     "move": "Déplacer…",
-    "removeTitle": "Retirer d'aujourd'hui ?",
     "removeMessage": "{name} est retiré de {slot} ({day}).",
     "moveTitle": "Déplacer",
     "moveSubtitle": "{name}, {slot} d'aujourd'hui"

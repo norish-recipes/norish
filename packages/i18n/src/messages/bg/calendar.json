@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "Отвори рецептата",
     "move": "Премести…",
-    "removeTitle": "Да се премахне ли от днес?",
     "removeMessage": "„{name}“ се премахва от {slot} ({day}).",
     "moveTitle": "Премести",
     "moveSubtitle": "{name}, {slot} днес"

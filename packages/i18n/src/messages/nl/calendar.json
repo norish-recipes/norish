@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "Recept openen",
     "move": "Verplaatsen…",
-    "removeTitle": "Van vandaag halen?",
     "removeMessage": "{name} gaat van {slot} op {day} af.",
     "moveTitle": "Verplaatsen",
     "moveSubtitle": "{name}, {slot} van vandaag"

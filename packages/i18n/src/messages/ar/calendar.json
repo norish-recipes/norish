@@ -10,7 +10,6 @@
   "today": {
     "openRecipe": "فتح الوصفة",
     "move": "نقل…",
-    "removeTitle": "هل تريد الإزالة من اليوم؟",
     "removeMessage": "ستتم إزالة {name} من {slot} يوم {day}.",
     "moveTitle": "نقل",
     "moveSubtitle": "{name}، {slot} اليوم"

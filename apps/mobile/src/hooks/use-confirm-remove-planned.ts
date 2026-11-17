@@ -18,7 +18,7 @@ export function useConfirmRemovePlanned() {
 
   return (item: PlannedItemFromQuery) =>
     confirm({
-      title: intl.formatMessage({ id: "calendar.today.removeTitle" }),
+      title: intl.formatMessage({ id: "common.actions.remove" }),
       message: intl.formatMessage(
         { id: "calendar.today.removeMessage" },
         {
