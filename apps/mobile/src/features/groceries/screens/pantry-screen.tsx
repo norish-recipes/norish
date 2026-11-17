@@ -1,6 +1,7 @@
 import React from "react";
 import { FlatList, Text, View } from "react-native";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
+import { SheetSearchField } from "@/components/sheet-search-field";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TitleRow } from "@/components/title-row";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
@@ -9,7 +10,8 @@ import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
-import { FindField } from "../components/find-field";
+import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
+
 import { ListSwitch } from "../components/list-switch";
 import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
 import { usePantryScreen } from "../hooks/use-pantry-screen";
@@ -28,7 +30,14 @@ export function PantryScreen() {
         />
       </TitleRow>
       <View className="px-5 pb-3.5">
-        <FindField disabled={!isRead} value={field.draft} onChange={field.setDraft} />
+        <SheetSearchField
+          ring
+          label={intl.formatMessage({ id: "groceries.pantry.findPlaceholder" })}
+          maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
+          testID="pantry-field"
+          value={field.draft}
+          onChange={isRead ? field.setDraft : undefined}
+        />
         {field.draft.trim() === "" ? (
           <Text className="text-muted px-2 pt-2 text-sm">
             {intl.formatMessage({ id: "groceries.pantry.hint" })}
