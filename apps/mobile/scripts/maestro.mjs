@@ -221,13 +221,14 @@ const control = createServer(async (request, response) => {
         JSON.stringify({ key: seed.dayKey(Number(route.searchParams.get("offset") ?? 0)) })
       );
     } else if (route.pathname === "/planned") {
+      const want = (field) => route.searchParams.get(field) ?? undefined;
+
       response.write(
         JSON.stringify(
-          await seed.plannedWhere(
-            route.searchParams.get("name") ?? "",
-            route.searchParams.get("date") ?? "",
-            route.searchParams.get("slot") ?? ""
-          )
+          await seed.plannedWhere(route.searchParams.get("name") ?? "", {
+            date: want("date"),
+            slot: want("slot"),
+          })
         )
       );
     } else if (route.pathname === "/pantry") {

@@ -142,8 +142,9 @@ export function seeder({ trpc, query }) {
       ),
     // The local day `offset` days from today, as the app keys it.
     dayKey: (offset) => dateKey(addDays(new Date(), offset)),
-    // Where the first plan of recipe `name` stands: now without a `date`, else once it is on `date` in `slot` or after 15 s.
-    async plannedWhere(name, date, slot) {
+    // Where the first plan of recipe `name` stands: now, or once it is on `want`'s date and slot,
+    // throwing after 15 s with where it is instead.
+    async plannedWhere(name, want = {}) {
       const range = {
         startISO: dateKey(addDays(new Date(), -7)),
         endISO: dateKey(addDays(new Date(), 60)),
@@ -153,9 +154,14 @@ export function seeder({ trpc, query }) {
       for (;;) {
         const items = await query("calendar.listItems", range);
         const found = items.find((item) => item.recipeName === name);
+        const at = { date: found?.date ?? null, slot: found?.slot ?? null };
+        const there = (want.date ?? at.date) === at.date && (want.slot ?? at.slot) === at.slot;
 
-        if (!date || (found?.date === date && found.slot === slot) || Date.now() > deadline) {
-          return { date: found?.date ?? null, slot: found?.slot ?? null };
+        if (found && there) return at;
+        if (Date.now() > deadline) {
+          throw new Error(
+            `waited 15 s for "${name}" on ${JSON.stringify(want)}; it is on ${JSON.stringify(at)}`
+          );
         }
         await sleep(250);
       }
