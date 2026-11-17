@@ -31,6 +31,11 @@ export function PantryAddRowView({
         }
         ingredientId={row.foodId}
         name={row.name}
+        subline={
+          row.recipeCount === null
+            ? undefined
+            : intl.formatMessage({ id: "groceries.pantry.inRecipes" }, { count: row.recipeCount })
+        }
         testID={row.testIDs.row}
         onPress={() => onKeep(row.keeps)}
       />

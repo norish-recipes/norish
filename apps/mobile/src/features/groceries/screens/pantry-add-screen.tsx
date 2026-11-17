@@ -1,5 +1,5 @@
 import type { SheetSearchInput } from "@/components/sheet-search-field";
-import React from "react";
+import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { Sheet, SheetList } from "@/components/sheet";
@@ -17,8 +17,9 @@ import {
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
 import { PantryAddRowView } from "../components/pantry-add-row";
+import { ShowMore } from "../components/pantry-rows";
 import { useKeepingField } from "../hooks/use-keeping-field";
-import { pantryAddRows, pickedFood, suggestedMatches } from "../utils/pantry-add-rows";
+import { pantryAddList, pickedFood } from "../utils/pantry-add-rows";
 
 /** Add to pantry: search the Ingredients, keep one, or keep the text as typed; the sheet stays open for the next. */
 export function PantryAddScreen() {
@@ -35,10 +36,12 @@ export function PantryAddScreen() {
   const named = foodNamedAsTyped(typed, matches, rules);
   // The text as typed, offered while it is not kept already and no found food is named so.
   const custom = canAdd && !named ? typed : null;
-  const { suggestions } = usePantrySuggestions(items);
-  // With the field empty the sheet offers "From your recipes" in place of search results.
-  const offered = typed === "" ? suggestedMatches(items, suggestions, rules) : [];
-  const rows = pantryAddRows(offered.length > 0 ? offered : matches, custom, intl.locale);
+  const { suggestions: offered } = usePantrySuggestions(items);
+  const [showAll, setShowAll] = useState(false);
+  const { rows, fromYourRecipes, more } = pantryAddList(
+    { typed, isRead, offered, showAll, matches, custom },
+    intl.locale
+  );
   const label = intl.formatMessage({ id: "groceries.pantry.fieldPlaceholder" });
 
   useIngredientIcons(rows.flatMap((row) => (row.foodId ? [row.foodId] : [])));
@@ -72,13 +75,14 @@ export function PantryAddScreen() {
                 onChange={isRead ? setDraft : undefined}
                 onSubmit={submit}
               />
-              {offered.length > 0 ? (
+              {fromYourRecipes ? (
                 <Text className="text-muted px-2 pt-3 text-xs font-semibold uppercase">
                   {intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}
                 </Text>
               ) : null}
             </View>
           }
+          ListFooterComponent={more ? <ShowMore onPress={() => setShowAll(true)} /> : undefined}
           data={rows}
           inset={false}
           keyExtractor={(row) => row.key}

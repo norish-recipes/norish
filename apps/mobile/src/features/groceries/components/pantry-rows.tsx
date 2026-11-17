@@ -130,7 +130,6 @@ const SECTION_LABEL = "text-muted text-xs font-semibold tracking-[0.6px] upperca
 /** One row of the Pantry's flat list. */
 export function PantryRowView({ row, actions }: { row: PantryRow; actions: PantryActions }) {
   const intl = useIntl();
-  const accentText = useAccentTextColor();
   const [muted] = useThemeColor(["muted"] as const);
   const addLabel = (name: string) =>
     intl.formatMessage({ id: "groceries.pantry.addFood" }, { name });
@@ -227,19 +226,27 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
       );
     }
     case "more":
-      return (
-        <Pressable
-          accessibilityRole="button"
-          className="px-7 pt-3"
-          testID="pantry-show-more"
-          onPress={actions.showMore}
-        >
-          <Text className="text-sm font-medium" style={{ color: accentText }}>
-            {intl.formatMessage({ id: "groceries.pantry.showMore" })}
-          </Text>
-        </Pressable>
-      );
+      return <ShowMore onPress={actions.showMore} />;
   }
+}
+
+/** "From your recipes"' Show more, under the suggestions it hides. */
+export function ShowMore({ onPress }: { onPress: () => void }) {
+  const intl = useIntl();
+  const accentText = useAccentTextColor();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="px-7 pt-3"
+      testID="pantry-show-more"
+      onPress={onPress}
+    >
+      <Text className="text-sm font-medium" style={{ color: accentText }}>
+        {intl.formatMessage({ id: "groceries.pantry.showMore" })}
+      </Text>
+    </Pressable>
+  );
 }
 
 /** What the Pantry looks like while it loads: one card of rows, in the real shell. */
