@@ -489,7 +489,7 @@ One glass rule, one panel anatomy, native large titles on the tab roots, our own
 
 - Native large titles on Recipes, Groceries, Pantry and Calendar replace `TitleRow` and the `top: "soft"` scroll-edge effect that blurred it at rest. Reverses Part 6's TitleRow exception and its out-of-scope line.
 - Scrolled, the large title scrolls away with the content and no inline title takes its place: the bar holds only its items. Header items are translucent glass (content shows through), never solid fills. Calendar has no sync button in its bar.
-- Where the switches, pills and Filters go is drawn first on a canvas page (ticket 40) and reviewed by Mike before ticket 41.
+- Where the switches, pills and Filters go is drawn first on a canvas page (ticket 40) and reviewed by Mike before ticket 41. Mike picked `place: header` (2026-11-17): Filters, the grid/list switch and the Groceries/Pantry switch are bar items; the All/Recipes/Cookbooks control sits under the large title and pins to the bar when scrolled.
 - The avatar sits top right on all four. It opens a small native menu, like the recipe's conversion menu: a status line that always shows ("Live", or "Offline · N changes waiting" when Offline with Queued changes), Theme (System/Light/Dark), Language, All settings, Sign out. Only when Offline does the avatar carry a small warning dot, on all four tabs; VoiceOver reads "‹name›, Offline". The calendar's Offline pill goes, with nothing in its place.
 
 ### Calendar
