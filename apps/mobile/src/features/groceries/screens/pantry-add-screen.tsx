@@ -35,7 +35,7 @@ export function PantryAddScreen() {
   const named = foodNamedAsTyped(typed, matches, rules);
   // The text as typed, offered while it is not kept already and no found food is named so.
   const custom = canAdd && !named ? typed : null;
-  const { suggestions } = usePantrySuggestions();
+  const { suggestions } = usePantrySuggestions(items);
   // With the field empty the sheet offers "From your recipes" in place of search results.
   const offered = typed === "" ? suggestedMatches(items, suggestions, rules) : [];
   const rows = pantryAddRows(offered.length > 0 ? offered : matches, custom, intl.locale);

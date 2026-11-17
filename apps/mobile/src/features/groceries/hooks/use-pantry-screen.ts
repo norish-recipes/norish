@@ -12,7 +12,7 @@ import {
 } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { usePlatform } from "@norish/shared-react/platform";
-import { searchPantry, uncoveredSuggestions } from "@norish/shared/lib/pantry";
+import { searchPantry } from "@norish/shared/lib/pantry";
 
 import type { PantryActions } from "../components/pantry-rows";
 import { pantryRows } from "../utils/pantry-rows";
@@ -25,7 +25,7 @@ export function usePantryScreen() {
   const rules = useSpellingRules();
   const { toast } = usePlatform();
   const { items, isRead, isUnavailable } = usePantryQuery();
-  const { suggestions } = usePantrySuggestions();
+  const { suggestions: offered } = usePantrySuggestions(items);
   const onTheList = useOnTheList(items);
   const putOnList = usePutOnTheList(intl.locale);
   const { draft, setDraft, typed, keep } = useKeepingField(items, intl.locale, rules);
@@ -33,7 +33,6 @@ export function usePantryScreen() {
   const [folded, setFolded] = useState<boolean | null>(null);
   const [showAll, setShowAll] = useState(false);
   const kept = searchPantry(items, draft, intl.locale, rules);
-  const offered = uncoveredSuggestions(items, suggestions, rules);
 
   // "From your recipes" opens when the Pantry was empty as it was first read.
   if (startedEmpty === null && isRead) setStartedEmpty(items.length === 0);

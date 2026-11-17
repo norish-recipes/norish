@@ -2,7 +2,7 @@ import type { Edge } from "@/lib/card-edges";
 import { edgeAt } from "@/lib/card-edges";
 
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
-import { SUGGESTIONS_SHOWN } from "@norish/shared/lib/pantry";
+import { shownSuggestions } from "@norish/shared/lib/pantry";
 
 /** A row; `foodId` is the Ingredient whose icon it shows, null for rows that name no food. */
 export type PantryRow = { key: string; foodId: string | null } & (
@@ -53,7 +53,7 @@ export function pantryRows(
   if (typed === "" && offered.length > 0) {
     rows.push({ key: "suggestions", foodId: null, type: "suggestions", open: suggestionsOpen });
     if (suggestionsOpen) {
-      const shown = showAll ? offered : offered.slice(0, SUGGESTIONS_SHOWN);
+      const { shown, more } = shownSuggestions(offered, showAll);
 
       shown.forEach((food, index) =>
         rows.push({
@@ -64,9 +64,7 @@ export function pantryRows(
           edge: edgeAt(index, shown.length),
         })
       );
-      if (!showAll && offered.length > SUGGESTIONS_SHOWN) {
-        rows.push({ key: "more", foodId: null, type: "more" });
-      }
+      if (more) rows.push({ key: "more", foodId: null, type: "more" });
     }
   }
 

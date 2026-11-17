@@ -153,6 +153,16 @@ export function searchPantry(
 /** How many suggested foods show before Show more. */
 export const SUGGESTIONS_SHOWN = 6;
 
+/** The suggested foods shown: the first `SUGGESTIONS_SHOWN` until Show more, and whether it shows. */
+export function shownSuggestions<T>(
+  offered: readonly T[],
+  showAll: boolean
+): { shown: T[]; more: boolean } {
+  const more = !showAll && offered.length > SUGGESTIONS_SHOWN;
+
+  return { shown: more ? offered.slice(0, SUGGESTIONS_SHOWN) : [...offered], more };
+}
+
 /** The suggested foods the Pantry does not cover, by the rule the server used to suggest them. */
 export function uncoveredSuggestions<T extends { ingredientId: string; name: string }>(
   items: readonly PantryIngredientDto[],

@@ -47,7 +47,7 @@ vi.mock("../../../../../packages/shared-react/src/groceries/use-groceries-mutati
   useGroceriesMutations: () => ({ createGroceriesFromData, deleteGroceries: vi.fn() }),
 }));
 vi.mock("@norish/shared-react/groceries", async () => {
-  const { groceryOnTheList } = await import("@norish/shared/lib/pantry");
+  const { groceryOnTheList, uncoveredSuggestions } = await import("@norish/shared/lib/pantry");
   const { usePantryField } =
     await import("../../../../../packages/shared-react/src/groceries/use-pantry-field");
   const { usePutOnTheList } =
@@ -57,7 +57,9 @@ vi.mock("@norish/shared-react/groceries", async () => {
     usePantryField,
     usePutOnTheList,
     usePantryQuery: () => ({ items, ...pantry }),
-    usePantrySuggestions: () => ({ suggestions }),
+    usePantrySuggestions: (kept: PantryIngredientDto[]) => ({
+      suggestions: uncoveredSuggestions(kept, suggestions),
+    }),
     // What the hook's select answers over the list these tests hold.
     useOnTheList: (kept: PantryIngredientDto[]) =>
       kept

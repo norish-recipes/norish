@@ -9,11 +9,10 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
-import { useSpellingRules } from "@norish/shared-react/config";
 import { usePantrySuggestions } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { SUGGESTIONS_SHOWN, uncoveredSuggestions } from "@norish/shared/lib/pantry";
+import { shownSuggestions } from "@norish/shared/lib/pantry";
 
 /**
  * "From your recipes": the foods the household's own recipes use most, each
@@ -32,13 +31,11 @@ export function FromYourRecipes({
 }) {
   const t = useTranslations("groceries.pantry");
   const locale = useLocale();
-  const rules = useSpellingRules();
-  const { suggestions } = usePantrySuggestions();
+  const { suggestions: offered } = usePantrySuggestions(items);
   // Mounted once the Pantry has answered, so this is the Pantry on load.
   const [open, setOpen] = useState(items.length === 0);
   const [showAll, setShowAll] = useState(false);
-  const offered = uncoveredSuggestions(items, suggestions, rules);
-  const shown = showAll ? offered : offered.slice(0, SUGGESTIONS_SHOWN);
+  const { shown, more } = shownSuggestions(offered, showAll);
 
   useIngredientIcons(open ? shown.map((food) => food.ingredientId) : []);
 
@@ -85,7 +82,7 @@ export function FromYourRecipes({
               );
             })}
           </ul>
-          {!showAll && offered.length > SUGGESTIONS_SHOWN ? (
+          {more ? (
             <Button className="w-fit" size="sm" variant="tertiary" onPress={() => setShowAll(true)}>
               {t("showMore")}
             </Button>
