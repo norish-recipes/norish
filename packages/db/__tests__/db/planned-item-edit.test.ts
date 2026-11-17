@@ -8,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { Slot } from "@norish/shared/contracts";
 import {
   createPlannedItem,
+  deletePlannedItem,
   editPlannedItem,
   getPlannedItemById,
   listPlannedItemsBySlot,
@@ -166,5 +167,70 @@ describe("two writes at one version", () => {
       moveItem(id, nextDay, "Lunch", 0, 1),
       moveItem(id, nextDay, "Lunch", 1, 1),
     ]);
+  });
+});
+
+describe("two writes renumbering one slot", () => {
+  // Each pair applies both; neither aborts on a deadlock or leaves two plans at one place.
+  async function overlap(writes: () => Promise<unknown>[]) {
+    // The pool is reset per suite: warm two connections so the writes really overlap.
+    await Promise.all([titlesIn(date, "Dinner"), titlesIn(date, "Dinner")]);
+
+    for (let round = 0; round < 5; round += 1) {
+      await Promise.all(writes());
+    }
+
+    for (const [day, slot] of [
+      [date, "Dinner"],
+      [nextDay, "Lunch"],
+      [nextDay, "Breakfast"],
+    ] as const) {
+      const orders = (await titlesIn(day, slot)).map(([, sortOrder]) => sortOrder);
+
+      expect(orders).toEqual(orders.map((_, i) => i));
+    }
+  }
+
+  it("two moves out of one slot", async () => {
+    const soup = await plan("Dinner", "Soup");
+    const salad = await plan("Dinner", "Salad");
+
+    await plan("Dinner", "Bread");
+    await overlap(() => [
+      moveItem(soup.id, nextDay, "Lunch", 0),
+      moveItem(salad.id, nextDay, "Breakfast", 0),
+    ]);
+  });
+
+  it("two moves into one slot", async () => {
+    const soup = await plan("Dinner", "Soup");
+    const toast = await plan("Breakfast", "Toast", nextDay);
+
+    await plan("Lunch", "Wrap", nextDay);
+    await plan("Lunch", "Fruit", nextDay);
+    await overlap(() => [
+      moveItem(soup.id, nextDay, "Lunch"),
+      moveItem(toast.id, nextDay, "Lunch"),
+    ]);
+  });
+
+  it("a move against a create", async () => {
+    const soup = await plan("Dinner", "Soup");
+
+    await plan("Lunch", "Wrap", nextDay);
+    await overlap(() => [moveItem(soup.id, nextDay, "Lunch", 0), plan("Lunch", "Pie", nextDay)]);
+  });
+
+  it("a delete against a move out of its slot", async () => {
+    await plan("Dinner", "Bread");
+
+    await overlap(() => {
+      const write = Promise.all([plan("Dinner", "Soup"), plan("Dinner", "Salad")]).then(
+        ([soup, salad]) =>
+          Promise.all([deletePlannedItem(soup.id), moveItem(salad.id, nextDay, "Lunch", 0)])
+      );
+
+      return [write];
+    });
   });
 });

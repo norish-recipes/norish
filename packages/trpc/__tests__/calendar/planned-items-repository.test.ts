@@ -3,22 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import {
-  createPlannedItem,
-  deletePlannedItem,
-  getMaxSortOrder,
   getPlannedItemOwnerId,
   listPlannedItemsBySlot,
   listPlannedItemsByUserAndDateRange,
-  moveItem,
 } from "@norish/db/repositories/planned-items";
 
 vi.mock("@norish/db/drizzle", () => ({
   db: {
     select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    transaction: vi.fn(),
   },
 }));
 
@@ -92,187 +84,6 @@ describe("planned items repository", () => {
       const result = await listPlannedItemsBySlot(userIds, date, slot);
 
       expect(result).toEqual([]);
-    });
-  });
-
-  describe("createPlannedItem", () => {
-    it("inserts item with sortOrder = max + 1", async () => {
-      const input = { userId: "user-1", date, slot, itemType: "note", title: "Note" };
-      const returning = vi.fn().mockResolvedValue([{ id: "new-item" }]);
-      const values = vi.fn().mockReturnValue({ returning });
-
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ max: 2 }]),
-        }),
-      } as any);
-      dbMock.insert.mockReturnValue({ values } as any);
-
-      const result = await createPlannedItem(input as any);
-
-      expect(values).toHaveBeenCalledWith({ ...input, sortOrder: 3 });
-      expect(result).toEqual({ id: "new-item" });
-    });
-
-    it("first item in slot gets sortOrder = 0", async () => {
-      const input = { userId: "user-1", date, slot, itemType: "note", title: "Note" };
-      const returning = vi.fn().mockResolvedValue([{ id: "new-item" }]);
-      const values = vi.fn().mockReturnValue({ returning });
-
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ max: null }]),
-        }),
-      } as any);
-      dbMock.insert.mockReturnValue({ values } as any);
-
-      const result = await createPlannedItem(input as any);
-
-      expect(values).toHaveBeenCalledWith({ ...input, sortOrder: 0 });
-      expect(result).toEqual({ id: "new-item" });
-    });
-  });
-
-  describe("deletePlannedItem", () => {
-    it("removes item and reindexes remaining items", async () => {
-      const deleteWhere = vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([{ id: "item-1", userId: "user-1", date, slot }]),
-      });
-      const deleteFn = vi.fn().mockReturnValue({ where: deleteWhere });
-      const updateWhere = vi
-        .fn()
-        .mockReturnValueOnce({ returning: vi.fn().mockResolvedValue([{ id: "a", sortOrder: 0 }]) })
-        .mockReturnValueOnce({ returning: vi.fn().mockResolvedValue([{ id: "b", sortOrder: 1 }]) });
-      const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
-
-      dbMock.transaction.mockImplementation(async (callback) =>
-        callback({
-          delete: vi.fn().mockReturnValue({ where: deleteWhere }),
-          update: vi.fn().mockReturnValue({ set: updateSet }),
-          select: vi.fn().mockReturnValue({
-            from: vi.fn().mockReturnValue({
-              where: vi.fn().mockReturnValue({
-                orderBy: vi.fn().mockResolvedValue([{ id: "a" }, { id: "b" }]),
-              }),
-            }),
-          }),
-        } as any)
-      );
-      dbMock.delete.mockReturnValue(deleteFn as any);
-
-      const result = await deletePlannedItem("item-1");
-
-      expect(result).toEqual({
-        applied: true,
-        stale: false,
-        value: {
-          deletedItem: { id: "item-1", userId: "user-1", date, slot },
-          reindexedItems: [
-            { id: "a", sortOrder: 0 },
-            { id: "b", sortOrder: 1 },
-          ],
-        },
-      });
-      expect(deleteWhere).toHaveBeenCalled();
-      expect(updateSet).toHaveBeenCalled();
-      expect(updateWhere).toHaveBeenCalled();
-    });
-
-    it("returns stale outcome when delete matches no row", async () => {
-      const deleteWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) });
-
-      dbMock.transaction.mockImplementation(async (callback) =>
-        callback({
-          delete: vi.fn().mockReturnValue({ where: deleteWhere }),
-        } as any)
-      );
-
-      const result = await deletePlannedItem("item-1", 2);
-
-      expect(result).toEqual({ applied: false, stale: true, value: undefined });
-    });
-  });
-
-  describe("moveItem", () => {
-    it("moves item to new position and reindexes source and target slots", async () => {
-      const plannedItem = { id: "item-1", userId: "user-1", date, slot, sortOrder: 1, version: 2 };
-      const returning = vi.fn().mockResolvedValue([{ ...plannedItem, date: "2025-01-12" }]);
-      const set = vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ returning }) });
-
-      dbMock.transaction.mockImplementation(async (callback) =>
-        callback({
-          select: vi.fn().mockReturnValue({
-            from: vi.fn().mockReturnValue({
-              where: vi
-                .fn()
-                .mockReturnValueOnce({
-                  limit: () => ({ for: vi.fn().mockResolvedValue([plannedItem]) }),
-                })
-                .mockReturnValue({
-                  orderBy: vi.fn().mockResolvedValue([plannedItem]),
-                }),
-            }),
-          }),
-          update: vi.fn().mockReturnValue({ set }),
-        } as any)
-      );
-
-      const result = await moveItem("item-1", "2025-01-12", "Lunch", 0);
-
-      expect(result).toEqual({
-        applied: true,
-        stale: false,
-        value: { ...plannedItem, date: "2025-01-12" },
-      });
-      expect(set).toHaveBeenCalled();
-    });
-
-    it("is stale and writes nothing when the locked read finds another version", async () => {
-      const update = vi.fn();
-
-      dbMock.transaction.mockImplementation(async (callback) =>
-        callback({
-          select: vi.fn().mockReturnValue({
-            from: vi.fn().mockReturnValue({
-              where: vi.fn().mockReturnValue({
-                limit: () => ({ for: vi.fn().mockResolvedValue([]) }),
-              }),
-            }),
-          }),
-          update,
-        } as any)
-      );
-
-      const result = await moveItem("item-1", "2025-01-12", "Lunch", 0, 2);
-
-      expect(result).toEqual({ applied: false, stale: true, value: undefined });
-      expect(update).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("getMaxSortOrder", () => {
-    it("returns highest sortOrder for date and slot", async () => {
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ max: 4 }]),
-        }),
-      } as any);
-
-      const result = await getMaxSortOrder(userIds, date, slot);
-
-      expect(result).toBe(4);
-    });
-
-    it("returns -1 when no items", async () => {
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]),
-        }),
-      } as any);
-
-      const result = await getMaxSortOrder(userIds, date, slot);
-
-      expect(result).toBe(-1);
     });
   });
 

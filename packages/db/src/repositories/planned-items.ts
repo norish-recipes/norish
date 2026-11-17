@@ -1,8 +1,8 @@
-import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 import { db } from "@norish/db/drizzle";
-import { plannedItems, recipes } from "@norish/db/schema";
+import { plannedItems, recipes, users } from "@norish/db/schema";
 import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { MutationOutcome } from "./mutation-outcomes";
@@ -149,41 +149,33 @@ export async function getPlannedItemById(id: string): Promise<PlannedItem | null
   return row ?? null;
 }
 
-export async function getMaxSortOrder(
-  userIds: string[],
-  date: string,
-  slot: PlannedItemSlot
-): Promise<number> {
-  if (!userIds.length) return -1;
-
-  const [row] = await db
-    .select({ max: sql<number>`max(${plannedItems.sortOrder})` })
-    .from(plannedItems)
-    .where(
-      and(
-        inArray(plannedItems.userId, userIds),
-        eq(plannedItems.date, date),
-        eq(plannedItems.slot, slot)
-      )
-    );
-
-  return typeof row?.max === "number" ? row.max : -1;
-}
-
 export async function createPlannedItem(input: PlannedItemInsert): Promise<PlannedItem> {
-  const maxSortOrder = await getMaxSortOrder([input.userId], input.date, input.slot);
-  const sortOrder = maxSortOrder + 1;
+  return await db.transaction(async (trx) => {
+    await lockPlanner(trx, input.userId);
+    const [last] = await trx
+      .select({ sortOrder: plannedItems.sortOrder })
+      .from(plannedItems)
+      .where(
+        and(
+          eq(plannedItems.userId, input.userId),
+          eq(plannedItems.date, input.date),
+          eq(plannedItems.slot, input.slot)
+        )
+      )
+      .orderBy(desc(plannedItems.sortOrder))
+      .limit(1);
 
-  const [row] = await db
-    .insert(plannedItems)
-    .values({ ...input, sortOrder })
-    .returning();
+    const [row] = await trx
+      .insert(plannedItems)
+      .values({ ...input, sortOrder: (last?.sortOrder ?? -1) + 1 })
+      .returning();
 
-  if (!row) {
-    throw new Error("Failed to create planned item");
-  }
+    if (!row) {
+      throw new Error("Failed to create planned item");
+    }
 
-  return row;
+    return row;
+  });
 }
 
 export async function deletePlannedItem(
@@ -191,6 +183,8 @@ export async function deletePlannedItem(
   version?: number
 ): Promise<MutationOutcome<{ deletedItem: PlannedItem; reindexedItems: PlannedItem[] }>> {
   return await db.transaction(async (trx) => {
+    if (!(await lockPlannerOf(trx, id))) return staleOutcome();
+
     const deleteWhereConditions = [eq(plannedItems.id, id)];
 
     if (version) {
@@ -248,8 +242,29 @@ type PlannedItemMove = { date: string; slot: PlannedItemSlot; index?: number };
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Locked: a second write at the same version waits here, then finds no row at that version.
+// Every write that renumbers a planner's slots takes this lock first, so two never wait on each other.
+async function lockPlanner(trx: Transaction, userId: string) {
+  await trx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("no key update");
+}
+
+/** Locks the planner of a plan; false when the plan is gone. */
+async function lockPlannerOf(trx: Transaction, itemId: string): Promise<boolean> {
+  const [owner] = await trx
+    .select({ userId: plannedItems.userId })
+    .from(plannedItems)
+    .where(eq(plannedItems.id, itemId))
+    .limit(1);
+
+  if (!owner) return false;
+  await lockPlanner(trx, owner.userId);
+
+  return true;
+}
+
+// Under the planner's lock: a second write at the same version waits, then finds no row at that version.
 async function selectCurrent(trx: Transaction, itemId: string, version?: number) {
+  if (!(await lockPlannerOf(trx, itemId))) return null;
+
   const conditions = [eq(plannedItems.id, itemId)];
 
   if (version) conditions.push(eq(plannedItems.version, version));
@@ -258,8 +273,7 @@ async function selectCurrent(trx: Transaction, itemId: string, version?: number)
     .select()
     .from(plannedItems)
     .where(and(...conditions))
-    .limit(1)
-    .for("update");
+    .limit(1);
 
   return current ?? null;
 }
