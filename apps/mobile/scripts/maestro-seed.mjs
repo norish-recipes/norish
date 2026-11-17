@@ -139,6 +139,27 @@ export function seeder({ trpc, query }) {
         async () => (await query("groceries.list")).groceries.map((grocery) => grocery.name),
         min
       ),
+    // Where the first plan of recipe `name` stands: now without a `date`, else once it is on `date` in `slot` or after 15 s.
+    async plannedWhere(name, date, slot) {
+      const day = (offset) => {
+        const at = new Date();
+
+        at.setDate(at.getDate() + offset);
+
+        return at.toLocaleDateString("sv");
+      };
+      const deadline = Date.now() + 15_000;
+
+      for (;;) {
+        const items = await query("calendar.listItems", { startISO: day(-7), endISO: day(60) });
+        const found = items.find((item) => item.recipeName === name);
+
+        if (!date || (found?.date === date && found.slot === slot) || Date.now() > deadline) {
+          return { date: found?.date ?? null, slot: found?.slot ?? null };
+        }
+        await sleep(250);
+      }
+    },
     // The same for the Pantry's foods.
     pantryNames: (min = 0) =>
       namesOnceThere(async () => (await query("pantry.list")).map((item) => item.name), min),

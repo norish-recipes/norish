@@ -1,0 +1,74 @@
+# Edits a planned item's day and slot from its sheet: plans a recipe from Today's empty card, opens it
+# on Calendar, picks tomorrow and another slot, Save. Nothing is written before Save; after it the
+# server holds the item on tomorrow in that slot, and Today no longer shows it.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Edit Plan Soup", "key": "soup", "ingredients": ["2 eggs", "100 g flour"]}]'
+- extendedWaitUntil:
+    visible:
+      id: today-add-.*
+    timeout: 20000
+# An empty card reads "Add recipe, <slot>".
+- copyTextFrom:
+    id: today-add-.*
+- evalScript: ${output.slot = maestro.copiedText.split(', ').pop()}
+- tapOn:
+    id: today-add-.*
+- extendedWaitUntil:
+    visible:
+      id: plan-recipe-${output.soup}
+    timeout: 20000
+- tapOn:
+    id: plan-recipe-${output.soup}
+- runFlow:
+    file: subflows/planned.yaml
+    env:
+      PLANNED_NAME: Edit Plan Soup
+- evalScript: ${output.target = output.slot == 'Snack' ? 'Breakfast' : 'Snack'}
+# Local calendar day, as the app reads it.
+- evalScript: ${output.tomorrow = new Date(Date.now() + 86400000).toLocaleDateString('sv')}
+- tapOn:
+    id: tab-calendar
+- extendedWaitUntil:
+    visible:
+      id: calendar-item-.*
+      text: Edit Plan Soup.*
+    timeout: 20000
+- tapOn:
+    id: calendar-item-.*
+    text: Edit Plan Soup.*
+- extendedWaitUntil:
+    visible:
+      id: planned-item-sheet
+    timeout: 20000
+- tapOn:
+    id: planned-item-day-1
+- tapOn:
+    id: planned-item-slot-${output.target}
+# Still a draft: the server holds the plan where it was.
+- evalScript: ${output.before = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?name=Edit%20Plan%20Soup').body)}
+- assertTrue: ${output.before.date != output.tomorrow && output.before.slot == output.slot}
+# Save is the sheet's native header item, which has no id.
+- tapOn: Save
+- extendedWaitUntil:
+    notVisible:
+      id: planned-item-sheet
+    timeout: 20000
+- evalScript: ${output.moved = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?name=Edit%20Plan%20Soup&date=' + output.tomorrow + '&slot=' + output.target).body)}
+- assertTrue: ${output.moved.date == output.tomorrow && output.moved.slot == output.target}
+# The timeline still shows it, and Today no longer does.
+- assertVisible:
+    id: calendar-item-.*
+    text: Edit Plan Soup.*
+- tapOn:
+    id: tab-recipes
+- extendedWaitUntil:
+    visible:
+      id: today-add-.*
+    timeout: 20000
+- assertNotVisible:
+    id: today-card-.*
+    text: Edit Plan Soup
