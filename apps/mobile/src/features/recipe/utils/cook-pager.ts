@@ -2,8 +2,9 @@ export const PEEK_SCALE = 0.86;
 export const PEEK_OPACITY = 0.22;
 /** The fixed height of the peek slots above and below the current step. */
 export const PEEK_SLOT = 96;
-/** The tallest a peek lays out, so at `PEEK_SCALE` it fills its slot and no more. */
-export const PEEK_MAX_HEIGHT = PEEK_SLOT / PEEK_SCALE;
+/** The tallest a peek lays out: two lines of step text and the padding above them, which at
+ * `PEEK_SCALE` sits inside its slot; a two-line step's chips are left out. */
+export const PEEK_MAX_HEIGHT = 12 + 2 * 44;
 /** The finger travel that moves the column by one step. */
 export const DRAG_DISTANCE = 220;
 /** Seconds of release velocity a settle carries the column on. */

@@ -40,8 +40,8 @@ describe("slotPose", () => {
     const above = slotPose(-1, COLUMN, PEEK_MAX_HEIGHT);
     const below = slotPose(1, COLUMN, PEEK_MAX_HEIGHT);
 
-    expect(COLUMN / 2 + above.y - (PEEK_SCALE * PEEK_MAX_HEIGHT) / 2).toBeCloseTo(0);
-    expect(COLUMN / 2 + below.y + (PEEK_SCALE * PEEK_MAX_HEIGHT) / 2).toBeCloseTo(COLUMN);
+    expect(COLUMN / 2 + above.y - (PEEK_SCALE * PEEK_MAX_HEIGHT) / 2).toBeGreaterThanOrEqual(0);
+    expect(COLUMN / 2 + below.y + (PEEK_SCALE * PEEK_MAX_HEIGHT) / 2).toBeLessThanOrEqual(COLUMN);
   });
 
   it("fades a full step out as it shrinks, before its peek fades in", () => {
