@@ -3,7 +3,10 @@ import { edgeAt } from "@/lib/card-edges";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
 import type { IngredientItem } from "@norish/shared-react/ingredients";
+import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
+import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
+import { uncoveredSuggestions } from "@norish/shared/lib/pantry";
 
 /** A catalogue food a search found. */
 export type Match = Pick<IngredientItem, "id" | "name" | "localeNames">;
@@ -54,4 +57,17 @@ export function pantryAddRows(
   }
 
   return rows;
+}
+
+/** "From your recipes" as the sheet lists it: the suggested foods the Pantry does not cover. */
+export function suggestedMatches(
+  items: readonly PantryIngredientDto[],
+  suggestions: readonly PantrySuggestionDto[],
+  rules: SpellingRules
+): Match[] {
+  return uncoveredSuggestions(items, suggestions, rules).map((food) => ({
+    id: food.ingredientId,
+    name: food.name,
+    localeNames: food.localeNames,
+  }));
 }

@@ -8,7 +8,7 @@ import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useIntl } from "react-intl";
 
 import { useSpellingRules } from "@norish/shared-react/config";
-import { usePantryQuery } from "@norish/shared-react/groceries";
+import { usePantryQuery, usePantrySuggestions } from "@norish/shared-react/groceries";
 import {
   foodNamedAsTyped,
   useIngredientIcons,
@@ -18,7 +18,7 @@ import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod"
 
 import { PantryAddRowView } from "../components/pantry-add-row";
 import { useKeepingField } from "../hooks/use-keeping-field";
-import { pantryAddRows, pickedFood } from "../utils/pantry-add-rows";
+import { pantryAddRows, pickedFood, suggestedMatches } from "../utils/pantry-add-rows";
 
 /** Add to pantry: search the Ingredients, keep one, or keep the text as typed; the sheet stays open for the next. */
 export function PantryAddScreen() {
@@ -35,10 +35,13 @@ export function PantryAddScreen() {
   const named = foodNamedAsTyped(typed, matches, rules);
   // The text as typed, offered while it is not kept already and no found food is named so.
   const custom = canAdd && !named ? typed : null;
-  const rows = pantryAddRows(matches, custom, intl.locale);
+  const { suggestions } = usePantrySuggestions();
+  // With the field empty the sheet offers "From your recipes" in place of search results.
+  const offered = typed === "" ? suggestedMatches(items, suggestions, rules) : [];
+  const rows = pantryAddRows(offered.length > 0 ? offered : matches, custom, intl.locale);
   const label = intl.formatMessage({ id: "groceries.pantry.fieldPlaceholder" });
 
-  useIngredientIcons(matches.map((food) => food.id));
+  useIngredientIcons(rows.flatMap((row) => (row.foodId ? [row.foodId] : [])));
 
   const submit = () => {
     const food = named ? pickedFood(named) : custom;
@@ -69,6 +72,11 @@ export function PantryAddScreen() {
                 onChange={isRead ? setDraft : undefined}
                 onSubmit={submit}
               />
+              {offered.length > 0 ? (
+                <Text className="text-muted px-2 pt-3 text-xs font-semibold uppercase">
+                  {intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}
+                </Text>
+              ) : null}
             </View>
           }
           data={rows}

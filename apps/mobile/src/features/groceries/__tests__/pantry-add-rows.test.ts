@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { foodNamedAsTyped } from "@norish/shared-react/ingredients";
 import { BASE_SPELLING_RULES } from "@norish/shared/lib/spelling-keys";
 
-import { pantryAddRows, pickedFood } from "../utils/pantry-add-rows";
+import { pantryAddRows, pickedFood, suggestedMatches } from "../utils/pantry-add-rows";
 
 const olives = { id: "i-olives", name: "Olives", localeNames: {} };
 const oil = { id: "i-oil", name: "Olive oil", localeNames: {} };
@@ -44,5 +44,37 @@ describe("pantryAddRows", () => {
       "i-egg",
     ]);
     expect(pantryAddRows([], null, "en")).toEqual([]);
+  });
+});
+
+describe("suggestedMatches", () => {
+  const salt = {
+    ingredientId: "i-salt",
+    name: "Salt",
+    localeNames: { nl: "Zout" },
+    recipeCount: 4,
+  };
+  const rice = { ingredientId: "i-rice", name: "Rice", localeNames: {}, recipeCount: 2 };
+
+  it("offers the foods the Pantry does not cover, as rows that keep them", () => {
+    const kept = [
+      {
+        id: "p-salt",
+        version: 1,
+        userId: "u",
+        ingredientId: "i-salt",
+        name: "Salt",
+        ancestorIds: [],
+        localeNames: {},
+      },
+    ];
+    const rows = pantryAddRows(
+      suggestedMatches(kept, [salt, rice], BASE_SPELLING_RULES),
+      null,
+      "en"
+    );
+
+    expect(rows.map((row) => row.foodId)).toEqual(["i-rice"]);
+    expect(rows[0]?.keeps).toEqual({ ingredientId: "i-rice", name: "Rice", localeNames: {} });
   });
 });
