@@ -1,8 +1,4 @@
-import {
-  resolveLaunchMotion,
-  resolveSloganStart,
-  stepLaunchClock,
-} from "@/lib/boot/launch-motion";
+import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/launch-motion";
 import { describe, expect, it } from "vitest";
 
 describe("resolveLaunchMotion", () => {

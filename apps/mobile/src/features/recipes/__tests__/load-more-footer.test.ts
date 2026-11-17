@@ -1,54 +1,38 @@
-import { tabListBottomInset } from "@/components/tab-list-inset";
 import {
   LOAD_MORE_FOOTER_HEIGHT,
-  loadMoreFooterSpan,
-  nextTabBarMinimised,
+  loadMoreFooterBox,
 } from "@/features/recipes/utils/load-more-footer";
 import { describe, expect, it } from "vitest";
 
 const SCREEN = 874;
 
-/** Where the loader's centre lands, and the accessory's top, with the list at its end. */
-function place(safeBottom: number, minimised: boolean, accessoryOccupies: number) {
-  const lastCardBottom = SCREEN - tabListBottomInset(safeBottom) - LOAD_MORE_FOOTER_HEIGHT;
-  const span = loadMoreFooterSpan(safeBottom, minimised);
+/** Where the loader's centre and the accessory's top land, list at its end, last card 12 pt above its row's end. */
+function place(listInset: number, homeIndicator: number, accessoryTopFromBottom: number) {
+  const rowEnd = SCREEN - listInset - LOAD_MORE_FOOTER_HEIGHT;
+  const box = loadMoreFooterBox(listInset, homeIndicator);
 
   return {
-    centre: lastCardBottom + span / 2,
-    accessoryTop: SCREEN - accessoryOccupies,
-    lastCardBottom,
+    centre: rowEnd + box.top + box.height / 2,
+    cardBottom: rowEnd - 12,
+    accessoryTop: SCREEN - accessoryTopFromBottom,
   };
 }
 
-describe("loadMoreFooterSpan", () => {
-  it("centres the loader between the last card and the minimised accessory (76 pt up on a 34 pt home indicator)", () => {
-    const { centre, accessoryTop, lastCardBottom } = place(34, true, 76);
+describe("loadMoreFooterBox", () => {
+  it("centres the loader between the last card and the accessory on a phone with a home indicator", () => {
+    // Measured on an iPhone 17: the accessory's top is 76 pt up, the list's end padding 206 pt.
+    const { centre, cardBottom, accessoryTop } = place(206, 34, 76);
 
-    expect(centre).toBe((lastCardBottom + accessoryTop) / 2);
-    expect(loadMoreFooterSpan(34, true)).toBe(143);
+    expect(centre).toBe((cardBottom + accessoryTop) / 2);
   });
 
-  it("centres it with no home indicator too, where the accessory sits lower", () => {
-    const { centre, accessoryTop, lastCardBottom } = place(0, true, 56);
+  it("centres it with no home indicator, where the accessory sits lower", () => {
+    const { centre, cardBottom, accessoryTop } = place(121, 0, 56);
 
-    expect(centre).toBe((lastCardBottom + accessoryTop) / 2);
+    expect(centre).toBe((cardBottom + accessoryTop) / 2);
   });
 
-  it("keeps the strip above the clearance when the bar is expanded", () => {
-    expect(loadMoreFooterSpan(34, false)).toBe(LOAD_MORE_FOOTER_HEIGHT);
-    expect(loadMoreFooterSpan(0, false)).toBe(LOAD_MORE_FOOTER_HEIGHT);
-  });
-});
-
-describe("nextTabBarMinimised", () => {
-  it("minimises on a scroll down away from the top and expands on a scroll up or at the top", () => {
-    expect(nextTabBarMinimised(false, 120, 100)).toBe(true);
-    expect(nextTabBarMinimised(true, 100, 120)).toBe(false);
-    expect(nextTabBarMinimised(true, 0, 4)).toBe(false);
-  });
-
-  it("holds while the offset does not move", () => {
-    expect(nextTabBarMinimised(true, 120, 120)).toBe(true);
-    expect(nextTabBarMinimised(false, 120, 120)).toBe(false);
+  it("never shrinks below the footer's own strip", () => {
+    expect(loadMoreFooterBox(0, 34).height).toBeGreaterThanOrEqual(LOAD_MORE_FOOTER_HEIGHT);
   });
 });

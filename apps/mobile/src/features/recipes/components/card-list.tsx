@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Loader } from "@/components/loader";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
@@ -12,11 +12,7 @@ import { useIsFocused } from "expo-router";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import { cardChunks } from "../utils/card-chunks";
-import {
-  LOAD_MORE_FOOTER_HEIGHT,
-  loadMoreFooterSpan,
-  nextTabBarMinimised,
-} from "../utils/load-more-footer";
+import { LOAD_MORE_FOOTER_HEIGHT, loadMoreFooterBox } from "../utils/load-more-footer";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
@@ -55,9 +51,8 @@ export function CardList<Row>({
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
+  const homeIndicator = initialWindowMetrics?.insets.bottom ?? 0;
   const [scrolled, setScrolled] = useState(false);
-  const [minimised, setMinimised] = useState(false);
-  const lastOffsetRef = useRef(0);
   const isGrid = variant === "grid";
   const focused = useIsFocused();
 
@@ -74,10 +69,10 @@ export function CardList<Row>({
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={{ height: LOAD_MORE_FOOTER_HEIGHT }}>
-              {/* Spans down to the accessory's top, over the empty clearance below the strip. */}
+              {/* From the last card down to the accessory's top, over the end padding below the strip. */}
               <View
-                className="absolute inset-x-0 top-0"
-                style={{ height: loadMoreFooterSpan(insets.bottom, minimised) }}
+                className="absolute inset-x-0"
+                style={loadMoreFooterBox(tabListBottomInset(insets.bottom), homeIndicator)}
               >
                 <Loader centred />
               </View>
@@ -124,13 +119,7 @@ export function CardList<Row>({
         testID={testID}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
-        onScroll={(event) => {
-          const offset = event.nativeEvent.contentOffset.y;
-
-          setScrolled(offset > 8);
-          setMinimised(nextTabBarMinimised(minimised, offset, lastOffsetRef.current));
-          lastOffsetRef.current = offset;
-        }}
+        onScroll={(event) => setScrolled(event.nativeEvent.contentOffset.y > 8)}
         onScrollBeginDrag={() => closeOpenRow()}
       />
       {/* Cards dissolve into the page colour before the tab bar. */}
