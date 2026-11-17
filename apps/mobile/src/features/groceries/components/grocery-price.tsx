@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { Loader } from "@/components/loader";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PricedLine } from "@norish/shared-react/groceries";
@@ -8,7 +8,7 @@ import { useGroceryPrice } from "@norish/shared-react/groceries";
 import { formatShelfPrice } from "@norish/shared/lib/format-price";
 
 /** What a row costs at its Store: the Line Cost, the regular one struck through beside it on a
- * Sale, a spinner while the Store is still being asked, nothing for a Miss. */
+ * Sale, a skeleton while the Store is still being asked, nothing for a Miss. */
 export function GroceryPrice({
   line,
   size = "base",
@@ -24,8 +24,11 @@ export function GroceryPrice({
   if (price.status === "none") return null;
   if (price.status === "pending") {
     return (
-      <View testID="grocery-price-pending">
-        <Loader label={intl.formatMessage({ id: "groceries.price.pending" })} />
+      <View
+        accessibilityLabel={intl.formatMessage({ id: "groceries.price.pending" })}
+        testID="grocery-price-pending"
+      >
+        <Skeleton className="h-5 w-12 rounded-md" />
       </View>
     );
   }

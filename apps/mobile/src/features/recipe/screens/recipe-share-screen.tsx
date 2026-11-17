@@ -5,7 +5,7 @@ import { SheetScrollView } from "@/components/sheet";
 import { useServerUrl } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
-import { Button, Chip, useThemeColor } from "heroui-native";
+import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
@@ -137,7 +137,7 @@ function ShareBody({
 
       <Text className="text-foreground text-sm font-semibold">{t("currentLinks")}</Text>
       {isLoading ? (
-        <Loader />
+        <ShareRowsSkeleton />
       ) : rows.length === 0 ? (
         <Text className="text-muted text-sm">{t("empty")}</Text>
       ) : (
@@ -198,6 +198,24 @@ function ShareBody({
       )}
     </SheetScrollView>
   );
+}
+
+/** Two link rows' worth of placeholders, in the rows' own layout. */
+function ShareRowsSkeleton() {
+  return [0, 1].map((row) => (
+    <View
+      key={row}
+      className="bg-surface flex-row items-start gap-3 rounded-2xl p-3.5"
+      testID="recipe-share-skeleton"
+    >
+      <View className="min-w-0 flex-1 gap-1">
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-4 w-44 rounded-md" />
+        <Skeleton className="h-4 w-40 rounded-md" />
+      </View>
+      <Skeleton className="size-9 rounded-full" />
+    </View>
+  ));
 }
 
 export function RecipeShareScreen() {
