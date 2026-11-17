@@ -20,3 +20,7 @@
   2. `MAX_BATCH_URL_LENGTH`'s doc comment names the 8 KB proxy request line and Node's 16 KB 431; the call site no longer repeats it (4c4573600).
   3. Skipped: the batch test is the only `createTRPCClientLinks` call without a WebSocket; `createLinks` builds the WS options, so there is no second copy to share.
   4. `useCookbookQuery` reads only a tRPC NOT_FOUND as not found and retries other errors once, so web and mobile stay on their skeleton like the recipe page (3edb83d5f, with a test that failed before). Web's shared recipe page had the same `!recipe || NOT_FOUND` check; fixed the same way (c02a457c4). Mobile's recipe screens already check NOT_FOUND.
+- Review round 2:
+  1. One `isNotFoundError` in `@norish/shared-react/trpc` replaces the cookbook hook's copy, mobile's `isRecipeNotFound` and the two web page checks (f8e879125).
+  2. `useSharedRecipeQuery` shares `retryUnlessNotFound` with `useCookbookQuery`, so a missing shared recipe shows at once (e4ca61148).
+  3. The cookbook test serves every read as a failure, runs retries with no delay and counts the reads (1 for NOT_FOUND, 2 otherwise); 20/20 repeat runs passed (e49a52299).
