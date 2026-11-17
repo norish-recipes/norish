@@ -35,7 +35,11 @@ export function RecipesStack() {
           {/* A cookbook opens inside this stack so its sheets present over it. */}
           <Stack.Screen
             name="cookbook/[id]"
-            options={{ title: "", headerBackButtonDisplayMode: "minimal" }}
+            options={{
+              title: "",
+              headerBackButtonDisplayMode: "minimal",
+              scrollEdgeEffects: { top: "soft" },
+            }}
           />
           {/* A recipe opens inside this stack too, with its own nested stack for its sheets. */}
           <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />

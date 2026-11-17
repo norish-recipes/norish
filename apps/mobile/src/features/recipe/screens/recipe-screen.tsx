@@ -63,8 +63,9 @@ function RecipePage() {
       <PrefetchIngredientIcons ids={recipe.recipeIngredients.map((line) => line.ingredientId)} />
       <Stack.Screen
         options={{
-          // The header floats over the photo: its items stay pinned, with no bar or title behind them.
-          scrollEdgeEffects: { top: "hidden" },
+          // The header floats over the photo: its items stay pinned, with no bar or title behind
+          // them, and content scrolled under the status bar blurs softly.
+          scrollEdgeEffects: { top: "soft" },
           unstable_headerRightItems: () => headerItems,
         }}
       />

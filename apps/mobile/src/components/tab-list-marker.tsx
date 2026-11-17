@@ -4,10 +4,11 @@ import React from "react";
 import { ScrollViewMarker } from "react-native-screens/experimental";
 
 /** Hands a tab's list to the tab bar, which minimises as it scrolls; a View between them hides it.
- * The list's own fade meets the tab bar, so iOS's bottom edge effect is off. */
+ * The list's own fade meets the tab bar, so iOS's bottom edge effect is off; the top edge blurs
+ * softly where content scrolls under the status bar. */
 export function TabListMarker({ children }: { children: ReactElement }) {
   return (
-    <ScrollViewMarker scrollEdgeEffects={{ bottom: "hidden" }} style={{ flex: 1 }}>
+    <ScrollViewMarker scrollEdgeEffects={{ bottom: "hidden", top: "soft" }} style={{ flex: 1 }}>
       {children}
     </ScrollViewMarker>
   );
