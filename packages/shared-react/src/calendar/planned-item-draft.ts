@@ -10,7 +10,7 @@ import { useCalendarMutations } from "./use-calendar-mutations";
 export type PlannedItemDraft = { title: string; date: string; slot: Slot };
 
 /**
- * What Save writes for a draft: a note's changed text and a move when the day or slot changed.
+ * What Save writes for a draft: a note's changed text, and the day and slot when changed.
  * Null when nothing changed, or when a note's text is blank, which a note cannot be.
  */
 export function plannedItemChanges(
@@ -25,9 +25,8 @@ export function plannedItemChanges(
   const changes: PlannedItemChanges = {};
 
   if (editsText && title !== item.title) changes.title = title;
-  if (draft.date !== item.date || draft.slot !== item.slot) {
-    changes.move = { date: draft.date, slot: draft.slot };
-  }
+  if (draft.date !== item.date) changes.date = draft.date;
+  if (draft.slot !== item.slot) changes.slot = draft.slot;
 
   return Object.keys(changes).length > 0 ? changes : null;
 }

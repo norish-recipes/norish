@@ -207,6 +207,40 @@ export function useCalendarMutations(): CalendarMutationsResult {
     })
   );
 
+  // One write for a whole edit: a new day or slot lands last there, carrying the new text.
+  const { mutate: mutateEdit } = useMutation(
+    trpc.calendar.editItem.mutationOptions({
+      onMutate: ({ itemId, title, date, slot }) => {
+        const found = findItem(itemId);
+
+        return writeAcrossRanges((items, range) => {
+          if (!found) return items;
+          const target = { date: date ?? found.date, slot: slot ?? found.slot };
+
+          if (target.date === found.date && target.slot === found.slot) {
+            return items.map((item) =>
+              item.id === itemId
+                ? {
+                    ...item,
+                    title: title ?? item.title,
+                    version: item.version + 1,
+                    updatedAt: new Date(),
+                  }
+                : item
+            );
+          }
+          const edited = { ...found, title: title ?? found.title };
+          const sortOrder = moveTargetIndex(items, edited, target.date, target.slot);
+
+          return moveItemInRange(items, edited, { ...target, sortOrder }, range);
+        });
+      },
+      onSuccess: placeAnswer,
+      onError: rollBack,
+      scope: planWrites,
+    })
+  );
+
   const versionOf = (itemId: string) => findItem(itemId)?.version ?? 1;
 
   return {
@@ -226,19 +260,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
     updateItem: (itemId, title) => {
       mutateUpdate({ itemId, version: versionOf(itemId), title });
     },
-    saveItem: (itemId, { title, move }) => {
-      const version = versionOf(itemId);
-
-      if (title !== undefined) mutateUpdate({ itemId, version, title });
-      // The text's write has not run its optimistic bump yet, so the move names the version it leaves.
-      if (move) {
-        mutateMove({
-          itemId,
-          version: title === undefined ? version : version + 1,
-          targetDate: move.date,
-          targetSlot: move.slot,
-        });
-      }
+    saveItem: (itemId, changes) => {
+      mutateEdit({ itemId, version: versionOf(itemId), ...changes });
     },
   };
 }

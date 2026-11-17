@@ -48,17 +48,17 @@ describe("plannedItemChanges", () => {
 
   it.each([
     ["the text", { title: " Leek soup " }, { title: "Leek soup" }],
-    ["the day", { date: "2026-12-30" }, { move: { date: "2026-12-30", slot: "Lunch" } }],
-    ["the slot", { slot: "Dinner" }, { move: { date: "2026-11-12", slot: "Dinner" } }],
+    ["the day", { date: "2026-12-30" }, { date: "2026-12-30" }],
+    ["the slot", { slot: "Dinner" }, { slot: "Dinner" }],
     [
       "day and slot",
       { date: "2026-12-30", slot: "Dinner" },
-      { move: { date: "2026-12-30", slot: "Dinner" } },
+      { date: "2026-12-30", slot: "Dinner" },
     ],
     [
       "all three",
       { title: "Leek soup", date: "2026-12-30", slot: "Dinner" },
-      { title: "Leek soup", move: { date: "2026-12-30", slot: "Dinner" } },
+      { title: "Leek soup", date: "2026-12-30", slot: "Dinner" },
     ],
   ] as const)("for a note with %s changed writes just that", (_, edit, expected) => {
     expect(plannedItemChanges(note, { ...unchanged(note), ...edit })).toEqual(expected);
@@ -76,7 +76,7 @@ describe("plannedItemChanges", () => {
 
   it("never writes text for a recipe", () => {
     expect(plannedItemChanges(recipe, { ...unchanged(recipe), title: "x", slot: "Snack" })).toEqual(
-      { move: { date: "2026-11-12", slot: "Snack" } }
+      { slot: "Snack" }
     );
   });
 });
@@ -99,7 +99,8 @@ describe("usePlannedItemDraft", () => {
     expect(saveItem).toHaveBeenCalledTimes(1);
     expect(saveItem).toHaveBeenCalledWith("n1", {
       title: "Leek soup",
-      move: { date: "2026-12-30", slot: "Dinner" },
+      date: "2026-12-30",
+      slot: "Dinner",
     });
   });
 

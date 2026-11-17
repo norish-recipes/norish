@@ -43,8 +43,8 @@ export type CalendarQueryResult = {
   isRead: boolean;
 };
 
-/** What saving a planned item's edit writes: a note's new text, and a move to another day or slot. */
-export type PlannedItemChanges = { title?: string; move?: { date: string; slot: Slot } };
+/** What saving a planned item's edit writes: only the fields that change. */
+export type PlannedItemChanges = { title?: string; date?: string; slot?: Slot };
 
 export type CalendarMutationsResult = {
   planRecipe: (date: string, slot: Slot, recipeId: string) => void;
@@ -53,7 +53,7 @@ export type CalendarMutationsResult = {
   /** No index: last in the target slot. */
   moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex?: number) => void;
   updateItem: (itemId: string, title: string) => void;
-  /** An edit's text and move as one save: the move is written at the version the text leaves. */
+  /** An edit's text, day and slot as one write; a new day or slot puts it last there. */
   saveItem: (itemId: string, changes: PlannedItemChanges) => void;
 };
 

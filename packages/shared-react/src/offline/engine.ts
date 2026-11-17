@@ -46,6 +46,7 @@ const SCOPED_WRITES = [
   "calendar.deleteItem",
   "calendar.moveItem",
   "calendar.updateItem",
+  "calendar.editItem",
   "user.setDevicePreferences",
 ];
 

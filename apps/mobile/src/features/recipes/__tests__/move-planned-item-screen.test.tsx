@@ -203,7 +203,8 @@ describe("MovePlannedItemScreen", () => {
     fireEvent.click(save);
 
     expect(held.saveItem).toHaveBeenCalledWith("note-1", {
-      move: { date: "2026-11-13", slot: "Dinner" },
+      date: "2026-11-13",
+      slot: "Dinner",
     });
     expect(held.back).toHaveBeenCalledTimes(1);
   });
@@ -214,7 +215,7 @@ describe("MovePlannedItemScreen", () => {
     fireEvent.click(screen.getByTestId("move-confirm"));
 
     expect(held.saveItem).toHaveBeenCalledWith("note-1", {
-      move: { date: "2027-01-09", slot: "Lunch" },
+      date: "2027-01-09",
     });
   });
 

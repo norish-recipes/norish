@@ -4,7 +4,8 @@
  * slot; a write at another version changes nothing and answers `stale: true`, a move to where the
  * plan is moves nothing; a move bumps the moved plan alone, lands at its index (none: last) among
  * its owner's slot-mates and renumbers them without bumping; an update bumps its plan, and a
- * delete renumbers without bumping.
+ * delete renumbers without bumping; an edit writes its text, day and slot under one version
+ * check, a new slot taking it last.
  */
 import type { inferRouterOutputs } from "@trpc/server";
 import { act, renderHook } from "@testing-library/react";
@@ -31,6 +32,7 @@ const sends = vi.hoisted(() => ({
   createItem: vi.fn(),
   moveItem: vi.fn(),
   updateItem: vi.fn(),
+  editItem: vi.fn(),
   deleteItem: vi.fn(),
 }));
 
@@ -54,6 +56,7 @@ vi.mock("../../trpc", () => ({
       createItem: procedure(sends.createItem),
       moveItem: procedure(sends.moveItem),
       updateItem: procedure(sends.updateItem),
+      editItem: procedure(sends.editItem),
       deleteItem: procedure(sends.deleteItem),
     },
   }),
@@ -169,6 +172,34 @@ function serverOf(rows: Record<string, Row>, { deletedRecipes = new Set<string>(
 
           return { success: true, stale: false };
         },
+      },
+      editItem: {
+        mutate: vi.fn(
+          async (input: {
+            itemId: string;
+            version: number;
+            title?: string;
+            date?: string;
+            slot?: Slot;
+          }): Promise<Answers["editItem"]> => {
+            const row = db.get(input.itemId);
+
+            if (!row || row.version !== input.version) return { success: true, stale: true };
+            const date = input.date ?? row.date;
+            const slot = input.slot ?? row.slot;
+
+            if (date !== row.date || slot !== row.slot) {
+              const source = slotOf(row.userId, row.date, row.slot, input.itemId);
+              const target = slotOf(row.userId, date, slot, input.itemId);
+
+              Object.assign(row, { date, slot, sortOrder: target.length });
+              renumber(source);
+            }
+            Object.assign(row, { title: input.title ?? row.title, version: row.version + 1 });
+
+            return { success: true, stale: false };
+          }
+        ),
       },
       deleteItem: {
         mutate: async (input: {
@@ -350,29 +381,46 @@ describe("plan writes made offline, replayed", () => {
     }
   });
 
-  it("a note's text and move saved together in one tick: both stored, the move at the version the text left", async () => {
+  it("a note's text, day and slot saved together: one queued write, stored whole", async () => {
     const shown = await offline([
-      (m) =>
-        m.saveItem("soup", {
-          title: "Leek soup",
-          move: { date: "2026-11-12", slot: "Lunch" },
-        }),
+      (m) => m.saveItem("soup", { title: "Leek soup", date: "2026-11-12", slot: "Lunch" }),
     ]);
 
+    expect((await store.loadAll()).map((entry) => entry.path)).toEqual(["calendar.editItem"]);
     expect(shown.find((item) => item.id === "soup")).toMatchObject({
       title: "Leek soup",
       date: "2026-11-12",
       slot: "Lunch",
-      version: 3,
+      version: 2,
     });
     const server = serverOf(rows());
 
-    expect(await replay(server.client)).toMatchObject({ removed: 2, parked: 0, conflicted: [] });
+    expect(await replay(server.client)).toMatchObject({ removed: 1, parked: 0, conflicted: [] });
     expect(server.db.get("soup")).toMatchObject({
       title: "Leek soup",
       date: "2026-11-12",
       slot: "Lunch",
-      version: 3,
+      sortOrder: 0,
+      version: 2,
+    });
+    expect(server.db.get("salad")).toMatchObject({ sortOrder: 0, version: 3 });
+  });
+
+  it("parks the whole save as Conflicted when another member wrote the plan first", async () => {
+    await offline([
+      (m) => m.saveItem("soup", { title: "Leek soup", date: "2026-11-12", slot: "Lunch" }),
+    ]);
+    const server = serverOf(rows());
+
+    Object.assign(server.db.get("soup")!, { title: "Pea soup", version: 2 });
+    const pass = await replay(server.client);
+
+    expect(pass.conflicted.map((entry) => entry.path)).toEqual(["calendar.editItem"]);
+    expect(server.db.get("soup")).toMatchObject({
+      title: "Pea soup",
+      date: "2026-11-11",
+      slot: "Dinner",
+      version: 2,
     });
   });
 

@@ -65,6 +65,9 @@ const trpc = {
     updateItem: {
       mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "updateItem"]], ...opts }),
     },
+    editItem: {
+      mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "editItem"]], ...opts }),
+    },
     onItemCreated: procedure("onItemCreated"),
     onItemDeleted: procedure("onItemDeleted"),
     onItemMoved: procedure("onItemMoved"),

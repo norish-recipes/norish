@@ -213,7 +213,8 @@ describe("PlannedItemScreen", () => {
     expect(held.saveItem).toHaveBeenCalledTimes(1);
     expect(held.saveItem).toHaveBeenCalledWith("note-1", {
       title: "Leek soup",
-      move: { date: "2026-11-15", slot: "Dinner" },
+      date: "2026-11-15",
+      slot: "Dinner",
     });
     expect(held.back).toHaveBeenCalledTimes(1);
   });
@@ -224,7 +225,7 @@ describe("PlannedItemScreen", () => {
     fireEvent.click(screen.getByTestId("planned-item-confirm"));
 
     expect(held.saveItem).toHaveBeenCalledWith("note-1", {
-      move: { date: "2027-03-24", slot: "Lunch" },
+      date: "2027-03-24",
     });
   });
 
@@ -244,7 +245,7 @@ describe("PlannedItemScreen", () => {
 
     expect(screen.queryByTestId("planned-item-note")).toBeNull();
     expect(held.saveItem).toHaveBeenCalledWith("note-1", {
-      move: { date: "2026-11-12", slot: "Snack" },
+      slot: "Snack",
     });
   });
 
