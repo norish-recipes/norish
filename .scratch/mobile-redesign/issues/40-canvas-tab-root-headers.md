@@ -34,10 +34,10 @@
   4. The Calendar refresh/sync button is gone from every Calendar board; the avatar is the only bar item.
   5. New `offline` tweak on the Recipes (TabRoot), Groceries and Pantry boards draws the warning dot. The avatar menu always starts with a status line: "Live" with a green dot (no avatar dot) or "Offline · 3 changes waiting" with the warning dot. TabRecipesMenu now shows the Live line.
 - Mike round 2 (canvas v92): Filters is a glass bar item beside the avatar on Recipes in both `place` values, at rest and scrolled; the Filters button at the end of the All/Recipes/Cookbooks row is gone.
-- Mike round 3 (canvas v95):
+- Mike round 3 (canvas v96):
   1. Recipes bar holds only Filters (glass) and the avatar, at rest and scrolled; no grid/list switch in the bar.
   2. Recipes content: "Recipes", Today, then "Your library" with the grid/list switch beside it (scrolls, never sticky), and the full-width glass All/Recipes/Cookbooks capsule directly under it.
-  3. The All/Recipes/Cookbooks capsule pins under the bar only once scrolled past "Your library"; TabRecipesScrolled has a `scroll` tweak (`today`: shallow, nothing pinned; `library`: pinned, default).
+  3. The All/Recipes/Cookbooks capsule is never sticky; it scrolls away with "Your library". TabRecipesScrolled has a `scroll` tweak (`today`: shallow, capsule still visible; `library`: deep, capsule gone, default).
   4. Glass, short blur, no inline title, "Add recipe", `offline` and `dark` kept; TabRecipesMenu shows the new layout.
-  5. Groceries/Pantry: switch under the title, pins once scrolled past; the bar keeps only the gear (Groceries) and the avatar. The `place` tweak is gone from every Tab roots board.
+  5. Groceries/Pantry: switch under the title, never sticky (scrolls away with the list); the bar keeps only the gear (Groceries) and the avatar. The `place` tweak is gone from every Tab roots board.
   6. Titles inline with the bar items (App Store style) on every Tab roots board; scrolled, the items stay top right over the blur.
