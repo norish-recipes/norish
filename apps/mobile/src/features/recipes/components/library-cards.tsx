@@ -1,4 +1,5 @@
 import type { CardActions } from "@/hooks/use-card-actions";
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactElement } from "react";
 import React from "react";
 import { useCardActions } from "@/hooks/use-card-actions";
@@ -38,7 +39,7 @@ export function LibraryCards<Row>({
   onEndReached,
   fadeHeight,
   insets,
-  onOffset,
+  scroll,
   testID,
 }: {
   rows: Row[];
@@ -53,7 +54,7 @@ export function LibraryCards<Row>({
   onEndReached: () => void;
   fadeHeight: FadeHeight;
   insets?: "automatic" | "never";
-  onOffset?: (y: number) => void;
+  scroll: TabScroll;
   testID?: string;
 }) {
   const [variant] = useDevicePreference("recipeViewMode");
@@ -76,11 +77,11 @@ export function LibraryCards<Row>({
       fadeHeight={fadeHeight}
       header={header}
       insets={insets}
-      onOffset={onOffset}
       isFetchingNextPage={isFetchingNextPage}
       renderCard={(row) => renderCard(row, { variant, actions, allergies, isFavorite })}
       rowKey={rowKey}
       rows={isLoading ? [] : rows}
+      scroll={scroll}
       testID={testID}
       variant={variant}
       onEndReached={onEndReached}

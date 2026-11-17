@@ -110,8 +110,8 @@ vi.mock("../components/groceries-states", () => ({
   GroceriesSkeleton: () => null,
 }));
 vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
-vi.mock("@/lib/use-scrolled", () => ({
-  useScrolled: () => ({ scrolled: false, onOffset: () => {} }),
+vi.mock("@/lib/use-tab-scroll", () => ({
+  useTabScroll: () => ({ offset: { value: 0 }, minimised: false, homeIndicator: 0 }),
 }));
 vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
 

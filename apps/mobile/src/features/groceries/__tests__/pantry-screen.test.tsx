@@ -45,12 +45,15 @@ vi.mock(
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0 }),
 }));
-vi.mock("@/lib/use-tab-bar-minimised", () => ({ homeIndicator: 0 }));
 vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
 vi.mock("@/components/sheet-search-field", () => ({ SheetSearchField: () => null }));
 vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
-vi.mock("@/lib/use-scrolled", () => ({
-  useScrolled: () => ({ scrolled: false, onOffset: () => {} }),
+vi.mock("@/lib/use-tab-scroll", () => ({
+  useTabScroll: () => ({ offset: { value: 0 }, minimised: false, homeIndicator: 0 }),
+}));
+// The list is Reanimated's FlatList, here the plain one above.
+vi.mock("react-native-reanimated", async () => ({
+  default: { FlatList: (await import("react-native")).FlatList },
 }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));

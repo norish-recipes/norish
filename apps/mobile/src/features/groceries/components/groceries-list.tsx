@@ -1,9 +1,9 @@
 import type { Drop } from "@/components/drag-list/drag-list";
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
-import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import Animated from "react-native-reanimated";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
@@ -52,7 +52,7 @@ export function GroceriesList({
   storeNameOnLines,
   actions,
   onDrop,
-  onOffset,
+  onScroll,
 }: {
   rows: ListRow[];
   /** False while the list waits on its first read, so its first rows don't animate in. */
@@ -68,8 +68,8 @@ export function GroceriesList({
   actions: ListActions;
   /** A held row let go; false puts it back. */
   onDrop: (drop: Drop<ListHeading, ListItem>) => boolean;
-  /** Each scroll's offset, for the title that hides once scrolled. */
-  onOffset?: (y: number) => void;
+  /** The tab's scroll handler (`useTabScroll`), a worklet the drag list composes. */
+  onScroll?: TabScroll["onScroll"];
 }) {
   const recurrence = useRecurrenceLabel();
   const { fresh } = useFreshRows(rows, loaded);
@@ -189,11 +189,6 @@ export function GroceriesList({
       </ItemSlice>
     );
   };
-
-  // The drag list composes a worklet handler, so a plain callback would never run.
-  const onScroll = useAnimatedScrollHandler((event) => {
-    if (onOffset) scheduleOnRN(onOffset, event.contentOffset.y);
-  });
 
   return (
     <View className="flex-1">

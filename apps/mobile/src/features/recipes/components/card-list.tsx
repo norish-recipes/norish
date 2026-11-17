@@ -1,13 +1,13 @@
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactElement } from "react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Loader } from "@/components/loader";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
-import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
 import { useIsFocused } from "expo-router";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
@@ -39,7 +39,7 @@ export function CardList<Row>({
   onEndReached,
   fadeHeight,
   insets = "never",
-  onOffset,
+  scroll,
   testID,
 }: {
   rows: Row[];
@@ -53,12 +53,19 @@ export function CardList<Row>({
   fadeHeight: FadeHeight;
   /** `automatic` under a native large title, which the list scrolls with. */
   insets?: "automatic" | "never";
-  /** Each scroll's offset, for a title that hides once scrolled. */
-  onOffset?: (y: number) => void;
+  /** The tab's scroll (`useTabScroll`): the list's handler, the tab bar's guess and the offset. */
+  scroll: TabScroll;
   testID?: string;
 }) {
-  const { minimised, homeIndicator, track } = useTabBarMinimised();
-  const [scrolled, setScrolled] = useState(false);
+  const { minimised, homeIndicator, offset, onScroll } = scroll;
+  const fadeStyle = useAnimatedStyle(() => ({
+    height:
+      typeof fadeHeight === "number"
+        ? fadeHeight
+        : offset.value > 8
+          ? fadeHeight.scrolled
+          : fadeHeight.rest,
+  }));
   const isGrid = variant === "grid";
   const focused = useIsFocused();
 
@@ -115,15 +122,11 @@ export function CardList<Row>({
           </Animated.View>
         )
       }
-      scrollEventThrottle={32}
+      scrollEventThrottle={16}
       testID={testID}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.6}
-      onScroll={({ nativeEvent }) => {
-        setScrolled(nativeEvent.contentOffset.y > 8);
-        track(nativeEvent);
-        onOffset?.(nativeEvent.contentOffset.y);
-      }}
+      onScroll={onScroll}
       onScrollBeginDrag={() => closeOpenRow()}
     />
   );
@@ -134,17 +137,10 @@ export function CardList<Row>({
       {/* Under a native large title the list is the tab's, which the bar's title and accessory follow. */}
       {insets === "automatic" ? <TabListMarker>{list}</TabListMarker> : list}
       {/* Cards dissolve into the page colour before the tab bar. */}
-      <View
+      <Animated.View
         className="to-background from-background/0 absolute inset-x-0 bottom-0 bg-linear-to-b to-75%"
         pointerEvents="none"
-        style={{
-          height:
-            typeof fadeHeight === "number"
-              ? fadeHeight
-              : scrolled
-                ? fadeHeight.scrolled
-                : fadeHeight.rest,
-        }}
+        style={fadeStyle}
       />
     </View>
   );

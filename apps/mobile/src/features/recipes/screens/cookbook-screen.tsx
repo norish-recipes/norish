@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { useCardActions } from "@/hooks/use-card-actions";
+import { useTabScroll } from "@/lib/use-tab-scroll";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -100,6 +101,7 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
   const intl = useIntl();
   const { recipes, isLoading, isFetchingNextPage, loadMore } = useCookbookList(cookbook.id);
   const menu = useCookbookMenu(cookbook);
+  const scroll = useTabScroll();
 
   return (
     <LibraryCards
@@ -141,6 +143,7 @@ function CookbookPage({ cookbook }: { cookbook: CookbookSummaryDTO }) {
       )}
       rowKey={(recipe) => recipe.id}
       rows={recipes}
+      scroll={scroll}
       testID="cookbook-screen"
       onEndReached={loadMore}
     />

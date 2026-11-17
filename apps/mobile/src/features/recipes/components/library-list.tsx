@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { TabRootHeader } from "@/components/tab-root-header";
-import { useScrolled } from "@/lib/use-scrolled";
+import { useTabScroll } from "@/lib/use-tab-scroll";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import {
@@ -35,7 +35,7 @@ export function LibraryList({
 }) {
   const filters = useLibraryFilters((state) => state.filters);
   const filtersItem = useFiltersItem();
-  const { scrolled, onOffset } = useScrolled();
+  const scroll = useTabScroll();
   const { pendingRecipes, pendingRecipeIds } = usePendingRecipesQuery();
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
   const rows = libraryGridItems(items, pendingRecipeIds, filters.libraryType);
@@ -73,18 +73,18 @@ export function LibraryList({
       fadeHeight={LIST_FADE_HEIGHT}
       header={
         <>
-          <TabRootHeader items={[filtersItem]} scrolled={scrolled} title={title} />
+          <TabRootHeader items={[filtersItem]} offset={scroll.offset} title={title} />
           {header}
           <LibraryHeader />
         </>
       }
       insets="automatic"
-      onOffset={onOffset}
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
       renderCard={renderCard}
       rowKey={(row) => `${row.kind}-${row.id}`}
       rows={rows}
+      scroll={scroll}
       testID={testID}
       onEndReached={loadMore}
     />

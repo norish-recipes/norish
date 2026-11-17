@@ -4,7 +4,7 @@ import { TabRootHeader } from "@/components/tab-root-header";
 import { useConfirm } from "@/hooks/use-confirm";
 import { lightImpact } from "@/lib/haptics";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import { useScrolled } from "@/lib/use-scrolled";
+import { useTabScroll } from "@/lib/use-tab-scroll";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -49,7 +49,7 @@ export function GroceriesScreen() {
   const intl = useIntl();
   const router = useRouter();
   const confirm = useConfirm();
-  const { scrolled, onOffset } = useScrolled();
+  const scroll = useTabScroll();
   const { groceries, recurringGroceries, recipeMap, isLoading, isRead, getRecipeNameForGrocery } =
     useGroceriesQuery();
   const { stores, isLoading: storesLoading, isRead: storesRead } = useStoresQuery();
@@ -166,7 +166,7 @@ export function GroceriesScreen() {
             onView: setView,
           }),
         ]}
-        scrolled={scrolled}
+        offset={scroll.offset}
         title={intl.formatMessage({ id: "groceries.page.title" })}
       />
       <GroceriesList
@@ -187,7 +187,7 @@ export function GroceriesScreen() {
         rows={loading ? [] : nothing ? [] : rows}
         storeNameOnLines={view === "recipe"}
         onDrop={drop}
-        onOffset={onOffset}
+        onScroll={scroll.onScroll}
       />
     </View>
   );

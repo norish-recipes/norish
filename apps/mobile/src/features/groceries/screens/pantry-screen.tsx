@@ -1,13 +1,13 @@
 import React from "react";
-import { FlatList, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TabRootHeader } from "@/components/tab-root-header";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import { useScrolled } from "@/lib/use-scrolled";
-import { homeIndicator } from "@/lib/use-tab-bar-minimised";
+import { useTabScroll } from "@/lib/use-tab-scroll";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -22,7 +22,7 @@ export function PantryScreen() {
   const intl = useIntl();
   const router = useRouter();
   const { rows, actions, field, isRead, isUnavailable } = usePantryScreen();
-  const { scrolled, onOffset } = useScrolled();
+  const scroll = useTabScroll();
   const header = (
     <View>
       <View className="px-5 pb-5">
@@ -53,11 +53,11 @@ export function PantryScreen() {
     <IngredientIconSlots rows={rows}>
       <View className="bg-background flex-1" testID="pantry-screen">
         <TabRootHeader
-          scrolled={scrolled}
+          offset={scroll.offset}
           title={intl.formatMessage({ id: "groceries.page.pantry" })}
         />
         <TabListMarker>
-          <FlatList
+          <Animated.FlatList
             ListEmptyComponent={
               isUnavailable ? (
                 <Text className="text-muted px-5 py-6 text-center" testID="pantry-unavailable">
@@ -68,7 +68,7 @@ export function PantryScreen() {
               )
             }
             ListHeaderComponent={header}
-            contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
+            contentContainerStyle={{ paddingBottom: tabListBottomInset(scroll.homeIndicator) }}
             contentInsetAdjustmentBehavior="automatic"
             data={isRead ? rows : []}
             keyExtractor={(row) => row.key}
@@ -76,7 +76,7 @@ export function PantryScreen() {
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => <PantryRowView actions={actions} row={item} />}
             testID="pantry-list"
-            onScroll={({ nativeEvent }) => onOffset(nativeEvent.contentOffset.y)}
+            onScroll={scroll.onScroll}
           />
         </TabListMarker>
         {/* Rows dissolve into the page colour before the tab bar. */}

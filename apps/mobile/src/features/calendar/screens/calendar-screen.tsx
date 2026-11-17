@@ -1,9 +1,8 @@
 import type { FlatList, FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
-import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { scheduleOnRN } from "react-native-worklets";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
@@ -12,9 +11,8 @@ import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import { useScrolled } from "@/lib/use-scrolled";
-import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
 import { useTabReselect } from "@/lib/use-tab-reselect";
+import { useTabScroll } from "@/lib/use-tab-scroll";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -67,8 +65,7 @@ export function CalendarScreen() {
   // What the list shows, which a held drop keeps apart from `rows`.
   const shownRowsRef = useRef<TimelineRow[]>([]);
   const growth = useHeldGrowth(grow);
-  const bar = useTabBarMinimised();
-  const { scrolled, onOffset } = useScrolled();
+  const bar = useTabScroll();
   // A day scrolled to sits just under the bar, not behind it.
   const listTop = insets.top + BAR_HEIGHT + 12;
   const scrollToRow = (index: number, animated: boolean) => {
@@ -77,15 +74,6 @@ export function CalendarScreen() {
       animated,
     });
   };
-  // The drag list composes a worklet handler, which hands each scroll on to the bar's guess.
-  const onScroll = useAnimatedScrollHandler((event) => {
-    scheduleOnRN(onOffset, event.contentOffset.y);
-    scheduleOnRN(bar.track, {
-      contentOffset: { y: event.contentOffset.y },
-      contentSize: { height: event.contentSize.height },
-      layoutMeasurement: { height: event.layoutMeasurement.height },
-    });
-  });
   // The days a row of which is on screen, for the way back to today.
   const [shownDays, setShownDays] = useState<string[]>([]);
   // Stable: FlatList refuses a new viewability callback after its first render.
@@ -132,7 +120,7 @@ export function CalendarScreen() {
   useTabReselect(scrollToToday);
 
   const header = (
-    <TabRootHeader scrolled={scrolled} title={intl.formatMessage({ id: "calendar.page.title" })} />
+    <TabRootHeader offset={bar.offset} title={intl.formatMessage({ id: "calendar.page.title" })} />
   );
 
   // Until a read holds data an empty day is unknown, not empty: a failed first read stays a skeleton.
@@ -222,7 +210,7 @@ export function CalendarScreen() {
           onEndReached={() => growth.reached("future")}
           onEndReachedThreshold={GROW_THRESHOLD}
           onHeldChange={growth.heldChange}
-          onScroll={onScroll}
+          onScroll={bar.onScroll}
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
