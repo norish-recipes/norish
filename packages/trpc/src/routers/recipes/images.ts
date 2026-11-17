@@ -319,18 +319,6 @@ const deleteGalleryImage = authedProcedure
     await assertRecipeAccess(ctx, imageRecord.recipeId, "edit");
 
     try {
-      // Delete from filesystem
-      try {
-        await deleteImageByUrl(imageRecord.image);
-      } catch (fsError) {
-        // Log but don't fail - file might already be deleted
-        log.warn(
-          { userId: ctx.user.id, imageId: input.imageId, error: fsError },
-          "Could not delete gallery image file"
-        );
-      }
-
-      // Delete from database
       const result = await deleteRecipeImageById(input.imageId, input.version);
 
       if (result.stale) {
@@ -340,6 +328,17 @@ const deleteGalleryImage = authedProcedure
         );
 
         return { success: true, stale: true };
+      }
+
+      // The row goes first: a stale delete removes nothing, the file included.
+      try {
+        await deleteImageByUrl(imageRecord.image);
+      } catch (fsError) {
+        // Log but don't fail - file might already be deleted
+        log.warn(
+          { userId: ctx.user.id, imageId: input.imageId, error: fsError },
+          "Could not delete gallery image file"
+        );
       }
 
       // Deleting the hero image changes what the page leads with; the Dish

@@ -179,6 +179,30 @@ describe("a gallery upload right after recipes.create", () => {
     });
   });
 
+  it("removes neither the file nor the row on a stale gallery delete", async () => {
+    const { deleteImageByUrl, deleteVideoByUrl } =
+      await import("@norish/shared-server/media/storage");
+    const id = await caller().create(recipe("Kept"));
+    const image = await caller().uploadGalleryImage(photo(id, 0));
+    const video = await caller().uploadGalleryVideo(clip(id));
+
+    if (!("id" in image) || !image.id || !("id" in video) || !video.id) {
+      throw new Error("The uploads were not stored");
+    }
+    vi.mocked(deleteImageByUrl).mockClear();
+    vi.mocked(deleteVideoByUrl).mockClear();
+
+    await caller().deleteGalleryImage({ imageId: image.id, version: (image.version ?? 1) + 1 });
+    await caller().deleteGalleryVideo({ videoId: video.id, version: (video.version ?? 1) + 1 });
+
+    expect(deleteImageByUrl).not.toHaveBeenCalled();
+    expect(deleteVideoByUrl).not.toHaveBeenCalled();
+    expect(await getRecipeFull(id)).toMatchObject({
+      images: [expect.objectContaining({ id: image.id })],
+      videos: [expect.objectContaining({ id: video.id })],
+    });
+  });
+
   it("announces nothing for media uploaded before its recipe is stored, or a stale removal", async () => {
     const pendingId = crypto.randomUUID();
 

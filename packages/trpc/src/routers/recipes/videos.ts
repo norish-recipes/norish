@@ -186,18 +186,6 @@ const deleteGalleryVideo = authedProcedure
     await assertRecipeAccess(ctx, videoRecord.recipeId, "edit");
 
     try {
-      // Delete from filesystem
-      try {
-        await deleteVideoByUrl(videoRecord.video);
-      } catch (fsError) {
-        // Log but don't fail - file might already be deleted
-        log.warn(
-          { userId: ctx.user.id, videoId: input.videoId, error: fsError },
-          "Could not delete gallery video file"
-        );
-      }
-
-      // Delete from database
       const result = await deleteRecipeVideoById(input.videoId, input.version);
 
       if (result.stale) {
@@ -207,6 +195,17 @@ const deleteGalleryVideo = authedProcedure
         );
 
         return { success: true, stale: true };
+      }
+
+      // The row goes first: a stale delete removes nothing, the file included.
+      try {
+        await deleteVideoByUrl(videoRecord.video);
+      } catch (fsError) {
+        // Log but don't fail - file might already be deleted
+        log.warn(
+          { userId: ctx.user.id, videoId: input.videoId, error: fsError },
+          "Could not delete gallery video file"
+        );
       }
 
       await afterCommit(ctx, "announcing the recipe", () =>
