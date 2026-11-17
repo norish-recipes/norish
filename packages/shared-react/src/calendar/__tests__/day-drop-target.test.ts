@@ -1,14 +1,9 @@
-import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
 import { moveTargetIndex } from "../calendar-cache-merge";
-import { dayDropTarget, useMovePlannedItem } from "../use-move-planned-item";
-
-const moveItem = vi.hoisted(() => vi.fn());
-
-vi.mock("../use-calendar-mutations", () => ({ useCalendarMutations: () => ({ moveItem }) }));
+import { dayDropTarget } from "../day-drop-target";
 
 function planned(id: string, date: string, slot: PlannedItemFromQuery["slot"]) {
   return {
@@ -32,7 +27,6 @@ function planned(id: string, date: string, slot: PlannedItemFromQuery["slot"]) {
 
 const moved = planned("m", "2026-11-13", "Lunch");
 const items = [moved, planned("a", "2026-11-14", "Dinner"), planned("b", "2026-11-14", "Dinner")];
-const close = vi.fn();
 
 describe("moveTargetIndex", () => {
   it("is the end of the target slot, the moved item not counted", () => {
@@ -67,36 +61,5 @@ describe("dayDropTarget", () => {
     ["its own day", "2026-11-14"],
   ])("moves nothing when dropped on %s", (_, dayKey) => {
     expect(dayDropTarget(items, items[1]!, dayKey)).toBeNull();
-  });
-});
-
-describe("useMovePlannedItem", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("moves the item last in the slot, for the server to place, and closes", () => {
-    const { result } = renderHook(() => useMovePlannedItem({ itemId: "m", items, close }));
-
-    result.current("2026-11-14", "Dinner");
-
-    expect(moveItem).toHaveBeenCalledWith("m", "2026-11-14", "Dinner");
-    expect(close).toHaveBeenCalled();
-  });
-
-  it("only closes when the item is already there", () => {
-    const { result } = renderHook(() => useMovePlannedItem({ itemId: "m", items, close }));
-
-    result.current("2026-11-13", "Lunch");
-
-    expect(moveItem).not.toHaveBeenCalled();
-    expect(close).toHaveBeenCalled();
-  });
-
-  it("closes without moving when the item is gone", () => {
-    const { result } = renderHook(() => useMovePlannedItem({ itemId: "deleted", items, close }));
-
-    result.current("2026-11-14", "Dinner");
-
-    expect(moveItem).not.toHaveBeenCalled();
-    expect(close).toHaveBeenCalled();
   });
 });
