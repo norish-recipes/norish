@@ -8,6 +8,9 @@ import { Stack } from "expo-router";
 /** How far the list scrolls before the title has faded out under the soft top edge. */
 const TITLE_FADE = 28;
 
+/** How far the list scrolls before it counts as scrolled, for what changes at rest and away. */
+export const SCROLLED_PAST = 8;
+
 /** A tab root's title on the bar's line, left (App Store style), moving up and fading with the
  * list's `offset`; its bar items beside the avatar menu, always last. */
 export function TabRootHeader({

@@ -5,6 +5,7 @@ import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Loader } from "@/components/loader";
 import { TabListMarker } from "@/components/tab-list-marker";
+import { SCROLLED_PAST } from "@/components/tab-root-header";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
@@ -62,7 +63,7 @@ export function CardList<Row>({
     height:
       typeof fadeHeight === "number"
         ? fadeHeight
-        : offset.value > 8
+        : offset.value > SCROLLED_PAST
           ? fadeHeight.scrolled
           : fadeHeight.rest,
   }));
