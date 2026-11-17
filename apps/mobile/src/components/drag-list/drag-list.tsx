@@ -316,8 +316,8 @@ type DragListProps<H, T> = Omit<
   /** Where a drop lands by a rule rather than where the card is: its gap in `rows` (the rows
    * shown), or null where it changes nothing. The list then draws no line, only the outline. */
   landAt?: (drop: Drop<H, T>, rows: DragRow<H, T>[]) => number | null;
-  /** The bars over the list's ends, inside which auto-scroll starts; by default its `contentInset`.
-   * The top one is also where scrolling up stops. */
+  /** The bars over the list's ends, inside which auto-scroll starts (none by default); the top one
+   * is also where scrolling up stops. */
   edgeInsets?: { top?: number; bottom?: number };
   itemLayoutAnimation?: LayoutAnimation;
   onScroll?: ScrollHandler;
@@ -374,11 +374,7 @@ export function DragList<H, T>({
         section: sections[index] ?? null,
       })),
       page,
-      insets: {
-        top: edgeInsets?.top ?? rest.contentInset?.top ?? 0,
-        bottom: edgeInsets?.bottom ?? rest.contentInset?.bottom ?? 0,
-        content: rest.contentInset?.bottom ?? 0,
-      },
+      insets: { top: edgeInsets?.top ?? 0, bottom: edgeInsets?.bottom ?? 0 },
       events: {
         lifted: (key) => {
           mediumImpact();

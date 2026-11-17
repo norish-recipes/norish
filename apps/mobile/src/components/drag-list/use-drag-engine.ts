@@ -52,7 +52,7 @@ export function useDragEngine({
 }: {
   order: Order;
   page: Page | null;
-  insets: { top: number; bottom: number; content: number };
+  insets: { top: number; bottom: number };
   events: Events;
 }) {
   const listRef = useAnimatedRef<FlatList>();
@@ -189,8 +189,7 @@ export function useDragEngine({
     if (depth !== 0) {
       // A FlatList's offset is where its content starts on screen; a page tracks its own.
       const offset = page ? page.offset.get() : viewport.pageY - content.pageY;
-      const max =
-        (page ? page.contentHeight.get() : contentHeight.get() + insets.content) - viewport.height;
+      const max = (page ? page.contentHeight.get() : contentHeight.get()) - viewport.height;
       const speed = Math.max(-1, Math.min(1, depth)) * EDGE_SPEED;
       const next = Math.max(
         page ? 0 : -insets.top,
