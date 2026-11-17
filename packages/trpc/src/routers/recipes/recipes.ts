@@ -209,7 +209,7 @@ export const createRecipeProcedure = authedProcedure
   })
   .input(FullRecipeInsertSchema)
   .output(z.uuid())
-  .mutation(({ ctx, input }) => {
+  .mutation(async ({ ctx, input }) => {
     const recipeId = input.id ?? randomUUID();
 
     log.info(
@@ -218,45 +218,41 @@ export const createRecipeProcedure = authedProcedure
     );
     log.debug({ recipe: input }, "Full recipe data");
 
-    if (input.id && input.id !== recipeId) {
-      log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
+    // The id is answered once the recipe is stored, so media uploaded with it lands on the recipe.
+    // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
+    const created = await createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
+      userId: ctx.user.id,
+    }).catch((err: unknown) => {
+      log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
+      throw err;
+    });
+
+    if (!created) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create recipe" });
     }
 
-    // The Dish Colour rides the payload from here: derived from the image
-    // the recipe is being stored with, overwriting anything the client sent.
-    withDishColor(input)
-      .then((dto) => createResolvedRecipe(recipeId, ctx.user.id, dto, { userId: ctx.user.id }))
-      .then(async (created) => {
-        if (!created) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create recipe",
-          });
-        }
+    void (async () => {
+      const dashboardDto = await dashboardRecipe(created.recipeId);
 
-        const createdId = created.recipeId;
-        const dashboardDto = await dashboardRecipe(createdId);
+      if (dashboardDto) {
+        log.info({ userId: ctx.user.id, recipeId: created.recipeId }, "Recipe created");
+        const policy = await getRecipePermissionPolicy();
 
-        if (dashboardDto) {
-          log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
-          const policy = await getRecipePermissionPolicy();
+        void recipes.publish(
+          "created",
+          { recipe: dashboardDto },
+          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+        );
+      }
 
-          void recipes.publish(
-            "created",
-            { recipe: dashboardDto },
-            { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-          );
-        }
-
-        // A manually created recipe enters the same automatic flow as an
-        // import: importing is not a prerequisite for automation.
-        await announceUsableRecipe(created, {
-          userId: ctx.user.id,
-          householdKey: ctx.householdKey,
-          householdUserIds: ctx.householdUserIds,
-        });
-      })
-      .catch((err) => handleRecipeError(ctx, err, "create recipe", { recipeId }));
+      // A manually created recipe enters the same automatic flow as an
+      // import: importing is not a prerequisite for automation.
+      await announceUsableRecipe(created, {
+        userId: ctx.user.id,
+        householdKey: ctx.householdKey,
+        householdUserIds: ctx.householdUserIds,
+      });
+    })().catch((err) => handleRecipeError(ctx, err, "announce the created recipe", { recipeId }));
 
     return recipeId;
   });
