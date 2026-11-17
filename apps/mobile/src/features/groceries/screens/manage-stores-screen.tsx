@@ -60,6 +60,7 @@ function ShopCheckLine({
  * editor that replaces the list inside the same sheet. Deleting asks first, as web does. */
 export function ManageStoresScreen() {
   const intl = useIntl();
+  const [onAccent] = useThemeColor(["accent-foreground"] as const);
   const cancel = useCancelButton();
   const text = (id: string) => intl.formatMessage({ id });
   const { stores, isRead } = useStoresQuery();
@@ -154,7 +155,7 @@ export function ManageStoresScreen() {
           variant="primary"
           onPress={() => setEditing(newEditingStore())}
         >
-          <Ionicons color="#ffffff" name="add" size={20} />
+          <Ionicons color={onAccent} name="add" size={20} />
           <Button.Label className="font-semibold">{text("groceries.mobile.addStore")}</Button.Label>
         </Button>
       }

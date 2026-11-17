@@ -1,6 +1,6 @@
 import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Checkbox } from "heroui-native";
+import { Checkbox, useThemeColor } from "heroui-native";
 
 /** A round tick for a row that carries the press itself; the row's accessibility state says whether it is ticked. */
 export function RoundTick({
@@ -18,6 +18,7 @@ export function RoundTick({
   partial?: boolean;
 }) {
   const filled = selected || partial;
+  const [onFill] = useThemeColor(["accent-foreground"] as const);
 
   return (
     <Checkbox
@@ -33,7 +34,7 @@ export function RoundTick({
         animation={{ borderRadius: { value: [999, 999] } }}
         style={color ? { backgroundColor: color } : undefined}
       >
-        {partial ? <Ionicons color="#ffffff" name="remove" size={14} /> : undefined}
+        {partial ? <Ionicons color={onFill} name="remove" size={14} /> : undefined}
       </Checkbox.Indicator>
     </Checkbox>
   );

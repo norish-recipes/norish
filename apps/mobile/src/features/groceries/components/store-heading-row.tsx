@@ -25,7 +25,7 @@ export function StoreHeadingRow({
   actions: SectionActions | undefined;
 }) {
   const intl = useIntl();
-  const [muted] = useThemeColor(["muted"] as const);
+  const [muted, onFill] = useThemeColor(["muted", "accent-foreground"] as const);
   const color = useStoreColor(heading.store?.color);
   const total = useStoreTotal(heading.lines, heading.store?.id ?? null);
   const name = heading.store?.name ?? intl.formatMessage({ id: "groceries.store.unsorted" });
@@ -51,7 +51,7 @@ export function StoreHeadingRow({
               style={{ backgroundColor: color }}
               testID="store-dot"
             >
-              <Ionicons color="#ffffff" name="checkmark" size={11} />
+              <Ionicons color={onFill} name="checkmark" size={11} />
             </View>
           ) : (
             <View
