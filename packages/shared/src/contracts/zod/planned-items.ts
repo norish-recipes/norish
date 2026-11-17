@@ -33,6 +33,16 @@ export type PlannedItemEdit = Omit<
   "itemId" | "version"
 >;
 
+/** Where an edit takes the item: undefined while its day and slot stay as they are. */
+export function plannedItemEditTarget(
+  item: { date: string; slot: z.infer<typeof slotSchema> },
+  edit: PlannedItemEdit
+) {
+  const target = { date: edit.date ?? item.date, slot: edit.slot ?? item.slot };
+
+  return target.date !== item.date || target.slot !== item.slot ? target : undefined;
+}
+
 export const PlannedItemEventPayloadSchema = z.object({
   id: z.string(),
   date: z.string(),

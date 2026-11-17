@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-import { assertHouseholdAccess } from "@norish/auth/permissions";
-import {
-  getPlannedItemById,
-  getPlannedItemWithRecipeById,
-  moveItem,
-} from "@norish/db/repositories/planned-items";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   PlannedItemDeleteInputSchema,
   PlannedItemEditInputSchema,
@@ -17,7 +10,6 @@ import { dateKey, endOfMonth, startOfMonth } from "@norish/shared/lib/helpers";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import {
-  buildPlannedItemPayload,
   createCalendarItem,
   deleteCalendarItem,
   editCalendarItem,
@@ -25,7 +17,7 @@ import {
   getServerToday,
   listItemsByRange,
   listPlannedRecipesByRange,
-  publishItemMoved,
+  moveCalendarItem,
   startOfServerWeek,
 } from "./planned-items-helpers";
 import {
@@ -167,46 +159,9 @@ export const plannedItemsProcedures = router({
     return listItemsByRange(ctx, startISO, endISO);
   }),
 
-  moveItem: authedProcedure.input(PlannedItemMoveInputSchema).mutation(async ({ ctx, input }) => {
-    const { itemId, targetDate, targetSlot, targetIndex, version } = input;
-
-    const item = await getPlannedItemById(itemId);
-
-    // A plan another member removed lost to an earlier write: stale, as a changed version is.
-    if (!item) return { success: true, moved: false, stale: true };
-
-    await assertHouseholdAccess(ctx.user.id, item.userId);
-
-    // A write at another version changes nothing, whatever it asks (ADR-0004).
-    if (item.version !== version) {
-      log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar move mutation");
-
-      return { success: true, moved: false, stale: true };
-    }
-    if (item.date === targetDate && item.slot === targetSlot && item.sortOrder === targetIndex) {
-      return { success: true, moved: false, stale: false };
-    }
-
-    const moveResult = await moveItem(itemId, targetDate, targetSlot, targetIndex, version);
-
-    if (moveResult.stale) {
-      log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar move mutation");
-
-      return { success: true, moved: false, stale: true };
-    }
-
-    const movedItemWithRecipe = await getPlannedItemWithRecipeById(moveResult.value.id);
-
-    // Stored all the same: no item in the answer makes the client reread.
-    if (!movedItemWithRecipe) return { success: true, moved: true, stale: false };
-
-    const itemPayload = buildPlannedItemPayload(movedItemWithRecipe);
-
-    await publishItemMoved(ctx, item, itemPayload);
-
-    // The moved item rides the answer, as a create's does: the echo is the fast path (ADR-0011).
-    return { success: true, moved: true, stale: false, item: itemPayload };
-  }),
+  moveItem: authedProcedure
+    .input(PlannedItemMoveInputSchema)
+    .mutation(async ({ ctx, input }) => moveCalendarItem(ctx, input)),
 
   createItem: authedProcedure.input(createItemInput).mutation(async ({ ctx, input }) => {
     return createCalendarItem(ctx, input);

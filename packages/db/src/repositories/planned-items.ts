@@ -3,6 +3,7 @@ import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 import { db } from "@norish/db/drizzle";
 import { plannedItems, recipes } from "@norish/db/schema";
+import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
@@ -400,9 +401,7 @@ export async function editPlannedItem(
 
     if (!current) return staleOutcome();
 
-    const date = edit.date ?? current.date;
-    const slot = edit.slot ?? current.slot;
-    const move = date !== current.date || slot !== current.slot ? { date, slot } : undefined;
+    const move = plannedItemEditTarget(current, edit);
 
     if (!move && edit.title === undefined) return appliedOutcome(current);
 
