@@ -150,6 +150,11 @@ describe("calendar.editItem", () => {
     expect(editPlannedItem).not.toHaveBeenCalled();
   });
 
+  it("refuses a day that is not a date key, writing nothing", async () => {
+    await expect(edit({ date: "tomorrow" })).rejects.toThrow();
+    expect(editPlannedItem).not.toHaveBeenCalled();
+  });
+
   it("refuses a member outside the item's household", async () => {
     assertHouseholdAccess.mockRejectedValue(new Error("Access denied"));
 

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DateStringSchema } from "../../lib/validation/schemas";
+
 export const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 
 const plannedItemTypeSchema = z.enum(["recipe", "note"]);
@@ -7,7 +9,7 @@ const plannedItemTypeSchema = z.enum(["recipe", "note"]);
 export const PlannedItemMoveInputSchema = z.object({
   itemId: z.uuid(),
   version: z.number().int().positive(),
-  targetDate: z.string(),
+  targetDate: DateStringSchema,
   targetSlot: slotSchema,
   /** Omitted: last in the target slot, as the server finds it. */
   targetIndex: z.number().int().min(0).optional(),
@@ -23,7 +25,7 @@ export const PlannedItemEditInputSchema = z.object({
   itemId: z.uuid(),
   version: z.number().int().positive(),
   title: z.string().min(1).optional(),
-  date: z.string().optional(),
+  date: DateStringSchema.optional(),
   slot: slotSchema.optional(),
 });
 
