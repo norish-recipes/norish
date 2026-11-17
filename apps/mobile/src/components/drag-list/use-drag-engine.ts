@@ -13,7 +13,7 @@ import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { lightImpact } from "@/lib/haptics";
 import { timedTo } from "@/lib/motion/timed";
 
-import type { Slot, Target } from "./drop-target";
+import type { Box, Slot, Span, Target } from "./drop-target";
 import { landingTop, targetAt } from "./drop-target";
 
 /** The band at either end of the visible list that scrolls it, and the speed at its far edge. */
@@ -22,10 +22,8 @@ const EDGE_SPEED = 900;
 /** How long the lifted card takes to settle where it lands. */
 const SETTLE_MS = 180;
 
-export type CellLayout = { top: number; height: number; width: number };
-export type CardLayout = { top: number; height: number; x: number; width: number };
 /** The lifted row: where its cell was, and where the list's content started on screen then. */
-type Lift = { key: string; top: number; height: number; origin: number };
+type Lift = Span & { key: string; origin: number };
 /** The rows a drag counts in, with each one's section. */
 export type Order = { key: string; heading: boolean; section: string | null }[];
 
@@ -59,8 +57,8 @@ export function useDragEngine({
 }) {
   const listRef = useAnimatedRef<FlatList>();
   const layerRef = useAnimatedRef<View>();
-  const cells = useSharedValue<Record<string, CellLayout>>({});
-  const cards = useSharedValue<Record<string, CardLayout>>({});
+  const cells = useSharedValue<Record<string, Box>>({});
+  const cards = useSharedValue<Record<string, Box>>({});
   const rowsNow = useSharedValue<Order>([]);
   const lift = useSharedValue<Lift | null>(null);
   const dragging = useSharedValue(false);
@@ -96,7 +94,7 @@ export function useDragEngine({
         height: cell.height,
         heading,
         section,
-        card: drawn[key] ?? { top: 0, height: cell.height, x: 0, width: cell.width },
+        card: drawn[key] ?? { ...cell, top: 0 },
       };
     });
   };

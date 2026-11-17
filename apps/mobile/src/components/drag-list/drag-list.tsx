@@ -30,9 +30,9 @@ import Animated, {
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { mediumImpact } from "@/lib/haptics";
 
-import type { Target } from "./drop-target";
+import type { Box, Target } from "./drop-target";
 import type { DragRow, Drop } from "./resolve-drop";
-import type { CardLayout, CellLayout, Page } from "./use-drag-engine";
+import type { Page } from "./use-drag-engine";
 import { sectionsOf } from "./drop-target";
 import { useDragEngine } from "./use-drag-engine";
 import { useHeldRows } from "./use-held-rows";
@@ -51,8 +51,8 @@ type LayoutAnimation = ComponentProps<typeof Animated.View>["layout"];
 /** What a cell needs from its list: where to record its layout, the drag's worklets, and whether it
  * is the lifted row's source or the row a drop just placed (which skips the layout animation). */
 type DragState = {
-  cells: SharedValue<Record<string, CellLayout>>;
-  cards: SharedValue<Record<string, CardLayout>>;
+  cells: Boxes;
+  cards: Boxes;
   start: (key: string) => void;
   move: (key: string, translation: number) => void;
   release: (key: string, canceled: boolean) => void;
@@ -139,6 +139,28 @@ function ItemHandle({
   return <HandleContext value={{ gesture, liftedRef }}>{children}</HandleContext>;
 }
 
+type Boxes = SharedValue<Record<string, Box>>;
+
+/** Sets a row's box in `into` on the UI thread, or with null deletes it. */
+function writeBox(into: Boxes, key: string, box: Box | null) {
+  scheduleOnUI(() => {
+    "worklet";
+    into.modify((all) => {
+      "worklet";
+      if (box) all[key] = box;
+      else delete all[key];
+
+      return all;
+    });
+  });
+}
+
+/** An `onLayout` that records the view's box, in its parent, as row `key`'s in `into`. */
+const recordInto =
+  (into: Boxes, key: string) =>
+  ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
+    writeBox(into, key, { top: layout.y, height: layout.height, x: layout.x, width: layout.width });
+
 /** A row's cell: records where it is laid out, fades as the lifted row's source, and gives an item
  * its handle. FlatList's `CellRendererComponent`, and each row of a nested list. */
 function DragCell({
@@ -163,52 +185,21 @@ function DragCell({
   useEffect(() => {
     if (!cells || !cards) return;
 
-    return () =>
-      scheduleOnUI(() => {
-        "worklet";
-        cells.modify((all) => {
-          "worklet";
-          delete all[key];
-
-          return all;
-        });
-        cards.modify((all) => {
-          "worklet";
-          delete all[key];
-
-          return all;
-        });
-      });
+    return () => {
+      writeBox(cells, key, null);
+      writeBox(cards, key, null);
+    };
   }, [cells, cards, key]);
 
   if (!drag || !cells || !cards) return children;
-  const recordCell = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
-    scheduleOnUI(() => {
-      "worklet";
-      cells.modify((all) => {
-        "worklet";
-        all[key] = { top: layout.y, height: layout.height, width: layout.width };
-
-        return all;
-      });
-    });
-  const recordCard = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
-    scheduleOnUI(() => {
-      "worklet";
-      cards.modify((all) => {
-        "worklet";
-        all[key] = { top: layout.y, height: layout.height, x: layout.x, width: layout.width };
-
-        return all;
-      });
-    });
+  const recordCard = recordInto(cards, key);
 
   return (
     <Animated.View
       layout={key === drag.dropped ? undefined : drag.layout}
       style={[style, key === drag.lifted ? { opacity: GHOST_OPACITY } : null]}
       onLayout={(event) => {
-        recordCell(event);
+        recordInto(cells, key)(event);
         onLayout?.(event);
       }}
     >

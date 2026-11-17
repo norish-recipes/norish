@@ -1,16 +1,21 @@
 import type { DragRow, Drop } from "./resolve-drop";
 import { resolveDrop } from "./resolve-drop";
 
+/** A vertical extent in the list's content. */
+export type Span = { top: number; height: number };
+/** A view's frame in its parent. */
+export type Box = Span & { x: number; width: number };
+
 /** A laid-out row in the list's content: its cell, and the card drawn in it (`card` is relative to
  * the cell's top). Null for a row not on screen. */
-export type Slot = {
-  top: number;
-  height: number;
-  heading: boolean;
-  /** The row's section: see `sectionsOf`. */
-  section: string | null;
-  card: { top: number; height: number; x: number; width: number };
-} | null;
+export type Slot =
+  | (Span & {
+      heading: boolean;
+      /** The row's section: see `sectionsOf`. */
+      section: string | null;
+      card: Box;
+    })
+  | null;
 
 /** Where a held row would land. `gap` is the index in the rows it lands before; `line` and `box` are
  * the drop line and the section's outline in the content. */
@@ -18,7 +23,7 @@ export type Target = {
   gap: number;
   section: string;
   line: { y: number; x: number; width: number } | null;
-  box: { top: number; height: number; x: number; width: number } | null;
+  box: Box | null;
 };
 
 /** Each row's section: a heading's from `sectionOf` (its key by default), an item's from the heading above it. Rows above
@@ -120,12 +125,7 @@ export function dropAt<H, T>(rows: DragRow<H, T>[], from: number, gap: number): 
 
 /** Where the held row's cell top lands for `gap`, in the content as it is now: rows between close
  * up behind it, or make room in front. `own` is where it was, its top when it lands in place. */
-export function landingTop(
-  slots: readonly Slot[],
-  gap: number | null,
-  from: number,
-  own: { top: number; height: number }
-) {
+export function landingTop(slots: readonly Slot[], gap: number | null, from: number, own: Span) {
   "worklet";
   if (gap === null || gap === from || gap === from + 1) return own.top;
   // The gap is next to a drawn row (see `gapAt`): the edge between the two rows either side.
