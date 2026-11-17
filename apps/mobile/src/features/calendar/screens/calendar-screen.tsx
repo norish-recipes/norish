@@ -116,8 +116,14 @@ export function CalendarScreen() {
           ref={listRef}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+          contentInsetAdjustmentBehavior="never"
+          // The rows the list shows, which a held row keeps still while `rows` moves on.
+          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
+          initialScrollIndex={openIndex < 0 ? undefined : openIndex}
           itemLayoutAnimation={settledSpan === span ? SPRING_LAYOUT : undefined}
+          // Rows added above keep the ones on screen where they are.
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderHeading={(heading) => (
             <Animated.View
               entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
@@ -173,12 +179,6 @@ export function CalendarScreen() {
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
-          contentInsetAdjustmentBehavior="never"
-          // The rows the list shows, which a held row keeps still while `rows` moves on.
-          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
-          initialScrollIndex={openIndex < 0 ? undefined : openIndex}
-          // Rows added above keep the ones on screen where they are.
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         />
       </TabListMarker>
     </View>
