@@ -488,8 +488,9 @@ One glass rule, one panel anatomy, native large titles on the tab roots, our own
 ### Tab roots
 
 - Native large titles on Recipes, Groceries, Pantry and Calendar replace `TitleRow` and the `top: "soft"` scroll-edge effect that blurred it at rest. Reverses Part 6's TitleRow exception and its out-of-scope line.
+- Scrolled, the large title scrolls away with the content and no inline title takes its place: the bar holds only its items. Header items are translucent glass (content shows through), never solid fills. Calendar has no sync button in its bar.
 - Where the switches, pills and Filters go is drawn first on a canvas page (ticket 40) and reviewed by Mike before ticket 41.
-- The avatar sits top right on all four. It opens a small native menu, like the recipe's conversion menu: a status line (nothing extra when Live; "Offline · N changes waiting" when Offline with Queued changes), Theme (System/Light/Dark), Language, All settings, Sign out. When Offline the avatar carries a small warning dot; VoiceOver reads "‹name›, Offline". The calendar's Offline pill goes, with nothing in its place.
+- The avatar sits top right on all four. It opens a small native menu, like the recipe's conversion menu: a status line that always shows ("Live", or "Offline · N changes waiting" when Offline with Queued changes), Theme (System/Light/Dark), Language, All settings, Sign out. Only when Offline does the avatar carry a small warning dot, on all four tabs; VoiceOver reads "‹name›, Offline". The calendar's Offline pill goes, with nothing in its place.
 
 ### Calendar
 
@@ -527,7 +528,7 @@ One glass rule, one panel anatomy, native large titles on the tab roots, our own
 
 ### Scope and order
 
-Ticket 39 (rc CI) and 40 (canvas) run at the same time; then 47 (drag) and 48 (copied link); then 42, 43, 45, 46 and 44; 41 last, after Mike approves the canvas. No release notes: the mobile app is unreleased.
+Ticket 39 (rc CI) and 40 (canvas) run at the same time; then 47 (drag), 48 (copied link) and 49 (Pantry search); then 42, 43, 45, 46 and 44; 41 last, after Mike approves the canvas. No release notes: the mobile app is unreleased.
 
 ## Testing Decisions
 

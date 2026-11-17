@@ -7,7 +7,7 @@
 **Status:** blocked
 
 - [ ] Native large titles on Recipes, Groceries, Pantry and Calendar; `TitleRow` and the `top: "soft"` edge effect go; no title under a blur at rest. The accessory still minimises on scroll on every tab.
-- [ ] Controls placed as the canvas decides.
-- [ ] The avatar (top right on all four) opens a native menu: status line, Theme, Language, All settings, Sign out. A warning dot when Offline; VoiceOver "‹name›, Offline"; "Offline · N changes waiting" with Queued changes.
+- [ ] Controls placed as the canvas decides. Scrolled, the bar shows no inline title; header items are translucent glass; Calendar loses its sync button.
+- [ ] The avatar (top right on all four) opens a native menu: status line (always: "Live", or Offline), Theme, Language, All settings, Sign out. A warning dot when Offline; VoiceOver "‹name›, Offline"; "Offline · N changes waiting" with Queued changes.
 - [ ] The calendar's Offline pill goes; the `calendar-offline` Maestro flow checks the screen instead.
 - [ ] Gates green; checked on the device in both themes.
