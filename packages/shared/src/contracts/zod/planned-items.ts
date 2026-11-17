@@ -18,12 +18,6 @@ export const PlannedItemDeleteInputSchema = z.object({
   version: z.number().int().positive(),
 });
 
-export const PlannedItemUpdateInputSchema = z.object({
-  itemId: z.uuid(),
-  version: z.number().int().positive(),
-  title: z.string().min(1),
-});
-
 /** One edit of a planned item: whichever of its text, day and slot changed, written together. */
 export const PlannedItemEditInputSchema = z.object({
   itemId: z.uuid(),

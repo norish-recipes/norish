@@ -52,7 +52,6 @@ export type CalendarMutationsResult = {
   deleteItem: (itemId: string) => void;
   /** No index: last in the target slot. */
   moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex?: number) => void;
-  updateItem: (itemId: string, title: string) => void;
   /** An edit's text, day and slot as one write; a new day or slot puts it last there. */
   saveItem: (itemId: string, changes: PlannedItemChanges) => void;
 };

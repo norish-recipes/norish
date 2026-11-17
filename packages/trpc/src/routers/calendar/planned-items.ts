@@ -11,7 +11,6 @@ import {
   PlannedItemDeleteInputSchema,
   PlannedItemEditInputSchema,
   PlannedItemMoveInputSchema,
-  PlannedItemUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
 import { dateKey, endOfMonth, startOfMonth } from "@norish/shared/lib/helpers";
 
@@ -218,10 +217,6 @@ export const plannedItemsProcedures = router({
     .mutation(async ({ ctx, input }) => {
       return deleteCalendarItem(ctx, input);
     }),
-
-  updateItem: authedProcedure
-    .input(PlannedItemUpdateInputSchema)
-    .mutation(async ({ ctx, input }) => editCalendarItem(ctx, input)),
 
   editItem: authedProcedure
     .input(PlannedItemEditInputSchema)

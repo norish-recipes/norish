@@ -20,7 +20,6 @@ export const delayedDeliveryEligibleMutations = [
   "households.regenerateCode",
   "households.transferAdmin",
   "calendar.moveItem",
-  "calendar.updateItem",
   "calendar.editItem",
   "calendar.deleteItem",
   "recipes.update",

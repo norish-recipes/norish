@@ -137,14 +137,14 @@ describe("calendar planned items stale handling", () => {
     expect(calendar.publish).not.toHaveBeenCalled();
   });
 
-  it("logs stale updateItem mutations as no-ops", async () => {
+  it("logs stale editItem mutations as no-ops", async () => {
     const item = createPlannedItem();
 
     getPlannedItemById.mockResolvedValue(item);
     editPlannedItem.mockResolvedValue({ stale: true });
 
     const caller = plannedItemsProcedures.createCaller(ctx as any);
-    const result = await caller.updateItem({
+    const result = await caller.editItem({
       itemId: item.id,
       version: item.version,
       title: "Updated note",
@@ -178,8 +178,8 @@ describe("calendar planned items stale handling", () => {
       expect(moveItem).not.toHaveBeenCalled();
     });
 
-    it("answers an update as stale", async () => {
-      const result = await caller().updateItem({ itemId: GONE, version: 2, title: "Soup" });
+    it("answers an edit as stale", async () => {
+      const result = await caller().editItem({ itemId: GONE, version: 2, title: "Soup" });
 
       expect(result).toEqual({ success: true, stale: true });
       expect(editPlannedItem).not.toHaveBeenCalled();
@@ -194,12 +194,12 @@ describe("calendar planned items stale handling", () => {
     });
   });
 
-  it("rejects an update that failed, telling no one else", async () => {
+  it("rejects an edit that failed, telling no one else", async () => {
     editPlannedItem.mockRejectedValue(new Error("database down"));
 
     const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
 
-    await expect(caller.updateItem({ itemId: GONE, version: 4, title: "Soup" })).rejects.toThrow(
+    await expect(caller.editItem({ itemId: GONE, version: 4, title: "Soup" })).rejects.toThrow(
       "database down"
     );
     expect(calendar.publish).not.toHaveBeenCalled();
@@ -240,7 +240,7 @@ describe("calendar planned items stale handling", () => {
     );
   });
 
-  it("answers an applied updateItem with the item it published", async () => {
+  it("answers an applied editItem with the item it published", async () => {
     const item = createPlannedItem();
     const updated = createPlannedItem({ ...item, title: "Updated note", version: 5 });
 
@@ -249,7 +249,7 @@ describe("calendar planned items stale handling", () => {
     getPlannedItemWithRecipeById.mockResolvedValue(withRecipe(updated));
 
     const caller = plannedItemsProcedures.createCaller(createMockCallerContext(ctx));
-    const result = await caller.updateItem({
+    const result = await caller.editItem({
       itemId: item.id,
       version: item.version,
       title: "Updated note",

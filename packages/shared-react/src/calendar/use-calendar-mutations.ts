@@ -71,7 +71,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
     showError("The calendar change was not saved. Please try again.", "calendar-mutations");
   };
 
-  // A move or update answers with its item, new version included: the echo is the fast path (ADR-0011).
+  // A move or edit answers with its item, new version included: the echo is the fast path (ADR-0011).
   // No item (stale, no-op, failed): the optimistic version was never earned, so reread.
   const placeAnswer = (result: { item?: PlannedItemWithRecipePayload }) => {
     if (result.item) upsertItemAcrossRanges(result.item);
@@ -191,22 +191,6 @@ export function useCalendarMutations(): CalendarMutationsResult {
     })
   );
 
-  const { mutate: mutateUpdate } = useMutation(
-    trpc.calendar.updateItem.mutationOptions({
-      onMutate: ({ itemId, title }) =>
-        writeAcrossRanges((items) =>
-          items.map((item) =>
-            item.id === itemId
-              ? { ...item, title, version: item.version + 1, updatedAt: new Date() }
-              : item
-          )
-        ),
-      onSuccess: placeAnswer,
-      onError: rollBack,
-      scope: planWrites,
-    })
-  );
-
   // One write for a whole edit: a new day or slot lands last there, carrying the new text.
   const { mutate: mutateEdit } = useMutation(
     trpc.calendar.editItem.mutationOptions({
@@ -256,9 +240,6 @@ export function useCalendarMutations(): CalendarMutationsResult {
     },
     moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex?: number) => {
       mutateMove({ itemId, version: versionOf(itemId), targetDate, targetSlot, targetIndex });
-    },
-    updateItem: (itemId, title) => {
-      mutateUpdate({ itemId, version: versionOf(itemId), title });
     },
     saveItem: (itemId, changes) => {
       mutateEdit({ itemId, version: versionOf(itemId), ...changes });

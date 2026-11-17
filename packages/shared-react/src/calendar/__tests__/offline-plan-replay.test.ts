@@ -31,7 +31,6 @@ import { useCalendarMutations } from "../use-calendar-mutations";
 const sends = vi.hoisted(() => ({
   createItem: vi.fn(),
   moveItem: vi.fn(),
-  updateItem: vi.fn(),
   editItem: vi.fn(),
   deleteItem: vi.fn(),
 }));
@@ -55,7 +54,6 @@ vi.mock("../../trpc", () => ({
       },
       createItem: procedure(sends.createItem),
       moveItem: procedure(sends.moveItem),
-      updateItem: procedure(sends.updateItem),
       editItem: procedure(sends.editItem),
       deleteItem: procedure(sends.deleteItem),
     },
@@ -158,20 +156,6 @@ function serverOf(rows: Record<string, Row>, { deletedRecipes = new Set<string>(
             return { success: true, moved: true, stale: false };
           }
         ),
-      },
-      updateItem: {
-        mutate: async (input: {
-          itemId: string;
-          version: number;
-          title: string;
-        }): Promise<Answers["updateItem"]> => {
-          const row = db.get(input.itemId);
-
-          if (!row || row.version !== input.version) return { success: true, stale: true };
-          Object.assign(row, { title: input.title, version: row.version + 1 });
-
-          return { success: true, stale: false };
-        },
       },
       editItem: {
         mutate: vi.fn(
@@ -364,7 +348,7 @@ describe("plan writes made offline, replayed", () => {
     [
       "a note renamed, then moved",
       [
-        (m: M) => m.updateItem("soup", "Leek soup"),
+        (m: M) => m.saveItem("soup", { title: "Leek soup" }),
         (m: M) => m.moveItem("soup", "2026-11-12", "Dinner", 1),
       ],
       { soup: { title: "Leek soup", date: "2026-11-12", version: 3 } },
