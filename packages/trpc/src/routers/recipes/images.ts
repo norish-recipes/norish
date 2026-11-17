@@ -20,10 +20,16 @@ import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeImageInputSchema, MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
+import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, mediaRecipeId, recipeIdOfMediaUrl } from "./helpers";
+import {
+  announceRecipeUpdated,
+  assertRecipeAccess,
+  mediaRecipeId,
+  recipeIdOfMediaUrl,
+} from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -259,6 +265,7 @@ const uploadGalleryImage = authedProcedure
         // A gallery upload on a stored recipe can change what the page leads
         // with; the Dish Colour follows the new hero (ADR-0023).
         await refreshDishColorForRecipe(recipeId);
+        await afterCommit(ctx, "announcing the recipe", () => announceRecipeUpdated(ctx, recipeId));
 
         log.info(
           { userId: ctx.user.id, recipeId, url, imageId: imageRecord.id },
@@ -335,6 +342,9 @@ const deleteGalleryImage = authedProcedure
       // Deleting the hero image changes what the page leads with; the Dish
       // Colour follows what is left (ADR-0023).
       await refreshDishColorForRecipe(imageRecord.recipeId);
+      await afterCommit(ctx, "announcing the recipe", () =>
+        announceRecipeUpdated(ctx, imageRecord.recipeId)
+      );
 
       log.info(
         { userId: ctx.user.id, imageId: input.imageId, url: imageRecord.image },

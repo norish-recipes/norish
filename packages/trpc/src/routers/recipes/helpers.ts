@@ -42,6 +42,26 @@ export function handleRecipeError(
   void emitRecipeFailure(ctx, error.message || `Failed to ${operation}`, meta);
 }
 
+/** Announce a recipe as stored now to everyone who may view it, and return it. */
+export async function announceRecipeUpdated(
+  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  recipeId: string
+): Promise<FullRecipeDTO | null> {
+  const stored = await getRecipeFull(recipeId);
+
+  if (stored) {
+    const policy = await getRecipePermissionPolicy();
+
+    void recipes.publish(
+      "updated",
+      { recipe: stored },
+      { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+    );
+  }
+
+  return stored;
+}
+
 export async function assertRecipeAccess(
   ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
   recipeId: string,

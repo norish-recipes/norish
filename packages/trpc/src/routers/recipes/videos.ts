@@ -14,10 +14,11 @@ import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
+import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, mediaRecipeId } from "./helpers";
+import { announceRecipeUpdated, assertRecipeAccess, mediaRecipeId } from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -125,6 +126,8 @@ const uploadGalleryVideo = authedProcedure
 
         const versionedVideoRecord = videoRecord as typeof videoRecord & { version: number };
 
+        await afterCommit(ctx, "announcing the recipe", () => announceRecipeUpdated(ctx, recipeId));
+
         log.info(
           { userId: ctx.user.id, recipeId, url: savedVideo.video, videoId: videoRecord.id },
           "Gallery video uploaded"
@@ -203,6 +206,10 @@ const deleteGalleryVideo = authedProcedure
 
         return { success: true, stale: true };
       }
+
+      await afterCommit(ctx, "announcing the recipe", () =>
+        announceRecipeUpdated(ctx, videoRecord.recipeId)
+      );
 
       log.info(
         { userId: ctx.user.id, videoId: input.videoId, url: videoRecord.video },

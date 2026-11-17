@@ -1,12 +1,14 @@
 // @vitest-environment node
 /**
  * A recipe's id is only handed back once the recipe is stored, so a gallery upload made right
- * after the create lands on the stored recipe instead of the "pending recipe" path.
+ * after the create lands on the stored recipe; each gallery write on it announces the recipe.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { User } from "@norish/shared/contracts";
+import type { recipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
+import type { FakeRealtimeDomain } from "../mocks/realtime";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const mocks = vi.hoisted(() => ({ announce: vi.fn() }));
@@ -26,6 +28,12 @@ vi.mock("@norish/shared-server/media/storage", async (importOriginal) => ({
   saveImageBytes: vi.fn(async (_bytes: Buffer, recipeId: string) => {
     return `/recipes/${recipeId}/${crypto.randomUUID()}.jpg`;
   }),
+  deleteImageByUrl: vi.fn(),
+  deleteVideoByUrl: vi.fn(),
+  saveVideoBytes: vi.fn(async (_bytes: Buffer, recipeId: string) => ({
+    video: `/recipes/${recipeId}/video-1.mp4`,
+    duration: 12,
+  })),
 }));
 vi.mock("@norish/shared-server/media/dish-color", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-server/media/dish-color")>()),
@@ -37,6 +45,7 @@ describe("a gallery upload right after recipes.create", () => {
   let user: User;
   let createCaller: typeof import("../../src/routers/recipes").recipesRouter.createCaller;
   let getRecipeFull: typeof import("@norish/db").getRecipeFull;
+  let realtime: FakeRealtimeDomain<typeof recipesRealtime>;
 
   beforeAll(async () => {
     await testBase.setup();
@@ -44,6 +53,8 @@ describe("a gallery upload right after recipes.create", () => {
       recipesRouter: { createCaller },
     } = await import("../../src/routers/recipes"));
     ({ getRecipeFull } = await import("@norish/db"));
+    realtime = (await import("@norish/shared-server/realtime/recipes"))
+      .recipes as FakeRealtimeDomain<typeof recipesRealtime>;
   });
 
   beforeEach(async () => {
@@ -51,6 +62,7 @@ describe("a gallery upload right after recipes.create", () => {
 
     user = { ...stored, isServerAdmin: false } as User;
     mocks.announce.mockReset();
+    realtime.reset();
     // The pool is reset per suite; warm it so the first create does not pay for it.
     await getRecipeFull(crypto.randomUUID());
   });
@@ -110,5 +122,57 @@ describe("a gallery upload right after recipes.create", () => {
     expect(results.every((result) => result.success && "id" in result && result.id)).toBe(true);
     await vi.waitFor(() => expect(mocks.announce).toHaveBeenCalled());
     expect((await getRecipeFull(id))?.images).toHaveLength(2);
+  });
+
+  const clip = (recipeId: string) => {
+    const form = new FormData();
+
+    form.set("recipeId", recipeId);
+    form.set("video", new File([new Uint8Array([1])], "a.mp4", { type: "video/mp4" }));
+
+    return form;
+  };
+
+  /** The recipes each "updated" announced, in order. */
+  const announced = () =>
+    realtime.published
+      .filter((entry) => entry.event === "updated")
+      .map((entry) => (entry.payload as { recipe: { id: string } }).recipe);
+
+  it("announces the stored recipe after each gallery upload and removal, to its household", async () => {
+    const id = await caller().create(recipe("Tacos"));
+    const image = await caller().uploadGalleryImage(photo(id, 0));
+    const video = await caller().uploadGalleryVideo(clip(id));
+
+    if (!("id" in image) || !image.id || !("id" in video) || !video.id) {
+      throw new Error("The uploads were not stored");
+    }
+    expect(announced().map((r) => r.images.map((i) => i.id))).toEqual([[image.id], [image.id]]);
+    expect(announced()[1]?.videos.map((v) => v.id)).toEqual([video.id]);
+    expect(realtime.published.find((entry) => entry.event === "updated")?.target).toEqual(
+      expect.objectContaining({ viewPolicy: "household", householdKey: user.id })
+    );
+
+    await caller().deleteGalleryImage({ imageId: image.id, version: image.version ?? 1 });
+    await caller().deleteGalleryVideo({ videoId: video.id, version: video.version ?? 1 });
+
+    expect(announced().slice(2)).toEqual([
+      expect.objectContaining({ images: [], videos: [expect.objectContaining({ id: video.id })] }),
+      expect.objectContaining({ images: [], videos: [] }),
+    ]);
+  });
+
+  it("announces nothing for media uploaded before its recipe is stored, or a stale removal", async () => {
+    const pendingId = crypto.randomUUID();
+
+    await caller().uploadGalleryImage(photo(pendingId, 0));
+    const id = await caller().create(recipe("Steak"));
+    const image = await caller().uploadGalleryImage(photo(id, 0));
+
+    if (!("id" in image) || !image.id) throw new Error("The upload was not stored");
+    realtime.reset();
+    await caller().deleteGalleryImage({ imageId: image.id, version: (image.version ?? 1) + 1 });
+
+    expect(announced()).toEqual([]);
   });
 });

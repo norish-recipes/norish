@@ -71,6 +71,7 @@ import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 import {
+  announceRecipeUpdated,
   assertRecipeAccess,
   findRecipeForViewer,
   handleRecipeError,
@@ -283,22 +284,10 @@ async function applyRecipeUpdate(
     return { recipe: null, stale: true, version: null };
   }
 
-  const updatedRecipe = await afterCommit(ctx, "announcing the recipe", async () => {
-    const stored = await getRecipeFull(id);
-
-    if (stored) {
-      log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
-      const policy = await getRecipePermissionPolicy();
-
-      void recipes.publish(
-        "updated",
-        { recipe: stored },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-      );
-    }
-
-    return stored;
-  });
+  log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
+  const updatedRecipe = await afterCommit(ctx, "announcing the recipe", () =>
+    announceRecipeUpdated(ctx, id)
+  );
 
   return { recipe: updatedRecipe ?? null, stale: false, version: result.value };
 }
