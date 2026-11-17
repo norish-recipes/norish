@@ -24,8 +24,11 @@ function SharedRecipePageContent({ token }: { token: string }) {
   if (isLoading) {
     return <RecipeSkeleton shared />;
   }
-  if (!recipe || (error instanceof TRPCClientError && error.data?.code === "NOT_FOUND")) {
+  if (!recipe && error instanceof TRPCClientError && error.data?.code === "NOT_FOUND") {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
+  }
+  if (!recipe) {
+    return <RecipeSkeleton shared />;
   }
 
   return (
