@@ -10,6 +10,8 @@ import { TabListMarker } from "@/components/tab-list-marker";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
+import { useTabReselect } from "@/lib/use-tab-reselect";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
@@ -17,8 +19,9 @@ import { useToday } from "@norish/shared-react/reader";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 import type { TimelineRow } from "../utils/timeline-rows";
-import { CalendarHeader } from "../components/calendar-header";
+import { CalendarHeader, calendarHeaderHeight } from "../components/calendar-header";
 import { DayHeadingRow, PlannedItemRow, SlotLabelRow } from "../components/timeline-row";
+import { TodayControl } from "../components/today-control";
 import { useCalendarLinkArrivals } from "../hooks/use-calendar-link-arrivals";
 import { useHeldGrowth } from "../hooks/use-held-growth";
 import {
@@ -29,6 +32,7 @@ import {
   rowLayout,
   timelineRows,
 } from "../utils/timeline-rows";
+import { todayDirection } from "../utils/today-control";
 
 const SKELETONS = [0, 1, 2, 3];
 
@@ -55,6 +59,8 @@ export function CalendarScreen() {
   // What the list shows, which a held drop keeps apart from `rows`.
   const shownRowsRef = useRef<TimelineRow[]>([]);
   const growth = useHeldGrowth(grow);
+  const bar = useTabBarMinimised();
+  const headerHeight = calendarHeaderHeight(insets.top);
   // The days a row of which is on screen, for the way back to today.
   const [shownDays, setShownDays] = useState<string[]>([]);
   // Stable: FlatList refuses a new viewability callback after its first render.
@@ -72,7 +78,7 @@ export function CalendarScreen() {
   const above = hiddenAbove(rows, shownDays[0] ?? "");
   const { fresh, settled } = useFreshRows(rows, isRead, `${span}|${above}`);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
-  const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
+  const direction = todayDirection(shownDays, todayKey, todayIndex >= 0);
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
   const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
 
@@ -83,16 +89,16 @@ export function CalendarScreen() {
     if (index >= 0) listRef.current?.scrollToIndex({ index, animated: false });
   });
 
-  const header = (
-    <CalendarHeader
-      todayDirection={todayShown ? null : (shownDays[0] ?? "") > todayKey ? "up" : "down"}
-      onToday={() => {
-        const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(todayKey));
+  const scrollToToday = () => {
+    const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(todayKey));
 
-        if (index >= 0) listRef.current?.scrollToIndex({ index, animated: true });
-      }}
-    />
-  );
+    if (index >= 0) listRef.current?.scrollToIndex({ index, animated: true });
+  };
+
+  // The tab pressed again while the Calendar shows returns to today.
+  useTabReselect(scrollToToday);
+
+  const header = <CalendarHeader />;
 
   // Until a read holds data an empty day is unknown, not empty: a failed first read stays a skeleton.
   if (!isRead) {
@@ -110,20 +116,25 @@ export function CalendarScreen() {
 
   return (
     <View className="bg-background flex-1" testID="calendar-screen">
-      {header}
       <TabListMarker>
         <DragList
           ref={listRef}
+          ListHeaderComponent={header}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
           contentInsetAdjustmentBehavior="never"
-          // The rows the list shows, which a held row keeps still while `rows` moves on.
-          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
+          // The rows the list shows, which a held row keeps still while `rows` moves on. The title
+          // row is the list's first child, so every row's offset starts below it.
+          getItemLayout={(shown, index) => {
+            const { offset, length } = rowLayout(shown ?? [], index, fontScale);
+
+            return { offset: offset + headerHeight, length, index };
+          }}
           initialNumToRender={12}
           initialScrollIndex={openIndex < 0 ? undefined : openIndex}
           itemLayoutAnimation={settled ? SPRING_LAYOUT : undefined}
-          // Rows added above keep the ones on screen where they are.
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+          // Rows added above keep the ones on screen where they are; the title row, the first child, stays out of it.
+          maintainVisibleContentPosition={{ minIndexForVisible: 1 }}
           renderHeading={(heading) => (
             <Animated.View
               entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
@@ -176,11 +187,18 @@ export function CalendarScreen() {
           onEndReached={() => growth.reached("future")}
           onEndReachedThreshold={GROW_THRESHOLD}
           onHeldChange={growth.heldChange}
+          onScroll={({ nativeEvent }) => bar.track(nativeEvent)}
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
         />
       </TabListMarker>
+      <TodayControl
+        direction={direction}
+        homeIndicator={bar.homeIndicator}
+        minimised={bar.minimised}
+        onPress={scrollToToday}
+      />
     </View>
   );
 }
