@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
 import { GlassIconButton } from "@/components/glass";
@@ -151,7 +150,7 @@ function VideoPage({
   );
 }
 
-/** The playing video: pause over it, mute at the bottom-left and fullscreen beside Back. */
+/** The playing video: pause over it, mute at the bottom-left and fullscreen under Back. */
 function Player({
   item,
   width,
@@ -164,7 +163,6 @@ function Player({
   onMuted: (muted: boolean) => void;
 }) {
   const intl = useIntl();
-  const { top } = useSafeAreaInsets();
   const [playing, setPlaying] = useState(true);
   const [view, setView] = useState<VideoView | null>(null);
   const player = useServerVideoPlayer(item.path, (created) => {
@@ -182,13 +180,14 @@ function Player({
         player={player}
         style={{ position: "absolute", width, height: HERO_HEIGHT }}
       />
-      <View className="absolute inset-x-0 top-[166px] items-center">
+      <View className="absolute inset-x-0 top-[150px] items-center">
         <GlassIconButton
           label={intl.formatMessage({
             id: playing
               ? "recipes.carousel.videoPlayer.pause"
               : "recipes.carousel.videoPlayer.play",
           })}
+          size="large"
           symbol={playing ? "pause.fill" : "play.fill"}
           testID="recipe-video-toggle"
           onPress={() => {
@@ -205,7 +204,7 @@ function Player({
           onMuted(!muted);
         }}
       />
-      <View className="absolute left-[78px]" style={{ top: top + 31 }}>
+      <View className="absolute top-[116px] left-5">
         <GlassIconButton
           label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.fullscreen" })}
           symbol="arrow.up.left.and.arrow.down.right"
