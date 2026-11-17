@@ -34,6 +34,9 @@ export const useTabBarHidden = () =>
     () => hiders.count() + sheets.count() > 0
   );
 
+/** Whether a sheet is mounted and in front right now. */
+export const isSheetOpen = () => sheets.count() > 0;
+
 /** Counts the caller in `store` while `active`. */
 function useCounted(store: ReturnType<typeof counterStore>, active: boolean) {
   useEffect(() => {
