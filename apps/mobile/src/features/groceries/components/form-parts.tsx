@@ -73,7 +73,7 @@ export function RepeatPills({
       {detected ? (
         <Pressable
           accessibilityRole="button"
-          className="border-border h-8 flex-row items-center gap-1.5 rounded-full border border-dashed px-3"
+          className="border-muted h-8 flex-row items-center gap-1.5 rounded-full border border-dashed px-3"
           testID="repeat-detected"
           onPress={onConfirmDetected}
         >

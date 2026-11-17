@@ -59,7 +59,7 @@ function ServingsBody() {
           />
           {/* Laid over the field right after its digits, 16 pt padding plus 11 pt a digit. */}
           <Text
-            className="text-muted absolute top-3.5 text-base"
+            className="text-muted absolute top-[17px] text-base"
             pointerEvents="none"
             style={{ left: 20 + Math.max(draft.servings.length, 1) * 11 }}
           >
