@@ -57,7 +57,7 @@ export function CardList<Row>({
   const insets = useSafeAreaInsets();
   const homeIndicator = initialWindowMetrics?.insets.bottom ?? 0;
   const [scrolled, setScrolled] = useState(false);
-  // The tab bar minimises on a scroll down, which moves the accessory the footer centres above.
+  // ponytail: scroll direction guesses the bar; the accessory mounts both placements at once, so JS cannot read which shows.
   const [minimised, setMinimised] = useState(false);
   const lastOffsetRef = useRef(0);
   const isGrid = variant === "grid";
