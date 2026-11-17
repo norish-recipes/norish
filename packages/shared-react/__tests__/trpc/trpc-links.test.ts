@@ -3,7 +3,7 @@
  * `createWSClient` replaced by a recorder of the options it was given.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type RecordedWsClient = {
   options: {
@@ -66,6 +66,10 @@ function createLinks(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   wsClients.length = 0;
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("webSocketRetryDelayMs", () => {
@@ -192,6 +196,5 @@ describe("batched reads", () => {
     await expect(Promise.all(reads)).resolves.toHaveLength(300);
     expect(urls.length).toBeGreaterThan(1);
     for (const url of urls) expect(url.length).toBeLessThanOrEqual(MAX_BATCH_URL_LENGTH);
-    vi.unstubAllGlobals();
   });
 });
