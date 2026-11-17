@@ -25,6 +25,14 @@ appId: dev.norish.app
     element:
       id: calendar-item-.*
       text: Offline Plan Roast.*
+# The Calendar opens on today's card; the Offline pill lives in the title row above it.
+- repeat:
+    times: 6
+    commands:
+      - swipe:
+          start: 50%,25%
+          end: 50%,85%
+          duration: 150
 - assertNotVisible:
     id: calendar-offline
 # Leaving the app saves what it has read.
@@ -43,12 +51,23 @@ appId: dev.norish.app
     id: tab-calendar
 - extendedWaitUntil:
     visible:
-      id: calendar-offline
-    timeout: 90000
+      id: calendar-screen
+    timeout: 20000
 - scrollUntilVisible:
     element:
       id: calendar-item-.*
       text: Offline Plan Roast.*
+- repeat:
+    times: 6
+    commands:
+      - swipe:
+          start: 50%,25%
+          end: 50%,85%
+          duration: 150
+- extendedWaitUntil:
+    visible:
+      id: calendar-offline
+    timeout: 90000
 - runFlow:
     file: subflows/proxy.yaml
     env:
