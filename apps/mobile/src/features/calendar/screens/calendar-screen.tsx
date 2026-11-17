@@ -2,7 +2,6 @@ import type { FlatList, FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
@@ -43,10 +42,6 @@ type ViewableChange = NonNullable<FlatListProps<TimelineRow>["onViewableItemsCha
 /** How far from an edge, in screens, the timeline grows that edge. */
 const GROW_THRESHOLD = 2;
 
-/** The native bar's height under the status bar (54 pt on iOS 27): fixed, as the measured header
- * height arrives a few renders late and the list opens on its first. */
-const BAR_HEIGHT = 54;
-
 /** A row counts as shown once half of it is on screen; one object, as FlatList asks. */
 const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
 
@@ -57,7 +52,6 @@ export function CalendarScreen() {
   const intl = useIntl();
   // A widget opens the Calendar on a day; without one it opens on today.
   const { day } = useLocalSearchParams<{ day?: string }>();
-  const insets = useSafeAreaInsets();
   const { fontScale } = useWindowDimensions();
   const todayKey = useToday();
   const { days, grow, calendarData, isRead } = useCalendarRangeQuery();
@@ -68,7 +62,7 @@ export function CalendarScreen() {
   const growth = useHeldGrowth(grow);
   const bar = useTabScroll();
   // A day scrolled to sits just under the bar, not behind it.
-  const barBottom = insets.top + BAR_HEIGHT;
+  const { barBottom } = bar;
   const listTop = barBottom + 12;
   const scrollToRow = (index: number, animated: boolean) => {
     listRef.current?.scrollToOffset({
@@ -141,7 +135,9 @@ export function CalendarScreen() {
         {header}
         <ScrollView
           contentContainerClassName="gap-3.5 px-5"
-          contentInsetAdjustmentBehavior="automatic"
+          // The list's inset, so nothing moves when it replaces the skeleton.
+          contentInset={{ top: barBottom }}
+          contentInsetAdjustmentBehavior="never"
           scrollEnabled={false}
         >
           {SKELETONS.map((key) => (

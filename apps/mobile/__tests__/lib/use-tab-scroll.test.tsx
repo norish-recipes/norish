@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 let focused = true;
 
 vi.mock("expo-router", () => ({ useIsFocused: () => focused }));
-vi.mock("expo-router/react-navigation", () => ({ useHeaderHeight: () => 116 }));
 vi.mock("react-native-safe-area-context", () => ({
   initialWindowMetrics: { insets: { bottom: 34 } },
+  useSafeAreaInsets: () => ({ top: 62, bottom: 34 }),
 }));
 // The scroll handler runs as plain JS, crossing to JS at once; shared values live across renders.
 vi.mock("react-native-reanimated", async () => {
@@ -42,6 +42,13 @@ function render() {
 }
 
 describe("useTabScroll", () => {
+  it("measures the offset from the list's rest under the bar", () => {
+    const { bar, onScroll } = render();
+
+    act(() => onScroll(scroll(-116 + 20)));
+    expect(bar.result.current.offset.value).toBe(20);
+  });
+
   it("guesses the bar expanded again when its tab comes back into focus", () => {
     focused = true;
     const { bar, onScroll } = render();
