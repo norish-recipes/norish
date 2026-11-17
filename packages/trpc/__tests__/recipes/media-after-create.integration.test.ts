@@ -111,6 +111,14 @@ describe("a gallery upload right after recipes.create", () => {
     expect(await getRecipeFull(id)).not.toBeNull();
   });
 
+  it("answers a repeated create with the same id with that recipe's id", async () => {
+    const id = crypto.randomUUID();
+
+    expect(await caller().create({ ...recipe("Once"), id })).toBe(id);
+    expect(await caller().create({ ...recipe("Twice"), id })).toBe(id);
+    expect((await getRecipeFull(id))?.name).toBe("Once");
+  });
+
   it.each([0, 1, 5, 20])("keeps every photo uploaded %i ms after the create", async (delay) => {
     const id = await caller().create(recipe(`Pancakes ${delay}`));
 

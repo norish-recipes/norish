@@ -40,6 +40,10 @@ type ManagedWebSocketClient = {
 /** The close code the server sends when the socket's session is not valid. */
 const WS_CLOSE_UNAUTHORIZED = 4401;
 
+/** The longest URL a batched read is sent with: under the 8 KB request line proxies take, with
+ * room for headers (Node answers 431 past 16 KB). */
+export const MAX_BATCH_URL_LENGTH = 6_000;
+
 /** The longest wait between two reconnect attempts. */
 const WS_RETRY_MAX_DELAY_MS = 30_000;
 
@@ -217,6 +221,9 @@ function createHttpTransportLink(
         url: `${getBaseUrl()}/api/trpc`,
         headers: createBatchRequestHeadersResolver(getHeaders),
         transformer: superjson,
+        // A batch's inputs ride in its GET URL: split it, or a large warm set fails every read
+        // batched with it.
+        maxURLLength: MAX_BATCH_URL_LENGTH,
       }),
     }),
   });

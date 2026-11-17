@@ -1,13 +1,8 @@
 import React from "react";
 import { Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { TRPCClientError } from "@trpc/client";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
-
-/** The server answered that the recipe is gone, or was never the reader's to open. */
-export const isRecipeNotFound = (error: unknown) =>
-  error instanceof TRPCClientError && error.data?.code === "NOT_FOUND";
 
 export function RecipeNotFound() {
   const intl = useIntl();

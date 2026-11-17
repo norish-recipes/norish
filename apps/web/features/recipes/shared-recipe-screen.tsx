@@ -9,10 +9,10 @@ import { SharedRecipePageDesktop } from "@/features/recipes/components/share/sha
 import { SharedRecipePageMobile } from "@/features/recipes/components/share/shared-recipe-page-mobile";
 import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { SharePageProvider } from "@/features/recipes/lib/share-page-store";
-import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
 import { useSharedRecipeQuery } from "@norish/shared-react/recipes";
+import { isNotFoundError } from "@norish/shared-react/trpc";
 
 function SharedRecipePageContent({ token }: { token: string }) {
   const { recipe, isLoading, error } = useSharedRecipeQuery(token);
@@ -24,8 +24,11 @@ function SharedRecipePageContent({ token }: { token: string }) {
   if (isLoading) {
     return <RecipeSkeleton shared />;
   }
-  if (!recipe || (error instanceof TRPCClientError && error.data?.code === "NOT_FOUND")) {
+  if (!recipe && isNotFoundError(error)) {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
+  }
+  if (!recipe) {
+    return <RecipeSkeleton shared />;
   }
 
   return (

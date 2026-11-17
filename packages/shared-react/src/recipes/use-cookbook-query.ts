@@ -5,11 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 
 import { useTRPC } from "../trpc";
+import { isNotFoundError, retryUnlessNotFound } from "../trpc/not-found";
 
 export type CookbookQueryResult = {
   cookbook: CookbookSummaryDTO | undefined;
   isLoading: boolean;
-  /** True only once the read has come back and said there is nothing there. */
+  /** True only once the server has answered NOT_FOUND; any other failure keeps the page loading. */
   isNotFound: boolean;
   error: unknown;
 };
@@ -22,13 +23,13 @@ export function useCookbookQuery(
   const { data, error, isLoading } = useQuery({
     ...trpc.cookbooks.get.queryOptions({ id: cookbookId }),
     enabled: enabled && Boolean(cookbookId),
-    retry: false,
+    retry: retryUnlessNotFound,
   });
 
   return {
     cookbook: data ?? undefined,
     isLoading,
-    isNotFound: !isLoading && !data && error !== null,
+    isNotFound: !data && isNotFoundError(error),
     error,
   };
 }

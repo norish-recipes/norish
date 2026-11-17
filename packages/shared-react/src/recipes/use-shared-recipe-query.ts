@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PublicRecipeViewDTO } from "@norish/shared/contracts";
 
 import { useTRPC } from "../trpc";
+import { retryUnlessNotFound } from "../trpc/not-found";
 
 type SharedRecipeQueryResult = {
   recipe: PublicRecipeViewDTO | null;
@@ -23,6 +24,7 @@ export function useSharedRecipeQuery(token: string | null): SharedRecipeQueryRes
   const query = useQuery({
     ...trpc.recipes.getShared.queryOptions({ token: token ?? "" }),
     enabled: !!token,
+    retry: retryUnlessNotFound,
   });
 
   const invalidate = useCallback(() => {

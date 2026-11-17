@@ -10,7 +10,6 @@ import { RecipePageTint } from "@/features/recipes/components/read-only";
 import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
 import { useRecipeEnrichmentSubscription } from "@/features/recipes/hooks/use-recipe-enrichment";
 import { useRecipeSubscription } from "@/features/recipes/hooks/use-recipe-subscription";
-import { TRPCClientError } from "@trpc/client";
 import { useTranslations } from "next-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
@@ -24,6 +23,7 @@ import {
   useRecipeQuery,
   useRecipeShareSubscription,
 } from "@norish/shared-react/recipes";
+import { isNotFoundError } from "@norish/shared-react/trpc";
 
 /** What the page draws kept current, cooking mode included; mounted once for the page. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
@@ -52,7 +52,7 @@ function RecipePageContent({ recipeId, libraryType }: RecipeScreenProps) {
   }
 
   // Recipe not found or no access - show 404
-  if (!recipe && error instanceof TRPCClientError && error.data?.code === "NOT_FOUND") {
+  if (!recipe && isNotFoundError(error)) {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
   }
 

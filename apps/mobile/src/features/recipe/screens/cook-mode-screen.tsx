@@ -34,6 +34,7 @@ import {
   useRecipePageStore,
   useRecipeQuery,
 } from "@norish/shared-react/recipes";
+import { isNotFoundError } from "@norish/shared-react/trpc";
 import { formatMinutesHM } from "@norish/shared/lib/helpers";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
@@ -42,7 +43,7 @@ import { BAR_BOTTOM, BAR_HEIGHT, BAR_SIDE, COOK_PILL, CookBar } from "../compone
 import { CookIngredients } from "../components/cook-ingredients";
 import { CookSteps, CROSSFADE_IN, CROSSFADE_OUT } from "../components/cook-steps";
 import { FadeEdge } from "../components/fade-edge";
-import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
+import { RecipeNotFound } from "../components/recipe-not-found";
 import { TimerScrim } from "../components/timer-list";
 import { TimerPill } from "../components/timer-pill";
 import { TintContext } from "../components/tint";
@@ -240,7 +241,7 @@ export function CookModeScreen() {
 
   return (
     <View className="bg-background flex-1" testID="cook-mode-loading">
-      {isRecipeNotFound(error) ? <RecipeNotFound /> : null}
+      {isNotFoundError(error) ? <RecipeNotFound /> : null}
       <View className="absolute right-4" style={{ top: top + 6 }}>
         <GlassCloseButton testID="cook-close" onPress={() => router.back()} />
       </View>
