@@ -8,7 +8,3 @@ const TAB_BAR_HEIGHT = 49;
 export function tabListBottomInset(safeAreaBottom: number): number {
   return safeAreaBottom + TAB_BAR_HEIGHT + ACCESSORY_CLEARANCE;
 }
-
-/** The load-more footer's height: the loader centres in a strip that ends where the clearance for
- * the tab bar and accessory begins, so it never sits under them. */
-export const LOAD_MORE_FOOTER_HEIGHT = 64;
