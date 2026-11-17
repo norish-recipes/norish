@@ -16,10 +16,9 @@ import {
   useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
 import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
-import { isAllergenTag } from "@norish/shared/lib/helpers";
+import { isAllergenTag, tagsBesideCategories } from "@norish/shared/lib/helpers";
 
 import { plainText } from "../utils/recipe-rows";
-import { tagLine } from "../utils/tag-line";
 import { useTint } from "./tint";
 
 function Description({ text }: { text: string }) {
@@ -123,7 +122,7 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
   const categories = recipe.categories.map(categoryLabel);
   const plainTags = facts.tagNames.filter((tag) => !isAllergenTag(tag, facts.allergySet));
   const allergens = facts.tagNames.filter((tag) => isAllergenTag(tag, facts.allergySet));
-  const shown = tagLine(categories, plainTags);
+  const shown = [...categories, ...tagsBesideCategories(plainTags, recipe.categories)].join(", ");
 
   const glance = [
     recipe.totalMinutes || facts.timeLabel

@@ -534,6 +534,13 @@ export function dedupeTagsByName(tags: readonly ({ name?: string | null } | null
   return deduped;
 }
 
+/** The tag names that don't repeat one of the recipe's stored Category names (any case). */
+export function tagsBesideCategories(tags: readonly string[], categories: readonly string[]) {
+  const named = new Set(categories.map((name) => name.toLowerCase()));
+
+  return tags.filter((tag) => !named.has(tag.toLowerCase()));
+}
+
 /** The allergies lower-cased, for a case-insensitive lookup. */
 export function allergenSet(allergies: readonly string[]): Set<string> {
   return new Set(allergies.map((allergy) => allergy.toLowerCase()));

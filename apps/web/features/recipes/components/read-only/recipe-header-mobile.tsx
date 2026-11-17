@@ -14,6 +14,7 @@ import {
   isAllergenTag,
   NO_ALLERGIES,
   sortTagsWithAllergyPriority,
+  tagsBesideCategories,
 } from "@norish/shared/lib/helpers";
 
 type RecipeTagLike = { name: string };
@@ -114,7 +115,10 @@ function TagLine({
   const allergens = sorted.filter((tag) => isAllergenTag(tag.name, allergySet));
   const plain = [
     ...categories.map(categoryLabel),
-    ...sorted.filter((tag) => !isAllergenTag(tag.name, allergySet)).map((tag) => tag.name),
+    ...tagsBesideCategories(
+      sorted.filter((tag) => !isAllergenTag(tag.name, allergySet)).map((tag) => tag.name),
+      categories
+    ),
   ];
 
   if (allergens.length === 0 && plain.length === 0) return null;
