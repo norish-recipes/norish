@@ -34,3 +34,5 @@
   3. fix: `copiedLinkToOffer`'s `hasUrl` parameter is always true in the app.
   4. fix: tests for the cases in 1 and 2.
   5. reject: a read in flight finishing after the sheet closes; a pasteboard read cannot be cancelled and the state guard is already there.
+- Review round 2 fixes (aa10efadb, 42c55f524), simulator (iPhone 18 Pro, iOS 27.2, Release, copied in Safari via a local page's `navigator.clipboard.writeText`). `detectValues(for: [.probableWebURL])` (iOS 14+) returns the detected link as a String; under Ask it logs "Paste requires user authorization. Prompting..." like a string read, `detectPatterns` does not; under Deny it fails with code 13 and no row shows.
+- Allow, row offered (full link read from "From a link"): recipe URL → that URL; `…/Pasta_(food)` → whole link; curly-quote sentence → none (`detectPatterns` says no); `see notes.txt then https://example.com/r` → `https://example.com/r`; `example.com/recipe` → `https://example.com/recipe`; `HTTPS://EXAMPLE.COM/a` → kept as is; plain text → none; `http://localhost:3000/recipes/abc` (own server) → value read, none. Setting set back to Ask.
