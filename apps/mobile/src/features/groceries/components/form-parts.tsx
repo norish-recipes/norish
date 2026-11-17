@@ -64,6 +64,7 @@ export function RepeatPills({
   const intl = useIntl();
   const label = useRecurrenceLabel();
   const accent = useAccentTextColor();
+  const [muted] = useThemeColor(["muted"] as const);
 
   if (!detected && !confirmed) return null;
 
@@ -72,10 +73,11 @@ export function RepeatPills({
       {detected ? (
         <Pressable
           accessibilityRole="button"
-          className="border-border h-8 flex-row items-center rounded-full border border-dashed px-3"
+          className="border-border h-8 flex-row items-center gap-1.5 rounded-full border border-dashed px-3"
           testID="repeat-detected"
           onPress={onConfirmDetected}
         >
+          <Ionicons color={muted} name="repeat" size={14} />
           <Text className="text-muted text-sm font-medium">{label(detected)}</Text>
         </Pressable>
       ) : null}
