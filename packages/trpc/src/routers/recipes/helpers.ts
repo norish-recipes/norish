@@ -16,6 +16,25 @@ export type RecipeUserContext = {
   isServerAdmin: boolean;
 };
 
+// ponytail: this process's creates only; a second server process would need a shared lock.
+const creating = new Map<string, Promise<unknown>>();
+
+/** Runs a recipe's create, so media uploaded for its id meanwhile waits for it. */
+export function whileCreating<T>(recipeId: string, create: () => Promise<T>): Promise<T> {
+  const running: Promise<T> = create().finally(() => {
+    if (creating.get(recipeId) === running) creating.delete(recipeId);
+  });
+
+  creating.set(recipeId, running);
+
+  return running;
+}
+
+/** Waits for a create of this id still running here; a failed create is reported by the create. */
+export async function createSettled(recipeId: string): Promise<void> {
+  await creating.get(recipeId)?.catch(() => undefined);
+}
+
 export async function emitRecipeFailure(
   ctx: Pick<RecipeUserContext, "user" | "householdKey">,
   reason: string,

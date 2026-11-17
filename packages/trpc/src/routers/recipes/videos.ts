@@ -18,7 +18,7 @@ import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { announceRecipeUpdated, assertRecipeAccess, mediaRecipeId } from "./helpers";
+import { announceRecipeUpdated, assertRecipeAccess, createSettled, mediaRecipeId } from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -77,6 +77,8 @@ const uploadGalleryVideo = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
+    // A create of this id still running links the file once it is stored.
+    await createSettled(recipeId);
     // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
     await assertRecipeAccess(ctx, recipeId, "edit");
 

@@ -76,6 +76,7 @@ import {
   findRecipeForViewer,
   handleRecipeError,
   recipeAccess,
+  whileCreating,
 } from "./helpers";
 import {
   randomRecipeInputSchema,
@@ -221,9 +222,11 @@ export const createRecipeProcedure = authedProcedure
 
     // The id is answered once the recipe is stored, so media uploaded with it lands on the recipe.
     // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
-    const created = await createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
-      userId: ctx.user.id,
-    }).catch((err: unknown) => {
+    const created = await whileCreating(recipeId, async () =>
+      createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
+        userId: ctx.user.id,
+      })
+    ).catch((err: unknown) => {
       log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
       throw err;
     });

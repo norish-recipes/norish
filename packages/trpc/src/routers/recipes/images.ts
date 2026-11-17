@@ -27,6 +27,7 @@ import { router } from "../../trpc";
 import {
   announceRecipeUpdated,
   assertRecipeAccess,
+  createSettled,
   mediaRecipeId,
   recipeIdOfMediaUrl,
 } from "./helpers";
@@ -222,6 +223,8 @@ const uploadGalleryImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
+    // A create of this id still running links the file once it is stored.
+    await createSettled(recipeId);
     await assertRecipeAccess(ctx, recipeId, "edit");
 
     // Check max images limit

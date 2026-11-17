@@ -162,6 +162,23 @@ describe("a gallery upload right after recipes.create", () => {
     ]);
   });
 
+  it("links a photo and a video sent while their recipe's create is still running", async () => {
+    const id = crypto.randomUUID();
+    const creating = caller().create({ ...recipe("In flight"), id });
+    const [image, video] = await Promise.all([
+      caller().uploadGalleryImage(photo(id, 0)),
+      caller().uploadGalleryVideo(clip(id)),
+    ]);
+
+    await creating;
+    expect(image).toMatchObject({ success: true, id: expect.any(String) });
+    expect(video).toMatchObject({ success: true, id: expect.any(String) });
+    expect(await getRecipeFull(id)).toMatchObject({
+      images: [expect.anything()],
+      videos: [expect.anything()],
+    });
+  });
+
   it("announces nothing for media uploaded before its recipe is stored, or a stale removal", async () => {
     const pendingId = crypto.randomUUID();
 
