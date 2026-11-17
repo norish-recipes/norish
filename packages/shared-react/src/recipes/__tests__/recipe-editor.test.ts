@@ -124,6 +124,17 @@ function seededForm(): RecipeFormState {
 const valid = (form: RecipeFormState) => recipeFormPayload({ ...form, servings: form.servings! });
 
 describe("the editor's rows round-trip a stored recipe", () => {
+  it("reads amounts in the page's mode and stores the same lines", () => {
+    const form = seededForm();
+    const line = { ...form.ingredients[0]!, amount: 0.5, unit: "tsp", ingredientName: "salt" };
+    const rows = seedIngredientRows([line], "fraction");
+
+    expect(rows[0]?.text).toBe("½ tsp salt");
+    expect(seedIngredientRows([line], "decimal")[0]?.text).toBe("0.5 tsp salt");
+    expect(seedIngredientRows([line])[0]?.text).toBe("0.5 tsp salt");
+    expect(ingredientRowsToLines(rows, {}, "metric")[0]).toEqual(line);
+  });
+
   it("gives back every line, section, order and reference untouched", () => {
     const form = seededForm();
     const rows = seedIngredientRows(form.ingredients);

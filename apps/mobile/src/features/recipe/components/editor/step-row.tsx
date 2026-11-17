@@ -205,7 +205,8 @@ export function StepRow({
       <View className="items-center">
         {heading ? null : (
           <RowIconButton
-            icon="image-outline"
+            soft
+            icon="camera-outline"
             label={text("recipes.editor.addStepPhoto")}
             testID={`editor-step-photo-${index}`}
             onPress={onAddPhoto}

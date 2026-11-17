@@ -20,6 +20,7 @@ import {
   removeIngredientRow,
   seedIngredientRows,
   typeIngredientRow,
+  useAmountDisplayPreference,
 } from "@norish/shared-react/recipes";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
@@ -42,7 +43,8 @@ export function IngredientRows({
 }) {
   const intl = useIntl();
   const { units } = useUnitsQuery();
-  const [rows, setRows] = useState<IngredientRow[]>(() => seedIngredientRows(ingredients));
+  const { mode } = useAmountDisplayPreference();
+  const [rows, setRows] = useState<IngredientRow[]>(() => seedIngredientRows(ingredients, mode));
   const [seededLength, setSeededLength] = useState(ingredients.length);
   const trailingRow = useTrailingRow(rows, hasIngredientContent);
 
@@ -50,7 +52,7 @@ export function IngredientRows({
   if (ingredients.length !== seededLength) {
     setSeededLength(ingredients.length);
     if (ingredients.length > 0 && rows.length === 1 && rows[0]?.text === "") {
-      setRows(seedIngredientRows(ingredients));
+      setRows(seedIngredientRows(ingredients, mode));
     }
   }
 
@@ -83,7 +85,7 @@ export function IngredientRows({
         className={`min-h-12 flex-row items-center gap-2.5 py-2 ${index === 0 ? "" : "border-separator border-t"}`}
         testID={`editor-ingredient-${index}`}
       >
-        {heading ? null : <IngredientIcon ingredientId={lineFoods[index]?.foodId} />}
+        <IngredientIcon ingredientId={lineFoods[index]?.foodId} />
         <View className="flex-1">
           <EditorInput
             {...trailingRow.inputProps(row, index)}
