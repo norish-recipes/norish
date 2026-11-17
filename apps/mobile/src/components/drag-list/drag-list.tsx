@@ -21,42 +21,30 @@ import {
 import { FlatList, ScrollView, View } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import Animated, {
-  measure,
-  scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useComposedEventHandler,
-  useFrameCallback,
   useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { lightImpact, mediumImpact } from "@/lib/haptics";
-import { timedTo } from "@/lib/motion/timed";
+import { mediumImpact } from "@/lib/haptics";
 
-import type { Slot, Target } from "./drop-target";
+import type { Target } from "./drop-target";
 import type { DragRow, Drop } from "./resolve-drop";
-import { landingTop, sectionsOf, targetAt } from "./drop-target";
+import type { CardLayout, CellLayout, Page } from "./use-drag-engine";
+import { sectionsOf } from "./drop-target";
+import { useDragEngine } from "./use-drag-engine";
 import { useHeldRows } from "./use-held-rows";
 
 export type { Drop, DragRow };
 
 /** How long a row is held before it lifts, as web's touch drag. */
 const HOLD_MS = 250;
-/** The band at either end of the visible list that scrolls it, and the speed at its far edge. */
-const EDGE = 80;
-const EDGE_SPEED = 900;
 /** The lifted row's source, as web's. */
 const GHOST_OPACITY = 0.5;
-/** How long the lifted card takes to settle where it lands. */
-const SETTLE_MS = 180;
 
 type AnyRow = DragRow<unknown, unknown>;
-type CellLayout = { top: number; height: number; width: number };
-type CardLayout = { top: number; height: number; x: number; width: number };
-/** The lifted row: where its cell was, and where the list's content started on screen then. */
-type Lift = { key: string; top: number; height: number; origin: number };
-type Order = { key: string; heading: boolean; section: string | null }[];
 type ScrollHandler = ReturnType<typeof useAnimatedScrollHandler>;
 type LayoutAnimation = ComponentProps<typeof Animated.View>["layout"];
 
@@ -72,14 +60,6 @@ type DragState = {
   lifted: string | null;
   dropped: string | null;
   layout: LayoutAnimation;
-};
-
-/** The page a `nested` list sits in, which it scrolls and holds still while a row is carried. */
-type Page = {
-  ref: ReturnType<typeof useAnimatedRef<Animated.ScrollView>>;
-  offset: SharedValue<number>;
-  contentHeight: SharedValue<number>;
-  setLocked: (locked: boolean) => void;
 };
 
 const DragContext = createContext<DragState | null>(null);
@@ -245,16 +225,16 @@ function DragCell({
   );
 }
 
-/** The list's scroll view with the drag's layer drawn over its rows, in content coordinates. */
-function LayerScrollView({
-  layer,
+/** The list's scroll view with the drag's overlay drawn over its rows, in content coordinates. */
+function OverlayScrollView({
+  overlay,
   children,
   ...props
-}: ComponentProps<typeof ScrollView> & { layer: ReactNode }) {
+}: ComponentProps<typeof ScrollView> & { overlay: ReactNode }) {
   return (
     <ScrollView {...props}>
       {children}
-      {layer}
+      {overlay}
     </ScrollView>
   );
 }
@@ -283,7 +263,7 @@ function DropMarks({ target }: { target: SharedValue<Target | null> }) {
       ? { opacity: 1, left: at.x, width: at.width, transform: [{ translateY: at.y - 1.5 }] }
       : { opacity: 0 };
   });
-  const box = useAnimatedStyle(() => {
+  const outline = useAnimatedStyle(() => {
     const at = target.get()?.box;
 
     return at
@@ -299,7 +279,10 @@ function DropMarks({ target }: { target: SharedValue<Target | null> }) {
 
   return (
     <>
-      <Animated.View className="border-accent absolute top-0 rounded-3xl border-2" style={box} />
+      <Animated.View
+        className="border-accent absolute top-0 rounded-3xl border-2"
+        style={outline}
+      />
       <Animated.View className="bg-accent absolute top-0 h-[3px] rounded-full" style={line} />
     </>
   );
@@ -383,51 +366,52 @@ export function DragList<H, T>({
   const page = nested ? outer : null;
   const [lifted, setLifted] = useState<string | null>(null);
   const [dropped, setDropped] = useState<string | null>(null);
-  const listRef = useAnimatedRef<FlatList>();
-  const layerRef = useAnimatedRef<View>();
-  const cells = useSharedValue<Record<string, CellLayout>>({});
-  const cards = useSharedValue<Record<string, CardLayout>>({});
-  const order = useSharedValue<Order>([]);
-  const lift = useSharedValue<Lift | null>(null);
-  const dragging = useSharedValue(false);
-  // How far the finger has moved since the lift; a sheet's gestures count from its own top.
-  const travel = useSharedValue(0);
-  const cardTop = useSharedValue(0);
-  const target = useSharedValue<Target | null>(null);
-  const section = useSharedValue<string | null>(null);
-  const contentHeight = useSharedValue(0);
-  const insetTop = edgeInsets?.top ?? rest.contentInset?.top ?? 0;
-  const contentInsetBottom = rest.contentInset?.bottom ?? 0;
-  const insetBottom = edgeInsets?.bottom ?? contentInsetBottom;
+  // The rows in the order a drag counts in, with each one's section, for the UI thread.
+  const sections = sectionsOf(shown, sectionOf);
+  const { listRef, layerRef, cells, cards, cardTop, target, contentHeight, start, move, release } =
+    useDragEngine({
+      order: shown.map((row, index) => ({
+        key: row.key,
+        heading: row.kind === "heading",
+        section: sections[index] ?? null,
+      })),
+      page,
+      insets: {
+        top: edgeInsets?.top ?? rest.contentInset?.top ?? 0,
+        bottom: edgeInsets?.bottom ?? rest.contentInset?.bottom ?? 0,
+        content: rest.contentInset?.bottom ?? 0,
+      },
+      events: {
+        lifted: (key) => {
+          mediumImpact();
+          held.lift();
+          setLifted(key);
+          setDropped(null);
+        },
+        finished: (key, gap) => {
+          const kept = held.drop(key, gap);
+
+          if (kept) mediumImpact();
+          setLifted(null);
+          setDropped(kept ? key : null);
+        },
+        rule: landAt
+          ? (key, gap) => {
+              const drop = held.dropOf(key, gap);
+
+              return drop && landAt(drop, held.shown);
+            }
+          : undefined,
+      },
+    });
 
   useImperativeHandle(ref, () => ({
     scrollToOffset: (params) => listRef.current?.scrollToOffset(params),
   }));
 
-  // The rows in the order a drag counts in, with each one's section, for the UI thread.
-  const sections = sectionsOf(shown, sectionOf);
-
   useEffect(() => {
     if (shownRef) shownRef.current = shown;
-    order.set(
-      shown.map((row, index) => ({
-        key: row.key,
-        heading: row.kind === "heading",
-        section: sections[index] ?? null,
-      }))
-    );
   });
-
-  // Lift and drop reach React through the latest render, as the worklets that call them are kept.
-  const latestRef = useRef({
-    lifted: (_key: string) => {},
-    finished: (_key: string, _gap: number | null) => {},
-    ruled: (_key: string, _gap: number | null) => {},
-  });
-  const onLifted = (key: string) => latestRef.current.lifted(key);
-  const onFinished = (key: string, gap: number | null) => latestRef.current.finished(key, gap);
-  const onRuled = (key: string, gap: number | null) => latestRef.current.ruled(key, gap);
-  const ruled = landAt !== undefined;
 
   // The drop's commit placed its row without the layout animation; later changes animate again.
   useEffect(() => {
@@ -446,170 +430,6 @@ export function DragList<H, T>({
 
     return () => heldChanged(false);
   }, [lifted]);
-
-  const slotsNow = () => {
-    "worklet";
-    const laid = cells.get();
-    const drawn = cards.get();
-
-    return order.get().map(({ key, heading, section }): Slot => {
-      const cell = laid[key];
-
-      if (!cell) return null;
-
-      return {
-        top: cell.top,
-        height: cell.height,
-        heading,
-        section,
-        card: drawn[key] ?? { top: 0, height: cell.height, x: 0, width: cell.width },
-      };
-    });
-  };
-
-  /** The row's index in the rows the drag counts in; the UI thread's index can be a render old. */
-  const indexOf = (key: string) => {
-    "worklet";
-    const rowsNow = order.get();
-
-    for (let index = 0; index < rowsNow.length; index++)
-      if (rowsNow[index]!.key === key) return index;
-
-    return -1;
-  };
-
-  const start = (key: string) => {
-    "worklet";
-    const layer = measure(layerRef);
-    const cell = cells.get()[key];
-
-    if (lift.get() || !layer || !cell) return;
-    lift.set({ key, top: cell.top, height: cell.height, origin: layer.pageY });
-    dragging.set(true);
-    travel.set(0);
-    cardTop.set(cell.top);
-    target.set(null);
-    section.set(order.get()[indexOf(key)]?.section ?? null);
-    scheduleOnRN(onLifted, key);
-  };
-
-  // Another finger's row is not the one carried.
-  const move = (key: string, translation: number) => {
-    "worklet";
-    if (lift.get()?.key === key) travel.set(translation);
-  };
-
-  // The card slides to where the row lands, or back to its place, then the drop commits.
-  const settle = (key: string, gap: number | null) => {
-    "worklet";
-    const held = lift.get();
-
-    if (held?.key !== key) return;
-    const done = () => {
-      "worklet";
-      lift.set(null);
-      scheduleOnRN(onFinished, key, gap);
-    };
-
-    cardTop.set(timedTo(landingTop(slotsNow(), gap, indexOf(key), held), SETTLE_MS, {}, done));
-  };
-
-  const release = (key: string, canceled: boolean) => {
-    "worklet";
-    if (lift.get()?.key !== key || !dragging.get()) return;
-    dragging.set(false);
-    const gap = canceled ? null : (target.get()?.gap ?? null);
-
-    target.set(null);
-    // A list with a rule asks it where the row lands first.
-    if (ruled && gap !== null) scheduleOnRN(onRuled, key, gap);
-    else settle(key, gap);
-  };
-
-  const frame = useFrameCallback(({ timeSincePreviousFrame }) => {
-    "worklet";
-    const held = lift.get();
-    const layer = measure(layerRef);
-    const box = page ? measure(page.ref) : measure(listRef);
-
-    if (!held || !dragging.get() || !layer || !box) return;
-    // The source cell left the list's window and took its gesture: the drag ends as a cancel.
-    if (!cells.get()[held.key]) {
-      release(held.key, true);
-
-      return;
-    }
-
-    // Frame-driven auto-scroll, faster the deeper the card's middle is in an end's band.
-    const y = held.origin + held.top + travel.get() + held.height / 2;
-    const top = box.pageY + (page ? 0 : insetTop);
-    const bottom = box.pageY + box.height - (page ? 0 : insetBottom);
-    const depth =
-      y < top + EDGE
-        ? -(top + EDGE - y) / EDGE
-        : y > bottom - EDGE
-          ? (y - bottom + EDGE) / EDGE
-          : 0;
-    let shift = 0;
-
-    if (depth !== 0) {
-      // A FlatList's offset is where its content starts on screen; a page tracks its own.
-      const offset = page ? page.offset.get() : box.pageY - layer.pageY;
-      const max =
-        (page ? page.contentHeight.get() : contentHeight.get() + contentInsetBottom) - box.height;
-      const speed = Math.max(-1, Math.min(1, depth)) * EDGE_SPEED;
-      const next = Math.max(
-        page ? 0 : -insetTop,
-        Math.min(max, offset + (speed * (timeSincePreviousFrame ?? 16)) / 1000)
-      );
-
-      if (Math.abs(next - offset) > 0.1) {
-        if (page) scrollTo(page.ref, 0, next, false);
-        else scrollTo(listRef, 0, next, false);
-        shift = next - offset;
-      }
-    }
-
-    // The card's top in the content, which the list scrolled under by `shift` this frame.
-    const cardY = held.top + travel.get() + held.origin - layer.pageY + shift;
-    // A loop, not a map: the React Compiler hoists a capture-free callback out of the worklet.
-    const sections: (string | null)[] = [];
-
-    for (const row of order.get()) sections.push(row.section);
-    const now = targetAt(slotsNow(), sections, indexOf(held.key), cardY + held.height / 2);
-
-    cardTop.set(cardY);
-    target.set(ruled && now ? { ...now, line: null } : now);
-    if (now && now.section !== section.get()) {
-      section.set(now.section);
-      scheduleOnRN(lightImpact);
-    }
-  }, false);
-
-  useEffect(() => {
-    latestRef.current = {
-      lifted: (key) => {
-        mediumImpact();
-        frame.setActive(true);
-        held.lift();
-        setLifted(key);
-        setDropped(null);
-      },
-      finished: (key, gap) => {
-        const kept = held.drop(key, gap);
-
-        if (kept) mediumImpact();
-        frame.setActive(false);
-        setLifted(null);
-        setDropped(kept ? key : null);
-      },
-      ruled: (key, gap) => {
-        const drop = held.dropOf(key, gap);
-
-        scheduleOnUI(settle, key, drop && landAt ? landAt(drop, held.shown) : null);
-      },
-    };
-  });
 
   const drag: DragState = {
     cells,
@@ -630,7 +450,7 @@ export function DragList<H, T>({
   const liftedRow = lifted ? shown.find((row) => row.key === lifted) : undefined;
   const renderRow = (row: DragRow<H, T>, index: number) =>
     row.kind === "heading" ? renderHeading(row.value, index) : renderItem(row.value);
-  const layer = (
+  const overlay = (
     <Animated.View
       ref={layerRef}
       className="absolute inset-x-0 top-0 h-0"
@@ -654,7 +474,7 @@ export function DragList<H, T>({
               {renderRow(row, index)}
             </DragCell>
           ))}
-          {layer}
+          {overlay}
         </View>
       </DragContext>
     );
@@ -669,7 +489,7 @@ export function DragList<H, T>({
         data={shown}
         keyExtractor={(row) => row.key}
         renderItem={({ index }) => renderRow(shown[index]!, index)}
-        renderScrollComponent={(props) => <LayerScrollView {...props} layer={layer} />}
+        renderScrollComponent={(props) => <OverlayScrollView {...props} overlay={overlay} />}
         onContentSizeChange={(width, height) => {
           contentHeight.set(height);
           onContentSizeChange?.(width, height);
