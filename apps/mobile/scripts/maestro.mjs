@@ -217,9 +217,11 @@ const control = createServer(async (request, response) => {
         })
       );
     } else if (route.pathname === "/day") {
-      response.write(
-        JSON.stringify({ key: seed.dayKey(Number(route.searchParams.get("offset") ?? 0)) })
-      );
+      const offset = route.searchParams.get("offset") ?? "0";
+
+      if (!/^-?\d+$/.test(offset))
+        throw new Error(`offset is not a whole number of days: ${offset}`);
+      response.write(JSON.stringify({ key: seed.dayKey(Number(offset)) }));
     } else if (route.pathname === "/planned") {
       const want = (field) => route.searchParams.get(field) ?? undefined;
 
