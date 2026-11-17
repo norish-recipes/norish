@@ -11,7 +11,7 @@ import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { SheetStrip } from "./sheet";
 
-/** A chip's width and the gap after it, for the offset that brings a later day into view. */
+/** A chip's width and the gap after it: drawn with these and read back for the opening offset. */
 const CHIP = 52;
 const GAP = 8;
 
@@ -37,7 +37,6 @@ export function DayStrip({
     // heroui-native has no day strip, so these chips are hand-built.
     <SheetStrip
       accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-      contentClassName="gap-2"
       contentOffset={{ x: start, y: 0 }}
       testID={`${testID}-days`}
     >
@@ -59,7 +58,8 @@ export function DayStrip({
             })}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
-            className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
+            className={`h-16 items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
+            style={{ width: CHIP, marginRight: GAP }}
             testID={`${testID}-day-${offset}`}
             onPress={() => onChange(key, true)}
           >
