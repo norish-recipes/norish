@@ -27,3 +27,9 @@
   5. The `header` Groceries/Pantry switch uses the same labelled segments as `row`. When scrolled, the inline title is hidden because the switch already names the tab.
   6. A canvas note beside the Groceries/Pantry row says that with `place: row` the switch scrolls away with the list.
   7. A canvas note beside the Calendar row says Calendar has no switches or pills, so `place` does not apply.
+- Mike round 1 (canvas v90):
+  1. Bar items and under-title controls (gear, avatar backing, Filters, grid/list, Groceries/Pantry, All/Recipes/Cookbooks, unselected pills) use a new `.hg` header glass: ~20% (light) / 26% (dark) fill with a 9 px backdrop blur, so content shows through blurred in both themes. The selected All pill and the switch thumbs stay solid.
+  2. Scrolled boards have no inline title. The solid top fade is replaced by a soft scroll-edge (short blur that fades out), so the bar holds only its items and the large title scrolls away with the content.
+  3. Pantry (at rest and scrolled, both `place` values) gets the "Add to pantry" accessory, styled like "Add items".
+  4. The Calendar refresh/sync button is gone from every Calendar board; the avatar is the only bar item.
+  5. New `offline` tweak on the Recipes (TabRoot), Groceries and Pantry boards draws the warning dot. The avatar menu always starts with a status line: "Live" with a green dot (no avatar dot) or "Offline · 3 changes waiting" with the warning dot. TabRecipesMenu now shows the Live line.
