@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { labelFits } from "@/lib/label-fits";
 import { closeOpenRow } from "@/lib/open-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -8,7 +9,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
 import type { Action } from "../utils/accessory-plan";
-import { ACTION_ICON, labelFits } from "../utils/accessory-plan";
+import { ACTION_CHROME, ACTION_ICON } from "../utils/accessory-plan";
 
 /** One action in the accessory: its icon and label, the label dropped beside the minimised tab bar
  * when its measured width does not fit the room the timer leaves. */
@@ -20,7 +21,7 @@ export function AccessoryAction({ action: { icon, labelId, testID, route } }: { 
   const accent = useAccentTextColor();
   const [room, setRoom] = useState<number | null>(null);
   const [labelWidth, setLabelWidth] = useState<number | null>(null);
-  const fits = inline ? labelFits(room, labelWidth) : true;
+  const fits = inline ? labelFits(room, labelWidth, ACTION_CHROME) : true;
 
   return (
     <Pressable

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
-import { accessoryPlan, accessoryScreen, labelFits, shellTab } from "../utils/accessory-plan";
+import { accessoryPlan, accessoryScreen, shellTab } from "../utils/accessory-plan";
 
 // The action a plan holds, by its test id; Add recipe by its name.
 const holds = (
@@ -114,24 +114,6 @@ describe("accessoryScreen", () => {
 
   it("passes every other path through", () => {
     expect(accessoryScreen("/groceries", undefined, "/", "abc")).toEqual({ path: "/groceries" });
-  });
-});
-
-describe("labelFits", () => {
-  it("does not know until the room and the label are measured", () => {
-    expect(labelFits(null, 80)).toBeNull();
-    expect(labelFits(120, null)).toBeNull();
-  });
-
-  it("keeps the label when sides, icon, gap and label fit the room", () => {
-    // 6 + 22 + 8 + 80 + 6 = 122
-    expect(labelFits(122, 80)).toBe(true);
-    expect(labelFits(121, 80)).toBe(false);
-  });
-
-  it("drops a long translation where a short label fits", () => {
-    expect(labelFits(150, 40)).toBe(true);
-    expect(labelFits(150, 120)).toBe(false);
   });
 });
 

@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { GlassSurface } from "@/components/glass";
 import { useTimersName } from "@/components/timer-glance";
+import { labelFits } from "@/lib/label-fits";
 import { useFadeTo } from "@/lib/motion/fade-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -13,7 +14,6 @@ import { useRecipePageStore } from "@norish/shared-react/recipes";
 import { timerGlance, useTimerStore } from "@norish/shared-react/recipes/timers";
 
 import { MORPH } from "../hooks/use-morph-frame";
-import { nextLabelFits } from "../utils/next-label";
 import { useTint } from "./tint";
 
 export type CookView = "steps" | "ingredients";
@@ -63,6 +63,8 @@ function BarButton({
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+/** What Next needs beside its label: the chevron, the gap and a side padding each way. */
+const NEXT_CHROME = 20 + 6 + 2 * 6;
 
 const PILL_HEIGHT = 40;
 
@@ -128,8 +130,9 @@ export function CookBar({
   const nextLabel = intl.formatMessage({
     id: last ? "common.actions.done" : "recipes.cookMode.nextStep",
   });
-  const [nextWidth, setNextWidth] = useState(0);
-  const [labelWidth, setLabelWidth] = useState(0);
+  const [nextWidth, setNextWidth] = useState<number | null>(null);
+  const [labelWidth, setLabelWidth] = useState<number | null>(null);
+  const nextFits = labelFits(nextWidth, labelWidth, NEXT_CHROME);
   const counter = intl.formatMessage(
     { id: "recipes.cookMode.stepCounter" },
     { current: current + 1, total }
@@ -238,8 +241,12 @@ export function CookBar({
               {nextLabel}
             </Text>
           </View>
-          {nextLabelFits(nextWidth, labelWidth) ? (
-            <Text className="text-accent-foreground text-[17px] font-semibold" numberOfLines={1}>
+          {/* Unmeasured, it keeps its place unseen: drawn first and dropped after, it would flash. */}
+          {nextFits !== false ? (
+            <Text
+              className={`text-accent-foreground text-[17px] font-semibold ${nextFits === null ? "opacity-0" : ""}`}
+              numberOfLines={1}
+            >
               {nextLabel}
             </Text>
           ) : null}

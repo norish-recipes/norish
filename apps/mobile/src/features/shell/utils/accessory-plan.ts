@@ -114,13 +114,5 @@ export function accessoryPlan(
 
 /** The action icon's size. */
 export const ACTION_ICON = 22;
-const GAP = 8;
-// Clear of the capsule's curve at the label's height.
-const SIDES = 6;
-
-/** Whether an action's label fits beside its icon in `room` pt; null until both are measured. */
-export function labelFits(room: number | null, labelWidth: number | null) {
-  if (room === null || labelWidth === null) return null;
-
-  return SIDES * 2 + ACTION_ICON + GAP + labelWidth <= room;
-}
+/** What an action's label needs beside it: the icon, the gap and 6 pt each side, clear of the capsule's curve. */
+export const ACTION_CHROME = ACTION_ICON + 8 + 2 * 6;
