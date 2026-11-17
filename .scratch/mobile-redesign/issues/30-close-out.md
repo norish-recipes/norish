@@ -4,12 +4,12 @@
 
 **Blocked by:** 29, 31, 32, 33, 34, 35, 36, 37, 38
 
-**Status:** open
+**Status:** done
 
 - [ ] Maestro flows from Parts 3–6's Testing Decisions; one full run after 18–29 and 31–38 are reviewed and fixed; each new flow run repeatedly to prove it stable.
 - [x] The grocery realtime check returns.
-- [ ] Device run of every new board against the canvas.
-- [ ] Docs pages for the Recipe screen and timers, Groceries and Calendar, and the widgets page stating that widgets update when Norish runs; release notes for 0.27.0-beta.
+- [x] Device run of every new board against the canvas.
+- [x] Docs pages for the Recipe screen and timers, Groceries and Calendar, and the widgets page stating that widgets update when Norish runs; release notes for 0.27.0-beta.
 
 ## Comments
 
@@ -77,3 +77,21 @@
 - Mobile: the tab bar guess resets to expanded when a tab regains focus (8607131c1); one tab bar geometry in `lib/tab-bar-placement.ts`, list end inset = expanded accessory top + 24 pt, pure modules moved to `lib/` (341945d07); one `labelFits`, hidden until measured (c7267a74b); the cookbook's Add recipes is a plan entry with its own key (220f992de); Reanimated only through `lib/motion` (1af9570fb); `createMark` for tab bar counts and timer answers, notification taps keep one id (bdd27e32e); white icons use `accent-foreground` (165be2d5e); the Pantry field is `SheetSearchField` with `ring` (955b485fb); comments at most two lines (c0ceb18cb).
 - Shared: a tag repeating a Category is dropped by the stored Category name, on web's recipe header too (219213a19). Repeat summaries are ICU plural messages per rule in every locale, and Danish and Norwegian full weekday names now start on Sunday (00174737c).
 - Simulator (iPhone 17, Release): the first build crashed after sign-in because the React Compiler memoised `answers.use()` as a value; mark hooks are now called through `use`-named bindings (ffb2272c8). The web recurrence test reads through `useTranslations`, as `next build` typechecks tests (023a90399). Then `cook-mode`, `recipe-controls`, `calendar-plan-accessory`, `cookbook-create-add` and `planned-item-edit` passed once each.
+
+### Review log (2026-11-17)
+
+The run covered tickets 31-38 and this close-out, from `1288c1807`. Whole-branch review: Standards on Sonnet low, Spec on Opus high, GPT-6.1 Sol on high; docs by GPT-6.1 Terra.
+
+Maestro: 17 new flows for Parts 3-5, each 3 of 3 (both drags and the grocery realtime check among them). The one full run of the whole suite was not made: the maintainer stopped it on 2026-11-17 ("its fine, just take the screenshots and docs and push"), so the first box stays open; `calendar-offline.yaml` was adjusted to find the Offline pill in the title row and has not been run since.
+
+Device run against 49 boards (iPhone 17 simulator), then three fix rounds: six app bugs (the accessory after a link over a recipe, cook mode's peeks, the tab bar stuck minimised, the Calendar's place, sheet steps and the keyboard, a sheet hiding the bar on every tab), about 25 board differences, the soft top edge under scrolled content and the Calendar's title row in its list with a floating Today control (both asked for by the maintainer during the run), and two server faults: photos lost when uploaded right after `recipes.create` (create now answers once stored) and no realtime event after a media upload.
+
+Whole-branch review, fixed (17): queued `calendar.updateItem` entries from 0.26.1 converted to `editItem` on load (Sol); a deadlock between two moves out of one slot (Sol; slot writes lock the planner's row first); a replayed create answering with the stored recipe; a failure after the store only logging; uploads held behind an in-flight create (Sol); a stale gallery delete removing nothing; the bar-state guess reset on tab focus; one tab-bar geometry; one label-fits rule; the cookbook's Add recipes as a plan entry; a Category tag de-duplicated by stored name in shared code; every animation through lib/motion; marks for the hand-rolled stores; tokens for white icons; one search field; comments; ICU plurals for repeat intervals (and Danish and Norwegian weekday names, which were a day off). Rejected (1): one palette for the widgets and the Live Activity (a widget body cannot import).
+
+Final state: the 11 gates exit 0 with no mobile lint warning; web E2E 282 of 282 and the base-path run 10 of 10, at `42af34bb3`; the docs build exits 0 with all 23 screenshots at `e5aec7475`.
+
+Decided by the maintainer during the run: the cook-mode bar at 48 pt; Cook as the recipe page's bottom accessory with the timer beside it (after a toolbar and floating controls were tried); the accessory minimising on every tab; the Calendar's title and Offline pill scrolling out of sight as built.
+
+Left for the maintainer to try on the phone (a Release build of `7e3854387` was installed on it): haptics, the widgets in each look, the Live Activity and the timer notification with the app closed, Reduce Motion; and the open judgement calls in tickets 32-37's logs (search sheets at one half height, the Today control's place, Filters' Apply pinned, a moved note landing last on web).
+
+Not done: the full Maestro run; `expo install --check` reports eleven Expo packages a patch or two behind their pins; the docs format gate fails on five older release-note files.
