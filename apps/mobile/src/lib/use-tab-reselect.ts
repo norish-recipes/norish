@@ -18,10 +18,17 @@ export function useTabReselect(onReselect: () => void) {
   const reselect = useEffectEvent(onReselect);
 
   useEffect(() => {
-    const tabs = navigation.getParent<TabsNavigation>()?.getParent<TabsNavigation>();
+    // The tab navigator is an ancestor, however many stacks sit between it and the screen.
+    const stops: (() => void)[] = [];
 
-    return tabs?.addListener("tabPress", () => {
-      if (navigation.isFocused()) reselect();
-    });
+    for (let parent = navigation.getParent<TabsNavigation>(); parent; parent = parent.getParent()) {
+      stops.push(
+        parent.addListener("tabPress", () => {
+          if (navigation.isFocused()) reselect();
+        })
+      );
+    }
+
+    return () => stops.forEach((stop) => stop());
   }, [navigation]);
 }

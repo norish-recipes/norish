@@ -1,8 +1,9 @@
 import type { FlatList, FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { scheduleOnRN } from "react-native-worklets";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
@@ -61,6 +62,21 @@ export function CalendarScreen() {
   const growth = useHeldGrowth(grow);
   const bar = useTabBarMinimised();
   const headerHeight = calendarHeaderHeight(insets.top);
+  // A day scrolled to sits just under the status bar, not behind it.
+  const listTop = insets.top + 12;
+  const scrollToRow = (index: number, animated: boolean) => {
+    const { offset } = rowLayout(shownRowsRef.current, index, fontScale);
+
+    listRef.current?.scrollToOffset({ offset: offset + headerHeight - listTop, animated });
+  };
+  // The drag list composes a worklet handler, which hands each scroll on to the bar's guess.
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scheduleOnRN(bar.track, {
+      contentOffset: { y: event.contentOffset.y },
+      contentSize: { height: event.contentSize.height },
+      layoutMeasurement: { height: event.layoutMeasurement.height },
+    });
+  });
   // The days a row of which is on screen, for the way back to today.
   const [shownDays, setShownDays] = useState<string[]>([]);
   // Stable: FlatList refuses a new viewability callback after its first render.
@@ -82,17 +98,26 @@ export function CalendarScreen() {
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
   const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
 
+  // Opened on a day or today: the list's initial scroll puts it at the very top, which the first
+  // laid-out content moves down to just under the status bar.
+  const openedRef = useRef(false);
+  const settleOpening = () => {
+    if (openedRef.current || openIndex < 0) return;
+    openedRef.current = true;
+    scrollToRow(openIndex, false);
+  };
+
   // A link while the timeline is open scrolls to its day, every time it is tapped.
   useCalendarLinkArrivals((linked) => {
     const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(linked));
 
-    if (index >= 0) listRef.current?.scrollToIndex({ index, animated: false });
+    if (index >= 0) scrollToRow(index, false);
   });
 
   const scrollToToday = () => {
     const index = shownRowsRef.current.findIndex((row) => row.key === dayRowKey(todayKey));
 
-    if (index >= 0) listRef.current?.scrollToIndex({ index, animated: true });
+    if (index >= 0) scrollToRow(index, true);
   };
 
   // The tab pressed again while the Calendar shows returns to today.
@@ -176,6 +201,7 @@ export function CalendarScreen() {
           shownRef={shownRowsRef}
           testID="calendar-list"
           viewabilityConfig={VIEWABILITY}
+          onContentSizeChange={settleOpening}
           onDrop={(drop) => {
             const plan = planTimelineDrop(drop, calendarData);
 
@@ -187,7 +213,7 @@ export function CalendarScreen() {
           onEndReached={() => growth.reached("future")}
           onEndReachedThreshold={GROW_THRESHOLD}
           onHeldChange={growth.heldChange}
-          onScroll={({ nativeEvent }) => bar.track(nativeEvent)}
+          onScroll={onScroll}
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
