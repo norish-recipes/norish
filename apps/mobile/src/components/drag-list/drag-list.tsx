@@ -168,6 +168,14 @@ const recordInto =
   ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
     writeBox(into, key, { top: layout.y, height: layout.height, x: layout.x, width: layout.width });
 
+/** An `onContentSizeChange` that records the content's height in `into`, then calls `then`. */
+const recordHeight =
+  (into: SharedValue<number>, then?: (width: number, height: number) => void) =>
+  (width: number, height: number) => {
+    into.set(height);
+    then?.(width, height);
+  };
+
 /** A row's cell: records where it is laid out, fades as the lifted row's source, and gives an item
  * its handle. FlatList's `CellRendererComponent`, and each row of a nested list. */
 function DragCell({
@@ -484,10 +492,7 @@ export function DragList<H, T>({
         keyExtractor={(row) => row.key}
         renderItem={({ index }) => renderRow(shown[index]!, index)}
         renderScrollComponent={(props) => <OverlayScrollView {...props} overlay={overlay} />}
-        onContentSizeChange={(width, height) => {
-          contentHeight.set(height);
-          onContentSizeChange?.(width, height);
-        }}
+        onContentSizeChange={recordHeight(contentHeight, onContentSizeChange)}
       />
     </DragContext>
   );
@@ -524,10 +529,7 @@ export function DragScrollView({
         ref={scrollRef}
         {...props}
         scrollEnabled={locked ? false : scrollEnabled}
-        onContentSizeChange={(width, height) => {
-          contentHeight.set(height);
-          onContentSizeChange?.(width, height);
-        }}
+        onContentSizeChange={recordHeight(contentHeight, onContentSizeChange)}
         onScroll={handler}
       >
         {children}
