@@ -4,6 +4,7 @@ import {
   clampToReach,
   HANDOVER,
   onStep,
+  PEEK_MAX_HEIGHT,
   PEEK_OPACITY,
   PEEK_SCALE,
   PEEK_SLOT,
@@ -33,6 +34,14 @@ describe("slotPose", () => {
     expect(above).toMatchObject({ scale: PEEK_SCALE, fullOpacity: 0, peekOpacity: PEEK_OPACITY });
     expect(COLUMN / 2 + above.y + (PEEK_SCALE * PEEK) / 2).toBeCloseTo(PEEK_SLOT);
     expect(COLUMN / 2 + below.y - (PEEK_SCALE * PEEK) / 2).toBeCloseTo(COLUMN - PEEK_SLOT);
+  });
+
+  it("keeps the tallest peek a step lays out inside its slot", () => {
+    const above = slotPose(-1, COLUMN, PEEK_MAX_HEIGHT);
+    const below = slotPose(1, COLUMN, PEEK_MAX_HEIGHT);
+
+    expect(COLUMN / 2 + above.y - (PEEK_SCALE * PEEK_MAX_HEIGHT) / 2).toBeCloseTo(0);
+    expect(COLUMN / 2 + below.y + (PEEK_SCALE * PEEK_MAX_HEIGHT) / 2).toBeCloseTo(COLUMN);
   });
 
   it("fades a full step out as it shrinks, before its peek fades in", () => {

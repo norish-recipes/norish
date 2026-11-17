@@ -14,7 +14,7 @@ import { useIntl } from "react-intl";
 import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
 
 import type { StepPager } from "../hooks/use-step-pager";
-import { PEEK_SLOT, slotPose } from "../utils/cook-pager";
+import { PEEK_MAX_HEIGHT, PEEK_SLOT, slotPose } from "../utils/cook-pager";
 import { PeekBody, StepBody } from "./cook-step-body";
 
 /** One step, posed by its distance from the pager's position: full in the middle or as its
@@ -106,7 +106,12 @@ export function StepSlot({
         className="absolute inset-x-0 top-0"
         importantForAccessibility={isPeek ? "auto" : "no-hide-descendants"}
         style={[
-          { transformOrigin: "left center", pointerEvents: isPeek ? "auto" : "none" },
+          {
+            maxHeight: PEEK_MAX_HEIGHT,
+            overflow: "hidden",
+            transformOrigin: "left center",
+            pointerEvents: isPeek ? "auto" : "none",
+          },
           peekStyle,
         ]}
         onLayout={(event) => peekHeight.set(event.nativeEvent.layout.height)}
