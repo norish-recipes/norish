@@ -1,7 +1,7 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
-import { GlassSurface } from "@/components/glass";
+import { GlassPill } from "@/components/glass";
 import { lightImpact } from "@/lib/haptics";
 import {
   FADE_REDUCED_IN,
@@ -46,17 +46,17 @@ export function TodayControl({
       pointerEvents="box-none"
       style={{ bottom: accessoryTop(homeIndicator, minimised) + ABOVE_ACCESSORY }}
     >
-      <Pressable
+      <GlassPill
         accessibilityLabel={intl.formatMessage({ id: "calendar.mobile.scrollToToday" })}
-        accessibilityRole="button"
         className="h-11 flex-row items-center gap-1.5 rounded-full pr-4 pl-3"
+        radius={22}
         testID="calendar-to-today"
+        tint={background}
         onPress={() => {
           lightImpact();
           onPress();
         }}
       >
-        <GlassSurface radius={22} tint={background} />
         <Ionicons
           color={foreground}
           name={direction === "up" ? "arrow-up" : "arrow-down"}
@@ -68,7 +68,7 @@ export function TodayControl({
         >
           {intl.formatMessage({ id: "calendar.mobile.today" })}
         </Text>
-      </Pressable>
+      </GlassPill>
     </Animated.View>
   );
 }

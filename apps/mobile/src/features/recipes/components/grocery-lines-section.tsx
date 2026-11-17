@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
-import { Button, Skeleton } from "heroui-native";
+import { GlassPill } from "@/components/glass";
+import { Skeleton } from "heroui-native";
 
-const SECTION = "bg-default overflow-hidden rounded-[22px]";
-const HEADER = "bg-surface flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5";
+const SECTION = "bg-fill overflow-hidden rounded-[22px]";
+const HEADER = "flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5";
 
 /** A section's shell while its lines load: the header's name and button over the rows given. */
 export function GroceryLinesSectionSkeleton({ children }: { children: ReactNode }) {
@@ -43,17 +44,14 @@ export function GroceryLinesSection({
         <Text className="text-muted flex-1 text-[13px]" numberOfLines={1}>
           {count}
         </Text>
-        <Button
-          className="bg-default h-[30px] rounded-full px-3"
-          size="sm"
+        <GlassPill
+          className="h-[30px] justify-center rounded-full px-3"
+          radius={15}
           testID={`${testID}-toggle`}
-          variant="secondary"
           onPress={onToggleAll}
         >
-          <Button.Label className="text-foreground text-[13px] font-medium">
-            {toggleLabel}
-          </Button.Label>
-        </Button>
+          <Text className="text-foreground text-[13px] font-medium">{toggleLabel}</Text>
+        </GlassPill>
       </View>
       {children}
     </View>

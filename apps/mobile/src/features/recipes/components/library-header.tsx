@@ -10,7 +10,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
 } from "react-native-reanimated";
-import { GlassSurface } from "@/components/glass";
+import { GlassIconButton, GlassSurface } from "@/components/glass";
 import { GlassSegmented } from "@/components/glass-segmented";
 import { PressableScale } from "@/components/pressable-scale";
 import { RollingText } from "@/components/rolling-text";
@@ -138,22 +138,23 @@ function SegmentIcon({
 export function FiltersButton() {
   const intl = useIntl();
   const router = useRouter();
-  const [foreground] = useThemeColor(["foreground"] as const);
   const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
 
   return (
-    <PressableScale
-      accessibilityLabel={intl.formatMessage({ id: "common.filters.title" })}
-      accessibilityRole="button"
-      className="bg-surface border-border size-9 items-center justify-center rounded-full border"
-      testID="library-filters-button"
-      onPress={() => router.push("/filters")}
-    >
-      <Ionicons color={foreground} name="funnel-outline" size={17} />
+    <View>
+      <GlassIconButton
+        label={intl.formatMessage({ id: "common.filters.title" })}
+        symbol="line.3.horizontal.decrease"
+        testID="library-filters-button"
+        onPress={() => router.push("/filters")}
+      />
       {filtersOn ? (
-        <View className="bg-accent border-surface absolute top-[3px] right-[3px] size-[9px] rounded-full border-2" />
+        <View
+          className="bg-accent border-surface absolute top-1 right-1 size-[9px] rounded-full border-2"
+          pointerEvents="none"
+        />
       ) : null}
-    </PressableScale>
+    </View>
   );
 }
 

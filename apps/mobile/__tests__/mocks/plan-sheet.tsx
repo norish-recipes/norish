@@ -5,10 +5,9 @@ import React from "react";
 
 type Children = { children?: ReactNode };
 
-/** What the date picker and the slot tabs were last handed, for a test to pick with. */
+/** What the date picker was last handed, for a test to pick with. */
 export const picks = {
   date: (_date: Date) => {},
-  slot: (_slot: string) => {},
 };
 
 const pass = ({ children }: Children) => children;
@@ -27,21 +26,22 @@ const Button = Object.assign(
   { Label: pass }
 );
 
-const Tabs = Object.assign(
-  ({ children, onValueChange }: Children & { onValueChange: (slot: string) => void }) => {
-    picks.slot = onValueChange;
-
-    return children;
-  },
-  {
-    List: pass,
-    Indicator: () => null,
-    Trigger: ({ testID, value }: { testID?: string; value: string }) => (
-      <button data-testid={testID} onClick={() => picks.slot(value)} />
-    ),
-    Label: pass,
-  }
-);
+/** The glass segmented control: one button per segment. */
+export const glassSegmented = {
+  GlassSegmented: ({
+    segments,
+    onChange,
+  }: {
+    segments: { value: string; testID: string }[];
+    onChange: (value: string) => void;
+  }) => (
+    <>
+      {segments.map(({ value, testID }) => (
+        <button key={value} data-testid={testID} onClick={() => onChange(value)} />
+      ))}
+    </>
+  ),
+};
 
 export const reactNative = {
   Text: ({ children }: Children) => <span>{children}</span>,
@@ -59,7 +59,6 @@ export const reactNative = {
 
 export const heroui = {
   Button,
-  Tabs,
   TextField: pass,
   Skeleton: () => null,
   useThemeColor: () => [],

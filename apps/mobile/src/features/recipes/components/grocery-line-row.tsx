@@ -1,9 +1,9 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
+import { GlassIconButton } from "@/components/glass";
 import { RoundTick } from "@/components/round-tick";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Chip, Skeleton, useThemeColor } from "heroui-native";
+import { Chip, Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
@@ -56,7 +56,6 @@ export function GroceryLineRow({
   onKeep: () => void;
 }) {
   const intl = useIntl();
-  const [muted] = useThemeColor(["muted"] as const);
 
   return (
     <View className={rowClass(first)}>
@@ -72,15 +71,13 @@ export function GroceryLineRow({
         <AmountName amount={amount} className="min-w-0 flex-1 text-base" name={name} />
       </Pressable>
       {canKeep ? (
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "groceries.panel.weKeepThis" })}
-          accessibilityRole="button"
-          className="bg-surface size-8 items-center justify-center rounded-full"
+        <GlassIconButton
+          label={intl.formatMessage({ id: "groceries.panel.weKeepThis" })}
+          size="small"
+          symbol="tray.full"
           testID={`${testID}-keep`}
           onPress={onKeep}
-        >
-          <Ionicons color={muted} name="file-tray-full-outline" size={16} />
-        </Pressable>
+        />
       ) : onTheList ? (
         <OnTheList testID={`${testID}-on-the-list`} />
       ) : null}

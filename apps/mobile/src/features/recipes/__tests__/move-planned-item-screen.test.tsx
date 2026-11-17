@@ -32,6 +32,10 @@ vi.mock(
 );
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
 vi.mock(
+  "@/components/glass-segmented",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).glassSegmented
+);
+vi.mock(
   "@/components/sheet",
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).sheet
 );

@@ -1,6 +1,7 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import type { PressableProps } from "react-native";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Host, Image, Rectangle } from "@expo/ui/swift-ui";
 import {
   accessibilityIdentifier,
@@ -31,6 +32,26 @@ export function GlassSurface({ radius, tint }: { radius: number; tint?: string }
         />
       </Host>
     </View>
+  );
+}
+
+/** A Pressable on glass, as a text pill or Today; `className` sizes it and `radius` is half its height. */
+export function GlassPill({
+  radius,
+  tint,
+  children,
+  ...props
+}: Omit<PressableProps, "children"> & {
+  radius: number;
+  tint?: string;
+  className: string;
+  children: ReactNode;
+}) {
+  return (
+    <Pressable accessibilityRole="button" {...props}>
+      <GlassSurface radius={radius} tint={tint} />
+      {children}
+    </Pressable>
   );
 }
 
