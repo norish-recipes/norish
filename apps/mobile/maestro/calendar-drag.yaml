@@ -18,11 +18,11 @@ appId: dev.norish.app
       id: calendar-item-.*
       text: Drag Plan Soup.*
     timeout: 20000
-# A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the half
+# A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the quarter
 # second that lifts it, then carries it onto the next day's heading.
 - swipe:
-    start: 50%,33%
-    end: 50%,41%
+    start: 50%,39%
+    end: 50%,48%
     duration: 10000
 - evalScript: ${output.moved = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?name=Drag%20Plan%20Soup&date=' + output.target).body)}
 - assertTrue: ${output.moved.date == output.target}

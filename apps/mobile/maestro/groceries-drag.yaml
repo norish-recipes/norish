@@ -23,11 +23,11 @@ appId: dev.norish.app
       id: group-tick-.*
       text: .*Drag Milk.*
     timeout: 20000
-# A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the half
+# A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the quarter
 # second that lifts it, then carries it over the next Store's heading.
 - swipe:
-    start: 50%,25%
-    end: 50%,37%
+    start: 50%,33%
+    end: 50%,41%
     duration: 10000
 - evalScript: ${output.milk = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?store=Lidl&name=Drag%20Milk').body)}
 - assertTrue: ${output.milk.store == 'Lidl'}
