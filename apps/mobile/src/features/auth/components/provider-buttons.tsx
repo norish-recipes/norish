@@ -2,10 +2,11 @@ import type { AuthAttempt } from "@/features/auth/hooks/use-auth-attempt";
 import type { AuthClient } from "@/lib/auth/auth-client";
 import React from "react";
 import { View } from "react-native";
+import { Loader } from "@/components/loader";
 import { InlineErrorBlock } from "@/features/auth/components/inline-error";
 import { ProviderIcon } from "@/features/auth/components/provider-icon";
 import { SIGN_IN_DEADLINE_MS } from "@/features/auth/utils/auth-failure";
-import { Button, Spinner, useThemeColor } from "heroui-native";
+import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ProviderInfo } from "@norish/shared/contracts";
@@ -52,7 +53,7 @@ export function ProviderButtons({
             {/* Hidden, so VoiceOver reads the label without the icon font's glyph. */}
             <View accessibilityElementsHidden collapsable={false}>
               {signIn.running === provider.id ? (
-                <Spinner color={foregroundColor} size="sm" />
+                <Loader inline color={foregroundColor} />
               ) : (
                 <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />
               )}

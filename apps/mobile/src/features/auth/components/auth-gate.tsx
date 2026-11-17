@@ -4,6 +4,7 @@ import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Brand } from "@/components/brand";
+import { Loader } from "@/components/loader";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
 import { AuthStatus } from "@/features/auth/components/auth-status";
 import { FadeInFill } from "@/features/auth/components/fade-in-fill";
@@ -11,7 +12,6 @@ import { FADE_IN } from "@/features/auth/utils/motion";
 import { resolveMethodsStatus } from "@/features/auth/utils/sign-in-methods";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { useRouter } from "expo-router";
-import { Spinner } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
@@ -75,7 +75,7 @@ function ConfigGate({
   if (status === "loading") {
     return (
       <AuthLayout footer={footer} underHeader={underHeader}>
-        <Spinner className="self-center" />
+        <Loader />
       </AuthLayout>
     );
   }

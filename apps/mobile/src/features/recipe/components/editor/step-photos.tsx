@@ -1,6 +1,7 @@
 import React from "react";
-import { ActivityIndicator, Image, View } from "react-native";
+import { Image, View } from "react-native";
 import { GlassCloseButton } from "@/components/glass";
+import { Loader } from "@/components/loader";
 import { ServerImage } from "@/components/server-image";
 import { useIntl } from "react-intl";
 
@@ -51,7 +52,7 @@ export function StepPhotos({
             source={{ uri: photo.uri }}
             style={{ width: 64, height: 64, borderRadius: 12 }}
           />
-          <ActivityIndicator className="absolute inset-0" />
+          <Loader className="absolute inset-0" />
           <View className="absolute -top-1.5 -right-1.5">
             <GlassCloseButton
               label={intl.formatMessage({ id: "recipes.editor.removePhoto" })}

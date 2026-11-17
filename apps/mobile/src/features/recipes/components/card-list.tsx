@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tabListBottomInset } from "@/components/tab-list-inset";
+import { Loader } from "@/components/loader";
+import { LOAD_MORE_FOOTER_HEIGHT, tabListBottomInset } from "@/components/tab-list-inset";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
 import { useIsFocused } from "expo-router";
-import { Spinner } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
@@ -64,7 +64,13 @@ export function CardList<Row>({
     <View className="flex-1" onTouchStart={() => closeOpenRow()}>
       <Animated.FlatList
         ListEmptyComponent={empty}
-        ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={{ height: LOAD_MORE_FOOTER_HEIGHT }}>
+              <Loader />
+            </View>
+          ) : undefined
+        }
         ListHeaderComponent={header}
         className="flex-1"
         contentContainerStyle={{

@@ -1,8 +1,9 @@
 import type * as ImagePicker from "expo-image-picker";
 import type { SetStateAction } from "react";
 import React from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { GlassCloseButton, GlassSurface } from "@/components/glass";
+import { Loader } from "@/components/loader";
 import { ServerImage } from "@/components/server-image";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -130,7 +131,7 @@ export function MediaStrip({
               source={{ uri: photo.uri }}
               style={{ width: TILE, height: TILE }}
             />
-            <ActivityIndicator />
+            <Loader inline />
             <View className="absolute top-1.5 right-1.5">
               <GlassCloseButton
                 label={text("recipes.editor.removePhoto")}

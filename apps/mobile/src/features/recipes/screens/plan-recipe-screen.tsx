@@ -2,6 +2,7 @@ import React, { useDeferredValue, useState } from "react";
 import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
+import { Loader } from "@/components/loader";
 import { MoveFields } from "@/components/move-fields";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
@@ -9,7 +10,7 @@ import { asSlot } from "@/components/slot-tabs";
 import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { Button, Skeleton, Spinner, useThemeColor } from "heroui-native";
+import { Button, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useSlotPlanning } from "@norish/shared-react/calendar";
@@ -182,7 +183,7 @@ function ActionRow({
       onPress={onPress}
     >
       <View className="bg-surface size-11 items-center justify-center rounded-xl">
-        {busy ? <Spinner size="sm" /> : <Ionicons color={accent} name={icon} size={20} />}
+        {busy ? <Loader inline /> : <Ionicons color={accent} name={icon} size={20} />}
       </View>
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
         {label}

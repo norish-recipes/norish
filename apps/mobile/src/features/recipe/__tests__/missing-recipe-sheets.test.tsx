@@ -25,7 +25,6 @@ vi.mock("heroui-native", () => ({
   TextField: ({ children }: Props) => children,
   Button: () => null,
   Chip: () => null,
-  Spinner: () => null,
 }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),

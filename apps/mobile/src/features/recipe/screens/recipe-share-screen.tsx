@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
+import { Loader } from "@/components/loader";
 import { SheetScrollView } from "@/components/sheet";
 import { useServerUrl } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
-import { Button, Chip, Spinner, useThemeColor } from "heroui-native";
+import { Button, Chip, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
@@ -54,7 +55,11 @@ function CreateLinkButton({
         void createShare(expiresIn).then((share) => share && onCreated(toUrl(share.url)))
       }
     >
-      {isCreating ? <Spinner /> : <Ionicons color={accentForeground} name="link" size={18} />}
+      {isCreating ? (
+        <Loader inline color={accentForeground} />
+      ) : (
+        <Ionicons color={accentForeground} name="link" size={18} />
+      )}
       <Button.Label className="font-semibold">{t("createLink")}</Button.Label>
     </Button>
   );
@@ -132,7 +137,7 @@ function ShareBody({
 
       <Text className="text-foreground text-sm font-semibold">{t("currentLinks")}</Text>
       {isLoading ? (
-        <Spinner />
+        <Loader />
       ) : rows.length === 0 ? (
         <Text className="text-muted text-sm">{t("empty")}</Text>
       ) : (

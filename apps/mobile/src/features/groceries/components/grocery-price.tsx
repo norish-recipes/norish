@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { Spinner } from "heroui-native";
+import { Loader } from "@/components/loader";
 import { useIntl } from "react-intl";
 
 import type { PricedLine } from "@norish/shared-react/groceries";
@@ -24,11 +24,8 @@ export function GroceryPrice({
   if (price.status === "none") return null;
   if (price.status === "pending") {
     return (
-      <View
-        accessibilityLabel={intl.formatMessage({ id: "groceries.price.pending" })}
-        testID="grocery-price-pending"
-      >
-        <Spinner size="sm" />
+      <View testID="grocery-price-pending">
+        <Loader inline label={intl.formatMessage({ id: "groceries.price.pending" })} />
       </View>
     );
   }
