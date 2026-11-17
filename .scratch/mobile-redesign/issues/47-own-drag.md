@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] `react-native-reorderable-list` removed; `DragList`'s interface kept; FlatList still virtualised.
 - [x] ~250 ms hold on the UI thread, haptic on lift; an opaque shadowed card follows the finger, the source a faded ghost.
@@ -49,3 +49,4 @@
   5. fix: when both sides of `landAt`'s gap are undrawn the card slides home while the drop commits elsewhere; it fades instead, and `landingTop`'s comment says what holds.
   6. reject: lifted aisle rows now tilt; one lifted look for every row is what the deduplication was for. Listed for Mike to see.
   7. reject: a drop committing after the list unmounts during the settle; the user made the drop.
+- Exit gate on `8e7e46582`: all seven gates exit 0. For Mike on the phone: cancel a drag by swiping home mid-drag (it should snap back), the haptics on lift, section change and drop, lifted aisle rows tilting like the others, a row button in the recipe editor with the keyboard up.
