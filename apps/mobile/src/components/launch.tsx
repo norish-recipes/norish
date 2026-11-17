@@ -14,11 +14,7 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { Brand, useSplashBrandTop } from "@/components/brand";
 import { BrandLoader } from "@/components/brand-loader";
-import {
-  resolveLaunchMotion,
-  resolveSloganStart,
-  stepLaunchClock,
-} from "@/lib/boot/launch-motion";
+import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/launch-motion";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { SPRING_FADE_IN } from "@/lib/motion/layout";
 import { progress } from "@/lib/motion/progress";
