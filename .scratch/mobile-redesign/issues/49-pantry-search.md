@@ -17,3 +17,16 @@
 - Fixes: the catalogue ranks a name with a word starting with the text before one that only contains it (db test, red then green); `searchPantry` matches any word typed, as recipe search ORs its terms (recipe search is server tsquery, there is no client matcher to reuse, so `nameWords` is the shared piece); the sheet shows "From your recipes" with the field empty, via the existing `uncoveredSuggestions`, with web's keys. The suggestion logic was already in shared, so no web move was needed.
 - Decided: all offered suggestions show (no Show more, no per-row recipe count) in the sheet. The multi-word typed text still searches the catalogue as one phrase in the sheet.
 - Device: both fields, light and dark, checked after the fix; egg kept from the suggestions and removed again. The pantry Maestro flows pass on first run; none asserts the suggestions.
+- Review round 1 (Standards + Spec), dispositions:
+  1. fix: the Add sheet still searches several words as one phrase (`parseIngredientSearch` builds one pattern), so "olive ex" finds nothing; the commit only reordered results.
+  2. fix: `searchPantry` now matches when ANY typed word matches, so "salt a" lists nearly everything, on web's Pantry field too. Both fields take one rule: every typed word matches part of the name, in any order. (My call: recipe search ORs its words because it ranks; a filter narrows.)
+  3. fix: the ranking reads `lower(name)` while the where matches folded text and translations, so "creme" never ranks "Crème fraîche", "skimmed" is no word start in "Semi-skimmed milk", and a food found through another language never ranks. It ranks on the text the where matched.
+  4. fix: "From your recipes" on the sheet shows up to 36 at once with no recipe count; web shows 6, a Show more and the count per food.
+  5. fix: before the Pantry is read the sheet shows unfiltered suggestions and a tap keeps one; nothing shows until it is read.
+  6. fix: the empty-field rule, fallback and header flag move from the screen into `pantry-add-rows.ts` with tests; a repository test for several words; a screen test for suggestions only while the field is empty and a tap keeping the food.
+  7. fix: `exactFirst` holds two ranks and its doc comment names one; the escaped fold and the `like` are built twice beside `matchingSearch`.
+  8. fix (verify): `pantry-add-screen.tsx` and `use-pantry-screen.ts` both fetch the suggestions and call `uncoveredSuggestions` with the same inputs.
+  9. fix (verify): a Maestro assertion for the suggestions in `pantry-add-from-sheet`, if the seed has recipes that give any.
+  10. docs: the ranking and the every-word rule change web's released ingredient and Pantry search, so the Target Version's release notes get a line (Terra).
+  11. reject: the ranking reordering web's ingredient pickers and admin search as scope creep; word starts first is the better order everywhere and no web E2E asserts the order.
+  12. reject: reusing recipe search's matcher; it is server full-text search, there is no client matcher to reuse.
