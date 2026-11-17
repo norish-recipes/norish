@@ -34,7 +34,6 @@ vi.mock("react-native", () => ({
   Text: ({ children }: Props) => <span>{children}</span>,
   ScrollView: host,
   Image: () => null,
-  ActivityIndicator: () => null,
   Pressable: ({ testID, children, onPress, disabled, accessibilityLabel }: Props) => (
     <button
       aria-label={accessibilityLabel}
