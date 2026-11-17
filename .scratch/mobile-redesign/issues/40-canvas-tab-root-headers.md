@@ -33,3 +33,4 @@
   3. Pantry (at rest and scrolled, both `place` values) gets the "Add to pantry" accessory, styled like "Add items".
   4. The Calendar refresh/sync button is gone from every Calendar board; the avatar is the only bar item.
   5. New `offline` tweak on the Recipes (TabRoot), Groceries and Pantry boards draws the warning dot. The avatar menu always starts with a status line: "Live" with a green dot (no avatar dot) or "Offline · 3 changes waiting" with the warning dot. TabRecipesMenu now shows the Live line.
+- Mike round 2 (canvas v92): Filters is a glass bar item beside the avatar on Recipes in both `place` values, at rest and scrolled; the Filters button at the end of the All/Recipes/Cookbooks row is gone.
