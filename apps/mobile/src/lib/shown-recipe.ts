@@ -16,18 +16,23 @@ export function useMarkRecipeShown(id: string) {
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
   const { key } = useRoute();
 
+  useLayoutEffect(
+    () => () => shown.update((current) => (current?.key === key ? null : current)),
+    [key]
+  );
+
   useLayoutEffect(() => {
-    const clear = () => shown.update((current) => (current?.key === key ? null : current));
+    // A link to another recipe while this page is on top gives its route the new id in place.
+    shown.update((current) => (current?.key === key ? { key, id } : current));
     const stops = [
       navigation.addListener("transitionStart", ({ data }) =>
-        data.closing ? clear() : shown.set({ key, id })
+        shown.update((current) =>
+          data.closing ? (current?.key === key ? null : current) : { key, id }
+        )
       ),
       navigation.addListener("gestureCancel", () => shown.set({ key, id })),
     ];
 
-    return () => {
-      stops.forEach((stop) => stop());
-      clear();
-    };
+    return () => stops.forEach((stop) => stop());
   }, [navigation, key, id]);
 }

@@ -29,7 +29,7 @@ const { useMarkRecipeShown, useShownRecipe } = await import("@/lib/shown-recipe"
 const mount = (key: string, id: string) => {
   screen.key = key;
 
-  return renderHook(() => useMarkRecipeShown(id));
+  return renderHook(({ recipe }) => useMarkRecipeShown(recipe), { initialProps: { recipe: id } });
 };
 const transition = (key: string, closing: boolean) =>
   act(() => screen.listeners.get(key)?.get("transitionStart")?.({ data: { closing } }));
@@ -60,6 +60,28 @@ describe("the shown recipe", () => {
     expect(shown.result.current).toBe("b");
 
     transition("only", true);
+    expect(shown.result.current).toBeNull();
+    page.unmount();
+  });
+
+  it("follows a link that gives the shown page's route a new recipe", () => {
+    const shown = renderHook(() => useShownRecipe());
+    const page = mount("page", "a");
+    transition("page", false);
+
+    // A link to B while A is on top updates the route's params in place: no transition.
+    page.rerender({ recipe: "b" });
+
+    expect(shown.result.current).toBe("b");
+    page.unmount();
+  });
+
+  it("leaves a page that is not shown unmarked when its recipe changes", () => {
+    const shown = renderHook(() => useShownRecipe());
+    const page = mount("hidden", "a");
+
+    page.rerender({ recipe: "b" });
+
     expect(shown.result.current).toBeNull();
     page.unmount();
   });
