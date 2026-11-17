@@ -32,6 +32,7 @@ import {
   recurringGroceries,
 } from "@norish/db/schema";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
+import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { RecipeListContext } from "./recipes";
@@ -111,7 +112,11 @@ export async function listCatalogueIngredients(query: {
   const parents = alias(ingredients, "parent");
   const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
   const exactFirst = query.search
-    ? [sql`case when lower(${ingredients.name}) = ${query.search.fold} then 0 else 1 end`]
+    ? [
+        sql`case when lower(${ingredients.name}) = ${query.search.fold} then 0 else 1 end`,
+        // A name with a word starting with the text outranks one that only contains it.
+        sql`case when lower(${ingredients.name}) like ${`${escapeLike(query.search.fold)}%`} or lower(${ingredients.name}) like ${`% ${escapeLike(query.search.fold)}%`} then 0 else 1 end`,
+      ]
     : [];
   const listedKind = query.listedOnly
     ? sql` and ${listedFood({ id: sql`k.id`, offId: sql`k.off_id` })}`

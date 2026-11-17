@@ -36,7 +36,7 @@ export interface IngredientSearch {
 }
 
 /** A `LIKE` pattern's own characters, escaped so the person's text is matched as written. */
-function literal(text: string): string {
+export function escapeLike(text: string): string {
   return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
@@ -52,7 +52,7 @@ export function parseIngredientSearch(
 
   return {
     fold,
-    pattern: match === "exact" ? literal(fold) : `%${literal(fold)}%`,
+    pattern: match === "exact" ? escapeLike(fold) : `%${escapeLike(fold)}%`,
     match,
     fields,
   };

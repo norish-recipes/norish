@@ -69,6 +69,26 @@ describe("listCatalogueIngredients search", () => {
     expect(await names(parseIngredientSearch("onion"))).toEqual(["Onion", "Red onion"]);
   });
 
+  it("puts the foods with a word starting with the text before those that only contain it", async () => {
+    await getTestDb()
+      .insert(schema.ingredients)
+      .values(
+        ["Alcohol", "Honey", "Hot sauce", "Red hot chili", "Ahoy"].map((name) => ({
+          name,
+          createdAt: new Date(),
+        }))
+      );
+
+    expect(await names(parseIngredientSearch("ho"))).toEqual([
+      "Honey",
+      "Hot sauce",
+      "Red hot chili",
+      "Ahoy",
+      "Alcohol",
+      "Chocolate",
+    ]);
+  });
+
   it("finds a food by a translation, and not once the field is off", async () => {
     expect(await names(parseIngredientSearch("ui"))).toEqual(["Onion"]);
     expect(await names(parseIngredientSearch("ui", { fields: ["name"] }))).toEqual([]);
