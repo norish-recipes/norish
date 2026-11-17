@@ -131,7 +131,7 @@ export function MediaStrip({
               source={{ uri: photo.uri }}
               style={{ width: TILE, height: TILE }}
             />
-            <Loader inline />
+            <Loader />
             <View className="absolute top-1.5 right-1.5">
               <GlassCloseButton
                 label={text("recipes.editor.removePhoto")}

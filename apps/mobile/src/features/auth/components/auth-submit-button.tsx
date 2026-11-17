@@ -37,7 +37,7 @@ export function AuthSubmitButton({
     >
       {/* Hidden, so VoiceOver reads the label without the icon font's glyph. */}
       <View accessibilityElementsHidden collapsable={false}>
-        {isBusy ? <Loader inline color={accentForegroundColor} /> : icon?.(accentForegroundColor)}
+        {isBusy ? <Loader color={accentForegroundColor} /> : icon?.(accentForegroundColor)}
       </View>
       <Button.Label className="text-[17px] font-semibold">{label}</Button.Label>
     </Button>

@@ -53,7 +53,7 @@ export function ProviderButtons({
             {/* Hidden, so VoiceOver reads the label without the icon font's glyph. */}
             <View accessibilityElementsHidden collapsable={false}>
               {signIn.running === provider.id ? (
-                <Loader inline color={foregroundColor} />
+                <Loader color={foregroundColor} />
               ) : (
                 <ProviderIcon color={foregroundColor} icon={provider.icon} size={18} />
               )}

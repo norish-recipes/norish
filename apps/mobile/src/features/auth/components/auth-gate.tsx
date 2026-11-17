@@ -75,7 +75,7 @@ function ConfigGate({
   if (status === "loading") {
     return (
       <AuthLayout footer={footer} underHeader={underHeader}>
-        <Loader />
+        <Loader centred />
       </AuthLayout>
     );
   }

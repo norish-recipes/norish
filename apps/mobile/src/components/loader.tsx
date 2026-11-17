@@ -4,18 +4,18 @@ import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /**
- * The app's one loader, the native activity indicator. It centres itself in the space it is given;
- * `inline` leaves it to the caller (a button's own pending state, a row's trailing slot).
+ * The app's one loader, the native activity indicator, in the slot the caller gives it (a button's
+ * pending state, a row's trailing slot); `centred` fills its parent and sits in the middle.
  */
 export function Loader({
-  inline = false,
+  centred = false,
   size = "small",
   color,
   label,
   className,
   testID,
 }: {
-  inline?: boolean;
+  centred?: boolean;
   size?: "small" | "large";
   /** The theme's muted tone unless the loader sits on a filled surface. */
   color?: string;
@@ -35,10 +35,10 @@ export function Loader({
     />
   );
 
-  if (inline) return indicator;
+  if (!centred) return indicator;
 
   return (
-    <View className={`min-h-12 flex-1 items-center justify-center ${className ?? ""}`}>
+    <View className={`min-h-12 flex-1 items-center justify-center ${className ?? ""}`.trim()}>
       {indicator}
     </View>
   );

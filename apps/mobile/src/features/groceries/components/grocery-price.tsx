@@ -25,7 +25,7 @@ export function GroceryPrice({
   if (price.status === "pending") {
     return (
       <View testID="grocery-price-pending">
-        <Loader inline label={intl.formatMessage({ id: "groceries.price.pending" })} />
+        <Loader label={intl.formatMessage({ id: "groceries.price.pending" })} />
       </View>
     );
   }

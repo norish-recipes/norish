@@ -183,7 +183,7 @@ function ActionRow({
       onPress={onPress}
     >
       <View className="bg-surface size-11 items-center justify-center rounded-xl">
-        {busy ? <Loader inline /> : <Ionicons color={accent} name={icon} size={20} />}
+        {busy ? <Loader /> : <Ionicons color={accent} name={icon} size={20} />}
       </View>
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
         {label}

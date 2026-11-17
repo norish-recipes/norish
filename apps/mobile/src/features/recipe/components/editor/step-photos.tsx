@@ -52,7 +52,7 @@ export function StepPhotos({
             source={{ uri: photo.uri }}
             style={{ width: 64, height: 64, borderRadius: 12 }}
           />
-          <Loader className="absolute inset-0" />
+          <Loader centred className="absolute inset-0" />
           <View className="absolute -top-1.5 -right-1.5">
             <GlassCloseButton
               label={intl.formatMessage({ id: "recipes.editor.removePhoto" })}

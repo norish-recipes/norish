@@ -12,8 +12,8 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { Brand, LOADER_GAP, useSplashBrandTop } from "@/components/brand";
-import { Loader } from "@/components/loader";
+import { Brand, useSplashBrandTop } from "@/components/brand";
+import { BrandLoader } from "@/components/brand-loader";
 import {
   resolveLaunchLoader,
   resolveLaunchMotion,
@@ -201,15 +201,7 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
       <Animated.View style={[styles.fill, { backgroundColor: background }, groundStyle]} />
       <Animated.View style={[styles.brand, { top }, brandStyle]}>
         <Brand sloganStyle={sloganStyle} />
-        {loading ? (
-          <Animated.View
-            className="items-center"
-            entering={SPRING_FADE_IN}
-            style={{ marginTop: LOADER_GAP }}
-          >
-            <Loader inline size="large" />
-          </Animated.View>
-        ) : null}
+        {loading ? <BrandLoader entering={SPRING_FADE_IN} /> : null}
       </Animated.View>
     </Animated.View>
   );

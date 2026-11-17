@@ -56,7 +56,7 @@ function CreateLinkButton({
       }
     >
       {isCreating ? (
-        <Loader inline color={accentForeground} />
+        <Loader color={accentForeground} />
       ) : (
         <Ionicons color={accentForeground} name="link" size={18} />
       )}

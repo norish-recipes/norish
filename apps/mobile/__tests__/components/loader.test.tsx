@@ -26,16 +26,16 @@ vi.mock("react-intl", () => ({
 const { Loader } = await import("@/components/loader");
 
 describe("Loader", () => {
-  it("centres itself in the space it is given, in the theme's muted tone", () => {
-    const { container } = render(<Loader />);
+  it("fills its parent and centres when asked, in the theme's muted tone", () => {
+    const { container } = render(<Loader centred />);
     const indicator = screen.getByLabelText("common.loading");
 
     expect(container.firstElementChild?.className).toContain("flex-1 items-center justify-center");
     expect(indicator.dataset.color).toBe("muted-colour");
   });
 
-  it("is the bare indicator when inline, with the caller's colour and label", () => {
-    const { container } = render(<Loader inline color="white" label="Saving" size="large" />);
+  it("is the bare indicator by default, with the caller's colour and label", () => {
+    const { container } = render(<Loader color="white" label="Saving" size="large" />);
     const indicator = screen.getByLabelText("Saving");
 
     expect(container.firstElementChild).toBe(indicator);

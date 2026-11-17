@@ -67,7 +67,7 @@ export function CardList<Row>({
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={{ height: LOAD_MORE_FOOTER_HEIGHT }}>
-              <Loader />
+              <Loader centred />
             </View>
           ) : undefined
         }

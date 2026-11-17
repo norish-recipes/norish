@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
-import { Brand, LOADER_GAP, useSplashBrandTop } from "@/components/brand";
-import { Loader } from "@/components/loader";
+import { Brand, useSplashBrandTop } from "@/components/brand";
+import { BrandLoader } from "@/components/brand-loader";
 import { useSigningIn } from "@/features/auth/hooks/use-signing-in";
 import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
 import { Stack, useRouter } from "expo-router";
@@ -25,14 +25,10 @@ export function AuthCallbackScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="absolute inset-x-0 items-center" style={{ top }}>
         <Brand />
-        <View style={{ marginTop: LOADER_GAP }}>
-          <Loader
-            inline
-            label={intl.formatMessage({ id: "auth.callback.signingIn" })}
-            size="large"
-            testID="signing-in-spinner"
-          />
-        </View>
+        <BrandLoader
+          label={intl.formatMessage({ id: "auth.callback.signingIn" })}
+          testID="signing-in-spinner"
+        />
       </View>
     </View>
   );
