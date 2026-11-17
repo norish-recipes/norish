@@ -105,8 +105,6 @@ test.beforeAll(async ({ aiStack, browser }) => {
   await fs.mkdir(recipeDir, { recursive: true });
   await fs.copyFile(PORTRAIT_CLIP, path.join(recipeDir, CLIP_FILENAME));
 
-  // The mutation answers before its transaction lands, so the row the video
-  // points at is not there yet.
   await waitForRecipe(stack.baseURL, stack.ownerCookies, recipeId);
 
   await addRecipeVideos(recipeId, [
