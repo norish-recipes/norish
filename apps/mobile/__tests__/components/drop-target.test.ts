@@ -165,6 +165,13 @@ describe("landingTop", () => {
     expect(landingTop(window, gap, 5, own(5))).toBe(150);
   });
 
+  it("has no top for a ruled gap with neither side drawn", () => {
+    // Calendar's `landAt` gap 4, between rows 3 and 4, which left the window.
+    const window = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
+
+    expect(landingTop(window, 4, 1, own(1))).toBeNull();
+  });
+
   it("goes back to the held row's own top after its cell left the window", () => {
     const window = slots.map((slot, index) => (index === 4 ? null : slot));
 

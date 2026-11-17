@@ -65,6 +65,7 @@ export function useDragEngine({
   // How far the finger has moved since the lift; a sheet's gestures count from its own top.
   const travel = useSharedValue(0);
   const cardTop = useSharedValue(0);
+  const cardOpacity = useSharedValue(1);
   const target = useSharedValue<Target | null>(null);
   // The section the card was last over, which a haptic marks leaving.
   const overSection = useSharedValue<string | null>(null);
@@ -120,6 +121,7 @@ export function useDragEngine({
     dragging.set(true);
     travel.set(0);
     cardTop.set(cell.top);
+    cardOpacity.set(1);
     target.set(null);
     overSection.set(rowsNow.get()[indexOf(key)]?.section ?? null);
     scheduleOnRN(onLifted, key);
@@ -143,7 +145,11 @@ export function useDragEngine({
       scheduleOnRN(onFinished, key, gap);
     };
 
-    cardTop.set(timedTo(landingTop(slotsNow(), gap, indexOf(key), carried), SETTLE_MS, {}, done));
+    const top = landingTop(slotsNow(), gap, indexOf(key), carried);
+
+    // A landing off screen has no top to slide to: the card fades where it is.
+    if (top === null) cardOpacity.set(timedTo(0, SETTLE_MS, {}, done));
+    else cardTop.set(timedTo(top, SETTLE_MS, {}, done));
   };
 
   const onRuled = (key: string, gap: number) =>
@@ -235,7 +241,7 @@ export function useDragEngine({
     layerRef,
     cells,
     cards,
-    cardTop,
+    card: { top: cardTop, opacity: cardOpacity },
     target,
     contentHeight,
     start,

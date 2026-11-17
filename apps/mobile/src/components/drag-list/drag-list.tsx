@@ -246,8 +246,19 @@ function OverlayScrollView({
 }
 
 /** The card a drag carries, over the rows, following the finger. */
-function LiftedCard({ top, children }: { top: SharedValue<number>; children: ReactNode }) {
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: top.get() }] }));
+function LiftedCard({
+  top,
+  opacity,
+  children,
+}: {
+  top: SharedValue<number>;
+  opacity: SharedValue<number>;
+  children: ReactNode;
+}) {
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+    transform: [{ translateY: top.get() }],
+  }));
 
   return (
     <Animated.View
@@ -374,7 +385,7 @@ export function DragList<H, T>({
   const [dropped, setDropped] = useState<string | null>(null);
   // The rows in the order a drag counts in, with each one's section, for the UI thread.
   const sections = sectionsOf(shown, sectionOf);
-  const { listRef, layerRef, cells, cards, cardTop, target, contentHeight, start, move, release } =
+  const { listRef, layerRef, cells, cards, card, target, contentHeight, start, move, release } =
     useDragEngine({
       order: shown.map((row, index) => ({
         key: row.key,
@@ -460,7 +471,7 @@ export function DragList<H, T>({
       pointerEvents="none"
     >
       {liftedRow?.kind === "item" ? (
-        <LiftedCard top={cardTop}>{renderItem(liftedRow.value)}</LiftedCard>
+        <LiftedCard {...card}>{renderItem(liftedRow.value)}</LiftedCard>
       ) : null}
       {/* Over the card, which the finger keeps over the gap. */}
       <DropMarks target={target} />

@@ -125,12 +125,12 @@ export function dropAt<H, T>(rows: DragRow<H, T>[], from: number, gap: number): 
 export function landingTop(slots: readonly Slot[], gap: number | null, from: number, own: Span) {
   "worklet";
   if (gap === null || gap === from || gap === from + 1) return own.top;
-  // The gap is next to a drawn row (see `gapAt`): the edge between the two rows either side.
+  // The edge between the rows either side; null when neither is drawn, as a `landAt` gap can be.
   const above = slots[gap - 1];
   const below = slots[gap];
   const edge = above ? above.top + above.height : below ? below.top : null;
 
-  if (edge === null) return own.top;
+  if (edge === null) return null;
 
   return gap > from ? edge - own.height : edge;
 }
