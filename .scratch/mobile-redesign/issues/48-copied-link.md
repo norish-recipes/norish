@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [ ] Reproduced on Mike's iPhone with links copied from Safari, Instagram and Notes; which ones fail recorded here.
 - [x] `useCopiedLink` asks `UIPasteboard.detectPatterns(for: [.probableWebURL])` through a local Expo module (no prompt), then reads the link (prompts as today). Own-server links still skipped.
@@ -36,3 +36,4 @@
   5. reject: a read in flight finishing after the sheet closes; a pasteboard read cannot be cancelled and the state guard is already there.
 - Review round 2 fixes (aa10efadb, 42c55f524), simulator (iPhone 18 Pro, iOS 27.2, Release, copied in Safari via a local page's `navigator.clipboard.writeText`). `detectValues(for: [.probableWebURL])` (iOS 14+) returns the detected link as a String; under Ask it logs "Paste requires user authorization. Prompting..." like a string read, `detectPatterns` does not; under Deny it fails with code 13 and no row shows.
 - Allow, row offered (full link read from "From a link"): recipe URL → that URL; `…/Pasta_(food)` → whole link; curly-quote sentence → none (`detectPatterns` says no); `see notes.txt then https://example.com/r` → `https://example.com/r`; `example.com/recipe` → `https://example.com/recipe`; `HTTPS://EXAMPLE.COM/a` → kept as is; plain text → none; `http://localhost:3000/recipes/abc` (own server) → value read, none. Setting set back to Ask.
+- Exit gate on `6ae65ca89`: all seven gates exit 0. The first box stays open for Mike's iPhone: links copied from Safari, Instagram and Notes, and the real paste prompt (once, and not again after Don't Allow), which the simulator cannot show. A link inside curly quotes gets no row, because iOS's own check says no.
