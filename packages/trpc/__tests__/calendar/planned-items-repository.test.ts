@@ -206,7 +206,7 @@ describe("planned items repository", () => {
               where: vi
                 .fn()
                 .mockReturnValueOnce({
-                  limit: vi.fn().mockResolvedValue([plannedItem]),
+                  limit: () => ({ for: vi.fn().mockResolvedValue([plannedItem]) }),
                 })
                 .mockReturnValue({
                   orderBy: vi.fn().mockResolvedValue([plannedItem]),
@@ -227,28 +227,26 @@ describe("planned items repository", () => {
       expect(set).toHaveBeenCalled();
     });
 
-    it("returns stale outcome when moved row no longer matches the supplied version", async () => {
-      const plannedItem = { id: "item-1", userId: "user-1", date, slot, sortOrder: 1, version: 2 };
-      const updateWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) });
-      const set = vi.fn().mockReturnValue({ where: updateWhere });
+    it("is stale and writes nothing when the locked read finds another version", async () => {
+      const update = vi.fn();
 
       dbMock.transaction.mockImplementation(async (callback) =>
         callback({
           select: vi.fn().mockReturnValue({
             from: vi.fn().mockReturnValue({
-              where: vi
-                .fn()
-                .mockReturnValueOnce({ limit: vi.fn().mockResolvedValue([plannedItem]) })
-                .mockReturnValue({ orderBy: vi.fn().mockResolvedValue([plannedItem]) }),
+              where: vi.fn().mockReturnValue({
+                limit: () => ({ for: vi.fn().mockResolvedValue([]) }),
+              }),
             }),
           }),
-          update: vi.fn().mockReturnValue({ set }),
+          update,
         } as any)
       );
 
       const result = await moveItem("item-1", "2025-01-12", "Lunch", 0, 2);
 
       expect(result).toEqual({ applied: false, stale: true, value: undefined });
+      expect(update).not.toHaveBeenCalled();
     });
   });
 
