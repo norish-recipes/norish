@@ -21,7 +21,7 @@ export function CookbookCover({
   /** On a sheet row, whose fill is the neutral one, so the ground takes the white. */
   onSheet?: boolean;
 }) {
-  const ground = onSheet ? "bg-surface" : "bg-default";
+  const ground = onSheet ? "bg-fill" : "bg-default";
   const [muted] = useThemeColor(["muted"] as const);
   const photos = cookbook.image ? [cookbook.image] : cookbook.coverImages.slice(0, 4);
   const tile = (uri: string, tileClass: string) => (

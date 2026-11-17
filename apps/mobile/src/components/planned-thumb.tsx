@@ -26,7 +26,7 @@ export function PlannedThumb({
     <CardPhoto className={className} image={item.recipeImage} onSheet={onSheet} />
   ) : (
     <View
-      className={`${onSheet ? "bg-surface" : "bg-default"} items-center justify-center ${className}`}
+      className={`${onSheet ? "bg-fill" : "bg-default"} items-center justify-center ${className}`}
     >
       <Ionicons color={muted} name="document-text-outline" size={glyphSize} />
     </View>

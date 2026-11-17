@@ -15,7 +15,7 @@ export function CardPhoto({
   /** On a sheet row, whose fill is the neutral one, so the ground takes the white. */
   onSheet?: boolean;
 }) {
-  const ground = onSheet ? "bg-surface" : "bg-default";
+  const ground = onSheet ? "bg-fill" : "bg-default";
   const [muted] = useThemeColor(["muted"] as const);
 
   if (!image) {
