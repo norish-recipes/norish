@@ -15,3 +15,8 @@
 - 2026-11-17 (implement): the trpc `test` task now hashes `apps/docs/docs/reference/openapi.json` (`$TURBO_ROOT$` input), so a stale spec fails `pnpm run test` without `--force`. The proof test is a router-through-DB case in `media-after-create.integration.test.ts`; the regenerated snapshot was unchanged (f96ba0a7e already held the text).
 - E2E root cause: on each socket recovery the offline warm set reads every library recipe and cookbook in one GET batch. At CI's library size (47 recipes, 8 cookbooks) the URL is about 18.6 KB, so Node answers 431 and every `cookbooks.get` in that batch errors. `useCookbookQuery` then reports any error as "Cookbook not found". Fix: `maxURLLength` (6 000) on the batch link. Reproduced the 431 locally by running the shard-3 sequence on an unfixed build; `:360` alone never grows the library far enough.
 - Left: `useCookbookQuery.isNotFound` still treats any error (431, network) as "not found". Not changed, because it is out of this ticket's scope and worth its own call.
+- Review round 1:
+  1. `vi.unstubAllGlobals()` moved to an `afterEach` (5cb89854f).
+  2. `MAX_BATCH_URL_LENGTH`'s doc comment names the 8 KB proxy request line and Node's 16 KB 431; the call site no longer repeats it (4c4573600).
+  3. Skipped: the batch test is the only `createTRPCClientLinks` call without a WebSocket; `createLinks` builds the WS options, so there is no second copy to share.
+  4. `useCookbookQuery` reads only a tRPC NOT_FOUND as not found and retries other errors once, so web and mobile stay on their skeleton like the recipe page (3edb83d5f, with a test that failed before). Web's shared recipe page had the same `!recipe || NOT_FOUND` check; fixed the same way (c02a457c4). Mobile's recipe screens already check NOT_FOUND.
