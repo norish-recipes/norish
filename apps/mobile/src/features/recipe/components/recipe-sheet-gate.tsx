@@ -13,14 +13,14 @@ import { isRecipeNotFound, RecipeNotFound } from "./recipe-not-found";
 export function RecipeSheetGate({
   name,
   title,
-  recipeNameSubtitle = false,
+  subtitle,
   actions,
   children,
 }: {
   name: string;
   title: string;
-  /** The recipe's name as the sheet's subtitle. */
-  recipeNameSubtitle?: boolean;
+  /** The sheet's subtitle, from the recipe's name. */
+  subtitle?: (recipeName: string) => string;
   actions?: ReactNode;
   children: ReactNode;
 }) {
@@ -31,7 +31,7 @@ export function RecipeSheetGate({
     <Sheet
       actions={recipe ? actions : undefined}
       name={name}
-      subtitle={recipe && recipeNameSubtitle ? recipe.name : undefined}
+      subtitle={recipe && subtitle ? subtitle(recipe.name) : undefined}
       title={title}
     >
       {recipe ? (
