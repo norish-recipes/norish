@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "telt som én pakke",
     "sale": "Tilbud",
-    "regularPrice": "Ordinær pris {price}"
+    "regularPrice": "Ordinær pris {price}",
+    "each": "stk."
   },
   "mobile": {
     "viewMode": "Visning",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Flytt varer til Usortert",
     "typePrice": "Skriv inn prisen selv",
     "product": "Produkt",
-    "chooseProduct": "Velg et produkt"
+    "chooseProduct": "Velg et produkt",
+    "recipeCount": "{count, plural, one {# oppskrift} other {# oppskrifter}}"
   }
 }

@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "geteld als één verpakking",
     "sale": "Aanbieding",
-    "regularPrice": "Normale prijs {price}"
+    "regularPrice": "Normale prijs {price}",
+    "each": "per stuk"
   },
   "mobile": {
     "viewMode": "Weergave",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Items naar Ongesorteerd verplaatsen",
     "typePrice": "Typ de prijs zelf",
     "product": "Product",
-    "chooseProduct": "Kies een product"
+    "chooseProduct": "Kies een product",
+    "recipeCount": "{count, plural, one {# recept} other {# recepten}}"
   }
 }

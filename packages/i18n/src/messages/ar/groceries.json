@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "مسعّر كعبوة واحدة",
     "sale": "عرض",
-    "regularPrice": "السعر العادي {price}"
+    "regularPrice": "السعر العادي {price}",
+    "each": "للواحدة"
   },
   "mobile": {
     "viewMode": "العرض",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "نقل العناصر إلى غير مصنّف",
     "typePrice": "اكتب السعر بنفسك",
     "product": "المنتج",
-    "chooseProduct": "اختر منتجًا"
+    "chooseProduct": "اختر منتجًا",
+    "recipeCount": "{count, plural, zero {لا وصفات} one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}"
   }
 }

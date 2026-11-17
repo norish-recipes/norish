@@ -111,7 +111,8 @@
     "cookbooks": "Cookbooks",
     "favourite": "Favourite",
     "unfavourite": "Unfavourite",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "Share link"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -155,7 +156,14 @@
       "title": "Delete link",
       "message": "Delete this share link for {recipeName}? This cannot be undone.",
       "confirm": "Delete link"
-    }
+    },
+    "subtitle": "Public links for {recipeName}",
+    "expiresAfter": "Expires after",
+    "expiresOn": "Expires {date}",
+    "expiredOn": "Expired {date}",
+    "lastOpenedOn": "Last opened {date}",
+    "neverExpires": "Never expires",
+    "linkCreated": "Created {date}"
   },
   "convert": {
     "ariaLabel": "Convert measurement system",

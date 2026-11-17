@@ -111,7 +111,8 @@
     "cookbooks": "Książki kucharskie",
     "favourite": "Ulubione",
     "unfavourite": "Usuń z ulubionych",
-    "ai": "SI"
+    "ai": "SI",
+    "shareLink": "Udostępnij link"
   },
   "sharePanel": {
     "title": "Udostępnij przepis",
@@ -155,7 +156,14 @@
       "title": "Usuń link",
       "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
       "confirm": "Usuń link"
-    }
+    },
+    "subtitle": "Publiczne linki do {recipeName}",
+    "expiresAfter": "Wygasa po",
+    "expiresOn": "Wygasa {date}",
+    "expiredOn": "Wygasł {date}",
+    "lastOpenedOn": "Ostatnio otwarto {date}",
+    "neverExpires": "Nigdy nie wygasa",
+    "linkCreated": "Utworzono {date}"
   },
   "convert": {
     "ariaLabel": "Przelicz system miar",

@@ -111,7 +111,8 @@
     "cookbooks": "Libri di cucina",
     "favourite": "Preferito",
     "unfavourite": "Rimuovi dai preferiti",
-    "ai": "IA"
+    "ai": "IA",
+    "shareLink": "Condividi link"
   },
   "sharePanel": {
     "title": "Condividi ricetta",
@@ -155,7 +156,14 @@
       "title": "Elimina link",
       "message": "Eliminare questo link di condivisione per {recipeName}? Questa azione non può essere annullata.",
       "confirm": "Elimina link"
-    }
+    },
+    "subtitle": "Link pubblici per {recipeName}",
+    "expiresAfter": "Scade dopo",
+    "expiresOn": "Scade il {date}",
+    "expiredOn": "Scaduto il {date}",
+    "lastOpenedOn": "Ultima apertura {date}",
+    "neverExpires": "Non scade mai",
+    "linkCreated": "Creato il {date}"
   },
   "convert": {
     "ariaLabel": "Converti sistema di misura",

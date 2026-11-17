@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "посчитано как одна упаковка",
     "sale": "Скидка",
-    "regularPrice": "Обычная цена {price}"
+    "regularPrice": "Обычная цена {price}",
+    "each": "за штуку"
   },
   "mobile": {
     "viewMode": "Вид",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Перенести товары в «Без магазина»",
     "typePrice": "Введите цену сами",
     "product": "Товар",
-    "chooseProduct": "Выбрать товар"
+    "chooseProduct": "Выбрать товар",
+    "recipeCount": "{count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}"
   }
 }

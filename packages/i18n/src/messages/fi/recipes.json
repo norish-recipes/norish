@@ -111,7 +111,8 @@
     "cookbooks": "Keittokirjat",
     "favourite": "Suosikki",
     "unfavourite": "Poista suosikeista",
-    "ai": "Tekoäly"
+    "ai": "Tekoäly",
+    "shareLink": "Jaa linkki"
   },
   "sharePanel": {
     "title": "Jaa resepti",
@@ -155,7 +156,14 @@
       "title": "Poista linkki",
       "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
       "confirm": "Poista linkki"
-    }
+    },
+    "subtitle": "Julkiset linkit: {recipeName}",
+    "expiresAfter": "Vanhenee kuluttua",
+    "expiresOn": "Vanhenee {date}",
+    "expiredOn": "Vanheni {date}",
+    "lastOpenedOn": "Viimeksi avattu {date}",
+    "neverExpires": "Ei vanhene koskaan",
+    "linkCreated": "Luotu {date}"
   },
   "convert": {
     "ariaLabel": "Muunna mittajärjestelmä",

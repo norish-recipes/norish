@@ -111,7 +111,8 @@
     "cookbooks": "Kookboeken",
     "favourite": "Favoriet",
     "unfavourite": "Favoriet verwijderen",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "Link delen"
   },
   "sharePanel": {
     "title": "Recept delen",
@@ -155,7 +156,14 @@
       "title": "Link verwijderen",
       "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "confirm": "Link verwijderen"
-    }
+    },
+    "subtitle": "Openbare links voor {recipeName}",
+    "expiresAfter": "Verloopt na",
+    "expiresOn": "Verloopt {date}",
+    "expiredOn": "Verlopen {date}",
+    "lastOpenedOn": "Laatst geopend {date}",
+    "neverExpires": "Verloopt nooit",
+    "linkCreated": "Gemaakt {date}"
   },
   "convert": {
     "ariaLabel": "Converteer meetsysteem",

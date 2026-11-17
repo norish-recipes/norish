@@ -111,7 +111,8 @@
     "cookbooks": "Kochbücher",
     "favourite": "Favorit",
     "unfavourite": "Aus Favoriten entfernen",
-    "ai": "KI"
+    "ai": "KI",
+    "shareLink": "Link teilen"
   },
   "sharePanel": {
     "title": "Rezept teilen",
@@ -155,7 +156,14 @@
       "title": "Link löschen",
       "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
       "confirm": "Link löschen"
-    }
+    },
+    "subtitle": "Öffentliche Links für {recipeName}",
+    "expiresAfter": "Läuft ab nach",
+    "expiresOn": "Läuft ab am {date}",
+    "expiredOn": "Abgelaufen am {date}",
+    "lastOpenedOn": "Zuletzt geöffnet {date}",
+    "neverExpires": "Läuft nie ab",
+    "linkCreated": "Erstellt am {date}"
   },
   "convert": {
     "ariaLabel": "Maßeinheit umwandeln",

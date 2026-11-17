@@ -111,7 +111,8 @@
     "cookbooks": "Кулінарні книги",
     "favourite": "В обране",
     "unfavourite": "Прибрати з обраного",
-    "ai": "ШІ"
+    "ai": "ШІ",
+    "shareLink": "Поділитися посиланням"
   },
   "sharePanel": {
     "title": "Поділитися рецептом",
@@ -155,7 +156,14 @@
       "title": "Видалити посилання",
       "message": "Видалити це посилання на {recipeName}? Цю дію не можна скасувати.",
       "confirm": "Видалити посилання"
-    }
+    },
+    "subtitle": "Публічні посилання на {recipeName}",
+    "expiresAfter": "Діє протягом",
+    "expiresOn": "Діє до {date}",
+    "expiredOn": "Закінчилося {date}",
+    "lastOpenedOn": "Востаннє відкрито {date}",
+    "neverExpires": "Не закінчується",
+    "linkCreated": "Створено {date}"
   },
   "convert": {
     "ariaLabel": "Перевести в іншу систему мір",

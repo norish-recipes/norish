@@ -111,7 +111,8 @@
     "cookbooks": "Kokebøker",
     "favourite": "Favoritt",
     "unfavourite": "Fjern fra favoritter",
-    "ai": "KI"
+    "ai": "KI",
+    "shareLink": "Del lenke"
   },
   "sharePanel": {
     "title": "Del oppskrift",
@@ -155,7 +156,14 @@
       "title": "Slett lenke",
       "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
       "confirm": "Slett lenke"
-    }
+    },
+    "subtitle": "Offentlige lenker for {recipeName}",
+    "expiresAfter": "Utløper etter",
+    "expiresOn": "Utløper {date}",
+    "expiredOn": "Utløp {date}",
+    "lastOpenedOn": "Sist åpnet {date}",
+    "neverExpires": "Utløper aldri",
+    "linkCreated": "Opprettet {date}"
   },
   "convert": {
     "ariaLabel": "Konverter målesystem",

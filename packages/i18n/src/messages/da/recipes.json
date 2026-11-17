@@ -111,7 +111,8 @@
     "cookbooks": "Kogebøger",
     "favourite": "Favorit",
     "unfavourite": "Fjern fra favoritter",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "Del link"
   },
   "sharePanel": {
     "title": "Del opskrift",
@@ -155,7 +156,14 @@
       "title": "Slet link",
       "message": "Slet dette delelink til {recipeName}? Dette kan ikke fortrydes.",
       "confirm": "Slet link"
-    }
+    },
+    "subtitle": "Offentlige links til {recipeName}",
+    "expiresAfter": "Udløber efter",
+    "expiresOn": "Udløber {date}",
+    "expiredOn": "Udløb {date}",
+    "lastOpenedOn": "Sidst åbnet {date}",
+    "neverExpires": "Udløber aldrig",
+    "linkCreated": "Oprettet {date}"
   },
   "convert": {
     "ariaLabel": "Konverter målesystem",

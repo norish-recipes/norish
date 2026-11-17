@@ -111,7 +111,8 @@
     "cookbooks": "요리책",
     "favourite": "즐겨찾기",
     "unfavourite": "즐겨찾기 해제",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "링크 공유"
   },
   "sharePanel": {
     "title": "레시피 공유",
@@ -155,7 +156,14 @@
       "title": "링크 삭제",
       "message": "{recipeName}의 이 공유 링크를 삭제하시겠습니까? 되돌릴 수 없습니다.",
       "confirm": "링크 삭제"
-    }
+    },
+    "subtitle": "{recipeName}의 공개 링크",
+    "expiresAfter": "만료 시점",
+    "expiresOn": "{date} 만료",
+    "expiredOn": "{date} 만료됨",
+    "lastOpenedOn": "마지막 열람 {date}",
+    "neverExpires": "만료되지 않음",
+    "linkCreated": "{date} 생성"
   },
   "convert": {
     "ariaLabel": "측정 단위 전환",

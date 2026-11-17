@@ -111,7 +111,8 @@
     "cookbooks": "كتب الطبخ",
     "favourite": "المفضلة",
     "unfavourite": "إزالة من المفضلة",
-    "ai": "الذكاء الاصطناعي"
+    "ai": "الذكاء الاصطناعي",
+    "shareLink": "مشاركة الرابط"
   },
   "sharePanel": {
     "title": "مشاركة الوصفة",
@@ -155,7 +156,14 @@
       "title": "حذف الرابط",
       "message": "هل تريد حذف رابط المشاركة هذا لـ {recipeName}؟ لا يمكن التراجع عن ذلك.",
       "confirm": "حذف الرابط"
-    }
+    },
+    "subtitle": "روابط عامة لـ {recipeName}",
+    "expiresAfter": "ينتهي بعد",
+    "expiresOn": "ينتهي {date}",
+    "expiredOn": "انتهى {date}",
+    "lastOpenedOn": "آخر فتح {date}",
+    "neverExpires": "لا ينتهي أبدًا",
+    "linkCreated": "أُنشئ {date}"
   },
   "convert": {
     "ariaLabel": "تحويل نظام القياس",

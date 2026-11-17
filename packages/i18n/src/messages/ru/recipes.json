@@ -111,7 +111,8 @@
     "cookbooks": "Кулинарные книги",
     "favourite": "В избранное",
     "unfavourite": "Убрать из избранного",
-    "ai": "ИИ"
+    "ai": "ИИ",
+    "shareLink": "Поделиться ссылкой"
   },
   "sharePanel": {
     "title": "Поделиться рецептом",
@@ -155,7 +156,14 @@
       "title": "Удалить ссылку",
       "message": "Удалить эту ссылку для совместного доступа к {recipeName}? Это действие нельзя отменить.",
       "confirm": "Удалить ссылку"
-    }
+    },
+    "subtitle": "Публичные ссылки на {recipeName}",
+    "expiresAfter": "Истекает через",
+    "expiresOn": "Истекает {date}",
+    "expiredOn": "Истекла {date}",
+    "lastOpenedOn": "Последнее открытие {date}",
+    "neverExpires": "Не истекает",
+    "linkCreated": "Создана {date}"
   },
   "convert": {
     "ariaLabel": "Преобразовать систему мер",

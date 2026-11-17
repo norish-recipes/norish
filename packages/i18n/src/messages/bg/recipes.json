@@ -111,7 +111,8 @@
     "cookbooks": "Готварски книги",
     "favourite": "Любима",
     "unfavourite": "Премахни от любимите",
-    "ai": "ИИ"
+    "ai": "ИИ",
+    "shareLink": "Сподели връзка"
   },
   "sharePanel": {
     "title": "Сподели рецепта",
@@ -155,7 +156,14 @@
       "title": "Изтрий връзката",
       "message": "Да се изтрие ли тази връзка за споделяне на {recipeName}? Това действие не може да бъде отменено.",
       "confirm": "Изтрий връзката"
-    }
+    },
+    "subtitle": "Публични връзки за {recipeName}",
+    "expiresAfter": "Изтича след",
+    "expiresOn": "Изтича на {date}",
+    "expiredOn": "Изтекла на {date}",
+    "lastOpenedOn": "Последно отворена {date}",
+    "neverExpires": "Не изтича",
+    "linkCreated": "Създадена на {date}"
   },
   "convert": {
     "ariaLabel": "Преобразуване на мерна система",

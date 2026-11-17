@@ -170,7 +170,8 @@
     "packs": "{count} × {size}",
     "onePack": "ціна за одну упаковку",
     "sale": "Знижка",
-    "regularPrice": "Звичайна ціна {price}"
+    "regularPrice": "Звичайна ціна {price}",
+    "each": "за штуку"
   },
   "clearConfirm": {
     "listTitle": "Очистити список?",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Перенести товари до «Без магазину»",
     "typePrice": "Введіть ціну самостійно",
     "product": "Товар",
-    "chooseProduct": "Вибрати товар"
+    "chooseProduct": "Вибрати товар",
+    "recipeCount": "{count, plural, one {# рецепт} few {# рецепти} many {# рецептів} other {# рецепта}}"
   }
 }

@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "1개 포장으로 계산됨",
     "sale": "할인",
-    "regularPrice": "정가 {price}"
+    "regularPrice": "정가 {price}",
+    "each": "개당"
   },
   "mobile": {
     "viewMode": "보기",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "항목을 미분류로 이동",
     "typePrice": "가격 직접 입력",
     "product": "제품",
-    "chooseProduct": "제품 선택"
+    "chooseProduct": "제품 선택",
+    "recipeCount": "{count, plural, other {레시피 #개}}"
   }
 }

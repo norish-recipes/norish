@@ -170,7 +170,8 @@
     "packs": "{count} × {size}",
     "onePack": "hinta yhdeltä pakkaukselta",
     "sale": "Tarjous",
-    "regularPrice": "Normaalihinta {price}"
+    "regularPrice": "Normaalihinta {price}",
+    "each": "kpl"
   },
   "clearConfirm": {
     "listTitle": "Tyhjennetäänkö lista?",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Siirrä tuotteet kohtaan Lajittelematon",
     "typePrice": "Kirjoita hinta itse",
     "product": "Tuote",
-    "chooseProduct": "Valitse tuote"
+    "chooseProduct": "Valitse tuote",
+    "recipeCount": "{count, plural, one {# resepti} other {# reseptiä}}"
   }
 }

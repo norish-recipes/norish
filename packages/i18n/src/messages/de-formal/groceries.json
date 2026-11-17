@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "als eine Packung berechnet",
     "sale": "Angebot",
-    "regularPrice": "Normalpreis {price}"
+    "regularPrice": "Normalpreis {price}",
+    "each": "pro Stück"
   },
   "mobile": {
     "viewMode": "Ansicht",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Artikel nach „Unsortiert“ verschieben",
     "typePrice": "Preis selbst eingeben",
     "product": "Produkt",
-    "chooseProduct": "Produkt auswählen"
+    "chooseProduct": "Produkt auswählen",
+    "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}"
   }
 }

@@ -111,7 +111,8 @@
     "cookbooks": "Kokböcker",
     "favourite": "Favorit",
     "unfavourite": "Ta bort som favorit",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "Dela länk"
   },
   "sharePanel": {
     "title": "Dela recept",
@@ -155,7 +156,14 @@
       "title": "Ta bort länk",
       "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
       "confirm": "Ta bort länk"
-    }
+    },
+    "subtitle": "Offentliga länkar till {recipeName}",
+    "expiresAfter": "Upphör efter",
+    "expiresOn": "Upphör {date}",
+    "expiredOn": "Upphörde {date}",
+    "lastOpenedOn": "Senast öppnad {date}",
+    "neverExpires": "Upphör aldrig",
+    "linkCreated": "Skapad {date}"
   },
   "convert": {
     "ariaLabel": "Omvandla måttsystem",

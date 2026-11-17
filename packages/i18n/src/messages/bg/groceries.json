@@ -177,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "броено като една опаковка",
     "sale": "Промоция",
-    "regularPrice": "Редовна цена {price}"
+    "regularPrice": "Редовна цена {price}",
+    "each": "за брой"
   },
   "mobile": {
     "viewMode": "Изглед",
@@ -208,6 +209,7 @@
     "moveItemsToUnsorted": "Премести артикулите в Несортирани",
     "typePrice": "Въведете цената сами",
     "product": "Продукт",
-    "chooseProduct": "Избор на продукт"
+    "chooseProduct": "Избор на продукт",
+    "recipeCount": "{count, plural, one {# рецепта} other {# рецепти}}"
   }
 }
