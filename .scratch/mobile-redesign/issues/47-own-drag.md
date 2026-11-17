@@ -41,3 +41,11 @@
 - Web's calendar drag only rings the day (`ring-2`, none on the item's own day) and lands the item last in its slot, with no line. So the outline stays, there is still no line, and `landAt` (replacing `dropLine` and the fade) settles the card where `timelineLanding` puts the item. A same-day drop slides back with no write.
 - Deleted (11): `dropLine`, and `edgeInsets` falling back to `contentInset`. Kept: `shownRef` (Calendar scrolls by index in the rows shown), `nested` (ingredient and step lists), `itemLayoutAnimation` (Groceries; Calendar no longer passes it). 13: `settle()` and the refused-drop intermediate order are gone. The list never reorders on its own now, and `drop` sets the rows straight back.
 - Device (Release, iOS 27.2): Calendar, Groceries, Manage stores and the editor drag, both auto-scroll edges with the source off screen plus a second lift, collapsed/empty/above-first-heading drops, and the editor with the keyboard up all checked. Not checked: a drag cancelled by backgrounding, because agent-device runs one session's commands in turn, so `home` waits for the held gesture to end. The last box stays open for that.
+- Review round 2 (the fix range), dispositions:
+  1. fix: `targetAt` takes `sections` beside slots that already carry `.section`, and the engine rebuilds that array every frame.
+  2. fix: the shared value `section` is shadowed by a destructured `section` in `slotsNow` (`use-drag-engine.ts:59,90`).
+  3. fix (verify): `card-slice.tsx` `SIZES.sheet.liftedInset` equals its `inset`.
+  4. fix: `DragList` and `DragScrollView` each define the same `onContentSizeChange` wrapper.
+  5. fix: when both sides of `landAt`'s gap are undrawn the card slides home while the drop commits elsewhere; it fades instead, and `landingTop`'s comment says what holds.
+  6. reject: lifted aisle rows now tilt; one lifted look for every row is what the deduplication was for. Listed for Mike to see.
+  7. reject: a drop committing after the list unmounts during the settle; the user made the drop.
