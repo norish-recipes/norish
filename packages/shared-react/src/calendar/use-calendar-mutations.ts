@@ -226,5 +226,19 @@ export function useCalendarMutations(): CalendarMutationsResult {
     updateItem: (itemId, title) => {
       mutateUpdate({ itemId, version: versionOf(itemId), title });
     },
+    saveItem: (itemId, { title, move }) => {
+      const version = versionOf(itemId);
+
+      if (title !== undefined) mutateUpdate({ itemId, version, title });
+      // The text's write has not run its optimistic bump yet, so the move names the version it leaves.
+      if (move) {
+        mutateMove({
+          itemId,
+          version: title === undefined ? version : version + 1,
+          targetDate: move.date,
+          targetSlot: move.slot,
+        });
+      }
+    },
   };
 }

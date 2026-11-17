@@ -350,6 +350,32 @@ describe("plan writes made offline, replayed", () => {
     }
   });
 
+  it("a note's text and move saved together in one tick: both stored, the move at the version the text left", async () => {
+    const shown = await offline([
+      (m) =>
+        m.saveItem("soup", {
+          title: "Leek soup",
+          move: { date: "2026-11-12", slot: "Lunch" },
+        }),
+    ]);
+
+    expect(shown.find((item) => item.id === "soup")).toMatchObject({
+      title: "Leek soup",
+      date: "2026-11-12",
+      slot: "Lunch",
+      version: 3,
+    });
+    const server = serverOf(rows());
+
+    expect(await replay(server.client)).toMatchObject({ removed: 2, parked: 0, conflicted: [] });
+    expect(server.db.get("soup")).toMatchObject({
+      title: "Leek soup",
+      date: "2026-11-12",
+      slot: "Lunch",
+      version: 3,
+    });
+  });
+
   it("move, then remove: the plan is gone and its slot-mates keep their versions", async () => {
     await offline([
       (m) => m.moveItem("soup", "2026-11-12", "Dinner", 1),
