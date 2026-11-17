@@ -117,3 +117,61 @@ describe("usePlannedItemDraft", () => {
     expect(result.current.changes).toBeNull();
   });
 });
+
+describe("a draft while a housemate writes the item", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const moved = { ...note, date: "2026-11-14", slot: "Dinner" as const, version: 2 };
+  const draftOf = () =>
+    renderHook(({ item }) => usePlannedItemDraft(item), { initialProps: { item: note } });
+
+  it("untouched: shows their values and has nothing to save", () => {
+    const { result, rerender } = draftOf();
+
+    rerender({ item: { ...moved, title: "Pea soup" } });
+
+    expect(result.current.draft).toEqual({ title: "Pea soup", date: "2026-11-14", slot: "Dinner" });
+    expect(result.current.changes).toBeNull();
+    act(() => result.current.save());
+    expect(saveItem).not.toHaveBeenCalled();
+  });
+
+  it("a touched note saves only the note, over their move", () => {
+    const { result, rerender } = draftOf();
+
+    act(() => result.current.setTitle("Leek soup"));
+    rerender({ item: moved });
+
+    expect(result.current.draft).toEqual({
+      title: "Leek soup",
+      date: "2026-11-14",
+      slot: "Dinner",
+    });
+    act(() => result.current.save());
+    expect(saveItem).toHaveBeenCalledExactlyOnceWith("n1", { title: "Leek soup" });
+  });
+
+  it("a touched day they also chose has nothing to save", () => {
+    const { result, rerender } = draftOf();
+
+    act(() => result.current.setDate("2026-11-14"));
+    rerender({ item: moved });
+
+    expect(result.current.changes).toBeNull();
+  });
+
+  it("Save tapped twice sends one write", () => {
+    const { result } = draftOf();
+
+    act(() => result.current.setSlot("Dinner"));
+    const { save } = result.current;
+
+    act(() => {
+      save();
+      save();
+    });
+    act(() => result.current.save());
+
+    expect(saveItem).toHaveBeenCalledExactlyOnceWith("n1", { slot: "Dinner" });
+  });
+});

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
@@ -10,46 +10,51 @@ import { useCalendarMutations } from "./use-calendar-mutations";
 export type PlannedItemDraft = { title: string; date: string; slot: Slot };
 
 /**
- * What Save writes for a draft: a note's changed text, and the day and slot when changed.
- * Null when nothing changed, or when a note's text is blank, which a note cannot be.
+ * What Save writes: each touched field that differs from the live item. Null when none does, or
+ * when a note's touched text is blank, which a note cannot be.
  */
 export function plannedItemChanges(
   item: PlannedItemFromQuery,
-  draft: PlannedItemDraft
+  touched: Partial<PlannedItemDraft>
 ): PlannedItemChanges | null {
-  const editsText = !isRecipeItem(item);
-  const title = draft.title.trim();
+  const title = isRecipeItem(item) ? undefined : touched.title?.trim();
 
-  if (editsText && !title) return null;
+  if (title === "") return null;
 
   const changes: PlannedItemChanges = {};
 
-  if (editsText && title !== item.title) changes.title = title;
-  if (draft.date !== item.date) changes.date = draft.date;
-  if (draft.slot !== item.slot) changes.slot = draft.slot;
+  if (title !== undefined && title !== item.title) changes.title = title;
+  if (touched.date !== undefined && touched.date !== item.date) changes.date = touched.date;
+  if (touched.slot !== undefined && touched.slot !== item.slot) changes.slot = touched.slot;
 
   return Object.keys(changes).length > 0 ? changes : null;
 }
 
-/** A planned item's edit as a draft: day, slot and a note's text change freely and are written
- * together by `save`; leaving without it discards them. */
+/** A planned item's edit as a draft over the live item: an untouched field follows it, and `save`
+ * writes once, at the live version, only what the member changed; leaving without it discards. */
 export function usePlannedItemDraft(item: PlannedItemFromQuery) {
   const { saveItem } = useCalendarMutations();
-  const [draft, setDraft] = useState<PlannedItemDraft>({
-    title: item.title ?? "",
-    date: item.date,
-    slot: item.slot,
-  });
-  const changes = plannedItemChanges(item, draft);
+  const [touched, setTouched] = useState<Partial<PlannedItemDraft>>({});
+  const savedRef = useRef(false);
+  const draft: PlannedItemDraft = {
+    title: touched.title ?? item.title ?? "",
+    date: touched.date ?? item.date,
+    slot: touched.slot ?? item.slot,
+  };
+  const changes = plannedItemChanges(item, touched);
+  const touch = (field: Partial<PlannedItemDraft>) =>
+    setTouched((current) => ({ ...current, ...field }));
 
   return {
     draft,
     changes,
-    setTitle: (title: string) => setDraft((current) => ({ ...current, title })),
-    setDate: (date: string) => setDraft((current) => ({ ...current, date })),
-    setSlot: (slot: Slot) => setDraft((current) => ({ ...current, slot })),
+    setTitle: (title: string) => touch({ title }),
+    setDate: (date: string) => touch({ date }),
+    setSlot: (slot: Slot) => touch({ slot }),
     save: () => {
-      if (changes) saveItem(item.id, changes);
+      if (!changes || savedRef.current) return;
+      savedRef.current = true;
+      saveItem(item.id, changes);
     },
   };
 }
