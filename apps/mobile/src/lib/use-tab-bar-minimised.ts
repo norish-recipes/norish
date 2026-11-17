@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { initialWindowMetrics } from "react-native-safe-area-context";
+import { useIsFocused } from "expo-router";
 
 import { nextTabBarMinimised } from "./tab-bar-placement";
 
@@ -9,6 +10,14 @@ import { nextTabBarMinimised } from "./tab-bar-placement";
 export function useTabBarMinimised() {
   const [minimised, setMinimised] = useState(false);
   const lastOffsetRef = useRef(0);
+  const focused = useIsFocused();
+  const [wasFocused, setWasFocused] = useState(focused);
+
+  // A tab coming back, from another tab or a screen over it, shows the bar expanded.
+  if (focused !== wasFocused) {
+    setWasFocused(focused);
+    if (focused) setMinimised(false);
+  }
 
   return {
     minimised,
