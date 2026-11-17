@@ -26,7 +26,7 @@ describe("useHeldRows", () => {
     rerender({ rows: [heading("A"), item("new"), item("a1"), item("a2")] });
     expect(keys(result.current.shown)).toEqual(["A", "a1", "a2"]);
 
-    act(() => result.current.drop(1, 2));
+    act(() => void result.current.drop(1, 3));
     expect(onDrop).toHaveBeenCalledWith(expect.objectContaining({ item: "a1", heading: "A" }));
   });
 
@@ -35,40 +35,28 @@ describe("useHeldRows", () => {
     const written = [heading("A"), item("a2"), item("a1")];
 
     act(() => result.current.lift());
-    act(() => result.current.drop(1, 2));
+    act(() => void result.current.drop(1, 3));
     expect(keys(result.current.shown)).toEqual(["A", "a2", "a1"]);
 
     rerender({ rows: written });
     expect(result.current.shown).toBe(written);
   });
 
-  it("puts the row back when the drop is refused, as a reorder after showing it", () => {
-    const rows = [heading("A"), item("a1"), item("a2")];
-    const shownEachRender: string[][] = [];
-    const { result } = renderHook(() => {
-      const held = useHeldRows(rows, () => false);
-
-      shownEachRender.push(keys(held.shown));
-
-      return held;
-    });
+  it("shows the rows again when the drop is refused", () => {
+    const { result } = render(false);
 
     act(() => result.current.lift());
-    act(() => result.current.drop(1, 2));
-
-    // The list moved the row itself, so it must see the drop before the rows come back.
-    expect(shownEachRender.slice(-2)).toEqual([
-      ["A", "a2", "a1"],
-      ["A", "a1", "a2"],
-    ]);
+    act(() => void result.current.drop(1, 3));
+    expect(keys(result.current.shown)).toEqual(["A", "a1", "a2"]);
   });
 
   it("lets the rows through again after a drag that ended where it began", () => {
-    const { result, rerender } = render();
+    const { result, rerender, onDrop } = render();
     const changed = [heading("A"), item("a2")];
 
     act(() => result.current.lift());
-    act(() => result.current.settle());
+    act(() => void result.current.drop(1, 2));
+    expect(onDrop).not.toHaveBeenCalled();
     rerender({ rows: changed });
     expect(result.current.shown).toBe(changed);
   });

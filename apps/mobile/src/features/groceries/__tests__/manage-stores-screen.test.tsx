@@ -64,9 +64,7 @@ vi.mock("@/components/sheet", async () => {
   };
 });
 vi.mock("@/components/drag-list/drag-list", () => ({
-  DragList: (
-    props: typeof held.list & { renderItem: (item: never, drag: () => void) => React.ReactNode }
-  ) => {
+  DragList: (props: typeof held.list & { renderItem: (item: never) => React.ReactNode }) => {
     Object.assign(held.list, props);
 
     return (
@@ -74,7 +72,7 @@ vi.mock("@/components/drag-list/drag-list", () => ({
         {props.rows.map(
           (row) =>
             (row as unknown as { value: never; key: string }) &&
-            props.renderItem((row as unknown as { value: never }).value, () => {})
+            props.renderItem((row as unknown as { value: never }).value)
         )}
       </div>
     );

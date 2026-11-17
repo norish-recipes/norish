@@ -1,11 +1,12 @@
 import type { Drop } from "@/components/drag-list/drag-list";
+import type { Measurable } from "@/hooks/use-focused-field-in-view";
 import type { TabScroll } from "@/lib/use-tab-scroll";
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
-import { DragList } from "@/components/drag-list/drag-list";
+import { DragList, useIsLifted } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
@@ -39,6 +40,30 @@ export type ListActions = {
   clear: (name: string, ids: string[]) => void;
 };
 
+/** A list row as it enters and leaves; the lifted card is a copy, which neither animates nor
+ * stands in for the row where a ticked row heads. */
+function ListedRow({
+  viewRef,
+  entering,
+  exiting,
+  children,
+}: {
+  viewRef: (view: Measurable | null) => void;
+  entering: ComponentProps<typeof Animated.View>["entering"];
+  exiting: ComponentProps<typeof Animated.View>["exiting"];
+  children: ReactNode;
+}) {
+  const lifted = useIsLifted();
+
+  if (lifted) return children;
+
+  return (
+    <Animated.View ref={viewRef} collapsable={false} entering={entering} exiting={exiting}>
+      {children}
+    </Animated.View>
+  );
+}
+
 /** The list's rows, virtualised: headings, grocery rows and the done tails, each a slice of its
  * section's card. Holding an open row lifts it; a done one stays put. */
 export function GroceriesList({
@@ -53,6 +78,7 @@ export function GroceriesList({
   actions,
   onDrop,
   onScroll,
+  topInset,
 }: {
   rows: ListRow[];
   /** False while the list waits on its first read, so its first rows don't animate in. */
@@ -61,7 +87,7 @@ export function GroceriesList({
   empty: ReactElement | null;
   recipeNameFor: (grocery: GroceryDto) => string | null;
   recurringById: ReadonlyMap<string, RecurringGroceryDto>;
-  /** The lines of the groups folded out; held above the list, which remounts the rows a drop passes. */
+  /** The lines of the groups folded out, held above the list so the lifted card shows them too. */
   openGroups: ReadonlySet<string>;
   /** The list by recipe names each line's Store under it, where a Store's list never does. */
   storeNameOnLines: boolean;
@@ -70,6 +96,8 @@ export function GroceriesList({
   onDrop: (drop: Drop<ListHeading, ListItem>) => boolean;
   /** The tab's scroll handler (`useTabScroll`), a worklet the drag list composes. */
   onScroll?: TabScroll["onScroll"];
+  /** The bar over the list's top, which auto-scroll stops under. */
+  topInset: number;
 }) {
   const recurrence = useRecurrenceLabel();
   const { fresh } = useFreshRows(rows, loaded);
@@ -140,7 +168,7 @@ export function GroceriesList({
     );
   };
 
-  const renderItem = (item: ListItem, drag: () => void) => {
+  const renderItem = (item: ListItem) => {
     const { edge } = item;
 
     if (item.type === "group") {
@@ -157,7 +185,6 @@ export function GroceriesList({
               recurringId ? recurringById.get(recurringId) : null,
               only?.recipeName ?? null
             )}
-            onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
             onToggle={(ids, isDone) => leaveThen(item, isDone, () => actions.toggle(ids, isDone))}
             onToggleOpen={() => actions.toggleGroup(item.group)}
@@ -182,7 +209,6 @@ export function GroceriesList({
                   recipeNameFor(grocery)
                 )
           }
-          onDrag={item.done ? undefined : drag}
           onEdit={actions.edit}
           onToggle={(id, isDone) => leaveThen(item, isDone, () => actions.toggle([id], isDone))}
         />
@@ -196,9 +222,12 @@ export function GroceriesList({
         <DragList
           ListEmptyComponent={empty ?? undefined}
           ListHeaderComponent={header}
+          // A done row stays put, and the done fold takes no drop.
+          canLift={(item) => !item.done}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
           contentInsetAdjustmentBehavior="automatic"
+          edgeInsets={{ top: topInset, bottom: tabListBottomInset(homeIndicator) }}
           itemLayoutAnimation={SPRING_LAYOUT}
           renderHeading={(heading, index) => (
             <Animated.View
@@ -208,17 +237,17 @@ export function GroceriesList({
               {renderHeading(heading, index)}
             </Animated.View>
           )}
-          renderItem={(item, drag) => (
-            <Animated.View
-              ref={itemRef(item.key)}
-              collapsable={false}
+          renderItem={(item) => (
+            <ListedRow
               entering={fresh.has(item) ? SPRING_FADE_IN : undefined}
               exiting={exitingFor(item.key)}
+              viewRef={itemRef(item.key)}
             >
-              {renderItem(item, drag)}
-            </Animated.View>
+              {renderItem(item)}
+            </ListedRow>
           )}
           rows={rows}
+          sectionOf={(heading, key) => (heading.type === "done" ? null : key)}
           testID="groceries-list"
           onDrop={onDrop}
           onScroll={onScroll}

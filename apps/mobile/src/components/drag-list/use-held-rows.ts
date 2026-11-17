@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { DragRow, Drop } from "./resolve-drop";
-import { resolveDrop } from "./resolve-drop";
+import { dropAt } from "./drop-target";
 
 type Held<H, T> = {
   /** What the list shows: the rows a row was lifted from, or where a drop put it. */
@@ -9,11 +9,7 @@ type Held<H, T> = {
   /** The `rows` this was held over: once they change, the list shows them again. */
   over: DragRow<H, T>[];
   dragging: boolean;
-  /** A refused drop, shown for one commit so the list moves the row back as a reorder. */
-  refused?: boolean;
 };
-
-export type HeldRows<H, T> = ReturnType<typeof useHeldRows<H, T>>;
 
 /** The rows a drag list shows. Under a lifted row they hold still, so a realtime change can't
  * move the slots the drag counts in; after a kept drop they show it until `rows` changes. */
@@ -27,24 +23,18 @@ export function useHeldRows<H, T>(
   if (held && !current) setHeld(null);
   const shown = current?.shown ?? rows;
 
-  // The list has already moved the row; only rows in a new order move it back.
-  useEffect(() => {
-    if (held?.refused) setHeld(null);
-  }, [held]);
-
   return {
     shown,
     lift: () => setHeld({ shown, over: rows, dragging: true }),
-    /** `from` and `to` count in the rows shown at the lift; `onDrop` returning false puts it back. */
-    drop: (from: number, to: number) => {
-      const drop = resolveDrop(shown, from, to);
+    /** The row at `from` let go into `gap`, both counted in the rows shown at the lift; `onDrop`
+     * returning false puts it back. True when the drop was kept. */
+    drop: (from: number, gap: number | null) => {
+      const drop = gap === null ? null : dropAt(shown, from, gap);
+      const kept = drop !== null && onDrop(drop) !== false;
 
-      if (!drop) return setHeld(null);
-      const kept = onDrop(drop) !== false;
+      setHeld(kept ? { shown: drop.rows, over: rows, dragging: false } : null);
 
-      setHeld({ shown: drop.rows, over: rows, dragging: false, refused: !kept });
+      return kept;
     },
-    /** A drag that ended where it began. */
-    settle: () => setHeld(null),
   };
 }

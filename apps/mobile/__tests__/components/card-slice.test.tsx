@@ -14,7 +14,10 @@ vi.mock("react-native", async () => {
   };
 });
 vi.mock("react-native-reanimated", () => import("../mocks/reanimated"));
-vi.mock("@/components/drag-list/drag-list", () => ({ useIsLifted: () => lift.lifted }));
+vi.mock("@/components/drag-list/drag-list", () => ({
+  useIsLifted: () => lift.lifted,
+  useDragCard: () => undefined,
+}));
 
 function Folding() {
   const [open, setOpen] = useState(false);

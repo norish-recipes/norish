@@ -184,12 +184,11 @@ export function ManageStoresScreen() {
           className="flex-1"
           contentInsetAdjustmentBehavior="never"
           renderHeading={() => null}
-          renderItem={({ store, edge }, drag) => (
+          renderItem={({ store, edge }) => (
             <StoreListRow
               edge={edge}
               store={store}
               onDelete={() => confirmDelete(store)}
-              onDrag={drag}
               onEdit={() => setEditing(editingStoreOf(store))}
             />
           )}

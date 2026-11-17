@@ -186,6 +186,7 @@ export function GroceriesScreen() {
         recurringById={new Map(recurringGroceries.map((recurring) => [recurring.id, recurring]))}
         rows={loading ? [] : nothing ? [] : rows}
         storeNameOnLines={view === "recipe"}
+        topInset={scroll.barBottom}
         onDrop={drop}
         onScroll={scroll.onScroll}
       />

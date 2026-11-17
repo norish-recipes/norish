@@ -56,19 +56,22 @@ vi.mock("../components/done-row", () => ({ DoneRow: () => null }));
 vi.mock("../components/grocery-row", () => ({ GroceryRow: () => null }));
 vi.mock("../components/grocery-price", () => ({ GroceryPrice: () => null }));
 vi.mock("../components/store-tick", () => ({ StoreTick: () => null }));
-// The library remounts the cells a reorder passed (a new key each time), as this does on render.
+// Every row remounts on each render (a new key each time), so state held in a row would be lost.
 vi.mock("@/components/drag-list/drag-list", async () => {
   const { createElement, Fragment } = await import("react");
   let generation = 0;
 
   return {
     useIsLifted: () => false,
+    useDragCard: () => undefined,
+    DragHandle: ({ children }: { children: React.ReactNode }) => children,
+    useDragTap: () => (onPress: () => void) => onPress,
     DragList: ({
       rows,
       renderItem,
     }: {
       rows: ListRow[];
-      renderItem: (item: unknown, drag: () => void) => React.ReactNode;
+      renderItem: (item: unknown) => React.ReactNode;
     }) => {
       generation += 1;
 
@@ -76,7 +79,7 @@ vi.mock("@/components/drag-list/drag-list", async () => {
         createElement(
           Fragment,
           { key: `${row.key}#${generation}` },
-          row.kind === "item" ? renderItem(row.value, () => {}) : null
+          row.kind === "item" ? renderItem(row.value) : null
         )
       );
     },
@@ -138,6 +141,7 @@ function Screen({ rows = rowsKeyed("milk") }: { rows?: ListRow[] }) {
       recurringById={new Map()}
       rows={rows}
       storeNameOnLines={false}
+      topInset={0}
       onDrop={() => true}
     />
   );

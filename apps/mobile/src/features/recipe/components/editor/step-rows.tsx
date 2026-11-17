@@ -134,13 +134,12 @@ export function StepRows({
     });
   };
 
-  const renderRow = (row: StepRowValue, drag: () => void) => {
+  const renderRow = (row: StepRowValue) => {
     const index = rows.indexOf(row);
 
     return (
       <StepRow
         chipLines={chipLines}
-        drag={drag}
         focused={trailingRow.focusedId === row.id}
         foods={foods}
         index={index}
@@ -189,8 +188,6 @@ export function StepRows({
     <View>
       <DragList
         nested
-        // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
-        keyboardShouldPersistTaps="handled"
         renderHeading={() => null}
         renderItem={renderRow}
         rows={trailingRow.visibleRows.map((row) => ({

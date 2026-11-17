@@ -1,4 +1,5 @@
-import type { FlatList, FlatListProps } from "react-native";
+import type { DragListHandle } from "@/components/drag-list/drag-list";
+import type { FlatListProps } from "react-native";
 import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -56,7 +57,7 @@ export function CalendarScreen() {
   const todayKey = useToday();
   const { days, grow, calendarData, isRead } = useCalendarRangeQuery();
   const { moveItem } = useCalendarMutations();
-  const listRef = useRef<FlatList<TimelineRow>>(null);
+  const listRef = useRef<DragListHandle>(null);
   // What the list shows, which a held drop keeps apart from `rows`.
   const shownRowsRef = useRef<TimelineRow[]>([]);
   const growth = useHeldGrowth(grow);
@@ -160,6 +161,9 @@ export function CalendarScreen() {
           contentInset={{ top: barBottom }}
           contentInsetAdjustmentBehavior="never"
           contentOffset={{ x: 0, y: openingAt ?? 0 }}
+          // A drop lands on its day by the rule, so the day is outlined and no line drawn.
+          dropLine={false}
+          edgeInsets={{ top: barBottom, bottom: tabListBottomInset(bar.homeIndicator) }}
           // The rows the list shows, which a held row keeps still while `rows` moves on.
           getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
@@ -187,14 +191,13 @@ export function CalendarScreen() {
               )}
             </Animated.View>
           )}
-          renderItem={(row, drag) => (
+          renderItem={(row) => (
             <Animated.View
               entering={fresh.has(row) ? SPRING_FADE_IN : undefined}
               exiting={SPRING_FADE_OUT}
             >
               <PlannedItemRow
                 row={row}
-                onDrag={drag}
                 onOpen={() =>
                   router.push({
                     pathname: TAB_ROUTES.calendar.item,
@@ -206,6 +209,7 @@ export function CalendarScreen() {
           )}
           rows={rows}
           scrollIndicatorInsets={{ top: barBottom }}
+          sectionOf={(heading) => heading.dayKey}
           shownRef={shownRowsRef}
           testID="calendar-list"
           viewabilityConfig={VIEWABILITY}

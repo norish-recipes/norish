@@ -4,7 +4,7 @@ import React from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DayTitle, formatDay } from "@/components/day-card";
-import { useIsLifted } from "@/components/drag-list/drag-list";
+import { DragHandle, useDragTap, useIsLifted } from "@/components/drag-list/drag-list";
 import { PlannedThumb } from "@/components/planned-thumb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -98,38 +98,32 @@ export function SlotLabelRow({ heading }: { heading: Extract<TimelineHeading, { 
 }
 
 /** A planned item: its photo or a note's tile, its name and details; a tap opens its sheet, a hold lifts it. */
-export function PlannedItemRow({
-  row,
-  onOpen,
-  onDrag,
-}: {
-  row: TimelineItem;
-  onOpen: () => void;
-  onDrag: () => void;
-}) {
+export function PlannedItemRow({ row, onOpen }: { row: TimelineItem; onOpen: () => void }) {
   const { fontScale } = useWindowDimensions();
   const { title, subtitle } = usePlannedItemText()(row.item);
   const lifted = useIsLifted();
+  const tap = useDragTap();
   const edge = { top: false, bottom: row.lastOfDay };
 
   return (
     <ItemSlice edge={edge} separated={false}>
-      <Pressable
-        accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
-        accessibilityRole="button"
-        className="justify-start px-4"
-        style={{
-          height: itemHeight(row, fontScale),
-          paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
-        }}
-        testID={`calendar-item-${row.item.id}`}
-        onLongPress={onDrag}
-        onPress={onOpen}
-      >
-        <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
-          <PlannedThumb className="size-[52px] rounded-[14px]" item={row.item} />
-        </PlannedItemLine>
-      </Pressable>
+      <DragHandle>
+        <Pressable
+          accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
+          accessibilityRole="button"
+          className="justify-start px-4"
+          style={{
+            height: itemHeight(row, fontScale),
+            paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
+          }}
+          testID={`calendar-item-${row.item.id}`}
+          onPress={tap(onOpen)}
+        >
+          <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
+            <PlannedThumb className="size-[52px] rounded-[14px]" item={row.item} />
+          </PlannedItemLine>
+        </Pressable>
+      </DragHandle>
       {row.isToday && !lifted ? <TodayRing edge={edge} /> : null}
     </ItemSlice>
   );

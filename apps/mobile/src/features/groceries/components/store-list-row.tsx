@@ -2,7 +2,7 @@ import type { Edge } from "@/lib/card-edges";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
-import { useIsLifted } from "@/components/drag-list/drag-list";
+import { DragHandle, useDragCard, useDragTap, useIsLifted } from "@/components/drag-list/drag-list";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useThemeColor } from "heroui-native";
@@ -47,13 +47,11 @@ function CircleButton({
 export function StoreListRow({
   store,
   edge,
-  onDrag,
   onEdit,
   onDelete,
 }: {
   store: StoreDto;
   edge: Edge;
-  onDrag: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -62,30 +60,34 @@ export function StoreListRow({
   const reduceMotion = useReducedMotion();
   const [muted] = useThemeColor(["muted"] as const);
   const color = useStoreColor(store.color);
+  const onCardLayout = useDragCard();
+  const tap = useDragTap();
 
   return (
     <View className="px-4" style={lifted && !reduceMotion ? TILT : undefined}>
       <View
         className={`bg-surface overflow-hidden ${
           lifted
-            ? "rounded-[22px] shadow-lg"
+            ? "rounded-[22px]"
             : `${edge.top ? "rounded-t-[22px]" : "border-separator border-t"} ${edge.bottom ? "rounded-b-[22px]" : ""}`
         }`}
+        onLayout={onCardLayout}
       >
         <View className="h-14 flex-row items-center gap-3 pr-2 pl-2.5">
-          <Pressable
-            accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
-            className="h-full min-w-0 flex-1 flex-row items-center gap-3"
-            testID={`store-row-${store.id}`}
-            onLongPress={onDrag}
-            onPress={onEdit}
-          >
-            <MaterialCommunityIcons color={muted} name="drag" size={22} />
-            <View className="size-3.5 rounded-full" style={{ backgroundColor: color }} />
-            <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
-              {store.name}
-            </Text>
-          </Pressable>
+          <DragHandle>
+            <Pressable
+              accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
+              className="h-full min-w-0 flex-1 flex-row items-center gap-3"
+              testID={`store-row-${store.id}`}
+              onPress={tap(onEdit)}
+            >
+              <MaterialCommunityIcons color={muted} name="drag" size={22} />
+              <View className="size-3.5 rounded-full" style={{ backgroundColor: color }} />
+              <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
+                {store.name}
+              </Text>
+            </Pressable>
+          </DragHandle>
           <CircleButton
             icon="pencil"
             label={intl.formatMessage(

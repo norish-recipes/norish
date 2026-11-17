@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
+import { DragHandle, useDragTap } from "@/components/drag-list/drag-list";
 import { useIntl } from "react-intl";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
@@ -20,7 +21,6 @@ export function GroceryRow({
   dotted = false,
   onToggle,
   onEdit,
-  onDrag,
 }: {
   grocery: GroceryDto;
   store: StoreDto | null;
@@ -30,8 +30,6 @@ export function GroceryRow({
   dotted?: boolean;
   onToggle: (id: string, isDone: boolean) => void;
   onEdit: (id: string) => void;
-  /** Lifts the row; left out on a done line, which stays put. */
-  onDrag?: () => void;
 }) {
   const intl = useIntl();
   const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
@@ -39,6 +37,7 @@ export function GroceryRow({
   const amount = formatSpacedAmountUnit(shownAmount(grocery), grocery.unit);
   const name = grocery.name || intl.formatMessage({ id: "groceries.item.unnamedItem" });
   const done = grocery.isDone;
+  const tap = useDragTap();
 
   return (
     <View className="flex-row items-center gap-1 pr-4 pl-2" testID="grocery-row">
@@ -49,28 +48,29 @@ export function GroceryRow({
         testID={`grocery-tick-${grocery.id}`}
         onPress={() => onToggle(grocery.id, !done)}
       />
-      <Pressable
-        accessibilityRole="button"
-        className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
-        testID={`grocery-${grocery.id}`}
-        onLongPress={onDrag}
-        onPress={() => onEdit(grocery.id)}
-      >
-        <View className="min-w-0 flex-1 gap-0.5">
-          <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
-          {subline ? (
-            <View className="flex-row items-center gap-1.5">
-              {dotted && color ? (
-                <View className="size-2 rounded-full" style={{ backgroundColor: color }} />
-              ) : null}
-              <Text className="text-muted shrink text-sm" numberOfLines={1}>
-                {subline}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-        <GroceryPrice line={lineOf(grocery)} muted={done} />
-      </Pressable>
+      <DragHandle>
+        <Pressable
+          accessibilityRole="button"
+          className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
+          testID={`grocery-${grocery.id}`}
+          onPress={tap(() => onEdit(grocery.id))}
+        >
+          <View className="min-w-0 flex-1 gap-0.5">
+            <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
+            {subline ? (
+              <View className="flex-row items-center gap-1.5">
+                {dotted && color ? (
+                  <View className="size-2 rounded-full" style={{ backgroundColor: color }} />
+                ) : null}
+                <Text className="text-muted shrink text-sm" numberOfLines={1}>
+                  {subline}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <GroceryPrice line={lineOf(grocery)} muted={done} />
+        </Pressable>
+      </DragHandle>
     </View>
   );
 }

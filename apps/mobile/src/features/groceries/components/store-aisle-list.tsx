@@ -1,10 +1,9 @@
-import type { DragRow, Drop } from "@/components/drag-list/drag-list";
+import type { DragListHandle, Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
-import type { FlatList } from "react-native";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
-import { DragList } from "@/components/drag-list/drag-list";
+import { DragList, useDragCard, useIsLifted } from "@/components/drag-list/drag-list";
 import { FULL_SHEET_TOP } from "@/components/sheet";
 import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -27,44 +26,55 @@ const ACTIONS_HEIGHT = 82;
 /** The sheet pads for the keyboard over 250 ms, a Reanimated change that fires no layout event. */
 const SHEET_SETTLE_MS = 300;
 
+/** An Aisle's slice of the list's card; while a drag carries it, a card of its own. */
 function AisleRow({
   aisle,
-  onDrag,
+  first,
   onRename,
   onRemove,
 }: {
   aisle: EditingAisle;
-  onDrag: () => void;
+  first: boolean;
   onRename: (name: string) => void;
   onRemove: () => void;
 }) {
   const intl = useIntl();
   const [muted] = useThemeColor(["muted"] as const);
+  const lifted = useIsLifted();
+  const onCardLayout = useDragCard();
 
   return (
-    <View className="bg-default border-separator h-12 flex-row items-center gap-2 border-b pr-2 pl-2.5">
-      <DragGrip
-        label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
-        testID="aisle-grip"
-        onDrag={onDrag}
-      />
-      <Input
-        accessibilityLabel={aisle.name}
-        className="ios:shadow-none ios:outline-transparent ios:focus:outline-transparent h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none focus:border-0"
-        maxLength={AISLE_NAME_MAX}
-        testID="aisle-row-name"
-        value={aisle.name}
-        onChangeText={onRename}
-      />
-      <Pressable
-        accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.removeAisle" })}
-        accessibilityRole="button"
-        className="size-8 items-center justify-center"
-        testID="aisle-remove"
-        onPress={onRemove}
+    <View className="px-4">
+      <View
+        className={`bg-default overflow-hidden ${lifted ? "rounded-[22px]" : first ? "rounded-t-[22px]" : ""}`}
+        onLayout={onCardLayout}
       >
-        <Ionicons color={muted} name="close" size={18} />
-      </Pressable>
+        <View
+          className={`bg-default border-separator h-12 flex-row items-center gap-2 pr-2 pl-2.5 ${lifted ? "" : "border-b"}`}
+        >
+          <DragGrip
+            label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
+            testID="aisle-grip"
+          />
+          <Input
+            accessibilityLabel={aisle.name}
+            className="ios:shadow-none ios:outline-transparent ios:focus:outline-transparent h-10 flex-1 border-0 bg-transparent px-1 text-base shadow-none focus:border-0"
+            maxLength={AISLE_NAME_MAX}
+            testID="aisle-row-name"
+            value={aisle.name}
+            onChangeText={onRename}
+          />
+          <Pressable
+            accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.removeAisle" })}
+            accessibilityRole="button"
+            className="size-8 items-center justify-center"
+            testID="aisle-remove"
+            onPress={onRemove}
+          >
+            <Ionicons color={muted} name="close" size={18} />
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
@@ -84,13 +94,12 @@ export function StoreAisleList({
   const text = (id: string) => intl.formatMessage({ id });
   const [accent] = useThemeColor(["accent"] as const);
   const [draft, setDraft] = useState("");
-  const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } = useFocusedFieldInView<
-    FlatList<DragRow<null, AisleItem>>
-  >(
-    // A field measures from the sheet's top, the keyboard from the screen's.
-    FULL_SHEET_TOP + ACTIONS_HEIGHT + 8,
-    SHEET_SETTLE_MS
-  );
+  const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } =
+    useFocusedFieldInView<DragListHandle>(
+      // A field measures from the sheet's top, the keyboard from the screen's.
+      FULL_SHEET_TOP + ACTIONS_HEIGHT + 8,
+      SHEET_SETTLE_MS
+    );
   const { canAdd, duplicate, listDuplicate } = aisleDraftState(aisles, draft);
   const rows = aisles.map((aisle, index) => ({
     kind: "item" as const,
@@ -159,17 +168,13 @@ export function StoreAisleList({
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled"
       renderHeading={() => null}
-      renderItem={({ aisle, first }, drag) => (
-        <View className="px-4">
-          <View className={`bg-default overflow-hidden ${first ? "rounded-t-[22px]" : ""}`}>
-            <AisleRow
-              aisle={aisle}
-              onDrag={drag}
-              onRemove={() => onChange(removedAisle(aisles, aisle.id))}
-              onRename={(name) => onChange(renamedAisle(aisles, aisle.id, name))}
-            />
-          </View>
-        </View>
+      renderItem={({ aisle, first }) => (
+        <AisleRow
+          aisle={aisle}
+          first={first}
+          onRemove={() => onChange(removedAisle(aisles, aisle.id))}
+          onRename={(name) => onChange(renamedAisle(aisles, aisle.id, name))}
+        />
       )}
       rows={rows}
       showsVerticalScrollIndicator={false}

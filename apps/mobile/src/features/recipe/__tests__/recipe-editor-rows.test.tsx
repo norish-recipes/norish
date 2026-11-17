@@ -91,18 +91,20 @@ vi.mock("expo-router", () => ({ useRouter: () => ({ back: vi.fn(), dismissTo: vi
 vi.mock("expo-router/react-navigation", () => ({ usePreventRemove: () => undefined }));
 vi.mock("@/components/drag-list/drag-list", () => ({
   DragScrollView: ({ children }: Props) => children,
+  DragHandle: ({ children }: Props) => children,
+  useIsLifted: () => false,
   DragList: ({
     rows,
     renderItem,
     onDrop,
   }: {
     rows: { key: string; value: unknown }[];
-    renderItem: (value: unknown, drag: () => void) => ReactNode;
+    renderItem: (value: unknown) => ReactNode;
     onDrop: (drop: unknown) => void;
   }) => {
     state.lists.set(rows[0]?.key.split("-")[0] ?? "", { rows, onDrop });
 
-    return rows.map((row) => <div key={row.key}>{renderItem(row.value, () => {})}</div>);
+    return rows.map((row) => <div key={row.key}>{renderItem(row.value)}</div>);
   },
 }));
 vi.mock("@/components/modal-header", () => import("../../../../__tests__/mocks/modal-header"));

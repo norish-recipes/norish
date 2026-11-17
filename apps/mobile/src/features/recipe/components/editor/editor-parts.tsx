@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React, { use } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useIsLifted } from "@/components/drag-list/drag-list";
 import { HintButton } from "@/components/hint-button";
 import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -11,6 +12,33 @@ import { withUniwind } from "uniwind";
 export const ClassIcon = withUniwind(Ionicons, {
   color: { fromClassName: "colorClassName", styleProperty: "color" },
 });
+
+/** An ingredient or step row, under a hairline unless it is the first; while a drag carries it,
+ * a card of its own. */
+export function EditorRow({
+  first,
+  className,
+  testID,
+  children,
+}: {
+  first: boolean;
+  className: string;
+  testID: string;
+  children: ReactNode;
+}) {
+  const lifted = useIsLifted();
+  const edge = lifted
+    ? "bg-surface -mx-3 rounded-2xl px-3"
+    : first
+      ? ""
+      : "border-separator border-t";
+
+  return (
+    <View className={`${className} ${edge}`} testID={testID}>
+      {children}
+    </View>
+  );
+}
 
 /** The editor's text field: plain, 17 pt, growing with its text when multiline. */
 export function EditorInput({ onFocus, ...props }: ComponentProps<typeof TextInput>) {
