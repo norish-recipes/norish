@@ -9,7 +9,7 @@ describe("parseIngredientSearch", () => {
   it("reads a text as contained anywhere, folded, in name and translations by default", () => {
     expect(parseIngredientSearch(" Crème ")).toEqual({
       fold: "creme",
-      pattern: "%creme%",
+      words: ["creme"],
       match: "contains",
       fields: ["name", "translations"],
     });
@@ -18,15 +18,19 @@ describe("parseIngredientSearch", () => {
   it("reads an exact match as the fold itself", () => {
     expect(parseIngredientSearch("Cola", { match: "exact" })).toEqual({
       fold: "cola",
-      pattern: "cola",
+      words: ["cola"],
       match: "exact",
       fields: ["name", "translations"],
     });
   });
 
   it("no longer reads % or <…> as syntax: they fold away like any punctuation", () => {
-    expect(parseIngredientSearch("%cola%")?.pattern).toBe("%cola%");
-    expect(parseIngredientSearch("<cola>", { match: "exact" })?.pattern).toBe("cola");
+    expect(parseIngredientSearch("%cola%")?.words).toEqual(["cola"]);
+    expect(parseIngredientSearch("<cola>", { match: "exact" })?.fold).toBe("cola");
+  });
+
+  it("splits the text into its folded words", () => {
+    expect(parseIngredientSearch("  Olive   EX_tra ")?.words).toEqual(["olive", "ex", "tra"]);
   });
 
   it("keeps the fields it was asked to look in", () => {

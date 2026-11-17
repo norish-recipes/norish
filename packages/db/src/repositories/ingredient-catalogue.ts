@@ -70,30 +70,67 @@ export interface CatalogueOwner {
   ownerId: string | null;
 }
 
-/**
- * One search over the fields it asks for (name, translations, parent): exact compares the fold,
- * contains runs `LIKE`; a name has no fold column, so it is matched lowercased.
- */
-function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; name: AnyPgColumn }) {
-  const matches = (value: SQL): SQL =>
-    search.match === "exact"
-      ? sql`${value} = ${search.fold}`
-      : sql`${value} like ${search.pattern}`;
+/** `foldName` in SQL, for a name with no fold column: accents dropped, lowercased, and every
+ * other run of characters one space. */
+function folded(value: AnyPgColumn): SQL {
+  return sql`btrim(regexp_replace(regexp_replace(normalize(lower(${value}), NFD), '[\u0300-\u036f]', '', 'g'), '[^[:alnum:]]+', ' ', 'g'))`;
+}
+
+/** Whether a folded text holds `word` as written (`start`: at the start of one of its words). */
+function holds(text: SQL, word: string, start = false): SQL {
+  const escaped = escapeLike(word);
+
+  return start
+    ? sql`(${text} like ${`${escaped}%`} or ${text} like ${`% ${escaped}%`})`
+    : sql`${text} like ${`%${escaped}%`}`;
+}
+
+/** Whether any text the search looks in (the folded name, its translations, the parent's) passes
+ * `test`. */
+function anySearchedText(
+  search: IngredientSearch,
+  parents: { id: AnyPgColumn; name: AnyPgColumn },
+  test: (text: SQL) => SQL
+): SQL {
   const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
-    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${matches(sql`${ingredientAliases.fold}`)})`;
+    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${test(sql`${ingredientAliases.fold}`)})`;
 
   const byField: Record<IngredientSearchField, SQL> = {
-    name: matches(sql`lower(${ingredients.name})`),
+    name: test(folded(ingredients.name)),
     translations: spellingOf(ingredients.id),
-    parent: or(matches(sql`lower(${parents.name})`), spellingOf(sql`${parents.id}`)) ?? sql`false`,
+    parent: or(test(folded(parents.name)), spellingOf(sql`${parents.id}`)) ?? sql`false`,
   };
 
-  return or(...search.fields.map((field) => byField[field]));
+  return or(...search.fields.map((field) => byField[field])) ?? sql`false`;
+}
+
+/** A searched text that is the fold exactly, or (contains) holds every typed word, in any order. */
+function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; name: AnyPgColumn }) {
+  return anySearchedText(search, parents, (text) =>
+    search.match === "exact"
+      ? sql`${text} = ${search.fold}`
+      : (and(...search.words.map((word) => holds(text, word))) ?? sql`true`)
+  );
+}
+
+/** The search's order over the same texts: the exact fold first, then a word starting with the
+ * first word typed. */
+function searchRanks(
+  search: IngredientSearch,
+  parents: { id: AnyPgColumn; name: AnyPgColumn }
+): SQL[] {
+  const rank = (test: (text: SQL) => SQL) =>
+    sql`case when ${anySearchedText(search, parents, test)} then 0 else 1 end`;
+
+  return [
+    rank((text) => sql`${text} = ${search.fold}`),
+    rank((text) => holds(text, search.words[0] ?? search.fold, true)),
+  ];
 }
 
 /**
- * A page of the catalogue (all, the flagged, or what a search finds by name or spelling): an exact
- * name first, then the flagged, then by name.
+ * A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
+ * search's ranks first, then the flagged, then by name.
  */
 export async function listCatalogueIngredients(query: {
   search: IngredientSearch | null;
@@ -111,13 +148,7 @@ export async function listCatalogueIngredients(query: {
 }): Promise<CatalogueIngredient[]> {
   const parents = alias(ingredients, "parent");
   const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
-  const exactFirst = query.search
-    ? [
-        sql`case when lower(${ingredients.name}) = ${query.search.fold} then 0 else 1 end`,
-        // A name with a word starting with the text outranks one that only contains it.
-        sql`case when lower(${ingredients.name}) like ${`${escapeLike(query.search.fold)}%`} or lower(${ingredients.name}) like ${`% ${escapeLike(query.search.fold)}%`} then 0 else 1 end`,
-      ]
-    : [];
+  const ranks = query.search ? searchRanks(query.search, parents) : [];
   const listedKind = query.listedOnly
     ? sql` and ${listedFood({ id: sql`k.id`, offId: sql`k.off_id` })}`
     : sql``;
@@ -157,7 +188,7 @@ export async function listCatalogueIngredients(query: {
       )
     )
     .orderBy(
-      ...exactFirst,
+      ...ranks,
       desc(ingredients.flagged),
       asc(sql`lower(${ingredients.name})`),
       asc(ingredients.id)

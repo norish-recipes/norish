@@ -89,6 +89,63 @@ describe("listCatalogueIngredients search", () => {
     ]);
   });
 
+  it("finds a name with every typed word in it, in any order", async () => {
+    await getTestDb()
+      .insert(schema.ingredients)
+      .values(
+        ["Extra virgin olive oil", "Olive", "Sunflower oil"].map((name) => ({
+          name,
+          createdAt: new Date(),
+        }))
+      );
+
+    expect(await names(parseIngredientSearch("olive ex"))).toEqual(["Extra virgin olive oil"]);
+    expect(await names(parseIngredientSearch("oil olive"))).toEqual(["Extra virgin olive oil"]);
+    expect(await names(parseIngredientSearch("  oil   ex  "))).toEqual(["Extra virgin olive oil"]);
+    expect(await names(parseIngredientSearch("oil"))).toEqual([
+      "Extra virgin olive oil",
+      "Sunflower oil",
+    ]);
+    expect(await names(parseIngredientSearch("olive xyz"))).toEqual([]);
+  });
+
+  it("matches a word's % _ and backslash as written, never as a pattern", async () => {
+    const search = parseIngredientSearch("onion")!;
+
+    for (const word of ["o%n", "o_ion", "on\\ion"]) {
+      expect(await names({ ...search, words: [word] })).toEqual([]);
+    }
+    expect(await names(parseIngredientSearch("oni%on_"))).toEqual(["Onion", "Red onion"]);
+  });
+
+  it("ranks a word start in the folded name, a translation or after a hyphen", async () => {
+    const db = getTestDb();
+    const [garlic] = await db
+      .insert(schema.ingredients)
+      .values({ name: "Garlic", createdAt: new Date() })
+      .returning();
+
+    await db
+      .insert(schema.ingredients)
+      .values(
+        ["Acremella", "Crème fraîche", "Semi-skimmed milk", "Halfskimmed", "Aknot", "Hokmaal"].map(
+          (name) => ({ name, createdAt: new Date() })
+        )
+      );
+    await db
+      .insert(schema.ingredientAliases)
+      .values({ text: "Knoflook", fold: "knoflook", locale: "nl", ingredientId: garlic!.id });
+
+    expect(await names(parseIngredientSearch("creme"))).toEqual(["Crème fraîche", "Acremella"]);
+    expect(await names(parseIngredientSearch("skimmed"))).toEqual([
+      "Semi-skimmed milk",
+      "Halfskimmed",
+    ]);
+    expect(await names(parseIngredientSearch("kn"))).toEqual(["Garlic", "Aknot"]);
+    // Several words rank by the first one typed.
+    expect(await names(parseIngredientSearch("h o"))).toEqual(["Hokmaal", "Chocolate"]);
+  });
+
   it("finds a food by a translation, and not once the field is off", async () => {
     expect(await names(parseIngredientSearch("ui"))).toEqual(["Onion"]);
     expect(await names(parseIngredientSearch("ui", { fields: ["name"] }))).toEqual([]);
