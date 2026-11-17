@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PlannedItemFromQuery, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
+import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
@@ -166,25 +167,38 @@ export function useCalendarMutations(): CalendarMutationsResult {
     })
   );
 
+  // One edit as every range shows it: new text in place, or the item moved carrying it; no
+  // index puts it last, as each range knows the slot (the server finds the real end).
+  const applyEdit = (
+    found: PlannedItemFromQuery | undefined,
+    { title, move }: { title?: string; move?: { date: string; slot: Slot; index?: number } }
+  ) =>
+    writeAcrossRanges((items, range) => {
+      if (!found) return items;
+      if (!move) {
+        return items.map((item) =>
+          item.id === found.id
+            ? {
+                ...item,
+                title: title ?? item.title,
+                version: item.version + 1,
+                updatedAt: new Date(),
+              }
+            : item
+        );
+      }
+      const edited = { ...found, title: title ?? found.title };
+      const sortOrder = move.index ?? moveTargetIndex(items, edited, move.date, move.slot);
+
+      return moveItemInRange(items, edited, { date: move.date, slot: move.slot, sortOrder }, range);
+    });
+
   const { mutate: mutateMove } = useMutation(
     trpc.calendar.moveItem.mutationOptions({
-      onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) => {
-        const moved = findItem(itemId);
-        // No index: last, as each range knows the slot; the server finds the real end.
-        const sortOrder = (items: PlannedItemFromQuery[]) =>
-          targetIndex ?? (moved ? moveTargetIndex(items, moved, targetDate, targetSlot) : 0);
-
-        return writeAcrossRanges((items, range) =>
-          moved
-            ? moveItemInRange(
-                items,
-                moved,
-                { date: targetDate, slot: targetSlot, sortOrder: sortOrder(items) },
-                range
-              )
-            : items
-        );
-      },
+      onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) =>
+        applyEdit(findItem(itemId), {
+          move: { date: targetDate, slot: targetSlot, index: targetIndex },
+        }),
       onSuccess: placeAnswer,
       onError: rollBack,
       scope: planWrites,
@@ -197,26 +211,9 @@ export function useCalendarMutations(): CalendarMutationsResult {
       onMutate: ({ itemId, title, date, slot }) => {
         const found = findItem(itemId);
 
-        return writeAcrossRanges((items, range) => {
-          if (!found) return items;
-          const target = { date: date ?? found.date, slot: slot ?? found.slot };
-
-          if (target.date === found.date && target.slot === found.slot) {
-            return items.map((item) =>
-              item.id === itemId
-                ? {
-                    ...item,
-                    title: title ?? item.title,
-                    version: item.version + 1,
-                    updatedAt: new Date(),
-                  }
-                : item
-            );
-          }
-          const edited = { ...found, title: title ?? found.title };
-          const sortOrder = moveTargetIndex(items, edited, target.date, target.slot);
-
-          return moveItemInRange(items, edited, { ...target, sortOrder }, range);
+        return applyEdit(found, {
+          title,
+          move: found && plannedItemEditTarget(found, { date, slot }),
         });
       },
       onSuccess: placeAnswer,
