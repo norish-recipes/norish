@@ -208,7 +208,7 @@ export function CookBar({
           accessibilityElementsHidden={nextHidden}
           accessibilityLabel={nextLabel}
           accessibilityRole="button"
-          className="flex-1 flex-row items-center justify-center gap-1.5 rounded-full px-2"
+          className="flex-1 flex-row items-center justify-center gap-1.5 rounded-full px-1.5"
           disabled={nextHidden}
           style={[{ height: BAR_HEIGHT }, nextFade]}
           testID="cook-next"

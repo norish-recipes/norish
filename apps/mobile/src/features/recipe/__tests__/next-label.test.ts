@@ -19,3 +19,9 @@ describe("nextLabelFits", () => {
     expect(nextLabelFits(82, 0)).toBe(true);
   });
 });
+
+describe("nextLabelFits beside a timer pill", () => {
+  it("keeps the label in the button the pill leaves, with a fractional width to spare", () => {
+    expect(nextLabelFits(116.5, 74.33)).toBe(true);
+  });
+});
