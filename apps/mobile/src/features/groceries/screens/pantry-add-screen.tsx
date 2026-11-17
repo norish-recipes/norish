@@ -43,6 +43,11 @@ export function PantryAddScreen() {
     intl.locale
   );
   const label = intl.formatMessage({ id: "groceries.pantry.fieldPlaceholder" });
+  // Any typing folds Show more back, so a cleared field offers the first six again.
+  const change = (text: string) => {
+    setDraft(text);
+    setShowAll(false);
+  };
 
   useIngredientIcons(rows.flatMap((row) => (row.foodId ? [row.foodId] : [])));
 
@@ -73,7 +78,7 @@ export function PantryAddScreen() {
                 testID="pantry-add-field"
                 value={draft}
                 // Taking nothing until the Pantry is read: a food added then could double one kept.
-                onChange={isRead ? setDraft : undefined}
+                onChange={isRead ? change : undefined}
                 onSubmit={submit}
               />
               {fromYourRecipes ? (

@@ -129,6 +129,7 @@ describe("Add to pantry's From your recipes", () => {
   beforeEach(() => {
     pantry.isRead = true;
     kept.length = 0;
+    suggestions.splice(1);
   });
 
   it("shows the suggestions with their header and recipe count while the field is empty", () => {
@@ -161,5 +162,28 @@ describe("Add to pantry's From your recipes", () => {
 
     expect(screen.queryByText("Garlic")).toBeNull();
     expect(screen.queryByText("groceries.pantry.fromYourRecipes")).toBeNull();
+  });
+
+  it("folds the suggestions back to six once the field is cleared after Show more", () => {
+    suggestions.push(
+      ...["Basil", "Carrot", "Dill", "Egg", "Fennel", "Honey", "Leek"].map((name) => ({
+        ingredientId: `i-${name.toLowerCase()}`,
+        name,
+        localeNames: {},
+        recipeCount: 1,
+      }))
+    );
+    render(<PantryAddScreen />);
+    fireEvent.click(screen.getByTestId("pantry-show-more"));
+    expect(screen.queryByText("Leek")).not.toBeNull();
+
+    const field = screen.getByTestId("pantry-add-field");
+
+    fireEvent.change(field, { target: { value: "oil" } });
+    fireEvent.change(field, { target: { value: "" } });
+
+    expect(screen.queryByText("Fennel")).not.toBeNull();
+    expect(screen.queryByText("Honey")).toBeNull();
+    expect(screen.queryByTestId("pantry-show-more")).not.toBeNull();
   });
 });
