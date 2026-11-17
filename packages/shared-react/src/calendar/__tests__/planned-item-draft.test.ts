@@ -158,18 +158,21 @@ describe("a draft while a housemate writes the item", () => {
     expect(result.current.changes).toBeNull();
   });
 
-  it("Save tapped twice sends one write", () => {
+  it("Save tapped twice sends one write, and only the first says it wrote", () => {
     const { result } = draftOf();
 
     act(() => result.current.setSlot("Dinner"));
     const { save } = result.current;
+    const wrote: boolean[] = [];
 
     act(() => {
-      save();
-      save();
+      wrote.push(save(), save());
     });
-    act(() => result.current.save());
+    act(() => {
+      wrote.push(result.current.save());
+    });
 
+    expect(wrote).toEqual([true, false, false]);
     expect(saveItem).toHaveBeenCalledExactlyOnceWith("n1", { slot: "Dinner" });
   });
 });

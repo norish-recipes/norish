@@ -11,9 +11,9 @@ export function usePlannedItemSheet(item: PlannedItemFromQuery) {
   const router = useRouter();
   const { saveItem } = useCalendarMutations();
   const { draft, changes, setTitle, setDate, setSlot, save } = usePlannedItemDraft(item, saveItem);
+  // Only the call that wrote goes back: a second Save or Return would pop the screen beneath.
   const saveAndClose = () => {
-    save();
-    router.back();
+    if (save()) router.back();
   };
   const confirm: HeaderConfirm = {
     label: intl.formatMessage({ id: "common.actions.save" }),

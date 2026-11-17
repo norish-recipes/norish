@@ -66,15 +66,18 @@ export const heroui = {
     testID,
     value,
     onChangeText,
+    onSubmitEditing,
   }: {
     testID?: string;
     value?: string;
     onChangeText?: (text: string) => void;
+    onSubmitEditing?: () => void;
   }) => (
     <input
       data-testid={testID}
       value={value}
       onChange={(event) => onChangeText?.(event.target.value)}
+      onKeyDown={(event) => event.key === "Enter" && onSubmitEditing?.()}
     />
   ),
 };

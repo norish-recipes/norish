@@ -112,6 +112,22 @@ describe("PlannedItemScreen", () => {
     expect(held.back).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ["Save tapped twice", () => fireEvent.click(screen.getByTestId("planned-item-confirm"))],
+    [
+      "Return, then Save",
+      () => fireEvent.keyDown(screen.getByTestId("planned-item-note"), { key: "Enter" }),
+    ],
+  ])("writes and goes back once for %s", (_, first) => {
+    render(<PlannedItemScreen />);
+    fireEvent.change(screen.getByTestId("planned-item-note"), { target: { value: "Leek soup" } });
+    first();
+    fireEvent.click(screen.getByTestId("planned-item-confirm"));
+
+    expect(held.saveItem).toHaveBeenCalledTimes(1);
+    expect(held.back).toHaveBeenCalledTimes(1);
+  });
+
   it("moves to a day the date picker picks, beyond the strip", () => {
     render(<PlannedItemScreen />);
     act(() => picks.date(new Date(2027, 2, 24, 9, 30)));

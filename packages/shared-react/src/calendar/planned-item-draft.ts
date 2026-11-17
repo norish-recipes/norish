@@ -52,10 +52,13 @@ export function usePlannedItemDraft(
     setTitle: (title: string) => touch({ title }),
     setDate: (date: string) => touch({ date }),
     setSlot: (slot: Slot) => touch({ slot }),
+    /** True only for the call that wrote. */
     save: () => {
-      if (!changes || savedRef.current) return;
+      if (!changes || savedRef.current) return false;
       savedRef.current = true;
       write(item.id, changes);
+
+      return true;
     },
   };
 }
