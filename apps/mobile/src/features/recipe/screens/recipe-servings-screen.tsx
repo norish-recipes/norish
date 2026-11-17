@@ -52,11 +52,19 @@ function ServingsBody() {
             accessibilityLabel={intl.formatMessage({ id: "recipes.form.servings" })}
             className="text-lg font-semibold"
             inputMode="decimal"
-            suffix={intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
+            style={{ fontVariant: ["tabular-nums"] }}
             testID="recipe-servings-input"
             value={draft.servings}
             onChangeText={(text) => type("servings", text)}
           />
+          {/* Laid over the field right after its digits, 16 pt padding plus 11 pt a digit. */}
+          <Text
+            className="text-muted absolute top-3.5 text-base"
+            pointerEvents="none"
+            style={{ left: 20 + Math.max(draft.servings.length, 1) * 11 }}
+          >
+            {intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
+          </Text>
         </TextField>
         <TextField className="w-[120px]">
           <SheetInput

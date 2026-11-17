@@ -40,6 +40,8 @@ const SIZES = {
   regular: { frame: 26, glyph: 18 },
   /** A 14 pt frame makes the 28 pt circle drawn over a photo. */
   small: { frame: 14, glyph: 12 },
+  /** A 58 pt frame makes the 72 pt play button over a video poster. */
+  large: { frame: 58, glyph: 28 },
 } as const;
 
 /** A native glass circle with one SF Symbol, as a sheet's close or a button over a photo. */

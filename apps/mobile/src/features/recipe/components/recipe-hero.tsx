@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
 import { GlassIconButton } from "@/components/glass";
@@ -85,7 +86,25 @@ function Pill({ children }: { children: string }) {
   );
 }
 
-/** A video that plays in place once started; before that its poster and a play button. */
+/** The mute toggle at the poster's bottom-left, in the same place before and during play. */
+function MuteButton({ muted, onPress }: { muted: boolean; onPress: () => void }) {
+  const intl = useIntl();
+
+  return (
+    <View className="absolute top-[322px] left-5">
+      <GlassIconButton
+        label={intl.formatMessage({
+          id: muted ? "recipes.carousel.videoPlayer.unmute" : "recipes.carousel.videoPlayer.mute",
+        })}
+        symbol={muted ? "speaker.slash.fill" : "speaker.wave.2.fill"}
+        testID="recipe-video-mute"
+        onPress={onPress}
+      />
+    </View>
+  );
+}
+
+/** A video that plays in place once started; before that its poster, play, mute and length. */
 function VideoPage({
   item,
   width,
@@ -97,6 +116,7 @@ function VideoPage({
 }) {
   const intl = useIntl();
   const [started, setStarted] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   return (
     <View style={{ width, height: HERO_HEIGHT }}>
@@ -106,29 +126,49 @@ function VideoPage({
         <View className="bg-default" style={{ width, height: HERO_HEIGHT }} />
       )}
       {started ? (
-        <Player item={item} width={width} />
+        <Player item={item} muted={muted} width={width} onMuted={setMuted} />
       ) : (
-        <View className="absolute inset-x-0 top-[166px] items-center">
-          <GlassIconButton
-            label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.play" })}
-            symbol="play.fill"
-            testID="recipe-video-play"
-            onPress={() => setStarted(true)}
-          />
-        </View>
+        <>
+          <View className="absolute inset-x-0 top-[150px] items-center">
+            <GlassIconButton
+              label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.play" })}
+              size="large"
+              symbol="play.fill"
+              testID="recipe-video-play"
+              onPress={() => setStarted(true)}
+            />
+          </View>
+          <MuteButton muted={muted} onPress={() => setMuted(!muted)} />
+        </>
       )}
+      {item.duration ? (
+        <View className="absolute top-[330px] right-5">
+          <Pill>{clock(item.duration)}</Pill>
+        </View>
+      ) : null}
       <Fade color={pageColor} />
     </View>
   );
 }
 
-function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width: number }) {
+/** The playing video: pause over it, mute at the bottom-left and fullscreen beside Back. */
+function Player({
+  item,
+  width,
+  muted,
+  onMuted,
+}: {
+  item: Extract<Item, { kind: "video" }>;
+  width: number;
+  muted: boolean;
+  onMuted: (muted: boolean) => void;
+}) {
   const intl = useIntl();
+  const { top } = useSafeAreaInsets();
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(true);
   const [view, setView] = useState<VideoView | null>(null);
   const player = useServerVideoPlayer(item.path, (created) => {
-    created.muted = true;
+    created.muted = muted;
     created.loop = true;
     created.play();
   });
@@ -158,20 +198,14 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
           }}
         />
       </View>
-      <View className="absolute top-[322px] left-5">
-        <GlassIconButton
-          label={intl.formatMessage({
-            id: muted ? "recipes.carousel.videoPlayer.unmute" : "recipes.carousel.videoPlayer.mute",
-          })}
-          symbol={muted ? "speaker.slash.fill" : "speaker.wave.2.fill"}
-          testID="recipe-video-mute"
-          onPress={() => {
-            muteVideo(player, !muted);
-            setMuted(!muted);
-          }}
-        />
-      </View>
-      <View className="absolute top-[322px] left-[68px]">
+      <MuteButton
+        muted={muted}
+        onPress={() => {
+          muteVideo(player, !muted);
+          onMuted(!muted);
+        }}
+      />
+      <View className="absolute left-[78px]" style={{ top: top + 31 }}>
         <GlassIconButton
           label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.fullscreen" })}
           symbol="arrow.up.left.and.arrow.down.right"
@@ -179,11 +213,6 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
           onPress={() => void view?.enterFullscreen()}
         />
       </View>
-      {item.duration ? (
-        <View className="absolute top-[330px] right-5">
-          <Pill>{clock(item.duration)}</Pill>
-        </View>
-      ) : null}
     </>
   );
 }

@@ -247,7 +247,7 @@ function StepLine({
         accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number })}
         accessibilityRole="button"
         accessibilityState={{ selected: done }}
-        className="bg-accent size-7 items-center justify-center rounded-full"
+        className={`size-6 items-center justify-center rounded-full ${done ? "bg-accent" : "bg-accent/15"}`}
         testID={`recipe-step-${number}-toggle`}
         onPress={toggle}
       >
@@ -259,21 +259,23 @@ function StepLine({
           exiting={SPRING_ZOOM_OUT}
         >
           {done ? (
-            <Ionicons color={accentForeground} name="checkmark" size={16} />
+            <Ionicons color={accentForeground} name="checkmark" size={14} />
           ) : (
-            <Text className="text-accent-foreground text-sm font-semibold">{number}</Text>
+            <Text className="text-accent-text text-[13px] font-semibold">{number}</Text>
           )}
         </Animated.View>
       </Pressable>
       <View className="min-w-0 flex-1 gap-3">
         <StepText
-          className={`pt-0.5 text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
+          className={`text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
           disableLinks={done}
           size="page"
           stepIndex={number - 1}
           text={step.step}
         />
-        <StepChips lines={lines} step={step} systemUsed={systemUsed} />
+        <View className={done ? "opacity-50" : ""}>
+          <StepChips lines={lines} step={step} systemUsed={systemUsed} />
+        </View>
         {step.images && step.images.length > 0 ? (
           <StepPhotos
             images={step.images}

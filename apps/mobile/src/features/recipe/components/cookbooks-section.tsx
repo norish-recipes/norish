@@ -3,7 +3,6 @@ import { Pressable, Text, View } from "react-native";
 import { cookbookRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { Chip } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
@@ -53,9 +52,9 @@ export function CookbooksSection() {
             accessibilityRole="link"
             onPress={() => router.push(cookbookRoute(cookbook.id))}
           >
-            <Chip size="lg" variant="secondary">
-              <Chip.Label>{cookbook.title}</Chip.Label>
-            </Chip>
+            <View className="bg-surface border-separator h-9 justify-center rounded-full border px-3.5">
+              <Text className="text-foreground text-sm font-medium">{cookbook.title}</Text>
+            </View>
           </Pressable>
         ))}
       </View>
