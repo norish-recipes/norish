@@ -1,50 +1,26 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 import { useIsFocused } from "expo-router";
 
-/** A mounted-count with its subscribers: the tab bar hides on either. */
-const counterStore = () => {
-  let count = 0;
-  const listeners = new Set<() => void>();
+import { createMark } from "./mark";
 
-  return {
-    count: () => count,
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-
-      return () => void listeners.delete(listener);
-    },
-    change: (by: number) => {
-      count += by;
-      listeners.forEach((listener) => listener());
-    },
-  };
-};
-
-const hiders = counterStore();
-const sheets = counterStore();
+// How many screens with their own chrome, and how many sheets, are mounted and in front.
+const hiders = createMark(0);
+const sheets = createMark(0);
 
 /** Whether the tab bar goes: a screen with its own chrome is in front, or a sheet is open. */
-export const useTabBarHidden = () =>
-  useSyncExternalStore(
-    (listener) => {
-      const stops = [hiders.subscribe(listener), sheets.subscribe(listener)];
-
-      return () => stops.forEach((stop) => stop());
-    },
-    () => hiders.count() + sheets.count() > 0
-  );
+export const useTabBarHidden = () => hiders.use() + sheets.use() > 0;
 
 /** Whether a sheet is mounted and in front right now. */
-export const isSheetOpen = () => sheets.count() > 0;
+export const isSheetOpen = () => sheets.get() > 0;
 
 /** Counts the caller in `store` while `active`. */
-function useCounted(store: ReturnType<typeof counterStore>, active: boolean) {
+function useCounted(store: ReturnType<typeof createMark<number>>, active: boolean) {
   useEffect(() => {
     if (!active) return;
 
-    store.change(1);
+    store.update((count) => count + 1);
 
-    return () => store.change(-1);
+    return () => store.update((count) => count - 1);
   }, [store, active]);
 }
 

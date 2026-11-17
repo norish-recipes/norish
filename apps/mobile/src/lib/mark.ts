@@ -18,6 +18,7 @@ export function createMark<T>(initial: T) {
 
   return {
     set,
+    get: () => value,
     /** Sets the mark from its current value, as a clear that only applies to its own value. */
     update: (change: (current: T) => T) => set(change(value)),
     use: () => useSyncExternalStore(subscribe, () => value),

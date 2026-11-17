@@ -1,6 +1,7 @@
-import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { successNotification } from "@/lib/haptics";
+import { createMark } from "@/lib/mark";
 import { cookModeRoute } from "@/lib/tab-routes";
 import { syncTimers } from "@/lib/timer-notifications";
 import * as Notifications from "expo-notifications";
@@ -24,8 +25,8 @@ Notifications.setNotificationHandler({
     }),
 });
 
-let answers = 0;
-const answerListeners = new Set<() => void>();
+// Counts permission answers, so the notifications sync again after one.
+const answers = createMark(0);
 
 /** Asks for notification permission the first time a timer starts; a refusal leaves the timer running. */
 export async function askTimerNotifications(): Promise<void> {
@@ -34,8 +35,7 @@ export async function askTimerNotifications(): Promise<void> {
 
     if (current.granted || !current.canAskAgain) return;
     await Notifications.requestPermissionsAsync();
-    answers += 1;
-    answerListeners.forEach((listener) => listener());
+    answers.update((count) => count + 1);
   } catch (error) {
     log.warn({ error }, "Could not ask for notification permission");
   }
@@ -50,14 +50,7 @@ function useTimerNotifications() {
       .map((timer) => `${timer.id}:${timer.status}:${timerEndsAt(timer) ?? timer.remainingMs}`)
       .join("|")
   );
-  const answered = useSyncExternalStore(
-    (listener) => {
-      answerListeners.add(listener);
-
-      return () => void answerListeners.delete(listener);
-    },
-    () => answers
-  );
+  const answered = answers.use();
   const body = intl.formatMessage({ id: "common.timer.notification_body" });
   const paused = intl.formatMessage({ id: "common.timer.paused" });
   const done = intl.formatMessage({ id: "common.timer.done" });
@@ -82,7 +75,8 @@ function useTimerNotifications() {
   }, []);
 }
 
-const opened = new Set<string>();
+// The last tap opened: only the launch tap is replayed, so one id is all a repeat can be.
+let lastOpened: string | null = null;
 
 /** A tapped timer notification opens cook mode on its step, from a cold start too. */
 export function useTimerNotificationTaps() {
@@ -96,12 +90,12 @@ export function useTimerNotificationTaps() {
 
       // The launch response is also replayed to the listener, so each tap opens once.
       if (
-        opened.has(identifier) ||
+        identifier === lastOpened ||
         response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER
       )
         return;
       if (typeof recipeId !== "string") return;
-      opened.add(identifier);
+      lastOpened = identifier;
       router.push(cookModeRoute(recipeId, typeof step === "number" ? step : 0));
     };
     const launch = Notifications.getLastNotificationResponse();
