@@ -1,17 +1,12 @@
 import { use, useEffect, useState } from "react";
-import { copiedLinkToOffer } from "@/features/recipes/utils/copied-link";
+import { copiedLinkFromPasteboard } from "@/features/recipes/utils/copied-link";
 import { ServerAddressContext } from "@/lib/network/server-address";
+import { hasProbableWebUrl } from "@/lib/pasteboard-link";
 import * as Clipboard from "expo-clipboard";
 
-import PasteboardLink from "../../../../modules/pasteboard-link/src/PasteboardLinkModule";
+import { createClientLogger } from "@norish/shared/lib/logger";
 
-/** Whether the pasteboard probably holds a web link, with no paste prompt. iOS also reports a link
- * copied as plain text, which `hasUrlAsync` misses. */
-async function hasLink(): Promise<boolean> {
-  const probable = await PasteboardLink?.hasProbableWebUrl().catch(() => false);
-
-  return probable ?? (await Clipboard.hasUrlAsync().catch(() => false));
-}
+const log = createClientLogger("copied-link");
 
 /** The clipboard's link worth offering, read once as the sheet opens. Only a pasteboard that
  * probably holds a link is read, and the read prompts. */
@@ -22,15 +17,17 @@ export function useCopiedLink(): string | null {
   useEffect(() => {
     let isCancelled = false;
 
-    void (async () => {
-      const hasUrl = await hasLink();
-      const url = hasUrl
-        ? ((await Clipboard.getUrlAsync().catch(() => null)) ??
-          (await Clipboard.getStringAsync().catch(() => null)))
-        : null;
-
-      if (!isCancelled) setLink(copiedLinkToOffer({ hasUrl, url, serverAddress }));
-    })();
+    void copiedLinkFromPasteboard({
+      pasteboard: {
+        probableWebUrl: hasProbableWebUrl,
+        hasUrl: () => Clipboard.hasUrlAsync(),
+        readText: () => Clipboard.getStringAsync(),
+      },
+      serverAddress,
+      onError: (error) => log.warn({ error }, "Could not check or read the clipboard"),
+    }).then((offered) => {
+      if (!isCancelled) setLink(offered);
+    });
 
     return () => {
       isCancelled = true;
