@@ -11,6 +11,7 @@ import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { sortAisles } from "@norish/shared/lib/aisles";
 
 import type { Choice } from "./choice-list";
+import { useAfterKeyboard } from "../hooks/use-after-keyboard";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { storeColorIn } from "../hooks/use-store-color";
 import { ChoiceList } from "./choice-list";
@@ -76,7 +77,10 @@ export function GrocerySheet({
 }) {
   const intl = useIntl();
   const recurrence = useRecurrenceLabel();
-  const [view, setView] = useState<Step>("form");
+  const [step, setStep] = useState<Step>("form");
+  const afterKeyboard = useAfterKeyboard();
+  // The form's field holds the keyboard; a step shows once it is down.
+  const setView = (next: Step) => afterKeyboard(() => setStep(next));
   const [draft, setDraft] = useState<RecurrencePattern | null>(null);
   const text = (id: string) => intl.formatMessage({ id });
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
@@ -208,5 +212,5 @@ export function GrocerySheet({
     ),
   };
 
-  return steps[view] ?? steps.form;
+  return steps[step] ?? steps.form;
 }
