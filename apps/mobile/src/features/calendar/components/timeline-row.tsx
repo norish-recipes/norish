@@ -4,7 +4,7 @@ import React from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DayTitle, formatDay } from "@/components/day-card";
-import { DragHandle, useDragTap, useIsLifted } from "@/components/drag-list/drag-list";
+import { DragPressable, useIsLifted } from "@/components/drag-list/drag-list";
 import { PlannedThumb } from "@/components/planned-thumb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -102,28 +102,25 @@ export function PlannedItemRow({ row, onOpen }: { row: TimelineItem; onOpen: () 
   const { fontScale } = useWindowDimensions();
   const { title, subtitle } = usePlannedItemText()(row.item);
   const lifted = useIsLifted();
-  const tap = useDragTap();
   const edge = { top: false, bottom: row.lastOfDay };
 
   return (
     <ItemSlice edge={edge} separated={false}>
-      <DragHandle>
-        <Pressable
-          accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
-          accessibilityRole="button"
-          className="justify-start px-4"
-          style={{
-            height: itemHeight(row, fontScale),
-            paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
-          }}
-          testID={`calendar-item-${row.item.id}`}
-          onPress={tap(onOpen)}
-        >
-          <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
-            <PlannedThumb className="size-[52px] rounded-[14px]" item={row.item} />
-          </PlannedItemLine>
-        </Pressable>
-      </DragHandle>
+      <DragPressable
+        accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
+        accessibilityRole="button"
+        className="justify-start px-4"
+        style={{
+          height: itemHeight(row, fontScale),
+          paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
+        }}
+        testID={`calendar-item-${row.item.id}`}
+        onPress={onOpen}
+      >
+        <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
+          <PlannedThumb className="size-[52px] rounded-[14px]" item={row.item} />
+        </PlannedItemLine>
+      </DragPressable>
       {row.isToday && !lifted ? <TodayRing edge={edge} /> : null}
     </ItemSlice>
   );

@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
-import { DragHandle, useDragTap } from "@/components/drag-list/drag-list";
+import { DragPressable } from "@/components/drag-list/drag-list";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -53,7 +53,6 @@ export function GroupRow({
       : formatInlineSourceBreakdown(group.sources, formatSpacedAmountUnit, manual);
   const ids = group.sources.map((source) => source.grocery.id);
   const done = group.allDone;
-  const tap = useDragTap();
 
   return (
     <View testID="grocery-row">
@@ -66,28 +65,26 @@ export function GroupRow({
           testID={`group-tick-${group.primaryId}`}
           onPress={() => onToggle(ids, !done)}
         />
-        <DragHandle>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={only ? undefined : { expanded: open }}
-            className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
-            testID={`group-${group.primaryId}`}
-            onPress={tap(() => (only ? onEdit(only.grocery.id) : onToggleOpen()))}
-          >
-            <View className="min-w-0 flex-1 gap-0.5">
-              <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
-              {second ? (
-                <Text className="text-muted text-sm" numberOfLines={2}>
-                  {second}
-                </Text>
-              ) : null}
-            </View>
-            <GroceryPrice line={lineOfGroup(group)} muted={done} />
-            {only ? null : (
-              <Ionicons color={muted} name={open ? "chevron-up" : "chevron-down"} size={16} />
-            )}
-          </Pressable>
-        </DragHandle>
+        <DragPressable
+          accessibilityRole="button"
+          accessibilityState={only ? undefined : { expanded: open }}
+          className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
+          testID={`group-${group.primaryId}`}
+          onPress={() => (only ? onEdit(only.grocery.id) : onToggleOpen())}
+        >
+          <View className="min-w-0 flex-1 gap-0.5">
+            <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
+            {second ? (
+              <Text className="text-muted text-sm" numberOfLines={2}>
+                {second}
+              </Text>
+            ) : null}
+          </View>
+          <GroceryPrice line={lineOfGroup(group)} muted={done} />
+          {only ? null : (
+            <Ionicons color={muted} name={open ? "chevron-up" : "chevron-down"} size={16} />
+          )}
+        </DragPressable>
       </View>
       {open && !only ? (
         <View

@@ -59,13 +59,14 @@ vi.mock("../components/store-tick", () => ({ StoreTick: () => null }));
 // Every row remounts on each render (a new key each time), so state held in a row would be lost.
 vi.mock("@/components/drag-list/drag-list", async () => {
   const { createElement, Fragment } = await import("react");
+  const { Pressable } = await import("react-native");
   let generation = 0;
 
   return {
     useIsLifted: () => false,
     useDragCard: () => undefined,
-    DragHandle: ({ children }: { children: React.ReactNode }) => children,
-    useDragTap: () => (onPress: () => void) => onPress,
+    DragPressable: (props: React.ComponentProps<typeof Pressable>) =>
+      createElement(Pressable, props),
     DragList: ({
       rows,
       renderItem,

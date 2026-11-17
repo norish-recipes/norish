@@ -18,7 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { FlatList, ScrollView, View } from "react-native";
+import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedRef,
@@ -86,14 +86,21 @@ export function DragHandle({ children }: { children: ReactElement }) {
   return handle ? <GestureDetector gesture={handle.gesture}>{children}</GestureDetector> : children;
 }
 
-/** Wraps a row's tap: a short carry ends inside the press's reach, and that press is no tap. */
-export function useDragTap() {
+/** A row's pressable part, which a hold lifts it by: a short carry ends inside the press's reach,
+ * and that press is no tap. */
+export function DragPressable({ onPress, ...props }: ComponentProps<typeof Pressable>) {
   const handle = use(HandleContext);
 
-  return <A extends unknown[]>(onPress: (...args: A) => void) =>
-    (...args: A) => {
-      if (!handle?.liftedRef.current) onPress(...args);
-    };
+  return (
+    <DragHandle>
+      <Pressable
+        {...props}
+        onPress={(event) => {
+          if (!handle?.liftedRef.current) onPress?.(event);
+        }}
+      />
+    </DragHandle>
+  );
 }
 
 /** An item cell's hold-then-pan, decided on the UI thread. */
