@@ -477,6 +477,14 @@ describe("the tree of kinds", () => {
     );
   });
 
+  it("ranks a search by the reader's catalogue languages", async () => {
+    await callerFor().list({ search: "tom", locale: "vi" });
+
+    expect(catalogue.listCatalogueIngredients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ languages: ["vi"] })
+    );
+  });
+
   it("lists the foods filed under none as the roots", async () => {
     await callerFor().list({ rootsOnly: true });
 

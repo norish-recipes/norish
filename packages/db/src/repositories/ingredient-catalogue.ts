@@ -130,14 +130,11 @@ function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; na
   );
 }
 
-/** The search's order over the same texts: the exact fold first, then a word starting with the
- * first word typed. */
-function searchRanks(
-  search: IngredientSearch,
-  parents: { id: AnyPgColumn; name: AnyPgColumn }
-): SQL[] {
+/** The search's order over the name and the translations in the reader's `languages` (or none):
+ * the exact fold first, then a word starting with the first word typed. */
+function searchRanks(search: IngredientSearch, languages: readonly string[]): SQL[] {
   const rank = (test: (text: SQL) => SQL) =>
-    sql`case when ${anySearchedText(search, parents, test)} then 0 else 1 end`;
+    sql`case when ${test(folded(ingredients.name))} or exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredients.id} and (${ingredientAliases.locale} is null or ${inArray(ingredientAliases.locale, [...languages])}) and ${test(sql`${ingredientAliases.fold}`)}) then 0 else 1 end`;
 
   return [
     rank((text) => sql`${text} = ${search.fold}`),
@@ -151,6 +148,8 @@ function searchRanks(
  */
 export async function listCatalogueIngredients(query: {
   search: IngredientSearch | null;
+  /** The reader's catalogue languages, whose translations rank a search (every one still matches). */
+  languages: readonly string[];
   flaggedOnly: boolean;
   /** Only the Ingredients filed under this one (null: the ones filed under none); undefined for every one. */
   parentId?: string | null;
@@ -165,7 +164,7 @@ export async function listCatalogueIngredients(query: {
 }): Promise<CatalogueIngredient[]> {
   const parents = alias(ingredients, "parent");
   const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
-  const ranks = query.search ? searchRanks(query.search, parents) : [];
+  const ranks = query.search ? searchRanks(query.search, query.languages) : [];
   const listedKind = query.listedOnly
     ? sql` and ${listedFood({ id: sql`k.id`, offId: sql`k.off_id` })}`
     : sql``;

@@ -127,7 +127,7 @@ describe("listCatalogueIngredients search", () => {
     expect(await names(parseIngredientSearch("oni%on_"))).toEqual(["Onion", "Red onion"]);
   });
 
-  it("ranks a word start in the folded name, a translation or after a hyphen", async () => {
+  it("ranks a word start in the folded name, a translation in the reader's language or after a hyphen", async () => {
     const db = getTestDb();
     const [garlic] = await db
       .insert(schema.ingredients)
@@ -150,7 +150,8 @@ describe("listCatalogueIngredients search", () => {
       "Semi-skimmed milk",
       "Halfskimmed",
     ]);
-    expect(await names(parseIngredientSearch("kn"))).toEqual(["Garlic", "Aknot"]);
+    expect(await names(parseIngredientSearch("kn"))).toEqual(["Aknot", "Garlic"]);
+    expect(await names(parseIngredientSearch("kn"), ["nl"])).toEqual(["Garlic", "Aknot"]);
     // Several words rank by the first one typed.
     expect(await names(parseIngredientSearch("h o"))).toEqual(["Hokmaal", "Chocolate"]);
   });
@@ -171,6 +172,28 @@ describe("listCatalogueIngredients search", () => {
     expect(await names(parseIngredientSearch("brûlée crè"))).toEqual(["Crème brûlée"]);
     expect(await names(parseIngredientSearch("oil virgin extra"))).toEqual([
       "Extra virgin olive oil",
+    ]);
+  });
+
+  it("ranks by the name and the translations in the reader's languages, finding every one", async () => {
+    const db = getTestDb();
+    const [prawn] = await db
+      .insert(schema.ingredients)
+      .values({ name: "Prawn", createdAt: new Date() })
+      .returning();
+
+    await db
+      .insert(schema.ingredients)
+      .values(["Tomato", "Cherry tomato"].map((name) => ({ name, createdAt: new Date() })));
+    await db
+      .insert(schema.ingredientAliases)
+      .values({ text: "Tôm", fold: "tom", locale: "vi", ingredientId: prawn!.id });
+
+    expect(await names(parseIngredientSearch("tom"))).toEqual(["Cherry tomato", "Tomato", "Prawn"]);
+    expect(await names(parseIngredientSearch("tom"), ["vi"])).toEqual([
+      "Prawn",
+      "Cherry tomato",
+      "Tomato",
     ]);
   });
 
