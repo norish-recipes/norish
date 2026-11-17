@@ -48,13 +48,16 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
 vi.mock("@/components/sheet-search-field", () => ({ SheetSearchField: () => null }));
 vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
-vi.mock("@/lib/use-tab-scroll", () => ({
-  useTabScroll: () => ({ offset: { value: 0 }, minimised: false, homeIndicator: 0 }),
-}));
+vi.mock("@/lib/use-tab-scroll", () => import("../../../../__tests__/mocks/use-tab-scroll"));
 // The list is Reanimated's FlatList, here the plain one above.
-vi.mock("react-native-reanimated", async () => ({
-  default: { FlatList: (await import("react-native")).FlatList },
-}));
+vi.mock("react-native-reanimated", async () => {
+  const reanimated = await import("../../../../__tests__/mocks/reanimated");
+
+  return {
+    ...reanimated,
+    default: { ...reanimated.default, FlatList: (await import("react-native")).FlatList },
+  };
+});
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), dismissTo: vi.fn() }));
