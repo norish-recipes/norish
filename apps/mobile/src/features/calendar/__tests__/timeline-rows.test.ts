@@ -89,6 +89,16 @@ describe("hiddenAbove", () => {
     expect(hiddenAbove(without, "2026-11-12")).not.toBe(hiddenAbove(rows, "2026-11-12"));
   });
 
+  it("changes when a plan is added above the first shown day, as when one goes", () => {
+    const added = timelineRows(
+      days,
+      { ...data, "2026-11-11": [...data["2026-11-11"], planned("pie", "2026-11-11", "Snack")] },
+      "2026-11-12"
+    );
+
+    expect(hiddenAbove(added, "2026-11-12")).not.toBe(hiddenAbove(rows, "2026-11-12"));
+  });
+
   it("stays while the shown days and those below change", () => {
     const later = timelineRows(
       days,
