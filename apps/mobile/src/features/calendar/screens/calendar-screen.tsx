@@ -28,9 +28,9 @@ import { useHeldGrowth } from "../hooks/use-held-growth";
 import {
   dayRowKey,
   hiddenAbove,
+  openingOffset,
   planTimelineDrop,
   rowDay,
-  openingOffset,
   rowLayout,
   timelineRows,
 } from "../utils/timeline-rows";
