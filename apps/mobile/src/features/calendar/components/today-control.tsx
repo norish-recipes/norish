@@ -34,7 +34,7 @@ export function TodayControl({
 }) {
   const intl = useIntl();
   const reduceMotion = useReducedMotion();
-  const [foreground] = useThemeColor(["foreground"] as const);
+  const [foreground, background] = useThemeColor(["foreground", "background"] as const);
 
   if (!direction) return null;
 
@@ -56,7 +56,7 @@ export function TodayControl({
           onPress();
         }}
       >
-        <GlassSurface radius={22} />
+        <GlassSurface radius={22} tint={background} />
         <Ionicons
           color={foreground}
           name={direction === "up" ? "arrow-up" : "arrow-down"}
