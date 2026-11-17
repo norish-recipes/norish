@@ -66,7 +66,8 @@ export function useDragEngine({
   const travel = useSharedValue(0);
   const cardTop = useSharedValue(0);
   const target = useSharedValue<Target | null>(null);
-  const section = useSharedValue<string | null>(null);
+  // The section the card was last over, which a haptic marks leaving.
+  const overSection = useSharedValue<string | null>(null);
   const contentHeight = useSharedValue(0);
   const ruled = events.rule !== undefined;
 
@@ -120,7 +121,7 @@ export function useDragEngine({
     travel.set(0);
     cardTop.set(cell.top);
     target.set(null);
-    section.set(rowsNow.get()[indexOf(key)]?.section ?? null);
+    overSection.set(rowsNow.get()[indexOf(key)]?.section ?? null);
     scheduleOnRN(onLifted, key);
   };
 
@@ -209,8 +210,8 @@ export function useDragEngine({
 
     cardTop.set(cardY);
     target.set(ruled && now ? { ...now, line: null } : now);
-    if (now && now.section !== section.get()) {
-      section.set(now.section);
+    if (now && now.section !== overSection.get()) {
+      overSection.set(now.section);
       scheduleOnRN(lightImpact);
     }
   }, false);
