@@ -25,6 +25,7 @@ import {
   dayRowKey,
   planTimelineDrop,
   rowDay,
+  hiddenAbove,
   rowLayout,
   timelineRows,
 } from "../utils/timeline-rows";
@@ -65,9 +66,11 @@ export function CalendarScreen() {
   });
 
   const rows = timelineRows(days, calendarData, todayKey);
-  // The days the timeline spans: growing it adds rows that neither fade in nor slide the rest.
+  // The days the timeline spans and the rows above the shown ones: a change to either adds or
+  // removes rows that neither fade in nor slide the rest, so the list keeps its place.
   const span = `${dateKey(days[0]!)}..${dateKey(days.at(-1)!)}`;
-  const { fresh, settled } = useFreshRows(rows, isRead, span);
+  const above = hiddenAbove(rows, shownDays[0] ?? "");
+  const { fresh, settled } = useFreshRows(rows, isRead, `${span}|${above}`);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;

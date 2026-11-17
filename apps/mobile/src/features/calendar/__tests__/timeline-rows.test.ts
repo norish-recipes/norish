@@ -5,6 +5,7 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import type { TimelineHeading, TimelineItem, TimelineRow } from "../utils/timeline-rows";
 import {
   dayRowKey,
+  hiddenAbove,
   itemHeight,
   planTimelineDrop,
   rowDay,
@@ -78,6 +79,24 @@ describe("timelineRows", () => {
       "2026-11-12",
       "2026-11-13",
     ]);
+  });
+});
+
+describe("hiddenAbove", () => {
+  it("changes when a row above the first shown day goes, so the list takes it without sliding", () => {
+    const without = timelineRows(days, { ...data, "2026-11-11": [] }, "2026-11-12");
+
+    expect(hiddenAbove(without, "2026-11-12")).not.toBe(hiddenAbove(rows, "2026-11-12"));
+  });
+
+  it("stays while the shown days and those below change", () => {
+    const later = timelineRows(
+      days,
+      { ...data, "2026-11-13": [planned("pie", "2026-11-13", "Lunch")] },
+      "2026-11-12"
+    );
+
+    expect(hiddenAbove(later, "2026-11-12")).toBe(hiddenAbove(rows, "2026-11-12"));
   });
 });
 

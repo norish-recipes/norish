@@ -77,6 +77,14 @@ export const dayRowKey = (dayKey: string) => `day:${dayKey}`;
 export const rowDay = (row: TimelineRow) =>
   row.kind === "heading" ? row.value.dayKey : row.value.item.date;
 
+/** The rows above `day`, as one key: a change to it is one the reader doesn't see, which the list
+ * takes without sliding its rows so it keeps its place. */
+export const hiddenAbove = (rows: readonly TimelineRow[], day: string) =>
+  rows
+    .filter((row) => rowDay(row) < day)
+    .map((row) => row.key)
+    .join();
+
 /** One row per day top, filled slot and planned item, from the first day to the last. */
 export function timelineRows(days: Date[], data: CalendarData, todayKey: string): TimelineRow[] {
   return days.flatMap((date, dayIndex): TimelineRow[] => {
