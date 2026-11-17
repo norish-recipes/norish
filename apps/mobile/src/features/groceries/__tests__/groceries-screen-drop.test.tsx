@@ -109,7 +109,10 @@ vi.mock("../components/groceries-states", () => ({
   GroceriesEmpty: () => null,
   GroceriesSkeleton: () => null,
 }));
-vi.mock("../components/list-settings-menu", () => ({ ListSettingsMenu: () => null }));
+vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
+vi.mock("@/lib/use-scrolled", () => ({
+  useScrolled: () => ({ scrolled: false, onOffset: () => {} }),
+}));
 vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
 
 const { GroceriesScreen } = await import("../screens/groceries-screen");

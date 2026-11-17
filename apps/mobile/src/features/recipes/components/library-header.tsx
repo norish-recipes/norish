@@ -1,3 +1,4 @@
+import type { HeaderItem } from "@/lib/header-item";
 import type { ComponentProps } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import React, { useEffect, useRef, useState } from "react";
@@ -9,9 +10,10 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
 } from "react-native-reanimated";
+import { GlassSurface } from "@/components/glass";
+import { GlassSegmented } from "@/components/glass-segmented";
 import { PressableScale } from "@/components/pressable-scale";
 import { RollingText } from "@/components/rolling-text";
-import { SelectFade } from "@/components/select-fade";
 import { lightImpact } from "@/lib/haptics";
 import { settleTo } from "@/lib/motion/settle-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -78,9 +80,10 @@ export function ViewToggle() {
   }));
 
   return (
-    <View className="bg-default h-9 flex-row rounded-full p-[3px]" style={{ gap: GAP }}>
+    <View className="h-9 flex-row rounded-full p-[3px]" style={{ gap: GAP }}>
+      <GlassSurface radius={18} />
       <Animated.View
-        className="bg-surface absolute top-[3px] left-[3px] rounded-full"
+        className="bg-thumb absolute top-[3px] left-[3px] rounded-full"
         pointerEvents="none"
         style={[SEGMENT, thumb]}
       />
@@ -148,10 +151,7 @@ export function FiltersButton() {
     >
       <Ionicons color={foreground} name="funnel-outline" size={17} />
       {filtersOn ? (
-        <View
-          className="bg-accent border-surface absolute top-[3px] right-[3px] size-[9px] rounded-full border-2"
-          testID="library-filters-active"
-        />
+        <View className="bg-accent border-surface absolute top-[3px] right-[3px] size-[9px] rounded-full border-2" />
       ) : null}
     </PressableScale>
   );
@@ -185,10 +185,6 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
   const intl = useIntl();
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
-  const [foreground, accentForeground] = useThemeColor([
-    "foreground",
-    "accent-foreground",
-  ] as const);
 
   if (scoped) {
     return (
@@ -205,44 +201,39 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
         <LibraryHeading type={filters.libraryType} />
         <ViewToggle />
       </View>
-      <View className="flex-row items-center gap-2 px-5">
-        {LIBRARY_TYPE_FILTERS.map((type) => {
-          const selected = filters.libraryType === type;
-
-          return (
-            <PressableScale
-              key={type}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              testID={`library-lens-${type}`}
-              onPress={() => {
-                if (!selected) lightImpact();
-                setFilters({ libraryType: type });
-              }}
-            >
-              <SelectFade
-                look={{
-                  shape: "items-center justify-center rounded-full",
-                  rest: "bg-surface border-border h-9 border px-4",
-                  picked: "bg-accent",
-                  tone: { rest: foreground, picked: accentForeground },
-                  inset: "-inset-px",
-                }}
-                selected={selected}
-              >
-                {(color) => (
-                  <Animated.Text className="text-[15px] font-medium" style={color}>
-                    {intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` })}
-                  </Animated.Text>
-                )}
-              </SelectFade>
-            </PressableScale>
-          );
-        })}
-        <View className="ml-auto flex-row items-center gap-2">
-          <FiltersButton />
-        </View>
+      <View className="px-5">
+        <GlassSegmented
+          segments={LIBRARY_TYPE_FILTERS.map((type) => ({
+            value: type,
+            label: intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` }),
+            testID: `library-lens-${type}`,
+          }))}
+          testID="library-lenses"
+          value={filters.libraryType}
+          onChange={(type) => {
+            if (type !== filters.libraryType) lightImpact();
+            setFilters({ libraryType: type });
+          }}
+        />
       </View>
     </View>
   );
+}
+
+/** Filters as a native bar item, marked while any filter is on. */
+export function useFiltersItem(): HeaderItem {
+  const intl = useIntl();
+  const router = useRouter();
+  const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
+  const label = intl.formatMessage({ id: "common.filters.title" });
+
+  return {
+    type: "button",
+    label,
+    accessibilityLabel: label,
+    identifier: "library-filters-button",
+    icon: { type: "sfSymbol", name: "line.3.horizontal.decrease" },
+    selected: filtersOn,
+    onPress: () => router.push("/filters"),
+  };
 }

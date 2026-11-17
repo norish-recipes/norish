@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Loader } from "@/components/loader";
+import { TabListMarker } from "@/components/tab-list-marker";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
@@ -37,6 +38,8 @@ export function CardList<Row>({
   renderCard,
   onEndReached,
   fadeHeight,
+  insets = "never",
+  onOffset,
   testID,
 }: {
   rows: Row[];
@@ -48,6 +51,10 @@ export function CardList<Row>({
   renderCard: (row: Row) => ReactElement;
   onEndReached: () => void;
   fadeHeight: FadeHeight;
+  /** `automatic` under a native large title, which the list scrolls with. */
+  insets?: "automatic" | "never";
+  /** Each scroll's offset, for a title that hides once scrolled. */
+  onOffset?: (y: number) => void;
   testID?: string;
 }) {
   const { minimised, homeIndicator, track } = useTabBarMinimised();
@@ -60,70 +67,72 @@ export function CardList<Row>({
     if (!focused) closeOpenRow();
   }, [focused]);
 
+  const list = (
+    <Animated.FlatList
+      ListEmptyComponent={empty}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <View style={{ height: LOAD_MORE_FOOTER_HEIGHT }}>
+            {/* From the last card down to the accessory's top, over the end padding below the strip. */}
+            <View
+              className="absolute inset-x-0"
+              style={loadMoreFooterBox(homeIndicator, minimised)}
+            >
+              <Loader centred />
+            </View>
+          </View>
+        ) : undefined
+      }
+      ListHeaderComponent={header}
+      className="flex-1"
+      contentContainerStyle={{
+        paddingBottom: tabListBottomInset(homeIndicator),
+      }}
+      contentInsetAdjustmentBehavior={insets}
+      data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
+      initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
+      itemLayoutAnimation={SPRING_LAYOUT}
+      keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
+      maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}
+      renderItem={({ item: chunk }) =>
+        isGrid ? (
+          <View className="flex-row flex-wrap px-3.5">
+            {chunk.map((row) => (
+              <Animated.View
+                key={rowKey(row)}
+                className="w-1/2 flex-row px-1.5 pb-3"
+                entering={SPRING_FADE_IN}
+                exiting={SPRING_FADE_OUT}
+                layout={SPRING_LAYOUT}
+              >
+                {renderCard(row)}
+              </Animated.View>
+            ))}
+          </View>
+        ) : (
+          <Animated.View className="px-5 pb-3" entering={SPRING_FADE_IN} exiting={SPRING_FADE_OUT}>
+            {chunk[0] ? renderCard(chunk[0]) : null}
+          </Animated.View>
+        )
+      }
+      scrollEventThrottle={32}
+      testID={testID}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.6}
+      onScroll={({ nativeEvent }) => {
+        setScrolled(nativeEvent.contentOffset.y > 8);
+        track(nativeEvent);
+        onOffset?.(nativeEvent.contentOffset.y);
+      }}
+      onScrollBeginDrag={() => closeOpenRow()}
+    />
+  );
+
   return (
     // A touch that no row took closes the open one.
     <View className="flex-1" onTouchStart={() => closeOpenRow()}>
-      <Animated.FlatList
-        ListEmptyComponent={empty}
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <View style={{ height: LOAD_MORE_FOOTER_HEIGHT }}>
-              {/* From the last card down to the accessory's top, over the end padding below the strip. */}
-              <View
-                className="absolute inset-x-0"
-                style={loadMoreFooterBox(homeIndicator, minimised)}
-              >
-                <Loader centred />
-              </View>
-            </View>
-          ) : undefined
-        }
-        ListHeaderComponent={header}
-        className="flex-1"
-        contentContainerStyle={{
-          paddingBottom: tabListBottomInset(homeIndicator),
-        }}
-        contentInsetAdjustmentBehavior="never"
-        data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
-        initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
-        itemLayoutAnimation={SPRING_LAYOUT}
-        keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
-        maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}
-        renderItem={({ item: chunk }) =>
-          isGrid ? (
-            <View className="flex-row flex-wrap px-3.5">
-              {chunk.map((row) => (
-                <Animated.View
-                  key={rowKey(row)}
-                  className="w-1/2 flex-row px-1.5 pb-3"
-                  entering={SPRING_FADE_IN}
-                  exiting={SPRING_FADE_OUT}
-                  layout={SPRING_LAYOUT}
-                >
-                  {renderCard(row)}
-                </Animated.View>
-              ))}
-            </View>
-          ) : (
-            <Animated.View
-              className="px-5 pb-3"
-              entering={SPRING_FADE_IN}
-              exiting={SPRING_FADE_OUT}
-            >
-              {chunk[0] ? renderCard(chunk[0]) : null}
-            </Animated.View>
-          )
-        }
-        scrollEventThrottle={32}
-        testID={testID}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.6}
-        onScroll={({ nativeEvent }) => {
-          setScrolled(nativeEvent.contentOffset.y > 8);
-          track(nativeEvent);
-        }}
-        onScrollBeginDrag={() => closeOpenRow()}
-      />
+      {/* Under a native large title the list is the tab's, which the bar's title and accessory follow. */}
+      {insets === "automatic" ? <TabListMarker>{list}</TabListMarker> : list}
       {/* Cards dissolve into the page colour before the tab bar. */}
       <View
         className="to-background from-background/0 absolute inset-x-0 bottom-0 bg-linear-to-b to-75%"

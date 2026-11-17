@@ -37,6 +37,8 @@ export function LibraryCards<Row>({
   renderCard,
   onEndReached,
   fadeHeight,
+  insets,
+  onOffset,
   testID,
 }: {
   rows: Row[];
@@ -50,6 +52,8 @@ export function LibraryCards<Row>({
   renderCard: (row: Row, context: CardContext) => ReactElement;
   onEndReached: () => void;
   fadeHeight: FadeHeight;
+  insets?: "automatic" | "never";
+  onOffset?: (y: number) => void;
   testID?: string;
 }) {
   const [variant] = useDevicePreference("recipeViewMode");
@@ -71,6 +75,8 @@ export function LibraryCards<Row>({
       }
       fadeHeight={fadeHeight}
       header={header}
+      insets={insets}
+      onOffset={onOffset}
       isFetchingNextPage={isFetchingNextPage}
       renderCard={(row) => renderCard(row, { variant, actions, allergies, isFavorite })}
       rowKey={rowKey}

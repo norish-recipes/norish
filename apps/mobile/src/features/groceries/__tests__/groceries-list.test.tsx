@@ -32,6 +32,7 @@ vi.mock(
 );
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ bottom: 0 }) }));
 vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
+vi.mock("react-native-worklets", () => ({ scheduleOnRN: () => {} }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));

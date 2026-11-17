@@ -19,7 +19,7 @@ const SEARCH_SHEETS = [
 
 const FIT_SHEETS = ["cookbook-rename", "move"] as const;
 
-/** The Recipes tab's stack: the list screen draws its own title and avatar and has no native header; a cookbook page keeps a transparent one for its back button. */
+/** The Recipes tab's stack: the list screen has a native large title; a cookbook page keeps a transparent header for its back button. */
 export function RecipesStack() {
   return (
     <LibraryRoot>
@@ -31,7 +31,8 @@ export function RecipesStack() {
             headerTitleStyle: { fontSize: 17, fontWeight: "600" },
           }}
         >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          {/* The list screen sets its native large-title header itself. */}
+          <Stack.Screen name="index" />
           {/* A cookbook opens inside this stack so its sheets present over it. */}
           <Stack.Screen
             name="cookbook/[id]"

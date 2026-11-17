@@ -55,7 +55,10 @@ vi.mock("../components/groceries-states", () => ({
   GroceriesEmpty: () => <p>empty</p>,
   GroceriesSkeleton: () => <p>skeleton</p>,
 }));
-vi.mock("../components/list-settings-menu", () => ({ ListSettingsMenu: () => null }));
+vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
+vi.mock("@/lib/use-scrolled", () => ({
+  useScrolled: () => ({ scrolled: false, onOffset: () => {} }),
+}));
 vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
 vi.mock("../utils/list-rows", () => ({ recipeListRows: () => [], storeListRows: () => [] }));
 vi.mock("../utils/grocery-drop", () => ({ planRecipeRowDrop: vi.fn(), planStoreRowDrop: vi.fn() }));

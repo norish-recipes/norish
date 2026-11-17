@@ -48,6 +48,10 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("@/lib/use-tab-bar-minimised", () => ({ homeIndicator: 0 }));
 vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
 vi.mock("@/components/sheet-search-field", () => ({ SheetSearchField: () => null }));
+vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
+vi.mock("@/lib/use-scrolled", () => ({
+  useScrolled: () => ({ scrolled: false, onOffset: () => {} }),
+}));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), dismissTo: vi.fn() }));

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import React from "react";
-import { TitleRow } from "@/components/title-row";
+import { TabRootHeader } from "@/components/tab-root-header";
+import { useScrolled } from "@/lib/use-scrolled";
 
 import type { LibraryGridItem } from "@norish/shared-react/recipes";
 import {
@@ -11,10 +12,9 @@ import {
 } from "@norish/shared-react/recipes";
 
 import type { CardContext } from "./library-cards";
-import { AccountAvatar } from "./account-avatar";
 import { CookbookCard } from "./cookbook-card";
 import { LibraryCards } from "./library-cards";
-import { LibraryHeader } from "./library-header";
+import { LibraryHeader, useFiltersItem } from "./library-header";
 import { CookbooksEmpty, LibraryEmpty } from "./library-states";
 import { PendingCard } from "./pending-card";
 import { RecipeCard } from "./recipe-card";
@@ -22,8 +22,8 @@ import { RecipeCard } from "./recipe-card";
 /** The fade over the Recipes tab's list: taller at rest than once scrolled. */
 const LIST_FADE_HEIGHT = { rest: 190, scrolled: 120 };
 
-/** The Recipes tab: `title` and the avatar, `header` (Today), then imports, recipes and cookbooks
- * as one paged list; the title and avatar are list content, so they scroll away with it. */
+/** The Recipes tab with its title on the bar's line, Filters and the avatar in the bar: `header`
+ * (Today), then imports, recipes and cookbooks as one paged list. */
 export function LibraryList({
   title,
   header,
@@ -34,6 +34,8 @@ export function LibraryList({
   testID?: string;
 }) {
   const filters = useLibraryFilters((state) => state.filters);
+  const filtersItem = useFiltersItem();
+  const { scrolled, onOffset } = useScrolled();
   const { pendingRecipes, pendingRecipeIds } = usePendingRecipesQuery();
   const { items, isLoading, isFetchingNextPage, loadMore } = useLibraryList();
   const rows = libraryGridItems(items, pendingRecipeIds, filters.libraryType);
@@ -71,13 +73,13 @@ export function LibraryList({
       fadeHeight={LIST_FADE_HEIGHT}
       header={
         <>
-          <TitleRow title={title}>
-            <AccountAvatar />
-          </TitleRow>
+          <TabRootHeader items={[filtersItem]} scrolled={scrolled} title={title} />
           {header}
           <LibraryHeader />
         </>
       }
+      insets="automatic"
+      onOffset={onOffset}
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
       renderCard={renderCard}

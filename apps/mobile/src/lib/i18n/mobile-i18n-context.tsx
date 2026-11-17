@@ -23,6 +23,8 @@ import { useLocaleSave } from "@norish/shared-react/reader";
 
 type MobileLocaleContextValue = {
   locale: string;
+  /** The languages the reader can pick. */
+  options: EnabledLocale[];
   isLoading: boolean;
   /** `fromServer` applies the server's own preference, so it is not written back. */
   setLocale: (nextLocale: string, options?: { fromServer?: boolean }) => void;
@@ -171,6 +173,7 @@ export function MobileIntlProvider({
 
   const value: MobileLocaleContextValue = {
     locale: activeLocale,
+    options: localeOptions,
     // The server's enabled locales can still change the language until they load.
     isLoading: isMessagesLoading || isConfigLoading,
     setLocale: (nextLocale, options) => {
@@ -212,6 +215,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
 
   const value: MobileLocaleContextValue = {
     locale: activeLocale,
+    options: BUNDLED_LOCALES,
     isLoading,
     setLocale: (nextLocale: string) => {
       const nextResolved = resolveLocaleSelection(nextLocale, BUNDLED_LOCALES, DEFAULT_LOCALE);

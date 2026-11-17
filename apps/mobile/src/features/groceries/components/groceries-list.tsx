@@ -2,7 +2,8 @@ import type { Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
@@ -51,6 +52,7 @@ export function GroceriesList({
   storeNameOnLines,
   actions,
   onDrop,
+  onOffset,
 }: {
   rows: ListRow[];
   /** False while the list waits on its first read, so its first rows don't animate in. */
@@ -66,6 +68,8 @@ export function GroceriesList({
   actions: ListActions;
   /** A held row let go; false puts it back. */
   onDrop: (drop: Drop<ListHeading, ListItem>) => boolean;
+  /** Each scroll's offset, for the title that hides once scrolled. */
+  onOffset?: (y: number) => void;
 }) {
   const recurrence = useRecurrenceLabel();
   const { fresh } = useFreshRows(rows, loaded);
@@ -186,6 +190,11 @@ export function GroceriesList({
     );
   };
 
+  // The drag list composes a worklet handler, so a plain callback would never run.
+  const onScroll = useAnimatedScrollHandler((event) => {
+    if (onOffset) scheduleOnRN(onOffset, event.contentOffset.y);
+  });
+
   return (
     <View className="flex-1">
       <TabListMarker>
@@ -194,7 +203,7 @@ export function GroceriesList({
           ListHeaderComponent={header}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
-          contentInsetAdjustmentBehavior="never"
+          contentInsetAdjustmentBehavior="automatic"
           itemLayoutAnimation={SPRING_LAYOUT}
           renderHeading={(heading, index) => (
             <Animated.View
@@ -217,6 +226,7 @@ export function GroceriesList({
           rows={rows}
           testID="groceries-list"
           onDrop={onDrop}
+          onScroll={onScroll}
         />
       </TabListMarker>
       {/* Rows dissolve into the page colour before the tab bar. */}

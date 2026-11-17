@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { TitleRow } from "@/components/title-row";
+import { TabRootHeader } from "@/components/tab-root-header";
 import { useConfirm } from "@/hooks/use-confirm";
 import { lightImpact } from "@/lib/haptics";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import { useScrolled } from "@/lib/use-scrolled";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -29,7 +30,7 @@ import type { ListActions } from "../components/groceries-list";
 import type { GroceryDrop } from "../utils/grocery-drop";
 import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
-import { ListSettingsMenu } from "../components/list-settings-menu";
+import { listSettingsItem } from "../components/list-settings-item";
 import { ListSwitch } from "../components/list-switch";
 import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
@@ -48,6 +49,7 @@ export function GroceriesScreen() {
   const intl = useIntl();
   const router = useRouter();
   const confirm = useConfirm();
+  const { scrolled, onOffset } = useScrolled();
   const { groceries, recurringGroceries, recipeMap, isLoading, isRead, getRecipeNameForGrocery } =
     useGroceriesQuery();
   const { stores, isLoading: storesLoading, isRead: storesRead } = useStoresQuery();
@@ -148,32 +150,35 @@ export function GroceriesScreen() {
 
   return (
     <View className="bg-background flex-1" testID="groceries-screen">
+      <TabRootHeader
+        items={[
+          listSettingsItem(intl, {
+            canClear: groceries.length > 0,
+            grouped,
+            view,
+            onClear: () =>
+              clear(
+                null,
+                groceries.map((grocery) => grocery.id)
+              ),
+            onGrouped: setGrouped,
+            onManageStores: () => router.push(TAB_ROUTES.groceries.stores),
+            onView: setView,
+          }),
+        ]}
+        scrolled={scrolled}
+        title={intl.formatMessage({ id: "groceries.page.title" })}
+      />
       <GroceriesList
         actions={actions}
         empty={loading ? <GroceriesSkeleton /> : nothing ? <GroceriesEmpty /> : null}
         header={
-          <TitleRow className="pb-5" title={intl.formatMessage({ id: "groceries.page.title" })}>
-            <View className="flex-row items-center gap-2">
-              <ListSettingsMenu
-                canClear={groceries.length > 0}
-                grouped={grouped}
-                view={view}
-                onClear={() =>
-                  clear(
-                    null,
-                    groceries.map((grocery) => grocery.id)
-                  )
-                }
-                onGrouped={setGrouped}
-                onManageStores={() => router.push(TAB_ROUTES.groceries.stores)}
-                onView={setView}
-              />
-              <ListSwitch
-                value="list"
-                onChange={(value) => value === "pantry" && router.push(TAB_ROUTES.groceries.pantry)}
-              />
-            </View>
-          </TitleRow>
+          <View className="px-5 pb-5">
+            <ListSwitch
+              value="list"
+              onChange={(value) => value === "pantry" && router.push(TAB_ROUTES.groceries.pantry)}
+            />
+          </View>
         }
         loaded={!loading}
         openGroups={openGroups}
@@ -182,6 +187,7 @@ export function GroceriesScreen() {
         rows={loading ? [] : nothing ? [] : rows}
         storeNameOnLines={view === "recipe"}
         onDrop={drop}
+        onOffset={onOffset}
       />
     </View>
   );

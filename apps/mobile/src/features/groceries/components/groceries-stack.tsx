@@ -2,7 +2,7 @@ import React from "react";
 import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS } from "@/components/sheet-options";
 import { Stack } from "expo-router";
 
-/** The Groceries tab's stack: the list draws its own title; its sheets present over it, and the
+/** The Groceries tab's stack: the list has a native large title; its sheets present over it, and the
  * Pantry is pushed on it with a fade. */
 export function GroceriesStack() {
   return (

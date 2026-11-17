@@ -7,20 +7,22 @@ import { scheduleOnRN } from "react-native-worklets";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
+import { TabRootHeader } from "@/components/tab-root-header";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import { useScrolled } from "@/lib/use-scrolled";
 import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
 import { useTabReselect } from "@/lib/use-tab-reselect";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIntl } from "react-intl";
 
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
 import { dateKey } from "@norish/shared/lib/helpers";
 
 import type { TimelineRow } from "../utils/timeline-rows";
-import { CalendarHeader, calendarHeaderHeight } from "../components/calendar-header";
 import { DayHeadingRow, PlannedItemRow, SlotLabelRow } from "../components/timeline-row";
 import { TodayControl } from "../components/today-control";
 import { useCalendarLinkArrivals } from "../hooks/use-calendar-link-arrivals";
@@ -43,6 +45,9 @@ type ViewableChange = NonNullable<FlatListProps<TimelineRow>["onViewableItemsCha
 /** How far from an edge, in screens, the timeline grows that edge. */
 const GROW_THRESHOLD = 2;
 
+/** The collapsed native bar below the status bar: where a day scrolled to sits under it. */
+const BAR_HEIGHT = 44;
+
 /** A row counts as shown once half of it is on screen; one object, as FlatList asks. */
 const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
 
@@ -50,6 +55,7 @@ const VIEWABILITY = { itemVisiblePercentThreshold: 50 };
  * it scrolls. A tap opens a planned item's sheet; a hold lifts it to drag onto another day. */
 export function CalendarScreen() {
   const router = useRouter();
+  const intl = useIntl();
   // A widget opens the Calendar on a day; without one it opens on today.
   const { day } = useLocalSearchParams<{ day?: string }>();
   const insets = useSafeAreaInsets();
@@ -62,17 +68,18 @@ export function CalendarScreen() {
   const shownRowsRef = useRef<TimelineRow[]>([]);
   const growth = useHeldGrowth(grow);
   const bar = useTabBarMinimised();
-  const headerHeight = calendarHeaderHeight(insets.top);
-  // A day scrolled to sits just under the status bar, not behind it.
-  const listTop = insets.top + 12;
+  const { scrolled, onOffset } = useScrolled();
+  // A day scrolled to sits just under the bar, not behind it.
+  const listTop = insets.top + BAR_HEIGHT + 12;
   const scrollToRow = (index: number, animated: boolean) => {
     listRef.current?.scrollToOffset({
-      offset: openingOffset(shownRowsRef.current, index, fontScale, headerHeight, listTop),
+      offset: openingOffset(shownRowsRef.current, index, fontScale, 0, listTop),
       animated,
     });
   };
   // The drag list composes a worklet handler, which hands each scroll on to the bar's guess.
   const onScroll = useAnimatedScrollHandler((event) => {
+    scheduleOnRN(onOffset, event.contentOffset.y);
     scheduleOnRN(bar.track, {
       contentOffset: { y: event.contentOffset.y },
       contentSize: { height: event.contentSize.height },
@@ -101,13 +108,11 @@ export function CalendarScreen() {
   const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
 
   // The offset the list mounts at, fixed on the first render of rows: a day sits just under the
-  // status bar from the first frame, and rows added above later are kept in place by the list.
+  // bar from the first frame, and rows added above later are kept in place by the list.
   const [openingAt, setOpeningAt] = useState<number | null>(null);
 
   if (isRead && openingAt === null) {
-    setOpeningAt(
-      openIndex < 0 ? 0 : openingOffset(rows, openIndex, fontScale, headerHeight, listTop)
-    );
+    setOpeningAt(openIndex < 0 ? 0 : openingOffset(rows, openIndex, fontScale, 0, listTop));
   }
 
   // A link while the timeline is open scrolls to its day, every time it is tapped.
@@ -126,14 +131,20 @@ export function CalendarScreen() {
   // The tab pressed again while the Calendar shows returns to today.
   useTabReselect(scrollToToday);
 
-  const header = <CalendarHeader />;
+  const header = (
+    <TabRootHeader scrolled={scrolled} title={intl.formatMessage({ id: "calendar.page.title" })} />
+  );
 
   // Until a read holds data an empty day is unknown, not empty: a failed first read stays a skeleton.
   if (!isRead) {
     return (
       <View className="bg-background flex-1" testID="calendar-screen">
         {header}
-        <ScrollView contentContainerClassName="gap-3.5 px-5" scrollEnabled={false}>
+        <ScrollView
+          contentContainerClassName="gap-3.5 px-5"
+          contentInsetAdjustmentBehavior="automatic"
+          scrollEnabled={false}
+        >
           {SKELETONS.map((key) => (
             <DayCardSkeleton key={key} className="bg-surface" />
           ))}
@@ -144,26 +155,21 @@ export function CalendarScreen() {
 
   return (
     <View className="bg-background flex-1" testID="calendar-screen">
+      {header}
       <TabListMarker>
         <DragList
           ref={listRef}
-          ListHeaderComponent={header}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(bar.homeIndicator) }}
-          contentInsetAdjustmentBehavior="never"
+          contentInsetAdjustmentBehavior="automatic"
           contentOffset={{ x: 0, y: openingAt ?? 0 }}
-          // The rows the list shows, which a held row keeps still while `rows` moves on. The title
-          // row is the list's first child, so every row's offset starts below it.
-          getItemLayout={(shown, index) => {
-            const { offset, length } = rowLayout(shown ?? [], index, fontScale);
-
-            return { offset: offset + headerHeight, length, index };
-          }}
+          // The rows the list shows, which a held row keeps still while `rows` moves on.
+          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
           initialScrollIndex={openIndex < 0 ? undefined : openIndex}
           itemLayoutAnimation={settled ? SPRING_LAYOUT : undefined}
-          // Rows added above keep the ones on screen where they are; the title row, the first child, stays out of it.
-          maintainVisibleContentPosition={{ minIndexForVisible: 1 }}
+          // Rows added above keep the ones on screen where they are.
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderHeading={(heading) => (
             <Animated.View
               entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
