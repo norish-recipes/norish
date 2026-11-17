@@ -49,15 +49,3 @@ export function resolveSloganStart(
 
 /** Where the launch is: the splash still opaque, fading or gliding away, or gone. */
 export type LaunchPhase = "covered" | "leaving" | "done";
-
-/**
- * Whether the splash shows the loader under its logo: once the hold ends (about a second in)
- * with no handoff decided, and from then on, so a loader seen fades out with the splash.
- */
-export function resolveLaunchLoader(
-  shown: boolean,
-  held: boolean,
-  handoff: LaunchHandoff | null
-): boolean {
-  return shown || (held && handoff === null);
-}
