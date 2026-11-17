@@ -203,6 +203,14 @@ describe("searchPantry", () => {
     expect(searchPantry(kept, "alt", "en").map((i) => i.name)).toEqual(["Salt"]);
   });
 
+  it("matches a food holding any word of the text, as recipe search does", () => {
+    expect(searchPantry(kept, "olive salt", "en").map((i) => i.name)).toEqual([
+      "Olive Oil",
+      "Salt",
+    ]);
+    expect(searchPantry(kept, "red oil", "en").map((i) => i.name)).toEqual(["Olive Oil"]);
+  });
+
   it("matches a text that names the food, and nothing else", () => {
     expect(searchPantry(kept, "salt to taste", "en").map((i) => i.name)).toEqual(["Salt"]);
     expect(searchPantry(kept, "pepper", "en")).toEqual([]);

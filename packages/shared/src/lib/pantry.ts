@@ -1,7 +1,7 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
-import { foldName } from "@norish/shared/lib/fold-name";
+import { foldName, nameWords } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import {
   BASE_SPELLING_RULES,
@@ -122,27 +122,30 @@ export function sortPantryIngredients<
   );
 }
 
-/** Whether a kept food goes by a name containing the folded text, in any language. */
-function hasNameContaining(item: PantryIngredientDto, needle: string): boolean {
-  return [item.name, ...Object.values(item.localeNames)].some((name) =>
-    foldName(name).includes(needle)
-  );
+/** Whether a kept food goes by a name containing any of the folded words, in any language. */
+function hasNameContaining(item: PantryIngredientDto, words: readonly string[]): boolean {
+  return [item.name, ...Object.values(item.localeNames)].some((name) => {
+    const folded = foldName(name);
+
+    return words.some((word) => folded.includes(word));
+  });
 }
 
-/** The Pantry the field narrows: every kept food whose name, in any language, contains the text,
- * or that the text names as a food, in the reader's order. No text keeps them all. */
+/** The Pantry the field narrows: every kept food whose name, in any language, contains a word of
+ * the text (recipe search ORs its words too), or that the text names as a food, in the reader's
+ * order. No text keeps them all. */
 export function searchPantry(
   items: readonly PantryIngredientDto[],
   text: string,
   locale: string,
   rules: SpellingRules = BASE_SPELLING_RULES
 ): PantryIngredientDto[] {
-  const needle = foldName(text);
+  const words = nameWords(text);
 
   return sortPantryIngredients(items, locale).filter(
     (item) =>
-      needle === "" ||
-      hasNameContaining(item, needle) ||
+      words.length === 0 ||
+      hasNameContaining(item, words) ||
       pantryIngredientFor([item], { ingredientName: text }, rules) !== null
   );
 }
