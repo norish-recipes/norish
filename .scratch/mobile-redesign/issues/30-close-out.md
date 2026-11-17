@@ -36,3 +36,14 @@
 - Drags are a `swipe` from the row's coordinates with `duration: 10000`: the finger stays under the touch slop for the half second that lifts the row, then carries it across the next heading. The coordinates come from the list's layout on the iPhone 17 and are percentages of the screen.
 - The harness gained a run count (`pnpm maestro <flow> 3`), control routes for groceries, Stores, aisles, plans and Pantry foods, and a reset that also clears Stores and planned items. No app code or test id changed, and no app fault turned up.
 - The first box stays open: the one full run of the whole suite is still to come.
+
+### Device-run app bugs fixed (2026-11-17)
+
+- A recipe link while a recipe is open rebuilds the Recipes stack with the new recipe on the old route's key, so the shown-recipe mark now follows an id change on its own route; Cook shows after a link over a recipe, over cook mode, from another tab and on a cold start.
+- Cook mode's peeks are clipped to two lines of text, so each stays in its slot; a long step's chips scroll into view in the step's own area. Drag, flick, peek taps and the long step were checked.
+- A tab switch holds the bar expanded through the switch (UIKit keeps one minimised state for all tabs and only tracks a newly mounted list after a reselect); a sheet hides the bar only while it is in front, so one left open on Recipes no longer hides it on other tabs.
+- The Calendar takes a change to the rows above the shown days without sliding rows, so `maintainVisibleContentPosition` keeps Today in place when plans above it go.
+- The grocery sheet opens a step once the keyboard is down; Repeat from the Add sheet had stayed clipped to the form's keyboard-era height.
+- Share sheet: Revoke was already an accessible button and the list already ends above Create link (the clipped row's AX frame overlapped it); Create link, Copy and Open now read their labels without a leading comma.
+- Open: a link to another recipe while a recipe's sheet is open shows that recipe inside the sheet's presentation without the tab bar; adding plans above the shown days over realtime still pushes Today down.
+- iPhone 17 Release build; `cook-mode`, `recipe-controls`, `groceries-add-repeat` and `calendar-remove` passed once each. Before/after frames are in the scratchpad `t30/fixA/`.
