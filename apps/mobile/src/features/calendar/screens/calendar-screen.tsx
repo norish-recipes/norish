@@ -1,16 +1,20 @@
 import type { FlatList, FlatListProps } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TabListMarker } from "@/components/tab-list-marker";
+import { useFreshRows } from "@/hooks/use-fresh-rows";
+import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useCalendarMutations, useCalendarRangeQuery } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
+import { dateKey } from "@norish/shared/lib/helpers";
 
 import type { TimelineRow } from "../utils/timeline-rows";
 import { CalendarHeader } from "../components/calendar-header";
@@ -61,6 +65,10 @@ export function CalendarScreen() {
   });
 
   const rows = timelineRows(days, calendarData, todayKey);
+  // The days the timeline spans: growing it adds rows that neither fade in nor slide the rest.
+  const span = `${dateKey(days[0]!)}..${dateKey(days.at(-1)!)}`;
+  const [settledSpan, setSettledSpan] = useState(span);
+  const fresh = useFreshRows(rows, isRead, span);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
@@ -84,6 +92,8 @@ export function CalendarScreen() {
     />
   );
 
+  useEffect(() => setSettledSpan(span), [span]);
+
   // Until a read holds data an empty day is unknown, not empty: a failed first read stays a skeleton.
   if (!isRead) {
     return (
@@ -106,36 +116,44 @@ export function CalendarScreen() {
           ref={listRef}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
-          contentInsetAdjustmentBehavior="never"
-          // The rows the list shows, which a held row keeps still while `rows` moves on.
-          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
-          initialScrollIndex={openIndex < 0 ? undefined : openIndex}
-          // Rows added above keep the ones on screen where they are.
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-          renderHeading={(heading) =>
-            heading.type === "day" ? (
-              <DayHeadingRow
-                heading={heading}
-                onAdd={() =>
+          itemLayoutAnimation={settledSpan === span ? SPRING_LAYOUT : undefined}
+          renderHeading={(heading) => (
+            <Animated.View
+              entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
+              exiting={SPRING_FADE_OUT}
+            >
+              {heading.type === "day" ? (
+                <DayHeadingRow
+                  heading={heading}
+                  onAdd={() =>
+                    router.push({
+                      pathname: TAB_ROUTES.calendar.planRecipe,
+                      params: { date: heading.dayKey },
+                    })
+                  }
+                />
+              ) : (
+                <SlotLabelRow heading={heading} />
+              )}
+            </Animated.View>
+          )}
+          renderItem={(row, drag) => (
+            <Animated.View
+              entering={fresh.has(row) ? SPRING_FADE_IN : undefined}
+              exiting={SPRING_FADE_OUT}
+            >
+              <PlannedItemRow
+                row={row}
+                onDrag={drag}
+                onOpen={() =>
                   router.push({
-                    pathname: TAB_ROUTES.calendar.planRecipe,
-                    params: { date: heading.dayKey },
+                    pathname: TAB_ROUTES.calendar.item,
+                    params: { id: row.item.id },
                   })
                 }
               />
-            ) : (
-              <SlotLabelRow heading={heading} />
-            )
-          }
-          renderItem={(row, drag) => (
-            <PlannedItemRow
-              row={row}
-              onDrag={drag}
-              onOpen={() =>
-                router.push({ pathname: TAB_ROUTES.calendar.item, params: { id: row.item.id } })
-              }
-            />
+            </Animated.View>
           )}
           rows={rows}
           shownRef={shownRowsRef}
@@ -155,6 +173,12 @@ export function CalendarScreen() {
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}
+          contentInsetAdjustmentBehavior="never"
+          // The rows the list shows, which a held row keeps still while `rows` moves on.
+          getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
+          initialScrollIndex={openIndex < 0 ? undefined : openIndex}
+          // Rows added above keep the ones on screen where they are.
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
         />
       </TabListMarker>
     </View>
