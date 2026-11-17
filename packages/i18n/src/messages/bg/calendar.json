@@ -13,8 +13,7 @@
     "removeTitle": "Да се премахне ли от днес?",
     "removeMessage": "„{name}“ се премахва от {slot} ({day}).",
     "moveTitle": "Премести",
-    "moveSubtitle": "{name}, {slot} днес",
-    "moveToDay": "Премести {name} на {day}"
+    "moveSubtitle": "{name}, {slot} днес"
   },
   "editNote": {
     "title": "Редактиране на бележка",

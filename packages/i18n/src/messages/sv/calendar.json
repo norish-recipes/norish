@@ -13,8 +13,7 @@
     "removeTitle": "Ta bort från idag?",
     "removeMessage": "{name} tas bort från {slot} på {day}.",
     "moveTitle": "Flytta",
-    "moveSubtitle": "{name}, dagens {slot}",
-    "moveToDay": "Flytta {name} till {day}"
+    "moveSubtitle": "{name}, dagens {slot}"
   },
   "editNote": {
     "title": "Redigera anteckning",

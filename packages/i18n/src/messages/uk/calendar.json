@@ -13,8 +13,7 @@
     "removeTitle": "Прибрати із сьогоднішнього плану?",
     "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day}).",
     "moveTitle": "Перемістити",
-    "moveSubtitle": "«{name}», {slot} сьогодні",
-    "moveToDay": "Перемістити «{name}» на {day}"
+    "moveSubtitle": "«{name}», {slot} сьогодні"
   },
   "editNote": {
     "title": "Редагувати нотатку",

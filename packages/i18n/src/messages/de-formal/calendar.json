@@ -13,8 +13,7 @@
     "removeTitle": "Von heute entfernen?",
     "removeMessage": "{name} wird aus {slot} am {day} entfernt.",
     "moveTitle": "Verschieben",
-    "moveSubtitle": "{name}, {slot} heute",
-    "moveToDay": "{name} auf {day} verschieben"
+    "moveSubtitle": "{name}, {slot} heute"
   },
   "editNote": {
     "title": "Notiz bearbeiten",

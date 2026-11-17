@@ -13,8 +13,7 @@
     "removeTitle": "오늘에서 제거할까요?",
     "removeMessage": "{day} {slot}에서 {name}을(를) 제거합니다.",
     "moveTitle": "이동",
-    "moveSubtitle": "{name}, 오늘의 {slot}",
-    "moveToDay": "{name}을(를) {day}(으)로 이동"
+    "moveSubtitle": "{name}, 오늘의 {slot}"
   },
   "editNote": {
     "title": "메모 편집",

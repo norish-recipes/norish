@@ -13,8 +13,7 @@
     "removeTitle": "Remove from today?",
     "removeMessage": "{name} comes off {day}'s {slot}.",
     "moveTitle": "Move",
-    "moveSubtitle": "{name}, today's {slot}",
-    "moveToDay": "Move {name} to {day}"
+    "moveSubtitle": "{name}, today's {slot}"
   },
   "editNote": {
     "title": "Edit Note",

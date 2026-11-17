@@ -13,8 +13,7 @@
     "removeTitle": "Usunąć z dzisiaj?",
     "removeMessage": "{name} zostanie usunięty z posiłku {slot} ({day}).",
     "moveTitle": "Przenieś",
-    "moveSubtitle": "{name}, {slot} dzisiaj",
-    "moveToDay": "Przenieś {name} na {day}"
+    "moveSubtitle": "{name}, {slot} dzisiaj"
   },
   "editNote": {
     "title": "Edytuj notatkę",

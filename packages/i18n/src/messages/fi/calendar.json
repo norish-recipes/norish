@@ -13,8 +13,7 @@
     "removeTitle": "Poistetaanko tältä päivältä?",
     "removeMessage": "{name} poistetaan kohdasta {slot}, {day}.",
     "moveTitle": "Siirrä",
-    "moveSubtitle": "{name}, tämän päivän {slot}",
-    "moveToDay": "Siirrä {name} päivälle {day}"
+    "moveSubtitle": "{name}, tämän päivän {slot}"
   },
   "editNote": {
     "title": "Muokkaa huomautusta",

@@ -13,8 +13,7 @@
     "removeTitle": "Van vandaag halen?",
     "removeMessage": "{name} gaat van {slot} op {day} af.",
     "moveTitle": "Verplaatsen",
-    "moveSubtitle": "{name}, {slot} van vandaag",
-    "moveToDay": "{name} verplaatsen naar {day}"
+    "moveSubtitle": "{name}, {slot} van vandaag"
   },
   "editNote": {
     "title": "Notitie bewerken",

@@ -13,8 +13,7 @@
     "removeTitle": "Убрать из сегодняшнего плана?",
     "removeMessage": "«{name}» будет убран из приёма пищи «{slot}» ({day}).",
     "moveTitle": "Переместить",
-    "moveSubtitle": "«{name}», {slot} сегодня",
-    "moveToDay": "Переместить «{name}» на {day}"
+    "moveSubtitle": "«{name}», {slot} сегодня"
   },
   "editNote": {
     "title": "Редактировать заметку",
