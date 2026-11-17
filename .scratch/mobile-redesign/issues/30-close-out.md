@@ -56,3 +56,12 @@
 - B1: a link dismisses an open sheet before it navigates (`+native-intent`). B2: a plan added above the shown days no longer moved Today in the run; the case where the added rows sit inside the visible days grows the list there, as it should.
 - Top edge: a soft native scroll edge effect under the status bar on the recipe page, the cookbook page and every tab list; no bar or title.
 - Calendar: the title row is the list's first row and scrolls away; a glass Today control sits above the accessory while today is off screen (also on a tap of the Calendar tab). Open: `calendar-drag` fails on the iPhone 17 after the title row moved into the list; the day it opens on lands at a slightly different height each launch, so the flow's percentage coordinates miss the row.
+
+### Calendar opening, header and board follow-ups (2026-11-17)
+
+- Calendar: the list mounted at the top and a content-size callback then scrolled to the day, so a flow or a glance could catch the first position; it now mounts at `openingOffset` (a day under the status bar, unit-tested) through `contentOffset`, once, and `calendar-drag` is retuned to the settled rows.
+- Recipe header: the repeat was the seed's tags carrying the Categories' names; the line now names a Category once (web joins the same way and has not changed).
+- Device fixes: pause is 72 pt and fullscreen sits under Back (the native header covers Back's row), Next keeps its label beside a timer pill, the Today glass is tinted so rows don't bleed through, the Servings word shares the number's baseline, the detected repeat pill's border reads in dark.
+- Seen fine: cook subtitle, filled timer chip, Pantry search ring, eight Store swatches in one row, done step's faded chips, the soft top edge on Calendar and Pantry.
+- Open: "Every other weeks on Friday" (the plural unit after "every other") is in the shared formatter; the locales differ on the unit's number, so it needs a key per locale. A long step in cook mode keeps its chips below the visible text until it is scrolled.
+- Maestro on the iPhone 17: `calendar-drag` 3 of 3, `calendar-plan-accessory`, `calendar-remove`, `planned-item-edit`, `cook-mode`, `groceries-add-repeat` once each pass. `calendar-offline` fails since the title row moved into the list: the Offline pill sits in that row, which the Calendar opens scrolled past, so the flow cannot see it. Open question for Mike: keep the pill in the scrolling title row (and have the flow reach it) or show it where it stays in view.
