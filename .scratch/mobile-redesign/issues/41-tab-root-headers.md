@@ -4,7 +4,7 @@
 
 **Blocked by:** 40 (approved by Mike)
 
-**Status:** ready
+**Status:** done
 
 - [x] Native large titles on Recipes, Groceries, Pantry and Calendar; `TitleRow` and the `top: "soft"` edge effect go; no title under a blur at rest; the title shares its line with the bar items (App Store style). The accessory still minimises on scroll on every tab.
 - [x] Controls placed as the canvas's Tab roots page draws them (Mike's pick): Groceries/Pantry switch below the title; on Recipes, Filters in the bar, grid/list beside "Your library" (not sticky), All/Recipes/Cookbooks under it. Nothing but the bar items is sticky. Scrolled, the bar shows no inline title; header items are translucent glass; Calendar loses its sync button.
@@ -65,3 +65,5 @@
   6. reject: `useTabScroll` passing `minimised`/`homeIndicator` through as Middle Man; it is the one wiring point by design (round 2 #3).
 - Round 3 fixes: the tab bar guess is decided in the scroll worklet and JS hears only a flip (handler made once); the bar height lives in `useTabScroll` (iPhone portrait only: `supportsTablet: false`, portrait), and the Calendar skeleton takes the list's inset. #5 reversed by Mike ("just status info"): Label/Text rows draw a grey dot and read as dimmed buttons, an image/foregroundStyle tint is dropped, an empty section draws nothing, so the status is the title of the section holding Language and All settings (VoiceOver: text). No colour; the avatar dot carries Offline.
 - Round 3 menu order (device-checked 2026-11-17): status title, Language, All settings, Theme, Sign out. Spec order (themes under the status) cannot hold: SwiftUI drops a section title over an inline Picker, in the same or a nested section, so the committed layout stays.
+- Exit gate on `b11384e14`: all seven gates exit 0. Carried to ticket 44: on the simulator the tab bar minimised on Recipes but did not expand again after slow drags back to the top (it did on Groceries; Pantry never minimised), unconfirmed whether that is the simulator's drags or a regression.
+- For Mike on the phone: the menu's order (status, Language, All settings, Theme, Sign out) and the status as plain grey text; the Calendar skeleton handing off to the list (cached data skipped it on the simulator).
