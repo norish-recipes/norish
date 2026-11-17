@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,7 +12,11 @@ import { useIsFocused } from "expo-router";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import { cardChunks } from "../utils/card-chunks";
-import { LOAD_MORE_FOOTER_HEIGHT, loadMoreFooterBox } from "../utils/load-more-footer";
+import {
+  LOAD_MORE_FOOTER_HEIGHT,
+  loadMoreFooterBox,
+  nextTabBarMinimised,
+} from "../utils/load-more-footer";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
@@ -53,6 +57,9 @@ export function CardList<Row>({
   const insets = useSafeAreaInsets();
   const homeIndicator = initialWindowMetrics?.insets.bottom ?? 0;
   const [scrolled, setScrolled] = useState(false);
+  // The tab bar minimises on a scroll down, which moves the accessory the footer centres above.
+  const [minimised, setMinimised] = useState(false);
+  const lastOffsetRef = useRef(0);
   const isGrid = variant === "grid";
   const focused = useIsFocused();
 
@@ -72,7 +79,11 @@ export function CardList<Row>({
               {/* From the last card down to the accessory's top, over the end padding below the strip. */}
               <View
                 className="absolute inset-x-0"
-                style={loadMoreFooterBox(tabListBottomInset(insets.bottom), homeIndicator)}
+                style={loadMoreFooterBox(
+                  tabListBottomInset(insets.bottom),
+                  homeIndicator,
+                  minimised
+                )}
               >
                 <Loader centred />
               </View>
@@ -119,7 +130,14 @@ export function CardList<Row>({
         testID={testID}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
-        onScroll={(event) => setScrolled(event.nativeEvent.contentOffset.y > 8)}
+        onScroll={({ nativeEvent }) => {
+          const offset = nativeEvent.contentOffset.y;
+          const maxOffset = nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height;
+
+          setScrolled(offset > 8);
+          setMinimised(nextTabBarMinimised(minimised, offset, lastOffsetRef.current, maxOffset));
+          lastOffsetRef.current = offset;
+        }}
         onScrollBeginDrag={() => closeOpenRow()}
       />
       {/* Cards dissolve into the page colour before the tab bar. */}
