@@ -48,10 +48,13 @@ describe("recurrenceHasWeekday", () => {
 });
 
 describe("recurrenceTranslationsFrom", () => {
-  it("reads every word and the seven weekdays through the lookup", () => {
-    const words = recurrenceTranslationsFrom((key) => `<${key}>`);
+  it("reads each rule's summary with its interval, and the seven weekdays, through the lookup", () => {
+    const words = recurrenceTranslationsFrom(
+      (key, values) => `<${key}${values ? JSON.stringify(values) : ""}>`
+    );
 
-    expect(words.everyOther).toBe("<everyOther>");
+    expect(words.summary("week", 2)).toBe('<everyWeek{"interval":2}>');
+    expect(words.onWeekday("x", "Fri")).toBe('<onWeekday{"repeat":"x","weekday":"Fri"}>');
     expect(words.weekdaysFull["3"]).toBe("<weekdaysFull.3>");
     expect(Object.keys(words.weekdaysFull)).toHaveLength(7);
   });

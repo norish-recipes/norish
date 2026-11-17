@@ -40,7 +40,8 @@ export function RepeatBody({
   const intl = useIntl();
   const label = useRecurrenceLabel();
   const [foreground, accentText] = useThemeColor(["foreground", "accent"] as const);
-  const text = (key: string) => intl.formatMessage({ id: `common.recurrence.${key}` });
+  const text = (key: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id: `common.recurrence.${key}` }, values);
   const next = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
   const words = recurrenceTranslationsFrom(text);
 

@@ -2,41 +2,31 @@ import { differenceInDays, format, parseISO } from "date-fns";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
 
-/**
- * Translation function type for recurrence formatting.
- * Matches the signature of next-intl's useTranslations return type.
- */
+/** The words a recurrence reads in: a pattern's summary and weekday from the reader's messages. */
 export type RecurrenceTranslations = {
-  every: string;
-  everyOther: string;
-  on: string;
-  day: string;
-  days: string;
-  week: string;
-  weeks: string;
-  month: string;
-  months: string;
-  year: string;
-  years: string;
+  /** "Every other week": the rule at its interval, as the language counts it. */
+  summary: (rule: RecurrenceRule, interval: number) => string;
+  /** "Every week on Friday". */
+  onWeekday: (repeat: string, weekday: string) => string;
   today: string;
   tomorrow: string;
   weekdaysFull: Record<string, string>;
 };
 
-/** The words a formatter reads, taken from a `common.recurrence` message lookup. */
-export function recurrenceTranslationsFrom(t: (key: string) => string): RecurrenceTranslations {
+const SUMMARY_KEYS = {
+  day: "everyDay",
+  week: "everyWeek",
+  month: "everyMonth",
+  year: "everyYear",
+} as const;
+
+/** The words a formatter reads, from a `common.recurrence` message lookup that takes ICU values. */
+export function recurrenceTranslationsFrom(
+  t: (key: string, values?: Record<string, string | number>) => string
+): RecurrenceTranslations {
   return {
-    every: t("every"),
-    everyOther: t("everyOther"),
-    on: t("on"),
-    day: t("day"),
-    days: t("days"),
-    week: t("week"),
-    weeks: t("weeks"),
-    month: t("month"),
-    months: t("months"),
-    year: t("year"),
-    years: t("years"),
+    summary: (rule, interval) => t(SUMMARY_KEYS[rule], { interval }),
+    onWeekday: (repeat, weekday) => t("onWeekday", { repeat, weekday }),
     today: t("today"),
     tomorrow: t("tomorrow"),
     weekdaysFull: Object.fromEntries(
@@ -45,22 +35,17 @@ export function recurrenceTranslationsFrom(t: (key: string) => string): Recurren
   };
 }
 
-/**
- * Default English translations for recurrence formatting.
- * Used when no translations are provided (e.g., server-side rendering).
- */
+const UNIT_PLURALS = { day: "days", week: "weeks", month: "months", year: "years" } as const;
+
+/** English, for a caller with no messages (the server, and text the parser reads back). */
 const DEFAULT_TRANSLATIONS: RecurrenceTranslations = {
-  every: "Every",
-  everyOther: "Every other",
-  on: "on",
-  day: "day",
-  days: "days",
-  week: "week",
-  weeks: "weeks",
-  month: "month",
-  months: "months",
-  year: "year",
-  years: "years",
+  summary: (rule, interval) =>
+    interval === 1
+      ? `Every ${rule}`
+      : interval === 2
+        ? `Every other ${rule}`
+        : `Every ${interval} ${UNIT_PLURALS[rule]}`,
+  onWeekday: (repeat, weekday) => `${repeat} on ${weekday}`,
   today: "today",
   tomorrow: "tomorrow",
   weekdaysFull: {
@@ -73,8 +58,6 @@ const DEFAULT_TRANSLATIONS: RecurrenceTranslations = {
     "6": "Saturday",
   },
 };
-
-const UNIT_PLURALS = { day: "days", week: "weeks", month: "months", year: "years" } as const;
 
 /** The translation key of the unit word a pattern reads in, singular or plural. */
 export function recurrenceUnitKey({
@@ -95,25 +78,12 @@ export function formatRecurrenceSummary(
   pattern: RecurrencePattern,
   translations: RecurrenceTranslations = DEFAULT_TRANSLATIONS
 ): string {
-  const { interval, weekday } = pattern;
-  const t = translations;
+  const { rule, interval, weekday } = pattern;
+  const summary = translations.summary(rule, interval);
 
-  // Build interval text
-  const intervalText =
-    interval === 1 ? t.every : interval === 2 ? t.everyOther : `${t.every} ${interval}`;
+  if (weekday === undefined) return summary;
 
-  const unitText = t[recurrenceUnitKey(pattern)];
-
-  // Build weekday text if applicable
-  let weekdayText = "";
-
-  if (weekday !== undefined) {
-    const weekdayName = t.weekdaysFull[weekday.toString()] ?? "";
-
-    weekdayText = ` ${t.on} ${weekdayName}`;
-  }
-
-  return `${intervalText} ${unitText}${weekdayText}`;
+  return translations.onWeekday(summary, translations.weekdaysFull[weekday.toString()] ?? "");
 }
 
 /**
@@ -202,7 +172,7 @@ export function formatRecurrenceAsText(pattern: RecurrencePattern): string {
   }
 
   // Add unit
-  text += ` ${DEFAULT_TRANSLATIONS[recurrenceUnitKey(pattern)]}`;
+  text += ` ${recurrenceUnitKey(pattern)}`;
 
   // Add weekday if specified
   if (weekday !== undefined) {
