@@ -232,7 +232,8 @@ export const createRecipeProcedure = authedProcedure
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create recipe" });
     }
 
-    void (async () => {
+    // Stored: a failure from here on only logs, so no client drops a recipe that exists.
+    void afterCommit(ctx, "announcing the created recipe", async () => {
       const dashboardDto = await dashboardRecipe(created.recipeId);
 
       if (dashboardDto) {
@@ -253,7 +254,7 @@ export const createRecipeProcedure = authedProcedure
         householdKey: ctx.householdKey,
         householdUserIds: ctx.householdUserIds,
       });
-    })().catch((err) => handleRecipeError(ctx, err, "announce the created recipe", { recipeId }));
+    });
 
     return recipeId;
   });

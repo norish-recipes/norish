@@ -521,53 +521,55 @@ describe("recipes procedures", () => {
   });
 
   describe("create", () => {
-    it("returns recipe ID and emits created event on success", async () => {
-      const mockDashboard = createMockRecipeDashboard({ name: "New Recipe" });
+    const recipeId = "77777777-7777-4777-8777-777777777777";
+    const input = {
+      id: recipeId,
+      name: "New Recipe",
+      tags: [],
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric" as const,
+    };
 
-      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
+    function createCaller() {
+      return recipesRouter.createCaller({ ...ctx, connectionId: null, operationId: null });
+    }
+
+    // The announcement runs after the answer: let it settle before asserting on it.
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it("answers the id once stored and announces the recipe", async () => {
+      const mockDashboard = createMockRecipeDashboard({ id: recipeId, name: "New Recipe" });
+
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
       dashboardRecipe.mockResolvedValue(mockDashboard);
 
-      const testRouter = t.router({
-        create: t.procedure
-          .input((v: any) => v)
-          .mutation(async ({ input }) => {
-            const recipeId = "test-uuid";
-
-            // Simulate async behavior
-            const createdId = await createRecipeWithRefs(recipeId, ctx.user.id, input);
-
-            if (createdId) {
-              const dto = await dashboardRecipe(createdId);
-
-              if (dto) {
-                void recipes.publish(
-                  "created",
-                  { recipe: dto },
-                  { householdKey: ctx.householdKey }
-                );
-              }
-            }
-
-            return recipeId;
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.create({
-        name: "New Recipe",
-        tags: [],
-        recipeIngredients: [],
-        steps: [],
-      });
-
-      expect(result).toBe("test-uuid");
-      expect(createRecipeWithRefs).toHaveBeenCalled();
+      expect(await createCaller().create(input)).toBe(recipeId);
+      await settle();
       expect(recipes.publish).toHaveBeenCalledWith(
         "created",
-        {
-          recipe: mockDashboard,
-        },
-        { householdKey: ctx.householdKey }
+        { recipe: mockDashboard },
+        expect.anything()
+      );
+    });
+
+    it("answers a replayed create whose id is already stored", async () => {
+      createRecipeWithRefs.mockResolvedValue({ status: "existing", recipeId });
+      dashboardRecipe.mockResolvedValue(null);
+
+      expect(await createCaller().create(input)).toBe(recipeId);
+    });
+
+    it("only logs a failure after the recipe is stored", async () => {
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
+      dashboardRecipe.mockRejectedValue(new Error("Valkey down"));
+
+      expect(await createCaller().create(input)).toBe(recipeId);
+      await settle();
+      expect(recipes.publish).not.toHaveBeenCalledWith(
+        "failed",
+        expect.anything(),
+        expect.anything()
       );
     });
   });
