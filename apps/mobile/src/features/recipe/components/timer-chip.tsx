@@ -152,7 +152,7 @@ export function TimerChip({
       ]}
     >
       {!timer ? (
-        <Ionicons color={foreground} name="time-outline" size={icon} />
+        <Ionicons color={foreground} name="time" size={icon} />
       ) : done ? (
         <Ionicons color={accentForeground} name="checkmark" size={icon} />
       ) : timer.status === "running" ? (

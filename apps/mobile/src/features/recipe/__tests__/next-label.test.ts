@@ -6,6 +6,7 @@ describe("nextLabelFits", () => {
   it("shows the label where it fits beside the chevron", () => {
     expect(nextLabelFits(160, 80)).toBe(true);
     expect(nextLabelFits(80 + NEXT_CHROME, 80)).toBe(true);
+    expect(nextLabelFits(117, 74)).toBe(true);
   });
 
   it("drops it where a wide timer pill or a long word leaves too little room", () => {

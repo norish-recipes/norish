@@ -55,7 +55,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
 
   return (
     <View
-      className={`flex-row items-center gap-2 py-2.5 pr-2.5 pl-3.5 ${first ? "" : "border-separator border-t"}`}
+      className={`flex-row items-center gap-1.5 py-2.5 pr-2 pl-3 ${first ? "" : "border-separator border-t"}`}
       testID={`timer-row-${timer.id}`}
     >
       <View className="w-[30px] items-center">
@@ -77,7 +77,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
           {timer.label}
         </Text>
         {timer.recipeName ? (
-          <Text className="text-muted text-[13px]" numberOfLines={1}>
+          <Text className="text-muted text-[13px]" numberOfLines={2}>
             {timer.recipeName}
           </Text>
         ) : null}
