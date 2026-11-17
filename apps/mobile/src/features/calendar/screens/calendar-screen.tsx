@@ -8,7 +8,7 @@ import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TabRootHeader } from "@/components/tab-root-header";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
-import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
+import { SPRING_FADE_IN, SPRING_FADE_OUT } from "@/lib/motion/layout";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useTabReselect } from "@/lib/use-tab-reselect";
@@ -84,10 +84,10 @@ export function CalendarScreen() {
 
   const rows = timelineRows(days, calendarData, todayKey);
   // The days the timeline spans and the rows above the shown ones: a change to either adds or
-  // removes rows that neither fade in nor slide the rest, so the list keeps its place.
+  // removes rows that do not fade in, so the list keeps its place.
   const span = `${dateKey(days[0]!)}..${dateKey(days.at(-1)!)}`;
   const above = hiddenAbove(rows, shownDays[0] ?? "");
-  const { fresh, settled } = useFreshRows(rows, isRead, `${span}|${above}`);
+  const { fresh } = useFreshRows(rows, isRead, `${span}|${above}`);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const direction = todayDirection(shownDays, todayKey, todayIndex >= 0);
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
@@ -167,10 +167,10 @@ export function CalendarScreen() {
           getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
           initialScrollIndex={openIndex < 0 ? undefined : openIndex}
-          itemLayoutAnimation={settled ? SPRING_LAYOUT : undefined}
           // As web: a drop lands on its day by the rule, which outlines the day and draws no line.
           landAt={(drop, shown) => timelineLanding(drop, shown, calendarData)}
-          // Rows added above keep the ones on screen where they are.
+          // Rows added above keep the ones on screen where they are. No layout spring, as web: a
+          // spring holds the cells at their old frames while UIKit measures, so the list jumped.
           maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderHeading={(heading) => (
             <Animated.View
