@@ -8,10 +8,23 @@
 
 - [ ] Reproduced on Mike's iPhone with links copied from Safari, Instagram and Notes; which ones fail recorded here.
 - [x] `useCopiedLink` asks `UIPasteboard.detectPatterns(for: [.probableWebURL])` through a local Expo module (no prompt), then reads the link (prompts as today). Own-server links still skipped.
-- [ ] Unit test for the decision (done); the fix seen on the device for every source that failed.
+- [x] Unit test for the decision (done); the fix seen on the device for every source that failed.
 
 ## Comments
 
 - Decided: `expo-clipboard` 58.0.4 has no pattern detection, so a local module `apps/mobile/modules/pasteboard-link` (iOS only; `requireOptionalNativeModule` is null on Android, which keeps `hasUrlAsync`) answers `hasProbableWebUrl`; `.gitignore` got `!apps/mobile/modules/*/ios` because `**/ios` swallowed it. After detection the hook reads `getUrlAsync()`, else `getStringAsync()`, since a link copied as text has no URL item. `copiedLinkToOffer` is unchanged and gained tests for text links and sentences.
 - Simulator (iPhone 18 Pro, iOS 27.2, Release, `simctl pbcopy`, which can only set plain text, so "copied as a URL" was not testable): link as text and the own-server link ran `detectPatterns` with no prompt; non-link text ran it and read nothing. But for the link-as-text case the read failed at once with "Operation not authorized" and no prompt, so the row never showed; I could not tell a simulator limit from a real fault.
 - Left for Mike's iPhone: the reproduction (Safari, Instagram, Notes) and whether the row shows after the real "Allow Paste" prompt, with a link copied as a URL and as text.
+- Review round 1 (Standards + Spec), dispositions:
+  1. fix: the two added tests restate cases `copiedLinkToOffer` already had; what changed (detection, its fallback, what is read) has no test. The flow becomes a testable function and gets the tests.
+  2. fix: a link copied as text is read twice (`getUrlAsync` returns nil, then `getStringAsync`), so a refused paste prompt comes back a second time. One read.
+  3. fix: `.probableWebURL` also matches a link inside a sentence and a link without a scheme, so iOS prompts and no row shows. Whatever makes detection say yes yields a row: the first web link in the text, `https://` added to a bare one. (My call; the spec does not settle it.)
+  4. fix: a native module that rejects returns false instead of falling back to `hasUrlAsync`; caught errors go to the app's logger if the app has one for this.
+  5. fix: the un-ignore rule moves from the root `.gitignore` to `apps/mobile/.gitignore`.
+  6. fix: the four-level relative import into `modules/`; the one-line JS binding lives where `@/` reaches it.
+  7. fix: podspec template residue (empty author and source, tvOS floor, globs for languages the module lacks).
+  8. fix (verify on the simulator): "Operation not authorized" with no prompt. Check Settings › Norish › Paste from Other Apps, then copy inside the simulator from Safari (a URL) and from Notes (text).
+  9. reject: a clipboard changed while the sheet stays open is not picked up; unchanged behaviour, not this ticket.
+  10. reject: a written convention for local native modules; nobody asked, and one module is not a pattern yet.
+- Review round 1 fixes, simulator (iPhone 18 Pro, iOS 27.2, Release, Notes is not installed so plain text was copied from Safari's address bar). The simulator cannot show the paste prompt: `pasted` logs "Paste requires user authorization. Prompting...", then tccd "service not protected: kTCCServicePasteboard" and the read fails with "Operation not authorized" under Ask. So Allow and Deny were set in Settings › Norish › Paste from Other Apps instead; the prompt itself stays for Mike's iPhone.
+- Allow: a URL copied from Safari's address bar, the same link as text, a sentence holding a link, and a bare `example.com/...` each showed "Import ‹host›" (https:// added to the bare one); a link to the dev server showed no row. Deny: link as text and sentence showed no row. The log shows one pasteboard read per sheet open, so the string read covers a copied URL.
