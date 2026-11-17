@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 
-import type { PlannedItemChanges } from "./types";
 import { isRecipeItem } from "./todays-meals";
 
 /** What the planned-item sheet edits before it saves. */
@@ -15,12 +15,12 @@ export type PlannedItemDraft = { title: string; date: string; slot: Slot };
 export function plannedItemChanges(
   item: PlannedItemFromQuery,
   touched: Partial<PlannedItemDraft>
-): PlannedItemChanges | null {
+): PlannedItemEdit | null {
   const title = isRecipeItem(item) ? undefined : touched.title?.trim();
 
   if (title === "") return null;
 
-  const changes: PlannedItemChanges = {};
+  const changes: PlannedItemEdit = {};
 
   if (title !== undefined && title !== item.title) changes.title = title;
   if (touched.date !== undefined && touched.date !== item.date) changes.date = touched.date;
@@ -33,7 +33,7 @@ export function plannedItemChanges(
  * hands `write` only what the member changed, once; leaving without it discards. */
 export function usePlannedItemDraft(
   item: PlannedItemFromQuery,
-  write: (itemId: string, changes: PlannedItemChanges) => void
+  write: (itemId: string, changes: PlannedItemEdit) => void
 ) {
   const [touched, setTouched] = useState<Partial<PlannedItemDraft>>({});
   const savedRef = useRef(false);

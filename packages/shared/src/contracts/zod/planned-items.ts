@@ -27,6 +27,12 @@ export const PlannedItemEditInputSchema = z.object({
   slot: slotSchema.optional(),
 });
 
+/** What one edit writes: whichever of a planned item's text, day and slot it names. */
+export type PlannedItemEdit = Omit<
+  z.infer<typeof PlannedItemEditInputSchema>,
+  "itemId" | "version"
+>;
+
 export const PlannedItemEventPayloadSchema = z.object({
   id: z.string(),
   date: z.string(),

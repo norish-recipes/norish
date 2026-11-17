@@ -23,4 +23,3 @@ export { afterPlanningStep, plannedServings, useAfterPlanning } from "./after-pl
 export type { Planned } from "./after-planning";
 export { dayDropTarget } from "./day-drop-target";
 export { plannedItemChanges, usePlannedItemDraft } from "./planned-item-draft";
-export type { PlannedItemChanges } from "./types";

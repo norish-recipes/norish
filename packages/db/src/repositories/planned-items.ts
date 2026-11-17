@@ -1,5 +1,6 @@
 import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
+import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 import { db } from "@norish/db/drizzle";
 import { plannedItems, recipes } from "@norish/db/schema";
 
@@ -241,8 +242,8 @@ export async function deletePlannedItemsBefore(beforeDate: string): Promise<numb
   return result.rowCount ?? 0;
 }
 
-/** What one edit of a planned item writes; a date or slot as it is moves nothing. */
-export type PlannedItemEdit = { title?: string; date?: string; slot?: PlannedItemSlot };
+/** Where a move puts the item; no index: last in the slot. */
+type PlannedItemMove = { date: string; slot: PlannedItemSlot; index?: number };
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -269,8 +270,7 @@ async function selectCurrent(trx: Transaction, itemId: string, version?: number)
 async function writeEdit(
   trx: Transaction,
   current: PlannedItem,
-  title: string | undefined,
-  move: { date: string; slot: PlannedItemSlot; index?: number } | undefined
+  { title, move }: { title?: string; move?: PlannedItemMove }
 ): Promise<MutationOutcome<PlannedItem>> {
   const itemId = current.id;
   const guard = eq(plannedItems.id, itemId);
@@ -383,10 +383,8 @@ export async function moveItem(
 
     if (!current) return staleOutcome();
 
-    return writeEdit(trx, current, undefined, {
-      date: targetDate,
-      slot: targetSlot,
-      index: targetIndex,
+    return writeEdit(trx, current, {
+      move: { date: targetDate, slot: targetSlot, index: targetIndex },
     });
   });
 }
@@ -408,7 +406,7 @@ export async function editPlannedItem(
 
     if (!move && edit.title === undefined) return appliedOutcome(current);
 
-    return writeEdit(trx, current, edit.title, move);
+    return writeEdit(trx, current, { title: edit.title, move });
   });
 }
 
