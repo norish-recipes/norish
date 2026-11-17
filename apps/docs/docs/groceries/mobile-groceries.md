@@ -7,7 +7,7 @@ description: Shop and manage your pantry on iPhone.
 
 Open **Groceries** to see your household's list. Use **View mode** to group it
 **By store** or **By recipe**. Tap a checkbox as you shop. Use the list settings to clear the list, or clear completed groceries from the
-Done section.
+Done section. When the list has no items, an empty card appears.
 
 ![The grocery list grouped by store and aisle](/img/screenshots/mobile-groceries-list.png)
 

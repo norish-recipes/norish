@@ -40,6 +40,8 @@ app if you were already signed in.
 
 ![Update your server screen showing the installed and required versions](/img/screenshots/mobile-update-your-server.png)
 
+The bottom bar minimises as you scroll down on each tab.
+
 ## Recipes
 
 **Today** shows your planned meals. To plan an empty slot, tap its add card and

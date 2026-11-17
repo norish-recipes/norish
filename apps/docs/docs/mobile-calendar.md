@@ -5,8 +5,9 @@ description: Plan meals on iPhone.
 
 # Calendar on iPhone
 
-Open **Calendar** to see the timeline around today. Scroll to another day or tap
-**Today** to return. Each day shows its planned recipes and notes by meal slot.
+Open **Calendar** to see the timeline around today. Scroll to another day. The title scrolls away with the days. When today is off
+screen, tap **Today** above the bottom bar to return. You can also tap the
+**Calendar** tab again. Each day shows its planned recipes and notes by meal slot.
 
 ![The Calendar timeline with planned meals](/img/screenshots/mobile-calendar-timeline.png)
 

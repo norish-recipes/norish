@@ -9,6 +9,11 @@ Tap a recipe in your library to open it. The page shows its ingredients, steps,
 nutrition and other details. Use the heart to favourite it, the stars to rate it,
 or the menu to edit, share, plan or delete it.
 
+To share a public link, choose **Share link** from the menu, select when it
+expires and tap **Create link**. Under **Current links**, each row shows its
+status and expiry. Copy a newly created link, or use the row controls to revoke,
+reactivate or delete a link.
+
 ![A recipe page with ingredients and steps](/img/screenshots/mobile-recipe-page.png)
 
 Tap the recipe photo to open the viewer. Swipe through photos and videos, pinch
@@ -37,7 +42,7 @@ section shows values per serving when they are available.
 
 ## Cook mode
 
-Tap **Cook** in the bottom bar. Swipe through steps or use the previous and next
+Tap **Cook** in the bottom bar, beside the running timer when there is one. Swipe through steps or use the previous and next
 controls. Switch between **Steps** and **Ingredients** to check the ingredients
 while cooking. Cook mode keeps the screen awake and shows progress and an
 estimated ready time.
