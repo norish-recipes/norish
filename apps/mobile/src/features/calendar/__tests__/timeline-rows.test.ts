@@ -7,6 +7,7 @@ import {
   dayRowKey,
   hiddenAbove,
   itemHeight,
+  openingOffset,
   planTimelineDrop,
   rowDay,
   rowLayout,
@@ -186,5 +187,20 @@ describe("planTimelineDrop", () => {
 
   it("means nothing for an item that is gone when it lands", () => {
     expect(planTimelineDrop(drop("soup", "day:2026-11-12"), { "2026-11-13": [] })).toBeNull();
+  });
+});
+
+describe("openingOffset", () => {
+  it("puts a day's top `top` points under the list's edge, below the title row", () => {
+    const index = rows.findIndex((row) => row.key === "day:2026-11-12");
+    const { offset } = rowLayout(rows, index);
+
+    expect(openingOffset(rows, index, 1, 116, 74)).toBe(offset + 116 - 74);
+  });
+
+  it("is the same for the same rows however often it is asked, and never negative", () => {
+    expect(openingOffset(rows, 0, 1, 116, 74)).toBe(42);
+    expect(openingOffset(rows, 0, 1, 10, 74)).toBe(0);
+    expect(openingOffset(rows, 3, 1, 116, 74)).toBe(openingOffset(rows, 3, 1, 116, 74));
   });
 });

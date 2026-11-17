@@ -21,8 +21,8 @@ appId: dev.norish.app
 # A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the half
 # second that lifts it, then carries it onto the next day's heading.
 - swipe:
-    start: 50%,38%
-    end: 50%,46%
+    start: 50%,33%
+    end: 50%,41%
     duration: 10000
 - evalScript: ${output.moved = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?name=Drag%20Plan%20Soup&date=' + output.target).body)}
 - assertTrue: ${output.moved.date == output.target}

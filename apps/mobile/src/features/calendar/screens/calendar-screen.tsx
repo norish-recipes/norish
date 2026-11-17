@@ -30,6 +30,7 @@ import {
   hiddenAbove,
   planTimelineDrop,
   rowDay,
+  openingOffset,
   rowLayout,
   timelineRows,
 } from "../utils/timeline-rows";
@@ -65,9 +66,10 @@ export function CalendarScreen() {
   // A day scrolled to sits just under the status bar, not behind it.
   const listTop = insets.top + 12;
   const scrollToRow = (index: number, animated: boolean) => {
-    const { offset } = rowLayout(shownRowsRef.current, index, fontScale);
-
-    listRef.current?.scrollToOffset({ offset: offset + headerHeight - listTop, animated });
+    listRef.current?.scrollToOffset({
+      offset: openingOffset(shownRowsRef.current, index, fontScale, headerHeight, listTop),
+      animated,
+    });
   };
   // The drag list composes a worklet handler, which hands each scroll on to the bar's guess.
   const onScroll = useAnimatedScrollHandler((event) => {
@@ -98,12 +100,15 @@ export function CalendarScreen() {
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
   const openIndex = dayIndex < 0 ? todayIndex : dayIndex;
 
-  // Opened on a day or today: the list's initial scroll puts it at the very top, which the content
-  // moves down to just under the status bar, again as rows above load, until the reader scrolls.
-  const touchedRef = useRef(false);
-  const settleOpening = () => {
-    if (!touchedRef.current && openIndex >= 0) scrollToRow(openIndex, false);
-  };
+  // The offset the list mounts at, fixed on the first render of rows: a day sits just under the
+  // status bar from the first frame, and rows added above later are kept in place by the list.
+  const [openingAt, setOpeningAt] = useState<number | null>(null);
+
+  if (isRead && openingAt === null) {
+    setOpeningAt(
+      openIndex < 0 ? 0 : openingOffset(rows, openIndex, fontScale, headerHeight, listTop)
+    );
+  }
 
   // A link while the timeline is open scrolls to its day, every time it is tapped.
   useCalendarLinkArrivals((linked) => {
@@ -146,6 +151,7 @@ export function CalendarScreen() {
           className="flex-1"
           contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
           contentInsetAdjustmentBehavior="never"
+          contentOffset={{ x: 0, y: openingAt ?? 0 }}
           // The rows the list shows, which a held row keeps still while `rows` moves on. The title
           // row is the list's first child, so every row's offset starts below it.
           getItemLayout={(shown, index) => {
@@ -199,7 +205,6 @@ export function CalendarScreen() {
           shownRef={shownRowsRef}
           testID="calendar-list"
           viewabilityConfig={VIEWABILITY}
-          onContentSizeChange={settleOpening}
           onDrop={(drop) => {
             const plan = planTimelineDrop(drop, calendarData);
 
@@ -212,9 +217,6 @@ export function CalendarScreen() {
           onEndReachedThreshold={GROW_THRESHOLD}
           onHeldChange={growth.heldChange}
           onScroll={onScroll}
-          onScrollBeginDrag={() => {
-            touchedRef.current = true;
-          }}
           onStartReached={() => growth.reached("past")}
           onStartReachedThreshold={GROW_THRESHOLD}
           onViewableItemsChanged={onViewable}

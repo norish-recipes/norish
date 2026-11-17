@@ -178,6 +178,18 @@ export function rowLayout(rows: ArrayLike<TimelineRow>, index: number, scale = 1
   return known.layouts[index] ?? { offset: 0, length: 0 };
 }
 
+/** The scroll offset that puts row `index` `top` points below the list's top edge, `headerHeight`
+ * being the title row above the first row; never above the list's start. */
+export function openingOffset(
+  rows: ArrayLike<TimelineRow>,
+  index: number,
+  scale: number,
+  headerHeight: number,
+  top: number
+) {
+  return Math.max(0, rowLayout(rows, index, scale).offset + headerHeight - top);
+}
+
 /** Where a held item dropped: resolved by id against the plan as it is when it lands, onto the
  * day of the heading above, in its own slot, last. Null for a drop that means nothing. */
 export function planTimelineDrop(drop: Drop<TimelineHeading, TimelineItem>, data: CalendarData) {
