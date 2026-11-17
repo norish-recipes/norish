@@ -1,22 +1,19 @@
 import type { ReactElement } from "react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Loader } from "@/components/loader";
 import { tabListBottomInset } from "@/components/tab-list-inset";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
+import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
 import { useIsFocused } from "expo-router";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import { cardChunks } from "../utils/card-chunks";
-import {
-  LOAD_MORE_FOOTER_HEIGHT,
-  loadMoreFooterBox,
-  nextTabBarMinimised,
-} from "../utils/load-more-footer";
+import { LOAD_MORE_FOOTER_HEIGHT, loadMoreFooterBox } from "../utils/load-more-footer";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
@@ -55,11 +52,8 @@ export function CardList<Row>({
   testID?: string;
 }) {
   const insets = useSafeAreaInsets();
-  const homeIndicator = initialWindowMetrics?.insets.bottom ?? 0;
+  const { minimised, homeIndicator, track } = useTabBarMinimised();
   const [scrolled, setScrolled] = useState(false);
-  // ponytail: scroll direction guesses the bar; the accessory mounts both placements at once, so JS cannot read which shows.
-  const [minimised, setMinimised] = useState(false);
-  const lastOffsetRef = useRef(0);
   const isGrid = variant === "grid";
   const focused = useIsFocused();
 
@@ -131,12 +125,8 @@ export function CardList<Row>({
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
         onScroll={({ nativeEvent }) => {
-          const offset = nativeEvent.contentOffset.y;
-          const maxOffset = nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height;
-
-          setScrolled(offset > 8);
-          setMinimised(nextTabBarMinimised(minimised, offset, lastOffsetRef.current, maxOffset));
-          lastOffsetRef.current = offset;
+          setScrolled(nativeEvent.contentOffset.y > 8);
+          track(nativeEvent);
         }}
         onScrollBeginDrag={() => closeOpenRow()}
       />

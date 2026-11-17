@@ -1,8 +1,8 @@
 import {
   LOAD_MORE_FOOTER_HEIGHT,
   loadMoreFooterBox,
-  nextTabBarMinimised,
 } from "@/features/recipes/utils/load-more-footer";
+import { nextTabBarMinimised } from "@/lib/tab-bar-placement";
 import { describe, expect, it } from "vitest";
 
 const SCREEN = 874;
