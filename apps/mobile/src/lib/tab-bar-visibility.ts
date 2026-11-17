@@ -50,7 +50,8 @@ export function useHideTabBar() {
   useCounted(hiders, useIsFocused());
 }
 
-/** Marks a sheet open for as long as it is mounted: the shared `Sheet` calls this. */
+/** Marks a sheet open while it is mounted and in front, so a link to another tab shows that tab's
+ * bar: the shared `Sheet` calls this. */
 export function useMarkSheetOpen() {
-  useCounted(sheets, true);
+  useCounted(sheets, useIsFocused());
 }
