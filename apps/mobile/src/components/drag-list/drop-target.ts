@@ -61,26 +61,24 @@ export function gapAt(slots: readonly Slot[], y: number): number | null {
   return gap;
 }
 
-/** The section a gap is in, the one of the row above it; null where a drop snaps back. */
-export function sectionAt(sections: readonly (string | null)[], gap: number) {
+/** The section a gap is in, the one of the row above it; null where a drop snaps back. Without a
+ * drawn row above, an item below shares its section and a heading below gives none. */
+export function sectionAt(slots: readonly Slot[], gap: number) {
   "worklet";
+  const above = slots[gap - 1];
+  const below = slots[gap];
 
-  if (gap > 0) return sections[gap - 1] ?? null;
+  if (above) return above.section;
 
-  return sections[0] === "" ? "" : null;
+  return below && !below.heading ? below.section : null;
 }
 
 /** What a finger at content `y` targets while row `from` is held: a line at the gap (none where it
  * lands in place) and an outline around its section's drawn cards. */
-export function targetAt(
-  slots: readonly Slot[],
-  sections: readonly (string | null)[],
-  from: number,
-  y: number
-): Target | null {
+export function targetAt(slots: readonly Slot[], from: number, y: number): Target | null {
   "worklet";
   const gap = gapAt(slots, y);
-  const section = gap === null ? null : sectionAt(sections, gap);
+  const section = gap === null ? null : sectionAt(slots, gap);
 
   if (gap === null || section === null) return null;
 

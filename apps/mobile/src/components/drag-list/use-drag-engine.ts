@@ -205,11 +205,7 @@ export function useDragEngine({
 
     // The card's top in the content, which the list scrolled under by `shift` this frame.
     const cardY = carried.top + travel.get() + carried.origin - content.pageY + shift;
-    // A loop, not a map: the React Compiler hoists a capture-free callback out of the worklet.
-    const sections: (string | null)[] = [];
-
-    for (const row of rowsNow.get()) sections.push(row.section);
-    const now = targetAt(slotsNow(), sections, indexOf(carried.key), cardY + carried.height / 2);
+    const now = targetAt(slotsNow(), indexOf(carried.key), cardY + carried.height / 2);
 
     cardTop.set(cardY);
     target.set(ruled && now ? { ...now, line: null } : now);

@@ -83,7 +83,7 @@ describe("gapAt", () => {
 describe("targetAt", () => {
   it("draws the line under the row above the gap and outlines the section's cards", () => {
     // a1 held, pointed at b1's bottom half.
-    expect(targetAt(slots, sections, 1, 240)).toEqual({
+    expect(targetAt(slots, 1, 240)).toEqual({
       gap: 5,
       section: "B",
       line: { y: 250, x: 20, width: 300 },
@@ -92,39 +92,23 @@ describe("targetAt", () => {
   });
 
   it("draws no line where the row would land in place", () => {
-    expect(targetAt(slots, sections, 1, 60)?.line).toBeNull();
-    expect(targetAt(slots, sections, 1, 90)?.line).toBeNull();
+    expect(targetAt(slots, 1, 60)?.line).toBeNull();
+    expect(targetAt(slots, 1, 90)?.line).toBeNull();
   });
 
   it("snaps back above the first heading", () => {
-    const above = [item("x"), ...rows];
     const aboveSlots: Slot[] = [
       { ...slots[1]!, top: -50, heading: false, section: null },
       ...slots,
     ];
 
-    expect(
-      targetAt(
-        aboveSlots,
-        sectionsOf(above, (value) => value),
-        2,
-        -40
-      )
-    ).toBeNull();
+    expect(targetAt(aboveSlots, 2, -40)).toBeNull();
   });
 
   it("outlines nothing in a list without headings", () => {
-    const flat = [item("x"), item("y")];
     const flatSlots: Slot[] = [slots[1]!, slots[2]!].map((slot) => ({ ...slot!, section: "" }));
 
-    expect(
-      targetAt(
-        flatSlots,
-        sectionsOf(flat, () => null),
-        0,
-        140
-      )
-    ).toMatchObject({
+    expect(targetAt(flatSlots, 0, 140)).toMatchObject({
       gap: 2,
       section: "",
       box: null,
@@ -160,7 +144,7 @@ describe("dropAt", () => {
 
 describe("landingTop", () => {
   const own = (index: number) => ({ top: index * 50, height: 50 });
-  const gapOf = (from: number, y: number) => targetAt(slots, sections, from, y)?.gap ?? null;
+  const gapOf = (from: number, y: number) => targetAt(slots, from, y)?.gap ?? null;
 
   it("lands where the rows close up behind the row, or make room in front", () => {
     expect(landingTop(slots, gapOf(1, 240), 1, own(1))).toBe(200);
