@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
-import { accessoryPlan, accessoryScreen, labelFits } from "../utils/accessory-plan";
+import { accessoryPlan, accessoryScreen, labelFits, shellTab } from "../utils/accessory-plan";
 
 // The action a plan holds, by its test id; Add recipe by its name.
 const holds = (
@@ -132,5 +132,17 @@ describe("labelFits", () => {
   it("drops a long translation where a short label fits", () => {
     expect(labelFits(150, 40)).toBe(true);
     expect(labelFits(150, 120)).toBe(false);
+  });
+});
+
+describe("shellTab", () => {
+  it("names the tab a path is on, Recipes for its pages and sheets", () => {
+    expect(shellTab("/")).toBe("recipes");
+    expect(shellTab("/recipe/r1/cook")).toBe("recipes");
+    expect(shellTab("/cookbook/c1")).toBe("recipes");
+    expect(shellTab("/groceries/pantry")).toBe("groceries");
+    expect(shellTab("/calendar/item")).toBe("calendar");
+    expect(shellTab("/settings")).toBe("settings");
+    expect(shellTab("/search")).toBe("search");
   });
 });

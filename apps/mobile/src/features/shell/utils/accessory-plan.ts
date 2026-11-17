@@ -69,6 +69,15 @@ const onPantry = (path: string) => PANTRY_PATHS.some((route) => path.startsWith(
 
 const tabOf = (path: string) => PATH_TABS.find((tab) => path.startsWith(TAB_ROUTES[tab].root));
 
+/** The tab `path` is on: its own first segment, Recipes for the library, its pages and sheets. */
+export function shellTab(path: string) {
+  const first = path.split("/")[1];
+
+  return first === "groceries" || first === "calendar" || first === "settings" || first === "search"
+    ? first
+    : "recipes";
+}
+
 /** The screen the accessory is for at `path`, whose recipe is `recipeId`: the recipe's once its page
  * is shown with it, until then the last path that was not a recipe's, on the Recipes tab. */
 export function accessoryScreen(

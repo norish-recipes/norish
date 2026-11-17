@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ShellAccessory } from "@/features/shell/components/shell-accessory";
-import { accessoryPlan, accessoryScreen } from "@/features/shell/utils/accessory-plan";
+import { accessoryPlan, accessoryScreen, shellTab } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
@@ -12,6 +12,9 @@ import { useIntl } from "react-intl";
 
 import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { useTimerStore } from "@norish/shared-react/recipes/timers";
+
+// Longer than UIKit's tab switch, which applies a minimise behaviour changed within it only after.
+const TAB_SWITCH_MS = 400;
 
 /** The signed-in tabs: the system tab bar, Search as its own tab, the tab's add action and the timer capsule above it. */
 export function ShellTabs() {
@@ -31,11 +34,25 @@ export function ShellTabs() {
   // A loading or missing recipe keeps the last other screen's action.
   const screen = accessoryScreen(path, recipeId, lastNonRecipePath, recipe ? shown : null);
   const plan = accessoryPlan(screen, hasTimers, lens);
+  const tab = shellTab(path);
+  // UIKit keeps one minimised state for every tab: a switch holds the bar expanded through the
+  // switch, after which it follows the new tab's list.
+  const [barTab, setBarTab] = useState(tab);
+
+  useEffect(() => {
+    const settle = setTimeout(() => setBarTab(tab), TAB_SWITCH_MS);
+
+    return () => clearTimeout(settle);
+  }, [tab]);
 
   if (!recipeId && path !== lastNonRecipePath) setLastNonRecipePath(path);
 
   return (
-    <NativeTabs hidden={hidden} minimizeBehavior="onScrollDown" tintColor={accent}>
+    <NativeTabs
+      hidden={hidden}
+      minimizeBehavior={tab === barTab ? "onScrollDown" : "never"}
+      tintColor={accent}
+    >
       {hidden ? null : (
         <NativeTabs.BottomAccessory>
           <ShellAccessory path={screen.path} plan={plan} />
