@@ -14,5 +14,15 @@ public class PasteboardLinkModule: Module {
         }
       }
     }
+
+    // detectValues reads the content, so it raises the paste prompt like a string read.
+    AsyncFunction("probableWebUrl") { (promise: Promise) in
+      UIPasteboard.general.detectValues(for: [.probableWebURL]) { result in
+        switch result {
+        case .success(let values): promise.resolve(values[.probableWebURL] as? String)
+        case .failure(let error): promise.reject("ERR_PASTEBOARD_READ", error.localizedDescription)
+        }
+      }
+    }
   }
 }

@@ -10,41 +10,26 @@ export function isImportableLink(value: string): boolean {
   }
 }
 
-// A scheme link, or a bare domain not glued to an address, path or another word.
-const WEB_LINK = /https?:\/\/[^\s<>"]+|(?<![\w@/.:-])(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s<>"]*)?/i;
-
-/** The first web link in some text, trailing punctuation dropped and `https://` added to a bare one. */
-export function firstWebLink(text: string): string | null {
-  let found = WEB_LINK.exec(text)?.[0];
-
-  if (!found) return null;
-
-  while (/[.,;:!?)\]'"]$/.test(found)) found = found.slice(0, -1);
-
-  return isWebLink(found) ? found : `https://${found}`;
+/** A detected link as a web link: `https://` added only when it has no scheme of its own. */
+export function withScheme(link: string): string {
+  return isWebLink(link) ? link : `https://${link}`;
 }
 
 /** The clipboard's web link that Add recipe offers first, unless it points at the Server Address. */
-export function copiedLinkToOffer({
-  hasUrl,
-  text,
-  serverAddress,
-}: {
-  hasUrl: boolean;
-  /** Read only when `hasUrl`: the read is what raises iOS's paste prompt. */
-  text: string | null;
-  serverAddress: string | null;
-}): string | null {
-  const link = hasUrl && text ? firstWebLink(text) : null;
+export function copiedLinkToOffer(
+  link: string | null,
+  serverAddress: string | null
+): string | null {
+  const trimmed = link?.trim();
 
-  if (!link || !isImportableLink(link) || isOnServer(serverAddress, link)) return null;
+  if (!trimmed || !isImportableLink(trimmed) || isOnServer(serverAddress, trimmed)) return null;
 
-  return link;
+  return trimmed;
 }
 
 export type Pasteboard = {
-  /** iOS's pattern check, which also sees a link copied as text. Null where there is none. */
-  probableWebUrl: (() => Promise<boolean>) | null;
+  /** iOS's link detection, null off iOS: `hasWebUrl` raises no prompt, `webUrl` is the read. */
+  detection: { hasWebUrl: () => Promise<boolean>; webUrl: () => Promise<string | null> } | null;
   hasUrl: () => Promise<boolean>;
   readText: () => Promise<string | null>;
 };
@@ -59,22 +44,23 @@ export async function copiedLinkFromPasteboard({
   serverAddress: string | null;
   onError: (error: unknown) => void;
 }): Promise<string | null> {
-  let hasUrl: boolean;
+  const read = (from: () => Promise<string | null>) =>
+    from().catch((error: unknown) => {
+      onError(error);
 
-  try {
-    hasUrl = await (pasteboard.probableWebUrl ?? pasteboard.hasUrl)();
-  } catch (error) {
-    onError(error);
-    hasUrl = await pasteboard.hasUrl().catch(() => false);
+      return null;
+    });
+  const { detection } = pasteboard;
+  const detected = await detection?.hasWebUrl().catch((error: unknown) => onError(error));
+
+  if (detection && detected !== undefined) {
+    const value = detected ? await read(detection.webUrl) : null;
+
+    return copiedLinkToOffer(value && withScheme(value.trim()), serverAddress);
   }
 
-  if (!hasUrl) return null;
+  // Without detection only a clipboard that is one whole link is offered.
+  if (!(await pasteboard.hasUrl().catch(() => false))) return null;
 
-  const text = await pasteboard.readText().catch((error: unknown) => {
-    onError(error);
-
-    return null;
-  });
-
-  return copiedLinkToOffer({ hasUrl, text, serverAddress });
+  return copiedLinkToOffer(await read(pasteboard.readText), serverAddress);
 }

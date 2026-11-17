@@ -1,7 +1,7 @@
 import { use, useEffect, useState } from "react";
 import { copiedLinkFromPasteboard } from "@/features/recipes/utils/copied-link";
 import { ServerAddressContext } from "@/lib/network/server-address";
-import { hasProbableWebUrl } from "@/lib/pasteboard-link";
+import { pasteboardLinkDetection } from "@/lib/pasteboard-link";
 import * as Clipboard from "expo-clipboard";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -19,7 +19,7 @@ export function useCopiedLink(): string | null {
 
     void copiedLinkFromPasteboard({
       pasteboard: {
-        probableWebUrl: hasProbableWebUrl,
+        detection: pasteboardLinkDetection,
         hasUrl: () => Clipboard.hasUrlAsync(),
         readText: () => Clipboard.getStringAsync(),
       },
