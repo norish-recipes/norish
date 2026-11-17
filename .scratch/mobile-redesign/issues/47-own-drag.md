@@ -11,7 +11,7 @@
 - [x] Nothing reflows until the drop: a drop line and a highlighted target section; light haptic crossing sections, medium on drop.
 - [x] Frame-driven auto-scroll.
 - [x] A drop on a heading lands in that section (empty and collapsed too); above the first heading snaps back; no remount on drop.
-- [ ] Unit tests for hit-testing and drop resolution; Maestro drag flows green; checked on the device.
+- [x] Unit tests for hit-testing and drop resolution; Maestro drag flows green; checked on the device.
 
 ## Comments
 
