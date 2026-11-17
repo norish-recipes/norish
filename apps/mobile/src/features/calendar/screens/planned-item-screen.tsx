@@ -1,75 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import React from "react";
+import { View } from "react-native";
+import { MoveFields } from "@/components/move-fields";
+import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
-import { SlotTabs } from "@/components/slot-tabs";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
+import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import { DatePicker, Host } from "@expo/ui/swift-ui";
-import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Skeleton, TextField } from "heroui-native";
+import { Button, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
-import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import {
-  useCalendarMutations,
   useCalendarRangeQuery,
+  usePlannedItemDraft,
   usePlannedItemText,
 } from "@norish/shared-react/calendar";
 import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
 import { usePlatform } from "@norish/shared-react/platform";
 import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
-/** A planned item's sheet: a note's text with Save, its date and slot, which move it at once, its
- * recipe, its groceries, and Remove. */
+/** A planned item's sheet: a draft of its note's text, day and slot that Save writes as one change
+ * and Close drops, its recipe, its groceries, and Remove after a confirm. */
 export function PlannedItemScreen() {
-  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { calendarData, isRead } = useCalendarRangeQuery();
   const items = Object.values(calendarData).flat();
   const item = items.find((candidate) => candidate.id === id);
   const gone = isRead && !item;
 
-  // Removed here or by someone else: nothing left to show.
-  useEffect(() => {
-    if (gone) router.back();
-  }, [gone, router]);
+  useCloseWhenGone(gone);
 
-  if (!item) {
-    return (
-      <Sheet name="planned-item" title="">
-        <SheetBody>
-          <Skeleton className="h-[110px] rounded-[22px]" />
-        </SheetBody>
-      </Sheet>
-    );
-  }
-
-  return <PlannedItemSheet item={item} />;
+  return item ? <PlannedItemSheet item={item} /> : <PlannedItemSkeleton name="planned-item" />;
 }
 
 function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const intl = useIntl();
   const router = useRouter();
   const { navigation } = usePlatform();
-  const { moveItem, deleteItem, updateItem } = useCalendarMutations();
-  const { range } = useCalendarRangeQuery();
+  const confirmRemove = useConfirmRemovePlanned();
   const { title, subtitle } = usePlannedItemText()(item);
-  const accent = useAccentTextColor();
+  const { draft, changes, setTitle, setDate, setSlot, save } = usePlannedItemDraft(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
-  // A note's text, saved on Save as web's note panel does.
-  const [note, setNote] = useState(item.title ?? "");
-  const noteChanged = !recipeId && note.trim().length > 0 && note.trim() !== item.title;
-  const saveNote = () => {
-    updateItem(item.id, note.trim());
+  const saveAndClose = () => {
+    save();
     router.back();
-  };
-  // Another day or slot: last there, as a drag puts it. A day past the range leaves it, so the sheet closes.
-  const moveTo = (day: string, slot: Slot) => {
-    if (day === item.date && slot === item.slot) return;
-    moveItem(item.id, day, slot);
-    if (day < range.startISO || day > range.endISO) router.back();
   };
 
   return (
@@ -114,10 +90,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
                 className="h-[50px]"
                 testID="planned-item-remove"
                 variant="danger-soft"
-                onPress={() => {
-                  deleteItem(item.id);
-                  router.back();
-                }}
+                onPress={() => confirmRemove(item)}
               >
                 <Button.Label>{intl.formatMessage({ id: "common.actions.remove" })}</Button.Label>
               </Button>
@@ -125,15 +98,11 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
           </Sheet.Actions>
         </View>
       }
-      confirm={
-        recipeId
-          ? undefined
-          : {
-              label: intl.formatMessage({ id: "common.actions.save" }),
-              disabled: !noteChanged,
-              onPress: saveNote,
-            }
-      }
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.save" }),
+        disabled: !changes,
+        onPress: saveAndClose,
+      }}
       name="planned-item"
       subtitle={subtitle ?? undefined}
       title={title}
@@ -146,40 +115,19 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
               placeholder={intl.formatMessage({ id: "calendar.editNote.notePlaceholder" })}
               returnKeyType="done"
               testID="planned-item-note"
-              value={note}
-              onChangeText={setNote}
-              onSubmitEditing={noteChanged ? saveNote : undefined}
+              value={draft.title}
+              onChangeText={setTitle}
+              onSubmitEditing={changes ? saveAndClose : undefined}
             />
           </TextField>
         )}
-        <View className="bg-default overflow-hidden rounded-[22px]">
-          <View className="h-[52px] flex-row items-center justify-between pr-3 pl-4">
-            <Text className="text-foreground text-base">
-              {intl.formatMessage({ id: "calendar.editPlannedRecipe.date" })}
-            </Text>
-            <Host matchContents>
-              <DatePicker
-                modifiers={[
-                  accessibilityIdentifier("planned-item-date"),
-                  ...(accent ? [tint(accent)] : []),
-                ]}
-                selection={parseDateKey(item.date)}
-                onDateChange={(date) => moveTo(dateKey(date), item.slot)}
-              />
-            </Host>
-          </View>
-          <View className="border-separator gap-2 border-t px-3 pt-2.5 pb-3">
-            <Text className="text-muted mx-1 text-[13px]">
-              {intl.formatMessage({ id: "calendar.editPlannedRecipe.slot" })}
-            </Text>
-            <SlotTabs
-              inCard
-              testID="planned-item-slot"
-              value={item.slot}
-              onChange={(slot) => moveTo(item.date, slot)}
-            />
-          </View>
-        </View>
+        <MoveFields
+          date={parseDateKey(draft.date)}
+          slot={draft.slot}
+          testID="planned-item"
+          onDateChange={(day) => setDate(dateKey(day))}
+          onSlotChange={setSlot}
+        />
       </SheetBody>
     </Sheet>
   );

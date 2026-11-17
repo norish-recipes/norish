@@ -12,6 +12,7 @@ export const TAB_ROUTES = {
     cookbook: "/cookbook/[id]",
     newCookbook: "/new-cookbook",
     planRecipe: "/plan-recipe",
+    move: "/move",
     addToGroceries: "/add-to-groceries",
     cookbookAddRecipes: "/cookbook-add-recipes",
   },

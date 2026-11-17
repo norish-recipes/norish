@@ -6,7 +6,7 @@ import { Stack } from "expo-router";
 import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
-// The sheets whose content can outgrow 62%; Rename fits its field.
+// The sheets whose content can outgrow 62%; Rename and Move fit their fields.
 const SHEETS = ["filters", "plan", "add-to-groceries"] as const;
 
 // The sheets with a field above a list.
@@ -17,7 +17,7 @@ const SEARCH_SHEETS = [
   "new-cookbook",
 ] as const;
 
-const FIT_SHEETS = ["cookbook-rename"] as const;
+const FIT_SHEETS = ["cookbook-rename", "move"] as const;
 
 /** The Recipes tab's stack: the list screen draws its own title and avatar and has no native header; a cookbook page keeps a transparent one for its back button. */
 export function RecipesStack() {

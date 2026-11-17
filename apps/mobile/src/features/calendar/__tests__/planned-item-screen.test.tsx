@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 
 const held = vi.hoisted(() => ({
   items: [] as PlannedItemFromQuery[],
-  moveItem: vi.fn(),
-  updateItem: vi.fn(),
+  saveItem: vi.fn(),
   deleteItem: vi.fn(),
+  confirm: vi.fn(),
   back: vi.fn(),
   pickDate: (_date: Date) => {},
+  pickSlot: (_slot: string) => {},
 }));
 
 vi.mock("react-native", async () => {
@@ -19,6 +20,15 @@ vi.mock("react-native", async () => {
   return {
     Text: ({ children }: { children?: React.ReactNode }) => createElement("span", null, children),
     View: ({ children }: { children?: React.ReactNode }) => createElement("div", null, children),
+    Pressable: ({
+      children,
+      testID,
+      onPress,
+    }: {
+      children?: React.ReactNode;
+      testID?: string;
+      onPress?: () => void;
+    }) => createElement("button", { "data-testid": testID, onClick: onPress }, children),
   };
 });
 vi.mock("heroui-native", async () => {
@@ -42,12 +52,26 @@ vi.mock("heroui-native", async () => {
     );
 
   Button.Label = pass;
-  const Tabs = Object.assign(pass, {
-    List: pass,
-    Indicator: () => null,
-    Trigger: pass,
-    Label: pass,
-  });
+  const Tabs = Object.assign(
+    ({
+      children,
+      onValueChange,
+    }: {
+      children?: React.ReactNode;
+      onValueChange: (slot: string) => void;
+    }) => {
+      held.pickSlot = onValueChange;
+
+      return children;
+    },
+    {
+      List: pass,
+      Indicator: () => null,
+      Trigger: ({ testID, value }: { testID?: string; value: string }) =>
+        createElement("button", { "data-testid": testID, onClick: () => held.pickSlot(value) }),
+      Label: pass,
+    }
+  );
 
   return {
     Button,
@@ -111,28 +135,35 @@ vi.mock("@/components/sheet", async () => {
     { Actions: pass, Action: pass }
   );
 
-  return { Sheet, SheetBody: pass };
+  return { Sheet, SheetBody: pass, SheetStrip: pass };
 });
+vi.mock("@/hooks/use-confirm", () => ({ useConfirm: () => held.confirm }));
 vi.mock("react-intl", () => ({
-  useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+  useIntl: () => ({
+    formatMessage: ({ id }: { id: string }) => id,
+    formatDate: () => "d",
+    locale: "en",
+  }),
 }));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "note-1" }),
   useRouter: () => ({ back: held.back, replace: vi.fn() }),
+  useIsFocused: () => true,
 }));
 vi.mock("@norish/shared-react/platform", () => ({
   usePlatform: () => ({ navigation: { toRecipe: vi.fn() } }),
 }));
-vi.mock("@norish/shared-react/calendar", () => ({
+vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-12" }));
+// The draft is the real one; only the writes it hands to are held.
+vi.mock("../../../../../../packages/shared-react/src/calendar/use-calendar-mutations", () => ({
+  useCalendarMutations: () => ({ saveItem: held.saveItem, deleteItem: held.deleteItem }),
+}));
+vi.mock("@norish/shared-react/calendar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/calendar")>()),
   useCalendarRangeQuery: () => ({
     calendarData: { "2026-11-12": held.items },
     isRead: true,
     range: { startISO: "2026-10-29", endISO: "2026-11-26" },
-  }),
-  useCalendarMutations: () => ({
-    moveItem: held.moveItem,
-    updateItem: held.updateItem,
-    deleteItem: held.deleteItem,
   }),
   usePlannedItemText: () => (item: PlannedItemFromQuery) => ({ title: item.title, subtitle: null }),
 }));
@@ -163,42 +194,69 @@ describe("PlannedItemScreen", () => {
     held.items = [note];
   });
 
-  it("edits a note's text and saves it", () => {
+  it("saves a note's text, day and slot as one change, and writes nothing before Save", () => {
     render(<PlannedItemScreen />);
-    const field = screen.getByTestId("planned-item-note");
     const save = screen.getByTestId("planned-item-confirm");
 
-    expect(field).toHaveProperty("value", "Leftovers");
+    expect(screen.getByTestId("planned-item-note")).toHaveProperty("value", "Leftovers");
     expect(save).toHaveProperty("disabled", true);
 
-    fireEvent.change(field, { target: { value: " Leek soup " } });
+    fireEvent.change(screen.getByTestId("planned-item-note"), { target: { value: " Leek soup " } });
+    fireEvent.click(screen.getByTestId("planned-item-day-3"));
+    fireEvent.click(screen.getByTestId("planned-item-slot-Dinner"));
+
+    expect(held.saveItem).not.toHaveBeenCalled();
+    expect(save).toHaveProperty("disabled", false);
+
     fireEvent.click(save);
 
-    expect(held.updateItem).toHaveBeenCalledWith("note-1", "Leek soup");
-    expect(held.back).toHaveBeenCalled();
+    expect(held.saveItem).toHaveBeenCalledTimes(1);
+    expect(held.saveItem).toHaveBeenCalledWith("note-1", {
+      title: "Leek soup",
+      move: { date: "2026-11-15", slot: "Dinner" },
+    });
+    expect(held.back).toHaveBeenCalledTimes(1);
   });
 
-  it("has no text to edit for a recipe", () => {
+  it("moves to a day the date picker picks, beyond the strip", () => {
+    render(<PlannedItemScreen />);
+    act(() => held.pickDate(new Date(2027, 2, 24, 9, 30)));
+    fireEvent.click(screen.getByTestId("planned-item-confirm"));
+
+    expect(held.saveItem).toHaveBeenCalledWith("note-1", {
+      move: { date: "2027-03-24", slot: "Lunch" },
+    });
+  });
+
+  it("keeps Save disabled when a change is put back", () => {
+    render(<PlannedItemScreen />);
+    fireEvent.click(screen.getByTestId("planned-item-slot-Dinner"));
+    fireEvent.click(screen.getByTestId("planned-item-slot-Lunch"));
+
+    expect(screen.getByTestId("planned-item-confirm")).toHaveProperty("disabled", true);
+  });
+
+  it("has no text to edit for a recipe, but moves it on Save", () => {
     held.items = [{ ...note, itemType: "recipe", recipeId: "r1" }];
     render(<PlannedItemScreen />);
+    fireEvent.click(screen.getByTestId("planned-item-slot-Snack"));
+    fireEvent.click(screen.getByTestId("planned-item-confirm"));
 
     expect(screen.queryByTestId("planned-item-note")).toBeNull();
-    expect(screen.queryByTestId("planned-item-confirm")).toBeNull();
+    expect(held.saveItem).toHaveBeenCalledWith("note-1", {
+      move: { date: "2026-11-12", slot: "Snack" },
+    });
   });
 
-  it("moves to a picked day in the range last in its slot and stays open on it", () => {
+  it("removes only once the confirm is accepted", () => {
     render(<PlannedItemScreen />);
-    held.pickDate(new Date(2026, 10, 15));
+    fireEvent.click(screen.getByTestId("planned-item-remove"));
 
-    expect(held.moveItem).toHaveBeenCalledWith("note-1", "2026-11-15", "Lunch");
-    expect(held.back).not.toHaveBeenCalled();
-  });
+    expect(held.confirm).toHaveBeenCalledTimes(1);
+    expect(held.deleteItem).not.toHaveBeenCalled();
 
-  it("moves to a picked day past the range and closes, leaving the range as it is", () => {
-    render(<PlannedItemScreen />);
-    held.pickDate(new Date(2027, 2, 24));
+    held.confirm.mock.calls[0]![0].onConfirm();
 
-    expect(held.moveItem).toHaveBeenCalledWith("note-1", "2027-03-24", "Lunch");
-    expect(held.back).toHaveBeenCalledTimes(1);
+    expect(held.deleteItem).toHaveBeenCalledWith("note-1");
   });
 });
