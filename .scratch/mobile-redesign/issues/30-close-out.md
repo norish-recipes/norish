@@ -7,7 +7,7 @@
 **Status:** open
 
 - [ ] Maestro flows from Parts 3–6's Testing Decisions; one full run after 18–29 and 31–38 are reviewed and fixed; each new flow run repeatedly to prove it stable.
-- [ ] The grocery realtime check returns.
+- [x] The grocery realtime check returns.
 - [ ] Device run of every new board against the canvas.
 - [ ] Docs pages for the Recipe screen and timers, Groceries and Calendar, and the widgets page stating that widgets update when Norish runs; release notes for 0.27.0-beta.
 
@@ -29,3 +29,10 @@
 - expo-notifications no longer declares remote push (`aps-environment` gone from the prebuilt entitlements; Live Activity, App Group and Share Extension unchanged).
 - Photo and camera permission strings name recipe photos; comments trimmed to two lines; eslint-disable reasons; one route map (`tab-routes.ts`); one serial queue for timers and widgets; `isRead` on the Pantry; web's grocery grouping memo removed.
 - Simulator (iPhone 18 Pro, iOS 27.2, Release build with both extensions, own server on :3400, throwaway Postgres and Valkey): cold recipe, cook-mode and missing-recipe links all go back to the Recipes list with the tab bar; a step photo whose upload finished while its step was held stayed on that step and was stored; a Store rename then an immediate reorder both stored.
+
+### Maestro flows written (2026-11-17)
+
+- New flows, each run three times in a row on the iPhone 17 (iOS 27.2, fresh Release build of a0918939c) with no failure: `recipe-scale`, `recipe-write-yourself`, `recipe-edit`, `cook-mode`, `groceries-add-repeat`, `groceries-tick-clear`, `groceries-drag`, `groceries-drag-aisle`, `stores-manage`, `stores-reorder`, `pantry-filter-remove`, `groceries-offline`, `groceries-realtime` (the realtime check that Part 2 deferred), `calendar-plan-accessory`, `calendar-drag`, `calendar-remove`, `calendar-offline`. The Part 6 flows were left as they are; the existing flows were not run.
+- Drags are a `swipe` from the row's coordinates with `duration: 10000`: the finger stays under the touch slop for the half second that lifts the row, then carries it across the next heading. The coordinates come from the list's layout on the iPhone 17 and are percentages of the screen.
+- The harness gained a run count (`pnpm maestro <flow> 3`), control routes for groceries, Stores, aisles, plans and Pantry foods, and a reset that also clears Stores and planned items. No app code or test id changed, and no app fault turned up.
+- The first box stays open: the one full run of the whole suite is still to come.
