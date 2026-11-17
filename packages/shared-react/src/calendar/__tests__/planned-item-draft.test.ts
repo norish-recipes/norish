@@ -69,13 +69,15 @@ describe("plannedItemChanges", () => {
   });
 
   it("refuses a blank note, whatever else changed", () => {
-    expect(plannedItemChanges(note, { ...unchanged(note), title: "  ", slot: "Dinner" })).toBeNull();
+    expect(
+      plannedItemChanges(note, { ...unchanged(note), title: "  ", slot: "Dinner" })
+    ).toBeNull();
   });
 
   it("never writes text for a recipe", () => {
-    expect(
-      plannedItemChanges(recipe, { ...unchanged(recipe), title: "x", slot: "Snack" })
-    ).toEqual({ move: { date: "2026-11-12", slot: "Snack" } });
+    expect(plannedItemChanges(recipe, { ...unchanged(recipe), title: "x", slot: "Snack" })).toEqual(
+      { move: { date: "2026-11-12", slot: "Snack" } }
+    );
   });
 });
 
