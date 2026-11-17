@@ -27,6 +27,8 @@ Notifications.setNotificationHandler({
 
 // Counts permission answers, so the notifications sync again after one.
 const answers = createMark(0);
+// Named as a hook: the React Compiler memoises an `answers.use()` call as a plain value.
+const useAnswers = answers.use;
 
 /** Asks for notification permission the first time a timer starts; a refusal leaves the timer running. */
 export async function askTimerNotifications(): Promise<void> {
@@ -50,7 +52,7 @@ function useTimerNotifications() {
       .map((timer) => `${timer.id}:${timer.status}:${timerEndsAt(timer) ?? timer.remainingMs}`)
       .join("|")
   );
-  const answered = answers.use();
+  const answered = useAnswers();
   const body = intl.formatMessage({ id: "common.timer.notification_body" });
   const paused = intl.formatMessage({ id: "common.timer.paused" });
   const done = intl.formatMessage({ id: "common.timer.done" });

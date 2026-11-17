@@ -6,9 +6,12 @@ import { createMark } from "./mark";
 // How many screens with their own chrome, and how many sheets, are mounted and in front.
 const hiders = createMark(0);
 const sheets = createMark(0);
+// Named as hooks: the React Compiler memoises a `mark.use()` call as a plain value.
+const useHiders = hiders.use;
+const useSheets = sheets.use;
 
 /** Whether the tab bar goes: a screen with its own chrome is in front, or a sheet is open. */
-export const useTabBarHidden = () => hiders.use() + sheets.use() > 0;
+export const useTabBarHidden = () => useHiders() + useSheets() > 0;
 
 /** Whether a sheet is mounted and in front right now. */
 export const isSheetOpen = () => sheets.get() > 0;
