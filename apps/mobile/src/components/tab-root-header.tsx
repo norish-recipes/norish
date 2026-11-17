@@ -33,13 +33,15 @@ export function TabRootHeader({
         headerTransparent: true,
         headerShadowVisible: false,
         scrollEdgeEffects: { top: "soft" },
+        // The native title stays for VoiceOver, which skips the drawn one as it fades out.
         headerTitleStyle: { color: "transparent" },
         unstable_headerLeftItems: () => [
           {
             type: "custom",
             element: (
               <Animated.Text
-                accessibilityRole="header"
+                accessibilityElementsHidden
+                accessible={false}
                 className="text-foreground text-[34px] font-semibold"
                 style={titleStyle}
               >
