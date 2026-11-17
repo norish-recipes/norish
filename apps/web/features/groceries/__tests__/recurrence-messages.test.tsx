@@ -1,4 +1,6 @@
-import { createTranslator } from "next-intl";
+import type { ReactNode } from "react";
+import { renderHook } from "@testing-library/react";
+import { NextIntlClientProvider, useTranslations } from "next-intl";
 import { describe, expect, it } from "vitest";
 
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
@@ -10,9 +12,14 @@ import {
 } from "@norish/shared/lib/recurrence/formatter";
 
 /** A repeat as the recurrence pill reads it, through next-intl and the shipped messages. */
-function labelIn(locale: string, common: object) {
-  const t = createTranslator({ locale, messages: { common }, namespace: "common.recurrence" });
-  const words = recurrenceTranslationsFrom((key, values) => t(key, values));
+function labelIn(locale: string, common: typeof enCommon) {
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <NextIntlClientProvider locale={locale} messages={{ common }}>
+      {children}
+    </NextIntlClientProvider>
+  );
+  const { result } = renderHook(() => useTranslations("common.recurrence"), { wrapper });
+  const words = recurrenceTranslationsFrom(result.current);
 
   return (pattern: RecurrencePattern) => formatRecurrenceSummary(pattern, words);
 }
