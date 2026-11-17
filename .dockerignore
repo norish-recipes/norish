@@ -65,3 +65,6 @@ docs/
 **/tests
 **/*.test.ts
 **/*.test.tsx
+
+# Dev-only measurement scripts import the E2E harness, which is dropped above.
+apps/web/scripts/measure-*.ts
