@@ -1,11 +1,13 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
+import { createSettled } from "./create-settled";
 
 export function useRecipeImages() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const uploadImageMutation = useMutation(trpc.recipes.uploadImage.mutationOptions());
   const { mutateAsync: mutateUploadImageAsync } = uploadImageMutation;
@@ -27,8 +29,15 @@ export function useRecipeImages() {
     uploadStepImageData: (input: Parameters<typeof uploadStepImageMutation.mutateAsync>[0]) =>
       mutateUploadStepImageAsync(input),
     deleteStepImage: (url: string) => mutateDeleteStepImageAsync({ url }),
-    uploadGalleryImageData: (input: Parameters<typeof uploadGalleryImageMutation.mutateAsync>[0]) =>
-      mutateUploadGalleryImageAsync(input),
+    /** Waits for the recipe's own create to be answered, so the photo is linked to it. */
+    uploadGalleryImageData: async (
+      input: Parameters<typeof uploadGalleryImageMutation.mutateAsync>[0],
+      recipeId: string
+    ) => {
+      await createSettled(queryClient, trpc.recipes.create.mutationKey(), recipeId);
+
+      return mutateUploadGalleryImageAsync(input);
+    },
     deleteGalleryImage: (imageId: string, version: number) =>
       mutateDeleteGalleryImageAsync({ imageId, version }),
     isUploadingImage: uploadImageMutation.isPending,

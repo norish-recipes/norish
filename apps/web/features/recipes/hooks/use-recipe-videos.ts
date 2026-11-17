@@ -36,7 +36,7 @@ export function useRecipeVideos(): RecipeVideosResult {
   } = useSharedRecipeVideos();
 
   const uploadGalleryVideo = (file: File, recipeId: string, order?: number, duration?: number) =>
-    uploadGalleryVideoData(uploadForm({ video: file, recipeId, order, duration }));
+    uploadGalleryVideoData(uploadForm({ video: file, recipeId, order, duration }), recipeId);
 
   return {
     uploadGalleryVideo,

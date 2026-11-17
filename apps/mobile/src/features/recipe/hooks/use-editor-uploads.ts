@@ -113,7 +113,8 @@ export function useEditorUploads(recipeId: string) {
         async (file, index) => {
           const order = firstOrder + index;
           const result = await images.uploadGalleryImageData(
-            uploadForm({ image: file, recipeId, order })
+            uploadForm({ image: file, recipeId, order }),
+            recipeId
           );
 
           if (!result.success || !result.url) throw new Error(result.error);
