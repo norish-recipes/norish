@@ -85,6 +85,10 @@ You can browse saved recipes and meals offline. Changes such as plans, cookbook
 edits, deletes and imports are sent when you reconnect. Uploading a cookbook
 cover requires a connection.
 
+For the recipe page, cook mode and timers, see [Recipes on iPhone](/recipes/mobile-recipe).
+For shopping and planning, see [Groceries on iPhone](/groceries/mobile-groceries),
+[Calendar on iPhone](/mobile-calendar) and [Calendar widgets on iPhone](/mobile-widgets).
+
 ## Share to Norish
 
 Share a link, text or up to 10 photos from another app and choose Norish. The
