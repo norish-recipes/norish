@@ -1,0 +1,31 @@
+# Drags a planned item to another day: held on its row and carried onto the next day's card, it moves
+# there, which the server holds, and the old day no longer lists it.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Drag Plan Soup", "key": "soup"}]'
+- runFlow:
+    file: subflows/plan.yaml
+    env:
+      PLAN: '{"recipeName": "Drag Plan Soup", "offset": 1, "slot": "Dinner"}'
+- evalScript: ${output.target = json(http.get(NORISH_PROXY_CONTROL_URL + '/day?offset=2').body).key}
+- tapOn:
+    id: tab-calendar
+- extendedWaitUntil:
+    visible:
+      id: calendar-item-.*
+      text: Drag Plan Soup.*
+    timeout: 20000
+# A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the half
+# second that lifts it, then carries it onto the next day's heading.
+- swipe:
+    start: 50%,38%
+    end: 50%,46%
+    duration: 10000
+- evalScript: ${output.moved = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?name=Drag%20Plan%20Soup&date=' + output.target).body)}
+- assertTrue: ${output.moved.date == output.target}
+- assertVisible:
+    id: calendar-item-.*
+    text: Drag Plan Soup.*

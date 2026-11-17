@@ -1,0 +1,51 @@
+# Adds a grocery that repeats from the Add groceries sheet: "milk every week" is detected as a repeat,
+# the detected pill confirms it, Add. The server holds the grocery with its repeat and the list shows it.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: add-grocery
+    timeout: 20000
+- tapOn:
+    id: add-grocery
+- extendedWaitUntil:
+    visible:
+      id: add-grocery-field
+    timeout: 20000
+- inputText: Milk every week
+# The sentence is read as a repeat, which one tap on the pill confirms. The pill sits under the
+# keyboard, so the keyboard goes first and the sheet settles before the tap.
+- extendedWaitUntil:
+    visible:
+      id: repeat-detected
+    timeout: 20000
+- hideKeyboard
+- waitForAnimationToEnd
+- tapOn:
+    id: repeat-detected
+- extendedWaitUntil:
+    visible:
+      id: repeat-confirmed
+    timeout: 20000
+# Add is the sheet's native header item, which has no id.
+- tapOn: ^Add$
+# The sheet stays open for the next one, whose field starts empty again.
+- evalScript: ${output.names = json(http.get(NORISH_PROXY_CONTROL_URL + '/groceries?min=1').body).names}
+- assertTrue: ${output.names.length == 1}
+- evalScript: ${output.grocery = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?repeats=true&name=' + encodeURIComponent(output.names[0])).body)}
+- assertTrue: ${output.grocery.repeats}
+- assertNotVisible:
+    id: repeat-confirmed
+- tapOn: Close
+- extendedWaitUntil:
+    notVisible:
+      id: add-grocery-sheet
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: (group|grocery)-.*
+      text: .*${output.names[0]}.*
+    timeout: 20000

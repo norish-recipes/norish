@@ -1,0 +1,46 @@
+# Plans a recipe from the Calendar's accessory: Plan recipe opens the sheet, the strip's day after
+# tomorrow and the Dinner tab are picked, the recipe is tapped. Planning opens Add to groceries; once
+# closed, the Calendar shows the recipe, and the server holds it on that day in that slot.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Calendar Pasta", "key": "pasta", "ingredients": ["2 eggs", "100 g flour"]}]'
+- tapOn:
+    id: tab-calendar
+- extendedWaitUntil:
+    visible:
+      id: plan-recipe-accessory
+    timeout: 20000
+- assertVisible:
+    id: calendar-screen
+- evalScript: ${output.target = json(http.get(NORISH_PROXY_CONTROL_URL + '/day?offset=2').body).key}
+- tapOn:
+    id: plan-recipe-accessory
+- extendedWaitUntil:
+    visible:
+      id: plan-recipe-${output.pasta}
+    timeout: 20000
+- tapOn:
+    id: plan-recipe-day-2
+- tapOn:
+    id: plan-recipe-slot-Dinner
+- tapOn:
+    id: plan-recipe-${output.pasta}
+# Planning opens Add to groceries; its own Close leaves the Calendar.
+- extendedWaitUntil:
+    visible:
+      id: add-to-groceries-sheet
+    timeout: 20000
+- tapOn: Close
+- extendedWaitUntil:
+    notVisible:
+      id: add-to-groceries-sheet
+    timeout: 20000
+- evalScript: ${output.planned = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?name=Calendar%20Pasta&date=' + output.target + '&slot=Dinner').body)}
+- assertTrue: ${output.planned.date == output.target && output.planned.slot == 'Dinner'}
+- scrollUntilVisible:
+    element:
+      id: calendar-item-.*
+      text: Calendar Pasta.*

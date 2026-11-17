@@ -1,4 +1,5 @@
 // What the flows ask of the throwaway server over the control port: clean slate, a recipe, a count.
+import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -128,7 +129,7 @@ export function seeder({ trpc, query }) {
       }
 
       for (const { id, version } of await query("stores.list")) {
-        await trpc("stores.remove", {
+        await trpc("stores.delete", {
           storeId: id,
           version,
           deleteGroceries: false,
@@ -225,11 +226,44 @@ export function seeder({ trpc, query }) {
         await sleep(250);
       }
     },
+    // The aisle `store` files `food` (a catalogue food's name) under: now, or once it is `is` (a
+    // name, or null for none), throwing after 15 s with where it is instead.
+    async filedAisle({ store, food, is }) {
+      const stores = await query("stores.list");
+      const found = stores.find((candidate) => candidate.name === store);
+
+      if (!found) throw new Error(`no Store named "${store}"`);
+
+      const { items } = await query("ingredients.list", {
+        search: food,
+        locale: "en",
+        listedOnly: false,
+      });
+      const ids = new Set(
+        items
+          .filter((item) => item.name.toLowerCase() === food.toLowerCase())
+          .map((item) => item.id)
+      );
+      const deadline = Date.now() + 15_000;
+
+      for (;;) {
+        const links = await query("stores.aisleLinks");
+        const link = links.find((one) => one.storeId === found.id && ids.has(one.ingredientId));
+        const aisle =
+          found.aisles.find((candidate) => candidate.id === link?.aisleId)?.name ?? null;
+
+        if (aisle === is) return { aisle };
+        if (Date.now() > deadline) {
+          throw new Error(`waited 15 s for ${food} at ${store} under ${is}; it is under ${aisle}`);
+        }
+        await sleep(250);
+      }
+    },
     // A Store of `aisles` (names, in order); answers its id.
     createStore({ name, aisles = [] }) {
       return trpc("stores.create", {
         name,
-        aisles: aisles.map((aisle) => ({ name: aisle })),
+        aisles: aisles.map((aisle) => ({ id: randomUUID(), name: aisle })),
       });
     },
     // The local day `offset` days from today, as the app keys it.

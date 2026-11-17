@@ -202,7 +202,7 @@ const bounds = (route) => ({
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
   // `POST /reset`, `POST /recipe`, `POST /grocery`, `POST /store`, `POST /plan` and `POST /pantry-add`
-  // (a JSON body each), `GET /count?name=`, `GET /groceries`, `GET /grocery`, `GET /stores`,
+  // (a JSON body each), `GET /count?name=`, `GET /groceries`, `GET /grocery`, `GET /stores`, `GET /aisle`,
   // `GET /day?offset=`, `GET /planned`, `GET /pantry` and `GET /pantry-kept` answer in JSON.
   const route = new URL(request.url ?? "/", "http://control");
   const body = await new Promise((resolve) => {
@@ -247,6 +247,18 @@ const control = createServer(async (request, response) => {
         JSON.stringify({
           names: await seed.storeNames({ is: is === null ? undefined : JSON.parse(is) }),
         })
+      );
+    } else if (route.pathname === "/aisle") {
+      const is = route.searchParams.get("is");
+
+      response.write(
+        JSON.stringify(
+          await seed.filedAisle({
+            store: route.searchParams.get("store") ?? "",
+            food: route.searchParams.get("food") ?? "",
+            is: is === "" || is === null ? null : is,
+          })
+        )
       );
     } else if (route.pathname === "/store") {
       response.write(JSON.stringify({ id: await seed.createStore(JSON.parse(body)) }));

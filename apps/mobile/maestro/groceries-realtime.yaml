@@ -1,0 +1,29 @@
+# Another member adds a grocery on the server: its line appears in the open Groceries list with no
+# reload, over the realtime socket.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- runFlow:
+    file: subflows/grocery.yaml
+    env:
+      GROCERIES: '[{"name": "Realtime Soup"}]'
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: (group|grocery)-tick-.*
+      text: .*Realtime Soup.*
+    timeout: 20000
+- assertNotVisible: .*Realtime Pie.*
+- runFlow:
+    file: subflows/grocery.yaml
+    env:
+      GROCERIES: '[{"name": "Realtime Pie"}]'
+- extendedWaitUntil:
+    visible:
+      id: (group|grocery)-tick-.*
+      text: .*Realtime Pie.*
+    timeout: 20000
+- assertVisible:
+    id: (group|grocery)-tick-.*
+    text: .*Realtime Soup.*
