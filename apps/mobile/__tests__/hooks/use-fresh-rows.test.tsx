@@ -16,20 +16,20 @@ describe("useFreshRows", () => {
       initialProps: { rows: first },
     });
 
-    expect(result.current.size).toBe(0);
+    expect(result.current.fresh.size).toBe(0);
 
     const next = rowsOf("a", "b", "c");
 
     rerender({ rows: next });
     // The commit that mounts the new row is done, so a scroll that mounts rows again animates none.
-    expect(result.current.size).toBe(0);
+    expect(result.current.fresh.size).toBe(0);
   });
 
   it("names the new row's value for the commit that mounts it", () => {
     const seen: ReadonlySet<object>[] = [];
     const { rerender } = renderHook(
       ({ rows }) => {
-        const fresh = useFreshRows(rows, true);
+        const { fresh } = useFreshRows(rows, true);
 
         seen.push(fresh);
 
@@ -51,7 +51,7 @@ describe("useFreshRows", () => {
     const seen: ReadonlySet<object>[] = [];
     const { rerender } = renderHook(
       ({ rows }) => {
-        const fresh = useFreshRows(rows, true);
+        const { fresh } = useFreshRows(rows, true);
 
         seen.push(fresh);
 
@@ -68,7 +68,7 @@ describe("useFreshRows", () => {
     const seen: ReadonlySet<object>[] = [];
     const { rerender } = renderHook(
       ({ rows }) => {
-        const fresh = useFreshRows(rows, true);
+        const { fresh } = useFreshRows(rows, true);
 
         seen.push(fresh);
 
@@ -88,7 +88,7 @@ describe("useFreshRows", () => {
     const seen: ReadonlySet<object>[] = [];
     const { rerender } = renderHook(
       ({ rows }) => {
-        const fresh = useFreshRows(rows, true);
+        const { fresh } = useFreshRows(rows, true);
 
         seen.push(fresh);
 
@@ -111,14 +111,14 @@ describe("useFreshRows", () => {
     });
 
     rerender({ rows: rowsOf("a", "b"), loaded: true });
-    expect(result.current.size).toBe(0);
+    expect(result.current.fresh.size).toBe(0);
   });
 
   it("animates no row that arrives with a new epoch, such as the days a list grew by", () => {
     const seen: ReadonlySet<object>[] = [];
     const { rerender } = renderHook(
       ({ rows, epoch }) => {
-        const fresh = useFreshRows(rows, true, epoch);
+        const { fresh } = useFreshRows(rows, true, epoch);
 
         seen.push(fresh);
 
@@ -132,5 +132,25 @@ describe("useFreshRows", () => {
 
     rerender({ rows: rowsOf("z", "a", "b", "c"), epoch: "1..28" });
     expect(seen.some((fresh) => fresh.size === 1)).toBe(true);
+  });
+
+  it("leaves the commit a new epoch lands in unsettled, and settles it once that commit is done", () => {
+    const settled: boolean[] = [];
+    const { result, rerender } = renderHook(
+      ({ rows, epoch }) => {
+        const shown = useFreshRows(rows, true, epoch);
+
+        settled.push(shown.settled);
+
+        return shown;
+      },
+      { initialProps: { rows: rowsOf("a"), epoch: "7..21" } }
+    );
+
+    expect(settled).not.toContain(false);
+    rerender({ rows: rowsOf("z", "a"), epoch: "1..28" });
+
+    expect(settled).toContain(false);
+    expect(result.current.settled).toBe(true);
   });
 });

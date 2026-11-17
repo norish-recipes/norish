@@ -69,7 +69,7 @@ export function GroceriesList({
 }) {
   const insets = useSafeAreaInsets();
   const recurrence = useRecurrenceLabel();
-  const fresh = useFreshRows(rows, loaded);
+  const { fresh } = useFreshRows(rows, loaded);
   const { exitingFor, leaveThen, doneRef, itemRef } = useLeaveToDone(rows);
   // What sits under a row's name: how it repeats, else the recipe it came from.
   const sublineOf = (

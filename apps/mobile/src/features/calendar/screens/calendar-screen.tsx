@@ -1,5 +1,5 @@
 import type { FlatList, FlatListProps } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -67,8 +67,7 @@ export function CalendarScreen() {
   const rows = timelineRows(days, calendarData, todayKey);
   // The days the timeline spans: growing it adds rows that neither fade in nor slide the rest.
   const span = `${dateKey(days[0]!)}..${dateKey(days.at(-1)!)}`;
-  const [settledSpan, setSettledSpan] = useState(span);
-  const fresh = useFreshRows(rows, isRead, span);
+  const { fresh, settled } = useFreshRows(rows, isRead, span);
   const todayIndex = rows.findIndex((row) => row.key === dayRowKey(todayKey));
   const todayShown = todayIndex < 0 || shownDays.length === 0 || shownDays.includes(todayKey);
   const dayIndex = day ? rows.findIndex((row) => row.key === dayRowKey(day)) : -1;
@@ -91,8 +90,6 @@ export function CalendarScreen() {
       }}
     />
   );
-
-  useEffect(() => setSettledSpan(span), [span]);
 
   // Until a read holds data an empty day is unknown, not empty: a failed first read stays a skeleton.
   if (!isRead) {
@@ -121,7 +118,7 @@ export function CalendarScreen() {
           getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
           initialScrollIndex={openIndex < 0 ? undefined : openIndex}
-          itemLayoutAnimation={settledSpan === span ? SPRING_LAYOUT : undefined}
+          itemLayoutAnimation={settled ? SPRING_LAYOUT : undefined}
           // Rows added above keep the ones on screen where they are.
           maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderHeading={(heading) => (
