@@ -63,6 +63,7 @@ export function PantryAddScreen() {
               </Text>
             )
           }
+          ListFooterComponent={more ? <ShowMore onPress={() => setShowAll(true)} /> : undefined}
           ListHeaderComponent={
             <View className="px-5 pb-3">
               <SheetSearchField
@@ -82,7 +83,6 @@ export function PantryAddScreen() {
               ) : null}
             </View>
           }
-          ListFooterComponent={more ? <ShowMore onPress={() => setShowAll(true)} /> : undefined}
           data={rows}
           inset={false}
           keyExtractor={(row) => row.key}
