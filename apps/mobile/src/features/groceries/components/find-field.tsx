@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -19,10 +19,11 @@ export function FindField({
   const intl = useIntl();
   const [muted] = useThemeColor(["muted"] as const);
   const label = intl.formatMessage({ id: "groceries.pantry.findPlaceholder" });
+  const [focused, setFocused] = useState(false);
 
   return (
     <View
-      className="bg-surface h-12 flex-row items-center gap-2.5 rounded-full px-4"
+      className={`bg-surface h-12 flex-row items-center gap-2.5 rounded-full border-2 px-3.5 ${focused ? "border-accent" : "border-transparent"}`}
       pointerEvents={disabled ? "none" : "auto"}
     >
       <Ionicons color={muted} name="search-outline" size={18} />
@@ -37,7 +38,9 @@ export function FindField({
         returnKeyType="search"
         testID="pantry-field"
         value={value}
+        onBlur={() => setFocused(false)}
         onChangeText={onChange}
+        onFocus={() => setFocused(true)}
       />
     </View>
   );
