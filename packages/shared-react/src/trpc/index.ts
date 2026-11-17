@@ -5,3 +5,4 @@ export {
   useTRPCClient,
 } from "./trpc-provider";
 export { OPERATION_ID_HEADER } from "./operation-id-link";
+export { isNotFoundError, retryUnlessNotFound } from "./not-found";

@@ -5,8 +5,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
+import { isNotFoundError } from "@norish/shared-react/trpc";
 
-import { isRecipeNotFound } from "../components/recipe-not-found";
 import { RecipeEditorScreen } from "./recipe-editor-screen";
 
 /** Edit: the editor on the recipe from the Warm Set or the server, for a reader who may edit it;
@@ -36,7 +36,7 @@ export function EditRecipeScreen() {
       key={ready?.id ?? "pending"}
       initialData={ready}
       mode="edit"
-      notFound={!recipe && (loaded || isRecipeNotFound(error))}
+      notFound={!recipe && (loaded || isNotFoundError(error))}
     />
   );
 }

@@ -5,8 +5,9 @@ import { Sheet } from "@/components/sheet";
 import { useLocalSearchParams } from "expo-router";
 
 import { useRecipeQuery } from "@norish/shared-react/recipes";
+import { isNotFoundError } from "@norish/shared-react/trpc";
 
-import { isRecipeNotFound, RecipeNotFound } from "./recipe-not-found";
+import { RecipeNotFound } from "./recipe-not-found";
 
 /** A recipe's sheet behind a link: `children` (and `actions`) once the recipe is read, else an
  * empty sheet or, where the server says it is gone, the not-found state. */
@@ -36,7 +37,7 @@ export function RecipeSheetGate({
     >
       {recipe ? (
         children
-      ) : isRecipeNotFound(error) ? (
+      ) : isNotFoundError(error) ? (
         // A fit sheet is as tall as its content, which a centred state has none of.
         <View className="h-64">
           <RecipeNotFound />

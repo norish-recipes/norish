@@ -13,6 +13,7 @@ import {
   useLoadedPageRecipe,
   useRecipeQuery,
 } from "@norish/shared-react/recipes";
+import { isNotFoundError } from "@norish/shared-react/trpc";
 
 import { CookbooksSection } from "../components/cookbooks-section";
 import { PrefetchIngredientIcons } from "../components/ingredient-icon-prefetch";
@@ -23,7 +24,7 @@ import { ProvenanceSection } from "../components/provenance-section";
 import { RatingSection } from "../components/rating-section";
 import { RecipeHeader } from "../components/recipe-header";
 import { HERO_HEIGHT, RecipeHero } from "../components/recipe-hero";
-import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
+import { RecipeNotFound } from "../components/recipe-not-found";
 import { SourceSection } from "../components/source-section";
 import { StepsSection } from "../components/steps-section";
 import { TintContext } from "../components/tint";
@@ -102,7 +103,7 @@ export function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipe, error } = useRecipeQuery(id);
   const page =
-    !recipe && isRecipeNotFound(error) ? (
+    !recipe && isNotFoundError(error) ? (
       <RecipeNotFound />
     ) : recipe ? (
       <RecipePage key={recipe.id} />
