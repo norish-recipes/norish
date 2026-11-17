@@ -1,4 +1,4 @@
-import type { Edge } from "@/components/card-edges";
+import type { Edge } from "@/lib/card-edges";
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";

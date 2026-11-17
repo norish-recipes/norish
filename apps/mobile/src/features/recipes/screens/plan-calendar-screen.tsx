@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 import { DayCard, DayCardSkeleton, formatDay } from "@/components/day-card";
-import { DAY_CARD, dayCardHeight, dayCardOffsets } from "@/components/day-card-height";
 import { Sheet, SheetList } from "@/components/sheet";
+import { DAY_CARD, dayCardHeight, dayCardOffsets } from "@/lib/day-card-height";
 import { useLocalSearchParams } from "expo-router";
 import { useIntl } from "react-intl";
 

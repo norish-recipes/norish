@@ -2,11 +2,10 @@ import type { ReactElement } from "react";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Loader } from "@/components/loader";
-import { tabListBottomInset } from "@/components/tab-list-inset";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
 import { useIsFocused } from "expo-router";
 
@@ -51,7 +50,6 @@ export function CardList<Row>({
   fadeHeight: FadeHeight;
   testID?: string;
 }) {
-  const insets = useSafeAreaInsets();
   const { minimised, homeIndicator, track } = useTabBarMinimised();
   const [scrolled, setScrolled] = useState(false);
   const isGrid = variant === "grid";
@@ -73,11 +71,7 @@ export function CardList<Row>({
               {/* From the last card down to the accessory's top, over the end padding below the strip. */}
               <View
                 className="absolute inset-x-0"
-                style={loadMoreFooterBox(
-                  tabListBottomInset(insets.bottom),
-                  homeIndicator,
-                  minimised
-                )}
+                style={loadMoreFooterBox(homeIndicator, minimised)}
               >
                 <Loader centred />
               </View>
@@ -87,7 +81,7 @@ export function CardList<Row>({
         ListHeaderComponent={header}
         className="flex-1"
         contentContainerStyle={{
-          paddingBottom: tabListBottomInset(insets.bottom),
+          paddingBottom: tabListBottomInset(homeIndicator),
         }}
         contentInsetAdjustmentBehavior="never"
         data={cardChunks(rows, isGrid ? GRID_CELL : 1)}

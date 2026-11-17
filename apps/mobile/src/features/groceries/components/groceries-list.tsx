@@ -3,13 +3,13 @@ import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
-import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
+import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
@@ -67,7 +67,6 @@ export function GroceriesList({
   /** A held row let go; false puts it back. */
   onDrop: (drop: Drop<ListHeading, ListItem>) => boolean;
 }) {
-  const insets = useSafeAreaInsets();
   const recurrence = useRecurrenceLabel();
   const { fresh } = useFreshRows(rows, loaded);
   const { exitingFor, leaveThen, doneRef, itemRef } = useLeaveToDone(rows);
@@ -194,7 +193,7 @@ export function GroceriesList({
           ListEmptyComponent={empty ?? undefined}
           ListHeaderComponent={header}
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
           contentInsetAdjustmentBehavior="never"
           itemLayoutAnimation={SPRING_LAYOUT}
           renderHeading={(heading, index) => (

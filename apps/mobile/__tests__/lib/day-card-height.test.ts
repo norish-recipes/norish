@@ -1,9 +1,4 @@
-import {
-  DAY_CARD,
-  DAY_CARD_CLASS,
-  dayCardHeight,
-  dayCardOffsets,
-} from "@/components/day-card-height";
+import { DAY_CARD, DAY_CARD_CLASS, dayCardHeight, dayCardOffsets } from "@/lib/day-card-height";
 import { describe, expect, it } from "vitest";
 
 describe("dayCardHeight", () => {

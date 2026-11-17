@@ -1,11 +1,11 @@
 import React from "react";
 import { FlatList, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
-import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TitleRow } from "@/components/title-row";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -18,7 +18,6 @@ import { usePantryScreen } from "../hooks/use-pantry-screen";
 export function PantryScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { rows, actions, field, isRead, isUnavailable } = usePantryScreen();
   const header = (
     <View>
@@ -54,7 +53,7 @@ export function PantryScreen() {
               )
             }
             ListHeaderComponent={header}
-            contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+            contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
             contentInsetAdjustmentBehavior="never"
             data={isRead ? rows : []}
             keyExtractor={(row) => row.key}

@@ -1,4 +1,4 @@
-import type { Edge } from "@/components/card-edges";
+import type { Edge } from "@/lib/card-edges";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";

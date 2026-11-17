@@ -1,6 +1,6 @@
-import type { Edge } from "@/components/card-edges";
 import type { DragRow } from "@/components/drag-list/resolve-drop";
-import { edgeAt } from "@/components/card-edges";
+import type { Edge } from "@/lib/card-edges";
+import { edgeAt } from "@/lib/card-edges";
 
 import type { PricedLine, RecipeGroceries } from "@norish/shared-react/groceries";
 import type { AisleDto, GroceryDto, StoreDto } from "@norish/shared/contracts";

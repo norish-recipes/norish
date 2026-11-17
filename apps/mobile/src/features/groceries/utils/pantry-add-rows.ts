@@ -1,5 +1,5 @@
-import type { Edge } from "@/components/card-edges";
-import { edgeAt } from "@/components/card-edges";
+import type { Edge } from "@/lib/card-edges";
+import { edgeAt } from "@/lib/card-edges";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
 import type { IngredientItem } from "@norish/shared-react/ingredients";

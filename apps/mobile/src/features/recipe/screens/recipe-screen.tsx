@@ -1,8 +1,8 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tabListBottomInset } from "@/components/tab-list-inset";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
+import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
 
@@ -52,7 +52,6 @@ function RecipePage() {
   const { toggleFavorite } = useFavoritesMutation();
   const [background] = useThemeColor(["background"] as const);
   const headerItems = useRecipeHeaderItems();
-  const { bottom } = useSafeAreaInsets();
   const tint = colorMode === "dish" ? dishTint(recipe.dishColor, scheme) : null;
 
   useAutoConversion();
@@ -80,7 +79,7 @@ function RecipePage() {
           recipe={recipe}
           onDoubleTap={showFavorites ? () => toggleFavorite(recipe.id) : undefined}
         />
-        <View className="-mt-12 gap-4" style={{ paddingBottom: tabListBottomInset(bottom) }}>
+        <View className="-mt-12 gap-4" style={{ paddingBottom: tabListBottomInset(homeIndicator) }}>
           <RecipeHeader recipe={recipe} />
           <View className="gap-4 px-5">
             <NotesSection />

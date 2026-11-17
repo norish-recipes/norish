@@ -6,10 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { DayCardSkeleton } from "@/components/day-card";
 import { DragList } from "@/components/drag-list/drag-list";
-import { tabListBottomInset } from "@/components/tab-list-inset";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
 import { useTabReselect } from "@/lib/use-tab-reselect";
@@ -149,7 +149,7 @@ export function CalendarScreen() {
           ref={listRef}
           ListHeaderComponent={header}
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(bar.homeIndicator) }}
           contentInsetAdjustmentBehavior="never"
           contentOffset={{ x: 0, y: openingAt ?? 0 }}
           // The rows the list shows, which a held row keeps still while `rows` moves on. The title

@@ -4,9 +4,10 @@ import { useIsFocused } from "expo-router";
 
 import { nextTabBarMinimised } from "./tab-bar-placement";
 
-/** Whether the tab bar is minimised, guessed from the list's scroll: `track` takes each scroll
- * event of the list, and `homeIndicator` is the window's bottom safe area. */
-// ponytail: scroll direction guesses the bar; the accessory mounts both placements at once, so JS cannot read which shows.
+/** The window's bottom safe area: the home indicator the tab bar sits over. */
+export const homeIndicator = initialWindowMetrics?.insets.bottom ?? 0;
+
+/** Whether the tab bar is minimised, guessed from the list's scroll: `track` takes each scroll event. */
 export function useTabBarMinimised() {
   const [minimised, setMinimised] = useState(false);
   const lastOffsetRef = useRef(0);
@@ -21,7 +22,7 @@ export function useTabBarMinimised() {
 
   return {
     minimised,
-    homeIndicator: initialWindowMetrics?.insets.bottom ?? 0,
+    homeIndicator,
     track: (event: {
       contentOffset: { y: number };
       contentSize: { height: number };

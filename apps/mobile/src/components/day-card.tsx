@@ -3,6 +3,8 @@ import React from "react";
 import { Text, View } from "react-native";
 import { PlannedThumb } from "@/components/planned-thumb";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { DAY_CARD_CLASS } from "@/lib/day-card-height";
+import { SLOT_GLYPHS, SLOT_SYMBOLS } from "@/lib/slot-icons";
 import { Button, Host, Image, Menu } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -16,9 +18,6 @@ import {
   slotTranslationKeys,
   TODAY_MEAL_SLOTS,
 } from "@norish/shared-react/calendar/todays-meals";
-
-import { DAY_CARD_CLASS } from "./day-card-height";
-import { SLOT_GLYPHS, SLOT_SYMBOLS } from "./slot-icons";
 
 /** A day on one line, as the calendar writes it: "Wed, Oct 7". */
 export function formatDay(intl: IntlShape, date: Date) {
@@ -127,7 +126,7 @@ function SlotMenu({
 
 /**
  * A day as a card: its date, what is planned in each slot, and a "+" that asks for a slot.
- * Heights are fixed (`day-card-height.ts` adds them up), so a list can lay days out unmeasured.
+ * Heights are fixed (`lib/day-card-height.ts` adds them up), so a list can lay days out unmeasured.
  */
 export function DayCard({
   date,
