@@ -462,3 +462,77 @@ Rolling digits for servings, ingredient amounts, nutrition and portions (`compon
 ## Out of Scope
 
 - A canvas audit, a Connecting-to-server screen, a native large title on the tab roots, morphing cards between grid and list.
+
+# Part 7: Refinement on the device
+
+Settled in a `/grilling` session on 2026-11-17, after using Part 6 on Mike's iPhone. Nothing here changes CONTEXT.md's vocabulary: the avatar shows **Offline** (CONTEXT.md), never "online".
+
+## Problem Statement
+
+On the device the app still reads as half-native. Glass is decided button by button, so neighbouring controls disagree. The tab headings sit under a scroll-edge blur at rest. Sheet content barely separates from the glass, and every sheet places its buttons differently. Drag moves headings and whole stores aside, feels worse than web, and its lifted card has never rendered. The library's view switch remounts every card. A list of small faults (control heights, a timer row that does nothing, a copied link that never shows) adds up.
+
+## Solution
+
+One glass rule, one panel anatomy, native large titles on the tab roots, our own drag inside `DragList`, and each listed fault fixed in its area's ticket.
+
+## Implementation Decisions
+
+### Rules (replacing Part 6's where they differ)
+
+- **Glass rule.** A control that floats over content or sits in chrome is glass: header buttons, segmented switches, filter and lens pills, floating buttons (Today), sheet toolbar buttons, and chips laid over a photo (grid tags). Primary actions stay solid. A control inside a row, card body or form field is not glass (steppers in lists, list-view tags, inputs). A glass button is the shared `GlassIconButton` look.
+- **Panel anatomy.** Every sheet: native header with the title, glass close on the left, the confirm (✓ or a verb) on the right. Apply/Save/Add are always the header confirm; secondary actions (Clear filters, Select all/Deselect all) are glass header items or a header menu when there are several. No pinned action buttons and no footers anywhere. Replaces Part 2 "Loading and sheets" on pinned actions.
+- **Content on glass.** Nothing on a sheet is solid. Grouped content (rows, the day strip, chips) uses one translucent fill token, `bg-fill`, built like iOS's tertiary system fill (the foreground at low alpha), so it darkens on light glass and lightens on dark glass. Checked on the device in both themes.
+- **Sheet heights.** List and search sheets take [0.5, full] detents and accept UIKit's full, opaque height while typing (replaces the single 0.5 detent of issue 36). Sheets sized to their content (making a grocery) stay fixed.
+- **Fields.** One HeroUI field style for `SheetInput` and `SheetSearchField`: the iOS search-field look, `bg-default`, fully rounded, no ring. No SwiftUI `TextField`: it only looks native inside a SwiftUI Form.
+
+### Tab roots
+
+- Native large titles on Recipes, Groceries, Pantry and Calendar replace `TitleRow` and the `top: "soft"` scroll-edge effect that blurred it at rest. Reverses Part 6's TitleRow exception and its out-of-scope line.
+- Where the switches, pills and Filters go is drawn first on a canvas page (ticket 40) and reviewed by Mike before ticket 41.
+- The avatar sits top right on all four. It opens a small native menu, like the recipe's conversion menu: a status line (nothing extra when Live; "Offline · N changes waiting" when Offline with Queued changes), Theme (System/Light/Dark), Language, All settings, Sign out. When Offline the avatar carries a small warning dot; VoiceOver reads "‹name›, Offline". The calendar's Offline pill goes, with nothing in its place.
+
+### Calendar
+
+- Today is glass at the bottom right, above the accessory. It follows the accessory's real placement, reported by a small native module (the scroll-direction guess fires before UIKit expands the bar), and moves with a layout transition.
+
+### Recipes tab
+
+- The grid/list switch is the Groceries `ListSwitch` (glass). A toggle flips locally at once and saves the Device Preference in the background; cards keep one key per recipe in both views and do not replay their entering animation, so nothing remounts.
+- Filters and the All/Recipes/Cookbooks pills are glass.
+- Grid tags work like the list's: the tags that fit, then `+N`, no scrolling, as glass chips over the photo. `TagStrip`, `useTagStrip` and `tag-strip-intent` go, with the swipe's `requireToFail` on them. Reverses Part 6's "grid cards show every tag in a row that scrolls sideways".
+- Swipe actions reveal Mail-style: each action slides out at its own rate with the finger, the outer one lagging, so they fan out in sequence. A full swipe still runs the first action.
+- The add-recipe sheet's copied-link row is reproduced on Mike's iPhone first (links copied from Safari, Instagram, Notes). The likely fault: `hasURLs` is false for a link copied as plain text. The fix asks iOS `detectPatterns(for: .probableWebURL)` (no paste prompt) through a local Expo module; reading the link still prompts.
+
+### Recipe page
+
+- The servings stepper, Convert menu and nutrition portion control share the ingredient control's height.
+- Rating fills the stars left to right to the tapped one, each with a small spring scale; nutrition bars animate their width (~250 ms ease-out) when the portion changes. Both are skipped under Reduce Motion.
+- Cookbooks: Manage is a glass icon button (its icon's `currentColor` goes); the cookbook chips take the timer chips' fill (`bg-default`, `tint.soft` on a tinted page), no border.
+- Tapping a timer row in the timers sheet closes it and opens cook mode at the timer's step (the first step without one). The row's round buttons keep their actions.
+
+### Sheets
+
+- Add to groceries: Select all/Deselect all and the pantry button are glass. Plan recipe: the day strip, slot selector and row plus buttons are glass. Filters: Apply is the header confirm, Clear filters a glass header item (its `bg-warning/20` goes).
+
+### Drag
+
+- Headings and stores never move while dragging. `react-native-reorderable-list` goes; `DragList` keeps its interface (`rows`, headings, `onDrop`) and the FlatList stays virtualised, with our own drag on Gesture Handler and Reanimated, modelled on web:
+  - ~250 ms hold decided on the UI thread, haptic on lift.
+  - An opaque card with a shadow follows the finger; the source stays as a faded ghost.
+  - Nothing reflows until the drop: a line shows where the row lands and the target section is highlighted.
+  - A light haptic on crossing into another section, medium on drop.
+  - Frame-driven auto-scroll.
+  - A drop on a heading lands in that section, so empty and collapsed sections take drops; a drop above the first heading snaps back. No remount on drop.
+- Why not a library (reverses ticket 19's choice): no maintained virtualised RN library keeps section headings still; drax's cross-list is experimental and on the JS thread; SwiftUI `onMove` reflows headings and drops the Calendar's FlatList features; iOS 27's `reorderContainer` is worth it only once iOS 27 is the floor. Found on the way: the lifted card of ticket 25 never rendered (`useIsActive` needs `shouldUpdateActiveItem`, never passed), and the hold was RN's 500 ms default.
+
+### Scope and order
+
+Ticket 39 (rc CI) and 40 (canvas) run at the same time; then 47 (drag) and 48 (copied link); then 42, 43, 45, 46 and 44; 41 last, after Mike approves the canvas. No release notes: the mobile app is unreleased.
+
+## Testing Decisions
+
+- Gates per ticket. New logic gets unit tests: the drop resolution and hit-testing, the staggered swipe offsets, the copied-link decision, the tag fit. Maestro flows stay green and change where a control moved (the `calendar-offline` flow checks the screen, not the pill). Motion, haptics, glass and contrast are checked by hand on Mike's iPhone in both themes. E2E and the full Maestro run once after the whole set.
+
+## Out of Scope
+
+- Building out the Settings tab (All settings opens what is there), Android drag, a native SwiftUI drag list.
