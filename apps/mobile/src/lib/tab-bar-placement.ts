@@ -33,6 +33,7 @@ export function nextTabBarMinimised(
   previous: number,
   maxOffset: number
 ) {
+  "worklet";
   const inRange = (value: number) => value >= 0 && value <= maxOffset;
 
   if (!inRange(offset) || !inRange(previous) || offset === previous) return current;
