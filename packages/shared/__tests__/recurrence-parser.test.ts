@@ -284,3 +284,29 @@ describe("recurrence/parser German, Polish, Russian, Finnish, Norwegian, Bulgari
     expect(result.cleanText).toBe("melk");
   });
 });
+
+describe("recurrence/parser every other weekday", () => {
+  const config = defaultRecurrenceConfig as RecurrenceConfig;
+
+  it.each([
+    ["1 l oat milk every other friday", "en", 5, "1 l oat milk"],
+    ["milk every second friday", "en", 5, "milk"],
+    ["melk elke andere vrijdag", "nl", 5, "melk"],
+    ["leche cada otro viernes", "es", 5, "leche"],
+    ["lait chaque autre vendredi", "fr", 5, "lait"],
+  ])("detects %s", (text, locale, weekday, cleanText) => {
+    const result = parseRecurrence(text, config);
+
+    expect(result.recurrence).toEqual({ rule: "week", interval: 2, weekday });
+    expect(result.matchedLocale).toBe(locale);
+    expect(result.cleanText).toBe(cleanText);
+  });
+
+  it("keeps every friday weekly", () => {
+    expect(parseRecurrence("milk every friday", config).recurrence).toEqual({
+      rule: "week",
+      interval: 1,
+      weekday: 5,
+    });
+  });
+});
