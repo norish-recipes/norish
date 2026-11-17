@@ -111,7 +111,8 @@
     "cookbooks": "Książki kucharskie",
     "favourite": "Ulubione",
     "unfavourite": "Usuń z ulubionych",
-    "ai": "SI"
+    "ai": "SI",
+    "shareLink": "Udostępnij link"
   },
   "sharePanel": {
     "title": "Udostępnij przepis",
@@ -155,7 +156,14 @@
       "title": "Usuń link",
       "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
       "confirm": "Usuń link"
-    }
+    },
+    "subtitle": "Publiczne linki do {recipeName}",
+    "expiresAfter": "Wygasa po",
+    "expiresOn": "Wygasa {date}",
+    "expiredOn": "Wygasł {date}",
+    "lastOpenedOn": "Ostatnio otwarto {date}",
+    "neverExpires": "Nigdy nie wygasa",
+    "linkCreated": "Utworzono {date}"
   },
   "convert": {
     "ariaLabel": "Przelicz system miar",
@@ -281,7 +289,9 @@
     "householdNumbers": "wartości twojego gospodarstwa",
     "decreasePortions": "Mniej porcji",
     "increasePortions": "Więcej porcji",
-    "portions": "{count, plural, one {# porcja} few {# porcje} many {# porcji} other {# porcji}}"
+    "portions": "{count, plural, one {# porcja} few {# porcje} many {# porcji} other {# porcji}}",
+    "percentOfReference": "{percent}% z {amount}",
+    "percentOfDailyReference": "{percent}% dziennego wzorca {amount}"
   },
   "measurementSystem": {
     "label": "System miar",
@@ -364,7 +374,9 @@
     "restartTimer": "Uruchom minutnik ponownie",
     "notificationsOff": "Powiadomienia Norish są wyłączone, więc minutniki dzwonią tylko przy otwartej aplikacji.",
     "decreaseTimer": "Odejmij {time}",
-    "increaseTimer": "Dodaj {time}"
+    "increaseTimer": "Dodaj {time}",
+    "timersLeft": "Minutniki, zostało {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# godzina } few {# godziny } many {# godzin } other {# godziny }}{minutes, plural, =0 {} one {# minuta } few {# minuty } many {# minut } other {# minuty }}{seconds, plural, =0 {} one {# sekunda } few {# sekundy } many {# sekund } other {# sekundy }}"
   },
   "enrichment": {
     "failed": "Wzbogacanie nie powiodło się",

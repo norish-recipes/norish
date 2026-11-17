@@ -17,6 +17,7 @@ export function GroceryRow({
   grocery,
   store,
   subline,
+  dotted = false,
   onToggle,
   onEdit,
   onDrag,
@@ -25,15 +26,17 @@ export function GroceryRow({
   store: StoreDto | null;
   /** The line under the name: where it came from, how it repeats, or its Store. */
   subline: string | null;
+  /** Puts the Store's dot before the subline, as the list by recipe does. */
+  dotted?: boolean;
   onToggle: (id: string, isDone: boolean) => void;
   onEdit: (id: string) => void;
   /** Lifts the row; left out on a done line, which stays put. */
   onDrag?: () => void;
 }) {
   const intl = useIntl();
-  const { formatAmountUnit } = useUnitFormatter(intl.locale);
+  const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
   const color = useStoreColor(store?.color);
-  const amount = formatAmountUnit(shownAmount(grocery), grocery.unit);
+  const amount = formatSpacedAmountUnit(shownAmount(grocery), grocery.unit);
   const name = grocery.name || intl.formatMessage({ id: "groceries.item.unnamedItem" });
   const done = grocery.isDone;
 
@@ -56,9 +59,14 @@ export function GroceryRow({
         <View className="min-w-0 flex-1 gap-0.5">
           <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
           {subline ? (
-            <Text className="text-muted text-sm" numberOfLines={1}>
-              {subline}
-            </Text>
+            <View className="flex-row items-center gap-1.5">
+              {dotted && color ? (
+                <View className="size-2 rounded-full" style={{ backgroundColor: color }} />
+              ) : null}
+              <Text className="text-muted shrink text-sm" numberOfLines={1}>
+                {subline}
+              </Text>
+            </View>
           ) : null}
         </View>
         <GroceryPrice line={lineOf(grocery)} muted={done} />

@@ -1,0 +1,96 @@
+# Manages Stores from Groceries' settings menu: Add store creates two, a Store's pencil renames one,
+# and its bin deletes the other after the confirm. The server holds each change in turn.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: groceries-settings
+    timeout: 20000
+- tapOn:
+    id: groceries-settings
+- tapOn: Manage stores
+- extendedWaitUntil:
+    visible:
+      id: stores-empty
+    timeout: 20000
+# Add store opens the editor in the same sheet; Create is its native header item.
+- tapOn:
+    id: store-add
+- extendedWaitUntil:
+    visible:
+      id: store-name
+    timeout: 20000
+- tapOn:
+    id: store-name
+- inputText: Aldi
+- hideKeyboard
+- tapOn: Create
+- extendedWaitUntil:
+    visible:
+      id: store-edit-.*
+      text: Edit Aldi
+    timeout: 20000
+- evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi"]')).body).names}
+- tapOn:
+    id: store-add
+- extendedWaitUntil:
+    visible:
+      id: store-name
+    timeout: 20000
+- tapOn:
+    id: store-name
+- inputText: Lidl
+- hideKeyboard
+- tapOn: Create
+- extendedWaitUntil:
+    visible:
+      id: store-edit-.*
+      text: Edit Lidl
+    timeout: 20000
+- evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi","Lidl"]')).body).names}
+# Rename: the pencil opens the editor on the Store, Save writes the new name.
+- tapOn:
+    id: store-edit-.*
+    text: Edit Aldi
+- extendedWaitUntil:
+    visible:
+      id: store-name
+      text: Aldi
+    timeout: 20000
+- tapOn:
+    id: store-name
+- eraseText
+- inputText: Aldi Noord
+- hideKeyboard
+- tapOn: Save
+- extendedWaitUntil:
+    visible:
+      id: store-edit-.*
+      text: Edit Aldi Noord
+    timeout: 20000
+- evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi Noord","Lidl"]')).body).names}
+# Delete asks first; cancelling keeps the Store.
+- tapOn:
+    id: store-delete-.*
+    text: Delete Lidl
+- tapOn: Cancel
+- assertVisible:
+    id: store-edit-.*
+    text: Edit Lidl
+- tapOn:
+    id: store-delete-.*
+    text: Delete Lidl
+# A Store with no items asks plainly; Delete is the alert's button.
+- tapOn: Delete
+- extendedWaitUntil:
+    notVisible:
+      id: store-edit-.*
+      text: Edit Lidl
+    timeout: 20000
+- evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi Noord"]')).body).names}
+- assertVisible:
+    id: store-edit-.*
+    text: Edit Aldi Noord

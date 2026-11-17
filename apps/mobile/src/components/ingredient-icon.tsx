@@ -1,11 +1,30 @@
-import React from "react";
-import { Image, View } from "react-native";
-import { useServerImage } from "@/lib/network/server-url";
+import type { ReactNode } from "react";
+import React, { createContext, use } from "react";
+import { View } from "react-native";
+import { ServerImage } from "@/components/server-image";
 
-import { useIngredientIconAddress } from "@norish/shared-react/ingredients";
+import { useIngredientIconAddress, useListHasIcon } from "@norish/shared-react/ingredients";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 
-/** A food's icon, or a grey circle of its size where the food has none (or is not read yet). */
+/** Whether another food of the list has an icon, so a food without one keeps an empty slot. */
+const IconSlotContext = createContext(false);
+
+/** Wraps a list of rows: each row's `foodId` is its food's Ingredient id, whose icon says whether the list has slots. */
+export function IngredientIconSlots({
+  rows,
+  children,
+}: {
+  rows: readonly { foodId?: string | null }[];
+  children: ReactNode;
+}) {
+  return (
+    <IconSlotContext value={useListHasIcon(rows.map((row) => row.foodId))}>
+      {children}
+    </IconSlotContext>
+  );
+}
+
+/** A food's icon; where it has none, an empty slot of its size if its list has icons, else nothing. */
 export function IngredientIcon({
   ingredientId,
   size = 28,
@@ -22,21 +41,19 @@ export function IngredientIcon({
 
 function Icon({ ingredientId, size }: { ingredientId: string; size: number }) {
   const address = useIngredientIconAddress(ingredientId);
-  const toImage = useServerImage();
+  const slot = use(IconSlotContext);
+
+  if (!address && !slot) return null;
 
   // The slot is a view of its own that never collapses: a picture arriving or leaving beside its
   // siblings otherwise unmounts out of order and Fabric asserts on the child index.
   return (
-    <View
-      className={address ? "" : "bg-default"}
-      collapsable={false}
-      style={{ width: size, height: size, borderRadius: size / 2 }}
-    >
+    <View collapsable={false} style={{ width: size, height: size }}>
       {address ? (
-        <Image
+        <ServerImage
           accessibilityElementsHidden
-          resizeMode="contain"
-          source={toImage(address)}
+          contentFit="contain"
+          path={address}
           style={{ width: size, height: size }}
         />
       ) : null}

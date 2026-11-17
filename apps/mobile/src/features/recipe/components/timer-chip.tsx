@@ -1,7 +1,9 @@
 import type { ComponentRef, RefObject } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { ActionSheetIOS, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { TimerRing } from "@/components/timer-ring";
+import { mediumImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -12,7 +14,7 @@ import { recipeTimerId, useTimerStore } from "@norish/shared-react/recipes/timer
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { askTimerNotifications } from "../hooks/use-recipe-timers";
-import { TimerRing } from "./timer-ring";
+import { toggleTimer } from "../utils/toggle-timer";
 import { useTint } from "./tint";
 
 const SIZES = {
@@ -27,19 +29,24 @@ type ChipProps = {
   size: keyof typeof SIZES;
 };
 
-/** A step duration's timer: a tap starts, pauses or resumes it, and taps a finished one away. */
+/** A step duration's timer: a tap starts, pauses, resumes or dismisses it; a long press offers
+ * Reset and Remove. */
 function useChipTimer({ match, index, stepIndex }: ChipProps) {
   const intl = useIntl();
   const recipe = useLoadedPageRecipe();
   const id = recipeTimerId(recipe.id, stepIndex, index);
   const timer = useTimerStore((state) => state.timers.find((entry) => entry.id === id));
   const addTimer = useTimerStore((state) => state.addTimer);
-  const startTimer = useTimerStore((state) => state.startTimer);
-  const pauseTimer = useTimerStore((state) => state.pauseTimer);
+  const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
   const left = timer ? formatTimerMs(timer.remainingMs) : "";
 
   const press = () => {
+    if (timer?.status === "completed") {
+      removeTimer(id);
+
+      return;
+    }
     if (!timer) {
       addTimer({
         id,
@@ -49,11 +56,30 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
         recipeName: recipe.name,
         stepIndex,
       });
-      startTimer(id);
-      void askTimerNotifications();
-    } else if (timer.status === "running") pauseTimer(id);
-    else if (timer.status === "paused") startTimer(id);
-    else removeTimer(id);
+    }
+    toggleTimer(id, timer?.status === "running");
+    if (!timer) void askTimerNotifications();
+  };
+
+  const longPress = () => {
+    if (!timer) return;
+
+    mediumImpact();
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: [
+          intl.formatMessage({ id: "common.actions.reset" }),
+          intl.formatMessage({ id: "common.actions.remove" }),
+          intl.formatMessage({ id: "common.actions.cancel" }),
+        ],
+        destructiveButtonIndex: 1,
+        cancelButtonIndex: 2,
+      },
+      (choice) => {
+        if (choice === 0) resetTimer(id);
+        else if (choice === 1) removeTimer(id);
+      }
+    );
   };
 
   // The duration first, then what a tap does: VoiceOver and Maestro find a chip by it.
@@ -74,7 +100,7 @@ function useChipTimer({ match, index, stepIndex }: ChipProps) {
             ),
       ].join(", ");
 
-  return { timer, left, label, press };
+  return { timer, left, label, press, longPress };
 }
 
 /** The chip drawn in the step's Text; inline views miss the accessibility tree, so TimerChipButton takes taps. */
@@ -126,7 +152,7 @@ export function TimerChip({
       ]}
     >
       {!timer ? (
-        <Ionicons color={foreground} name="time-outline" size={icon} />
+        <Ionicons color={foreground} name="time" size={icon} />
       ) : done ? (
         <Ionicons color={accentForeground} name="checkmark" size={icon} />
       ) : timer.status === "running" ? (
@@ -155,7 +181,7 @@ export function TimerChip({
 
 /** The chip's button, laid over where the Text drew it: the step's text stays one flow. */
 export function TimerChipButton({ frame, ...props }: ChipProps & { frame: LayoutRectangle }) {
-  const { label, press } = useChipTimer(props);
+  const { label, press, longPress } = useChipTimer(props);
 
   return (
     <Pressable
@@ -169,6 +195,7 @@ export function TimerChipButton({ frame, ...props }: ChipProps & { frame: Layout
         height: frame.height,
       }}
       testID={`timer-chip-${props.stepIndex}-${props.index}`}
+      onLongPress={longPress}
       onPress={press}
     />
   );

@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlassCloseButton } from "@/components/glass";
+import { useHideTabBar } from "@/lib/tab-bar-visibility";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
 
-import { isRecipeNotFound, RecipeNotFound } from "../components/recipe-not-found";
-import { RecipeEditorScreen, RecipeEditorSkeleton } from "./recipe-editor-screen";
+import { isRecipeNotFound } from "../components/recipe-not-found";
+import { RecipeEditorScreen } from "./recipe-editor-screen";
 
 /** Edit: the editor on the recipe from the Warm Set or the server, for a reader who may edit it;
  * a skeleton until then, and the not-found state once it is deleted while open. */
 export function EditRecipeScreen() {
   const router = useRouter();
-  const { top } = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipe, error } = useRecipeQuery(id);
   const { isLoading: checking, canEditRecipe } = useRecipePermissions();
@@ -29,20 +26,17 @@ export function EditRecipeScreen() {
     if (refused) router.dismissTo(recipeRoute(id));
   }, [refused, router, id]);
 
-  if (recipe && !checking && !refused) {
-    return <RecipeEditorScreen key={recipe.id} initialData={recipe} mode="edit" />;
-  }
+  useHideTabBar();
 
+  const ready = recipe && !checking && !refused ? recipe : undefined;
+
+  // Keyed by what it holds, so the recipe arriving opens the editor on it.
   return (
-    <View className="bg-background flex-1">
-      {!recipe && (loaded || isRecipeNotFound(error)) ? (
-        <RecipeNotFound />
-      ) : (
-        <RecipeEditorSkeleton />
-      )}
-      <View className="absolute left-4" style={{ top: top + 6 }}>
-        <GlassCloseButton testID="recipe-editor-close" onPress={() => router.back()} />
-      </View>
-    </View>
+    <RecipeEditorScreen
+      key={ready?.id ?? "pending"}
+      initialData={ready}
+      mode="edit"
+      notFound={!recipe && (loaded || isRecipeNotFound(error))}
+    />
   );
 }

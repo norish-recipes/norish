@@ -1,0 +1,48 @@
+import { useEffect, useState } from "react";
+
+/** A list row as the drag list holds it: a stable key and the value it draws. */
+type Row = { key: string; value: object };
+
+/** `keys` holds every row the list has shown since it loaded, null until it has; `settled` is
+ * false from a change of epoch until the commit that drew it is done. */
+type Seen = {
+  keys: ReadonlySet<string> | null;
+  fresh: ReadonlySet<object>;
+  epoch: unknown;
+  settled: boolean;
+};
+
+const NONE: ReadonlySet<object> = new Set();
+
+/** `fresh`: rows shown for the first time (not the first load's, nor ones brought back), for their
+ * commit. A new `epoch` (the range grown to) starts over, and `settled` is false for its commit. */
+export function useFreshRows(
+  rows: readonly Row[],
+  loaded: boolean,
+  epoch?: unknown
+): { fresh: ReadonlySet<object>; settled: boolean } {
+  const [seen, setSeen] = useState<Seen>({ keys: null, fresh: NONE, epoch, settled: true });
+  const added = seen.keys === null ? [] : rows.filter((row) => !seen.keys?.has(row.key));
+
+  // Set while rendering, not in an effect: the commit that mounts a new row must already know it.
+  if (loaded && (seen.keys === null || seen.epoch !== epoch)) {
+    const settled = seen.keys === null;
+
+    setSeen({ keys: new Set(rows.map((row) => row.key)), fresh: NONE, epoch, settled });
+  } else if (added.length > 0) {
+    setSeen({
+      keys: new Set([...(seen.keys ?? []), ...added.map((row) => row.key)]),
+      fresh: new Set(added.map((row) => row.value)),
+      epoch,
+      settled: seen.settled,
+    });
+  }
+
+  useEffect(() => {
+    if (seen.fresh.size > 0 || !seen.settled) {
+      setSeen((current) => ({ ...current, fresh: NONE, settled: true }));
+    }
+  }, [seen]);
+
+  return { fresh: seen.fresh, settled: seen.settled };
+}

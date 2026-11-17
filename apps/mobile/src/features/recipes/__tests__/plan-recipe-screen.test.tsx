@@ -51,7 +51,6 @@ vi.mock("heroui-native", async () => {
     Button: Object.assign(Button, { Label: pass }),
     SearchField,
     Skeleton: pass,
-    Spinner: pass,
     Tabs,
     useThemeColor: () => ["#000"],
   };

@@ -3,7 +3,7 @@ import type { TextInput } from "react-native";
 import React, { useState } from "react";
 import { ActionSheetIOS, Pressable, Text, View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useIntl } from "react-intl";
 
@@ -96,6 +96,11 @@ export function StepRow({
       : null;
   const matches = match ? matchIngredientSuggestions(suggestions, match.query) : [];
 
+  const chipFoods = chipLines.map((line) => ({
+    line,
+    foodId: foods.get(line.ingredientName) ?? null,
+  }));
+
   const pickMention = (suggestion: IngredientSuggestion) => {
     if (!match) return;
     const inserted = replaceTrigger(row.text, match, suggestion.label);
@@ -161,28 +166,31 @@ export function StepRow({
           <MentionPopup foods={foods} matches={matches} onPick={pickMention} />
         ) : null}
         {!heading && row.stepIngredients.length > 0 ? (
-          <View className="flex-row flex-wrap gap-1.5">
-            {row.stepIngredients.map((ref) => {
-              const line = chipLines.find((candidate) => candidate.order === ref.ingredientOrder);
+          <IngredientIconSlots rows={chipFoods}>
+            <View className="flex-row flex-wrap gap-1.5">
+              {row.stepIngredients.map((ref) => {
+                const chip = chipFoods.find(({ line }) => line.order === ref.ingredientOrder);
+                const line = chip?.line;
 
-              return line ? (
-                <Pressable
-                  key={ref.ingredientOrder}
-                  accessibilityLabel={text("recipes.stepIngredients.shareLabel", {
-                    name: line.ingredientName,
-                  })}
-                  accessibilityRole="button"
-                  className="bg-default h-7 flex-row items-center gap-1 rounded-full px-2.5"
-                  onPress={() => editChip(line)}
-                >
-                  <IngredientIcon ingredientId={foods.get(line.ingredientName) ?? null} size={18} />
-                  <Text className="text-foreground text-[13px] font-medium">
-                    {stepChipLabel(line, ref.share)}
-                  </Text>
-                </Pressable>
-              ) : null;
-            })}
-          </View>
+                return chip && line ? (
+                  <Pressable
+                    key={ref.ingredientOrder}
+                    accessibilityLabel={text("recipes.stepIngredients.shareLabel", {
+                      name: line.ingredientName,
+                    })}
+                    accessibilityRole="button"
+                    className="bg-default h-7 flex-row items-center gap-1 rounded-full px-2.5"
+                    onPress={() => editChip(line)}
+                  >
+                    <IngredientIcon ingredientId={chip.foodId} size={18} />
+                    <Text className="text-foreground text-[13px] font-medium">
+                      {stepChipLabel(line, ref.share)}
+                    </Text>
+                  </Pressable>
+                ) : null;
+              })}
+            </View>
+          </IngredientIconSlots>
         ) : null}
         {row.images.length > 0 || pendingPhotos.length > 0 ? (
           <StepPhotos
@@ -197,7 +205,8 @@ export function StepRow({
       <View className="items-center">
         {heading ? null : (
           <RowIconButton
-            icon="image-outline"
+            soft
+            icon="camera-outline"
             label={text("recipes.editor.addStepPhoto")}
             testID={`editor-step-photo-${index}`}
             onPress={onAddPhoto}

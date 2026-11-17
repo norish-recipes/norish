@@ -1,50 +1,68 @@
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { useIntl } from "react-intl";
+import { View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LayoutAnimationConfig,
+  ReduceMotion,
+  useReducedMotion,
+} from "react-native-reanimated";
 
 import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
-import { useLoadedPageRecipe, usePageIngredients } from "@norish/shared-react/recipes";
 
-import { plainText } from "../utils/recipe-rows";
-import { StepChips, StepPhotos, StepText } from "./steps-section";
+import { useStepPager } from "../hooks/use-step-pager";
+import { StepSlot } from "./cook-step-slot";
 
-/** A step beside the current one, faded; a tap moves to it. */
-function Peek({
-  step,
-  edge,
-  onPress,
+// Layout animations snap under Reduce Motion unless they opt out, so its crossfade does.
+export const CROSSFADE_IN = FadeIn.duration(200).reduceMotion(ReduceMotion.Never);
+export const CROSSFADE_OUT = FadeOut.duration(200).reduceMotion(ReduceMotion.Never);
+
+// Steps either side kept mounted, so one paging into a peek is already laid out.
+const WINDOW = 2;
+
+/** The step column: the slots within `WINDOW` of the current step, under the pager's pan. */
+function StepColumn({
+  steps,
+  current,
+  reduceMotion,
+  onStepChange,
 }: {
-  step: ResolvedCookingModeStep | undefined;
-  edge: "top" | "bottom";
-  onPress: () => void;
+  steps: ResolvedCookingModeStep[];
+  current: number;
+  reduceMotion: boolean;
+  onStepChange: (step: number) => void;
 }) {
-  const intl = useIntl();
-  const recipe = useLoadedPageRecipe();
-  const lines = usePageIngredients();
-
-  if (!step) return null;
+  const pager = useStepPager({ count: steps.length, current, reduceMotion, onStepChange });
+  const first = Math.max(current - WINDOW, 0);
 
   return (
-    <Pressable
-      accessibilityLabel={intl.formatMessage(
-        { id: "recipes.cookMode.stepLabel" },
-        { number: step.stepNumber }
-      )}
-      accessibilityRole="button"
-      className="gap-3 py-3 opacity-[0.22]"
-      testID={`cook-peek-${edge}`}
-      onPress={onPress}
-    >
-      <Text className="text-foreground text-2xl leading-[33px] font-medium" numberOfLines={2}>
-        {plainText(step.text)}
-      </Text>
-      <StepChips large lines={lines} step={step} systemUsed={recipe.systemUsed ?? "metric"} />
-    </Pressable>
+    <GestureDetector gesture={pager.pan}>
+      <View
+        className="mx-5 flex-1"
+        onLayout={(event) => pager.height.set(event.nativeEvent.layout.height)}
+      >
+        {steps.slice(first, current + WINDOW + 1).map((step, offset) => {
+          const index = first + offset;
+
+          return (
+            <StepSlot
+              key={step.stepNumber}
+              current={current}
+              index={index}
+              pager={pager}
+              step={step}
+              onPeekPress={() => onStepChange(index)}
+            />
+          );
+        })}
+      </View>
+    </GestureDetector>
   );
 }
 
-/** Cook mode's steps: the current one large in the middle, the steps either side faded. */
+/** The current step large in the middle, its neighbours faded. Under Reduce Motion the column
+ * holds and a step change crossfades; the view switch's own fade skips that one. */
 export function CookSteps({
   steps,
   current,
@@ -54,44 +72,30 @@ export function CookSteps({
   current: number;
   onStepChange: (step: number) => void;
 }) {
-  const intl = useIntl();
-  const recipe = useLoadedPageRecipe();
-  const lines = usePageIngredients();
-  const step = steps[current];
+  const reduceMotion = useReducedMotion();
 
-  if (!step) return null;
+  if (!steps[current]) return null;
+  if (!reduceMotion) {
+    return (
+      <StepColumn
+        current={current}
+        reduceMotion={false}
+        steps={steps}
+        onStepChange={onStepChange}
+      />
+    );
+  }
 
   return (
-    <View className="flex-1 px-5">
-      <Peek edge="top" step={steps[current - 1]} onPress={() => onStepChange(current - 1)} />
+    <LayoutAnimationConfig skipEntering skipExiting>
       <Animated.View
         key={current}
-        className="shrink"
-        entering={FadeIn.duration(220)}
-        testID="cook-step"
+        className="flex-1"
+        entering={CROSSFADE_IN}
+        exiting={CROSSFADE_OUT}
       >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View className="gap-5 py-2">
-            {step.heading ? (
-              <Text className="text-accent-text text-[15px] font-semibold">{step.heading}</Text>
-            ) : null}
-            <StepText
-              className="text-foreground text-[28px] leading-[44px] font-medium tracking-[-0.3px]"
-              size="cook"
-              stepIndex={step.stepNumber - 1}
-              text={step.text}
-            />
-            <StepChips large lines={lines} step={step} systemUsed={recipe.systemUsed ?? "metric"} />
-            {step.images.length > 0 ? (
-              <StepPhotos
-                images={step.images}
-                label={intl.formatMessage({ id: "recipes.detail.stepPhoto" })}
-              />
-            ) : null}
-          </View>
-        </ScrollView>
+        <StepColumn reduceMotion current={current} steps={steps} onStepChange={onStepChange} />
       </Animated.View>
-      <Peek edge="bottom" step={steps[current + 1]} onPress={() => onStepChange(current + 1)} />
-    </View>
+    </LayoutAnimationConfig>
   );
 }

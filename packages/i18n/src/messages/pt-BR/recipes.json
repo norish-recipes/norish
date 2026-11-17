@@ -111,7 +111,8 @@
     "cookbooks": "Livros de receitas",
     "favourite": "Favoritar",
     "unfavourite": "Desfavoritar",
-    "ai": "IA"
+    "ai": "IA",
+    "shareLink": "Compartilhar link"
   },
   "sharePanel": {
     "title": "Compartilhar receita",
@@ -155,7 +156,14 @@
       "title": "Excluir link",
       "message": "Excluir este link de compartilhamento para {recipeName}? Isso não pode ser desfeito.",
       "confirm": "Excluir link"
-    }
+    },
+    "subtitle": "Links públicos de {recipeName}",
+    "expiresAfter": "Expira após",
+    "expiresOn": "Expira em {date}",
+    "expiredOn": "Expirou em {date}",
+    "lastOpenedOn": "Última abertura {date}",
+    "neverExpires": "Nunca expira",
+    "linkCreated": "Criado em {date}"
   },
   "convert": {
     "ariaLabel": "Converter sistema de medidas",
@@ -281,7 +289,9 @@
     "householdNumbers": "os valores da sua casa",
     "decreasePortions": "Menos porções",
     "increasePortions": "Mais porções",
-    "portions": "{count, plural, one {# porção} other {# porções}}"
+    "portions": "{count, plural, one {# porção} other {# porções}}",
+    "percentOfReference": "{percent}% de {amount}",
+    "percentOfDailyReference": "{percent}% da referência diária de {amount}"
   },
   "measurementSystem": {
     "label": "Sistema de medidas",
@@ -364,7 +374,9 @@
     "restartTimer": "Reiniciar o timer",
     "notificationsOff": "As notificações do Norish estão desativadas, então os timers só tocam com o app aberto.",
     "decreaseTimer": "Tirar {time}",
-    "increaseTimer": "Adicionar {time}"
+    "increaseTimer": "Adicionar {time}",
+    "timersLeft": "Temporizadores, faltam {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# hora } other {# horas }}{minutes, plural, =0 {} one {# minuto } other {# minutos }}{seconds, plural, =0 {} one {# segundo } other {# segundos }}"
   },
   "enrichment": {
     "failed": "Falha no enriquecimento",

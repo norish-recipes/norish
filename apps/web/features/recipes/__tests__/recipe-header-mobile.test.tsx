@@ -124,6 +124,16 @@ describe("RecipeHeaderMobile", () => {
     expect(screen.getByText("recipes.form.category.dinner, Quick, Weeknight")).toBeInTheDocument();
   });
 
+  it("names a Category once when a tag repeats it, whatever language labels the Category", () => {
+    render(
+      <RecipeHeaderMobile
+        recipe={{ ...baseRecipe(), tags: [{ name: "dinner" }, { name: "Quick" }] }}
+      />
+    );
+
+    expect(screen.getByText("recipes.form.category.dinner, Quick")).toBeInTheDocument();
+  });
+
   it("keeps allergen tags at the front of that line, and marked", () => {
     render(
       <RecipeHeaderMobile

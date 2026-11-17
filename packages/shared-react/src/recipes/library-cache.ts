@@ -3,8 +3,11 @@ import type { InfiniteData } from "@tanstack/react-query";
 import type {
   CookbookSummaryDTO,
   LibraryItemDTO,
+  LibraryKind,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import type { LibraryListInput } from "@norish/shared/contracts/list-queries";
+import { lensHoldsKind } from "@norish/shared/contracts";
 
 import type { InfiniteCookbookData } from "./cookbook-types";
 
@@ -21,6 +24,13 @@ export type InfiniteRecipeData = InfiniteData<{
   total: number;
   nextCursor: number | null;
 }>;
+
+/** Whether the Library query at `queryKey` lists `kind`, by the lens its input names. */
+export function libraryQueryHolds(queryKey: readonly unknown[], kind: LibraryKind): boolean {
+  const params = queryKey[1] as { input?: Partial<LibraryListInput> } | undefined;
+
+  return lensHoldsKind(params?.input?.type ?? "all", kind);
+}
 
 /**
  * Reconcile one kind's rows back into the Library's interleaved pages.

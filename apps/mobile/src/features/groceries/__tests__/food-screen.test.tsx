@@ -32,10 +32,20 @@ vi.mock("react-native", async () => {
   return { Text: box, View: box };
 });
 vi.mock("@/components/sheet", () => ({
-  Sheet: ({ children, actions }: { children: React.ReactNode; actions: React.ReactNode }) => (
+  Sheet: ({
+    children,
+    name,
+    confirm,
+  }: {
+    children: React.ReactNode;
+    name: string;
+    confirm?: { onPress: () => void };
+  }) => (
     <div>
       {children}
-      {actions}
+      {confirm ? (
+        <button data-testid={`${name}-confirm`} type="button" onClick={confirm.onPress} />
+      ) : null}
     </div>
   ),
   SheetBody: ({ children }: { children: React.ReactNode }) => children,
@@ -84,7 +94,7 @@ describe("the food sheet", () => {
   it("closes once, not twice, when Save takes the food out", () => {
     render(<FoodScreen />);
     fireEvent.click(screen.getByTestId("switch"));
-    fireEvent.click(screen.getByTestId("pantry-food-save"));
+    fireEvent.click(screen.getByTestId("pantry-food-confirm"));
 
     expect(store.state.items).toHaveLength(0);
     expect(store.back).toHaveBeenCalledTimes(1);
@@ -92,7 +102,7 @@ describe("the food sheet", () => {
 
   it("closes once when Save keeps the food", () => {
     render(<FoodScreen />);
-    fireEvent.click(screen.getByTestId("pantry-food-save"));
+    fireEvent.click(screen.getByTestId("pantry-food-confirm"));
 
     expect(store.back).toHaveBeenCalledTimes(1);
   });

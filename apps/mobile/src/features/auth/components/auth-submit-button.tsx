@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
-import { Button, Spinner, useThemeColor } from "heroui-native";
+import { Loader } from "@/components/loader";
+import { Button, useThemeColor } from "heroui-native";
 
 interface AuthSubmitButtonProps {
   label: string;
@@ -36,13 +37,7 @@ export function AuthSubmitButton({
     >
       {/* Hidden, so VoiceOver reads the label without the icon font's glyph. */}
       <View accessibilityElementsHidden collapsable={false}>
-        {isBusy ? (
-          <Spinner className="size-5" color={accentForegroundColor}>
-            <Spinner.Indicator iconProps={{ width: 20, height: 20 }} />
-          </Spinner>
-        ) : (
-          icon?.(accentForegroundColor)
-        )}
+        {isBusy ? <Loader color={accentForegroundColor} /> : icon?.(accentForegroundColor)}
       </View>
       <Button.Label className="text-[17px] font-semibold">{label}</Button.Label>
     </Button>

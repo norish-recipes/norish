@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { HintButton } from "@/components/hint-button";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -11,7 +12,7 @@ import { useCuisinesQuery } from "@norish/shared-react/config";
 import { countryFlagEmoji, listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
 import { SectionCard } from "../tint";
-import { ChoiceSheet } from "./choice-sheet";
+import { choiceRoute, requestChoice } from "./choice-request";
 import { AddChip, RemovableChip } from "./detail-cards";
 import { EditorField, EditorInput } from "./editor-parts";
 
@@ -26,10 +27,39 @@ export function ProvenanceCard({
   const intl = useIntl();
   const { cuisines } = useCuisinesQuery();
   const [muted] = useThemeColor(["muted"] as const);
-  const [picking, setPicking] = useState<"country" | "cuisines" | null>(null);
+  const router = useRouter();
   const text = (id: string) => intl.formatMessage({ id });
   const patch = (next: Partial<ProvenanceFormValue>) => onChange({ ...value, ...next });
-  const countries = picking === "country" ? listCountryOptions(intl.locale) : [];
+  const pickCountry = () => {
+    const countries = listCountryOptions(intl.locale);
+
+    requestChoice({
+      choices: countries.map((option) => ({
+        key: option.code,
+        label: `${countryFlagEmoji(option.code) ?? ""} ${option.name}`.trim(),
+      })),
+      selected: value.originCountry ? [value.originCountry] : [],
+      // A pick stores the name the editor saw; clearing the country clears it too.
+      onChange: ([code]) =>
+        patch({
+          originCountry: code ?? null,
+          originCountryName: code
+            ? (countries.find((option) => option.code === code)?.name ?? null)
+            : null,
+        }),
+    });
+    router.push(choiceRoute({ name: "editor-country", title: text("recipes.form.originCountry") }));
+  };
+  const pickCuisines = () => {
+    requestChoice({
+      choices: cuisines.map((cuisine) => ({ key: cuisine.id, label: cuisine.name })),
+      selected: value.cuisineIds,
+      onChange: (cuisineIds) => patch({ cuisineIds }),
+    });
+    router.push(
+      choiceRoute({ name: "editor-cuisine", title: text("recipes.form.cuisines"), multiple: true })
+    );
+  };
   const flag = countryFlagEmoji(value.originCountry);
   const cuisineName = (id: string) => cuisines.find((cuisine) => cuisine.id === id)?.name ?? id;
 
@@ -39,7 +69,7 @@ export function ProvenanceCard({
         accessibilityRole="button"
         className="flex-row items-center py-3"
         testID="editor-country"
-        onPress={() => setPicking("country")}
+        onPress={pickCountry}
       >
         <View className="flex-1 gap-1">
           <Text className="text-muted text-[13px] font-semibold">
@@ -76,7 +106,7 @@ export function ProvenanceCard({
           <AddChip
             label={text("common.actions.add")}
             testID="editor-add-cuisine"
-            onPress={() => setPicking("cuisines")}
+            onPress={pickCuisines}
           />
         </View>
       </EditorField>
@@ -90,38 +120,6 @@ export function ProvenanceCard({
           onChangeText={(provenanceNote) => patch({ provenanceNote })}
         />
       </EditorField>
-      {picking === "country" ? (
-        <ChoiceSheet
-          choices={countries.map((option) => ({
-            key: option.code,
-            label: `${countryFlagEmoji(option.code) ?? ""} ${option.name}`.trim(),
-          }))}
-          selected={value.originCountry ? [value.originCountry] : []}
-          testID="editor-country-sheet"
-          title={text("recipes.form.originCountry")}
-          onChange={([code]) =>
-            // A pick stores the name the editor saw; clearing the country clears it too.
-            patch({
-              originCountry: code ?? null,
-              originCountryName: code
-                ? (countries.find((option) => option.code === code)?.name ?? null)
-                : null,
-            })
-          }
-          onClose={() => setPicking(null)}
-        />
-      ) : null}
-      {picking === "cuisines" ? (
-        <ChoiceSheet
-          multiple
-          choices={cuisines.map((cuisine) => ({ key: cuisine.id, label: cuisine.name }))}
-          selected={value.cuisineIds}
-          testID="editor-cuisine-sheet"
-          title={text("recipes.form.cuisines")}
-          onChange={(cuisineIds) => patch({ cuisineIds })}
-          onClose={() => setPicking(null)}
-        />
-      ) : null}
     </SectionCard>
   );
 }

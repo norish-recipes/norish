@@ -111,7 +111,8 @@
     "cookbooks": "Cookbooks",
     "favourite": "Favourite",
     "unfavourite": "Unfavourite",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "Share link"
   },
   "sharePanel": {
     "title": "Share recipe",
@@ -155,7 +156,14 @@
       "title": "Delete link",
       "message": "Delete this share link for {recipeName}? This cannot be undone.",
       "confirm": "Delete link"
-    }
+    },
+    "subtitle": "Public links for {recipeName}",
+    "expiresAfter": "Expires after",
+    "expiresOn": "Expires {date}",
+    "expiredOn": "Expired {date}",
+    "lastOpenedOn": "Last opened {date}",
+    "neverExpires": "Never expires",
+    "linkCreated": "Created {date}"
   },
   "convert": {
     "ariaLabel": "Convert measurement system",
@@ -281,7 +289,9 @@
     "householdNumbers": "your household's numbers",
     "decreasePortions": "Decrease portions",
     "increasePortions": "Increase portions",
-    "portions": "{count, plural, one {# portion} other {# portions}}"
+    "portions": "{count, plural, one {# portion} other {# portions}}",
+    "percentOfReference": "{percent}% of {amount}",
+    "percentOfDailyReference": "{percent}% of {amount} daily reference"
   },
   "measurementSystem": {
     "label": "Measurement System",
@@ -364,7 +374,9 @@
     "restartTimer": "Restart timer",
     "notificationsOff": "Notifications are off for Norish, so timers only ring while the app is open.",
     "decreaseTimer": "Take {time} off",
-    "increaseTimer": "Add {time}"
+    "increaseTimer": "Add {time}",
+    "timersLeft": "Timers, {time} left",
+    "spokenTime": "{hours, plural, =0 {} one {# hour } other {# hours }}{minutes, plural, =0 {} one {# minute } other {# minutes }}{seconds, plural, =0 {} one {# second } other {# seconds }}"
   },
   "enrichment": {
     "failed": "Enrichment failed",
@@ -405,7 +417,7 @@
     "total": "Total"
   },
   "cookbooks": {
-    "addCookbook": "Add Cookbook",
+    "addCookbook": "Add cookbook",
     "createTitle": "New cookbook",
     "editTitle": "Edit cookbook",
     "titleLabel": "Title",

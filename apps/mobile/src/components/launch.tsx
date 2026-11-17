@@ -13,8 +13,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Brand, useSplashBrandTop } from "@/components/brand";
+import { BrandLoader } from "@/components/brand-loader";
 import { resolveLaunchMotion, resolveSloganStart, stepLaunchClock } from "@/lib/boot/launch-motion";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
+import { SPRING_FADE_IN } from "@/lib/motion/layout";
 import { progress } from "@/lib/motion/progress";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
@@ -42,6 +44,9 @@ type Launch = {
   /** How the splash leaves, decided once the hold ends. */
   motion: LaunchHandoff | null;
   setMotion: (motion: LaunchHandoff) => void;
+  /** Whether the hold ended with no handoff, so the loader shows under the logo; kept here so a remount keeps it. */
+  loader: boolean;
+  setLoader: (loader: boolean) => void;
   /** Server address's brand top, in window points: where the glide lands. */
   target: number | null;
   setTarget: (top: number) => void;
@@ -56,6 +61,7 @@ export function LaunchProvider({ children }: { children: ReactNode }) {
   const [done, setDone] = useState(false);
   const [target, setTarget] = useState<number | null>(null);
   const [motion, setMotion] = useState<LaunchHandoff | null>(null);
+  const [loader, setLoader] = useState(false);
 
   return (
     <LaunchContext
@@ -66,6 +72,8 @@ export function LaunchProvider({ children }: { children: ReactNode }) {
         finish: () => setDone(true),
         motion,
         setMotion,
+        loader,
+        setLoader,
         target,
         setTarget,
       }}
@@ -97,7 +105,7 @@ export function LaunchSplash({ handoff }: { handoff: LaunchHandoff | null }) {
 }
 
 function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; launch: Launch }) {
-  const { clock, sloganStart, finish, motion, setMotion, target } = launch;
+  const { clock, sloganStart, finish, motion, setMotion, loader, setLoader, target } = launch;
   const reduceMotion = useReducedMotion();
   // The device's messages (and, with a server, its enabled locales) have loaded.
   const messagesReady = !useMobileLocaleSettings().isLoading;
@@ -115,6 +123,12 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     if (motion === null && decided !== null) setMotion(decided);
   }, [decided, motion, setMotion]);
 
+  // A hold that ends with no handoff latches the loader in the launch, so it stays through the
+  // fade and a remount.
+  const endHold = () => {
+    setHeld(true);
+    if (handoff === null) setLoader(true);
+  };
   const end = motion === null ? HOLD_END : motion === "glide" ? LAUNCH_END : FADE_END;
   const stop = shown ? end : 0;
 
@@ -135,7 +149,7 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
     if (next < stop) return;
 
     if (stop === HOLD_END) {
-      scheduleOnRN(setHeld, true);
+      scheduleOnRN(endHold);
     } else {
       clock.set(LAUNCH_END);
       scheduleOnRN(finish);
@@ -182,6 +196,7 @@ function LaunchOverlay({ handoff, launch }: { handoff: LaunchHandoff | null; lau
       <Animated.View style={[styles.fill, { backgroundColor: background }, groundStyle]} />
       <Animated.View style={[styles.brand, { top }, brandStyle]}>
         <Brand sloganStyle={sloganStyle} />
+        {loader ? <BrandLoader entering={SPRING_FADE_IN} /> : null}
       </Animated.View>
     </Animated.View>
   );

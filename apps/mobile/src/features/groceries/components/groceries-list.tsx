@@ -2,16 +2,21 @@ import type { Drop } from "@/components/drag-list/drag-list";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated from "react-native-reanimated";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList } from "@/components/drag-list/drag-list";
-import { tabListBottomInset } from "@/components/tab-list-inset";
+import { TabListMarker } from "@/components/tab-list-marker";
+import { useFreshRows } from "@/hooks/use-fresh-rows";
+import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
+import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
+import { useLeaveToDone } from "../hooks/use-leave-to-done";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { isGroupOpen, sectionKeyOf } from "../utils/list-rows";
 import { AisleHeadingRow } from "./aisle-heading-row";
@@ -37,6 +42,7 @@ export type ListActions = {
  * section's card. Holding an open row lifts it; a done one stays put. */
 export function GroceriesList({
   rows,
+  loaded,
   header,
   empty,
   recipeNameFor,
@@ -47,6 +53,8 @@ export function GroceriesList({
   onDrop,
 }: {
   rows: ListRow[];
+  /** False while the list waits on its first read, so its first rows don't animate in. */
+  loaded: boolean;
   header: ReactElement;
   empty: ReactElement | null;
   recipeNameFor: (grocery: GroceryDto) => string | null;
@@ -59,8 +67,9 @@ export function GroceriesList({
   /** A held row let go; false puts it back. */
   onDrop: (drop: Drop<ListHeading, ListItem>) => boolean;
 }) {
-  const insets = useSafeAreaInsets();
   const recurrence = useRecurrenceLabel();
+  const { fresh } = useFreshRows(rows, loaded);
+  const { exitingFor, leaveThen, doneRef, itemRef } = useLeaveToDone(rows);
   // What sits under a row's name: how it repeats, else the recipe it came from.
   const sublineOf = (
     recurring: RecurringGroceryDto | null | undefined,
@@ -85,6 +94,7 @@ export function GroceriesList({
             count={heading.count}
             open={heading.open}
             sectionKey={heading.sectionKey}
+            viewRef={doneRef(heading.sectionKey)}
             onToggle={() => actions.toggleDone(heading.sectionKey)}
           />
         </CardSlice>
@@ -145,7 +155,7 @@ export function GroceriesList({
             )}
             onDrag={item.done ? undefined : drag}
             onEdit={actions.edit}
-            onToggle={actions.toggle}
+            onToggle={(ids, isDone) => leaveThen(item, isDone, () => actions.toggle(ids, isDone))}
             onToggleOpen={() => actions.toggleGroup(item.group)}
           />
         </ItemSlice>
@@ -157,6 +167,7 @@ export function GroceriesList({
     return (
       <ItemSlice edge={edge}>
         <GroceryRow
+          dotted={storeNameOnLines}
           grocery={grocery}
           store={store}
           subline={
@@ -169,7 +180,7 @@ export function GroceriesList({
           }
           onDrag={item.done ? undefined : drag}
           onEdit={actions.edit}
-          onToggle={(id, isDone) => actions.toggle([id], isDone)}
+          onToggle={(id, isDone) => leaveThen(item, isDone, () => actions.toggle([id], isDone))}
         />
       </ItemSlice>
     );
@@ -177,18 +188,37 @@ export function GroceriesList({
 
   return (
     <View className="flex-1">
-      <DragList
-        ListEmptyComponent={empty ?? undefined}
-        ListHeaderComponent={header}
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
-        contentInsetAdjustmentBehavior="never"
-        renderHeading={renderHeading}
-        renderItem={renderItem}
-        rows={rows}
-        testID="groceries-list"
-        onDrop={onDrop}
-      />
+      <TabListMarker>
+        <DragList
+          ListEmptyComponent={empty ?? undefined}
+          ListHeaderComponent={header}
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
+          contentInsetAdjustmentBehavior="never"
+          itemLayoutAnimation={SPRING_LAYOUT}
+          renderHeading={(heading, index) => (
+            <Animated.View
+              entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
+              exiting={SPRING_FADE_OUT}
+            >
+              {renderHeading(heading, index)}
+            </Animated.View>
+          )}
+          renderItem={(item, drag) => (
+            <Animated.View
+              ref={itemRef(item.key)}
+              collapsable={false}
+              entering={fresh.has(item) ? SPRING_FADE_IN : undefined}
+              exiting={exitingFor(item.key)}
+            >
+              {renderItem(item, drag)}
+            </Animated.View>
+          )}
+          rows={rows}
+          testID="groceries-list"
+          onDrop={onDrop}
+        />
+      </TabListMarker>
       {/* Rows dissolve into the page colour before the tab bar. */}
       <View
         className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"

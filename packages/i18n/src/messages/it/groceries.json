@@ -93,6 +93,7 @@
     "unavailable": "Impossibile leggere la dispensa. Non è cambiato nulla; riprova quando torni online.",
     "fieldLabel": "Cerca o aggiungi un alimento",
     "fieldPlaceholder": "Cerca o aggiungi, es. olio d'oliva",
+    "findPlaceholder": "Cerca un alimento nella dispensa",
     "add": "Aggiungi alla dispensa",
     "fromCatalogue": "Aggiungi un alimento",
     "addFood": "Aggiungi {name} alla dispensa",
@@ -134,9 +135,7 @@
     "toBuy": "Da comprare",
     "inPantry": "Nella tua dispensa",
     "weKeepThis": "Lo abbiamo sempre",
-    "keepFailed": "Impossibile aggiungerlo alla dispensa",
-    "addCount": "{count, plural, one {Aggiungi # articolo} other {Aggiungi # articoli}}",
-    "adding": "Aggiunta alla lista della spesa…"
+    "keepFailed": "Impossibile aggiungerlo alla dispensa"
   },
   "picker": {
     "unlink": "Scollega prodotto",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "contato come una confezione",
     "sale": "Offerta",
-    "regularPrice": "Prezzo normale {price}"
+    "regularPrice": "Prezzo normale {price}",
+    "each": "cad."
   },
   "mobile": {
     "viewMode": "Visualizzazione",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Sposta gli articoli in Non ordinati",
     "typePrice": "Digita il prezzo tu stesso",
     "product": "Prodotto",
-    "chooseProduct": "Scegli un prodotto"
+    "chooseProduct": "Scegli un prodotto",
+    "recipeCount": "{count, plural, one {# ricetta} other {# ricette}}"
   }
 }

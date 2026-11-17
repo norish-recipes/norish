@@ -1,10 +1,16 @@
-import type { ComponentRef, ReactNode } from "react";
+import type { ViewerStep } from "@/lib/tab-routes";
+import type { ComponentRef } from "react";
 import type { LayoutRectangle } from "react-native";
-import React, { Fragment, useRef, useState } from "react";
-import { Image, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
-import { IngredientIcon } from "@/components/ingredient-icon";
-import { useServerImage } from "@/lib/network/server-url";
+import React, { useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
+import { ServerImage } from "@/components/server-image";
+import { lightImpact } from "@/lib/haptics";
+import { SPRING_ZOOM_IN, SPRING_ZOOM_OUT } from "@/lib/motion/layout";
+import { mediaViewerRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -20,6 +26,7 @@ import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
 import { useStepTimers } from "../hooks/use-step-timers";
+import { imageItems } from "../utils/hero-items";
 import { plainText, stepRows } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
 import { TimerChip, TimerChipButton } from "./timer-chip";
@@ -29,59 +36,36 @@ type Recipe = ReturnType<typeof useLoadedPageRecipe>;
 type Step = Recipe["steps"][number];
 type Line = ReturnType<typeof usePageIngredients>[number];
 
-/** Keys a step's photos by place: the same picture can sit twice, so only its place tells them apart. */
-function byPlace<T>(items: T[], render: (item: T, index: number) => ReactNode) {
-  // eslint-disable-next-line @eslint-react/no-array-index-key -- the same picture can sit here twice
-  return items.map((item, index) => <Fragment key={index}>{render(item, index)}</Fragment>);
-}
-
-/** A step's own photos as small thumbnails; one opens the pages in full. */
-export function StepPhotos({ images, label }: { images: { image: string }[]; label: string }) {
-  const toImage = useServerImage();
-  const { width } = useWindowDimensions();
-  const [open, setOpen] = useState<number | null>(null);
+/** A step's own photos as small thumbnails; one opens the viewer on it. */
+export function StepPhotos({
+  images,
+  label,
+  step,
+}: {
+  images: { image: string }[];
+  label: string;
+  step: ViewerStep;
+}) {
+  const router = useRouter();
+  const { id } = useLoadedPageRecipe();
 
   return (
-    <>
-      <View className="flex-row flex-wrap gap-2">
-        {byPlace(images, (image, index) => (
-          <Pressable
-            accessibilityLabel={`${label} ${index + 1}`}
-            accessibilityRole="button"
-            onPress={() => setOpen(index)}
-          >
-            <Image
-              className="bg-default size-16 rounded-lg"
-              resizeMode="cover"
-              source={toImage(image.image)}
-            />
-          </Pressable>
-        ))}
-      </View>
-      <Modal
-        transparent
-        animationType="fade"
-        visible={open !== null}
-        onRequestClose={() => setOpen(null)}
-      >
-        <Pressable className="flex-1 justify-center bg-black/90" onPress={() => setOpen(null)}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            contentOffset={{ x: (open ?? 0) * width, y: 0 }}
-            showsHorizontalScrollIndicator={false}
-          >
-            {byPlace(images, (image) => (
-              <Image
-                resizeMode="contain"
-                source={toImage(image.image)}
-                style={{ width, height: width * 1.2 }}
-              />
-            ))}
-          </ScrollView>
+    <View className="flex-row flex-wrap gap-2">
+      {imageItems(images).map((item, index) => (
+        <Pressable
+          key={item.key}
+          accessibilityLabel={`${label} ${index + 1}`}
+          accessibilityRole="button"
+          onPress={() => router.push(mediaViewerRoute(id, index, step))}
+        >
+          <ServerImage
+            className="bg-default size-16 rounded-lg"
+            contentFit="cover"
+            path={item.path}
+          />
         </Pressable>
-      </Modal>
-    </>
+      ))}
+    </View>
   );
 }
 
@@ -192,36 +176,40 @@ export function StepChips({
     lines.filter((line) => line.systemUsed === systemUsed).map((line) => [line.order, line])
   );
 
-  return (
-    <View className="flex-row flex-wrap gap-1.5">
-      {resolved.map((item) => {
-        const label = [
-          item.amount != null ? formatAmount(item.amount, mode) : "",
-          item.unit ? formatUnitOnly(item.unit, item.amount) : "",
-          plainText(item.name),
-        ]
-          .filter(Boolean)
-          .join(" ");
+  const chips = resolved.map((item) => ({
+    item,
+    foodId: namesNoFood(item.name)
+      ? null
+      : (lineAt.get(item.ingredientOrder)?.ingredientId ?? null),
+  }));
 
-        return (
-          <View
-            key={item.ingredientOrder}
-            className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
-            style={tint ? { backgroundColor: tint.soft } : undefined}
-          >
-            {namesNoFood(item.name) ? null : (
-              <IngredientIcon
-                ingredientId={lineAt.get(item.ingredientOrder)?.ingredientId}
-                size={large ? 26 : 22}
-              />
-            )}
-            <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
-              {label}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
+  return (
+    <IngredientIconSlots rows={chips}>
+      <View className="flex-row flex-wrap gap-1.5">
+        {chips.map(({ item, foodId }) => {
+          const label = [
+            item.amount != null ? formatAmount(item.amount, mode) : "",
+            item.unit ? formatUnitOnly(item.unit, item.amount) : "",
+            plainText(item.name),
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return (
+            <View
+              key={item.ingredientOrder}
+              className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
+              style={tint ? { backgroundColor: tint.soft } : undefined}
+            >
+              <IngredientIcon ingredientId={foodId} size={large ? 26 : 22} />
+              <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
+                {label}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </IngredientIconSlots>
   );
 }
 
@@ -242,6 +230,10 @@ function StepLine({
 }) {
   const intl = useIntl();
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
+  const toggle = () => {
+    lightImpact();
+    onToggle(number);
+  };
 
   return (
     // Not one button, so VoiceOver reaches the step's timer chips; the number is the toggle.
@@ -249,35 +241,46 @@ function StepLine({
       accessible={false}
       className="flex-row gap-3"
       testID={`recipe-step-${number}`}
-      onPress={() => onToggle(number)}
+      onPress={toggle}
     >
       <Pressable
         accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.stepLabel" }, { number })}
         accessibilityRole="button"
         accessibilityState={{ selected: done }}
-        className="bg-accent size-7 items-center justify-center rounded-full"
+        className={`size-6 items-center justify-center rounded-full ${done ? "bg-accent" : "bg-accent/15"}`}
         testID={`recipe-step-${number}-toggle`}
-        onPress={() => onToggle(number)}
+        onPress={toggle}
       >
-        {done ? (
-          <Ionicons color={accentForeground} name="checkmark" size={16} />
-        ) : (
-          <Text className="text-accent-foreground text-sm font-semibold">{number}</Text>
-        )}
+        {/* The number and the check swap by scale; each is laid over the other while one leaves. */}
+        <Animated.View
+          key={done ? "check" : "number"}
+          className="absolute"
+          entering={SPRING_ZOOM_IN}
+          exiting={SPRING_ZOOM_OUT}
+        >
+          {done ? (
+            <Ionicons color={accentForeground} name="checkmark" size={14} />
+          ) : (
+            <Text className="text-accent-text text-[13px] font-semibold">{number}</Text>
+          )}
+        </Animated.View>
       </Pressable>
       <View className="min-w-0 flex-1 gap-3">
         <StepText
-          className={`pt-0.5 text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
+          className={`text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
           disableLinks={done}
           size="page"
           stepIndex={number - 1}
           text={step.step}
         />
-        <StepChips lines={lines} step={step} systemUsed={systemUsed} />
+        <View className={done ? "opacity-50" : ""}>
+          <StepChips lines={lines} step={step} systemUsed={systemUsed} />
+        </View>
         {step.images && step.images.length > 0 ? (
           <StepPhotos
             images={step.images}
             label={intl.formatMessage({ id: "recipes.detail.stepPhoto" })}
+            step={{ order: step.order }}
           />
         ) : null}
       </View>

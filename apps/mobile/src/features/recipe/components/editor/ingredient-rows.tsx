@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { useIntl } from "react-intl";
 
 import type { IngredientRow, LineMoves, ParsedIngredient } from "@norish/shared-react/recipes";
@@ -20,6 +20,7 @@ import {
   removeIngredientRow,
   seedIngredientRows,
   typeIngredientRow,
+  useAmountDisplayPreference,
 } from "@norish/shared-react/recipes";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
@@ -42,7 +43,8 @@ export function IngredientRows({
 }) {
   const intl = useIntl();
   const { units } = useUnitsQuery();
-  const [rows, setRows] = useState<IngredientRow[]>(() => seedIngredientRows(ingredients));
+  const { mode } = useAmountDisplayPreference();
+  const [rows, setRows] = useState<IngredientRow[]>(() => seedIngredientRows(ingredients, mode));
   const [seededLength, setSeededLength] = useState(ingredients.length);
   const trailingRow = useTrailingRow(rows, hasIngredientContent);
 
@@ -50,7 +52,7 @@ export function IngredientRows({
   if (ingredients.length !== seededLength) {
     setSeededLength(ingredients.length);
     if (ingredients.length > 0 && rows.length === 1 && rows[0]?.text === "") {
-      setRows(seedIngredientRows(ingredients));
+      setRows(seedIngredientRows(ingredients, mode));
     }
   }
 
@@ -68,6 +70,7 @@ export function IngredientRows({
     return namesNoFood(name) || isHeadingText(name) ? "" : name;
   });
   const foods = useFoodsByName(foodNames);
+  const lineFoods = foodNames.map((name) => ({ foodId: foods.get(name) ?? null }));
 
   useIngredientIcons([...foods.values()]);
 
@@ -82,11 +85,7 @@ export function IngredientRows({
         className={`min-h-12 flex-row items-center gap-2.5 py-2 ${index === 0 ? "" : "border-separator border-t"}`}
         testID={`editor-ingredient-${index}`}
       >
-        <View className="w-7 items-center">
-          {heading ? null : (
-            <IngredientIcon ingredientId={foods.get(foodNames[index] ?? "") ?? null} />
-          )}
-        </View>
+        <IngredientIcon ingredientId={lineFoods[index]?.foodId} />
         <View className="flex-1">
           <EditorInput
             {...trailingRow.inputProps(row, index)}
@@ -130,36 +129,38 @@ export function IngredientRows({
   };
 
   return (
-    <View>
-      <DragList
-        nested
-        // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
-        keyboardShouldPersistTaps="handled"
-        renderHeading={() => null}
-        renderItem={renderRow}
-        rows={trailingRow.visibleRows.map((row) => ({
-          kind: "item" as const,
-          key: row.id,
-          value: row,
-        }))}
-        onDrop={(drop) =>
-          commit(
-            normalizeIngredientRows(
-              inDraggedOrder(
-                drop.rows.map((entry) => entry.value),
-                rows
+    <IngredientIconSlots rows={lineFoods}>
+      <View>
+        <DragList
+          nested
+          // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
+          keyboardShouldPersistTaps="handled"
+          renderHeading={() => null}
+          renderItem={renderRow}
+          rows={trailingRow.visibleRows.map((row) => ({
+            kind: "item" as const,
+            key: row.id,
+            value: row,
+          }))}
+          onDrop={(drop) =>
+            commit(
+              normalizeIngredientRows(
+                inDraggedOrder(
+                  drop.rows.map((entry) => entry.value),
+                  rows
+                )
               )
             )
-          )
-        }
-      />
-      {trailingRow.canAdd ? (
-        <AddRow
-          label={intl.formatMessage({ id: "recipes.editor.addIngredient" })}
-          testID="editor-add-ingredient"
-          onPress={trailingRow.add}
+          }
         />
-      ) : null}
-    </View>
+        {trailingRow.canAdd ? (
+          <AddRow
+            label={intl.formatMessage({ id: "recipes.editor.addIngredient" })}
+            testID="editor-add-ingredient"
+            onPress={trailingRow.add}
+          />
+        ) : null}
+      </View>
+    </IngredientIconSlots>
   );
 }

@@ -184,9 +184,11 @@
     "year": "år",
     "years": "år",
     "next": "Næste:",
-    "every": "Hver",
-    "everyOther": "Hver anden",
-    "on": "på",
+    "everyDay": "{interval, plural, =1 {Hver dag} =2 {Hver anden dag} other {Hver #. dag}}",
+    "everyWeek": "{interval, plural, =1 {Hver uge} =2 {Hver anden uge} other {Hver #. uge}}",
+    "everyMonth": "{interval, plural, =1 {Hver måned} =2 {Hver anden måned} other {Hver #. måned}}",
+    "everyYear": "{interval, plural, =1 {Hvert år} =2 {Hvert andet år} other {Hvert #. år}}",
+    "onWeekday": "{repeat} på {weekday}",
     "today": "i dag",
     "tomorrow": "i morgen",
     "weekdays": {
@@ -199,13 +201,13 @@
       "sat": "Lør"
     },
     "weekdaysFull": {
-      "0": "Mandag",
-      "1": "Tirsdag",
-      "2": "Onsdag",
-      "3": "Torsdag",
-      "4": "Fredag",
-      "5": "Lørdag",
-      "6": "Søndag"
+      "0": "Søndag",
+      "1": "Mandag",
+      "2": "Tirsdag",
+      "3": "Onsdag",
+      "4": "Torsdag",
+      "5": "Fredag",
+      "6": "Lørdag"
     }
   },
   "badges": {

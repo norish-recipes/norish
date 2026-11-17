@@ -1,0 +1,33 @@
+import { useEffect } from "react";
+import {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+} from "react-native-reanimated";
+
+import { settleTo } from "./settle-to";
+import { timedTo } from "./timed";
+
+/** The opacity that follows `opacity` as a shared value: a spring, a short fade under Reduce
+ * Motion. A rise waits `riseDelay` ms; a fall takes exactly `fallMs` when given. */
+export function useFadeProgress(opacity: number, riseDelay = 0, fallMs?: number) {
+  const reduceMotion = useReducedMotion();
+  const shown = useSharedValue(opacity);
+
+  useEffect(() => {
+    const settle = settleTo(opacity, { reduceMotion, overshootClamping: true });
+
+    if (opacity > shown.get()) shown.set(withDelay(riseDelay, settle));
+    else shown.set(fallMs === undefined ? settle : timedTo(opacity, fallMs));
+  }, [opacity, riseDelay, fallMs, reduceMotion, shown]);
+
+  return shown;
+}
+
+/** The animated style for an opacity that follows `opacity`, as `useFadeProgress` moves it. */
+export function useFadeTo(opacity: number, riseDelay = 0, fallMs?: number) {
+  const shown = useFadeProgress(opacity, riseDelay, fallMs);
+
+  return useAnimatedStyle(() => ({ opacity: shown.get() }));
+}

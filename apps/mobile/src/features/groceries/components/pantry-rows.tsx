@@ -154,7 +154,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
                 />
               )
             }
-            ingredientId={item.ingredientId || null}
+            ingredientId={row.foodId}
             name={ingredientDisplayName(item, intl.locale)}
             testID={`pantry-food-${item.id}`}
             onPress={() => actions.open(item)}
@@ -170,41 +170,6 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
           <Text className="text-muted px-4 py-[22px] text-center text-[15px]" testID={note.testID}>
             {intl.formatMessage({ id: note.messageId })}
           </Text>
-        </CardSlice>
-      );
-    }
-    case "label":
-      return (
-        <Text className={`${SECTION_LABEL} px-7 pt-[18px] pb-2`}>
-          {intl.formatMessage({ id: "groceries.pantry.fromCatalogue" })}
-        </Text>
-      );
-    case "match": {
-      const food = row.food;
-      const name = ingredientDisplayName(food, intl.locale);
-
-      return (
-        <CardSlice edge={row.edge}>
-          <FoodRow
-            end={
-              <RowButton
-                accent
-                icon="add"
-                label={addLabel(name)}
-                testID={`pantry-match-${food.id}`}
-                onPress={() =>
-                  actions.keep({
-                    ingredientId: food.id,
-                    name: food.name,
-                    localeNames: food.localeNames,
-                  })
-                }
-              />
-            }
-            ingredientId={food.id}
-            name={name}
-            testID={`pantry-match-row-${food.id}`}
-          />
         </CardSlice>
       );
     }
@@ -250,7 +215,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
                 onPress={() => actions.keep(food)}
               />
             }
-            ingredientId={food.ingredientId}
+            ingredientId={row.foodId}
             name={name}
             subline={intl.formatMessage(
               { id: "groceries.pantry.inRecipes" },

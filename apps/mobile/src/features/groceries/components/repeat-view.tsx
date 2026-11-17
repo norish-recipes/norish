@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { SheetScrollView } from "@/components/sheet";
+import { SheetBody } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -40,12 +40,13 @@ export function RepeatBody({
   const intl = useIntl();
   const label = useRecurrenceLabel();
   const [foreground, accentText] = useThemeColor(["foreground", "accent"] as const);
-  const text = (key: string) => intl.formatMessage({ id: `common.recurrence.${key}` });
+  const text = (key: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id: `common.recurrence.${key}` }, values);
   const next = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
   const words = recurrenceTranslationsFrom(text);
 
   return (
-    <SheetScrollView contentClassName="gap-2">
+    <SheetBody contentClassName="gap-2">
       <FieldLabel>{text("frequency")}</FieldLabel>
       <Segmented
         options={RULES.map(([rule, key]) => ({ id: rule, label: text(key) }))}
@@ -125,6 +126,6 @@ export function RepeatBody({
           ) : null}
         </View>
       ) : null}
-    </SheetScrollView>
+    </SheetBody>
   );
 }

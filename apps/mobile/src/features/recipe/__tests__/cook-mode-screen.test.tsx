@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const query = vi.hoisted(() => ({ recipe: null as object | null, error: null as unknown }));
 const back = vi.hoisted(() => vi.fn());
+const setHostOptions = vi.hoisted(() => vi.fn());
 
 type Props = { testID?: string; children?: ReactNode; onPress?: () => void };
 const host = ({ testID, children, onPress }: Props) => (
@@ -23,6 +24,8 @@ vi.mock("react-native", () => ({
   StyleSheet: { absoluteFill: {} },
 }));
 vi.mock("react-native-gesture-handler", () => ({}));
+vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
+vi.mock("expo-haptics", () => ({}));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0 }) }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/components/glass", () => ({
@@ -31,10 +34,12 @@ vi.mock("@/components/glass", () => ({
   ),
 }));
 vi.mock("@/hooks/use-resolved-color-scheme", () => ({}));
-vi.mock("@/lib/network/server-url", () => ({}));
+vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
+vi.mock("@/lib/tab-bar-visibility", () => ({ useHideTabBar: () => {} }));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "missing" }),
   useRouter: () => ({ back }),
+  useNavigation: () => ({ getParent: () => ({ setOptions: setHostOptions }) }),
 }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 vi.mock("react-intl", () => ({
@@ -45,15 +50,17 @@ vi.mock("@trpc/client", () => ({
     data = { code: "NOT_FOUND" };
   },
 }));
+vi.mock("@norish/shared-react/config", () => ({}));
 vi.mock("@norish/shared-react/ingredients", () => ({}));
 vi.mock("@norish/shared-react/reader", () => ({}));
 vi.mock("@norish/shared-react/recipes", () => ({ useRecipeQuery: () => query }));
+vi.doMock("../components/cook-bar", () => ({ BAR_BOTTOM: 34, BAR_HEIGHT: 48 }));
 for (const path of [
-  "../components/cook-bar",
   "../components/cook-ingredients",
   "../components/cook-steps",
   "../components/fade-edge",
   "../components/timer-list",
+  "../components/timer-pill",
   "../components/tint",
   "../utils/dish-tint",
 ]) {
@@ -68,6 +75,15 @@ describe("CookModeScreen before its recipe loads", () => {
     query.recipe = null;
     query.error = null;
     back.mockClear();
+    setHostOptions.mockClear();
+  });
+
+  it("turns off the hosting route's back swipe while open, so a swipe never pops cook mode", () => {
+    const { unmount } = render(<CookModeScreen />);
+
+    expect(setHostOptions).toHaveBeenLastCalledWith({ gestureEnabled: false });
+    unmount();
+    expect(setHostOptions).toHaveBeenLastCalledWith({ gestureEnabled: true });
   });
 
   it("closes while the recipe is still loading, offline without it too", () => {

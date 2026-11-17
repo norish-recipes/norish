@@ -7,6 +7,7 @@ import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/p
 vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     recipes: {
+      create: { mutationKey: () => [["recipes", "create"]] },
       uploadImage: {
         mutationOptions: () => ({
           mutationFn: vi.fn(async (formData: FormData) => {

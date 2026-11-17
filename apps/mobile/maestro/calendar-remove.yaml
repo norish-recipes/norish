@@ -1,0 +1,46 @@
+# Removes a planned item from its sheet: the Calendar's row opens the sheet, Remove asks first, and
+# on the confirm the item goes from the timeline and from the server.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Remove Plan Soup", "key": "soup"}]'
+- runFlow:
+    file: subflows/plan.yaml
+    env:
+      PLAN: '{"recipeName": "Remove Plan Soup", "offset": 1, "slot": "Dinner"}'
+- tapOn:
+    id: tab-calendar
+- scrollUntilVisible:
+    element:
+      id: calendar-item-.*
+      text: Remove Plan Soup.*
+- tapOn:
+    id: calendar-item-.*
+    text: Remove Plan Soup.*
+- extendedWaitUntil:
+    visible:
+      id: planned-item-sheet
+    timeout: 20000
+- tapOn:
+    id: planned-item-remove
+# The alert names the item and its day; cancelling keeps it.
+- assertVisible: Remove Plan Soup comes off .*
+- tapOn: Cancel
+- assertVisible:
+    id: planned-item-sheet
+- tapOn:
+    id: planned-item-remove
+# Remove is the alert's right-hand button; the sheet behind it has a Remove of its own that a text
+# selector would reach first, so the button is tapped where the system draws it.
+- tapOn:
+    point: 68%,57%
+- extendedWaitUntil:
+    notVisible:
+      id: planned-item-sheet
+    timeout: 20000
+- evalScript: ${output.gone = json(http.get(NORISH_PROXY_CONTROL_URL + '/planned?absent=true&name=Remove%20Plan%20Soup').body)}
+- assertNotVisible:
+    id: calendar-item-.*
+    text: Remove Plan Soup.*

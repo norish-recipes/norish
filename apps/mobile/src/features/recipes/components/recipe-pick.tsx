@@ -2,42 +2,13 @@ import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
-import { SearchField } from "heroui-native";
+import { SheetSearchField } from "@/components/sheet-search-field";
 import { useIntl } from "react-intl";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import { PickRow } from "./pick-row";
 import { PickSheet } from "./pick-sheet";
-
-/** The search field over a recipe picker; `onChange` is absent while what it searches loads. */
-function SearchRecipes({
-  value,
-  onChange,
-}: {
-  value?: string;
-  onChange?: (value: string) => void;
-}) {
-  const intl = useIntl();
-  const label = intl.formatMessage({ id: "recipes.cookbooks.searchRecipes" });
-
-  return (
-    <SearchField isDisabled={!onChange} value={value} onChange={onChange}>
-      <SearchField.Group>
-        <SearchField.SearchIcon />
-        <SearchField.Input
-          accessibilityLabel={label}
-          autoCorrect={false}
-          className="bg-default h-12 rounded-3xl"
-          placeholder={label}
-          returnKeyType="search"
-          testID="cookbook-add-recipes-search"
-        />
-        <SearchField.ClearButton />
-      </SearchField.Group>
-    </SearchField>
-  );
-}
 
 /** What a recipe picker reads from `useRecipePick`, over the recipes it offers. */
 type RecipePick = {
@@ -74,7 +45,12 @@ export function RecipePickSheet({
       header={
         <View className="gap-2">
           {children}
-          <SearchRecipes value={pick?.input} onChange={pick?.setInput} />
+          <SheetSearchField
+            label={intl.formatMessage({ id: "recipes.cookbooks.searchRecipes" })}
+            testID="cookbook-add-recipes-search"
+            value={pick?.input}
+            onChange={pick?.setInput}
+          />
         </View>
       }
       list={

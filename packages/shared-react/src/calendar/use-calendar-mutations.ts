@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PlannedItemFromQuery, RecipeDashboardDTO, Slot } from "@norish/shared/contracts";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
+import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
@@ -71,7 +72,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
     showError("The calendar change was not saved. Please try again.", "calendar-mutations");
   };
 
-  // A move or update answers with its item, new version included: the echo is the fast path (ADR-0011).
+  // A move or edit answers with its item, new version included: the echo is the fast path (ADR-0011).
   // No item (stale, no-op, failed): the optimistic version was never earned, so reread.
   const placeAnswer = (result: { item?: PlannedItemWithRecipePayload }) => {
     if (result.item) upsertItemAcrossRanges(result.item);
@@ -166,41 +167,55 @@ export function useCalendarMutations(): CalendarMutationsResult {
     })
   );
 
+  // One edit as every range shows it: new text in place, or the item moved carrying it; no
+  // index puts it last, as each range knows the slot (the server finds the real end).
+  const applyEdit = (
+    found: PlannedItemFromQuery | undefined,
+    { title, move }: { title?: string; move?: { date: string; slot: Slot; index?: number } }
+  ) =>
+    writeAcrossRanges((items, range) => {
+      if (!found) return items;
+      if (!move) {
+        return items.map((item) =>
+          item.id === found.id
+            ? {
+                ...item,
+                title: title ?? item.title,
+                version: item.version + 1,
+                updatedAt: new Date(),
+              }
+            : item
+        );
+      }
+      const edited = { ...found, title: title ?? found.title };
+      const sortOrder = move.index ?? moveTargetIndex(items, edited, move.date, move.slot);
+
+      return moveItemInRange(items, edited, { date: move.date, slot: move.slot, sortOrder }, range);
+    });
+
   const { mutate: mutateMove } = useMutation(
     trpc.calendar.moveItem.mutationOptions({
-      onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) => {
-        const moved = findItem(itemId);
-        // No index: last, as each range knows the slot; the server finds the real end.
-        const sortOrder = (items: PlannedItemFromQuery[]) =>
-          targetIndex ?? (moved ? moveTargetIndex(items, moved, targetDate, targetSlot) : 0);
-
-        return writeAcrossRanges((items, range) =>
-          moved
-            ? moveItemInRange(
-                items,
-                moved,
-                { date: targetDate, slot: targetSlot, sortOrder: sortOrder(items) },
-                range
-              )
-            : items
-        );
-      },
+      onMutate: ({ itemId, targetDate, targetSlot, targetIndex }) =>
+        applyEdit(findItem(itemId), {
+          move: { date: targetDate, slot: targetSlot, index: targetIndex },
+        }),
       onSuccess: placeAnswer,
       onError: rollBack,
       scope: planWrites,
     })
   );
 
-  const { mutate: mutateUpdate } = useMutation(
-    trpc.calendar.updateItem.mutationOptions({
-      onMutate: ({ itemId, title }) =>
-        writeAcrossRanges((items) =>
-          items.map((item) =>
-            item.id === itemId
-              ? { ...item, title, version: item.version + 1, updatedAt: new Date() }
-              : item
-          )
-        ),
+  // One write for a whole edit: a new day or slot lands last there, carrying the new text.
+  const { mutate: mutateEdit } = useMutation(
+    trpc.calendar.editItem.mutationOptions({
+      onMutate: ({ itemId, title, date, slot }) => {
+        const found = findItem(itemId);
+
+        return applyEdit(found, {
+          title,
+          move: found && plannedItemEditTarget(found, { date, slot }),
+        });
+      },
       onSuccess: placeAnswer,
       onError: rollBack,
       scope: planWrites,
@@ -223,8 +238,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
     moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex?: number) => {
       mutateMove({ itemId, version: versionOf(itemId), targetDate, targetSlot, targetIndex });
     },
-    updateItem: (itemId, title) => {
-      mutateUpdate({ itemId, version: versionOf(itemId), title });
+    saveItem: (itemId, changes) => {
+      mutateEdit({ itemId, version: versionOf(itemId), ...changes });
     },
   };
 }

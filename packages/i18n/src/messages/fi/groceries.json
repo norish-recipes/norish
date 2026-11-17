@@ -93,6 +93,7 @@
     "unavailable": "Ruokakomeroa ei voitu lukea. Mikään ei muuttunut; yritä uudelleen, kun olet taas verkossa.",
     "fieldLabel": "Etsi tai lisää ruoka",
     "fieldPlaceholder": "Etsi tai lisää, esim. oliiviöljy",
+    "findPlaceholder": "Etsi ruoka ruokakomerosta",
     "add": "Lisää ruokakomeroon",
     "fromCatalogue": "Lisää ruoka",
     "addFood": "Lisää {name} ruokakomeroon",
@@ -134,9 +135,7 @@
     "toBuy": "Ostettavat",
     "inPantry": "Ruokakomerossasi",
     "weKeepThis": "Tätä on aina",
-    "keepFailed": "Sitä ei voitu lisätä ruokakomeroon",
-    "addCount": "{count, plural, one {Lisää # tuote} other {Lisää # tuotetta}}",
-    "adding": "Lisätään ostoslistalle…"
+    "keepFailed": "Sitä ei voitu lisätä ruokakomeroon"
   },
   "picker": {
     "unlink": "Poista tuotelinkitys",
@@ -171,7 +170,8 @@
     "packs": "{count} × {size}",
     "onePack": "hinta yhdeltä pakkaukselta",
     "sale": "Tarjous",
-    "regularPrice": "Normaalihinta {price}"
+    "regularPrice": "Normaalihinta {price}",
+    "each": "kpl"
   },
   "clearConfirm": {
     "listTitle": "Tyhjennetäänkö lista?",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Siirrä tuotteet kohtaan Lajittelematon",
     "typePrice": "Kirjoita hinta itse",
     "product": "Tuote",
-    "chooseProduct": "Valitse tuote"
+    "chooseProduct": "Valitse tuote",
+    "recipeCount": "{count, plural, one {# resepti} other {# reseptiä}}"
   }
 }

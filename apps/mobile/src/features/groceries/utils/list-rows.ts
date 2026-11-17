@@ -1,6 +1,6 @@
-import type { Edge } from "@/components/card-edges";
 import type { DragRow } from "@/components/drag-list/resolve-drop";
-import { edgeAt } from "@/components/card-edges";
+import type { Edge } from "@/lib/card-edges";
+import { edgeAt } from "@/lib/card-edges";
 
 import type { PricedLine, RecipeGroceries } from "@norish/shared-react/groceries";
 import type { AisleDto, GroceryDto, StoreDto } from "@norish/shared/contracts";
@@ -46,6 +46,9 @@ export type ListRow = DragRow<ListHeading, ListItem>;
 export const UNSORTED_KEY = "unsorted";
 
 export const sectionKeyOf = (storeId: string | null) => storeId ?? UNSORTED_KEY;
+
+/** The Done row's height, whose middle a row leaving towards it aims at. */
+export const DONE_ROW_HEIGHT = 44;
 
 const lineRow = (grocery: GroceryDto, store: StoreDto | null): DragRow<Heading, Item> => ({
   kind: "item",

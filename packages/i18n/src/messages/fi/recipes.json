@@ -111,7 +111,8 @@
     "cookbooks": "Keittokirjat",
     "favourite": "Suosikki",
     "unfavourite": "Poista suosikeista",
-    "ai": "Tekoäly"
+    "ai": "Tekoäly",
+    "shareLink": "Jaa linkki"
   },
   "sharePanel": {
     "title": "Jaa resepti",
@@ -155,7 +156,14 @@
       "title": "Poista linkki",
       "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
       "confirm": "Poista linkki"
-    }
+    },
+    "subtitle": "Julkiset linkit: {recipeName}",
+    "expiresAfter": "Vanhenee kuluttua",
+    "expiresOn": "Vanhenee {date}",
+    "expiredOn": "Vanheni {date}",
+    "lastOpenedOn": "Viimeksi avattu {date}",
+    "neverExpires": "Ei vanhene koskaan",
+    "linkCreated": "Luotu {date}"
   },
   "convert": {
     "ariaLabel": "Muunna mittajärjestelmä",
@@ -281,7 +289,9 @@
     "householdNumbers": "kotitaloutesi arvot",
     "decreasePortions": "Vähemmän annoksia",
     "increasePortions": "Enemmän annoksia",
-    "portions": "{count, plural, one {# annos} other {# annosta}}"
+    "portions": "{count, plural, one {# annos} other {# annosta}}",
+    "percentOfReference": "{percent} % määrästä {amount}",
+    "percentOfDailyReference": "{percent} % päiväviitearvosta {amount}"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",
@@ -364,7 +374,9 @@
     "restartTimer": "Käynnistä ajastin uudelleen",
     "notificationsOff": "Norishin ilmoitukset ovat pois päältä, joten ajastimet hälyttävät vain sovelluksen ollessa auki.",
     "decreaseTimer": "Vähennä {time}",
-    "increaseTimer": "Lisää {time}"
+    "increaseTimer": "Lisää {time}",
+    "timersLeft": "Ajastimet, {time} jäljellä",
+    "spokenTime": "{hours, plural, =0 {} one {# tunti } other {# tuntia }}{minutes, plural, =0 {} one {# minuutti } other {# minuuttia }}{seconds, plural, =0 {} one {# sekunti } other {# sekuntia }}"
   },
   "enrichment": {
     "failed": "Rikastus epäonnistui",

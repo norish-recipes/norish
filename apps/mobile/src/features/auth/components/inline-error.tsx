@@ -5,12 +5,11 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSequence,
-  withTiming,
 } from "react-native-reanimated";
 import { FADE_IN, RISE_IN } from "@/features/auth/utils/motion";
+import { errorNotification } from "@/lib/haptics";
+import { stepsThrough } from "@/lib/motion/timed";
 import Feather from "@expo/vector-icons/Feather";
-import * as Haptics from "expo-haptics";
 import { FieldError, useThemeColor } from "heroui-native";
 
 /** A failed attempt; each one is a new object, so the same message shakes again. */
@@ -34,7 +33,7 @@ export function ErrorShake({
 
   useEffect(() => {
     if (error && !reduceMotion) {
-      offset.set(withSequence(...SHAKE_OFFSETS.map((to) => withTiming(to, { duration: 50 }))));
+      offset.set(stepsThrough(SHAKE_OFFSETS, 50));
     }
   }, [error, offset, reduceMotion]);
 
@@ -51,7 +50,7 @@ export function InlineError({ error, testID }: { error: InlineErrorState; testID
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (error) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    if (error) errorNotification();
   }, [error]);
 
   return (

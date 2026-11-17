@@ -13,7 +13,7 @@ import { useCalendarMutations } from "../use-calendar-mutations";
 const mockCreateItemMutate = vi.fn();
 const mockDeleteItemMutate = vi.fn();
 const mockMoveItemMutate = vi.fn();
-const mockUpdateItemMutate = vi.fn();
+const mockEditItemMutate = vi.fn();
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
@@ -47,9 +47,9 @@ vi.mock("../../trpc", () => ({
           ...options,
         }),
       },
-      updateItem: {
+      editItem: {
         mutationOptions: (options: Record<string, unknown>) => ({
-          mutationFn: mockUpdateItemMutate,
+          mutationFn: mockEditItemMutate,
           ...options,
         }),
       },
@@ -288,7 +288,7 @@ describe("useCalendarMutations", () => {
       ["a plan", mockCreateItemMutate, (w: Writes) => w.planNote("2025-01-15", "Lunch", "Soup")],
       ["a remove", mockDeleteItemMutate, (w: Writes) => w.deleteItem("item-1")],
       ["a move", mockMoveItemMutate, (w: Writes) => w.moveItem("item-1", "2025-01-16", "Lunch")],
-      ["an edit", mockUpdateItemMutate, (w: Writes) => w.updateItem("item-1", "Soup")],
+      ["a save", mockEditItemMutate, (w: Writes) => w.saveItem("item-1", { slot: "Lunch" })],
     ])("tells the reader when %s is rolled back", async (_, mutation, write) => {
       queryClient.setQueryData(getQueryKey(), [createMockItem({ id: "item-1" })]);
       mutation.mockRejectedValue(new Error("refused"));
@@ -524,32 +524,6 @@ describe("useCalendarMutations", () => {
     });
   });
 
-  describe("updateItem", () => {
-    it("includes the current version in mutation input", async () => {
-      const item = createMockItem({ id: "item-1", title: "Old title", version: 4 });
-
-      queryClient.setQueryData(getQueryKey(), [item]);
-
-      mockUpdateItemMutate.mockResolvedValue({ success: true });
-
-      const { result } = renderHook(() => useCalendarMutations(), {
-        wrapper: createTestWrapper(queryClient),
-      });
-
-      act(() => {
-        result.current.updateItem("item-1", "New title");
-      });
-
-      await waitFor(() => {
-        expect(mockUpdateItemMutate.mock.calls[0]?.[0]).toEqual({
-          itemId: "item-1",
-          version: 4,
-          title: "New title",
-        });
-      });
-    });
-  });
-
   describe("a write's own answer", () => {
     const range = { startISO, endISO };
     const withoutTimes = (items: PlannedItemFromQuery[] | undefined) =>
@@ -588,10 +562,10 @@ describe("useCalendarMutations", () => {
       await waitFor(() => expect(mockMoveItemMutate.mock.calls[1]?.[0].version).toBe(2));
     });
 
-    it("places the updated plan's new version, so its next write is not stale", async () => {
+    it("places the saved plan's new version, so its next write is not stale", async () => {
       const { a } = setup();
 
-      mockUpdateItemMutate.mockResolvedValue({
+      mockEditItemMutate.mockResolvedValue({
         success: true,
         stale: false,
         item: { ...a, title: "renamed", version: 2 },
@@ -600,11 +574,11 @@ describe("useCalendarMutations", () => {
         wrapper: createTestWrapper(queryClient),
       });
 
-      act(() => result.current.updateItem("a", "renamed"));
+      act(() => result.current.saveItem("a", { title: "renamed" }));
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
-      act(() => result.current.updateItem("a", "again"));
+      act(() => result.current.saveItem("a", { title: "again" }));
 
-      await waitFor(() => expect(mockUpdateItemMutate.mock.calls[1]?.[0].version).toBe(2));
+      await waitFor(() => expect(mockEditItemMutate.mock.calls[1]?.[0].version).toBe(2));
     });
 
     it("an answer then its echo leaves the cache as either alone would", async () => {
@@ -633,6 +607,92 @@ describe("useCalendarMutations", () => {
     });
   });
 
+  describe("saveItem", () => {
+    const cached = () => queryClient.getQueryData<PlannedItemFromQuery[]>(getQueryKey())!;
+    const render = () =>
+      renderHook(() => useCalendarMutations(), { wrapper: createTestWrapper(queryClient) });
+
+    beforeEach(() => {
+      mockMoveItemMutate.mockReset();
+      mockEditItemMutate.mockReset();
+      mockEditItemMutate.mockReset().mockReturnValue(new Promise(() => {}));
+    });
+
+    it("sends text, day and slot as exactly one write at the cached version", async () => {
+      const note = createMockItem({ id: "n", itemType: "note", title: "Soup", version: 3 });
+      const mate = createMockItem({ id: "m", date: "2025-01-20", slot: "Dinner" });
+
+      queryClient.setQueryData(getQueryKey(), [note, mate]);
+      const { result } = render();
+
+      act(() =>
+        result.current.saveItem("n", { title: "Leek soup", date: "2025-01-20", slot: "Dinner" })
+      );
+      await waitFor(() => expect(mockEditItemMutate).toHaveBeenCalledTimes(1));
+
+      expect(mockEditItemMutate.mock.calls[0]![0]).toEqual({
+        itemId: "n",
+        version: 3,
+        title: "Leek soup",
+        date: "2025-01-20",
+        slot: "Dinner",
+      });
+      expect(mockMoveItemMutate).not.toHaveBeenCalled();
+      // Shown at once, last in its new slot, one version on.
+      expect(cached().find((item) => item.id === "n")).toMatchObject({
+        title: "Leek soup",
+        date: "2025-01-20",
+        slot: "Dinner",
+        sortOrder: 1,
+        version: 4,
+      });
+    });
+
+    it("a text-only save changes the text in place, one version on", async () => {
+      queryClient.setQueryData(getQueryKey(), [
+        createMockItem({ id: "n", itemType: "note", title: "Soup", version: 3 }),
+      ]);
+      const { result } = render();
+
+      act(() => result.current.saveItem("n", { title: "Leek soup" }));
+      await waitFor(() => expect(mockEditItemMutate).toHaveBeenCalledTimes(1));
+
+      expect(mockEditItemMutate.mock.calls[0]![0]).toEqual({
+        itemId: "n",
+        version: 3,
+        title: "Leek soup",
+      });
+      expect(cached()[0]).toMatchObject({ title: "Leek soup", date: "2025-01-15", version: 4 });
+    });
+
+    it("a remove made while the save waits is sent once it answered, at the version it left", async () => {
+      const note = createMockItem({ id: "n", itemType: "note", title: "Soup", version: 3 });
+      const save = Promise.withResolvers<object>();
+
+      queryClient.setQueryData(getQueryKey(), [note]);
+      mockEditItemMutate.mockReturnValue(save.promise);
+      mockDeleteItemMutate.mockResolvedValue({ success: true, stale: false });
+      const { result } = render();
+
+      act(() => result.current.saveItem("n", { title: "Leek soup", slot: "Lunch" }));
+      act(() => result.current.deleteItem("n"));
+      await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+      expect(mockDeleteItemMutate).not.toHaveBeenCalled();
+
+      await act(async () =>
+        save.resolve({
+          success: true,
+          stale: false,
+          item: { ...note, title: "Leek soup", slot: "Lunch", version: 4 },
+        })
+      );
+      await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+
+      expect(mockDeleteItemMutate.mock.calls[0]![0]).toEqual({ itemId: "n", version: 4 });
+      expect(cached()).toEqual([]);
+    });
+  });
+
   describe("overlapping writes to one plan", () => {
     const range = { startISO, endISO };
 
@@ -652,7 +712,7 @@ describe("useCalendarMutations", () => {
       const { a } = setup();
       const rename = Promise.withResolvers<object>();
 
-      mockUpdateItemMutate.mockReturnValue(rename.promise);
+      mockEditItemMutate.mockReturnValue(rename.promise);
       mockMoveItemMutate.mockResolvedValue({
         success: true,
         moved: true,
@@ -663,10 +723,10 @@ describe("useCalendarMutations", () => {
       });
 
       act(() => {
-        result.current.updateItem("a", "renamed");
+        result.current.saveItem("a", { title: "renamed" });
         result.current.moveItem("a", "2025-01-20", "Breakfast", 0);
       });
-      await waitFor(() => expect(mockUpdateItemMutate).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(mockEditItemMutate).toHaveBeenCalledTimes(1));
       await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
       expect(mockMoveItemMutate).not.toHaveBeenCalled();
       expect(cachedA()).toMatchObject({ title: "renamed", date: "2025-01-20", version: 5 });
@@ -680,7 +740,7 @@ describe("useCalendarMutations", () => {
       );
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
 
-      expect(mockUpdateItemMutate.mock.calls[0]![0].version).toBe(3);
+      expect(mockEditItemMutate.mock.calls[0]![0].version).toBe(3);
       expect(mockMoveItemMutate.mock.calls[0]![0].version).toBe(4);
       expect(cachedA()).toMatchObject({ title: "renamed", date: "2025-01-20", version: 5 });
     });
@@ -770,17 +830,17 @@ describe("useCalendarMutations", () => {
       setup();
       const rename = Promise.withResolvers<object>();
 
-      mockUpdateItemMutate.mockReturnValue(rename.promise);
+      mockEditItemMutate.mockReturnValue(rename.promise);
       mockMoveItemMutate.mockResolvedValue({ success: true, moved: false, stale: true });
       const { result } = renderHook(() => useCalendarMutations(), {
         wrapper: createTestWrapper(queryClient),
       });
 
       act(() => {
-        result.current.updateItem("a", "renamed");
+        result.current.saveItem("a", { title: "renamed" });
         result.current.moveItem("a", "2025-01-20", "Breakfast", 0);
       });
-      await waitFor(() => expect(mockUpdateItemMutate).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(mockEditItemMutate).toHaveBeenCalledTimes(1));
       // A real error, not backend-unreachable: the rename never happened.
       await act(async () => rename.reject(new Error("BAD_REQUEST")));
       await waitFor(() => expect(queryClient.isMutating()).toBe(0));
@@ -823,10 +883,10 @@ describe("useCalendarMutations", () => {
         },
       },
       {
-        name: "a failed update",
+        name: "a failed save",
         write: (mutations: ReturnType<typeof useCalendarMutations>) => {
-          mockUpdateItemMutate.mockResolvedValue({ success: false });
-          mutations.updateItem("a", "renamed");
+          mockEditItemMutate.mockResolvedValue({ success: false });
+          mutations.saveItem("a", { title: "renamed" });
         },
       },
     ])("$name answer, carrying no item, rereads", async ({ write }) => {

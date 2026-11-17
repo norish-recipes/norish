@@ -10,11 +10,9 @@
   "today": {
     "openRecipe": "Abrir receita",
     "move": "Mover…",
-    "removeTitle": "Remover de hoje?",
     "removeMessage": "{name} sai de {slot} de {day}.",
     "moveTitle": "Mover",
-    "moveSubtitle": "{name}, {slot} de hoje",
-    "moveToDay": "Mover {name} para {day}"
+    "moveSubtitle": "{name}, {slot} de hoje"
   },
   "editNote": {
     "title": "Editar nota",
@@ -55,7 +53,6 @@
     "randomRecipe": "Receita aleatória",
     "noRecipesFound": "Nenhuma receita encontrada.",
     "failedToLoadRecipes": "Falha ao carregar receitas.",
-    "planRecipe": "Planejar uma receita",
     "searchOrAddNote": "Busque receitas ou adicione uma nota",
     "random": "Receita aleatória",
     "planThisRecipe": "Planejar esta receita",

@@ -40,6 +40,8 @@ app if you were already signed in.
 
 ![Update your server screen showing the installed and required versions](/img/screenshots/mobile-update-your-server.png)
 
+The bottom bar minimises as you scroll down on each tab.
+
 ## Recipes
 
 **Today** shows your planned meals. To plan an empty slot, tap its add card and
@@ -84,6 +86,10 @@ library while they are processing.
 You can browse saved recipes and meals offline. Changes such as plans, cookbook
 edits, deletes and imports are sent when you reconnect. Uploading a cookbook
 cover requires a connection.
+
+For the recipe page, cook mode and timers, see [Recipes on iPhone](/recipes/mobile-recipe).
+For shopping and planning, see [Groceries on iPhone](/groceries/mobile-groceries),
+[Calendar on iPhone](/mobile-calendar) and [Calendar widgets on iPhone](/mobile-widgets).
 
 ## Share to Norish
 

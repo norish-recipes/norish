@@ -13,8 +13,12 @@ import { ValkeyContainer } from "@testcontainers/valkey";
 
 import { PAGE_NAME, seeder, serveRecipePage } from "./maestro-seed.mjs";
 
-// An optional argument runs that one flow, with the same setup, instead of the whole folder.
+// An optional argument runs that one flow, with the same setup, instead of the whole folder; a
+// second one runs it that many times in a row, to prove it stable.
 const only = process.argv[2] && path.resolve(process.argv[2]);
+const repeat = Number(process.argv[3] ?? 1);
+
+if (!Number.isInteger(repeat) || repeat < 1) throw new Error(`Not a run count: ${process.argv[3]}`);
 
 if (only && !existsSync(only)) throw new Error(`No flow at ${only}`);
 
@@ -39,6 +43,8 @@ async function freePort() {
 
   return port;
 }
+
+const recipePage = await serveRecipePage(LOOPBACK);
 
 // Without NORISH_SERVER_URL the flows get the web build on throwaway Postgres and Valkey
 // containers, which Testcontainers removes even when this run dies.
@@ -73,7 +79,8 @@ async function startServer() {
       UPLOADS_DIR: await mkdtemp(path.join(os.tmpdir(), "norish-maestro-")),
       PASSWORD_AUTH_ENABLED: "true",
       AUTH_RATE_LIMIT_ENABLED: "false",
-      INGREDIENT_CATALOGUE_URL: "",
+      // A few foods from loopback, so recipes resolve to catalogue foods and show their icons.
+      INGREDIENT_CATALOGUE_URL: `http://${LOOPBACK}:${recipePage.address().port}/catalogue`,
       // The import flows' recipe page answers on loopback.
       ALLOW_PRIVATE_ADDRESSES: "true",
       LOG_LEVEL: "error",
@@ -139,7 +146,6 @@ const query = async (procedure, input) => {
   return data.result.data.json;
 };
 const seed = seeder({ trpc, query });
-const recipePage = await serveRecipePage(LOOPBACK);
 
 const credentials = { email: env.NORISH_EMAIL, password: env.NORISH_PASSWORD };
 
@@ -188,9 +194,15 @@ const proxy = net.createServer((client) => {
   }
   client.pipe(upstream).pipe(client);
 });
+// `min` and `max`, as a read of names waits for them.
+const bounds = (route) => ({
+  min: Number(route.searchParams.get("min") ?? 0),
+  max: Number(route.searchParams.get("max") ?? Infinity),
+});
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
-  // `POST /reset`, `POST /recipe` (a JSON body), `GET /count?name=` and `GET /groceries` answer in JSON.
+  // The seeding and reading routes the flows call, each answering in JSON: POST seeds from a JSON
+  // body (/reset, /recipe, /grocery, /store, /plan, /pantry-add), GET reads (/count, /groceries, ...).
   const route = new URL(request.url ?? "/", "http://control");
   const body = await new Promise((resolve) => {
     const chunks = [];
@@ -209,10 +221,79 @@ const control = createServer(async (request, response) => {
         JSON.stringify({ count: await seed.countRecipes(route.searchParams.get("name")) })
       );
     } else if (route.pathname === "/groceries") {
+      response.write(JSON.stringify({ names: await seed.groceryNames(bounds(route)) }));
+    } else if (route.pathname === "/grocery" && request.method === "POST") {
+      response.write(JSON.stringify({ id: await seed.createGrocery(JSON.parse(body)) }));
+    } else if (route.pathname === "/grocery") {
+      const want = {};
+
+      // `done` and `repeats` are true or false, `store` a Store's name, or nothing for none.
+      for (const field of ["done", "repeats"]) {
+        if (route.searchParams.has(field)) want[field] = route.searchParams.get(field) === "true";
+      }
+      if (route.searchParams.has("store")) want.store = route.searchParams.get("store") || null;
+      response.write(
+        JSON.stringify(
+          await seed.groceryWhere(route.searchParams.get("name") ?? "", want, {
+            within: Number(route.searchParams.get("within") ?? 15_000),
+          })
+        )
+      );
+    } else if (route.pathname === "/stores") {
+      const is = route.searchParams.get("is");
+
       response.write(
         JSON.stringify({
-          names: await seed.groceryNames(Number(route.searchParams.get("min") ?? 0)),
+          names: await seed.storeNames({ is: is === null ? undefined : JSON.parse(is) }),
         })
+      );
+    } else if (route.pathname === "/aisle") {
+      const is = route.searchParams.get("is");
+
+      response.write(
+        JSON.stringify(
+          await seed.filedAisle({
+            store: route.searchParams.get("store") ?? "",
+            food: route.searchParams.get("food") ?? "",
+            is: is === "" || is === null ? null : is,
+          })
+        )
+      );
+    } else if (route.pathname === "/store") {
+      response.write(JSON.stringify({ id: await seed.createStore(JSON.parse(body)) }));
+    } else if (route.pathname === "/plan") {
+      response.write(JSON.stringify({ id: await seed.createPlanned(JSON.parse(body)) }));
+    } else if (route.pathname === "/pantry-add") {
+      await seed.addPantry(JSON.parse(body));
+    } else if (route.pathname === "/day") {
+      const offset = route.searchParams.get("offset") ?? "0";
+
+      if (!/^-?\d+$/.test(offset))
+        throw new Error(`offset is not a whole number of days: ${offset}`);
+      response.write(JSON.stringify({ key: seed.dayKey(Number(offset)) }));
+    } else if (route.pathname === "/planned") {
+      const want = (field) => route.searchParams.get(field) ?? undefined;
+
+      response.write(
+        JSON.stringify(
+          await seed.plannedWhere(route.searchParams.get("name") ?? "", {
+            date: want("date"),
+            slot: want("slot"),
+            absent: want("absent") === "true",
+          })
+        )
+      );
+    } else if (route.pathname === "/pantry") {
+      response.write(JSON.stringify({ names: await seed.pantryNames(bounds(route)) }));
+    } else if (route.pathname === "/pantry-kept") {
+      response.write(
+        JSON.stringify(
+          await seed.pantryKept(
+            route.searchParams.get("search") ?? "",
+            route.searchParams.get("custom") ?? "",
+            Number(route.searchParams.get("min") ?? 0)
+          )
+        )
       );
     } else if (route.pathname === "/cut") {
       proxy.close();
@@ -378,7 +459,7 @@ const vars = {
 };
 
 try {
-  await maestro(only ?? flows, vars);
+  for (let run = 0; run < repeat; run++) await maestro(only ?? flows, vars);
   proxy.close();
 
   if (!only) await maestro(path.join(flows, "old-server"), vars);

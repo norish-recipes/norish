@@ -1,11 +1,11 @@
-import type { Edge } from "@/components/card-edges";
 import type { Drop } from "@/components/drag-list/drag-list";
+import type { Edge } from "@/lib/card-edges";
 import React, { useState } from "react";
 import { Alert, Text, View } from "react-native";
-import { edgeAt } from "@/components/card-edges";
 import { DragList } from "@/components/drag-list/drag-list";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useCancelButton } from "@/hooks/use-cancel-button";
+import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -60,6 +60,7 @@ function ShopCheckLine({
  * editor that replaces the list inside the same sheet. Deleting asks first, as web does. */
 export function ManageStoresScreen() {
   const intl = useIntl();
+  const [onAccent] = useThemeColor(["accent-foreground"] as const);
   const cancel = useCancelButton();
   const text = (id: string) => intl.formatMessage({ id });
   const { stores, isRead } = useStoresQuery();
@@ -154,7 +155,7 @@ export function ManageStoresScreen() {
           variant="primary"
           onPress={() => setEditing(newEditingStore())}
         >
-          <Ionicons color="#ffffff" name="add" size={20} />
+          <Ionicons color={onAccent} name="add" size={20} />
           <Button.Label className="font-semibold">{text("groceries.mobile.addStore")}</Button.Label>
         </Button>
       }

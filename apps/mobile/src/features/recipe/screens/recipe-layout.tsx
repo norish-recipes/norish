@@ -1,6 +1,6 @@
 import React from "react";
-import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
-import { useHideTabBar } from "@/lib/tab-bar-visibility";
+import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { useMarkRecipeShown } from "@/lib/shown-recipe";
 import { Stack, useLocalSearchParams } from "expo-router";
 
 import { useIngredientsSubscription } from "@norish/shared-react/config";
@@ -12,9 +12,6 @@ import {
 } from "@norish/shared-react/recipes";
 
 import { ScreenKeepAwake } from "../components/screen-keep-awake";
-
-// The sheets of the Recipes stack the page opens; the bar stays away while one is over it.
-const PAGE_SHEETS = ["add-to-groceries", "plan", "add-to-cookbook"] as const;
 
 /** What the page keeps current: the recipe, its shares, its enrichment and the foods' icons. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
@@ -31,7 +28,7 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
 export function RecipeLayout() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  useHideTabBar(PAGE_SHEETS);
+  useMarkRecipeShown(id);
 
   return (
     <RecipePageProvider recipeId={id}>
@@ -47,7 +44,18 @@ export function RecipeLayout() {
         <Stack.Screen name="index" options={{ title: "" }} />
         <Stack.Screen name="servings" options={FIT_SHEET_OPTIONS} />
         <Stack.Screen name="share" options={SHEET_OPTIONS} />
-        <Stack.Screen name="edit" options={{ headerShown: false }} />
+        <Stack.Screen name="edit" options={EDITOR_OPTIONS} />
+        <Stack.Screen
+          name="viewer"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            animation: "fade",
+            gestureEnabled: false,
+            statusBarStyle: "light",
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
         <Stack.Screen
           name="cook"
           options={{ headerShown: false, presentation: "fullScreenModal" }}

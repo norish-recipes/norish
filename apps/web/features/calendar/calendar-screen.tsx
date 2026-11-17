@@ -107,11 +107,9 @@ function CalendarScreenContent() {
       {/* Edit note panel */}
       {editingNote && (
         <EditNotePanel
-          date={editingNote.date}
-          initialTitle={editingNote.title ?? ""}
-          noteId={editingNote.id}
+          key={editingNote.id}
+          note={editingNote}
           open={!!editingNote}
-          slot={editingNote.slot}
           onOpenChange={(open) => {
             if (!open) setEditingNote(null);
           }}

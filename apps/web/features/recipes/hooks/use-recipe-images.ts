@@ -57,7 +57,7 @@ export function useRecipeImages(): RecipeImagesResult {
     uploadStepImageData(uploadForm({ image: file, recipeId }));
 
   const uploadGalleryImage = (file: File, recipeId: string, order?: number) =>
-    uploadGalleryImageData(uploadForm({ image: file, recipeId, order }));
+    uploadGalleryImageData(uploadForm({ image: file, recipeId, order }), recipeId);
 
   return {
     uploadImage,

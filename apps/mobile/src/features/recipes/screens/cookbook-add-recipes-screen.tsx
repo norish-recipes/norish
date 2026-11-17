@@ -23,8 +23,6 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
                 { count: pick.selected.length }
               )
             : intl.formatMessage({ id: "common.actions.add" }),
-        icon: "add",
-        testID: "cookbook-add-recipes-add",
         onPress:
           pick.selected.length === 0
             ? undefined
@@ -57,8 +55,6 @@ export function CookbookAddRecipesScreen() {
     <RecipePickSheet
       action={{
         label: intl.formatMessage({ id: "common.actions.add" }),
-        icon: "add",
-        testID: "cookbook-add-recipes-add",
       }}
       emptyId="recipes.cookbooks.noRecipesToAdd"
       name="cookbook-add-recipes"

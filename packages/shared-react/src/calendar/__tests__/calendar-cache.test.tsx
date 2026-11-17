@@ -62,8 +62,8 @@ const trpc = {
     moveItem: {
       mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "moveItem"]], ...opts }),
     },
-    updateItem: {
-      mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "updateItem"]], ...opts }),
+    editItem: {
+      mutationOptions: (opts: object) => ({ mutationKey: [["calendar", "editItem"]], ...opts }),
     },
     onItemCreated: procedure("onItemCreated"),
     onItemDeleted: procedure("onItemDeleted"),
@@ -392,7 +392,7 @@ describe("calendar cache convergence across ranges", () => {
   });
 });
 
-describe("a delete, move or update with no range", () => {
+describe("a delete, move or edit with no range", () => {
   let queryClient: QueryClient;
   let unmount: () => void = () => {};
   let mutations: ReturnType<typeof useCalendarMutations>;
@@ -410,7 +410,7 @@ describe("a delete, move or update with no range", () => {
 
   // Each write answers with `answer`, or refuses with it when it is an Error.
   function mount(answer: unknown) {
-    for (const name of ["deleteItem", "moveItem", "updateItem"]) {
+    for (const name of ["deleteItem", "moveItem", "editItem"]) {
       queryClient.setMutationDefaults([["calendar", name]], {
         mutationFn: async (input: unknown) => {
           sent(name, input);
@@ -438,7 +438,7 @@ describe("a delete, move or update with no range", () => {
   const writes = {
     delete: () => mutations.deleteItem("item-0"),
     move: () => mutations.moveItem("item-0", "2026-10-05", "Lunch", 0),
-    update: () => mutations.updateItem("item-0", "Leftovers"),
+    edit: () => mutations.saveItem("item-0", { title: "Leftovers" }),
   };
   const WRITES = Object.keys(writes) as (keyof typeof writes)[];
 
@@ -461,7 +461,7 @@ describe("a delete, move or update with no range", () => {
         item({ id: "item-3", date: "2026-10-05", slot: "Lunch", sortOrder: 1 }),
       ],
     },
-    update: {
+    edit: {
       week: [item({ id: "item-0", title: "Leftovers" }), item({ id: "item-2", title: "Soup" })],
       page: [
         item({ id: "item-0", title: "Leftovers" }),
@@ -640,7 +640,7 @@ describe("a delete, move or update with no range", () => {
     queryClient.setMutationDefaults([["calendar", "deleteItem"]], {
       mutationFn: () => failing.promise,
     });
-    queryClient.setMutationDefaults([["calendar", "updateItem"]], {
+    queryClient.setMutationDefaults([["calendar", "editItem"]], {
       mutationFn: () => landing.promise,
     });
     readRange.mockImplementation(async () => server);
@@ -656,13 +656,13 @@ describe("a delete, move or update with no range", () => {
 
     act(() => {
       mutations.deleteItem("item-0");
-      mutations.updateItem("item-2", "Leftovers");
+      mutations.saveItem("item-2", { title: "Leftovers" });
     });
     await act(async () => {
       failing.reject(new Error("refused"));
       await vi.waitFor(() => expect(queryClient.isMutating()).toBe(1));
     });
-    // The server applies the update only now, after the delete failed.
+    // The server applies the edit only now, after the delete failed.
     server = PAGE_ITEMS.map((item) =>
       item.id === "item-2" ? { ...item, title: "Leftovers" } : item
     );
@@ -679,9 +679,9 @@ describe("a delete, move or update with no range", () => {
 
   it("keeps both writes started in one tick", async () => {
     mount({ success: true });
-    // The note editor renames, then moves, in one handler.
+    // A rename, then a move, in one handler.
     act(() => {
-      mutations.updateItem("item-0", "Leftovers");
+      mutations.saveItem("item-0", { title: "Leftovers" });
       mutations.moveItem("item-0", "2026-09-24", "Lunch", 0);
     });
     await settle();
@@ -695,10 +695,10 @@ describe("a delete, move or update with no range", () => {
 
   it("rereads both ranges after a stale write", async () => {
     mount({ success: true, stale: true });
-    act(() => writes.update());
+    act(() => writes.edit());
     await settle();
 
-    expectLanded("update");
+    expectLanded("edit");
     for (const range of [THIS_WEEK, CALENDAR_PAGE]) {
       expect(queryClient.getQueryState(rangeKey(range.startISO, range.endISO))?.isInvalidated).toBe(
         true
@@ -706,13 +706,13 @@ describe("a delete, move or update with no range", () => {
     }
   });
   // Mutations ride a non-streaming batch link, so an answer can land after a newer echo.
-  it.each(["move", "update"] as const)(
+  it.each(["move", "edit"] as const)(
     "keeps a newer echo in every range when a %s's answer lands after it",
     async (write) => {
       const answer = deferred<object>();
       const answered = {
         move: payload({ id: "item-0", date: "2026-10-05", slot: "Lunch", version: 2 }),
-        update: payload({ id: "item-0", date: "2026-09-22", title: "Leftovers", version: 2 }),
+        edit: payload({ id: "item-0", date: "2026-09-22", title: "Leftovers", version: 2 }),
       };
 
       queryClient.setMutationDefaults([["calendar", `${write}Item`]], {

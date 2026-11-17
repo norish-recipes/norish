@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DateStringSchema } from "../../lib/validation/schemas";
+
 export const slotSchema = z.enum(["Breakfast", "Lunch", "Dinner", "Snack"]);
 
 const plannedItemTypeSchema = z.enum(["recipe", "note"]);
@@ -7,7 +9,7 @@ const plannedItemTypeSchema = z.enum(["recipe", "note"]);
 export const PlannedItemMoveInputSchema = z.object({
   itemId: z.uuid(),
   version: z.number().int().positive(),
-  targetDate: z.string(),
+  targetDate: DateStringSchema,
   targetSlot: slotSchema,
   /** Omitted: last in the target slot, as the server finds it. */
   targetIndex: z.number().int().min(0).optional(),
@@ -18,11 +20,30 @@ export const PlannedItemDeleteInputSchema = z.object({
   version: z.number().int().positive(),
 });
 
-export const PlannedItemUpdateInputSchema = z.object({
+/** One edit of a planned item: whichever of its text, day and slot changed, written together. */
+export const PlannedItemEditInputSchema = z.object({
   itemId: z.uuid(),
   version: z.number().int().positive(),
-  title: z.string().min(1),
+  title: z.string().min(1).optional(),
+  date: DateStringSchema.optional(),
+  slot: slotSchema.optional(),
 });
+
+/** What one edit writes: whichever of a planned item's text, day and slot it names. */
+export type PlannedItemEdit = Omit<
+  z.infer<typeof PlannedItemEditInputSchema>,
+  "itemId" | "version"
+>;
+
+/** Where an edit takes the item: undefined while its day and slot stay as they are. */
+export function plannedItemEditTarget(
+  item: { date: string; slot: z.infer<typeof slotSchema> },
+  edit: PlannedItemEdit
+) {
+  const target = { date: edit.date ?? item.date, slot: edit.slot ?? item.slot };
+
+  return target.date !== item.date || target.slot !== item.slot ? target : undefined;
+}
 
 export const PlannedItemEventPayloadSchema = z.object({
   id: z.string(),

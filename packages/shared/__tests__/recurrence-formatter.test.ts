@@ -17,6 +17,12 @@ describe("recurrence/formatter yearly", () => {
     expect(formatRecurrenceSummary(everyThree)).toBe("Every 3 years");
   });
 
+  it("reads an interval of two as every other, in the singular", () => {
+    expect(formatRecurrenceSummary({ rule: "week", interval: 2, weekday: 5 })).toBe(
+      "Every other week on Friday"
+    );
+  });
+
   it("writes a yearly pattern as text that parses back to it", () => {
     for (const pattern of [yearly, everyThree]) {
       const text = formatRecurrenceAsText(pattern);

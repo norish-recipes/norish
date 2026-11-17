@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 // Sampled only at keyTimes, where any easing is 0 or 1 and interpolate returns that keyframe's value.
-vi.mock("react-native-reanimated", () => ({
-  Easing: { bezierFn: () => (t: number) => t },
-  Extrapolation: { CLAMP: "clamp" },
-  interpolate: (x: number, input: number[], output: number[]) =>
-    output[input.findIndex((keyTime) => Math.abs(keyTime - x) < 1e-9)],
-}));
+vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
 
 const { STRIKE_TIMING, UPDATE_TIMING, badgeArrow, badgeRing, badgeShake } =
   await import("@/features/auth/utils/badge-motion");

@@ -93,6 +93,7 @@
     "unavailable": "Spisekammeret kunne ikke læses. Intet er ændret; prøv igen, når du er online.",
     "fieldLabel": "Find eller tilføj en madvare",
     "fieldPlaceholder": "Find eller tilføj, f.eks. olivenolie",
+    "findPlaceholder": "Find en vare i dit køkkenskab",
     "add": "Tilføj til spisekammer",
     "fromCatalogue": "Tilføj en madvare",
     "addFood": "Tilføj {name} til spisekammeret",
@@ -134,9 +135,7 @@
     "toBuy": "Skal købes",
     "inPantry": "I dit spisekammer",
     "weKeepThis": "Har vi altid",
-    "keepFailed": "Det kunne ikke tilføjes til spisekammeret",
-    "addCount": "{count, plural, one {Tilføj # vare} other {Tilføj # varer}}",
-    "adding": "Tilføjer til indkøbslisten…"
+    "keepFailed": "Det kunne ikke tilføjes til spisekammeret"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "talt som én pakke",
     "sale": "Tilbud",
-    "regularPrice": "Normalpris {price}"
+    "regularPrice": "Normalpris {price}",
+    "each": "stk."
   },
   "mobile": {
     "viewMode": "Visning",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Flyt varer til Usorteret",
     "typePrice": "Skriv prisen selv",
     "product": "Produkt",
-    "chooseProduct": "Vælg et produkt"
+    "chooseProduct": "Vælg et produkt",
+    "recipeCount": "{count, plural, one {# opskrift} other {# opskrifter}}"
   }
 }

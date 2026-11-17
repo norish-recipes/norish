@@ -16,12 +16,11 @@ appId: dev.norish.app
     direction: LEFT
 - tapOn:
     id: recipe-swipe-groceries-${output.omelette}
+# Add is the sheet's native header item, which has no id.
 - extendedWaitUntil:
-    visible:
-      id: add-to-groceries-add
+    visible: ^Add$
     timeout: 20000
-- tapOn:
-    id: add-to-groceries-add
+- tapOn: ^Add$
 - extendedWaitUntil:
     notVisible:
       id: add-to-groceries-sheet

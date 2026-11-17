@@ -33,29 +33,33 @@ export function ProvenanceSection() {
           {intl.formatMessage({ id: "recipes.actions.inferringProvenance" })}
         </Text>
       ) : (
-        <View className="gap-3">
+        <View>
           {recipe.originRegion ? (
-            <View className="flex-row items-baseline gap-2">
-              <Text className="text-muted text-sm">
+            <View className="border-separator flex-row items-center justify-between border-t py-3">
+              <Text className="text-muted text-base">
                 {intl.formatMessage({ id: "recipes.provenance.region" })}
               </Text>
               <Text className="text-foreground text-base">{recipe.originRegion}</Text>
             </View>
           ) : null}
           {recipe.cuisines.length > 0 ? (
-            <View className="flex-row flex-wrap items-center gap-2">
-              <Text className="text-muted text-sm">
+            <View className="border-separator flex-row items-center gap-3 border-t py-2.5">
+              <Text className="text-muted text-base">
                 {intl.formatMessage({ id: "recipes.provenance.cuisines" })}
               </Text>
-              {recipe.cuisines.map((cuisine) => (
-                <Chip key={cuisine.id} size="sm" variant="secondary">
-                  <Chip.Label>{cuisine.name}</Chip.Label>
-                </Chip>
-              ))}
+              <View className="flex-1 flex-row flex-wrap justify-end gap-2">
+                {recipe.cuisines.map((cuisine) => (
+                  <Chip key={cuisine.id} size="sm" variant="secondary">
+                    <Chip.Label>{cuisine.name}</Chip.Label>
+                  </Chip>
+                ))}
+              </View>
             </View>
           ) : null}
           {recipe.provenanceNote ? (
-            <Text className="text-foreground text-base leading-6">{recipe.provenanceNote}</Text>
+            <Text className="text-muted border-separator border-t pt-3 text-base leading-6">
+              {recipe.provenanceNote}
+            </Text>
           ) : null}
         </View>
       )}

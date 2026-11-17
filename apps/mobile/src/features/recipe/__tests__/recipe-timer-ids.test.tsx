@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { recipeTimerId } from "@norish/shared-react/recipes/timers";
 
-const host = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+const host = ({ testID, children }: { testID?: string; children?: ReactNode }) => (
+  <div data-testid={testID}>{children}</div>
+);
 const STEPS = [
   "# Sauce",
   "Simmer for 10 minutes.",
@@ -25,16 +27,22 @@ vi.mock("react-native", () => ({
   Modal: host,
   useWindowDimensions: () => ({ width: 400, fontScale: 1 }),
 }));
-vi.mock("react-native-reanimated", () => ({
-  default: { View: host },
-  FadeIn: { duration: () => ({}) },
+vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
+vi.mock("react-native-gesture-handler", () => ({
+  GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  Pressable: host,
+  useNativeGesture: () => ({}),
+  usePanGesture: () => ({}),
 }));
+vi.mock("react-native-worklets", () => ({ scheduleOnRN: () => {}, scheduleOnUI: () => {} }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("@/lib/network/server-url", () => ({ useServerImage: () => () => null }));
+vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
+vi.mock("expo-router", () => ({ useRouter: () => ({ push: () => {} }) }));
+vi.mock("@/lib/haptics", () => ({ lightImpact: () => {} }));
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
   useLoadedPageRecipe: () => RECIPE,
@@ -43,7 +51,10 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   useUnitFormatter: () => ({ formatUnitOnly: () => "" }),
 }));
 vi.mock("../components/tint", () => ({ SectionCard: host, useTint: () => null }));
-vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
+vi.mock("@/components/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconSlots: ({ children }: { children: React.ReactNode }) => children,
+}));
 // Every step has one duration, drawn as a chip that shows the timer id it would start.
 vi.mock("../hooks/use-step-timers", () => ({
   useStepTimers: (text: string) => ({ matches: [{ originalText: text }], marked: text }),
@@ -63,7 +74,8 @@ const { StepsSection } = await import("../components/steps-section");
 const { CookSteps } = await import("../components/cook-steps");
 const { resolveCookingModeSteps } = await import("@norish/shared-react/recipes");
 
-const shownIds = () => screen.getAllByTestId("timer").map((chip) => chip.textContent);
+const shownIds = (root: Pick<typeof screen, "getAllByTestId"> = screen) =>
+  root.getAllByTestId("timer").map((chip) => chip.textContent);
 
 describe("Recipe Timer ids on mobile", () => {
   it("are the same on the Recipe page and in cook mode for a recipe with headings", () => {
@@ -74,7 +86,8 @@ describe("Recipe Timer ids on mobile", () => {
     const steps = resolveCookingModeSteps(STEPS, "metric");
     const cook = steps.flatMap((_, current) => {
       render(<CookSteps current={current} steps={steps} onStepChange={() => {}} />);
-      const ids = shownIds();
+      // The steps either side are mounted too, posed as peeks; only the current one is read.
+      const ids = shownIds(within(screen.getByTestId("cook-step")));
 
       cleanup();
 

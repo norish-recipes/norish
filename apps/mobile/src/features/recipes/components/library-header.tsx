@@ -1,5 +1,19 @@
-import React from "react";
-import { Pressable, Text, View } from "react-native";
+import type { ComponentProps } from "react";
+import type { SharedValue } from "react-native-reanimated";
+import React, { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
+import Animated, {
+  interpolateColor,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+} from "react-native-reanimated";
+import { PressableScale } from "@/components/pressable-scale";
+import { RollingText } from "@/components/rolling-text";
+import { SelectFade } from "@/components/select-fade";
+import { lightImpact } from "@/lib/haptics";
+import { settleTo } from "@/lib/motion/settle-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -23,29 +37,98 @@ const VIEWS = [
   { mode: "list", icon: "list-outline", label: "recipes.dashboard.viewMode.list" },
 ] as const satisfies readonly { mode: RecipeViewMode; icon: string; label: string }[];
 
-/** The grid or list toggle, the reader's own choice on this device. */
+const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
+
+// A segment's size and the gap to the next, in pt: the thumb is one segment and moves by one step.
+const SEGMENT = { width: 38, height: 30 };
+const GAP = 2;
+const STEP = SEGMENT.width + GAP;
+
+/** The grid or list toggle, the reader's own choice on this device: a thumb springs to the picked
+ * segment, or fades in there under Reduce Motion. */
 export function ViewToggle() {
   const intl = useIntl();
+  const reduceMotion = useReducedMotion();
   const [view, setView] = useDevicePreference("recipeViewMode");
   const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
+  const index = VIEWS.findIndex(({ mode }) => mode === view);
+  const x = useSharedValue(index * STEP);
+  const thumbOpacity = useSharedValue(1);
+  const shownIndexRef = useRef(index);
+
+  // The thumb leaves on the press, before the list redraws, and again for a change made elsewhere.
+  const moveThumb = (to: number) => {
+    if (shownIndexRef.current === to) return;
+
+    shownIndexRef.current = to;
+    if (reduceMotion) {
+      x.set(to * STEP);
+      thumbOpacity.set(0);
+      thumbOpacity.set(settleTo(1, { reduceMotion: true }));
+    } else {
+      x.set(settleTo(to * STEP, { reduceMotion: false }));
+    }
+  };
+
+  useEffect(() => moveThumb(index));
+
+  const thumb = useAnimatedStyle(() => ({
+    opacity: thumbOpacity.get(),
+    transform: [{ translateX: x.get() }],
+  }));
 
   return (
-    <View className="bg-default h-9 flex-row gap-0.5 rounded-full p-[3px]">
-      {VIEWS.map(({ mode, icon, label }) => (
-        <Pressable
+    <View className="bg-default h-9 flex-row rounded-full p-[3px]" style={{ gap: GAP }}>
+      <Animated.View
+        className="bg-surface absolute top-[3px] left-[3px] rounded-full"
+        pointerEvents="none"
+        style={[SEGMENT, thumb]}
+      />
+      {VIEWS.map(({ mode, icon, label }, at) => (
+        <PressableScale
           key={mode}
           accessibilityLabel={intl.formatMessage({ id: label })}
           accessibilityRole="button"
           accessibilityState={{ selected: view === mode }}
-          className={`h-[30px] w-[38px] items-center justify-center rounded-full ${view === mode ? "bg-surface" : ""}`}
           testID={`library-view-${mode}`}
-          onPress={() => setView(mode)}
+          onPress={() => {
+            if (view !== mode) lightImpact();
+            moveThumb(at);
+            setView(mode);
+          }}
         >
-          <Ionicons color={view === mode ? foreground : muted} name={icon} size={17} />
-        </Pressable>
+          <View className="items-center justify-center" style={SEGMENT}>
+            <SegmentIcon icon={icon} picked={at} rest={muted} selectedColor={foreground} x={x} />
+          </View>
+        </PressableScale>
       ))}
     </View>
   );
+}
+
+/** A segment's icon, `selectedColor` while the thumb is over segment `picked` and `rest` away from it. */
+function SegmentIcon({
+  icon,
+  picked,
+  rest,
+  selectedColor,
+  x,
+}: {
+  icon: ComponentProps<typeof Ionicons>["name"];
+  picked: number;
+  rest: string;
+  selectedColor: string;
+  x: SharedValue<number>;
+}) {
+  const props = useAnimatedProps(() => ({
+    color: interpolateColor(
+      x.get(),
+      [(picked - 1) * STEP, picked * STEP, (picked + 1) * STEP],
+      [rest, selectedColor, rest]
+    ),
+  }));
+
+  return <AnimatedIonicons animatedProps={props} color={rest} name={icon} size={17} />;
 }
 
 /** The Filters button, marked while any filter is on. */
@@ -56,7 +139,7 @@ export function FiltersButton() {
   const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityLabel={intl.formatMessage({ id: "common.filters.title" })}
       accessibilityRole="button"
       className="bg-surface border-border size-9 items-center justify-center rounded-full border"
@@ -70,26 +153,27 @@ export function FiltersButton() {
           testID="library-filters-active"
         />
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 
-/** The Cookbooks lens's green plus, which opens New cookbook. */
-function NewCookbookButton() {
+/** The Library's heading word, rolling to the lens's word the way the lens moved in LIBRARY_TYPE_FILTERS. */
+function LibraryHeading({ type }: { type: LibraryTypeFilter }) {
   const intl = useIntl();
-  const router = useRouter();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
+  const index = LIBRARY_TYPE_FILTERS.indexOf(type);
+  const [shown, setShown] = useState({ index, rising: true });
+
+  if (shown.index !== index) setShown({ index, rising: index > shown.index });
 
   return (
-    <Pressable
-      accessibilityLabel={intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
-      accessibilityRole="button"
-      className="bg-accent size-9 items-center justify-center rounded-full"
-      testID="library-new-cookbook"
-      onPress={() => router.push("/new-cookbook")}
-    >
-      <Ionicons color={accentForeground} name="add" size={22} />
-    </Pressable>
+    <View testID="library-heading">
+      <RollingText
+        className="text-foreground text-2xl font-semibold"
+        growth="end"
+        rising={shown.rising}
+        value={intl.formatMessage({ id: HEADING_KEYS[type] })}
+      />
+    </View>
   );
 }
 
@@ -101,6 +185,10 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
   const intl = useIntl();
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
+  const [foreground, accentForeground] = useThemeColor([
+    "foreground",
+    "accent-foreground",
+  ] as const);
 
   if (scoped) {
     return (
@@ -114,9 +202,7 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
   return (
     <View className="gap-3.5 pt-7 pb-4">
       <View className="flex-row items-center justify-between px-5">
-        <Text className="text-foreground text-2xl font-semibold" testID="library-heading">
-          {intl.formatMessage({ id: HEADING_KEYS[filters.libraryType] })}
-        </Text>
+        <LibraryHeading type={filters.libraryType} />
         <ViewToggle />
       </View>
       <View className="flex-row items-center gap-2 px-5">
@@ -124,24 +210,36 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
           const selected = filters.libraryType === type;
 
           return (
-            <Pressable
+            <PressableScale
               key={type}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              className={`h-9 justify-center rounded-full px-4 ${selected ? "bg-accent" : "bg-surface border-border border"}`}
               testID={`library-lens-${type}`}
-              onPress={() => setFilters({ libraryType: type })}
+              onPress={() => {
+                if (!selected) lightImpact();
+                setFilters({ libraryType: type });
+              }}
             >
-              <Text
-                className={`text-[15px] font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
+              <SelectFade
+                look={{
+                  shape: "items-center justify-center rounded-full",
+                  rest: "bg-surface border-border h-9 border px-4",
+                  picked: "bg-accent",
+                  tone: { rest: foreground, picked: accentForeground },
+                  inset: "-inset-px",
+                }}
+                selected={selected}
               >
-                {intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` })}
-              </Text>
-            </Pressable>
+                {(color) => (
+                  <Animated.Text className="text-[15px] font-medium" style={color}>
+                    {intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` })}
+                  </Animated.Text>
+                )}
+              </SelectFade>
+            </PressableScale>
           );
         })}
         <View className="ml-auto flex-row items-center gap-2">
-          {filters.libraryType === "cookbooks" ? <NewCookbookButton /> : null}
           <FiltersButton />
         </View>
       </View>

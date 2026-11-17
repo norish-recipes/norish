@@ -1,23 +1,32 @@
 import type { ReactElement } from "react";
-import React, { createContext, useRef, useState } from "react";
-import { FlatList, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tabListBottomInset } from "@/components/tab-list-inset";
-import { Spinner } from "heroui-native";
+import React, { useEffect, useState } from "react";
+import { View } from "react-native";
+import Animated from "react-native-reanimated";
+import { Loader } from "@/components/loader";
+import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
+import { closeOpenRow } from "@/lib/open-row";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
+import { useTabBarMinimised } from "@/lib/use-tab-bar-minimised";
+import { useIsFocused } from "expo-router";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
-/** Scrolls the row a card sits in clear of the accessory and tab bar; a card outside a list does nothing. */
-export const RevealRowContext = createContext<() => void>(() => {});
+import { cardChunks } from "../utils/card-chunks";
+import { LOAD_MORE_FOOTER_HEIGHT, loadMoreFooterBox } from "../utils/load-more-footer";
 
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
 
-/** Where a revealed row's top lands below the status bar. */
-const REVEAL_OFFSET = 120;
+/** Cards in a grid cell, wrapped two to a line: the others in a cell move when one leaves it. */
+const GRID_CELL = 8;
+// A cell is 8 cards where a list row is one, so the grid mounts about the 20 cards a pair-row
+// list did: two cells at first, one more with each batch.
+const GRID_INITIAL_CELLS = 2;
+const GRID_BATCH_CELLS = 1;
+const LIST_BATCH = 10;
 
-/** The Library's cards, a row each or two to a row, paged on scroll; `header` scrolls with them,
- * `empty` shows when there is no card. */
+/** The Library's cards in one list for both views, so `header` keeps its state; `empty` shows when
+ * there is no card, and a card entering or leaving animates the others into place. */
 export function CardList<Row>({
   rows,
   variant,
@@ -41,51 +50,79 @@ export function CardList<Row>({
   fadeHeight: FadeHeight;
   testID?: string;
 }) {
-  const insets = useSafeAreaInsets();
+  const { minimised, homeIndicator, track } = useTabBarMinimised();
   const [scrolled, setScrolled] = useState(false);
   const isGrid = variant === "grid";
-  const listRef = useRef<FlatList<Row>>(null);
+  const focused = useIsFocused();
+
+  // Leaving the screen, for another tab or a sheet over it, closes the open row.
+  useEffect(() => {
+    if (!focused) closeOpenRow();
+  }, [focused]);
 
   return (
-    <View className="flex-1">
-      {/* Remounted per view: a FlatList's column count can't change under it. */}
-      <FlatList
-        key={variant}
-        ref={listRef}
+    // A touch that no row took closes the open one.
+    <View className="flex-1" onTouchStart={() => closeOpenRow()}>
+      <Animated.FlatList
         ListEmptyComponent={empty}
-        ListFooterComponent={isFetchingNextPage ? <Spinner className="py-4" /> : undefined}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={{ height: LOAD_MORE_FOOTER_HEIGHT }}>
+              {/* From the last card down to the accessory's top, over the end padding below the strip. */}
+              <View
+                className="absolute inset-x-0"
+                style={loadMoreFooterBox(homeIndicator, minimised)}
+              >
+                <Loader centred />
+              </View>
+            </View>
+          ) : undefined
+        }
         ListHeaderComponent={header}
         className="flex-1"
-        columnWrapperClassName={isGrid ? "mb-3 gap-3 px-5" : undefined}
         contentContainerStyle={{
-          paddingBottom: tabListBottomInset(insets.bottom),
+          paddingBottom: tabListBottomInset(homeIndicator),
         }}
         contentInsetAdjustmentBehavior="never"
-        data={rows}
-        keyExtractor={rowKey}
-        numColumns={isGrid ? 2 : 1}
-        renderItem={({ item, index }) => {
-          const card = renderCard(item);
-
-          return (
-            <RevealRowContext
-              value={() =>
-                listRef.current?.scrollToIndex({
-                  index: Math.floor(index / (isGrid ? 2 : 1)),
-                  viewOffset: REVEAL_OFFSET,
-                  animated: true,
-                })
-              }
+        data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
+        initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
+        itemLayoutAnimation={SPRING_LAYOUT}
+        keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
+        maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}
+        renderItem={({ item: chunk }) =>
+          isGrid ? (
+            <View className="flex-row flex-wrap px-3.5">
+              {chunk.map((row) => (
+                <Animated.View
+                  key={rowKey(row)}
+                  className="w-1/2 flex-row px-1.5 pb-3"
+                  entering={SPRING_FADE_IN}
+                  exiting={SPRING_FADE_OUT}
+                  layout={SPRING_LAYOUT}
+                >
+                  {renderCard(row)}
+                </Animated.View>
+              ))}
+            </View>
+          ) : (
+            <Animated.View
+              className="px-5 pb-3"
+              entering={SPRING_FADE_IN}
+              exiting={SPRING_FADE_OUT}
             >
-              {isGrid ? card : <View className="px-5 pb-3">{card}</View>}
-            </RevealRowContext>
-          );
-        }}
+              {chunk[0] ? renderCard(chunk[0]) : null}
+            </Animated.View>
+          )
+        }
         scrollEventThrottle={32}
         testID={testID}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
-        onScroll={(event) => setScrolled(event.nativeEvent.contentOffset.y > 8)}
+        onScroll={({ nativeEvent }) => {
+          setScrolled(nativeEvent.contentOffset.y > 8);
+          track(nativeEvent);
+        }}
+        onScrollBeginDrag={() => closeOpenRow()}
       />
       {/* Cards dissolve into the page colour before the tab bar. */}
       <View

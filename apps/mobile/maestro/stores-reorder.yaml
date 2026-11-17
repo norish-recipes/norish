@@ -1,0 +1,32 @@
+# Reorders Stores in Manage stores: a Store's row is held and carried over the one above it, and the
+# server holds the new order.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- evalScript: |
+    ${
+      for (const name of ['Aldi', 'Lidl', 'Jumbo']) {
+        http.post(NORISH_PROXY_CONTROL_URL + '/store', { body: JSON.stringify({ name }) });
+      }
+    }
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: groceries-settings
+    timeout: 20000
+- tapOn:
+    id: groceries-settings
+- tapOn: Manage stores
+- extendedWaitUntil:
+    visible:
+      id: store-edit-.*
+      text: Edit Jumbo
+    timeout: 20000
+# Held on Jumbo's row (the last of three) and carried up over Lidl's, it takes the middle place.
+- swipe:
+    start: 37%,76%
+    end: 37%,69%
+    duration: 10000
+- evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi","Jumbo","Lidl"]')).body).names}
+- assertTrue: ${output.stores.length == 3}

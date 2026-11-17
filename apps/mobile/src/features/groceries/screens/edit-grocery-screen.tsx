@@ -112,40 +112,27 @@ function EditSheet({
   return (
     <GrocerySheet
       actions={
-        <Sheet.Actions>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              testID="edit-grocery-delete"
-              variant="secondary"
-              onPress={() => {
-                remove();
-                router.back();
-              }}
-            >
-              <Button.Label className="text-danger font-medium">
-                {intl.formatMessage({ id: "common.actions.delete" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              isDisabled={!trimmed || !productValid}
-              testID="edit-grocery-save"
-              variant="primary"
-              onPress={submit}
-            >
-              <Button.Label className="font-semibold">
-                {intl.formatMessage({ id: "common.actions.save" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
+        <Button
+          className="h-[50px]"
+          testID="edit-grocery-delete"
+          variant="secondary"
+          onPress={() => {
+            remove();
+            router.back();
+          }}
+        >
+          <Button.Label className="text-danger font-medium">
+            {intl.formatMessage({ id: "common.actions.delete" })}
+          </Button.Label>
+        </Button>
       }
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
-      confirmed={form.confirmedPattern}
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.save" }),
+        disabled: !trimmed || !productValid,
+        onPress: submit,
+      }}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField
@@ -178,12 +165,13 @@ function EditSheet({
           />
         ) : null
       }
+      repeat={form.confirmedPattern}
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}
-      onConfirmed={(pattern) => form.setConfirmedPattern(pattern)}
+      onRepeat={(pattern) => form.setConfirmedPattern(pattern)}
       onStore={setStoreId}
     />
   );

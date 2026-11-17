@@ -111,7 +111,8 @@
     "cookbooks": "كتب الطبخ",
     "favourite": "المفضلة",
     "unfavourite": "إزالة من المفضلة",
-    "ai": "الذكاء الاصطناعي"
+    "ai": "الذكاء الاصطناعي",
+    "shareLink": "مشاركة الرابط"
   },
   "sharePanel": {
     "title": "مشاركة الوصفة",
@@ -155,7 +156,14 @@
       "title": "حذف الرابط",
       "message": "هل تريد حذف رابط المشاركة هذا لـ {recipeName}؟ لا يمكن التراجع عن ذلك.",
       "confirm": "حذف الرابط"
-    }
+    },
+    "subtitle": "روابط عامة لـ {recipeName}",
+    "expiresAfter": "ينتهي بعد",
+    "expiresOn": "ينتهي {date}",
+    "expiredOn": "انتهى {date}",
+    "lastOpenedOn": "آخر فتح {date}",
+    "neverExpires": "لا ينتهي أبدًا",
+    "linkCreated": "أُنشئ {date}"
   },
   "convert": {
     "ariaLabel": "تحويل نظام القياس",
@@ -281,7 +289,9 @@
     "householdNumbers": "أرقام منزلك",
     "decreasePortions": "حصص أقل",
     "increasePortions": "حصص أكثر",
-    "portions": "{count, plural, one {# حصة} two {# حصتان} few {# حصص} many {# حصة} other {# حصة}}"
+    "portions": "{count, plural, one {# حصة} two {# حصتان} few {# حصص} many {# حصة} other {# حصة}}",
+    "percentOfReference": "{percent}% من {amount}",
+    "percentOfDailyReference": "{percent}% من المرجع اليومي {amount}"
   },
   "measurementSystem": {
     "label": "نظام القياس",
@@ -364,7 +374,9 @@
     "restartTimer": "إعادة تشغيل المؤقت",
     "notificationsOff": "الإشعارات متوقفة لتطبيق Norish، لذا لا ترن المؤقتات إلا والتطبيق مفتوح.",
     "decreaseTimer": "إنقاص {time}",
-    "increaseTimer": "إضافة {time}"
+    "increaseTimer": "إضافة {time}",
+    "timersLeft": "المؤقّتات، متبقٍ {time}",
+    "spokenTime": "{hours, plural, =0 {} one {ساعة واحدة } two {ساعتان } few {# ساعات } many {# ساعة } other {# ساعة }}{minutes, plural, =0 {} one {دقيقة واحدة } two {دقيقتان } few {# دقائق } many {# دقيقة } other {# دقيقة }}{seconds, plural, =0 {} one {ثانية واحدة } two {ثانيتان } few {# ثوانٍ } many {# ثانية } other {# ثانية }}"
   },
   "enrichment": {
     "failed": "فشل الإثراء",

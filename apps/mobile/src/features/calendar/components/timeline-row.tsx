@@ -1,4 +1,4 @@
-import type { Edge } from "@/components/card-edges";
+import type { Edge } from "@/lib/card-edges";
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
@@ -49,7 +49,7 @@ export function DayHeadingRow({
   return (
     <CardSlice edge={edge} gap={heading.gap} separated={false}>
       <View
-        className={`flex-row items-center gap-2 px-4 ${heading.empty ? "" : "border-separator border-b"}`}
+        className="flex-row items-center gap-2 px-4"
         style={{ marginTop: TIMELINE.dayTop, height: dayHeaderHeight(fontScale) }}
         testID={`calendar-day-${heading.dayKey}`}
       >
@@ -69,6 +69,9 @@ export function DayHeadingRow({
         >
           <Ionicons color={foreground} name="add" size={20} />
         </Pressable>
+        {heading.empty ? null : (
+          <View className="bg-separator absolute inset-x-[18px] bottom-0 h-px" />
+        )}
       </View>
       {heading.empty ? <View style={{ height: TIMELINE.emptyBottom }} /> : null}
       {heading.isToday ? <TodayRing edge={edge} /> : null}

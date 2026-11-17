@@ -2,14 +2,14 @@ import React from "react";
 import { Pressable, View } from "react-native";
 import { GlassSurface } from "@/components/glass";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useIntl } from "react-intl";
 
 export type ListSection = "list" | "pantry";
 
 const SEGMENTS = [
-  { value: "list", icon: "clipboard-outline", labelId: "groceries.page.title" },
-  { value: "pantry", icon: "file-tray-full-outline", labelId: "groceries.page.pantry" },
+  { value: "list", icon: "clipboard-check-outline", labelId: "groceries.page.title" },
+  { value: "pantry", icon: "archive-outline", labelId: "groceries.page.pantry" },
 ] as const;
 
 /** The title row's glass switch between the list and the Pantry. */
@@ -40,7 +40,11 @@ export function ListSwitch({
             testID={`groceries-switch-${segment.value}`}
             onPress={() => onChange(segment.value)}
           >
-            <Ionicons color={selected ? foreground : muted} name={segment.icon} size={18} />
+            <MaterialCommunityIcons
+              color={selected ? foreground : muted}
+              name={segment.icon}
+              size={20}
+            />
           </Pressable>
         );
       })}

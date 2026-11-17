@@ -182,7 +182,7 @@ describe("runReplayPass", () => {
 
   it.each([
     ["a cookbook", "cookbooks.update", "cookbooks.setMembership", { cookbookId: "c1" }],
-    ["a planned item", "calendar.updateItem", "calendar.deleteItem", { itemId: "c1" }],
+    ["a planned item", "calendar.editItem", "calendar.deleteItem", { itemId: "c1" }],
   ])(
     "sends the writes after %s edit parked as Conflicted: its entity exists",
     async (_, path, laterPath, laterInput) => {

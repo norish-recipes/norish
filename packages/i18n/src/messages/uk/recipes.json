@@ -111,7 +111,8 @@
     "cookbooks": "Кулінарні книги",
     "favourite": "В обране",
     "unfavourite": "Прибрати з обраного",
-    "ai": "ШІ"
+    "ai": "ШІ",
+    "shareLink": "Поділитися посиланням"
   },
   "sharePanel": {
     "title": "Поділитися рецептом",
@@ -155,7 +156,14 @@
       "title": "Видалити посилання",
       "message": "Видалити це посилання на {recipeName}? Цю дію не можна скасувати.",
       "confirm": "Видалити посилання"
-    }
+    },
+    "subtitle": "Публічні посилання на {recipeName}",
+    "expiresAfter": "Діє протягом",
+    "expiresOn": "Діє до {date}",
+    "expiredOn": "Закінчилося {date}",
+    "lastOpenedOn": "Востаннє відкрито {date}",
+    "neverExpires": "Не закінчується",
+    "linkCreated": "Створено {date}"
   },
   "convert": {
     "ariaLabel": "Перевести в іншу систему мір",
@@ -281,7 +289,9 @@
     "householdNumbers": "дані вашого домогосподарства",
     "decreasePortions": "Менше порцій",
     "increasePortions": "Більше порцій",
-    "portions": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}"
+    "portions": "{count, plural, one {# порція} few {# порції} many {# порцій} other {# порції}}",
+    "percentOfReference": "{percent}% від {amount}",
+    "percentOfDailyReference": "{percent}% від добової норми {amount}"
   },
   "measurementSystem": {
     "label": "Система мір",
@@ -364,7 +374,9 @@
     "restartTimer": "Перезапустити таймер",
     "notificationsOff": "Сповіщення Norish вимкнено, тож таймери дзвонять, лише поки застосунок відкритий.",
     "decreaseTimer": "Зменшити на {time}",
-    "increaseTimer": "Додати {time}"
+    "increaseTimer": "Додати {time}",
+    "timersLeft": "Таймери, залишилося {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# година } few {# години } many {# годин } other {# години }}{minutes, plural, =0 {} one {# хвилина } few {# хвилини } many {# хвилин } other {# хвилини }}{seconds, plural, =0 {} one {# секунда } few {# секунди } many {# секунд } other {# секунди }}"
   },
   "enrichment": {
     "failed": "Не вдалося доповнити рецепт",

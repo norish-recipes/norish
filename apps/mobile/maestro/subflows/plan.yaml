@@ -1,0 +1,5 @@
+# Plans on the server, as another member does. Callers pass PLAN via runFlow env: a JSON object of
+# { recipeName or title, offset (days from today), slot }.
+appId: dev.norish.app
+---
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/plan', { body: PLAN })}"

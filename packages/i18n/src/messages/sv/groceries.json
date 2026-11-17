@@ -93,6 +93,7 @@
     "unavailable": "Det gick inte att läsa ditt skafferi. Inget har ändrats. Försök igen när du är online.",
     "fieldLabel": "Sök efter eller lägg till ett livsmedel",
     "fieldPlaceholder": "Sök efter eller lägg till ett livsmedel, t.ex. olivolja",
+    "findPlaceholder": "Hitta en vara i skafferiet",
     "add": "Lägg till i skafferiet",
     "fromCatalogue": "Lägg till livsmedel",
     "addFood": "Lägg till {name} i skafferiet",
@@ -134,9 +135,7 @@
     "toBuy": "Att köpa",
     "inPantry": "I ditt skafferi",
     "weKeepThis": "Det här har vi hemma",
-    "keepFailed": "Det gick inte att lägga till i skafferiet",
-    "addCount": "{count, plural, one {Lägg till # artikel} other {Lägg till # artiklar}}",
-    "adding": "Lägger till i inköpslistan…"
+    "keepFailed": "Det gick inte att lägga till i skafferiet"
   },
   "picker": {
     "unlink": "Ta bort produktkoppling",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "prissatt som en förpackning",
     "sale": "Extrapris",
-    "regularPrice": "Ordinarie pris {price}"
+    "regularPrice": "Ordinarie pris {price}",
+    "each": "st"
   },
   "mobile": {
     "viewMode": "Visning",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Flytta varor till Osorterat",
     "typePrice": "Skriv in priset själv",
     "product": "Produkt",
-    "chooseProduct": "Välj en produkt"
+    "chooseProduct": "Välj en produkt",
+    "recipeCount": "{count, plural, one {# recept} other {# recept}}"
   }
 }

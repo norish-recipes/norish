@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { SheetInput } from "@/components/sheet-input";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, TextField, useThemeColor } from "heroui-native";
@@ -30,10 +31,10 @@ export function NameField({
 
   return (
     <TextField>
-      <Input
+      <SheetInput
         ref={fieldRef}
         accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.itemLabel" })}
-        className="h-[52px] rounded-[18px] px-4 text-[17px]"
+        className="h-[52px] text-[17px]"
         placeholder={intl.formatMessage({ id: placeholderId })}
         returnKeyType="done"
         testID={testID}
@@ -63,6 +64,7 @@ export function RepeatPills({
   const intl = useIntl();
   const label = useRecurrenceLabel();
   const accent = useAccentTextColor();
+  const [muted] = useThemeColor(["muted"] as const);
 
   if (!detected && !confirmed) return null;
 
@@ -71,10 +73,11 @@ export function RepeatPills({
       {detected ? (
         <Pressable
           accessibilityRole="button"
-          className="border-border h-8 flex-row items-center rounded-full border border-dashed px-3"
+          className="border-muted h-8 flex-row items-center gap-1.5 rounded-full border border-dashed px-3"
           testID="repeat-detected"
           onPress={onConfirmDetected}
         >
+          <Ionicons color={muted} name="repeat" size={14} />
           <Text className="text-muted text-sm font-medium">{label(detected)}</Text>
         </Pressable>
       ) : null}

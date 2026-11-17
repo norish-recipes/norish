@@ -1,19 +1,28 @@
 import type { VideoPlayer } from "expo-video";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, useWindowDimensions, View } from "react-native";
-import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { GestureDetector, useExclusiveGestures, useTapGesture } from "react-native-gesture-handler";
+import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import { scheduleOnRN } from "react-native-worklets";
 import { GlassIconButton } from "@/components/glass";
-import { useServerImage } from "@/lib/network/server-url";
-import * as Haptics from "expo-haptics";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { ServerImage } from "@/components/server-image";
+import { lightImpact } from "@/lib/haptics";
+import { sprung } from "@/lib/motion/spring";
+import { mediaViewerRoute } from "@/lib/tab-routes";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { VideoView } from "expo-video";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
+import { useResolveClassNames } from "uniwind";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 import type { Item } from "../utils/hero-items";
+import { useServerVideoPlayer } from "../hooks/use-server-video-player";
 import { heroItems } from "../utils/hero-items";
+import { pageAt } from "../utils/viewer-pages";
 
 export const HERO_HEIGHT = 430;
 
@@ -42,6 +51,32 @@ function Fade({ color }: { color: string }) {
   );
 }
 
+/** A heart that pops over the photo and, a beat later, `onDone` takes it away so it leaves. */
+function HeartPop({ onDone }: { onDone: () => void }) {
+  const [color] = useThemeColor(["accent-foreground"] as const);
+  // An icon takes no class; its shadow's colour comes from one.
+  const { color: shadow } = useResolveClassNames("text-black/30");
+
+  return (
+    <Animated.View
+      className="absolute inset-x-0 top-[150px] items-center"
+      entering={sprung(ZoomIn.springify()).withCallback((finished) => {
+        "worklet";
+        if (finished) scheduleOnRN(onDone);
+      })}
+      exiting={sprung(ZoomOut.springify()).delay(250)}
+      pointerEvents="none"
+    >
+      <Ionicons
+        color={color}
+        name="heart"
+        size={88}
+        style={{ textShadowColor: shadow, textShadowRadius: 12 }}
+      />
+    </Animated.View>
+  );
+}
+
 function Pill({ children }: { children: string }) {
   return (
     <View className="bg-background/70 h-[26px] justify-center rounded-full px-2.5">
@@ -50,7 +85,25 @@ function Pill({ children }: { children: string }) {
   );
 }
 
-/** A video that plays in place once started; before that its poster and a play button. */
+/** The mute toggle at the poster's bottom-left, in the same place before and during play. */
+function MuteButton({ muted, onPress }: { muted: boolean; onPress: () => void }) {
+  const intl = useIntl();
+
+  return (
+    <View className="absolute top-[322px] left-5">
+      <GlassIconButton
+        label={intl.formatMessage({
+          id: muted ? "recipes.carousel.videoPlayer.unmute" : "recipes.carousel.videoPlayer.mute",
+        })}
+        symbol={muted ? "speaker.slash.fill" : "speaker.wave.2.fill"}
+        testID="recipe-video-mute"
+        onPress={onPress}
+      />
+    </View>
+  );
+}
+
+/** A video that plays in place once started; before that its poster, play, mute and length. */
 function VideoPage({
   item,
   width,
@@ -61,46 +114,59 @@ function VideoPage({
   pageColor: string;
 }) {
   const intl = useIntl();
-  const toImage = useServerImage();
   const [started, setStarted] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   return (
     <View style={{ width, height: HERO_HEIGHT }}>
       {item.poster ? (
-        <Image
-          resizeMode="cover"
-          source={toImage(item.poster)}
-          style={{ width, height: HERO_HEIGHT }}
-        />
+        <ServerImage contentFit="cover" path={item.poster} style={{ width, height: HERO_HEIGHT }} />
       ) : (
         <View className="bg-default" style={{ width, height: HERO_HEIGHT }} />
       )}
       {started ? (
-        <Player item={item} width={width} />
+        <Player item={item} muted={muted} width={width} onMuted={setMuted} />
       ) : (
-        <View className="absolute inset-x-0 top-[166px] items-center">
-          <GlassIconButton
-            label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.play" })}
-            symbol="play.fill"
-            testID="recipe-video-play"
-            onPress={() => setStarted(true)}
-          />
-        </View>
+        <>
+          <View className="absolute inset-x-0 top-[150px] items-center">
+            <GlassIconButton
+              label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.play" })}
+              size="large"
+              symbol="play.fill"
+              testID="recipe-video-play"
+              onPress={() => setStarted(true)}
+            />
+          </View>
+          <MuteButton muted={muted} onPress={() => setMuted(!muted)} />
+        </>
       )}
+      {item.duration ? (
+        <View className="absolute top-[330px] right-5">
+          <Pill>{clock(item.duration)}</Pill>
+        </View>
+      ) : null}
       <Fade color={pageColor} />
     </View>
   );
 }
 
-function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width: number }) {
+/** The playing video: pause over it, mute at the bottom-left and fullscreen under Back. */
+function Player({
+  item,
+  width,
+  muted,
+  onMuted,
+}: {
+  item: Extract<Item, { kind: "video" }>;
+  width: number;
+  muted: boolean;
+  onMuted: (muted: boolean) => void;
+}) {
   const intl = useIntl();
-  const toImage = useServerImage();
-  const insets = useSafeAreaInsets();
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(true);
   const [view, setView] = useState<VideoView | null>(null);
-  const player = useVideoPlayer(toImage(item.path), (created) => {
-    created.muted = true;
+  const player = useServerVideoPlayer(item.path, (created) => {
+    created.muted = muted;
     created.loop = true;
     created.play();
   });
@@ -114,13 +180,14 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
         player={player}
         style={{ position: "absolute", width, height: HERO_HEIGHT }}
       />
-      <View className="absolute inset-x-0 top-[166px] items-center">
+      <View className="absolute inset-x-0 top-[150px] items-center">
         <GlassIconButton
           label={intl.formatMessage({
             id: playing
               ? "recipes.carousel.videoPlayer.pause"
               : "recipes.carousel.videoPlayer.play",
           })}
+          size="large"
           symbol={playing ? "pause.fill" : "play.fill"}
           testID="recipe-video-toggle"
           onPress={() => {
@@ -130,20 +197,14 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
           }}
         />
       </View>
-      <View className="absolute top-[322px] left-5">
-        <GlassIconButton
-          label={intl.formatMessage({
-            id: muted ? "recipes.carousel.videoPlayer.unmute" : "recipes.carousel.videoPlayer.mute",
-          })}
-          symbol={muted ? "speaker.slash.fill" : "speaker.wave.2.fill"}
-          testID="recipe-video-mute"
-          onPress={() => {
-            muteVideo(player, !muted);
-            setMuted(!muted);
-          }}
-        />
-      </View>
-      <View className="absolute left-[68px]" style={{ top: insets.top + 6 }}>
+      <MuteButton
+        muted={muted}
+        onPress={() => {
+          muteVideo(player, !muted);
+          onMuted(!muted);
+        }}
+      />
+      <View className="absolute top-[116px] left-5">
         <GlassIconButton
           label={intl.formatMessage({ id: "recipes.carousel.videoPlayer.fullscreen" })}
           symbol="arrow.up.left.and.arrow.down.right"
@@ -151,11 +212,6 @@ function Player({ item, width }: { item: Extract<Item, { kind: "video" }>; width
           onPress={() => void view?.enterFullscreen()}
         />
       </View>
-      {item.duration ? (
-        <View className="absolute top-[330px] right-5">
-          <Pill>{clock(item.duration)}</Pill>
-        </View>
-      ) : null}
     </>
   );
 }
@@ -167,24 +223,32 @@ export function RecipeHero({
   pageColor,
   onDoubleTap,
 }: {
-  recipe: Pick<FullRecipeDTO, "images" | "videos" | "name">;
+  recipe: Pick<FullRecipeDTO, "id" | "images" | "videos" | "name">;
   pageColor: string;
   onDoubleTap?: () => void;
 }) {
   const intl = useIntl();
-  const toImage = useServerImage();
   const { width } = useWindowDimensions();
   const [page, setPage] = useState(0);
+  const router = useRouter();
+  const [heart, setHeart] = useState<number | null>(null);
   const items = heroItems(recipe);
   const doubleTap = useTapGesture({
     numberOfTaps: 2,
     runOnJS: true,
     onActivate: () => {
       if (!onDoubleTap) return;
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      lightImpact();
+      setHeart((count) => (count ?? 0) + 1);
       onDoubleTap();
     },
   });
+  const tap = useTapGesture({
+    runOnJS: true,
+    onActivate: () => router.push(mediaViewerRoute(recipe.id, page)),
+  });
+  // A single tap waits for a second one to fail, so a favourite never opens the viewer.
+  const gesture = useExclusiveGestures(doubleTap, tap);
 
   if (items.length === 0) {
     return (
@@ -197,7 +261,7 @@ export function RecipeHero({
   }
 
   return (
-    <GestureDetector gesture={doubleTap}>
+    <GestureDetector gesture={gesture}>
       <View style={{ height: HERO_HEIGHT }} testID="recipe-hero">
         <ScrollView
           horizontal
@@ -205,16 +269,16 @@ export function RecipeHero({
           scrollEnabled={items.length > 1}
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={(event) =>
-            setPage(Math.round(event.nativeEvent.contentOffset.x / width))
+            setPage(pageAt(event.nativeEvent.contentOffset.x, width, items.length))
           }
         >
           {items.map((item) =>
             item.kind === "image" ? (
               <View key={item.key} style={{ width, height: HERO_HEIGHT }}>
-                <Image
+                <ServerImage
                   accessibilityLabel={recipe.name}
-                  resizeMode="cover"
-                  source={toImage(item.path)}
+                  contentFit="cover"
+                  path={item.path}
                   style={{ width, height: HERO_HEIGHT }}
                   testID="recipe-photo"
                 />
@@ -243,6 +307,7 @@ export function RecipeHero({
             ))}
           </View>
         ) : null}
+        {heart === null ? null : <HeartPop key={heart} onDone={() => setHeart(null)} />}
       </View>
     </GestureDetector>
   );

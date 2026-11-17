@@ -1,0 +1,39 @@
+# Drags a grocery from one Store into another: held from its row and carried over the next Store's
+# heading, it lands in that Store, which the server holds.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- evalScript: |
+    ${
+      for (const [path, body] of [
+        ['/store', { name: 'Aldi' }],
+        ['/store', { name: 'Lidl' }],
+      ]) {
+        http.post(NORISH_PROXY_CONTROL_URL + path, { body: JSON.stringify(body) });
+      }
+    }
+- runFlow:
+    file: subflows/grocery.yaml
+    env:
+      GROCERIES: '[{"name": "Drag Milk", "store": "Aldi"}, {"name": "Drag Bread", "store": "Lidl"}]'
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: group-tick-.*
+      text: .*Drag Milk.*
+    timeout: 20000
+# A drag is a hold and then a move: a slow swipe from the row stays under the touch slop for the half
+# second that lifts it, then carries it over the next Store's heading.
+- swipe:
+    start: 50%,25%
+    end: 50%,37%
+    duration: 10000
+- evalScript: ${output.milk = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?store=Lidl&name=Drag%20Milk').body)}
+- assertTrue: ${output.milk.store == 'Lidl'}
+- evalScript: ${output.bread = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?store=Lidl&name=Drag%20Bread').body)}
+- assertTrue: ${output.bread.store == 'Lidl'}
+# Both Stores' lines now sit under the second heading, which counts two.
+- assertVisible:
+    id: store-meta
+    text: 2 items.*

@@ -111,7 +111,8 @@
     "cookbooks": "Kochbücher",
     "favourite": "Favorit",
     "unfavourite": "Aus Favoriten entfernen",
-    "ai": "KI"
+    "ai": "KI",
+    "shareLink": "Link teilen"
   },
   "sharePanel": {
     "title": "Rezept teilen",
@@ -155,7 +156,14 @@
       "title": "Link löschen",
       "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
       "confirm": "Link löschen"
-    }
+    },
+    "subtitle": "Öffentliche Links für {recipeName}",
+    "expiresAfter": "Läuft ab nach",
+    "expiresOn": "Läuft ab am {date}",
+    "expiredOn": "Abgelaufen am {date}",
+    "lastOpenedOn": "Zuletzt geöffnet {date}",
+    "neverExpires": "Läuft nie ab",
+    "linkCreated": "Erstellt am {date}"
   },
   "convert": {
     "ariaLabel": "Maßeinheit umwandeln",
@@ -281,7 +289,9 @@
     "householdNumbers": "den Werten Ihres Haushalts",
     "decreasePortions": "Weniger Portionen",
     "increasePortions": "Mehr Portionen",
-    "portions": "{count, plural, one {# Portion} other {# Portionen}}"
+    "portions": "{count, plural, one {# Portion} other {# Portionen}}",
+    "percentOfReference": "{percent} % von {amount}",
+    "percentOfDailyReference": "{percent} % des Tagesreferenzwerts von {amount}"
   },
   "measurementSystem": {
     "label": "Maßeinheit-System",
@@ -364,7 +374,9 @@
     "restartTimer": "Timer neu starten",
     "notificationsOff": "Mitteilungen sind für Norish ausgeschaltet, daher klingeln Timer nur, solange die App geöffnet ist.",
     "decreaseTimer": "{time} abziehen",
-    "increaseTimer": "{time} hinzufügen"
+    "increaseTimer": "{time} hinzufügen",
+    "timersLeft": "Timer, noch {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, =0 {} one {# Minute } other {# Minuten }}{seconds, plural, =0 {} one {# Sekunde } other {# Sekunden }}"
   },
   "enrichment": {
     "failed": "Anreicherung fehlgeschlagen",

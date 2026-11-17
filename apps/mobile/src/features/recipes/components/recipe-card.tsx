@@ -4,8 +4,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
+import { PressTap } from "@/components/press-tap";
+import { lightImpact } from "@/lib/haptics";
 import { recipeRoute } from "@/lib/tab-routes";
-import * as Haptics from "expo-haptics";
 import { useIntl } from "react-intl";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
@@ -26,6 +27,7 @@ import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
 import { Pill } from "./pill";
 import { SwipeActions } from "./swipe-actions";
+import { TagStrip, useTagStrip } from "./tag-strip";
 
 type Props = {
   recipe: RecipeDashboardDTO;
@@ -77,14 +79,14 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
     maxDelay: 250,
     runOnJS: true,
     onActivate: () => {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      lightImpact();
       handlers.favourite();
     },
   });
-  const singleTap = useTapGesture({ runOnJS: true, requireToFail: doubleTap, onActivate: open });
+  const strip = useTagStrip();
 
   return (
-    <SwipeActions actions={swipe} variant={variant}>
+    <SwipeActions actions={swipe} stripGesture={strip.gesture} variant={variant}>
       <View
         accessible
         {...accessibilityProps}
@@ -99,9 +101,19 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
         onAccessibilityTap={open}
       >
         <CardMenu href={recipeRoute(recipe.id)} items={items}>
-          <GestureDetector gesture={singleTap}>
-            <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
-          </GestureDetector>
+          <PressTap
+            className={variant === "grid" ? "flex-1" : undefined}
+            requireToFail={doubleTap}
+            onPress={open}
+          >
+            <Card
+              facts={facts}
+              isFavorite={isFavorite}
+              photoGesture={doubleTap}
+              recipe={recipe}
+              strip={strip}
+            />
+          </PressTap>
         </CardMenu>
       </View>
     </SwipeActions>
@@ -114,6 +126,8 @@ type CardProps = {
   isFavorite: boolean;
   /** The double tap the photo owns. */
   photoGesture: ReturnType<typeof useTapGesture>;
+  /** The grid card's sideways tag strip. */
+  strip: ReturnType<typeof useTagStrip>;
 };
 
 function DoubleTapPhoto({
@@ -185,7 +199,7 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
   );
 }
 
-function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
+function GridCard({ recipe, facts, isFavorite, photoGesture, strip }: CardProps) {
   const { description, tagNames, allergySet, timeLabel, servings } = facts;
 
   return (
@@ -193,8 +207,9 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
       <DoubleTapPhoto className="h-40" gesture={photoGesture}>
         <CardPhoto className="h-40 w-full" image={recipe.image} />
         {isFavorite ? <FavouriteMark size={32} /> : null}
-        <View className="absolute inset-x-0 bottom-0 flex-row gap-1.5 overflow-hidden p-2">
-          {tagNames.slice(0, 3).map((tag) => {
+        {/* Every tag, allergens first, in a row that scrolls sideways as web's does. */}
+        <TagStrip strip={strip} testID={`recipe-card-tags-${recipe.id}`}>
+          {tagNames.map((tag) => {
             const allergen = isAllergenTag(tag, allergySet);
 
             return (
@@ -208,7 +223,7 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
               </Pill>
             );
           })}
-        </View>
+        </TagStrip>
       </DoubleTapPhoto>
       <View className="min-h-0 flex-1 px-3 pt-2.5 pb-3">
         <Text className="text-foreground text-sm leading-[19px] font-semibold" numberOfLines={2}>

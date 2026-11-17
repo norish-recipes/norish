@@ -2,8 +2,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { Sheet } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, Input, TextField, useThemeColor } from "heroui-native";
+import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { EditingStore } from "@norish/shared-react/groceries";
@@ -13,7 +14,7 @@ import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 import { StoreAisleList } from "./store-aisle-list";
 import { StoreColorPicker } from "./store-color-picker";
 
-const FIELD = "h-[52px] rounded-[18px] px-4 text-[17px]";
+const FIELD = "h-[52px] text-[17px]";
 
 /** The Store being added or edited: its name, shop link, colour and Aisles, held by the manager
  * and written only on Save. Aisles reorder by holding a row. */
@@ -43,33 +44,12 @@ export function StoreEditorSheet({
 
   return (
     <Sheet
-      actions={
-        <Sheet.Actions>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              testID="store-editor-cancel"
-              variant="secondary"
-              onPress={onBack}
-            >
-              <Button.Label className="font-medium">{text("common.actions.cancel")}</Button.Label>
-            </Button>
-          </Sheet.Action>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              isDisabled={!canSaveStore(editing)}
-              testID="store-editor-save"
-              variant="primary"
-              onPress={onSave}
-            >
-              <Button.Label className="font-semibold">
-                {text(editing.id ? "common.actions.save" : "groceries.storeManager.create")}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
-      }
+      back
+      confirm={{
+        label: text(editing.id ? "common.actions.save" : "groceries.storeManager.create"),
+        disabled: !canSaveStore(editing),
+        onPress: onSave,
+      }}
       name="store-editor"
       title={text(editing.id ? "groceries.mobile.editStore" : "groceries.mobile.addStore")}
       onClose={onBack}
@@ -80,7 +60,7 @@ export function StoreEditorSheet({
           <View className="px-4">
             {label("groceries.storeManager.storeName")}
             <TextField>
-              <Input
+              <SheetInput
                 accessibilityLabel={text("groceries.storeManager.storeName")}
                 className={FIELD}
                 placeholder={text("groceries.storeManager.storeNamePlaceholder")}
@@ -94,7 +74,7 @@ export function StoreEditorSheet({
             <View className="h-4" />
             {label("groceries.storeManager.shopLink", "groceries.storeManager.shopLinkHint")}
             <TextField>
-              <Input
+              <SheetInput
                 accessibilityLabel={text("groceries.storeManager.shopLink")}
                 autoCapitalize="none"
                 autoCorrect={false}

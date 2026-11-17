@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { IngredientIcon } from "@/components/ingredient-icon";
+import Animated from "react-native-reanimated";
+import { AnimatedNumber } from "@/components/animated-number";
+import { GlassStepper } from "@/components/glass-stepper";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
 import { useCardActions } from "@/hooks/use-card-actions";
+import { lightImpact } from "@/lib/haptics";
+import { useFadeTo } from "@/lib/motion/fade-to";
 import { recipeRoute } from "@/lib/tab-routes";
 import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
 import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
@@ -24,39 +29,10 @@ import {
   useUnitFormatter,
 } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
-import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { ingredientRows, plainText } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
-import { SectionCard, useTint } from "./tint";
-
-function RoundButton({
-  icon,
-  label,
-  testID,
-  onPress,
-}: {
-  icon: "add" | "remove";
-  label: string;
-  testID: string;
-  onPress: () => void;
-}) {
-  const tint = useTint();
-  const [foreground] = useThemeColor(["foreground"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className="bg-default size-9 items-center justify-center rounded-full"
-      style={tint ? { backgroundColor: tint.soft } : undefined}
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons color={foreground} name={icon} size={17} />
-    </Pressable>
-  );
-}
+import { SectionCard } from "./tint";
 
 /** The servings stepper; the number opens the Servings sheet. */
 export function ServingsControl() {
@@ -67,13 +43,14 @@ export function ServingsControl() {
   const setServings = useRecipePageStore((state) => state.setServings);
 
   return (
-    <View className="flex-row items-center gap-1">
-      <RoundButton
-        icon="remove"
-        label={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
-        testID="recipe-servings-decrease"
-        onPress={() => setServings(servingsDown(servings))}
-      />
+    <GlassStepper
+      canDecrement={servingsDown(servings) !== servings}
+      decreaseLabel={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
+      increaseLabel={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
+      testID="recipe-servings"
+      onDecrement={() => setServings(servingsDown(servings))}
+      onIncrement={() => setServings(servingsUp(servings))}
+    >
       <Pressable
         accessibilityLabel={intl.formatMessage(
           { id: "recipes.detail.servingsCount" },
@@ -84,15 +61,12 @@ export function ServingsControl() {
         testID="recipe-servings-value"
         onPress={() => router.push(recipeRoute(recipe.id, "servings"))}
       >
-        <Text className="text-foreground text-base font-semibold">{formatServings(servings)}</Text>
+        <AnimatedNumber
+          className="text-foreground text-base font-semibold"
+          value={formatServings(servings)}
+        />
       </Pressable>
-      <RoundButton
-        icon="add"
-        label={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
-        testID="recipe-servings-increase"
-        onPress={() => setServings(servingsUp(servings))}
-      />
-    </View>
+    </GlassStepper>
   );
 }
 
@@ -144,7 +118,7 @@ export function Line({
   amount,
   unit,
   name,
-  ingredientId,
+  foodId,
   checked,
   onToggle,
   large = false,
@@ -153,34 +127,46 @@ export function Line({
   amount: string;
   unit: string;
   name: string;
-  ingredientId: string | null | undefined;
+  foodId: string | null;
   checked: boolean;
   onToggle: (index: number) => void;
   large?: boolean;
 }) {
   const plain = plainText(name);
+  const fade = useFadeTo(checked ? 0.5 : 1);
 
   return (
     <Pressable
       accessibilityLabel={[amount, unit, plain].filter(Boolean).join(" ")}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
-      style={{ opacity: checked ? 0.5 : 1 }}
       testID={`recipe-ingredient-${index}`}
-      onPress={() => onToggle(index)}
+      onPress={() => {
+        lightImpact();
+        onToggle(index);
+      }}
     >
-      <RoundTick selected={checked} />
-      {namesNoFood(name) ? null : (
-        <IngredientIcon ingredientId={ingredientId} size={large ? 34 : undefined} />
-      )}
-      <Text
-        className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
+      <Animated.View
+        className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
+        style={fade}
       >
-        {amount ? <Text className="font-semibold">{`${amount} `}</Text> : null}
-        {unit ? <Text className="text-accent-text font-semibold">{`${unit} `}</Text> : null}
-        <InlineMarkdown disableLinks={checked} text={name} />
-      </Text>
+        <RoundTick selected={checked} />
+        <IngredientIcon ingredientId={foodId} size={large ? 34 : undefined} />
+        <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
+          {amount ? (
+            <AnimatedNumber
+              className={`${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} font-bold ${checked ? "text-muted line-through" : "text-foreground"}`}
+              value={amount}
+            />
+          ) : null}
+          <Text
+            className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
+          >
+            {unit ? <Text className="text-accent-text font-bold">{`${unit} `}</Text> : null}
+            <InlineMarkdown disableLinks={checked} text={name} />
+          </Text>
+        </View>
+      </Animated.View>
     </Pressable>
   );
 }
@@ -205,46 +191,48 @@ export function IngredientsSection() {
   };
 
   return (
-    <SectionCard
-      right={
-        <View className="flex-row items-center gap-1.5">
-          {recipe.servings ? <ServingsControl /> : null}
-          <OptionsMenu />
-        </View>
-      }
-      testID="recipe-ingredients"
-      title={intl.formatMessage({ id: "recipes.detail.ingredients" })}
-    >
-      {rows.map((row) =>
-        row.kind === "heading" ? (
-          <Text
-            key={row.key}
-            className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
-          >
-            {row.text}
-          </Text>
-        ) : (
-          <Line
-            key={row.key}
-            amount={formatAmount(row.line.amount, mode)}
-            checked={checked.has(row.index)}
-            index={row.index}
-            ingredientId={row.line.ingredientId}
-            name={row.line.ingredientName}
-            unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
-            onToggle={toggle}
-          />
-        )
-      )}
-      <Button
-        className="mt-3 rounded-full"
-        testID="recipe-add-to-groceries"
-        variant="primary"
-        onPress={() => actions.addToGroceries(recipe, servings)}
+    <IngredientIconSlots rows={rows}>
+      <SectionCard
+        right={
+          <View className="flex-row items-center gap-1.5">
+            {recipe.servings ? <ServingsControl /> : null}
+            <OptionsMenu />
+          </View>
+        }
+        testID="recipe-ingredients"
+        title={intl.formatMessage({ id: "recipes.detail.ingredients" })}
       >
-        <Ionicons color={accentForeground} name="bag-outline" size={18} />
-        <Button.Label>{intl.formatMessage({ id: "recipes.detail.addToGroceries" })}</Button.Label>
-      </Button>
-    </SectionCard>
+        {rows.map((row) =>
+          row.kind === "heading" ? (
+            <Text
+              key={row.key}
+              className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
+            >
+              {row.text}
+            </Text>
+          ) : (
+            <Line
+              key={row.key}
+              amount={formatAmount(row.line.amount, mode)}
+              checked={checked.has(row.index)}
+              foodId={row.foodId}
+              index={row.index}
+              name={row.line.ingredientName}
+              unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
+              onToggle={toggle}
+            />
+          )
+        )}
+        <Button
+          className="mt-3 rounded-full"
+          testID="recipe-add-to-groceries"
+          variant="primary"
+          onPress={() => actions.addToGroceries(recipe, servings)}
+        >
+          <Ionicons color={accentForeground} name="bag-outline" size={18} />
+          <Button.Label>{intl.formatMessage({ id: "recipes.detail.addToGroceries" })}</Button.Label>
+        </Button>
+      </SectionCard>
+    </IngredientIconSlots>
   );
 }

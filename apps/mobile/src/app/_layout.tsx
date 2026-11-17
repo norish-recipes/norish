@@ -4,14 +4,18 @@ import "@/lib/i18n/list-format";
 import "@/lib/i18n/plural-rules";
 
 import React from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
-import { LaunchProvider, LaunchSplash } from "@/components/launch";
-import { FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { LaunchProvider, LaunchSplash, useLaunchPhase } from "@/components/launch";
+import { Loader } from "@/components/loader";
+import {
+  EDITOR_OPTIONS,
+  FIT_SHEET_OPTIONS,
+  SEARCH_SHEET_OPTIONS,
+} from "@/components/sheet-options";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
-import { FADE_OUT_TIMING, PENDING_FADE_IN } from "@/features/auth/utils/motion";
 import { useCalendarWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
 import { useRecipeTimers } from "@/features/recipe/hooks/use-recipe-timers";
 import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
@@ -20,9 +24,11 @@ import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { AuthProviders } from "@/lib/auth/auth-providers";
-import { useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
+import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
+import { resolveSessionView } from "@/lib/boot/session-view";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
+import { timedTo } from "@/lib/motion/timed";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
@@ -172,12 +178,14 @@ function RootLayoutContent() {
 
 const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/** The stack, wrapped in the offline controller while signed in; held under the splash while pending. */
+/** The stack, wrapped in the offline controller while signed in; the ground while the session
+ * restores under the splash, then the loader while one ends. */
 function SessionStack() {
   const { session } = usePlatform();
   const { colors } = useTheme();
   const signedIn = session.user !== null;
   const pending = session.isPending && !signedIn;
+  const view = resolveSessionView(pending, signedIn, useLaunchPhase());
 
   const app = (
     <>
@@ -189,17 +197,13 @@ function SessionStack() {
   // One themed ground under every phase, so a session ending never shows the bare window.
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {pending ? (
-        <Animated.View entering={PENDING_FADE_IN} style={[styles.root, styles.centred]}>
-          <ActivityIndicator />
-        </Animated.View>
-      ) : signedIn ? (
+      {view === "loader" ? <Loader centred /> : null}
+      {view === "signed-in" ? (
         <SignedInFade>
           <AuthenticatedProviders>{app}</AuthenticatedProviders>
         </SignedInFade>
-      ) : (
-        app
-      )}
+      ) : null}
+      {view === "signed-out" ? app : null}
       <LaunchVersionCheck enabled={!pending} />
       <LaunchSplash handoff={pending ? null : "fade"} />
     </View>
@@ -210,7 +214,8 @@ function SessionStack() {
 function SignedInFade({ children }: { children: React.ReactNode }) {
   const fading = useSignedInFadingOut();
   const style = useAnimatedStyle(() => ({
-    opacity: withTiming(fading ? 0 : 1, FADE_OUT_TIMING),
+    // A plain fade, kept under Reduce Motion.
+    opacity: timedTo(fading ? 0 : 1, SESSION_END_FADE_MS, { keep: true }),
   }));
 
   // Not interactive while it fades: the session it shows is already ending.
@@ -256,20 +261,20 @@ function AuthenticatedEffects() {
   return null;
 }
 
-/** The import sheets as tall as their content; From text's field takes the sheet's height. */
-const FIT_IMPORT_SHEETS = ["add-recipe", "import-link", "import-photos"] as const;
+/** Sheets the accessory presents over any tab: Add recipe, its imports and the timer list. The
+ * editor's choice, a search field over a list, presents over the editor. */
+const FIT_SHEETS = ["add-recipe", "import-link", "import-text", "import-photos", "timers"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="recipe/new" />
-        {/* Add recipe and its imports present over whichever tab the accessory was pressed on. */}
-        {FIT_IMPORT_SHEETS.map((name) => (
+        <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
+        <Stack.Screen name="editor-choice" options={SEARCH_SHEET_OPTIONS} />
+        {FIT_SHEETS.map((name) => (
           <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
         ))}
-        <Stack.Screen name="import-text" options={SHEET_OPTIONS} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
@@ -292,9 +297,5 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  centred: {
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

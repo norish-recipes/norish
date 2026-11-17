@@ -1,15 +1,16 @@
 import React, { useDeferredValue, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
-import { Sheet, SheetList, SheetStrip } from "@/components/sheet";
-import { asSlot, SlotTabs } from "@/components/slot-tabs";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import { DatePicker, Host } from "@expo/ui/swift-ui";
-import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
+import { Loader } from "@/components/loader";
+import { MoveFields } from "@/components/move-fields";
+import { Sheet, SheetList } from "@/components/sheet";
+import { SheetSearchField } from "@/components/sheet-search-field";
+import { asSlot } from "@/components/slot-tabs";
+import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { Button, SearchField, Skeleton, Spinner, useThemeColor } from "heroui-native";
+import { Button, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useSlotPlanning } from "@norish/shared-react/calendar";
@@ -19,12 +20,10 @@ import {
   useRecipeListSubscription,
   useRecipesQuery,
 } from "@norish/shared-react/recipes";
-import { addDays, parseDateKey } from "@norish/shared/lib/helpers";
+import { parseDateKey } from "@norish/shared/lib/helpers";
 
 import { usePlanExit } from "../hooks/use-plan-exit";
 
-/** The days on the strip, today first; its last chip picks any other. */
-const DAYS = 14;
 const SKELETON_ROWS = [0, 1, 2, 3];
 
 /** Plan a recipe: a day (strip or date chip), a slot, then a recipe from the search, a random one
@@ -33,13 +32,12 @@ export function PlanRecipeScreen() {
   const intl = useIntl();
   const params = useLocalSearchParams<{ slot?: string; date?: string }>();
   const [foreground] = useThemeColor(["foreground"] as const);
-  const accentText = useAccentTextColor();
-  const today = parseDateKey(useToday());
-  const day = params.date ? parseDateKey(params.date) : null;
-  const days = Array.from({ length: DAYS }, (_, offset) => addDays(today, offset));
-  const [picked, setPicked] = useState<{ day: Date; fromStrip: boolean } | null>(null);
+  const today = useToday();
+  const day = params.date ?? null;
+  const days = stripDays(today);
+  const [picked, setPicked] = useState<{ day: string; fromStrip: boolean } | null>(null);
   // Today until a day is picked; a strip day that midnight took off the strip is today again.
-  const stripped = picked?.fromStrip && !days.some((d) => d.getTime() === picked.day.getTime());
+  const stripped = picked?.fromStrip && !days.includes(picked.day);
   const date = day ?? (picked && !stripped ? picked.day : today);
   const [slot, setSlot] = useState(() => asSlot(params.slot));
   const [input, setInput] = useState("");
@@ -48,7 +46,7 @@ export function PlanRecipeScreen() {
   const { getRandomRecipe } = useRandomRecipe();
   const exit = usePlanExit();
   const { isRandomLoading, planRecipe, planRandom, planNote } = useSlotPlanning({
-    date,
+    date: parseDateKey(date),
     slot,
     getRandomRecipe,
     close: exit,
@@ -61,85 +59,23 @@ export function PlanRecipeScreen() {
 
   const header = (
     <View className="gap-3">
-      {/* heroui-native has no day strip, so these chips are hand-built. */}
-      {day ? null : (
-        <SheetStrip
-          accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-          contentClassName="gap-2"
-          testID="plan-recipe-days"
-        >
-          {days.map((day, offset) => {
-            const selected = day.getTime() === date.getTime();
-            const label =
-              offset === 0
-                ? intl.formatMessage({ id: "calendar.mobile.today" })
-                : intl.formatDate(day, { weekday: "short" });
+      <MoveFields
+        date={date}
+        days={!day}
+        slot={slot}
+        testID="plan-recipe"
+        onDateChange={(next, fromStrip) => setPicked({ day: next, fromStrip })}
+        onSlotChange={setSlot}
+      />
 
-            return (
-              <Pressable
-                key={day.getTime()}
-                accessibilityLabel={intl.formatDate(day, {
-                  weekday: "long",
-                  month: "short",
-                  day: "numeric",
-                })}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-                className={`h-16 w-[52px] items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-default"}`}
-                testID={`plan-recipe-day-${offset}`}
-                onPress={() => setPicked({ day, fromStrip: true })}
-              >
-                <Text
-                  className={`text-xs font-medium ${selected ? "text-accent-foreground" : "text-foreground"}`}
-                >
-                  {label}
-                </Text>
-                <Text
-                  className={`text-[19px] font-semibold ${selected ? "text-accent-foreground" : "text-foreground"}`}
-                >
-                  {day.getDate()}
-                </Text>
-              </Pressable>
-            );
-          })}
-          <View className="h-16 justify-center">
-            <Host matchContents>
-              <DatePicker
-                modifiers={[
-                  accessibilityIdentifier("plan-recipe-other-day"),
-                  ...(accentText ? [tint(accentText)] : []),
-                ]}
-                selection={date}
-                onDateChange={(next) =>
-                  setPicked({
-                    day: new Date(next.getFullYear(), next.getMonth(), next.getDate()),
-                    fromStrip: false,
-                  })
-                }
-              />
-            </Host>
-          </View>
-        </SheetStrip>
-      )}
+      <SheetSearchField
+        label={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
+        testID="plan-recipe-search"
+        value={input}
+        onChange={setInput}
+      />
 
-      <SlotTabs testID="plan-recipe-slot" value={slot} onChange={setSlot} />
-
-      <SearchField value={input} onChange={setInput}>
-        <SearchField.Group>
-          <SearchField.SearchIcon />
-          <SearchField.Input
-            accessibilityLabel={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
-            autoCorrect={false}
-            className="bg-default h-12 rounded-3xl"
-            placeholder={intl.formatMessage({ id: "calendar.panel.searchOrAddNote" })}
-            returnKeyType="search"
-            testID="plan-recipe-search"
-          />
-          <SearchField.ClearButton />
-        </SearchField.Group>
-      </SearchField>
-
-      <View className={`bg-default ${first}`}>
+      <View className={`bg-surface ${first}`}>
         {hasNote ? (
           <ActionRow
             icon="document-text-outline"
@@ -170,14 +106,17 @@ export function PlanRecipeScreen() {
       name="plan-recipe"
       title={
         day
-          ? intl.formatMessage({ id: "calendar.panel.addToDay" }, { day: formatDay(intl, day) })
-          : intl.formatMessage({ id: "calendar.panel.planRecipe" })
+          ? intl.formatMessage(
+              { id: "calendar.panel.addToDay" },
+              { day: formatDay(intl, parseDateKey(day)) }
+            )
+          : intl.formatMessage({ id: "calendar.mobile.planRecipe" })
       }
     >
       <SheetList
         ListEmptyComponent={
           error ? undefined : (
-            <View className="bg-default border-separator rounded-b-[22px] border-t">
+            <View className="bg-surface border-separator rounded-b-[22px] border-t">
               {isLoading ? (
                 SKELETON_ROWS.map((row) => (
                   <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
@@ -199,7 +138,7 @@ export function PlanRecipeScreen() {
         renderItem={({ item: recipe, index }) => (
           <Button
             accessibilityLabel={recipe.name}
-            className={`border-separator bg-default h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+            className={`border-separator bg-surface h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
             testID={`plan-recipe-${recipe.id}`}
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
@@ -208,7 +147,7 @@ export function PlanRecipeScreen() {
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>
-            <View className="bg-surface size-8 items-center justify-center rounded-full">
+            <View className="bg-default size-8 items-center justify-center rounded-full">
               <Ionicons color={foreground} name="add" size={17} />
             </View>
           </Button>
@@ -243,8 +182,8 @@ function ActionRow({
       variant="ghost"
       onPress={onPress}
     >
-      <View className="bg-surface size-11 items-center justify-center rounded-xl">
-        {busy ? <Spinner size="sm" /> : <Ionicons color={accent} name={icon} size={20} />}
+      <View className="bg-default size-11 items-center justify-center rounded-xl">
+        {busy ? <Loader /> : <Ionicons color={accent} name={icon} size={20} />}
       </View>
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>
         {label}

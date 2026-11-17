@@ -1,7 +1,8 @@
 import React from "react";
-import { ActivityIndicator, Image, View } from "react-native";
+import { Image, View } from "react-native";
 import { GlassCloseButton } from "@/components/glass";
-import { useServerImage } from "@/lib/network/server-url";
+import { Loader } from "@/components/loader";
+import { ServerImage } from "@/components/server-image";
 import { useIntl } from "react-intl";
 
 import type { StepImage } from "@norish/shared-react/recipes";
@@ -23,16 +24,15 @@ export function StepPhotos({
   onCancel: (key: string) => void;
 }) {
   const intl = useIntl();
-  const toImage = useServerImage();
 
   return (
     <View className="flex-row flex-wrap gap-2">
       {images.map((image, imageIndex) => (
         // eslint-disable-next-line @eslint-react/no-array-index-key -- the same picture can sit here twice
         <View key={imageIndex} className="size-16">
-          <Image
+          <ServerImage
             className="size-16 rounded-xl"
-            source={toImage(image.image)}
+            path={image.image}
             style={{ width: 64, height: 64, borderRadius: 12 }}
           />
           <View className="absolute -top-1.5 -right-1.5">
@@ -52,7 +52,7 @@ export function StepPhotos({
             source={{ uri: photo.uri }}
             style={{ width: 64, height: 64, borderRadius: 12 }}
           />
-          <ActivityIndicator className="absolute inset-0" />
+          <Loader centred className="absolute inset-0" />
           <View className="absolute -top-1.5 -right-1.5">
             <GlassCloseButton
               label={intl.formatMessage({ id: "recipes.editor.removePhoto" })}

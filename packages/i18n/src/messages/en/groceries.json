@@ -93,6 +93,7 @@
     "unavailable": "Your pantry could not be read. Nothing has changed; try again when you are back online.",
     "fieldLabel": "Find or add a food",
     "fieldPlaceholder": "Find or add a food, e.g. olive oil",
+    "findPlaceholder": "Find a food in your pantry",
     "add": "Add to pantry",
     "fromCatalogue": "Add a food",
     "addFood": "Add {name} to your pantry",
@@ -134,9 +135,7 @@
     "toBuy": "To buy",
     "inPantry": "In your pantry",
     "weKeepThis": "We keep this",
-    "keepFailed": "That could not be added to your pantry",
-    "addCount": "{count, plural, one {Add # item} other {Add # items}}",
-    "adding": "Adding to the grocery list…"
+    "keepFailed": "That could not be added to your pantry"
   },
   "picker": {
     "unlink": "Unlink product",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "priced as one pack",
     "sale": "Sale",
-    "regularPrice": "Regular price {price}"
+    "regularPrice": "Regular price {price}",
+    "each": "each"
   },
   "mobile": {
     "viewMode": "View mode",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Move items to Unsorted",
     "typePrice": "Type the price yourself",
     "product": "Product",
-    "chooseProduct": "Choose a product"
+    "chooseProduct": "Choose a product",
+    "recipeCount": "{count, plural, one {# recipe} other {# recipes}}"
   }
 }

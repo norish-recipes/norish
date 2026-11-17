@@ -1,27 +1,14 @@
-import React, { useEffect } from "react";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
+import React from "react";
+import Animated from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { useSpinStyle } from "@/lib/motion/spin";
 
-/** A 38-of-56 arc turning once per 0.9 s while an import runs, still under Reduce Motion. */
+/** A drawn arc, not the shared loader: it marks one import card's work in the accent colour.
+ * It turns once per 0.9 s and stays still under Reduce Motion. */
 export function ImportSpinner({ size }: { size: number }) {
   const color = useAccentTextColor();
-  const reduceMotion = useReducedMotion();
-  const turn = useSharedValue(0);
-
-  useEffect(() => {
-    if (reduceMotion) return;
-    turn.set(withRepeat(withTiming(360, { duration: 900, easing: Easing.linear }), -1));
-  }, [reduceMotion, turn]);
-
-  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.get()}deg` }] }));
+  const style = useSpinStyle(900);
 
   return (
     <Animated.View style={style}>

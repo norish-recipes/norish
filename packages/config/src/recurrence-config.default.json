@@ -2,7 +2,7 @@
   "locales": {
     "en": {
       "everyWords": ["every", "each"],
-      "otherWords": ["other"],
+      "otherWords": ["other", "second"],
       "onWords": ["on"],
       "numberWords": {
         "one": 1,

@@ -31,8 +31,19 @@ export const parkedPatch = (reason: ParkedReason) =>
     sending: undefined,
   }) satisfies Partial<OutboxEntry>;
 
+// Paths an older release queued under a name this server no longer has; the stored input fits the new one.
+const renamedPaths: Record<string, string> = { "calendar.updateItem": "calendar.editItem" };
+
 export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore {
   const listeners = new Set<() => void>();
+
+  async function all(): Promise<OutboxEntry[]> {
+    return (await outbox.all()).map((entry) => {
+      const path = renamedPaths[entry.path];
+
+      return path ? { ...entry, path } : entry;
+    });
+  }
 
   function notify(): void {
     for (const listener of listeners) {
@@ -59,9 +70,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
   }
 
   async function forOwner(ownerId: string, status?: OutboxEntryStatus): Promise<OutboxEntry[]> {
-    const all = await outbox.all();
-
-    return all.filter(
+    return (await all()).filter(
       (entry) => entry.ownerId === ownerId && (status ? entry.status === status : true)
     );
   }
@@ -89,9 +98,9 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
   }
 
   async function size(ownerId?: string): Promise<number> {
-    const all = await outbox.all();
+    const entries = await all();
 
-    return ownerId ? all.filter((entry) => entry.ownerId === ownerId).length : all.length;
+    return ownerId ? entries.filter((entry) => entry.ownerId === ownerId).length : entries.length;
   }
 
   function subscribe(listener: () => void): () => void {
@@ -105,7 +114,7 @@ export function createOutboxStore(outbox: OfflineStorage["outbox"]): OutboxStore
   return {
     process: createClientId(),
     enqueue,
-    loadAll: () => outbox.all(),
+    loadAll: all,
     forOwner,
     update,
     change,

@@ -1,0 +1,67 @@
+# Starts a Recipe Timer on the Recipe page and stops it from the accessory's timer on another tab: it
+# springs in beside Cook on the recipe and the add action elsewhere, opens the timer list, and goes
+# when its last timer does.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Timer Stew", "key": "stew", "steps": ["Simmer for 10 minutes."]}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.stew}
+    timeout: 20000
+# No timer yet: the accessory holds its add action alone.
+- assertVisible:
+    id: add-recipe
+- assertNotVisible:
+    id: timer-capsule
+- tapOn:
+    id: recipe-card-${output.stew}
+- extendedWaitUntil:
+    visible:
+      id: timer-chip-0-0
+    timeout: 20000
+- tapOn:
+    id: timer-chip-0-0
+# The first timer asks for notification permission; the prompt is the system's, so it is tapped by its label.
+- tapOn:
+    text: Allow
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: timer-capsule
+    timeout: 20000
+- assertVisible:
+    id: cook-recipe
+# A native header item exposes no id; its accessibility name is "Back".
+- tapOn: Back
+- extendedWaitUntil:
+    visible:
+      id: add-recipe
+    timeout: 20000
+- assertVisible:
+    id: timer-capsule
+# Another tab shows it too.
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: timer-capsule
+    timeout: 20000
+- tapOn:
+    id: timer-capsule
+- extendedWaitUntil:
+    visible:
+      id: timers-sheet
+    timeout: 20000
+- assertVisible:
+    id: timer-row-.*
+# Dismissing the last timer closes the sheet and takes the capsule away.
+- tapOn: Dismiss timer
+- extendedWaitUntil:
+    notVisible:
+      id: timers-sheet
+    timeout: 20000
+- assertNotVisible:
+    id: timer-capsule

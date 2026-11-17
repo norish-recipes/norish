@@ -48,7 +48,7 @@ describe("RecurrencePanel", () => {
       fireEvent.click(screen.getByRole("radio", { name: "yearly" }));
     });
 
-    expect(screen.getByText("every year")).toBeInTheDocument();
+    expect(screen.getByText("everyYear")).toBeInTheDocument();
     expect(screen.queryByText("onDay")).toBeNull();
     await act(async () => {
       fireEvent.click(screen.getByTestId("action-done"));

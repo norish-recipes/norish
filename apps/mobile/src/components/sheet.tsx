@@ -1,17 +1,12 @@
 import type { ReactNode } from "react";
-import type {
-  FlatListProps,
-  KeyboardEvent,
-  LayoutChangeEvent,
-  ScrollViewProps,
-} from "react-native";
+import type { FlatListProps, KeyboardEvent, ScrollViewProps } from "react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, Keyboard, ScrollView, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
+import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { initialWindowMetrics } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
-import { GlassCloseButton } from "./glass";
+import type { HeaderConfirm } from "./modal-header";
+import { ModalHeader } from "./modal-header";
 
 /** The props a body takes from the sheet rather than from the screen. */
 type SheetOwnedProps =
@@ -28,8 +23,14 @@ type BodyLayout = {
 /** The body's side inset in points, the `px-4` below: for a layout that sizes itself to the sheet. */
 export const SHEET_INSET = 16;
 
+/** A tall field's height on a fit sheet, which is as tall as its content, so no field can fill it. */
+export const FIT_SHEET_FIELD_HEIGHT = 200;
+
+/** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
+const TITLE_INSET = 24;
+
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
-  `${inset ? "px-4" : ""} pb-4 ${contentClassName}`;
+  `${inset ? "px-4" : ""} pt-1 pb-4 ${contentClassName}`;
 
 /** What both scrolling bodies share: they fill the sheet and meet the keyboard the same way. */
 const SCROLLER = {
@@ -70,9 +71,21 @@ export function SheetList<T>({
   );
 }
 
-/** A sheet's body that does not scroll, as tall as its content: the body of a fit sheet. */
+/** A fit sheet's body: as tall as its content until the sheet runs out of room, then it scrolls. */
 export function SheetBody({ children, ...layout }: BodyLayout & { children: ReactNode }) {
-  return <View className={contentClass(layout)}>{children}</View>;
+  return (
+    <>
+      {/* Kept first: react-native-screens stretches a sheet's first-child scroll view to the sheet. */}
+      <View collapsable={false} />
+      <ScrollView
+        {...SCROLLER}
+        className="shrink grow-0"
+        contentContainerClassName={contentClass(layout)}
+      >
+        {children}
+      </ScrollView>
+    </>
+  );
 }
 
 /** A horizontal strip that runs to the sheet's sides, its content starting on the sheet's inset. */
@@ -91,7 +104,7 @@ export function SheetStrip({
   );
 }
 
-/** A row whose content lines up with the sheet's title. */
+/** A row whose content lines up with the sheet's subtitle. */
 export function SheetRow({
   className = "",
   children,
@@ -99,7 +112,11 @@ export function SheetRow({
   className?: string;
   children: ReactNode;
 }) {
-  return <View className={`px-2 ${className}`}>{children}</View>;
+  return (
+    <View className={className} style={{ paddingHorizontal: TITLE_INSET - SHEET_INSET }}>
+      {children}
+    </View>
+  );
 }
 
 /** Several actions in one row; each `Sheet.Action` takes an equal share. */
@@ -114,12 +131,16 @@ function SheetAction({ children }: { children: ReactNode }) {
 /** The top of a sheet at its full height, the window's safe-area top. */
 export const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
 
-/**
- * How far the keyboard covers the sheet. UIKit lifts a sheet above it as far as its full height's
- * top; JS layout starts at the sheet's own top, so the sheet's height places its bottom.
- */
-function useKeyboardOverlap() {
-  const [height, setHeight] = useState(0);
+/** The native header's height over a sheet's content, measured on iOS 26 and 27. */
+const SHEET_HEADER = 70;
+
+/** Where a sheet's content starts at the sheet's full height, under the native header. */
+export const SHEET_BODY_TOP = FULL_SHEET_TOP + SHEET_HEADER;
+
+/** The most the content can take: down to the keyboard or the screen's bottom. UIKit lifts a sheet
+ * that then fits onto the keyboard, so nothing laid out feeds back into it. */
+function useSheetRoom() {
+  const { height } = useWindowDimensions();
   const [keyboardTop, setKeyboardTop] = useState<number | null>(null);
 
   useEffect(() => {
@@ -133,73 +154,59 @@ function useKeyboardOverlap() {
     return () => subscriptions.forEach((subscription) => subscription.remove());
   }, []);
 
-  return {
-    overlap:
-      keyboardTop === null ? 0 : Math.max(0, Math.round(FULL_SHEET_TOP + height - keyboardTop)),
-    onLayout: (event: LayoutChangeEvent) => setHeight(event.nativeEvent.layout.height),
-  };
+  return (keyboardTop ?? height) - SHEET_BODY_TOP;
 }
 
 /**
- * The one sheet layout: title, subtitle and close on top, the body between, the actions pinned
- * below. They are flex siblings, and the keyboard's overlap pads the bottom so it covers none.
+ * The one sheet layout: the native header (title, Close, and Save where it saves), the body, the
+ * actions pinned below, all held to the room above the keyboard.
  */
 export function Sheet({
   name,
   title,
   subtitle,
+  back = false,
   onClose,
+  confirm,
   actions,
   children,
 }: {
-  /** The testID prefix: `<name>-sheet` on the sheet, `<name>-close` on the close button. */
+  /** The testID prefix: `<name>-sheet` on the sheet. */
   name: string;
   title: string;
+  /** A muted line above the body: the header's system title has no subtitle. */
   subtitle?: string;
-  /** What the close button does; going back by default. */
+  /** A step inside a sheet: the header's left item is a Back chevron. */
+  back?: boolean;
+  /** What the left item does; going back by default. */
   onClose?: () => void;
+  /** The header's confirm item, for a sheet that saves. */
+  confirm?: HeaderConfirm;
   /** One element, or a `Sheet.Actions` of `Sheet.Action`s sharing the row. */
   actions?: ReactNode;
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
   children?: ReactNode;
 }) {
-  const router = useRouter();
-  const { overlap, onLayout } = useKeyboardOverlap();
-  // Animated on this view only: a global LayoutAnimation left armed by a picker's keyboard events
-  // animated the sheet's unmount, which Reanimated's layout animations abort on.
-  const keyboardStyle = useAnimatedStyle(() => ({
-    paddingBottom: withTiming(overlap, { duration: 250 }),
-  }));
+  const room = useSheetRoom();
+
+  useMarkSheetOpen();
 
   return (
     // Not flattened, so react-native-screens never resizes the body directly.
-    <Animated.View
-      className="grow"
-      collapsable={false}
-      style={keyboardStyle}
-      testID={`${name}-sheet`}
-      onLayout={onLayout}
-    >
-      {/* Top-aligned so the close button never moves; pt-1.5 centres the title on the button. */}
-      <View className="flex-row items-start justify-between gap-2.5 px-4 pt-[27px] pb-3.5">
-        <View className="min-w-0 flex-1 pt-1.5 pl-2">
-          <Text
-            accessibilityRole="header"
-            className="text-foreground text-[22px] leading-7 font-semibold"
-          >
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text className="text-muted text-sm leading-[17px]" numberOfLines={1}>
-              {subtitle}
-            </Text>
-          ) : null}
-        </View>
-        <GlassCloseButton testID={`${name}-close`} onPress={onClose ?? (() => router.back())} />
-      </View>
+    <View className="grow" collapsable={false} style={{ maxHeight: room }} testID={`${name}-sheet`}>
+      <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
+      {subtitle ? (
+        <Text
+          className="text-muted pb-3 text-sm leading-[17px]"
+          numberOfLines={1}
+          style={{ paddingHorizontal: TITLE_INSET }}
+        >
+          {subtitle}
+        </Text>
+      ) : null}
       {children}
       {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
-    </Animated.View>
+    </View>
   );
 }
 

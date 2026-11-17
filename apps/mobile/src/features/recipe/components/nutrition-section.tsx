@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { AnimatedNumber } from "@/components/animated-number";
+import { GlassStepper } from "@/components/glass-stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -11,20 +13,14 @@ import {
   usePageEnrichment,
   useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
-import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
 import { workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 
 import type { NutritionFigures } from "../utils/stored-nutrition";
+import { DAILY_REFERENCE, percentOfReference } from "../utils/nutrition-reference";
+import { aroundCount } from "../utils/portions-label";
 import { plainText } from "../utils/recipe-rows";
 import { storedNutrition } from "../utils/stored-nutrition";
-import { NutritionDonut } from "./nutrition-donut";
-import { SectionCard, useTint } from "./tint";
-
-const MACRO_ICON = {
-  fat: "water-outline",
-  carbs: "cube-outline",
-  protein: "flash-outline",
-} as const;
+import { SectionCard } from "./tint";
 
 const REASON_KEYS = {
   seasoning: "seasoning",
@@ -35,6 +31,128 @@ const REASON_KEYS = {
   "no-piece-weight": "noPieceWeight",
 } as const;
 
+/** "2 portions" with the 2 rolling and the word still. */
+function PortionsLabel({ portions }: { portions: number }) {
+  const intl = useIntl();
+  const label = intl.formatMessage({ id: "recipes.nutrition.portions" }, { count: portions });
+  const around = aroundCount(label, intl.formatNumber(portions));
+  const className = "text-foreground text-sm font-semibold";
+
+  return (
+    <View className="min-w-14 flex-row items-center justify-center">
+      {around ? (
+        <>
+          {around[0] ? <Text className={className}>{around[0]}</Text> : null}
+          <AnimatedNumber className={className} value={intl.formatNumber(portions)} />
+          {around[1] ? <Text className={className}>{around[1]}</Text> : null}
+        </>
+      ) : (
+        <Text className={className}>{label}</Text>
+      )}
+    </View>
+  );
+}
+
+const MACROS = ["protein", "carbs", "fat"] as const;
+
+/** A figure's share of its reference, as a thin bar of `color` on a track. */
+function ReferenceBar({
+  percent,
+  color,
+  label,
+  height,
+}: {
+  percent: number;
+  color?: string;
+  label: string;
+  height: number;
+}) {
+  return (
+    <View
+      accessibilityLabel={label}
+      accessibilityRole="image"
+      className="bg-default overflow-hidden"
+      style={{ height, borderRadius: height / 2 }}
+    >
+      <View
+        className={color ? "" : "bg-foreground"}
+        style={{
+          width: `${Math.min(percent, 100)}%`,
+          height,
+          borderRadius: height / 2,
+          ...(color ? { backgroundColor: color } : null),
+        }}
+      />
+    </View>
+  );
+}
+
+/** The calories as one big number, against the daily reference. */
+function CalorieBar({ calories }: { calories: number }) {
+  const intl = useIntl();
+  const percent = percentOfReference(calories, DAILY_REFERENCE.calories);
+  const caption = intl.formatMessage(
+    { id: "recipes.nutrition.percentOfDailyReference" },
+    { percent, amount: `${intl.formatNumber(DAILY_REFERENCE.calories)} kcal` }
+  );
+
+  return (
+    <View className="gap-[14px] pt-1.5">
+      <View className="flex-row items-baseline gap-1.5">
+        <AnimatedNumber
+          className="text-foreground text-[60px] leading-[60px] font-semibold tracking-[-2.7px]"
+          value={String(Math.round(calories))}
+        />
+        <Text className="text-muted text-lg font-medium">kcal</Text>
+      </View>
+      <View className="gap-[7px]">
+        <ReferenceBar height={6} label={caption} percent={percent} />
+        <Text className="text-muted text-[13px]">{caption}</Text>
+      </View>
+    </View>
+  );
+}
+
+/** One macro as an open column: its label, the grams, and the share of its reference. */
+function MacroColumn({
+  macro,
+  grams,
+  color,
+}: {
+  macro: (typeof MACROS)[number];
+  grams: number;
+  color?: string;
+}) {
+  const intl = useIntl();
+  const percent = percentOfReference(grams, DAILY_REFERENCE[macro]);
+  const share = intl.formatMessage(
+    { id: "recipes.nutrition.percentOfReference" },
+    { percent, amount: `${DAILY_REFERENCE[macro]} g` }
+  );
+
+  return (
+    <View className="min-w-0 flex-1 gap-1" testID={`nutrition-${macro}`}>
+      <View className="flex-row items-center gap-1.5">
+        <View className="size-[7px] rounded-full" style={{ backgroundColor: color }} />
+        <Text className="text-muted text-[13px]">
+          {intl.formatMessage({ id: `recipes.nutrition.${macro}` })}
+        </Text>
+      </View>
+      <View className="flex-row items-baseline gap-[3px]">
+        <AnimatedNumber
+          className="text-foreground text-[28px] leading-8 font-semibold tracking-[-0.8px]"
+          value={String(Math.round(grams))}
+        />
+        <Text className="text-muted text-[15px]">g</Text>
+      </View>
+      <Text className="text-muted text-xs">{share}</Text>
+      <View className="pt-1">
+        <ReferenceBar color={color} height={4} label={share} percent={percent} />
+      </View>
+    </View>
+  );
+}
+
 /** Nutrition: stored values, else the total worked out from the lines; portions scale it. */
 export function NutritionSection() {
   const intl = useIntl();
@@ -44,13 +162,12 @@ export function NutritionSection() {
   const workedOut = useWorkedOutNutrition(recipe);
   const [portions, setPortions] = useState(1);
   const [listOpen, setListOpen] = useState(false);
-  const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
+  const [muted] = useThemeColor(["muted"] as const);
   const macroColor = {
     fat: useTokenColor("nutrition-fat"),
     carbs: useTokenColor("nutrition-carbs"),
     protein: useTokenColor("nutrition-protein"),
   };
-  const tint = useTint();
   const stored = storedNutrition(recipe);
   const perServing = workedOut?.perServing;
   const shown: NutritionFigures | null =
@@ -67,7 +184,6 @@ export function NutritionSection() {
 
   if (!showNutrition || (!shown && !estimating)) return null;
 
-  const shares = shown ? macroCalorieShares(shown) : [];
   const leftOut = !stored ? (workedOut?.leftOut ?? []) : [];
   const step = (next: number) => setPortions(Math.max(1, portions + next));
 
@@ -75,29 +191,16 @@ export function NutritionSection() {
     <SectionCard
       right={
         shown && !estimating ? (
-          <View className="flex-row items-center gap-1">
-            <Pressable
-              accessibilityLabel={intl.formatMessage({ id: "recipes.nutrition.decreasePortions" })}
-              accessibilityRole="button"
-              className="bg-default size-9 items-center justify-center rounded-full"
-              style={tint ? { backgroundColor: tint.soft } : undefined}
-              onPress={() => step(-1)}
-            >
-              <Ionicons color={foreground} name="remove" size={17} />
-            </Pressable>
-            <Text className="text-foreground min-w-14 text-center text-sm font-semibold">
-              {intl.formatMessage({ id: "recipes.nutrition.portions" }, { count: portions })}
-            </Text>
-            <Pressable
-              accessibilityLabel={intl.formatMessage({ id: "recipes.nutrition.increasePortions" })}
-              accessibilityRole="button"
-              className="bg-default size-9 items-center justify-center rounded-full"
-              style={tint ? { backgroundColor: tint.soft } : undefined}
-              onPress={() => step(1)}
-            >
-              <Ionicons color={foreground} name="add" size={17} />
-            </Pressable>
-          </View>
+          <GlassStepper
+            canDecrement={portions > 1}
+            decreaseLabel={intl.formatMessage({ id: "recipes.nutrition.decreasePortions" })}
+            increaseLabel={intl.formatMessage({ id: "recipes.nutrition.increasePortions" })}
+            testID="recipe-portions"
+            onDecrement={() => step(-1)}
+            onIncrement={() => step(1)}
+          >
+            <PortionsLabel portions={portions} />
+          </GlassStepper>
         ) : null
       }
       testID="recipe-nutrition"
@@ -109,36 +212,20 @@ export function NutritionSection() {
         </Text>
       ) : (
         <>
-          <View className="flex-row items-center gap-5 pt-1">
-            {shares.length > 0 ? <NutritionDonut figures={shown} portions={portions} /> : null}
-            <View className="min-w-0 flex-1">
-              {shares.length === 0 && shown.calories != null ? (
-                <Text className="text-foreground text-base font-semibold">
-                  {`${Math.round(shown.calories * portions)} kcal`}
-                </Text>
-              ) : null}
-              {shares.map((macro) => (
-                <View
-                  key={macro.key}
-                  className="border-separator flex-row items-center justify-between gap-2 border-b py-2"
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Ionicons
-                      color={macroColor[macro.key]}
-                      name={MACRO_ICON[macro.key]}
-                      size={16}
-                    />
-                    <Text className="text-foreground text-base">
-                      {intl.formatMessage({ id: `recipes.nutrition.${macro.key}` })}
-                    </Text>
-                  </View>
-                  <Text className="text-foreground text-base font-semibold">
-                    {`${Math.round((shown[macro.key] ?? macro.grams) * portions)} `}
-                    <Text className="text-muted font-normal">g</Text>
-                  </Text>
-                </View>
-              ))}
-            </View>
+          {shown.calories != null ? <CalorieBar calories={shown.calories * portions} /> : null}
+          <View className="mt-5 flex-row gap-[18px]">
+            {MACROS.map((key) => {
+              const grams = shown[key];
+
+              return grams == null ? null : (
+                <MacroColumn
+                  key={key}
+                  color={macroColor[key]}
+                  grams={grams * portions}
+                  macro={key}
+                />
+              );
+            })}
           </View>
           {!stored && workedOut?.estimated ? (
             <Text className="text-muted pt-2 text-xs">

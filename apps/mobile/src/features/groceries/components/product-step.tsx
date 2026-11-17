@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Sheet, SheetScrollView } from "@/components/sheet";
+import { Sheet, SheetBody } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, Input, TextField, useThemeColor } from "heroui-native";
+import { Button, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ProductRow, useProductField } from "@norish/shared-react/groceries";
@@ -102,35 +103,39 @@ export function ProductStep({
 
   return (
     <Sheet
+      back
       actions={
-        <Button
-          className="h-[50px]"
-          testID={typing ? "product-done" : "product-type-price"}
-          variant={typing ? "primary" : "secondary"}
-          onPress={typing ? onBack : () => setTyping(true)}
-        >
-          <Button.Label className="font-semibold">
-            {text(typing ? "common.actions.done" : "groceries.mobile.typePrice")}
-          </Button.Label>
-        </Button>
+        typing ? undefined : (
+          <Button
+            className="h-[50px]"
+            testID="product-type-price"
+            variant="secondary"
+            onPress={() => setTyping(true)}
+          >
+            <Button.Label className="font-semibold">
+              {text("groceries.mobile.typePrice")}
+            </Button.Label>
+          </Button>
+        )
       }
+      confirm={{ label: text("common.actions.done"), onPress: onBack }}
       name="grocery-product"
       title={text("groceries.picker.productLabel", { store: store.name })}
       onClose={onBack}
     >
-      <SheetScrollView contentClassName="gap-4">
+      <SheetBody contentClassName="gap-4">
         <View className="justify-center">
           <View className="absolute left-4 z-10" pointerEvents="none">
             <Ionicons color={muted} name="search" size={18} />
           </View>
           <TextField>
-            <Input
+            <SheetInput
               // eslint-disable-next-line jsx-a11y-x/no-autofocus -- the search opens focused, which also asks the Store what it knows
               autoFocus
               accessibilityLabel={text("groceries.picker.searchPlaceholder")}
               autoCapitalize="none"
               autoCorrect={false}
-              className="h-[52px] rounded-[18px] pr-4 pl-11 text-[17px]"
+              className="h-[52px] pr-4 pl-11 text-[17px]"
               editable={field.canSearch}
               placeholder={text(
                 field.canSearch
@@ -191,9 +196,9 @@ export function ProductStep({
                 {text("groceries.picker.byHandPrice")}
               </Text>
               <TextField isInvalid={field.priceInvalid}>
-                <Input
+                <SheetInput
                   accessibilityLabel={text("groceries.picker.byHandPrice")}
-                  className="h-[52px] rounded-[18px] px-4 text-[17px]"
+                  className="h-[52px] text-[17px]"
                   keyboardType="decimal-pad"
                   placeholder="0.00"
                   testID="product-price"
@@ -207,10 +212,10 @@ export function ProductStep({
                 {text("groceries.picker.byHandCurrency")}
               </Text>
               <TextField isInvalid={field.currencyInvalid}>
-                <Input
+                <SheetInput
                   accessibilityLabel={text("groceries.picker.byHandCurrency")}
                   autoCapitalize="characters"
-                  className="h-[52px] rounded-[18px] px-4 text-[17px]"
+                  className="h-[52px] text-[17px]"
                   maxLength={3}
                   placeholder={field.suggestedCurrency}
                   testID="product-currency"
@@ -230,7 +235,7 @@ export function ProductStep({
             )}
           </Text>
         ) : null}
-      </SheetScrollView>
+      </SheetBody>
     </Sheet>
   );
 }

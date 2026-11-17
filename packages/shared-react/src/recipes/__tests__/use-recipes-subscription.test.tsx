@@ -264,6 +264,30 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(invalidateQueries).not.toHaveBeenCalled();
   });
 
+  it("shows a photo another member added, once however often it is announced", () => {
+    const photo = { id: "image-1", image: "/recipes/recipe-1/a.jpg", order: 0, version: 1 };
+    const withPhoto = fullRecipe({ images: [photo] } as Partial<FullRecipeDTO>);
+
+    emit("onUpdated", { recipe: withPhoto });
+    emit("onUpdated", { recipe: withPhoto });
+
+    expect(queryClient.getQueryData(detailKey("recipe-1"))).toEqual(withPhoto);
+    expect(
+      (queryClient.getQueryData(LIST_KEY) as { pages: { recipes: RecipeDashboardDTO[] }[] })
+        .pages[0]?.recipes
+    ).toEqual([expect.objectContaining({ id: "recipe-1", image: photo.image })]);
+  });
+
+  it("keeps the photo a client already has from its own upload, unchanged", () => {
+    const photo = { id: "image-1", image: "/recipes/recipe-1/a.jpg", order: 0, version: 1 };
+    const withPhoto = fullRecipe({ images: [photo] } as Partial<FullRecipeDTO>);
+
+    queryClient.setQueryData(detailKey("recipe-1"), withPhoto);
+    emit("onUpdated", { recipe: fullRecipe({ images: [{ ...photo }] } as Partial<FullRecipeDTO>) });
+
+    expect(queryClient.getQueryData<FullRecipeDTO>(detailKey("recipe-1"))?.images).toEqual([photo]);
+  });
+
   it("rereads only the Categories for an update that is not an enrichment", () => {
     const calendarKey = [
       ["calendar", "listItems"],

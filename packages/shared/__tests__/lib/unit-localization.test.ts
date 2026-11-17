@@ -335,6 +335,18 @@ describe("createUnitFormatter", () => {
     expect(formatAmountUnit(500, "gram")).toBe("500 grams");
   });
 
+  it("keeps the space before a short unit when spaced", () => {
+    const abbreviated = createUnitFormatter({
+      locale: "en",
+      units: unitsConfig,
+      unitStyle: "abbreviated",
+    });
+
+    expect(abbreviated.formatSpacedAmountUnit(500, "gram")).toBe("500 g");
+    expect(abbreviated.formatSpacedAmountUnit(3, null)).toBe("3\u00D7");
+    expect(abbreviated.formatSpacedAmountUnit(null, "gram")).toBe("g");
+  });
+
   it("reads a unitless amount as a count, and shows a unit with no amount alone", () => {
     expect(formatAmountUnit(3, null)).toBe("3\u00D7");
     expect(formatAmountUnit(0, null)).toBe("0\u00D7");

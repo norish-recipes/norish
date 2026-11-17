@@ -1,0 +1,85 @@
+# Cooks a recipe in cook mode: Cook opens it on the first step, a step's timer starts from its chip and
+# shows in the pill, Next pages the steps, and Done on the last one leaves for the recipe's page.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Cook Along Soup", "key": "soup", "steps": ["Chop the onions.", "Simmer for 10 minutes.", "Serve warm."]}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 20000
+- tapOn:
+    id: recipe-card-${output.soup}
+- extendedWaitUntil:
+    visible:
+      id: cook-recipe
+    timeout: 20000
+- tapOn:
+    id: cook-recipe
+- extendedWaitUntil:
+    visible:
+      id: cook-mode
+    timeout: 20000
+- assertVisible: 1 / 3
+- assertVisible: Chop the onions.*
+# Next pages to the step with the timer.
+- tapOn:
+    id: cook-next
+- extendedWaitUntil:
+    visible: 2 / 3
+    timeout: 20000
+- assertVisible: Simmer for .*
+- tapOn:
+    id: timer-chip-1-0
+# The first timer asks for notification permission; the prompt is the system's, so it is tapped by its label.
+- tapOn:
+    text: Allow
+    optional: true
+# A running timer is what the pill shows: its list opens with the row.
+- tapOn:
+    id: cook-timers
+- extendedWaitUntil:
+    visible:
+      id: timer-list
+    timeout: 20000
+- assertVisible:
+    id: timer-row-.*
+- tapOn:
+    id: timer-list-scrim
+    point: 50%,15%
+- extendedWaitUntil:
+    notVisible:
+      id: timer-list
+    timeout: 20000
+# Previous goes back a step, Next on to the last.
+- tapOn:
+    id: cook-previous
+- extendedWaitUntil:
+    visible: 1 / 3
+    timeout: 20000
+- tapOn:
+    id: cook-next
+- extendedWaitUntil:
+    visible: 2 / 3
+    timeout: 20000
+- tapOn:
+    id: cook-next
+- extendedWaitUntil:
+    visible: 3 / 3
+    timeout: 20000
+- assertVisible: Serve warm.*
+# On the last step Next reads Done.
+- assertVisible:
+    id: cook-next
+    text: Done
+- tapOn:
+    id: cook-next
+- extendedWaitUntil:
+    notVisible:
+      id: cook-mode
+    timeout: 20000
+- assertVisible:
+    id: recipe-name
+    text: Cook Along Soup

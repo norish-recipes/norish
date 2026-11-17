@@ -4,9 +4,7 @@ import { Text, View } from "react-native";
 import { ServingsStepper } from "@/components/servings-stepper";
 import { Sheet, SheetRow, SheetScrollView } from "@/components/sheet";
 import { groceriesStartServings } from "@/lib/add-to-groceries";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Spinner, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { GroceryLineControls, ScaledFood } from "@norish/shared-react/groceries";
@@ -61,38 +59,6 @@ function LinesSkeleton() {
   );
 }
 
-/** The Add button: pressable only when given `onPress`, busy while the lines go on the list. */
-function AddButton({
-  count,
-  busy = false,
-  onPress,
-}: {
-  count: number;
-  busy?: boolean;
-  onPress?: () => void;
-}) {
-  const intl = useIntl();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-  const disabled = !onPress || busy;
-
-  return (
-    <Button
-      accessibilityLabel={busy ? intl.formatMessage({ id: "groceries.panel.adding" }) : undefined}
-      accessibilityState={{ disabled, busy }}
-      className="h-[50px] rounded-full"
-      isDisabled={disabled}
-      testID="add-to-groceries-add"
-      variant="primary"
-      onPress={onPress}
-    >
-      {busy ? <Spinner size="sm" /> : <Ionicons color={accentForeground} name="add" size={20} />}
-      <Button.Label className="text-base font-semibold">
-        {intl.formatMessage({ id: "groceries.panel.addCount" }, { count })}
-      </Button.Label>
-    </Button>
-  );
-}
-
 /** One section of the sheet: a heading with its select-all, then its lines. */
 function LineSection({
   lines,
@@ -110,7 +76,7 @@ function LineSection({
   controls: GroceryLineControls<ScaledFood>;
 }) {
   const intl = useIntl();
-  const { formatAmountUnit } = useUnitFormatter(intl.locale);
+  const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
 
   return (
     <GroceryLinesSection
@@ -128,7 +94,7 @@ function LineSection({
       {lines.map((item, index) => (
         <GroceryLineRow
           key={item.id}
-          amount={formatAmountUnit(item.amount, item.unit)}
+          amount={formatSpacedAmountUnit(item.amount, item.unit)}
           canKeep={controls.canKeep(item)}
           first={index === 0}
           name={item.ingredientName}
@@ -173,17 +139,14 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
 
   return (
     <Sheet
-      actions={
-        <AddButton
-          busy={isAdding}
-          count={ticked}
-          onPress={
-            loading || ticked === 0
-              ? undefined
-              : () => void addTicked().then((added) => added && router.back())
-          }
-        />
-      }
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.add" }),
+        disabled: isAdding,
+        onPress:
+          loading || ticked === 0
+            ? undefined
+            : () => void addTicked().then((added) => added && router.back()),
+      }}
       name="add-to-groceries"
       subtitle={recipe.name}
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
@@ -252,7 +215,7 @@ export function AddToGroceriesScreen() {
     <GroceriesSheet key={recipe.id} recipe={recipe} />
   ) : (
     <Sheet
-      actions={<AddButton count={0} />}
+      confirm={{ label: intl.formatMessage({ id: "common.actions.add" }) }}
       name="add-to-groceries"
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >

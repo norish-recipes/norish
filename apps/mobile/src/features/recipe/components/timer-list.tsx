@@ -1,28 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { GlassSurface } from "@/components/glass";
+import { TimerRing } from "@/components/timer-ring";
+import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { Timer } from "@norish/shared-react/recipes/timers";
-import { timerAdjustStep, useTimerStore } from "@norish/shared-react/recipes/timers";
+import { sortTimers, timerAdjustStep, useTimerStore } from "@norish/shared-react/recipes/timers";
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
-import { TimerRing } from "./timer-ring";
+import { toggleTimer } from "../utils/toggle-timer";
 import { useTint } from "./tint";
-
-/** Finished timers first, to be dealt with, then the soonest to finish; as web's dock sorts them. */
-export function sortTimers(timers: readonly Timer[]): Timer[] {
-  return [...timers].sort((a, b) => {
-    if (a.status === "completed" && b.status !== "completed") return -1;
-    if (b.status === "completed" && a.status !== "completed") return 1;
-
-    return a.remainingMs - b.remainingMs;
-  });
-}
 
 function RoundAction({
   icon,
@@ -54,8 +45,6 @@ function RoundAction({
 
 function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
   const intl = useIntl();
-  const startTimer = useTimerStore((state) => state.startTimer);
-  const pauseTimer = useTimerStore((state) => state.pauseTimer);
   const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
   const adjustTimer = useTimerStore((state) => state.adjustTimer);
@@ -66,7 +55,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
 
   return (
     <View
-      className={`flex-row items-center gap-2 py-2.5 pr-2.5 pl-3.5 ${first ? "" : "border-separator border-t"}`}
+      className={`flex-row items-center gap-1.5 py-2.5 pr-2 pl-3 ${first ? "" : "border-separator border-t"}`}
       testID={`timer-row-${timer.id}`}
     >
       <View className="w-[30px] items-center">
@@ -88,7 +77,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
           {timer.label}
         </Text>
         {timer.recipeName ? (
-          <Text className="text-muted text-[13px]" numberOfLines={1}>
+          <Text className="text-muted text-[13px]" numberOfLines={2}>
             {timer.recipeName}
           </Text>
         ) : null}
@@ -105,7 +94,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
           label={intl.formatMessage({ id: "recipes.cookMode.restartTimer" })}
           onPress={() => {
             resetTimer(timer.id);
-            startTimer(timer.id);
+            toggleTimer(timer.id, false);
           }}
         />
       ) : (
@@ -131,9 +120,7 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
               },
               { time: formatTimerMs(timer.remainingMs) }
             )}
-            onPress={() =>
-              timer.status === "running" ? pauseTimer(timer.id) : startTimer(timer.id)
-            }
+            onPress={() => toggleTimer(timer.id, timer.status === "running")}
           />
         </>
       )}
@@ -161,48 +148,52 @@ function useNotificationsRefused(): boolean {
   return refused;
 }
 
-/** The clock pill's popover: every timer on the device, with pause, adjust, restart and dismiss. */
-export function TimerList({ bottom, onClose }: { bottom: number; onClose: () => void }) {
+/** Every timer on the device, with pause, adjust, restart and dismiss; `onEmpty` when the last goes. */
+export function AllTimers({ onEmpty }: { onEmpty: () => void }) {
   const intl = useIntl();
   const timers = sortTimers(useTimerStore((state) => state.timers));
   const refused = useNotificationsRefused();
 
+  // An event, so a caller's new function each render doesn't re-run the effect and close twice.
+  const empty = useEffectEvent(onEmpty);
+
   useEffect(() => {
-    if (timers.length === 0) onClose();
-  }, [timers.length, onClose]);
+    if (timers.length === 0) empty();
+  }, [timers.length]);
 
   return (
     <>
-      <Animated.View
-        className="absolute inset-0"
-        entering={FadeIn.duration(150)}
-        exiting={FadeOut.duration(150)}
-      >
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
-          className="flex-1 bg-black/10"
-          testID="timer-list-scrim"
-          onPress={onClose}
-        />
-      </Animated.View>
-      <Animated.View
-        accessibilityLabel={intl.formatMessage({ id: "recipes.cookMode.timers" })}
-        className="absolute right-5 left-5 overflow-hidden rounded-[26px] py-1"
-        entering={FadeIn.duration(180)}
-        exiting={FadeOut.duration(150)}
-        style={{ bottom }}
-        testID="timer-list"
-      >
-        <GlassSurface radius={26} />
-        {timers.map((timer, index) => (
-          <TimerRow key={timer.id} first={index === 0} timer={timer} />
-        ))}
-        {refused ? (
-          <Text className="text-muted border-separator border-t px-4 py-2.5 text-[13px]">
-            {intl.formatMessage({ id: "recipes.cookMode.notificationsOff" })}
-          </Text>
-        ) : null}
-      </Animated.View>
+      {timers.map((timer, index) => (
+        <TimerRow key={timer.id} first={index === 0} timer={timer} />
+      ))}
+      {refused ? (
+        <Text className="text-muted border-separator border-t px-4 py-2.5 text-[13px]">
+          {intl.formatMessage({ id: "recipes.cookMode.notificationsOff" })}
+        </Text>
+      ) : null}
     </>
+  );
+}
+
+/** The scrim under an open timer pill: a tap anywhere else closes the list. */
+export function TimerScrim({ onClose }: { onClose: () => void }) {
+  const intl = useIntl();
+
+  return (
+    <Animated.View
+      className="absolute inset-0"
+      entering={FadeIn.duration(150)}
+      exiting={FadeOut.duration(150)}
+    >
+      <Pressable
+        accessibilityLabel={intl.formatMessage({ id: "common.actions.close" })}
+        className="flex-1 bg-black/10"
+        testID="timer-list-scrim"
+        onPress={() => {
+          lightImpact();
+          onClose();
+        }}
+      />
+    </Animated.View>
   );
 }

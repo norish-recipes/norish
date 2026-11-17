@@ -106,11 +106,14 @@ export function RowIconButton({
   icon,
   label,
   testID,
+  soft = false,
   onPress,
 }: {
   icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
   testID?: string;
+  /** Sits on a soft circle, as the step photo button does. */
+  soft?: boolean;
   onPress: () => void;
 }) {
   const [muted] = useThemeColor(["muted"] as const);
@@ -119,12 +122,12 @@ export function RowIconButton({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="size-8 items-center justify-center"
+      className={`size-8 items-center justify-center ${soft ? "bg-default rounded-full" : ""}`}
       hitSlop={6}
       testID={testID}
       onPress={onPress}
     >
-      <Ionicons color={muted} name={icon} size={18} />
+      <Ionicons color={muted} name={icon} size={soft ? 16 : 18} />
     </Pressable>
   );
 }

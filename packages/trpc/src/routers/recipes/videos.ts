@@ -14,10 +14,11 @@ import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
+import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, mediaRecipeId } from "./helpers";
+import { announceRecipeUpdated, assertRecipeAccess, createSettled, mediaRecipeId } from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -76,6 +77,8 @@ const uploadGalleryVideo = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
+    // A create of this id still running links the file once it is stored.
+    await createSettled(recipeId);
     // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
     await assertRecipeAccess(ctx, recipeId, "edit");
 
@@ -124,6 +127,8 @@ const uploadGalleryVideo = authedProcedure
         }
 
         const versionedVideoRecord = videoRecord as typeof videoRecord & { version: number };
+
+        await afterCommit(ctx, "announcing the recipe", () => announceRecipeUpdated(ctx, recipeId));
 
         log.info(
           { userId: ctx.user.id, recipeId, url: savedVideo.video, videoId: videoRecord.id },
@@ -181,18 +186,6 @@ const deleteGalleryVideo = authedProcedure
     await assertRecipeAccess(ctx, videoRecord.recipeId, "edit");
 
     try {
-      // Delete from filesystem
-      try {
-        await deleteVideoByUrl(videoRecord.video);
-      } catch (fsError) {
-        // Log but don't fail - file might already be deleted
-        log.warn(
-          { userId: ctx.user.id, videoId: input.videoId, error: fsError },
-          "Could not delete gallery video file"
-        );
-      }
-
-      // Delete from database
       const result = await deleteRecipeVideoById(input.videoId, input.version);
 
       if (result.stale) {
@@ -203,6 +196,21 @@ const deleteGalleryVideo = authedProcedure
 
         return { success: true, stale: true };
       }
+
+      // The row goes first: a stale delete removes nothing, the file included.
+      try {
+        await deleteVideoByUrl(videoRecord.video);
+      } catch (fsError) {
+        // Log but don't fail - file might already be deleted
+        log.warn(
+          { userId: ctx.user.id, videoId: input.videoId, error: fsError },
+          "Could not delete gallery video file"
+        );
+      }
+
+      await afterCommit(ctx, "announcing the recipe", () =>
+        announceRecipeUpdated(ctx, videoRecord.recipeId)
+      );
 
       log.info(
         { userId: ctx.user.id, videoId: input.videoId, url: videoRecord.video },

@@ -13,16 +13,22 @@ appId: dev.norish.app
 - tapOn:
     id: library-lens-cookbooks
 - tapOn:
-    id: library-new-cookbook
+    id: add-cookbook
 - extendedWaitUntil:
     visible:
       id: new-cookbook-title
     timeout: 20000
 - inputText: Weeknight Dinners
+- hideKeyboard
+- waitForAnimationToEnd
 - tapOn:
     id: cookbook-add-recipes-row-${output.soup}
-- tapOn:
-    id: new-cookbook-submit
+# A tap that never landed fails here, not as an empty cookbook later; iOS gives the state as text.
+- assertVisible:
+    id: cookbook-add-recipes-row-${output.soup}
+    text: "checkbox, checked"
+# Create is the sheet's native header item, which has no id.
+- tapOn: Create
 # The new cookbook is on the Cookbooks lens and opens with its one recipe.
 - extendedWaitUntil:
     visible: Weeknight Dinners
@@ -46,8 +52,7 @@ appId: dev.norish.app
     timeout: 20000
 - tapOn:
     id: cookbook-add-recipes-row-${output.tart}
-- tapOn:
-    id: cookbook-add-recipes-add
+- tapOn: Add 1 recipe
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.tart}

@@ -1,9 +1,8 @@
-import type { ComponentProps, ReactElement } from "react";
+import type { HeaderConfirm } from "@/components/modal-header";
+import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
 import { Sheet, SheetList } from "@/components/sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
 
 import type { PickRowPosition } from "./pick-row";
 import { PickRowSkeleton } from "./pick-row";
@@ -20,10 +19,8 @@ export type PickList<Item> = {
   onEndReached?: () => void;
 };
 
-/**
- * A sheet of things to tick: `header` over the rows of `list`, the one `action` pinned below,
- * which stays off without an `onPress`. Without a `list` the rows are skeletons.
- */
+/** A sheet of things to tick: `header` over `list`'s rows, `action` as the header's confirm
+ * (off without an `onPress`). Without a `list` the rows are skeletons. */
 export function PickSheet<Item>({
   name,
   title,
@@ -38,34 +35,12 @@ export function PickSheet<Item>({
   subtitle?: string;
   header: ReactElement;
   list?: PickList<Item>;
-  action: {
-    label: string;
-    icon: ComponentProps<typeof Ionicons>["name"];
-    testID: string;
-    onPress?: () => void;
-  };
+  action: HeaderConfirm;
 }) {
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
   const items = list?.items ?? [];
 
   return (
-    <Sheet
-      actions={
-        <Button
-          className="h-[50px] rounded-full"
-          isDisabled={!action.onPress}
-          testID={action.testID}
-          variant="primary"
-          onPress={action.onPress}
-        >
-          <Ionicons color={accentForeground} name={action.icon} size={20} />
-          <Button.Label className="text-base font-semibold">{action.label}</Button.Label>
-        </Button>
-      }
-      name={name}
-      subtitle={subtitle}
-      title={title}
-    >
+    <Sheet confirm={action} name={name} subtitle={subtitle} title={title}>
       <SheetList
         ListEmptyComponent={
           list ? (

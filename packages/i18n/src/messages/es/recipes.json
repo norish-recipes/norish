@@ -111,7 +111,8 @@
     "cookbooks": "Libros de cocina",
     "favourite": "Favorito",
     "unfavourite": "Quitar de favoritos",
-    "ai": "IA"
+    "ai": "IA",
+    "shareLink": "Compartir enlace"
   },
   "sharePanel": {
     "title": "Compartir receta",
@@ -155,7 +156,14 @@
       "title": "Eliminar enlace",
       "message": "¿Eliminar este enlace para compartir {recipeName}? Esta acción no se puede deshacer.",
       "confirm": "Eliminar enlace"
-    }
+    },
+    "subtitle": "Enlaces públicos de {recipeName}",
+    "expiresAfter": "Expira después de",
+    "expiresOn": "Expira el {date}",
+    "expiredOn": "Expiró el {date}",
+    "lastOpenedOn": "Último acceso {date}",
+    "neverExpires": "No expira nunca",
+    "linkCreated": "Creado el {date}"
   },
   "convert": {
     "ariaLabel": "Cambiar sistema de medidas",
@@ -281,7 +289,9 @@
     "householdNumbers": "los valores de tu hogar",
     "decreasePortions": "Menos raciones",
     "increasePortions": "Más raciones",
-    "portions": "{count, plural, one {# ración} other {# raciones}}"
+    "portions": "{count, plural, one {# ración} other {# raciones}}",
+    "percentOfReference": "{percent} % de {amount}",
+    "percentOfDailyReference": "{percent} % de la referencia diaria de {amount}"
   },
   "measurementSystem": {
     "label": "Sistema de medidas",
@@ -364,7 +374,9 @@
     "restartTimer": "Reiniciar el temporizador",
     "notificationsOff": "Las notificaciones de Norish están desactivadas, así que los temporizadores solo suenan con la app abierta.",
     "decreaseTimer": "Quitar {time}",
-    "increaseTimer": "Añadir {time}"
+    "increaseTimer": "Añadir {time}",
+    "timersLeft": "Temporizadores, quedan {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# hora } other {# horas }}{minutes, plural, =0 {} one {# minuto } other {# minutos }}{seconds, plural, =0 {} one {# segundo } other {# segundos }}"
   },
   "enrichment": {
     "failed": "El enriquecimiento falló",

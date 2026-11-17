@@ -1,10 +1,12 @@
+import type { ComponentProps } from "react";
 import React, { useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
-import { Sheet, SheetScrollView } from "@/components/sheet";
+import { Pressable, Text, View } from "react-native";
+import { Loader } from "@/components/loader";
+import { SheetScrollView } from "@/components/sheet";
 import { useServerUrl } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
-import { Button, Chip, Spinner, useThemeColor } from "heroui-native";
+import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
@@ -15,166 +17,243 @@ import {
   useRecipeSharesQuery,
 } from "@norish/shared-react/recipes";
 
+import { RecipeSheetGate } from "../components/recipe-sheet-gate";
+import { shareSubtitle } from "../utils/share-row";
+
 type Expiry = CreateRecipeShareInputDto["expiresIn"];
 
 const EXPIRIES: Expiry[] = ["1day", "1week", "1month", "1year", "forever"];
 const STATUS_COLOR = { active: "success", expired: "warning", revoked: "default" } as const;
+const LABEL = "text-muted text-xs font-semibold tracking-[0.6px] uppercase";
 
-/** Public links for the recipe: pick when one expires, create it, copy it, and manage the others. */
-export function RecipeShareScreen() {
+/** The link made this visit: the one share whose URL the server still gives. */
+type MadeLink = { id: string; url: string };
+
+type ShareT = (id: string, values?: Record<string, string | number>) => string;
+
+const useShareT = (): ShareT => {
   const intl = useIntl();
-  const { toast } = usePlatform();
+
+  return (id, values) => intl.formatMessage({ id: `recipes.sharePanel.${id}` }, values);
+};
+
+/** The sheet's pinned Create link: it makes the link and hands the new URL up. */
+function CreateLinkButton({
+  expiresIn,
+  onCreated,
+}: {
+  expiresIn: Expiry;
+  onCreated: (link: MadeLink) => void;
+}) {
+  const t = useShareT();
   const toUrl = useServerUrl();
   const recipe = useLoadedPageRecipe();
-  const { shares, isLoading } = useRecipeSharesQuery(recipe.id);
-  const { createShare, isCreating, revokeShare, reactivateShare, deleteShare } =
-    useRecipeShareMutations(recipe.id);
-  const [expiresIn, setExpiresIn] = useState<Expiry>("forever");
-  const [latest, setLatest] = useState<string | null>(null);
-  const [accentForeground, foreground, muted] = useThemeColor([
-    "accent-foreground",
-    "foreground",
-    "muted",
-  ] as const);
-  const t = (id: string, values?: Record<string, string | number>) =>
-    intl.formatMessage({ id: `recipes.sharePanel.${id}` }, values);
-  const date = (value: Date | null) =>
-    value ? new Date(value).toLocaleString(intl.locale) : t("never");
-  const rows = shares.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-  const create = async () => {
-    const share = await createShare(expiresIn);
-
-    if (share) setLatest(toUrl(share.url));
-  };
-  const copy = async () => {
-    if (!latest) return;
-    await Clipboard.setStringAsync(latest);
-    toast.show({ severity: "success", title: t("copySuccess") });
-  };
+  const { createShare, isCreating } = useRecipeShareMutations(recipe.id);
+  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
 
   return (
-    <Sheet
-      actions={
-        <Button
-          className="h-12"
-          isDisabled={isCreating}
-          testID="recipe-share-create"
-          variant="primary"
-          onPress={() => void create()}
-        >
-          {isCreating ? <Spinner /> : <Ionicons color={accentForeground} name="link" size={18} />}
-          <Button.Label className="font-semibold">{t("createLink")}</Button.Label>
-        </Button>
+    <Button
+      accessibilityLabel={t("createLink")}
+      className="h-12"
+      isDisabled={isCreating}
+      testID="recipe-share-create"
+      variant="primary"
+      onPress={() =>
+        void createShare(expiresIn).then(
+          (share) => share && onCreated({ id: share.id, url: toUrl(share.url) })
+        )
       }
+    >
+      {isCreating ? (
+        <Loader color={accentForeground} />
+      ) : (
+        <Ionicons color={accentForeground} name="link" size={18} />
+      )}
+      <Button.Label className="font-semibold">{t("createLink")}</Button.Label>
+    </Button>
+  );
+}
+
+/** One link: its URL where this visit made it, its status, when it ends, and what it can do. */
+function ShareRow({
+  share,
+  url,
+  first,
+}: {
+  share: ReturnType<typeof useRecipeSharesQuery>["shares"][number];
+  url: string | null;
+  first: boolean;
+}) {
+  const intl = useIntl();
+  const { toast } = usePlatform();
+  const recipe = useLoadedPageRecipe();
+  const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(recipe.id);
+  const [foreground, danger] = useThemeColor(["foreground", "danger"] as const);
+  const t = useShareT();
+  const date = (value: Date) => intl.formatDate(value, { month: "short", day: "numeric" });
+  const copy = async () => {
+    if (!url) return;
+    await Clipboard.setStringAsync(url);
+    toast.show({ severity: "success", title: t("copySuccess") });
+  };
+  const round = (
+    label: string,
+    icon: ComponentProps<typeof Ionicons>["name"],
+    onPress: () => void,
+    color = foreground
+  ) => (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      className="bg-default size-11 items-center justify-center rounded-full"
+      onPress={onPress}
+    >
+      <Ionicons color={color} name={icon} size={20} />
+    </Pressable>
+  );
+
+  return (
+    <View
+      className={`flex-row items-center gap-2 py-3 pr-3 pl-4 ${first ? "" : "border-separator border-t"}`}
+      testID={`recipe-share-${share.id}`}
+    >
+      <View className="min-w-0 flex-1 gap-0.5">
+        <View className="flex-row items-center gap-2">
+          <Text
+            selectable
+            className="text-foreground shrink text-base font-medium"
+            numberOfLines={1}
+            testID={url ? "recipe-share-url" : undefined}
+          >
+            {url
+              ? url.replace(/^https?:\/\//, "")
+              : t("linkCreated", { date: date(share.createdAt) })}
+          </Text>
+          <Chip color={STATUS_COLOR[share.status]} size="sm" variant="soft">
+            <Chip.Label>{t(`status.${share.status}`)}</Chip.Label>
+          </Chip>
+        </View>
+        <Text className="text-muted text-[13px]" numberOfLines={1}>
+          {shareSubtitle(share, t, date)}
+        </Text>
+      </View>
+      {url ? round(t("copyLink"), "copy-outline", () => void copy()) : null}
+      {share.status === "active"
+        ? round(t("revokeModal.confirm"), "pause-outline", () =>
+            revokeShare(share.id, share.version)
+          )
+        : null}
+      {share.status === "revoked"
+        ? round(t("reactivateModal.confirm"), "play-outline", () =>
+            reactivateShare(share.id, share.version)
+          )
+        : null}
+      {share.status === "active"
+        ? null
+        : round(
+            t("deleteModal.confirm"),
+            "trash-outline",
+            () => deleteShare(share.id, share.version),
+            danger
+          )}
+    </View>
+  );
+}
+
+/** Public links for the recipe: pick when one expires, then manage the links made so far. */
+function ShareBody({
+  expiresIn,
+  setExpiresIn,
+  latest,
+}: {
+  expiresIn: Expiry;
+  setExpiresIn: (expiry: Expiry) => void;
+  latest: MadeLink | null;
+}) {
+  const recipe = useLoadedPageRecipe();
+  const { shares, isLoading } = useRecipeSharesQuery(recipe.id);
+  const t = useShareT();
+  const rows = shares.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  return (
+    <SheetScrollView contentClassName="gap-4">
+      <View className="gap-2">
+        <Text className={`${LABEL} px-1`}>{t("expiresAfter")}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          {EXPIRIES.map((expiry) => (
+            <Pressable
+              key={expiry}
+              accessibilityRole="button"
+              accessibilityState={{ selected: expiresIn === expiry }}
+              className={`h-10 items-center justify-center rounded-full px-4 ${expiresIn === expiry ? "bg-accent" : "bg-surface"}`}
+              testID={`recipe-share-expiry-${expiry}`}
+              onPress={() => setExpiresIn(expiry)}
+            >
+              <Text
+                className={`text-sm font-medium ${expiresIn === expiry ? "text-accent-foreground" : "text-foreground"}`}
+              >
+                {t(`expiryOptions.${expiry}`)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <Text className={`${LABEL} px-1`}>{t("currentLinks")}</Text>
+      {isLoading ? (
+        <ShareRowsSkeleton />
+      ) : rows.length === 0 ? (
+        <Text className="text-muted text-sm">{t("empty")}</Text>
+      ) : (
+        <View className="bg-surface overflow-hidden rounded-[22px]">
+          {rows.map((share, index) => (
+            <ShareRow
+              key={share.id}
+              first={index === 0}
+              share={share}
+              url={latest?.id === share.id ? latest.url : null}
+            />
+          ))}
+        </View>
+      )}
+    </SheetScrollView>
+  );
+}
+
+/** Two link rows' worth of placeholders, in the rows' own layout. */
+function ShareRowsSkeleton() {
+  return (
+    <View className="bg-surface overflow-hidden rounded-[22px]">
+      {[0, 1].map((row) => (
+        <View
+          key={row}
+          className={`flex-row items-center gap-3 py-3 pr-3 pl-4 ${row === 0 ? "" : "border-separator border-t"}`}
+          testID="recipe-share-skeleton"
+        >
+          <View className="min-w-0 flex-1 gap-1.5">
+            <Skeleton className="h-5 w-44 rounded-md" />
+            <Skeleton className="h-4 w-40 rounded-md" />
+          </View>
+          <Skeleton className="size-11 rounded-full" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function RecipeShareScreen() {
+  const t = useShareT();
+  const [expiresIn, setExpiresIn] = useState<Expiry>("forever");
+  const [latest, setLatest] = useState<MadeLink | null>(null);
+
+  return (
+    <RecipeSheetGate
+      actions={<CreateLinkButton expiresIn={expiresIn} onCreated={setLatest} />}
       name="recipe-share"
-      subtitle={recipe.name}
+      subtitle={(recipeName) => t("subtitle", { recipeName })}
       title={t("title")}
     >
-      <SheetScrollView contentClassName="gap-4">
-        <View className="gap-2">
-          <Text className="text-muted text-sm font-medium">{t("expiryLabel")}</Text>
-          <View className="flex-row flex-wrap gap-2">
-            {EXPIRIES.map((expiry) => (
-              <Pressable
-                key={expiry}
-                accessibilityRole="button"
-                accessibilityState={{ selected: expiresIn === expiry }}
-                className={`h-10 items-center justify-center rounded-full px-4 ${expiresIn === expiry ? "bg-accent" : "bg-default"}`}
-                testID={`recipe-share-expiry-${expiry}`}
-                onPress={() => setExpiresIn(expiry)}
-              >
-                <Text
-                  className={`text-sm font-medium ${expiresIn === expiry ? "text-accent-foreground" : "text-foreground"}`}
-                >
-                  {t(`expiryOptions.${expiry}`)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {latest ? (
-          <View className="bg-surface gap-2 rounded-2xl p-3.5" testID="recipe-share-latest">
-            <Text className="text-foreground text-sm font-medium">{t("latestLink")}</Text>
-            <Text selectable className="text-muted text-sm" numberOfLines={1}>
-              {latest}
-            </Text>
-            <View className="flex-row gap-2">
-              <Button size="sm" variant="tertiary" onPress={() => void copy()}>
-                <Ionicons color={foreground} name="copy-outline" size={16} />
-                <Button.Label>{t("copyLink")}</Button.Label>
-              </Button>
-              <Button size="sm" variant="tertiary" onPress={() => void Linking.openURL(latest)}>
-                <Ionicons color={foreground} name="open-outline" size={16} />
-                <Button.Label>{t("openLink")}</Button.Label>
-              </Button>
-            </View>
-          </View>
-        ) : null}
-
-        <Text className="text-foreground text-sm font-semibold">{t("currentLinks")}</Text>
-        {isLoading ? (
-          <Spinner />
-        ) : rows.length === 0 ? (
-          <Text className="text-muted text-sm">{t("empty")}</Text>
-        ) : (
-          rows.map((share) => (
-            <View
-              key={share.id}
-              className="bg-surface flex-row items-start gap-3 rounded-2xl p-3.5"
-              testID={`recipe-share-${share.id}`}
-            >
-              <View className="min-w-0 flex-1 gap-1">
-                <Chip color={STATUS_COLOR[share.status]} size="sm" variant="soft">
-                  <Chip.Label>{t(`status.${share.status}`)}</Chip.Label>
-                </Chip>
-                <Text className="text-muted text-xs">
-                  {t("createdAt", { value: date(share.createdAt) })}
-                </Text>
-                <Text className="text-muted text-xs">
-                  {t("expiresAt", { value: date(share.expiresAt) })}
-                </Text>
-                {share.lastAccessedAt ? (
-                  <Text className="text-muted text-xs">
-                    {t("lastAccessedAt", { value: date(share.lastAccessedAt) })}
-                  </Text>
-                ) : null}
-              </View>
-              <View className="flex-row gap-1">
-                {share.status === "active" ? (
-                  <Pressable
-                    accessibilityLabel={t("revokeModal.confirm")}
-                    accessibilityRole="button"
-                    className="size-9 items-center justify-center"
-                    onPress={() => revokeShare(share.id, share.version)}
-                  >
-                    <Ionicons color={muted} name="pause-outline" size={20} />
-                  </Pressable>
-                ) : null}
-                {share.status === "revoked" ? (
-                  <Pressable
-                    accessibilityLabel={t("reactivateModal.confirm")}
-                    accessibilityRole="button"
-                    className="size-9 items-center justify-center"
-                    onPress={() => reactivateShare(share.id, share.version)}
-                  >
-                    <Ionicons color={muted} name="play-outline" size={20} />
-                  </Pressable>
-                ) : null}
-                <Pressable
-                  accessibilityLabel={t("deleteModal.confirm")}
-                  accessibilityRole="button"
-                  className="size-9 items-center justify-center"
-                  onPress={() => deleteShare(share.id, share.version)}
-                >
-                  <Ionicons color={muted} name="trash-outline" size={20} />
-                </Pressable>
-              </View>
-            </View>
-          ))
-        )}
-      </SheetScrollView>
-    </Sheet>
+      <ShareBody expiresIn={expiresIn} latest={latest} setExpiresIn={setExpiresIn} />
+    </RecipeSheetGate>
   );
 }

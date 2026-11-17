@@ -5,7 +5,9 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import type { TimelineHeading, TimelineItem, TimelineRow } from "../utils/timeline-rows";
 import {
   dayRowKey,
+  hiddenAbove,
   itemHeight,
+  openingOffset,
   planTimelineDrop,
   rowDay,
   rowLayout,
@@ -78,6 +80,34 @@ describe("timelineRows", () => {
       "2026-11-12",
       "2026-11-13",
     ]);
+  });
+});
+
+describe("hiddenAbove", () => {
+  it("changes when a row above the first shown day goes, so the list takes it without sliding", () => {
+    const without = timelineRows(days, { ...data, "2026-11-11": [] }, "2026-11-12");
+
+    expect(hiddenAbove(without, "2026-11-12")).not.toBe(hiddenAbove(rows, "2026-11-12"));
+  });
+
+  it("changes when a plan is added above the first shown day, as when one goes", () => {
+    const added = timelineRows(
+      days,
+      { ...data, "2026-11-11": [...data["2026-11-11"], planned("pie", "2026-11-11", "Snack")] },
+      "2026-11-12"
+    );
+
+    expect(hiddenAbove(added, "2026-11-12")).not.toBe(hiddenAbove(rows, "2026-11-12"));
+  });
+
+  it("stays while the shown days and those below change", () => {
+    const later = timelineRows(
+      days,
+      { ...data, "2026-11-13": [planned("pie", "2026-11-13", "Lunch")] },
+      "2026-11-12"
+    );
+
+    expect(hiddenAbove(later, "2026-11-12")).toBe(hiddenAbove(rows, "2026-11-12"));
   });
 });
 
@@ -157,5 +187,20 @@ describe("planTimelineDrop", () => {
 
   it("means nothing for an item that is gone when it lands", () => {
     expect(planTimelineDrop(drop("soup", "day:2026-11-12"), { "2026-11-13": [] })).toBeNull();
+  });
+});
+
+describe("openingOffset", () => {
+  it("puts a day's top `top` points under the list's edge, below the title row", () => {
+    const index = rows.findIndex((row) => row.key === "day:2026-11-12");
+    const { offset } = rowLayout(rows, index);
+
+    expect(openingOffset(rows, index, 1, 116, 74)).toBe(offset + 116 - 74);
+  });
+
+  it("is the same for the same rows however often it is asked, and never negative", () => {
+    expect(openingOffset(rows, 0, 1, 116, 74)).toBe(42);
+    expect(openingOffset(rows, 0, 1, 10, 74)).toBe(0);
+    expect(openingOffset(rows, 3, 1, 116, 74)).toBe(openingOffset(rows, 3, 1, 116, 74));
   });
 });

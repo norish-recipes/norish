@@ -93,6 +93,7 @@
     "unavailable": "Nie udało się odczytać spiżarni. Nic się nie zmieniło; spróbuj ponownie po powrocie do sieci.",
     "fieldLabel": "Znajdź lub dodaj produkt",
     "fieldPlaceholder": "Znajdź lub dodaj, np. oliwa z oliwek",
+    "findPlaceholder": "Znajdź produkt w spiżarni",
     "add": "Dodaj do spiżarni",
     "fromCatalogue": "Dodaj produkt",
     "addFood": "Dodaj {name} do spiżarni",
@@ -134,9 +135,7 @@
     "toBuy": "Do kupienia",
     "inPantry": "W Twojej spiżarni",
     "weKeepThis": "Zawsze to mamy",
-    "keepFailed": "Nie udało się dodać do spiżarni",
-    "addCount": "{count, plural, one {Dodaj # pozycję} few {Dodaj # pozycje} many {Dodaj # pozycji} other {Dodaj # pozycji}}",
-    "adding": "Dodawanie do listy zakupów…"
+    "keepFailed": "Nie udało się dodać do spiżarni"
   },
   "picker": {
     "unlink": "Odłącz produkt",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "policzono jako jedno opakowanie",
     "sale": "Promocja",
-    "regularPrice": "Cena regularna {price}"
+    "regularPrice": "Cena regularna {price}",
+    "each": "za sztukę"
   },
   "mobile": {
     "viewMode": "Widok",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Przenieś pozycje do Nieposortowane",
     "typePrice": "Wpisz cenę samodzielnie",
     "product": "Produkt",
-    "chooseProduct": "Wybierz produkt"
+    "chooseProduct": "Wybierz produkt",
+    "recipeCount": "{count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}"
   }
 }

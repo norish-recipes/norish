@@ -33,11 +33,8 @@ export function useIngredientIcons(ids: readonly (string | null | undefined)[]):
   });
 }
 
-/**
- * One food's icon address from a surface's own read, else the newest earlier one that answered it,
- * so an icon keeps the previous read's while a changed set is read; undefined until one answers it.
- */
-export function useIngredientIconAddress(ingredientId: string): string | null | undefined {
+/** Reads the icon answers cached by every surface: one food's address, newest and watched first. */
+function useIconAnswers() {
   const trpc = useTRPC();
   const queryCache = useQueryClient().getQueryCache();
   const subscribe = (onChange: () => void) =>
@@ -47,7 +44,7 @@ export function useIngredientIconAddress(ingredientId: string): string | null | 
         if (matchQuery({ queryKey: trpc.ingredients.icons.pathKey() }, query)) onChange();
       })
     );
-  const read = () => {
+  const read = (ingredientId: string) => {
     let address: string | null | undefined;
     let answeredWatched = false;
     let answeredAt = -1;
@@ -72,8 +69,28 @@ export function useIngredientIconAddress(ingredientId: string): string | null | 
     return address;
   };
 
+  return { subscribe, read };
+}
+
+/** One food's icon address from a surface's own read, else the newest earlier read that answered
+ * it, so a changed set keeps the previous icon while it loads; undefined until one answers. */
+export function useIngredientIconAddress(ingredientId: string): string | null | undefined {
+  const { subscribe, read } = useIconAnswers();
+
   // A string or null, so an unchanged address renders nothing.
-  return useSyncExternalStore(subscribe, read, read);
+  return useSyncExternalStore(
+    subscribe,
+    () => read(ingredientId),
+    () => read(ingredientId)
+  );
+}
+
+/** Whether any food of a list has an icon: only then does a food without one keep an empty slot. */
+export function useListHasIcon(ids: readonly (string | null | undefined)[]): boolean {
+  const { subscribe, read } = useIconAnswers();
+  const any = () => ids.some((id) => Boolean(id && read(id)));
+
+  return useSyncExternalStore(subscribe, any, any);
 }
 
 const MISS_STALE_MS = 5 * 60_000;

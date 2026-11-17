@@ -78,6 +78,20 @@ describe("replayOutboxEntry", () => {
     expect(entries[3]?.[1]).toBe("two");
   });
 
+  it("delivers a recipes.create replayed after its answer was lost", async () => {
+    const recipeId = "77777777-7777-4777-8777-777777777777";
+    // The server answers a create whose id it already stored with that id, as the first time.
+    const mutate = vi.fn(async () => recipeId);
+
+    const outcome = await replayOutboxEntry(
+      { recipes: { create: { mutate } } },
+      entry({ path: "recipes.create", input: { id: recipeId, name: "Soup" }, entityId: recipeId }),
+      OUTBOX_REPLAY_HEADER_VALUE
+    );
+
+    expect(outcome).toEqual({ kind: "success" });
+  });
+
   it("maps a stale response to a conflict", async () => {
     const outcome = await replayOutboxEntry(
       clientWith(async () => ({ success: true, stale: true })),

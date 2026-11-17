@@ -3,8 +3,9 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const keep = vi.hoisted(() => vi.fn());
+const successNotification = vi.hoisted(() => vi.fn());
 
-vi.mock("react-native", () => ({ TextInput: () => null }));
+vi.mock("@/lib/haptics", () => ({ successNotification }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
@@ -19,7 +20,6 @@ vi.mock("@norish/shared-react/platform", () => ({
 }));
 vi.mock("@norish/shared-react/ingredients", () => ({
   useIngredientIcons: () => undefined,
-  usePantryCatalogue: () => [],
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
   useOnTheList: () => [],
@@ -32,16 +32,19 @@ vi.mock("@norish/shared-react/groceries", () => ({
 const { usePantryScreen } = await import("../hooks/use-pantry-screen");
 
 describe("the Pantry field", () => {
-  it("takes focus again after a typed add and after a picked food", () => {
+  it("only narrows: it holds the text and adds nothing", () => {
     const { result } = renderHook(() => usePantryScreen());
-    const focus = vi.fn();
 
-    result.current.field.ref.current = { focus } as never;
-    act(() => result.current.field.add());
+    expect(Object.keys(result.current.field)).toEqual(["draft", "setDraft"]);
+    expect(keep).not.toHaveBeenCalled();
+  });
+
+  it("keeps a suggested food from its row", () => {
+    const { result } = renderHook(() => usePantryScreen());
+
     act(() => result.current.actions.keep({ ingredientId: "i1", name: "Olives" }));
 
-    expect(keep).toHaveBeenNthCalledWith(1, "oil");
-    expect(keep).toHaveBeenNthCalledWith(2, { ingredientId: "i1", name: "Olives" });
-    expect(focus).toHaveBeenCalledTimes(2);
+    expect(keep).toHaveBeenCalledWith({ ingredientId: "i1", name: "Olives" });
+    expect(successNotification).toHaveBeenCalledOnce();
   });
 });

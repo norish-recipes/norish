@@ -1,22 +1,25 @@
 import React from "react";
 import { FlatList, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tabListBottomInset } from "@/components/tab-list-inset";
+import { IngredientIconSlots } from "@/components/ingredient-icon";
+import { SheetSearchField } from "@/components/sheet-search-field";
+import { TabListMarker } from "@/components/tab-list-marker";
 import { TitleRow } from "@/components/title-row";
+import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
-import { FindField } from "../components/find-field";
+import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
+
 import { ListSwitch } from "../components/list-switch";
 import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
 import { usePantryScreen } from "../hooks/use-pantry-screen";
 
-/** The Pantry: the foods the household keeps, narrowed and added to from one field. */
+/** The Pantry: the foods the household keeps, narrowed by its field, which only filters. */
 export function PantryScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { rows, actions, field, isRead, isUnavailable } = usePantryScreen();
   const header = (
     <View>
@@ -27,14 +30,13 @@ export function PantryScreen() {
         />
       </TitleRow>
       <View className="px-5 pb-3.5">
-        {/* Drawn while the Pantry loads but taking nothing: a food added then could double one kept. */}
-        <FindField
-          canAdd={field.canAdd}
-          disabled={!isRead}
-          fieldRef={field.ref}
+        <SheetSearchField
+          ring
+          label={intl.formatMessage({ id: "groceries.pantry.findPlaceholder" })}
+          maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
+          testID="pantry-field"
           value={field.draft}
-          onAdd={field.add}
-          onChange={field.setDraft}
+          onChange={isRead ? field.setDraft : undefined}
         />
         {field.draft.trim() === "" ? (
           <Text className="text-muted px-2 pt-2 text-sm">
@@ -46,32 +48,36 @@ export function PantryScreen() {
   );
 
   return (
-    <View className="bg-background flex-1" testID="pantry-screen">
-      <FlatList
-        ListEmptyComponent={
-          isUnavailable ? (
-            <Text className="text-muted px-5 py-6 text-center" testID="pantry-unavailable">
-              {intl.formatMessage({ id: "groceries.pantry.unavailable" })}
-            </Text>
-          ) : (
-            <PantrySkeleton />
-          )
-        }
-        ListHeaderComponent={header}
-        contentContainerStyle={{ paddingBottom: tabListBottomInset(insets.bottom) }}
-        contentInsetAdjustmentBehavior="never"
-        data={isRead ? rows : []}
-        keyExtractor={(row) => row.key}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => <PantryRowView actions={actions} row={item} />}
-        testID="pantry-list"
-      />
-      {/* Rows dissolve into the page colour before the tab bar. */}
-      <View
-        className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
-        pointerEvents="none"
-      />
-    </View>
+    <IngredientIconSlots rows={rows}>
+      <View className="bg-background flex-1" testID="pantry-screen">
+        <TabListMarker>
+          <FlatList
+            ListEmptyComponent={
+              isUnavailable ? (
+                <Text className="text-muted px-5 py-6 text-center" testID="pantry-unavailable">
+                  {intl.formatMessage({ id: "groceries.pantry.unavailable" })}
+                </Text>
+              ) : (
+                <PantrySkeleton />
+              )
+            }
+            ListHeaderComponent={header}
+            contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
+            contentInsetAdjustmentBehavior="never"
+            data={isRead ? rows : []}
+            keyExtractor={(row) => row.key}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => <PantryRowView actions={actions} row={item} />}
+            testID="pantry-list"
+          />
+        </TabListMarker>
+        {/* Rows dissolve into the page colour before the tab bar. */}
+        <View
+          className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
+          pointerEvents="none"
+        />
+      </View>
+    </IngredientIconSlots>
   );
 }

@@ -6,6 +6,7 @@ import type {
 import { useCardActions } from "@/hooks/use-card-actions";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
@@ -39,6 +40,7 @@ const AI_ACTIONS = [
 export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
   const intl = useIntl();
   const router = useRouter();
+  const [danger] = useThemeColor(["danger"] as const);
   const recipe = useLoadedPageRecipe();
   const actions = useCardActions();
   const enrichment = usePageEnrichment();
@@ -75,13 +77,7 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
       ? [
           {
             type: "action" as const,
-            label: label("common.actions.edit"),
-            icon: { type: "sfSymbol" as const, name: "pencil" as const },
-            onPress: () => router.push(recipeRoute(recipe.id, "edit")),
-          },
-          {
-            type: "action" as const,
-            label: label("recipes.actions.share"),
+            label: label("recipes.actions.shareLink"),
             icon: { type: "sfSymbol" as const, name: "link" as const },
             onPress: () => router.push(recipeRoute(recipe.id, "share")),
           },
@@ -105,6 +101,16 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
       icon: { type: "sfSymbol" as const, name: "bag" as const },
       onPress: () => actions.addToGroceries(recipe, servings),
     },
+    ...(canEdit
+      ? [
+          {
+            type: "action" as const,
+            label: label("common.actions.edit"),
+            icon: { type: "sfSymbol" as const, name: "pencil" as const },
+            onPress: () => router.push(recipeRoute(recipe.id, "edit")),
+          },
+        ]
+      : []),
     {
       type: "action" as const,
       label: label(keepAwake ? "recipes.actions.screenOn" : "recipes.actions.keepScreenOn"),
@@ -145,6 +151,7 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
               type: "sfSymbol" as const,
               name: favourite ? ("heart.fill" as const) : ("heart" as const),
             },
+            tintColor: favourite ? danger : undefined,
             identifier: "recipe-favourite",
             onPress: () => actions.toggleFavourite(recipe),
           },

@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useMarkLibraryLens } from "@/lib/library-lens";
 
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { usePlatform } from "@norish/shared-react/platform";
-import { LibraryFiltersProvider, useLibraryFiltersPersistence } from "@norish/shared-react/recipes";
+import {
+  LibraryFiltersProvider,
+  useLibraryFilters,
+  useLibraryFiltersPersistence,
+} from "@norish/shared-react/recipes";
 
 // The tRPC provider remounts the tree when the session settles, so the filters it last held live here.
 let lastFilters: CanonicalRecipeFilters | undefined;
@@ -16,6 +21,7 @@ function LibraryEffects({ resumed }: { resumed: boolean }) {
   const { storage } = usePlatform();
 
   useLibraryFiltersPersistence({ storage, resumed, onKeep: keep });
+  useMarkLibraryLens(useLibraryFilters((state) => state.filters.libraryType));
 
   return null;
 }

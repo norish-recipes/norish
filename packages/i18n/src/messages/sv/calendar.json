@@ -10,11 +10,9 @@
   "today": {
     "openRecipe": "Öppna recept",
     "move": "Flytta…",
-    "removeTitle": "Ta bort från idag?",
     "removeMessage": "{name} tas bort från {slot} på {day}.",
     "moveTitle": "Flytta",
-    "moveSubtitle": "{name}, dagens {slot}",
-    "moveToDay": "Flytta {name} till {day}"
+    "moveSubtitle": "{name}, dagens {slot}"
   },
   "editNote": {
     "title": "Redigera anteckning",
@@ -55,7 +53,6 @@
     "randomRecipe": "Slumpa recept",
     "noRecipesFound": "Inga recept hittades.",
     "failedToLoadRecipes": "Det gick inte att hämta recepten.",
-    "planRecipe": "Planera ett recept",
     "searchOrAddNote": "Sök recept eller lägg till en anteckning",
     "random": "Slumpmässigt recept",
     "planThisRecipe": "Planera det här receptet",

@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
+import { PressableScale } from "@/components/pressable-scale";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -24,7 +25,7 @@ export function ToggleChip({
   ] as const);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : "bg-default"}`}
@@ -39,6 +40,6 @@ export function ToggleChip({
       >
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }

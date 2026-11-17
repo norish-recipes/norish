@@ -10,7 +10,7 @@ import type {
 } from "@norish/shared/contracts";
 import type { CalendarRealtime } from "@norish/shared/contracts/realtime/calendar";
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
-import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
+import type { PlannedItemEdit, PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
 
 export type CalendarData = Record<string, PlannedItemFromQuery[]>;
@@ -49,7 +49,8 @@ export type CalendarMutationsResult = {
   deleteItem: (itemId: string) => void;
   /** No index: last in the target slot. */
   moveItem: (itemId: string, targetDate: string, targetSlot: Slot, targetIndex?: number) => void;
-  updateItem: (itemId: string, title: string) => void;
+  /** An edit's text, day and slot as one write; a new day or slot puts it last there. */
+  saveItem: (itemId: string, changes: PlannedItemEdit) => void;
 };
 
 type CaldavSyncStatusPage = {

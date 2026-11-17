@@ -93,6 +93,7 @@
     "unavailable": "Ihre Vorratskammer konnte nicht gelesen werden. Es hat sich nichts geändert; versuchen Sie es erneut, wenn Sie wieder online sind.",
     "fieldLabel": "Lebensmittel suchen oder hinzufügen",
     "fieldPlaceholder": "Suchen oder hinzufügen, z. B. Olivenöl",
+    "findPlaceholder": "Lebensmittel in der Vorratskammer suchen",
     "add": "Zur Vorratskammer hinzufügen",
     "fromCatalogue": "Lebensmittel hinzufügen",
     "addFood": "{name} zur Vorratskammer hinzufügen",
@@ -134,9 +135,7 @@
     "toBuy": "Einzukaufen",
     "inPantry": "In Ihrer Vorratskammer",
     "weKeepThis": "Haben wir immer",
-    "keepFailed": "Das konnte nicht zur Vorratskammer hinzugefügt werden",
-    "addCount": "{count, plural, one {# Eintrag hinzufügen} other {# Einträge hinzufügen}}",
-    "adding": "Wird zur Einkaufsliste hinzugefügt…"
+    "keepFailed": "Das konnte nicht zur Vorratskammer hinzugefügt werden"
   },
   "picker": {
     "unlink": "Produkt entkoppeln",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "als eine Packung berechnet",
     "sale": "Angebot",
-    "regularPrice": "Normalpreis {price}"
+    "regularPrice": "Normalpreis {price}",
+    "each": "pro Stück"
   },
   "mobile": {
     "viewMode": "Ansicht",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Artikel nach „Unsortiert“ verschieben",
     "typePrice": "Preis selbst eingeben",
     "product": "Produkt",
-    "chooseProduct": "Produkt auswählen"
+    "chooseProduct": "Produkt auswählen",
+    "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}"
   }
 }

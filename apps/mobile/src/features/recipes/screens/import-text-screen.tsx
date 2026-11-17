@@ -2,7 +2,7 @@ import type { ComponentRef } from "react";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { HintButton } from "@/components/hint-button";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { FieldError, Label, TextArea, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -14,7 +14,7 @@ import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { ImportActions } from "../components/import-actions";
 import { useStartImport } from "../hooks/use-start-import";
 
-/** Import from text: a field as tall as the sheet for a pasted recipe or JSON-LD. */
+/** Import from text: a field for a pasted recipe or JSON-LD, in a sheet that fits it. */
 export function ImportTextScreen() {
   const intl = useIntl();
   const [text, setText] = useState("");
@@ -46,8 +46,8 @@ export function ImportTextScreen() {
       name="import-text"
       title={intl.formatMessage({ id: "recipes.addRecipe.textTitle" })}
     >
-      <SheetBody contentClassName="flex-1">
-        <TextField className="flex-1 gap-2" isInvalid={isTooLong}>
+      <SheetBody>
+        <TextField className="gap-2" isInvalid={isTooLong}>
           <View className="flex-row items-center justify-between pr-0.5 pl-2">
             <Label>
               <Label.Text className="text-foreground text-[15px] font-medium">
@@ -64,8 +64,9 @@ export function ImportTextScreen() {
           <TextArea
             ref={fieldRef}
             scrollEnabled
-            className="bg-default ios:shadow-none flex-1 rounded-3xl px-4 py-3.5 text-base leading-[23px]"
+            className="bg-default ios:shadow-none rounded-3xl px-4 py-3.5 text-base leading-[23px]"
             placeholder={intl.formatMessage({ id: "common.import.paste.placeholder" })}
+            style={{ height: FIT_SHEET_FIELD_HEIGHT }}
             testID="import-text-field"
             textAlignVertical="top"
             value={text}

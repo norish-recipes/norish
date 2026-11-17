@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { AnimatedNumber } from "@/components/animated-number";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -15,8 +16,7 @@ import {
   useWorkedOutNutrition,
 } from "@norish/shared-react/recipes";
 import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
-import { isAllergenTag } from "@norish/shared/lib/helpers";
-import { countryFlagEmoji } from "@norish/shared/lib/recipe-provenance";
+import { isAllergenTag, tagsBesideCategories } from "@norish/shared/lib/helpers";
 
 import { plainText } from "../utils/recipe-rows";
 import { useTint } from "./tint";
@@ -50,13 +50,28 @@ function Description({ text }: { text: string }) {
   );
 }
 
-function Fact({ icon, children, color }: { icon: string; children: string; color?: string }) {
+/** One fact of the glance bar; `rolling` ones are figures that change under the reader. */
+function Fact({
+  icon,
+  children,
+  color,
+  rolling = false,
+}: {
+  icon: string;
+  children: string;
+  color?: string;
+  rolling?: boolean;
+}) {
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
     <View className="flex-1 flex-row items-center justify-center gap-[7px]">
       <Ionicons color={color ?? muted} name={icon as "time-outline"} size={18} />
-      <Text className="text-foreground text-base font-semibold tabular-nums">{children}</Text>
+      {rolling ? (
+        <AnimatedNumber className="text-foreground text-base font-semibold" value={children} />
+      ) : (
+        <Text className="text-foreground text-base font-semibold tabular-nums">{children}</Text>
+      )}
     </View>
   );
 }
@@ -103,12 +118,37 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
   const tint = useTint();
   const calories = useTokenColor("nutrition-calories");
   const facts = recipeCardFacts(recipe, allergies);
-  const flag = countryFlagEmoji(recipe.originCountry);
   const kcal = recipe.calories ?? workedOut?.perServing?.calories ?? null;
   const categories = recipe.categories.map(categoryLabel);
   const plainTags = facts.tagNames.filter((tag) => !isAllergenTag(tag, facts.allergySet));
   const allergens = facts.tagNames.filter((tag) => isAllergenTag(tag, facts.allergySet));
-  const shown = [...categories, ...plainTags].join(", ");
+  const shown = [...categories, ...tagsBesideCategories(plainTags, recipe.categories)].join(", ");
+
+  const glance = [
+    recipe.totalMinutes || facts.timeLabel
+      ? { key: "time", node: <Fact icon="time-outline">{facts.timeLabel ?? ""}</Fact> }
+      : null,
+    recipe.servings
+      ? {
+          key: "servings",
+          node: (
+            <Fact rolling icon="people-outline">
+              {formatServings(servings)}
+            </Fact>
+          ),
+        }
+      : null,
+    showNutrition && kcal != null
+      ? {
+          key: "calories",
+          node: (
+            <Fact rolling color={calories} icon="flame-outline">
+              {String(Math.round(kcal))}
+            </Fact>
+          ),
+        }
+      : null,
+  ].filter((fact) => fact !== null);
 
   return (
     <View className="items-center gap-3.5 px-5 pt-1">
@@ -117,7 +157,6 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
         className="text-foreground text-center text-[32px] leading-[38px] font-semibold tracking-[-0.7px]"
         testID="recipe-name"
       >
-        {flag ? `${flag} ` : ""}
         {recipe.name}
       </Text>
       {recipe.description ? <Description text={recipe.description} /> : null}
@@ -126,27 +165,26 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
         style={tint ? { backgroundColor: tint.card } : undefined}
         testID="recipe-glance"
       >
-        {recipe.totalMinutes || facts.timeLabel ? (
-          <Fact icon="time-outline">{facts.timeLabel ?? ""}</Fact>
-        ) : null}
-        {recipe.servings ? <Fact icon="people-outline">{formatServings(servings)}</Fact> : null}
-        {showNutrition && kcal != null ? (
-          <Fact color={calories} icon="flame-outline">
-            {String(Math.round(kcal))}
-          </Fact>
-        ) : null}
+        {glance.map((fact, index) => (
+          <React.Fragment key={fact.key}>
+            {index > 0 ? <View className="bg-separator h-6 w-px" /> : null}
+            {fact.node}
+          </React.Fragment>
+        ))}
       </View>
       <TimeBar recipe={recipe} />
       {allergens.length > 0 || shown ? (
-        <Text className="text-muted text-center text-sm leading-5" testID="recipe-tags">
+        <View
+          className="flex-row flex-wrap items-center justify-center gap-1.5"
+          testID="recipe-tags"
+        >
           {allergens.map((tag) => (
-            <Text key={tag} className="text-warning-foreground bg-warning font-medium">
-              {` ${tag} `}
-            </Text>
+            <View key={tag} className="bg-warning rounded-full px-2.5 py-0.5">
+              <Text className="text-warning-foreground text-[13px] font-medium">{tag}</Text>
+            </View>
           ))}
-          {allergens.length > 0 && shown ? "  " : ""}
-          {shown}
-        </Text>
+          {shown ? <Text className="text-muted text-center text-sm leading-5">{shown}</Text> : null}
+        </View>
       ) : null}
     </View>
   );

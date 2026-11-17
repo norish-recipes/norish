@@ -57,9 +57,3 @@ export interface PlannedItemDeleteInput {
   itemId: string;
   version: number;
 }
-
-export interface PlannedItemUpdateInput {
-  itemId: string;
-  version: number;
-  title: string;
-}

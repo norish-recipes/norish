@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { DestructiveMenuButton } from "@/components/destructive-menu-button";
 import { Button, Host, Menu } from "@expo/ui/swift-ui";
-import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
+import { buttonStyle, labelStyle, rotationEffect } from "@expo/ui/swift-ui/modifiers";
 import { useIntl } from "react-intl";
 
 export type SectionActions = {
@@ -29,7 +29,7 @@ export function SectionMenu({
       <Host matchContents>
         <Menu
           label={label}
-          modifiers={[buttonStyle("plain"), labelStyle("iconOnly")]}
+          modifiers={[buttonStyle("plain"), labelStyle("iconOnly"), rotationEffect(90)]}
           systemImage="ellipsis"
         >
           {actions.markAllDone ? (

@@ -111,7 +111,8 @@
     "cookbooks": "Kogebøger",
     "favourite": "Favorit",
     "unfavourite": "Fjern fra favoritter",
-    "ai": "AI"
+    "ai": "AI",
+    "shareLink": "Del link"
   },
   "sharePanel": {
     "title": "Del opskrift",
@@ -155,7 +156,14 @@
       "title": "Slet link",
       "message": "Slet dette delelink til {recipeName}? Dette kan ikke fortrydes.",
       "confirm": "Slet link"
-    }
+    },
+    "subtitle": "Offentlige links til {recipeName}",
+    "expiresAfter": "Udløber efter",
+    "expiresOn": "Udløber {date}",
+    "expiredOn": "Udløb {date}",
+    "lastOpenedOn": "Sidst åbnet {date}",
+    "neverExpires": "Udløber aldrig",
+    "linkCreated": "Oprettet {date}"
   },
   "convert": {
     "ariaLabel": "Konverter målesystem",
@@ -281,7 +289,9 @@
     "householdNumbers": "din husstands værdier",
     "decreasePortions": "Færre portioner",
     "increasePortions": "Flere portioner",
-    "portions": "{count, plural, one {# portion} other {# portioner}}"
+    "portions": "{count, plural, one {# portion} other {# portioner}}",
+    "percentOfReference": "{percent} % af {amount}",
+    "percentOfDailyReference": "{percent} % af den daglige reference på {amount}"
   },
   "measurementSystem": {
     "label": "Målesystem",
@@ -364,7 +374,9 @@
     "restartTimer": "Genstart timeren",
     "notificationsOff": "Notifikationer er slået fra for Norish, så timere ringer kun, mens appen er åben.",
     "decreaseTimer": "Træk {time} fra",
-    "increaseTimer": "Læg {time} til"
+    "increaseTimer": "Læg {time} til",
+    "timersLeft": "Timere, {time} tilbage",
+    "spokenTime": "{hours, plural, =0 {} one {# time } other {# timer }}{minutes, plural, =0 {} one {# minut } other {# minutter }}{seconds, plural, =0 {} one {# sekund } other {# sekunder }}"
   },
   "enrichment": {
     "failed": "Berigelse mislykkedes",

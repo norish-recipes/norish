@@ -1,5 +1,15 @@
 // What the flows ask of the throwaway server over the control port: clean slate, a recipe, a count.
+import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+// The recipe form's own line parser, through the web workspace's tsx.
+const fromWeb = createRequire(path.join(import.meta.dirname, "../../web/package.json"));
+
+(await import(fromWeb.resolve("tsx/esm/api"))).register();
+const { addDays, dateKey, parseIngredientWithDefaults } =
+  await import("@norish/shared/lib/helpers");
 
 export const PAGE_NAME = "Maestro Lemon Cake";
 
@@ -17,6 +27,21 @@ function recipePage() {
   return `<!doctype html><html><head><title>${PAGE_NAME}</title><script type="application/ld+json">${JSON.stringify(recipe)}</script></head><body><h1>${PAGE_NAME}</h1></body></html>`;
 }
 
+// The flows' foods in the Open Food Facts taxonomy format; their built-in icons are keyed by these ids.
+const CATALOGUE = [
+  "egg, eggs",
+  "flour",
+  "butter",
+  "milk",
+  "onion, onions",
+  "lemon, lemons",
+  "beef",
+  "salt",
+  "sugar",
+]
+  .map((names) => `en: ${names}\n`)
+  .join("\n");
+
 // A page that is not a recipe, for the failed import's toast.
 function notesPage() {
   return "<!doctype html><html><head><title>Weekend notes</title></head><body><h1>Weekend notes</h1><p>Buy milk. Call the plumber.</p></body></html>";
@@ -24,7 +49,9 @@ function notesPage() {
 
 export function serveRecipePage(host) {
   const page = createServer((request, response) => {
-    const body = { "/recipe": recipePage(), "/notes": notesPage() }[request.url];
+    const body = { "/recipe": recipePage(), "/notes": notesPage(), "/catalogue": CATALOGUE }[
+      request.url
+    ];
 
     response.writeHead(body === undefined ? 404 : 200, {
       "content-type": "text/html; charset=utf-8",
@@ -37,6 +64,29 @@ export function serveRecipePage(host) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// What `read` answers once it holds between `min` and `max` names, for a write still on its way;
+// after 15 s it throws with what it holds instead.
+async function namesOnceThere(read, { min = 0, max = Infinity } = {}) {
+  const deadline = Date.now() + 15_000;
+  let found = await read();
+
+  while (found.length < min || found.length > max) {
+    if (Date.now() > deadline) {
+      throw new Error(`waited 15 s for ${min}..${max} names; it holds ${JSON.stringify(found)}`);
+    }
+    await sleep(250);
+    found = await read();
+  }
+
+  return found;
+}
+
+// The planned items' window, through the date helpers.
+const plannedRange = () => ({
+  startISO: dateKey(addDays(new Date(), -7)),
+  endISO: dateKey(addDays(new Date(), 60)),
+});
+
 // `trpc` posts a mutation, `query` reads one; both throw on a failed call.
 export function seeder({ trpc, query }) {
   const recipes = async (search) => {
@@ -45,8 +95,16 @@ export function seeder({ trpc, query }) {
     return recipes;
   };
 
+  const storeIdOf = async (name) => {
+    const store = (await query("stores.list")).find((candidate) => candidate.name === name);
+
+    if (!store) throw new Error(`no Store named "${name}"`);
+
+    return store.id;
+  };
+
   return {
-    // Every recipe, cookbook and grocery the account has, so a flow starts from nothing.
+    // Every recipe, cookbook, grocery and pantry food the account has, so a flow starts from nothing.
     async reset() {
       const stale = (await recipes()).map(({ id, version }) => ({ id, version }));
 
@@ -63,22 +121,41 @@ export function seeder({ trpc, query }) {
           groceries: groceries.map(({ id, version }) => ({ id, version })),
         });
       }
+
+      for (const { id } of await query("pantry.list")) await trpc("pantry.remove", { id });
+
+      for (const { id, version } of await query("calendar.listItems", plannedRange())) {
+        await trpc("calendar.deleteItem", { itemId: id, version });
+      }
+
+      for (const { id, version } of await query("stores.list")) {
+        await trpc("stores.delete", {
+          storeId: id,
+          version,
+          deleteGroceries: false,
+          grocerySnapshot: [],
+        });
+      }
     },
     // A recipe as the recipe form saves one; answers its id.
-    createRecipe({ name, ingredients = [], tags = [], minutes }) {
+    createRecipe({ name, ingredients = [], steps = [], tags = [], minutes }) {
       return trpc("recipes.create", {
         name,
         systemUsed: "metric",
         servings: 2,
         ...(minutes && { totalMinutes: minutes }),
-        recipeIngredients: ingredients.map((ingredientName, order) => ({
-          ingredientName,
-          ingredientId: null,
-          amount: null,
-          unit: null,
-          order,
-        })),
-        steps: [],
+        recipeIngredients: ingredients.map((text, order) => {
+          const [parsed] = parseIngredientWithDefaults(text);
+
+          return {
+            ingredientName: parsed?.description || text,
+            ingredientId: null,
+            amount: parsed?.quantity ? Number(parsed.quantity) : null,
+            unit: parsed?.unitOfMeasure || null,
+            order,
+          };
+        }),
+        steps: steps.map((step, order) => ({ step, order, systemUsed: "metric" })),
         tags: tags.map((tag) => ({ name: tag })),
         cuisines: [],
         categories: [],
@@ -90,18 +167,177 @@ export function seeder({ trpc, query }) {
       return (await recipes(name)).filter((recipe) => recipe.name === name).length;
     },
     // The grocery names once there are at least `min` of them, for a write still on its way.
-    async groceryNames(min = 0) {
-      const deadline = Date.now() + 15_000;
-      const names = async () =>
-        (await query("groceries.list")).groceries.map((grocery) => grocery.name);
-      let found = await names();
+    groceryNames: ({ min = 0, max = Infinity } = {}) =>
+      namesOnceThere(
+        async () => (await query("groceries.list")).groceries.map((grocery) => grocery.name),
+        { min, max }
+      ),
+    // A grocery as another member adds it, filed under the Store named `store`; answers its id.
+    async createGrocery({ name, store }) {
+      const storeId = store ? await storeIdOf(store) : null;
+      const [created] = await trpc("groceries.create", [
+        { name, unit: null, amount: null, ...(storeId && { storeId }) },
+      ]);
 
-      while (found.length < min && Date.now() < deadline) {
+      return created.id;
+    },
+    // Where the grocery `name` stands: now, or once it matches `want` (`done`, `store` as a Store's
+    // name or null, `repeats`), throwing after `within` ms (15 s) with where it is instead.
+    async groceryWhere(name, want = {}, { within = 15_000 } = {}) {
+      const deadline = Date.now() + within;
+
+      for (;;) {
+        const { groceries, recurringGroceries } = await query("groceries.list");
+        const stores = await query("stores.list");
+        const found = groceries.find((grocery) => grocery.name === name);
+        const at = found && {
+          done: found.isDone,
+          store: stores.find((store) => store.id === found.storeId)?.name ?? null,
+          repeats: recurringGroceries.some(
+            (recurring) => recurring.id === found.recurringGroceryId
+          ),
+        };
+        const there = Object.entries(want).every(([field, value]) => at?.[field] === value);
+
+        if (at && there) return at;
+        if (Date.now() > deadline) {
+          throw new Error(
+            `waited ${within / 1000} s for grocery "${name}" on ${JSON.stringify(want)}; it is ${JSON.stringify(at ?? null)}`
+          );
+        }
         await sleep(250);
-        found = await names();
       }
+    },
+    // The Stores' names in their order, once they are `is` when that is given.
+    async storeNames({ is } = {}) {
+      const deadline = Date.now() + 15_000;
 
-      return found;
+      for (;;) {
+        const names = (await query("stores.list"))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((store) => store.name);
+
+        if (!is || JSON.stringify(names) === JSON.stringify(is)) return names;
+        if (Date.now() > deadline) {
+          throw new Error(
+            `waited 15 s for stores ${JSON.stringify(is)}; they are ${JSON.stringify(names)}`
+          );
+        }
+        await sleep(250);
+      }
+    },
+    // The aisle `store` files `food` (a catalogue food's name) under: now, or once it is `is` (a
+    // name, or null for none), throwing after 15 s with where it is instead.
+    async filedAisle({ store, food, is }) {
+      const stores = await query("stores.list");
+      const found = stores.find((candidate) => candidate.name === store);
+
+      if (!found) throw new Error(`no Store named "${store}"`);
+
+      const { items } = await query("ingredients.list", {
+        search: food,
+        locale: "en",
+        listedOnly: false,
+      });
+      const ids = new Set(
+        items
+          .filter((item) => item.name.toLowerCase() === food.toLowerCase())
+          .map((item) => item.id)
+      );
+      const deadline = Date.now() + 15_000;
+
+      for (;;) {
+        const links = await query("stores.aisleLinks");
+        const link = links.find((one) => one.storeId === found.id && ids.has(one.ingredientId));
+        const aisle =
+          found.aisles.find((candidate) => candidate.id === link?.aisleId)?.name ?? null;
+
+        if (aisle === is) return { aisle };
+        if (Date.now() > deadline) {
+          throw new Error(`waited 15 s for ${food} at ${store} under ${is}; it is under ${aisle}`);
+        }
+        await sleep(250);
+      }
+    },
+    // A Store of `aisles` (names, in order); answers its id.
+    createStore({ name, aisles = [] }) {
+      return trpc("stores.create", {
+        name,
+        aisles: aisles.map((aisle) => ({ id: randomUUID(), name: aisle })),
+      });
+    },
+    // The local day `offset` days from today, as the app keys it.
+    dayKey: (offset) => dateKey(addDays(new Date(), offset)),
+    // Where the first plan of recipe `name` stands: now, or once it is on `want`'s date and slot,
+    // throwing after 15 s with where it is instead.
+    async plannedWhere(name, want = {}) {
+      const range = plannedRange();
+      const deadline = Date.now() + 15_000;
+
+      for (;;) {
+        const items = await query("calendar.listItems", range);
+        const found = items.find((item) => item.recipeName === name);
+        const at = { date: found?.date ?? null, slot: found?.slot ?? null };
+        const there = (want.date ?? at.date) === at.date && (want.slot ?? at.slot) === at.slot;
+
+        if (want.absent ? !found : found && there) return at;
+        if (Date.now() > deadline) {
+          throw new Error(
+            `waited 15 s for "${name}" on ${JSON.stringify(want)}; it is on ${JSON.stringify(at)}`
+          );
+        }
+        await sleep(250);
+      }
+    },
+    // A plan on `offset` days from today, in `slot`: a recipe by name, or a note's `title`.
+    async createPlanned({ recipeName, title, offset, slot }) {
+      const recipe = recipeName && (await recipes(recipeName)).find((r) => r.name === recipeName);
+
+      if (recipeName && !recipe) throw new Error(`no recipe named "${recipeName}"`);
+
+      return trpc("calendar.createItem", {
+        date: dateKey(addDays(new Date(), offset)),
+        slot,
+        ...(recipe ? { itemType: "recipe", recipeId: recipe.id } : { itemType: "note", title }),
+      });
+    },
+    // The same for the Pantry's foods.
+    pantryNames: ({ min = 0, max = Infinity } = {}) =>
+      namesOnceThere(async () => (await query("pantry.list")).map((item) => item.name), {
+        min,
+        max,
+      }),
+    // A food another member keeps in the Pantry, as typed.
+    addPantry: ({ name }) => trpc("pantry.add", { name }),
+    // How the Pantry holds a food kept from the catalogue (the one `search` names exactly) and one kept as typed.
+    async pantryKept(search, custom, min) {
+      const entries = [];
+
+      await namesOnceThere(
+        async () => {
+          entries.splice(0, entries.length, ...(await query("pantry.list")));
+
+          return entries;
+        },
+        { min }
+      );
+
+      const { items } = await query("ingredients.list", {
+        search,
+        locale: "en",
+        listedOnly: false,
+      });
+      const found = items.filter((food) => food.name.toLowerCase() === search.toLowerCase());
+      const ids = new Set(found.map((food) => food.id));
+
+      return {
+        count: entries.length,
+        catalogue: entries.some((entry) => ids.has(entry.ingredientId)),
+        custom: entries.some(
+          (entry) =>
+            entry.name.toLowerCase() === custom.toLowerCase() && !ids.has(entry.ingredientId)
+        ),
+      };
     },
   };
 }

@@ -23,6 +23,7 @@ import useSound from "use-sound";
 import type { Timer } from "@norish/shared-react/recipes/timers";
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import {
+  sortTimers,
   timerAdjustStep,
   useTimerStore,
   useTimerTicker,
@@ -132,12 +133,7 @@ export function TimerDock({
   }, [hasTimers, onExpandedChange]);
   if (!timersEnabled) return null;
 
-  // Sort: completed first (to alert), then active by remaining time
-  const sortedTimers = [...dockedTimers].sort((a, b) => {
-    if (a.status === "completed" && b.status !== "completed") return -1;
-    if (b.status === "completed" && a.status !== "completed") return 1;
-    return a.remainingMs - b.remainingMs;
-  });
+  const sortedTimers = sortTimers(dockedTimers);
   const topTimer = sortedTimers[0];
   const timerCount = dockedTimers.length;
 

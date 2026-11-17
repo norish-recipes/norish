@@ -93,6 +93,7 @@
     "unavailable": "Não foi possível ler sua despensa. Nada mudou; tente de novo quando estiver online.",
     "fieldLabel": "Buscar ou adicionar um alimento",
     "fieldPlaceholder": "Buscar ou adicionar, ex.: azeite",
+    "findPlaceholder": "Buscar um alimento na despensa",
     "add": "Adicionar à despensa",
     "fromCatalogue": "Adicionar um alimento",
     "addFood": "Adicionar {name} à despensa",
@@ -134,9 +135,7 @@
     "toBuy": "Para comprar",
     "inPantry": "Na sua despensa",
     "weKeepThis": "Sempre temos",
-    "keepFailed": "Não foi possível adicionar à despensa",
-    "addCount": "{count, plural, one {Adicionar # item} other {Adicionar # itens}}",
-    "adding": "Adicionando à lista de compras…"
+    "keepFailed": "Não foi possível adicionar à despensa"
   },
   "picker": {
     "unlink": "Desvincular produto",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "contado como uma embalagem",
     "sale": "Oferta",
-    "regularPrice": "Preço normal {price}"
+    "regularPrice": "Preço normal {price}",
+    "each": "cada"
   },
   "mobile": {
     "viewMode": "Visualização",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Mover itens para Sem loja",
     "typePrice": "Digite o preço você mesmo",
     "product": "Produto",
-    "chooseProduct": "Escolher um produto"
+    "chooseProduct": "Escolher um produto",
+    "recipeCount": "{count, plural, one {# receita} other {# receitas}}"
   }
 }

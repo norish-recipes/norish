@@ -93,6 +93,7 @@
     "unavailable": "Spiskammeret kunne ikke leses. Ingenting er endret; prøv igjen når du er tilkoblet.",
     "fieldLabel": "Finn eller legg til en matvare",
     "fieldPlaceholder": "Finn eller legg til, f.eks. olivenolje",
+    "findPlaceholder": "Finn en vare i spiskammeret",
     "add": "Legg til i spiskammeret",
     "fromCatalogue": "Legg til en matvare",
     "addFood": "Legg {name} i spiskammeret",
@@ -134,9 +135,7 @@
     "toBuy": "Skal kjøpes",
     "inPantry": "I spiskammeret ditt",
     "weKeepThis": "Har vi alltid",
-    "keepFailed": "Det kunne ikke legges i spiskammeret",
-    "addCount": "{count, plural, one {Legg til # vare} other {Legg til # varer}}",
-    "adding": "Legger til i handlelisten…"
+    "keepFailed": "Det kunne ikke legges i spiskammeret"
   },
   "picker": {
     "unlink": "Fjern kobling til produkt",
@@ -178,7 +177,8 @@
     "packs": "{count} × {size}",
     "onePack": "telt som én pakke",
     "sale": "Tilbud",
-    "regularPrice": "Ordinær pris {price}"
+    "regularPrice": "Ordinær pris {price}",
+    "each": "stk."
   },
   "mobile": {
     "viewMode": "Visning",
@@ -209,6 +209,7 @@
     "moveItemsToUnsorted": "Flytt varer til Usortert",
     "typePrice": "Skriv inn prisen selv",
     "product": "Produkt",
-    "chooseProduct": "Velg et produkt"
+    "chooseProduct": "Velg et produkt",
+    "recipeCount": "{count, plural, one {# oppskrift} other {# oppskrifter}}"
   }
 }

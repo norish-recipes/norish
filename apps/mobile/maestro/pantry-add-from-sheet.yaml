@@ -1,0 +1,66 @@
+# Adds foods to the Pantry from the Add to pantry sheet: the accessory reads Add to pantry, the sheet
+# finds a catalogue food and keeps it, then keeps a typed name as a custom entry. The server has both.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: groceries-switch-pantry
+    timeout: 20000
+- tapOn:
+    id: groceries-switch-pantry
+- extendedWaitUntil:
+    visible:
+      id: pantry-screen
+    timeout: 20000
+# The accessory is the Pantry's add action.
+- assertVisible:
+    id: add-pantry
+- tapOn:
+    id: add-pantry
+- extendedWaitUntil:
+    visible:
+      id: pantry-add-sheet
+    timeout: 20000
+# A catalogue food: type it, keep its row.
+- tapOn:
+    id: pantry-add-field
+- inputText: milk
+# The catalogue's answer replaces the typed row, so the tap waits for the food's own row, named exactly.
+- extendedWaitUntil:
+    visible:
+      id: pantry-match-[0-9a-f]{8}-.*
+      text: ^Add milk to your pantry$
+    timeout: 20000
+# The sheet rises with the keyboard, so the tap waits for it to stop.
+- waitForAnimationToEnd
+- tapOn:
+    id: pantry-match-[0-9a-f]{8}-.*
+    text: ^Add milk to your pantry$
+- evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=1').body).names}
+- assertTrue: ${output.pantry.length == 1}
+# The field empties for the next food; a typed name that is no food of the catalogue is kept as typed.
+- tapOn:
+    id: pantry-add-field
+- inputText: tahini
+- extendedWaitUntil:
+    visible:
+      id: pantry-add-custom
+    timeout: 20000
+- tapOn:
+    id: pantry-add-custom
+- evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?min=2').body).names}
+- assertTrue: ${output.pantry.length == 2}
+# One entry is the catalogue's milk, the other the text as typed.
+- evalScript: ${output.kept = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry-kept?search=milk&custom=tahini&min=2').body)}
+- assertTrue: ${output.kept.count == 2 && output.kept.catalogue && output.kept.custom}
+# The sheet closes on its Close item, and the Pantry behind it holds both.
+- tapOn: Close
+- extendedWaitUntil:
+    notVisible:
+      id: pantry-add-sheet
+    timeout: 20000
+- assertVisible: milk
+- assertVisible: tahini

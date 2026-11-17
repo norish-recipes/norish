@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { SheetScrollView } from "@/components/sheet";
+import { SheetBody } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
 
@@ -56,7 +56,7 @@ export function ChoiceList({
   onPick: (id: string | null) => void;
 }) {
   return (
-    <SheetScrollView>
+    <SheetBody>
       <FormCard>
         {choices.map((choice, index) => (
           <ChoiceRow
@@ -69,6 +69,6 @@ export function ChoiceList({
           />
         ))}
       </FormCard>
-    </SheetScrollView>
+    </SheetBody>
   );
 }

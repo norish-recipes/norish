@@ -47,7 +47,7 @@ export function ProductRow({
             per: (unit) => intl.formatMessage({ id: "groceries.price.perUnit" }, { unit }),
             pieces: (count) => intl.formatMessage({ id: "groceries.price.pieces" }, { count }),
           })
-        : null);
+        : intl.formatMessage({ id: "groceries.price.each" }));
 
     name = product.name;
     cost = format(priced.cost.cost, product.currency);

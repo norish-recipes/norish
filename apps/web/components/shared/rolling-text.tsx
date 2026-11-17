@@ -3,6 +3,8 @@
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
+import { toSlots } from "@norish/shared/lib/rolling-slots";
+
 /** The roll, slow enough to read as one thing moving rather than as a flicker. */
 const ROLL_TRANSITION = { duration: 0.42, ease: [0.22, 0.61, 0.36, 1] } as const;
 
@@ -48,18 +50,6 @@ type RollingTextProps = {
   srValue?: string;
   className?: string;
 };
-
-/**
- * The value as slots, padded to `slots` with empty ones on the side it grows
- * from — the end for a word, the start for a number.
- */
-export function toSlots(value: string, slots: number | undefined, keyFrom: "left" | "right") {
-  const characters = [...value];
-  const padding = Math.max(0, (slots ?? characters.length) - characters.length);
-  const blanks = Array.from({ length: padding }, () => " ");
-
-  return keyFrom === "right" ? [...blanks, ...characters] : [...characters, ...blanks];
-}
 
 /**
  * Text whose characters roll rather than repaint, the way an odometer does.

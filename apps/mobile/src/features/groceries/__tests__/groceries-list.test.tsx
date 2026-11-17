@@ -26,8 +26,12 @@ vi.mock("react-native", async () => {
 
   return { View: tag("div"), Text: tag("span"), Pressable: tag("button") };
 });
+vi.mock(
+  "@/components/tab-list-marker",
+  () => import("../../../../__tests__/mocks/tab-list-marker")
+);
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ bottom: 0 }) }));
-vi.mock("react-native-reanimated", () => ({ useReducedMotion: () => false }));
+vi.mock("react-native-reanimated", () => import("../../../../__tests__/mocks/reanimated"));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
@@ -37,9 +41,9 @@ vi.mock("@/components/amount-name", () => ({
   AmountName: ({ name }: { name: string }) => name,
   amountNameLabel: (amount: string, name: string) => `${amount} ${name}`,
 }));
-vi.mock("@/components/tab-list-inset", () => ({ tabListBottomInset: () => 0 }));
+vi.mock("@/lib/use-tab-bar-minimised", () => ({ homeIndicator: 0 }));
 vi.mock("@norish/shared-react/recipes", () => ({
-  useUnitFormatter: () => ({ formatAmountUnit: (amount: number | null) => String(amount) }),
+  useUnitFormatter: () => ({ formatSpacedAmountUnit: (amount: number | null) => String(amount) }),
 }));
 vi.mock("@norish/shared-react/groceries", () => ({ lineOf: vi.fn(), lineOfGroup: vi.fn() }));
 vi.mock("../hooks/use-recurrence-label", () => ({ useRecurrenceLabel: () => () => "" }));
@@ -126,6 +130,7 @@ function Screen({ rows = rowsKeyed("milk") }: { rows?: ListRow[] }) {
     <GroceriesList
       actions={actions}
       empty={null}
+      loaded
       header={<></>}
       openGroups={openGroups}
       recipeNameFor={() => null}

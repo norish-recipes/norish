@@ -6,7 +6,7 @@ import { Keyboard } from "react-native";
 import { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 
 /** Anything that can say where it sits on screen, as a focused field can. */
-type Measurable = {
+export type Measurable = {
   measureInWindow: (
     callback: (x: number, y: number, width: number, height: number) => void
   ) => void;

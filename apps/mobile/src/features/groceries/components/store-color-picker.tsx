@@ -8,7 +8,7 @@ import { STORE_COLOR_KEYS, storeHue } from "@norish/shared/lib/store-colors";
 
 import { storeColorIn } from "../hooks/use-store-color";
 
-/** The Store's colour, one swatch per hue, the chosen one ringed in its own colour. */
+/** The Store's colour: every hue in one row of 34 pt swatches, the chosen one ringed in its own. */
 export function StoreColorPicker({
   value,
   onChange,
@@ -22,7 +22,7 @@ export function StoreColorPicker({
   return (
     <View
       accessibilityRole="radiogroup"
-      className="flex-row flex-wrap gap-3 px-2"
+      className="flex-row justify-between px-1.5 py-0.5"
       testID="store-colors"
     >
       {STORE_COLOR_KEYS.map((color) => {
@@ -36,16 +36,16 @@ export function StoreColorPicker({
             })}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
-            className="size-10 items-center justify-center rounded-full border-2"
-            style={{ borderColor: selected ? storeColorIn(scheme, color) : "transparent" }}
+            className="size-[34px] rounded-full"
+            style={{
+              backgroundColor: storeColorIn(scheme, color),
+              outlineColor: storeColorIn(scheme, color),
+              outlineOffset: 2,
+              outlineWidth: selected ? 2 : 0,
+            }}
             testID={`store-color-${color}`}
             onPress={() => onChange(color)}
-          >
-            <View
-              className="size-7 rounded-full"
-              style={{ backgroundColor: storeColorIn(scheme, color) }}
-            />
-          </Pressable>
+          />
         );
       })}
     </View>

@@ -1,6 +1,7 @@
+import type { HeaderConfirm } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
-import { Sheet, SheetScrollView } from "@/components/sheet";
+import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { Button } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -10,6 +11,7 @@ import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 import { sortAisles } from "@norish/shared/lib/aisles";
 
 import type { Choice } from "./choice-list";
+import { useAfterKeyboard } from "../hooks/use-after-keyboard";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { storeColorIn } from "../hooks/use-store-color";
 import { ChoiceList } from "./choice-list";
@@ -19,7 +21,7 @@ import { RepeatBody } from "./repeat-view";
 type Step = "form" | "repeat" | "store" | "aisle" | "product";
 
 /** The add and edit sheets' shell. The form is one view; Repeat, Store and Aisle replace it
- * inside the same sheet, the close button going back, so a pick returns to what was typed. */
+ * inside the same sheet, the header going back, so a pick returns to what was typed. */
 export function GrocerySheet({
   name,
   title,
@@ -36,10 +38,11 @@ export function GrocerySheet({
   aisleId,
   onAisle,
   detected,
-  confirmed,
+  repeat,
   onConfirmDetected,
-  onConfirmed,
+  onRepeat,
   trailingRows,
+  confirm,
   actions,
 }: {
   /** The testID prefix: `<name>-sheet`. */
@@ -62,16 +65,22 @@ export function GrocerySheet({
   aisleId: string | null;
   onAisle: (aisleId: string | null) => void;
   detected: RecurrencePattern | null;
-  confirmed: RecurrencePattern | null;
+  /** The confirmed repeat, if any. */
+  repeat: RecurrencePattern | null;
   onConfirmDetected: () => void;
-  onConfirmed: (pattern: RecurrencePattern | null) => void;
+  onRepeat: (pattern: RecurrencePattern | null) => void;
   trailingRows?: ReactNode;
-  /** The form view's pinned actions. */
-  actions: ReactNode;
+  /** The form view's header item, Save. */
+  confirm: HeaderConfirm;
+  /** The form view's pinned actions, if any. */
+  actions?: ReactNode;
 }) {
   const intl = useIntl();
   const recurrence = useRecurrenceLabel();
-  const [view, setView] = useState<Step>("form");
+  const [step, setStep] = useState<Step>("form");
+  const afterKeyboard = useAfterKeyboard();
+  // The form's field holds the keyboard; a step shows once it is down.
+  const setView = (next: Step) => afterKeyboard(() => setStep(next));
   const [draft, setDraft] = useState<RecurrencePattern | null>(null);
   const text = (id: string) => intl.formatMessage({ id });
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
@@ -79,13 +88,14 @@ export function GrocerySheet({
   const dot = (color: string) => storeColorIn(scheme, color);
   const aisle = aisles.find((candidate) => candidate.id === aisleId) ?? null;
   const openRepeat = () => {
-    setDraft(confirmed);
+    setDraft(repeat);
     setView("repeat");
   };
   const back = () => setView("form");
 
   const choiceSheet = (step: "store" | "aisle", choices: Choice[], value: string | null) => (
     <Sheet
+      back
       name={`${name}-${step}`}
       title={text(step === "store" ? "groceries.mobile.store" : "groceries.panel.aisle")}
       onClose={back}
@@ -104,15 +114,15 @@ export function GrocerySheet({
   );
   const steps: Record<Step, ReactNode> = {
     form: (
-      <Sheet actions={actions} name={name} subtitle={subtitle} title={title}>
-        <SheetScrollView contentClassName="gap-3">
+      <Sheet actions={actions} confirm={confirm} name={name} subtitle={subtitle} title={title}>
+        <SheetBody contentClassName="gap-3">
           {field}
           <RepeatPills
-            confirmed={confirmed}
-            detected={confirmed ? null : detected}
+            confirmed={repeat}
+            detected={repeat ? null : detected}
             onConfirmDetected={onConfirmDetected}
             onEdit={openRepeat}
-            onRemove={() => onConfirmed(null)}
+            onRemove={() => onRepeat(null)}
           />
           {notes}
           <FormCard>
@@ -136,51 +146,40 @@ export function GrocerySheet({
             <FormRow
               label={text("common.recurrence.title")}
               testID={`${name}-repeat`}
-              value={confirmed ? recurrence(confirmed) : text("groceries.mobile.never")}
+              value={repeat ? recurrence(repeat) : text("groceries.mobile.never")}
               onPress={openRepeat}
             />
             {trailingRows}
           </FormCard>
-        </SheetScrollView>
+        </SheetBody>
       </Sheet>
     ),
     repeat: (
       <Sheet
+        back
         actions={
-          <Sheet.Actions>
-            {confirmed ? (
-              <Sheet.Action>
-                <Button
-                  className="h-12"
-                  testID="repeat-clear"
-                  variant="secondary"
-                  onPress={() => {
-                    onConfirmed(null);
-                    back();
-                  }}
-                >
-                  <Button.Label className="font-medium">
-                    {text("common.actions.remove")}
-                  </Button.Label>
-                </Button>
-              </Sheet.Action>
-            ) : null}
-            <Sheet.Action>
-              <Button
-                className="h-12"
-                isDisabled={!draft}
-                testID="repeat-done"
-                variant="primary"
-                onPress={() => {
-                  onConfirmed(draft);
-                  back();
-                }}
-              >
-                <Button.Label className="font-semibold">{text("common.actions.done")}</Button.Label>
-              </Button>
-            </Sheet.Action>
-          </Sheet.Actions>
+          repeat ? (
+            <Button
+              className="h-12"
+              testID="repeat-clear"
+              variant="secondary"
+              onPress={() => {
+                onRepeat(null);
+                back();
+              }}
+            >
+              <Button.Label className="font-medium">{text("common.actions.remove")}</Button.Label>
+            </Button>
+          ) : undefined
         }
+        confirm={{
+          label: text("common.actions.done"),
+          disabled: !draft,
+          onPress: () => {
+            onRepeat(draft);
+            back();
+          },
+        }}
         name={`${name}-repeat`}
         title={text("common.recurrence.title")}
         onClose={back}
@@ -213,5 +212,5 @@ export function GrocerySheet({
     ),
   };
 
-  return steps[view] ?? steps.form;
+  return steps[step] ?? steps.form;
 }

@@ -38,10 +38,16 @@ vi.mock("react-native", async () => {
       ),
   };
 });
+vi.mock(
+  "@/components/tab-list-marker",
+  () => import("../../../../__tests__/mocks/tab-list-marker")
+);
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0 }),
 }));
-vi.mock("@/components/tab-list-inset", () => ({ tabListBottomInset: () => 0 }));
+vi.mock("@/lib/use-tab-bar-minimised", () => ({ homeIndicator: 0 }));
+vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
+vi.mock("@/components/sheet-search-field", () => ({ SheetSearchField: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), dismissTo: vi.fn() }));
@@ -65,7 +71,10 @@ vi.mock("../components/list-switch", () => ({
     return null;
   },
 }));
-vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
+vi.mock("@/components/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconSlots: ({ children }: { children: React.ReactNode }) => children,
+}));
 vi.mock("@norish/shared-react/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
 
@@ -76,7 +85,6 @@ vi.mock("@norish/shared-react/platform", () => ({
 }));
 vi.mock("@norish/shared-react/ingredients", () => ({
   useIngredientIcons: () => undefined,
-  usePantryCatalogue: () => [],
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
   useOnTheList: () => [],

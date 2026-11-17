@@ -10,11 +10,9 @@
   "today": {
     "openRecipe": "Otwórz przepis",
     "move": "Przenieś…",
-    "removeTitle": "Usunąć z dzisiaj?",
     "removeMessage": "{name} zostanie usunięty z posiłku {slot} ({day}).",
     "moveTitle": "Przenieś",
-    "moveSubtitle": "{name}, {slot} dzisiaj",
-    "moveToDay": "Przenieś {name} na {day}"
+    "moveSubtitle": "{name}, {slot} dzisiaj"
   },
   "editNote": {
     "title": "Edytuj notatkę",
@@ -55,7 +53,6 @@
     "randomRecipe": "Losowy przepis",
     "noRecipesFound": "Nie znaleziono przepisów.",
     "failedToLoadRecipes": "Nie udało się załadować przepisów.",
-    "planRecipe": "Zaplanuj przepis",
     "searchOrAddNote": "Szukaj przepisów lub dodaj notatkę",
     "random": "Losowy przepis",
     "planThisRecipe": "Zaplanuj ten przepis",

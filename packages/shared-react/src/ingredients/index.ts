@@ -8,8 +8,10 @@ export {
   useIngredientIconMutations,
   useIngredientIcons,
   useIngredientsNamed,
+  useListHasIcon,
 } from "./use-ingredient-icons";
 export { useIngredientMutations } from "./use-ingredient-mutations";
+export { foodNamedAsTyped } from "./food-named-as-typed";
 export { usePantryCatalogue } from "./use-pantry-catalogue";
 export {
   useIngredientNutritionQuery,

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Skeleton, Switch } from "heroui-native";
+import { Skeleton, Switch } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
@@ -50,13 +50,7 @@ export function FoodScreen() {
 
   return (
     <Sheet
-      actions={
-        <Button className="h-[50px]" testID="pantry-food-save" variant="primary" onPress={save}>
-          <Button.Label className="font-semibold">
-            {intl.formatMessage({ id: "common.actions.save" })}
-          </Button.Label>
-        </Button>
-      }
+      confirm={{ label: intl.formatMessage({ id: "common.actions.save" }), onPress: save }}
       name="pantry-food"
       title={ingredientDisplayName(item, intl.locale)}
     >

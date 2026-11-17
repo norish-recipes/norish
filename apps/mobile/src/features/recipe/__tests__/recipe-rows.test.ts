@@ -22,6 +22,25 @@ describe("ingredientRows", () => {
   });
 });
 
+describe("ingredientRows foodId", () => {
+  it("is the line's food, none for a line that names no food", () => {
+    const rows = ingredientRows(
+      [
+        { ingredientName: "flour", ingredientId: "f1", systemUsed: "metric", order: 0 },
+        { ingredientName: "2", ingredientId: "f2", systemUsed: "metric", order: 1 },
+        { ingredientName: "water", systemUsed: "metric", order: 2 },
+      ],
+      "metric"
+    );
+
+    expect(rows.map((row) => (row.kind === "line" ? row.foodId : "heading"))).toEqual([
+      "f1",
+      null,
+      null,
+    ]);
+  });
+});
+
 describe("stepRows", () => {
   it("numbers steps and leaves headings unnumbered", () => {
     const rows = stepRows(

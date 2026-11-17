@@ -13,7 +13,11 @@ import { cookbookRecipesInput } from "@norish/shared/contracts/list-queries";
 import type { CookbooksCacheHelpers, InfiniteCookbookData } from "./cookbook-types";
 import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
 import { useTRPC } from "../trpc";
-import { applyCookbookUpdateToLibrary, applyCookbookUpdateToList } from "./library-cache";
+import {
+  applyCookbookUpdateToLibrary,
+  applyCookbookUpdateToList,
+  libraryQueryHolds,
+} from "./library-cache";
 import { cookbookIdOf } from "./use-cookbook-recipes-query";
 
 export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
@@ -45,6 +49,8 @@ export function useCookbooksCacheHelpers(): CookbooksCacheHelpers {
       for (const [key] of queryClient.getQueriesData<InfiniteLibraryData>({
         queryKey: libraryPath,
       })) {
+        if (!libraryQueryHolds(key, "cookbook")) continue;
+
         queryClient.setQueryData<InfiniteLibraryData>(key, (previous) =>
           applyCookbookUpdateToLibrary(previous, updater)
         );

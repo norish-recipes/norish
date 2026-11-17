@@ -9,8 +9,8 @@ import {
 /** How a repeat reads in the reader's language: "Every other week on Friday". */
 export function useRecurrenceLabel(): (pattern: RecurrencePattern) => string {
   const intl = useIntl();
-  const words = recurrenceTranslationsFrom((key) =>
-    intl.formatMessage({ id: `common.recurrence.${key}` })
+  const words = recurrenceTranslationsFrom((key, values) =>
+    intl.formatMessage({ id: `common.recurrence.${key}` }, values)
   );
 
   return (pattern) => formatRecurrenceSummary(pattern, words);

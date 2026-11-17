@@ -45,7 +45,7 @@ export function RemovableChip({
   );
 }
 
-/** The dashed chip that adds one more. */
+/** The chip, ruled by a hairline, that adds one more. */
 export function AddChip({
   label,
   testID,
@@ -55,13 +55,12 @@ export function AddChip({
   testID: string;
   onPress: () => void;
 }) {
-  const [muted, border] = useThemeColor(["muted", "border"] as const);
+  const [muted] = useThemeColor(["muted"] as const);
 
   return (
     <Pressable
       accessibilityRole="button"
-      className="h-[34px] flex-row items-center gap-1.5 rounded-full px-3"
-      style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: border }}
+      className="border-separator h-[34px] flex-row items-center gap-1.5 rounded-full border px-3"
       testID={testID}
       onPress={onPress}
     >
@@ -200,9 +199,10 @@ function NumberBox({
       <View className="flex-row items-baseline gap-1">
         <EditorInput
           accessibilityLabel={label}
-          className="text-foreground min-w-0 flex-1 py-0 text-[17px] leading-6"
+          className="text-foreground py-0 text-xl leading-7 font-semibold"
           keyboardType={decimal ? "decimal-pad" : "number-pad"}
           placeholder="–"
+          style={{ width: Math.max(shown.length, 1) * 12 + 2 }}
           testID={testID}
           value={shown}
           onChangeText={(next) => {

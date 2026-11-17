@@ -25,7 +25,6 @@ const base = {
   items: [] as PantryIngredientDto[],
   kept: [] as PantryIngredientDto[],
   onTheList: [] as string[],
-  matches: [] as { id: string; name: string }[],
   offered: [] as PantrySuggestionDto[],
   typed: "",
   suggestionsOpen: true,
@@ -64,19 +63,17 @@ describe("pantryRows", () => {
     ]);
   });
 
-  it("offers catalogue foods under the kept ones, and suggestions only for an empty field", () => {
-    const match = { id: "m", name: "Olives" };
+  it("offers suggestions only for an empty field", () => {
     const offered = [suggestion("rice")];
     const searching = pantryRows({
       ...base,
       items: [kept("salt")],
       kept: [kept("salt")],
-      matches: [match],
       offered,
-      typed: "oli",
+      typed: "sa",
     });
 
-    expect(types(searching)).toEqual(["kept", "label", "match"]);
+    expect(types(searching)).toEqual(["kept"]);
     expect(
       types(pantryRows({ ...base, items: [kept("salt")], kept: [kept("salt")], offered }))
     ).toEqual(["kept", "suggestions", "suggestion"]);
@@ -96,5 +93,30 @@ describe("pantryRows", () => {
     expect(
       types(pantryRows({ ...base, offered, showAll: true })).filter((t) => t === "suggestion")
     ).toHaveLength(SUGGESTIONS_SHOWN + 2);
+  });
+});
+
+describe("a row's foodId", () => {
+  it("is the food it shows the icon of, and null for rows naming no food", () => {
+    const rows = pantryRows({
+      ...base,
+      items: [kept("salt")],
+      kept: [kept("salt")],
+      offered: [suggestion("kale")],
+    });
+
+    expect(rows.map((row) => [row.type, row.foodId])).toEqual([
+      ["kept", "i-salt"],
+      ["suggestions", null],
+      ["suggestion", "s-kale"],
+    ]);
+  });
+
+  it("names the suggestion's food and none for the more row", () => {
+    const offered = Array.from({ length: SUGGESTIONS_SHOWN + 1 }, (_, i) => suggestion(`f${i}`));
+    const rows = pantryRows({ ...base, items: [kept("a")], kept: [kept("a")], offered });
+
+    expect(rows.find((row) => row.type === "suggestion")?.foodId).toBe("s-f0");
+    expect(rows.at(-1)).toMatchObject({ type: "more", foodId: null });
   });
 });

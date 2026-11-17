@@ -312,10 +312,10 @@ export function createUnitFormatter({
     amount?: number | null | undefined
   ): string => (unit ? formatUnit(unit, locale, units, amount, unitStyle) : "");
 
-  /** A unitless amount reads as a count ("2×"); a unit longer than two letters gets a space. */
-  const formatAmountUnit = (
+  const join = (
     amount: number | null | undefined,
-    unit: string | null | undefined
+    unit: string | null | undefined,
+    spaceShortUnits: boolean
   ): string => {
     const hasAmount = !!amount || amount === 0;
 
@@ -325,10 +325,22 @@ export function createUnitFormatter({
 
     if (!hasAmount) return localizedUnit;
 
-    return localizedUnit.length > 2
+    return spaceShortUnits || localizedUnit.length > 2
       ? `${toOneDecimal(amount ?? 0)} ${localizedUnit}`
       : `${toOneDecimal(amount ?? 0)}${localizedUnit}`;
   };
 
-  return { formatAmountUnit, formatUnitOnly, locale, units };
+  /** A unitless amount reads as a count ("2×"); a unit longer than two letters gets a space. */
+  const formatAmountUnit = (
+    amount: number | null | undefined,
+    unit: string | null | undefined
+  ): string => join(amount, unit, false);
+
+  /** As `formatAmountUnit`, with the space before every unit ("1 lb"), as the recipe page reads. */
+  const formatSpacedAmountUnit = (
+    amount: number | null | undefined,
+    unit: string | null | undefined
+  ): string => join(amount, unit, true);
+
+  return { formatAmountUnit, formatSpacedAmountUnit, formatUnitOnly, locale, units };
 }

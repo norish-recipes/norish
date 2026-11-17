@@ -1,8 +1,9 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Input, TextField, useThemeColor } from "heroui-native";
+import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useCookbookMembership } from "@norish/shared-react/recipes";
@@ -46,16 +47,13 @@ export function AddToCookbookScreen() {
     <PickSheet
       action={{
         label: intl.formatMessage({ id: "common.actions.save" }),
-        icon: "checkmark",
-        testID: "add-to-cookbook-save",
         onPress: isDirty ? () => void save(() => router.back()) : undefined,
       }}
       header={
         <View className="flex-row gap-2">
           <TextField className="flex-1">
-            <Input
+            <SheetInput
               accessibilityLabel={newLabel}
-              className="bg-default h-12 rounded-full px-4 text-base"
               placeholder={newLabel}
               returnKeyType="done"
               testID="add-to-cookbook-new-title"

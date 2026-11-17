@@ -10,11 +10,9 @@
   "today": {
     "openRecipe": "Отвори рецептата",
     "move": "Премести…",
-    "removeTitle": "Да се премахне ли от днес?",
     "removeMessage": "„{name}“ се премахва от {slot} ({day}).",
     "moveTitle": "Премести",
-    "moveSubtitle": "{name}, {slot} днес",
-    "moveToDay": "Премести {name} на {day}"
+    "moveSubtitle": "{name}, {slot} днес"
   },
   "editNote": {
     "title": "Редактиране на бележка",
@@ -55,7 +53,6 @@
     "randomRecipe": "Случайна рецепта",
     "noRecipesFound": "Няма намерени рецепти.",
     "failedToLoadRecipes": "Зареждането на рецептите не бе успешно.",
-    "planRecipe": "Планирай рецепта",
     "searchOrAddNote": "Търсете рецепти или добавете бележка",
     "random": "Случайна рецепта",
     "planThisRecipe": "Планирай тази рецепта",

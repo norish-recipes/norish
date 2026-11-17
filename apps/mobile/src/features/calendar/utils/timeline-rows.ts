@@ -77,6 +77,14 @@ export const dayRowKey = (dayKey: string) => `day:${dayKey}`;
 export const rowDay = (row: TimelineRow) =>
   row.kind === "heading" ? row.value.dayKey : row.value.item.date;
 
+/** The rows above `day`, as one key: a change to it is one the reader doesn't see, which the list
+ * takes without sliding its rows so it keeps its place. */
+export const hiddenAbove = (rows: readonly TimelineRow[], day: string) =>
+  rows
+    .filter((row) => rowDay(row) < day)
+    .map((row) => row.key)
+    .join();
+
 /** One row per day top, filled slot and planned item, from the first day to the last. */
 export function timelineRows(days: Date[], data: CalendarData, todayKey: string): TimelineRow[] {
   return days.flatMap((date, dayIndex): TimelineRow[] => {
@@ -168,6 +176,18 @@ export function rowLayout(rows: ArrayLike<TimelineRow>, index: number, scale = 1
   }
 
   return known.layouts[index] ?? { offset: 0, length: 0 };
+}
+
+/** The scroll offset that puts row `index` `top` points below the list's top edge, `headerHeight`
+ * being the title row above the first row; never above the list's start. */
+export function openingOffset(
+  rows: ArrayLike<TimelineRow>,
+  index: number,
+  scale: number,
+  headerHeight: number,
+  top: number
+) {
+  return Math.max(0, rowLayout(rows, index, scale).offset + headerHeight - top);
 }
 
 /** Where a held item dropped: resolved by id against the plan as it is when it lands, onto the

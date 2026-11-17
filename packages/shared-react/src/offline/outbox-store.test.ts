@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { PlannedItemEditInputSchema } from "@norish/shared/contracts/zod";
+
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry } from "./outbox-types";
 import { createOutboxStore } from "./outbox-store";
@@ -106,6 +108,26 @@ describe("outbox store", () => {
 
     expect(restored).toBeInstanceOf(Date);
     expect(restored.toISOString()).toBe(when.toISOString());
+  });
+
+  it("reads a v0.26.1 calendar.updateItem entry as calendar.editItem", async () => {
+    // What the v0.26.1-beta web client queued for a planned note's text edit.
+    await store.enqueue(
+      entry({
+        path: "calendar.updateItem",
+        input: { itemId: "4f0c3c1e-0a7b-4a39-9a51-6f3cfa2d6b10", version: 3, title: "Leftovers" },
+        entityId: null,
+      })
+    );
+
+    const [loaded] = await store.forOwner("u1", "pending");
+
+    expect(loaded).toMatchObject({
+      path: "calendar.editItem",
+      input: { itemId: "4f0c3c1e-0a7b-4a39-9a51-6f3cfa2d6b10", version: 3, title: "Leftovers" },
+    });
+    expect((await store.loadAll())[0]!.path).toBe("calendar.editItem");
+    expect(PlannedItemEditInputSchema.safeParse(loaded!.input).success).toBe(true);
   });
 
   it("notifies subscribers when the queue changes", async () => {

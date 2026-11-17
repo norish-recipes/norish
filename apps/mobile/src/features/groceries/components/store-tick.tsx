@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable } from "react-native";
+import { PressableScale } from "@/components/pressable-scale";
 import { RoundTick } from "@/components/round-tick";
 import { useThemeColor } from "heroui-native";
 
@@ -24,7 +24,7 @@ export function StoreTick({
   const [accent] = useThemeColor(["accent"] as const);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityLabel={label}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: partial ? "mixed" : checked }}
@@ -35,6 +35,6 @@ export function StoreTick({
       onPress={onPress}
     >
       <RoundTick color={color ?? accent} partial={partial} selected={checked} />
-    </Pressable>
+    </PressableScale>
   );
 }

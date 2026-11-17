@@ -40,16 +40,19 @@ export function GroupRow({
   onToggleOpen: () => void;
 }) {
   const intl = useIntl();
-  const { formatAmountUnit } = useUnitFormatter(intl.locale);
+  const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
   const [muted] = useThemeColor(["muted"] as const);
   const color = useStoreColor(store?.color);
   const only = group.sources.length === 1 ? group.sources[0] : undefined;
-  const amount = formatAmountUnit(group.totalAmount, group.displayUnit);
+  const amount = formatSpacedAmountUnit(group.totalAmount, group.displayUnit);
   const name = group.displayName || intl.formatMessage({ id: "groceries.item.unnamedItem" });
   const manual = intl.formatMessage({ id: "groceries.empty.manual" });
+  const recipes = group.sources.filter((source) => source.recipeName).length;
   const second = only
     ? subline
-    : formatInlineSourceBreakdown(group.sources, formatAmountUnit, manual);
+    : recipes === group.sources.length
+      ? intl.formatMessage({ id: "groceries.mobile.recipeCount" }, { count: recipes })
+      : formatInlineSourceBreakdown(group.sources, formatSpacedAmountUnit, manual);
   const ids = group.sources.map((source) => source.grocery.id);
   const done = group.allDone;
 
@@ -75,7 +78,7 @@ export function GroupRow({
           <View className="min-w-0 flex-1 gap-0.5">
             <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
             {second ? (
-              <Text className="text-muted text-sm" numberOfLines={1}>
+              <Text className="text-muted text-sm" numberOfLines={2}>
                 {second}
               </Text>
             ) : null}
@@ -94,7 +97,7 @@ export function GroupRow({
           {group.sources.map(({ grocery, recipeName }, index) => (
             <SourceRow
               key={grocery.id}
-              amount={formatAmountUnit(shownAmount(grocery), grocery.unit)}
+              amount={formatSpacedAmountUnit(shownAmount(grocery), grocery.unit)}
               color={color}
               first={index === 0}
               grocery={grocery}

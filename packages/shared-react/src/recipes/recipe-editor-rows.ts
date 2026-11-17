@@ -1,5 +1,6 @@
 import type { UnitsMap } from "@norish/config/zod/server-config";
 import type { MeasurementSystem } from "@norish/shared/contracts";
+import type { AmountDisplayMode } from "@norish/shared/lib/format-amount";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { deriveStepIngredientAmount, toLineAmount } from "@norish/shared/lib/step-ingredients";
@@ -40,13 +41,18 @@ export function createIngredientRow(
   return { id: `ing-${nextIngredientRowId++}`, text, ...meta };
 }
 
-/** The editor's rows for the given lines, plus the empty row to type into. */
-export function seedIngredientRows(ingredients: ParsedIngredient[]): IngredientRow[] {
+/** The editor's rows for the given lines, plus the empty row to type into; amounts read in `mode`
+ * where given, as the recipe page shows them, and the stored line is the one parsed back. */
+export function seedIngredientRows(
+  ingredients: ParsedIngredient[],
+  mode?: AmountDisplayMode
+): IngredientRow[] {
   return [
     ...ingredients.map((ing) => {
       const parts: string[] = [];
 
-      if (ing.amount !== null) parts.push(String(ing.amount));
+      if (ing.amount !== null)
+        parts.push(mode ? formatAmount(ing.amount, mode) : String(ing.amount));
       if (ing.unit) parts.push(ing.unit);
       if (ing.ingredientName) parts.push(ing.ingredientName);
 

@@ -16,7 +16,6 @@ function RenameSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
     <CookbookTitleSheet
       canSubmit={isDirty}
       name="cookbook-rename"
-      submitIcon="checkmark"
       submitLabelId="common.actions.save"
       title={intl.formatMessage({ id: "recipes.cookbooks.renameTitle" })}
       value={title}
@@ -43,7 +42,6 @@ export function CookbookRenameScreen() {
       isLoading
       canSubmit={false}
       name="cookbook-rename"
-      submitIcon="checkmark"
       submitLabelId="common.actions.save"
       title={intl.formatMessage({ id: "recipes.cookbooks.renameTitle" })}
     />

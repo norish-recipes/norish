@@ -9,25 +9,22 @@ import { slotTranslationKeys, TODAY_MEAL_SLOTS } from "@norish/shared-react/cale
 export const asSlot = (value: string | undefined): Slot =>
   TODAY_MEAL_SLOTS.find((slot) => slot === value) ?? "Dinner";
 
-/** The four meal slots as one rounded segmented control. `inCard` swaps its fills for a grouped
- * card's, whose ground is the neutral one; each tab's testID is `${testID}-${slot}`. */
+/** The four meal slots as one rounded segmented control; each tab's testID is `${testID}-${slot}`. */
 export function SlotTabs({
   value,
   testID,
-  inCard = false,
   onChange,
 }: {
   value: Slot;
   testID: string;
-  inCard?: boolean;
   onChange: (slot: Slot) => void;
 }) {
   const intl = useIntl();
 
   return (
     <Tabs value={value} onValueChange={(next) => onChange(asSlot(next))}>
-      <Tabs.List className={`${inCard ? "bg-surface" : "bg-default"} h-10 rounded-full p-[3px]`}>
-        <Tabs.Indicator className={`${inCard ? "bg-default" : "bg-surface"} rounded-full`} />
+      <Tabs.List className="bg-default h-10 rounded-full p-[3px]">
+        <Tabs.Indicator className="bg-surface rounded-full" />
         {TODAY_MEAL_SLOTS.map((slot) => (
           <Tabs.Trigger
             key={slot}

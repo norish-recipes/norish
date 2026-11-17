@@ -1,10 +1,9 @@
+import type { Edge } from "@/lib/card-edges";
 import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { useIsLifted } from "@/components/drag-list/drag-list";
-
-import type { Edge } from "./card-edges";
 
 /** One row's slice of its section's card: the card is flat rows, so the heading rounds the top
  * and the last row the bottom. `gap` leaves room above a section's heading. */

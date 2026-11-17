@@ -1,8 +1,6 @@
 "use client";
 
-import type { DateValue } from "@internationalized/date";
 import type { Key } from "react";
-import { useState } from "react";
 import { Panel } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { DateAndSlotFields } from "@/features/calendar/components/panels/edit-planned-recipe-panel";
@@ -10,75 +8,46 @@ import { Input, Label, TextField } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
 
-import { useCalendarMutations } from "@norish/shared-react/calendar";
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+import { useCalendarMutations, usePlannedItemDraft } from "@norish/shared-react/calendar";
 import { Slot } from "@norish/shared/contracts";
 
 type EditNotePanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  noteId: string;
-  initialTitle: string;
-  date: string;
-  slot: Slot;
+  note: PlannedItemFromQuery;
 };
-export function EditNotePanel({
-  open,
-  onOpenChange,
-  noteId,
-  initialTitle,
-  date,
-  slot,
-}: EditNotePanelProps) {
-  const { planNote, deleteItem, moveItem, updateItem } = useCalendarMutations();
-  const [title, setTitle] = useState(initialTitle);
-  const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
-  const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
-  const [seededFrom, setSeededFrom] = useState({ open, initialTitle, date, slot });
+
+/** A note's draft: Save writes its text, day and slot as one change, only what was touched. */
+export function EditNotePanel({ open, onOpenChange, note }: EditNotePanelProps) {
+  const { planNote, deleteItem, saveItem } = useCalendarMutations();
+  const { draft, setTitle, setDate, setSlot, save } = usePlannedItemDraft(note, saveItem);
   const t = useTranslations("calendar.editNote");
   const tActions = useTranslations("common.actions");
-  if (
-    seededFrom.open !== open ||
-    seededFrom.initialTitle !== initialTitle ||
-    seededFrom.date !== date ||
-    seededFrom.slot !== slot
-  ) {
-    setSeededFrom({ open, initialTitle, date, slot });
-    if (open) {
-      setTitle(initialTitle);
-      setSelectedDate(parseDate(date));
-      setSelectedSlot(slot);
-    }
-  }
+  const title = draft.title.trim();
   const handleSave = () => {
-    if (!title.trim()) return;
-    const newDateStr = selectedDate.toString();
-    const titleChanged = title.trim() !== initialTitle;
-    const locationChanged = newDateStr !== date || selectedSlot !== slot;
-    if (titleChanged) {
-      updateItem(noteId, title.trim());
-    }
-    if (locationChanged) {
-      moveItem(noteId, newDateStr, selectedSlot, 0);
-    }
+    if (!title) return;
+    save();
     onOpenChange(false);
   };
   const handleDelete = () => {
-    deleteItem(noteId);
+    deleteItem(note.id);
     onOpenChange(false);
   };
   const handleDuplicate = () => {
-    if (!title.trim()) return;
-    planNote(selectedDate.toString(), selectedSlot, title.trim());
+    if (!title) return;
+    planNote(draft.date, draft.slot, title);
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {
-      setSelectedSlot(value.toString() as Slot);
+      setSlot(value.toString() as Slot);
     }
   };
+
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
       <Panel.Body>
-        <TextField value={title} onChange={setTitle}>
+        <TextField value={draft.title} onChange={setTitle}>
           <Label>{t("noteLabel")}</Label>
           <Input
             placeholder={t("notePlaceholder")}
@@ -91,9 +60,9 @@ export function EditNotePanel({
         </TextField>
 
         <DateAndSlotFields
-          selectedDate={selectedDate}
-          selectedSlot={selectedSlot}
-          onSelectDate={setSelectedDate}
+          selectedDate={parseDate(draft.date)}
+          selectedSlot={draft.slot}
+          onSelectDate={(date) => setDate(date.toString())}
           onSelectSlot={handleSlotChange}
         />
       </Panel.Body>

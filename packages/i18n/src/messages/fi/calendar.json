@@ -10,11 +10,9 @@
   "today": {
     "openRecipe": "Avaa resepti",
     "move": "Siirrä…",
-    "removeTitle": "Poistetaanko tältä päivältä?",
     "removeMessage": "{name} poistetaan kohdasta {slot}, {day}.",
     "moveTitle": "Siirrä",
-    "moveSubtitle": "{name}, tämän päivän {slot}",
-    "moveToDay": "Siirrä {name} päivälle {day}"
+    "moveSubtitle": "{name}, tämän päivän {slot}"
   },
   "editNote": {
     "title": "Muokkaa huomautusta",
@@ -55,7 +53,6 @@
     "randomRecipe": "Satunnainen resepti",
     "noRecipesFound": "Reseptejä ei löytynyt.",
     "failedToLoadRecipes": "Reseptien lataaminen epäonnistui.",
-    "planRecipe": "Suunnittele resepti",
     "searchOrAddNote": "Hae reseptejä tai lisää muistiinpano",
     "random": "Satunnainen resepti",
     "planThisRecipe": "Suunnittele tämä resepti",

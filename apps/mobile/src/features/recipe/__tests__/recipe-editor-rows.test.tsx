@@ -34,7 +34,6 @@ vi.mock("react-native", () => ({
   Text: ({ children }: Props) => <span>{children}</span>,
   ScrollView: host,
   Image: () => null,
-  ActivityIndicator: () => null,
   Pressable: ({ testID, children, onPress, disabled, accessibilityLabel }: Props) => (
     <button
       aria-label={accessibilityLabel}
@@ -79,6 +78,7 @@ vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
 vi.mock("uniwind", () => ({ withUniwind: () => () => null }));
 vi.mock("heroui-native", () => ({
   Skeleton: () => null,
@@ -105,6 +105,7 @@ vi.mock("@/components/drag-list/drag-list", () => ({
     return rows.map((row) => <div key={row.key}>{renderItem(row.value, () => {})}</div>);
   },
 }));
+vi.mock("@/components/modal-header", () => import("../../../../__tests__/mocks/modal-header"));
 vi.mock("@/components/glass", () => ({
   GlassSurface: () => null,
   GlassCloseButton: ({ testID, onPress }: Props) => (
@@ -118,8 +119,11 @@ vi.mock("@/hooks/use-photo-source-sheet", () => ({
     state.pendingPick = () => onPicked([{ uri: "/recipes/r/steps/new.jpg" }]);
   },
 }));
-vi.mock("@/lib/network/server-url", () => ({ useServerImage: () => (path: string) => path }));
-vi.mock("@/components/ingredient-icon", () => ({ IngredientIcon: () => null }));
+vi.mock("@/components/server-image", () => ({ ServerImage: () => null }));
+vi.mock("@/components/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconSlots: ({ children }: { children: React.ReactNode }) => children,
+}));
 vi.mock("../components/fade-edge", () => ({ FadeEdge: () => null }));
 vi.mock("../components/tint", () => ({ SectionCard: ({ children }: Props) => children }));
 vi.mock("../components/editor/detail-cards", () => ({
@@ -274,7 +278,7 @@ type Payload = {
 
 const input = (id: string) => screen.getByTestId(id) as HTMLTextAreaElement;
 const type = (id: string, text: string) => fireEvent.change(input(id), { target: { value: text } });
-const save = () => fireEvent.click(screen.getByTestId("recipe-editor-save"));
+const save = () => fireEvent.click(screen.getByTestId("header-confirm"));
 const saved = () => state.update.mock.calls.at(-1)?.[1] as Payload;
 /** Which line, by id, each step's references point at in the payload. */
 const refIds = (payload: Payload) =>
@@ -396,7 +400,7 @@ describe("RecipeEditorScreen with its real rows", () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />);
     save();
 
-    expect(screen.getByTestId("recipe-editor-save")).toHaveProperty("disabled", true);
+    expect(screen.getByTestId("header-confirm")).toHaveProperty("disabled", true);
     expect(state.update).not.toHaveBeenCalled();
   });
 
