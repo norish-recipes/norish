@@ -1,0 +1,70 @@
+# Reads a recipe and scales it: the servings stepper moves the count and every amount with it, down
+# again, and the stepper's value opens the Servings sheet.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Scale Pancakes", "key": "cakes", "ingredients": ["200 g flour", "2 eggs"]}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.cakes}
+    timeout: 20000
+- tapOn:
+    id: recipe-card-${output.cakes}
+- extendedWaitUntil:
+    visible:
+      id: recipe-servings-value
+      text: 2 servings
+    timeout: 20000
+- assertVisible:
+    id: recipe-ingredient-0
+    text: 200 grams flour
+- assertVisible:
+    id: recipe-ingredient-1
+    text: 2 eggs
+# Two to three servings is half as much again.
+- tapOn:
+    id: recipe-servings-increase
+- assertVisible:
+    id: recipe-servings-value
+    text: 3 servings
+- assertVisible:
+    id: recipe-ingredient-0
+    text: 300 grams flour
+- assertVisible:
+    id: recipe-ingredient-1
+    text: 3 eggs
+# Back to the recipe's own count.
+- tapOn:
+    id: recipe-servings-decrease
+- assertVisible:
+    id: recipe-servings-value
+    text: 2 servings
+- assertVisible:
+    id: recipe-ingredient-0
+    text: 200 grams flour
+# One serving, the least a recipe has, halves it and disables the step.
+- tapOn:
+    id: recipe-servings-decrease
+- assertVisible:
+    id: recipe-servings-value
+    text: 1 serving
+- assertVisible:
+    id: recipe-ingredient-0
+    text: 100 grams flour
+# The value opens the Servings sheet, whose own Close leaves it on the page as it was.
+- tapOn:
+    id: recipe-servings-value
+- extendedWaitUntil:
+    visible:
+      id: recipe-servings-input
+    timeout: 20000
+- tapOn: Close
+- extendedWaitUntil:
+    notVisible:
+      id: recipe-servings-input
+    timeout: 20000
+- assertVisible:
+    id: recipe-servings-value
+    text: 1 serving

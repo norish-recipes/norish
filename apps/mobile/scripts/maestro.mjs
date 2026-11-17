@@ -13,8 +13,12 @@ import { ValkeyContainer } from "@testcontainers/valkey";
 
 import { PAGE_NAME, seeder, serveRecipePage } from "./maestro-seed.mjs";
 
-// An optional argument runs that one flow, with the same setup, instead of the whole folder.
+// An optional argument runs that one flow, with the same setup, instead of the whole folder; a
+// second one runs it that many times in a row, to prove it stable.
 const only = process.argv[2] && path.resolve(process.argv[2]);
+const repeat = Number(process.argv[3] ?? 1);
+
+if (!Number.isInteger(repeat) || repeat < 1) throw new Error(`Not a run count: ${process.argv[3]}`);
 
 if (only && !existsSync(only)) throw new Error(`No flow at ${only}`);
 
@@ -190,9 +194,16 @@ const proxy = net.createServer((client) => {
   }
   client.pipe(upstream).pipe(client);
 });
+// `min` and `max`, as a read of names waits for them.
+const bounds = (route) => ({
+  min: Number(route.searchParams.get("min") ?? 0),
+  max: Number(route.searchParams.get("max") ?? Infinity),
+});
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
-  // `POST /reset`, `POST /recipe` (a JSON body), `GET /count?name=`, `GET /groceries`, `GET /day?offset=`, `GET /planned`, `GET /pantry` and `GET /pantry-kept` answer in JSON.
+  // `POST /reset`, `POST /recipe`, `POST /grocery`, `POST /store`, `POST /plan` and `POST /pantry-add`
+  // (a JSON body each), `GET /count?name=`, `GET /groceries`, `GET /grocery`, `GET /stores`,
+  // `GET /day?offset=`, `GET /planned`, `GET /pantry` and `GET /pantry-kept` answer in JSON.
   const route = new URL(request.url ?? "/", "http://control");
   const body = await new Promise((resolve) => {
     const chunks = [];
@@ -211,11 +222,38 @@ const control = createServer(async (request, response) => {
         JSON.stringify({ count: await seed.countRecipes(route.searchParams.get("name")) })
       );
     } else if (route.pathname === "/groceries") {
+      response.write(JSON.stringify({ names: await seed.groceryNames(bounds(route)) }));
+    } else if (route.pathname === "/grocery" && request.method === "POST") {
+      response.write(JSON.stringify({ id: await seed.createGrocery(JSON.parse(body)) }));
+    } else if (route.pathname === "/grocery") {
+      const want = {};
+
+      // `done` and `repeats` are true or false, `store` a Store's name, or nothing for none.
+      for (const field of ["done", "repeats"]) {
+        if (route.searchParams.has(field)) want[field] = route.searchParams.get(field) === "true";
+      }
+      if (route.searchParams.has("store")) want.store = route.searchParams.get("store") || null;
+      response.write(
+        JSON.stringify(
+          await seed.groceryWhere(route.searchParams.get("name") ?? "", want, {
+            within: Number(route.searchParams.get("within") ?? 15_000),
+          })
+        )
+      );
+    } else if (route.pathname === "/stores") {
+      const is = route.searchParams.get("is");
+
       response.write(
         JSON.stringify({
-          names: await seed.groceryNames(Number(route.searchParams.get("min") ?? 0)),
+          names: await seed.storeNames({ is: is === null ? undefined : JSON.parse(is) }),
         })
       );
+    } else if (route.pathname === "/store") {
+      response.write(JSON.stringify({ id: await seed.createStore(JSON.parse(body)) }));
+    } else if (route.pathname === "/plan") {
+      response.write(JSON.stringify({ id: await seed.createPlanned(JSON.parse(body)) }));
+    } else if (route.pathname === "/pantry-add") {
+      await seed.addPantry(JSON.parse(body));
     } else if (route.pathname === "/day") {
       const offset = route.searchParams.get("offset") ?? "0";
 
@@ -230,15 +268,12 @@ const control = createServer(async (request, response) => {
           await seed.plannedWhere(route.searchParams.get("name") ?? "", {
             date: want("date"),
             slot: want("slot"),
+            absent: want("absent") === "true",
           })
         )
       );
     } else if (route.pathname === "/pantry") {
-      response.write(
-        JSON.stringify({
-          names: await seed.pantryNames(Number(route.searchParams.get("min") ?? 0)),
-        })
-      );
+      response.write(JSON.stringify({ names: await seed.pantryNames(bounds(route)) }));
     } else if (route.pathname === "/pantry-kept") {
       response.write(
         JSON.stringify(
@@ -413,7 +448,7 @@ const vars = {
 };
 
 try {
-  await maestro(only ?? flows, vars);
+  for (let run = 0; run < repeat; run++) await maestro(only ?? flows, vars);
   proxy.close();
 
   if (!only) await maestro(path.join(flows, "old-server"), vars);
