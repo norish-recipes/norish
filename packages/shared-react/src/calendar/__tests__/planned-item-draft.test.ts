@@ -7,8 +7,6 @@ import { plannedItemChanges, usePlannedItemDraft } from "../planned-item-draft";
 
 const saveItem = vi.hoisted(() => vi.fn());
 
-vi.mock("../use-calendar-mutations", () => ({ useCalendarMutations: () => ({ saveItem }) }));
-
 const note: PlannedItemFromQuery = {
   id: "n1",
   userId: "u1",
@@ -85,7 +83,7 @@ describe("usePlannedItemDraft", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("saves date, slot and text as one write, and writes nothing before Save", () => {
-    const { result } = renderHook(() => usePlannedItemDraft(note));
+    const { result } = renderHook(() => usePlannedItemDraft(note, saveItem));
 
     act(() => {
       result.current.setTitle("Leek soup");
@@ -105,7 +103,7 @@ describe("usePlannedItemDraft", () => {
   });
 
   it("has no changes, and saves nothing, until something differs", () => {
-    const { result } = renderHook(() => usePlannedItemDraft(note));
+    const { result } = renderHook(() => usePlannedItemDraft(note, saveItem));
 
     expect(result.current.changes).toBeNull();
     act(() => result.current.save());
@@ -123,7 +121,7 @@ describe("a draft while a housemate writes the item", () => {
 
   const moved = { ...note, date: "2026-11-14", slot: "Dinner" as const, version: 2 };
   const draftOf = () =>
-    renderHook(({ item }) => usePlannedItemDraft(item), { initialProps: { item: note } });
+    renderHook(({ item }) => usePlannedItemDraft(item, saveItem), { initialProps: { item: note } });
 
   it("untouched: shows their values and has nothing to save", () => {
     const { result, rerender } = draftOf();

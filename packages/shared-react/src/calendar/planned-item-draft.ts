@@ -4,7 +4,6 @@ import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 
 import type { PlannedItemChanges } from "./types";
 import { isRecipeItem } from "./todays-meals";
-import { useCalendarMutations } from "./use-calendar-mutations";
 
 /** What the planned-item sheet edits before it saves. */
 export type PlannedItemDraft = { title: string; date: string; slot: Slot };
@@ -31,9 +30,11 @@ export function plannedItemChanges(
 }
 
 /** A planned item's edit as a draft over the live item: an untouched field follows it, and `save`
- * writes once, at the live version, only what the member changed; leaving without it discards. */
-export function usePlannedItemDraft(item: PlannedItemFromQuery) {
-  const { saveItem } = useCalendarMutations();
+ * hands `write` only what the member changed, once; leaving without it discards. */
+export function usePlannedItemDraft(
+  item: PlannedItemFromQuery,
+  write: (itemId: string, changes: PlannedItemChanges) => void
+) {
   const [touched, setTouched] = useState<Partial<PlannedItemDraft>>({});
   const savedRef = useRef(false);
   const draft: PlannedItemDraft = {
@@ -54,7 +55,7 @@ export function usePlannedItemDraft(item: PlannedItemFromQuery) {
     save: () => {
       if (!changes || savedRef.current) return;
       savedRef.current = true;
-      saveItem(item.id, changes);
+      write(item.id, changes);
     },
   };
 }
