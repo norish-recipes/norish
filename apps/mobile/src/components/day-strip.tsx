@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { stripDays } from "@/lib/strip-days";
 import { DatePicker, Host } from "@expo/ui/swift-ui";
 import { accessibilityIdentifier, tint } from "@expo/ui/swift-ui/modifiers";
 import { useIntl } from "react-intl";
 
 import { useToday } from "@norish/shared-react/reader";
-import { parseDateKey } from "@norish/shared/lib/helpers";
+import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { SheetStrip } from "./sheet";
-import { sameDay, stripDays } from "./strip-days";
 
 /** A chip's width and the gap after it, for the offset that brings a later day into view. */
 const CHIP = 52;
@@ -28,11 +28,10 @@ export function DayStrip({
 }) {
   const intl = useIntl();
   const accentText = useAccentTextColor();
-  const days = stripDays(parseDateKey(useToday()));
+  const days = stripDays(useToday());
+  const picked = dateKey(date);
   // Opens with the picked day in view, not scrolled back to today.
-  const [start] = useState(() =>
-    Math.max(0, days.findIndex((day) => sameDay(day, date)) * (CHIP + GAP) - CHIP)
-  );
+  const [start] = useState(() => Math.max(0, days.indexOf(picked) * (CHIP + GAP) - CHIP));
 
   return (
     // heroui-native has no day strip, so these chips are hand-built.
@@ -42,8 +41,9 @@ export function DayStrip({
       contentOffset={{ x: start, y: 0 }}
       testID={`${testID}-days`}
     >
-      {days.map((day, offset) => {
-        const selected = sameDay(day, date);
+      {days.map((key, offset) => {
+        const day = parseDateKey(key);
+        const selected = key === picked;
         const label =
           offset === 0
             ? intl.formatMessage({ id: "calendar.mobile.today" })
@@ -51,7 +51,7 @@ export function DayStrip({
 
         return (
           <Pressable
-            key={day.getTime()}
+            key={key}
             accessibilityLabel={intl.formatDate(day, {
               weekday: "long",
               month: "short",

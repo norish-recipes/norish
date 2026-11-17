@@ -6,7 +6,7 @@ import { MoveFields } from "@/components/move-fields";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { asSlot } from "@/components/slot-tabs";
-import { sameDay, stripDays } from "@/components/strip-days";
+import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { Button, Skeleton, Spinner, useThemeColor } from "heroui-native";
@@ -19,7 +19,7 @@ import {
   useRecipeListSubscription,
   useRecipesQuery,
 } from "@norish/shared-react/recipes";
-import { parseDateKey } from "@norish/shared/lib/helpers";
+import { dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 import { usePlanExit } from "../hooks/use-plan-exit";
 
@@ -33,8 +33,8 @@ export function PlanRecipeScreen() {
   const [foreground] = useThemeColor(["foreground"] as const);
   const today = parseDateKey(useToday());
   const day = params.date ? parseDateKey(params.date) : null;
-  const days = stripDays(today);
-  const onStrip = (picked: Date) => days.some((stripped) => sameDay(stripped, picked));
+  const days = stripDays(dateKey(today));
+  const onStrip = (picked: Date) => days.includes(dateKey(picked));
   const [picked, setPicked] = useState<{ day: Date; fromStrip: boolean } | null>(null);
   // Today until a day is picked; a strip day that midnight took off the strip is today again.
   const stripped = picked?.fromStrip && !onStrip(picked.day);
