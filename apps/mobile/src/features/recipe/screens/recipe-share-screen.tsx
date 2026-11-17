@@ -47,6 +47,7 @@ function CreateLinkButton({
 
   return (
     <Button
+      accessibilityLabel={t("createLink")}
       className="h-12"
       isDisabled={isCreating}
       testID="recipe-share-create"
@@ -123,11 +124,21 @@ function ShareBody({
             {latest}
           </Text>
           <View className="flex-row gap-2">
-            <Button size="sm" variant="tertiary" onPress={() => void copy()}>
+            <Button
+              accessibilityLabel={t("copyLink")}
+              size="sm"
+              variant="tertiary"
+              onPress={() => void copy()}
+            >
               <Ionicons color={foreground} name="copy-outline" size={16} />
               <Button.Label>{t("copyLink")}</Button.Label>
             </Button>
-            <Button size="sm" variant="tertiary" onPress={() => void Linking.openURL(latest)}>
+            <Button
+              accessibilityLabel={t("openLink")}
+              size="sm"
+              variant="tertiary"
+              onPress={() => void Linking.openURL(latest)}
+            >
               <Ionicons color={foreground} name="open-outline" size={16} />
               <Button.Label>{t("openLink")}</Button.Label>
             </Button>
