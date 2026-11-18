@@ -181,6 +181,27 @@ describe("ModalHeader", () => {
     expect(create).toHaveBeenCalledTimes(2);
   });
 
+  it("frees the item after a rejected action without raising an unhandled rejection", async () => {
+    const unhandled = vi.fn();
+    const failing = vi.fn(() => Promise.reject(new Error("nope")));
+
+    process.on("unhandledRejection", unhandled);
+    render(<ModalHeader confirm={{ label: "Create", onPress: failing }} title="Share" />);
+    const press = (declared().unstable_headerRightItems()[0] as unknown as { onPress: () => void })
+      .onPress;
+
+    press();
+    press();
+    expect(failing).toHaveBeenCalledOnce();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    press();
+    process.off("unhandledRejection", unhandled);
+
+    expect(failing).toHaveBeenCalledTimes(2);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
   it("ignores a press on a confirm or action that is disabled", () => {
     const save = vi.fn();
     const act = vi.fn();

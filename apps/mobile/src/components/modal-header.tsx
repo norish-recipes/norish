@@ -80,9 +80,11 @@ export function ModalHeader({
 
     if (result instanceof Promise) {
       busyRef.current = true;
-      void result.finally(() => {
+      const release = () => {
         busyRef.current = false;
-      });
+      };
+
+      result.then(release, release);
     }
   };
 
