@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Loader } from "@/components/loader";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { SCROLLED_PAST } from "@/components/tab-root-header";
+import { homeIndicator } from "@/lib/home-indicator";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
 import { useTabBarMinimised } from "@/lib/tab-accessory-placement";
@@ -58,7 +59,7 @@ export function CardList<Row>({
   scroll: TabScroll;
   testID?: string;
 }) {
-  const { homeIndicator, offset, onScroll } = scroll;
+  const { offset, onScroll } = scroll;
   const minimised = useTabBarMinimised();
   const fadeStyle = useAnimatedStyle(() => ({
     height:

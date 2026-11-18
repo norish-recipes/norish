@@ -8,6 +8,7 @@ const mounts = vi.hoisted(() => new Map<string, number>());
 const entered = vi.hoisted(() => [] as string[]);
 const exited = vi.hoisted(() => [] as string[]);
 
+vi.mock("@/lib/home-indicator", () => ({ homeIndicator: 0 }));
 vi.mock("react-native", () => ({ View: ({ children }: { children?: ReactNode }) => children }));
 vi.mock("expo-router", () => ({ useIsFocused: () => true }));
 vi.mock("react-native-reanimated", async () => {
@@ -80,7 +81,6 @@ function Card({ id }: { id: string }) {
 const scroll = {
   offset: { value: 0 },
   onScroll: undefined,
-  homeIndicator: 0,
   barBottom: 0,
 } as never;
 const ROWS = Array.from({ length: 20 }, (_, i) => `r${i}`);

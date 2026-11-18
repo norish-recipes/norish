@@ -3,6 +3,5 @@
 export const useTabScroll = () => ({
   offset: { value: 0 },
   onScroll: undefined,
-  homeIndicator: 0,
   barBottom: 0,
 });

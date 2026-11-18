@@ -5,6 +5,7 @@ import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TabRootHeader } from "@/components/tab-root-header";
+import { homeIndicator } from "@/lib/home-indicator";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useTabScroll } from "@/lib/use-tab-scroll";
@@ -68,7 +69,7 @@ export function PantryScreen() {
               )
             }
             ListHeaderComponent={header}
-            contentContainerStyle={{ paddingBottom: tabListBottomInset(scroll.homeIndicator) }}
+            contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
             contentInsetAdjustmentBehavior="automatic"
             data={isRead ? rows : []}
             keyExtractor={(row) => row.key}

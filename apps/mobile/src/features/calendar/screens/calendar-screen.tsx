@@ -8,6 +8,7 @@ import { DragList } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TabRootHeader } from "@/components/tab-root-header";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
+import { homeIndicator } from "@/lib/home-indicator";
 import { SPRING_FADE_IN, SPRING_FADE_OUT } from "@/lib/motion/layout";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { TAB_ROUTES } from "@/lib/tab-routes";
@@ -157,12 +158,12 @@ export function CalendarScreen() {
         <DragList
           ref={listRef}
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: tabListBottomInset(bar.homeIndicator) }}
+          contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
           // The bar's inset set here, not by UIKit, which shifts an offset given before it applies.
           contentInset={{ top: barBottom }}
           contentInsetAdjustmentBehavior="never"
           contentOffset={{ x: 0, y: openingAt ?? 0 }}
-          edgeInsets={{ top: barBottom, bottom: tabListBottomInset(bar.homeIndicator) }}
+          edgeInsets={{ top: barBottom, bottom: tabListBottomInset(homeIndicator) }}
           // The rows the list shows, which a held row keeps still while `rows` moves on.
           getItemLayout={(shown, index) => ({ ...rowLayout(shown ?? [], index, fontScale), index })}
           initialNumToRender={12}
@@ -232,11 +233,7 @@ export function CalendarScreen() {
           onViewableItemsChanged={onViewable}
         />
       </TabListMarker>
-      <TodayControl
-        direction={direction}
-        homeIndicator={bar.homeIndicator}
-        onPress={scrollToToday}
-      />
+      <TodayControl direction={direction} homeIndicator={homeIndicator} onPress={scrollToToday} />
     </View>
   );
 }
