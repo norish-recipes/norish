@@ -1,6 +1,6 @@
 import type { LayoutChangeEvent } from "react-native";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 
 import { isAllergenTag } from "@norish/shared/lib/helpers";
 
@@ -16,8 +16,9 @@ const LOOK = {
 } as const;
 
 /**
- * A card's tags on one line: the ones that fit, then `+N`. Each chip is measured once in a hidden
- * row, so `fitTags` decides before anything is drawn. `glass` chips sit over a grid card's photo.
+ * A card's tags on one line: the ones that fit, then `+N`. Each chip is measured in a hidden row,
+ * plain as glass has the same box, so `fitTags` decides before anything is drawn; the row then goes.
+ * `glass` chips sit over a grid card's photo.
  */
 export function TagChips({
   tags,
@@ -31,19 +32,28 @@ export function TagChips({
   testID: string;
 }) {
   const [room, setRoom] = useState<number | null>(null);
-  const [widths, setWidths] = useState<Record<string, number>>({});
-  const [moreWidth, setMoreWidth] = useState<number | null>(null);
-  const { size, tone } = LOOK[look];
-  const glass = look === "glass";
-  const widthOf = (tag: string) => (event: LayoutChangeEvent) => {
+  // Chip widths by position, for these tags at this window width and font scale.
+  const { width: screen, fontScale } = useWindowDimensions();
+  const basis = [screen, fontScale, ...tags].join("\n");
+  const [measured, setMeasured] = useState<Measured>({ basis, widths: [], more: null });
+  const known = measured.basis === basis ? measured : { basis, widths: [], more: null };
+  const measure = (update: (known: Measured) => Measured) =>
+    setMeasured((last) => update(last.basis === basis ? last : { basis, widths: [], more: null }));
+  const widthOf = (index: number) => (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
 
-    setWidths((known) => (known[tag] === width ? known : { ...known, [tag]: width }));
+    measure((last) =>
+      last.widths[index] === width
+        ? last
+        : { ...last, widths: Object.assign([...last.widths], { [index]: width }) }
+    );
   };
+  const { size, tone } = LOOK[look];
+  const glass = look === "glass";
   const allergen = (tag: string) => isAllergenTag(tag, allergySet);
-  const chip = (tag: string, maxWidth?: number) => (
+  const chip = (tag: string, maxWidth?: number, onGlass = glass) => (
     <Pill
-      glass={glass}
+      glass={onGlass}
       icon={allergen(tag) ? "warning-outline" : undefined}
       maxWidth={maxWidth}
       size={size}
@@ -52,12 +62,12 @@ export function TagChips({
       {tag}
     </Pill>
   );
-  const tagWidths = tags.map((tag) => widths[tag]);
+  const tagWidths = tags.map((_tag, index) => known.widths[index]);
+  const allMeasured =
+    known.more !== null && tagWidths.every((width): width is number => width !== undefined);
   const fit =
-    room !== null &&
-    moreWidth !== null &&
-    tagWidths.every((width): width is number => width !== undefined)
-      ? fitTags(tagWidths, room, TAG_GAP, moreWidth)
+    room !== null && allMeasured && known.more !== null
+      ? fitTags(tagWidths, room, TAG_GAP, known.more)
       : null;
 
   if (tags.length === 0) return null;
@@ -78,7 +88,7 @@ export function TagChips({
         {fit ? (
           <>
             {tags.slice(0, fit.shown).map((tag, index) => (
-              <React.Fragment key={tag}>
+              <React.Fragment key={index}>
                 {chip(tag, index === 0 ? fit.firstWidth : undefined)}
               </React.Fragment>
             ))}
@@ -91,21 +101,31 @@ export function TagChips({
         ) : null}
       </View>
       {/* Measured at their own width: unclipped by the line, out of sight and of the reader. */}
-      <View
-        accessibilityElementsHidden
-        className="absolute top-0 left-0 flex-row opacity-0"
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-      >
-        {tags.map((tag) => (
-          <View key={tag} onLayout={widthOf(tag)}>
-            {chip(tag)}
+      {allMeasured ? null : (
+        <View
+          accessibilityElementsHidden
+          className="absolute top-0 left-0 flex-row opacity-0"
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+        >
+          {tags.map((tag, index) => (
+            <View key={index} onLayout={widthOf(index)}>
+              {chip(tag, undefined, false)}
+            </View>
+          ))}
+          <View
+            onLayout={(event) => {
+              const { width } = event.nativeEvent.layout;
+
+              measure((last) => (last.more === width ? last : { ...last, more: width }));
+            }}
+          >
+            <Pill size={size}>{`+${tags.length}`}</Pill>
           </View>
-        ))}
-        <View onLayout={(event) => setMoreWidth(event.nativeEvent.layout.width)}>
-          <Pill size={size}>{`+${tags.length}`}</Pill>
         </View>
-      </View>
+      )}
     </View>
   );
 }
+
+type Measured = { basis: string; widths: (number | undefined)[]; more: number | null };

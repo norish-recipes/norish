@@ -7,8 +7,10 @@ import { describe, expect, it, vi } from "vitest";
 type Layout = (event: { nativeEvent: { layout: { width: number } } }) => void;
 
 const layouts = vi.hoisted(() => [] as { onLayout: Layout; children: ReactNode }[]);
+const window = vi.hoisted(() => ({ width: 402, fontScale: 1 }));
 
 vi.mock("react-native", () => ({
+  useWindowDimensions: () => window,
   View: ({
     children,
     onLayout,
@@ -73,5 +75,23 @@ describe("TagChips", () => {
     // "+" is 10 pt and "salad" 50: both fit in 66, whatever the +2 chip measures.
     layOut(66);
     expect(visibleChips(container)).toEqual(["+", "salad"]);
+  });
+
+  it("measures two tags of one name apart, then drops the hidden row until the font scale changes", () => {
+    layouts.length = 0;
+    window.fontScale = 1;
+    const chips = () => (
+      <TagChips allergySet={new Set()} look="glass" tags={["soup", "soup"]} testID="tags" />
+    );
+    const { container, rerender } = render(chips());
+
+    layOut(100);
+    expect(visibleChips(container)).toEqual(["soup", "soup"]);
+    expect(container.querySelector("[data-hidden]")).toBeNull();
+
+    window.fontScale = 1.2;
+    rerender(chips());
+    expect(visibleChips(container)).toEqual([]);
+    expect(container.querySelector("[data-hidden]")).not.toBeNull();
   });
 });
