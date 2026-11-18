@@ -6,6 +6,7 @@ const held = vi.hoisted(() => ({
   params: {} as { date?: string },
   today: "2026-11-15",
   planned: [] as Date[],
+  planRecipe: vi.fn(),
   pickDate: (_date: Date) => {},
 }));
 
@@ -71,8 +72,7 @@ vi.mock("@/components/glass", async () => {
   const { createElement } = await import("react");
 
   return {
-    GlassIconButton: ({ testID, onPress }: { testID: string; onPress: () => void }) =>
-      createElement("button", { "data-testid": testID, onClick: onPress }),
+    GlassIconBadge: () => createElement("span", { "data-testid": "plan-recipe-plus" }),
   };
 });
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
@@ -86,8 +86,23 @@ vi.mock("@/components/sheet", async () => {
     Sheet: ({ children }: { children?: React.ReactNode }) => createElement("div", null, children),
     SheetStrip: ({ children }: { children?: React.ReactNode }) =>
       createElement("div", { "data-testid": "strip" }, children),
-    SheetList: ({ ListHeaderComponent }: { ListHeaderComponent: React.ReactNode }) =>
+    SheetList: ({
       ListHeaderComponent,
+      data,
+      renderItem,
+    }: {
+      ListHeaderComponent: React.ReactNode;
+      data: { id: string }[];
+      renderItem: (info: { item: { id: string }; index: number }) => React.ReactNode;
+    }) =>
+      createElement(
+        "div",
+        null,
+        ListHeaderComponent,
+        data.map((item, index) =>
+          createElement("div", { key: item.id }, renderItem({ item, index }))
+        )
+      ),
   };
 });
 vi.mock("react-intl", () => ({
@@ -98,12 +113,17 @@ vi.mock("@norish/shared-react/reader", () => ({ useToday: () => held.today }));
 vi.mock("@norish/shared-react/recipes", () => ({
   useRandomRecipe: () => ({ getRandomRecipe: vi.fn() }),
   useRecipeListSubscription: vi.fn(),
-  useRecipesQuery: () => ({ recipes: [], isLoading: false, error: null, loadMore: vi.fn() }),
+  useRecipesQuery: () => ({
+    recipes: [{ id: "r1", name: "Soup", image: null }],
+    isLoading: false,
+    error: null,
+    loadMore: vi.fn(),
+  }),
 }));
 vi.mock("@norish/shared-react/calendar", () => ({
   useSlotPlanning: ({ date }: { date: Date }) => ({
     isRandomLoading: false,
-    planRecipe: vi.fn(),
+    planRecipe: held.planRecipe,
     planNote: vi.fn(),
     planRandom: () => held.planned.push(date),
   }),
@@ -116,6 +136,7 @@ describe("PlanRecipeScreen", () => {
   beforeEach(() => {
     held.params = {};
     held.planned = [];
+    held.planRecipe.mockClear();
     held.today = "2026-11-15";
   });
 
@@ -167,5 +188,16 @@ describe("PlanRecipeScreen", () => {
 
     expect(screen.queryByTestId("strip")).toBeNull();
     expect(held.planned.at(-1)).toEqual(new Date(2026, 10, 20));
+  });
+
+  it("plans the recipe once for a tap on its row or its plus", () => {
+    render(<PlanRecipeScreen />);
+    fireEvent.click(screen.getByTestId("plan-recipe-plus"));
+
+    expect(held.planRecipe).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByTestId("plan-recipe-r1"));
+
+    expect(held.planRecipe).toHaveBeenCalledTimes(2);
   });
 });

@@ -2,7 +2,7 @@ import React, { useDeferredValue, useState } from "react";
 import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
-import { GlassIconButton } from "@/components/glass";
+import { GlassIconBadge } from "@/components/glass";
 import { Loader } from "@/components/loader";
 import { MoveFields } from "@/components/move-fields";
 import { Sheet, SheetList } from "@/components/sheet";
@@ -147,13 +147,7 @@ export function PlanRecipeScreen() {
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>
-            <GlassIconButton
-              label={intl.formatMessage({ id: "common.actions.add" })}
-              size="small"
-              symbol="plus"
-              testID={`plan-recipe-${recipe.id}-add`}
-              onPress={() => planRecipe(recipe, slot)}
-            />
+            <GlassIconBadge symbol="plus" />
           </Button>
         )}
         onEndReached={loadMore}
