@@ -54,27 +54,35 @@ vi.mock("heroui-native", async () => {
     useThemeColor: () => ["#000"],
   };
 });
-vi.mock("@expo/ui/swift-ui", () => ({
-  Host: ({ children }: { children?: React.ReactNode }) => children,
-  DatePicker: ({ onDateChange }: { onDateChange: (date: Date) => void }) => {
-    held.pickDate = onDateChange;
+vi.mock("@expo/ui/swift-ui", async () => {
+  const { createElement } = await import("react");
 
-    return null;
-  },
+  return {
+    Host: ({ children }: { children?: React.ReactNode }) => children,
+    Image: () => null,
+    Button: ({ children, onPress }: { children?: React.ReactNode; onPress?: () => void }) =>
+      createElement("span", { "data-testid": "plan-recipe-plus", onClick: onPress }, children),
+    DatePicker: ({ onDateChange }: { onDateChange: (date: Date) => void }) => {
+      held.pickDate = onDateChange;
+
+      return null;
+    },
+  };
+});
+vi.mock("@expo/ui/swift-ui/modifiers", () => ({
+  accessibilityIdentifier: vi.fn(),
+  accessibilityLabel: vi.fn(),
+  buttonBorderShape: vi.fn(),
+  buttonStyle: vi.fn(),
+  frame: vi.fn(),
+  tint: vi.fn(),
 }));
-vi.mock("@expo/ui/swift-ui/modifiers", () => ({ accessibilityIdentifier: vi.fn(), tint: vi.fn() }));
 vi.mock("@/components/glass-segmented", async () => {
   const { glassSegmented } = await import("../../../../__tests__/mocks/plan-sheet");
 
   return glassSegmented;
 });
-vi.mock("@/components/glass", async () => {
-  const { createElement } = await import("react");
-
-  return {
-    GlassIconBadge: () => createElement("span", { "data-testid": "plan-recipe-plus" }),
-  };
-});
+vi.mock("@/components/pressable-scale", () => ({ PressableScale: () => null }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
 vi.mock("@/components/card-photo", () => ({ CardPhoto: () => null }));
@@ -190,7 +198,7 @@ describe("PlanRecipeScreen", () => {
     expect(held.planned.at(-1)).toEqual(new Date(2026, 10, 20));
   });
 
-  it("plans the recipe once for a tap on its row or its plus", () => {
+  it("plans the recipe once for a tap on its row or its plus, which is no press target", () => {
     render(<PlanRecipeScreen />);
     fireEvent.click(screen.getByTestId("plan-recipe-plus"));
 

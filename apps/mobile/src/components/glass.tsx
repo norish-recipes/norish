@@ -99,7 +99,8 @@ function Glyph({
   );
 }
 
-/** A native glass circle with one SF Symbol, as a sheet's close or a button over a photo. */
+/** A native glass circle with one SF Symbol, as a sheet's close or a button over a photo.
+ * Without `onPress` it is inert, hidden from accessibility, for a glyph in a row that is the press target. */
 export function GlassIconButton({
   symbol,
   label,
@@ -109,44 +110,37 @@ export function GlassIconButton({
   onPress,
 }: {
   symbol: ComponentProps<typeof Image>["systemName"];
-  label: string;
-  testID: string;
+  label?: string;
+  testID?: string;
   size?: keyof typeof SIZES;
   /** The glyph's theme colour where the foreground does not read, as on a black viewer. */
   color?: "accent-foreground";
-  onPress: () => void;
+  onPress?: () => void;
 }) {
-  return (
+  const button = (
     <Host matchContents>
       <Button
-        modifiers={[...GLASS_CIRCLE, accessibilityLabel(label), accessibilityIdentifier(testID)]}
+        modifiers={
+          label && testID
+            ? [...GLASS_CIRCLE, accessibilityLabel(label), accessibilityIdentifier(testID)]
+            : GLASS_CIRCLE
+        }
         onPress={onPress}
       >
         <Glyph color={color} size={size} symbol={symbol} />
       </Button>
     </Host>
   );
-}
 
-/** GlassIconButton's look with no press of its own, for a glyph inside a row that is the one press target. */
-export function GlassIconBadge({
-  symbol,
-  size = "small",
-}: {
-  symbol: ComponentProps<typeof Image>["systemName"];
-  size?: keyof typeof SIZES;
-}) {
-  return (
+  return onPress ? (
+    button
+  ) : (
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
     >
-      <Host matchContents>
-        <Button modifiers={GLASS_CIRCLE}>
-          <Glyph size={size} symbol={symbol} />
-        </Button>
-      </Host>
+      {button}
     </View>
   );
 }
