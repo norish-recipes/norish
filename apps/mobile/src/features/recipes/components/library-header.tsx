@@ -11,11 +11,10 @@ import { useIntl } from "react-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+import { useDevicePreference } from "@norish/shared-react/reader";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-
-import { useLibraryView } from "../hooks/use-library-view";
 
 const HEADING_KEYS = {
   all: "recipes.dashboard.libraryTitle",
@@ -31,7 +30,7 @@ const VIEWS = [
 /** The grid or list switch, the reader's own choice on this device. */
 export function ViewToggle() {
   const intl = useIntl();
-  const [view, setView] = useLibraryView();
+  const [view, setView] = useDevicePreference("recipeViewMode");
 
   return (
     <GlassSegmented

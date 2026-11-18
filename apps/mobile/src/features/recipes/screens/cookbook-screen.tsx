@@ -8,6 +8,7 @@ import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
+import { useDevicePreference } from "@norish/shared-react/reader";
 import {
   useCookbookList,
   useCookbookQuery,
@@ -22,12 +23,11 @@ import { CookbookNoRecipes } from "../components/library-states";
 import { RecipeCard } from "../components/recipe-card";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { useCookbookCoverPicker } from "../hooks/use-cookbook-cover-picker";
-import { useLibraryView } from "../hooks/use-library-view";
 import { COOKBOOK_ACTION_DEFINITIONS, cookbookPageActions } from "../utils/card-actions";
 
 /** What the cookbook page shows until the cookbook is read: the hero's and the cards' shells. */
 function CookbookPageSkeleton() {
-  const [variant] = useLibraryView();
+  const [variant] = useDevicePreference("recipeViewMode");
 
   return (
     <View className="bg-background flex-1" testID="cookbook-screen">
