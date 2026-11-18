@@ -34,7 +34,7 @@ const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pt-1 pb-4 ${contentClassName}`;
 
 /** A scrolling body ends above the home indicator, which a sheet at its full height reaches. */
-const SCROLL_END = { paddingBottom: 16 + (initialWindowMetrics?.insets.bottom ?? 0) };
+export const SHEET_SCROLL_END = { paddingBottom: 16 + (initialWindowMetrics?.insets.bottom ?? 0) };
 
 /** What both scrolling bodies share: they fill the sheet and meet the keyboard the same way. */
 const SCROLLER = {
@@ -56,7 +56,7 @@ export function SheetScrollView({
       {...SCROLLER}
       {...props}
       contentContainerClassName={contentClass({ inset, contentClassName })}
-      contentContainerStyle={SCROLL_END}
+      contentContainerStyle={SHEET_SCROLL_END}
     />
   );
 }
@@ -72,7 +72,7 @@ export function SheetList<T>({
       {...SCROLLER}
       {...props}
       contentContainerClassName={contentClass({ inset, contentClassName })}
-      contentContainerStyle={SCROLL_END}
+      contentContainerStyle={SHEET_SCROLL_END}
     />
   );
 }

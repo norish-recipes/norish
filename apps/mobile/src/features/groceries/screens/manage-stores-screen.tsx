@@ -3,7 +3,7 @@ import type { Edge } from "@/lib/card-edges";
 import React, { useState } from "react";
 import { Alert, Text, View } from "react-native";
 import { DragList } from "@/components/drag-list/drag-list";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { Sheet, SHEET_SCROLL_END, SheetBody } from "@/components/sheet";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -174,6 +174,7 @@ export function ManageStoresScreen() {
             ) : undefined
           }
           className="flex-1"
+          contentContainerStyle={SHEET_SCROLL_END}
           contentInsetAdjustmentBehavior="never"
           renderHeading={() => null}
           renderItem={({ store, edge }) => (

@@ -61,6 +61,7 @@ vi.mock("@/components/sheet", async () => {
       createElement("div", null, children, actions),
     SheetBody: ({ children }: { children?: React.ReactNode }) =>
       createElement("div", null, children),
+    SHEET_SCROLL_END: {},
   };
 });
 vi.mock("@/components/drag-list/drag-list", () => ({
