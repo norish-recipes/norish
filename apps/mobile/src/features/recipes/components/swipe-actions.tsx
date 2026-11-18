@@ -22,6 +22,7 @@ import { useThemeColor } from "heroui-native";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
+import type { SwipeZone } from "../utils/swipe-reveal";
 import { actionOffset, fullSwipeAt, swipeZone } from "../utils/swipe-reveal";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -178,7 +179,7 @@ export function SwipeActions({
 }
 
 /** While a finger drags: a tick where a release would open the row and a firmer one at the full
- * swipe, each way the finger crosses them; the settle after a release plays none. */
+ * swipe, each way the finger really crosses them; the settle after a release plays none. */
 function SwipeWatch({
   dragging,
   fullAt,
@@ -190,12 +191,20 @@ function SwipeWatch({
   fullSwipe: SharedValue<boolean>;
   translation: SharedValue<number>;
 }) {
+  // The zone the card was in last frame: `swipeZone` needs it to hold a full swipe near the line.
+  const zone = useSharedValue<SwipeZone>("closed");
+
   useAnimatedReaction(
-    () => swipeZone(-translation.get(), OPEN_THRESHOLD, fullAt),
-    (zone, was) => {
-      if (was === null || zone === was || !dragging.get()) return;
-      fullSwipe.set(zone === "full");
-      scheduleOnRN(zone === "full" || was === "full" ? mediumImpact : lightImpact);
+    () => -translation.get(),
+    (travel) => {
+      const was = zone.get();
+      const next = swipeZone(travel, OPEN_THRESHOLD, fullAt, was);
+
+      if (next === was) return;
+      zone.set(next);
+      if (!dragging.get()) return;
+      fullSwipe.set(next === "full");
+      scheduleOnRN(next === "full" || was === "full" ? mediumImpact : lightImpact);
     }
   );
 

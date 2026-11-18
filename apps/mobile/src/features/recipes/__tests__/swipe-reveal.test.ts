@@ -1,6 +1,7 @@
 import {
   actionOffset,
   FULL_SWIPE_FLOOR,
+  FULL_SWIPE_HYSTERESIS,
   FULL_SWIPE_OVERSHOOT,
   fullSwipeAt,
   swipeZone,
@@ -78,5 +79,25 @@ describe("swipeZone", () => {
     expect(swipeZone(GRID, 40, fullAt)).toBe("open");
     expect(swipeZone(fullAt, 40, fullAt)).toBe("open");
     expect(swipeZone(fullAt + 1, 40, fullAt)).toBe("full");
+  });
+
+  it("fires once for a finger jittering on the full-swipe line, again after a real return", () => {
+    const fullAt = fullSwipeAt(GRID, 382);
+    let zone = swipeZone(GRID, 40, fullAt);
+    let fired = 0;
+    const drag = (travel: number) => {
+      const next = swipeZone(travel, 40, fullAt, zone);
+
+      if ((next === "full") !== (zone === "full")) fired += 1;
+      zone = next;
+    };
+
+    for (const step of [1, -1, 1, -1, 2, -2, 1]) drag(fullAt + step);
+    expect(fired).toBe(1);
+
+    drag(fullAt - FULL_SWIPE_HYSTERESIS - 1);
+    expect(fired).toBe(2);
+    drag(fullAt + 1);
+    expect(fired).toBe(3);
   });
 });

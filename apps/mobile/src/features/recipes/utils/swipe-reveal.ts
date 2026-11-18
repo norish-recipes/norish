@@ -2,6 +2,8 @@
 export const FULL_SWIPE_OVERSHOOT = 64;
 // Room a full swipe leaves at the screen's left edge, for a finger that starts on the card's right.
 export const FULL_SWIPE_EDGE = 64;
+// How far back past the full swipe a finger must go to leave it, so jitter on the line ticks once.
+export const FULL_SWIPE_HYSTERESIS = 16;
 // The least a full swipe goes past the open width, however little room the card leaves.
 export const FULL_SWIPE_FLOOR = 32;
 
@@ -35,9 +37,19 @@ export function fullSwipeAt(openWidth: number, rightEdge: number) {
   return Math.max(reachable, openWidth + FULL_SWIPE_FLOOR);
 }
 
-/** Where a card dragged `travel` pt is: `closed`, `open` on release, or `full`, running the first action. */
-export function swipeZone(travel: number, openAt: number, fullAt: number) {
+export type SwipeZone = "closed" | "open" | "full";
+
+/** Where a card dragged `travel` pt is: `closed`, `open` on release, or `full`, running the first
+ * action. A card `was` full stays so until `FULL_SWIPE_HYSTERESIS` back past `fullAt`. */
+export function swipeZone(
+  travel: number,
+  openAt: number,
+  fullAt: number,
+  was: SwipeZone = "closed"
+): SwipeZone {
   "worklet";
 
-  return travel > fullAt ? "full" : travel > openAt ? "open" : "closed";
+  const leaveAt = was === "full" ? fullAt - FULL_SWIPE_HYSTERESIS : fullAt;
+
+  return travel > leaveAt ? "full" : travel > openAt ? "open" : "closed";
 }
