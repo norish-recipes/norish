@@ -62,14 +62,12 @@ function LinesSkeleton() {
 /** One section of the sheet: a heading with its select-all, then its lines. */
 function LineSection({
   lines,
-  other,
   title,
   selected,
   testID,
   controls,
 }: {
   lines: ScaledFood[];
-  other: ScaledFood[];
   title: string;
   selected: number;
   testID: string;
@@ -86,10 +84,6 @@ function LineSection({
       )}
       testID={testID}
       title={title}
-      toggleLabel={intl.formatMessage({
-        id: selected === lines.length ? "common.actions.deselectAll" : "common.actions.selectAll",
-      })}
-      onToggleAll={() => controls.toggleSection(lines, other)}
     >
       {lines.map((item, index) => (
         <GroceryLineRow
@@ -136,6 +130,16 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
 
   const loading = isLoading || pantry.isLoading;
   const ticked = selectedCount + inPantrySelectedCount;
+  // The select-all covers what is to buy, or the Pantry's lines when nothing is to buy.
+  const all =
+    toBuy.length > 0
+      ? { lines: toBuy, other: inPantry, selected: selectedCount }
+      : {
+          lines: inPantry,
+          other: toBuy,
+          selected: inPantrySelectedCount,
+        };
+  const allSelected = all.lines.length > 0 && all.selected === all.lines.length;
 
   return (
     <Sheet
@@ -148,6 +152,20 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
             : () => void addTicked().then((added) => added && router.back()),
       }}
       name="add-to-groceries"
+      secondary={
+        loading || all.lines.length === 0
+          ? []
+          : [
+              {
+                label: intl.formatMessage({
+                  id: allSelected ? "common.actions.deselectAll" : "common.actions.selectAll",
+                }),
+                symbol: allSelected ? "checklist.unchecked" : "checklist",
+                id: "add-to-groceries-toggle",
+                onPress: () => controls.toggleSection(all.lines, all.other),
+              },
+            ]
+      }
       subtitle={recipe.name}
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
@@ -180,7 +198,6 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
               <LineSection
                 controls={controls}
                 lines={toBuy}
-                other={inPantry}
                 selected={selectedCount}
                 testID="add-to-groceries-to-buy"
                 title={intl.formatMessage({ id: "groceries.panel.toBuy" })}
@@ -190,7 +207,6 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
               <LineSection
                 controls={controls}
                 lines={inPantry}
-                other={toBuy}
                 selected={inPantrySelectedCount}
                 testID="add-to-groceries-pantry"
                 title={intl.formatMessage({ id: "groceries.panel.inPantry" })}
