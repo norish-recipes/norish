@@ -46,6 +46,8 @@ Language or **All settings**, select the System, Light or Dark theme, or sign ou
 A warning dot appears on the avatar while Offline. The title scrolls away and
 the bottom bar minimises as you scroll down.
 
+![The avatar menu with status, Language, All settings, themes and Sign out](/img/screenshots/mobile-account-menu.png)
+
 Sheets have a close button on the left of the header and a confirm action on the
 right. Other actions appear as header buttons or in an **Actions** menu.
 
@@ -62,6 +64,8 @@ between list and grid with the switch beside the library heading. Tap **Filters*
 in the top bar to narrow the library, then use **Apply** or **Clear filters** in
 the sheet header. Your view and filters stay on this device. Cards show the tags
 that fit, followed by +N for any remaining tags.
+
+![The Filters sheet with Apply and Clear filters in its header](/img/screenshots/mobile-recipes-filters.png)
 
 Swipe a recipe card to reveal actions that fan out for adding its ingredients to
 groceries, planning it or deleting it. A full swipe runs the first action.

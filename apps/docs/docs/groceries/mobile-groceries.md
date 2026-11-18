@@ -40,6 +40,8 @@ own. Catalogue results put exact matches first, then names with a word starting
 with the first word you typed, using names in your language. When the field is
 empty, **From your recipes** shows six foods with the number of recipes using
 each. Tap **Show more** for the rest, or tap a food to keep it.
+
+![Add to pantry with From your recipes suggestions and Show more](/img/screenshots/mobile-pantry-suggestions.png)
 Tap a food to put it on the grocery list or remove it from the Pantry. Foods in
 the Pantry are shown separately when you add a recipe to groceries.
 
