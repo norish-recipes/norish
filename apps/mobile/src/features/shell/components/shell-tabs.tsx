@@ -65,6 +65,8 @@ export function ShellTabs() {
       {hidden ? null : (
         <NativeTabs.BottomAccessory>
           <ShellAccessory plan={plan} />
+          {/* Rendered twice (a regular and an inline copy), both in the one accessory: each reads its
+           * shared trait, so the two report the same placement together. */}
           <TabAccessoryPlacementProbe />
         </NativeTabs.BottomAccessory>
       )}
