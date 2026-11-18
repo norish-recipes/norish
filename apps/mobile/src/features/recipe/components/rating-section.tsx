@@ -1,8 +1,13 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, useReducedMotion } from "react-native-reanimated";
-import { useFadeProgress } from "@/lib/motion/fade-to";
-import { usePopOnChange } from "@/lib/motion/pop-on-change";
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+} from "react-native-reanimated";
+import { popAfter } from "@/lib/motion/pop-on-change";
+import { settleTo } from "@/lib/motion/settle-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -14,20 +19,36 @@ import {
   useRatingsMutation,
 } from "@norish/shared-react/recipes";
 
+import type { StarMotion } from "../utils/star-motion";
+import { starMotion } from "../utils/star-motion";
 import { SectionCard } from "./tint";
 
-/** How long each star after the first waits, so a rating fills left to right. */
-const STAR_STAGGER_MS = 45;
 const STAR_SIZE = 34;
 
-/** One star: the filled glyph fades in over the outline and swells, after its turn in the row. */
-function Star({ order, filled }: { order: number; filled: boolean }) {
+/** One star: the filled glyph over the outline. A tap's change fades it, and a fill swells it, after
+ * its `motion` delay; with no `motion` (a value from the server) it is shown as it is. */
+function Star({ filled, motion }: { filled: boolean; motion: StarMotion | null }) {
   const reduceMotion = useReducedMotion();
   const [star, muted] = useThemeColor(["warning", "muted"] as const);
-  const delay = filled && !reduceMotion ? order * STAR_STAGGER_MS : 0;
-  const fill = useFadeProgress(filled ? 1 : 0, delay);
-  const pop = usePopOnChange(filled, delay);
+  const fill = useSharedValue(filled ? 1 : 0);
+  const scale = useSharedValue(1);
+  const seenRef = useRef(filled);
   const filledStyle = useAnimatedStyle(() => ({ opacity: fill.get() }));
+  const pop = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
+
+  useEffect(() => {
+    if (seenRef.current === filled) return;
+    seenRef.current = filled;
+    if (!motion) {
+      fill.set(filled ? 1 : 0);
+
+      return;
+    }
+    const delay = reduceMotion ? 0 : motion.delay;
+
+    fill.set(withDelay(delay, settleTo(filled ? 1 : 0, { reduceMotion, overshootClamping: true })));
+    if (motion.pop) scale.set(popAfter(delay, reduceMotion));
+  }, [filled, motion, reduceMotion, fill, scale]);
 
   return (
     <Animated.View style={pop}>
@@ -47,6 +68,8 @@ export function RatingSection() {
   const { userRating, averageRating } = useRatingQuery(recipe.id);
   const { rateRecipe } = useRatingsMutation();
   const shown = Math.round(userRating ?? averageRating ?? 0);
+  // The stars the last tap went from and to: only that change animates.
+  const [tap, setTap] = useState<{ from: number; to: number } | null>(null);
 
   if (!showRatings) return null;
 
@@ -68,9 +91,17 @@ export function RatingSection() {
               accessibilityState={{ checked: userRating === value }}
               hitSlop={4}
               testID={`recipe-rate-${value}`}
-              onPress={() => rateRecipe(recipe.id, userRating === value ? null : value)}
+              onPress={() => {
+                const next = userRating === value ? null : value;
+
+                setTap({ from: shown, to: Math.round(next ?? averageRating ?? 0) });
+                rateRecipe(recipe.id, next);
+              }}
             >
-              <Star filled={value <= shown} order={value - 1} />
+              <Star
+                filled={value <= shown}
+                motion={tap?.to === shown ? starMotion(value, tap.from, shown) : null}
+              />
             </Pressable>
           ))}
         </View>
