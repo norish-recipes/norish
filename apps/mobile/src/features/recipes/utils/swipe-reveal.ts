@@ -2,6 +2,8 @@
 export const FULL_SWIPE_OVERSHOOT = 64;
 // Room a full swipe leaves at the screen's left edge, for a finger that starts on the card's right.
 export const FULL_SWIPE_EDGE = 64;
+// The least a full swipe goes past the open width, however little room the card leaves.
+export const FULL_SWIPE_FLOOR = 32;
 
 /** How far right of its place action `index` of `count` sits with the card `travel` pt over a
  * `width` pt panel: each moves at `(count - index) / count` of the finger, as one under Reduce Motion. */
@@ -24,13 +26,13 @@ export function actionOffset(
 }
 
 /** The drag a full swipe needs: the open width plus an overshoot, capped by the travel a card whose
- * right edge is at `rightEdge` pt allows, but always past half the overshoot. */
+ * right edge is at `rightEdge` pt allows, but always `FULL_SWIPE_FLOOR` past the open width. */
 export function fullSwipeAt(openWidth: number, rightEdge: number) {
   "worklet";
 
   const reachable = Math.min(openWidth + FULL_SWIPE_OVERSHOOT, rightEdge - FULL_SWIPE_EDGE);
 
-  return Math.max(reachable, openWidth + FULL_SWIPE_OVERSHOOT / 2);
+  return Math.max(reachable, openWidth + FULL_SWIPE_FLOOR);
 }
 
 /** Where a card dragged `travel` pt is: `closed`, `open` on release, or `full`, running the first action. */

@@ -1,5 +1,6 @@
 import {
   actionOffset,
+  FULL_SWIPE_FLOOR,
   FULL_SWIPE_OVERSHOOT,
   fullSwipeAt,
   swipeZone,
@@ -65,7 +66,7 @@ describe("fullSwipeAt", () => {
   });
 
   it("is past a swipe that only opens the actions however little room the card leaves", () => {
-    expect(fullSwipeAt(list(3), 200)).toBe(list(3) + FULL_SWIPE_OVERSHOOT / 2);
+    expect(fullSwipeAt(list(3), 200)).toBe(list(3) + FULL_SWIPE_FLOOR);
   });
 });
 
