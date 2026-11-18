@@ -72,7 +72,7 @@ vi.mock("@/components/sheet", async () => {
       confirm,
     }: {
       children?: React.ReactNode;
-      secondary?: { onPress: () => void }[];
+      secondary?: { id?: string; onPress: () => void }[];
       confirm?: { onPress?: () => void };
     }) =>
       createElement(
@@ -82,7 +82,7 @@ vi.mock("@/components/sheet", async () => {
         ...secondary.map((action, index) =>
           createElement("button", {
             key: index,
-            "data-testid": "product-type-price",
+            "data-testid": action.id,
             onClick: action.onPress,
           })
         ),
