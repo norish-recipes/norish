@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] Servings stepper, Convert menu and nutrition portion control share the ingredient control's height.
 - [x] Stars fill left to right to the tapped one with a spring scale each; nutrition bars animate their width on a portion change. Neither under Reduce Motion.
@@ -46,3 +46,5 @@
   6. reject: `Star` repeating `usePopOnChange`'s pattern; it needs a per-star delay and a fade the shared hook does not have.
   7. kept: the cook-mode popover's timer rows are inert and read that way (disabled, no role).
 - Round 2 fixes: #1 and #2 (004970da9, 08946460f): a tap waits on the sheet that queued it (`useId`); a sheet that unmounts before its close ran drops the tap, and the open runs only on a finished transition after its own sheet unmounted. #3 verified unreachable: the tree re-keys only on sign-out or an account change, and `SessionStack` renders `RootStack` under a different parent signed in and signed out, so the guard never flips on a living stack and the sheet never remounts already up. #4 (f55cf4910): `liveTap` waits for the tapped value, animates on it, and the next value spends it. #5 (73ea3dd85): `cookStepOf` beside `cookModeRoute`, tested through the route. Release on iOS 27.2: row → one cook mode at 2/2; swipe-down → recipe page only; a tap ~0.4 s into the presentation → one cook mode; ± buttons only adjust; rating 0 → 4 fills and clears. Maestro `timer-from-accessory` 3/3, `cook-mode`, `recipe-controls` green; seven gates exit 0.
+- Exit gate on `92cd591a0`: all seven gates exit 0. For Mike on the phone: the star fill and nutrition bar motion (stills cannot show it), a timer row from a step other than the last, a tap on a row while the timers sheet is still sliding up.
+- iPhone guide screenshots to retake: the Ingredients header row, the rating card, the nutrition card, the timers sheet.
