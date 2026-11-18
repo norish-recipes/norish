@@ -1,6 +1,6 @@
 import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactElement } from "react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Loader } from "@/components/loader";
@@ -68,6 +68,12 @@ export function CardList<Row>({
   }));
   const isGrid = variant === "grid";
   const focused = useIsFocused();
+  // The recipes listed before the list last changed: a card moving cells remounts, entering only if
+  // new. Compared by keys, as a caller may pass a fresh array each render.
+  const ids = rows.map(rowKey);
+  const [before, setBefore] = useState(() => ({ ids, listed: new Set<string>() }));
+
+  if (before.ids.join("\n") !== ids.join("\n")) setBefore({ ids, listed: new Set(before.ids) });
 
   // Leaving the screen, for another tab or a sheet over it, closes the open row.
   useEffect(() => {
@@ -107,7 +113,7 @@ export function CardList<Row>({
             <Animated.View
               key={rowKey(row)}
               className={isGrid ? "w-1/2 flex-row px-1.5 pb-3" : "px-5 pb-3"}
-              entering={SPRING_FADE_IN}
+              entering={before.listed.has(rowKey(row)) ? undefined : SPRING_FADE_IN}
               exiting={SPRING_FADE_OUT}
               layout={SPRING_LAYOUT}
             >

@@ -5,6 +5,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const mounts = vi.hoisted(() => new Map<string, number>());
+const entered = vi.hoisted(() => [] as string[]);
 
 vi.mock("react-native", () => ({ View: ({ children }: { children?: ReactNode }) => children }));
 vi.mock("expo-router", () => ({ useIsFocused: () => true }));
@@ -25,7 +26,14 @@ vi.mock("react-native-reanimated", async () => {
 
   return { ...mock, default: { ...mock.default, FlatList, View: Passthrough } };
 
-  function Passthrough({ children }: { children?: ReactNode }) {
+  // Records the card a view mounts with an entering animation, as Reanimated would play it.
+  function Passthrough({ children, entering }: { children?: ReactNode; entering?: object }) {
+    const card = React.isValidElement<{ id?: string }>(children) ? children.props.id : undefined;
+
+    React.useEffect(() => {
+      if (entering && card) entered.push(card);
+    }, []);
+
     return children;
   }
 });
@@ -59,7 +67,7 @@ const scroll = {
 } as never;
 const ROWS = Array.from({ length: 20 }, (_, i) => `r${i}`);
 
-const list = (variant: "grid" | "list") => (
+const list = (variant: "grid" | "list", rows = ROWS) => (
   <CardList
     empty={<div />}
     fadeHeight={100}
@@ -67,7 +75,7 @@ const list = (variant: "grid" | "list") => (
     isFetchingNextPage={false}
     renderCard={(id) => <Card id={id} />}
     rowKey={(id) => id}
-    rows={ROWS}
+    rows={rows}
     scroll={scroll}
     variant={variant}
     onEndReached={() => {}}
@@ -83,5 +91,20 @@ describe("CardList", () => {
 
     expect(mounts.size).toBe(ROWS.length);
     expect([...mounts.values()].every((count) => count === 1)).toBe(true);
+  });
+
+  it("plays the entering animation only for a recipe new to the list", () => {
+    entered.length = 0;
+    const { rerender } = render(list("list"));
+
+    expect(entered).toEqual(ROWS);
+    entered.length = 0;
+    // Deleting the first row moves the first card of every later cell into the cell before.
+    rerender(list("list", ROWS.slice(1)));
+    rerender(list("grid", ROWS.slice(1)));
+    expect(entered).toEqual([]);
+
+    rerender(list("grid", [...ROWS.slice(1), "new"]));
+    expect(entered).toEqual(["new"]);
   });
 });
