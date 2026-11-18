@@ -54,10 +54,12 @@ export function AddGroceriesScreen() {
     <GrocerySheet
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
-      confirm={{
-        label: intl.formatMessage({ id: "common.actions.add" }),
-        disabled: !trimmed,
-        onPress: submit,
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.add" }),
+          disabled: !trimmed,
+          onPress: submit,
+        },
       }}
       detected={detectedPattern?.pattern ?? null}
       field={

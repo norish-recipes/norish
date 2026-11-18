@@ -15,21 +15,23 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
 
   return (
     <RecipePickSheet
-      action={{
-        label:
-          pick.selected.length > 0
-            ? intl.formatMessage(
-                { id: "recipes.cookbooks.addCount" },
-                { count: pick.selected.length }
-              )
-            : intl.formatMessage({ id: "common.actions.add" }),
-        onPress:
-          pick.selected.length === 0
-            ? undefined
-            : () => {
-                save();
-                router.back();
-              },
+      actions={{
+        confirm: {
+          label:
+            pick.selected.length > 0
+              ? intl.formatMessage(
+                  { id: "recipes.cookbooks.addCount" },
+                  { count: pick.selected.length }
+                )
+              : intl.formatMessage({ id: "common.actions.add" }),
+          onPress:
+            pick.selected.length === 0
+              ? undefined
+              : () => {
+                  save();
+                  router.back();
+                },
+        },
       }}
       emptyId={
         hasRecipes ? "recipes.cookbooks.everythingAlreadyIn" : "recipes.cookbooks.noRecipesToAdd"
@@ -53,9 +55,7 @@ export function CookbookAddRecipesScreen() {
     <AddRecipesSheet key={cookbook.id} cookbook={cookbook} />
   ) : (
     <RecipePickSheet
-      action={{
-        label: intl.formatMessage({ id: "common.actions.add" }),
-      }}
+      actions={{ confirm: { label: intl.formatMessage({ id: "common.actions.add" }) } }}
       emptyId="recipes.cookbooks.noRecipesToAdd"
       name="cookbook-add-recipes"
       subtitle={title}

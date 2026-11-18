@@ -5,7 +5,7 @@ import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from 
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
-import type { HeaderAction, HeaderConfirm } from "./modal-header";
+import type { SheetActions } from "./modal-header";
 import { ModalHeader } from "./modal-header";
 import { OnSheet } from "./on-sheet";
 
@@ -162,7 +162,7 @@ export function Sheet({
   confirm,
   secondary,
   children,
-}: {
+}: SheetActions & {
   /** The testID prefix: `<name>-sheet` on the sheet. */
   name: string;
   title: string;
@@ -172,10 +172,6 @@ export function Sheet({
   back?: boolean;
   /** What the left item does; going back by default. */
   onClose?: () => void;
-  /** The header's confirm item: the sheet's one Apply, Save, Add or verb. */
-  confirm?: HeaderConfirm;
-  /** The other actions: one is a glass header item, several share a header menu. */
-  secondary?: HeaderAction[];
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
   children?: ReactNode;
 }) {

@@ -1,4 +1,4 @@
-import type { HeaderAction, HeaderConfirm } from "@/components/modal-header";
+import type { SheetActions } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
 import { Sheet, SheetBody } from "@/components/sheet";
@@ -41,8 +41,7 @@ export function GrocerySheet({
   onConfirmDetected,
   onRepeat,
   trailingRows,
-  confirm,
-  secondary,
+  actions,
 }: {
   /** The testID prefix: `<name>-sheet`. */
   name: string;
@@ -69,10 +68,8 @@ export function GrocerySheet({
   onConfirmDetected: () => void;
   onRepeat: (pattern: RecurrencePattern | null) => void;
   trailingRows?: ReactNode;
-  /** The form view's header item, Save. */
-  confirm: HeaderConfirm;
-  /** The form view's other header actions, if any. */
-  secondary?: HeaderAction[];
+  /** The form view's header: its confirm, Save, and any other actions. */
+  actions: SheetActions;
 }) {
   const intl = useIntl();
   const recurrence = useRecurrenceLabel();
@@ -113,7 +110,7 @@ export function GrocerySheet({
   );
   const steps: Record<Step, ReactNode> = {
     form: (
-      <Sheet confirm={confirm} name={name} secondary={secondary} subtitle={subtitle} title={title}>
+      <Sheet {...actions} name={name} subtitle={subtitle} title={title}>
         <SheetBody contentClassName="gap-3">
           {field}
           <RepeatPills
@@ -170,6 +167,7 @@ export function GrocerySheet({
             ? [
                 {
                   label: text("common.actions.remove"),
+                  id: "repeat-clear",
                   symbol: "trash",
                   destructive: true,
                   onPress: () => {

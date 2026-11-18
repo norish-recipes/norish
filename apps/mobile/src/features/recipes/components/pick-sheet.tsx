@@ -1,4 +1,4 @@
-import type { HeaderConfirm } from "@/components/modal-header";
+import type { SheetActions } from "@/components/modal-header";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
@@ -19,15 +19,15 @@ export type PickList<Item> = {
   onEndReached?: () => void;
 };
 
-/** A sheet of things to tick: `header` over `list`'s rows, `action` as the header's confirm
- * (off without an `onPress`). Without a `list` the rows are skeletons. */
+/** A sheet of things to tick: `header` over `list`'s rows, `actions` in the header (a confirm is
+ * off without an `onPress`). Without a `list` the rows are skeletons. */
 export function PickSheet<Item>({
   name,
   title,
   subtitle,
   header,
   list,
-  action,
+  actions,
 }: {
   /** The testID prefix of the sheet, its list and its skeleton. */
   name: string;
@@ -35,12 +35,12 @@ export function PickSheet<Item>({
   subtitle?: string;
   header: ReactElement;
   list?: PickList<Item>;
-  action: HeaderConfirm;
+  actions: SheetActions;
 }) {
   const items = list?.items ?? [];
 
   return (
-    <Sheet confirm={action} name={name} subtitle={subtitle} title={title}>
+    <Sheet {...actions} name={name} subtitle={subtitle} title={title}>
       <SheetList
         ListEmptyComponent={
           list ? (

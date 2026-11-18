@@ -45,9 +45,11 @@ export function AddToCookbookScreen() {
 
   return (
     <PickSheet
-      action={{
-        label: intl.formatMessage({ id: "common.actions.save" }),
-        onPress: isDirty ? () => void save(() => router.back()) : undefined,
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.save" }),
+          onPress: isDirty ? () => void save(() => router.back()) : undefined,
+        },
       }}
       header={
         <View className="flex-row gap-2">

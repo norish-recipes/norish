@@ -36,7 +36,7 @@ export function RecipePickSheet({
   emptyId: string;
   /** Above the search, such as a name field. */
   children?: ReactNode;
-} & Pick<ComponentProps<typeof PickSheet>, "name" | "title" | "subtitle" | "action">) {
+} & Pick<ComponentProps<typeof PickSheet>, "name" | "title" | "subtitle" | "actions">) {
   const intl = useIntl();
 
   return (

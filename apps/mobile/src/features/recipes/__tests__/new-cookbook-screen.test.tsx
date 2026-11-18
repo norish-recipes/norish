@@ -19,8 +19,8 @@ vi.mock("expo-router", () => ({
   useRouter: () => ({ back: state.back }),
 }));
 vi.mock("../components/recipe-pick", () => ({
-  RecipePickSheet: ({ action }: { action: { onPress?: () => void } }) => {
-    state.action = action;
+  RecipePickSheet: ({ actions }: { actions: { confirm: { onPress?: () => void } } }) => {
+    state.action = actions.confirm;
 
     return null;
   },

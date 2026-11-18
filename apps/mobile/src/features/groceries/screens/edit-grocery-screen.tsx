@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Text } from "react-native";
+import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton } from "heroui-native";
@@ -113,10 +114,22 @@ function EditSheet({
     <GrocerySheet
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
-      confirm={{
-        label: intl.formatMessage({ id: "common.actions.save" }),
-        disabled: !trimmed || !productValid,
-        onPress: submit,
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.save" }),
+          disabled: !trimmed || !productValid,
+          onPress: submit,
+        },
+        secondary: [
+          destructiveAction(
+            intl.formatMessage({ id: "common.actions.delete" }),
+            () => {
+              remove();
+              router.back();
+            },
+            "edit-grocery-delete"
+          ),
+        ],
       }}
       detected={detectedPattern?.pattern ?? null}
       field={
@@ -151,17 +164,6 @@ function EditSheet({
         ) : null
       }
       repeat={form.confirmedPattern}
-      secondary={[
-        {
-          label: intl.formatMessage({ id: "common.actions.delete" }),
-          symbol: "trash",
-          destructive: true,
-          onPress: () => {
-            remove();
-            router.back();
-          },
-        },
-      ]}
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}

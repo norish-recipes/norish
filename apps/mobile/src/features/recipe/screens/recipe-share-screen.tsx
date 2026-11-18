@@ -214,13 +214,16 @@ export function RecipeShareScreen() {
 
   return (
     <RecipeSheetGate
-      confirm={{
-        label: t("createLink"),
-        disabled: isCreating,
-        onPress: () =>
-          createShare(expiresIn).then(
-            (share) => share && setLatest({ id: share.id, url: toUrl(share.url) })
-          ),
+      actions={{
+        confirm: {
+          label: t("createLink"),
+          disabled: isCreating,
+          id: "recipe-share-create",
+          onPress: () =>
+            createShare(expiresIn).then(
+              (share) => share && setLatest({ id: share.id, url: toUrl(share.url) })
+            ),
+        },
       }}
       name="recipe-share"
       subtitle={(recipeName) => t("subtitle", { recipeName })}

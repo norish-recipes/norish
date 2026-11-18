@@ -1,4 +1,4 @@
-import type { HeaderConfirm } from "@/components/modal-header";
+import type { SheetActions } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
@@ -10,20 +10,20 @@ import { isNotFoundError } from "@norish/shared-react/trpc";
 
 import { RecipeNotFound } from "./recipe-not-found";
 
-/** A recipe's sheet behind a link: `children` (and `confirm`) once the recipe is read, else an
+/** A recipe's sheet behind a link: `children` (and `actions`) once the recipe is read, else an
  * empty sheet or, where the server says it is gone, the not-found state. */
 export function RecipeSheetGate({
   name,
   title,
   subtitle,
-  confirm,
+  actions,
   children,
 }: {
   name: string;
   title: string;
   /** The sheet's subtitle, from the recipe's name. */
   subtitle?: (recipeName: string) => string;
-  confirm?: HeaderConfirm;
+  actions?: SheetActions;
   children: ReactNode;
 }) {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,7 +31,7 @@ export function RecipeSheetGate({
 
   return (
     <Sheet
-      confirm={recipe ? confirm : undefined}
+      {...(recipe ? actions : undefined)}
       name={name}
       subtitle={recipe && subtitle ? subtitle(recipe.name) : undefined}
       title={title}
