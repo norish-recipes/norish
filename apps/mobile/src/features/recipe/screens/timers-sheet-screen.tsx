@@ -23,7 +23,7 @@ export function TimersSheetScreen() {
         style={{ maxHeight: height * MAX_HEIGHT_SHARE }}
       >
         <View className="pb-4">
-          <AllTimers onEmpty={() => router.back()} />
+          <AllTimers onSheet onEmpty={() => router.back()} />
         </View>
       </ScrollView>
     </Sheet>

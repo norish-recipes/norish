@@ -38,12 +38,15 @@ export function RowButton({
   label,
   testID,
   accent = false,
+  onSheet = false,
   onPress,
 }: {
   icon: "cart-outline" | "add";
   label: string;
   testID: string;
   accent?: boolean;
+  /** On a sheet, whose grouped content is the translucent fill. */
+  onSheet?: boolean;
   onPress: () => void;
 }) {
   const [foreground] = useThemeColor(["foreground"] as const);
@@ -53,7 +56,7 @@ export function RowButton({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="bg-default size-9 items-center justify-center rounded-full"
+      className={`${onSheet ? "bg-fill" : "bg-default"} size-9 items-center justify-center rounded-full`}
       hitSlop={4}
       testID={testID}
       onPress={onPress}

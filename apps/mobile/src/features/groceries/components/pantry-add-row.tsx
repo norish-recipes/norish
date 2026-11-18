@@ -18,12 +18,13 @@ export function PantryAddRowView({
   const intl = useIntl();
 
   return (
-    <CardSlice className="bg-default" edge={row.edge}>
+    <CardSlice className="bg-fill" edge={row.edge}>
       <FoodRow
         end={
           <RowButton
             accent
             icon="add"
+            onSheet
             label={intl.formatMessage({ id: "groceries.pantry.addFood" }, { name: row.name })}
             testID={row.testIDs.button}
             onPress={() => onKeep(row.keeps)}

@@ -31,7 +31,7 @@ function CircleButton({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="bg-default size-9 items-center justify-center rounded-full"
+      className="bg-fill size-9 items-center justify-center rounded-full"
       testID={testID}
       onPress={onPress}
     >
@@ -58,7 +58,7 @@ export function StoreListRow({
   const color = useStoreColor(store.color);
 
   return (
-    <ItemSlice edge={edge} size="sheet">
+    <ItemSlice className="bg-fill" edge={edge} size="sheet">
       <View className="h-14 flex-row items-center gap-3 pr-2 pl-2.5">
         <DragPressable
           accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
