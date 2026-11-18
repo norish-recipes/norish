@@ -1,12 +1,12 @@
 import type { IntlShape } from "react-intl";
 import React from "react";
 import { Text, View } from "react-native";
+import { GlassIconMenu } from "@/components/glass";
 import { PlannedThumb } from "@/components/planned-thumb";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { DAY_CARD_CLASS } from "@/lib/day-card-height";
 import { SLOT_GLYPHS, SLOT_SYMBOLS } from "@/lib/slot-icons";
-import { Button, Host, Image, Menu } from "@expo/ui/swift-ui";
-import { accessibilityIdentifier, accessibilityLabel, frame } from "@expo/ui/swift-ui/modifiers";
+import { Button } from "@expo/ui/swift-ui";
+import { accessibilityIdentifier } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -92,34 +92,20 @@ function SlotMenu({
   onAdd: (slot: Slot) => void;
 }) {
   const intl = useIntl();
-  const accentText = useAccentTextColor();
-  const [accent] = useThemeColor(["accent"] as const);
 
   return (
-    <View className="bg-fill size-9 overflow-hidden rounded-full">
-      <Host matchContents>
-        <Menu
-          label={
-            <Image
-              color={accentText ?? accent}
-              modifiers={[frame({ width: 36, height: 36 })]}
-              size={16}
-              systemName="plus"
-            />
-          }
-          modifiers={[accessibilityLabel(addLabel), accessibilityIdentifier(testID)]}
-        >
-          {TODAY_MEAL_SLOTS.map((slot) => (
-            <Button
-              key={slot}
-              label={intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
-              modifiers={[accessibilityIdentifier(`${testID}-${slot}`)]}
-              systemImage={SLOT_SYMBOLS[slot]}
-              onPress={() => onAdd(slot)}
-            />
-          ))}
-        </Menu>
-      </Host>
+    <View className="size-9 items-center justify-center">
+      <GlassIconMenu label={addLabel} symbol="plus" testID={testID}>
+        {TODAY_MEAL_SLOTS.map((slot) => (
+          <Button
+            key={slot}
+            label={intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
+            modifiers={[accessibilityIdentifier(`${testID}-${slot}`)]}
+            systemImage={SLOT_SYMBOLS[slot]}
+            onPress={() => onAdd(slot)}
+          />
+        ))}
+      </GlassIconMenu>
     </View>
   );
 }
