@@ -23,17 +23,18 @@ appId: dev.norish.app
     visible:
       id: planned-item-sheet
     timeout: 20000
-- tapOn:
-    id: planned-item-remove
+# Remove is in the sheet's header menu, whose native items have no id.
+- tapOn: Actions
+- tapOn: Remove
 # The alert names the item and its day; cancelling keeps it.
 - assertVisible: Remove Plan Soup comes off .*
 - tapOn: Cancel
 - assertVisible:
     id: planned-item-sheet
-- tapOn:
-    id: planned-item-remove
-# Remove is the alert's right-hand button; the sheet behind it has a Remove of its own that a text
-# selector would reach first, so the button is tapped where the system draws it.
+- tapOn: Actions
+- tapOn: Remove
+# Remove is the alert's right-hand button, whose title reads the same, so it is tapped where the
+# system draws it.
 - tapOn:
     point: 68%,57%
 - extendedWaitUntil:
