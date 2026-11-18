@@ -40,7 +40,14 @@ app if you were already signed in.
 
 ![Update your server screen showing the installed and required versions](/img/screenshots/mobile-update-your-server.png)
 
-The bottom bar minimises as you scroll down on each tab.
+Each tab has its title on the top bar and an avatar at the top right. Tap the
+avatar to see **Live** or **Offline** with the number of changes waiting, choose
+Language or **All settings**, select the System, Light or Dark theme, or sign out.
+A warning dot appears on the avatar while Offline. The title scrolls away and
+the bottom bar minimises as you scroll down.
+
+Sheets have a close button on the left of the header and a confirm action on the
+right. Other actions appear as header buttons or in an **Actions** menu.
 
 ## Recipes
 
@@ -51,10 +58,13 @@ or remove it.
 ![Today and the library in list view](/img/screenshots/mobile-recipes-list.png)
 
 Under **Your library**, choose **All**, **Recipes** or **Cookbooks** and switch
-between list and grid. Tap the filter button to narrow the library. Your view
-and filters stay on this device.
+between list and grid with the switch beside the library heading. Tap **Filters**
+in the top bar to narrow the library, then use **Apply** or **Clear filters** in
+the sheet header. Your view and filters stay on this device. Cards show the tags
+that fit, followed by +N for any remaining tags.
 
-Swipe a recipe card to add its ingredients to groceries, plan it or delete it.
+Swipe a recipe card to reveal actions that fan out for adding its ingredients to
+groceries, planning it or deleting it. A full swipe runs the first action.
 Long-press for those actions, to favourite it or add it to a cookbook. Inside a
 cookbook, you can also remove it from the cookbook. Double-tap a recipe photo to
 favourite or unfavourite it. To plan a recipe, choose a day and meal slot.
@@ -76,7 +86,8 @@ You can also long-press a cookbook card to add recipes, rename or delete it.
 
 Tap **Add recipe** and choose **From a link** or **From text**. If your server
 has AI enabled, **From photos** lets you choose photos or take a photo. A copied
-link can also appear in the sheet for you to import. Imports appear in the
+link, including one copied as text, can appear as **Import `host`** in the sheet.
+Tap it to import the link. Imports appear in the
 library while they are processing.
 
 ![Add recipe sheet](/img/screenshots/mobile-add-recipe.png)
@@ -109,5 +120,5 @@ Signed-out screens follow your device language. With a saved Server Address,
 they use a language enabled by the server. On iOS, you can set a language for
 Norish in the device settings. Once signed in, the app uses your Account language.
 
-To end your session, tap **Sign out** and confirm. The app returns to **Sign in**
+To end your session, tap the avatar, then **Sign out** and confirm. The app returns to **Sign in**
 for the same server.

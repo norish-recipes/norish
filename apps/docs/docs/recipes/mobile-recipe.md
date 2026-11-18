@@ -10,7 +10,7 @@ nutrition and other details. Use the heart to favourite it, the stars to rate it
 or the menu to edit, share, plan or delete it.
 
 To share a public link, choose **Share link** from the menu, select when it
-expires and tap **Create link**. Under **Current links**, each row shows its
+expires and tap **Create link** in the sheet header. Under **Current links**, each row shows its
 status and expiry. Copy a newly created link, or use the row controls to revoke,
 reactivate or delete a link.
 
@@ -57,6 +57,7 @@ They keep running when you leave cook mode or close Norish.
 
 The timer in the bottom bar opens the timer list. In cook mode, tap the clock to
 open the list. There you can pause, resume, adjust, restart or remove timers.
+From the bottom bar's timer sheet, tap a timer row to open cook mode at its step.
 
 ![The timer list with running and paused timers](/img/screenshots/mobile-recipe-timers.png)
 
