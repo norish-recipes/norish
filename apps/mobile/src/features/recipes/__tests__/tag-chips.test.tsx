@@ -94,4 +94,20 @@ describe("TagChips", () => {
     expect(visibleChips(container)).toEqual([]);
     expect(container.querySelector("[data-hidden]")).not.toBeNull();
   });
+
+  it("measures again when a tag becomes an allergen, as its warning chip is wider", () => {
+    layouts.length = 0;
+    window.fontScale = 1;
+    const chips = (allergySet: Set<string>) => (
+      <TagChips allergySet={allergySet} look="plain" tags={["nuts", "soup"]} testID="tags" />
+    );
+    const { container, rerender } = render(chips(new Set()));
+
+    layOut(100);
+    expect(container.querySelector("[data-hidden]")).toBeNull();
+
+    rerender(chips(new Set(["nuts"])));
+    expect(visibleChips(container)).toEqual([]);
+    expect(container.querySelector("[data-hidden]")).not.toBeNull();
+  });
 });

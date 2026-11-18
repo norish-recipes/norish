@@ -32,9 +32,10 @@ export function TagChips({
   testID: string;
 }) {
   const [room, setRoom] = useState<number | null>(null);
-  // Chip widths by position, for these tags at this window width and font scale.
+  // Chip widths by position, for these tags, their allergen look, the window width and font scale.
   const { width: screen, fontScale } = useWindowDimensions();
-  const basis = [screen, fontScale, ...tags].join("\n");
+  const allergen = (tag: string) => isAllergenTag(tag, allergySet);
+  const basis = [screen, fontScale, ...tags.map((tag) => `${allergen(tag)}${tag}`)].join("\n");
   const [measured, setMeasured] = useState<Measured>({ basis, widths: [], more: null });
   const known = measured.basis === basis ? measured : { basis, widths: [], more: null };
   const measure = (update: (known: Measured) => Measured) =>
@@ -50,7 +51,6 @@ export function TagChips({
   };
   const { size, tone } = LOOK[look];
   const glass = look === "glass";
-  const allergen = (tag: string) => isAllergenTag(tag, allergySet);
   const chip = (tag: string, maxWidth?: number, onGlass = glass) => (
     <Pill
       glass={onGlass}
