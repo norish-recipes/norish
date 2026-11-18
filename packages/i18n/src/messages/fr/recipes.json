@@ -375,6 +375,8 @@
     "notificationsOff": "Les notifications sont désactivées pour Norish : les minuteurs ne sonnent que lorsque l’app est ouverte.",
     "decreaseTimer": "Retirer {time}",
     "increaseTimer": "Ajouter {time}",
+    "openTimer": "{timer}, ouvrir {recipe} en mode cuisine",
+    "openTimerAtStep": "{timer}, ouvrir {recipe} en mode cuisine à l'étape {number}",
     "timersLeft": "Minuteurs, {time} restantes",
     "spokenTime": "{hours, plural, =0 {} one {# heure } other {# heures }}{minutes, plural, =0 {} one {# minute } other {# minutes }}{seconds, plural, =0 {} one {# seconde } other {# secondes }}"
   },

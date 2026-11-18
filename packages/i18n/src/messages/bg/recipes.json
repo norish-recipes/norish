@@ -375,6 +375,8 @@
     "notificationsOff": "Известията за Norish са изключени, затова таймерите звънят само докато приложението е отворено.",
     "decreaseTimer": "Извади {time}",
     "increaseTimer": "Добави {time}",
+    "openTimer": "{timer}, отвори {recipe} в режим на готвене",
+    "openTimerAtStep": "{timer}, отвори {recipe} в режим на готвене на стъпка {number}",
     "timersLeft": "Таймери, остават {time}",
     "spokenTime": "{hours, plural, =0 {} one {# час } other {# часа }}{minutes, plural, =0 {} one {# минута } other {# минути }}{seconds, plural, =0 {} one {# секунда } other {# секунди }}"
   },

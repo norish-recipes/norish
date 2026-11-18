@@ -375,6 +375,8 @@
     "notificationsOff": "Varsler er slått av for Norish, så tidtakere ringer bare mens appen er åpen.",
     "decreaseTimer": "Trekk fra {time}",
     "increaseTimer": "Legg til {time}",
+    "openTimer": "{timer}, åpne {recipe} i matlagingsmodus",
+    "openTimerAtStep": "{timer}, åpne {recipe} i matlagingsmodus ved trinn {number}",
     "timersLeft": "Tidtakere, {time} igjen",
     "spokenTime": "{hours, plural, =0 {} one {# time } other {# timer }}{minutes, plural, =0 {} one {# minutt } other {# minutter }}{seconds, plural, =0 {} one {# sekund } other {# sekunder }}"
   },

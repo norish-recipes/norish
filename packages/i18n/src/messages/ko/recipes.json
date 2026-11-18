@@ -375,6 +375,8 @@
     "notificationsOff": "Norish 알림이 꺼져 있어 앱이 열려 있을 때만 타이머가 울립니다.",
     "decreaseTimer": "{time} 줄이기",
     "increaseTimer": "{time} 늘리기",
+    "openTimer": "{timer}, 요리 모드에서 {recipe} 열기",
+    "openTimerAtStep": "{timer}, 요리 모드에서 {recipe} {number}단계 열기",
     "timersLeft": "타이머, {time} 남음",
     "spokenTime": "{hours, plural, =0 {} other {#시간 }}{minutes, plural, =0 {} other {#분 }}{seconds, plural, =0 {} other {#초 }}"
   },

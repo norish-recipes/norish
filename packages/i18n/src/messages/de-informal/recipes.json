@@ -375,6 +375,8 @@
     "notificationsOff": "Mitteilungen sind für Norish ausgeschaltet, daher klingeln Timer nur, solange die App geöffnet ist.",
     "decreaseTimer": "{time} abziehen",
     "increaseTimer": "{time} hinzufügen",
+    "openTimer": "{timer}, {recipe} im Kochmodus öffnen",
+    "openTimerAtStep": "{timer}, {recipe} im Kochmodus bei Schritt {number} öffnen",
     "timersLeft": "Timer, noch {time}",
     "spokenTime": "{hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, =0 {} one {# Minute } other {# Minuten }}{seconds, plural, =0 {} one {# Sekunde } other {# Sekunden }}"
   },

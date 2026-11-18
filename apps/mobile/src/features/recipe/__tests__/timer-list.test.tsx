@@ -8,15 +8,23 @@ type Props = {
   testID?: string;
   className?: string;
   accessibilityLabel?: string;
+  accessibilityRole?: string;
   children?: ReactNode;
   onPress?: () => void;
 };
-const host = ({ testID, className, accessibilityLabel, children, onPress }: Props) => (
+const host = ({
+  testID,
+  className,
+  accessibilityLabel,
+  accessibilityRole,
+  children,
+  onPress,
+}: Props) => (
   <div
     aria-label={accessibilityLabel}
     className={className}
     data-testid={testID}
-    role="button"
+    role={accessibilityRole}
     onClick={onPress}
   >
     {children}
@@ -42,6 +50,7 @@ vi.mock("react-intl", () => ({
   }),
 }));
 vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
+vi.mock("@/components/pressable-scale", () => ({ PressableScale: host }));
 vi.mock("../components/tint", () => ({ useTint: () => null }));
 
 const { AllTimers } = await import("../components/timer-list");
@@ -102,16 +111,29 @@ describe("AllTimers", () => {
     expect(screen.getByLabelText("recipes.cookMode.resumeTimer").className).toContain(fill);
   });
 
-  it("opens the tapped row's timer, and a round button only does its own action", () => {
+  it("opens the tapped row's timer, and a round button beside it only does its own action", () => {
     const onOpen = vi.fn();
 
-    useTimerStore.setState({ timers: [timer("a", "running")] });
+    useTimerStore.setState({ timers: [{ ...timer("a", "running"), stepIndex: 1 }] });
     render(<AllTimers onEmpty={() => {}} onOpen={onOpen} />);
+    const row = screen.getByTestId("timer-open-a");
+    const pause = screen.getByLabelText("recipes.cookMode.pauseTimer");
 
-    fireEvent.click(screen.getByLabelText("recipes.cookMode.pauseTimer"));
+    expect(row.contains(pause)).toBe(false);
+    fireEvent.click(pause);
     expect(onOpen).not.toHaveBeenCalled();
+    expect(useTimerStore.getState().timers[0]?.status).toBe("paused");
 
-    fireEvent.click(screen.getByTestId("timer-open-a"));
+    expect(row.getAttribute("role")).toBe("button");
+    expect(row.getAttribute("aria-label")).toBe("recipes.cookMode.openTimerAtStep");
+    fireEvent.click(row);
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
+  });
+
+  it("makes no button of a row with nothing to open", () => {
+    useTimerStore.setState({ timers: [timer("a", "running")] });
+    render(<AllTimers onEmpty={() => {}} />);
+
+    expect(screen.getByTestId("timer-open-a").getAttribute("role")).toBeNull();
   });
 });

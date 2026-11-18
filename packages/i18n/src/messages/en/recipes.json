@@ -375,6 +375,8 @@
     "notificationsOff": "Notifications are off for Norish, so timers only ring while the app is open.",
     "decreaseTimer": "Take {time} off",
     "increaseTimer": "Add {time}",
+    "openTimer": "{timer}, open {recipe} in cook mode",
+    "openTimerAtStep": "{timer}, open {recipe} in cook mode at step {number}",
     "timersLeft": "Timers, {time} left",
     "spokenTime": "{hours, plural, =0 {} one {# hour } other {# hours }}{minutes, plural, =0 {} one {# minute } other {# minutes }}{seconds, plural, =0 {} one {# second } other {# seconds }}"
   },

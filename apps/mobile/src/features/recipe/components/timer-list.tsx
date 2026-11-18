@@ -2,6 +2,7 @@ import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useGroupedFill, useOnSheet } from "@/components/on-sheet";
+import { PressableScale } from "@/components/pressable-scale";
 import { TimerRing } from "@/components/timer-ring";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -63,13 +64,24 @@ function TimerRow({
   const done = timer.status === "completed";
   const step = timerAdjustStep(timer.originalDurationMs);
   const stepText = formatTimerMs(step);
+  const named = { timer: timer.label, recipe: timer.recipeName ?? timer.label };
+  const openLabel =
+    timer.stepIndex === undefined
+      ? intl.formatMessage({ id: "recipes.cookMode.openTimer" }, named)
+      : intl.formatMessage(
+          { id: "recipes.cookMode.openTimerAtStep" },
+          { ...named, number: timer.stepIndex + 1 }
+        );
 
   return (
     <View
       className={`flex-row items-center gap-1.5 py-2.5 pr-2 pl-3 ${first ? "" : "border-separator border-t"}`}
       testID={`timer-row-${timer.id}`}
     >
-      <Pressable
+      {/* Cook mode's own pill has nothing to open, so its rows are no button. */}
+      <PressableScale
+        accessibilityLabel={onOpen ? openLabel : undefined}
+        accessibilityRole={onOpen ? "button" : undefined}
         className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch"
         disabled={!onOpen}
         testID={`timer-open-${timer.id}`}
@@ -107,7 +119,7 @@ function TimerRow({
             ? intl.formatMessage({ id: "common.timer.done" })
             : formatTimerMs(timer.remainingMs)}
         </Text>
-      </Pressable>
+      </PressableScale>
       {done ? (
         <RoundAction
           icon="refresh"

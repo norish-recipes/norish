@@ -375,6 +375,8 @@
     "notificationsOff": "Meldingen staan uit voor Norish, dus timers gaan alleen af terwijl de app open is.",
     "decreaseTimer": "{time} eraf",
     "increaseTimer": "{time} erbij",
+    "openTimer": "{timer}, open {recipe} in kookmodus",
+    "openTimerAtStep": "{timer}, open {recipe} in kookmodus bij stap {number}",
     "timersLeft": "Timers, nog {time}",
     "spokenTime": "{hours, plural, =0 {} one {# uur } other {# uur }}{minutes, plural, =0 {} one {# minuut } other {# minuten }}{seconds, plural, =0 {} one {# seconde } other {# seconden }}"
   },

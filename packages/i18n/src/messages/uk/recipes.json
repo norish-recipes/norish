@@ -375,6 +375,8 @@
     "notificationsOff": "Сповіщення Norish вимкнено, тож таймери дзвонять, лише поки застосунок відкритий.",
     "decreaseTimer": "Зменшити на {time}",
     "increaseTimer": "Додати {time}",
+    "openTimer": "{timer}, відкрити {recipe} у режимі готування",
+    "openTimerAtStep": "{timer}, відкрити {recipe} у режимі готування на кроці {number}",
     "timersLeft": "Таймери, залишилося {time}",
     "spokenTime": "{hours, plural, =0 {} one {# година } few {# години } many {# годин } other {# години }}{minutes, plural, =0 {} one {# хвилина } few {# хвилини } many {# хвилин } other {# хвилини }}{seconds, plural, =0 {} one {# секунда } few {# секунди } many {# секунд } other {# секунди }}"
   },

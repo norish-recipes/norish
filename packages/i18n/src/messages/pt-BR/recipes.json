@@ -375,6 +375,8 @@
     "notificationsOff": "As notificações do Norish estão desativadas, então os timers só tocam com o app aberto.",
     "decreaseTimer": "Tirar {time}",
     "increaseTimer": "Adicionar {time}",
+    "openTimer": "{timer}, abrir {recipe} no modo cozinha",
+    "openTimerAtStep": "{timer}, abrir {recipe} no modo cozinha na etapa {number}",
     "timersLeft": "Temporizadores, faltam {time}",
     "spokenTime": "{hours, plural, =0 {} one {# hora } other {# horas }}{minutes, plural, =0 {} one {# minuto } other {# minutos }}{seconds, plural, =0 {} one {# segundo } other {# segundos }}"
   },
