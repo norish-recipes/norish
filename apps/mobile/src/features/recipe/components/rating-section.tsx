@@ -19,8 +19,8 @@ import {
   useRatingsMutation,
 } from "@norish/shared-react/recipes";
 
-import type { StarMotion } from "../utils/star-motion";
-import { starMotion } from "../utils/star-motion";
+import type { StarMotion, StarTap } from "../utils/star-motion";
+import { liveTap, starMotion } from "../utils/star-motion";
 import { SectionCard } from "./tint";
 
 const STAR_SIZE = 34;
@@ -68,8 +68,11 @@ export function RatingSection() {
   const { userRating, averageRating } = useRatingQuery(recipe.id);
   const { rateRecipe } = useRatingsMutation();
   const shown = Math.round(userRating ?? averageRating ?? 0);
-  // The stars the last tap went from and to: only that change animates.
-  const [tap, setTap] = useState<{ from: number; to: number } | null>(null);
+  // The last tap: only its own change animates, once.
+  const [tap, setTap] = useState<StarTap | null>(null);
+  const live = liveTap(tap, shown);
+
+  if (live !== tap) setTap(live);
 
   if (!showRatings) return null;
 
@@ -94,13 +97,13 @@ export function RatingSection() {
               onPress={() => {
                 const next = userRating === value ? null : value;
 
-                setTap({ from: shown, to: Math.round(next ?? averageRating ?? 0) });
+                setTap({ from: shown, to: Math.round(next ?? averageRating ?? 0), reached: false });
                 rateRecipe(recipe.id, next);
               }}
             >
               <Star
                 filled={value <= shown}
-                motion={tap?.to === shown ? starMotion(value, tap.from, shown) : null}
+                motion={live?.reached ? starMotion(value, live.from, live.to) : null}
               />
             </Pressable>
           ))}

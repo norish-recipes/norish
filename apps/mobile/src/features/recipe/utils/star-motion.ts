@@ -10,3 +10,15 @@ export function starMotion(star: number, from: number, to: number): StarMotion {
 
   return { delay: fills ? (star - from - 1) * STAR_STAGGER_MS : 0, pop: fills };
 }
+
+/** A tap from `from` to `to` stars; `reached` once the stars show `to`. */
+export type StarTap = { from: number; to: number; reached: boolean };
+
+/** The tap as of the stars showing `shown`: it waits for its own value, animates on it, and the
+ * next value after spends it, so later ratings show as they arrive. */
+export function liveTap(tap: StarTap | null, shown: number): StarTap | null {
+  if (!tap) return null;
+  if (shown === tap.to) return tap.reached ? tap : { ...tap, reached: true };
+
+  return tap.reached ? null : tap;
+}
