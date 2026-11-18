@@ -11,6 +11,9 @@ import { timerCookStep } from "../utils/timer-step";
 /** The most of the window the rows take before they scroll, as the shared sheets' first detent. */
 const MAX_HEIGHT_SHARE = 0.62;
 
+/** How long the sheet takes to leave before UIKit can present cook mode: 400 ms still left it unpresented. */
+const SHEET_LEFT_MS = 800;
+
 /** The capsule's sheet: every Recipe Timer on the device, as tall as its rows; a row opens cook mode on its step. */
 export function TimersSheetScreen() {
   const intl = useIntl();
@@ -28,8 +31,11 @@ export function TimersSheetScreen() {
           <AllTimers
             onEmpty={() => router.back()}
             onOpen={(timer) => {
+              const cook = cookModeRoute(timer.recipeId, timerCookStep(timer));
+
+              // UIKit cannot present cook mode while the sheet is still leaving.
               router.back();
-              router.push(cookModeRoute(timer.recipeId, timerCookStep(timer)));
+              setTimeout(() => router.push(cook), SHEET_LEFT_MS);
             }}
           />
         </View>
