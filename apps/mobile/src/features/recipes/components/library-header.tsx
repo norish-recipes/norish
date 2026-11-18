@@ -150,7 +150,7 @@ export function FiltersButton() {
       />
       {filtersOn ? (
         <View
-          className="bg-accent border-surface absolute top-1 right-1 size-[9px] rounded-full border-2"
+          className="bg-accent absolute top-1 right-1 size-2 rounded-full"
           pointerEvents="none"
         />
       ) : null}
