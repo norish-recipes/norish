@@ -12,6 +12,7 @@ const held = vi.hoisted(() => ({
   deleteItem: vi.fn(),
   confirm: vi.fn(),
   back: vi.fn(),
+  toRecipe: vi.fn(),
 }));
 
 vi.mock(
@@ -52,7 +53,7 @@ vi.mock("expo-router", () => ({
   useIsFocused: () => true,
 }));
 vi.mock("@norish/shared-react/platform", () => ({
-  usePlatform: () => ({ navigation: { toRecipe: vi.fn() } }),
+  usePlatform: () => ({ navigation: { toRecipe: held.toRecipe } }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-12" }));
 // The draft is the real one; only the writes it hands to are held.
@@ -189,5 +190,23 @@ describe("PlannedItemScreen", () => {
     held.confirm.mock.calls[0]![0].onConfirm();
 
     expect(held.deleteItem).toHaveBeenCalledWith("note-1");
+  });
+
+  it("opens the recipe from its row, which the Actions menu no longer offers", () => {
+    held.items = [{ ...note, itemType: "recipe", recipeId: "r1" }];
+    render(<PlannedItemScreen />);
+
+    expect(screen.queryByTestId("planned-item-action-calendar.timeline.goToRecipe")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("planned-item-recipe"));
+
+    expect(held.back).toHaveBeenCalledOnce();
+    expect(held.toRecipe).toHaveBeenCalledExactlyOnceWith("r1");
+  });
+
+  it("has no recipe row for a note", () => {
+    render(<PlannedItemScreen />);
+
+    expect(screen.queryByTestId("planned-item-recipe")).toBeNull();
   });
 });

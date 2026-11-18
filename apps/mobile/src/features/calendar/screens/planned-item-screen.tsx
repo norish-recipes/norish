@@ -1,5 +1,6 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { destructiveAction } from "@/components/modal-header";
 import { MoveFields } from "@/components/move-fields";
 import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
 import { PlannedThumb } from "@/components/planned-thumb";
@@ -9,8 +10,9 @@ import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
 import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
 import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
 import { TAB_ROUTES } from "@/lib/tab-routes";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { TextField } from "heroui-native";
+import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -35,6 +37,7 @@ export function PlannedItemScreen() {
 function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const intl = useIntl();
   const router = useRouter();
+  const [muted] = useThemeColor(["muted"] as const);
   const { navigation } = usePlatform();
   const confirmRemove = useConfirmRemovePlanned();
   const { title, subtitle } = usePlannedItemText()(item);
@@ -47,15 +50,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
       name="planned-item"
       secondary={[
         ...(recipeId
-          ? ([
-              {
-                label: intl.formatMessage({ id: "calendar.timeline.goToRecipe" }),
-                symbol: "book",
-                onPress: () => {
-                  router.back();
-                  navigation.toRecipe(recipeId);
-                },
-              },
+          ? [
               {
                 label: intl.formatMessage({ id: "navbar.nav.groceries" }),
                 symbol: "cart",
@@ -64,25 +59,38 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
                     pathname: TAB_ROUTES.calendar.addToGroceries,
                     params: { recipeId },
                   }),
-              },
-            ] as const)
+              } as const,
+            ]
           : []),
-        {
-          label: intl.formatMessage({ id: "common.actions.remove" }),
-          symbol: "trash",
-          destructive: true,
-          onPress: () => confirmRemove(item),
-        },
+        destructiveAction(
+          intl.formatMessage({ id: "common.actions.remove" }),
+          () => confirmRemove(item),
+          "planned-item-remove"
+        ),
       ]}
       subtitle={recipeId ? undefined : (subtitle ?? undefined)}
       title={title}
     >
       <SheetBody>
         {recipeId ? (
-          <View className="flex-row items-center gap-3.5 px-2 pb-3">
+          <Pressable
+            accessibilityRole="button"
+            className="flex-row items-center gap-3.5 px-2 pb-3"
+            testID="planned-item-recipe"
+            onPress={() => {
+              router.back();
+              navigation.toRecipe(recipeId);
+            }}
+          >
             <PlannedThumb className="size-14 rounded-2xl" item={item} />
-            {subtitle ? <Text className="text-muted flex-1 text-base">{subtitle}</Text> : null}
-          </View>
+            <View className="min-w-0 flex-1">
+              <Text className="text-foreground text-base font-medium" numberOfLines={2}>
+                {title}
+              </Text>
+              {subtitle ? <Text className="text-muted text-sm">{subtitle}</Text> : null}
+            </View>
+            <Ionicons color={muted} name="chevron-forward" size={18} />
+          </Pressable>
         ) : null}
         {recipeId ? null : (
           <TextField className="mb-3">
