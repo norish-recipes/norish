@@ -1,9 +1,29 @@
-import { useEffect, useId, useLayoutEffect } from "react";
+import { useEffect, useId, useLayoutEffect, useSyncExternalStore } from "react";
 
 /** A row's tap: `close` the sheet, then `open` once that sheet has gone. */
 type Wait = { sheet: string; close: () => void; open: () => void; closed: boolean; gone: boolean };
 
 let waiting: Wait | null = null;
+const listeners = new Set<() => void>();
+
+/** Every change to `waiting` goes through here, so the touch shield hears each one. */
+function setWaiting(next: Wait | null) {
+  waiting = next;
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+
+  return () => listeners.delete(listener);
+}
+
+const isWaiting = () => waiting !== null;
+
+/** True from a tap that queued an open until that open runs or is dropped. */
+export function useSheetOpenWaiting(): boolean {
+  return useSyncExternalStore(subscribe, isWaiting);
+}
 /** The sheet whose presentation has not finished: UIKit would only start a close once it ends. */
 let presenting: string | null = null;
 
@@ -16,7 +36,7 @@ function sheetUnmounted(sheet: string) {
   if (presenting === sheet) presenting = null;
   if (waiting?.sheet !== sheet) return;
   if (waiting.closed) waiting.gone = true;
-  else waiting = null;
+  else setWaiting(null);
 }
 
 /** A sheet's mount: it presents until its stack's next finished transition. Returns the id
@@ -37,8 +57,10 @@ export function useSheetPresenting(): string {
  * false, doing nothing, while a tap already waits. */
 export function openAfterSheet(sheet: string, close: () => void, open: () => void): boolean {
   if (waiting) return false;
-  waiting = { sheet, close, open, closed: presenting !== sheet, gone: false };
-  if (waiting.closed) close();
+  const wait = { sheet, close, open, closed: presenting !== sheet, gone: false };
+
+  setWaiting(wait);
+  if (wait.closed) close();
 
   return true;
 }
@@ -60,12 +82,12 @@ function transitionFinished() {
     return;
   }
   if (!wait?.gone) return;
-  waiting = null;
+  setWaiting(null);
   wait.open();
 }
 
 function reset() {
-  waiting = null;
+  setWaiting(null);
   presenting = null;
 }
 

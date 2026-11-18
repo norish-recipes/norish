@@ -124,4 +124,45 @@ describe("after-sheet in a release build", () => {
     expect(close).not.toHaveBeenCalled();
     expect(open).not.toHaveBeenCalled();
   });
+  it("reports a waiting open from the tap until it runs, and until it is dropped", () => {
+    const { openAfterSheet, useSheetExit, useSheetOpenWaiting, useSheetPresenting } =
+      releaseAfterSheet();
+    const stack = renderHook(() => useSheetExit());
+    const renders = vi.fn();
+    const waiting = renderHook(() => {
+      renders();
+
+      return useSheetOpenWaiting();
+    });
+    const sheet = renderHook(() => useSheetPresenting());
+
+    expect(waiting.result.current).toBe(false);
+    act(() => stack.result.current());
+    act(() => void openAfterSheet(sheet.result.current, vi.fn(), vi.fn()));
+    expect(waiting.result.current).toBe(true);
+
+    // Unmounted after its close: still waiting for the dismissal to finish.
+    sheet.unmount();
+    expect(waiting.result.current).toBe(true);
+    act(() => stack.result.current());
+    expect(waiting.result.current).toBe(false);
+
+    // Swiped away before it was up: the drop clears it.
+    const swiped = renderHook(() => useSheetPresenting());
+
+    act(() => void openAfterSheet(swiped.result.current, vi.fn(), vi.fn()));
+    expect(waiting.result.current).toBe(true);
+    swiped.unmount();
+    expect(waiting.result.current).toBe(false);
+
+    // The stack unmounting, as on sign-out, clears it too.
+    const reset = renderHook(() => useSheetPresenting());
+
+    act(() => void openAfterSheet(reset.result.current, vi.fn(), vi.fn()));
+    expect(waiting.result.current).toBe(true);
+    stack.unmount();
+    expect(waiting.result.current).toBe(false);
+    // One render per change: on at the tap, off at each of the open, the drop and the reset.
+    expect(renders).toHaveBeenCalledTimes(7);
+  });
 });

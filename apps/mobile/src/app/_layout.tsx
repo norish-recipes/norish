@@ -14,6 +14,7 @@ import {
   FIT_SHEET_OPTIONS,
   SEARCH_SHEET_OPTIONS,
 } from "@/components/sheet-options";
+import { SheetTouchShield } from "@/components/sheet-touch-shield";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useCalendarWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
@@ -192,6 +193,7 @@ function SessionStack() {
     <>
       <RootStack signedIn={signedIn} />
       <PortalHost name="app" />
+      <SheetTouchShield />
     </>
   );
 
