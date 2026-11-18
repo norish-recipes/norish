@@ -34,7 +34,6 @@ export function NameField({
       <SheetInput
         ref={fieldRef}
         accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.itemLabel" })}
-        className="h-[52px] text-[17px]"
         placeholder={intl.formatMessage({ id: placeholderId })}
         returnKeyType="done"
         testID={testID}
