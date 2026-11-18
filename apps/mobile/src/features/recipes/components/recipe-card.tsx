@@ -200,6 +200,7 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
         {isFavorite ? <FavouriteMark size={32} /> : null}
         <TagChips
           allergySet={allergySet}
+          look="glass"
           tags={tagNames}
           testID={`recipe-card-tags-${recipe.id}`}
         />
