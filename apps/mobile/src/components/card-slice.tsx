@@ -4,6 +4,7 @@ import React from "react";
 import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { useDragCard, useIsLifted } from "@/components/drag-list/drag-list";
+import { useOnSheet } from "@/components/on-sheet";
 
 /** One row's slice of its section's card: the card is flat rows, so the heading rounds the top
  * and the last row the bottom. `gap` leaves room above a section's heading. */
@@ -11,7 +12,7 @@ export function CardSlice({
   edge,
   gap = false,
   separated = true,
-  className = "bg-surface",
+  className,
   children,
 }: {
   edge: Edge;
@@ -22,15 +23,20 @@ export function CardSlice({
   children: ReactNode;
 }) {
   const onCardLayout = useDragCard();
+  const ground = useSliceFill();
+  const fill = className ?? ground;
 
   return (
     <View className={`px-5 ${gap ? "pt-3.5" : ""}`}>
-      <View className={sliceClass(edge, className, separated)} onLayout={onCardLayout}>
+      <View className={sliceClass(edge, fill, separated)} onLayout={onCardLayout}>
         {children}
       </View>
     </View>
   );
 }
+
+/** A slice's ground: the translucent fill on a sheet, the surface off one. */
+const useSliceFill = () => (useOnSheet() ? "bg-fill" : "bg-surface");
 
 /** A page's cards, and a sheet's tighter ones; `lifted` is the card a drag carries. */
 const SIZES: Record<
@@ -66,7 +72,7 @@ const TILT = { transform: [{ rotate: "-1.5deg" }] };
 export function ItemSlice({
   edge,
   separated = true,
-  className = "bg-surface",
+  className,
   size = "page",
   children,
 }: {
@@ -80,6 +86,8 @@ export function ItemSlice({
   const reduceMotion = useReducedMotion();
   const onCardLayout = useDragCard();
   const sized = SIZES[size];
+  const ground = useSliceFill();
+  const fill = className ?? ground;
 
   return (
     <View
@@ -89,8 +97,8 @@ export function ItemSlice({
       <View
         className={
           lifted
-            ? `overflow-hidden ${className} ${sized.lifted}`
-            : sliceClass(edge, className, separated, sized)
+            ? `overflow-hidden ${fill} ${sized.lifted}`
+            : sliceClass(edge, fill, separated, sized)
         }
         onLayout={onCardLayout}
       >

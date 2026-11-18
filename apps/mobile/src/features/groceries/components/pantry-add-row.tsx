@@ -18,7 +18,7 @@ export function PantryAddRowView({
   const intl = useIntl();
 
   return (
-    <CardSlice className="bg-fill" edge={row.edge}>
+    <CardSlice edge={row.edge}>
       <FoodRow
         end={
           <RowButton

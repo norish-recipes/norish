@@ -43,7 +43,7 @@ function AisleRow({
   const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <ItemSlice className="bg-fill" edge={{ top: first, bottom: false }} size="sheet">
+    <ItemSlice edge={{ top: first, bottom: false }} size="sheet">
       <View className="h-12 flex-row items-center gap-2 pr-2 pl-2.5">
         <DragGrip
           label={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}

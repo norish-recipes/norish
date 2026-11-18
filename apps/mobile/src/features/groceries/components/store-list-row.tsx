@@ -58,7 +58,7 @@ export function StoreListRow({
   const color = useStoreColor(store.color);
 
   return (
-    <ItemSlice className="bg-fill" edge={edge} size="sheet">
+    <ItemSlice edge={edge} size="sheet">
       <View className="h-14 flex-row items-center gap-3 pr-2 pl-2.5">
         <DragPressable
           accessibilityLabel={intl.formatMessage({ id: "groceries.storeManager.dragAisle" })}
