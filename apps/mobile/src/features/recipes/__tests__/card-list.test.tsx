@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const mounts = vi.hoisted(() => new Map<string, number>());
 const entered = vi.hoisted(() => [] as string[]);
+const exited = vi.hoisted(() => [] as string[]);
 
 vi.mock("react-native", () => ({ View: ({ children }: { children?: ReactNode }) => children }));
 vi.mock("expo-router", () => ({ useIsFocused: () => true }));
@@ -26,12 +27,29 @@ vi.mock("react-native-reanimated", async () => {
 
   return { ...mock, default: { ...mock.default, FlatList, View: Passthrough } };
 
-  // Records the card a view mounts with an entering animation, as Reanimated would play it.
-  function Passthrough({ children, entering }: { children?: ReactNode; entering?: object }) {
+  // Records the card a view mounts with an entering animation, and the one it unmounts with the
+  // exiting animation its last commit set, as Reanimated would play them.
+  function Passthrough({
+    children,
+    entering,
+    exiting,
+  }: {
+    children?: ReactNode;
+    entering?: object;
+    exiting?: object;
+  }) {
     const card = React.isValidElement<{ id?: string }>(children) ? children.props.id : undefined;
+    const exits = React.useRef(exiting);
 
     React.useEffect(() => {
+      exits.current = exiting;
+    });
+    React.useEffect(() => {
       if (entering && card) entered.push(card);
+
+      return () => {
+        if (exits.current && card) exited.push(card);
+      };
     }, []);
 
     return children;
@@ -106,5 +124,14 @@ describe("CardList", () => {
 
     rerender(list("grid", [...ROWS.slice(1), "new"]));
     expect(entered).toEqual(["new"]);
+  });
+
+  it("plays the exiting animation only for the recipe that left, not for a card moving cells", () => {
+    exited.length = 0;
+    const { rerender } = render(list("list"));
+
+    // r8 and r16 move up a cell, unmounting from their old one.
+    rerender(list("list", ROWS.slice(1)));
+    expect(exited).toEqual(["r0"]);
   });
 });

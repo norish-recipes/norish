@@ -1,6 +1,6 @@
 import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactElement } from "react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Loader } from "@/components/loader";
@@ -68,12 +68,16 @@ export function CardList<Row>({
   }));
   const isGrid = variant === "grid";
   const focused = useIsFocused();
-  // The recipes listed before the list last changed: a card moving cells remounts, entering only if
-  // new. Compared by keys, as a caller may pass a fresh array each render.
+  // A card moving cells remounts, entering only if new to `listed`. A change first commits the old
+  // cells with only leaving cards set to exit, as Reanimated reads that before the removal.
   const ids = rows.map(rowKey);
-  const [before, setBefore] = useState(() => ({ ids, listed: new Set<string>() }));
+  const [drawn, setDrawn] = useState(() => ({ rows, ids, listed: new Set<string>() }));
+  const changed = drawn.ids.join("\n") !== ids.join("\n");
+  const leaving = new Set(changed ? drawn.ids.filter((id) => !ids.includes(id)) : []);
 
-  if (before.ids.join("\n") !== ids.join("\n")) setBefore({ ids, listed: new Set(before.ids) });
+  useLayoutEffect(() => {
+    if (changed) setDrawn({ rows, ids, listed: new Set(drawn.ids) });
+  }, [changed, rows, ids, drawn.ids]);
 
   // Leaving the screen, for another tab or a sheet over it, closes the open row.
   useEffect(() => {
@@ -102,7 +106,7 @@ export function CardList<Row>({
         paddingBottom: tabListBottomInset(homeIndicator),
       }}
       contentInsetAdjustmentBehavior={insets}
-      data={cardChunks(rows, CELL)}
+      data={cardChunks(changed ? drawn.rows : rows, CELL)}
       initialNumToRender={INITIAL_CELLS}
       itemLayoutAnimation={SPRING_LAYOUT}
       keyExtractor={(_chunk, index) => `cell-${index}`}
@@ -113,8 +117,8 @@ export function CardList<Row>({
             <Animated.View
               key={rowKey(row)}
               className={isGrid ? "w-1/2 flex-row px-1.5 pb-3" : "px-5 pb-3"}
-              entering={before.listed.has(rowKey(row)) ? undefined : SPRING_FADE_IN}
-              exiting={SPRING_FADE_OUT}
+              entering={drawn.listed.has(rowKey(row)) ? undefined : SPRING_FADE_IN}
+              exiting={leaving.has(rowKey(row)) ? SPRING_FADE_OUT : undefined}
               layout={SPRING_LAYOUT}
             >
               {renderCard(row)}
