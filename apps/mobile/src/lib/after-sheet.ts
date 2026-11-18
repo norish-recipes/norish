@@ -22,15 +22,15 @@ function sheetUnmounted(sheet: string) {
 /** A root sheet's mount: it presents until the root stack's next finished transition. Returns the
  * id `openAfterSheet` ties a tap to. */
 export function useSheetPresenting(): string {
-  const sheet = useId();
+  const sheetId = useId();
 
   useLayoutEffect(() => {
-    sheetMounted(sheet);
+    sheetMounted(sheetId);
 
-    return () => sheetUnmounted(sheet);
-  }, [sheet]);
+    return () => sheetUnmounted(sheetId);
+  }, [sheetId]);
 
-  return sheet;
+  return sheetId;
 }
 
 /** Closes `sheet` with `close` once it has finished presenting, and runs `open` once it has gone;
