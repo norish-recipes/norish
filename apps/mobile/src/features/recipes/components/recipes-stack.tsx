@@ -7,10 +7,11 @@ import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
 // The sheets whose content can outgrow 62%; Rename and Move fit their fields.
-const SHEETS = ["filters", "plan", "add-to-groceries"] as const;
+const SHEETS = ["filters", "add-to-groceries"] as const;
 
-// The sheets with a field above a list.
+// The list sheets: a field above a list, or a list of days.
 const SEARCH_SHEETS = [
+  "plan",
   "plan-recipe",
   "add-to-cookbook",
   "cookbook-add-recipes",
