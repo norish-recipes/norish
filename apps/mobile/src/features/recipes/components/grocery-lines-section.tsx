@@ -1,33 +1,40 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { GlassPill } from "@/components/glass";
 import { Skeleton } from "heroui-native";
 
 const SECTION = "bg-fill overflow-hidden rounded-[22px]";
 const HEADER = "flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5";
 
-/** A section's shell while its lines load: the header's name over the rows given. */
+/** A section's shell while its lines load: the header's name and button over the rows given. */
 export function GroceryLinesSectionSkeleton({ children }: { children: ReactNode }) {
   return (
     <View className={SECTION}>
       <View className={HEADER}>
         <Skeleton className="h-5 w-24 rounded-md" />
+        <View className="flex-1" />
+        <Skeleton className="h-[30px] w-20 rounded-full" />
       </View>
       {children}
     </View>
   );
 }
 
-/** One section of the Add to groceries sheet: its name, how many lines are ticked, then its lines. */
+/** One section of the Add to groceries sheet: its name, how many lines are ticked, select-all, then its lines. */
 export function GroceryLinesSection({
   title,
   count,
+  toggleLabel,
   testID,
+  onToggleAll,
   children,
 }: {
   title: string;
   count: string;
+  toggleLabel: string;
   testID: string;
+  onToggleAll: () => void;
   children: ReactNode;
 }) {
   return (
@@ -37,6 +44,14 @@ export function GroceryLinesSection({
         <Text className="text-muted flex-1 text-[13px]" numberOfLines={1}>
           {count}
         </Text>
+        <GlassPill
+          className="justify-center px-3"
+          size="small"
+          testID={`${testID}-toggle`}
+          onPress={onToggleAll}
+        >
+          <Text className="text-foreground text-[13px] font-medium">{toggleLabel}</Text>
+        </GlassPill>
       </View>
       {children}
     </View>
