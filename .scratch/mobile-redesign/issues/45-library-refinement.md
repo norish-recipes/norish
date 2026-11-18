@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] The grid/list switch is `ListSwitch`; it flips locally at once and saves the Device Preference in the background.
 - [x] One key per recipe in both views (no `grid-${index}`); no entering animation replay on a toggle.
@@ -43,3 +43,6 @@
   4. fix: the floor "open + 32" is `FULL_SWIPE_OVERSHOOT / 2`, not its own constant; two tags with the same name share a key and a width slot; no mobile test checks the view switch writes the preference.
   5. reject (low): the first frames of a card's first drag using 148 where 131 applies; a second finger resetting the full swipe; list tags appearing a frame after the facts; cells mounted later by virtualisation animating in.
 - Round 2 fixes: #2 `579d11159` (the delete test now fails on moved cards exiting; a change first commits the old cells with only leaving cards set to exit), #4 floor `03d6f1e3e`, #1 `afb33c684` (`FULL_SWIPE_HYSTERESIS` 16 pt in `swipeZone`), #3 + #4 keys `af6233a09` (plain measuring row, unmounted once measured, re-measured on window width, font scale or tags), #4 view switch test `0e6533b38`. All seven gates exit 0. Device (iPhone 17, iOS 27.2 Release, local dev server, mike@mike.nl): list `chicken +3` plain, grid `chicken dinner +2` glass; slow swipe opens and full swipe opens Add to groceries once in both views (closed unchanged); no crash. Maestro delete-recipe and add-to-groceries pass first run.
+- Exit gate on `c2e1385cb`: all seven gates exit 0. Left as is: two `@eslint-react/no-array-index-key` warnings in `tag-chips.tsx` (a card's tags are a fixed list, and position is what keeps two same-named tags apart).
+- For Mike on the phone: the swipe's fan-out and the full-swipe haptic, the list now showing the tags that fit (it showed one), the dark thumb's lightness, and whether the Library flashes grid before list on a cold start.
+- iPhone guide screenshots to retake: the Library in grid and list, and any swipe-actions shot.
