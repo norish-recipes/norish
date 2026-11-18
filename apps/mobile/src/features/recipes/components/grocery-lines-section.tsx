@@ -45,8 +45,8 @@ export function GroceryLinesSection({
           {count}
         </Text>
         <GlassPill
-          className="h-[30px] justify-center rounded-full px-3"
-          radius={15}
+          className="justify-center px-3"
+          size="small"
           testID={`${testID}-toggle`}
           onPress={onToggleAll}
         >

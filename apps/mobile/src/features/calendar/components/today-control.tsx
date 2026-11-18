@@ -48,8 +48,7 @@ export function TodayControl({
     >
       <GlassPill
         accessibilityLabel={intl.formatMessage({ id: "calendar.mobile.scrollToToday" })}
-        className="h-11 flex-row items-center gap-1.5 rounded-full pr-4 pl-3"
-        radius={22}
+        className="flex-row items-center gap-1.5 pr-4 pl-3"
         testID="calendar-to-today"
         tint={background}
         onPress={() => {
