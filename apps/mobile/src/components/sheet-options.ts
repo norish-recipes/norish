@@ -16,7 +16,7 @@ const FORM_SHEET = {
 } as const satisfies NativeStackNavigationOptions;
 
 /** Opens at 62% and expands by drag or by scrolling to the edge; `bottom: 0` makes the content
- *  fill the sheet at every detent, so `Sheet` pins its actions with flexbox. */
+ *  fill the sheet at every detent. */
 export const SHEET_OPTIONS = {
   ...FORM_SHEET,
   sheetGrabberVisible: true,
@@ -26,13 +26,10 @@ export const SHEET_OPTIONS = {
   contentStyle: { backgroundColor: "transparent", bottom: 0 },
 } as const satisfies NativeStackNavigationOptions;
 
-/** A sheet with a search field and a list: one detent, because UIKit expands a sheet that has
- *  more to the full height, drawn opaque, when the keyboard rises; this one rises with it. */
+/** A list or search sheet: half height, and UIKit's full, opaque height on a drag or while typing. */
 export const SEARCH_SHEET_OPTIONS = {
   ...SHEET_OPTIONS,
-  sheetGrabberVisible: false,
-  sheetAllowedDetents: [0.5],
-  sheetExpandsWhenScrolledToEdge: false,
+  sheetAllowedDetents: [0.5, 1],
 } as const satisfies NativeStackNavigationOptions;
 
 /** A sheet as tall as its content, which does not resize. */
