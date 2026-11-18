@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import React, { useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
   useAnimatedReaction,
@@ -77,9 +77,9 @@ export function SwipeActions({
   const openRow = useOpenRow(rowRef);
   // Whether a finger is dragging the card, so the threshold's haptic is not played by the settle.
   const dragging = useSharedValue(false);
-  // Whether the finger is past the card's `FULL_SWIPE_SHARE`: a release there runs the first action.
+  // Whether the finger is past `FULL_SWIPE_SHARE` of the screen: a release there runs the first action.
   const fullSwipe = useSharedValue(false);
-  const cardWidth = useSharedValue(0);
+  const screenWidth = useWindowDimensions().width;
   const startDrag = () => {
     dragging.set(true);
     fullSwipe.set(false);
@@ -91,7 +91,6 @@ export function SwipeActions({
     // A touch on this row closes any other open one, and stops there: the list closes on any other.
     <View
       className={isGrid ? "flex-1" : undefined}
-      onLayout={(event) => cardWidth.set(event.nativeEvent.layout.width)}
       onTouchStart={(event) => {
         event.stopPropagation();
         closeOpenRow(openRow.row);
@@ -103,7 +102,7 @@ export function SwipeActions({
         renderRightActions={(progress, translation, methods) => (
           <>
             <SwipeWatch
-              cardWidth={cardWidth}
+              screenWidth={screenWidth}
               dragging={dragging}
               fullSwipe={fullSwipe}
               translation={translation}
@@ -145,12 +144,12 @@ export function SwipeActions({
 /** A tick where a release would open the row, each way the finger crosses it, and whether the
  * finger is past a full swipe; the settle after a release plays no tick and keeps the full swipe. */
 function SwipeWatch({
-  cardWidth,
+  screenWidth,
   dragging,
   fullSwipe,
   translation,
 }: {
-  cardWidth: SharedValue<number>;
+  screenWidth: number;
   dragging: SharedValue<boolean>;
   fullSwipe: SharedValue<boolean>;
   translation: SharedValue<number>;
@@ -162,7 +161,7 @@ function SwipeWatch({
     }
   );
   useAnimatedReaction(
-    () => isFullSwipe(-translation.get(), cardWidth.get()),
+    () => isFullSwipe(-translation.get(), screenWidth),
     (full) => {
       if (dragging.get()) fullSwipe.set(full);
     }

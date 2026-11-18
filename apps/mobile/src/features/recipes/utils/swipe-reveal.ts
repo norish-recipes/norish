@@ -1,5 +1,6 @@
-/** A swipe past this share of the card's width, released, runs the first action. */
-export const FULL_SWIPE_SHARE = 0.6;
+/** A swipe past this share of the screen's width, released, runs the first action: a share of a
+ * grid card's own width would be an accident away. */
+export const FULL_SWIPE_SHARE = 0.8;
 
 /**
  * How far right of its place action `index` of `count` sits when the card is `travel` pt along its
@@ -22,9 +23,9 @@ export function actionOffset(
   return width * left * rate;
 }
 
-/** Whether a card dragged `travel` pt over a `cardWidth` pt card is swiped through to the end. */
-export function isFullSwipe(travel: number, cardWidth: number) {
+/** Whether a card dragged `travel` pt on a `screenWidth` pt screen is swiped through to the end. */
+export function isFullSwipe(travel: number, screenWidth: number) {
   "worklet";
 
-  return cardWidth > 0 && travel > cardWidth * FULL_SWIPE_SHARE;
+  return screenWidth > 0 && travel > screenWidth * FULL_SWIPE_SHARE;
 }

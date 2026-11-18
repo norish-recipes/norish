@@ -37,12 +37,12 @@ describe("actionOffset", () => {
 });
 
 describe("isFullSwipe", () => {
-  it("is a drag past 60% of the card", () => {
-    expect(isFullSwipe(210, 350)).toBe(false);
-    expect(isFullSwipe(211, 350)).toBe(true);
+  it("is a drag past 80% of the screen", () => {
+    expect(isFullSwipe(320, 400)).toBe(false);
+    expect(isFullSwipe(321, 400)).toBe(true);
   });
 
-  it("is never true for an unmeasured card", () => {
+  it("is never true for an unmeasured screen", () => {
     expect(isFullSwipe(500, 0)).toBe(false);
   });
 });
