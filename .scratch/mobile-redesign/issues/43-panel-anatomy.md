@@ -41,3 +41,18 @@
 - The shared header ignores a press while its async action runs or the item is disabled (Create link). Photo import confirms with a checkmark labelled "Import with AI", which fits the header.
 - Header testIDs: native header items (`_UIButtonBarButton`) and menu entries expose no identifier to the accessibility tree on iOS 27 (`identifier` on the item was set and not seen), so flows tap by label; `calendar-remove` taps the alert's Remove by `index: 1`, and `import-link` waits for the sheet to settle before tapping Import.
 - `recipe-share-screen` reads the id from the `[id]` route (always set), so the `?? null` case is gone; `ModalHeader`'s `onClose`/`back` both have callers (`Sheet`). Dev data checked: no "zzt" grocery, test data removed.
+- Exit gate on `98c0d55e1`: all seven gates exit 0 (before round 2's fixes).
+- Review round 2 (the fix range), dispositions:
+  1. fix (bug): the press guard holds only when the handler returns its promise; `add-to-groceries-screen.tsx:152` and `add-to-cookbook-screen.tsx:51` wrap theirs in `void`, so a double tap adds or saves twice. Every confirm returns its promise.
+  2. fix: a rejected action leaves an unhandled rejection (`modal-header.tsx:83`, `void result.finally(...)`); the test covers resolve only.
+  3. fix (bug, verify): Plan this recipe sometimes opens on past days (`plan-calendar-dark.png`): `initialScrollIndex` is applied once and the offsets are estimated before the plan's data settles, and ignore the list's top padding.
+  4. fix: the grocery `NameField` overrides the shared field with `h-[52px] text-[17px]` (`form-parts.tsx:37`).
+  5. fix: the repeat step's Remove is hand-built beside the shared action shape (`grocery-sheet.tsx:168-176`); it stays a header item (it clears a setting), built from the shared piece.
+  6. fix (verify): Planned item shows the recipe's name twice, in the header and in the recipe row.
+  7. fix: `calendar-remove.yaml` picks the alert's Remove by `index: 1`; a selector that does not depend on order.
+  8. fix: `calendar.timeline.goToRecipe` has no reader left in any app but sits in every locale.
+  9. ask (Mike): Add to groceries had a Select all per section (To buy, In pantry); the one header item covers To buy, or In pantry only when nothing is to buy.
+  10. reject: one busy flag per header blocking the secondary items while a confirm runs; one action at a time is the point.
+  11. reject: `recipe-servings-screen.tsx`'s `text-lg font-semibold` on its number; the field's fill, height and rounding come from the definition, the weight is content.
+  12. reject: the bottom inset staying under the keyboard (about 34 pt of extra scroll); no visible defect.
+  13. kept: Edit grocery's Delete as the only entry of an Actions menu; the extra tap is the guard a delete without confirmation needs.
