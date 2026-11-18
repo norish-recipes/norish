@@ -21,3 +21,20 @@
 - Mike, in the implementer's thread (2026-11-18): Today takes the same glass as the avatar menu and its right edge lines up with the Search button; "The full maestro run can be skipped and marked done, after the last fix this ticket is done". Closed on his word without a per-ticket review; the whole-branch review reads its commits (`4b475db1d`, `027e35374`, `c65a5c0bb`) first-hand.
 - Exit gate on `a9710dfe5`: all seven gates exit 0. The seven Maestro flows passed before the glass and spacing fixes and were not re-run after them.
 - Ticket 41's carried question is answered: the bar minimises on the first scroll down and expands only when a list bounces at its end or the minimised bar is tapped. Ask for Mike: the Calendar has no end, so its bar expands only on a tap; should it minimise at all.
+
+## Final pass (whole branch, `3048459c7..HEAD`)
+
+Reviewers: Standards (Sonnet), Spec (Opus high), GPT-6.1 Sol. Dispositions:
+
+1. fix: Planned item's recipe row does `router.back(); toRecipe()` with no guard (a double tap backs twice and pushes twice) beside ticket 46's `openAfterSheet`; one close-then-go pattern.
+2. fix: `CardSlice`/`ItemSlice` ignore the on-sheet context and default to `bg-surface`; three sheet callers pass `bg-fill` by hand.
+3. fix (verify): the tab-accessory probe is mounted once per environment (two native views writing one mark).
+4. fix: `homeIndicator` is read two ways (`scroll.homeIndicator` and a direct import).
+5. fix: comments still say "native large title" (`card-list.tsx:56,147`, `recipes-stack.tsx:35`); comment blocks over two lines that this range added; exports nothing imports (`sectionAt`, `FULL_SWIPE_EDGE`, `PantryAddInput`).
+6. fix (bug): the tag chips' width cache ignores each tag's allergen status, which adds an icon and a heavier weight (Sol).
+7. fix (verify): Manage stores' own drag list has no bottom clearance since ticket 43 removed its pinned footer (Sol).
+8. fix: `modal-header.test.tsx:306` waits on a real `setTimeout`.
+9. docs (Terra, then screenshots): the iPhone guides are out of date (Remove on a planned item, the avatar menu, timer rows, Add to pantry's suggestions, the sheets' header actions), and the Pantry and Ingredients guides do not state the search rule (Sol, Spec).
+10. done here: ticket 48's third box and ticket 47's last box said more than their logs; both corrected.
+11. ask (Mike): bar items, switches and Today are 44 pt while the recipe page's controls are 40 pt; his "40 pt" answer on ticket 46 was about the recipe page.
+12. reject: testIDs no flow references; an element may carry an id before a flow uses it.

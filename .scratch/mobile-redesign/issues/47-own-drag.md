@@ -11,7 +11,7 @@
 - [x] Nothing reflows until the drop: a drop line and a highlighted target section; light haptic crossing sections, medium on drop.
 - [x] Frame-driven auto-scroll.
 - [x] A drop on a heading lands in that section (empty and collapsed too); above the first heading snaps back; no remount on drop.
-- [x] Unit tests for hit-testing and drop resolution; Maestro drag flows green; checked on the device.
+- [x] Unit tests for hit-testing and drop resolution; Maestro drag flows green; checked on the device. (On the simulator; a drag cancelled by backgrounding the app and the haptics are owed on Mike's iPhone.)
 
 ## Comments
 
@@ -50,3 +50,4 @@
   6. reject: lifted aisle rows now tilt; one lifted look for every row is what the deduplication was for. Listed for Mike to see.
   7. reject: a drop committing after the list unmounts during the settle; the user made the drop.
 - Exit gate on `8e7e46582`: all seven gates exit 0. For Mike on the phone: cancel a drag by swiping home mid-drag (it should snap back), the haptics on lift, section change and drop, lifted aisle rows tilting like the others, a row button in the recipe editor with the keyboard up.
+- Final review: the last box was ticked by round 2 on the gatekeeper's word, against the round 1 note that kept it open; the box now says what was and was not checked.
