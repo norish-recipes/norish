@@ -1,32 +1,21 @@
 import type { HeaderItem } from "@/lib/header-item";
-import type { ComponentProps } from "react";
-import type { SharedValue } from "react-native-reanimated";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
-import Animated, {
-  interpolateColor,
-  useAnimatedProps,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-} from "react-native-reanimated";
-import { GlassIconButton, GlassSurface } from "@/components/glass";
+import { GlassIconButton } from "@/components/glass";
 import { GlassSegmented } from "@/components/glass-segmented";
-import { PressableScale } from "@/components/pressable-scale";
 import { RollingText } from "@/components/rolling-text";
 import { lightImpact } from "@/lib/haptics";
-import { settleTo } from "@/lib/motion/settle-to";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
-import { useDevicePreference } from "@norish/shared-react/reader";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+
+import { useLibraryView } from "../hooks/use-library-view";
 
 const HEADING_KEYS = {
   all: "recipes.dashboard.libraryTitle",
@@ -39,99 +28,28 @@ const VIEWS = [
   { mode: "list", icon: "list-outline", label: "recipes.dashboard.viewMode.list" },
 ] as const satisfies readonly { mode: RecipeViewMode; icon: string; label: string }[];
 
-const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
-
-// A segment's size and the gap to the next, in pt: the thumb is one segment and moves by one step.
-const SEGMENT = { width: 38, height: 30 };
-const GAP = 2;
-const STEP = SEGMENT.width + GAP;
-
-/** The grid or list toggle, the reader's own choice on this device: a thumb springs to the picked
- * segment, or fades in there under Reduce Motion. */
+/** The grid or list switch, the reader's own choice on this device. */
 export function ViewToggle() {
   const intl = useIntl();
-  const reduceMotion = useReducedMotion();
-  const [view, setView] = useDevicePreference("recipeViewMode");
-  const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
-  const index = VIEWS.findIndex(({ mode }) => mode === view);
-  const x = useSharedValue(index * STEP);
-  const thumbOpacity = useSharedValue(1);
-  const shownIndexRef = useRef(index);
-
-  // The thumb leaves on the press, before the list redraws, and again for a change made elsewhere.
-  const moveThumb = (to: number) => {
-    if (shownIndexRef.current === to) return;
-
-    shownIndexRef.current = to;
-    if (reduceMotion) {
-      x.set(to * STEP);
-      thumbOpacity.set(0);
-      thumbOpacity.set(settleTo(1, { reduceMotion: true }));
-    } else {
-      x.set(settleTo(to * STEP, { reduceMotion: false }));
-    }
-  };
-
-  useEffect(() => moveThumb(index));
-
-  const thumb = useAnimatedStyle(() => ({
-    opacity: thumbOpacity.get(),
-    transform: [{ translateX: x.get() }],
-  }));
+  const [view, setView] = useLibraryView();
 
   return (
-    <View className="h-9 flex-row rounded-full p-[3px]" style={{ gap: GAP }}>
-      <GlassSurface radius={18} />
-      <Animated.View
-        className="bg-thumb absolute top-[3px] left-[3px] rounded-full"
-        pointerEvents="none"
-        style={[SEGMENT, thumb]}
-      />
-      {VIEWS.map(({ mode, icon, label }, at) => (
-        <PressableScale
-          key={mode}
-          accessibilityLabel={intl.formatMessage({ id: label })}
-          accessibilityRole="button"
-          accessibilityState={{ selected: view === mode }}
-          testID={`library-view-${mode}`}
-          onPress={() => {
-            if (view !== mode) lightImpact();
-            moveThumb(at);
-            setView(mode);
-          }}
-        >
-          <View className="items-center justify-center" style={SEGMENT}>
-            <SegmentIcon icon={icon} picked={at} rest={muted} selectedColor={foreground} x={x} />
-          </View>
-        </PressableScale>
-      ))}
-    </View>
+    <GlassSegmented
+      iconOnly
+      segments={VIEWS.map(({ mode, icon, label }) => ({
+        value: mode,
+        label: intl.formatMessage({ id: label }),
+        icon: (color) => <Ionicons color={color} name={icon} size={20} />,
+        testID: `library-view-${mode}`,
+      }))}
+      testID="library-view-toggle"
+      value={view}
+      onChange={(mode) => {
+        if (mode !== view) lightImpact();
+        setView(mode);
+      }}
+    />
   );
-}
-
-/** A segment's icon, `selectedColor` while the thumb is over segment `picked` and `rest` away from it. */
-function SegmentIcon({
-  icon,
-  picked,
-  rest,
-  selectedColor,
-  x,
-}: {
-  icon: ComponentProps<typeof Ionicons>["name"];
-  picked: number;
-  rest: string;
-  selectedColor: string;
-  x: SharedValue<number>;
-}) {
-  const props = useAnimatedProps(() => ({
-    color: interpolateColor(
-      x.get(),
-      [(picked - 1) * STEP, picked * STEP, (picked + 1) * STEP],
-      [rest, selectedColor, rest]
-    ),
-  }));
-
-  return <AnimatedIonicons animatedProps={props} color={rest} name={icon} size={17} />;
 }
 
 /** The Filters button, marked while any filter is on. */
