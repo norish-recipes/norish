@@ -33,10 +33,10 @@ appId: dev.norish.app
     id: planned-item-sheet
 - tapOn: Actions
 - tapOn: Remove
-# The alert's title reads Remove too; its button is the second match, below it.
+# The alert's title reads Remove too; its button is the one below the message.
 - tapOn:
     text: Remove
-    index: 1
+    below: Remove Plan Soup comes off .*
 - extendedWaitUntil:
     notVisible:
       id: planned-item-sheet
