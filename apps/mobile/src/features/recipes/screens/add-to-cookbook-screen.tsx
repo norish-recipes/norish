@@ -48,7 +48,7 @@ export function AddToCookbookScreen() {
       actions={{
         confirm: {
           label: intl.formatMessage({ id: "common.actions.save" }),
-          onPress: isDirty ? () => void save(() => router.back()) : undefined,
+          onPress: isDirty ? () => save(() => router.back()) : undefined,
         },
       }}
       header={

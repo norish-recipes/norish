@@ -18,8 +18,11 @@ export function NewCookbookScreen() {
   // The sheet opens on its field, so the keyboard rises with it.
   const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
   const submit = () => {
-    void create();
+    const created = create();
+
     router.back();
+
+    return created;
   };
 
   return (

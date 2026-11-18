@@ -149,7 +149,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
         onPress:
           loading || ticked === 0
             ? undefined
-            : () => void addTicked().then((added) => added && router.back()),
+            : () => addTicked().then((added) => added && router.back()),
       }}
       name="add-to-groceries"
       secondary={
