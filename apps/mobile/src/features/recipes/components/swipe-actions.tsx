@@ -3,6 +3,7 @@ import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSw
 import type { SharedValue } from "react-native-reanimated";
 import React, { useRef, useState } from "react";
 import { Text, useWindowDimensions, View } from "react-native";
+import { GestureDetector, useManualGesture } from "react-native-gesture-handler";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
   useAnimatedReaction,
@@ -92,73 +93,87 @@ export function SwipeActions({
   const rowRef = useRef<SwipeableMethods>(null);
   const boxRef = useRef<ComponentRef<typeof View>>(null);
   const openRow = useOpenRow(rowRef);
-  // Whether a finger is dragging the card, so the settle after a release plays no haptic.
+  // Whether a finger is on the card: the settle after a release neither ticks nor clears a full swipe.
   const dragging = useSharedValue(false);
   // Whether the finger is past the full swipe: a release there runs the first action.
   const fullSwipe = useSharedValue(false);
   const screenWidth = useWindowDimensions().width;
   // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
   const [rightEdge, setRightEdge] = useState(screenWidth);
-  const startDrag = () => {
-    dragging.set(true);
-    fullSwipe.set(false);
+  const startDrag = () =>
     boxRef.current?.measureInWindow((x, _y, boxWidth) => setRightEdge(x + boxWidth));
-  };
+  // Never activates; it only follows the finger on the UI thread, where a release beats the settle.
+  const finger = useManualGesture({
+    onTouchesDown: () => {
+      "worklet";
+      dragging.set(true);
+      fullSwipe.set(false);
+    },
+    onTouchesUp: () => {
+      "worklet";
+      dragging.set(false);
+    },
+    onTouchesCancel: () => {
+      "worklet";
+      dragging.set(false);
+    },
+  });
   const { width, ...look } = LAYOUTS[variant];
   const layout: Layout = { ...look, width: width(actions.length), count: actions.length };
   const fullAt = fullSwipeAt(layout.width, rightEdge);
 
   return (
     // A touch on this row closes any other open one, and stops there: the list closes on any other.
-    <View
-      ref={boxRef}
-      className={variant === "grid" ? "flex-1" : undefined}
-      onTouchStart={(event) => {
-        event.stopPropagation();
-        closeOpenRow(openRow.row);
-      }}
-    >
-      <ReanimatedSwipeable
-        ref={rowRef}
-        containerStyle={variant === "grid" ? { flex: 1, borderRadius: 24 } : undefined}
-        renderRightActions={(progress, translation, methods) => (
-          <>
-            <SwipeWatch
-              dragging={dragging}
-              fullAt={fullAt}
-              fullSwipe={fullSwipe}
-              translation={translation}
-            />
-            <ActionsPanel
-              actions={actions}
-              isOpen={isOpen}
-              layout={layout}
-              methods={methods}
-              progress={progress}
-              translation={translation}
-            />
-          </>
-        )}
-        rightThreshold={OPEN_THRESHOLD}
-        onSwipeableClose={() => {
-          setIsOpen(false);
-          openRow.closed();
-        }}
-        onSwipeableCloseStartDrag={startDrag}
-        onSwipeableOpen={() => setIsOpen(true)}
-        onSwipeableOpenStartDrag={startDrag}
-        onSwipeableWillClose={() => dragging.set(false)}
-        onSwipeableWillOpen={() => {
-          dragging.set(false);
-          if (fullSwipe.get() && actions[0]) {
-            rowRef.current?.close();
-            actions[0].onPress();
-          } else openRow.opened();
+    <GestureDetector gesture={finger}>
+      <View
+        ref={boxRef}
+        className={variant === "grid" ? "flex-1" : undefined}
+        onTouchStart={(event) => {
+          event.stopPropagation();
+          closeOpenRow(openRow.row);
         }}
       >
-        {children}
-      </ReanimatedSwipeable>
-    </View>
+        <ReanimatedSwipeable
+          ref={rowRef}
+          containerStyle={variant === "grid" ? { flex: 1, borderRadius: 24 } : undefined}
+          renderRightActions={(progress, translation, methods) => (
+            <>
+              <SwipeWatch
+                dragging={dragging}
+                fullAt={fullAt}
+                fullSwipe={fullSwipe}
+                translation={translation}
+              />
+              <ActionsPanel
+                actions={actions}
+                isOpen={isOpen}
+                layout={layout}
+                methods={methods}
+                progress={progress}
+                translation={translation}
+              />
+            </>
+          )}
+          rightThreshold={OPEN_THRESHOLD}
+          simultaneousWith={finger}
+          onSwipeableClose={() => {
+            setIsOpen(false);
+            openRow.closed();
+          }}
+          onSwipeableCloseStartDrag={startDrag}
+          onSwipeableOpen={() => setIsOpen(true)}
+          onSwipeableOpenStartDrag={startDrag}
+          onSwipeableWillOpen={() => {
+            if (fullSwipe.get() && actions[0]) {
+              rowRef.current?.close();
+              actions[0].onPress();
+            } else openRow.opened();
+          }}
+        >
+          {children}
+        </ReanimatedSwipeable>
+      </View>
+    </GestureDetector>
   );
 }
 

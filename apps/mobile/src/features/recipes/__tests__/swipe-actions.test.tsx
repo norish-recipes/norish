@@ -11,8 +11,11 @@ type Props = {
   children?: ReactNode;
 };
 
+type Finger = { onTouchesDown: () => void; onTouchesUp: () => void };
+
 const swipe = vi.hoisted(() => ({
   props: null as Props | null,
+  finger: null as Finger | null,
   translation: { value: 0, get: () => swipe.translation.value },
   close: vi.fn(),
 }));
@@ -53,6 +56,10 @@ vi.mock("react-native-gesture-handler/ReanimatedSwipeable", () => ({
     );
   }),
 }));
+vi.mock("react-native-gesture-handler", () => ({
+  GestureDetector: ({ children }: { children?: ReactNode }) => children,
+  useManualGesture: (config: Finger) => (swipe.finger = config),
+}));
 vi.mock("react-native-worklets", () => ({
   scheduleOnRN: (run: () => void) => run(),
 }));
@@ -91,7 +98,10 @@ describe("SwipeActions", () => {
   it("runs the first action once on the release of a full swipe, and closes the row", () => {
     const { rerender } = render(ui());
 
-    act(() => swipe.props!.onSwipeableOpenStartDrag());
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
     dragTo(300, rerender);
     act(() => swipe.props!.onSwipeableWillOpen());
 
@@ -102,7 +112,10 @@ describe("SwipeActions", () => {
   it("only opens the actions on the release of a swipe short of it", () => {
     const { rerender } = render(ui());
 
-    act(() => swipe.props!.onSwipeableOpenStartDrag());
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
     dragTo(250, rerender);
     act(() => swipe.props!.onSwipeableWillOpen());
 
@@ -113,7 +126,10 @@ describe("SwipeActions", () => {
   it("marks crossing the full swipe each way with a firmer haptic, the open point with a light one", () => {
     const { rerender } = render(ui());
 
-    act(() => swipe.props!.onSwipeableOpenStartDrag());
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
     dragTo(100, rerender);
     expect(haptics.lightImpact).toHaveBeenCalledTimes(1);
 
@@ -124,5 +140,22 @@ describe("SwipeActions", () => {
     // Back short of the full swipe, a release only opens.
     act(() => swipe.props!.onSwipeableWillOpen());
     expect(actions[0]!.onPress).not.toHaveBeenCalled();
+  });
+
+  it("runs the first action when the settle after a full swipe moves the card back first", () => {
+    const { rerender } = render(ui());
+
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
+    dragTo(300, rerender);
+    // Released: under Reduce Motion the row is at its open width before "will open" reaches JS.
+    act(() => swipe.finger!.onTouchesUp());
+    dragTo(216, rerender);
+    act(() => swipe.props!.onSwipeableWillOpen());
+
+    expect(actions[0]!.onPress).toHaveBeenCalledTimes(1);
+    expect(haptics.mediumImpact).toHaveBeenCalledTimes(1);
   });
 });
