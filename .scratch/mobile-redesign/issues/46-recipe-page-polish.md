@@ -32,3 +32,5 @@
 - Open: in the Release build with a running timer, the push on the dismissal's end does not open cook mode (Maestro `timer-from-accessory` 0/4, also by hand). It works in Debug, and in Release with a finished timer (9/9). Not yet diagnosed. Needs a decision before another approach.
 - Rating: `starMotion` (pure, tested) gives the stagger from the first star that changes; only filling stars pop. Only the user's own tap animates (`tap.to === shown`); values from the server snap.
 - `onOpen` stays optional: cook mode's timer pill renders `AllTimers` without it, so its rows are not buttons.
+- Round 1 #7 answered by Mike 2026-11-18: 40 pt, as built; one glass control height everywhere.
+- Round 1 #1 did not converge: with the timer gone, a row closes the sheet but cook mode never opens in a Release build while a timer is running (Maestro 0 of 4; Debug and a finished timer work). Sent to a diagnosis round one step up.
