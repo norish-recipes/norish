@@ -182,10 +182,10 @@ describe("ModalHeader", () => {
   });
 
   it("frees the item after a rejected action without raising an unhandled rejection", async () => {
-    const unhandled = vi.fn();
-    const failing = vi.fn(() => Promise.reject(new Error("nope")));
+    const failure = Promise.reject(new Error("nope"));
+    const handled = vi.spyOn(failure, "then");
+    const failing = vi.fn(() => failure);
 
-    process.on("unhandledRejection", unhandled);
     render(<ModalHeader confirm={{ label: "Create", onPress: failing }} title="Share" />);
     const press = (declared().unstable_headerRightItems()[0] as unknown as { onPress: () => void })
       .onPress;
@@ -194,12 +194,11 @@ describe("ModalHeader", () => {
     press();
     expect(failing).toHaveBeenCalledOnce();
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    // The header's own handling of the rejection: it rejects in turn if the header left it unhandled.
+    await handled.mock.results[0]!.value;
     press();
-    process.off("unhandledRejection", unhandled);
 
     expect(failing).toHaveBeenCalledTimes(2);
-    expect(unhandled).not.toHaveBeenCalled();
   });
 
   it("ignores a press on a confirm or action that is disabled", () => {
