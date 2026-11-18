@@ -19,8 +19,8 @@ function sheetUnmounted(sheet: string) {
   else waiting = null;
 }
 
-/** A root sheet's mount: it presents until the root stack's next finished transition. Returns the
- * id `openAfterSheet` ties a tap to. */
+/** A sheet's mount: it presents until its stack's next finished transition. Returns the id
+ * `openAfterSheet` ties a tap to. */
 export function useSheetPresenting(): string {
   const sheetId = useId();
 
@@ -43,7 +43,7 @@ export function openAfterSheet(sheet: string, close: () => void, open: () => voi
   return true;
 }
 
-/** The root stack's finished transition: ends a presentation, else, once the sheet has unmounted,
+/** A sheet stack's finished transition: ends a presentation, else, once the sheet has unmounted,
  * its dismissal. Not a hook's closure: React Compiler 1.0 folds a read-then-clear of module state there. */
 function transitionFinished() {
   const wait = waiting;
@@ -69,7 +69,7 @@ function reset() {
   presenting = null;
 }
 
-/** The root stack's `onFinishTransitioning`; unmounting the stack drops what waits. */
+/** A stack's `onFinishTransitioning` for the sheets it presents; unmounting it drops what waits. */
 export function useSheetExit() {
   useEffect(() => reset, []);
 

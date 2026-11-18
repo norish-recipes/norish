@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -69,6 +69,7 @@ vi.mock("@norish/shared-react/calendar", async (importOriginal) => ({
 }));
 
 const { PlannedItemScreen } = await import("../screens/planned-item-screen");
+const { useSheetExit } = await import("@/lib/after-sheet");
 
 const note: PlannedItemFromQuery = {
   id: "note-1",
@@ -192,16 +193,26 @@ describe("PlannedItemScreen", () => {
     expect(held.deleteItem).toHaveBeenCalledWith("note-1");
   });
 
-  it("opens the recipe from its row, which the Actions menu no longer offers", () => {
+  it("opens the recipe once from its row, double-tapped, after the sheet has gone", () => {
     held.items = [{ ...note, itemType: "recipe", recipeId: "r1" }];
-    render(<PlannedItemScreen />);
+    const sheet = render(<PlannedItemScreen />);
 
     expect(screen.queryByTestId("planned-item-action-calendar.timeline.goToRecipe")).toBeNull();
 
+    const stack = renderHook(() => useSheetExit());
+
+    act(() => stack.result.current());
+    fireEvent.click(screen.getByTestId("planned-item-recipe"));
     fireEvent.click(screen.getByTestId("planned-item-recipe"));
 
     expect(held.back).toHaveBeenCalledOnce();
+    expect(held.toRecipe).not.toHaveBeenCalled();
+
+    sheet.unmount();
+    act(() => stack.result.current());
+
     expect(held.toRecipe).toHaveBeenCalledExactlyOnceWith("r1");
+    stack.unmount();
   });
 
   it("has no recipe row for a note", () => {

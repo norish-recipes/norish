@@ -9,6 +9,7 @@ import { SheetInput } from "@/components/sheet-input";
 import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
 import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
 import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
+import { openAfterSheet, useSheetPresenting } from "@/lib/after-sheet";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -29,12 +30,18 @@ export function PlannedItemScreen() {
   const item = items.find((candidate) => candidate.id === id);
   const gone = isRead && !item;
 
+  const sheet = useSheetPresenting();
+
   useCloseWhenGone(gone);
 
-  return item ? <PlannedItemSheet item={item} /> : <PlannedItemSkeleton name="planned-item" />;
+  return item ? (
+    <PlannedItemSheet item={item} sheet={sheet} />
+  ) : (
+    <PlannedItemSkeleton name="planned-item" />
+  );
 }
 
-function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
+function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: string }) {
   const intl = useIntl();
   const router = useRouter();
   const [muted] = useThemeColor(["muted"] as const);
@@ -76,8 +83,11 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
             className="flex-row items-center gap-3.5 px-2 pb-3"
             testID="planned-item-recipe"
             onPress={() => {
-              router.back();
-              navigation.toRecipe(recipeId);
+              openAfterSheet(
+                sheet,
+                () => router.back(),
+                () => navigation.toRecipe(recipeId)
+              );
             }}
           >
             <PlannedThumb className="size-14 rounded-2xl" item={item} />
