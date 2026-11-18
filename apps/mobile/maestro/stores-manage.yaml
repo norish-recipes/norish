@@ -16,9 +16,8 @@ appId: dev.norish.app
     visible:
       id: stores-empty
     timeout: 20000
-# Add store opens the editor in the same sheet; Create is its native header item.
-- tapOn:
-    id: store-add
+# Add store, the sheet's native header item, opens the editor in the same sheet; Create is its header item too.
+- tapOn: Add store
 - extendedWaitUntil:
     visible:
       id: store-name
@@ -34,8 +33,7 @@ appId: dev.norish.app
       text: Edit Aldi
     timeout: 20000
 - evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi"]')).body).names}
-- tapOn:
-    id: store-add
+- tapOn: Add store
 - extendedWaitUntil:
     visible:
       id: store-name

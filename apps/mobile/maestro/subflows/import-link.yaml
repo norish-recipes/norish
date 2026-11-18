@@ -10,5 +10,5 @@ appId: dev.norish.app
       id: import-link-field
     timeout: 20000
 - inputText: ${IMPORT_URL}
-- tapOn:
-    id: import-link-submit
+# Import is the sheet's native header item, which has no id.
+- tapOn: Import
