@@ -107,6 +107,7 @@ export function FiltersScreen() {
                       key === "title" ? "common.filters.sortByTitle" : "common.filters.sortByDate",
                   })}
                   testID={`filters-sort-${key}`}
+                  onSheet
                   onPress={() => decideSortOrder(key)}
                 />
               );
@@ -123,6 +124,7 @@ export function FiltersScreen() {
                   icon="heart-outline"
                   label={intl.formatMessage({ id: "common.filters.favorites" })}
                   testID="filters-favorites"
+                  onSheet
                   onPress={() => update({ showFavoritesOnly: !draft.showFavoritesOnly })}
                 />
               </FilterSection>
@@ -169,6 +171,7 @@ export function FiltersScreen() {
               icon="file-tray-full-outline"
               label={intl.formatMessage({ id: "common.filters.pantryOnly" })}
               testID="filters-pantry"
+              onSheet
               onPress={() => update({ showPantryOnly: !draft.showPantryOnly })}
             />
           </View>
@@ -182,6 +185,7 @@ export function FiltersScreen() {
                 active={draft.maxCookingTime === value}
                 label={intl.formatMessage({ id: `common.filters.${labelKey}` })}
                 testID={`filters-time-${value}`}
+                onSheet
                 onPress={() => toggleCookingTime(value)}
               />
             ))}
@@ -196,6 +200,7 @@ export function FiltersScreen() {
                 active={draft.categories.includes(category)}
                 label={categoryLabel(category)}
                 testID={`filters-category-${category}`}
+                onSheet
                 onPress={() => toggleCategory(category)}
               />
             ))}
@@ -240,6 +245,7 @@ export function FiltersScreen() {
                   active={draft.searchTags.includes(tag)}
                   label={tag}
                   testID={`filters-tag-${tag}`}
+                  onSheet
                   onPress={() => toggleTag(tag)}
                 />
               ))}

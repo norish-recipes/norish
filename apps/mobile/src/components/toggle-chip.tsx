@@ -10,12 +10,15 @@ export function ToggleChip({
   label,
   icon,
   active,
+  onSheet = false,
   onPress,
   testID,
 }: {
   label: string;
   icon?: ComponentProps<typeof Ionicons>["name"];
   active: boolean;
+  /** On a sheet, whose grouped content is the translucent fill; off one it is solid. */
+  onSheet?: boolean;
   onPress: () => void;
   testID?: string;
 }) {
@@ -28,7 +31,7 @@ export function ToggleChip({
     <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : "bg-fill"}`}
+      className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : onSheet ? "bg-fill" : "bg-default"}`}
       testID={testID}
       onPress={onPress}
     >
