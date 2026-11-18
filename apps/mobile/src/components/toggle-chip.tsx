@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text } from "react-native";
+import { useGroupedFill } from "@/components/on-sheet";
 import { PressableScale } from "@/components/pressable-scale";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -10,15 +11,12 @@ export function ToggleChip({
   label,
   icon,
   active,
-  onSheet = false,
   onPress,
   testID,
 }: {
   label: string;
   icon?: ComponentProps<typeof Ionicons>["name"];
   active: boolean;
-  /** On a sheet, whose grouped content is the translucent fill; off one it is solid. */
-  onSheet?: boolean;
   onPress: () => void;
   testID?: string;
 }) {
@@ -26,12 +24,13 @@ export function ToggleChip({
     "foreground",
     "accent-foreground",
   ] as const);
+  const fill = useGroupedFill();
 
   return (
     <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : onSheet ? "bg-fill" : "bg-default"}`}
+      className={`h-[34px] flex-none flex-row items-center gap-1.5 rounded-full px-[13px] ${active ? "bg-accent" : fill}`}
       testID={testID}
       onPress={onPress}
     >

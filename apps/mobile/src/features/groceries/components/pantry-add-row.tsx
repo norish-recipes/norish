@@ -24,7 +24,6 @@ export function PantryAddRowView({
           <RowButton
             accent
             icon="add"
-            onSheet
             label={intl.formatMessage({ id: "groceries.pantry.addFood" }, { name: row.name })}
             testID={row.testIDs.button}
             onPress={() => onKeep(row.keeps)}

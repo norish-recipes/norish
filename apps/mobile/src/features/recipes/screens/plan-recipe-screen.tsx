@@ -143,7 +143,7 @@ export function PlanRecipeScreen() {
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
           >
-            <CardPhoto className="size-11 rounded-xl" image={recipe.image} onSheet />
+            <CardPhoto className="size-11 rounded-xl" image={recipe.image} />
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>

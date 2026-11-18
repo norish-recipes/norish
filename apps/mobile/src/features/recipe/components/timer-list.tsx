@@ -1,6 +1,7 @@
 import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { useGroupedFill, useOnSheet } from "@/components/on-sheet";
 import { TimerRing } from "@/components/timer-ring";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -20,22 +21,22 @@ function RoundAction({
   label,
   onPress,
   plain = false,
-  onSheet = false,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   onPress: () => void;
   plain?: boolean;
-  onSheet?: boolean;
 }) {
   const tint = useTint();
+  const onSheet = useOnSheet();
+  const fill = useGroupedFill();
   const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
 
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className={`size-9 items-center justify-center rounded-full ${plain ? "" : onSheet ? "bg-fill" : "bg-default"}`}
+      className={`size-9 items-center justify-center rounded-full ${plain ? "" : fill}`}
       hitSlop={4}
       style={!plain && !onSheet && tint ? { backgroundColor: tint.soft } : undefined}
       onPress={onPress}
@@ -45,7 +46,7 @@ function RoundAction({
   );
 }
 
-function TimerRow({ timer, first, onSheet }: { timer: Timer; first: boolean; onSheet: boolean }) {
+function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
   const intl = useIntl();
   const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
@@ -92,7 +93,6 @@ function TimerRow({ timer, first, onSheet }: { timer: Timer; first: boolean; onS
       </Text>
       {done ? (
         <RoundAction
-          onSheet={onSheet}
           icon="refresh"
           label={intl.formatMessage({ id: "recipes.cookMode.restartTimer" })}
           onPress={() => {
@@ -103,19 +103,16 @@ function TimerRow({ timer, first, onSheet }: { timer: Timer; first: boolean; onS
       ) : (
         <>
           <RoundAction
-            onSheet={onSheet}
             icon="remove"
             label={intl.formatMessage({ id: "recipes.cookMode.decreaseTimer" }, { time: stepText })}
             onPress={() => adjustTimer(timer.id, -step)}
           />
           <RoundAction
-            onSheet={onSheet}
             icon="add"
             label={intl.formatMessage({ id: "recipes.cookMode.increaseTimer" }, { time: stepText })}
             onPress={() => adjustTimer(timer.id, step)}
           />
           <RoundAction
-            onSheet={onSheet}
             icon={timer.status === "running" ? "pause" : "play"}
             label={intl.formatMessage(
               {
@@ -131,7 +128,6 @@ function TimerRow({ timer, first, onSheet }: { timer: Timer; first: boolean; onS
         </>
       )}
       <RoundAction
-        onSheet={onSheet}
         plain
         icon="close"
         label={intl.formatMessage({ id: "recipes.cookMode.dismissTimer" })}
@@ -156,13 +152,7 @@ function useNotificationsRefused(): boolean {
 }
 
 /** Every timer on the device, with pause, adjust, restart and dismiss; `onEmpty` when the last goes. */
-export function AllTimers({
-  onEmpty,
-  onSheet = false,
-}: {
-  onEmpty: () => void;
-  onSheet?: boolean;
-}) {
+export function AllTimers({ onEmpty }: { onEmpty: () => void }) {
   const intl = useIntl();
   const timers = sortTimers(useTimerStore((state) => state.timers));
   const refused = useNotificationsRefused();
@@ -177,7 +167,7 @@ export function AllTimers({
   return (
     <>
       {timers.map((timer, index) => (
-        <TimerRow key={timer.id} first={index === 0} onSheet={onSheet} timer={timer} />
+        <TimerRow key={timer.id} first={index === 0} timer={timer} />
       ))}
       {refused ? (
         <Text className="text-muted border-separator border-t px-4 py-2.5 text-[13px]">

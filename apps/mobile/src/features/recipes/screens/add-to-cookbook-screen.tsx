@@ -121,7 +121,6 @@ export function AddToCookbookScreen() {
                         className="size-11 overflow-hidden rounded-xl"
                         cookbook={item.cookbook}
                         iconSize={20}
-                        onSheet
                       />
                     }
                     position={position}

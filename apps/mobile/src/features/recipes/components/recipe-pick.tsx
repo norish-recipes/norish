@@ -65,7 +65,7 @@ export function RecipePickSheet({
               keyExtractor: (recipe) => recipe.id,
               renderRow: (recipe, position) => (
                 <PickRow
-                  media={<CardPhoto className="size-11 rounded-xl" image={recipe.image} onSheet />}
+                  media={<CardPhoto className="size-11 rounded-xl" image={recipe.image} />}
                   position={position}
                   selected={pick.selected.includes(recipe.id)}
                   testID={`cookbook-add-recipes-row-${recipe.id}`}

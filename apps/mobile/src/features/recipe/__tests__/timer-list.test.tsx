@@ -6,12 +6,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Props = {
   testID?: string;
+  className?: string;
   accessibilityLabel?: string;
   children?: ReactNode;
   onPress?: () => void;
 };
-const host = ({ testID, accessibilityLabel, children, onPress }: Props) => (
-  <div aria-label={accessibilityLabel} data-testid={testID} role="button" onClick={onPress}>
+const host = ({ testID, className, accessibilityLabel, children, onPress }: Props) => (
+  <div
+    aria-label={accessibilityLabel}
+    className={className}
+    data-testid={testID}
+    role="button"
+    onClick={onPress}
+  >
     {children}
   </div>
 );
@@ -38,6 +45,7 @@ vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
 vi.mock("../components/tint", () => ({ useTint: () => null }));
 
 const { AllTimers } = await import("../components/timer-list");
+const { OnSheet } = await import("@/components/on-sheet");
 const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
 
 const timer = (id: string, status: "running" | "paused" | "completed") => ({
@@ -78,5 +86,19 @@ describe("AllTimers", () => {
       "running",
       "running",
     ]);
+  });
+
+  it.each([
+    [true, "bg-fill"],
+    [false, "bg-default"],
+  ])("fills its round buttons for a sheet=%s with %s", (onSheet, fill) => {
+    useTimerStore.setState({ timers: [timer("a", "paused")] });
+    render(
+      <OnSheet value={onSheet}>
+        <AllTimers onEmpty={() => {}} />
+      </OnSheet>
+    );
+
+    expect(screen.getByLabelText("recipes.cookMode.resumeTimer").className).toContain(fill);
   });
 });

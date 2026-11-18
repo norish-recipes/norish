@@ -108,7 +108,7 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
       <SheetBody>
         {recipeId ? (
           <View className="flex-row items-center gap-3.5 px-2 pb-3">
-            <PlannedThumb className="size-14 rounded-2xl" item={item} onSheet />
+            <PlannedThumb className="size-14 rounded-2xl" item={item} />
             {subtitle ? <Text className="text-muted flex-1 text-base">{subtitle}</Text> : null}
           </View>
         ) : null}

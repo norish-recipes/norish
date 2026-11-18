@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { IngredientIcon } from "@/components/ingredient-icon";
+import { useGroupedFill } from "@/components/on-sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
@@ -38,25 +39,23 @@ export function RowButton({
   label,
   testID,
   accent = false,
-  onSheet = false,
   onPress,
 }: {
   icon: "cart-outline" | "add";
   label: string;
   testID: string;
   accent?: boolean;
-  /** On a sheet, whose grouped content is the translucent fill. */
-  onSheet?: boolean;
   onPress: () => void;
 }) {
   const [foreground] = useThemeColor(["foreground"] as const);
   const accentText = useAccentTextColor();
+  const fill = useGroupedFill();
 
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className={`${onSheet ? "bg-fill" : "bg-default"} size-9 items-center justify-center rounded-full`}
+      className={`${fill} size-9 items-center justify-center rounded-full`}
       hitSlop={4}
       testID={testID}
       onPress={onPress}
@@ -237,6 +236,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
 export function ShowMore({ onPress }: { onPress: () => void }) {
   const intl = useIntl();
   const accentText = useAccentTextColor();
+  const fill = useGroupedFill();
 
   return (
     <Pressable

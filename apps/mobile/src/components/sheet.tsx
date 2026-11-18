@@ -7,6 +7,7 @@ import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
 import type { HeaderConfirm } from "./modal-header";
 import { ModalHeader } from "./modal-header";
+import { OnSheet } from "./on-sheet";
 
 /** The props a body takes from the sheet rather than from the screen. */
 type SheetOwnedProps =
@@ -192,21 +193,28 @@ export function Sheet({
   useMarkSheetOpen();
 
   return (
-    // Not flattened, so react-native-screens never resizes the body directly.
-    <View className="grow" collapsable={false} style={{ maxHeight: room }} testID={`${name}-sheet`}>
-      <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
-      {subtitle ? (
-        <Text
-          className="text-muted pb-3 text-sm leading-[17px]"
-          numberOfLines={1}
-          style={{ paddingHorizontal: TITLE_INSET }}
-        >
-          {subtitle}
-        </Text>
-      ) : null}
-      {children}
-      {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
-    </View>
+    <OnSheet value>
+      {/* Not flattened, so react-native-screens never resizes the body directly. */}
+      <View
+        className="grow"
+        collapsable={false}
+        style={{ maxHeight: room }}
+        testID={`${name}-sheet`}
+      >
+        <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
+        {subtitle ? (
+          <Text
+            className="text-muted pb-3 text-sm leading-[17px]"
+            numberOfLines={1}
+            style={{ paddingHorizontal: TITLE_INSET }}
+          >
+            {subtitle}
+          </Text>
+        ) : null}
+        {children}
+        {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
+      </View>
+    </OnSheet>
   );
 }
 

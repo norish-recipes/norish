@@ -73,7 +73,7 @@ function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
       className={`flex-row items-center gap-3 ${DAY_CARD_CLASS.row}`}
       testID={`day-item-${item.id}`}
     >
-      <PlannedThumb className="size-10 rounded-[11px]" item={item} onSheet />
+      <PlannedThumb className="size-10 rounded-[11px]" item={item} />
       <Text className="text-foreground flex-1 text-[15px]" numberOfLines={1}>
         {title}
       </Text>
