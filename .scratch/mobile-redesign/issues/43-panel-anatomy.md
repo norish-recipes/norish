@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] No pinned action buttons: filters, imports, share, manage-stores, pantry, planned-item, edit-grocery, grocery-sheet and product-step move theirs into the header (confirm, glass items or a header menu). `Sheet.Actions` goes if nothing uses it.
 - [x] Filters: Apply is the header confirm, Clear filters a glass header item.
@@ -59,3 +59,6 @@
 - Round 2 fixes: Plan this recipe opened on past days because a refetch grew the cards above today after the list mounted (and the offsets ignored the list's `pt-1`); it now scrolls back to today after each change until the first drag, and ten opens in both themes (cold and warm) all showed Today. Finding 8 does not hold: web's `edit-planned-recipe-panel.tsx` still reads `calendar.timeline.goToRecipe`, so the key stays.
 - Every confirm now returns its promise (Add to groceries, Add to cookbook, New cookbook); the others are synchronous and close the sheet. The header releases its guard with `then(release, release)`, leaving no second rejected promise. Planned item for a recipe is titled "Edit Planned Recipe" (existing key) since its recipe row carries the name. Remaining: Add to groceries' Select all (9) is with Mike.
 - Mike 2026-11-18: Select all stays per section; it acts on a section, not the sheet. (Round 2 finding 9: the pill is back in each section heading; the header keeps Close, the title and Add.)
+- Round 2 #8 not fixed, rightly: web's `edit-planned-recipe-panel.tsx:87` still reads `calendar.timeline.goToRecipe`. #9 answered by Mike: Select all per section (`f7119a8a8`).
+- Exit gate on `94ff16b24`: all seven gates exit 0. Carried to ticket 45: in `planned-item-dark.png` the slot switch shows no thumb behind the selected slot. For Mike on the phone: Delete as the one entry of Edit grocery's Actions menu, the recipe row on Planned item, the half and full detents while typing, a real photo import and a real link import (the simulator had neither).
+- Sheets whose look changed (the iPhone guides' screenshots): Filters, the three imports, Share, Planned item, Edit grocery and its repeat step, the product step, Manage stores, the store editor, Add to pantry.
