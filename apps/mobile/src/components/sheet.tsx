@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import type { FlatListProps, KeyboardEvent, ScrollViewProps } from "react-native";
 import React, { useEffect, useState } from "react";
 import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from "react-native";
@@ -66,7 +66,7 @@ export function SheetList<T>({
   inset,
   contentClassName,
   ...props
-}: Omit<FlatListProps<T>, SheetOwnedProps> & BodyLayout) {
+}: Omit<FlatListProps<T>, SheetOwnedProps> & BodyLayout & { ref?: Ref<FlatList<T>> }) {
   return (
     <FlatList
       {...SCROLLER}

@@ -1,8 +1,9 @@
-import React from "react";
+import type { FlatList } from "react-native";
+import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { DayCard, DayCardSkeleton, formatDay } from "@/components/day-card";
 import { Sheet, SheetList } from "@/components/sheet";
-import { DAY_CARD, dayCardHeight, dayCardOffsets } from "@/lib/day-card-height";
+import { DAY_CARD, DAY_LIST_TOP, dayCardHeight, dayCardOffsets } from "@/lib/day-card-height";
 import { useLocalSearchParams } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -29,7 +30,16 @@ export function PlanCalendarScreen() {
 
   const rows: Array<Date | number> = isLoading ? SKELETONS : days;
   const heights = days.map((day) => dayCardHeight(calendarData[dateKey(day)] ?? []));
-  const offsets = dayCardOffsets(heights, 0);
+  const offsets = dayCardOffsets(heights, DAY_LIST_TOP);
+  const todayTop = offsets[todayIndex];
+  const listRef = useRef<FlatList<Date | number>>(null);
+  const touchedRef = useRef(false);
+
+  // A refetch can grow the cards above today after the list mounted; until a drag, keep today in view.
+  useEffect(() => {
+    if (touchedRef.current || isLoading || todayIndex < 0) return;
+    listRef.current?.scrollToIndex({ index: todayIndex, animated: false });
+  }, [todayTop, isLoading, todayIndex]);
 
   return (
     <Sheet
@@ -40,6 +50,7 @@ export function PlanCalendarScreen() {
       <SheetList
         // The list remounts when the plan arrives, so it opens on today instead of jumping there.
         key={isLoading ? "loading" : "days"}
+        ref={listRef}
         data={rows}
         getItemLayout={
           isLoading
@@ -54,6 +65,9 @@ export function PlanCalendarScreen() {
         initialScrollIndex={isLoading || todayIndex < 0 ? undefined : todayIndex}
         keyExtractor={(item) => (typeof item === "number" ? `skeleton-${item}` : dateKey(item))}
         maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+        onScrollBeginDrag={() => {
+          touchedRef.current = true;
+        }}
         renderItem={({ item, index }) => {
           if (typeof item === "number") {
             return (

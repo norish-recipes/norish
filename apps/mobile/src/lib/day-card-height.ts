@@ -23,6 +23,9 @@ export const DAY_CARD = {
   gap: 12,
 } as const;
 
+/** What a sheet list's content starts below: its `pt-1`, which a card's offset has to include. */
+export const DAY_LIST_TOP = 4;
+
 /** A day card's height, from how many planned items each of its slots holds. */
 export function dayCardHeight(items: readonly Pick<PlannedItemFromQuery, "slot">[]) {
   const perSlot = new Map<string, number>();

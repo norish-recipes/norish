@@ -1,4 +1,10 @@
-import { DAY_CARD, DAY_CARD_CLASS, dayCardHeight, dayCardOffsets } from "@/lib/day-card-height";
+import {
+  DAY_CARD,
+  DAY_CARD_CLASS,
+  DAY_LIST_TOP,
+  dayCardHeight,
+  dayCardOffsets,
+} from "@/lib/day-card-height";
 import { describe, expect, it } from "vitest";
 
 describe("dayCardHeight", () => {
@@ -16,6 +22,15 @@ describe("dayCardHeight", () => {
 describe("dayCardOffsets", () => {
   it("stacks the cards with the gap between, from the start", () => {
     expect(dayCardOffsets([58, 143, 58], 100)).toEqual([100, 170, 325]);
+  });
+
+  it("starts below the list's top padding, and today moves by what the cards above it gain", () => {
+    const todayIndex = 2;
+    const empty = dayCardOffsets([58, 58, 58], DAY_LIST_TOP);
+    const planned = dayCardOffsets([143, 58, 58], DAY_LIST_TOP);
+
+    expect(empty[0]).toBe(4);
+    expect(planned[todayIndex]! - empty[todayIndex]!).toBe(143 - 58);
   });
 });
 
