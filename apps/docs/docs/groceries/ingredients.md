@@ -10,7 +10,11 @@ Recipes, groceries and your pantry share one ingredient catalogue.
 
 Names and translations such as **onion**, **onions** and **ui** (Dutch for onion) can refer to one ingredient, sharing its aisle assignments, prices and nutrition.
 
-Find the catalogue under **Settings => Ingredients**.
+Find the catalogue under **Settings => Ingredients**. Search with parts of words
+in any order, ignoring accents and punctuation. Every word must match part of a
+food's name, so "olive ex" finds "Extra virgin olive oil". Results put exact
+matches first, then names with a word starting with the first word you typed,
+using names in your language.
 
 ## Matching
 

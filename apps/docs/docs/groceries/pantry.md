@@ -7,7 +7,9 @@ description: The ingredients your household has in stock.
 # Pantry
 
 Use the switch at the top of **Groceries** to open the **Pantry**, your
-household's list of foods in stock.
+household's list of foods in stock. Search with parts of words in any order,
+ignoring accents and punctuation. Every word must match part of a food's name, so
+"olive ex" finds "Extra virgin olive oil".
 
 ![The Pantry page, with olive oil on the list](/img/screenshots/groceries-pantry-page.png)
 
