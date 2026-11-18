@@ -17,7 +17,7 @@ export function TimersSheetScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
 
-  useSheetPresenting();
+  const sheet = useSheetPresenting();
 
   return (
     <Sheet name="timers" title={intl.formatMessage({ id: "recipes.cookMode.timers" })}>
@@ -34,6 +34,7 @@ export function TimersSheetScreen() {
 
               // UIKit cannot present cook mode while the sheet is still leaving.
               openAfterSheet(
+                sheet,
                 () => router.back(),
                 () => router.push(cook)
               );

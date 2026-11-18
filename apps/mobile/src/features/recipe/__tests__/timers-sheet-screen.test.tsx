@@ -38,7 +38,8 @@ describe("TimersSheetScreen", () => {
   it("closes the sheet once for a double tap and opens cook mode once, when the sheet has gone", () => {
     const stack = renderHook(() => useSheetExit());
 
-    render(<TimersSheetScreen />);
+    const sheet = render(<TimersSheetScreen />);
+
     act(() => stack.result.current());
     fireEvent.click(screen.getByText("row"));
     fireEvent.click(screen.getByText("row"));
@@ -46,6 +47,7 @@ describe("TimersSheetScreen", () => {
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(router.push).not.toHaveBeenCalled();
 
+    sheet.unmount();
     act(() => stack.result.current());
     act(() => stack.result.current());
 
@@ -60,7 +62,8 @@ describe("TimersSheetScreen", () => {
   it("closes a sheet tapped mid-presentation only once it is up", () => {
     const stack = renderHook(() => useSheetExit());
 
-    render(<TimersSheetScreen />);
+    const sheet = render(<TimersSheetScreen />);
+
     fireEvent.click(screen.getByText("row"));
 
     expect(router.back).not.toHaveBeenCalled();
@@ -69,6 +72,7 @@ describe("TimersSheetScreen", () => {
     act(() => stack.result.current());
     expect(router.back).toHaveBeenCalledTimes(1);
     expect(router.push).not.toHaveBeenCalled();
+    sheet.unmount();
     act(() => stack.result.current());
     expect(router.push).toHaveBeenCalledTimes(1);
     stack.unmount();
@@ -77,14 +81,30 @@ describe("TimersSheetScreen", () => {
   it("opens nothing when the stack goes before the sheet has", () => {
     const stack = renderHook(() => useSheetExit());
 
-    render(<TimersSheetScreen />);
+    const sheet = render(<TimersSheetScreen />);
+
     act(() => stack.result.current());
     fireEvent.click(screen.getByText("row"));
+    sheet.unmount();
     const finish = stack.result.current;
 
     stack.unmount();
     finish();
 
     expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it("neither closes nor opens when the sheet is swiped away mid-presentation after a tap", () => {
+    const stack = renderHook(() => useSheetExit());
+    const sheet = render(<TimersSheetScreen />);
+
+    fireEvent.click(screen.getByText("row"));
+    sheet.unmount();
+    act(() => stack.result.current());
+    act(() => stack.result.current());
+
+    expect(router.back).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
+    stack.unmount();
   });
 });

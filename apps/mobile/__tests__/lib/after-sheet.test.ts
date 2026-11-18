@@ -35,16 +35,19 @@ function releaseAfterSheet(): AfterSheet {
 }
 
 describe("after-sheet in a release build", () => {
-  it("opens once the sheet has gone, once for a double tap", () => {
-    const { openAfterSheet, useSheetExit } = releaseAfterSheet();
+  it("opens once its sheet has gone, once for a double tap", () => {
+    const { openAfterSheet, useSheetExit, useSheetPresenting } = releaseAfterSheet();
     const stack = renderHook(() => useSheetExit());
+    const sheet = renderHook(() => useSheetPresenting());
     const close = vi.fn();
     const open = vi.fn();
 
-    expect(openAfterSheet(close, open)).toBe(true);
-    expect(openAfterSheet(close, open)).toBe(false);
+    act(() => stack.result.current());
+    expect(openAfterSheet(sheet.result.current, close, open)).toBe(true);
+    expect(openAfterSheet(sheet.result.current, close, open)).toBe(false);
     expect(close).toHaveBeenCalledTimes(1);
 
+    sheet.unmount();
     act(() => stack.result.current());
     act(() => stack.result.current());
     expect(open).toHaveBeenCalledTimes(1);
@@ -53,16 +56,72 @@ describe("after-sheet in a release build", () => {
   it("closes a sheet tapped mid-presentation once it is up, then opens", () => {
     const { openAfterSheet, useSheetExit, useSheetPresenting } = releaseAfterSheet();
     const stack = renderHook(() => useSheetExit());
+    const sheet = renderHook(() => useSheetPresenting());
     const close = vi.fn();
     const open = vi.fn();
 
-    renderHook(() => useSheetPresenting());
-    openAfterSheet(close, open);
+    openAfterSheet(sheet.result.current, close, open);
     expect(close).not.toHaveBeenCalled();
 
     act(() => stack.result.current());
     expect(close).toHaveBeenCalledTimes(1);
+    sheet.unmount();
     act(() => stack.result.current());
     expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops a mid-presentation tap when the sheet is swiped away before it is up", () => {
+    const { openAfterSheet, useSheetExit, useSheetPresenting } = releaseAfterSheet();
+    const stack = renderHook(() => useSheetExit());
+    const sheet = renderHook(() => useSheetPresenting());
+    const close = vi.fn();
+    const open = vi.fn();
+
+    openAfterSheet(sheet.result.current, close, open);
+    sheet.unmount();
+    act(() => stack.result.current());
+    act(() => stack.result.current());
+    expect(close).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it("opens only on a transition after its own sheet has gone", () => {
+    const { openAfterSheet, useSheetExit, useSheetPresenting } = releaseAfterSheet();
+    const stack = renderHook(() => useSheetExit());
+    const sheet = renderHook(() => useSheetPresenting());
+    const open = vi.fn();
+
+    act(() => stack.result.current());
+    openAfterSheet(sheet.result.current, vi.fn(), open);
+    // Another root transition finishing while the sheet is still mounted.
+    act(() => stack.result.current());
+    expect(open).not.toHaveBeenCalled();
+
+    sheet.unmount();
+    act(() => stack.result.current());
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a tap to its own sheet: a second sheet's mount and unmount neither close nor drop it", () => {
+    const { openAfterSheet, useSheetExit, useSheetPresenting } = releaseAfterSheet();
+    const stack = renderHook(() => useSheetExit());
+    const first = renderHook(() => useSheetPresenting());
+    const close = vi.fn();
+    const open = vi.fn();
+
+    openAfterSheet(first.result.current, close, open);
+    const second = renderHook(() => useSheetPresenting());
+
+    // The second sheet's presentation ends: not the first's, so its close still waits.
+    act(() => stack.result.current());
+    expect(close).not.toHaveBeenCalled();
+    second.unmount();
+    act(() => stack.result.current());
+    expect(open).not.toHaveBeenCalled();
+
+    first.unmount();
+    act(() => stack.result.current());
+    expect(close).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
   });
 });
