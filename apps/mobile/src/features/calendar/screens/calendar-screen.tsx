@@ -235,7 +235,6 @@ export function CalendarScreen() {
       <TodayControl
         direction={direction}
         homeIndicator={bar.homeIndicator}
-        minimised={bar.minimised}
         onPress={scrollToToday}
       />
     </View>

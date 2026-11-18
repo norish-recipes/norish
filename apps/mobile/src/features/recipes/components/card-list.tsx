@@ -8,6 +8,7 @@ import { TabListMarker } from "@/components/tab-list-marker";
 import { SCROLLED_PAST } from "@/components/tab-root-header";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { closeOpenRow } from "@/lib/open-row";
+import { useTabBarMinimised } from "@/lib/tab-accessory-placement";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { useIsFocused } from "expo-router";
 
@@ -53,11 +54,12 @@ export function CardList<Row>({
   fadeHeight: FadeHeight;
   /** `automatic` under a native large title, which the list scrolls with. */
   insets?: "automatic" | "never";
-  /** The tab's scroll (`useTabScroll`): the list's handler, the tab bar's guess and the offset. */
+  /** The tab's scroll (`useTabScroll`): the list's handler and the offset. */
   scroll: TabScroll;
   testID?: string;
 }) {
-  const { minimised, homeIndicator, offset, onScroll } = scroll;
+  const { homeIndicator, offset, onScroll } = scroll;
+  const minimised = useTabBarMinimised();
   const fadeStyle = useAnimatedStyle(() => ({
     height:
       typeof fadeHeight === "number"

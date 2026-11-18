@@ -1,8 +1,8 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { homeIndicator } from "@/lib/home-indicator";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
-import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
 

@@ -9,9 +9,9 @@ import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DragList, useIsLifted } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
+import { homeIndicator } from "@/lib/home-indicator";
 import { SPRING_FADE_IN, SPRING_FADE_OUT, SPRING_LAYOUT } from "@/lib/motion/layout";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
-import { homeIndicator } from "@/lib/use-tab-bar-minimised";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";

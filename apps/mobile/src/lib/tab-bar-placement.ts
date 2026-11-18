@@ -19,24 +19,8 @@ export function accessoryTop(homeIndicator: number, minimised: boolean) {
   return bottom + ACCESSORY_HEIGHT;
 }
 
-// ponytail: both accessory placements mount at once, so JS can't read the bar's state: scroll direction guesses it, and tab lists keep the expanded end inset.
-/** The padding that ends a tab's list above the tab bar and its accessory. */
+/** The padding that ends a tab's list above the tab bar and its accessory, expanded or not: an
+ * end that followed the bar would shrink the list as the bar minimises there, and pull it back. */
 export function tabListBottomInset(homeIndicator: number) {
   return accessoryTop(homeIndicator, false) + LIST_END_GAP;
-}
-
-/** Whether the tab bar is minimised after a scroll from `previous` to `offset`: a scroll down
- * minimises it and a scroll up expands it, as `onScrollDown` does; a bounce past either end holds. */
-export function nextTabBarMinimised(
-  current: boolean,
-  offset: number,
-  previous: number,
-  maxOffset: number
-) {
-  "worklet";
-  const inRange = (value: number) => value >= 0 && value <= maxOffset;
-
-  if (!inRange(offset) || !inRange(previous) || offset === previous) return current;
-
-  return offset > previous;
 }

@@ -9,6 +9,7 @@ import {
   SPRING_ZOOM_IN,
   SPRING_ZOOM_OUT,
 } from "@/lib/motion/layout";
+import { useTabBarMinimised } from "@/lib/tab-accessory-placement";
 import { accessoryTop } from "@/lib/tab-bar-placement";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -24,15 +25,14 @@ const PILL_TEXT_SCALE = 2;
 export function TodayControl({
   direction,
   homeIndicator,
-  minimised,
   onPress,
 }: {
   direction: "up" | "down" | null;
   homeIndicator: number;
-  minimised: boolean;
   onPress: () => void;
 }) {
   const intl = useIntl();
+  const minimised = useTabBarMinimised();
   const reduceMotion = useReducedMotion();
   const [foreground, background] = useThemeColor(["foreground", "background"] as const);
 

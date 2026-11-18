@@ -67,6 +67,7 @@ vi.mock("@/lib/motion/layout", () => ({
 }));
 vi.mock("@/lib/open-row", () => ({ closeOpenRow: () => {} }));
 vi.mock("@/lib/tab-bar-placement", () => ({ tabListBottomInset: () => 0 }));
+vi.mock("@/lib/tab-accessory-placement", () => ({ useTabBarMinimised: () => false }));
 
 const { CardList } = await import("@/features/recipes/components/card-list");
 
@@ -79,7 +80,6 @@ function Card({ id }: { id: string }) {
 const scroll = {
   offset: { value: 0 },
   onScroll: undefined,
-  minimised: false,
   homeIndicator: 0,
   barBottom: 0,
 } as never;
