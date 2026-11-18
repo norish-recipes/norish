@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { GlassSurface } from "@/components/glass";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -17,28 +18,39 @@ const TEXT: Record<Size, string> = {
   footer: "text-[11px]",
   overlay: "text-xs",
 };
+const RADIUS: Record<Size, number> = { row: 12, footer: 11, overlay: 12 };
 const GROUND: Record<Tone, string> = {
   default: "bg-default",
   surface: "bg-surface",
   warning: "bg-warning",
 };
 
-/** A card's small capsule: a fact, a tag, or an allergen warning, sized by the card's `size`. */
+/** A card's small capsule: a fact, a tag, or an allergen warning, sized by the card's `size`.
+ * `glass` lays native glass in place of the ground, for a chip over a photo; a warning tints it. */
 export function Pill({
   children,
   icon,
   size,
   tone = "default",
+  glass = false,
 }: {
   children: string | number;
   icon?: ComponentProps<typeof Ionicons>["name"];
   size: Size;
   tone?: Tone;
+  glass?: boolean;
 }) {
-  const [muted, warningForeground] = useThemeColor(["muted", "warning-foreground"] as const);
+  const [muted, warning, warningForeground] = useThemeColor([
+    "muted",
+    "warning",
+    "warning-foreground",
+  ] as const);
 
   return (
-    <View className={`flex-none flex-row items-center ${BOX[size]} ${GROUND[tone]}`}>
+    <View className={`flex-none flex-row items-center ${BOX[size]} ${glass ? "" : GROUND[tone]}`}>
+      {glass ? (
+        <GlassSurface radius={RADIUS[size]} tint={tone === "warning" ? warning : undefined} />
+      ) : null}
       {icon ? (
         <Ionicons
           color={tone === "warning" ? warningForeground : muted}

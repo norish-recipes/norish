@@ -64,13 +64,10 @@ const CIRCLE_SHADOW = {
 export function SwipeActions({
   variant,
   actions,
-  stripGesture,
   children,
 }: {
   variant: RecipeViewMode;
   actions: SwipeAction[];
-  /** A sideways strip on the card: the swipe waits for it to decline a drag. */
-  stripGesture?: ComponentProps<typeof ReanimatedSwipeable>["requireToFail"];
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,7 +104,6 @@ export function SwipeActions({
             />
           </>
         )}
-        requireToFail={stripGesture}
         rightThreshold={OPEN_THRESHOLD}
         onSwipeableClose={() => {
           setIsOpen(false);
