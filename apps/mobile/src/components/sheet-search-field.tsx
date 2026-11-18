@@ -2,11 +2,13 @@ import type { ComponentProps, ComponentRef } from "react";
 import React, { useState } from "react";
 import { SearchField } from "heroui-native";
 
+import { SHEET_FIELD } from "./sheet-input";
+
 /** What a ref to the field holds. */
 export type SheetSearchInput = ComponentRef<typeof SearchField.Input>;
 
-/** A search field; `onChange` is absent while what it searches loads. A `ring`ed field sits on the
- * page's ground, as the Pantry's, and rings in the accent while focused. */
+/** A search field; `onChange` is absent while what it searches loads. A `ring`ed field sits on an
+ * opaque page, as the Pantry's, and rings in the accent while focused. */
 export function SheetSearchField({
   label,
   testID,
@@ -29,7 +31,7 @@ export function SheetSearchField({
   const [focused, setFocused] = useState(false);
   const look = ring
     ? `bg-surface rounded-full border-2 ${focused ? "border-accent" : "border-transparent"}`
-    : "bg-default rounded-3xl";
+    : `${SHEET_FIELD} rounded-full`;
 
   return (
     <SearchField isDisabled={!onChange} value={value} onChange={onChange}>
