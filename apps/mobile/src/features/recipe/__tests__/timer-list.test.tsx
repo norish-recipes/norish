@@ -101,4 +101,17 @@ describe("AllTimers", () => {
 
     expect(screen.getByLabelText("recipes.cookMode.resumeTimer").className).toContain(fill);
   });
+
+  it("opens the tapped row's timer, and a round button only does its own action", () => {
+    const onOpen = vi.fn();
+
+    useTimerStore.setState({ timers: [timer("a", "running")] });
+    render(<AllTimers onEmpty={() => {}} onOpen={onOpen} />);
+
+    fireEvent.click(screen.getByLabelText("recipes.cookMode.pauseTimer"));
+    expect(onOpen).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("timer-open-a"));
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }));
+  });
 });

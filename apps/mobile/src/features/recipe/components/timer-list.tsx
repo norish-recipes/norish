@@ -46,7 +46,15 @@ function RoundAction({
   );
 }
 
-function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
+function TimerRow({
+  timer,
+  first,
+  onOpen,
+}: {
+  timer: Timer;
+  first: boolean;
+  onOpen?: (timer: Timer) => void;
+}) {
   const intl = useIntl();
   const resetTimer = useTimerStore((state) => state.resetTimer);
   const removeTimer = useTimerStore((state) => state.removeTimer);
@@ -61,36 +69,45 @@ function TimerRow({ timer, first }: { timer: Timer; first: boolean }) {
       className={`flex-row items-center gap-1.5 py-2.5 pr-2 pl-3 ${first ? "" : "border-separator border-t"}`}
       testID={`timer-row-${timer.id}`}
     >
-      <View className="w-[30px] items-center">
-        {done ? (
-          <View className="bg-accent size-6 items-center justify-center rounded-full">
-            <Ionicons color={accentForeground} name="checkmark" size={14} />
-          </View>
-        ) : (
-          <TimerRing
-            color={accent}
-            left={timer.remainingMs / timer.originalDurationMs}
-            size={28}
-            stroke={3}
-          />
-        )}
-      </View>
-      <View className="min-w-0 flex-1">
-        <Text className="text-foreground text-[15px] font-semibold" numberOfLines={1}>
-          {timer.label}
-        </Text>
-        {timer.recipeName ? (
-          <Text className="text-muted text-[13px]" numberOfLines={2}>
-            {timer.recipeName}
-          </Text>
-        ) : null}
-      </View>
-      <Text
-        className={`text-xl font-semibold ${done ? "text-accent-text" : timer.status === "paused" ? "text-muted" : "text-foreground"}`}
-        style={{ fontVariant: ["tabular-nums"] }}
+      <Pressable
+        className="min-w-0 flex-1 flex-row items-center gap-1.5 self-stretch"
+        disabled={!onOpen}
+        testID={`timer-open-${timer.id}`}
+        onPress={() => onOpen?.(timer)}
       >
-        {done ? intl.formatMessage({ id: "common.timer.done" }) : formatTimerMs(timer.remainingMs)}
-      </Text>
+        <View className="w-[30px] items-center">
+          {done ? (
+            <View className="bg-accent size-6 items-center justify-center rounded-full">
+              <Ionicons color={accentForeground} name="checkmark" size={14} />
+            </View>
+          ) : (
+            <TimerRing
+              color={accent}
+              left={timer.remainingMs / timer.originalDurationMs}
+              size={28}
+              stroke={3}
+            />
+          )}
+        </View>
+        <View className="min-w-0 flex-1">
+          <Text className="text-foreground text-[15px] font-semibold" numberOfLines={1}>
+            {timer.label}
+          </Text>
+          {timer.recipeName ? (
+            <Text className="text-muted text-[13px]" numberOfLines={2}>
+              {timer.recipeName}
+            </Text>
+          ) : null}
+        </View>
+        <Text
+          className={`text-xl font-semibold ${done ? "text-accent-text" : timer.status === "paused" ? "text-muted" : "text-foreground"}`}
+          style={{ fontVariant: ["tabular-nums"] }}
+        >
+          {done
+            ? intl.formatMessage({ id: "common.timer.done" })
+            : formatTimerMs(timer.remainingMs)}
+        </Text>
+      </Pressable>
       {done ? (
         <RoundAction
           icon="refresh"
@@ -151,8 +168,14 @@ function useNotificationsRefused(): boolean {
   return refused;
 }
 
-/** Every timer on the device, with pause, adjust, restart and dismiss; `onEmpty` when the last goes. */
-export function AllTimers({ onEmpty }: { onEmpty: () => void }) {
+/** Every timer on the device, with pause, adjust, restart and dismiss; `onEmpty` when the last goes, `onOpen` when a row (not its buttons) is tapped. */
+export function AllTimers({
+  onEmpty,
+  onOpen,
+}: {
+  onEmpty: () => void;
+  onOpen?: (timer: Timer) => void;
+}) {
   const intl = useIntl();
   const timers = sortTimers(useTimerStore((state) => state.timers));
   const refused = useNotificationsRefused();
@@ -167,7 +190,7 @@ export function AllTimers({ onEmpty }: { onEmpty: () => void }) {
   return (
     <>
       {timers.map((timer, index) => (
-        <TimerRow key={timer.id} first={index === 0} timer={timer} />
+        <TimerRow key={timer.id} first={index === 0} timer={timer} onOpen={onOpen} />
       ))}
       {refused ? (
         <Text className="text-muted border-separator border-t px-4 py-2.5 text-[13px]">
