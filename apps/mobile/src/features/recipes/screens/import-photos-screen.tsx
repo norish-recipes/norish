@@ -10,7 +10,6 @@ import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
-import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useUploadLimitsQuery } from "@norish/shared-react/config";
@@ -52,7 +51,6 @@ export function ImportPhotosScreen() {
   const { importFromImages } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
   const accentText = useAccentTextColor();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
   const tile = (useWindowDimensions().width - 2 * SHEET_INSET - GAP * (COLUMNS - 1)) / COLUMNS;
   const isFull = photos.length >= MAX_OCR_FILES;
   const limitsText = intl.formatMessage(
@@ -108,21 +106,11 @@ export function ImportPhotosScreen() {
 
   return (
     <Sheet
-      actions={
-        <Button
-          accessibilityLabel={intl.formatMessage({ id: "common.actions.importWithAI" })}
-          className="h-[50px]"
-          isDisabled={photos.length === 0}
-          testID="import-photos-submit"
-          variant="primary"
-          onPress={startImport(() => importFromImages(photos))}
-        >
-          <Ionicons color={accentForeground} name="sparkles-outline" size={18} />
-          <Button.Label className="font-semibold">
-            {intl.formatMessage({ id: "common.actions.importWithAI" })}
-          </Button.Label>
-        </Button>
-      }
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.importWithAI" }),
+        disabled: photos.length === 0,
+        onPress: startImport(() => importFromImages(photos)),
+      }}
       name="import-photos"
       title={intl.formatMessage({ id: "recipes.addRecipe.photosTitle" })}
     >

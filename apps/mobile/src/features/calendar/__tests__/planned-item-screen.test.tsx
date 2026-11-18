@@ -181,7 +181,7 @@ describe("PlannedItemScreen", () => {
 
   it("removes only once the confirm is accepted", () => {
     render(<PlannedItemScreen />);
-    fireEvent.click(screen.getByTestId("planned-item-remove"));
+    fireEvent.click(screen.getByTestId("planned-item-action-common.actions.remove"));
 
     expect(held.confirm).toHaveBeenCalledTimes(1);
     expect(held.deleteItem).not.toHaveBeenCalled();

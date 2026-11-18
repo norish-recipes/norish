@@ -4,10 +4,9 @@ import { Sheet, SheetScrollView } from "@/components/sheet";
 import { ToggleChip } from "@/components/toggle-chip";
 import { FilterSection } from "@/features/recipes/components/filter-section";
 import { useCategoryLabel } from "@/hooks/use-category-label";
-import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { Button, Skeleton, useThemeColor } from "heroui-native";
+import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { FilterMode } from "@norish/shared/contracts";
@@ -28,7 +27,6 @@ export function FiltersScreen() {
   const categoryLabel = useCategoryLabel();
   const router = useRouter();
   const [foreground, muted, star] = useThemeColor(["foreground", "muted", "warning"] as const);
-  const warningInk = useWarningInkColor();
   const { showRatings, showFavorites } = useHiddenItemVisibility();
   const {
     draft,
@@ -48,40 +46,23 @@ export function FiltersScreen() {
 
   return (
     <Sheet
-      actions={
-        <Sheet.Actions>
-          <Sheet.Action>
-            <Button
-              className="bg-warning/20 h-[50px]"
-              testID="filters-reset"
-              variant="secondary"
-              onPress={() => {
-                reset();
-                close();
-              }}
-            >
-              <Ionicons color={warningInk} name="refresh" size={18} />
-              <Button.Label className="text-warning-ink">
-                {intl.formatMessage({ id: "common.filters.clearFilters" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              testID="filters-apply"
-              variant="primary"
-              onPress={() => {
-                apply();
-                close();
-              }}
-            >
-              <Ionicons color="white" name="checkmark" size={20} />
-              <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
-      }
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.apply" }),
+        onPress: () => {
+          apply();
+          close();
+        },
+      }}
+      secondary={[
+        {
+          label: intl.formatMessage({ id: "common.filters.clearFilters" }),
+          symbol: "arrow.counterclockwise",
+          onPress: () => {
+            reset();
+            close();
+          },
+        },
+      ]}
       name="filters"
       title={intl.formatMessage({ id: "common.filters.title" })}
     >

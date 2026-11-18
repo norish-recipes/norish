@@ -3,15 +3,18 @@ import React from "react";
 import { Text } from "react-native";
 import { Input, InputGroup } from "heroui-native";
 
-/** A sheet's text field: a capsule in the muted fill, as the sheets' search fields are; a `prefix`
- * or `suffix` word sits inside the capsule. */
+/** What every sheet field shares: the default fill and no ring, shadow or focus outline. */
+export const SHEET_FIELD = "bg-default ios:shadow-none ios:focus:outline-transparent";
+
+/** A sheet's text field: a capsule, as the sheets' search fields are; a `prefix` or `suffix` word
+ * sits inside the capsule. */
 export function SheetInput({
   className,
   prefix,
   suffix,
   ...props
 }: ComponentProps<typeof Input> & { prefix?: string; suffix?: string }) {
-  const field = `h-12 rounded-full text-base ${className ?? ""}`;
+  const field = `${SHEET_FIELD} h-12 rounded-full text-base ${className ?? ""}`;
 
   if (!prefix && !suffix) {
     return <Input {...props} className={`px-4 ${field}`} variant="secondary" />;

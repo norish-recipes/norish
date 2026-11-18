@@ -2,6 +2,7 @@ import type { ComponentRef } from "react";
 import React, { useState } from "react";
 import { Pressable } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { SHEET_FIELD } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -10,7 +11,7 @@ import { useIntl } from "react-intl";
 
 import { useImportRecipe } from "@norish/shared-react/recipes";
 
-import { ImportActions } from "../components/import-actions";
+import { useImportActions } from "../hooks/use-import-actions";
 import { useStartImport } from "../hooks/use-start-import";
 import { isImportableLink } from "../utils/copied-link";
 
@@ -44,16 +45,15 @@ export function ImportLinkScreen() {
       run(trimmed);
     });
 
+  const actions = useImportActions({
+    isDisabled: trimmed === "",
+    onAIImport: start(importRecipeWithAI),
+    onImport: start(importRecipe),
+  });
+
   return (
     <Sheet
-      actions={
-        <ImportActions
-          isDisabled={trimmed === ""}
-          name="import-link"
-          onAIImport={start(importRecipeWithAI)}
-          onImport={start(importRecipe)}
-        />
-      }
+      {...actions}
       name="import-link"
       title={intl.formatMessage({ id: "recipes.addRecipe.linkTitle" })}
     >
@@ -72,7 +72,7 @@ export function ImportLinkScreen() {
               ref={fieldRef}
               autoCapitalize="none"
               autoCorrect={false}
-              className="bg-default ios:shadow-none h-[52px] rounded-full text-base"
+              className={`${SHEET_FIELD} h-[52px] rounded-full text-base`}
               keyboardType="url"
               placeholder={intl.formatMessage({ id: "common.import.url.placeholder" })}
               returnKeyType="go"

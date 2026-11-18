@@ -7,7 +7,15 @@ const screen = vi.hoisted(() => ({
   back: vi.fn(),
 }));
 
-type Item = { label: string; icon?: { name: string }; variant?: string; disabled?: boolean };
+type Item = {
+  type?: string;
+  label: string;
+  icon?: { name: string };
+  variant?: string;
+  disabled?: boolean;
+  tintColor?: string;
+  menu?: { items: { label: string; destructive?: boolean }[] };
+};
 type Options = {
   title: string;
   unstable_headerLeftItems: () => Item[];
@@ -24,6 +32,7 @@ vi.mock("expo-router", () => ({
     },
   },
 }));
+vi.mock("heroui-native", () => ({ useThemeColor: () => ["red"] }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
@@ -111,5 +120,45 @@ describe("ModalHeader", () => {
 
     expect(stale).not.toHaveBeenCalled();
     expect(latest).toHaveBeenCalledOnce();
+  });
+
+  it("puts one secondary action before the confirm as a glass item, red when destructive", () => {
+    const remove = vi.fn();
+
+    render(
+      <ModalHeader
+        confirm={{ label: "Save", onPress: vi.fn() }}
+        secondary={[{ label: "Delete", symbol: "trash", destructive: true, onPress: remove }]}
+        title="Edit"
+      />
+    );
+    const items = declared().unstable_headerRightItems();
+
+    expect(items).toMatchObject([
+      { type: "button", label: "Delete", icon: { name: "trash" }, tintColor: "red" },
+      { label: "Save", variant: "prominent" },
+    ]);
+    (items[0] as unknown as { onPress: () => void }).onPress();
+    expect(remove).toHaveBeenCalledOnce();
+  });
+
+  it("gathers several secondary actions into one menu, destructive ones marked", () => {
+    render(
+      <ModalHeader
+        secondary={[
+          { label: "Go to recipe", symbol: "book", onPress: vi.fn() },
+          { label: "Remove", symbol: "trash", destructive: true, onPress: vi.fn() },
+        ]}
+        title="Item"
+      />
+    );
+
+    expect(declared().unstable_headerRightItems()).toMatchObject([
+      {
+        type: "menu",
+        label: "recipes.actions.actionsLabel",
+        menu: { items: [{ label: "Go to recipe" }, { label: "Remove", destructive: true }] },
+      },
+    ]);
   });
 });

@@ -77,7 +77,7 @@ const layOut = (testID: string, height: number) => {
 
 function fitSheet() {
   render(
-    <Sheet actions={<span>Save</span>} name="fit" title="Fit">
+    <Sheet name="fit" title="Fit">
       <SheetBody>
         <span data-testid="content">content</span>
       </SheetBody>

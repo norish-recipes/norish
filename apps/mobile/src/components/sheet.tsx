@@ -5,7 +5,7 @@ import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from 
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
-import type { HeaderConfirm } from "./modal-header";
+import type { HeaderAction, HeaderConfirm } from "./modal-header";
 import { ModalHeader } from "./modal-header";
 import { OnSheet } from "./on-sheet";
 
@@ -120,15 +120,6 @@ export function SheetRow({
   );
 }
 
-/** Several actions in one row; each `Sheet.Action` takes an equal share. */
-function SheetActions({ children }: { children: ReactNode }) {
-  return <View className="flex-row gap-2.5">{children}</View>;
-}
-
-function SheetAction({ children }: { children: ReactNode }) {
-  return <View className="flex-1">{children}</View>;
-}
-
 /** The top of a sheet at its full height, the window's safe-area top. */
 export const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
 
@@ -159,8 +150,8 @@ function useSheetRoom() {
 }
 
 /**
- * The one sheet layout: the native header (title, Close, and Save where it saves), the body, the
- * actions pinned below, all held to the room above the keyboard.
+ * The one sheet layout: the native header (title, Close, secondary actions and the confirm), then
+ * the body, all held to the room above the keyboard. Nothing is pinned below the body.
  */
 export function Sheet({
   name,
@@ -169,7 +160,7 @@ export function Sheet({
   back = false,
   onClose,
   confirm,
-  actions,
+  secondary,
   children,
 }: {
   /** The testID prefix: `<name>-sheet` on the sheet. */
@@ -181,10 +172,10 @@ export function Sheet({
   back?: boolean;
   /** What the left item does; going back by default. */
   onClose?: () => void;
-  /** The header's confirm item, for a sheet that saves. */
+  /** The header's confirm item: the sheet's one Apply, Save, Add or verb. */
   confirm?: HeaderConfirm;
-  /** One element, or a `Sheet.Actions` of `Sheet.Action`s sharing the row. */
-  actions?: ReactNode;
+  /** The other actions: one is a glass header item, several share a header menu. */
+  secondary?: HeaderAction[];
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
   children?: ReactNode;
 }) {
@@ -201,7 +192,13 @@ export function Sheet({
         style={{ maxHeight: room }}
         testID={`${name}-sheet`}
       >
-        <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
+        <ModalHeader
+          back={back}
+          confirm={confirm}
+          secondary={secondary}
+          title={title}
+          onClose={onClose}
+        />
         {subtitle ? (
           <Text
             className="text-muted pb-3 text-sm leading-[17px]"
@@ -212,11 +209,7 @@ export function Sheet({
           </Text>
         ) : null}
         {children}
-        {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
       </View>
     </OnSheet>
   );
 }
-
-Sheet.Actions = SheetActions;
-Sheet.Action = SheetAction;

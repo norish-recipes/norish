@@ -7,7 +7,7 @@ import { Sheet, SheetBody } from "@/components/sheet";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { EditingStore } from "@norish/shared-react/groceries";
@@ -60,7 +60,6 @@ function ShopCheckLine({
  * editor that replaces the list inside the same sheet. Deleting asks first, as web does. */
 export function ManageStoresScreen() {
   const intl = useIntl();
-  const [onAccent] = useThemeColor(["accent-foreground"] as const);
   const cancel = useCancelButton();
   const text = (id: string) => intl.formatMessage({ id });
   const { stores, isRead } = useStoresQuery();
@@ -148,17 +147,10 @@ export function ManageStoresScreen() {
 
   return (
     <Sheet
-      actions={
-        <Button
-          className="h-[50px]"
-          testID="store-add"
-          variant="primary"
-          onPress={() => setEditing(newEditingStore())}
-        >
-          <Ionicons color={onAccent} name="add" size={20} />
-          <Button.Label className="font-semibold">{text("groceries.mobile.addStore")}</Button.Label>
-        </Button>
-      }
+      confirm={{
+        label: text("groceries.mobile.addStore"),
+        onPress: () => setEditing(newEditingStore()),
+      }}
       name="manage-stores"
       title={text("groceries.mobile.manageStores")}
     >

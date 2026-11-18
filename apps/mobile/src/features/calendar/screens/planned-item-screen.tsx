@@ -9,9 +9,8 @@ import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
 import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
 import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, TextField, useThemeColor } from "heroui-native";
+import { TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -41,67 +40,40 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
   const { title, subtitle } = usePlannedItemText()(item);
   const { draft, changes, setTitle, saveAndClose, confirm, fields } = usePlannedItemSheet(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
-  const [accentForeground, foreground, danger] = useThemeColor([
-    "accent-foreground",
-    "foreground",
-    "danger",
-  ] as const);
 
   return (
     <Sheet
-      actions={
-        <View className="gap-2.5">
-          {recipeId ? (
-            <Button
-              className="h-[50px]"
-              testID="planned-item-recipe"
-              variant="primary"
-              onPress={() => {
-                router.back();
-                navigation.toRecipe(recipeId);
-              }}
-            >
-              <Ionicons color={accentForeground} name="book-outline" size={19} />
-              <Button.Label className="font-semibold">
-                {intl.formatMessage({ id: "calendar.timeline.goToRecipe" })}
-              </Button.Label>
-            </Button>
-          ) : null}
-          <Sheet.Actions>
-            {recipeId ? (
-              <Sheet.Action>
-                <Button
-                  className="h-[50px]"
-                  testID="planned-item-groceries"
-                  variant="secondary"
-                  onPress={() =>
-                    router.replace({
-                      pathname: TAB_ROUTES.calendar.addToGroceries,
-                      params: { recipeId },
-                    })
-                  }
-                >
-                  <Ionicons color={foreground} name="cart-outline" size={19} />
-                  <Button.Label>{intl.formatMessage({ id: "navbar.nav.groceries" })}</Button.Label>
-                </Button>
-              </Sheet.Action>
-            ) : null}
-            <Sheet.Action>
-              <Button
-                className="h-[50px]"
-                testID="planned-item-remove"
-                variant="danger-soft"
-                onPress={() => confirmRemove(item)}
-              >
-                <Ionicons color={danger} name="trash-outline" size={19} />
-                <Button.Label>{intl.formatMessage({ id: "common.actions.remove" })}</Button.Label>
-              </Button>
-            </Sheet.Action>
-          </Sheet.Actions>
-        </View>
-      }
       confirm={confirm}
       name="planned-item"
+      secondary={[
+        ...(recipeId
+          ? ([
+              {
+                label: intl.formatMessage({ id: "calendar.timeline.goToRecipe" }),
+                symbol: "book",
+                onPress: () => {
+                  router.back();
+                  navigation.toRecipe(recipeId);
+                },
+              },
+              {
+                label: intl.formatMessage({ id: "navbar.nav.groceries" }),
+                symbol: "cart",
+                onPress: () =>
+                  router.replace({
+                    pathname: TAB_ROUTES.calendar.addToGroceries,
+                    params: { recipeId },
+                  }),
+              },
+            ] as const)
+          : []),
+        {
+          label: intl.formatMessage({ id: "common.actions.remove" }),
+          symbol: "trash",
+          destructive: true,
+          onPress: () => confirmRemove(item),
+        },
+      ]}
       subtitle={recipeId ? undefined : (subtitle ?? undefined)}
       title={title}
     >

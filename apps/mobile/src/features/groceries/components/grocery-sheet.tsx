@@ -1,9 +1,8 @@
-import type { HeaderConfirm } from "@/components/modal-header";
+import type { HeaderAction, HeaderConfirm } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { Button } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { AisleDto, StoreDto } from "@norish/shared/contracts";
@@ -43,7 +42,7 @@ export function GrocerySheet({
   onRepeat,
   trailingRows,
   confirm,
-  actions,
+  secondary,
 }: {
   /** The testID prefix: `<name>-sheet`. */
   name: string;
@@ -72,8 +71,8 @@ export function GrocerySheet({
   trailingRows?: ReactNode;
   /** The form view's header item, Save. */
   confirm: HeaderConfirm;
-  /** The form view's pinned actions, if any. */
-  actions?: ReactNode;
+  /** The form view's other header actions, if any. */
+  secondary?: HeaderAction[];
 }) {
   const intl = useIntl();
   const recurrence = useRecurrenceLabel();
@@ -114,7 +113,7 @@ export function GrocerySheet({
   );
   const steps: Record<Step, ReactNode> = {
     form: (
-      <Sheet actions={actions} confirm={confirm} name={name} subtitle={subtitle} title={title}>
+      <Sheet confirm={confirm} name={name} secondary={secondary} subtitle={subtitle} title={title}>
         <SheetBody contentClassName="gap-3">
           {field}
           <RepeatPills
@@ -157,21 +156,6 @@ export function GrocerySheet({
     repeat: (
       <Sheet
         back
-        actions={
-          repeat ? (
-            <Button
-              className="h-12"
-              testID="repeat-clear"
-              variant="secondary"
-              onPress={() => {
-                onRepeat(null);
-                back();
-              }}
-            >
-              <Button.Label className="font-medium">{text("common.actions.remove")}</Button.Label>
-            </Button>
-          ) : undefined
-        }
         confirm={{
           label: text("common.actions.done"),
           disabled: !draft,
@@ -181,6 +165,21 @@ export function GrocerySheet({
           },
         }}
         name={`${name}-repeat`}
+        secondary={
+          repeat
+            ? [
+                {
+                  label: text("common.actions.remove"),
+                  symbol: "trash",
+                  destructive: true,
+                  onPress: () => {
+                    onRepeat(null);
+                    back();
+                  },
+                },
+              ]
+            : []
+        }
         title={text("common.recurrence.title")}
         onClose={back}
       >

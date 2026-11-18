@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { HintButton } from "@/components/hint-button";
 import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
+import { SHEET_FIELD } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { FieldError, Label, TextArea, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -11,7 +12,7 @@ import { usePermissions } from "@norish/shared-react/reader";
 import { isPasteTooLong, useImportRecipe } from "@norish/shared-react/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
-import { ImportActions } from "../components/import-actions";
+import { useImportActions } from "../hooks/use-import-actions";
 import { useStartImport } from "../hooks/use-start-import";
 
 /** Import from text: a field for a pasted recipe or JSON-LD, in a sheet that fits it. */
@@ -32,17 +33,16 @@ export function ImportTextScreen() {
 
   const start = (run: (text: string) => boolean | void) => startImport(() => run(trimmed));
 
+  const actions = useImportActions({
+    isAIDisabled: trimmed === "" || isTooLong,
+    isDisabled: trimmed === "",
+    onAIImport: start(importFromPasteWithAI),
+    onImport: start(importFromPaste),
+  });
+
   return (
     <Sheet
-      actions={
-        <ImportActions
-          isAIDisabled={trimmed === "" || isTooLong}
-          isDisabled={trimmed === ""}
-          name="import-text"
-          onAIImport={start(importFromPasteWithAI)}
-          onImport={start(importFromPaste)}
-        />
-      }
+      {...actions}
       name="import-text"
       title={intl.formatMessage({ id: "recipes.addRecipe.textTitle" })}
     >
@@ -64,7 +64,7 @@ export function ImportTextScreen() {
           <TextArea
             ref={fieldRef}
             scrollEnabled
-            className="bg-default ios:shadow-none rounded-3xl px-4 py-3.5 text-base leading-[23px]"
+            className={`${SHEET_FIELD} rounded-3xl px-4 py-3.5 text-base leading-[23px]`}
             placeholder={intl.formatMessage({ id: "common.import.paste.placeholder" })}
             style={{ height: FIT_SHEET_FIELD_HEIGHT }}
             testID="import-text-field"

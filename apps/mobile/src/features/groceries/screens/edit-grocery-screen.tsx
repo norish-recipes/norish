@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Text } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Skeleton } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
@@ -111,21 +111,6 @@ function EditSheet({
 
   return (
     <GrocerySheet
-      actions={
-        <Button
-          className="h-[50px]"
-          testID="edit-grocery-delete"
-          variant="secondary"
-          onPress={() => {
-            remove();
-            router.back();
-          }}
-        >
-          <Button.Label className="text-danger font-medium">
-            {intl.formatMessage({ id: "common.actions.delete" })}
-          </Button.Label>
-        </Button>
-      }
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
       confirm={{
@@ -166,6 +151,17 @@ function EditSheet({
         ) : null
       }
       repeat={form.confirmedPattern}
+      secondary={[
+        {
+          label: intl.formatMessage({ id: "common.actions.delete" }),
+          symbol: "trash",
+          destructive: true,
+          onPress: () => {
+            remove();
+            router.back();
+          },
+        },
+      ]}
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}

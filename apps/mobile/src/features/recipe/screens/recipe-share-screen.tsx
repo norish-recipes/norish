@@ -1,12 +1,12 @@
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { Loader } from "@/components/loader";
 import { SheetScrollView } from "@/components/sheet";
 import { useServerUrl } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
-import { Button, Chip, Skeleton, useThemeColor } from "heroui-native";
+import { useLocalSearchParams } from "expo-router";
+import { Chip, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
@@ -36,43 +36,6 @@ const useShareT = (): ShareT => {
 
   return (id, values) => intl.formatMessage({ id: `recipes.sharePanel.${id}` }, values);
 };
-
-/** The sheet's pinned Create link: it makes the link and hands the new URL up. */
-function CreateLinkButton({
-  expiresIn,
-  onCreated,
-}: {
-  expiresIn: Expiry;
-  onCreated: (link: MadeLink) => void;
-}) {
-  const t = useShareT();
-  const toUrl = useServerUrl();
-  const recipe = useLoadedPageRecipe();
-  const { createShare, isCreating } = useRecipeShareMutations(recipe.id);
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-
-  return (
-    <Button
-      accessibilityLabel={t("createLink")}
-      className="h-12"
-      isDisabled={isCreating}
-      testID="recipe-share-create"
-      variant="primary"
-      onPress={() =>
-        void createShare(expiresIn).then(
-          (share) => share && onCreated({ id: share.id, url: toUrl(share.url) })
-        )
-      }
-    >
-      {isCreating ? (
-        <Loader color={accentForeground} />
-      ) : (
-        <Ionicons color={accentForeground} name="link" size={18} />
-      )}
-      <Button.Label className="font-semibold">{t("createLink")}</Button.Label>
-    </Button>
-  );
-}
 
 /** One link: its URL where this visit made it, its status, when it ends, and what it can do. */
 function ShareRow({
@@ -243,12 +206,22 @@ function ShareRowsSkeleton() {
 
 export function RecipeShareScreen() {
   const t = useShareT();
+  const toUrl = useServerUrl();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { createShare, isCreating } = useRecipeShareMutations(id ?? null);
   const [expiresIn, setExpiresIn] = useState<Expiry>("forever");
   const [latest, setLatest] = useState<MadeLink | null>(null);
 
   return (
     <RecipeSheetGate
-      actions={<CreateLinkButton expiresIn={expiresIn} onCreated={setLatest} />}
+      confirm={{
+        label: t("createLink"),
+        disabled: isCreating,
+        onPress: () =>
+          void createShare(expiresIn).then(
+            (share) => share && setLatest({ id: share.id, url: toUrl(share.url) })
+          ),
+      }}
       name="recipe-share"
       subtitle={(recipeName) => t("subtitle", { recipeName })}
       title={t("title")}

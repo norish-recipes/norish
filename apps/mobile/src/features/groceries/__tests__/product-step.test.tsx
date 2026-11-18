@@ -68,18 +68,24 @@ vi.mock("@/components/sheet", async () => {
   return {
     Sheet: ({
       children,
-      actions,
+      secondary = [],
       confirm,
     }: {
       children?: React.ReactNode;
-      actions?: React.ReactNode;
+      secondary?: { onPress: () => void }[];
       confirm?: { onPress?: () => void };
     }) =>
       createElement(
         "div",
         null,
         children,
-        actions,
+        ...secondary.map((action, index) =>
+          createElement("button", {
+            key: index,
+            "data-testid": "product-type-price",
+            onClick: action.onPress,
+          })
+        ),
         createElement("button", { "data-testid": "header-confirm", onClick: confirm?.onPress })
       ),
     SheetBody: box,

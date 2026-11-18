@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, TextField, useThemeColor } from "heroui-native";
+import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ProductRow, useProductField } from "@norish/shared-react/groceries";
@@ -104,22 +104,19 @@ export function ProductStep({
   return (
     <Sheet
       back
-      actions={
-        typing ? undefined : (
-          <Button
-            className="h-[50px]"
-            testID="product-type-price"
-            variant="secondary"
-            onPress={() => setTyping(true)}
-          >
-            <Button.Label className="font-semibold">
-              {text("groceries.mobile.typePrice")}
-            </Button.Label>
-          </Button>
-        )
-      }
       confirm={{ label: text("common.actions.done"), onPress: onBack }}
       name="grocery-product"
+      secondary={
+        typing
+          ? []
+          : [
+              {
+                label: text("groceries.mobile.typePrice"),
+                symbol: "pencil",
+                onPress: () => setTyping(true),
+              },
+            ]
+      }
       title={text("groceries.picker.productLabel", { store: store.name })}
       onClose={onBack}
     >

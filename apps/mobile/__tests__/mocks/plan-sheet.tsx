@@ -93,30 +93,33 @@ export const swiftUi = {
 
 export const swiftUiModifiers = { accessibilityIdentifier: () => null, tint: () => null };
 
-const Sheet = Object.assign(
-  ({
-    children,
-    actions,
-    name,
-    confirm,
-  }: Children & {
-    actions?: ReactNode;
-    name: string;
-    confirm?: { disabled?: boolean; onPress: () => void };
-  }) => (
-    <div>
-      {children}
-      {actions}
-      {confirm ? (
-        <button
-          data-testid={`${name}-confirm`}
-          disabled={confirm.disabled}
-          onClick={confirm.onPress}
-        />
-      ) : null}
-    </div>
-  ),
-  { Actions: pass, Action: pass }
+const Sheet = ({
+  children,
+  name,
+  confirm,
+  secondary = [],
+}: Children & {
+  name: string;
+  confirm?: { disabled?: boolean; onPress: () => void };
+  secondary?: { label: string; onPress: () => void }[];
+}) => (
+  <div>
+    {children}
+    {secondary.map((action) => (
+      <button
+        key={action.label}
+        data-testid={`${name}-action-${action.label}`}
+        onClick={action.onPress}
+      />
+    ))}
+    {confirm ? (
+      <button
+        data-testid={`${name}-confirm`}
+        disabled={confirm.disabled}
+        onClick={confirm.onPress}
+      />
+    ) : null}
+  </div>
 );
 
 export const sheet = { Sheet, SheetBody: pass, SheetStrip: pass };
