@@ -5,6 +5,7 @@ import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
 import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
+import { TabAccessoryPlacementProbe } from "@/lib/tab-accessory-placement";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
 import { cookbookIdOf, recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
 import { usePathname } from "expo-router";
@@ -64,6 +65,7 @@ export function ShellTabs() {
       {hidden ? null : (
         <NativeTabs.BottomAccessory>
           <ShellAccessory plan={plan} />
+          <TabAccessoryPlacementProbe />
         </NativeTabs.BottomAccessory>
       )}
       <NativeTabs.Trigger disableAutomaticContentInsets name="(recipes)" testID="tab-recipes">
