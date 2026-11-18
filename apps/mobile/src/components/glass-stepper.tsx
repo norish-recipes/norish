@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, View } from "react-native";
-import { GlassSurface } from "@/components/glass";
+import { GLASS_CONTROL_HEIGHT, GlassSurface } from "@/components/glass";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
-
-const HEIGHT = 40;
 
 function Step({
   icon,
@@ -30,7 +28,11 @@ function Step({
       accessibilityState={{ disabled }}
       className="items-center justify-center"
       disabled={disabled}
-      style={{ width: HEIGHT, height: HEIGHT, opacity: disabled ? 0.35 : 1 }}
+      style={{
+        width: GLASS_CONTROL_HEIGHT,
+        height: GLASS_CONTROL_HEIGHT,
+        opacity: disabled ? 0.35 : 1,
+      }}
       testID={testID}
       onPress={() => {
         lightImpact();
@@ -64,8 +66,8 @@ export function GlassStepper({
   onIncrement: () => void;
 }) {
   return (
-    <View className="flex-row items-center rounded-full" style={{ height: HEIGHT }}>
-      <GlassSurface radius={HEIGHT / 2} />
+    <View className="flex-row items-center rounded-full" style={{ height: GLASS_CONTROL_HEIGHT }}>
+      <GlassSurface radius={GLASS_CONTROL_HEIGHT / 2} />
       <Step
         disabled={!canDecrement}
         icon="remove"

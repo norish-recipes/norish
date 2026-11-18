@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
+import { GlassIconMenu } from "@/components/glass";
 import { GlassStepper } from "@/components/glass-stepper";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
@@ -9,8 +10,7 @@ import { useCardActions } from "@/hooks/use-card-actions";
 import { lightImpact } from "@/lib/haptics";
 import { useFadeTo } from "@/lib/motion/fade-to";
 import { recipeRoute } from "@/lib/tab-routes";
-import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
-import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
+import { Button as NativeButton } from "@expo/ui/swift-ui";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
@@ -77,38 +77,35 @@ export function OptionsMenu() {
   const conversion = useSystemConversion();
 
   return (
-    <View testID="recipe-ingredient-options">
-      <Host matchContents>
-        <Menu
-          label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
-          modifiers={[buttonStyle("glass"), labelStyle("iconOnly")]}
-          systemImage="slider.horizontal.3"
-        >
-          <NativeButton
-            label={intl.formatMessage({
-              id:
-                mode === "fraction"
-                  ? "recipes.detail.switchToDecimal"
-                  : "recipes.detail.switchToFraction",
-            })}
-            systemImage="plusminus"
-            onPress={toggleMode}
-          />
-          {conversion.isAvailable
-            ? conversion.options
-                .filter((option) => option.withAI || option.system !== conversion.currentSystem)
-                .map((option) => (
-                  <NativeButton
-                    key={option.key}
-                    label={intl.formatMessage({ id: `recipes.convert.${option.labelKey}` })}
-                    systemImage={option.withAI ? "sparkles" : "arrow.left.arrow.right"}
-                    onPress={() => conversion.convertTo(option)}
-                  />
-                ))
-            : null}
-        </Menu>
-      </Host>
-    </View>
+    <GlassIconMenu
+      label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
+      size="regular"
+      symbol="slider.horizontal.3"
+      testID="recipe-ingredient-options"
+    >
+      <NativeButton
+        label={intl.formatMessage({
+          id:
+            mode === "fraction"
+              ? "recipes.detail.switchToDecimal"
+              : "recipes.detail.switchToFraction",
+        })}
+        systemImage="plusminus"
+        onPress={toggleMode}
+      />
+      {conversion.isAvailable
+        ? conversion.options
+            .filter((option) => option.withAI || option.system !== conversion.currentSystem)
+            .map((option) => (
+              <NativeButton
+                key={option.key}
+                label={intl.formatMessage({ id: `recipes.convert.${option.labelKey}` })}
+                systemImage={option.withAI ? "sparkles" : "arrow.left.arrow.right"}
+                onPress={() => conversion.convertTo(option)}
+              />
+            ))
+        : null}
+    </GlassIconMenu>
   );
 }
 

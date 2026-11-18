@@ -65,10 +65,15 @@ export function GlassPill({
   );
 }
 
-/** The glyph's frame and size: the glass style pads the label 7 pt on each side. */
+/** The height of a glass control on a page, so a stepper, a menu and a portion control line up. */
+export const GLASS_CONTROL_HEIGHT = 40;
+
+/** What the glass style adds to a label's frame, on each side. */
+const GLASS_PADDING = 7;
+
+/** The glyph's frame and size, so the glass pads it out to a circle. */
 const SIZES = {
-  /** The glass pads a 26 pt frame to a 40 pt circle. */
-  regular: { frame: 26, glyph: 18 },
+  regular: { frame: GLASS_CONTROL_HEIGHT - 2 * GLASS_PADDING, glyph: 18 },
   /** A 14 pt frame makes the 28 pt circle drawn over a photo. */
   small: { frame: 14, glyph: 12 },
   /** A 58 pt frame makes the 72 pt play button over a video poster. */

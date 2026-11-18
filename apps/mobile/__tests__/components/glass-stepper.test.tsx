@@ -27,7 +27,7 @@ vi.mock("react-native", () => ({
     </button>
   ),
 }));
-vi.mock("@/components/glass", () => ({ GlassSurface: () => null }));
+vi.mock("@/components/glass", () => ({ GLASS_CONTROL_HEIGHT: 40, GlassSurface: () => null }));
 vi.mock("@/lib/haptics", () => ({ lightImpact: () => lightImpact() }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
