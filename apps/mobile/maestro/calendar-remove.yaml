@@ -33,10 +33,10 @@ appId: dev.norish.app
     id: planned-item-sheet
 - tapOn: Actions
 - tapOn: Remove
-# Remove is the alert's right-hand button, whose title reads the same, so it is tapped where the
-# system draws it.
+# The alert's title reads Remove too; its button is the second match, below it.
 - tapOn:
-    point: 68%,57%
+    text: Remove
+    index: 1
 - extendedWaitUntil:
     notVisible:
       id: planned-item-sheet

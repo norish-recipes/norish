@@ -10,5 +10,12 @@ appId: dev.norish.app
       id: import-link-field
     timeout: 20000
 - inputText: ${IMPORT_URL}
-# Import is the sheet's native header item, which has no id.
+# Import is the sheet's native header item, which has no id and turns on a moment after the text.
+- extendedWaitUntil:
+    visible:
+      text: Import
+      enabled: true
+    timeout: 10000
+# The sheet is still rising with the keyboard, so the item moves under a tap that comes too soon.
+- waitForAnimationToEnd
 - tapOn: Import
