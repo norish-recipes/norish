@@ -19,13 +19,12 @@ import { LOAD_MORE_FOOTER_HEIGHT, loadMoreFooterBox } from "../utils/load-more-f
 /** The height of the page-coloured fade over a list's end: one height, or one at rest and one once scrolled. */
 export type FadeHeight = number | { rest: number; scrolled: number };
 
-/** Cards in a grid cell, wrapped two to a line: the others in a cell move when one leaves it. */
-const GRID_CELL = 8;
-// A cell is 8 cards where a list row is one, so the grid mounts about the 20 cards a pair-row
-// list did: two cells at first, one more with each batch.
-const GRID_INITIAL_CELLS = 2;
-const GRID_BATCH_CELLS = 1;
-const LIST_BATCH = 10;
+/** Cards in a cell, in both views: a card keeps its parent when the view changes, so nothing
+ * remounts or enters again, and the others in a cell move when one leaves it. */
+const CELL = 8;
+// A cell is about the 20 cards a pair-row list rendered: two cells at first, one more with each batch.
+const INITIAL_CELLS = 2;
+const BATCH_CELLS = 1;
 
 /** The Library's cards in one list for both views, so `header` keeps its state; `empty` shows when
  * there is no card, and a card entering or leaving animates the others into place. */
@@ -97,32 +96,26 @@ export function CardList<Row>({
         paddingBottom: tabListBottomInset(homeIndicator),
       }}
       contentInsetAdjustmentBehavior={insets}
-      data={cardChunks(rows, isGrid ? GRID_CELL : 1)}
-      initialNumToRender={isGrid ? GRID_INITIAL_CELLS : LIST_BATCH}
+      data={cardChunks(rows, CELL)}
+      initialNumToRender={INITIAL_CELLS}
       itemLayoutAnimation={SPRING_LAYOUT}
-      keyExtractor={(chunk, index) => (isGrid ? `grid-${index}` : rowKey(chunk[0] as Row))}
-      maxToRenderPerBatch={isGrid ? GRID_BATCH_CELLS : LIST_BATCH}
-      renderItem={({ item: chunk }) =>
-        isGrid ? (
-          <View className="flex-row flex-wrap px-3.5">
-            {chunk.map((row) => (
-              <Animated.View
-                key={rowKey(row)}
-                className="w-1/2 flex-row px-1.5 pb-3"
-                entering={SPRING_FADE_IN}
-                exiting={SPRING_FADE_OUT}
-                layout={SPRING_LAYOUT}
-              >
-                {renderCard(row)}
-              </Animated.View>
-            ))}
-          </View>
-        ) : (
-          <Animated.View className="px-5 pb-3" entering={SPRING_FADE_IN} exiting={SPRING_FADE_OUT}>
-            {chunk[0] ? renderCard(chunk[0]) : null}
-          </Animated.View>
-        )
-      }
+      keyExtractor={(_chunk, index) => `cell-${index}`}
+      maxToRenderPerBatch={BATCH_CELLS}
+      renderItem={({ item: chunk }) => (
+        <View className={isGrid ? "flex-row flex-wrap px-3.5" : undefined}>
+          {chunk.map((row) => (
+            <Animated.View
+              key={rowKey(row)}
+              className={isGrid ? "w-1/2 flex-row px-1.5 pb-3" : "px-5 pb-3"}
+              entering={SPRING_FADE_IN}
+              exiting={SPRING_FADE_OUT}
+              layout={SPRING_LAYOUT}
+            >
+              {renderCard(row)}
+            </Animated.View>
+          ))}
+        </View>
+      )}
       scrollEventThrottle={16}
       testID={testID}
       onEndReached={onEndReached}
