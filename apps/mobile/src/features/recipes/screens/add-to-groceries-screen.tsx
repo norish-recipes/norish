@@ -161,7 +161,6 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
                   id: allSelected ? "common.actions.deselectAll" : "common.actions.selectAll",
                 }),
                 symbol: allSelected ? "checklist.unchecked" : "checklist",
-                id: "add-to-groceries-toggle",
                 onPress: () => controls.toggleSection(all.lines, all.other),
               },
             ]

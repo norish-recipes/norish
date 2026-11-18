@@ -121,14 +121,10 @@ function EditSheet({
           onPress: submit,
         },
         secondary: [
-          destructiveAction(
-            intl.formatMessage({ id: "common.actions.delete" }),
-            () => {
-              remove();
-              router.back();
-            },
-            "edit-grocery-delete"
-          ),
+          destructiveAction(intl.formatMessage({ id: "common.actions.delete" }), () => {
+            remove();
+            router.back();
+          }),
         ],
       }}
       detected={detectedPattern?.pattern ?? null}

@@ -7,8 +7,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 type Header = {
-  confirm?: { id?: string; onPress?: () => void };
-  secondary?: { id?: string; onPress: () => void }[];
+  confirm?: { label: string; onPress?: () => void };
+  secondary?: { label: string; onPress: () => void }[];
 };
 
 vi.mock("react-intl", () => ({
@@ -28,13 +28,13 @@ vi.mock("@/components/sheet", () => ({
       children,
       ...secondary.map((action) =>
         createElement("button", {
-          key: action.id,
-          "data-testid": action.id,
+          key: action.label,
+          "data-testid": action.label,
           onClick: action.onPress,
         })
       ),
       createElement("button", {
-        "data-testid": confirm?.id ?? "confirm",
+        "data-testid": confirm?.label,
         onClick: confirm?.onPress,
       })
     ),
@@ -65,7 +65,7 @@ describe("GrocerySheet repeat step", () => {
 
     render(
       <GrocerySheet
-        actions={{ confirm: { label: "Save", id: "form-confirm", onPress: vi.fn() } }}
+        actions={{ confirm: { label: "Save", onPress: vi.fn() } }}
         aisleId={null}
         aisles={[]}
         detected={null}
@@ -83,11 +83,11 @@ describe("GrocerySheet repeat step", () => {
       />
     );
     fireEvent.click(screen.getByTestId("edit-grocery-repeat"));
-    fireEvent.click(screen.getByTestId("repeat-clear"));
+    fireEvent.click(screen.getByTestId("common.actions.remove"));
 
     expect(onRepeat).toHaveBeenCalledExactlyOnceWith(null);
     expect(screen.getByTestId("edit-grocery-sheet")).toBeTruthy();
-    expect(screen.getByTestId("form-confirm")).toBeTruthy();
+    expect(screen.getByTestId("Save")).toBeTruthy();
   });
 
   it("has no Remove item while no repeat is set", () => {
@@ -112,6 +112,6 @@ describe("GrocerySheet repeat step", () => {
     );
     fireEvent.click(screen.getByTestId("edit-grocery-repeat"));
 
-    expect(screen.queryByTestId("repeat-clear")).toBeNull();
+    expect(screen.queryByTestId("common.actions.remove")).toBeNull();
   });
 });

@@ -15,8 +15,6 @@ export type HeaderConfirm = {
   /** A promise holds the item until it settles, so a second tap cannot start the action twice. */
   onPress?: () => void | Promise<unknown>;
   disabled?: boolean;
-  /** The native item's identifier. */
-  id?: string;
 };
 
 /** What a sheet hands `Sheet`: its title, its one confirm and its other header actions. */
@@ -35,16 +33,13 @@ export type HeaderAction = {
   destructive?: boolean;
   /** Always a menu entry, never a lone glass item: removing data sits one tap from the confirm. */
   inMenu?: boolean;
-  /** The native item's identifier. */
-  id?: string;
 };
 
 /** The one destructive menu entry for removing data: Delete on a grocery, Remove on a planned item. */
 export const destructiveAction = (
   label: string,
-  onPress: HeaderAction["onPress"],
-  id?: string
-): HeaderAction => ({ label, symbol: "trash", destructive: true, inMenu: true, onPress, id });
+  onPress: HeaderAction["onPress"]
+): HeaderAction => ({ label, symbol: "trash", destructive: true, inMenu: true, onPress });
 
 /** A sheet's or modal's one native header, rendered inside the screen: the title, a glass Close
  * on the left (Back with `back`, inside a sheet) and, on the right, the secondary actions then the
@@ -108,7 +103,6 @@ export function ModalHeader({
               icon: icon(action),
               destructive: action.destructive,
               disabled: action.disabled,
-              identifier: action.id,
               onPress: press(index),
             })),
           },
@@ -123,7 +117,6 @@ export function ModalHeader({
       icon: icon(action),
       tintColor: action.destructive ? danger : undefined,
       disabled: action.disabled,
-      identifier: action.id,
       onPress: press(index),
     }));
   };
@@ -157,7 +150,6 @@ export function ModalHeader({
                   variant: "prominent",
                   disabled: confirm.disabled || !confirm.onPress,
                   // The native item type requires a handler; `disabled` above keeps it from firing.
-                  identifier: confirm.id,
                   onPress: () => run(latestRef.current.confirm),
                 },
               ] as const)

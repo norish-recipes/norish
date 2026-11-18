@@ -113,7 +113,6 @@ export function ProductStep({
               {
                 label: text("groceries.mobile.typePrice"),
                 symbol: "pencil",
-                id: "product-type-price",
                 onPress: () => setTyping(true),
               },
             ]

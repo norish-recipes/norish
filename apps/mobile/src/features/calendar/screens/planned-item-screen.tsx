@@ -62,10 +62,8 @@ function PlannedItemSheet({ item }: { item: PlannedItemFromQuery }) {
               } as const,
             ]
           : []),
-        destructiveAction(
-          intl.formatMessage({ id: "common.actions.remove" }),
-          () => confirmRemove(item),
-          "planned-item-remove"
+        destructiveAction(intl.formatMessage({ id: "common.actions.remove" }), () =>
+          confirmRemove(item)
         ),
       ]}
       subtitle={recipeId ? undefined : (subtitle ?? undefined)}

@@ -167,7 +167,6 @@ export function GrocerySheet({
             ? [
                 {
                   label: text("common.actions.remove"),
-                  id: "repeat-clear",
                   symbol: "trash",
                   destructive: true,
                   onPress: () => {

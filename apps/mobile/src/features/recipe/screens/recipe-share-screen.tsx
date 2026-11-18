@@ -218,7 +218,6 @@ export function RecipeShareScreen() {
         confirm: {
           label: t("createLink"),
           disabled: isCreating,
-          id: "recipe-share-create",
           onPress: () =>
             createShare(expiresIn).then(
               (share) => share && setLatest({ id: share.id, url: toUrl(share.url) })

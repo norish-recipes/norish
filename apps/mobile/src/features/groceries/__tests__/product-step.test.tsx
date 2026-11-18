@@ -72,7 +72,7 @@ vi.mock("@/components/sheet", async () => {
       confirm,
     }: {
       children?: React.ReactNode;
-      secondary?: { id?: string; onPress: () => void }[];
+      secondary?: { label: string; onPress: () => void }[];
       confirm?: { onPress?: () => void };
     }) =>
       createElement(
@@ -82,7 +82,7 @@ vi.mock("@/components/sheet", async () => {
         ...secondary.map((action, index) =>
           createElement("button", {
             key: index,
-            "data-testid": action.id,
+            "data-testid": action.label,
             onClick: action.onPress,
           })
         ),
@@ -165,11 +165,11 @@ describe("the product step", () => {
 
     render(<ProductStep field={f as never} linked={false} store={store} onBack={onBack} />);
     expect(screen.queryByTestId("product-price")).toBeNull();
-    fireEvent.click(screen.getByTestId("product-type-price"));
+    fireEvent.click(screen.getByTestId("groceries.mobile.typePrice"));
     fireEvent.change(screen.getByTestId("product-price"), { target: { value: "2,49" } });
 
     expect(f.editPrice).toHaveBeenCalledWith("2,49");
-    expect(screen.queryByTestId("product-type-price")).toBeNull();
+    expect(screen.queryByTestId("groceries.mobile.typePrice")).toBeNull();
     fireEvent.click(screen.getByTestId("header-confirm"));
     expect(onBack).toHaveBeenCalled();
   });

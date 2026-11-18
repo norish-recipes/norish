@@ -5,8 +5,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Header = {
-  confirm?: { id?: string; label: string; onPress?: () => void };
-  secondary?: { id?: string; inMenu?: boolean; destructive?: boolean; onPress: () => void }[];
+  confirm?: { label: string; onPress?: () => void };
+  secondary?: { label: string; inMenu?: boolean; destructive?: boolean; onPress: () => void }[];
 };
 
 const held = vi.hoisted(() => ({ remove: vi.fn(), save: vi.fn(), back: vi.fn() }));
@@ -29,8 +29,8 @@ vi.mock("../components/grocery-sheet", () => ({
       null,
       ...(actions.secondary ?? []).map((action) =>
         createElement("button", {
-          key: action.id,
-          "data-testid": action.id,
+          key: action.label,
+          "data-testid": action.label,
           "data-menu": String(action.inMenu),
           "data-destructive": String(action.destructive),
           onClick: action.onPress,
@@ -81,7 +81,7 @@ describe("EditGroceryScreen", () => {
 
   it("deletes the grocery and closes from its Delete menu entry, never from Save", () => {
     render(<EditGroceryScreen />);
-    const del = screen.getByTestId("edit-grocery-delete");
+    const del = screen.getByTestId("common.actions.delete");
 
     expect(del.dataset.menu).toBe("true");
     expect(del.dataset.destructive).toBe("true");
