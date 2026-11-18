@@ -63,7 +63,7 @@ export function pantryAddRows(
 }
 
 /** What the sheet lists and what it typed and opened. */
-export type PantryAddInput = {
+type PantryAddInput = {
   typed: string;
   /** Whether the Pantry is read: until then nothing is suggested, as the field takes nothing. */
   isRead: boolean;

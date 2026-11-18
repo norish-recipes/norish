@@ -63,7 +63,7 @@ export function gapAt(slots: readonly Slot[], y: number): number | null {
 
 /** The section a gap is in, the one of the row above it; null where a drop snaps back. Without a
  * drawn row above, an item below shares its section and a heading below gives none. */
-export function sectionAt(slots: readonly Slot[], gap: number) {
+function sectionAt(slots: readonly Slot[], gap: number) {
   "worklet";
   const above = slots[gap - 1];
   const below = slots[gap];
