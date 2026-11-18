@@ -24,8 +24,25 @@ export function openAfterSheet(close: () => void, open: () => void): boolean {
   return true;
 }
 
-/** The root stack's `onFinishTransitioning`: ends a presentation, else runs what waits, once;
- * unmounting the stack drops it. */
+/** The root stack's finished transition: ends a presentation, else runs what waits, once. Not a
+ * hook's closure: there React Compiler 1.0 drops `const open = pending` and calls the cleared value. */
+function transitionFinished() {
+  if (presenting) {
+    const close = waitingClose;
+
+    presenting = false;
+    waitingClose = null;
+    close?.();
+
+    return;
+  }
+  const open = pending;
+
+  pending = null;
+  open?.();
+}
+
+/** The root stack's `onFinishTransitioning`; unmounting the stack drops what waits. */
 export function useSheetExit() {
   useEffect(
     () => () => {
@@ -36,19 +53,5 @@ export function useSheetExit() {
     []
   );
 
-  return () => {
-    if (presenting) {
-      const close = waitingClose;
-
-      presenting = false;
-      waitingClose = null;
-      close?.();
-
-      return;
-    }
-    const open = pending;
-
-    pending = null;
-    open?.();
-  };
+  return transitionFinished;
 }
