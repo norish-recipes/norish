@@ -6,7 +6,7 @@ const MINIMISED_MIN_BOTTOM = 8;
 const MINIMISED_INDICATOR_OVERLAP = 6;
 /** Expanded, it sits 7 pt over the 50 pt tab bar, itself over the home indicator. */
 const TAB_BAR_HEIGHT = 50;
-const TAB_BAR_ACCESSORY_GAP = 7;
+export const TAB_BAR_ACCESSORY_GAP = 7;
 /** Between a tab list's last row and the expanded accessory. */
 const LIST_END_GAP = 24;
 

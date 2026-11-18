@@ -41,13 +41,11 @@ const PILL = { regular: { height: "h-11", radius: 22 }, small: { height: "h-[30p
 /** A PressableScale on glass, as a text pill or Today; `className` lays out what is inside it. */
 export function GlassPill({
   size = "regular",
-  tint,
   className,
   children,
   ...props
 }: Omit<ComponentProps<typeof PressableScale>, "children" | "className"> & {
   size?: keyof typeof PILL;
-  tint?: string;
   className: string;
   children: ReactNode;
 }) {
@@ -59,7 +57,7 @@ export function GlassPill({
       className={`${height} rounded-full ${className}`}
       {...props}
     >
-      <GlassSurface radius={radius} tint={tint} />
+      <GlassSurface radius={radius} />
       {children}
     </PressableScale>
   );

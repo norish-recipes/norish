@@ -1,6 +1,10 @@
 import React from "react";
 import { Text } from "react-native";
-import Animated, { useReducedMotion } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useDerivedValue,
+  useReducedMotion,
+} from "react-native-reanimated";
 import { GlassPill } from "@/components/glass";
 import { lightImpact } from "@/lib/haptics";
 import {
@@ -9,19 +13,19 @@ import {
   SPRING_ZOOM_IN,
   SPRING_ZOOM_OUT,
 } from "@/lib/motion/layout";
+import { springTo } from "@/lib/motion/spring";
 import { useTabBarMinimised } from "@/lib/tab-accessory-placement";
-import { accessoryTop } from "@/lib/tab-bar-placement";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
-/** The clear space between the control and the accessory under it. */
-const ABOVE_ACCESSORY = 12;
+import { todayControlPlace } from "../utils/today-control";
+
 /** The largest text scale a 44 pt pill holds whole. */
 const PILL_TEXT_SCALE = 2;
 
-/** A glass Today over the list's foot, above the accessory wherever the bar sits, while today's
- * card is off screen; it points the way to it. */
+/** A glass Today at the list's bottom right, above the accessory wherever UIKit places it and
+ * moving with it, while today's card is off screen; it points the way to it. */
 export function TodayControl({
   direction,
   homeIndicator,
@@ -34,40 +38,43 @@ export function TodayControl({
   const intl = useIntl();
   const minimised = useTabBarMinimised();
   const reduceMotion = useReducedMotion();
-  const [foreground, background] = useThemeColor(["foreground", "background"] as const);
-
-  if (!direction) return null;
+  const [foreground] = useThemeColor(["foreground"] as const);
+  const { right, bottom } = todayControlPlace(homeIndicator, minimised);
+  // Springs on the edges: a transform or layout move left the pill's glass blank. Reduce Motion jumps.
+  const lift = useDerivedValue(() => (reduceMotion ? bottom : springTo(bottom)));
+  const inset = useDerivedValue(() => (reduceMotion ? right : springTo(right)));
+  const placeStyle = useAnimatedStyle(() => ({ bottom: lift.get(), right: inset.get() }));
 
   return (
-    <Animated.View
-      className="absolute inset-x-0 items-center"
-      entering={reduceMotion ? FADE_REDUCED_IN : SPRING_ZOOM_IN}
-      exiting={reduceMotion ? FADE_REDUCED_OUT : SPRING_ZOOM_OUT}
-      pointerEvents="box-none"
-      style={{ bottom: accessoryTop(homeIndicator, minimised) + ABOVE_ACCESSORY }}
-    >
-      <GlassPill
-        accessibilityLabel={intl.formatMessage({ id: "calendar.mobile.scrollToToday" })}
-        className="flex-row items-center gap-1.5 pr-4 pl-3"
-        testID="calendar-to-today"
-        tint={background}
-        onPress={() => {
-          lightImpact();
-          onPress();
-        }}
-      >
-        <Ionicons
-          color={foreground}
-          name={direction === "up" ? "arrow-up" : "arrow-down"}
-          size={16}
-        />
-        <Text
-          className="text-foreground text-[15px] font-semibold"
-          maxFontSizeMultiplier={PILL_TEXT_SCALE}
+    <Animated.View className="absolute" pointerEvents="box-none" style={placeStyle}>
+      {direction ? (
+        <Animated.View
+          entering={reduceMotion ? FADE_REDUCED_IN : SPRING_ZOOM_IN}
+          exiting={reduceMotion ? FADE_REDUCED_OUT : SPRING_ZOOM_OUT}
         >
-          {intl.formatMessage({ id: "calendar.mobile.today" })}
-        </Text>
-      </GlassPill>
+          <GlassPill
+            accessibilityLabel={intl.formatMessage({ id: "calendar.mobile.scrollToToday" })}
+            className="flex-row items-center gap-1.5 pr-4 pl-3"
+            testID="calendar-to-today"
+            onPress={() => {
+              lightImpact();
+              onPress();
+            }}
+          >
+            <Ionicons
+              color={foreground}
+              name={direction === "up" ? "arrow-up" : "arrow-down"}
+              size={16}
+            />
+            <Text
+              className="text-foreground text-[15px] font-semibold"
+              maxFontSizeMultiplier={PILL_TEXT_SCALE}
+            >
+              {intl.formatMessage({ id: "calendar.mobile.today" })}
+            </Text>
+          </GlassPill>
+        </Animated.View>
+      ) : null}
     </Animated.View>
   );
 }
