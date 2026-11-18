@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
 import { GlassStepper } from "@/components/glass-stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { timedTo } from "@/lib/motion/timed";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -55,7 +57,10 @@ function PortionsLabel({ portions }: { portions: number }) {
 
 const MACROS = ["protein", "carbs", "fat"] as const;
 
-/** A figure's share of its reference, as a thin bar of `color` on a track. */
+/** How long a bar takes to its new width when the portion changes. */
+const BAR_MS = 250;
+
+/** A figure's share of its reference, as a thin bar of `color` on a track; it grows or shrinks to a new share. */
 function ReferenceBar({
   percent,
   color,
@@ -67,6 +72,13 @@ function ReferenceBar({
   label: string;
   height: number;
 }) {
+  const share = useSharedValue(Math.min(percent, 100));
+  const widthStyle = useAnimatedStyle(() => ({ width: `${share.get()}%` }));
+
+  useEffect(() => {
+    share.set(timedTo(Math.min(percent, 100), BAR_MS, { easing: Easing.out(Easing.cubic) }));
+  }, [percent, share]);
+
   return (
     <View
       accessibilityLabel={label}
@@ -74,14 +86,13 @@ function ReferenceBar({
       className="bg-default overflow-hidden"
       style={{ height, borderRadius: height / 2 }}
     >
-      <View
+      <Animated.View
         className={color ? "" : "bg-foreground"}
-        style={{
-          width: `${Math.min(percent, 100)}%`,
-          height,
-          borderRadius: height / 2,
-          ...(color ? { backgroundColor: color } : null),
-        }}
+        style={[
+          { height, borderRadius: height / 2 },
+          color ? { backgroundColor: color } : null,
+          widthStyle,
+        ]}
       />
     </View>
   );
