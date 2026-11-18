@@ -39,6 +39,7 @@ describe("TimersSheetScreen", () => {
     const stack = renderHook(() => useSheetExit());
 
     render(<TimersSheetScreen />);
+    act(() => stack.result.current());
     fireEvent.click(screen.getByText("row"));
     fireEvent.click(screen.getByText("row"));
 
@@ -56,10 +57,28 @@ describe("TimersSheetScreen", () => {
     stack.unmount();
   });
 
+  it("closes a sheet tapped mid-presentation only once it is up", () => {
+    const stack = renderHook(() => useSheetExit());
+
+    render(<TimersSheetScreen />);
+    fireEvent.click(screen.getByText("row"));
+
+    expect(router.back).not.toHaveBeenCalled();
+
+    // The presentation's end closes the sheet; the dismissal's end opens cook mode.
+    act(() => stack.result.current());
+    expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.push).not.toHaveBeenCalled();
+    act(() => stack.result.current());
+    expect(router.push).toHaveBeenCalledTimes(1);
+    stack.unmount();
+  });
+
   it("opens nothing when the stack goes before the sheet has", () => {
     const stack = renderHook(() => useSheetExit());
 
     render(<TimersSheetScreen />);
+    act(() => stack.result.current());
     fireEvent.click(screen.getByText("row"));
     const finish = stack.result.current;
 

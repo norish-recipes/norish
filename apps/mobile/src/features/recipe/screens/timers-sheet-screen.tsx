@@ -1,7 +1,7 @@
 import React from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { Sheet } from "@/components/sheet";
-import { openAfterSheet } from "@/lib/after-sheet";
+import { openAfterSheet, useSheetPresenting } from "@/lib/after-sheet";
 import { cookModeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -17,6 +17,8 @@ export function TimersSheetScreen() {
   const router = useRouter();
   const { height } = useWindowDimensions();
 
+  useSheetPresenting();
+
   return (
     <Sheet name="timers" title={intl.formatMessage({ id: "recipes.cookMode.timers" })}>
       <ScrollView
@@ -31,7 +33,10 @@ export function TimersSheetScreen() {
               const cook = cookModeRoute(timer.recipeId, timer.stepIndex);
 
               // UIKit cannot present cook mode while the sheet is still leaving.
-              if (openAfterSheet(() => router.push(cook))) router.back();
+              openAfterSheet(
+                () => router.back(),
+                () => router.push(cook)
+              );
             }}
           />
         </View>
