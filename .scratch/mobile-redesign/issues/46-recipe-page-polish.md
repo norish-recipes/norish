@@ -28,3 +28,7 @@
   8. reject: the bars animating on any change of their value, not only a portion change; harmless, and one code path.
   9. reject: `SIZES.regular` deriving from the control height; one glass control height is the point.
   10. kept: the options menu in cook mode also going to 40 pt, with the page's.
+- Round 1 fixes: a row asks `openAfterSheet` (`lib/after-sheet.ts`) to close the sheet and open cook mode on the root stack's native `onFinishTransitioning` (via `unstable_nativeProps`), no timer. A tap mid-presentation defers the close to the presentation's end, because react-native-screens emits that event before it starts a queued dismissal. A second tap does nothing; unmounting the root drops the intent.
+- Open: in the Release build with a running timer, the push on the dismissal's end does not open cook mode (Maestro `timer-from-accessory` 0/4, also by hand). It works in Debug, and in Release with a finished timer (9/9). Not yet diagnosed. Needs a decision before another approach.
+- Rating: `starMotion` (pure, tested) gives the stagger from the first star that changes; only filling stars pop. Only the user's own tap animates (`tap.to === shown`); values from the server snap.
+- `onOpen` stays optional: cook mode's timer pill renders `AllTimers` without it, so its rows are not buttons.
