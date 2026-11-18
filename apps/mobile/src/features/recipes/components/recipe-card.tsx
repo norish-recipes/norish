@@ -13,7 +13,6 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
-import { isAllergenTag } from "@norish/shared/lib/helpers";
 
 import type { RecipeMenuAction } from "../utils/card-actions";
 import type { SwipeAction } from "./swipe-actions";
@@ -27,7 +26,7 @@ import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
 import { Pill } from "./pill";
 import { SwipeActions } from "./swipe-actions";
-import { TagChips } from "./tag-chips";
+import { TAG_GAP, TagChips } from "./tag-chips";
 
 type Props = {
   recipe: RecipeDashboardDTO;
@@ -139,8 +138,6 @@ function DoubleTapPhoto({
 
 function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
   const { description, tagNames, allergySet, timeLabel, servings } = facts;
-  const [firstTag, ...otherTags] = tagNames;
-  const overflowIsAllergen = otherTags.some((tag) => isAllergenTag(tag, allergySet));
 
   return (
     <View className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]">
@@ -159,7 +156,7 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
         <Text className="text-muted text-sm" ellipsizeMode="tail" numberOfLines={1}>
           {description}
         </Text>
-        <View className="mt-auto flex-row gap-1.5 overflow-hidden">
+        <View className="mt-auto flex-row overflow-hidden" style={{ gap: TAG_GAP }}>
           {timeLabel ? (
             <Pill icon="time-outline" size="row">
               {timeLabel}
@@ -170,20 +167,12 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
               {servings}
             </Pill>
           ) : null}
-          {firstTag ? (
-            <Pill
-              icon={isAllergenTag(firstTag, allergySet) ? "warning-outline" : undefined}
-              size="row"
-              tone={isAllergenTag(firstTag, allergySet) ? "warning" : "default"}
-            >
-              {firstTag}
-            </Pill>
-          ) : null}
-          {otherTags.length > 0 ? (
-            <Pill size="row" tone={overflowIsAllergen ? "warning" : "default"}>
-              {`+${otherTags.length}`}
-            </Pill>
-          ) : null}
+          <TagChips
+            allergySet={allergySet}
+            look="plain"
+            tags={tagNames}
+            testID={`recipe-card-tags-${recipe.id}`}
+          />
         </View>
       </View>
     </View>
