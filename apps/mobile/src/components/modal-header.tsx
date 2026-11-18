@@ -15,6 +15,9 @@ export type HeaderConfirm = {
   /** A promise holds the item until it settles, so a second tap cannot start the action twice. */
   onPress?: () => void | Promise<unknown>;
   disabled?: boolean;
+  /** A glyph in place of the label, for a label too long for the header; the label stays its
+   * accessibility name. */
+  symbol?: SfSymbol;
 };
 
 /** What a sheet hands `Sheet`: its title, its one confirm and its other header actions. */
@@ -147,6 +150,9 @@ export function ModalHeader({
                   type: "button",
                   label: confirm.label,
                   accessibilityLabel: confirm.label,
+                  icon: confirm.symbol
+                    ? ({ type: "sfSymbol", name: confirm.symbol } as const)
+                    : undefined,
                   variant: "prominent",
                   disabled: confirm.disabled || !confirm.onPress,
                   // The native item type requires a handler; `disabled` above keeps it from firing.

@@ -209,4 +209,22 @@ describe("ModalHeader", () => {
       { type: "menu", menu: { items: [{ label: "Delete", destructive: true }] } },
     ]);
   });
+
+  it("shows a confirm's symbol instead of its label, which stays its accessibility name", () => {
+    render(
+      <ModalHeader
+        confirm={{ label: "Import with AI", symbol: "checkmark", onPress: vi.fn() }}
+        title="Photos"
+      />
+    );
+
+    expect(declared().unstable_headerRightItems()).toMatchObject([
+      {
+        label: "Import with AI",
+        accessibilityLabel: "Import with AI",
+        icon: { name: "checkmark" },
+        variant: "prominent",
+      },
+    ]);
+  });
 });

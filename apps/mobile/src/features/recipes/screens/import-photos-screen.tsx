@@ -108,6 +108,7 @@ export function ImportPhotosScreen() {
     <Sheet
       confirm={{
         label: intl.formatMessage({ id: "common.actions.importWithAI" }),
+        symbol: "checkmark",
         disabled: photos.length === 0,
         onPress: startImport(() => importFromImages(photos)),
       }}
