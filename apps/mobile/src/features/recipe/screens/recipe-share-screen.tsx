@@ -208,7 +208,7 @@ export function RecipeShareScreen() {
   const t = useShareT();
   const toUrl = useServerUrl();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { createShare, isCreating } = useRecipeShareMutations(id ?? null);
+  const { createShare, isCreating } = useRecipeShareMutations(id);
   const [expiresIn, setExpiresIn] = useState<Expiry>("forever");
   const [latest, setLatest] = useState<MadeLink | null>(null);
 
@@ -218,7 +218,7 @@ export function RecipeShareScreen() {
         label: t("createLink"),
         disabled: isCreating,
         onPress: () =>
-          void createShare(expiresIn).then(
+          createShare(expiresIn).then(
             (share) => share && setLatest({ id: share.id, url: toUrl(share.url) })
           ),
       }}

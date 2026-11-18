@@ -12,19 +12,39 @@ type SfSymbol = Extract<
 /** The header's confirm item: a sheet's Save, an editor's Create. Without `onPress` it is disabled. */
 export type HeaderConfirm = {
   label: string;
-  onPress?: () => void;
+  /** A promise holds the item until it settles, so a second tap cannot start the action twice. */
+  onPress?: () => void | Promise<unknown>;
   disabled?: boolean;
+  /** The native item's identifier. */
+  id?: string;
+};
+
+/** What a sheet hands `Sheet`: its title, its one confirm and its other header actions. */
+export type SheetActions = {
+  confirm?: HeaderConfirm;
+  secondary?: HeaderAction[];
 };
 
 /** A secondary action in the header: a glass item, or a menu entry where there are several. */
 export type HeaderAction = {
   label: string;
   symbol: SfSymbol;
-  onPress: () => void;
+  onPress: () => void | Promise<unknown>;
   disabled?: boolean;
   /** In the danger colour, as a button or a menu entry. */
   destructive?: boolean;
+  /** Always a menu entry, never a lone glass item: removing data sits one tap from the confirm. */
+  inMenu?: boolean;
+  /** The native item's identifier. */
+  id?: string;
 };
+
+/** The one destructive menu entry for removing data: Delete on a grocery, Remove on a planned item. */
+export const destructiveAction = (
+  label: string,
+  onPress: HeaderAction["onPress"],
+  id?: string
+): HeaderAction => ({ label, symbol: "trash", destructive: true, inMenu: true, onPress, id });
 
 /** A sheet's or modal's one native header, rendered inside the screen: the title, a glass Close
  * on the left (Back with `back`, inside a sheet) and, on the right, the secondary actions then the
@@ -49,16 +69,30 @@ export function ModalHeader({
   const [danger] = useThemeColor(["danger"] as const);
   // The native item is replaced a moment after a render: it calls this, so a press in that gap still runs the latest handler.
   const latestRef = useRef({ confirm, secondary });
+  const busyRef = useRef(false);
 
   useEffect(() => {
     latestRef.current = { confirm, secondary };
   });
 
+  // A press while the last one's action is still pending or the item is disabled does nothing.
+  const run = (action?: { onPress?: HeaderAction["onPress"]; disabled?: boolean }) => {
+    if (busyRef.current || action?.disabled) return;
+    const result = action?.onPress?.();
+
+    if (result instanceof Promise) {
+      busyRef.current = true;
+      void result.finally(() => {
+        busyRef.current = false;
+      });
+    }
+  };
+
   const secondaryItems = (): HeaderItem[] => {
     const icon = ({ symbol }: HeaderAction) => ({ type: "sfSymbol", name: symbol }) as const;
-    const press = (index: number) => () => latestRef.current.secondary[index]?.onPress();
+    const press = (index: number) => () => run(latestRef.current.secondary[index]);
 
-    if (secondary.length > 1) {
+    if (secondary.length > 1 || secondary.some((action) => action.inMenu)) {
       const label = intl.formatMessage({ id: "recipes.actions.actionsLabel" });
 
       return [
@@ -74,6 +108,7 @@ export function ModalHeader({
               icon: icon(action),
               destructive: action.destructive,
               disabled: action.disabled,
+              identifier: action.id,
               onPress: press(index),
             })),
           },
@@ -88,6 +123,7 @@ export function ModalHeader({
       icon: icon(action),
       tintColor: action.destructive ? danger : undefined,
       disabled: action.disabled,
+      identifier: action.id,
       onPress: press(index),
     }));
   };
@@ -121,7 +157,8 @@ export function ModalHeader({
                   variant: "prominent",
                   disabled: confirm.disabled || !confirm.onPress,
                   // The native item type requires a handler; `disabled` above keeps it from firing.
-                  onPress: () => latestRef.current.confirm?.onPress?.(),
+                  identifier: confirm.id,
+                  onPress: () => run(latestRef.current.confirm),
                 },
               ] as const)
             : []),

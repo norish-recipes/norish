@@ -37,7 +37,7 @@ vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 
-const { ModalHeader } = await import("@/components/modal-header");
+const { ModalHeader, destructiveAction } = await import("@/components/modal-header");
 
 const declared = () => screen.options as unknown as Options;
 
@@ -159,6 +159,54 @@ describe("ModalHeader", () => {
         label: "recipes.actions.actionsLabel",
         menu: { items: [{ label: "Go to recipe" }, { label: "Remove", destructive: true }] },
       },
+    ]);
+  });
+
+  it("runs a confirm's async action once for two presses in the same tick", async () => {
+    let finish = () => {};
+    const create = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+
+    render(<ModalHeader confirm={{ label: "Create", onPress: create }} title="Share" />);
+    const press = (declared().unstable_headerRightItems()[0] as unknown as { onPress: () => void })
+      .onPress;
+
+    press();
+    press();
+    expect(create).toHaveBeenCalledOnce();
+
+    finish();
+    await Promise.resolve();
+    await Promise.resolve();
+    press();
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it("ignores a press on a confirm or action that is disabled", () => {
+    const save = vi.fn();
+    const act = vi.fn();
+
+    render(
+      <ModalHeader
+        confirm={{ label: "Save", disabled: true, onPress: save }}
+        secondary={[{ label: "More", symbol: "book", disabled: true, onPress: act }]}
+        title="Edit"
+      />
+    );
+    const [more, confirm] = declared().unstable_headerRightItems() as unknown as {
+      onPress: () => void;
+    }[];
+
+    confirm?.onPress();
+    more?.onPress();
+    expect(save).not.toHaveBeenCalled();
+    expect(act).not.toHaveBeenCalled();
+  });
+
+  it("puts a destructive data action in the menu even when it is the only one", () => {
+    render(<ModalHeader secondary={[destructiveAction("Delete", vi.fn())]} title="Edit grocery" />);
+
+    expect(declared().unstable_headerRightItems()).toMatchObject([
+      { type: "menu", menu: { items: [{ label: "Delete", destructive: true }] } },
     ]);
   });
 });
