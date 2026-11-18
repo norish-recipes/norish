@@ -1,4 +1,9 @@
-import { actionOffset, isFullSwipe } from "@/features/recipes/utils/swipe-reveal";
+import {
+  actionOffset,
+  FULL_SWIPE_OVERSHOOT,
+  fullSwipeAt,
+  swipeZone,
+} from "@/features/recipes/utils/swipe-reveal";
 import { describe, expect, it } from "vitest";
 
 const offsets = (travel: number, reduceMotion = false) =>
@@ -8,7 +13,11 @@ describe("actionOffset", () => {
   it("hides every action a panel's width away and seats them all once it is open", () => {
     expect(offsets(0)).toEqual([300, 200, 100]);
     expect(offsets(300)).toEqual([0, 0, 0]);
-    expect(offsets(450)).toEqual([0, 0, 0]);
+  });
+
+  it("past the open width, moves the first action with the card's edge and leaves the rest", () => {
+    expect(offsets(450)).toEqual([-150, 0, 0]);
+    expect(offsets(450, true)).toEqual([-150, -150, -150]);
   });
 
   it("keeps the first action on the card's edge and lets each outer one lag further behind", () => {
@@ -36,13 +45,37 @@ describe("actionOffset", () => {
   });
 });
 
-describe("isFullSwipe", () => {
-  it("is a drag past 80% of the screen", () => {
-    expect(isFullSwipe(320, 400)).toBe(false);
-    expect(isFullSwipe(321, 400)).toBe(true);
+// A 402 pt screen: list rows span 20-382 pt, grid cards 20-195 and 207-382 pt.
+const LIST_ACTION = 208 / 3;
+const list = (count: number) => 8 + LIST_ACTION * count;
+const GRID = 84;
+
+describe("fullSwipeAt", () => {
+  it("is the open width plus the overshoot wherever the card leaves room", () => {
+    expect(fullSwipeAt(list(3), 382)).toBe(list(3) + FULL_SWIPE_OVERSHOOT);
+    expect(fullSwipeAt(list(1), 382)).toBe(list(1) + FULL_SWIPE_OVERSHOOT);
+    expect(fullSwipeAt(GRID, 382)).toBe(GRID + FULL_SWIPE_OVERSHOOT);
   });
 
-  it("is never true for an unmeasured screen", () => {
-    expect(isFullSwipe(500, 0)).toBe(false);
+  it("is reachable on a left-column grid card, from its right edge to short of the screen's", () => {
+    const at = fullSwipeAt(GRID, 195);
+
+    expect(at).toBeLessThan(195);
+    expect(at).toBeGreaterThan(GRID);
+  });
+
+  it("is past a swipe that only opens the actions however little room the card leaves", () => {
+    expect(fullSwipeAt(list(3), 200)).toBe(list(3) + FULL_SWIPE_OVERSHOOT / 2);
+  });
+});
+
+describe("swipeZone", () => {
+  it("opens past the open threshold and runs the first action past the full swipe", () => {
+    const fullAt = fullSwipeAt(GRID, 195);
+
+    expect(swipeZone(30, 40, fullAt)).toBe("closed");
+    expect(swipeZone(GRID, 40, fullAt)).toBe("open");
+    expect(swipeZone(fullAt, 40, fullAt)).toBe("open");
+    expect(swipeZone(fullAt + 1, 40, fullAt)).toBe("full");
   });
 });

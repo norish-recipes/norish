@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ComponentRef, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import React, { useRef, useState } from "react";
@@ -13,7 +13,7 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
-import { lightImpact } from "@/lib/haptics";
+import { lightImpact, mediumImpact } from "@/lib/haptics";
 import { closeOpenRow, useOpenRow } from "@/lib/open-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -21,7 +21,7 @@ import { useThemeColor } from "heroui-native";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
-import { actionOffset, isFullSwipe } from "../utils/swipe-reveal";
+import { actionOffset, fullSwipeAt, swipeZone } from "../utils/swipe-reveal";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -47,12 +47,28 @@ const GROUND: Record<SwipeAction["key"], string> = {
 // drag (plus a toss from its velocity) passes `-rightThreshold`, so the tick uses the same value.
 const OPEN_THRESHOLD = 40;
 
-// List circles are 48 pt in a 208 pt panel, grid circles 44 pt in an 80 pt one; the card stops
-// 8 / 4 pt short of the panel.
-const LIST_BUTTON = 208 / 3;
-const LIST_GAP = 8;
-const GRID_PANEL = 80;
-const GRID_GAP = 4;
+// List circles are 48 pt in a 208 pt panel, the card 8 pt short of it; grid circles 44 pt in an
+// 80 pt one, 4 pt short.
+const LAYOUTS = {
+  list: {
+    width: (count: number) => 8 + (208 / 3) * count,
+    panel: "flex-row pl-2",
+    slot: "flex-1",
+    button: "items-center justify-center gap-[7px]",
+    circle: "size-12",
+    icon: 20,
+  },
+  grid: {
+    width: () => 84,
+    panel: "items-center justify-center gap-[18px] pl-1",
+    slot: "w-[72px]",
+    button: "items-center gap-1.5",
+    circle: "size-11",
+    icon: 19,
+  },
+};
+
+type Layout = Omit<(typeof LAYOUTS)[RecipeViewMode], "width"> & { width: number; count: number };
 
 // A CSS `0 2px 8px` shadow at 14% black; iOS's radius is half the CSS blur.
 const CIRCLE_SHADOW = {
@@ -74,23 +90,29 @@ export function SwipeActions({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const rowRef = useRef<SwipeableMethods>(null);
+  const boxRef = useRef<ComponentRef<typeof View>>(null);
   const openRow = useOpenRow(rowRef);
-  // Whether a finger is dragging the card, so the threshold's haptic is not played by the settle.
+  // Whether a finger is dragging the card, so the settle after a release plays no haptic.
   const dragging = useSharedValue(false);
-  // Whether the finger is past `FULL_SWIPE_SHARE` of the screen: a release there runs the first action.
+  // Whether the finger is past the full swipe: a release there runs the first action.
   const fullSwipe = useSharedValue(false);
   const screenWidth = useWindowDimensions().width;
+  // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
+  const [rightEdge, setRightEdge] = useState(screenWidth);
   const startDrag = () => {
     dragging.set(true);
     fullSwipe.set(false);
+    boxRef.current?.measureInWindow((x, _y, boxWidth) => setRightEdge(x + boxWidth));
   };
-  const isGrid = variant === "grid";
-  const width = isGrid ? GRID_PANEL + GRID_GAP : LIST_GAP + LIST_BUTTON * actions.length;
+  const { width, ...look } = LAYOUTS[variant];
+  const layout: Layout = { ...look, width: width(actions.length), count: actions.length };
+  const fullAt = fullSwipeAt(layout.width, rightEdge);
 
   return (
     // A touch on this row closes any other open one, and stops there: the list closes on any other.
     <View
-      className={isGrid ? "flex-1" : undefined}
+      ref={boxRef}
+      className={variant === "grid" ? "flex-1" : undefined}
       onTouchStart={(event) => {
         event.stopPropagation();
         closeOpenRow(openRow.row);
@@ -98,23 +120,22 @@ export function SwipeActions({
     >
       <ReanimatedSwipeable
         ref={rowRef}
-        containerStyle={isGrid ? { flex: 1, borderRadius: 24 } : undefined}
+        containerStyle={variant === "grid" ? { flex: 1, borderRadius: 24 } : undefined}
         renderRightActions={(progress, translation, methods) => (
           <>
             <SwipeWatch
-              screenWidth={screenWidth}
               dragging={dragging}
+              fullAt={fullAt}
               fullSwipe={fullSwipe}
               translation={translation}
             />
             <ActionsPanel
               actions={actions}
-              isGrid={isGrid}
               isOpen={isOpen}
+              layout={layout}
               methods={methods}
               progress={progress}
               translation={translation}
-              width={width}
             />
           </>
         )}
@@ -123,9 +144,9 @@ export function SwipeActions({
           setIsOpen(false);
           openRow.closed();
         }}
-        onSwipeableCloseStartDrag={() => startDrag()}
+        onSwipeableCloseStartDrag={startDrag}
         onSwipeableOpen={() => setIsOpen(true)}
-        onSwipeableOpenStartDrag={() => startDrag()}
+        onSwipeableOpenStartDrag={startDrag}
         onSwipeableWillClose={() => dragging.set(false)}
         onSwipeableWillOpen={() => {
           dragging.set(false);
@@ -141,29 +162,25 @@ export function SwipeActions({
   );
 }
 
-/** A tick where a release would open the row, each way the finger crosses it, and whether the
- * finger is past a full swipe; the settle after a release plays no tick and keeps the full swipe. */
+/** While a finger drags: a tick where a release would open the row and a firmer one at the full
+ * swipe, each way the finger crosses them; the settle after a release plays none. */
 function SwipeWatch({
-  screenWidth,
   dragging,
+  fullAt,
   fullSwipe,
   translation,
 }: {
-  screenWidth: number;
   dragging: SharedValue<boolean>;
+  fullAt: number;
   fullSwipe: SharedValue<boolean>;
   translation: SharedValue<number>;
 }) {
   useAnimatedReaction(
-    () => translation.get() < -OPEN_THRESHOLD,
-    (past, was) => {
-      if (was !== null && past !== was && dragging.get()) scheduleOnRN(lightImpact);
-    }
-  );
-  useAnimatedReaction(
-    () => isFullSwipe(-translation.get(), screenWidth),
-    (full) => {
-      if (dragging.get()) fullSwipe.set(full);
+    () => swipeZone(-translation.get(), OPEN_THRESHOLD, fullAt),
+    (zone, was) => {
+      if (was === null || zone === was || !dragging.get()) return;
+      fullSwipe.set(zone === "full");
+      scheduleOnRN(zone === "full" || was === "full" ? mediumImpact : lightImpact);
     }
   );
 
@@ -173,38 +190,34 @@ function SwipeWatch({
 /** The panel sits behind the card, so it is clear until the card moves: a lifting card then shows nothing behind it. */
 function ActionsPanel({
   actions,
-  isGrid,
   isOpen,
+  layout,
   methods,
   progress,
   translation,
-  width,
 }: {
   actions: SwipeAction[];
-  isGrid: boolean;
   isOpen: boolean;
+  layout: Layout;
   methods: SwipeableMethods;
   progress: SharedValue<number>;
   translation: SharedValue<number>;
-  width: number;
 }) {
   const visibility = useAnimatedStyle(() => ({ opacity: progress.value > 0 ? 1 : 0 }));
 
   return (
     <Animated.View
       accessibilityElementsHidden={!isOpen}
-      className={isGrid ? "items-center justify-center gap-[18px] pl-1" : "flex-row pl-2"}
+      className={layout.panel}
       importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
-      style={[{ width }, visibility]}
+      style={[{ width: layout.width }, visibility]}
     >
       {actions.map((action, index) => (
         <ActionButton
           key={action.key}
           action={action}
-          count={actions.length}
           index={index}
-          isGrid={isGrid}
-          panelWidth={width}
+          layout={layout}
           translation={translation}
           onPress={() => {
             methods.close();
@@ -219,27 +232,22 @@ function ActionsPanel({
 /** One action, sliding out of the card's edge at its own rate (`actionOffset`) on the UI thread. */
 function ActionButton({
   action,
-  count,
   index,
-  isGrid,
-  panelWidth,
+  layout,
   translation,
   onPress,
 }: {
   action: SwipeAction;
-  count: number;
   index: number;
-  isGrid: boolean;
-  panelWidth: number;
+  layout: Layout;
   translation: SharedValue<number>;
   onPress: () => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const { width, count } = layout;
   const slide = useAnimatedStyle(() => ({
     transform: [
-      {
-        translateX: actionOffset(-translation.get(), panelWidth, index, count, reduceMotion),
-      },
+      { translateX: actionOffset(-translation.get(), width, index, count, reduceMotion) },
     ],
   }));
   const [onColour] = useThemeColor(["danger-foreground"] as const);
@@ -247,19 +255,19 @@ function ActionButton({
   const icon = action.key === "groceries" && shopForeground ? shopForeground : onColour;
 
   return (
-    <Animated.View className={isGrid ? "w-[72px]" : "flex-1"} style={slide}>
+    <Animated.View className={layout.slot} style={slide}>
       <PressableScale
         accessibilityLabel={action.label}
         accessibilityRole="button"
-        className={isGrid ? "items-center gap-1.5" : "items-center justify-center gap-[7px]"}
+        className={layout.button}
         testID={action.testID}
         onPress={onPress}
       >
         <View
-          className={`items-center justify-center rounded-full ${isGrid ? "size-11" : "size-12"} ${GROUND[action.key]}`}
+          className={`items-center justify-center rounded-full ${layout.circle} ${GROUND[action.key]}`}
           style={CIRCLE_SHADOW}
         >
-          <Ionicons color={icon} name={ICONS[action.key]} size={isGrid ? 19 : 20} />
+          <Ionicons color={icon} name={ICONS[action.key]} size={layout.icon} />
         </View>
         <Text className="text-muted text-xs font-medium">{action.label}</Text>
       </PressableScale>

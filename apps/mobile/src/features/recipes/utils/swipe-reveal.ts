@@ -1,13 +1,10 @@
-/** A swipe past this share of the screen's width, released, runs the first action: a share of a
- * grid card's own width would be an accident away. */
-export const FULL_SWIPE_SHARE = 0.8;
+// A full swipe is the open width plus this, so a swipe that only opens the actions never runs one.
+export const FULL_SWIPE_OVERSHOOT = 64;
+// Room a full swipe leaves at the screen's left edge, for a finger that starts on the card's right.
+export const FULL_SWIPE_EDGE = 64;
 
-/**
- * How far right of its place action `index` of `count` sits when the card is `travel` pt along its
- * way over a `width` pt panel. The first action is glued to the card's edge; each next one moves at
- * a smaller share of the finger (`(count - index) / count`), lags behind it, and lands with the
- * rest at `travel` = `width`. With `reduceMotion` they move as one block.
- */
+/** How far right of its place action `index` of `count` sits with the card `travel` pt over a
+ * `width` pt panel: each moves at `(count - index) / count` of the finger, as one under Reduce Motion. */
 export function actionOffset(
   travel: number,
   width: number,
@@ -17,15 +14,28 @@ export function actionOffset(
 ) {
   "worklet";
 
-  const left = 1 - Math.min(Math.max(travel / width, 0), 1);
+  // Past the open width the first action, the one a full swipe runs, follows the card's edge.
+  if (travel > width) return index === 0 || reduceMotion ? width - travel : 0;
+
+  const left = 1 - Math.max(travel / width, 0);
   const rate = reduceMotion ? 1 : (count - index) / count;
 
   return width * left * rate;
 }
 
-/** Whether a card dragged `travel` pt on a `screenWidth` pt screen is swiped through to the end. */
-export function isFullSwipe(travel: number, screenWidth: number) {
+/** The drag a full swipe needs: the open width plus an overshoot, capped by the travel a card whose
+ * right edge is at `rightEdge` pt allows, but always past half the overshoot. */
+export function fullSwipeAt(openWidth: number, rightEdge: number) {
   "worklet";
 
-  return screenWidth > 0 && travel > screenWidth * FULL_SWIPE_SHARE;
+  const reachable = Math.min(openWidth + FULL_SWIPE_OVERSHOOT, rightEdge - FULL_SWIPE_EDGE);
+
+  return Math.max(reachable, openWidth + FULL_SWIPE_OVERSHOOT / 2);
+}
+
+/** Where a card dragged `travel` pt is: `closed`, `open` on release, or `full`, running the first action. */
+export function swipeZone(travel: number, openAt: number, fullAt: number) {
+  "worklet";
+
+  return travel > fullAt ? "full" : travel > openAt ? "open" : "closed";
 }
