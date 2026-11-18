@@ -14,8 +14,6 @@ import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 import { StoreAisleList } from "./store-aisle-list";
 import { StoreColorPicker } from "./store-color-picker";
 
-const FIELD = "h-[52px] text-[17px]";
-
 /** The Store being added or edited: its name, shop link, colour and Aisles, held by the manager
  * and written only on Save. Aisles reorder by holding a row. */
 export function StoreEditorSheet({
@@ -62,7 +60,6 @@ export function StoreEditorSheet({
             <TextField>
               <SheetInput
                 accessibilityLabel={text("groceries.storeManager.storeName")}
-                className={FIELD}
                 placeholder={text("groceries.storeManager.storeNamePlaceholder")}
                 returnKeyType="done"
                 testID="store-name"
@@ -78,7 +75,6 @@ export function StoreEditorSheet({
                 accessibilityLabel={text("groceries.storeManager.shopLink")}
                 autoCapitalize="none"
                 autoCorrect={false}
-                className={FIELD}
                 keyboardType="url"
                 placeholder={text("groceries.storeManager.shopLinkPlaceholder")}
                 testID="store-shop-link"

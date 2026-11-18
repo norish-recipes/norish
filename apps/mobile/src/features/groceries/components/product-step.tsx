@@ -132,7 +132,7 @@ export function ProductStep({
               accessibilityLabel={text("groceries.picker.searchPlaceholder")}
               autoCapitalize="none"
               autoCorrect={false}
-              className="h-[52px] pr-4 pl-11 text-[17px]"
+              className="pr-4 pl-11"
               editable={field.canSearch}
               placeholder={text(
                 field.canSearch
@@ -195,7 +195,6 @@ export function ProductStep({
               <TextField isInvalid={field.priceInvalid}>
                 <SheetInput
                   accessibilityLabel={text("groceries.picker.byHandPrice")}
-                  className="h-[52px] text-[17px]"
                   keyboardType="decimal-pad"
                   placeholder="0.00"
                   testID="product-price"
@@ -212,7 +211,6 @@ export function ProductStep({
                 <SheetInput
                   accessibilityLabel={text("groceries.picker.byHandCurrency")}
                   autoCapitalize="characters"
-                  className="h-[52px] text-[17px]"
                   maxLength={3}
                   placeholder={field.suggestedCurrency}
                   testID="product-currency"

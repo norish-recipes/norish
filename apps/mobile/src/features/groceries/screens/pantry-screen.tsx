@@ -33,7 +33,7 @@ export function PantryScreen() {
       </View>
       <View className="px-5 pb-3.5">
         <SheetSearchField
-          ring
+          className="bg-surface focus:border-accent h-12 rounded-full border-2 border-transparent"
           label={intl.formatMessage({ id: "groceries.pantry.findPlaceholder" })}
           maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
           testID="pantry-field"

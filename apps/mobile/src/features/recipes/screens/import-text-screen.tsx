@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { HintButton } from "@/components/hint-button";
 import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
-import { SHEET_FIELD } from "@/components/sheet-input";
+import { SheetTextArea } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import { FieldError, Label, TextArea, TextField } from "heroui-native";
+import { FieldError, Label, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -22,7 +22,7 @@ export function ImportTextScreen() {
   const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importFromPaste, importFromPasteWithAI } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const fieldRef = useFocusOnMount<ComponentRef<typeof TextArea>>();
+  const fieldRef = useFocusOnMount<ComponentRef<typeof SheetTextArea>>();
   const trimmed = text.trim();
   // Only the AI import has a length cap, as on web; the field says so before a press can.
   const isTooLong = isAIEnabled && isPasteTooLong(text);
@@ -61,10 +61,9 @@ export function ImportTextScreen() {
               testID="import-text-info"
             />
           </View>
-          <TextArea
+          <SheetTextArea
             ref={fieldRef}
             scrollEnabled
-            className={`${SHEET_FIELD} rounded-3xl px-4 py-3.5 text-base leading-[23px]`}
             placeholder={intl.formatMessage({ id: "common.import.paste.placeholder" })}
             style={{ height: FIT_SHEET_FIELD_HEIGHT }}
             testID="import-text-field"
