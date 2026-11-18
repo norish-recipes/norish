@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
 import { GlassStepper } from "@/components/glass-stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -72,12 +73,13 @@ function ReferenceBar({
   label: string;
   height: number;
 }) {
-  const share = useSharedValue(Math.min(percent, 100));
+  const width = Math.min(percent, 100);
+  const share = useSharedValue(width);
   const widthStyle = useAnimatedStyle(() => ({ width: `${share.get()}%` }));
 
   useEffect(() => {
-    share.set(timedTo(Math.min(percent, 100), BAR_MS, { easing: Easing.out(Easing.cubic) }));
-  }, [percent, share]);
+    share.set(timedTo(width, BAR_MS, { easing: EASE_OUT }));
+  }, [width, share]);
 
   return (
     <View
