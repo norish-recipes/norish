@@ -38,3 +38,4 @@ Reviewers: Standards (Sonnet), Spec (Opus high), GPT-6.1 Sol. Dispositions:
 10. done here: ticket 48's third box and ticket 47's last box said more than their logs; both corrected.
 11. ask (Mike): bar items, switches and Today are 44 pt while the recipe page's controls are 40 pt; his "40 pt" answer on ticket 46 was about the recipe page.
 12. reject: testIDs no flow references; an element may carry an id before a flow uses it.
+- Final fix round: #1-#8 fixed (`a1d77ae16`, `aa1ec62af`, `4a41e9be8`, `edcbaa7a4`, `02efcab5e`, `0a9257bb2`, `28173c7e6`, `6109998c0`, `27e8ba6d0`); #3 held as safe (both probe copies report the same placement in the same millisecond), #7 was real (the last store row was cut off). New from #1's device check: a double tap on the planned item's recipe row lets the second tap reach the Calendar row under the leaving sheet, which opens a second sheet that then sticks. Sent back as a bug.
