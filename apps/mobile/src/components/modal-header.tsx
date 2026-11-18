@@ -38,11 +38,13 @@ export type HeaderAction = {
   inMenu?: boolean;
 };
 
-/** The one destructive menu entry for removing data: Delete on a grocery, Remove on a planned item. */
+/** The one destructive action: a menu entry for removing data (Delete on a grocery, Remove on a
+ * planned item), or with `inMenu: false` a glass item for clearing a setting. */
 export const destructiveAction = (
   label: string,
-  onPress: HeaderAction["onPress"]
-): HeaderAction => ({ label, symbol: "trash", destructive: true, inMenu: true, onPress });
+  onPress: HeaderAction["onPress"],
+  { inMenu = true }: { inMenu?: boolean } = {}
+): HeaderAction => ({ label, symbol: "trash", destructive: true, inMenu, onPress });
 
 /** A sheet's or modal's one native header, rendered inside the screen: the title, a glass Close
  * on the left (Back with `back`, inside a sheet) and, on the right, the secondary actions then the

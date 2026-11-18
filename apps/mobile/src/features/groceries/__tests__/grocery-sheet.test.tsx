@@ -8,11 +8,18 @@ import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
 
 type Header = {
   confirm?: { label: string; onPress?: () => void };
-  secondary?: { label: string; onPress: () => void }[];
+  secondary?: { label: string; inMenu?: boolean; onPress: () => void }[];
 };
 
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+}));
+vi.mock("@/components/modal-header", () => ({
+  destructiveAction: (
+    label: string,
+    onPress: () => void,
+    { inMenu = true }: { inMenu?: boolean } = {}
+  ) => ({ label, onPress, inMenu }),
 }));
 vi.mock("@/components/sheet", () => ({
   // A sheet's header items are pressed by their own ids.
@@ -29,6 +36,7 @@ vi.mock("@/components/sheet", () => ({
       ...secondary.map((action) =>
         createElement("button", {
           key: action.label,
+          "data-in-menu": String(action.inMenu ?? false),
           "data-testid": action.label,
           onClick: action.onPress,
         })
@@ -83,6 +91,8 @@ describe("GrocerySheet repeat step", () => {
       />
     );
     fireEvent.click(screen.getByTestId("edit-grocery-repeat"));
+    // A glass item beside Done, not a menu entry: it clears a setting.
+    expect(screen.getByTestId("common.actions.remove").dataset.inMenu).toBe("false");
     fireEvent.click(screen.getByTestId("common.actions.remove"));
 
     expect(onRepeat).toHaveBeenCalledExactlyOnceWith(null);

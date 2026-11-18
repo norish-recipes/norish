@@ -1,6 +1,7 @@
 import type { SheetActions } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
+import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useIntl } from "react-intl";
@@ -165,15 +166,14 @@ export function GrocerySheet({
         secondary={
           repeat
             ? [
-                {
-                  label: text("common.actions.remove"),
-                  symbol: "trash",
-                  destructive: true,
-                  onPress: () => {
+                destructiveAction(
+                  text("common.actions.remove"),
+                  () => {
                     onRepeat(null);
                     back();
                   },
-                },
+                  { inMenu: false }
+                ),
               ]
             : []
         }
