@@ -131,9 +131,8 @@ function hasNameContaining(item: PantryIngredientDto, words: readonly string[]):
   });
 }
 
-/** The Pantry the field narrows: every kept food with a name, in any language, holding every word
- * of the text in any order, or that the text names as a food, in the reader's order. No text keeps
- * them all. */
+/** The kept foods with a name, in any language, holding every word of the text, or that the text
+ * names as a food, in the reader's order; no text keeps them all. */
 export function searchPantry(
   items: readonly PantryIngredientDto[],
   text: string,

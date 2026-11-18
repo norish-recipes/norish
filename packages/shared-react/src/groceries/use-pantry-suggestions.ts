@@ -8,11 +8,8 @@ import { useSpellingRules } from "../config";
 import { useConnectivity } from "../offline/react";
 import { useTRPC } from "../trpc";
 
-/**
- * "From your recipes": the foods the household's own recipes use that `items`,
- * its Pantry, does not cover, by the rule the server suggested them by.
- * Best-effort: never asked while Offline, and a failed read is simply no suggestions.
- */
+/** "From your recipes": foods the household's recipes use that `items`, its Pantry, does not cover
+ * by the server's rule. Best-effort: not asked Offline, and a failed read is no suggestions. */
 export function usePantrySuggestions(
   items: readonly PantryIngredientDto[]
 ): PantrySuggestionsResult {

@@ -147,10 +147,8 @@ function searchRank(search: IngredientSearch, languages: readonly string[]): SQL
   return sql`least(case when ${exact(searchedName.fold)} then 0 when ${wordStart(searchedName.fold)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
 }
 
-/**
- * A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
- * search's ranks first, then the flagged, then by name.
- */
+/** A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
+ * search's ranks first, then the flagged, then by name. */
 export async function listCatalogueIngredients(query: {
   search: IngredientSearch | null;
   /** The reader's catalogue languages, whose translations rank a search (every one still matches). */

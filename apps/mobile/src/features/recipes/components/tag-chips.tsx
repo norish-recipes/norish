@@ -15,11 +15,8 @@ const LOOK = {
   plain: { size: "row", tone: "default" },
 } as const;
 
-/**
- * A card's tags on one line: the ones that fit, then `+N`. Each chip is measured in a hidden row,
- * plain as glass has the same box, so `fitTags` decides before anything is drawn; the row then goes.
- * `glass` chips sit over a grid card's photo.
- */
+/** A card's tags on one line, then `+N`: a hidden row measures each chip (plain, glass has its box)
+ * so `fitTags` decides before drawing. `glass` chips sit over a grid card's photo. */
 export function TagChips({
   tags,
   allergySet,

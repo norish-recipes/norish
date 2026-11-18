@@ -22,11 +22,8 @@ export const DEFAULT_INGREDIENT_SEARCH_FIELDS: readonly IngredientSearchField[] 
   "translations",
 ];
 
-/**
- * What a search of the catalogue asks for. `fold` is the typed text folded the
- * way spellings are, so "creme" finds "Crème fraîche"; `words` are its words,
- * each of which a contains match finds somewhere in the same text, in any order.
- */
+/** A catalogue search: `fold` is the text folded as spellings are ("creme" finds "Crème fraîche");
+ * a contains match finds each of its `words` somewhere in one text, in any order. */
 export interface IngredientSearch {
   fold: string;
   words: string[];

@@ -154,10 +154,8 @@ function useSheetRoom() {
   return (keyboardTop ?? height) - SHEET_BODY_TOP;
 }
 
-/**
- * The one sheet layout: the native header (title, Close, secondary actions and the confirm), then
- * the body, all held to the room above the keyboard. Nothing is pinned below the body.
- */
+/** The one sheet layout: the native header (title, Close, secondary actions, confirm), then the
+ * body, held to the room above the keyboard. Nothing is pinned below the body. */
 export function Sheet({
   name,
   title,

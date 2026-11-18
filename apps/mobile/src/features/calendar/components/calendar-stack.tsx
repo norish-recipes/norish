@@ -6,8 +6,8 @@ import { Stack } from "expo-router";
 import { CalendarRangeProvider, useCalendarSubscription } from "@norish/shared-react/calendar";
 import { useToday } from "@norish/shared-react/reader";
 
-/** The Calendar tab's stack: the timeline has a native large title; the planned-item sheet, add-to-day
- * and Add to groceries present over it. Its sheets read the timeline's range too. */
+/** The Calendar tab's stack: the timeline, whose bar-item title hides on scroll, and the sheets over
+ * it (planned item, add-to-day, Add to groceries), which read its range too. */
 export function CalendarStack() {
   useCalendarSubscription();
   const sheetExit = useSheetExit();

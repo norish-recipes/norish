@@ -53,7 +53,7 @@ export function CardList<Row>({
   renderCard: (row: Row) => ReactElement;
   onEndReached: () => void;
   fadeHeight: FadeHeight;
-  /** `automatic` under a native large title, which the list scrolls with. */
+  /** `automatic` for the tab's own list, under the bar whose title hides as it scrolls. */
   insets?: "automatic" | "never";
   /** The tab's scroll (`useTabScroll`): the list's handler and the offset. */
   scroll: TabScroll;
@@ -141,7 +141,7 @@ export function CardList<Row>({
   return (
     // A touch that no row took closes the open one.
     <View className="flex-1" onTouchStart={() => closeOpenRow()}>
-      {/* Under a native large title the list is the tab's, which the bar's title and accessory follow. */}
+      {/* The tab's own list, which the bar's title and the accessory follow. */}
       {insets === "automatic" ? <TabListMarker>{list}</TabListMarker> : list}
       {/* Cards dissolve into the page colour before the tab bar. */}
       <Animated.View

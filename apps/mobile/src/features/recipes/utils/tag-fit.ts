@@ -1,7 +1,5 @@
-/**
- * How many of the tags, in order, fit in `room` pt on one line, `gap` apart, and whether the `+N`
- * chip (`moreWidth`) follows them. A first tag too wide for the line is cut to `firstWidth`.
- */
+/** How many tags, in order, fit in `room` pt on one line `gap` apart, and whether `+N` (`moreWidth`)
+ * follows; a first tag too wide for the line is cut to `firstWidth`. */
 export function fitTags(
   widths: readonly number[],
   room: number,
