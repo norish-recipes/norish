@@ -1,6 +1,8 @@
 import {
   cookbookIdOf,
   cookbookRoute,
+  cookModeRoute,
+  cookStepOf,
   mediaViewerRoute,
   recipeIdOf,
   recipeRoute,
@@ -33,5 +35,13 @@ describe("the viewer route", () => {
     for (const step of [undefined, { order: 3 }, { stepNumber: 2 }]) {
       expect(viewerParamsOf(mediaViewerRoute("r1", 4, step).params)).toEqual({ start: 4, step });
     }
+  });
+});
+
+describe("cookStepOf", () => {
+  it("opens the timer's step, and the first step for a timer with none", () => {
+    expect(cookStepOf(cookModeRoute("r", 3).params.step)).toBe(3);
+    expect(cookStepOf(cookModeRoute("r", 0).params.step)).toBe(0);
+    expect(cookStepOf(cookModeRoute("r").params.step)).toBe(0);
   });
 });

@@ -92,6 +92,9 @@ export const cookModeRoute = (recipeId: string, step?: number) =>
     params: step === undefined ? { id: recipeId } : { id: recipeId, step: String(step) },
   }) as const;
 
+/** The step cook mode opens on from its `step` param: the first for a timer with none. */
+export const cookStepOf = (step?: string) => Number(step ?? 0) || 0;
+
 /** The Add to groceries route; a page passes the servings it shows, a card leaves them to the recipe. */
 export function addToGroceriesRoute(recipeId: string, servings?: number) {
   return {
