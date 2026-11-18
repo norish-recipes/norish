@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] Glass: the Library's Filters and lens pills; Add to groceries' Select all/Deselect all and pantry button; Plan recipe's day strip, slot selector and row plus buttons; the cookbooks' Manage (`GlassIconButton` look, no `currentColor`).
 - [x] Cookbook chips take the timer chips' fill, no border.
@@ -39,3 +39,4 @@
   2. fix: the single-press test mocks the plus as a bare span, so a second handler coming back would not fail it.
   3. fix: `GlassIconBadge` is `GlassIconButton` without a handler, wrapped in a hidden view; one component.
   4. fix: the one-line doc comment at `glass.tsx:131` runs far past the line length.
+- Exit gate on `82e29f8b8`: all seven gates exit 0. Round 2's fill refactor (`Sheet` context) had no device run; ticket 43 screenshots every sheet and checks the fills there. For Mike on the phone: contrast of grouped content on sheets in both themes, an untinted recipe page's cookbook chips (no untinted recipe in the dev data), the Manage stores skeleton.
