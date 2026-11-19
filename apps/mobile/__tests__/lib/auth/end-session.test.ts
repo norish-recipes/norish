@@ -13,6 +13,10 @@ vi.mock("@/lib/calendar-widgets", () => ({
   clearCalendarWidgets: async (signIn: string) => void order.push(`widgets cleared: ${signIn}`),
 }));
 
+vi.mock("@/lib/search-session", () => ({
+  resetSearchSession: () => void order.push("search reset"),
+}));
+
 const { endSession } = await import("@/lib/auth/end-session");
 
 describe("endSession", () => {
@@ -44,6 +48,7 @@ describe("endSession", () => {
       "auth server",
       "closed",
       "stored session reset",
+      "search reset",
       "timers ended",
       "widgets cleared: Sign in",
     ]);
@@ -54,7 +59,7 @@ describe("endSession", () => {
     resetAuthClientStorage.mockRejectedValue(new Error("keychain"));
 
     await expect(endSession(authClient, "everywhere", "Sign in")).resolves.toBeUndefined();
-    expect(order).toEqual(["closed", "timers ended", "widgets cleared: Sign in"]);
+    expect(order).toEqual(["closed", "search reset", "timers ended", "widgets cleared: Sign in"]);
   });
 
   it("aborts a stalled server after 5 s, so it cannot answer late, and still ends it on this device", async () => {
@@ -70,6 +75,7 @@ describe("endSession", () => {
     expect(order).toEqual([
       "closed",
       "stored session reset",
+      "search reset",
       "timers ended",
       "widgets cleared: Sign in",
     ]);
@@ -82,6 +88,7 @@ describe("endSession", () => {
     expect(order).toEqual([
       "closed",
       "stored session reset",
+      "search reset",
       "timers ended",
       "widgets cleared: Sign in",
     ]);
@@ -92,6 +99,6 @@ describe("endSession", () => {
 
     await endSession(authClient, "device", "Sign in");
 
-    expect(order).toEqual(["stored session reset", "timers ended", "widgets cleared: Sign in"]);
+    expect(order).toEqual(["stored session reset", "search reset", "timers ended", "widgets cleared: Sign in"]);
   });
 });
