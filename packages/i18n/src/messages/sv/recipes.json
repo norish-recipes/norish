@@ -489,7 +489,7 @@
     "fromTextHint": "Klistra in ett recept eller JSON-LD",
     "writeYourself": "Skriv det själv",
     "writeYourselfHint": "Börja med ett tomt recept",
-    "importHost": "Importera {host}",
+    "fromClipboard": "Från ditt urklipp",
     "linkTitle": "Importera från en länk",
     "textTitle": "Importera från text",
     "photosTitle": "Importera från foton",

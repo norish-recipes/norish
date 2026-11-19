@@ -489,7 +489,7 @@
     "fromTextHint": "Paste a recipe or JSON-LD",
     "writeYourself": "Write it yourself",
     "writeYourselfHint": "Start from an empty recipe",
-    "importHost": "Import {host}",
+    "fromClipboard": "From your clipboard",
     "linkTitle": "Import from a link",
     "textTitle": "Import from text",
     "photosTitle": "Import from photos",

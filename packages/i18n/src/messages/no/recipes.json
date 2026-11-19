@@ -489,7 +489,7 @@
     "fromTextHint": "Lim inn en oppskrift eller JSON-LD",
     "writeYourself": "Skriv den selv",
     "writeYourselfHint": "Start med en tom oppskrift",
-    "importHost": "Importer {host}",
+    "fromClipboard": "Fra utklippstavlen din",
     "linkTitle": "Importer fra en lenke",
     "textTitle": "Importer fra tekst",
     "photosTitle": "Importer fra bilder",

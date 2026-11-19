@@ -489,7 +489,7 @@
     "fromTextHint": "Поставете рецепта или JSON-LD",
     "writeYourself": "Напишете я сами",
     "writeYourselfHint": "Започнете с празна рецепта",
-    "importHost": "Импортиране от {host}",
+    "fromClipboard": "От клипборда",
     "linkTitle": "Импортиране от линк",
     "textTitle": "Импортиране от текст",
     "photosTitle": "Импортиране от снимки",

@@ -489,7 +489,7 @@
     "fromTextHint": "Pega una receta o JSON-LD",
     "writeYourself": "Escríbela tú",
     "writeYourselfHint": "Empieza con una receta vacía",
-    "importHost": "Importar {host}",
+    "fromClipboard": "Desde tu portapapeles",
     "linkTitle": "Importar desde un enlace",
     "textTitle": "Importar desde texto",
     "photosTitle": "Importar desde fotos",

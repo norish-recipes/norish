@@ -489,7 +489,7 @@
     "fromTextHint": "Plak een recept of JSON-LD",
     "writeYourself": "Zelf schrijven",
     "writeYourselfHint": "Begin met een leeg recept",
-    "importHost": "{host} importeren",
+    "fromClipboard": "Van je klembord",
     "linkTitle": "Importeren via een link",
     "textTitle": "Importeren via tekst",
     "photosTitle": "Importeren via foto's",

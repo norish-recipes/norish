@@ -489,7 +489,7 @@
     "fromTextHint": "Wklej przepis lub JSON-LD",
     "writeYourself": "Napisz samodzielnie",
     "writeYourselfHint": "Zacznij od pustego przepisu",
-    "importHost": "Importuj {host}",
+    "fromClipboard": "Ze schowka",
     "linkTitle": "Importuj z linku",
     "textTitle": "Importuj z tekstu",
     "photosTitle": "Importuj ze zdjęć",

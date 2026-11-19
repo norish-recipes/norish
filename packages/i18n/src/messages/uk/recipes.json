@@ -489,7 +489,7 @@
     "fromTextHint": "Вставте рецепт або JSON-LD",
     "writeYourself": "Написати самостійно",
     "writeYourselfHint": "Почати з порожнього рецепта",
-    "importHost": "Імпортувати {host}",
+    "fromClipboard": "З буфера обміну",
     "linkTitle": "Імпорт за посиланням",
     "textTitle": "Імпорт із тексту",
     "photosTitle": "Імпорт із фото",

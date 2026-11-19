@@ -489,7 +489,7 @@
     "fromTextHint": "Indsæt en opskrift eller JSON-LD",
     "writeYourself": "Skriv den selv",
     "writeYourselfHint": "Start med en tom opskrift",
-    "importHost": "Importér {host}",
+    "fromClipboard": "Fra din udklipsholder",
     "linkTitle": "Importér fra et link",
     "textTitle": "Importér fra tekst",
     "photosTitle": "Importér fra fotos",

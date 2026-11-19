@@ -489,7 +489,7 @@
     "fromTextHint": "Cole uma receita ou JSON-LD",
     "writeYourself": "Escrever você mesmo",
     "writeYourselfHint": "Começar com uma receita vazia",
-    "importHost": "Importar {host}",
+    "fromClipboard": "Da sua área de transferência",
     "linkTitle": "Importar de um link",
     "textTitle": "Importar de texto",
     "photosTitle": "Importar de fotos",

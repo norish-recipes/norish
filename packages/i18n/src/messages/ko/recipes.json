@@ -489,7 +489,7 @@
     "fromTextHint": "레시피 또는 JSON-LD 붙여넣기",
     "writeYourself": "직접 작성",
     "writeYourselfHint": "빈 레시피로 시작",
-    "importHost": "{host} 가져오기",
+    "fromClipboard": "클립보드에서",
     "linkTitle": "링크에서 가져오기",
     "textTitle": "텍스트에서 가져오기",
     "photosTitle": "사진에서 가져오기",

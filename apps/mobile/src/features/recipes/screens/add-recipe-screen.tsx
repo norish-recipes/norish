@@ -1,14 +1,12 @@
+import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import { Card } from "@/components/card";
+import { Card, CardRow } from "@/components/card";
+import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { hostOf, plainLink } from "@/lib/network/host-of";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -21,65 +19,44 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Option = { key: string; icon: IconName; title: string; hint: string; to: Href };
 
-/** The copied link, imported in one tap: the sheet's first row, on the accent. */
+/** The copied link: a card row with its host, where it came from and a small Import. */
 function CopiedLinkRow({ url, onPress }: { url: string; onPress: () => void }) {
   const intl = useIntl();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-  const title = intl.formatMessage(
-    { id: "recipes.addRecipe.importHost" },
-    { host: plainLink(hostOf(url)) }
-  );
 
   return (
-    <Pressable
-      accessibilityHint={plainLink(url)}
-      accessibilityLabel={title}
-      accessibilityRole="button"
-      className="bg-accent flex-row items-center gap-3.5 rounded-3xl px-4 py-3"
-      testID="add-recipe-copied-link"
-      onPress={onPress}
-    >
-      <View className="size-10 items-center justify-center rounded-xl bg-white/20">
-        <Ionicons color={accentForeground} name="link" size={20} />
-      </View>
-      <View className="min-w-0 flex-1 gap-px">
-        <Text className="text-accent-foreground text-base font-semibold" numberOfLines={1}>
-          {title}
-        </Text>
-        <Text className="text-accent-foreground text-[13px] opacity-80" numberOfLines={1}>
-          {plainLink(url)}
-        </Text>
-      </View>
-      <Ionicons color={accentForeground} name="download-outline" size={20} />
-    </Pressable>
+    <Card>
+      <CardRow
+        first
+        hint={intl.formatMessage({ id: "recipes.addRecipe.fromClipboard" })}
+        icon="link"
+        label={plainLink(hostOf(url))}
+        testID="add-recipe-copied-link"
+      >
+        <PillButton
+          label={intl.formatMessage({ id: "common.actions.import" })}
+          testID="add-recipe-copied-link-import"
+          tone="accent"
+          onPress={onPress}
+        />
+      </CardRow>
+    </Card>
   );
 }
 
 /** One way to add a recipe: its icon, name and what it takes, opening that way's sheet. */
 function OptionRow({ option, first }: { option: Option; first: boolean }) {
   const router = useRouter();
-  const accentText = useAccentTextColor();
-  const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <Pressable
-      accessibilityHint={option.hint}
-      accessibilityLabel={option.title}
-      accessibilityRole="button"
-      className={`flex-row items-center gap-3.5 px-4 py-3 ${first ? "" : "border-line border-t"}`}
+    <CardRow
+      first={first}
+      hint={option.hint}
+      icon={option.icon}
+      label={option.title}
       testID={`add-recipe-${option.key}`}
       // The chosen way's sheet replaces this one, so only one sheet is ever stacked.
       onPress={() => router.replace(option.to)}
-    >
-      <View className="bg-sand size-10 items-center justify-center rounded-xl">
-        <Ionicons color={accentText} name={option.icon} size={20} />
-      </View>
-      <View className="min-w-0 flex-1 gap-px">
-        <Text className="text-foreground text-base font-medium">{option.title}</Text>
-        <Text className="text-muted text-[13px]">{option.hint}</Text>
-      </View>
-      <Ionicons color={muted} name="chevron-forward" size={16} />
-    </Pressable>
+    />
   );
 }
 

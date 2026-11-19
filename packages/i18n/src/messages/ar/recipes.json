@@ -489,7 +489,7 @@
     "fromTextHint": "الصق وصفة أو JSON-LD",
     "writeYourself": "اكتبها بنفسك",
     "writeYourselfHint": "ابدأ بوصفة فارغة",
-    "importHost": "استيراد {host}",
+    "fromClipboard": "من الحافظة",
     "linkTitle": "استيراد من رابط",
     "textTitle": "استيراد من نص",
     "photosTitle": "استيراد من الصور",

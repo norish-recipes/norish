@@ -489,7 +489,7 @@
     "fromTextHint": "Liitä resepti tai JSON-LD",
     "writeYourself": "Kirjoita itse",
     "writeYourselfHint": "Aloita tyhjästä reseptistä",
-    "importHost": "Tuo {host}",
+    "fromClipboard": "Leikepöydältäsi",
     "linkTitle": "Tuo linkistä",
     "textTitle": "Tuo tekstistä",
     "photosTitle": "Tuo kuvista",

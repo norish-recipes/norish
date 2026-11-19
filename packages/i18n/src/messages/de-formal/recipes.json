@@ -489,7 +489,7 @@
     "fromTextHint": "Fügen Sie ein Rezept oder JSON-LD ein",
     "writeYourself": "Selbst schreiben",
     "writeYourselfHint": "Mit einem leeren Rezept beginnen",
-    "importHost": "{host} importieren",
+    "fromClipboard": "Aus Ihrer Zwischenablage",
     "linkTitle": "Über einen Link importieren",
     "textTitle": "Über Text importieren",
     "photosTitle": "Über Fotos importieren",
