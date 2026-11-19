@@ -1,12 +1,11 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
-import { Pressable } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { FieldError, Label, TextField, useThemeColor } from "heroui-native";
+import { FieldError, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useImportRecipe } from "@norish/shared-react/recipes";
@@ -23,7 +22,7 @@ export function ImportLinkScreen() {
   const [isInvalid, setIsInvalid] = useState(false);
   const { importRecipe, importRecipeWithAI } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const [muted, foreground] = useThemeColor(["muted", "foreground"] as const);
+  const [muted] = useThemeColor(["muted"] as const);
   // An empty sheet is there to be typed into; a copied link is imported with one tap.
   const fieldRef = useFocusOnMount<ComponentRef<typeof SheetInput>>(!copiedUrl);
   const trimmed = link.trim();
@@ -59,11 +58,6 @@ export function ImportLinkScreen() {
     >
       <SheetBody>
         <TextField className="gap-2" isInvalid={isInvalid}>
-          <Label className="px-2">
-            <Label.Text className="text-foreground text-[15px] font-medium">
-              {intl.formatMessage({ id: "common.import.url.label" })}
-            </Label.Text>
-          </Label>
           <SheetInput
             ref={fieldRef}
             autoCapitalize="none"
@@ -72,27 +66,14 @@ export function ImportLinkScreen() {
             placeholder={intl.formatMessage({ id: "common.import.url.placeholder" })}
             prefix={<Ionicons color={muted} name="link" size={18} />}
             returnKeyType="go"
-            suffix={
-              link ? (
-                <Pressable
-                  accessibilityLabel={intl.formatMessage({ id: "common.actions.clear" })}
-                  accessibilityRole="button"
-                  className="bg-sand size-7 items-center justify-center rounded-full"
-                  hitSlop={8}
-                  testID="import-link-clear"
-                  onPress={() => {
-                    changeLink("");
-                    fieldRef.current?.focus();
-                  }}
-                >
-                  <Ionicons color={foreground} name="close" size={14} />
-                </Pressable>
-              ) : null
-            }
             testID="import-link-field"
             textContentType="URL"
             value={link}
             onChangeText={changeLink}
+            onClear={() => {
+              changeLink("");
+              fieldRef.current?.focus();
+            }}
             onSubmitEditing={trimmed ? start(importRecipe) : undefined}
           />
           <FieldError className="px-2" testID="import-link-invalid">

@@ -57,6 +57,7 @@ export function CookbookTitleSheet({
               testID={`${name}-title`}
               value={value}
               onChangeText={onChange}
+              onClear={onChange ? () => onChange("") : undefined}
               onSubmitEditing={disabled ? undefined : onSubmit}
             />
           </TextField>

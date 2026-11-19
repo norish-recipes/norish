@@ -1,11 +1,10 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
-import { View } from "react-native";
-import { HintButton } from "@/components/hint-button";
+import { Text } from "react-native";
 import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
 import { SheetTextArea } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import { FieldError, Label, TextField } from "heroui-native";
+import { TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -48,19 +47,6 @@ export function ImportTextScreen() {
     >
       <SheetBody>
         <TextField className="gap-2" isInvalid={isTooLong}>
-          <View className="flex-row items-center justify-between pr-0.5 pl-2">
-            <Label>
-              <Label.Text className="text-foreground text-[15px] font-medium">
-                {intl.formatMessage({ id: "common.import.paste.label" })}
-              </Label.Text>
-            </Label>
-            <HintButton
-              className="size-7 items-center justify-center rounded-full"
-              hint={limit}
-              size={20}
-              testID="import-text-info"
-            />
-          </View>
           <SheetTextArea
             ref={fieldRef}
             scrollEnabled
@@ -71,9 +57,12 @@ export function ImportTextScreen() {
             value={text}
             onChangeText={setText}
           />
-          <FieldError className="px-2" testID="import-text-too-long">
+          <Text
+            className={`px-2 text-sm ${isTooLong ? "text-danger" : "text-muted"}`}
+            testID="import-text-too-long"
+          >
             {limit}
-          </FieldError>
+          </Text>
         </TextField>
       </SheetBody>
     </Sheet>
