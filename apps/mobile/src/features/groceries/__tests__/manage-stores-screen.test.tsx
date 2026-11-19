@@ -11,7 +11,7 @@ const store = (id: string, sortOrder: number) =>
 const held = vi.hoisted(() => ({
   stores: [] as StoreDto[],
   isRead: true,
-  lines: [] as { storeId: string }[],
+  lines: [] as { storeId: string; isDone?: boolean }[],
   reorder: vi.fn(),
   remove: vi.fn(),
   save: vi.fn(),
