@@ -124,6 +124,7 @@
     },
     "paste": {
       "title": "Importer fra indsætning",
+      "label": "Opskrifttekst eller JSON-LD",
       "placeholder": "Indsæt en opskrift (fritekst) eller JSON-LD her...",
       "characters": "{count} / {max} tegn",
       "tooLarge": "Indsætningen er for stor",

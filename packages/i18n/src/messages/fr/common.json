@@ -124,6 +124,7 @@
     },
     "paste": {
       "title": "Importer depuis le presse papier",
+      "label": "Texte de la recette ou JSON-LD",
       "placeholder": "Collez ici une recette (texte libre) ou un fichier JSON-LD...",
       "characters": "{count} / {max} caractères",
       "tooLarge": "Presse papier trop gros",

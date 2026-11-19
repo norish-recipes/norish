@@ -124,6 +124,7 @@
     },
     "paste": {
       "title": "Importera inklistrad text",
+      "label": "Recepttext eller JSON-LD",
       "placeholder": "Klistra in ett recept som fritext eller JSON-LD här...",
       "characters": "{count} / {max} tecken",
       "tooLarge": "Den inklistrade texten är för stor",

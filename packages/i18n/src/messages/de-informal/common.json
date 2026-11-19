@@ -124,6 +124,7 @@
     },
     "paste": {
       "title": "Aus Paste importieren",
+      "label": "Rezept-Text oder JSON-LD",
       "placeholder": "Füge ein Rezept (Freitext) oder JSON-LD ein...",
       "characters": "{count} / {max} Zeichen",
       "tooLarge": "Paste zu groß",

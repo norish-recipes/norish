@@ -124,6 +124,7 @@
     },
     "paste": {
       "title": "Importa da testo incollato",
+      "label": "Testo della ricetta o JSON-LD",
       "placeholder": "Incolla una ricetta (testo libero) o JSON-LD qui...",
       "characters": "{count} / {max} caratteri",
       "tooLarge": "Testo troppo lungo",

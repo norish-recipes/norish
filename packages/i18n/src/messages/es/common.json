@@ -119,6 +119,7 @@
     },
     "paste": {
       "title": "Importar pegando el texto",
+      "label": "Texto de la receta o JSON-LD",
       "placeholder": "Pega una receta (texto libre) o JSON-LD aquí...",
       "characters": "{count} / {max} caracteres",
       "tooLarge": "Texto demasiado largo",

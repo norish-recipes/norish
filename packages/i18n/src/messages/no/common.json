@@ -124,6 +124,7 @@
     },
     "paste": {
       "title": "Importer fra liming",
+      "label": "Oppskrifttekst eller JSON-LD",
       "placeholder": "Lim inn en oppskrift (fritekst) eller JSON-LD her...",
       "characters": "{count} / {max} tegn",
       "tooLarge": "Innlimingen er for stor",
