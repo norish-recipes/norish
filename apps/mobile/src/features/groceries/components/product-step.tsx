@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { Checkmark } from "@/components/checkmark";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -27,7 +28,6 @@ function ProductOption({
   onPick: () => void;
 }) {
   const intl = useIntl();
-  const [accent] = useThemeColor(["accent"] as const);
   const format = (amount: number) => formatShelfPrice(intl.locale, amount, row.currency);
 
   return (
@@ -57,7 +57,7 @@ function ProductOption({
         )}
       </View>
       <View className="size-5 items-center justify-center">
-        {picked ? <Ionicons color={accent} name="checkmark" size={18} /> : null}
+        {picked ? <Checkmark /> : null}
       </View>
     </Pressable>
   );

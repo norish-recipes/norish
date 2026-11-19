@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
 import { GlassIconButton } from "@/components/glass";
-import { RoundTick } from "@/components/round-tick";
+import { Tick } from "@/components/tick";
 import { Chip, Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -67,7 +67,7 @@ export function GroceryLineRow({
         testID={testID}
         onPress={onToggle}
       >
-        <RoundTick selected={selected} />
+        <Tick selected={selected} />
         <AmountName amount={amount} className="min-w-0 flex-1 text-base" name={name} />
       </Pressable>
       {canKeep ? (

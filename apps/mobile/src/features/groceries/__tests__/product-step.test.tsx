@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ProductRow as Row } from "@norish/shared-react/groceries";
 import type { StoreDto } from "@norish/shared/contracts";
 
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("react-native", async () => {
   const { createElement } = await import("react");
   const tag =

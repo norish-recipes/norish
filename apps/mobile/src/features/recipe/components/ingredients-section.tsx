@@ -4,7 +4,7 @@ import Animated from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
 import { GlassIconMenu } from "@/components/glass";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
-import { RoundTick } from "@/components/round-tick";
+import { Tick } from "@/components/tick";
 import { Stepper } from "@/components/stepper";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { lightImpact } from "@/lib/haptics";
@@ -147,7 +147,7 @@ export function Line({
         className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
         style={fade}
       >
-        <RoundTick selected={checked} />
+        <Tick selected={checked} />
         <IngredientIcon ingredientId={foodId} size={large ? 34 : undefined} />
         <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
           {amount ? (

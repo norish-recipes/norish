@@ -25,6 +25,7 @@
   [data-theme="light"] {
     --sand: rgb(234 228 214);
     --stroke: oklch(45% 0.03 85 / 0.16);
+    --tick-border: oklch(56% 0.015 80);
     --muted: oklch(30% 0.012 80);
     --field-placeholder: oklch(32% 0.012 80);
     --accent-text: oklch(30% 0.085 150.36);
@@ -35,6 +36,7 @@
   [data-theme="dark"] {
     --sand: rgb(46 42 34);
     --stroke: oklch(100% 0 0 / 0.14);
+    --tick-border: oklch(64% 0.01 80);
     --muted: oklch(89% 0.011 80);
     --field-placeholder: oklch(87% 0.011 80);
     --accent-text: oklch(88% 0.11 150);
@@ -44,4 +46,5 @@
 @theme inline {
   --color-sand: var(--sand);
   --color-stroke: var(--stroke);
+  --color-tick-border: var(--tick-border);
 }

@@ -2,8 +2,8 @@ import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Checkbox, useThemeColor } from "heroui-native";
 
-/** A round tick for a row that carries the press itself; the row's accessibility state says whether it is ticked. */
-export function RoundTick({
+/** The kit's multi-select tick, a circle, for a row that carries the press itself; the row's accessibility state says whether it is ticked. */
+export function Tick({
   selected,
   sizeClass = "size-6",
   color,
@@ -22,7 +22,7 @@ export function RoundTick({
 
   return (
     <Checkbox
-      className={`${sizeClass} rounded-full border-2 bg-transparent shadow-none ${filled ? "border-transparent" : "border-border"}`}
+      className={`${sizeClass} rounded-full border-2 bg-transparent shadow-none ${filled ? "border-transparent" : "border-tick-border"}`}
       importantForAccessibility="no-hide-descendants"
       isSelected={filled}
       pointerEvents="none"

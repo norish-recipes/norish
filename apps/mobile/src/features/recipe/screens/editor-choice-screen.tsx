@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { Checkmark } from "@/components/checkmark";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ChoiceParams } from "../components/editor/choice-request";
@@ -23,7 +22,6 @@ export function EditorChoiceScreen() {
   const [request] = useState(takeChoice);
   const [selected, setSelected] = useState(request?.selected ?? []);
   const [query, setQuery] = useState("");
-  const [accent] = useThemeColor(["accent"] as const);
 
   // A relaunch restores the route without the request that opened it.
   useEffect(() => {
@@ -79,7 +77,7 @@ export function EditorChoiceScreen() {
               onPress={() => pick(item.key)}
             >
               <Text className="text-foreground flex-1 text-[17px]">{item.label}</Text>
-              {ticked ? <Ionicons color={accent} name="checkmark" size={20} /> : null}
+              {ticked ? <Checkmark /> : null}
             </Pressable>
           );
         }}

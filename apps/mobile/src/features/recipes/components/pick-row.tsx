@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { RoundTick } from "@/components/round-tick";
+import { Tick } from "@/components/tick";
 import { Skeleton } from "heroui-native";
 
 /** Where a row sits in its group, which rounds the group's first and last row. */
@@ -60,7 +60,7 @@ export function PickRow({
         </Text>
         {subtitle ? <Text className="text-muted text-[13px]">{subtitle}</Text> : null}
       </View>
-      <RoundTick selected={selected} sizeClass="size-[26px]" />
+      <Tick selected={selected} sizeClass="size-[26px]" />
     </Pressable>
   );
 }
