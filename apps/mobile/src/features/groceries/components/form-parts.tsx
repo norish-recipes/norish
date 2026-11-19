@@ -100,8 +100,3 @@ export function RepeatPills({
     </View>
   );
 }
-
-/** A label over a group of controls. */
-export function FieldLabel({ children }: { children: string }) {
-  return <Text className="text-muted px-2 text-[13px] font-medium">{children}</Text>;
-}

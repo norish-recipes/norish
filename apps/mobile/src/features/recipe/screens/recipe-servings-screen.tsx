@@ -1,5 +1,6 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { SectionLabel } from "@/components/section-label";
 import { useServingsStepper } from "@/components/servings-stepper";
 import { SheetBody } from "@/components/sheet";
 import { Stepper } from "@/components/stepper";
@@ -19,7 +20,6 @@ import { RecipeSheetGate } from "../components/recipe-sheet-gate";
 import { TypedServings } from "../components/typed-servings";
 
 const MULTIPLIERS = [0.5, 1, 2, 3, 4];
-const LABEL = "text-muted px-1 text-[13px] font-semibold";
 
 /** The Servings body: step the servings or pick a scale; each change scales the page. */
 function ServingsBody() {
@@ -43,7 +43,7 @@ function ServingsBody() {
       >
         <TypedServings servings={servings} onChange={setServings} />
       </Stepper>
-      <Text className={LABEL}>{intl.formatMessage({ id: "recipes.detail.multiplier" })}</Text>
+      <SectionLabel>{intl.formatMessage({ id: "recipes.detail.multiplier" })}</SectionLabel>
       <View className="flex-row gap-2">
         {MULTIPLIERS.map((multiplier) => (
           <ToggleChip

@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Card } from "@/components/card";
 import { PillButton } from "@/components/pill-button";
+import { SectionLabel } from "@/components/section-label";
 import { Skeleton } from "heroui-native";
 
 /** A section's label row: its name beside the pill, above the card of lines. */
@@ -38,7 +39,7 @@ export function GroceryLinesSection({
   return (
     <View className="gap-1.5" testID={testID}>
       <View className={HEADER}>
-        <Text className="text-muted pb-1.5 text-[13px] font-semibold">{title}</Text>
+        <SectionLabel className="pb-1.5">{title}</SectionLabel>
         <PillButton label={toggleLabel} testID={`${testID}-toggle`} onPress={onToggleAll} />
       </View>
       <Card>{children}</Card>

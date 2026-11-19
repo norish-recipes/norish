@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { Card } from "@/components/card";
 import { Checkmark } from "@/components/checkmark";
 import { PillButton } from "@/components/pill-button";
+import { SectionLabel } from "@/components/section-label";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SliceHairline } from "@/components/slice-row";
@@ -66,7 +67,7 @@ function ProductOption({
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View className="gap-2" testID="product-group">
-      <Text className="text-muted px-2 text-[13px] font-medium">{title}</Text>
+      <SectionLabel>{title}</SectionLabel>
       <Card>{children}</Card>
     </View>
   );
@@ -184,9 +185,7 @@ export function ProductStep({
         {typing ? (
           <View className="flex-row gap-3">
             <View className="flex-1 gap-2">
-              <Text className="text-muted px-2 text-[13px] font-medium">
-                {text("groceries.picker.byHandPrice")}
-              </Text>
+              <SectionLabel>{text("groceries.picker.byHandPrice")}</SectionLabel>
               <TextField isInvalid={field.priceInvalid}>
                 <SheetInput
                   accessibilityLabel={text("groceries.picker.byHandPrice")}
@@ -199,9 +198,7 @@ export function ProductStep({
               </TextField>
             </View>
             <View className="w-28 gap-2">
-              <Text className="text-muted px-2 text-[13px] font-medium">
-                {text("groceries.picker.byHandCurrency")}
-              </Text>
+              <SectionLabel>{text("groceries.picker.byHandCurrency")}</SectionLabel>
               <TextField isInvalid={field.currencyInvalid}>
                 <SheetInput
                   accessibilityLabel={text("groceries.picker.byHandCurrency")}

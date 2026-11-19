@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { SectionLabel } from "@/components/section-label";
 
 /** One Filters sheet section: a small heading, an optional control beside it, then its choices. */
 export function FilterSection({
@@ -15,7 +16,7 @@ export function FilterSection({
   return (
     <View className="gap-2">
       <View className="min-h-[26px] flex-row items-center justify-between">
-        <Text className="text-muted px-2 text-[13px] font-semibold">{title}</Text>
+        <SectionLabel>{title}</SectionLabel>
         {trailing}
       </View>
       {children}

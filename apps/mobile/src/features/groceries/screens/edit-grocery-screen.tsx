@@ -112,8 +112,6 @@ function EditSheet({
 
   return (
     <GrocerySheet
-      aisleId={aisle.aisleId}
-      aisles={groceryName === "" ? [] : aisle.aisles}
       actions={{
         confirm: {
           label: intl.formatMessage({ id: "common.actions.save" }),
@@ -127,6 +125,8 @@ function EditSheet({
           }),
         ],
       }}
+      aisleId={aisle.aisleId}
+      aisles={groceryName === "" ? [] : aisle.aisles}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField

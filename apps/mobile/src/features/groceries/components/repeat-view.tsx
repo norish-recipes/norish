@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { SectionLabel } from "@/components/section-label";
 import { Segmented } from "@/components/segmented";
 import { SheetBody } from "@/components/sheet";
 import { Stepper } from "@/components/stepper";
@@ -18,7 +19,6 @@ import {
 } from "@norish/shared/lib/recurrence/pattern";
 
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
-import { FieldLabel } from "./form-parts";
 
 const RULES = [
   ["day", "daily", "everyDay"],
@@ -48,7 +48,7 @@ export function RepeatBody({
 
   return (
     <SheetBody contentClassName="gap-2">
-      <FieldLabel>{text("frequency")}</FieldLabel>
+      <SectionLabel>{text("frequency")}</SectionLabel>
       <Segmented
         segments={RULES.map(([rule, key]) => ({
           value: rule,
@@ -62,7 +62,7 @@ export function RepeatBody({
       {pattern ? (
         <>
           <View className="pt-2.5">
-            <FieldLabel>{text("interval")}</FieldLabel>
+            <SectionLabel>{text("interval")}</SectionLabel>
           </View>
           <Stepper
             wide
@@ -82,7 +82,7 @@ export function RepeatBody({
       {recurrenceHasWeekday(pattern) && pattern ? (
         <>
           <View className="pt-2.5">
-            <FieldLabel>{text("onDay")}</FieldLabel>
+            <SectionLabel>{text("onDay")}</SectionLabel>
           </View>
           <Segmented
             segments={WEEKDAYS.map((key, index) => ({

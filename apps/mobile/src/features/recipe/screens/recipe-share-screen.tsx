@@ -3,6 +3,8 @@ import { Share, Text, View } from "react-native";
 import { Card } from "@/components/card";
 import { Pill } from "@/components/pill";
 import { PillButton } from "@/components/pill-button";
+import { SectionLabel } from "@/components/section-label";
+import { SliceHairline } from "@/components/slice-row";
 import { Segmented } from "@/components/segmented";
 import { SheetScrollView } from "@/components/sheet";
 import { useServerUrl } from "@/lib/network/server-url";
@@ -26,7 +28,6 @@ type Expiry = NonNullable<CreateRecipeShareInputDto["expiresIn"]>;
 
 const EXPIRIES: Expiry[] = ["1day", "1week", "1month", "1year", "forever"];
 const STATUS_TONE = { active: "active", expired: "expired", revoked: "default" } as const;
-const LABEL = "text-muted px-1 text-[13px] font-semibold";
 
 /** The link made this visit: the one share whose URL the server still gives. */
 type MadeLink = { id: string; url: string };
@@ -63,7 +64,7 @@ function ShareRow({
 
   return (
     <View className="gap-2.5 px-4 py-3" testID={`recipe-share-${share.id}`}>
-      {first ? null : <View className="bg-line absolute top-0 right-0 left-4 h-px" />}
+      <SliceHairline first={first} />
       <View className="flex-row items-center gap-2">
         <View className="min-w-0 flex-1 gap-0.5">
           <Text
@@ -140,7 +141,7 @@ function ShareBody({
   return (
     <SheetScrollView contentClassName="gap-4">
       <View className="gap-2">
-        <Text className={LABEL}>{t("expiresAfter")}</Text>
+        <SectionLabel>{t("expiresAfter")}</SectionLabel>
         <Segmented
           segments={EXPIRIES.map((expiry) => ({
             value: expiry,
@@ -153,7 +154,7 @@ function ShareBody({
         />
       </View>
 
-      {rows.length > 0 || isLoading ? <Text className={LABEL}>{t("currentLinks")}</Text> : null}
+      {rows.length > 0 || isLoading ? <SectionLabel>{t("currentLinks")}</SectionLabel> : null}
       {isLoading ? (
         <ShareRowsSkeleton />
       ) : rows.length === 0 ? (
@@ -181,9 +182,10 @@ function ShareRowsSkeleton() {
       {[0, 1].map((row) => (
         <View
           key={row}
-          className={`flex-row items-center gap-3 py-3 pr-3 pl-4 ${row === 0 ? "" : "border-separator border-t"}`}
+          className="flex-row items-center gap-3 py-3 pr-3 pl-4"
           testID="recipe-share-skeleton"
         >
+          <SliceHairline first={row === 0} />
           <View className="min-w-0 flex-1 gap-1.5">
             <Skeleton className="h-5 w-44 rounded-md" />
             <Skeleton className="h-4 w-40 rounded-md" />

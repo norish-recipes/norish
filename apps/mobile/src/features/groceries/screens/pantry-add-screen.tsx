@@ -1,3 +1,4 @@
+import { SectionLabel } from "@/components/section-label";
 import type { SheetSearchInput } from "@/components/sheet-search-field";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
@@ -90,9 +91,7 @@ export function PantryAddScreen() {
                 onSubmit={submit}
               />
               {fromYourRecipes ? (
-                <Text className="text-muted px-2 pt-3 text-[13px] font-medium">
-                  {intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}
-                </Text>
+                <SectionLabel className="pt-3">{intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}</SectionLabel>
               ) : null}
             </View>
           }
