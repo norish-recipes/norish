@@ -4,7 +4,7 @@
 
 **Blocked by:** 50, 51, 52
 
-**Status:** ready
+**Status:** done
 
 - [x] Each listed sheet matches its board's structure (sections, row ends, which controls, order) in both themes; no sheet restyles a kit control locally (no ad-hoc fills, radii, glass).
 - [x] Add recipe: the clipboard row is a card row with a small solid-accent Import. Import from photos: photo strip + Camera/Photo library rows. Share: inset expiry switch, link rows with Copy/Share/Reactivate pill buttons and Active/Expired tags, a no-links state. Timers: solid body icon buttons, the dismiss is a solid circle with a red cross. Add to groceries: servings stepper right-aligned. Repeat: sand stepper for the interval.
@@ -56,3 +56,4 @@
   6. reject: the decimal pad has no return key; tapping outside the field ends editing, as in the other sheets' numeric fields.
 
 - Round 2 fixes: 1-5 done (paste label restored; typed servings leave edit on outside changes, tested; label inset once; choice rows report selected; delete-store alert counts all lines, tested). 6 rejected.
+- Exit gate on `cab1ea64b`: all six gates exit 0 (fixer's run after the last change).
