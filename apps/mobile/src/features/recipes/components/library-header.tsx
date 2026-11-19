@@ -59,7 +59,7 @@ function LibraryFiltersButton() {
 
   return (
     <FiltersButton
-      count={filtersOn ? 1 : 0}
+      on={filtersOn}
       label={intl.formatMessage({ id: "common.filters.title" })}
       testID="library-filters-button"
     />
