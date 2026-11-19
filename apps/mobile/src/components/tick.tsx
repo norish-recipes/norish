@@ -5,13 +5,10 @@ import { Checkbox, useThemeColor } from "heroui-native";
 /** The kit's multi-select tick, a circle, for a row that carries the press itself; the row's accessibility state says whether it is ticked. */
 export function Tick({
   selected,
-  sizeClass = "size-6",
   color,
   partial = false,
 }: {
   selected: boolean;
-  /** The tick's width and height classes, as they are whole utilities. */
-  sizeClass?: "size-6" | "size-[26px]";
   /** Rings and fills the tick in this colour instead of the theme's. */
   color?: string;
   /** Some of a group's lines are ticked: filled with a dash. */
@@ -22,7 +19,7 @@ export function Tick({
 
   return (
     <Checkbox
-      className={`${sizeClass} rounded-full border-2 bg-transparent shadow-none ${filled ? "border-transparent" : "border-tick-border"}`}
+      className={`size-6 rounded-full border-2 bg-transparent shadow-none ${filled ? "border-transparent" : "border-tick-border"}`}
       importantForAccessibility="no-hide-descendants"
       isSelected={filled}
       pointerEvents="none"

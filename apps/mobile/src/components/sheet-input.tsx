@@ -1,9 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text } from "react-native";
-import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Input, InputGroup, TextArea } from "heroui-native";
+import { Input, InputGroup, TextArea, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /** The one field: the sand fill, a capsule 48 pt tall, no ring, shadow or focus outline. */
@@ -34,7 +33,7 @@ export function SheetInput({
   onClear?: () => void;
 }) {
   const intl = useIntl();
-  const placeholder = useTokenColor("field-placeholder");
+  const [muted] = useThemeColor(["muted"] as const);
   const clear =
     onClear && props.value ? (
       <Pressable
@@ -44,7 +43,7 @@ export function SheetInput({
         testID={`${props.testID}-clear`}
         onPress={onClear}
       >
-        <Ionicons color={placeholder} name="close-circle" size={20} />
+        <Ionicons color={muted} name="close-circle" size={20} />
       </Pressable>
     ) : null;
 
