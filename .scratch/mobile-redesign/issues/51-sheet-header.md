@@ -12,3 +12,8 @@
 - [ ] Tests for the subtitle and the menu/secondary split; gates green.
 
 ## Comments
+
+- Native bar API has no title subtitle, so `ModalHeader` takes `subtitle` and renders a two-line `headerTitle` view (17 semibold foreground, 12.5 muted, one line each) only when it is set; `Sheet` forwards it and no longer paints a body line.
+- The enabled prominent primary gets `tintColor` accent; disabled sets none (plain glass). Scroll-edge effect untouched.
+- `SheetRow`/`TITLE_INSET` stay (add-to-groceries aligns rows with the title inset); the centred title no longer lines up with them, ticket 53 should revisit.
+- Tests extend the existing modal-header suite; no device check (ticket 55).
