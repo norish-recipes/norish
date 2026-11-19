@@ -16,8 +16,8 @@ import {
   withoutHiddenFilters,
 } from "../utils/search-chips";
 
-const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
-const garlic = { id: "a0000000-0000-4000-8000-000000000002", name: "garlic" };
+const onion = "a0000000-0000-4000-8000-000000000001";
+const garlic = "a0000000-0000-4000-8000-000000000002";
 
 const applied = {
   ...DEFAULT_RECIPE_FILTERS,
@@ -53,8 +53,8 @@ describe("filter chips", () => {
       "category:Dinner",
       "tag:vegan",
       "tag:quick",
-      `ingredient:${onion.id}`,
-      `ingredient:${garlic.id}`,
+      `ingredient:${onion}`,
+      `ingredient:${garlic}`,
       "time:30",
       "rating:4",
       "favorites:true",
@@ -105,11 +105,14 @@ describe("filter chips", () => {
       say: (id: string, values?: Record<string, string | number>) =>
         values ? `${id}:${Object.values(values).join()}` : id,
       category: (name: string) => `cat ${name}`,
+      ingredient: (id: string) => (id === onion ? "onion" : ""),
     };
 
     expect(chipLabel({ kind: "category", value: "Dinner" }, speech)).toBe("cat Dinner");
     expect(chipLabel({ kind: "tag", value: "vegan" }, speech)).toBe("vegan");
     expect(chipLabel({ kind: "ingredient", value: onion }, speech)).toBe("onion");
+    // A food that no longer resolves says nothing, and its chip still removes it.
+    expect(chipLabel({ kind: "ingredient", value: garlic }, speech)).toBe("");
     expect(chipLabel({ kind: "time", value: 30 }, speech)).toBe(
       "common.filters.cookingTimeUnder30"
     );
@@ -122,7 +125,7 @@ describe("filter chips", () => {
 
 describe("a chip's icon", () => {
   it("is the Ingredient's for an Ingredient chip and none for the rest", () => {
-    expect(chipIcon({ kind: "ingredient", value: onion })).toBe(onion.id);
+    expect(chipIcon({ kind: "ingredient", value: onion })).toBe(onion);
     expect(chipIcon({ kind: "tag", value: "vegan" })).toBeNull();
     expect(chipIcon({ kind: "time", value: 30 })).toBeNull();
   });

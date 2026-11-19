@@ -22,6 +22,7 @@ export {
   useHeldIngredient,
   useIngredientKinds,
   useIngredientListQuery,
+  useIngredientNames,
   useIngredientQuery,
   useIngredientSearchQuery,
   useIngredientSpellingsQuery,

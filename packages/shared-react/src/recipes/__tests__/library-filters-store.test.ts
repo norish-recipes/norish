@@ -63,10 +63,10 @@ describe("createLibraryFiltersStore", () => {
     });
   });
 
-  it("narrows to an Ingredient once, keeping its name, and clears it with the chips", () => {
+  it("narrows to an Ingredient once, by id, and clears it with the chips", () => {
     const store = createLibraryFiltersStore(undefined);
-    const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
-    const garlic = { id: "a0000000-0000-4000-8000-000000000002", name: "garlic" };
+    const onion = "a0000000-0000-4000-8000-000000000001";
+    const garlic = "a0000000-0000-4000-8000-000000000002";
 
     store.getState().addIngredient(onion);
     store.getState().addIngredient(garlic);
@@ -81,10 +81,7 @@ describe("createLibraryFiltersStore", () => {
 
   it("stops narrowing to more Ingredients than a search accepts", () => {
     const store = createLibraryFiltersStore(undefined);
-    const ingredient = (n: number) => ({
-      id: `a0000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
-      name: `food ${n}`,
-    });
+    const ingredient = (n: number) => `a0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
     for (let n = 0; n < MAX_FILTER_INGREDIENTS + 1; n++)
       store.getState().addIngredient(ingredient(n));

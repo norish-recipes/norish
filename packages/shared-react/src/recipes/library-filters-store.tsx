@@ -8,7 +8,6 @@ import { createStore } from "zustand";
 import type { SearchField } from "@norish/shared/contracts";
 import type {
   CanonicalRecipeFilters,
-  FilterIngredient,
   PersistedRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
 import {
@@ -32,7 +31,7 @@ type LibraryFiltersState = {
   clearFilters: () => void;
   toggleSearchField: (field: SearchField) => void;
   /** Narrows to an Ingredient; one already narrowed to, or one past the limit a search accepts, changes nothing. */
-  addIngredient: (ingredient: FilterIngredient) => void;
+  addIngredient: (ingredientId: string) => void;
   /** The browser's stored filters win over the cookie's: a kept document can be old. */
   applyStored: (stored: PersistedRecipeFilters | null) => void;
 };
@@ -64,15 +63,15 @@ export function createLibraryFiltersStore(
           searchFields: toggleSearchFieldIn(state.filters.searchFields, field),
         },
       })),
-    addIngredient: (ingredient) =>
+    addIngredient: (ingredientId) =>
       set((state) =>
         state.filters.ingredients.length >= MAX_FILTER_INGREDIENTS ||
-        state.filters.ingredients.some((item) => item.id === ingredient.id)
+        state.filters.ingredients.includes(ingredientId)
           ? state
           : {
               filters: {
                 ...state.filters,
-                ingredients: [...state.filters.ingredients, ingredient],
+                ingredients: [...state.filters.ingredients, ingredientId],
               },
             }
       ),

@@ -1,16 +1,14 @@
 import type { HiddenItemVisibility } from "@norish/shared-react/reader";
-import type {
-  CanonicalRecipeFilters,
-  FilterIngredient,
-} from "@norish/shared/contracts/filter-contract";
+import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { COOKING_TIME_OPTIONS } from "@norish/shared-react/recipes";
 
 type Patch = Partial<CanonicalRecipeFilters>;
 
-/** How a chip says its filter: a message by id, and a category by its name. */
+/** How a chip says its filter: a message by id, a category by its name, an Ingredient by its id. */
 export type ChipSpeech = {
   say: (id: string, values?: Record<string, string | number>) => string;
   category: (name: string) => string;
+  ingredient: (ingredientId: string) => string;
 };
 
 /** What one kind of chip knows: the values it is applied with, how it reads and how it is removed. */
@@ -20,8 +18,6 @@ type ChipKind<V> = {
   remove: (filters: CanonicalRecipeFilters, value: V) => Patch;
   /** The Ingredient whose icon the chip shows; absent for no icon. */
   icon?: (value: V) => string;
-  /** What tells one value from another, for a key; absent for the value itself. */
-  key?: (value: V) => string;
   /** Whether the reader's Hidden Items leave this filter on offer; absent for always. */
   offered?: (visibility: HiddenItemVisibility) => boolean;
 };
@@ -44,13 +40,12 @@ const CHIP_KINDS = {
       searchTags: filters.searchTags.filter((item) => item !== value),
     }),
   }),
-  ingredient: kind<FilterIngredient>({
+  ingredient: kind<string>({
     values: (filters) => filters.ingredients,
-    label: (value) => value.name,
-    key: (value) => value.id,
-    icon: (value) => value.id,
+    label: (value, { ingredient }) => ingredient(value),
+    icon: (value) => value,
     remove: (filters, value) => ({
-      ingredients: filters.ingredients.filter((item) => item.id !== value.id),
+      ingredients: filters.ingredients.filter((item) => item !== value),
     }),
   }),
   time: kind<number>({
@@ -137,5 +132,4 @@ export function visibleFilters(filters: CanonicalRecipeFilters, visibility: Hidd
 }
 
 /** A key for a chip that is stable while the others come and go. */
-export const chipKey = (chip: FilterChip) =>
-  `${chip.kind}:${kindOf(chip).key?.(chip.value) ?? String(chip.value)}`;
+export const chipKey = (chip: FilterChip) => `${chip.kind}:${String(chip.value)}`;

@@ -9,7 +9,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIntl } from "react-intl";
 
 import type { SortOrder } from "@norish/shared/contracts";
-import { useIngredientIcons } from "@norish/shared-react/ingredients";
+import { useIngredientIcons, useIngredientNames } from "@norish/shared-react/ingredients";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 
 import type { ChipSpeech, FilterChip } from "../utils/search-chips";
@@ -25,17 +25,31 @@ const SORT_LABELS: Record<SortOrder, string> = {
   titleDesc: "recipes.search.sortZA",
 };
 
-function useChipSpeech(): ChipSpeech {
+/** How chips speak; an Ingredient is named by its current name, empty until read or if gone. */
+function useChipSpeech(ingredientIds: readonly string[]): ChipSpeech {
   const intl = useIntl();
   const category = useCategoryLabel();
+  const names = useIngredientNames(ingredientIds, intl.locale);
 
-  return { say: (id, values) => intl.formatMessage({ id }, values), category };
+  return {
+    say: (id, values) => intl.formatMessage({ id }, values),
+    category,
+    ingredient: (ingredientId) => names.get(ingredientId) ?? "",
+  };
 }
 
-function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove: () => void }) {
+function FilterChipView({
+  chip,
+  speech,
+  onRemove,
+}: {
+  chip: FilterChip;
+  speech: ChipSpeech;
+  onRemove: () => void;
+}) {
   const intl = useIntl();
   const muted = useTokenColor("muted");
-  const label = chipLabel(chip, useChipSpeech());
+  const label = chipLabel(chip, speech);
   const icon = chipIcon(chip);
 
   return (
@@ -91,7 +105,8 @@ export function ChipRow({ chips }: { chips: FilterChip[] }) {
   const setFilters = useLibraryFilters((state) => state.setFilters);
 
   // One read for every Ingredient chip's icon; the row that added it has usually read it already.
-  useIngredientIcons(filters.ingredients.map((ingredient) => ingredient.id));
+  useIngredientIcons(filters.ingredients);
+  const speech = useChipSpeech(filters.ingredients);
 
   return (
     <ScrollView
@@ -103,6 +118,7 @@ export function ChipRow({ chips }: { chips: FilterChip[] }) {
         <FilterChipView
           key={chipKey(chip)}
           chip={chip}
+          speech={speech}
           onRemove={() => setFilters(withoutChip(filters, chip))}
         />
       ))}

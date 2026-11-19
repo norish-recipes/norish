@@ -71,6 +71,26 @@ export function useIngredientQuery(ingredientId: string, locale: string) {
   return data ?? null;
 }
 
+/** Each food's name by id, as `useIngredientQuery` reads one; a food not read yet or gone has none. */
+export function useIngredientNames(
+  ingredientIds: readonly string[],
+  locale: string
+): ReadonlyMap<string, string> {
+  const trpc = useTRPC();
+
+  return useQueries({
+    queries: ingredientIds.map((ingredientId) =>
+      trpc.ingredients.get.queryOptions({ ingredientId, locale })
+    ),
+    combine: (results) =>
+      new Map(
+        results.flatMap((result, index) =>
+          result.data ? [[ingredientIds[index]!, result.data.name]] : []
+        )
+      ),
+  });
+}
+
 /** That read as the cache holds it, never fetched here: what a mounted `useIngredientQuery` read. */
 export function useHeldIngredient(ingredientId: string, locale: string) {
   const trpc = useTRPC();

@@ -95,13 +95,11 @@ describe("useLibraryFiltersPersistence", () => {
     );
 
     act(() =>
-      result.current
-        .getState()
-        .setFilters({
-          sortMode: "dateAsc",
-          rawInput: "soup",
-          ingredients: [{ id: "a0000000-0000-4000-8000-000000000001", name: "onion" }],
-        })
+      result.current.getState().setFilters({
+        sortMode: "dateAsc",
+        rawInput: "soup",
+        ingredients: ["a0000000-0000-4000-8000-000000000001"],
+      })
     );
 
     expect(values[RECIPE_FILTERS_STORAGE_KEY]).toBe(

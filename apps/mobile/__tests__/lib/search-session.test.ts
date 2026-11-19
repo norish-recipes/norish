@@ -33,9 +33,7 @@ describe("the Search session", () => {
   });
 
   it("drops its Ingredient filters when the session ends", () => {
-    searchStore
-      .getState()
-      .addIngredient({ id: "a0000000-0000-4000-8000-000000000001", name: "onion" });
+    searchStore.getState().addIngredient("a0000000-0000-4000-8000-000000000001");
     resetSearchSession();
 
     expect(searchStore.getState().filters.ingredients).toEqual([]);

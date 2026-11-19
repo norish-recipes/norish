@@ -32,12 +32,12 @@ describe("recipe filter contract", () => {
   });
 
   it("sends Ingredient ids only when there are some, and never persists them", () => {
-    const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
+    const onion = "a0000000-0000-4000-8000-000000000001";
 
     expect(
       toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, ingredients: [onion] })
     ).toMatchObject({
-      ingredientIds: [onion.id],
+      ingredientIds: [onion],
     });
     expect(toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS)).not.toHaveProperty("ingredientIds");
     expect(DEFAULT_PERSISTED_RECIPE_FILTERS).not.toHaveProperty("ingredients");
@@ -52,7 +52,7 @@ describe("recipe filter contract", () => {
   });
 
   it("keeps the search text and Ingredients out of what is persisted", () => {
-    const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
+    const onion = "a0000000-0000-4000-8000-000000000001";
     const persisted = persistedRecipeFilters({
       ...DEFAULT_RECIPE_FILTERS,
       rawInput: "soup",

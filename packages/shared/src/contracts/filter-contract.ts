@@ -11,14 +11,11 @@ import {
 } from "@norish/shared/contracts";
 import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 
-/** An Ingredient filter, with the name its chip says; its icon is read by id. */
-export type FilterIngredient = { id: string; name: string };
-
 export type CanonicalRecipeFilters = {
   rawInput: string;
   searchTags: string[];
-  /** Mobile Search only, never persisted: the Ingredients a recipe must name, or a kind of. */
-  ingredients: FilterIngredient[];
+  /** Mobile Search only, never persisted: ids of the Ingredients a recipe must name, or a kind of. */
+  ingredients: string[];
   searchFields: SearchField[];
   filterMode: FilterMode;
   sortMode: SortOrder;
@@ -203,9 +200,7 @@ export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
     tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
     categories: filters.categories.length > 0 ? filters.categories : undefined,
     // Left out unless set: web never sets it, so its input and cache keys hold no such field.
-    ...(filters.ingredients.length > 0
-      ? { ingredientIds: filters.ingredients.map((ingredient) => ingredient.id) }
-      : {}),
+    ...(filters.ingredients.length > 0 ? { ingredientIds: filters.ingredients } : {}),
     filterMode: filters.filterMode,
     sortMode: filters.sortMode,
     minRating: filters.minRating ?? undefined,
