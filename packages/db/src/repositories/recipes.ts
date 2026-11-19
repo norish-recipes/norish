@@ -479,26 +479,25 @@ const MATCH_SNIPPET_OPTIONS =
   "MaxFragments=1, MinWords=6, MaxWords=14, StartSel=\uE000, StopSel=\uE001";
 const plainSnippet = (snippet: string) => snippet.replace(/[\uE000\uE001]/g, "");
 
-/**
- * Why each of `ids` matched `search`: the strongest hit within `searchFields`,
- * ordered title > tag > ingredient > description > step.
- *
- * Each field is tested with the same tsquery `recipeSearchSql` filters by. The
- * query is an OR of prefix terms, so testing a tag, a line or a step on its own
- * agrees with testing the field's concatenated vector. It runs for the page
- * being returned only. Written with `"recipes"."…"` by hand like the builder.
- */
-export async function recipeSearchMatches(
+/** A `#` line titles the lines under it, in ingredients and steps alike. */
+const HEADING_PATTERN = "^\\s*#";
+const HEADING_MARKS = "^#+\\s*";
+
+type MatchRow = {
+  id: string;
+  title_hit: boolean;
+  tag: string | null;
+  ingredient: { amount: number | null; unit: string | null; name: string } | null;
+  description: string | null;
+  step: { number: number | null; snippet: string } | null;
+};
+
+/** One row per recipe of `ids`: what each in-scope field holds that `query` finds. */
+async function recipeMatchRows(
   ids: string[],
-  search: string | undefined,
-  searchFields: SearchField[]
-): Promise<Map<string, LibraryMatchDTO>> {
-  const terms = search ? searchTsqueryTerms(search) : null;
-  const matches = new Map<string, LibraryMatchDTO>();
-
-  if (!terms || ids.length === 0 || searchFields.length === 0) return matches;
-
-  const query = sql`to_tsquery('simple', ${terms})`;
+  searchFields: SearchField[],
+  query: ReturnType<typeof sql>
+): Promise<MatchRow[]> {
   const inScope = (field: SearchField) => searchFields.includes(field);
   const idList = sql.join(
     ids.map((id) => sql`${id}::uuid`),
@@ -528,14 +527,17 @@ export async function recipeSearchMatches(
       ${
         inScope("ingredients")
           ? sql`(
-              SELECT match_ri.name
+              SELECT json_build_object(
+                'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name)
               FROM ${recipeIngredients} match_ri
               WHERE match_ri.recipe_id = "recipes"."id"
+                AND match_ri.name !~ ${HEADING_PATTERN}
                 AND to_tsvector('simple', match_ri.name) @@ ${query}
-              ORDER BY match_ri."order" NULLS LAST, match_ri.created_at, match_ri.id
+              ORDER BY (match_ri.system_used <> "recipes"."system_used"),
+                match_ri."order" NULLS LAST, match_ri.created_at, match_ri.id
               LIMIT 1
             )`
-          : sql`NULL::text`
+          : sql`NULL::json`
       } AS ingredient,
       ${
         inScope("description")
@@ -547,42 +549,75 @@ export async function recipeSearchMatches(
       ${
         inScope("steps")
           ? sql`(
-              SELECT numbered.n || ':' || ts_headline('simple', numbered.step, ${query}, ${MATCH_SNIPPET_OPTIONS})
+              SELECT json_build_object(
+                'number', numbered.n,
+                'snippet', ts_headline('simple', numbered.body, ${query}, ${MATCH_SNIPPET_OPTIONS}))
               FROM (
-                SELECT match_step.step,
-                  row_number() OVER (ORDER BY match_step."order" NULLS LAST, match_step.created_at, match_step.id) AS n
+                SELECT match_step.system_used,
+                  CASE WHEN match_step.step ~ ${HEADING_PATTERN}
+                    THEN regexp_replace(btrim(match_step.step), ${HEADING_MARKS}, '')
+                    ELSE match_step.step END AS body,
+                  CASE WHEN match_step.step ~ ${HEADING_PATTERN} THEN NULL
+                    ELSE count(*) FILTER (WHERE match_step.step !~ ${HEADING_PATTERN}) OVER (
+                      PARTITION BY match_step.system_used
+                      ORDER BY match_step."order" NULLS LAST, match_step.created_at, match_step.id
+                    ) END AS n
                 FROM ${stepsTable} match_step
                 WHERE match_step.recipe_id = "recipes"."id"
               ) numbered
-              WHERE to_tsvector('simple', numbered.step) @@ ${query}
-              ORDER BY numbered.n
+              WHERE to_tsvector('simple', numbered.body) @@ ${query}
+              ORDER BY (numbered.n IS NULL), (numbered.system_used <> "recipes"."system_used"), numbered.n
               LIMIT 1
             )`
-          : sql`NULL::text`
+          : sql`NULL::json`
       } AS step
     FROM ${recipes}
     WHERE "recipes"."id" IN (${idList})
   `);
 
-  const rows = (result as unknown as { rows: Record<string, string | boolean | null>[] }).rows;
+  return (result as unknown as { rows: MatchRow[] }).rows;
+}
 
-  for (const row of rows) {
-    const id = row.id as string;
+function toLibraryMatch(row: MatchRow): LibraryMatchDTO | null {
+  if (row.title_hit) return { field: "title" };
+  if (row.tag) return { field: "tags", tag: row.tag };
+  if (row.ingredient) return { field: "ingredients", ...row.ingredient };
+  if (row.description) return { field: "description", snippet: plainSnippet(row.description) };
+  if (row.step) {
+    const snippet = plainSnippet(row.step.snippet);
 
-    if (row.title_hit === true) matches.set(id, { field: "title" });
-    else if (row.tag) matches.set(id, { field: "tags", text: row.tag as string });
-    else if (row.ingredient)
-      matches.set(id, { field: "ingredients", text: row.ingredient as string });
-    else if (row.description)
-      matches.set(id, { field: "description", text: plainSnippet(row.description as string) });
-    else if (row.step) {
-      const [number, ...snippet] = (row.step as string).split(":");
+    return row.step.number === null
+      ? { field: "steps", snippet }
+      : { field: "steps", snippet, number: row.step.number };
+  }
 
-      matches.set(id, {
-        field: "steps",
-        step: Number(number),
-        text: plainSnippet(snippet.join(":")),
-      });
+  return null;
+}
+
+/** The strongest hit per recipe in scope, title > tag > ingredient > description > step. A phrase
+ * spanning two rows ("chicken,rice") matches no one row, so those recipes are read again as an OR. */
+export async function recipeSearchMatches(
+  ids: string[],
+  search: string | undefined,
+  searchFields: SearchField[]
+): Promise<Map<string, LibraryMatchDTO>> {
+  const terms = search ? searchTsqueryTerms(search) : null;
+  const matches = new Map<string, LibraryMatchDTO>();
+
+  if (!terms || ids.length === 0 || searchFields.length === 0) return matches;
+
+  const exact = sql`to_tsquery('simple', ${terms})`;
+  const anyWord = sql`to_tsquery('simple', replace(to_tsquery('simple', ${terms})::text, ' <-> ', ' | '))`;
+
+  for (const query of [exact, anyWord]) {
+    const pending = ids.filter((id) => !matches.has(id));
+
+    if (pending.length === 0) break;
+
+    for (const row of await recipeMatchRows(pending, searchFields, query)) {
+      const match = toLibraryMatch(row);
+
+      if (match) matches.set(row.id, match);
     }
   }
 

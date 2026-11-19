@@ -618,7 +618,7 @@ describe("the Library union", () => {
     it("reports the tag", async () => {
       await seedBasil(["tags"]);
 
-      expect(await matchOf({ searchFields: [...ALL] })).toEqual({ field: "tags", text: "basil" });
+      expect(await matchOf({ searchFields: [...ALL] })).toEqual({ field: "tags", tag: "basil" });
     });
 
     it("reports the ingredient line as written", async () => {
@@ -626,7 +626,9 @@ describe("the Library union", () => {
 
       expect(await matchOf({ searchFields: [...ALL] })).toEqual({
         field: "ingredients",
-        text: "fresh basil leaves",
+        amount: null,
+        unit: null,
+        name: "fresh basil leaves",
       });
     });
 
@@ -635,9 +637,28 @@ describe("the Library union", () => {
 
       const match = await matchOf({ searchFields: [...ALL] });
 
+      expect(match).toEqual({
+        field: "description",
+        snippet: "bright sauce made with fresh basil leaves and pine nuts for pasta",
+      });
+    });
+
+    it("cuts a long description to a short snippet around the hit", async () => {
+      await deleteRecipeById(baseRecipeId);
+      await createTestRecipe(ownerId, {
+        name: "Green sauce",
+        description: `${"Once upon a time there was a very long introduction. ".repeat(8)}Then add the basil and stir.`,
+      });
+
+      const match = await matchOf({ searchFields: ["description"] });
+
       expect(match?.field).toBe("description");
-      expect(match?.text).toContain("basil");
-      expect(match?.text).not.toContain("<");
+
+      const snippet = match && "snippet" in match ? match.snippet : "";
+
+      expect(snippet).toContain("basil");
+      expect(snippet.split(/\s+/).length).toBeLessThanOrEqual(15);
+      expect(snippet).not.toMatch(/[<>\uE000\uE001]/);
     });
 
     it("reports the step with its number", async () => {
@@ -645,8 +666,7 @@ describe("the Library union", () => {
 
       const match = await matchOf({ searchFields: [...ALL] });
 
-      expect(match).toMatchObject({ field: "steps", step: 2 });
-      expect(match?.text).toContain("basil");
+      expect(match).toEqual({ field: "steps", number: 2, snippet: "Pound the basil with salt" });
     });
 
     it("prefers title, then tag, ingredient, description, step", async () => {
@@ -686,6 +706,196 @@ describe("the Library union", () => {
 
       expect(result.items).toHaveLength(1);
       expect(result.items.every((item) => item.kind === "recipe" && item.match)).toBe(true);
+    });
+
+    it("takes the snippet from the step that matched, not its neighbours", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      for (const [order, step] of [
+        ["0", "Wash the leaves and dry them well on a clean towel before chopping anything"],
+        [
+          "1",
+          `${"Heat the pan slowly and wait until it is properly hot. ".repeat(4)}Add the basil.`,
+        ],
+        ["2", "Season with pepper and serve warm with fresh bread and a little olive oil"],
+      ] as const) {
+        await createTestRecipeStep(recipe.id, "metric", { step, order });
+      }
+
+      const match = await matchOf({ searchFields: ["steps"] });
+
+      expect(match).toMatchObject({ field: "steps", number: 2 });
+
+      const snippet = match && "snippet" in match ? match.snippet : "";
+
+      expect(snippet).toContain("basil");
+      expect(snippet).not.toMatch(/towel|pepper/);
+      expect(snippet.split(/\s+/).length).toBeLessThanOrEqual(15);
+    });
+
+    it("reports a matching step heading as a plain snippet, without number or #", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await createTestRecipeStep(recipe.id, "metric", { step: "# The basil", order: "0" });
+      await createTestRecipeStep(recipe.id, "metric", { step: "Stir well", order: "1" });
+
+      const match = await matchOf({ searchFields: ["steps"] });
+
+      expect(match).toEqual({ field: "steps", snippet: expect.stringContaining("basil") });
+      expect(match).not.toHaveProperty("number");
+      expect(JSON.stringify(match)).not.toContain("#");
+    });
+
+    it("prefers a step over a heading that also matches", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await createTestRecipeStep(recipe.id, "metric", { step: "# The basil", order: "0" });
+      await createTestRecipeStep(recipe.id, "metric", { step: "Pound the basil", order: "1" });
+
+      expect(await matchOf({ searchFields: ["steps"] })).toEqual({
+        field: "steps",
+        number: 1,
+        snippet: "Pound the basil",
+      });
+    });
+
+    it("reports the ingredient line as written, with its amount and unit", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await insertTestRecipeLine({
+        recipeId: recipe.id,
+        name: "basil leaves",
+        amount: "4",
+        unit: "g",
+        order: "0",
+      });
+
+      expect(await matchOf({ searchFields: ["ingredients"] })).toEqual({
+        field: "ingredients",
+        amount: 4,
+        unit: "g",
+        name: "basil leaves",
+      });
+    });
+
+    it("skips a heading line and takes the next ingredient that matches", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "# For the basil", order: "0" });
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "basil leaves", order: "1" });
+
+      expect(await matchOf({ searchFields: ["ingredients"] })).toMatchObject({
+        field: "ingredients",
+        name: "basil leaves",
+      });
+    });
+
+    it("takes an ingredient line from the recipe's own system, once", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await insertTestRecipeLine({
+        recipeId: recipe.id,
+        name: "basil leaves",
+        amount: "1",
+        unit: "cup",
+        systemUsed: "us",
+        order: "0",
+      });
+      await insertTestRecipeLine({
+        recipeId: recipe.id,
+        name: "basil leaves",
+        amount: "240",
+        unit: "ml",
+        systemUsed: "metric",
+        order: "1",
+      });
+
+      expect(await matchOf({ searchFields: ["ingredients"] })).toMatchObject({
+        amount: 240,
+        unit: "ml",
+      });
+    });
+
+    it("numbers the step as the recipe page does: headings take no number", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      for (const [order, step] of [
+        ["0", "# Prepare"],
+        ["1", "Chop the onion"],
+        ["2", "# Cook"],
+        ["3", "Pound the basil with salt"],
+      ] as const) {
+        await createTestRecipeStep(recipe.id, "metric", { step, order });
+      }
+
+      expect(await matchOf({ searchFields: ["steps"] })).toMatchObject({
+        field: "steps",
+        number: 2,
+      });
+    });
+
+    it("numbers a step within its own measurement system", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      for (const [system, order, step] of [
+        ["us", "0", "Preheat the pan"],
+        ["us", "1", "Chop the onion"],
+        ["us", "2", "Pound the basil with salt"],
+        ["metric", "3", "Chop the onion"],
+        ["metric", "4", "Pound the basil with salt"],
+      ] as const) {
+        await createTestRecipeStep(recipe.id, system, { step, order });
+      }
+
+      expect(await matchOf({ searchFields: ["steps"] })).toMatchObject({
+        field: "steps",
+        number: 2,
+      });
+    });
+
+    it("gives a recipe whose phrase spans two tags a match", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      for (const [order, name] of [
+        [0, "chicken"],
+        [1, "rice"],
+      ] as const) {
+        const [tag] = await getTestDb()
+          .insert(tagsTable)
+          .values({ name })
+          .onConflictDoNothing()
+          .returning();
+
+        await getTestDb().insert(recipeTags).values({ recipeId: recipe.id, tagId: tag!.id, order });
+      }
+
+      const result = await listLibrary(viewer(ownerId), {
+        ...base,
+        search: "chicken,rice",
+        searchFields: ["tags"],
+        withMatch: true,
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toMatchObject({ match: { field: "tags" } });
     });
 
     it("carries no match without text, without the flag, or on a cookbook", async () => {

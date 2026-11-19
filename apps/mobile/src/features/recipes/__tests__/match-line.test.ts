@@ -55,14 +55,24 @@ describe("matchLine", () => {
     });
   });
 
-  it("labels a tag and an ingredient and highlights the hit", () => {
-    expect(matchLine({ field: "tags", text: "Soup" }, "soup")).toEqual({
+  it("labels a tag and highlights the hit", () => {
+    expect(matchLine({ field: "tags", tag: "Soup" }, "soup")).toEqual({
       labelId: "recipes.search.matchTag",
       segments: [{ text: "Soup", highlighted: true }],
     });
-    expect(matchLine({ field: "ingredients", text: "chicken stock" }, "chicken")).toEqual({
+  });
+
+  it("puts the formatted amount and unit before the ingredient, highlighting only its name", () => {
+    expect(
+      matchLine(
+        { field: "ingredients", amount: 4, unit: "g", name: "chicken stock" },
+        "chicken",
+        "4 g"
+      )
+    ).toEqual({
       labelId: "recipes.search.matchIngredient",
       segments: [
+        { text: "4 g ", highlighted: false },
         { text: "chicken", highlighted: true },
         { text: " stock", highlighted: false },
       ],
@@ -70,13 +80,40 @@ describe("matchLine", () => {
   });
 
   it("numbers a step", () => {
-    expect(matchLine({ field: "steps", step: 3, text: "Pound the basil" }, "basil")).toMatchObject({
-      labelId: "recipes.search.matchStep",
-      labelValues: { number: 3 },
-    });
+    expect(
+      matchLine({ field: "steps", number: 3, snippet: "Pound the basil" }, "basil")
+    ).toMatchObject({ labelId: "recipes.search.matchStep", labelValues: { number: 3 } });
+  });
+
+  it("shows a step heading, which has no number, as a plain snippet", () => {
+    expect(matchLine({ field: "steps", snippet: "The basil" }, "basil").labelId).toBeNull();
   });
 
   it("shows a description snippet without a label", () => {
-    expect(matchLine({ field: "description", text: "fresh basil" }, "basil").labelId).toBeNull();
+    expect(matchLine({ field: "description", snippet: "fresh basil" }, "basil").labelId).toBeNull();
+  });
+
+  it("shows snippets and ingredient names as plain text, without markdown", () => {
+    const text = (segments: { text: string }[]) => segments.map((segment) => segment.text).join("");
+
+    expect(
+      text(
+        matchLine(
+          { field: "description", snippet: "**fresh** [basil](http://x.y) _leaves_" },
+          "basil"
+        ).segments
+      )
+    ).toBe("fresh basil leaves");
+    expect(
+      text(
+        matchLine({ field: "steps", number: 1, snippet: "# Pound the **basil**" }, "basil").segments
+      )
+    ).toBe("Pound the basil");
+    expect(
+      text(
+        matchLine({ field: "ingredients", amount: null, unit: null, name: "**basil**" }, "basil")
+          .segments
+      )
+    ).toBe("basil");
   });
 });

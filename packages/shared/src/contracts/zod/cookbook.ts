@@ -155,6 +155,25 @@ export const CookbookListResultSchema = z.object({
   nextCursor: z.number().int().nonnegative().nullable(),
 });
 
+/** Why a recipe matched a search: its strongest field in scope and what was found there. */
+export const LibraryMatchSchema = z.discriminatedUnion("field", [
+  z.object({ field: z.literal("title") }),
+  z.object({ field: z.literal("tags"), tag: z.string() }),
+  z.object({
+    field: z.literal("ingredients"),
+    amount: z.number().nullable(),
+    unit: z.string().nullable(),
+    name: z.string(),
+  }),
+  z.object({ field: z.literal("description"), snippet: z.string() }),
+  /** `number` is the step's place among the recipe's numbered steps; a matching heading has none. */
+  z.object({
+    field: z.literal("steps"),
+    snippet: z.string(),
+    number: z.number().int().positive().optional(),
+  }),
+]);
+
 /**
  * One Library row: a recipe or a cookbook, discriminated by kind.
  *
@@ -162,14 +181,6 @@ export const CookbookListResultSchema = z.object({
  * discriminated union and every reader of them has to say which kind it is
  * drawing.
  */
-export const LibraryMatchSchema = z.object({
-  field: z.enum(["title", "tags", "ingredients", "description", "steps"]),
-  /** The tag, the ingredient line, or a snippet around the hit; none for the title. */
-  text: z.string().optional(),
-  /** The step's 1-based number, for a steps match. */
-  step: z.number().int().positive().optional(),
-});
-
 export const LibraryItemSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("recipe"),

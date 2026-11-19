@@ -1,3 +1,5 @@
+import { plainText } from "@/lib/plain-text";
+
 import type { LibraryMatchDTO } from "@norish/shared/contracts";
 import { stripDiacritics } from "@norish/shared/lib/fold-name";
 import { searchTerms } from "@norish/shared/lib/search-terms";
@@ -15,7 +17,7 @@ const foldChar = (text: string) => stripDiacritics(text).toLowerCase();
 
 /**
  * `text` split around the places a search term starts a word, ignoring case and accents.
- * A term that is nowhere literally (the server stems) leaves the text whole, unhighlighted.
+ * A term nowhere as written (the server reads "a,b" as two words) leaves the text whole.
  */
 export function highlightSegments(text: string, search: string): MatchSegment[] {
   let folded = "";
@@ -67,25 +69,40 @@ export function highlightSegments(text: string, search: string): MatchSegment[] 
   return segments.length > 0 ? segments : [{ text, highlighted: false }];
 }
 
-/** The match line the card shows in place of its description while searching. */
-export function matchLine(match: LibraryMatchDTO, search: string): MatchLine {
-  const text = match.text ?? "";
-  const segments = highlightSegments(text, search);
-
+/** The match line the card shows in place of its description while searching. `ingredientPrefix` is the line's formatted amount and unit. */
+export function matchLine(
+  match: LibraryMatchDTO,
+  search: string,
+  ingredientPrefix = ""
+): MatchLine {
   switch (match.field) {
     case "title":
       return { labelId: "recipes.search.matchTitle", segments: [] };
     case "tags":
-      return { labelId: "recipes.search.matchTag", segments };
-    case "ingredients":
-      return { labelId: "recipes.search.matchIngredient", segments };
-    case "steps":
       return {
-        labelId: "recipes.search.matchStep",
-        labelValues: { number: match.step ?? 1 },
-        segments,
+        labelId: "recipes.search.matchTag",
+        segments: highlightSegments(match.tag, search),
       };
+    case "ingredients":
+      return {
+        labelId: "recipes.search.matchIngredient",
+        segments: [
+          ...(ingredientPrefix ? [{ text: `${ingredientPrefix} `, highlighted: false }] : []),
+          ...highlightSegments(plainText(match.name), search),
+        ],
+      };
+    case "steps": {
+      const segments = highlightSegments(plainText(match.snippet), search);
+
+      return match.number === undefined
+        ? { labelId: null, segments }
+        : {
+            labelId: "recipes.search.matchStep",
+            labelValues: { number: match.number },
+            segments,
+          };
+    }
     case "description":
-      return { labelId: null, segments };
+      return { labelId: null, segments: highlightSegments(plainText(match.snippet), search) };
   }
 }
