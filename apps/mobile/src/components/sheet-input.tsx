@@ -1,7 +1,10 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
-import { Text } from "react-native";
+import { Pressable, Text } from "react-native";
+import { useTokenColor } from "@/hooks/use-token-color";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, InputGroup, TextArea } from "heroui-native";
+import { useIntl } from "react-intl";
 
 /** The one field: the sand fill, a capsule 48 pt tall, no ring, shadow or focus outline. */
 export const SHEET_FIELD =
@@ -17,18 +20,40 @@ export function SheetTextArea({ className, ...props }: ComponentProps<typeof Tex
 }
 
 /** A sheet's text field: a capsule, as the sheets' search fields are; a `prefix` or `suffix` sits
- * inside the capsule, a word in the muted colour or a node such as an icon or a clear button. */
+ * inside the capsule, a word in the muted colour or a node such as an icon. An `onClear` adds the
+ * board's clear circle (`<testID>-clear`) as the suffix while the field holds a value. */
 export function SheetInput({
   className,
   prefix,
   suffix,
+  onClear,
   ...props
-}: ComponentProps<typeof Input> & { prefix?: ReactNode; suffix?: ReactNode }) {
+}: ComponentProps<typeof Input> & {
+  prefix?: ReactNode;
+  suffix?: ReactNode;
+  onClear?: () => void;
+}) {
+  const intl = useIntl();
+  const placeholder = useTokenColor("field-placeholder");
+  const clear =
+    onClear && props.value ? (
+      <Pressable
+        accessibilityLabel={intl.formatMessage({ id: "common.actions.clear" })}
+        accessibilityRole="button"
+        hitSlop={12}
+        testID={`${props.testID}-clear`}
+        onPress={onClear}
+      >
+        <Ionicons color={placeholder} name="close-circle" size={20} />
+      </Pressable>
+    ) : null;
+
+  const end = clear ?? suffix;
   const field = `${SHEET_FIELD} ${className ?? ""}`;
   const word = (node: ReactNode) =>
     typeof node === "string" ? <Text className="text-muted text-base">{node}</Text> : node;
 
-  if (!prefix && !suffix) {
+  if (!prefix && !end) {
     return <Input {...props} className={`px-4 ${field}`} variant="secondary" />;
   }
 
@@ -41,12 +66,12 @@ export function SheetInput({
       ) : null}
       <InputGroup.Input
         {...props}
-        className={`${prefix ? "" : "pl-4"} ${suffix ? "" : "pr-4"} ${field}`}
+        className={`${prefix ? "" : "pl-4"} ${end ? "" : "pr-4"} ${field}`}
         variant="secondary"
       />
-      {suffix ? (
-        <InputGroup.Suffix className="pr-4 pl-1.5" isDecorative={typeof suffix === "string"}>
-          {word(suffix)}
+      {end ? (
+        <InputGroup.Suffix className="pr-4 pl-1.5" isDecorative={typeof end === "string"}>
+          {word(end)}
         </InputGroup.Suffix>
       ) : null}
     </InputGroup>
