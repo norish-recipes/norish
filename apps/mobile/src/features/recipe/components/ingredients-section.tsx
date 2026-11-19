@@ -10,6 +10,7 @@ import { Tick } from "@/components/tick";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { lightImpact } from "@/lib/haptics";
 import { useFadeTo } from "@/lib/motion/fade-to";
+import { plainText } from "@/lib/plain-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -30,7 +31,7 @@ import {
 } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 
-import { ingredientRows, plainText } from "../utils/recipe-rows";
+import { ingredientRows } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
 import { SectionCard } from "./tint";
 

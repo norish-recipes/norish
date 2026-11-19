@@ -8,6 +8,7 @@ import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-ico
 import { ServerImage } from "@/components/server-image";
 import { lightImpact } from "@/lib/haptics";
 import { SPRING_ZOOM_IN, SPRING_ZOOM_OUT } from "@/lib/motion/layout";
+import { plainText } from "@/lib/plain-text";
 import { mediaViewerRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -27,7 +28,7 @@ import { resolveStepIngredients } from "@norish/shared/lib/step-ingredients";
 
 import { useStepTimers } from "../hooks/use-step-timers";
 import { imageItems } from "../utils/hero-items";
-import { plainText, stepRows } from "../utils/recipe-rows";
+import { stepRows } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
 import { TimerChip, TimerChipButton } from "./timer-chip";
 import { SectionCard, useTint } from "./tint";

@@ -1,11 +1,11 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { plainText } from "@/lib/plain-text";
 import { useIntl } from "react-intl";
 
 import type { ResolvedCookingModeStep } from "@norish/shared-react/recipes";
 import { useLoadedPageRecipe, usePageIngredients } from "@norish/shared-react/recipes";
 
-import { plainText } from "../utils/recipe-rows";
 import { StepChips, StepPhotos, StepText } from "./steps-section";
 
 const STEP_TEXT = "text-foreground text-[28px] leading-[44px] font-medium tracking-[-0.3px]";

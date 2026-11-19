@@ -1,11 +1,11 @@
 import React from "react";
 import { Text } from "react-native";
+import { plainText } from "@/lib/plain-text";
 import { useIntl } from "react-intl";
 
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { useLoadedPageRecipe } from "@norish/shared-react/recipes";
 
-import { plainText } from "../utils/recipe-rows";
 import { SectionCard } from "./tint";
 
 export function NotesSection() {

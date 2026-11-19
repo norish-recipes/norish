@@ -6,6 +6,7 @@ import { Stepper } from "@/components/stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
+import { plainText } from "@/lib/plain-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -21,7 +22,6 @@ import { workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 import type { NutritionFigures } from "../utils/stored-nutrition";
 import { DAILY_REFERENCE, percentOfReference } from "../utils/nutrition-reference";
 import { aroundCount } from "../utils/portions-label";
-import { plainText } from "../utils/recipe-rows";
 import { storedNutrition } from "../utils/stored-nutrition";
 import { SectionCard } from "./tint";
 
