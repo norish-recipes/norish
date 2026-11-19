@@ -11,8 +11,7 @@
     "openRecipe": "Recept openen",
     "move": "Verplaatsen…",
     "removeMessage": "{name} gaat van {slot} op {day} af.",
-    "moveTitle": "Verplaatsen",
-    "moveSubtitle": "{name}, {slot} van vandaag"
+    "moveTitle": "Verplaatsen"
   },
   "editNote": {
     "title": "Notitie bewerken",

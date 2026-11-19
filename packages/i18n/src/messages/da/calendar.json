@@ -11,8 +11,7 @@
     "openRecipe": "Åbn opskrift",
     "move": "Flyt…",
     "removeMessage": "{name} fjernes fra {slot} på {day}.",
-    "moveTitle": "Flyt",
-    "moveSubtitle": "{name}, dagens {slot}"
+    "moveTitle": "Flyt"
   },
   "editNote": {
     "title": "Rediger note",

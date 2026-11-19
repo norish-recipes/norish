@@ -11,8 +11,7 @@
     "openRecipe": "Otwórz przepis",
     "move": "Przenieś…",
     "removeMessage": "{name} zostanie usunięty z posiłku {slot} ({day}).",
-    "moveTitle": "Przenieś",
-    "moveSubtitle": "{name}, {slot} dzisiaj"
+    "moveTitle": "Przenieś"
   },
   "editNote": {
     "title": "Edytuj notatkę",

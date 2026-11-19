@@ -9,7 +9,6 @@ import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { useCalendarQuery, usePlannedItemText } from "@norish/shared-react/calendar";
-import { slotTranslationKeys } from "@norish/shared-react/calendar/todays-meals";
 
 /** Move from Today: the planned item named by the route's `plannedItemId`, on its `date`. */
 export function MovePlannedItemScreen() {
@@ -32,15 +31,7 @@ function MoveSheet({ item }: { item: PlannedItemFromQuery }) {
     <Sheet
       confirm={confirm}
       name="move"
-      subtitle={intl.formatMessage(
-        { id: "calendar.today.moveSubtitle" },
-        {
-          name: title,
-          slot: intl
-            .formatMessage({ id: `common.slots.${slotTranslationKeys[item.slot]}` })
-            .toLocaleLowerCase(intl.locale),
-        }
-      )}
+      subtitle={title}
       title={intl.formatMessage({ id: "calendar.today.moveTitle" })}
     >
       <SheetBody>
