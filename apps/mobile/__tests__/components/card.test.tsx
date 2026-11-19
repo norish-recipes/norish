@@ -22,7 +22,7 @@ vi.mock("react-native", () => ({
 vi.mock("@expo/vector-icons/Ionicons", () => ({
   default: () => <i data-testid="chevron" />,
 }));
-vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: (name: string) => name }));
 
 const { CardRow } = await import("@/components/card");
 

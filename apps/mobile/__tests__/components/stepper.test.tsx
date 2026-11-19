@@ -29,7 +29,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("@/lib/haptics", () => ({ lightImpact: () => lightImpact() }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: (name: string) => name }));
 
 const { Stepper } = await import("@/components/stepper");
 

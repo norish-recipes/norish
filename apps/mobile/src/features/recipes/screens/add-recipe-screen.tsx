@@ -2,6 +2,7 @@ import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Card } from "@/components/card";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { hostOf, plainLink } from "@/lib/network/host-of";
@@ -65,7 +66,7 @@ function OptionRow({ option, first }: { option: Option; first: boolean }) {
       accessibilityHint={option.hint}
       accessibilityLabel={option.title}
       accessibilityRole="button"
-      className={`flex-row items-center gap-3.5 px-4 py-3 ${first ? "" : "border-separator border-t"}`}
+      className={`flex-row items-center gap-3.5 px-4 py-3 ${first ? "" : "border-line border-t"}`}
       testID={`add-recipe-${option.key}`}
       // The chosen way's sheet replaces this one, so only one sheet is ever stacked.
       onPress={() => router.replace(option.to)}
@@ -132,11 +133,11 @@ export function AddRecipeScreen() {
         {copiedLink ? (
           <CopiedLinkRow url={copiedLink} onPress={startImport(() => importRecipe(copiedLink))} />
         ) : null}
-        <View className="bg-sand overflow-hidden rounded-3xl">
+        <Card>
           {options.map((option, index) => (
             <OptionRow key={option.key} first={index === 0} option={option} />
           ))}
-        </View>
+        </Card>
       </SheetBody>
     </Sheet>
   );

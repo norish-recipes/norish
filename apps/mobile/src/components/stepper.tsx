@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, View } from "react-native";
+import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useThemeColor } from "heroui-native";
 
 function Step({
   icon,
@@ -18,7 +18,7 @@ function Step({
   disabled: boolean;
   onPress: () => void;
 }) {
-  const [foreground] = useThemeColor(["foreground"] as const);
+  const foreground = useTokenColor("foreground");
 
   return (
     <Pressable
@@ -38,9 +38,8 @@ function Step({
   );
 }
 
-/** The kit's one stepper: a minus and a plus as solid knobs on a sand track around `children`, the
- * value; `wide` stretches it to its row. `testID` prefixes the knobs' (`-decrease`, `-increase`);
- * a knob that cannot move is disabled, so gives no haptic. */
+/** The kit's stepper: solid knobs on a sand track around `children`, the value; `wide` fills the
+ * row. `testID` prefixes the knobs' `-decrease` and `-increase`; a knob that cannot move is disabled. */
 export function Stepper({
   children,
   decreaseLabel,

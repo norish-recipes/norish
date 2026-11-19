@@ -5,11 +5,11 @@ import { Input, InputGroup, TextArea } from "heroui-native";
 
 /** The one field: the sand fill, a capsule 48 pt tall, no ring, shadow or focus outline. */
 export const SHEET_FIELD =
-  "bg-sand h-12 rounded-full text-base ios:shadow-none ios:focus:outline-transparent";
+  "bg-sand border-stroke h-12 rounded-full border-[0.5px] text-base ios:shadow-none ios:focus:outline-transparent";
 
 /** The same field for several lines: the sand fill and no ring, rounded to a card instead of a capsule. */
 const SHEET_TEXT_AREA =
-  "bg-sand rounded-3xl px-4 py-3.5 text-base leading-[23px] ios:shadow-none ios:focus:outline-transparent";
+  "bg-sand border-stroke rounded-[22px] border-[0.5px] px-4 py-3.5 text-base leading-[23px] ios:shadow-none ios:focus:outline-transparent";
 
 /** A sheet's multi-line field, as tall as its `style` makes it. */
 export function SheetTextArea({ className, ...props }: ComponentProps<typeof TextArea>) {

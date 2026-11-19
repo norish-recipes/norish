@@ -35,7 +35,7 @@ export function CardSlice({
   );
 }
 
-/** A slice's ground: the translucent fill on a sheet, the surface off one. */
+/** A slice's ground: sand on a sheet, the surface off one. */
 const useSliceFill = () => (useOnSheet() ? "bg-sand" : "bg-surface");
 
 /** A page's cards, and a sheet's tighter ones; `lifted` is the card a drag carries. */
@@ -64,7 +64,7 @@ const sliceClass = (
   separated: boolean,
   size: (typeof SIZES)[keyof typeof SIZES] = SIZES.page
 ) =>
-  `overflow-hidden ${className} ${edge.top ? size.top : separated ? "border-separator border-t" : ""} ${edge.bottom ? size.bottom : ""}`;
+  `overflow-hidden ${className} ${edge.top ? size.top : separated ? "border-line border-t" : ""} ${edge.bottom ? size.bottom : ""}`;
 
 const TILT = { transform: [{ rotate: "-1.5deg" }] };
 

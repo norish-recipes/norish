@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
+import { ToggleChip } from "@/components/toggle-chip";
 import { useRouter } from "expo-router";
-import { TextField, useThemeColor } from "heroui-native";
+import { TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
@@ -25,7 +26,6 @@ function ServingsBody() {
   const recipe = useLoadedPageRecipe();
   const servings = usePageServings();
   const setServings = useRecipePageStore((state) => state.setServings);
-  const [foreground] = useThemeColor(["foreground"] as const);
   const original = recipe.servings || 1;
   const drafts = (next: number) => ({
     servings: formatAmountAsDecimal(next),
@@ -80,24 +80,17 @@ function ServingsBody() {
       </View>
       <View className="flex-row gap-2">
         {MULTIPLIERS.map((multiplier) => (
-          <Pressable
+          <ToggleChip
             key={multiplier}
-            accessibilityRole="button"
-            accessibilityState={{ selected: picked === multiplier }}
-            className={`h-10 flex-1 items-center justify-center rounded-full ${picked === multiplier ? "bg-accent" : "bg-sand"}`}
+            even
+            active={picked === multiplier}
+            label={multiplier === 0.5 ? "½×" : `${multiplier}×`}
             testID={`recipe-multiplier-${multiplier}`}
             onPress={() => {
               setServings(original * multiplier);
               router.back();
             }}
-          >
-            <Text
-              className={`text-sm font-medium ${picked === multiplier ? "text-accent-foreground" : "text-foreground"}`}
-              style={picked === multiplier ? undefined : { color: foreground }}
-            >
-              {multiplier === 0.5 ? "½×" : `${multiplier}×`}
-            </Text>
-          </Pressable>
+          />
         ))}
       </View>
     </SheetBody>

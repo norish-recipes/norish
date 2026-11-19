@@ -26,7 +26,7 @@ vi.mock("@/components/pressable-scale", () => ({
   ),
 }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: (name: string) => name }));
 
 const { ToggleChip } = await import("@/components/toggle-chip");
 
