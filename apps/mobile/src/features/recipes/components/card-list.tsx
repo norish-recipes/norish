@@ -66,6 +66,7 @@ export function CardList<Row>({
   fadeHeight,
   insets = "never",
   scroll,
+  query,
   testID,
 }: {
   rows: Row[];
@@ -74,13 +75,16 @@ export function CardList<Row>({
   empty: ReactElement;
   isFetchingNextPage: boolean;
   rowKey: (row: Row) => string;
-  renderCard: (row: Row) => ReactElement;
+  /** The card in `variant`, the view its cell is drawn in. */
+  renderCard: (row: Row, variant: RecipeViewMode) => ReactElement;
   onEndReached: () => void;
   fadeHeight: FadeHeight;
   /** `automatic` for the tab's own list, under the bar whose title hides as it scrolls. */
   insets?: "automatic" | "never";
   /** The tab's scroll (`useTabScroll`): the offset the bar's title follows. */
   scroll: TabScroll;
+  /** What the rows answer: a new one shows from the list's top. */
+  query: unknown;
   testID?: string;
 }) {
   const { offset, barBottom } = scroll;
@@ -102,6 +106,7 @@ export function CardList<Row>({
   const [shown, setShown] = useState(variant);
   const isGrid = shown === "grid";
   const focused = useIsFocused();
+  const [shownQuery, setShownQuery] = useState(query);
 
   // An automatic inset rests the list at minus the bar's bottom.
   useAnimatedReaction(
@@ -114,6 +119,17 @@ export function CardList<Row>({
     listRef.current?.clearLayoutCacheOnUpdate();
     setShown(variant);
   }, [shown, variant]);
+
+  // A new query lands at rest, a no-op when the list is there already. The automatic inset rests
+  // above 0, which a scroll reaches only with scrollToOverflowEnabled.
+  useLayoutEffect(() => {
+    if (shownQuery === query) return;
+    setShownQuery(query);
+    listRef.current?.scrollToOffset({
+      offset: insets === "automatic" ? -barBottom : 0,
+      animated: false,
+    });
+  }, [shownQuery, query, insets, barBottom]);
 
   // Leaving the screen, for another tab or a sheet over it, closes the open row.
   useEffect(() => {
@@ -145,9 +161,14 @@ export function CardList<Row>({
           contentInsetAdjustmentBehavior={insets}
           data={rows}
           keyExtractor={rowKey}
+          // Its default keeps the old first card in place, so a new query lands part-way down.
+          maintainVisibleContentPosition={{ disabled: true }}
           numColumns={isGrid ? 2 : 1}
           renderItem={({ item, index }) => (
+            // Keyed by the view, so a toggle mounts fresh cards: a native card kept across it could
+            // keep the other view's width, as a list-wide card overlapping its grid neighbour.
             <View
+              key={shown}
               className={isGrid ? "flex-1 flex-row pb-3" : "px-5 pb-3"}
               style={
                 isGrid
@@ -158,11 +179,12 @@ export function CardList<Row>({
                   : undefined
               }
             >
-              {renderCard(item)}
+              {renderCard(item, shown)}
             </View>
           )}
           renderScrollComponent={TabScrollView}
           scrollEventThrottle={16}
+          scrollToOverflowEnabled
           style={{ flex: 1 }}
           testID={testID}
           onEndReached={onEndReached}

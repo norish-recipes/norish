@@ -78,7 +78,10 @@ export function LibraryCards<Row>({
       header={header}
       insets={insets}
       isFetchingNextPage={isFetchingNextPage}
-      renderCard={(row) => renderCard(row, { variant, actions, allergies, isFavorite })}
+      query={filters}
+      renderCard={(row, shown) =>
+        renderCard(row, { variant: shown, actions, allergies, isFavorite })
+      }
       rowKey={rowKey}
       rows={isLoading ? [] : rows}
       scroll={scroll}
