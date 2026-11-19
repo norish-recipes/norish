@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { Checkmark } from "@/components/checkmark";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
+import { SliceHairline, sliceRowClass } from "@/components/slice-row";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -54,7 +55,7 @@ export function EditorChoiceScreen() {
     <Sheet name={name} title={title}>
       <SheetList
         ListHeaderComponent={
-          <View className="pb-2">
+          <View className="pb-3">
             <SheetSearchField
               label={intl.formatMessage({ id: "common.actions.search" })}
               testID={`${name}-search`}
@@ -72,11 +73,12 @@ export function EditorChoiceScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: ticked }}
-              className={`min-h-12 flex-row items-center justify-between ${index === 0 ? "" : "border-separator border-t"}`}
+              className={`${sliceRowClass({ first: index === 0, last: index === shown.length - 1 })} justify-between`}
               testID={`${name}-${item.key}`}
               onPress={() => pick(item.key)}
             >
-              <Text className="text-foreground flex-1 text-[17px]">{item.label}</Text>
+              <SliceHairline first={index === 0} />
+              <Text className="text-foreground flex-1 text-base">{item.label}</Text>
               {ticked ? <Checkmark /> : null}
             </Pressable>
           );
