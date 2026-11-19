@@ -280,6 +280,33 @@ describe("the Library union", () => {
       expect(kinds(result.items)).toEqual(["recipe"]);
       expect(result.total).toBe(1);
     });
+
+    it("treats text with no search terms as no text", async () => {
+      const { alphaRecipe } = await seedMixedLibrary();
+
+      await createCookbook({ userId: ownerId, title: "C^ookbook" });
+      await getTestDb()
+        .update(cookbooksTable)
+        .set({ createdAt: new Date(Date.UTC(2026, 0, 1, 12, 4)) })
+        .where(eq(cookbooksTable.title, "C^ookbook"));
+
+      for (const sortMode of ["titleDesc", "none"] as const) {
+        const plain = await listLibrary(viewer(ownerId), { ...base, sortMode });
+
+        for (const search of ["  ", "^", "^ !"]) {
+          expect(await listLibrary(viewer(ownerId), { ...base, sortMode, search })).toEqual(plain);
+        }
+      }
+
+      const recipesOf = (search?: string) =>
+        listRecipes(viewer(ownerId), 50, 0, search, ["title"], undefined, "OR", "titleDesc");
+      const plainRecipes = await recipesOf();
+
+      expect(plainRecipes.recipes.map((recipe) => recipe.id)).toContain(alphaRecipe.id);
+      for (const search of ["  ", "^", "^ !"]) {
+        expect(await recipesOf(search)).toEqual(plainRecipes);
+      }
+    });
   });
 
   describe("an explicit sort while searching", () => {

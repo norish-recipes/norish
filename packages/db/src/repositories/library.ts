@@ -120,7 +120,6 @@ export async function listLibrary(
   const {
     limit,
     offset = 0,
-    search,
     searchFields = ["title", "ingredients"],
     tags,
     ingredientIds,
@@ -135,7 +134,8 @@ export async function listLibrary(
     sortBeatsRank = false,
     withMatch = false,
   } = params;
-
+  // Text with no search terms ("^", "  ") is no text: no title filter, no pinning, the plain sort.
+  const search = hasSearchTerms(params.search) ? params.search : undefined;
   const searchSql = recipeSearchSql(search, searchFields);
   const cookbookTitleCondition = search ? cookbookTitleMatch(search) : undefined;
   const includeRecipes = type !== "cookbooks";
@@ -292,7 +292,7 @@ export async function listLibrary(
     ),
     // The text's match wins; without text, the line that satisfied the Ingredient filter.
     withMatch
-      ? hasSearchTerms(search)
+      ? search
         ? recipeSearchMatches(pageRecipeIds, search, searchFields)
         : recipeIngredientMatches(pageRecipeIds, [...new Set(ingredientIds)])
       : undefined,
