@@ -1,7 +1,7 @@
 import type { ComponentProps, ComponentRef, ReactNode, Ref } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useImperativeHandle, useRef, useState } from "react";
+import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useManualGesture } from "react-native-gesture-handler";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -72,6 +72,8 @@ const LEAVE_EASE = Easing.out(Easing.cubic);
 const HOLD_MS = 120;
 const RESTORE_MS = 250;
 const SLIDE_MS = 260;
+// The board starts the circle's exit and the row's close this long after the slide starts.
+const AFTER_SLIDE_MS = 350;
 const CIRCLE_EXIT_MS = 200;
 const COLLAPSE_MS = 350;
 // ponytail: the removal is async, so the card stays hidden this long; a failed delete brings it back after it.
@@ -159,8 +161,8 @@ export function SwipeActions({
   const layout: Layout = { ...look, width: openWidth, count: actions.length, fullAt };
   const collapses = leaving && variant === "list";
   // The card sits `openWidth` out while held, so only the rest of its travel is its own.
-  const extra = useDerivedValue(
-    () => cardTravel(held.get(), slide.get(), fullAt, slideBy) - openWidth * held.get()
+  const extra = useDerivedValue(() =>
+    leaving ? cardTravel(held.get(), slide.get(), fullAt, slideBy) - openWidth * held.get() : 0
   );
   const motion: DeleteMotion = { extra, held, gone };
   const contentStyle = useAnimatedStyle(() => ({
@@ -176,6 +178,24 @@ export function SwipeActions({
     held.set(withTiming(1, { duration: HOLD_MS, easing: LEAVE_EASE }));
   };
 
+  // Back to a card at rest: the motion a delete leaves behind must not reach the cell's next item.
+  const resetMotion = () => {
+    slide.set(0);
+    held.set(0);
+    gone.set(0);
+    collapse.set(0);
+  };
+  const lastKey = useRef(itemKey);
+
+  // A recycled cell draws another item: it starts closed, whatever the last one was doing.
+  useEffect(() => {
+    if (lastKey.current === itemKey) return;
+    lastKey.current = itemKey;
+    rowRef.current?.reset();
+    resetMotion();
+    setIsOpen(false);
+  }, [itemKey]);
+
   useImperativeHandle(ref, () => ({
     leave: (done) => {
       if (reduceMotion) return done();
@@ -184,10 +204,10 @@ export function SwipeActions({
       collapse.set(0);
       setLeftKey(itemKey);
       slide.set(withTiming(1, { duration: SLIDE_MS, easing: LEAVE_EASE }));
-      gone.set(withDelay(SLIDE_MS, withTiming(1, { duration: CIRCLE_EXIT_MS })));
+      gone.set(withDelay(AFTER_SLIDE_MS, withTiming(1, { duration: CIRCLE_EXIT_MS })));
       if (variant === "list")
         collapse.set(
-          withDelay(SLIDE_MS, withTiming(1, { duration: COLLAPSE_MS, easing: LEAVE_EASE }))
+          withDelay(AFTER_SLIDE_MS, withTiming(1, { duration: COLLAPSE_MS, easing: LEAVE_EASE }))
         );
       // On a timer, so a cancelled animation or a cell gone mid-way still deletes what was confirmed.
       setTimeout(
@@ -196,9 +216,12 @@ export function SwipeActions({
           // Closed for the cell's next item, with the card still off screen.
           rowRef.current?.reset();
           held.set(0);
-          setTimeout(() => setLeftKey(null), HIDDEN_MS);
+          setTimeout(() => {
+            setLeftKey(null);
+            resetMotion();
+          }, HIDDEN_MS);
         },
-        SLIDE_MS + (variant === "list" ? COLLAPSE_MS : 0)
+        AFTER_SLIDE_MS + (variant === "list" ? COLLAPSE_MS : 0)
       );
     },
     restore: () => {

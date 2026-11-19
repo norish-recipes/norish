@@ -32,6 +32,23 @@ vi.mock("react-native-reanimated", async () => {
 
   return {
     ...mock,
+    default: {
+      ...mock.default,
+      View: ({
+        style,
+        testID,
+        children,
+      }: {
+        style?: unknown;
+        testID?: string;
+        children?: ReactNode;
+      }) => (
+        <div data-style={JSON.stringify(style)} data-testid={testID}>
+          {children}
+        </div>
+      ),
+    },
+    useAnimatedStyle: <T,>(style: () => T) => style(),
     // One box per component, as Reanimated keeps it across renders.
     useSharedValue: <T,>(value: T) => React.useState(() => mock.useSharedValue(value))[0],
     // As Reanimated does: the reaction runs when what it watches changes, with the value before.
@@ -220,7 +237,7 @@ describe("SwipeActions", () => {
     expect(queryByTestId("card-leaving")).not.toBeNull();
     expect(remove).not.toHaveBeenCalled();
 
-    act(() => void vi.advanceTimersByTime(610));
+    act(() => void vi.advanceTimersByTime(700));
     expect(remove).toHaveBeenCalledTimes(1);
     expect(swipe.reset).toHaveBeenCalledTimes(1);
 
@@ -228,5 +245,55 @@ describe("SwipeActions", () => {
     rerender(ui(ref, "r2"));
     expect(queryByTestId("card-leaving")).toBeNull();
     vi.useRealTimers();
+  });
+
+  // The action circles' styles: the only ones that carry a scale beside a translate.
+  const circles = (container: HTMLElement) =>
+    [...container.querySelectorAll("[data-style]")]
+      .map((node) => JSON.parse(node.getAttribute("data-style")!) as { opacity?: number })
+      .filter(
+        (style) =>
+          "transform" in style && (style as { transform: unknown[] }).transform.length === 2
+      );
+
+  it("shows every action on a cell reused after a delete", () => {
+    vi.useFakeTimers();
+    const ref = React.createRef<Handle>();
+    const { container, rerender } = render(ui(ref));
+
+    act(() => ref.current!.leave(vi.fn()));
+    act(() => void vi.advanceTimersByTime(700));
+    rerender(ui(ref, "r2"));
+    // The mock's styles only read the values on a render; the real ones follow them.
+    rerender(ui(ref, "r2"));
+    expect(circles(container).map((style) => style.opacity)).toEqual([1, 1, 1]);
+
+    vi.useRealTimers();
+  });
+
+  it("shows every action on a card whose delete failed and came back", () => {
+    vi.useFakeTimers();
+    const ref = React.createRef<Handle>();
+    const { container } = render(ui(ref));
+
+    act(() => ref.current!.leave(vi.fn()));
+    act(() => void vi.advanceTimersByTime(1700));
+    expect(circles(container).map((style) => style.opacity)).toEqual([1, 1, 1]);
+    vi.useRealTimers();
+  });
+
+  it("resets a held card's swipe when its cell is reused for another item", () => {
+    const { rerender } = render(ui());
+
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
+    dragTo(300, rerender);
+    act(() => swipe.props!.onSwipeableWillOpen());
+    expect(swipe.reset).not.toHaveBeenCalled();
+
+    rerender(ui(undefined, "r2"));
+    expect(swipe.reset).toHaveBeenCalledTimes(1);
   });
 });
