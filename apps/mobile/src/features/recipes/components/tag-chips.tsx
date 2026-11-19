@@ -1,11 +1,11 @@
 import type { LayoutChangeEvent } from "react-native";
 import React, { useState } from "react";
 import { useWindowDimensions, View } from "react-native";
+import { Pill } from "@/components/pill";
 
 import { isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { fitTags } from "../utils/tag-fit";
-import { Pill } from "@/components/pill";
 
 // Between chips, and between the row card's facts and its tags.
 export const TAG_GAP = 6;

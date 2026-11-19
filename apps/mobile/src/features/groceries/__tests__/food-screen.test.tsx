@@ -72,8 +72,9 @@ vi.mock("heroui-native", () => ({
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("../components/form-parts", () => ({
-  FormCard: ({ children }: { children: React.ReactNode }) => children,
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children: React.ReactNode }) => children,
+  CardRow: ({ children }: { children: React.ReactNode }) => children,
 }));
 vi.mock("../components/pantry-rows", () => ({ OnTheListChip: () => null }));
 vi.mock("@norish/shared-react/groceries", () => ({

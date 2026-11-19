@@ -4,6 +4,7 @@ import React, { memo, useRef } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
+import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { lightImpact } from "@/lib/haptics";
 import { recipeRoute } from "@/lib/tab-routes";
@@ -24,7 +25,6 @@ import {
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
-import { Pill } from "@/components/pill";
 import { SwipeActions } from "./swipe-actions";
 import { TAG_GAP, TagChips } from "./tag-chips";
 

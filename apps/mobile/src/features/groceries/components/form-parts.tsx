@@ -100,48 +100,6 @@ export function RepeatPills({
   );
 }
 
-/** The sheet's rows on one rounded card. */
-export function FormCard({ children }: { children: ReactNode }) {
-  return <View className="bg-sand overflow-hidden rounded-[22px]">{children}</View>;
-}
-
-/** A row of the form: its label, its value (with a Store's dot), and a chevron where it opens a choice. */
-export function FormRow({
-  label,
-  value,
-  dotColor,
-  first = false,
-  testID,
-  onPress,
-}: {
-  label: string;
-  value: string;
-  dotColor?: string;
-  first?: boolean;
-  testID: string;
-  onPress: () => void;
-}) {
-  const [muted] = useThemeColor(["muted"] as const);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      className={`min-h-[52px] flex-row items-center gap-2 px-4 ${first ? "" : "border-separator border-t"}`}
-      testID={testID}
-      onPress={onPress}
-    >
-      <Text className="text-foreground flex-1 text-base">{label}</Text>
-      {dotColor ? (
-        <View className="size-2 rounded-full" style={{ backgroundColor: dotColor }} />
-      ) : null}
-      <Text className="text-muted max-w-[55%] text-base" numberOfLines={1}>
-        {value}
-      </Text>
-      <Ionicons color={muted} name="chevron-forward" size={16} />
-    </Pressable>
-  );
-}
-
 /** A small caps label over a group of controls. */
 export function FieldLabel({ children }: { children: string }) {
   return (

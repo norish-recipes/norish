@@ -51,10 +51,12 @@ vi.mock("../hooks/use-recurrence-label", () => ({ useRecurrenceLabel: () => () =
 vi.mock("../hooks/use-store-color", () => ({ storeColorIn: () => "red" }));
 vi.mock("../components/choice-list", () => ({ ChoiceList: () => null }));
 vi.mock("../components/repeat-view", () => ({ RepeatBody: () => null }));
-vi.mock("../components/form-parts", () => ({
-  FormCard: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
-  FormRow: ({ testID, onPress }: { testID: string; onPress: () => void }) =>
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
+  CardRow: ({ testID, onPress }: { testID: string; onPress: () => void }) =>
     createElement("button", { "data-testid": testID, onClick: onPress }),
+}));
+vi.mock("../components/form-parts", () => ({
   RepeatPills: () => null,
 }));
 

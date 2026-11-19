@@ -1,7 +1,9 @@
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import { Card } from "@/components/card";
 import { IconButton } from "@/components/icon-button";
+import { Pill } from "@/components/pill";
 import { SheetScrollView } from "@/components/sheet";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useServerUrl } from "@/lib/network/server-url";
@@ -18,7 +20,6 @@ import {
   useRecipeSharesQuery,
 } from "@norish/shared-react/recipes";
 
-import { Pill } from "@/components/pill";
 import { RecipeSheetGate } from "../components/recipe-sheet-gate";
 import { shareSubtitle } from "../utils/share-row";
 
@@ -153,7 +154,7 @@ function ShareBody({
       ) : rows.length === 0 ? (
         <Text className="text-muted text-sm">{t("empty")}</Text>
       ) : (
-        <View className="bg-sand overflow-hidden rounded-[22px]">
+        <Card>
           {rows.map((share, index) => (
             <ShareRow
               key={share.id}
@@ -162,7 +163,7 @@ function ShareBody({
               url={latest?.id === share.id ? latest.url : null}
             />
           ))}
-        </View>
+        </Card>
       )}
     </SheetScrollView>
   );
@@ -171,7 +172,7 @@ function ShareBody({
 /** Two link rows' worth of placeholders, in the rows' own layout. */
 function ShareRowsSkeleton() {
   return (
-    <View className="bg-sand overflow-hidden rounded-[22px]">
+    <Card>
       {[0, 1].map((row) => (
         <View
           key={row}
@@ -185,7 +186,7 @@ function ShareRowsSkeleton() {
           <Skeleton className="size-11 rounded-full" />
         </View>
       ))}
-    </View>
+    </Card>
   );
 }
 

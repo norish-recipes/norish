@@ -1,6 +1,7 @@
 import type { CardActions } from "@/hooks/use-card-actions";
 import React, { memo } from "react";
 import { Text, View } from "react-native";
+import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { cookbookRoute } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -16,7 +17,6 @@ import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { COOKBOOK_ACTION_DEFINITIONS, cookbookMenuActions } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { CookbookCover } from "./cookbook-cover";
-import { Pill } from "@/components/pill";
 
 /** A cookbook in the Library, as a row or a grid card; a long press offers Add recipes, Rename and Delete. */
 export const CookbookCard = memo(function CookbookCard({

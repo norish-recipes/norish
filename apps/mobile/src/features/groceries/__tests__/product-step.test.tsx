@@ -92,8 +92,8 @@ vi.mock("@/components/sheet", async () => {
     SheetBody: box,
   };
 });
-vi.mock("../components/form-parts", () => ({
-  FormCard: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
 const { ProductStep } = await import("../components/product-step");

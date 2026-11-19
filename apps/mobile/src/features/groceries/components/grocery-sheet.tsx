@@ -1,6 +1,7 @@
 import type { SheetActions } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
+import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
@@ -15,7 +16,7 @@ import { useAfterKeyboard } from "../hooks/use-after-keyboard";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { storeColorIn } from "../hooks/use-store-color";
 import { ChoiceList } from "./choice-list";
-import { FormCard, FormRow, RepeatPills } from "./form-parts";
+import { RepeatPills } from "./form-parts";
 import { RepeatBody } from "./repeat-view";
 
 type Step = "form" | "repeat" | "store" | "aisle" | "product";
@@ -122,9 +123,9 @@ export function GrocerySheet({
             onRemove={() => onRepeat(null)}
           />
           {notes}
-          <FormCard>
+          <Card>
             {product?.(() => setView("product"))}
-            <FormRow
+            <CardRow
               dotColor={store ? dot(store.color) : undefined}
               first={!product}
               label={text("groceries.mobile.store")}
@@ -133,21 +134,21 @@ export function GrocerySheet({
               onPress={() => setView("store")}
             />
             {aisles.length > 0 ? (
-              <FormRow
+              <CardRow
                 label={text("groceries.panel.aisle")}
                 testID={`${name}-aisle`}
                 value={aisle?.name ?? text("groceries.panel.noAisle")}
                 onPress={() => setView("aisle")}
               />
             ) : null}
-            <FormRow
+            <CardRow
               label={text("common.recurrence.title")}
               testID={`${name}-repeat`}
               value={repeat ? recurrence(repeat) : text("groceries.mobile.never")}
               onPress={openRepeat}
             />
             {trailingRows}
-          </FormCard>
+          </Card>
         </SheetBody>
       </Sheet>
     ),

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { Card } from "@/components/card";
 import { Checkmark } from "@/components/checkmark";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
@@ -10,8 +11,6 @@ import { useIntl } from "react-intl";
 import type { ProductRow, useProductField } from "@norish/shared-react/groceries";
 import type { StoreDto } from "@norish/shared/contracts";
 import { formatShelfPrice } from "@norish/shared/lib/format-price";
-
-import { FormCard } from "./form-parts";
 
 type Field = ReturnType<typeof useProductField>;
 
@@ -56,9 +55,7 @@ function ProductOption({
           <Text className="text-muted text-[13px] line-through">{format(row.regularPrice)}</Text>
         )}
       </View>
-      <View className="size-5 items-center justify-center">
-        {picked ? <Checkmark /> : null}
-      </View>
+      <View className="size-5 items-center justify-center">{picked ? <Checkmark /> : null}</View>
     </Pressable>
   );
 }
@@ -67,7 +64,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   return (
     <View className="gap-2" testID="product-group">
       <Text className="text-muted px-2 text-[13px] font-medium">{title}</Text>
-      <FormCard>{children}</FormCard>
+      <Card>{children}</Card>
     </View>
   );
 }

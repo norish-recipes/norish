@@ -1,10 +1,9 @@
 import React from "react";
 import { View } from "react-native";
+import { Card } from "@/components/card";
 import { SheetBody } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
-
-import { FormCard } from "./form-parts";
 
 export type Choice = { id: string | null; label: string; color?: string };
 
@@ -57,7 +56,7 @@ export function ChoiceList({
 }) {
   return (
     <SheetBody>
-      <FormCard>
+      <Card>
         {choices.map((choice, index) => (
           <ChoiceRow
             key={choice.id ?? "none"}
@@ -68,7 +67,7 @@ export function ChoiceList({
             onPick={() => onPick(choice.id)}
           />
         ))}
-      </FormCard>
+      </Card>
     </SheetBody>
   );
 }
