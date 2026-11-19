@@ -20,7 +20,7 @@ appId: dev.norish.app
 - tapOn: Manage stores
 - extendedWaitUntil:
     visible:
-      id: store-edit-.*
+      id: store-row-.*
       text: Edit Jumbo
     timeout: 20000
 # Held on Jumbo's row (the last of three) and carried up over Lidl's, it takes the middle place.

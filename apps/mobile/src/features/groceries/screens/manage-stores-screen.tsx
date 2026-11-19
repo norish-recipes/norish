@@ -149,6 +149,7 @@ export function ManageStoresScreen() {
     <Sheet
       confirm={{
         label: text("groceries.mobile.addStore"),
+        symbol: "plus",
         onPress: () => setEditing(newEditingStore()),
       }}
       name="manage-stores"
@@ -179,6 +180,7 @@ export function ManageStoresScreen() {
           renderHeading={() => null}
           renderItem={({ store, edge }) => (
             <StoreListRow
+              count={groceries.filter((grocery) => grocery.storeId === store.id).length}
               edge={edge}
               store={store}
               onDelete={() => confirmDelete(store)}
