@@ -1,11 +1,10 @@
-import type { ComponentProps } from "react";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Share, Text, View } from "react-native";
 import { Card } from "@/components/card";
-import { IconButton } from "@/components/icon-button";
 import { Pill } from "@/components/pill";
+import { PillButton } from "@/components/pill-button";
+import { Segmented } from "@/components/segmented";
 import { SheetScrollView } from "@/components/sheet";
-import { ToggleChip } from "@/components/toggle-chip";
 import { useServerUrl } from "@/lib/network/server-url";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams } from "expo-router";
@@ -23,11 +22,11 @@ import {
 import { RecipeSheetGate } from "../components/recipe-sheet-gate";
 import { shareSubtitle } from "../utils/share-row";
 
-type Expiry = CreateRecipeShareInputDto["expiresIn"];
+type Expiry = NonNullable<CreateRecipeShareInputDto["expiresIn"]>;
 
 const EXPIRIES: Expiry[] = ["1day", "1week", "1month", "1year", "forever"];
 const STATUS_TONE = { active: "active", expired: "expired", revoked: "default" } as const;
-const LABEL = "text-muted text-xs font-semibold tracking-[0.6px] uppercase";
+const LABEL = "text-muted px-1 text-[13px] font-semibold";
 
 /** The link made this visit: the one share whose URL the server still gives. */
 type MadeLink = { id: string; url: string };
@@ -61,23 +60,15 @@ function ShareRow({
     await Clipboard.setStringAsync(url);
     toast.show({ severity: "success", title: t("copySuccess") });
   };
-  const round = (
-    label: string,
-    icon: ComponentProps<typeof IconButton>["icon"],
-    onPress: () => void,
-    tone: "default" | "danger" = "default"
-  ) => <IconButton icon={icon} label={label} tone={tone} onPress={onPress} />;
 
   return (
-    <View
-      className={`flex-row items-center gap-2 py-3 pr-3 pl-4 ${first ? "" : "border-separator border-t"}`}
-      testID={`recipe-share-${share.id}`}
-    >
-      <View className="min-w-0 flex-1 gap-0.5">
-        <View className="flex-row items-center gap-2">
+    <View className="gap-2.5 px-4 py-3" testID={`recipe-share-${share.id}`}>
+      {first ? null : <View className="bg-line absolute top-0 right-0 left-4 h-px" />}
+      <View className="flex-row items-center gap-2">
+        <View className="min-w-0 flex-1 gap-0.5">
           <Text
             selectable
-            className="text-foreground shrink text-base font-medium"
+            className="text-foreground text-base font-medium"
             numberOfLines={1}
             testID={url ? "recipe-share-url" : undefined}
           >
@@ -85,33 +76,48 @@ function ShareRow({
               ? url.replace(/^https?:\/\//, "")
               : t("linkCreated", { date: date(share.createdAt) })}
           </Text>
-          <Pill size="tag" tone={STATUS_TONE[share.status]}>
-            {t(`status.${share.status}`)}
-          </Pill>
+          <Text className="text-muted text-[13px]" numberOfLines={1}>
+            {shareSubtitle(share, t, date)}
+          </Text>
         </View>
-        <Text className="text-muted text-[13px]" numberOfLines={1}>
-          {shareSubtitle(share, t, date)}
-        </Text>
+        <Pill size="tag" tone={STATUS_TONE[share.status]}>
+          {t(`status.${share.status}`)}
+        </Pill>
       </View>
-      {url ? round(t("copyLink"), "copy-outline", () => void copy()) : null}
-      {share.status === "active"
-        ? round(t("revokeModal.confirm"), "pause-outline", () =>
-            revokeShare(share.id, share.version)
-          )
-        : null}
-      {share.status === "revoked"
-        ? round(t("reactivateModal.confirm"), "play-outline", () =>
-            reactivateShare(share.id, share.version)
-          )
-        : null}
-      {share.status === "active"
-        ? null
-        : round(
-            t("deleteModal.confirm"),
-            "trash-outline",
-            () => deleteShare(share.id, share.version),
-            "danger"
-          )}
+      <View className="flex-row flex-wrap gap-2">
+        {url ? (
+          <>
+            <PillButton icon="copy-outline" label={t("copyLink")} onPress={() => void copy()} />
+            <PillButton
+              icon="share-outline"
+              label={intl.formatMessage({ id: "recipes.actions.share" })}
+              onPress={() => void Share.share({ url })}
+            />
+          </>
+        ) : null}
+        {share.status === "active" ? (
+          <PillButton
+            icon="pause-outline"
+            label={t("revokeModal.confirm")}
+            onPress={() => revokeShare(share.id, share.version)}
+          />
+        ) : null}
+        {share.status === "revoked" ? (
+          <PillButton
+            icon="refresh"
+            label={t("reactivateModal.confirm")}
+            onPress={() => reactivateShare(share.id, share.version)}
+          />
+        ) : null}
+        {share.status === "active" ? null : (
+          <PillButton
+            icon="trash-outline"
+            label={t("deleteModal.confirm")}
+            tone="danger"
+            onPress={() => deleteShare(share.id, share.version)}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -134,25 +140,24 @@ function ShareBody({
   return (
     <SheetScrollView contentClassName="gap-4">
       <View className="gap-2">
-        <Text className={`${LABEL} px-1`}>{t("expiresAfter")}</Text>
-        <View className="flex-row flex-wrap gap-2">
-          {EXPIRIES.map((expiry) => (
-            <ToggleChip
-              key={expiry}
-              active={expiresIn === expiry}
-              label={t(`expiryOptions.${expiry}`)}
-              testID={`recipe-share-expiry-${expiry}`}
-              onPress={() => setExpiresIn(expiry)}
-            />
-          ))}
-        </View>
+        <Text className={LABEL}>{t("expiresAfter")}</Text>
+        <Segmented
+          segments={EXPIRIES.map((expiry) => ({
+            value: expiry,
+            label: t(`expiryOptions.${expiry}`),
+            testID: `recipe-share-expiry-${expiry}`,
+          }))}
+          testID="recipe-share-expiry"
+          value={expiresIn}
+          onChange={setExpiresIn}
+        />
       </View>
 
-      <Text className={`${LABEL} px-1`}>{t("currentLinks")}</Text>
+      {rows.length > 0 || isLoading ? <Text className={LABEL}>{t("currentLinks")}</Text> : null}
       {isLoading ? (
         <ShareRowsSkeleton />
       ) : rows.length === 0 ? (
-        <Text className="text-muted text-sm">{t("empty")}</Text>
+        <Text className="text-muted py-10 text-center text-base">{t("empty")}</Text>
       ) : (
         <Card>
           {rows.map((share, index) => (
@@ -200,6 +205,7 @@ export function RecipeShareScreen() {
 
   return (
     <RecipeSheetGate
+      subtitle
       actions={{
         confirm: {
           label: t("createLink"),
@@ -211,7 +217,6 @@ export function RecipeShareScreen() {
         },
       }}
       name="recipe-share"
-      subtitle
       title={t("title")}
     >
       <ShareBody expiresIn={expiresIn} latest={latest} setExpiresIn={setExpiresIn} />
