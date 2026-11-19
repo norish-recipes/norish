@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
-import { GlassIconMenu } from "@/components/glass";
+import { IconMenu } from "@/components/icon-menu";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { useServingsStepper } from "@/components/servings-stepper";
 import { Stepper } from "@/components/stepper";
@@ -77,10 +77,9 @@ export function OptionsMenu() {
   const conversion = useSystemConversion();
 
   return (
-    <GlassIconMenu
+    <IconMenu
+      icon="options-outline"
       label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
-      size="regular"
-      symbol="slider.horizontal.3"
       testID="recipe-ingredient-options"
     >
       <NativeButton
@@ -105,7 +104,7 @@ export function OptionsMenu() {
               />
             ))
         : null}
-    </GlassIconMenu>
+    </IconMenu>
   );
 }
 

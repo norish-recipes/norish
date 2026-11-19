@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { GlassIconButton } from "@/components/glass";
+import { IconButton } from "@/components/icon-button";
 import { cookbookRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -24,9 +24,9 @@ export function CookbooksSection() {
   return (
     <SectionCard
       right={
-        <GlassIconButton
+        <IconButton
+          icon="book-outline"
           label={intl.formatMessage({ id: "recipes.cookbooks.manage" })}
-          symbol="book"
           testID="recipe-manage-cookbooks"
           onPress={() =>
             router.push({

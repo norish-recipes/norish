@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { PressableScale } from "@/components/pressable-scale";
-import { Button, Host, Image, Menu, Rectangle } from "@expo/ui/swift-ui";
+import { Button, Host, Image, Rectangle } from "@expo/ui/swift-ui";
 import {
   accessibilityIdentifier,
   accessibilityLabel,
@@ -145,32 +145,6 @@ export function GlassIconButton({
     >
       {button}
     </View>
-  );
-}
-
-/** A glass circle with one SF Symbol that opens a native menu of `children`, as a day's plus. */
-export function GlassIconMenu({
-  symbol,
-  label,
-  testID,
-  size = "small",
-  children,
-}: {
-  symbol: ComponentProps<typeof Image>["systemName"];
-  label: string;
-  testID: string;
-  size?: keyof typeof SIZES;
-  children: ReactNode;
-}) {
-  return (
-    <Host matchContents>
-      <Menu
-        label={<Glyph size={size} symbol={symbol} />}
-        modifiers={[...GLASS_CIRCLE, accessibilityLabel(label), accessibilityIdentifier(testID)]}
-      >
-        {children}
-      </Menu>
-    </Host>
   );
 }
 

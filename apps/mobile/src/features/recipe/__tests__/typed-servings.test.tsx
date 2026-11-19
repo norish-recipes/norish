@@ -29,6 +29,7 @@ vi.mock("react-native", () => ({
     />
   ),
 }));
+vi.mock("@/hooks/use-focus-on-mount", () => ({ useFocusOnMount: () => null }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
