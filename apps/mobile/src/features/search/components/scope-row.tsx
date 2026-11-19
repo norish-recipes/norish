@@ -53,10 +53,7 @@ export function ScopeRow() {
             >
               <GlassSurface radius={18} />
               {on ? <Ionicons color={foreground} name="checkmark" size={14} /> : null}
-              <Text
-                className="text-[15px] font-medium"
-                style={{ color: on ? foreground : muted }}
-              >
+              <Text className="text-[15px] font-medium" style={{ color: on ? foreground : muted }}>
                 {intl.formatMessage({ id: `recipes.dashboard.searchFields.${field}` })}
               </Text>
             </PressableScale>

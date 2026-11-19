@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, it } from "vitest";
-
 import {
   keepSearchFilters,
   resetSearchSession,
   savedSearchFilters,
   SEARCH_START,
 } from "@/lib/search-session";
+import { afterEach, describe, expect, it } from "vitest";
 
 afterEach(resetSearchSession);
 

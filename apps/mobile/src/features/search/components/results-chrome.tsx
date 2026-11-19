@@ -57,7 +57,10 @@ function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove: () => 
 
   return (
     <PressableScale
-      accessibilityLabel={intl.formatMessage({ id: "recipes.search.removeFilter" }, { filter: label })}
+      accessibilityLabel={intl.formatMessage(
+        { id: "recipes.search.removeFilter" },
+        { filter: label }
+      )}
       accessibilityRole="button"
       className="bg-default h-9 flex-none flex-row items-center gap-1.5 rounded-full pr-2.5 pl-3.5"
       testID={`search-chip-${chipKey(chip)}`}

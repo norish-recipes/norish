@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { keepSearchFilters, savedSearchFilters } from "@/lib/search-session";
 
 import { LibraryFiltersProvider, useLibraryFiltersStoreApi } from "@norish/shared-react/recipes";
-
-import { keepSearchFilters, savedSearchFilters } from "@/lib/search-session";
 
 function KeepFilters() {
   const store = useLibraryFiltersStoreApi();

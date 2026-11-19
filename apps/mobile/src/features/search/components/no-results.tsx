@@ -40,9 +40,7 @@ export function SearchNoResults({
   return (
     <EmptyCard
       className="bg-surface mx-5 mt-4"
-      description={
-        clearing ? intl.formatMessage({ id: "recipes.empty.noResultsHint" }) : undefined
-      }
+      description={clearing ? intl.formatMessage({ id: "recipes.empty.noResultsHint" }) : undefined}
       icon={clearing ? "funnel-outline" : "search-outline"}
       testID="search-no-results"
       title={intl.formatMessage({ id: "recipes.empty.noResults" })}

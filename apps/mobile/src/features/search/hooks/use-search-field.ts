@@ -1,9 +1,9 @@
 import type { SearchBarCommands } from "react-native-screens";
 import { useEffect, useRef, useState } from "react";
+import { setSearchConfirmed } from "@/lib/search-session";
 
 import { useLibraryFilters, useLibraryFiltersStoreApi } from "@norish/shared-react/recipes";
 
-import { setSearchConfirmed } from "@/lib/search-session";
 import { hasSearchFilters } from "../utils/search-state";
 
 // UIKit empties the field on Cancel just before it reports it, as it does on the clear button.

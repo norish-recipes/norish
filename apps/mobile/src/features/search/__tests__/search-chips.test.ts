@@ -36,7 +36,9 @@ describe("filter chips", () => {
   });
 
   it("removes only the one it names", () => {
-    expect(withoutChip(applied, { kind: "tag", value: "vegan" })).toEqual({ searchTags: ["quick"] });
+    expect(withoutChip(applied, { kind: "tag", value: "vegan" })).toEqual({
+      searchTags: ["quick"],
+    });
     expect(withoutChip(applied, { kind: "category", value: "Dinner" })).toEqual({ categories: [] });
     expect(withoutChip(applied, { kind: "time", value: 30 })).toEqual({ maxCookingTime: null });
     expect(withoutChip(applied, { kind: "rating", value: 4 })).toEqual({ minRating: null });

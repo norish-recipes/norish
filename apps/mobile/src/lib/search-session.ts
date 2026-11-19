@@ -4,7 +4,6 @@ import type { SortOrder } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
-
 /** Best match is the server's `none`: rank while there is text, newest otherwise. It is Search's default. */
 export const BEST_MATCH: SortOrder = "none";
 

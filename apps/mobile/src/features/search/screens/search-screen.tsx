@@ -12,12 +12,12 @@ import { useIntl } from "react-intl";
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
 
-import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { SearchNoResults } from "../components/no-results";
+import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
 import { useSearchField } from "../hooks/use-search-field";
-import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
 import { filterChips } from "../utils/search-chips";
+import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
 import { hasSearchFilters, noResultsVariant, searchView } from "../utils/search-state";
 
 /** What the card list Search shows its results in takes: the recipes, paged, under `header`. */

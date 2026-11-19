@@ -99,6 +99,11 @@ describe("endSession", () => {
 
     await endSession(authClient, "device", "Sign in");
 
-    expect(order).toEqual(["stored session reset", "search reset", "timers ended", "widgets cleared: Sign in"]);
+    expect(order).toEqual([
+      "stored session reset",
+      "search reset",
+      "timers ended",
+      "widgets cleared: Sign in",
+    ]);
   });
 });
