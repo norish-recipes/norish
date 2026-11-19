@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { Switch } from "@/components/switch";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 

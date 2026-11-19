@@ -16,7 +16,7 @@ import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import { COOKBOOK_ACTION_DEFINITIONS, cookbookMenuActions } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { CookbookCover } from "./cookbook-cover";
-import { Pill } from "./pill";
+import { Pill } from "@/components/pill";
 
 /** A cookbook in the Library, as a row or a grid card; a long press offers Add recipes, Rename and Delete. */
 export const CookbookCard = memo(function CookbookCard({

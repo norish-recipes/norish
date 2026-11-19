@@ -5,6 +5,7 @@ import { Pressable, Text, View } from "react-native";
 import { ItemSlice } from "@/components/card-slice";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
+import { IconButton } from "@/components/icon-button";
 import { FULL_SHEET_TOP, SHEET_SCROLL_END } from "@/components/sheet";
 import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -84,7 +85,6 @@ export function StoreAisleList({
 }) {
   const intl = useIntl();
   const text = (id: string) => intl.formatMessage({ id });
-  const [accent] = useThemeColor(["accent"] as const);
   const [draft, setDraft] = useState("");
   const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } =
     useFocusedFieldInView<DragListHandle>(
@@ -133,17 +133,14 @@ export function StoreAisleList({
                 }}
                 onSubmitEditing={add}
               />
-              <Pressable
-                accessibilityLabel={text("groceries.storeManager.addAisle")}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !canAdd }}
-                className={`bg-sand size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
+              <IconButton
                 disabled={!canAdd}
+                icon="add"
+                label={text("groceries.storeManager.addAisle")}
                 testID="aisle-add"
+                tone="accent"
                 onPress={add}
-              >
-                <Ionicons color={accent} name="add" size={18} />
-              </Pressable>
+              />
             </View>
           </View>
           {duplicate || listDuplicate ? (

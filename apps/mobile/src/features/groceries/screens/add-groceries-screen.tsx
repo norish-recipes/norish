@@ -1,9 +1,9 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import { Switch } from "@/components/switch";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useRouter } from "expo-router";
-import { Switch } from "@/components/switch";
 import { Input } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -53,8 +53,6 @@ export function AddGroceriesScreen() {
 
   return (
     <GrocerySheet
-      aisleId={aisle.aisleId}
-      aisles={groceryName === "" ? [] : aisle.aisles}
       actions={{
         confirm: {
           label: intl.formatMessage({ id: "common.actions.add" }),
@@ -62,6 +60,8 @@ export function AddGroceriesScreen() {
           onPress: submit,
         },
       }}
+      aisleId={aisle.aisleId}
+      aisles={groceryName === "" ? [] : aisle.aisles}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField

@@ -7,6 +7,8 @@ import { describe, expect, it, vi } from "vitest";
 type Props = { testID?: string; children?: ReactNode };
 
 // A link to a recipe that is gone: the page store has nothing, and the server said NOT_FOUND.
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
+vi.mock("@/components/toggle-chip", () => ({ ToggleChip: () => null }));
 vi.mock("react-native", () => ({
   View: ({ testID, children }: Props) => <div data-testid={testID}>{children}</div>,
   Text: ({ children }: Props) => <span>{children}</span>,

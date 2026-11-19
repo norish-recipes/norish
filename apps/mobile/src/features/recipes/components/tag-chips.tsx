@@ -5,7 +5,7 @@ import { useWindowDimensions, View } from "react-native";
 import { isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { fitTags } from "../utils/tag-fit";
-import { Pill } from "./pill";
+import { Pill } from "@/components/pill";
 
 // Between chips, and between the row card's facts and its tags.
 export const TAG_GAP = 6;

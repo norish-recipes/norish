@@ -1,12 +1,13 @@
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { IconButton } from "@/components/icon-button";
 import { SheetScrollView } from "@/components/sheet";
+import { ToggleChip } from "@/components/toggle-chip";
 import { useServerUrl } from "@/lib/network/server-url";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams } from "expo-router";
-import { Chip, Skeleton, useThemeColor } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
@@ -17,13 +18,14 @@ import {
   useRecipeSharesQuery,
 } from "@norish/shared-react/recipes";
 
+import { Pill } from "@/components/pill";
 import { RecipeSheetGate } from "../components/recipe-sheet-gate";
 import { shareSubtitle } from "../utils/share-row";
 
 type Expiry = CreateRecipeShareInputDto["expiresIn"];
 
 const EXPIRIES: Expiry[] = ["1day", "1week", "1month", "1year", "forever"];
-const STATUS_COLOR = { active: "success", expired: "warning", revoked: "default" } as const;
+const STATUS_TONE = { active: "active", expired: "expired", revoked: "default" } as const;
 const LABEL = "text-muted text-xs font-semibold tracking-[0.6px] uppercase";
 
 /** The link made this visit: the one share whose URL the server still gives. */
@@ -51,7 +53,6 @@ function ShareRow({
   const { toast } = usePlatform();
   const recipe = useLoadedPageRecipe();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(recipe.id);
-  const [foreground, danger] = useThemeColor(["foreground", "danger"] as const);
   const t = useShareT();
   const date = (value: Date) => intl.formatDate(value, { month: "short", day: "numeric" });
   const copy = async () => {
@@ -61,19 +62,10 @@ function ShareRow({
   };
   const round = (
     label: string,
-    icon: ComponentProps<typeof Ionicons>["name"],
+    icon: ComponentProps<typeof IconButton>["icon"],
     onPress: () => void,
-    color = foreground
-  ) => (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className="bg-sand size-11 items-center justify-center rounded-full"
-      onPress={onPress}
-    >
-      <Ionicons color={color} name={icon} size={20} />
-    </Pressable>
-  );
+    tone: "default" | "danger" = "default"
+  ) => <IconButton icon={icon} label={label} tone={tone} onPress={onPress} />;
 
   return (
     <View
@@ -92,9 +84,9 @@ function ShareRow({
               ? url.replace(/^https?:\/\//, "")
               : t("linkCreated", { date: date(share.createdAt) })}
           </Text>
-          <Chip color={STATUS_COLOR[share.status]} size="sm" variant="soft">
-            <Chip.Label>{t(`status.${share.status}`)}</Chip.Label>
-          </Chip>
+          <Pill size="row" tone={STATUS_TONE[share.status]}>
+            {t(`status.${share.status}`)}
+          </Pill>
         </View>
         <Text className="text-muted text-[13px]" numberOfLines={1}>
           {shareSubtitle(share, t, date)}
@@ -117,7 +109,7 @@ function ShareRow({
             t("deleteModal.confirm"),
             "trash-outline",
             () => deleteShare(share.id, share.version),
-            danger
+            "danger"
           )}
     </View>
   );
@@ -144,20 +136,13 @@ function ShareBody({
         <Text className={`${LABEL} px-1`}>{t("expiresAfter")}</Text>
         <View className="flex-row flex-wrap gap-2">
           {EXPIRIES.map((expiry) => (
-            <Pressable
+            <ToggleChip
               key={expiry}
-              accessibilityRole="button"
-              accessibilityState={{ selected: expiresIn === expiry }}
-              className={`h-10 items-center justify-center rounded-full px-4 ${expiresIn === expiry ? "bg-accent" : "bg-sand"}`}
+              active={expiresIn === expiry}
+              label={t(`expiryOptions.${expiry}`)}
               testID={`recipe-share-expiry-${expiry}`}
               onPress={() => setExpiresIn(expiry)}
-            >
-              <Text
-                className={`text-sm font-medium ${expiresIn === expiry ? "text-accent-foreground" : "text-foreground"}`}
-              >
-                {t(`expiryOptions.${expiry}`)}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
       </View>

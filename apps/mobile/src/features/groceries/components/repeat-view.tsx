@@ -101,12 +101,12 @@ export function RepeatBody({
             <FieldLabel>{text("onDay")}</FieldLabel>
           </View>
           <Segmented
-            size="compact"
             segments={WEEKDAYS.map((key, index) => ({
               value: String(index),
               label: text(`weekdays.${key}`),
               testID: `repeat-weekday-${index}`,
             }))}
+            size="compact"
             testID="repeat-weekday"
             value={String(pattern.weekday ?? 1)}
             onChange={(day) => onChange({ ...pattern, weekday: Number(day) })}

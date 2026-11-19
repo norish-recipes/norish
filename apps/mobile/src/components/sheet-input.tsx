@@ -45,7 +45,7 @@ export function SheetInput({
         variant="secondary"
       />
       {suffix ? (
-        <InputGroup.Suffix isDecorative={typeof suffix === "string"} className="pr-4 pl-1.5">
+        <InputGroup.Suffix className="pr-4 pl-1.5" isDecorative={typeof suffix === "string"}>
           {word(suffix)}
         </InputGroup.Suffix>
       ) : null}

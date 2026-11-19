@@ -35,7 +35,6 @@ const { OnSheet } = await import("@/components/on-sheet");
 const { CardPhoto } = await import("@/components/card-photo");
 const { PlannedThumb } = await import("@/components/planned-thumb");
 const { CookbookCover } = await import("@/features/recipes/components/cookbook-cover");
-const { RowButton } = await import("@/features/groceries/components/pantry-rows");
 const slices =
   await vi.importActual<typeof import("@/components/card-slice")>("@/components/card-slice");
 
@@ -46,7 +45,6 @@ const cases = [
     "CookbookCover",
     <CookbookCover key="d" className="x" cookbook={{ image: null, coverImages: [] } as never} />,
   ],
-  ["RowButton", <RowButton key="e" icon="add" label="l" testID="t" onPress={() => {}} />],
 ] as const;
 
 describe.each(cases)("%s ground", (_, element) => {

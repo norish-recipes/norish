@@ -24,7 +24,7 @@ import {
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
-import { Pill } from "./pill";
+import { Pill } from "@/components/pill";
 import { SwipeActions } from "./swipe-actions";
 import { TAG_GAP, TagChips } from "./tag-chips";
 

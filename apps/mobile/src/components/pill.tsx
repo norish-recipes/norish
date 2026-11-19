@@ -5,7 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 type Size = "row" | "footer" | "overlay";
-type Tone = "default" | "surface" | "warning";
+type Tone = "default" | "surface" | "warning" | "active" | "expired";
 
 // Fully rounded: the radius is half the height.
 const HEIGHT: Record<Size, number> = { row: 24, footer: 22, overlay: 24 };
@@ -19,9 +19,19 @@ const GROUND: Record<Tone, string> = {
   default: "bg-default",
   surface: "bg-surface",
   warning: "bg-warning",
+  active: "bg-accent",
+  expired: "bg-shop",
+};
+const LABEL: Record<Tone, string> = {
+  default: "text-foreground",
+  surface: "text-foreground",
+  warning: "text-warning-foreground font-semibold",
+  active: "text-accent-foreground font-semibold",
+  expired: "text-shop-foreground font-semibold",
 };
 
-/** A card's small capsule: a fact, a tag, or an allergen warning, sized by the card's `size`.
+/** A card's small capsule: a fact, a tag, an allergen warning, or a kit status (`active`, `expired`),
+ * sized by the card's `size`.
  * An `overlay` chip sits on a photo, so it casts a shadow; past `maxWidth` the text is cut. */
 export function Pill({
   children,
@@ -29,12 +39,14 @@ export function Pill({
   size,
   tone = "default",
   maxWidth,
+  testID,
 }: {
   children: string | number;
   icon?: ComponentProps<typeof Ionicons>["name"];
   size: Size;
   tone?: Tone;
   maxWidth?: number;
+  testID?: string;
 }) {
   const [muted, warningForeground] = useThemeColor(["muted", "warning-foreground"] as const);
 
@@ -42,6 +54,7 @@ export function Pill({
     <View
       className={`flex-none flex-row items-center gap-1 ${PADDING[size]} ${GROUND[tone]} ${size === "overlay" ? "shadow-md" : ""}`}
       style={{ height: HEIGHT[size], borderRadius: HEIGHT[size] / 2, maxWidth }}
+      testID={testID}
     >
       {icon ? (
         <Ionicons
@@ -50,10 +63,7 @@ export function Pill({
           size={size === "footer" ? 11 : 13}
         />
       ) : null}
-      <Text
-        className={`shrink ${TEXT[size]} ${tone === "warning" ? "text-warning-foreground font-semibold" : "text-foreground"}`}
-        numberOfLines={1}
-      >
+      <Text className={`shrink ${TEXT[size]} ${LABEL[tone]}`} numberOfLines={1}>
         {children}
       </Text>
     </View>

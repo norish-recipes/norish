@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
-import { GlassPill } from "@/components/glass";
+import { PillButton } from "@/components/pill-button";
 import { Skeleton } from "heroui-native";
 
 const SECTION = "bg-sand overflow-hidden rounded-[22px]";
@@ -44,14 +44,7 @@ export function GroceryLinesSection({
         <Text className="text-muted flex-1 text-[13px]" numberOfLines={1}>
           {count}
         </Text>
-        <GlassPill
-          className="justify-center px-3"
-          size="small"
-          testID={`${testID}-toggle`}
-          onPress={onToggleAll}
-        >
-          <Text className="text-foreground text-[13px] font-medium">{toggleLabel}</Text>
-        </GlassPill>
+        <PillButton label={toggleLabel} testID={`${testID}-toggle`} onPress={onToggleAll} />
       </View>
       {children}
     </View>

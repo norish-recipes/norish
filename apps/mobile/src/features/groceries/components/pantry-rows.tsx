@@ -1,8 +1,10 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
+import { IconButton } from "@/components/icon-button";
 import { IngredientIcon } from "@/components/ingredient-icon";
-import { useGroupedFill, useOnSheet } from "@/components/on-sheet";
+import { useOnSheet } from "@/components/on-sheet";
+import { Pill } from "@/components/pill";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
@@ -18,54 +20,11 @@ import { SkeletonCard } from "./groceries-states";
 /** A kept food that still has a grocery to buy: handled, so nobody adds it twice. */
 export function OnTheListChip() {
   const intl = useIntl();
-  const accentText = useAccentTextColor();
 
   return (
-    <View
-      className="bg-accent/10 h-[30px] flex-row items-center gap-1 rounded-full pr-2.5 pl-2"
-      testID="on-the-list"
-    >
-      <Ionicons color={accentText} name="checkmark" size={13} />
-      <Text className="text-accent-text text-[13px] font-semibold">
-        {intl.formatMessage({ id: "groceries.pantry.onTheList" })}
-      </Text>
-    </View>
-  );
-}
-
-/** The round 36 pt button at the end of a row. */
-export function RowButton({
-  icon,
-  label,
-  testID,
-  accent = false,
-  onPress,
-}: {
-  icon: "cart-outline" | "add";
-  label: string;
-  testID: string;
-  accent?: boolean;
-  onPress: () => void;
-}) {
-  const [foreground] = useThemeColor(["foreground"] as const);
-  const accentText = useAccentTextColor();
-  const fill = useGroupedFill();
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className={`${fill} size-9 items-center justify-center rounded-full`}
-      hitSlop={4}
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons
-        color={accent ? accentText : foreground}
-        name={icon}
-        size={icon === "add" ? 20 : 17}
-      />
-    </Pressable>
+    <Pill size="row" testID="on-the-list" tone="active">
+      {intl.formatMessage({ id: "groceries.pantry.onTheList" })}
+    </Pill>
   );
 }
 
@@ -147,7 +106,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
               row.onList ? (
                 <OnTheListChip />
               ) : (
-                <RowButton
+                <IconButton
                   icon="cart-outline"
                   label={intl.formatMessage({ id: "groceries.pantry.putOnTheList" })}
                   testID={`pantry-put-${item.id}`}
@@ -208,11 +167,11 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
         <CardSlice edge={row.edge}>
           <FoodRow
             end={
-              <RowButton
-                accent
+              <IconButton
                 icon="add"
                 label={addLabel(name)}
                 testID={`pantry-suggestion-${food.ingredientId}`}
+                tone="accent"
                 onPress={() => actions.keep(food)}
               />
             }
@@ -236,7 +195,6 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
 export function ShowMore({ onPress }: { onPress: () => void }) {
   const intl = useIntl();
   const accentText = useAccentTextColor();
-  const fill = useGroupedFill();
 
   return (
     <Pressable

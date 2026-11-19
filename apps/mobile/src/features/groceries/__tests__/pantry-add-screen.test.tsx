@@ -12,6 +12,7 @@ const suggestions = vi.hoisted(() => [
   { ingredientId: "i-garlic", name: "Garlic", localeNames: {}, recipeCount: 3 },
 ]);
 
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("react-native", async () => {
   const { createElement } = await import("react");
 

@@ -8,6 +8,7 @@ const pantry = vi.hoisted(() => ({
   isUnavailable: false,
 }));
 
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("@/lib/home-indicator", () => ({ homeIndicator: 0 }));
 vi.mock("react-native", async () => {
   const { createElement } = await import("react");

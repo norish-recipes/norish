@@ -1,11 +1,12 @@
 import React from "react";
 import { CardSlice } from "@/components/card-slice";
+import { IconButton } from "@/components/icon-button";
 import { useIntl } from "react-intl";
 
 import type { PickedFood } from "@norish/shared-react/groceries";
 
 import type { PantryAddRow } from "../utils/pantry-add-rows";
-import { FoodRow, RowButton } from "./pantry-rows";
+import { FoodRow } from "./pantry-rows";
 
 /** One row of the Add to pantry sheet: a food it found, or the text as typed; a tap on its + keeps it. */
 export function PantryAddRowView({
@@ -21,11 +22,11 @@ export function PantryAddRowView({
     <CardSlice edge={row.edge}>
       <FoodRow
         end={
-          <RowButton
-            accent
+          <IconButton
             icon="add"
             label={intl.formatMessage({ id: "groceries.pantry.addFood" }, { name: row.name })}
             testID={row.testIDs.button}
+            tone="accent"
             onPress={() => onKeep(row.keeps)}
           />
         }

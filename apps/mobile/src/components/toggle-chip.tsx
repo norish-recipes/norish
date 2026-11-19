@@ -36,7 +36,7 @@ export function ToggleChip({
         <Ionicons color={active ? accentForeground : foreground} name={icon} size={14} />
       ) : null}
       <Text
-        className={`text-[15px] ${active ? "font-semibold text-accent-foreground" : "font-medium text-foreground"}`}
+        className={`text-[15px] ${active ? "text-accent-foreground font-semibold" : "text-foreground font-medium"}`}
       >
         {label}
       </Text>

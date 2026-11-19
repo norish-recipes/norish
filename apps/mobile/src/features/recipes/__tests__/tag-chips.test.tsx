@@ -25,7 +25,7 @@ vi.mock("react-native", () => ({
     return <div data-hidden={accessibilityElementsHidden ? "" : undefined}>{children}</div>;
   },
 }));
-vi.mock("@/features/recipes/components/pill", () => ({
+vi.mock("@/components/pill", () => ({
   Pill: ({ children }: { children: string }) => <span>{children}</span>,
 }));
 
