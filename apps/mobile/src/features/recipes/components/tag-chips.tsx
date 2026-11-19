@@ -11,12 +11,15 @@ import { Pill } from "./pill";
 export const TAG_GAP = 6;
 
 const LOOK = {
-  glass: { size: "overlay", tone: "surface" },
+  photo: { size: "overlay", tone: "surface" },
   plain: { size: "row", tone: "default" },
 } as const;
 
-/** A card's tags on one line, then `+N`: a hidden row measures each chip (plain, glass has its box)
- * so `fitTags` decides before drawing. `glass` chips sit over a grid card's photo. */
+/** Chip widths by size, font scale, allergen look and text, measured once for every card. */
+const chipWidths = new Map<string, number>();
+
+/** A card's tags on one line, then `+N`: a hidden row measures each chip not yet in `chipWidths`
+ * so `fitTags` decides before drawing. `photo` chips sit over a grid card's photo. */
 export function TagChips({
   tags,
   allergySet,
@@ -29,28 +32,23 @@ export function TagChips({
   testID: string;
 }) {
   const [room, setRoom] = useState<number | null>(null);
-  // Chip widths by position, for these tags, their allergen look, the window width and font scale.
-  const { width: screen, fontScale } = useWindowDimensions();
+  // This card's own measurements: the compiler would not see the shared map change.
+  const [measured, setMeasured] = useState<Record<string, number>>({});
+  const { fontScale } = useWindowDimensions();
   const allergen = (tag: string) => isAllergenTag(tag, allergySet);
-  const basis = [screen, fontScale, ...tags.map((tag) => `${allergen(tag)}${tag}`)].join("\n");
-  const [measured, setMeasured] = useState<Measured>({ basis, widths: [], more: null });
-  const known = measured.basis === basis ? measured : { basis, widths: [], more: null };
-  const measure = (update: (known: Measured) => Measured) =>
-    setMeasured((last) => update(last.basis === basis ? last : { basis, widths: [], more: null }));
-  const widthOf = (index: number) => (event: LayoutChangeEvent) => {
+  const { size, tone } = LOOK[look];
+  const tagKeys = tags.map((tag) => `${size}\n${fontScale}\n${allergen(tag)}\n${tag}`);
+  // Apart from the tags, so a tag named +2 keeps its own width.
+  const moreKey = `${size}\n${fontScale}\nmore\n${tags.length}`;
+  const widthOf = (key: string) => (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
 
-    measure((last) =>
-      last.widths[index] === width
-        ? last
-        : { ...last, widths: Object.assign([...last.widths], { [index]: width }) }
-    );
+    chipWidths.set(key, width);
+    setMeasured((last) => (last[key] === width ? last : { ...last, [key]: width }));
   };
-  const { size, tone } = LOOK[look];
-  const glass = look === "glass";
-  const chip = (tag: string, maxWidth?: number, onGlass = glass) => (
+  const known = (key: string) => measured[key] ?? chipWidths.get(key);
+  const chip = (tag: string, maxWidth?: number) => (
     <Pill
-      glass={onGlass}
       icon={allergen(tag) ? "warning-outline" : undefined}
       maxWidth={maxWidth}
       size={size}
@@ -59,13 +57,11 @@ export function TagChips({
       {tag}
     </Pill>
   );
-  const tagWidths = tags.map((_tag, index) => known.widths[index]);
+  const tagWidths = tagKeys.map(known);
+  const moreWidth = known(moreKey);
   const allMeasured =
-    known.more !== null && tagWidths.every((width): width is number => width !== undefined);
-  const fit =
-    room !== null && allMeasured && known.more !== null
-      ? fitTags(tagWidths, room, TAG_GAP, known.more)
-      : null;
+    moreWidth !== undefined && tagWidths.every((width): width is number => width !== undefined);
+  const fit = room !== null && allMeasured ? fitTags(tagWidths, room, TAG_GAP, moreWidth) : null;
 
   if (tags.length === 0) return null;
 
@@ -73,7 +69,7 @@ export function TagChips({
 
   return (
     <View
-      className={glass ? "absolute inset-x-0 bottom-0 px-2 pb-2" : "min-w-0 flex-1"}
+      className={look === "photo" ? "absolute inset-x-0 bottom-0 px-2 pb-2" : "min-w-0 flex-1"}
       pointerEvents="none"
       testID={testID}
     >
@@ -90,7 +86,7 @@ export function TagChips({
               </React.Fragment>
             ))}
             {fit.more ? (
-              <Pill glass={glass} size={size} tone={hidden.some(allergen) ? "warning" : tone}>
+              <Pill size={size} tone={hidden.some(allergen) ? "warning" : tone}>
                 {`+${hidden.length}`}
               </Pill>
             ) : null}
@@ -106,17 +102,11 @@ export function TagChips({
           pointerEvents="none"
         >
           {tags.map((tag, index) => (
-            <View key={index} onLayout={widthOf(index)}>
-              {chip(tag, undefined, false)}
+            <View key={index} onLayout={widthOf(tagKeys[index] ?? "")}>
+              {chip(tag)}
             </View>
           ))}
-          <View
-            onLayout={(event) => {
-              const { width } = event.nativeEvent.layout;
-
-              measure((last) => (last.more === width ? last : { ...last, more: width }));
-            }}
-          >
+          <View onLayout={widthOf(moreKey)}>
             <Pill size={size}>{`+${tags.length}`}</Pill>
           </View>
         </View>
@@ -124,5 +114,3 @@ export function TagChips({
     </View>
   );
 }
-
-type Measured = { basis: string; widths: (number | undefined)[]; more: number | null };

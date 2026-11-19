@@ -53,7 +53,7 @@ describe("TagChips", () => {
     const { container } = render(
       <TagChips
         allergySet={new Set()}
-        look="glass"
+        look="photo"
         tags={["vegan", "quick", "spicy"]}
         testID="tags"
       />
@@ -81,7 +81,7 @@ describe("TagChips", () => {
     layouts.length = 0;
     window.fontScale = 1;
     const chips = () => (
-      <TagChips allergySet={new Set()} look="glass" tags={["soup", "soup"]} testID="tags" />
+      <TagChips allergySet={new Set()} look="photo" tags={["soup", "soup"]} testID="tags" />
     );
     const { container, rerender } = render(chips());
 
@@ -109,5 +109,23 @@ describe("TagChips", () => {
     rerender(chips(new Set(["nuts"])));
     expect(visibleChips(container)).toEqual([]);
     expect(container.querySelector("[data-hidden]")).not.toBeNull();
+  });
+
+  it("draws tags another card measured at once, with no hidden row", () => {
+    layouts.length = 0;
+    window.fontScale = 1;
+    const chips = () => (
+      <TagChips allergySet={new Set()} look="plain" tags={["rice", "beans"]} testID="tags" />
+    );
+
+    render(chips());
+    layOut(100);
+    layouts.length = 0;
+    const { container } = render(chips());
+    // Only the line itself is still measured.
+    layOut(100);
+
+    expect(container.querySelector("[data-hidden]")).toBeNull();
+    expect(visibleChips(container)).toEqual(["rice", "beans"]);
   });
 });
