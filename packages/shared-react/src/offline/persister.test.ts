@@ -1,64 +1,69 @@
-import type { PersistedClient } from "@tanstack/query-persist-client-core";
-import { beforeEach, describe, expect, it } from "vitest";
+import { dehydrate, QueryClient } from "@tanstack/react-query";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { OfflineStorage } from "./storage";
-import { queryCacheKey } from "./cache-identity";
-import { createPersister } from "./persister";
+import { queryCacheKey, queryCachePrefix } from "./cache-identity";
+import { createQueryStore } from "./persister";
 import { createMemoryStorage } from "./testing/memory-storage";
 
-function fakeClient(marker: string): PersistedClient {
-  return {
-    timestamp: 0,
-    buster: "test",
-    clientState: { mutations: [], queries: [{ marker } as never] },
-  } as PersistedClient;
+const MAX_AGE = 1000;
+
+function read(key: string, value: unknown) {
+  const client = new QueryClient();
+
+  client.setQueryData([key], value);
+
+  return dehydrate(client).queries[0]!;
 }
 
-describe("createPersister", () => {
-  let idb: OfflineStorage["keyval"];
+describe("createQueryStore", () => {
+  let keyval: OfflineStorage["keyval"];
+  const restore = (owner: string, buster = "v1") =>
+    createQueryStore(keyval).restore(owner, { buster, maxAge: MAX_AGE });
 
   beforeEach(() => {
-    idb = createMemoryStorage().keyval;
+    keyval = createMemoryStorage().keyval;
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("keeps each read under its owner's key, apart from another owner's", async () => {
+    const store = createQueryStore(keyval);
+
+    await store.write("a", read("greeting", "for a"), "v1");
+    await store.write("ab", read("greeting", "for ab"), "v1");
+
+    expect((await restore("a")).map((query) => query.state.data)).toEqual(["for a"]);
+    expect(await keyval.get(queryCacheKey("a", read("greeting", "").queryHash))).toBeDefined();
   });
 
-  it("persists and restores a client under the owner's cache key", async () => {
-    const persister = createPersister(idb, "owner-a");
+  it("drops reads another app version saved", async () => {
+    await createQueryStore(keyval).write("a", read("greeting", "old app"), "v0");
 
-    await persister.persistClient(fakeClient("a"));
-
-    expect(await persister.restoreClient()).toEqual(fakeClient("a"));
-    expect(await idb.get(queryCacheKey("owner-a"))).toEqual(fakeClient("a"));
+    expect(await restore("a")).toEqual([]);
+    expect(await keyval.entries(queryCachePrefix("a"))).toEqual([]);
   });
 
-  it("returns undefined when nothing is stored for the owner", async () => {
-    const persister = createPersister(idb, "empty");
+  it("removes one read, and clears every read of an owner's", async () => {
+    const store = createQueryStore(keyval);
+    const kept = read("kept", 1);
 
-    expect(await persister.restoreClient()).toBeUndefined();
+    await store.write("a", read("gone", 1), "v1");
+    await store.write("a", kept, "v1");
+    await store.write("b", read("other", 1), "v1");
+    await store.remove("a", read("gone", 1).queryHash);
+
+    expect((await restore("a")).map((query) => query.queryKey)).toEqual([["kept"]]);
+
+    await store.clear("a");
+
+    expect(await restore("a")).toEqual([]);
+    expect(await restore("b")).toHaveLength(1);
   });
 
-  it("re-keys to another owner without touching the first owner's blob", async () => {
-    const persister = createPersister(idb, "owner-a");
+  it("deletes an owner's entry it cannot read as a saved read", async () => {
+    await keyval.set(queryCachePrefix("a"), { clientState: { queries: [] } });
 
-    await persister.persistClient(fakeClient("a"));
-    persister.setOwner("owner-b");
-
-    expect(persister.currentOwner()).toBe("owner-b");
-    // owner-b has nothing yet...
-    expect(await persister.restoreClient()).toBeUndefined();
-
-    await persister.persistClient(fakeClient("b"));
-
-    // ...and owner-a's blob is still intact.
-    expect(await idb.get(queryCacheKey("owner-a"))).toEqual(fakeClient("a"));
-    expect(await idb.get(queryCacheKey("owner-b"))).toEqual(fakeClient("b"));
-  });
-
-  it("removes the current owner's blob", async () => {
-    const persister = createPersister(idb, "owner-a");
-
-    await persister.persistClient(fakeClient("a"));
-    await persister.removeClient();
-
-    expect(await persister.restoreClient()).toBeUndefined();
+    expect(await restore("a")).toEqual([]);
+    expect(await keyval.keys()).toEqual([]);
   });
 });

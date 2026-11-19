@@ -22,13 +22,18 @@
 
 import type { OfflineStorage } from "./storage";
 
-/** Prefix for a per-owner persisted query-cache blob in the `keyval` store. */
+/** Prefix for an owner's persisted reads in the `keyval` store, one entry per read. */
 const QUERY_CACHE_KEY_PREFIX = "query-cache:";
 const LAST_WARMED_KEY_PREFIX = "last-warmed:";
 
-/** `keyval` key under which a given owner's dehydrated cache lives. */
-export function queryCacheKey(ownerId: string): string {
+/** The start of every `keyval` key holding one of `ownerId`'s persisted reads. */
+export function queryCachePrefix(ownerId: string): string {
   return `${QUERY_CACHE_KEY_PREFIX}${ownerId}`;
+}
+
+/** `keyval` key under which one of `ownerId`'s reads lives, by its query hash. */
+export function queryCacheKey(ownerId: string, queryHash: string): string {
+  return `${queryCachePrefix(ownerId)}:${queryHash}`;
 }
 
 /** `keyval` key holding a given owner's Warm Set completion time. */
@@ -48,7 +53,10 @@ function ownerFromPrefixedKey(key: unknown, prefix: string): string | null {
 
 /** Extract the owner id from a `queryCacheKey`, or null if the key isn't one. */
 export function ownerFromCacheKey(key: unknown): string | null {
-  return ownerFromPrefixedKey(key, QUERY_CACHE_KEY_PREFIX);
+  const rest = ownerFromPrefixedKey(key, QUERY_CACHE_KEY_PREFIX);
+  const owner = rest?.split(":", 1)[0];
+
+  return owner ? owner : null;
 }
 
 /**

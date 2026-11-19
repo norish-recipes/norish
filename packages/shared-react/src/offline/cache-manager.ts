@@ -2,31 +2,34 @@
 // owner is confirmed, and an account switch purges the departed owner's cache and re-keys.
 
 import type { Query } from "@tanstack/react-query";
-import {
-  persistQueryClientRestore,
-  persistQueryClientSave,
-} from "@tanstack/query-persist-client-core";
-import { partialMatchKey, QueryClient } from "@tanstack/react-query";
+import { dehydrate, hydrate, partialMatchKey, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
 
 import type { OfflineStorage } from "./storage";
-import { purgeForeignReadArtifacts, queryCacheKey } from "./cache-identity";
+import { purgeForeignReadArtifacts } from "./cache-identity";
 import { clearLastWarmedAt } from "./last-warmed";
-import { createPersister } from "./persister";
+import { createQueryStore } from "./persister";
+import { shareEqual } from "./share-equal";
 
 /** Discard a restored cache older than this (ADR: 7-day maxAge). */
 export const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const QUERY_STALE_TIME_MS = 1000 * 60 * 5;
 
-/** Each save serializes the whole cache, so a burst of changes saves once per this interval. */
+/** A burst of changes saves once, this long after its first change. */
 export const PERSIST_THROTTLE_MS = 1000;
 
-/** Placeholder owner before any user is confirmed; never actually persisted. */
-const ANON_OWNER = "__anon__";
+/** Runs `run` when the thread is next idle (or within the throttle at the latest). */
+const whenIdle = (run: () => void) => {
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(run, { timeout: PERSIST_THROTTLE_MS });
+  } else {
+    setTimeout(run, 0);
+  }
+};
 
 export type RefetchOnMount = boolean | "always" | ((query: Query) => boolean | "always");
 
@@ -63,6 +66,8 @@ export function createOfflineQueryClient({
         refetchOnWindowFocus: true,
         refetchOnMount,
         retry: 1,
+        // Keeps an unchanged object across a refetch even when it holds a Date.
+        structuralSharing: shareEqual,
       },
       mutations: {
         // Our "offline" is backend-unreachable, not `navigator.onLine`, so a
@@ -138,7 +143,7 @@ export function createCacheManager({
 }: CacheManagerOptions): CacheManager {
   const { keyval, lastOwner } = storage;
   let bootOwner = lastOwner.get();
-  const persister = createPersister(keyval, bootOwner ?? ANON_OWNER);
+  const queryStore = createQueryStore(keyval);
   const queryClient = createOfflineQueryClient({ refetchOnMount });
 
   let appliedOwner: string | null = null;
@@ -147,34 +152,61 @@ export function createCacheManager({
   let inFlight: Promise<void> = Promise.resolve();
   const appliedListeners = new Set<() => void>();
 
-  function subscribeToPersistence(): void {
+  /** `held`: reads already in the client, which no event would save. */
+  function subscribeToPersistence(owner: string, held: string[] = []): void {
     unsubscribe?.();
 
+    // The reads changed since the last save, by query hash; a save writes or deletes only those.
+    const dirty = new Set<string>();
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const save = async () => {
-      if (timer === null) return;
-      clearTimeout(timer);
-      timer = null;
-      await persistQueryClientSave({
-        queryClient,
-        persister,
-        buster,
-        // The Outbox is the durable write queue (ADR-0009); a restored paused mutation has no
-        // mutationFn and would block its scope.
-        dehydrateOptions: { shouldDehydrateQuery, shouldDehydrateMutation: () => false },
-      });
+    let stopped = false;
+    const markDirty = (hash: string) => {
+      dirty.add(hash);
+      timer ??= setTimeout(() => whenIdle(() => void save()), PERSIST_THROTTLE_MS);
     };
-    // A trailing throttle: the first change of a burst schedules one save for the whole burst.
-    // Mutations are never persisted, so only the query cache's changes count.
-    const stopListening = queryClient.getQueryCache().subscribe(({ type }) => {
-      if (timer === null && (type === "added" || type === "removed" || type === "updated")) {
-        timer = setTimeout(() => void save(), PERSIST_THROTTLE_MS);
-      }
+    const save = async () => {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      if (stopped || dirty.size === 0) return;
+
+      const hashes = new Set(dirty);
+
+      dirty.clear();
+      // The Outbox is the durable write queue (ADR-0009), so mutations are never persisted.
+      const { queries } = dehydrate(queryClient, {
+        shouldDehydrateQuery: (query) => hashes.has(query.queryHash) && shouldDehydrateQuery(query),
+        shouldDehydrateMutation: () => false,
+      });
+      const written = new Set(queries.map((query) => query.queryHash));
+
+      await Promise.all([
+        ...queries.map((query) => queryStore.write(owner, query, buster)),
+        ...[...hashes]
+          .filter((hash) => !written.has(hash))
+          .map((hash) => queryStore.remove(owner, hash)),
+      ]);
+    };
+    // A trailing throttle, then the next idle moment: a burst of changes saves once, never
+    // during a scroll or a tap. Only new data, a read hydrated with data, or a dropped one changes the copy.
+    const stopListening = queryClient.getQueryCache().subscribe((event) => {
+      const changed =
+        event.type === "removed" ||
+        (event.type === "added" && event.query.state.data !== undefined) ||
+        (event.type === "updated" &&
+          (event.action.type === "success" || event.action.type === "setState"));
+
+      if (changed) markDirty(event.query.queryHash);
     });
 
-    flushPending = save;
+    held.forEach(markDirty);
+    // Leaving the foreground also marks the copy as in use, so a week Offline keeps it.
+    flushPending = async () => {
+      await save();
+      if (!stopped) await queryStore.touch(owner);
+    };
     unsubscribe = () => {
-      // A save still pending after a clear would write the purged cache back.
+      // A save still pending after a clear would write the purged reads back.
+      stopped = true;
       if (timer !== null) clearTimeout(timer);
       timer = null;
       stopListening();
@@ -202,7 +234,7 @@ export function createCacheManager({
     // A failure in one store must not prevent the other cleanup attempts
     // or strand the manager between lifecycle states.
     await Promise.allSettled([
-      keyval.del(queryCacheKey(owner)),
+      queryStore.clear(owner),
       clearLastWarmedAt(owner, keyval),
       clearPersonalCaches(),
     ]);
@@ -217,24 +249,23 @@ export function createCacheManager({
   }
 
   async function restoreForOwner(owner: string): Promise<void> {
-    persister.setOwner(owner);
+    // On a first adoption the client holds reads made before the owner was known.
+    const held = queryClient
+      .getQueryCache()
+      .getAll()
+      .map((query) => query.queryHash);
+    const queries = await queryStore.restore(owner, { buster, maxAge: CACHE_MAX_AGE_MS });
 
-    await persistQueryClientRestore({
+    // Dehydration drops per-query gcTime, so without a hydrate-time floor every restored read,
+    // warmed ones included, reverts to the 10-minute default, is GC'd shortly after boot and is
+    // deleted from disk: a warmed recipe would not survive a second Offline reload (ADR-0008).
+    hydrate(
       queryClient,
-      persister,
-      maxAge: CACHE_MAX_AGE_MS,
-      buster,
-      // Dehydration drops per-query gcTime, so without a hydrate-time floor every
-      // restored entry — warmed ones included — reverts to the 10-minute default,
-      // is GC'd shortly after boot, and falls out of the next persist snapshot: a
-      // warmed recipe would not survive a second Offline reload (ADR-0008's
-      // durability claim). Restoring at the cache's own maxAge keeps anything
-      // persisted eligible to stay persisted for as long as the on-disk copy is
-      // itself valid; the whole-cache maxAge/buster still bound staleness.
-      hydrateOptions: { defaultOptions: { queries: { gcTime: CACHE_MAX_AGE_MS } } },
-    });
+      { queries, mutations: [] },
+      { defaultOptions: { queries: { gcTime: CACHE_MAX_AGE_MS } } }
+    );
 
-    subscribeToPersistence();
+    subscribeToPersistence(owner, held);
 
     appliedOwner = owner;
     bootOwner = owner;
@@ -316,10 +347,7 @@ export function createCacheManager({
             return;
           }
 
-          if (owner) {
-            persister.setOwner(owner);
-            subscribeToPersistence();
-          }
+          if (owner) subscribeToPersistence(owner);
         })
         .catch(() => undefined);
 

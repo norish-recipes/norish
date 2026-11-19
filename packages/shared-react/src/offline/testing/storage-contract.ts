@@ -338,6 +338,25 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
       });
     });
 
+    describe("keyval", () => {
+      it("reads every key under a prefix with its value, and nothing outside it", async () => {
+        const { keyval } = await harness.create();
+        const at = new Date("2026-01-02T03:04:05.000Z");
+
+        await keyval.set("query-cache:u1:a", { at });
+        await keyval.set("query-cache:u1:b", 2);
+        await keyval.set("query-cache:u10:a", 3);
+        await keyval.set("last-warmed:u1", 4);
+
+        const entries = await keyval.entries<unknown>("query-cache:u1:");
+
+        expect(entries.sort(([a], [b]) => a.localeCompare(b))).toEqual([
+          ["query-cache:u1:a", { at }],
+          ["query-cache:u1:b", 2],
+        ]);
+      });
+    });
+
     describe("purge on account switch", () => {
       const cacheOf = (storage: OfflineStorage) => createCacheManager({ storage, buster: "test" });
       // A stand-in read, not a tRPC one.

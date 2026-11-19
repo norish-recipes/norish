@@ -11,3 +11,7 @@ Web offline support (targeting flaky connectivity and backend-down page loads, e
 ## Amended November 2026: one engine, storage per client
 
 The offline runtime is one engine in `@norish/shared-react/offline` that web and mobile both run: the Offline Cache persister, the Outbox and Replay, Recovery, the Cache Warmer and the connectivity probe. A client supplies only its storage adapter and its platform concerns. Web stores in IndexedDB and localStorage and keeps the service worker and the Offline Toggle. Mobile stores in MMKV, with upload files copied into the app's storage. Every adapter must pass the same storage contract suite, so a fix to offline behaviour lands for both clients at once.
+
+## Amended November 2026: one entry per read
+
+The persisted cache is stored one entry per read under its owner's prefix, not as one dehydrated blob. A save writes only the reads whose data changed and deletes those that left the cache, at the next idle moment after a short throttle: serialising the whole cache on every save froze a phone's JS thread for 200–330 ms. A launch restores every entry at once, and the 7-day maxAge counts from the owner's newest save, so a cache in use never loses a warmed read for being unchanged.

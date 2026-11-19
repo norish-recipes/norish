@@ -57,6 +57,8 @@ export function createIdbStorage(factory?: IDBFactory): OfflineStorage {
       del: (key) => idb.del(KEYVAL_STORE, key),
       keys: async () =>
         (await idb.keys(KEYVAL_STORE)).filter((key): key is string => typeof key === "string"),
+      // One range read rather than a transaction per key: a launch restores every cached read.
+      entries: (prefix) => idb.entries(KEYVAL_STORE, prefix),
     },
     outbox: {
       async add(entry) {

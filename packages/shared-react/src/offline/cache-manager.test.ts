@@ -1,5 +1,4 @@
-import type { PersistedClient } from "@tanstack/query-persist-client-core";
-import { dehydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
+import { dehydrate, hydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,29 +6,54 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppRouter } from "@norish/trpc/client";
 
 import type { OfflineStorage } from "./storage";
-import { queryCacheKey } from "./cache-identity";
+import { queryCachePrefix } from "./cache-identity";
 import { CACHE_MAX_AGE_MS, createCacheManager, PERSIST_THROTTLE_MS } from "./cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
+import { createQueryStore } from "./persister";
 import { createMemoryStorage } from "./testing/memory-storage";
 
 const CACHE_BUSTER = "0.0.0-test";
 
-/** Build a valid persisted cache blob holding a single successful query. */
-function seedClient(key: unknown[], value: unknown): PersistedClient {
-  const source = new QueryClient();
+/** A save's longest wait: the throttle, then the idle callback's deadline. */
+const SAVED_MS = 2 * PERSIST_THROTTLE_MS;
 
-  source.setQueryData(key, value);
+/** Fake timers that also hold the idle callback a save waits for. */
+const useFakeTimers = () =>
+  vi.useFakeTimers({
+    toFake: [
+      "setTimeout",
+      "clearTimeout",
+      "setInterval",
+      "clearInterval",
+      "Date",
+      "requestIdleCallback",
+      "cancelIdleCallback",
+    ],
+  });
 
-  return { timestamp: Date.now(), buster: CACHE_BUSTER, clientState: dehydrate(source) };
-}
-
+/** Save one successful read for `owner`, as an earlier session would have. */
 async function seedOwnerCache(
   storage: OfflineStorage,
   owner: string,
   key: unknown[],
   value: unknown
 ): Promise<void> {
-  await storage.keyval.set(queryCacheKey(owner), seedClient(key, value));
+  const source = new QueryClient();
+
+  source.setQueryData(key, value);
+  const [query] = dehydrate(source).queries;
+
+  if (query) await createQueryStore(storage.keyval).write(owner, query, CACHE_BUSTER);
+}
+
+/** The reads saved for `owner`. */
+async function persisted(storage: OfflineStorage, owner: string) {
+  const entries = await storage.keyval.entries<{ query?: { queryKey: unknown[] } }>(
+    `${queryCachePrefix(owner)}:`
+  );
+
+  // Past the marker of when the copy was last in use.
+  return entries.flatMap(([, stored]) => (stored.query ? [stored.query] : []));
 }
 
 describe("createCacheManager", () => {
@@ -90,7 +114,7 @@ describe("createCacheManager", () => {
     expect(manager.owner()).toBe("u2");
     // u1's data is gone from both the live client and IndexedDB.
     expect(manager.queryClient.getQueryData(["greeting"])).toBeUndefined();
-    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeUndefined();
+    expect(await persisted(storage, "u1")).toEqual([]);
     expect(await readLastWarmedAt("u1", storage.keyval)).toBeNull();
     // The new owner is recorded as the cache owner.
     expect(storage.lastOwner.get()).toBe("u2");
@@ -105,11 +129,11 @@ describe("createCacheManager", () => {
     await manager.flush();
 
     expect(manager.owner()).toBe("u1");
-    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeDefined();
+    expect(await persisted(storage, "u1")).toHaveLength(1);
   });
 
-  it("saves a burst of changes inside one interval once, at its end", async () => {
-    vi.useFakeTimers();
+  it("saves a burst of changes inside one interval at its end, each read once", async () => {
+    useFakeTimers();
     const manager = createManager();
     const set = vi.spyOn(storage.keyval, "set");
 
@@ -120,16 +144,111 @@ describe("createCacheManager", () => {
     await vi.advanceTimersByTimeAsync(PERSIST_THROTTLE_MS - 1);
 
     expect(set).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1);
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+    expect(set).toHaveBeenCalledTimes(50);
+    expect(await persisted(storage, "u1")).toHaveLength(50);
+  });
+
+  it("writes only the reads that changed, and deletes one that left the cache", async () => {
+    useFakeTimers();
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(["a"], 1);
+    manager.queryClient.setQueryData(["b"], 1);
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+    const set = vi.spyOn(storage.keyval, "set");
+
+    manager.queryClient.setQueryData(["a"], 2);
+    manager.queryClient.removeQueries({ queryKey: ["b"] });
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
 
     expect(set).toHaveBeenCalledTimes(1);
-    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
+    expect(await persisted(storage, "u1")).toMatchObject([{ queryKey: ["a"], state: { data: 2 } }]);
+  });
 
-    expect(persisted?.clientState.queries).toHaveLength(50);
+  it("restores every read while the newest save is within maxAge, none once it is older", async () => {
+    useFakeTimers();
+    await seedOwnerCache(storage, "u1", ["old"], "kept with the cache");
+    vi.advanceTimersByTime(CACHE_MAX_AGE_MS - 1);
+    await seedOwnerCache(storage, "u1", ["new"], "fresh");
+
+    const inUse = createManager();
+
+    await inUse.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    expect(inUse.queryClient.getQueryData(["old"])).toBe("kept with the cache");
+
+    vi.advanceTimersByTime(CACHE_MAX_AGE_MS + 1);
+    const unused = createManager();
+
+    await unused.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    expect(unused.queryClient.getQueryData(["new"])).toBeUndefined();
+    expect(await persisted(storage, "u1")).toEqual([]);
+  });
+
+  it("keeps a copy opened within maxAge of each use, though no read got new data", async () => {
+    useFakeTimers();
+    await seedOwnerCache(storage, "u1", ["k"], "from a week ago");
+
+    for (const _ of [1, 2]) {
+      vi.advanceTimersByTime(CACHE_MAX_AGE_MS - 1);
+      const opened = createManager();
+
+      await opened.reconcileIdentity({ sessionUserId: "u1", isOffline: true });
+      expect(opened.queryClient.getQueryData(["k"])).toBe("from a week ago");
+    }
+  });
+
+  it("saves the reads made before a first owner was known, and a read hydrated in later", async () => {
+    useFakeTimers();
+    const manager = createManager();
+
+    manager.queryClient.setQueryData(["early"], "read before the session was confirmed");
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+    expect((await persisted(storage, "u1")).map((query) => query.queryKey)).toEqual([["early"]]);
+
+    const server = new QueryClient();
+
+    server.setQueryData(["seeded"], "the server's first frame");
+    hydrate(manager.queryClient, dehydrate(server));
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+    expect((await persisted(storage, "u1")).map((query) => query.queryKey)).toContainEqual([
+      "seeded",
+    ]);
+  });
+
+  it("saves no copy for a fetch starting or a read going stale, only for new data", async () => {
+    useFakeTimers();
+    const manager = createManager();
+    const set = vi.spyOn(storage.keyval, "set");
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(["k"], "v");
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+    expect(set).toHaveBeenCalledTimes(1);
+
+    let answer!: (value: string) => void;
+    const fetching = manager.queryClient.fetchQuery({
+      queryKey: ["k"],
+      staleTime: 0,
+      queryFn: () => new Promise<string>((resolve) => (answer = resolve)),
+    });
+
+    await manager.queryClient.invalidateQueries({ queryKey: ["k"], refetchType: "none" });
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+    expect(set).toHaveBeenCalledTimes(1);
+
+    answer("w");
+    await fetching;
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+    expect(set).toHaveBeenCalledTimes(2);
   });
 
   it("saves a pending change at once on a flush, and not again when the interval ends", async () => {
-    vi.useFakeTimers();
+    useFakeTimers();
     const manager = createManager();
     const set = vi.spyOn(storage.keyval, "set");
 
@@ -137,22 +256,25 @@ describe("createCacheManager", () => {
     manager.queryClient.setQueryData(["k"], "v");
     await manager.flush();
 
-    expect(set).toHaveBeenCalledTimes(1);
-    await vi.advanceTimersByTimeAsync(PERSIST_THROTTLE_MS);
+    // A flush also marks the copy as in use.
+    const reads = () => set.mock.calls.filter(([key]) => !key.endsWith(":used")).length;
 
-    expect(set).toHaveBeenCalledTimes(1);
+    expect(reads()).toBe(1);
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+    expect(reads()).toBe(1);
   });
 
   it("never writes a pending save back after the read copy is reset", async () => {
-    vi.useFakeTimers();
+    useFakeTimers();
     const manager = createManager();
 
     await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
     manager.queryClient.setQueryData(["k"], "v");
     await manager.resetOfflineCopy("sign-out");
-    await vi.advanceTimersByTimeAsync(PERSIST_THROTTLE_MS);
+    await vi.advanceTimersByTimeAsync(SAVED_MS);
 
-    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeUndefined();
+    expect(await persisted(storage, "u1")).toEqual([]);
   });
 
   it("restores last successful data after background refetches fail", async () => {
@@ -224,9 +346,8 @@ describe("createCacheManager", () => {
     await manager.flush();
 
     expect(waiting.state.isPaused).toBe(true);
-    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
-
-    expect(persisted?.clientState.mutations).toEqual([]);
+    // Only reads are stored; the waiting mutation is not among them.
+    expect((await persisted(storage, "u1")).map((query) => query.queryKey)).toEqual([["k"]]);
     first.resolve();
   });
 
@@ -247,12 +368,11 @@ describe("createCacheManager", () => {
     manager.queryClient.setQueryData(kept, null);
     await manager.flush();
 
-    const persisted = await storage.keyval.get<PersistedClient>(queryCacheKey("u1"));
-    const persistedKeys = persisted?.clientState.queries.map((query) => query.queryKey);
+    const stored = await persisted(storage, "u1");
 
-    expect(persistedKeys).toContainEqual(kept);
-    expect(JSON.stringify(persisted)).not.toContain("secret");
-    expect(JSON.stringify(persisted)).not.toContain("checked");
+    expect(stored.map((query) => query.queryKey)).toContainEqual(kept);
+    expect(JSON.stringify(stored)).not.toContain("secret");
+    expect(JSON.stringify(stored)).not.toContain("checked");
   });
 
   it("does not restore a query whose initial request failed without data", async () => {
@@ -293,7 +413,7 @@ describe("createCacheManager", () => {
   });
 
   it("holds a recipe, a cookbook, the groceries list's reads and the Library past the default gcTime (ADR-0008)", async () => {
-    vi.useFakeTimers();
+    useFakeTimers();
 
     const { queryClient } = createManager();
     // The app's own keys, so this proves the held paths match what tRPC builds.
@@ -362,7 +482,7 @@ describe("createCacheManager", () => {
     await manager.resetOfflineCopy("manual");
 
     expect(manager.queryClient.getQueryData(["memory"])).toBeUndefined();
-    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeUndefined();
+    expect(await persisted(storage, "u1")).toEqual([]);
     expect(await readLastWarmedAt("u1", storage.keyval)).toBeNull();
     // The platform's own personal caches (web: images and pages) go with the reads.
     expect(clearPersonalCaches).toHaveBeenCalledTimes(1);
@@ -372,7 +492,7 @@ describe("createCacheManager", () => {
     await manager.flush();
 
     expect(manager.owner()).toBe("u1");
-    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeDefined();
+    expect((await persisted(storage, "u1")).map((query) => query.queryKey)).toEqual([["rewarmed"]]);
   });
 
   it("forgets the cache owner after a sign-out reset", async () => {
@@ -413,7 +533,9 @@ describe("createCacheManager", () => {
     await manager.flush();
 
     expect(manager.owner()).toBe("u1");
-    expect(await storage.keyval.get(queryCacheKey("u1"))).toBeDefined();
+    expect((await persisted(storage, "u1")).map((query) => query.queryKey)).toContainEqual([
+      "after-reset",
+    ]);
   });
 
   it("publishes the applied owner as its only identity observable", async () => {

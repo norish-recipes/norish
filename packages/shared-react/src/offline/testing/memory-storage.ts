@@ -27,6 +27,10 @@ export function createMemoryStorage(): OfflineStorage {
         values.delete(key);
       },
       keys: async () => [...values.keys()],
+      entries: async <T>(prefix: string) =>
+        [...values]
+          .filter(([key]) => key.startsWith(prefix))
+          .map(([key, value]) => [key, structuredClone(value) as T] as [string, T]),
     },
     outbox: {
       async add(entry) {
