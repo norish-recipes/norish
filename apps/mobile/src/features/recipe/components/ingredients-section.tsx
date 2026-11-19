@@ -3,13 +3,14 @@ import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
 import { GlassIconMenu } from "@/components/glass";
-import { GlassStepper } from "@/components/glass-stepper";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { RoundTick } from "@/components/round-tick";
+import { Stepper } from "@/components/stepper";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { lightImpact } from "@/lib/haptics";
 import { useFadeTo } from "@/lib/motion/fade-to";
 import { recipeRoute } from "@/lib/tab-routes";
+import { useServingsStepper } from "@/lib/use-servings-stepper";
 import { Button as NativeButton } from "@expo/ui/swift-ui";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -41,12 +42,11 @@ export function ServingsControl() {
   const recipe = useLoadedPageRecipe();
   const servings = usePageServings();
   const setServings = useRecipePageStore((state) => state.setServings);
+  const stepper = useServingsStepper(servings);
 
   return (
-    <GlassStepper
-      canDecrement={servingsDown(servings) !== servings}
-      decreaseLabel={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
-      increaseLabel={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
+    <Stepper
+      {...stepper}
       testID="recipe-servings"
       onDecrement={() => setServings(servingsDown(servings))}
       onIncrement={() => setServings(servingsUp(servings))}
@@ -66,7 +66,7 @@ export function ServingsControl() {
           value={formatServings(servings)}
         />
       </Pressable>
-    </GlassStepper>
+    </Stepper>
   );
 }
 

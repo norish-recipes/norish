@@ -27,19 +27,18 @@ vi.mock("react-native", () => ({
     </button>
   ),
 }));
-vi.mock("@/components/glass", () => ({ GLASS_CONTROL_HEIGHT: 40, GlassSurface: () => null }));
 vi.mock("@/lib/haptics", () => ({ lightImpact: () => lightImpact() }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({ useThemeColor: (names: string[]) => names }));
 
-const { GlassStepper } = await import("@/components/glass-stepper");
+const { Stepper } = await import("@/components/stepper");
 
 function stepper(props: { canDecrement?: boolean; canIncrement?: boolean }) {
   const onDecrement = vi.fn();
   const onIncrement = vi.fn();
 
   render(
-    <GlassStepper
+    <Stepper
       decreaseLabel="Fewer"
       increaseLabel="More"
       testID="s"
@@ -48,13 +47,13 @@ function stepper(props: { canDecrement?: boolean; canIncrement?: boolean }) {
       {...props}
     >
       <span>1</span>
-    </GlassStepper>
+    </Stepper>
   );
 
   return { onDecrement, onIncrement };
 }
 
-describe("GlassStepper", () => {
+describe("Stepper", () => {
   beforeEach(() => lightImpact.mockClear());
 
   it("steps with a haptic", () => {
@@ -68,14 +67,21 @@ describe("GlassStepper", () => {
     expect(lightImpact).toHaveBeenCalledTimes(2);
   });
 
-  it("shows a step that cannot move disabled, with no step and no haptic", () => {
-    const { onDecrement } = stepper({ canDecrement: false });
-    const minus = screen.getByLabelText<HTMLButtonElement>("Fewer");
+  it("shows a knob that cannot move disabled, with no step and no haptic", () => {
+    const { onIncrement } = stepper({ canIncrement: false });
+    const plus = screen.getByLabelText<HTMLButtonElement>("More");
 
-    fireEvent.click(minus);
+    fireEvent.click(plus);
 
-    expect(minus.disabled).toBe(true);
-    expect(onDecrement).not.toHaveBeenCalled();
+    expect(plus.disabled).toBe(true);
+    expect(onIncrement).not.toHaveBeenCalled();
     expect(lightImpact).not.toHaveBeenCalled();
+  });
+
+  it("prefixes the knobs' testIDs", () => {
+    stepper({});
+
+    expect(screen.getByTestId("s-decrease")).toBeTruthy();
+    expect(screen.getByTestId("s-increase")).toBeTruthy();
   });
 });

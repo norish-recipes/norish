@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
-import { GlassStepper } from "@/components/glass-stepper";
+import { Stepper } from "@/components/stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
@@ -204,7 +204,7 @@ export function NutritionSection() {
     <SectionCard
       right={
         shown && !estimating ? (
-          <GlassStepper
+          <Stepper
             canDecrement={portions > 1}
             decreaseLabel={intl.formatMessage({ id: "recipes.nutrition.decreasePortions" })}
             increaseLabel={intl.formatMessage({ id: "recipes.nutrition.increasePortions" })}
@@ -213,7 +213,7 @@ export function NutritionSection() {
             onIncrement={() => step(1)}
           >
             <PortionsLabel portions={portions} />
-          </GlassStepper>
+          </Stepper>
         ) : null
       }
       testID="recipe-nutrition"

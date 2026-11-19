@@ -30,7 +30,8 @@ vi.mock("expo-router", () => ({
     },
   },
 }));
-vi.mock("@/components/servings-stepper", () => ({ ServingsStepper: () => null }));
+vi.mock("@/components/stepper", () => ({ Stepper: () => null }));
+vi.mock("@/components/animated-number", () => ({ AnimatedNumber: () => null }));
 vi.mock("@/lib/add-to-groceries", () => ({ groceriesStartServings: () => undefined }));
 vi.mock("@/components/sheet", async () => {
   const { ModalHeader } = await import("@/components/modal-header");
@@ -91,6 +92,8 @@ vi.mock("@norish/shared-react/groceries", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/recipes", () => ({
+  servingsDown: (servings: number) => servings,
+  formatServings: String,
   useRecipeFoodsToBuy: () => ({
     isLoading: false,
     servings: 2,
