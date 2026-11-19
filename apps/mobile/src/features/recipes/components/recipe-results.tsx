@@ -1,4 +1,4 @@
-import type { RecipeResultsProps } from "@/lib/recipe-results-props";
+import type { RecipeResultsProps, SearchHit } from "@/lib/recipe-results-props";
 import React from "react";
 
 import { LibraryCards } from "./library-cards";
@@ -7,11 +7,16 @@ import { RecipeCard } from "./recipe-card";
 /** The fade over a results list under the bar. */
 const FADE_HEIGHT = 120;
 
+function hitOf(matches: RecipeResultsProps["matches"], id: string): SearchHit | undefined {
+  const match = matches?.byId[id];
+
+  return matches && match ? { match, search: matches.search } : undefined;
+}
+
 /** Recipes as the Library's cards, paged: the list Search shows its results in. */
 export function RecipeResults({
   recipes,
   matches,
-  search,
   header,
   isLoading,
   isFetchingNextPage,
@@ -33,9 +38,8 @@ export function RecipeResults({
           actions={actions}
           allergies={allergies}
           isFavorite={isFavorite(recipe.id)}
-          match={matches?.[recipe.id]}
+          hit={hitOf(matches, recipe.id)}
           recipe={recipe}
-          search={search}
           variant={variant}
         />
       )}

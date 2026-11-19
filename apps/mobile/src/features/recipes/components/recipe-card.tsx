@@ -1,4 +1,5 @@
 import type { CardActions } from "@/hooks/use-card-actions";
+import type { SearchHit } from "@/lib/recipe-results-props";
 import type { ReactNode } from "react";
 import React, { memo, useRef } from "react";
 import { Text, View } from "react-native";
@@ -10,7 +11,7 @@ import { lightImpact } from "@/lib/haptics";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useIntl } from "react-intl";
 
-import type { LibraryMatchDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
@@ -36,8 +37,7 @@ type Props = {
   allergies: string[];
   actions: CardActions;
   /** While searching: why the recipe matched, shown in place of its description. */
-  match?: LibraryMatchDTO;
-  search?: string;
+  hit?: SearchHit;
 };
 
 /** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions.
@@ -48,8 +48,7 @@ export const RecipeCard = memo(function RecipeCard({
   isFavorite,
   allergies,
   actions,
-  match,
-  search,
+  hit,
 }: Props) {
   const intl = useIntl();
   const { navigation } = usePlatform();
@@ -121,10 +120,9 @@ export const RecipeCard = memo(function RecipeCard({
             <Card
               facts={facts}
               isFavorite={isFavorite}
-              match={match}
+              hit={hit}
               photoGesture={doubleTap}
               recipe={recipe}
-              search={search}
             />
           </PressTap>
         </CardMenu>
@@ -139,22 +137,21 @@ type CardProps = {
   isFavorite: boolean;
   /** The double tap the photo owns. */
   photoGesture: ReturnType<typeof useTapGesture>;
-  match?: LibraryMatchDTO;
-  search?: string;
+  hit?: SearchHit;
 };
 
 /** The recipe's title and the line under it: the match while searching, else the description. */
-function titleAndLine({ recipe, facts, match, search }: CardProps) {
-  if (!match || !search) return { title: recipe.name, line: facts.description };
+function titleAndLine({ recipe, facts, hit }: CardProps) {
+  if (!hit) return { title: recipe.name, line: facts.description };
 
   return {
     title:
-      match.field === "title" ? (
-        <HighlightedTitle name={recipe.name} search={search} />
+      hit.match.field === "title" ? (
+        <HighlightedTitle name={recipe.name} search={hit.search} />
       ) : (
         recipe.name
       ),
-    line: <MatchText match={match} search={search} />,
+    line: <MatchText match={hit.match} search={hit.search} />,
   };
 }
 

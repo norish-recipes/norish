@@ -103,10 +103,9 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           }
           isFetchingNextPage={list.isFetchingNextPage}
           isLoading={list.isLoading}
-          matches={list.matches}
+          matches={{ byId: list.matches, search: filters.rawInput.trim() }}
           noResults={noResults}
           recipes={list.recipes}
-          search={filters.rawInput.trim()}
           scroll={scroll}
           testID="search-results"
           onEndReached={list.loadMore}
