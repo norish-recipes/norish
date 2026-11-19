@@ -1,3 +1,4 @@
+import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, asc, desc, eq, ilike, inArray, isNull, lte, notInArray, or, sql } from "drizzle-orm";
 import z from "zod";
@@ -69,6 +70,7 @@ import {
   resolvedRecipeLineValues,
   writeRecipeLineFoodsTx,
 } from "./ingredients";
+import { lineNamesKindSql } from "./ingredient-kinds";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
@@ -480,6 +482,25 @@ const MATCH_SNIPPET_OPTIONS =
   "MaxFragments=1, MinWords=6, MaxWords=14, StartSel=\uE000, StopSel=\uE001";
 const plainSnippet = (snippet: string) => snippet.replace(/[\uE000\uE001]/g, "");
 
+/** The recipe's first line (in the order the page reads them) that `condition` accepts, as written.
+ * Correlated on `"recipes"."id"`; the line is `match_ri`. */
+function ingredientLineSql(condition: SQL) {
+  return sql`(
+    SELECT CASE WHEN match_ri.name ~ ${HEADING_LINE}
+      THEN json_build_object('amount', NULL, 'unit', NULL,
+        'name', regexp_replace(match_ri.name, ${HEADING_MARKS}, '', 'g'))
+      ELSE json_build_object(
+        'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name) END
+    FROM ${recipeIngredients} match_ri
+    WHERE match_ri.recipe_id = "recipes"."id" AND ${condition}
+    ORDER BY (match_ri.name ~ ${HEADING_LINE}),
+      (match_ri.system_used <> "recipes"."system_used"),
+      coalesce(match_ri."order", 0), match_ri."order" NULLS LAST,
+      match_ri.created_at, match_ri.id
+    LIMIT 1
+  )`;
+}
+
 type MatchRow = {
   id: string;
   title_hit: boolean;
@@ -523,21 +544,7 @@ async function recipeMatchRows(
       } AS tag,
       ${
         inScope("ingredients")
-          ? sql`(
-              SELECT CASE WHEN match_ri.name ~ ${HEADING_LINE}
-                THEN json_build_object('amount', NULL, 'unit', NULL,
-                  'name', regexp_replace(match_ri.name, ${HEADING_MARKS}, '', 'g'))
-                ELSE json_build_object(
-                  'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name) END
-              FROM ${recipeIngredients} match_ri
-              WHERE match_ri.recipe_id = "recipes"."id"
-                AND to_tsvector('simple', match_ri.name) @@ ${query}
-              ORDER BY (match_ri.name ~ ${HEADING_LINE}),
-                (match_ri.system_used <> "recipes"."system_used"),
-                coalesce(match_ri."order", 0), match_ri."order" NULLS LAST,
-                match_ri.created_at, match_ri.id
-              LIMIT 1
-            )`
+          ? ingredientLineSql(sql`to_tsvector('simple', match_ri.name) @@ ${query}`)
           : sql`NULL::json`
       } AS ingredient,
       ${
@@ -626,6 +633,33 @@ export async function recipeSearchMatches(
 
       if (match) matches.set(row.id, match);
     }
+  }
+
+  return matches;
+}
+
+/** The line of each recipe of `ids` that satisfied an Ingredient filter, for a search without text. */
+export async function recipeIngredientMatches(
+  ids: string[],
+  ingredientIds: string[]
+): Promise<Map<string, LibraryMatchDTO>> {
+  const matches = new Map<string, LibraryMatchDTO>();
+
+  if (ids.length === 0 || ingredientIds.length === 0) return matches;
+
+  const idList = sql.join(
+    ids.map((id) => sql`${id}::uuid`),
+    sql`, `
+  );
+  const result = await db.execute(sql`
+    SELECT "recipes"."id" AS id,
+      ${ingredientLineSql(lineNamesKindSql("match_ri", ingredientIds))} AS ingredient
+    FROM ${recipes}
+    WHERE "recipes"."id" IN (${idList})
+  `);
+
+  for (const row of (result as unknown as { rows: Pick<MatchRow, "id" | "ingredient">[] }).rows) {
+    if (row.ingredient) matches.set(row.id, { field: "ingredients", ...row.ingredient });
   }
 
   return matches;

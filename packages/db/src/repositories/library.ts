@@ -30,6 +30,7 @@ import { pantryCoverageSql } from "./pantry-coverage";
 import {
   buildOwnerPolicyCondition,
   listDashboardRecipesByIds,
+  recipeIngredientMatches,
   recipeSearchMatches,
   recipeSearchSql,
 } from "./recipes";
@@ -289,7 +290,12 @@ export async function listLibrary(
       ctx,
       page.filter((row) => row.kind === "cookbook").map((row) => row.id)
     ),
-    withMatch ? recipeSearchMatches(pageRecipeIds, search, searchFields) : undefined,
+    // The text's match wins; without text, the line that satisfied the Ingredient filter.
+    withMatch
+      ? search
+        ? recipeSearchMatches(pageRecipeIds, search, searchFields)
+        : recipeIngredientMatches(pageRecipeIds, [...new Set(ingredientIds)])
+      : undefined,
   ]);
 
   const recipesById = new Map(recipeCards.map((recipe) => [recipe.id, recipe]));

@@ -669,6 +669,46 @@ describe("the Library union", () => {
       expect(await named({ ingredientIds: [food.onion!.ingredientId] })).toEqual(["Pearl stew"]);
     });
 
+    it("says which line satisfied the filter when there is no text", async () => {
+      const { food } = await seedFoods();
+      const made = await createTestRecipe(ownerId, { name: "Pearl stew" });
+
+      await insertTestRecipeLine({ recipeId: made.id, name: "# For the stew", order: "0" });
+      await insertTestRecipeLine(
+        { recipeId: made.id, name: "salt", amount: "1", unit: "tsp", order: "1" },
+        [food.garlic!.aliasId]
+      );
+      await insertTestRecipeLine(
+        { recipeId: made.id, name: "pearl onions, peeled", amount: "4", unit: "g", order: "2" },
+        [food["pearl onion"]!.aliasId]
+      );
+
+      const match = async (ids: string[], params: Partial<LibraryListParams> = {}) =>
+        (
+          await listLibrary(viewer(ownerId), {
+            limit: 50,
+            withMatch: true,
+            ingredientIds: ids,
+            ...params,
+          })
+        ).items.map((item) => ("match" in item ? item.match : undefined));
+
+      // The line of a descendant, as written: the garlic line is not what the onion filter asked.
+      expect(await match([food.onion!.ingredientId])).toEqual([
+        { field: "ingredients", amount: 4, unit: "g", name: "pearl onions, peeled" },
+      ]);
+      expect(await match([food.garlic!.ingredientId, food.onion!.ingredientId])).toEqual([
+        { field: "ingredients", amount: 1, unit: "tsp", name: "salt" },
+      ]);
+      // The text's own match wins when there is text.
+      expect(await match([food.onion!.ingredientId], { search: "stew" })).toEqual([
+        { field: "title" },
+      ]);
+      expect(
+        await match([food.onion!.ingredientId], { withMatch: false })
+      ).toEqual([undefined]);
+    });
+
     it("changes nothing without ids", async () => {
       const { recipe } = await seedFoods();
 
