@@ -23,6 +23,7 @@ import {
   pantryIngredients,
   recipeRatings,
   recipeTags,
+  steps as stepsTable,
   tags as tagsTable,
 } from "@norish/db/schema";
 
@@ -918,6 +919,40 @@ describe("the Library union", () => {
         unit: null,
         name: "For the basil",
       });
+    });
+
+    it("reads a heading behind a non-breaking space as the page does", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await createTestRecipeStep(recipe.id, "metric", { step: "\u00a0# Prepare", order: "0" });
+      await createTestRecipeStep(recipe.id, "metric", { step: "Pound the basil", order: "1" });
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "\u00a0# Basil", order: "0" });
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "basil leaves", order: "1" });
+
+      expect(await matchOf({ searchFields: ["steps"] })).toMatchObject({ number: 1 });
+      expect(await matchOf({ searchFields: ["ingredients"] })).toMatchObject({
+        name: "basil leaves",
+      });
+    });
+
+    it("orders a step without an order first, as the page reads it as 0", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await createTestRecipeStep(recipe.id, "metric", { step: "Chop the onion", order: "1" });
+      const unordered = await createTestRecipeStep(recipe.id, "metric", {
+        step: "Pound the basil",
+      });
+
+      await getTestDb()
+        .update(stepsTable)
+        .set({ order: null })
+        .where(eq(stepsTable.id, unordered!.id));
+
+      expect(await matchOf({ searchFields: ["steps"] })).toMatchObject({ number: 1 });
     });
 
     it("ignores a query term the parser drops", async () => {

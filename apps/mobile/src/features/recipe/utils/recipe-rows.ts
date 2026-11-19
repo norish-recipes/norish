@@ -1,11 +1,5 @@
+import { headingText } from "@norish/shared/lib/heading-line";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
-
-/** A `#` line in the ingredients or steps titles the lines under it. */
-const headingText = (text: string) => {
-  const trimmed = text.trim();
-
-  return trimmed.startsWith("#") ? trimmed.replace(/^#+\s*/, "") : null;
-};
 
 type Ingredient = {
   ingredientName: string;

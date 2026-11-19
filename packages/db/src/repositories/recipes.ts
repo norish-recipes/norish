@@ -25,6 +25,7 @@ import {
 } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
+import { HEADING_LINE, HEADING_MARKS } from "@norish/shared/lib/heading-line";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
@@ -479,10 +480,6 @@ const MATCH_SNIPPET_OPTIONS =
   "MaxFragments=1, MinWords=6, MaxWords=14, StartSel=\uE000, StopSel=\uE001";
 const plainSnippet = (snippet: string) => snippet.replace(/[\uE000\uE001]/g, "");
 
-/** A `#` line titles the lines under it, in ingredients and steps alike. */
-const HEADING_PATTERN = "^\\s*#";
-const HEADING_MARKS = "^#+\\s*";
-
 type MatchRow = {
   id: string;
   title_hit: boolean;
@@ -527,17 +524,18 @@ async function recipeMatchRows(
       ${
         inScope("ingredients")
           ? sql`(
-              SELECT CASE WHEN match_ri.name ~ ${HEADING_PATTERN}
+              SELECT CASE WHEN match_ri.name ~ ${HEADING_LINE}
                 THEN json_build_object('amount', NULL, 'unit', NULL,
-                  'name', regexp_replace(btrim(match_ri.name), ${HEADING_MARKS}, ''))
+                  'name', regexp_replace(match_ri.name, ${HEADING_MARKS}, '', 'g'))
                 ELSE json_build_object(
                   'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name) END
               FROM ${recipeIngredients} match_ri
               WHERE match_ri.recipe_id = "recipes"."id"
                 AND to_tsvector('simple', match_ri.name) @@ ${query}
-              ORDER BY (match_ri.name ~ ${HEADING_PATTERN}),
+              ORDER BY (match_ri.name ~ ${HEADING_LINE}),
                 (match_ri.system_used <> "recipes"."system_used"),
-                match_ri."order" NULLS LAST, match_ri.created_at, match_ri.id
+                coalesce(match_ri."order", 0), match_ri."order" NULLS LAST,
+                match_ri.created_at, match_ri.id
               LIMIT 1
             )`
           : sql`NULL::json`
@@ -557,13 +555,14 @@ async function recipeMatchRows(
                 'snippet', ts_headline('simple', numbered.body, ${query}, ${MATCH_SNIPPET_OPTIONS}))
               FROM (
                 SELECT match_step.system_used,
-                  CASE WHEN match_step.step ~ ${HEADING_PATTERN}
-                    THEN regexp_replace(btrim(match_step.step), ${HEADING_MARKS}, '')
+                  CASE WHEN match_step.step ~ ${HEADING_LINE}
+                    THEN regexp_replace(match_step.step, ${HEADING_MARKS}, '', 'g')
                     ELSE match_step.step END AS body,
-                  CASE WHEN match_step.step ~ ${HEADING_PATTERN} THEN NULL
-                    ELSE count(*) FILTER (WHERE match_step.step !~ ${HEADING_PATTERN}) OVER (
+                  CASE WHEN match_step.step ~ ${HEADING_LINE} THEN NULL
+                    ELSE count(*) FILTER (WHERE match_step.step !~ ${HEADING_LINE}) OVER (
                       PARTITION BY match_step.system_used
-                      ORDER BY match_step."order" NULLS LAST, match_step.created_at, match_step.id
+                      ORDER BY coalesce(match_step."order", 0), match_step."order" NULLS LAST,
+                        match_step.created_at, match_step.id
                     ) END AS n
                 FROM ${stepsTable} match_step
                 WHERE match_step.recipe_id = "recipes"."id"
