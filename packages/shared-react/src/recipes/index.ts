@@ -75,6 +75,7 @@ export { useUnitFormatter } from "./use-unit-formatter";
 export {
   createRecipePageStore,
   RecipePageProvider,
+  RecipePageStores,
   useRecipePageStore,
   type RecipePageState,
 } from "./recipe-page-store";

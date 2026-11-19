@@ -55,6 +55,9 @@ export function RecipePageProvider({
   return <recipePage.Provider pageKey={recipeId}>{children}</recipePage.Provider>;
 }
 
+/** Shares a recipe's store between the screens below that show it, while other recipes keep theirs. */
+export const RecipePageStores = recipePage.SharedStores;
+
 export const useRecipePageStoreApi = recipePage.usePageStoreApi;
 
 /** One slice of the recipe page's store; renders when that slice changes. */
