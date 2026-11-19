@@ -2,8 +2,8 @@ import type { HeaderItem } from "@/lib/header-item";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { GlassIconButton } from "@/components/glass";
-import { GlassSegmented } from "@/components/glass-segmented";
 import { RollingText } from "@/components/rolling-text";
+import { Segmented } from "@/components/segmented";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -33,7 +33,7 @@ export function ViewToggle() {
   const [view, setView] = useDevicePreference("recipeViewMode");
 
   return (
-    <GlassSegmented
+    <Segmented
       iconOnly
       segments={VIEWS.map(({ mode, icon, label }) => ({
         value: mode,
@@ -41,6 +41,7 @@ export function ViewToggle() {
         icon: (color) => <Ionicons color={color} name={icon} size={20} />,
         testID: `library-view-${mode}`,
       }))}
+      size="compact"
       testID="library-view-toggle"
       value={view}
       onChange={(mode) => {
@@ -120,7 +121,7 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
         <ViewToggle />
       </View>
       <View className="px-5">
-        <GlassSegmented
+        <Segmented
           segments={LIBRARY_TYPE_FILTERS.map((type) => ({
             value: type,
             label: intl.formatMessage({ id: `recipes.dashboard.libraryType.${type}` }),

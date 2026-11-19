@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
+import { Segmented } from "@/components/segmented";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TabRootHeader } from "@/components/tab-root-header";
@@ -14,8 +15,8 @@ import { useIntl } from "react-intl";
 
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
-import { ListSwitch } from "../components/list-switch";
 import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
+import { useListSegments } from "../hooks/use-list-segments";
 import { usePantryScreen } from "../hooks/use-pantry-screen";
 
 /** The Pantry: the foods the household keeps, narrowed by its field, which only filters. */
@@ -24,10 +25,13 @@ export function PantryScreen() {
   const router = useRouter();
   const { rows, actions, field, isRead, isUnavailable } = usePantryScreen();
   const scroll = useTabScroll();
+  const segments = useListSegments();
   const header = (
     <View>
       <View className="px-5 pb-5">
-        <ListSwitch
+        <Segmented
+          segments={segments}
+          testID="groceries-switch"
           value="pantry"
           onChange={(value) => value === "list" && router.dismissTo(TAB_ROUTES.groceries.root)}
         />

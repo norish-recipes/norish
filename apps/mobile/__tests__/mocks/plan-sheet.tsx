@@ -26,9 +26,9 @@ const Button = Object.assign(
   { Label: pass }
 );
 
-/** The glass segmented control: one button per segment. */
-export const glassSegmented = {
-  GlassSegmented: ({
+/** The segmented control: one button per segment. */
+export const segmentedMock = {
+  Segmented: ({
     segments,
     onChange,
   }: {

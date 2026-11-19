@@ -77,10 +77,10 @@ vi.mock("@expo/ui/swift-ui/modifiers", () => ({
   frame: vi.fn(),
   tint: vi.fn(),
 }));
-vi.mock("@/components/glass-segmented", async () => {
-  const { glassSegmented } = await import("../../../../__tests__/mocks/plan-sheet");
+vi.mock("@/components/segmented", async () => {
+  const { segmentedMock } = await import("../../../../__tests__/mocks/plan-sheet");
 
-  return glassSegmented;
+  return segmentedMock;
 });
 vi.mock("@/components/pressable-scale", () => ({ PressableScale: () => null }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));

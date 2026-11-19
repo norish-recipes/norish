@@ -142,43 +142,6 @@ export function FormRow({
   );
 }
 
-/** A capsule of choices, one on at a time. */
-export function Segmented<T extends string>({
-  options,
-  value,
-  small = false,
-  testID,
-  onChange,
-}: {
-  options: readonly { id: T; label: string }[];
-  value: T | null;
-  small?: boolean;
-  testID: string;
-  onChange: (id: T) => void;
-}) {
-  return (
-    <View className="bg-sand h-11 flex-row gap-0.5 rounded-full p-1" testID={testID}>
-      {options.map((option) => (
-        <Pressable
-          key={option.id}
-          accessibilityRole="button"
-          accessibilityState={{ selected: value === option.id }}
-          className={`flex-1 items-center justify-center rounded-full ${value === option.id ? "bg-thumb" : ""}`}
-          testID={`${testID}-${option.id}`}
-          onPress={() => onChange(option.id)}
-        >
-          <Text
-            className={`${small ? "text-[13px]" : "text-[15px]"} font-medium ${value === option.id ? "text-foreground" : "text-muted"}`}
-            numberOfLines={1}
-          >
-            {option.label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 /** A small caps label over a group of controls. */
 export function FieldLabel({ children }: { children: string }) {
   return (

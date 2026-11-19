@@ -57,7 +57,8 @@ vi.mock("../components/groceries-states", () => ({
 }));
 vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
 vi.mock("@/lib/use-tab-scroll", () => import("../../../../__tests__/mocks/use-tab-scroll"));
-vi.mock("../components/list-switch", () => ({ ListSwitch: () => null }));
+vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
+vi.mock("@/components/segmented", () => ({ Segmented: () => null }));
 vi.mock("../utils/list-rows", () => ({ recipeListRows: () => [], storeListRows: () => [] }));
 vi.mock("../utils/grocery-drop", () => ({ planRecipeRowDrop: vi.fn(), planStoreRowDrop: vi.fn() }));
 

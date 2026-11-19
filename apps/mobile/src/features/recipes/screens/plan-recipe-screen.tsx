@@ -7,7 +7,7 @@ import { Loader } from "@/components/loader";
 import { MoveFields } from "@/components/move-fields";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
-import { asSlot } from "@/components/slot-tabs";
+import { asSlot } from "@/lib/slot-segments";
 import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -75,7 +75,7 @@ export function PlanRecipeScreen() {
         onChange={setInput}
       />
 
-      <View className={`bg-fill ${first}`}>
+      <View className={`bg-sand ${first}`}>
         {hasNote ? (
           <ActionRow
             icon="document-text-outline"
@@ -116,7 +116,7 @@ export function PlanRecipeScreen() {
       <SheetList
         ListEmptyComponent={
           error ? undefined : (
-            <View className="bg-fill border-separator rounded-b-[22px] border-t">
+            <View className="bg-sand border-separator rounded-b-[22px] border-t">
               {isLoading ? (
                 SKELETON_ROWS.map((row) => (
                   <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
@@ -138,7 +138,7 @@ export function PlanRecipeScreen() {
         renderItem={({ item: recipe, index }) => (
           <Button
             accessibilityLabel={recipe.name}
-            className={`border-separator bg-fill h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+            className={`border-separator bg-sand h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
             testID={`plan-recipe-${recipe.id}`}
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
@@ -180,7 +180,7 @@ function ActionRow({
       variant="ghost"
       onPress={onPress}
     >
-      <View className="bg-fill size-11 items-center justify-center rounded-xl">
+      <View className="bg-sand size-11 items-center justify-center rounded-xl">
         {busy ? <Loader /> : <Ionicons color={accent} name={icon} size={20} />}
       </View>
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>

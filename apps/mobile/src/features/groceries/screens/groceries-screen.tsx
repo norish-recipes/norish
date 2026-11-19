@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
+import { Segmented } from "@/components/segmented";
 import { TabRootHeader } from "@/components/tab-root-header";
 import { useConfirm } from "@/hooks/use-confirm";
 import { lightImpact } from "@/lib/haptics";
@@ -31,7 +32,7 @@ import type { GroceryDrop } from "../utils/grocery-drop";
 import { GroceriesList } from "../components/groceries-list";
 import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
 import { listSettingsItem } from "../components/list-settings-item";
-import { ListSwitch } from "../components/list-switch";
+import { useListSegments } from "../hooks/use-list-segments";
 import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
 import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
 
@@ -50,6 +51,7 @@ export function GroceriesScreen() {
   const router = useRouter();
   const confirm = useConfirm();
   const scroll = useTabScroll();
+  const segments = useListSegments();
   const { groceries, recurringGroceries, recipeMap, isLoading, isRead, getRecipeNameForGrocery } =
     useGroceriesQuery();
   const { stores, isLoading: storesLoading, isRead: storesRead } = useStoresQuery();
@@ -174,7 +176,9 @@ export function GroceriesScreen() {
         empty={loading ? <GroceriesSkeleton /> : nothing ? <GroceriesEmpty /> : null}
         header={
           <View className="px-5 pb-5">
-            <ListSwitch
+            <Segmented
+              segments={segments}
+              testID="groceries-switch"
               value="list"
               onChange={(value) => value === "pantry" && router.push(TAB_ROUTES.groceries.pantry)}
             />

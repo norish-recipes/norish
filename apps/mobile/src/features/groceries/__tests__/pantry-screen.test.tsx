@@ -75,8 +75,9 @@ vi.mock("react-intl", () => ({
 vi.mock("@/components/card-slice", () => ({
   CardSlice: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock("../components/list-switch", () => ({
-  ListSwitch: (props: { onChange: (value: string) => void }) => {
+vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
+vi.mock("@/components/segmented", () => ({
+  Segmented: (props: { onChange: (value: string) => void }) => {
     switchProps.onChange = props.onChange;
 
     return null;

@@ -35,8 +35,8 @@ vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
 vi.mock(
-  "@/components/glass-segmented",
-  async () => (await import("../../../../__tests__/mocks/plan-sheet")).glassSegmented
+  "@/components/segmented",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).segmentedMock
 );
 vi.mock(
   "@/components/sheet",

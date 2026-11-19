@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Segmented } from "@/components/segmented";
 import { Sheet, SheetScrollView } from "@/components/sheet";
 import { ToggleChip } from "@/components/toggle-chip";
 import { FilterSection } from "@/features/recipes/components/filter-section";
@@ -26,7 +27,7 @@ export function FiltersScreen() {
   const intl = useIntl();
   const categoryLabel = useCategoryLabel();
   const router = useRouter();
-  const [foreground, muted, star] = useThemeColor(["foreground", "muted", "warning"] as const);
+  const [star] = useThemeColor(["warning"] as const);
   const { showRatings, showFavorites } = useHiddenItemVisibility();
   const {
     draft,
@@ -53,6 +54,7 @@ export function FiltersScreen() {
           close();
         },
       }}
+      name="filters"
       secondary={[
         {
           label: intl.formatMessage({ id: "common.filters.clearFilters" }),
@@ -63,7 +65,6 @@ export function FiltersScreen() {
           },
         },
       ]}
-      name="filters"
       title={intl.formatMessage({ id: "common.filters.title" })}
     >
       <SheetScrollView contentClassName="gap-[18px]">
@@ -186,25 +187,17 @@ export function FiltersScreen() {
         <FilterSection
           title={intl.formatMessage({ id: "common.filters.tags" })}
           trailing={
-            <View className="bg-fill flex-row gap-0.5 rounded-full p-[3px]">
-              {MODES.map(({ value, label }) => (
-                <Pressable
-                  key={value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: draft.filterMode === value }}
-                  className={`h-[26px] justify-center rounded-full px-3 ${draft.filterMode === value ? "bg-thumb" : ""}`}
-                  testID={`filters-mode-${value}`}
-                  onPress={() => update({ filterMode: value })}
-                >
-                  <Text
-                    className="text-[13px] font-medium"
-                    style={{ color: draft.filterMode === value ? foreground : muted }}
-                  >
-                    {intl.formatMessage({ id: label })}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <Segmented
+              segments={MODES.map(({ value, label }) => ({
+                value,
+                label: intl.formatMessage({ id: label }),
+                testID: `filters-mode-${value}`,
+              }))}
+              size="compact"
+              testID="filters-mode"
+              value={draft.filterMode}
+              onChange={(value) => update({ filterMode: value })}
+            />
           }
         >
           {tagsLoading ? (

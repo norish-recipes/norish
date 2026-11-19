@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { Segmented } from "@/components/segmented";
 import { SheetBody } from "@/components/sheet";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
@@ -19,7 +20,7 @@ import {
 } from "@norish/shared/lib/recurrence/pattern";
 
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
-import { FieldLabel, Segmented } from "./form-parts";
+import { FieldLabel } from "./form-parts";
 
 const RULES = [
   ["day", "daily"],
@@ -49,7 +50,11 @@ export function RepeatBody({
     <SheetBody contentClassName="gap-2">
       <FieldLabel>{text("frequency")}</FieldLabel>
       <Segmented
-        options={RULES.map(([rule, key]) => ({ id: rule, label: text(key) }))}
+        segments={RULES.map(([rule, key]) => ({
+          value: rule,
+          label: text(key),
+          testID: `repeat-frequency-${rule}`,
+        }))}
         testID="repeat-frequency"
         value={pattern?.rule ?? null}
         onChange={(rule) => onChange(withRecurrenceRule(pattern, rule))}
@@ -63,7 +68,7 @@ export function RepeatBody({
             <Button
               isIconOnly
               accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.decreaseInterval" })}
-              className="bg-fill size-11 rounded-full"
+              className="bg-sand size-11 rounded-full"
               isDisabled={pattern.interval <= 1}
               testID="repeat-interval-decrease"
               variant="secondary"
@@ -71,7 +76,7 @@ export function RepeatBody({
             >
               <Ionicons color={foreground} name="remove" size={16} />
             </Button>
-            <View className="bg-fill h-11 flex-1 flex-row items-baseline justify-center gap-1.5 rounded-full pt-2">
+            <View className="bg-sand h-11 flex-1 flex-row items-baseline justify-center gap-1.5 rounded-full pt-2">
               <Text className="text-foreground text-[22px] font-bold" testID="repeat-interval">
                 {pattern.interval}
               </Text>
@@ -80,7 +85,7 @@ export function RepeatBody({
             <Button
               isIconOnly
               accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.increaseInterval" })}
-              className="bg-fill size-11 rounded-full"
+              className="bg-sand size-11 rounded-full"
               testID="repeat-interval-increase"
               variant="secondary"
               onPress={() => onChange(stepRecurrenceInterval(pattern, 1))}
@@ -96,10 +101,11 @@ export function RepeatBody({
             <FieldLabel>{text("onDay")}</FieldLabel>
           </View>
           <Segmented
-            small
-            options={WEEKDAYS.map((key, index) => ({
-              id: String(index),
+            size="compact"
+            segments={WEEKDAYS.map((key, index) => ({
+              value: String(index),
               label: text(`weekdays.${key}`),
+              testID: `repeat-weekday-${index}`,
             }))}
             testID="repeat-weekday"
             value={String(pattern.weekday ?? 1)}
@@ -108,13 +114,13 @@ export function RepeatBody({
         </>
       ) : null}
       {pattern ? (
-        <View className="bg-fill mt-2.5 gap-2 rounded-[18px] px-3.5 py-3" testID="repeat-preview">
+        <View className="bg-sand mt-2.5 gap-2 rounded-[18px] px-3.5 py-3" testID="repeat-preview">
           <View className="flex-row items-center gap-2.5">
             <Ionicons color={accentText} name="calendar-outline" size={16} />
             <Text className="text-foreground flex-1 text-sm font-semibold">{label(pattern)}</Text>
           </View>
           {next ? (
-            <View className="bg-fill ml-[26px] flex-row gap-1 self-start rounded-full px-3 py-1.5">
+            <View className="bg-sand ml-[26px] flex-row gap-1 self-start rounded-full px-3 py-1.5">
               <Text className="text-muted text-[13px]">{text("next")}</Text>
               <Text className="text-foreground text-[13px] font-medium">
                 {formatNextOccurrence(next, words)}

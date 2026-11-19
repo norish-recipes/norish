@@ -19,8 +19,8 @@ vi.mock("@norish/shared-react/reader", () => ({
 }));
 vi.mock("@norish/shared-react/recipes", () => ({ useLibraryFilters: () => ({}) }));
 // One button per segment that picks it.
-vi.mock("@/components/glass-segmented", () => ({
-  GlassSegmented: ({
+vi.mock("@/components/segmented", () => ({
+  Segmented: ({
     segments,
     onChange,
   }: {
