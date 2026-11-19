@@ -4,15 +4,12 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useReducedMotion,
+  ZoomIn,
+  ZoomOut,
 } from "react-native-reanimated";
 import { GlassPill } from "@/components/glass";
 import { lightImpact } from "@/lib/haptics";
-import {
-  FADE_REDUCED_IN,
-  FADE_REDUCED_OUT,
-  SPRING_ZOOM_IN,
-  SPRING_ZOOM_OUT,
-} from "@/lib/motion/layout";
+import { FADE_REDUCED_IN, FADE_REDUCED_OUT } from "@/lib/motion/layout";
 import { springTo } from "@/lib/motion/spring";
 import { useTabBarMinimised } from "@/lib/tab-accessory-placement";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -20,6 +17,11 @@ import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { todayControlPlace } from "../utils/today-control";
+
+// Stiffer than the app's spring and still critically damped: the pill pops rather than grows.
+const POP = { damping: 49, stiffness: 600 };
+const POP_IN = ZoomIn.springify().damping(POP.damping).stiffness(POP.stiffness);
+const POP_OUT = ZoomOut.springify().damping(POP.damping).stiffness(POP.stiffness);
 
 /** The largest text scale a 44 pt pill holds whole. */
 const PILL_TEXT_SCALE = 2;
@@ -46,11 +48,17 @@ export function TodayControl({
   const placeStyle = useAnimatedStyle(() => ({ bottom: lift.get(), right: inset.get() }));
 
   return (
-    <Animated.View className="absolute" pointerEvents="box-none" style={placeStyle}>
+    // Pinned top and left too: sized by the pill, the box shrank into its corner on exit and the
+    // zooming-out pill slid along with it.
+    <Animated.View
+      className="absolute top-0 left-0 items-end justify-end"
+      pointerEvents="box-none"
+      style={placeStyle}
+    >
       {direction ? (
         <Animated.View
-          entering={reduceMotion ? FADE_REDUCED_IN : SPRING_ZOOM_IN}
-          exiting={reduceMotion ? FADE_REDUCED_OUT : SPRING_ZOOM_OUT}
+          entering={reduceMotion ? FADE_REDUCED_IN : POP_IN}
+          exiting={reduceMotion ? FADE_REDUCED_OUT : POP_OUT}
         >
           <GlassPill
             accessibilityLabel={intl.formatMessage({ id: "calendar.mobile.scrollToToday" })}
