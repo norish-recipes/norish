@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { babel, releaseCode } from "./release-module";
 
@@ -42,6 +42,12 @@ function unassignedCaptures(file: string) {
 }
 
 describe("worklet closures in a release build", () => {
+  // The first transform loads Expo's preset and the compiler (seconds under a parallel gate), so
+  // it runs here, on the hook's own limit, rather than inside the first case's.
+  beforeAll(() => {
+    releaseCode(join(src, "lib/motion/timed.ts"));
+  }, 30_000);
+
   it("finds the modules with worklets", () => {
     expect(files).toContain("components/drag-list/drop-target.ts");
   });
