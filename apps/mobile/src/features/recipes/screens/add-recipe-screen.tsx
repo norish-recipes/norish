@@ -1,12 +1,13 @@
-import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import React from "react";
+import { Pressable, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
-import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { hostOf, plainLink } from "@/lib/network/host-of";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -19,27 +20,33 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Option = { key: string; icon: IconName; title: string; hint: string; to: Href };
 
-/** The copied link: a card row with its host, where it came from and a small Import. */
+/** The copied link: an accent card row with its host and where it came from; a tap imports it. */
 function CopiedLinkRow({ url, onPress }: { url: string; onPress: () => void }) {
   const intl = useIntl();
+  const [onAccent] = useThemeColor(["accent-foreground"] as const);
+  const host = plainLink(hostOf(url));
+  const hint = intl.formatMessage({ id: "recipes.addRecipe.fromClipboard" });
 
   return (
-    <Card>
-      <CardRow
-        first
-        hint={intl.formatMessage({ id: "recipes.addRecipe.fromClipboard" })}
-        icon="link"
-        label={plainLink(hostOf(url))}
-        testID="add-recipe-copied-link"
-      >
-        <PillButton
-          label={intl.formatMessage({ id: "common.actions.import" })}
-          testID="add-recipe-copied-link-import"
-          tone="accent"
-          onPress={onPress}
-        />
-      </CardRow>
-    </Card>
+    <Pressable
+      accessibilityHint={intl.formatMessage({ id: "common.actions.import" })}
+      accessibilityLabel={`${host}, ${hint}`}
+      accessibilityRole="button"
+      className="bg-accent min-h-[60px] flex-row items-center gap-3 rounded-[22px] px-4"
+      testID="add-recipe-copied-link"
+      onPress={onPress}
+    >
+      <View className="size-10 items-center justify-center">
+        <Ionicons color={onAccent} name="link" size={23} />
+      </View>
+      <View className="min-w-0 flex-1 gap-px">
+        <Text className="text-accent-foreground text-base font-semibold" numberOfLines={1}>
+          {host}
+        </Text>
+        <Text className="text-accent-foreground/80 text-sm">{hint}</Text>
+      </View>
+      <Ionicons color={onAccent} name="chevron-forward" size={16} />
+    </Pressable>
   );
 }
 
