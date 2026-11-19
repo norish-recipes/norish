@@ -37,6 +37,16 @@ describe("highlightSegments", () => {
     ]);
   });
 
+  it("marks the words the server's any-word fallback found", () => {
+    expect(highlightSegments("Chicken", "chicken,rice")).toEqual([
+      { text: "Chicken", highlighted: true },
+    ]);
+    expect(highlightSegments("Fried rice", "chicken,rice")).toEqual([
+      { text: "Fried ", highlighted: false },
+      { text: "rice", highlighted: true },
+    ]);
+  });
+
   it("marks the term wherever it starts a word, ignoring case", () => {
     expect(highlightSegments("Hoisin Chicken and chicken stock", "chicken")).toEqual([
       { text: "Hoisin ", highlighted: false },

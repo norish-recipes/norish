@@ -2,7 +2,7 @@ import { plainText } from "@/lib/plain-text";
 
 import type { LibraryMatchDTO } from "@norish/shared/contracts";
 import { stripDiacritics } from "@norish/shared/lib/fold-name";
-import { searchTerms } from "@norish/shared/lib/search-terms";
+import { searchTerms, searchWords } from "@norish/shared/lib/search-terms";
 
 export type MatchSegment = { text: string; highlighted: boolean };
 
@@ -17,7 +17,7 @@ const foldChar = (text: string) => stripDiacritics(text).toLowerCase();
 
 /**
  * `text` split around the places a search term starts a word, ignoring case and accents.
- * A term nowhere as written (the server reads "a,b" as two words) leaves the text whole.
+ * A term nowhere as written leaves the text whole; "a,b" also marks "a" and "b" on their own.
  */
 export function highlightSegments(text: string, search: string): MatchSegment[] {
   let folded = "";
@@ -39,8 +39,8 @@ export function highlightSegments(text: string, search: string): MatchSegment[] 
 
   const marked: [number, number][] = [];
 
-  // A term that folds away (a lone "^") would match everywhere, so it is skipped.
-  const terms = searchTerms(search)
+  // The terms as written and the words the server's any-word fallback ORs; one that folds away is skipped.
+  const terms = [...searchTerms(search), ...searchWords(search)]
     .map(foldChar)
     .filter((term) => term.length > 0);
 

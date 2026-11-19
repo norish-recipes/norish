@@ -29,7 +29,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
-import { searchTerms } from "@norish/shared/lib/search-terms";
+import { searchTerms, searchWords } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
@@ -595,7 +595,8 @@ function toLibraryMatch(row: MatchRow): LibraryMatchDTO | null {
 }
 
 /** The strongest hit per recipe in scope, title > tag > ingredient > description > step. A phrase
- * spanning two rows ("chicken,rice") matches no one row, so those recipes are read again as an OR. */
+ * spanning two rows ("chicken,rice") matches no one row, so those recipes are read again as an OR
+ * of its `searchWords`, the words the card highlights. */
 export async function recipeSearchMatches(
   ids: string[],
   search: string | undefined,
@@ -604,12 +605,16 @@ export async function recipeSearchMatches(
   const terms = search ? searchTsqueryTerms(search) : null;
   const matches = new Map<string, LibraryMatchDTO>();
 
-  if (!terms || ids.length === 0 || searchFields.length === 0) return matches;
+  if (!search || !terms || ids.length === 0 || searchFields.length === 0) return matches;
 
-  const exact = sql`to_tsquery('simple', ${terms})`;
-  const anyWord = sql`to_tsquery('simple', replace(to_tsquery('simple', ${terms})::text, ' <-> ', ' | '))`;
+  const words = searchWords(search)
+    .map((word) => `${word}:*`)
+    .join(" | ");
+  const queries = [sql`to_tsquery('simple', ${terms})`];
 
-  for (const query of [exact, anyWord]) {
+  if (words) queries.push(sql`to_tsquery('simple', ${words})`);
+
+  for (const query of queries) {
     const pending = ids.filter((id) => !matches.has(id));
 
     if (pending.length === 0) break;

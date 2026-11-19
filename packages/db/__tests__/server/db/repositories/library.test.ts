@@ -895,7 +895,7 @@ describe("the Library union", () => {
       });
 
       expect(result.items).toHaveLength(1);
-      expect(result.items[0]).toMatchObject({ match: { field: "tags" } });
+      expect(result.items[0]).toMatchObject({ match: { field: "tags", tag: "chicken" } });
     });
 
     it("ignores a query term the parser drops", async () => {

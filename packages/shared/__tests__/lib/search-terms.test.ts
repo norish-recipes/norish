@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { searchTerms } from "../../src/lib/search-terms";
+import { searchTerms, searchWords } from "../../src/lib/search-terms";
 
 describe("searchTerms", () => {
   it("splits on whitespace and drops tsquery characters", () => {
@@ -17,5 +17,17 @@ describe("searchTerms", () => {
 
   it("is empty when nothing searchable is left", () => {
     expect(searchTerms(" &| () ")).toEqual([]);
+  });
+});
+
+describe("searchWords", () => {
+  it("splits each term into the words the any-word fallback looks for", () => {
+    expect(searchWords("chicken,rice stir-fry ^ crème")).toEqual([
+      "chicken",
+      "rice",
+      "stir",
+      "fry",
+      "crème",
+    ]);
   });
 });
