@@ -29,7 +29,7 @@ export function StoreEditorSheet({
 }) {
   const intl = useIntl();
   const text = (id: string) => intl.formatMessage({ id });
-  const [accent] = useThemeColor(["accent"] as const);
+  const [accent, muted] = useThemeColor(["accent", "muted"] as const);
   const link = editing.link.trim();
   const derived = link ? deriveSearchAddress(link) : null;
   const label = (id: string, hintId?: string) => (
@@ -77,6 +77,7 @@ export function StoreEditorSheet({
                 autoCorrect={false}
                 keyboardType="url"
                 placeholder={text("groceries.storeManager.shopLinkPlaceholder")}
+                prefix={<Ionicons color={muted} name="link" size={18} />}
                 testID="store-shop-link"
                 value={editing.link}
                 onChangeText={(next) => onChange({ ...editing, link: next })}
