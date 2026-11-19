@@ -1,3 +1,4 @@
+import type { ComponentType, ReactNode } from "react";
 import React from "react";
 import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
 import { HEADER_TITLE_STYLE } from "@/lib/header-title";
@@ -21,10 +22,19 @@ const SEARCH_SHEETS = [
 
 const FIT_SHEETS = ["cookbook-rename", "move"] as const;
 
-/** The Recipes tab's stack: the list screen's title is a bar item that hides on scroll; a cookbook page keeps a transparent header for its back button. */
-export function RecipesStack() {
+/**
+ * The Recipes tab's stack: the list screen's title is a bar item that hides on scroll; a cookbook page keeps a transparent header for its back button.
+ * Search's stack is this one with its own root screen and filters.
+ */
+export function RecipesStack({
+  root = "index",
+  Root = LibraryRoot,
+}: {
+  root?: "index" | "search";
+  Root?: ComponentType<{ children: ReactNode }>;
+}) {
   return (
-    <LibraryRoot>
+    <Root>
       <AddAtOnceHost addToGroceries={TAB_ROUTES.recipes.addToGroceries}>
         <Stack
           screenOptions={{
@@ -33,8 +43,8 @@ export function RecipesStack() {
             headerTitleStyle: HEADER_TITLE_STYLE,
           }}
         >
-          {/* The list screen sets its header, a bar-item title, itself. */}
-          <Stack.Screen name="index" />
+          {/* The root screen sets its header itself: Recipes a bar-item title, Search its field. */}
+          <Stack.Screen name={root} />
           {/* A cookbook opens inside this stack so its sheets present over it. */}
           <Stack.Screen
             name="cookbook/[id]"
@@ -57,6 +67,6 @@ export function RecipesStack() {
           ))}
         </Stack>
       </AddAtOnceHost>
-    </LibraryRoot>
+    </Root>
   );
 }

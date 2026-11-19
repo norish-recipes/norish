@@ -107,7 +107,7 @@ export function ShellTabs() {
           {intl.formatMessage({ id: "navbar.userMenu.settings.title" })}
         </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="search" role="search" testID="tab-search">
+      <NativeTabs.Trigger name="(search)" role="search" testID="tab-search">
         <NativeTabs.Trigger.Label>
           {intl.formatMessage({ id: "common.actions.search" })}
         </NativeTabs.Trigger.Label>
