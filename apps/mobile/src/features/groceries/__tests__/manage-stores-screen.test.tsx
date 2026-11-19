@@ -163,6 +163,15 @@ describe("Manage stores", () => {
     expect(held.remove).toHaveBeenNthCalledWith(2, "a", true);
   });
 
+  it("counts ticked lines too, since deleting the Store reaches them", () => {
+    held.lines = [{ storeId: "a", isDone: true }];
+    render(<ManageStoresScreen />);
+    fireEvent.click(screen.getByTestId("delete-a"));
+    const buttons = held.alert.mock.calls[0]?.[2] as { onPress?: () => void }[];
+
+    expect(buttons).toHaveLength(3);
+  });
+
   it("deletes a Store with no lines after one confirmation", () => {
     render(<ManageStoresScreen />);
     fireEvent.click(screen.getByTestId("delete-c"));

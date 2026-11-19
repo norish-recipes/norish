@@ -91,9 +91,7 @@ export function ManageStoresScreen() {
     return true;
   };
   const confirmDelete = (store: StoreDto) => {
-    const count = groceries.filter(
-      (grocery) => grocery.storeId === store.id && !grocery.isDone
-    ).length;
+    const count = groceries.filter((grocery) => grocery.storeId === store.id).length;
     const title = intl.formatMessage(
       { id: "groceries.mobile.deleteStoreTitle" },
       { store: store.name }
