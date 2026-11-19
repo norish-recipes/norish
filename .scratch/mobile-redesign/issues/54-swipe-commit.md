@@ -4,7 +4,7 @@
 
 **Blocked by:** 50
 
-**Status:** ready
+**Status:** done
 
 - [x] Full swipe commits Delete on recipe cards and settings rows; the confirm (if any) behaves as today.
 - [x] Motion on the UI thread; Reduce Motion skips the slide.
@@ -38,3 +38,4 @@
   2. fix: a held card whose recipe disappears (realtime delete while the alert is up) leaves `held=1`/an open row on the reused cell; reset swipe state when the cell's item changes.
   3. fix: board timing: the circle shrinks and the rows rise ~350 ms after the slide starts (board keyTimes .4583-.5167 vs slide .3667-.4417); the code starts both at SLIDE_MS (260).
   4. reject: delete from the long-press menu or partial swipe + tap leaves with no circle: the board draws the circle only for the full swipe.
+- Exit gate on `7dd002b8d`: all six gates exit 0 (fixer's run; i18n unchanged since its green run).
