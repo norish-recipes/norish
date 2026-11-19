@@ -6,10 +6,10 @@
 
 **Status:** ready
 
-- [ ] Each listed sheet matches its board's structure (sections, row ends, which controls, order) in both themes; no sheet restyles a kit control locally (no ad-hoc fills, radii, glass).
-- [ ] Add recipe: the clipboard row is a card row with a small solid-accent Import. Import from photos: photo strip + Camera/Photo library rows. Share: inset expiry switch, link rows with Copy/Share/Reactivate pill buttons and Active/Expired tags, a no-links state. Timers: solid body icon buttons, the dismiss is a solid circle with a red cross. Add to groceries: servings stepper right-aligned. Repeat: sand stepper for the interval.
-- [ ] Translucent or glass content left in any sheet body is gone (grep `GlassSurface`, `bg-fill`, `glass` under `apps/mobile/src` and justify what stays: only header, tab bar, accessory, nav buttons, Today, heart on photos).
-- [ ] Tests and Maestro flows follow moved controls; gates green.
+- [x] Each listed sheet matches its board's structure (sections, row ends, which controls, order) in both themes; no sheet restyles a kit control locally (no ad-hoc fills, radii, glass).
+- [x] Add recipe: the clipboard row is a card row with a small solid-accent Import. Import from photos: photo strip + Camera/Photo library rows. Share: inset expiry switch, link rows with Copy/Share/Reactivate pill buttons and Active/Expired tags, a no-links state. Timers: solid body icon buttons, the dismiss is a solid circle with a red cross. Add to groceries: servings stepper right-aligned. Repeat: sand stepper for the interval.
+- [x] Translucent or glass content left in any sheet body is gone (grep `GlassSurface`, `bg-fill`, `glass` under `apps/mobile/src` and justify what stays: only header, tab bar, accessory, nav buttons, Today, heart on photos).
+- [x] Tests and Maestro flows follow moved controls; gates green.
 
 ## Comments
 
@@ -19,3 +19,6 @@
 - Part B (recipe page sheets): Servings is the wide kit Stepper ("N servings") plus a Multiplier label over the scale chips (½× to 4×); the two typed fields are gone (board has none), so an arbitrary multiplier like 1.5× is only reachable by stepping. Maestro `recipe-scale` waits on `recipe-servings-sheet-value`.
 - Share: Segmented expiry (keeps 1 year, the board shows four), link rows in one Card with Active/Expired/Revoked tags and PillButtons: Copy and new Share (native share sheet, only on the link made this visit, the only one with a URL), Revoke, Reactivate, Delete (danger). Empty state is centred "No share links yet."; existing copy kept ("Expires after", "Copy").
 - Timers: rows sit in a Card, buttons are kit IconButtons with a danger dismiss. The ±step buttons the board omits stay (functional); the cook-mode pill shares the rows, so its buttons are solid too.
+- Part C (groceries sheets): Store/Aisle choices are card rows with a dot slot, `RepeatPills` and Repeat labels follow the board (interval reads "Every 2 weeks", the preview is one plain line); Product is a label/value card row (name and cost; the pack-size and strike-through detail line is dropped), its search has the clear circle and Unlink is a danger PillButton; Manage stores rows show "N items" and a chevron, the header + is the confirm with a plus glyph; Edit store's link has a link prefix; Pantry food's "On the list" tag is its own Groceries row.
+- Not built or kept: Manage stores keeps the per-row Delete button (the board has none; ticket 54's swipe can take it) and drops the pencil (the row opens the editor, Maestro taps `store-row-*`); "0 items" instead of "No items"; Edit grocery keeps the "From recipe" note under the field (information, the board drops it); Edit store's aisle rows and add field, Pantry add's CardSlice rows (full-width hairline) are unchanged.
+- Glass grep (`GlassSurface|bg-fill|glass` under `apps/mobile/src`): no `bg-fill` and no glass in any sheet body. What keeps glass: header/native sheet (`modal-header`, `sheet-options`, `glass.tsx`), nav buttons (`library-header`, `cook-mode` and `media-viewer` close), account avatar disc, Today, heart/buttons over photos (`recipe-hero`, editor `media-strip`/`step-photos` remove), cook bar and timer pill/capsule (accessory), server chip on sign-in. Page content still on glass, outside the sheets and for ticket 55: `cookbooks-section` and `ingredients-section` (`GlassIconButton`/`GlassIconMenu`).
