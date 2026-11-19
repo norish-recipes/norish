@@ -22,12 +22,8 @@ export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };
 }
 
-/**
- * The Library under the reader's filters, with its recipes in grid order. Until the stored
- * filters are applied it stays loading: the defaults would show recipes the reader filters away.
- * `sortBeatsRank`, `withMatch` (each recipe of a search says why it matched, in `matches` by id) and `filters` (read instead of the store's) are mobile Search's; `enabled: false`
- * reads nothing.
- */
+/** The Library under the reader's filters, in grid order; loading until they apply. `sortBeatsRank`,
+ * `withMatch` (`matches` by recipe id), `filters` and `enabled` (false reads nothing) are Search's. */
 export function useLibraryList({
   sortBeatsRank,
   withMatch,
