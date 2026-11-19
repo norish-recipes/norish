@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready
+**Status:** done
 
 - [x] Sand content fill as one theme token (light `rgb(234 228 214)`, dark `rgb(46 42 34)`) plus the solid body-button colour and the retuned text colours of `PnOpacity`, defined once where the mobile theme lives; `bg-fill` on content gives way to it.
 - [x] Segmented: one component (standard 44, compact 34, icon), sand track, solid thumb, no glass; `glass-segmented`, `slot-tabs`, `list-switch` callers move to it and the old files go.
