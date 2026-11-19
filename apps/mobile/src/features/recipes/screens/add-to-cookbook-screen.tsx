@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { IconButton } from "@/components/icon-button";
 import { SheetInput } from "@/components/sheet-input";
+import { SliceHairline } from "@/components/slice-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { TextField, useThemeColor } from "heroui-native";
@@ -66,7 +67,6 @@ export function AddToCookbookScreen() {
             icon="add"
             label={newLabel}
             testID="add-to-cookbook-new-add"
-            tone="accent"
             onPress={stageNew}
           />
         </View>
@@ -89,7 +89,8 @@ export function AddToCookbookScreen() {
                     className={pickRowClass(position)}
                     testID={`add-to-cookbook-pending-${item.entry.key}`}
                   >
-                    <View className="bg-sand size-11 items-center justify-center rounded-xl">
+                    <SliceHairline first={position.first} tall />
+                    <View className="bg-thumb size-10 items-center justify-center rounded-xl">
                       <Ionicons color={muted} name="book-outline" size={20} />
                     </View>
                     <View className="min-w-0 flex-1">
@@ -111,7 +112,7 @@ export function AddToCookbookScreen() {
                   <PickRow
                     media={
                       <CookbookCover
-                        className="size-11 overflow-hidden rounded-xl"
+                        className="size-10 overflow-hidden rounded-xl"
                         cookbook={item.cookbook}
                         iconSize={20}
                       />

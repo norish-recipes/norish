@@ -1,10 +1,10 @@
 import type { SheetActions } from "@/components/modal-header";
+import type { RowPosition } from "@/components/slice-row";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
 import { Sheet, SheetList } from "@/components/sheet";
 
-import type { PickRowPosition } from "./pick-row";
 import { PickRowSkeleton } from "./pick-row";
 
 const SKELETON_ROWS = [0, 1, 2, 3, 4];
@@ -15,7 +15,7 @@ export type PickList<Item> = {
   /** Shown when there is no item. */
   empty: ReactElement;
   keyExtractor: (item: Item) => string;
-  renderRow: (item: Item, position: PickRowPosition) => ReactElement;
+  renderRow: (item: Item, position: RowPosition) => ReactElement;
   onEndReached?: () => void;
 };
 

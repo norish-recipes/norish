@@ -7,6 +7,7 @@ import { Loader } from "@/components/loader";
 import { PlanPicker } from "@/components/plan-block";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
+import { SliceHairline } from "@/components/slice-row";
 import { asSlot } from "@/lib/slot-segments";
 import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -144,7 +145,8 @@ export function PlanRecipeScreen() {
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
           >
-            <CardPhoto className="size-11 rounded-xl" image={recipe.image} />
+            <SliceHairline first={false} tall />
+            <CardPhoto className="size-10 rounded-xl" image={recipe.image} />
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>

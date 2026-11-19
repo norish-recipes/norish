@@ -1,23 +1,22 @@
+import type { RowPosition } from "@/components/slice-row";
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { SliceHairline, sliceRowClass } from "@/components/slice-row";
 import { Tick } from "@/components/tick";
 import { Skeleton } from "heroui-native";
 
-/** Where a row sits in its group, which rounds the group's first and last row. */
-export type PickRowPosition = { first: boolean; last: boolean };
-
-/** A row's classes, for the rows of the list that are not ticks. */
-export const pickRowClass = ({ first, last }: PickRowPosition) =>
-  `bg-sand flex-row items-center gap-3 px-3.5 py-2.5 ${first ? "rounded-t-[22px]" : "border-line border-t"} ${last ? "rounded-b-[22px]" : ""}`;
+/** A pick row's classes, for the rows of the list that are not ticks. */
+export const pickRowClass = (position: RowPosition) => sliceRowClass(position, true);
 
 /** A row's shell while its content loads: the picture, the name and the tick, in the row's own layout. */
-export function PickRowSkeleton({ position }: { position: PickRowPosition }) {
+export function PickRowSkeleton({ position }: { position: RowPosition }) {
   return (
     <View className={pickRowClass(position)}>
-      <Skeleton className="size-11 rounded-xl" />
+      <SliceHairline first={position.first} tall />
+      <Skeleton className="size-10 rounded-xl" />
       <Skeleton className="h-6 flex-1 rounded-md" />
-      <Skeleton className="size-[26px] rounded-full" />
+      <Skeleton className="size-6 rounded-full" />
     </View>
   );
 }
@@ -32,12 +31,12 @@ export function PickRow({
   testID,
   onToggle,
 }: {
-  /** A 44 pt picture, rounded by the caller. */
+  /** A 40 pt picture, rounded by the caller. */
   media: ReactNode;
   title: string;
   subtitle?: string;
   selected: boolean;
-  position: PickRowPosition;
+  position: RowPosition;
   testID: string;
   onToggle: () => void;
 }) {
@@ -50,17 +49,15 @@ export function PickRow({
       testID={testID}
       onPress={onToggle}
     >
+      <SliceHairline first={position.first} tall />
       {media}
-      <View className="min-w-0 flex-1">
-        <Text
-          className={`text-foreground text-base ${subtitle ? "font-semibold" : ""}`}
-          numberOfLines={1}
-        >
+      <View className="min-w-0 flex-1 gap-px">
+        <Text className="text-foreground text-base" numberOfLines={1}>
           {title}
         </Text>
-        {subtitle ? <Text className="text-muted text-[13px]">{subtitle}</Text> : null}
+        {subtitle ? <Text className="text-muted text-sm">{subtitle}</Text> : null}
       </View>
-      <Tick selected={selected} sizeClass="size-[26px]" />
+      <Tick selected={selected} />
     </Pressable>
   );
 }
