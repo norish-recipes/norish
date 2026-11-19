@@ -55,11 +55,13 @@ vi.mock("expo-router", () => {
 
   return { useRouter: () => router, useLocalSearchParams: () => ({ id: "p1" }) };
 });
-vi.mock("heroui-native", () => ({
-  Skeleton: () => null,
+vi.mock("@/components/switch", () => ({
   Switch: ({ onSelectedChange }: { onSelectedChange: (value: boolean) => void }) => (
     <button data-testid="switch" onClick={() => onSelectedChange(false)} />
   ),
+}));
+vi.mock("heroui-native", () => ({
+  Skeleton: () => null,
   Button: Object.assign(
     ({ onPress, testID }: { onPress: () => void; testID: string }) => (
       <button data-testid={testID} onClick={onPress} />

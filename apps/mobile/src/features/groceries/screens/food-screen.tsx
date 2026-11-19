@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Skeleton, Switch } from "heroui-native";
+import { Switch } from "@/components/switch";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";

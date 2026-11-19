@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useRouter } from "expo-router";
-import { Input, Switch } from "heroui-native";
+import { Switch } from "@/components/switch";
+import { Input } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
