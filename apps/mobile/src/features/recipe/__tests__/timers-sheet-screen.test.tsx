@@ -18,7 +18,10 @@ vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 vi.mock("@/components/card", () => ({ Card: ({ children }: Props) => <div>{children}</div> }));
-vi.mock("@/components/sheet", () => ({ Sheet: ({ children }: Props) => <div>{children}</div> }));
+vi.mock("@/components/sheet", () => ({
+  Sheet: ({ children }: Props) => <div>{children}</div>,
+  SheetScrollGuard: () => null,
+}));
 vi.mock("../components/timer-list", () => ({
   AllTimers: ({ onOpen }: { onOpen: (timer: { recipeId: string; stepIndex: number }) => void }) => (
     <button type="button" onClick={() => onOpen({ recipeId: "r", stepIndex: 2 })}>

@@ -6,7 +6,7 @@ import type {
   ScrollViewProps,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, Keyboard, ScrollView, useWindowDimensions, View } from "react-native";
+import { FlatList, Keyboard, Platform, ScrollView, useWindowDimensions, View } from "react-native";
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
@@ -35,8 +35,17 @@ export const FIT_SHEET_FIELD_HEIGHT = 200;
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pt-1 pb-4 ${contentClassName}`;
 
-/** A scrolling body ends above the home indicator, which a sheet at its full height reaches. */
-export const SHEET_SCROLL_END = { paddingBottom: 16 + (initialWindowMetrics?.insets.bottom ?? 0) };
+/** The native header's height over a sheet's content, measured on iOS 26 and 27. */
+const SHEET_HEADER = 70;
+
+/** A nested body ends above the home indicator, which a sheet at its full height reaches. */
+const NESTED_SCROLL_END = { paddingBottom: 16 + (initialWindowMetrics?.insets.bottom ?? 0) };
+
+/** iOS react-native-screens sizes a sheet's first scroll view to the whole sheet, header included,
+ * so it runs a header's height past the sheet's bottom: its end pads past that too. */
+export const SHEET_SCROLL_END = {
+  paddingBottom: NESTED_SCROLL_END.paddingBottom + (Platform.OS === "ios" ? SHEET_HEADER : 0),
+};
 
 /** What both scrolling bodies share: they fill the sheet and meet the keyboard the same way. */
 const SCROLLER = {
@@ -67,24 +76,35 @@ export function SheetScrollView({
 export function SheetList<T>({
   inset,
   contentClassName,
+  nested = false,
   ...props
-}: Omit<FlatListProps<T>, SheetOwnedProps> & BodyLayout & { ref?: Ref<FlatList<T>> }) {
+}: Omit<FlatListProps<T>, SheetOwnedProps> &
+  BodyLayout & {
+    /** Under other content, where react-native-screens leaves the list its laid-out height. */
+    nested?: boolean;
+    ref?: Ref<FlatList<T>>;
+  }) {
   return (
     <FlatList
       {...SCROLLER}
       {...props}
       contentContainerClassName={contentClass({ inset, contentClassName })}
-      contentContainerStyle={SHEET_SCROLL_END}
+      contentContainerStyle={nested ? NESTED_SCROLL_END : SHEET_SCROLL_END}
     />
   );
+}
+
+/** Kept first in a fit sheet: react-native-screens stretches a sheet's first-child scroll view to the
+ * sheet, so a scroll view after it keeps its own height. */
+export function SheetScrollGuard() {
+  return <View collapsable={false} />;
 }
 
 /** A fit sheet's body: as tall as its content until the sheet runs out of room, then it scrolls. */
 export function SheetBody({ children, ...layout }: BodyLayout & { children: ReactNode }) {
   return (
     <>
-      {/* Kept first: react-native-screens stretches a sheet's first-child scroll view to the sheet. */}
-      <View collapsable={false} />
+      <SheetScrollGuard />
       <ScrollView
         {...SCROLLER}
         className="shrink grow-0"
@@ -117,9 +137,6 @@ export function SheetStrip({
 
 /** The top of a sheet at its full height, the window's safe-area top. */
 export const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
-
-/** The native header's height over a sheet's content, measured on iOS 26 and 27. */
-const SHEET_HEADER = 70;
 
 /** Where a sheet's content starts at the sheet's full height, under the native header. */
 export const SHEET_BODY_TOP = FULL_SHEET_TOP + SHEET_HEADER;

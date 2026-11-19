@@ -1,7 +1,7 @@
 import React from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { Card } from "@/components/card";
-import { Sheet } from "@/components/sheet";
+import { Sheet, SheetScrollGuard } from "@/components/sheet";
 import { openAfterSheet, useSheetPresenting } from "@/lib/after-sheet";
 import { cookModeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
@@ -22,6 +22,7 @@ export function TimersSheetScreen() {
 
   return (
     <Sheet name="timers" title={intl.formatMessage({ id: "recipes.cookMode.timers" })}>
+      <SheetScrollGuard />
       <ScrollView
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}

@@ -102,6 +102,7 @@ export function PlanDayList({
         />
       </View>
       <SheetList
+        nested
         // The list remounts when the plan arrives, so it opens on today instead of jumping there.
         key={isLoading ? "loading" : "days"}
         ref={listRef}
