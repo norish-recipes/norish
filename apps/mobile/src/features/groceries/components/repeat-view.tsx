@@ -3,8 +3,6 @@ import { Text, View } from "react-native";
 import { Segmented } from "@/components/segmented";
 import { SheetBody } from "@/components/sheet";
 import { Stepper } from "@/components/stepper";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
@@ -12,7 +10,6 @@ import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recu
 import {
   formatNextOccurrence,
   recurrenceTranslationsFrom,
-  recurrenceUnitKey,
 } from "@norish/shared/lib/recurrence/formatter";
 import {
   recurrenceHasWeekday,
@@ -24,12 +21,15 @@ import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { FieldLabel } from "./form-parts";
 
 const RULES = [
-  ["day", "daily"],
-  ["week", "weekly"],
-  ["month", "monthly"],
-  ["year", "yearly"],
-] as const satisfies readonly (readonly [RecurrenceRule, string])[];
+  ["day", "daily", "everyDay"],
+  ["week", "weekly", "everyWeek"],
+  ["month", "monthly", "everyMonth"],
+  ["year", "yearly", "everyYear"],
+] as const satisfies readonly (readonly [RecurrenceRule, string, string])[];
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+
+const everyKey = (rule: RecurrenceRule) =>
+  RULES.find(([candidate]) => candidate === rule)?.[2] ?? "everyWeek";
 
 /** The body of Repeat: frequency, interval, weekday and what it will read as. */
 export function RepeatBody({
@@ -41,7 +41,6 @@ export function RepeatBody({
 }) {
   const intl = useIntl();
   const label = useRecurrenceLabel();
-  const [accentText] = useThemeColor(["accent"] as const);
   const text = (key: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id: `common.recurrence.${key}` }, values);
   const next = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
@@ -74,12 +73,9 @@ export function RepeatBody({
             onDecrement={() => onChange(stepRecurrenceInterval(pattern, -1))}
             onIncrement={() => onChange(stepRecurrenceInterval(pattern, 1))}
           >
-            <View className="flex-row items-baseline gap-1.5">
-              <Text className="text-foreground text-[22px] font-bold" testID="repeat-interval">
-                {pattern.interval}
-              </Text>
-              <Text className="text-muted text-[13px]">{text(recurrenceUnitKey(pattern))}</Text>
-            </View>
+            <Text className="text-foreground text-[15px] font-semibold" testID="repeat-interval">
+              {text(everyKey(pattern.rule), { interval: pattern.interval })}
+            </Text>
           </Stepper>
         </>
       ) : null}
@@ -102,20 +98,11 @@ export function RepeatBody({
         </>
       ) : null}
       {pattern ? (
-        <View className="bg-sand mt-2.5 gap-2 rounded-[18px] px-3.5 py-3" testID="repeat-preview">
-          <View className="flex-row items-center gap-2.5">
-            <Ionicons color={accentText} name="calendar-outline" size={16} />
-            <Text className="text-foreground flex-1 text-sm font-semibold">{label(pattern)}</Text>
-          </View>
-          {next ? (
-            <View className="bg-sand ml-[26px] flex-row gap-1 self-start rounded-full px-3 py-1.5">
-              <Text className="text-muted text-[13px]">{text("next")}</Text>
-              <Text className="text-foreground text-[13px] font-medium">
-                {formatNextOccurrence(next, words)}
-              </Text>
-            </View>
-          ) : null}
-        </View>
+        <Text className="text-muted px-2 pt-2.5 text-[15px]" testID="repeat-preview">
+          {next
+            ? `${label(pattern)} · ${text("next")} ${formatNextOccurrence(next, words)}`
+            : label(pattern)}
+        </Text>
       ) : null}
     </SheetBody>
   );
