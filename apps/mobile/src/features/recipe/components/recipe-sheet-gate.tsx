@@ -21,8 +21,8 @@ export function RecipeSheetGate({
 }: {
   name: string;
   title: string;
-  /** The sheet's subtitle, from the recipe's name. */
-  subtitle?: (recipeName: string) => string;
+  /** The recipe's name as the sheet's subtitle. */
+  subtitle?: boolean;
   actions?: SheetActions;
   children: ReactNode;
 }) {
@@ -33,7 +33,7 @@ export function RecipeSheetGate({
     <Sheet
       {...(recipe ? actions : undefined)}
       name={name}
-      subtitle={recipe && subtitle ? subtitle(recipe.name) : undefined}
+      subtitle={recipe && subtitle ? recipe.name : undefined}
       title={title}
     >
       {recipe ? (

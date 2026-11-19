@@ -211,7 +211,7 @@ export function RecipeShareScreen() {
         },
       }}
       name="recipe-share"
-      subtitle={(recipeName) => t("subtitle", { recipeName })}
+      subtitle
       title={t("title")}
     >
       <ShareBody expiresIn={expiresIn} latest={latest} setExpiresIn={setExpiresIn} />

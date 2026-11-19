@@ -157,7 +157,6 @@
       "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
       "confirm": "Usuń link"
     },
-    "subtitle": "Publiczne linki do {recipeName}",
     "expiresAfter": "Wygasa po",
     "expiresOn": "Wygasa {date}",
     "expiredOn": "Wygasł {date}",

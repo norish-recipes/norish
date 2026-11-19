@@ -157,7 +157,6 @@
       "message": "¿Eliminar este enlace para compartir {recipeName}? Esta acción no se puede deshacer.",
       "confirm": "Eliminar enlace"
     },
-    "subtitle": "Enlaces públicos de {recipeName}",
     "expiresAfter": "Expira después de",
     "expiresOn": "Expira el {date}",
     "expiredOn": "Expiró el {date}",

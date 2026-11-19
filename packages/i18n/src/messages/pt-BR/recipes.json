@@ -157,7 +157,6 @@
       "message": "Excluir este link de compartilhamento para {recipeName}? Isso não pode ser desfeito.",
       "confirm": "Excluir link"
     },
-    "subtitle": "Links públicos de {recipeName}",
     "expiresAfter": "Expira após",
     "expiresOn": "Expira em {date}",
     "expiredOn": "Expirou em {date}",

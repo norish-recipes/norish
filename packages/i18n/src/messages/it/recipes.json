@@ -157,7 +157,6 @@
       "message": "Eliminare questo link di condivisione per {recipeName}? Questa azione non può essere annullata.",
       "confirm": "Elimina link"
     },
-    "subtitle": "Link pubblici per {recipeName}",
     "expiresAfter": "Scade dopo",
     "expiresOn": "Scade il {date}",
     "expiredOn": "Scaduto il {date}",

@@ -157,7 +157,6 @@
       "message": "هل تريد حذف رابط المشاركة هذا لـ {recipeName}؟ لا يمكن التراجع عن ذلك.",
       "confirm": "حذف الرابط"
     },
-    "subtitle": "روابط عامة لـ {recipeName}",
     "expiresAfter": "ينتهي بعد",
     "expiresOn": "ينتهي {date}",
     "expiredOn": "انتهى {date}",

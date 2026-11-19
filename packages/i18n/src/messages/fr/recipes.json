@@ -157,7 +157,6 @@
       "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
       "confirm": "Supprimer le lien"
     },
-    "subtitle": "Liens publics pour {recipeName}",
     "expiresAfter": "Expire après",
     "expiresOn": "Expire le {date}",
     "expiredOn": "Expiré le {date}",

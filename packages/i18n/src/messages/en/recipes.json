@@ -157,7 +157,6 @@
       "message": "Delete this share link for {recipeName}? This cannot be undone.",
       "confirm": "Delete link"
     },
-    "subtitle": "Public links for {recipeName}",
     "expiresAfter": "Expires after",
     "expiresOn": "Expires {date}",
     "expiredOn": "Expired {date}",

@@ -157,7 +157,6 @@
       "message": "Slet dette delelink til {recipeName}? Dette kan ikke fortrydes.",
       "confirm": "Slet link"
     },
-    "subtitle": "Offentlige links til {recipeName}",
     "expiresAfter": "Udløber efter",
     "expiresOn": "Udløber {date}",
     "expiredOn": "Udløb {date}",

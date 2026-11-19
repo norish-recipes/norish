@@ -157,7 +157,6 @@
       "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
       "confirm": "Link löschen"
     },
-    "subtitle": "Öffentliche Links für {recipeName}",
     "expiresAfter": "Läuft ab nach",
     "expiresOn": "Läuft ab am {date}",
     "expiredOn": "Abgelaufen am {date}",

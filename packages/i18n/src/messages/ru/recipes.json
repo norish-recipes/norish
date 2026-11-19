@@ -157,7 +157,6 @@
       "message": "Удалить эту ссылку для совместного доступа к {recipeName}? Это действие нельзя отменить.",
       "confirm": "Удалить ссылку"
     },
-    "subtitle": "Публичные ссылки на {recipeName}",
     "expiresAfter": "Истекает через",
     "expiresOn": "Истекает {date}",
     "expiredOn": "Истекла {date}",

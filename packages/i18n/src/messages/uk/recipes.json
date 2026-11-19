@@ -157,7 +157,6 @@
       "message": "Видалити це посилання на {recipeName}? Цю дію не можна скасувати.",
       "confirm": "Видалити посилання"
     },
-    "subtitle": "Публічні посилання на {recipeName}",
     "expiresAfter": "Діє протягом",
     "expiresOn": "Діє до {date}",
     "expiredOn": "Закінчилося {date}",

@@ -157,7 +157,6 @@
       "message": "Deze deellink voor {recipeName} verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "confirm": "Link verwijderen"
     },
-    "subtitle": "Openbare links voor {recipeName}",
     "expiresAfter": "Verloopt na",
     "expiresOn": "Verloopt {date}",
     "expiredOn": "Verlopen {date}",

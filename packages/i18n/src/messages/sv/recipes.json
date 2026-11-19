@@ -157,7 +157,6 @@
       "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
       "confirm": "Ta bort länk"
     },
-    "subtitle": "Offentliga länkar till {recipeName}",
     "expiresAfter": "Upphör efter",
     "expiresOn": "Upphör {date}",
     "expiredOn": "Upphörde {date}",

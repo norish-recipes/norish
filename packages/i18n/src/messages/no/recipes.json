@@ -157,7 +157,6 @@
       "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
       "confirm": "Slett lenke"
     },
-    "subtitle": "Offentlige lenker for {recipeName}",
     "expiresAfter": "Utløper etter",
     "expiresOn": "Utløper {date}",
     "expiredOn": "Utløp {date}",

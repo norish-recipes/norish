@@ -157,7 +157,6 @@
       "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
       "confirm": "Poista linkki"
     },
-    "subtitle": "Julkiset linkit: {recipeName}",
     "expiresAfter": "Vanhenee kuluttua",
     "expiresOn": "Vanhenee {date}",
     "expiredOn": "Vanheni {date}",
