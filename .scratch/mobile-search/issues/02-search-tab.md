@@ -13,7 +13,7 @@
 - [x] Results: filter chips with ×, the sort chip (Best match while there is text, otherwise Newest; Newest, Oldest, A–Z, Z–A), the recipe count, the Recipes tab's library card, recipes only, paginated as the Library list is.
 - [x] No results: Clear filters (keeps the text) / Search all fields (narrowed scope) / "No recipes match '…'".
 - [x] The state rules (which state shows, the scope rule, the no-results variant) in plain modules with unit tests; i18n keys in every locale.
-- [ ] Gates green.
+- [x] Gates green.
 
 ## Comments
 
@@ -30,3 +30,8 @@ Part B (2026-11-19):
 - Device (iPhone 18 Pro, iOS 27.2, Release): UIKit hides the nav bar while search is active (fixed with `hideNavigationBar={false}`); the tab accessory covered the Scope row, so Search shows none unless a timer runs. Cancel emits its event before the empty text (Part A assumed the reverse): the empty text after a Cancel is now ignored; the native × also leaves for the Recipes tab (UIKit), and query, results, chips, scope and sort were all there on return. Shared-route resolution and the field refill after return work.
 - Not done: the Scope row sits under the accessory while a timer runs; sign-out wipe checked by unit test only, not on device. Gates: `pnpm test:run` fails at default turbo concurrency on `worklet-closures` drag-list (5 s timeout under load, untouched file, passes alone and with `--concurrency=2`), so "Gates green" stays unticked.
 
+Fix round (2026-11-19):
+- Results show only for a confirmed text or while a chip filters (`showsResults`), so removing the last chip or Clear rests; the field rules are a reducer (`utils/search-field.ts`, tested), Search's filters and confirmed flag are one module-level store (`lib/search-session.ts`) the provider takes via `store`.
+- The accessory knows it is in Search's stack (`(search)` segment): no Add recipe on Search's pages, Cook on a recipe opened there, `barTab` stays "search"; the Scope row clears the timer accessory (keyboard hides it). A kept favourites/rating filter is dropped once its item is hidden. One chip definition per kind (`search-chips.ts`); Funnel/no-results card are shared `components/`.
+- Q5: no supported way to keep the Search tab on the native ×. react-native-screens builds a plain `UISearchTab` (`ios/tabs/host/RNSTabBarController.mm:735-755`), the only search-tab option is `automaticallyActivatesSearch`, and the only selection hook, `preventNativeSelection` (`:458`), blocks every user tab selection; UIKit's own cancel returns to the previous tab. Device (iPhone 18 Pro, Release): × leaves for Recipes, query and results kept on return. Left as is; your call.
+- Cooking-time chips with a value outside the four options read "Cooking time" (no key for an arbitrary count).
