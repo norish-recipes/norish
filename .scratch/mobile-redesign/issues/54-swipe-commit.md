@@ -33,3 +33,8 @@
 - Round 1 fixes: all but 12 (rejected) and 13 (ticket 55) done in one commit. A full-swipe Delete now holds the card (`held`) for the confirm: Confirm slides it off from there, Cancel springs it back (`restore`, via `useConfirm`'s `onCancel`).
 - The leaving overlay circle is gone: the panel's own Delete circle stays on the held edge and shrinks/fades (`gone`), so one `ActionButton` draws it. Menu deletes slide the card off without a circle.
 - `collapseHeight` always returns the height key (undefined when not collapsing); `dropAway` finishes at `fullAt`; `actionOffset` takes a `Reveal`. Maestro flows only open the row, so none changed; the motion is for the device pass in ticket 55.
+- Re-review of the fix range (Opus), dispositions:
+  1. fix (bug): a FlashList cell reused after a delete shows every swipe action invisible: the done timer resets `held` but not `slide`/`gone` (`swipe-actions.tsx:181-183`), and `ActionButton` reads `motion.extra` without checking `leaving`, pinning `travel` at `fullAt`. Reset all leave state when the leave finishes, and `extra` is 0 when not leaving.
+  2. fix: a held card whose recipe disappears (realtime delete while the alert is up) leaves `held=1`/an open row on the reused cell; reset swipe state when the cell's item changes.
+  3. fix: board timing: the circle shrinks and the rows rise ~350 ms after the slide starts (board keyTimes .4583-.5167 vs slide .3667-.4417); the code starts both at SLIDE_MS (260).
+  4. reject: delete from the long-press menu or partial swipe + tap leaves with no circle: the board draws the circle only for the full swipe.
