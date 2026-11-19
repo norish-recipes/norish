@@ -2,6 +2,8 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useTabScroll } from "../../../../__tests__/mocks/use-tab-scroll";
+
 const pantry = vi.hoisted(() => ({
   items: [] as { id: string; ingredientId: string; name: string; localeNames: object }[],
   isRead: true,
@@ -12,8 +14,8 @@ vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("@/lib/home-indicator", () => ({ homeIndicator: 0 }));
 vi.mock("react-native", async () => {
   const { createElement } = await import("react");
-  const box = ({ children }: { children?: React.ReactNode }) =>
-    createElement("div", null, children);
+  const box = ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
+    createElement("div", { "data-testid": testID }, children);
 
   return {
     Text: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
@@ -50,7 +52,6 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
 vi.mock("@/components/sheet-search-field", () => ({ SheetSearchField: () => null }));
 vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
-vi.mock("@/lib/use-tab-scroll", () => import("../../../../__tests__/mocks/use-tab-scroll"));
 // The list is Reanimated's FlatList, here the plain one above.
 vi.mock("react-native-reanimated", async () => {
   const reanimated = await import("../../../../__tests__/mocks/reanimated");
@@ -62,10 +63,7 @@ vi.mock("react-native-reanimated", async () => {
 });
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), dismissTo: vi.fn() }));
-const switchProps = vi.hoisted(() => ({ onChange: (_value: string) => {} }));
-
-vi.mock("expo-router", () => ({ useRouter: () => router }));
+vi.mock("expo-router", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("heroui-native", () => ({
   Skeleton: () => <i>skeleton</i>,
   useThemeColor: () => ["#000", "#000"],
@@ -76,14 +74,7 @@ vi.mock("react-intl", () => ({
 vi.mock("@/components/card-slice", () => ({
   CardSlice: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
-vi.mock("@/components/segmented", () => ({
-  Segmented: (props: { onChange: (value: string) => void }) => {
-    switchProps.onChange = props.onChange;
-
-    return null;
-  },
-}));
+vi.mock("../components/list-switch", () => ({ ListSwitchSpace: () => null }));
 vi.mock("@/components/ingredient-icon", () => ({
   IngredientIcon: () => null,
   IngredientIconSlots: ({ children }: { children: React.ReactNode }) => children,
@@ -113,9 +104,13 @@ vi.mock("@norish/shared-react/groceries", () => ({
   usePantrySuggestions: () => ({ suggestions: [] }),
 }));
 
-const { PantryScreen } = await import("../screens/pantry-screen");
+const { PantrySection } = await import("../components/pantry-section");
+const { usePantryScreen } = await import("../hooks/use-pantry-screen");
+const scroll = useTabScroll();
+// The page holds the Pantry's state and hands it down.
+const Pantry = () => <PantrySection pantry={usePantryScreen()} scroll={scroll} />;
 
-describe("the Pantry screen's first frame", () => {
+describe("the Pantry section's first frame", () => {
   beforeEach(() => {
     pantry.items = [];
     pantry.isRead = true;
@@ -123,14 +118,14 @@ describe("the Pantry screen's first frame", () => {
   });
 
   it("shows the empty state once the Pantry was read and holds nothing", () => {
-    render(<PantryScreen />);
+    render(<Pantry />);
 
     expect(screen.queryByTestId("pantry-empty")).not.toBeNull();
   });
 
   it("keeps the skeleton, never the empty state, until a read has succeeded", () => {
     pantry.isRead = false;
-    render(<PantryScreen />);
+    render(<Pantry />);
 
     expect(screen.queryAllByText("skeleton").length).toBeGreaterThan(0);
     expect(screen.queryByTestId("pantry-empty")).toBeNull();
@@ -139,7 +134,7 @@ describe("the Pantry screen's first frame", () => {
   it("says an unreadable Pantry is unreadable, not empty", () => {
     pantry.isRead = false;
     pantry.isUnavailable = true;
-    render(<PantryScreen />);
+    render(<Pantry />);
 
     expect(screen.queryByTestId("pantry-unavailable")).not.toBeNull();
     expect(screen.queryByTestId("pantry-empty")).toBeNull();
@@ -147,16 +142,8 @@ describe("the Pantry screen's first frame", () => {
 
   it("lists the kept foods from the cache in the first frame", () => {
     pantry.items = [{ id: "p1", ingredientId: "i1", name: "Salt", localeNames: {} }];
-    render(<PantryScreen />);
+    render(<Pantry />);
 
     expect(screen.queryByText("Salt")).not.toBeNull();
-  });
-
-  it("goes to the list by navigating to it, whatever is under the Pantry", () => {
-    render(<PantryScreen />);
-    switchProps.onChange("list");
-
-    expect(router.dismissTo).toHaveBeenCalledWith("/groceries");
-    expect(router.back).not.toHaveBeenCalled();
   });
 });

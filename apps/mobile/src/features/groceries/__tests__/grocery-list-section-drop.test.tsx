@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** The screen's drop, through the real by-Store plan, to the writes it makes. */
+/** The list section's drop, through the real by-Store plan, to the writes it makes. */
 import type { Drop } from "@/components/drag-list/resolve-drop";
 import { resolveDrop } from "@/components/drag-list/resolve-drop";
 import { act, render } from "@testing-library/react";
@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
 
 import type { ListHeading, ListItem, ListRow } from "../utils/list-rows";
+import { useTabScroll } from "../../../../__tests__/mocks/use-tab-scroll";
 
 const store = (id: string, sortOrder: number, aisles: string[] = []) =>
   ({
@@ -63,12 +64,13 @@ vi.mock("react-native", async () => {
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0 }) }));
 vi.mock("@/lib/haptics", () => ({ lightImpact: () => {} }));
 vi.mock("@/hooks/use-confirm", () => ({ useConfirm: () => vi.fn() }));
-vi.mock("expo-router", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("expo-router", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 vi.mock("@norish/shared-react/config", () => ({
-  useIngredientsSubscription: () => undefined,
   useUnitsQuery: () => ({ units: {} }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({
@@ -86,16 +88,12 @@ vi.mock("@norish/shared-react/groceries", async (importActual) => ({
     recipeMap: {},
     getRecipeNameForGrocery: () => null,
   }),
-  useGroceriesSubscription: () => undefined,
   // Markt files cheese under Dairy.
   useStoreAisles: () => ({
     aisleFor: (storeId: string | null, ingredientId: string | null | undefined) =>
       storeId === "markt" && ingredientId === "i-cheese" ? "dairy" : null,
   }),
-  useStoreAislesSubscription: () => undefined,
-  useStorePricesSubscription: () => undefined,
   useStoresQuery: () => ({ isLoading: false, isRead: true, stores: STORES }),
-  useStoresSubscription: () => undefined,
   useFileGroceryName: () => writes.file,
 }));
 vi.mock("../components/groceries-list", () => ({
@@ -110,17 +108,25 @@ vi.mock("../components/groceries-states", () => ({
   GroceriesSkeleton: () => null,
 }));
 vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
-vi.mock("@/lib/use-tab-scroll", () => import("../../../../__tests__/mocks/use-tab-scroll"));
-vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
-vi.mock("@/components/segmented", () => ({ Segmented: () => null }));
+vi.mock("../components/list-switch", () => ({ ListSwitchSpace: () => null }));
 
-const { GroceriesScreen } = await import("../screens/groceries-screen");
+const { GroceryListSection } = await import("../components/grocery-list-section");
+const scroll = useTabScroll();
+// Nothing folded, as the page starts.
+const state = {
+  doneOpen: new Set<string>(),
+  setDoneOpen: vi.fn(),
+  collapsed: new Set<string>(),
+  setCollapsed: vi.fn(),
+  openGroups: new Set<string>(),
+  setOpenGroups: vi.fn(),
+};
 
 /** Drops the row `key` where `toKey` is, as the drag list reports it. */
 function dropOnScreen(key: string, toKey: string) {
   writes.reorder.mockClear();
   writes.file.mockClear();
-  render(<GroceriesScreen />);
+  render(<GroceryListSection scroll={scroll} state={state} />);
   const at = (k: string) => list.rows.findIndex((row) => row.key === k);
   let landed = false;
 
@@ -131,7 +137,7 @@ function dropOnScreen(key: string, toKey: string) {
   return landed;
 }
 
-describe("the Groceries screen's drop", () => {
+describe("the Groceries list's drop", () => {
   it("moves a line to another Store", () => {
     expect(dropOnScreen("line:apples", "line:bread")).toBe(true);
 

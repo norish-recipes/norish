@@ -3,10 +3,9 @@ import type { Measurable } from "@/hooks/use-focused-field-in-view";
 import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import React from "react";
-import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
-import { DragList, useIsLifted } from "@/components/drag-list/drag-list";
+import { DragList, useIsCarried } from "@/components/drag-list/drag-list";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { useFreshRows } from "@/hooks/use-fresh-rows";
 import { homeIndicator } from "@/lib/home-indicator";
@@ -53,9 +52,9 @@ function ListedRow({
   exiting: ComponentProps<typeof Animated.View>["exiting"];
   children: ReactNode;
 }) {
-  const lifted = useIsLifted();
+  const carried = useIsCarried();
 
-  if (lifted) return children;
+  if (carried) return children;
 
   return (
     <Animated.View ref={viewRef} collapsable={false} entering={entering} exiting={exiting}>
@@ -217,47 +216,40 @@ export function GroceriesList({
   };
 
   return (
-    <View className="flex-1">
-      <TabListMarker>
-        <DragList
-          ListEmptyComponent={empty ?? undefined}
-          ListHeaderComponent={header}
-          // A done row stays put, and the done fold takes no drop.
-          canLift={(item) => !item.done}
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
-          contentInsetAdjustmentBehavior="automatic"
-          edgeInsets={{ top: topInset, bottom: tabListBottomInset(homeIndicator) }}
-          itemLayoutAnimation={SPRING_LAYOUT}
-          renderHeading={(heading, index) => (
-            <Animated.View
-              entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
-              exiting={SPRING_FADE_OUT}
-            >
-              {renderHeading(heading, index)}
-            </Animated.View>
-          )}
-          renderItem={(item) => (
-            <ListedRow
-              entering={fresh.has(item) ? SPRING_FADE_IN : undefined}
-              exiting={exitingFor(item.key)}
-              viewRef={itemRef(item.key)}
-            >
-              {renderItem(item)}
-            </ListedRow>
-          )}
-          rows={rows}
-          sectionOf={(heading, key) => (heading.type === "done" ? null : key)}
-          testID="groceries-list"
-          onDrop={onDrop}
-          onScroll={onScroll}
-        />
-      </TabListMarker>
-      {/* Rows dissolve into the page colour before the tab bar. */}
-      <View
-        className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
-        pointerEvents="none"
+    <TabListMarker>
+      <DragList
+        ListEmptyComponent={empty ?? undefined}
+        ListHeaderComponent={header}
+        // A done row stays put, and the done fold takes no drop.
+        canLift={(item) => !item.done}
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: tabListBottomInset(homeIndicator) }}
+        contentInsetAdjustmentBehavior="automatic"
+        edgeInsets={{ top: topInset, bottom: tabListBottomInset(homeIndicator) }}
+        itemLayoutAnimation={SPRING_LAYOUT}
+        renderHeading={(heading, index) => (
+          <Animated.View
+            entering={fresh.has(heading) ? SPRING_FADE_IN : undefined}
+            exiting={SPRING_FADE_OUT}
+          >
+            {renderHeading(heading, index)}
+          </Animated.View>
+        )}
+        renderItem={(item) => (
+          <ListedRow
+            entering={fresh.has(item) ? SPRING_FADE_IN : undefined}
+            exiting={exitingFor(item.key)}
+            viewRef={itemRef(item.key)}
+          >
+            {renderItem(item)}
+          </ListedRow>
+        )}
+        rows={rows}
+        sectionOf={(heading, key) => (heading.type === "done" ? null : key)}
+        testID="groceries-list"
+        onDrop={onDrop}
+        onScroll={onScroll}
       />
-    </View>
+    </TabListMarker>
   );
 }

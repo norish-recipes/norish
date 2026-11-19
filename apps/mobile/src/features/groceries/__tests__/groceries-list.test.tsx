@@ -64,6 +64,7 @@ vi.mock("@/components/drag-list/drag-list", async () => {
 
   return {
     useIsLifted: () => false,
+    useIsCarried: () => false,
     useDragCard: () => undefined,
     DragPressable: (props: React.ComponentProps<typeof Pressable>) =>
       createElement(Pressable, props),

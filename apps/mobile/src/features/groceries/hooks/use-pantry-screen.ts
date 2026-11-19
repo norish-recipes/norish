@@ -18,7 +18,8 @@ import type { PantryActions } from "../components/pantry-rows";
 import { pantryRows } from "../utils/pantry-rows";
 import { useKeepingField } from "./use-keeping-field";
 
-/** The Pantry screen's state: what the field narrows (it only filters), what is folded, and what a row does. */
+/** The Pantry's state, held by the Groceries page so it outlives a switch to the list: what the
+ * field narrows (it only filters), what is folded, and what a row does. */
 export function usePantryScreen() {
   const intl = useIntl();
   const router = useRouter();
@@ -71,3 +72,5 @@ export function usePantryScreen() {
     isUnavailable,
   };
 }
+
+export type PantryScreen = ReturnType<typeof usePantryScreen>;

@@ -1,41 +1,29 @@
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import React from "react";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
-import { Segmented } from "@/components/segmented";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { TabListMarker } from "@/components/tab-list-marker";
 import { TabRootHeader } from "@/components/tab-root-header";
 import { homeIndicator } from "@/lib/home-indicator";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
-import { TAB_ROUTES } from "@/lib/tab-routes";
-import { useTabScroll } from "@/lib/use-tab-scroll";
-import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
-import { PantryRowView, PantrySkeleton } from "../components/pantry-rows";
-import { useListSegments } from "../hooks/use-list-segments";
-import { usePantryScreen } from "../hooks/use-pantry-screen";
+import type { PantryScreen } from "../hooks/use-pantry-screen";
+import { ListSwitchSpace } from "./list-switch";
+import { PantryRowView, PantrySkeleton } from "./pantry-rows";
 
-/** The Pantry: the foods the household keeps, narrowed by its field, which only filters. */
-export function PantryScreen() {
+/** The Groceries page's Pantry: the foods the household keeps, narrowed by its field, which only
+ * filters; its title fills the bar, riding the list's scroll. The page keeps its `pantry` state. */
+export function PantrySection({ scroll, pantry }: { scroll: TabScroll; pantry: PantryScreen }) {
   const intl = useIntl();
-  const router = useRouter();
-  const { rows, actions, field, isRead, isUnavailable } = usePantryScreen();
-  const scroll = useTabScroll();
-  const segments = useListSegments();
+  const { rows, actions, field, isRead, isUnavailable } = pantry;
   const header = (
     <View>
-      <View className="px-5 pb-5">
-        <Segmented
-          segments={segments}
-          testID="groceries-switch"
-          value="pantry"
-          onChange={(value) => value === "list" && router.dismissTo(TAB_ROUTES.groceries.root)}
-        />
-      </View>
+      <ListSwitchSpace />
       <View className="px-5 pb-3.5">
         <SheetSearchField
           className="bg-surface focus:border-accent h-12 rounded-full border-2 border-transparent"
@@ -84,11 +72,6 @@ export function PantryScreen() {
             onScroll={scroll.onScroll}
           />
         </TabListMarker>
-        {/* Rows dissolve into the page colour before the tab bar. */}
-        <View
-          className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
-          pointerEvents="none"
-        />
       </View>
     </IngredientIconSlots>
   );

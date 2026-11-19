@@ -1,198 +1,91 @@
-import React, { useState } from "react";
+import React, { useLayoutEffect } from "react";
 import { View } from "react-native";
-import { Segmented } from "@/components/segmented";
-import { TabRootHeader } from "@/components/tab-root-header";
-import { useConfirm } from "@/hooks/use-confirm";
-import { lightImpact } from "@/lib/haptics";
-import { TAB_ROUTES } from "@/lib/tab-routes";
+import Animated, {
+  LayoutAnimationConfig,
+  SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+} from "react-native-reanimated";
+import { showGroceriesSection, useGroceriesSection } from "@/lib/groceries-section";
+import { sprung } from "@/lib/motion/spring";
 import { useTabScroll } from "@/lib/use-tab-scroll";
-import { useRouter } from "expo-router";
-import { useIntl } from "react-intl";
 
-import { useIngredientsSubscription, useUnitsQuery } from "@norish/shared-react/config";
-import {
-  groupGroceriesByRecipe,
-  useAisleLinksLoading,
-  useFileGroceryName,
-  useGroceriesMutations,
-  useGroceriesQuery,
-  useGroceriesSubscription,
-  useStoreAisles,
-  useStoreAislesSubscription,
-  useStorePricesSubscription,
-  useStoresQuery,
-  useStoresSubscription,
-  writeDrop,
-} from "@norish/shared-react/groceries";
-import { useDevicePreference } from "@norish/shared-react/reader";
-import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
+import { GroceryListSection } from "../components/grocery-list-section";
+import { ListSwitch } from "../components/list-switch";
+import { PantrySection } from "../components/pantry-section";
+import { useGroceryListState } from "../hooks/use-grocery-list-state";
+import { usePantryScreen } from "../hooks/use-pantry-screen";
 
-import type { ListActions } from "../components/groceries-list";
-import type { GroceryDrop } from "../utils/grocery-drop";
-import { GroceriesList } from "../components/groceries-list";
-import { GroceriesEmpty, GroceriesSkeleton } from "../components/groceries-states";
-import { listSettingsItem } from "../components/list-settings-item";
-import { useListSegments } from "../hooks/use-list-segments";
-import { planRecipeRowDrop, planStoreRowDrop } from "../utils/grocery-drop";
-import { recipeListRows, storeListRows, toggledGroup } from "../utils/list-rows";
+// The list sits left of the Pantry: each slides in from, and out to, its own side.
+const LIST_IN = sprung(SlideInLeft.springify());
+const LIST_OUT = sprung(SlideOutLeft.springify());
+const PANTRY_IN = sprung(SlideInRight.springify());
+const PANTRY_OUT = sprung(SlideOutRight.springify());
 
-/** Adds or removes `key`: the sets of folded sections and of open done tails. */
-function flipped(set: ReadonlySet<string>, key: string): Set<string> {
-  const next = new Set(set);
-
-  if (!next.delete(key)) next.add(key);
-
-  return next;
-}
-
-/** The Groceries tab: the list by Store or by recipe, ticked in place, edited on a tap. */
+/** The Groceries tab: the list or the Pantry, the switch sliding one out and the other in. Only the
+ * shown one is mounted, so it opens at its top and the tab bar follows its scroll; the page keeps
+ * both sections' state and the list's realtime, so a switch back finds them as they were. */
 export function GroceriesScreen() {
-  const intl = useIntl();
-  const router = useRouter();
-  const confirm = useConfirm();
+  const section = useGroceriesSection();
   const scroll = useTabScroll();
-  const segments = useListSegments();
-  const { groceries, recurringGroceries, recipeMap, isLoading, isRead, getRecipeNameForGrocery } =
-    useGroceriesQuery();
-  const { stores, isLoading: storesLoading, isRead: storesRead } = useStoresQuery();
-  const { aisleFor } = useStoreAisles();
-  const aislesLoading = useAisleLinksLoading();
-  const { units } = useUnitsQuery();
-  const {
-    toggleGroceries,
-    deleteGroceries,
-    markAllDoneInStore,
-    deleteDoneInStore,
-    reorderGroceriesInStore,
-  } = useGroceriesMutations();
-  const fileGroceryName = useFileGroceryName();
-  // Device Preferences: the reader's own choice on this device, as on web.
-  const [view, setView] = useDevicePreference("groceryViewMode");
-  const [grouped, setGrouped] = useDevicePreference("groceryGroupSimilar");
-  const [doneOpen, setDoneOpen] = useState<ReadonlySet<string>>(() => new Set());
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
-  const [openGroups, setOpenGroups] = useState<ReadonlySet<string>>(() => new Set());
+  const listState = useGroceryListState();
+  const pantry = usePantryScreen();
 
-  // The list's realtime; the Warm Set keeps its reads for the first frame.
-  useGroceriesSubscription();
-  useStoresSubscription();
-  useStorePricesSubscription();
-  useStoreAislesSubscription();
-  useIngredientsSubscription();
-
-  // Until a read holds data an empty list is unknown, not empty: a failed first read stays a skeleton.
-  const isListRead = groceries.length > 0 || (isRead && (view === "recipe" || storesRead));
-  const loading = isLoading || storesLoading || aislesLoading || !isListRead;
-  const groups =
-    view === "store" && grouped
-      ? groupGroceriesByIngredient(groceries, getRecipeNameForGrocery, units, (grocery) =>
-          aisleFor(grocery.storeId, grocery.ingredientId)
-        )
-      : null;
-  const recipes =
-    view === "recipe"
-      ? groupGroceriesByRecipe(
-          groceries,
-          recipeMap,
-          intl.formatMessage({ id: "groceries.empty.manual" })
-        )
-      : [];
-  const rows =
-    view === "store"
-      ? storeListRows({ stores, groceries, aisleFor, groups, doneOpen, collapsed })
-      : recipeListRows(recipes, stores);
-  // Planned against the list as it is when the row lands, and written as web writes a drop.
-  const drop = (landed: GroceryDrop) => {
-    const plan =
-      view === "store"
-        ? planStoreRowDrop({ drop: landed, groceries, stores, aisleFor, groups })
-        : planRecipeRowDrop(landed, recipes);
-
-    return plan !== null && writeDrop(plan, reorderGroceriesInStore, fileGroceryName);
-  };
-  const nothing = groceries.length === 0;
-
-  const clear = (name: string | null, ids: string[]) =>
-    confirm({
-      title: intl.formatMessage(
-        {
-          id:
-            name === null
-              ? "groceries.clearConfirm.listTitle"
-              : "groceries.clearConfirm.sectionTitle",
-        },
-        { name }
-      ),
-      message: intl.formatMessage(
-        {
-          id:
-            name === null
-              ? "groceries.clearConfirm.listDescription"
-              : "groceries.clearConfirm.sectionDescription",
-        },
-        { name, count: ids.length }
-      ),
-      confirmLabelId: "groceries.clearConfirm.confirm",
-      onConfirm: () => deleteGroceries(ids),
-    });
-  const actions: ListActions = {
-    toggle: (ids, isDone) => {
-      lightImpact();
-      toggleGroceries(ids, isDone);
-    },
-    edit: (id) => router.push({ pathname: "/groceries/edit", params: { id } }),
-    toggleCollapsed: (key) => setCollapsed(flipped(collapsed, key)),
-    toggleDone: (key) => setDoneOpen(flipped(doneOpen, key)),
-    toggleGroup: (group) => setOpenGroups(toggledGroup(openGroups, group, groceries)),
-    markAllDone: markAllDoneInStore,
-    deleteDone: deleteDoneInStore,
-    clear: (name, ids) =>
-      clear(name || intl.formatMessage({ id: "groceries.store.unsorted" }), ids),
-  };
+  // The new list opens at its top, so the switch riding the scroll starts there too: a tap resets it
+  // before the switch, a link before the frame that shows the new section.
+  useLayoutEffect(() => {
+    scroll.offset.set(0);
+  }, [section, scroll.offset]);
 
   return (
-    <View className="bg-background flex-1" testID="groceries-screen">
-      <TabRootHeader
-        items={[
-          listSettingsItem(intl, {
-            canClear: groceries.length > 0,
-            grouped,
-            view,
-            onClear: () =>
-              clear(
-                null,
-                groceries.map((grocery) => grocery.id)
-              ),
-            onGrouped: setGrouped,
-            onManageStores: () => router.push(TAB_ROUTES.groceries.stores),
-            onView: setView,
-          }),
-        ]}
+    <View className="bg-background flex-1">
+      {/* First in the tree; its z-index draws it over the lists. */}
+      <ListSwitch
         offset={scroll.offset}
-        title={intl.formatMessage({ id: "groceries.page.title" })}
+        section={section}
+        top={scroll.barBottom}
+        onChange={(next) => {
+          scroll.offset.set(0);
+          showGroceriesSection(next);
+        }}
       />
-      <GroceriesList
-        actions={actions}
-        empty={loading ? <GroceriesSkeleton /> : nothing ? <GroceriesEmpty /> : null}
-        header={
-          <View className="px-5 pb-5">
-            <Segmented
-              segments={segments}
-              testID="groceries-switch"
-              value="list"
-              onChange={(value) => value === "pantry" && router.push(TAB_ROUTES.groceries.pantry)}
-            />
-          </View>
-        }
-        loaded={!loading}
-        openGroups={openGroups}
-        recipeNameFor={getRecipeNameForGrocery}
-        recurringById={new Map(recurringGroceries.map((recurring) => [recurring.id, recurring]))}
-        rows={loading ? [] : nothing ? [] : rows}
-        storeNameOnLines={view === "recipe"}
-        topInset={scroll.barBottom}
-        onDrop={drop}
-        onScroll={scroll.onScroll}
+      {/* The page's first frame shows its list in place; only a switch slides. */}
+      <LayoutAnimationConfig skipEntering>
+        {section === "list" ? (
+          <Animated.View
+            key="list"
+            className="absolute inset-0"
+            entering={LIST_IN}
+            exiting={LIST_OUT}
+          >
+            {/* A leaving section slides out whole: unmounting, the config flags this unflattened
+                view's subtree to skip its rows' own exits. */}
+            <LayoutAnimationConfig skipExiting>
+              <View collapsable={false} className="flex-1">
+                <GroceryListSection scroll={scroll} state={listState} />
+              </View>
+            </LayoutAnimationConfig>
+          </Animated.View>
+        ) : (
+          <Animated.View
+            key="pantry"
+            className="absolute inset-0"
+            entering={PANTRY_IN}
+            exiting={PANTRY_OUT}
+          >
+            <LayoutAnimationConfig skipExiting>
+              <View collapsable={false} className="flex-1">
+                <PantrySection pantry={pantry} scroll={scroll} />
+              </View>
+            </LayoutAnimationConfig>
+          </Animated.View>
+        )}
+      </LayoutAnimationConfig>
+      {/* Rows dissolve into the page colour before the tab bar. */}
+      <View
+        className="to-background from-background/0 absolute inset-x-0 bottom-0 h-[190px] bg-linear-to-b to-75%"
+        pointerEvents="none"
       />
     </View>
   );

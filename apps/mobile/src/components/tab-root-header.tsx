@@ -1,5 +1,5 @@
 import type { HeaderItem } from "@/lib/header-item";
-import type { SharedValue } from "react-native-reanimated";
+import type { DerivedValue } from "react-native-reanimated";
 import React from "react";
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from "react-native-reanimated";
 import { AccountMenu } from "@/components/account-menu";
@@ -20,7 +20,7 @@ export function TabRootHeader({
 }: {
   title: string;
   items?: HeaderItem[];
-  offset: SharedValue<number>;
+  offset: DerivedValue<number>;
 }) {
   const titleStyle = useAnimatedStyle(() => ({
     opacity: interpolate(offset.value, [0, TITLE_FADE], [1, 0], Extrapolation.CLAMP),

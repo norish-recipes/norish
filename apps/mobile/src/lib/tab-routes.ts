@@ -20,7 +20,6 @@ export const TAB_ROUTES = {
     root: "/groceries",
     add: "/groceries/add",
     stores: "/groceries/stores",
-    pantry: "/groceries/pantry",
     pantryAdd: "/groceries/pantry-add",
     food: "/groceries/food",
   },

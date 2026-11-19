@@ -1,94 +1,161 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const read = vi.hoisted(() => ({
-  groceries: { isLoading: false, isSuccess: true, isRead: true, groceries: [] as unknown[] },
-  stores: { isLoading: false, isSuccess: true, isRead: true, stores: [] as unknown[] },
-}));
+import type { GroceryListState } from "../hooks/use-grocery-list-state";
+
+// The page's one scroll, which the switch rides.
+const scroll = vi.hoisted(() => {
+  let offset = 0;
+
+  return {
+    offset: { get: () => offset, set: (to: number) => (offset = to) },
+    onScroll: undefined,
+    barBottom: 100,
+  };
+});
 
 vi.mock("react-native", async () => {
   const { createElement } = await import("react");
 
   return {
-    Text: ({ children }: { children: React.ReactNode }) => createElement("span", null, children),
     View: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   };
 });
-vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0 }) }));
-vi.mock("@/lib/haptics", () => ({ lightImpact: () => {} }));
-vi.mock("@/hooks/use-confirm", () => ({ useConfirm: () => vi.fn() }));
-vi.mock("expo-router", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("react-intl", () => ({
-  useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
-}));
-vi.mock("@norish/shared-react/config", () => ({
-  useIngredientsSubscription: () => undefined,
-  useUnitsQuery: () => ({ units: {} }),
-}));
-vi.mock("@norish/shared-react/reader", () => ({
-  useDevicePreference: (key: string) => [key === "groceryViewMode" ? "store" : false, vi.fn()],
-}));
+vi.mock("react-native-reanimated", async () => {
+  const reanimated = await import("../../../../__tests__/mocks/reanimated");
+  const builder = () => ({ springify: () => builder() });
+
+  return {
+    ...reanimated,
+    LayoutAnimationConfig: ({ children }: { children: React.ReactNode }) => children,
+    SlideInLeft: builder(),
+    SlideInRight: builder(),
+    SlideOutLeft: builder(),
+    SlideOutRight: builder(),
+  };
+});
+vi.mock("@/lib/motion/spring", () => ({ sprung: <T,>(builder: T) => builder }));
+vi.mock("@/lib/use-tab-scroll", () => ({ useTabScroll: () => scroll }));
+vi.mock("@norish/shared-react/config", () => ({ useIngredientsSubscription: () => undefined }));
 vi.mock("@norish/shared-react/groceries", () => ({
-  groupGroceriesByRecipe: () => [],
-  useAisleLinksLoading: () => false,
-  useGroceriesMutations: () => ({}),
-  useGroceriesQuery: () => ({
-    ...read.groceries,
-    recurringGroceries: [],
-    recipeMap: {},
-    getRecipeNameForGrocery: () => null,
-  }),
   useGroceriesSubscription: () => undefined,
-  useStoreAisles: () => ({ aisleFor: () => null }),
   useStoreAislesSubscription: () => undefined,
   useStorePricesSubscription: () => undefined,
-  useStoresQuery: () => read.stores,
   useStoresSubscription: () => undefined,
-  useFileGroceryName: () => vi.fn(),
-  writeDrop: vi.fn(),
 }));
-vi.mock("../components/groceries-list", () => ({
-  GroceriesList: ({ empty }: { empty: React.ReactNode }) => empty,
+// The Pantry's field, as the real hook holds it.
+vi.mock("../hooks/use-pantry-screen", async () => {
+  const { useState } = await import("react");
+
+  return {
+    usePantryScreen: () => {
+      const [draft, setDraft] = useState("");
+
+      return { field: { draft, setDraft } };
+    },
+  };
+});
+// A tap folds the Markt Store.
+vi.mock("../components/grocery-list-section", () => ({
+  GroceryListSection: ({ state }: { state: GroceryListState }) => (
+    <p
+      data-collapsed={[...state.collapsed].join()}
+      data-testid="list-section"
+      onClick={() => state.setCollapsed(new Set(["markt"]))}
+    />
+  ),
 }));
-vi.mock("../components/groceries-states", () => ({
-  GroceriesEmpty: () => <p>empty</p>,
-  GroceriesSkeleton: () => <p>skeleton</p>,
+// A tap types "oil" in the field.
+vi.mock("../components/pantry-section", () => ({
+  PantrySection: ({
+    pantry,
+  }: {
+    pantry: { field: { draft: string; setDraft: (text: string) => void } };
+  }) => (
+    <p
+      data-draft={pantry.field.draft}
+      data-testid="pantry-section"
+      onClick={() => pantry.field.setDraft("oil")}
+    />
+  ),
 }));
-vi.mock("@/components/tab-root-header", () => ({ TabRootHeader: () => null }));
-vi.mock("@/lib/use-tab-scroll", () => import("../../../../__tests__/mocks/use-tab-scroll"));
-vi.mock("@expo/vector-icons/MaterialCommunityIcons", () => ({ default: () => null }));
-vi.mock("@/components/segmented", () => ({ Segmented: () => null }));
-vi.mock("../utils/list-rows", () => ({ recipeListRows: () => [], storeListRows: () => [] }));
-vi.mock("../utils/grocery-drop", () => ({ planRecipeRowDrop: vi.fn(), planStoreRowDrop: vi.fn() }));
+vi.mock("../components/list-switch", () => ({
+  ListSwitch: ({ section, onChange }: { section: string; onChange: (to: string) => void }) => (
+    <button
+      data-section={section}
+      data-testid="switch"
+      onClick={() => onChange(section === "list" ? "pantry" : "list")}
+    />
+  ),
+}));
 
 const { GroceriesScreen } = await import("../screens/groceries-screen");
+const { showGroceriesSection } = await import("@/lib/groceries-section");
 
-describe("the Groceries screen's first frame", () => {
+describe("the Groceries page", () => {
   beforeEach(() => {
-    read.groceries = { isLoading: false, isSuccess: true, isRead: true, groceries: [] };
-    read.stores = { isLoading: false, isSuccess: true, isRead: true, stores: [] };
+    act(() => showGroceriesSection("list"));
+    scroll.offset.set(0);
   });
 
-  it("shows the empty state once the list was read and holds nothing", () => {
+  it("mounts only the shown section, the switch swapping one for the other", () => {
     render(<GroceriesScreen />);
 
-    expect(screen.queryByText("empty")).not.toBeNull();
+    expect(screen.getByTestId("list-section")).not.toBeNull();
+    expect(screen.queryByTestId("pantry-section")).toBeNull();
+    expect(screen.getByTestId("switch").getAttribute("data-section")).toBe("list");
+
+    fireEvent.click(screen.getByTestId("switch"));
+
+    expect(screen.getByTestId("pantry-section")).not.toBeNull();
+    expect(screen.queryByTestId("list-section")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("switch"));
+
+    expect(screen.getByTestId("list-section")).not.toBeNull();
   });
 
-  it("shows the empty state when a refetch of the empty list failed", () => {
-    read.groceries = { isLoading: false, isSuccess: false, isRead: true, groceries: [] };
-    read.stores = { isLoading: false, isSuccess: false, isRead: true, stores: [] };
+  it("starts the switch at the top with the new section, which opens at its top", () => {
     render(<GroceriesScreen />);
+    scroll.offset.set(30);
 
-    expect(screen.queryByText("empty")).not.toBeNull();
+    fireEvent.click(screen.getByTestId("switch"));
+
+    expect(scroll.offset.get()).toBe(0);
   });
 
-  it("keeps the skeleton when the read failed with nothing cached", () => {
-    read.groceries = { isLoading: false, isSuccess: false, isRead: false, groceries: [] };
+  it("starts the switch at the top when a link shows the Pantry", () => {
+    render(<GroceriesScreen />);
+    scroll.offset.set(30);
+
+    act(() => showGroceriesSection("pantry"));
+
+    expect(scroll.offset.get()).toBe(0);
+  });
+
+  it("keeps the list's folds and the Pantry's field across switches", () => {
     render(<GroceriesScreen />);
 
-    expect(screen.queryByText("skeleton")).not.toBeNull();
-    expect(screen.queryByText("empty")).toBeNull();
+    fireEvent.click(screen.getByTestId("list-section"));
+    fireEvent.click(screen.getByTestId("switch"));
+    fireEvent.click(screen.getByTestId("pantry-section"));
+    fireEvent.click(screen.getByTestId("switch"));
+
+    expect(screen.getByTestId("list-section").getAttribute("data-collapsed")).toBe("markt");
+
+    fireEvent.click(screen.getByTestId("switch"));
+
+    expect(screen.getByTestId("pantry-section").getAttribute("data-draft")).toBe("oil");
+  });
+
+  it("keeps its section across a remount", () => {
+    const { unmount } = render(<GroceriesScreen />);
+
+    fireEvent.click(screen.getByTestId("switch"));
+    unmount();
+    render(<GroceriesScreen />);
+
+    expect(screen.getByTestId("pantry-section")).not.toBeNull();
   });
 });
