@@ -552,5 +552,19 @@
     "discardMessage": "Sinulla on tallentamattomia muutoksia.",
     "keepEditing": "Jatka muokkausta",
     "discard": "Hylkää"
+  },
+  "search": {
+    "sortBestMatch": "Paras osuma",
+    "sortNewest": "Uusimmat",
+    "sortOldest": "Vanhimmat",
+    "sortAZ": "A–Ö",
+    "sortZA": "Ö–A",
+    "sortLabel": "Järjestys: {sort}",
+    "ratingChip": "{count}+ tähteä",
+    "removeFilter": "Poista {filter}",
+    "count": "{count, plural, one {# resepti} other {# reseptiä}}",
+    "noMatch": "Ei reseptejä haulle ”{text}”",
+    "searchAllFields": "Hae kaikista kentistä",
+    "filtersOn": "Suodattimet, {count} käytössä"
   }
 }

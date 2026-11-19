@@ -552,5 +552,19 @@
     "discardMessage": "You have unsaved changes.",
     "keepEditing": "Keep editing",
     "discard": "Discard"
+  },
+  "search": {
+    "sortBestMatch": "Best match",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Sort: {sort}",
+    "ratingChip": "{count}+ stars",
+    "removeFilter": "Remove {filter}",
+    "count": "{count, plural, one {# recipe} other {# recipes}}",
+    "noMatch": "No recipes match “{text}”",
+    "searchAllFields": "Search all fields",
+    "filtersOn": "Filters, {count} on"
   }
 }

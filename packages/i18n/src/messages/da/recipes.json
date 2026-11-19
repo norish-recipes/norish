@@ -552,5 +552,19 @@
     "discardMessage": "Du har ikke-gemte ændringer.",
     "keepEditing": "Fortsæt redigering",
     "discard": "Kassér"
+  },
+  "search": {
+    "sortBestMatch": "Bedste match",
+    "sortNewest": "Nyeste",
+    "sortOldest": "Ældste",
+    "sortAZ": "A–Å",
+    "sortZA": "Å–A",
+    "sortLabel": "Sortering: {sort}",
+    "ratingChip": "{count}+ stjerner",
+    "removeFilter": "Fjern {filter}",
+    "count": "{count, plural, one {# opskrift} other {# opskrifter}}",
+    "noMatch": "Ingen opskrifter matcher “{text}”",
+    "searchAllFields": "Søg i alle felter",
+    "filtersOn": "Filtre, {count} aktive"
   }
 }

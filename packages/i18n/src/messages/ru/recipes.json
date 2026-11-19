@@ -552,5 +552,19 @@
     "discardMessage": "У вас есть несохранённые изменения.",
     "keepEditing": "Продолжить",
     "discard": "Отменить"
+  },
+  "search": {
+    "sortBestMatch": "Лучшее совпадение",
+    "sortNewest": "Новые",
+    "sortOldest": "Старые",
+    "sortAZ": "А–Я",
+    "sortZA": "Я–А",
+    "sortLabel": "Сортировка: {sort}",
+    "ratingChip": "{count}+ звёзд",
+    "removeFilter": "Убрать {filter}",
+    "count": "{count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}",
+    "noMatch": "Нет рецептов по запросу «{text}»",
+    "searchAllFields": "Искать во всех полях",
+    "filtersOn": "Фильтры, включено: {count}"
   }
 }

@@ -552,5 +552,19 @@
     "discardMessage": "Masz niezapisane zmiany.",
     "keepEditing": "Edytuj dalej",
     "discard": "Odrzuć"
+  },
+  "search": {
+    "sortBestMatch": "Najlepsze dopasowanie",
+    "sortNewest": "Najnowsze",
+    "sortOldest": "Najstarsze",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Sortowanie: {sort}",
+    "ratingChip": "{count}+ gwiazdek",
+    "removeFilter": "Usuń {filter}",
+    "count": "{count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}",
+    "noMatch": "Brak przepisów pasujących do „{text}”",
+    "searchAllFields": "Szukaj we wszystkich polach",
+    "filtersOn": "Filtry, włączone: {count}"
   }
 }

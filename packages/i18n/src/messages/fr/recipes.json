@@ -552,5 +552,19 @@
     "discardMessage": "Vous avez des modifications non enregistrées.",
     "keepEditing": "Continuer",
     "discard": "Abandonner"
+  },
+  "search": {
+    "sortBestMatch": "Meilleure correspondance",
+    "sortNewest": "Plus récentes",
+    "sortOldest": "Plus anciennes",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Tri : {sort}",
+    "ratingChip": "{count}+ étoiles",
+    "removeFilter": "Retirer {filter}",
+    "count": "{count, plural, one {# recette} other {# recettes}}",
+    "noMatch": "Aucune recette pour « {text} »",
+    "searchAllFields": "Chercher dans tous les champs",
+    "filtersOn": "Filtres, {count} actifs"
   }
 }

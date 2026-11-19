@@ -3,12 +3,17 @@ import { useEffect, useState } from "react";
 
 import { LibraryFiltersProvider, useLibraryFiltersStoreApi } from "@norish/shared-react/recipes";
 
-import { keepSearchFilters, savedSearchFilters } from "../utils/search-session";
+import { keepSearchFilters, savedSearchFilters } from "@/lib/search-session";
 
 function KeepFilters() {
   const store = useLibraryFiltersStoreApi();
 
-  useEffect(() => store.subscribe((state) => keepSearchFilters(state.filters)), [store]);
+  // Clear filters leaves the text, scope and sort: they are the field's, not chips.
+  useEffect(() => {
+    store.setState({ keepOnClear: ["rawInput", "searchFields", "sortMode"] });
+
+    return store.subscribe((state) => keepSearchFilters(state.filters));
+  }, [store]);
 
   return null;
 }

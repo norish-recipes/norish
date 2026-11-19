@@ -552,5 +552,19 @@
     "discardMessage": "Você tem alterações não salvas.",
     "keepEditing": "Continuar editando",
     "discard": "Descartar"
+  },
+  "search": {
+    "sortBestMatch": "Melhor correspondência",
+    "sortNewest": "Mais recentes",
+    "sortOldest": "Mais antigas",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Ordem: {sort}",
+    "ratingChip": "{count}+ estrelas",
+    "removeFilter": "Remover {filter}",
+    "count": "{count, plural, one {# receita} other {# receitas}}",
+    "noMatch": "Nenhuma receita corresponde a “{text}”",
+    "searchAllFields": "Pesquisar em todos os campos",
+    "filtersOn": "Filtros, {count} ativos"
   }
 }

@@ -552,5 +552,19 @@
     "discardMessage": "Je hebt niet-opgeslagen wijzigingen.",
     "keepEditing": "Verder bewerken",
     "discard": "Weggooien"
+  },
+  "search": {
+    "sortBestMatch": "Beste match",
+    "sortNewest": "Nieuwste",
+    "sortOldest": "Oudste",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Sorteren: {sort}",
+    "ratingChip": "{count}+ sterren",
+    "removeFilter": "{filter} verwijderen",
+    "count": "{count, plural, one {# recept} other {# recepten}}",
+    "noMatch": "Geen recepten met “{text}”",
+    "searchAllFields": "Zoek in alle velden",
+    "filtersOn": "Filters, {count} aan"
   }
 }

@@ -552,5 +552,19 @@
     "discardMessage": "У вас є незбережені зміни.",
     "keepEditing": "Продовжити",
     "discard": "Скасувати"
+  },
+  "search": {
+    "sortBestMatch": "Найкращий збіг",
+    "sortNewest": "Найновіші",
+    "sortOldest": "Найстаріші",
+    "sortAZ": "А–Я",
+    "sortZA": "Я–А",
+    "sortLabel": "Сортування: {sort}",
+    "ratingChip": "{count}+ зірок",
+    "removeFilter": "Прибрати {filter}",
+    "count": "{count, plural, one {# рецепт} few {# рецепти} many {# рецептів} other {# рецепта}}",
+    "noMatch": "Немає рецептів за запитом «{text}»",
+    "searchAllFields": "Шукати в усіх полях",
+    "filtersOn": "Фільтри, увімкнено: {count}"
   }
 }

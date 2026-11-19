@@ -552,5 +552,19 @@
     "discardMessage": "Имате незапазени промени.",
     "keepEditing": "Продължаване",
     "discard": "Отхвърляне"
+  },
+  "search": {
+    "sortBestMatch": "Най-добро съвпадение",
+    "sortNewest": "Най-нови",
+    "sortOldest": "Най-стари",
+    "sortAZ": "А–Я",
+    "sortZA": "Я–А",
+    "sortLabel": "Подредба: {sort}",
+    "ratingChip": "{count}+ звезди",
+    "removeFilter": "Премахни {filter}",
+    "count": "{count, plural, one {# рецепта} other {# рецепти}}",
+    "noMatch": "Няма рецепти за „{text}“",
+    "searchAllFields": "Търсене във всички полета",
+    "filtersOn": "Филтри, включени: {count}"
   }
 }

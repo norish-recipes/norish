@@ -552,5 +552,19 @@
     "discardMessage": "Du hast ungespeicherte Änderungen.",
     "keepEditing": "Weiter bearbeiten",
     "discard": "Verwerfen"
+  },
+  "search": {
+    "sortBestMatch": "Beste Treffer",
+    "sortNewest": "Neueste",
+    "sortOldest": "Älteste",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Sortierung: {sort}",
+    "ratingChip": "{count}+ Sterne",
+    "removeFilter": "{filter} entfernen",
+    "count": "{count, plural, one {# Rezept} other {# Rezepte}}",
+    "noMatch": "Keine Rezepte zu „{text}“",
+    "searchAllFields": "In allen Feldern suchen",
+    "filtersOn": "Filter, {count} aktiv"
   }
 }

@@ -552,5 +552,19 @@
     "discardMessage": "Tienes cambios sin guardar.",
     "keepEditing": "Seguir editando",
     "discard": "Descartar"
+  },
+  "search": {
+    "sortBestMatch": "Mejor coincidencia",
+    "sortNewest": "Más recientes",
+    "sortOldest": "Más antiguas",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Orden: {sort}",
+    "ratingChip": "{count}+ estrellas",
+    "removeFilter": "Quitar {filter}",
+    "count": "{count, plural, one {# receta} other {# recetas}}",
+    "noMatch": "Ninguna receta coincide con «{text}»",
+    "searchAllFields": "Buscar en todos los campos",
+    "filtersOn": "Filtros, {count} activos"
   }
 }

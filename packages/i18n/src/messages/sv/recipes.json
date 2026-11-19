@@ -552,5 +552,19 @@
     "discardMessage": "Du har osparade ändringar.",
     "keepEditing": "Fortsätt redigera",
     "discard": "Släng"
+  },
+  "search": {
+    "sortBestMatch": "Bästa träff",
+    "sortNewest": "Nyaste",
+    "sortOldest": "Äldsta",
+    "sortAZ": "A–Ö",
+    "sortZA": "Ö–A",
+    "sortLabel": "Sortering: {sort}",
+    "ratingChip": "{count}+ stjärnor",
+    "removeFilter": "Ta bort {filter}",
+    "count": "{count, plural, one {# recept} other {# recept}}",
+    "noMatch": "Inga recept matchar ”{text}”",
+    "searchAllFields": "Sök i alla fält",
+    "filtersOn": "Filter, {count} aktiva"
   }
 }

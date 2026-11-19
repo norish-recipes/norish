@@ -552,5 +552,19 @@
     "discardMessage": "Du har endringer som ikke er lagret.",
     "keepEditing": "Fortsett å redigere",
     "discard": "Forkast"
+  },
+  "search": {
+    "sortBestMatch": "Beste treff",
+    "sortNewest": "Nyeste",
+    "sortOldest": "Eldste",
+    "sortAZ": "A–Å",
+    "sortZA": "Å–A",
+    "sortLabel": "Sortering: {sort}",
+    "ratingChip": "{count}+ stjerner",
+    "removeFilter": "Fjern {filter}",
+    "count": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
+    "noMatch": "Ingen oppskrifter samsvarer med «{text}»",
+    "searchAllFields": "Søk i alle felt",
+    "filtersOn": "Filtre, {count} på"
   }
 }

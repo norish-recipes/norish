@@ -552,5 +552,19 @@
     "discardMessage": "저장하지 않은 변경 사항이 있습니다.",
     "keepEditing": "계속 편집",
     "discard": "버리기"
+  },
+  "search": {
+    "sortBestMatch": "가장 일치",
+    "sortNewest": "최신순",
+    "sortOldest": "오래된 순",
+    "sortAZ": "가나다순",
+    "sortZA": "역가나다순",
+    "sortLabel": "정렬: {sort}",
+    "ratingChip": "별 {count}개 이상",
+    "removeFilter": "{filter} 제거",
+    "count": "{count, plural, other {레시피 #개}}",
+    "noMatch": "“{text}”와(과) 일치하는 레시피 없음",
+    "searchAllFields": "모든 필드에서 검색",
+    "filtersOn": "필터, {count}개 켜짐"
   }
 }

@@ -33,6 +33,7 @@ export function LibraryCards<Row>({
   isFetchingNextPage,
   header,
   empty,
+  noResults,
   cookbook,
   rowKey,
   renderCard,
@@ -48,6 +49,8 @@ export function LibraryCards<Row>({
   header: ReactElement;
   /** What shows when nothing is loading, no filter is on and there is no row. */
   empty: ReactElement;
+  /** Replaces the Clear filters card, for a list whose text is not a filter, as Search's. */
+  noResults?: ReactElement;
   cookbook?: CookbookSummaryDTO;
   rowKey: (row: Row) => string;
   renderCard: (row: Row, context: CardContext) => ReactElement;
@@ -68,6 +71,8 @@ export function LibraryCards<Row>({
       empty={
         isLoading ? (
           <LibrarySkeleton variant={variant} />
+        ) : noResults ? (
+          noResults
         ) : hasAppliedRecipeFilters(filters) ? (
           <LibraryNoResults onClear={clearFilters} />
         ) : (

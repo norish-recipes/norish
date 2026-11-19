@@ -552,5 +552,19 @@
     "discardMessage": "لديك تغييرات غير محفوظة.",
     "keepEditing": "متابعة التعديل",
     "discard": "تجاهل"
+  },
+  "search": {
+    "sortBestMatch": "أفضل تطابق",
+    "sortNewest": "الأحدث",
+    "sortOldest": "الأقدم",
+    "sortAZ": "أ–ي",
+    "sortZA": "ي–أ",
+    "sortLabel": "الترتيب: {sort}",
+    "ratingChip": "{count}+ نجوم",
+    "removeFilter": "إزالة {filter}",
+    "count": "{count, plural, zero {# وصفة} one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}",
+    "noMatch": "لا توجد وصفات تطابق «{text}»",
+    "searchAllFields": "البحث في كل الحقول",
+    "filtersOn": "عوامل التصفية، {count} مفعّلة"
   }
 }

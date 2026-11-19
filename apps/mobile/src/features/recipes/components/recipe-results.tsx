@@ -17,6 +17,7 @@ export function RecipeResults({
   isLoading,
   isFetchingNextPage,
   onEndReached,
+  noResults,
   scroll,
   testID,
 }: {
@@ -25,6 +26,7 @@ export function RecipeResults({
   isLoading: boolean;
   isFetchingNextPage: boolean;
   onEndReached: () => void;
+  noResults: ReactElement;
   scroll: TabScroll;
   testID?: string;
 }) {
@@ -36,6 +38,7 @@ export function RecipeResults({
       insets="automatic"
       isFetchingNextPage={isFetchingNextPage}
       isLoading={isLoading}
+      noResults={noResults}
       renderCard={(recipe, { variant, actions, allergies, isFavorite }) => (
         <RecipeCard
           actions={actions}
