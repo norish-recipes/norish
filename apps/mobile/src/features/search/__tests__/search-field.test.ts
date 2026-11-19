@@ -38,28 +38,27 @@ describe("the search field", () => {
     expect(push).toBeUndefined();
   });
 
-  it("restores the text UIKit empties right after Cancel, whichever came first", () => {
-    const cancelledFirst = fieldStep(holding("soup", true), { type: "cancelled" }, 1000).state;
-    const ignored = fieldStep(cancelledFirst, { type: "typed", text: "" }, 1000 + 50);
+  it("ignores the emptying UIKit does right after Cancel, and keeps text and confirmation", () => {
+    const cancelled = fieldStep(holding("soup", true), { type: "cancelled" }, 1000).state;
+    const ignored = fieldStep(cancelled, { type: "typed", text: "" }, 1000 + 50);
 
-    expect(ignored.state).toBe(cancelledFirst);
+    expect(ignored.state).toBe(cancelled);
+    expect(ignored.state).toMatchObject({ text: "soup", confirmed: true });
     expect(ignored.push).toBe("soup");
-
-    const wiped = fieldStep(holding("soup", true), { type: "typed", text: "" }, 1000).state;
-    const restored = fieldStep(wiped, { type: "cancelled" }, 1000 + 50);
-
-    expect(restored.state).toMatchObject({ text: "soup", confirmed: true });
-    expect(restored.push).toBe("soup");
   });
 
-  it("treats an emptying outside the window as the reader's", () => {
+  it("keeps the reader's own clear when Cancel follows it", () => {
+    const cleared = fieldStep(holding("soup", true), { type: "typed", text: "" }, 1000).state;
+    const { state, push } = fieldStep(cleared, { type: "cancelled" }, 1000 + 50);
+
+    expect(state).toMatchObject({ text: "", confirmed: false });
+    expect(push).toBeUndefined();
+  });
+
+  it("treats an emptying after the window as the reader's", () => {
     const cancelled = fieldStep(holding("soup", true), { type: "cancelled" }, 1000).state;
     const { state } = fieldStep(cancelled, { type: "typed", text: "" }, 1000 + CANCEL_WINDOW_MS);
 
     expect(state.text).toBe("");
-
-    const wiped = fieldStep(holding("soup", true), { type: "typed", text: "" }, 1000).state;
-
-    expect(fieldStep(wiped, { type: "cancelled" }, 1000 + CANCEL_WINDOW_MS).push).toBeUndefined();
   });
 });

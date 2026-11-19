@@ -24,7 +24,7 @@ export function useSearchField() {
   const store = useLibraryFiltersStoreApi();
   const text = useLibraryFilters((state) => state.filters.rawInput);
   const barRef = useRef<SearchBarCommands | null>(null);
-  const timingRef = useRef<Pick<FieldState, "cancelledAt" | "wiped">>(FRESH_FIELD);
+  const timingRef = useRef<Pick<FieldState, "cancelledAt">>(FRESH_FIELD);
   const [focused, setFocused] = useState(false);
 
   // A remount, or coming back to the tab, leaves the native field empty over the kept text.
