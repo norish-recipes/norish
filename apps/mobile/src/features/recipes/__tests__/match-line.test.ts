@@ -137,6 +137,19 @@ describe("matchLine", () => {
     expect(matchLine({ field: "description", snippet: "fresh basil" }, "basil").labelId).toBeNull();
   });
 
+  it("shows a snippet cut inside markdown without its markers", () => {
+    const text = (snippet: string) =>
+      matchLine({ field: "description", snippet }, "basil")
+        .segments.map((segment) => segment.text)
+        .join("");
+
+    expect(text("Add **basil and stir")).toBe("Add basil and stir");
+    expect(text("stir the basil__ well")).toBe("stir the basil well");
+    expect(text("_fresh basil and the [best oil](http://exa")).toBe("fresh basil and the best oil");
+    expect(text("# Pound *the basil")).toBe("Pound the basil");
+    expect(text("a snake_case basil")).toBe("a snake_case basil");
+  });
+
   it("shows snippets and ingredient names as plain text, without markdown", () => {
     const text = (segments: { text: string }[]) => segments.map((segment) => segment.text).join("");
 

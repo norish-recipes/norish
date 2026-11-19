@@ -10,3 +10,13 @@ export function plainText(markdown: string): string {
     .replace(/^#+\s*/gm, "")
     .trim();
 }
+
+/** A cut-out of markdown as plain text: also drops the marks the cut left unpaired. */
+export function snippetText(markdown: string): string {
+  return plainText(markdown)
+    .replace(/!?\[([^\]]{0,200})\]\([^)]{0,500}$/, "$1")
+    .replace(/(^|\s)[*_]+(?=\S)/g, "$1")
+    .replace(/([^\s*_])[*_]+(?=$|[\s.,;:!?)])/g, "$1")
+    .replace(/^#+\s*/, "")
+    .trim();
+}

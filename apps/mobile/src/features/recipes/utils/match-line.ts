@@ -1,4 +1,4 @@
-import { plainText } from "@/lib/plain-text";
+import { plainText, snippetText } from "@/lib/plain-text";
 
 import type { LibraryMatchDTO } from "@norish/shared/contracts";
 import { stripDiacritics } from "@norish/shared/lib/fold-name";
@@ -101,7 +101,7 @@ export function matchLine(
         ],
       };
     case "steps": {
-      const segments = highlightSegments(plainText(match.snippet), search);
+      const segments = highlightSegments(snippetText(match.snippet), search);
 
       return match.number === undefined
         ? { labelId: null, segments }
@@ -112,6 +112,6 @@ export function matchLine(
           };
     }
     case "description":
-      return { labelId: null, segments: highlightSegments(plainText(match.snippet), search) };
+      return { labelId: null, segments: highlightSegments(snippetText(match.snippet), search) };
   }
 }
