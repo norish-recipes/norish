@@ -4,11 +4,9 @@ import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { useIntl } from "react-intl";
 
 import {
-  formatServings,
   useAmountDisplayPreference,
   useLoadedPageRecipe,
   usePageIngredients,
-  usePageServings,
   useUnitFormatter,
 } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
@@ -26,7 +24,6 @@ export function CookIngredients({
 }) {
   const intl = useIntl();
   const recipe = useLoadedPageRecipe();
-  const servings = usePageServings();
   const display = usePageIngredients();
   const { mode } = useAmountDisplayPreference();
   const { formatUnitOnly } = useUnitFormatter(intl.locale);
@@ -46,22 +43,20 @@ export function CookIngredients({
         showsVerticalScrollIndicator={false}
         testID="cook-ingredients"
       >
-        <View className="flex-row items-baseline justify-between">
-          <Text className="text-foreground text-[28px] font-semibold tracking-[-0.6px]">
+        <View className="mb-1.5 flex-row items-center justify-between gap-3">
+          {/* A long translation or large text shrinks the title rather than push the controls off. */}
+          <Text
+            adjustsFontSizeToFit
+            className="text-foreground shrink text-[28px] font-semibold tracking-[-0.6px]"
+            minimumFontScale={0.7}
+            numberOfLines={1}
+          >
             {intl.formatMessage({ id: "recipes.cookMode.ingredients" })}
           </Text>
-          {recipe.servings ? (
-            <Text className="text-muted text-base">
-              {intl.formatMessage(
-                { id: "recipes.cookMode.serving" },
-                { count: formatServings(servings) }
-              )}
-            </Text>
-          ) : null}
-        </View>
-        <View className="mt-3.5 mb-1.5 flex-row items-center justify-between">
-          {recipe.servings ? <ServingsControl /> : <View />}
-          <OptionsMenu />
+          <View className="shrink-0 flex-row items-center gap-1.5">
+            {recipe.servings ? <ServingsControl /> : null}
+            <OptionsMenu />
+          </View>
         </View>
         {rows.map((row) =>
           row.kind === "heading" ? (

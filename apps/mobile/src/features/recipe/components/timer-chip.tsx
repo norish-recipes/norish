@@ -17,8 +17,10 @@ import { askTimerNotifications } from "../hooks/use-recipe-timers";
 import { toggleTimer } from "../utils/toggle-timer";
 import { useTint } from "./tint";
 
+// Text sets an inline view's foot on the font's descent, which a 28 pt chip in the 28 pt line needed
+// shifting 5 pt to centre: a 24 pt chip centres with its foot 2 pt higher, so 3.
 const SIZES = {
-  page: { height: 28, shift: 5, text: "text-[15px]", icon: 15, ring: 15, stroke: 2.3 },
+  page: { height: 24, shift: 3, text: "text-[14px]", icon: 14, ring: 14, stroke: 2.1 },
   cook: { height: 34, shift: 6, text: "text-xl", icon: 18, ring: 18, stroke: 2.6 },
 } as const;
 
@@ -125,6 +127,7 @@ export function TimerChip({
   ] as const);
   const { height, shift, text, icon, ring, stroke } = SIZES[props.size];
   const done = timer?.status === "completed";
+  const face = !timer ? "idle" : done ? "done" : "live";
   const faceRef = useRef<ComponentRef<typeof View>>(null);
   // A text size change re-lays the text natively; reading it re-renders the chip to re-measure.
   const { fontScale } = useWindowDimensions();
@@ -143,7 +146,10 @@ export function TimerChip({
   }, [withinRef, onPlace, layouts, fontScale, timer?.status, left]);
 
   return (
+    // Text sizes an inline view only as it lays out, so a chip that changes face or text length
+    // ("10:00" to "9:59", "Done") is a new view, which makes the text measure it again.
     <View
+      key={`${face}-${(left || props.match.originalText).length}`}
       ref={faceRef}
       className={`flex-row items-center gap-1.5 rounded-full pr-2.5 pl-2 ${done ? "bg-accent" : "bg-default"}`}
       style={[
@@ -187,6 +193,8 @@ export function TimerChipButton({ frame, ...props }: ChipProps & { frame: Layout
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
+      // The page chip is 24 pt tall: the slop brings its tap target to 44 pt.
+      hitSlop={{ top: 10, bottom: 10 }}
       style={{
         position: "absolute",
         left: frame.x,

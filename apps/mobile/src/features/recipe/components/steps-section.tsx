@@ -196,13 +196,14 @@ export function StepChips({
             .join(" ");
 
           return (
+            // A long name wraps inside the chip, which grows from a pill to a rounded card.
             <View
               key={item.ingredientOrder}
-              className={`bg-default flex-row items-center gap-1.5 rounded-full pr-2.5 ${large ? "h-[38px] pl-1.5" : "h-[30px] pl-1"}`}
+              className={`bg-default max-w-full flex-row items-center gap-1.5 py-1 pr-2.5 ${large ? "min-h-[38px] rounded-[19px] pl-1.5" : "min-h-[30px] rounded-[15px] pl-1"}`}
               style={tint ? { backgroundColor: tint.soft } : undefined}
             >
               <IngredientIcon ingredientId={foodId} size={large ? 26 : 22} />
-              <Text className={`text-foreground ${large ? "text-[15px]" : "text-[13px]"}`}>
+              <Text className={`text-foreground shrink ${large ? "text-[15px]" : "text-[13px]"}`}>
                 {label}
               </Text>
             </View>
@@ -267,7 +268,8 @@ function StepLine({
       </Pressable>
       <View className="min-w-0 flex-1 gap-3">
         <StepText
-          className={`text-base leading-6 ${done ? "text-muted line-through" : "text-foreground"}`}
+          // 28 pt lines leave room between timer chips that wrap onto lines of their own.
+          className={`text-base leading-7 ${done ? "text-muted line-through" : "text-foreground"}`}
           disableLinks={done}
           size="page"
           stepIndex={number - 1}

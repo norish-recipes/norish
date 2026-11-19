@@ -37,6 +37,7 @@ vi.mock("react-native", () => ({
   View: host,
   Text: host,
   Pressable: host,
+  useWindowDimensions: () => ({ fontScale: 1 }),
   ActionSheetIOS: { showActionSheetWithOptions: sheet.show },
 }));
 vi.mock("expo-haptics", () => ({
@@ -58,7 +59,7 @@ vi.mock("../hooks/use-recipe-timers", () => ({ askTimerNotifications: async () =
 vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
 vi.mock("../components/tint", () => ({ useTint: () => null }));
 
-const { TimerChipButton } = await import("../components/timer-chip");
+const { TimerChip, TimerChipButton } = await import("../components/timer-chip");
 const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
 
 const match = {
@@ -128,5 +129,48 @@ describe("TimerChipButton", () => {
     fireEvent.contextMenu(screen.getByRole("button"));
 
     expect(sheet.show).not.toHaveBeenCalled();
+  });
+});
+
+describe("TimerChip", () => {
+  beforeEach(() => useTimerStore.setState({ timers: [] }));
+
+  it("redraws its face when the time's text changes length, so the step text sizes it again", () => {
+    const face = (
+      <TimerChip
+        index={0}
+        layouts={0}
+        match={match}
+        size="page"
+        stepIndex={1}
+        withinRef={{ current: null }}
+        onPlace={() => {}}
+      />
+    );
+    const left = (remainingMs: number) =>
+      useTimerStore.setState((state) => ({
+        timers: state.timers.map((timer) => ({ ...timer, remainingMs })),
+      }));
+    const { container, rerender } = render(face);
+    const idle = container.firstChild;
+
+    render(chip);
+    fireEvent.click(screen.getByRole("button"));
+    rerender(face);
+    const tenMinutes = container.firstChild;
+
+    expect(tenMinutes?.textContent).toBe("10:00");
+    expect(tenMinutes).not.toBe(idle);
+
+    left(599_000);
+    rerender(face);
+    const nineMinutes = container.firstChild;
+
+    expect(nineMinutes?.textContent).toBe("9:59");
+    expect(nineMinutes).not.toBe(tenMinutes);
+
+    left(598_000);
+    rerender(face);
+    expect(container.firstChild).toBe(nineMinutes);
   });
 });

@@ -31,7 +31,7 @@ export function TypedServings({
         onPress={() => setDraft({ text: formatAmountAsDecimal(servings), sent: servings })}
       >
         <Text className="text-foreground text-base font-semibold">
-          {intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
+          {intl.formatMessage({ id: "recipes.cookMode.serving" }, { count: servings })}
         </Text>
       </Pressable>
     );
