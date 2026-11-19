@@ -2,7 +2,7 @@
 
 Status: sign-in tickets 01-06 done; Recipes tab tickets 07-17 open; Recipe, Groceries and Calendar tickets 18-30 open
 
-Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area got its tickets once the one before it had landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below). Recipe, Groceries and Calendar were specced together on 2026-11-14 as Parts 3–5, tickets 18–30.
+Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area got its tickets once the one before it had landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below). Recipe, Groceries and Calendar were specced together on 2026-11-14 as Parts 3–5, tickets 18–30. Search is specced on its own in `.scratch/mobile-search/spec.md`.
 
 ## Problem Statement
 
