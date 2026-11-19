@@ -124,7 +124,6 @@
     },
     "paste": {
       "title": "Tuo liittämällä",
-      "label": "Reseptin teksti tai JSON-LD",
       "placeholder": "Liitä resepti (vapaa teksti) tai JSON-LD tähän...",
       "characters": "{count} / {max} merkkiä",
       "tooLarge": "Liitetty teksti on liian pitkä",

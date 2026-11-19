@@ -124,7 +124,6 @@
     },
     "paste": {
       "title": "Importuj przez wklejenie",
-      "label": "Tekst przepisu lub JSON-LD",
       "placeholder": "Wklej przepis lub JSON-LD...",
       "characters": "{count} / {max} znaków",
       "tooLarge": "Wklejony tekst jest za duży",

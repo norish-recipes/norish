@@ -124,7 +124,6 @@
     },
     "paste": {
       "title": "استيراد من نص ملصق",
-      "label": "نص الوصفة أو JSON-LD",
       "placeholder": "الصق وصفة (نصًا حرًا) أو JSON-LD هنا...",
       "characters": "{count} / {max} حرف",
       "tooLarge": "النص طويل جدًا",

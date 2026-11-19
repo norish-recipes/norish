@@ -124,7 +124,6 @@
     },
     "paste": {
       "title": "Import from paste",
-      "label": "Recipe text or JSON-LD",
       "placeholder": "Paste a recipe (free text) or JSON-LD here...",
       "characters": "{count} / {max} characters",
       "tooLarge": "Paste too large",

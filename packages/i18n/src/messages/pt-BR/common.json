@@ -124,7 +124,6 @@
     },
     "paste": {
       "title": "Importar por colagem",
-      "label": "Texto da receita ou JSON-LD",
       "placeholder": "Cole uma receita (texto livre) ou JSON-LD aqui...",
       "characters": "{count} / {max} caracteres",
       "tooLarge": "Colagem muito grande",
