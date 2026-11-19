@@ -32,6 +32,7 @@ vi.mock(
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).swiftUiModifiers
 );
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@/components/icon-button", () => ({ IconButton: () => null }));
 vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
 vi.mock(

@@ -1,5 +1,5 @@
-# Plans a recipe from its card: swipe, Plan, the day Today shows in the mini calendar, in the slot of
-# the empty card Today shows. Planning opens Add to groceries, the default after planning; once closed,
+# Plans a recipe from its card: swipe, Plan, the slot tab of the empty card Today shows, then the "+"
+# of the day Today shows in the plan block. Planning opens Add to groceries, the default after planning; once closed,
 # Today shows the recipe on a card. Slot and day come from what the app shows, not from the clock.
 appId: dev.norish.app
 ---
@@ -35,10 +35,10 @@ appId: dev.norish.app
       text: .* ${output.day}
     timeout: 20000
 - tapOn:
+    id: plan-slot-${output.slot}
+- tapOn:
     id: day-add-.*
     text: .* ${output.day}
-- tapOn:
-    id: day-add-.*-${output.slot}
 - runFlow:
     file: subflows/planned.yaml
     env:

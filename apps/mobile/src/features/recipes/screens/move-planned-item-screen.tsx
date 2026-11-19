@@ -1,7 +1,8 @@
 import React from "react";
-import { MoveFields } from "@/components/move-fields";
+import { formatDay } from "@/components/day-card";
+import { PlanDayList } from "@/components/plan-block";
 import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { Sheet } from "@/components/sheet";
 import { useCloseWhenGone } from "@/hooks/use-close-when-gone";
 import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
 import { useLocalSearchParams } from "expo-router";
@@ -21,7 +22,7 @@ export function MovePlannedItemScreen() {
   return item ? <MoveSheet item={item} /> : <PlannedItemSkeleton name="move" />;
 }
 
-/** The shared move fields as a draft: Save moves the item last in its new slot, Close leaves it. */
+/** The plan block as a draft: Save moves the item last in its new slot, Close leaves it. */
 function MoveSheet({ item }: { item: PlannedItemFromQuery }) {
   const intl = useIntl();
   const { title } = usePlannedItemText()(item);
@@ -34,9 +35,17 @@ function MoveSheet({ item }: { item: PlannedItemFromQuery }) {
       subtitle={title}
       title={intl.formatMessage({ id: "calendar.today.moveTitle" })}
     >
-      <SheetBody>
-        <MoveFields {...fields} testID="move" />
-      </SheetBody>
+      <PlanDayList
+        {...fields}
+        addLabel={(day) =>
+          intl.formatMessage(
+            { id: "calendar.panel.planOnDay" },
+            { name: title, day: formatDay(intl, day) }
+          )
+        }
+        testID="move"
+        onAdd={(key) => fields.onDateChange(key)}
+      />
     </Sheet>
   );
 }

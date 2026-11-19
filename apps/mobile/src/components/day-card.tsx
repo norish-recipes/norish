@@ -1,12 +1,10 @@
 import type { IntlShape } from "react-intl";
 import React from "react";
 import { Text, View } from "react-native";
-import { GlassIconMenu } from "@/components/glass";
+import { IconButton } from "@/components/icon-button";
 import { PlannedThumb } from "@/components/planned-thumb";
 import { DAY_CARD_CLASS } from "@/lib/day-card-height";
-import { SLOT_GLYPHS, SLOT_SYMBOLS } from "@/lib/slot-icons";
-import { Button } from "@expo/ui/swift-ui";
-import { accessibilityIdentifier } from "@expo/ui/swift-ui/modifiers";
+import { SLOT_GLYPHS } from "@/lib/slot-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -81,37 +79,8 @@ function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
   );
 }
 
-/** The "+" of a day: the native menu of the four slots, with no heading. */
-function SlotMenu({
-  addLabel,
-  testID,
-  onAdd,
-}: {
-  addLabel: string;
-  testID: string;
-  onAdd: (slot: Slot) => void;
-}) {
-  const intl = useIntl();
-
-  return (
-    <View className="size-9 items-center justify-center">
-      <GlassIconMenu label={addLabel} symbol="plus" testID={testID}>
-        {TODAY_MEAL_SLOTS.map((slot) => (
-          <Button
-            key={slot}
-            label={intl.formatMessage({ id: `common.slots.${slotTranslationKeys[slot]}` })}
-            modifiers={[accessibilityIdentifier(`${testID}-${slot}`)]}
-            systemImage={SLOT_SYMBOLS[slot]}
-            onPress={() => onAdd(slot)}
-          />
-        ))}
-      </GlassIconMenu>
-    </View>
-  );
-}
-
 /**
- * A day as a card: its date, what is planned in each slot, and a "+" that asks for a slot.
+ * A day as a card: its date, what is planned in each slot, and a "+" that picks the day.
  * Heights are fixed (`lib/day-card-height.ts` adds them up), so a list can lay days out unmeasured.
  */
 export function DayCard({
@@ -128,7 +97,7 @@ export function DayCard({
   items: PlannedItemFromQuery[];
   /** What VoiceOver calls the "+". */
   addLabel: string;
-  onAdd: (slot: Slot) => void;
+  onAdd: () => void;
 }) {
   const intl = useIntl();
   const bySlot = groupTodayItemsBySlot(items);
@@ -146,7 +115,13 @@ export function DayCard({
       ) : null}
       <View className={`flex-row items-center gap-2 ${DAY_CARD_CLASS.header}`}>
         <DayTitle after="text-[15px]" date={date} isToday={isToday} title="text-[17px]" />
-        <SlotMenu addLabel={addLabel} testID={`day-add-${dateKey}`} onAdd={onAdd} />
+        <IconButton
+          icon="add"
+          label={addLabel}
+          testID={`day-add-${dateKey}`}
+          tone="accent"
+          onPress={onAdd}
+        />
       </View>
       {TODAY_MEAL_SLOTS.filter((slot) => bySlot[slot].length > 0).map((slot) => (
         <View

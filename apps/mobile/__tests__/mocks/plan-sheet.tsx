@@ -122,7 +122,25 @@ const Sheet = ({
   </div>
 );
 
-export const sheet = { Sheet, SheetBody: pass, SheetStrip: pass };
+/** The list renders its header and rows in place. */
+const SheetList = ({
+  ListHeaderComponent,
+  data,
+  renderItem,
+}: {
+  ListHeaderComponent?: ReactNode;
+  data: unknown[];
+  renderItem: (info: { item: unknown; index: number }) => ReactNode;
+}) => (
+  <div>
+    {ListHeaderComponent}
+    {data.map((item, index) => (
+      <div key={index}>{renderItem({ item, index })}</div>
+    ))}
+  </div>
+);
+
+export const sheet = { Sheet, SheetBody: pass, SheetStrip: pass, SheetList };
 
 export const reactIntl = {
   useIntl: () => ({

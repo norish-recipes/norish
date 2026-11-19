@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { destructiveAction } from "@/components/modal-header";
-import { MoveFields } from "@/components/move-fields";
+import { PlanPicker } from "@/components/plan-block";
 import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
 import { PlannedThumb } from "@/components/planned-thumb";
 import { Sheet, SheetBody } from "@/components/sheet";
@@ -112,7 +112,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
             />
           </TextField>
         )}
-        <MoveFields {...fields} testID="planned-item" />
+        <PlanPicker {...fields} testID="planned-item" />
       </SheetBody>
     </Sheet>
   );

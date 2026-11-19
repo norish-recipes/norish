@@ -5,7 +5,7 @@ import { useIntl } from "react-intl";
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { useCalendarMutations, usePlannedItemDraft } from "@norish/shared-react/calendar";
 
-/** A planned item's draft on a sheet: Save writes it and closes, and `fields` wires `MoveFields`. */
+/** A planned item's draft on a sheet: Save writes it and closes, and `fields` wires `PlanPicker`. */
 export function usePlannedItemSheet(item: PlannedItemFromQuery) {
   const intl = useIntl();
   const router = useRouter();

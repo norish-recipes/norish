@@ -39,6 +39,16 @@ vi.mock(
   "@/components/sheet",
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).sheet
 );
+vi.mock("@/components/icon-button", async () => {
+  const { createElement } = await import("react");
+
+  return {
+    IconButton: ({ testID, onPress }: { testID?: string; onPress: () => void }) =>
+      createElement("button", { "data-testid": testID, onClick: onPress }),
+  };
+});
+vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
+vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/hooks/use-confirm", () => ({ useConfirm: () => held.confirm }));
 vi.mock(
   "react-intl",
@@ -57,6 +67,13 @@ vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-12" }))
 vi.mock("@norish/shared-react/calendar", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/calendar")>()),
   useCalendarMutations: () => ({ saveItem: held.saveItem, deleteItem: held.deleteItem }),
+  useMiniCalendar: () => ({
+    days: [new Date(2026, 10, 12), new Date(2026, 10, 14)],
+    todayKey: "2026-11-12",
+    todayIndex: 0,
+    calendarData: {},
+    isLoading: false,
+  }),
   useCalendarQuery: () => ({ calendarData: { "2026-11-12": held.items }, isRead: true }),
   usePlannedItemText: () => (item: PlannedItemFromQuery) => ({ title: item.title, subtitle: null }),
 }));
@@ -104,6 +121,14 @@ describe("MovePlannedItemScreen", () => {
       slot: "Dinner",
     });
     expect(held.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves to the day a card's plus picks", () => {
+    render(<MovePlannedItemScreen />);
+    fireEvent.click(screen.getByTestId("day-add-2026-11-14"));
+    fireEvent.click(screen.getByTestId("move-confirm"));
+
+    expect(held.saveItem).toHaveBeenCalledWith("note-1", { date: "2026-11-14" });
   });
 
   it("goes to a day beyond the strip from the date picker", () => {

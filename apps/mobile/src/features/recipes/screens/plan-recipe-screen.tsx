@@ -4,7 +4,7 @@ import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
 import { IconButton } from "@/components/icon-button";
 import { Loader } from "@/components/loader";
-import { MoveFields } from "@/components/move-fields";
+import { PlanPicker } from "@/components/plan-block";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { asSlot } from "@/lib/slot-segments";
@@ -60,7 +60,7 @@ export function PlanRecipeScreen() {
 
   const header = (
     <View className="gap-3">
-      <MoveFields
+      <PlanPicker
         date={date}
         days={!day}
         slot={slot}
