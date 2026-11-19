@@ -1,22 +1,23 @@
 import type { HeaderItem } from "@/lib/header-item";
 import type { RecipeResultsProps } from "@/lib/recipe-results-props";
 import type { ComponentType } from "react";
-import React, { useEffect } from "react";
+import React from "react";
 import { View } from "react-native";
 import { FiltersButton } from "@/components/filters-button";
 import { TabRootHeader } from "@/components/tab-root-header";
+import { useSearchConfirmed } from "@/lib/search-session";
 import { useTabScroll } from "@/lib/use-tab-scroll";
 import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
-import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
 
 import { SearchNoResults } from "../components/no-results";
 import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
 import { useSearchField } from "../hooks/use-search-field";
-import { filterChips, hasChips, withoutHiddenFilters } from "../utils/search-chips";
+import { useSearchFilters } from "../hooks/use-search-filters";
+import { filterChips } from "../utils/search-chips";
 import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
 import { noResultsVariant, searchView, showsResults } from "../utils/search-state";
 
@@ -26,29 +27,29 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
   const intl = useIntl();
   const [barRef, field] = useSearchField();
   const scroll = useTabScroll();
-  const visibility = useHiddenItemVisibility();
-  const confirmed = useLibraryFilters((state) => state.searchConfirmed);
-  const filters = useLibraryFilters((state) => state.filters);
+  const confirmed = useSearchConfirmed();
+  const filters = useSearchFilters();
+  const chips = filterChips(filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const input = {
     text: field.text,
     confirmed,
-    hasChips: hasChips(filters),
+    hasChips: chips.length > 0,
     focused: field.focused,
   };
   // Recipes only, and an explicit sort beats rank; nothing is read until Results show.
   const list = useLibraryList({
     sortBeatsRank: true,
+    filters,
     enabled: showsResults({ ...input, resultCount: null }),
   });
   const view = searchView({ ...input, resultCount: list.isLoading ? null : list.recipes.length });
-  const chipCount = filterChips(filters).length;
+  const chipCount = chips.length;
   const funnel: HeaderItem = {
     type: "custom",
     element: (
       <FiltersButton
-        counted
         count={chipCount}
         label={
           chipCount > 0
@@ -61,17 +62,10 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
     hidesSharedBackground: true,
   };
 
-  // A favourites or rating filter the reader has since hidden neither filters nor shows a chip.
-  useEffect(() => {
-    const hidden = withoutHiddenFilters(filters, visibility);
-
-    if (hidden) setFilters(hidden);
-  }, [filters, visibility, setFilters]);
-
   const noResults = (
     <SearchNoResults
       text={field.text.trim()}
-      variant={noResultsVariant(hasChips(filters), isScopeNarrowed(filters.searchFields))}
+      variant={noResultsVariant(chips.length > 0, isScopeNarrowed(filters.searchFields))}
       onClearFilters={clearFilters}
       onSearchAllFields={() => setFilters({ searchFields: [...ALL_SCOPE] })}
     />
@@ -102,7 +96,7 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
         <Results
           header={
             <View className="pt-2">
-              <ChipRow />
+              <ChipRow chips={chips} />
               {view === "results" && !list.isLoading ? <RecipeCount count={list.total} /> : null}
             </View>
           }

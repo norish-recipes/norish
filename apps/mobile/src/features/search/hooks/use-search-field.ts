@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import type { SearchBarCommands } from "react-native-screens";
 import { useEffect, useRef, useState } from "react";
+import { getSearchConfirmed, setSearchConfirmed } from "@/lib/search-session";
 
 import { useLibraryFilters, useLibraryFiltersStoreApi } from "@norish/shared-react/recipes";
 
@@ -33,9 +34,9 @@ export function useSearchField() {
   useEffect(() => pushKeptText(store, barRef), [store]);
 
   const send = (event: FieldEvent) => {
-    const { filters, searchConfirmed, setFilters, setSearchConfirmed } = store.getState();
+    const { filters, setFilters } = store.getState();
     const { state, push } = fieldStep(
-      { ...timingRef.current, text: filters.rawInput, confirmed: searchConfirmed },
+      { ...timingRef.current, text: filters.rawInput, confirmed: getSearchConfirmed() },
       event,
       Date.now()
     );

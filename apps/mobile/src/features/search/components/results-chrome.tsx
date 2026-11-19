@@ -11,7 +11,8 @@ import type { SortOrder } from "@norish/shared/contracts";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 
 import type { ChipSpeech, FilterChip } from "../utils/search-chips";
-import { chipKey, chipLabel, filterChips, withoutChip } from "../utils/search-chips";
+import { useSearchFilters } from "../hooks/use-search-filters";
+import { chipKey, chipLabel, withoutChip } from "../utils/search-chips";
 import { shownSort, sortOptions } from "../utils/search-sort";
 
 const SORT_LABELS: Record<SortOrder, string> = {
@@ -80,9 +81,9 @@ function SortChip() {
   );
 }
 
-/** Under the title: a chip for each applied filter (× removes it) and the sort chip. */
-export function ChipRow() {
-  const filters = useLibraryFilters((state) => state.filters);
+/** Under the title: a chip for each of `chips` (× removes it) and the sort chip. */
+export function ChipRow({ chips }: { chips: FilterChip[] }) {
+  const filters = useSearchFilters();
   const setFilters = useLibraryFilters((state) => state.setFilters);
 
   return (
@@ -91,7 +92,7 @@ export function ChipRow() {
       contentContainerClassName="items-center gap-2 px-5"
       showsHorizontalScrollIndicator={false}
     >
-      {filterChips(filters).map((chip) => (
+      {chips.map((chip) => (
         <FilterChipView
           key={chipKey(chip)}
           chip={chip}

@@ -1,4 +1,10 @@
-import { resetSearchSession, SEARCH_START, searchStore } from "@/lib/search-session";
+import {
+  getSearchConfirmed,
+  resetSearchSession,
+  SEARCH_START,
+  searchStore,
+  setSearchConfirmed,
+} from "@/lib/search-session";
 import { afterEach, describe, expect, it } from "vitest";
 
 afterEach(resetSearchSession);
@@ -11,19 +17,19 @@ describe("the Search session", () => {
       searchFields: ["title", "ingredients"],
       rawInput: "",
     });
-    expect(searchStore.getState().searchConfirmed).toBe(false);
+    expect(getSearchConfirmed()).toBe(false);
   });
 
   it("keeps what it is given until the session ends", () => {
     searchStore.getState().setFilters({ rawInput: "soup" });
-    searchStore.getState().setSearchConfirmed(true);
+    setSearchConfirmed(true);
 
     expect(searchStore.getState().filters.rawInput).toBe("soup");
 
     resetSearchSession();
 
     expect(searchStore.getState().filters).toEqual(SEARCH_START);
-    expect(searchStore.getState().searchConfirmed).toBe(false);
+    expect(getSearchConfirmed()).toBe(false);
   });
 
   it("leaves the text, scope and sort when Clear filters clears the chips", () => {

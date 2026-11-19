@@ -109,5 +109,13 @@ export function withoutHiddenFilters(
     : Object.assign({}, ...hidden.map((chip) => withoutChip(filters, chip)));
 }
 
+/** `filters` as Search reads them: without the favourites and rating filters Hidden Items hides, so
+ * none narrows the list or shows a chip. */
+export function visibleFilters(filters: CanonicalRecipeFilters, visibility: HiddenItemVisibility) {
+  const hidden = withoutHiddenFilters(filters, visibility);
+
+  return hidden ? { ...filters, ...hidden } : filters;
+}
+
 /** A key for a chip that is stable while the others come and go. */
 export const chipKey = (chip: FilterChip) => `${chip.kind}:${String(chip.value)}`;

@@ -10,6 +10,7 @@ import {
   chipLabel,
   filterChips,
   hasChips,
+  visibleFilters,
   withoutChip,
   withoutHiddenFilters,
 } from "../utils/search-chips";
@@ -125,5 +126,33 @@ describe("filters the reader hid", () => {
         { ...everything, showFavorites: false, showRatings: false }
       )
     ).toBeNull();
+  });
+});
+
+describe("the filters Search reads", () => {
+  const hidden = { ...everything, showFavorites: false, showRatings: false };
+
+  it("leaves out a hidden kept filter, so it neither shows nor filters", () => {
+    const seen = visibleFilters(applied, hidden);
+
+    expect(seen).toMatchObject({
+      showFavoritesOnly: false,
+      minRating: null,
+      searchTags: ["vegan", "quick"],
+    });
+    expect(filterChips(seen).map((chip) => chip.kind)).toEqual([
+      "category",
+      "tag",
+      "tag",
+      "time",
+      "pantry",
+    ]);
+    expect(hasChips(visibleFilters({ ...DEFAULT_RECIPE_FILTERS, minRating: 4 }, hidden))).toBe(
+      false
+    );
+  });
+
+  it("is the filters themselves while the items show", () => {
+    expect(visibleFilters(applied, everything)).toBe(applied);
   });
 });

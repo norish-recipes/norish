@@ -28,9 +28,6 @@ type LibraryFiltersState = {
   /** Resets every filter except the Library's type, a lens that clearing a search must not move
    * (ADR-0026), and those in `keepOnClear`. */
   clearFilters: () => void;
-  /** Search's: whether its text was confirmed with the search key. */
-  searchConfirmed: boolean;
-  setSearchConfirmed: (confirmed: boolean) => void;
   toggleSearchField: (field: SearchField) => void;
   /** The browser's stored filters win over the cookie's: a kept document can be old. */
   applyStored: (stored: PersistedRecipeFilters | null) => void;
@@ -48,8 +45,6 @@ export function createLibraryFiltersStore(
     hydrated: initial !== undefined,
     setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
     keepOnClear: [],
-    searchConfirmed: false,
-    setSearchConfirmed: (searchConfirmed) => set({ searchConfirmed }),
     clearFilters: () =>
       set((state) => ({
         filters: {

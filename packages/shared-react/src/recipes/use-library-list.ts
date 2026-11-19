@@ -1,5 +1,6 @@
 "use client";
 
+import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
@@ -12,8 +13,9 @@ import { useLibraryQuery } from "./use-library-query";
 import { useRecipesMutations } from "./use-recipes-mutations";
 
 /** The Library's filters, as a list query takes them, and whether the stored ones are applied. */
-export function useLibraryQueryFilters() {
-  const filters = useLibraryFilters((state) => state.filters);
+export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
+  const stored = useLibraryFilters((state) => state.filters);
+  const filters = override ?? stored;
   const isHydrated = useLibraryFilters((state) => state.hydrated);
 
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };
@@ -22,13 +24,15 @@ export function useLibraryQueryFilters() {
 /**
  * The Library under the reader's filters, with its recipes in grid order. Until the stored
  * filters are applied it stays loading: the defaults would show recipes the reader filters away.
- * `sortBeatsRank` is mobile Search's; `enabled: false` reads nothing.
+ * `sortBeatsRank` and `filters` (read instead of the store's) are mobile Search's; `enabled: false`
+ * reads nothing.
  */
 export function useLibraryList({
   sortBeatsRank,
   enabled = true,
-}: { sortBeatsRank?: boolean; enabled?: boolean } = {}) {
-  const { queryFilters, isHydrated } = useLibraryQueryFilters();
+  filters,
+}: { sortBeatsRank?: boolean; enabled?: boolean; filters?: CanonicalRecipeFilters } = {}) {
+  const { queryFilters, isHydrated } = useLibraryQueryFilters(filters);
   const library = useLibraryQuery(
     { ...queryFilters, sortBeatsRank },
     { enabled: isHydrated && enabled }
