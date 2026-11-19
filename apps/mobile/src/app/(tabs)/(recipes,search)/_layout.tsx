@@ -10,5 +10,5 @@ export const unstable_settings = {
 };
 
 export default function Layout({ segment }: { segment: string }) {
-  return <RecipesStack search={segment === "(search)" ? SearchRoot : undefined} />;
+  return <RecipesStack Provider={segment === "(search)" ? SearchRoot : undefined} />;
 }

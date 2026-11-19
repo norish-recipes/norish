@@ -24,10 +24,10 @@ const FIT_SHEETS = ["cookbook-rename", "move"] as const;
 
 /**
  * The Recipes tab's stack: the list screen's title is a bar item that hides on scroll; a cookbook page keeps a transparent header for its back button.
- * Search's stack is this one, given its own filters in `search`, rooted at its own screen.
+ * Search's stack is this one: its `Provider` holds Search's own filters, and the stack roots at Search's screen.
  */
-export function RecipesStack({ search }: { search?: ComponentType<{ children: ReactNode }> }) {
-  const Root = search ?? LibraryRoot;
+export function RecipesStack({ Provider }: { Provider?: ComponentType<{ children: ReactNode }> }) {
+  const Root = Provider ?? LibraryRoot;
 
   return (
     <Root>
@@ -40,7 +40,7 @@ export function RecipesStack({ search }: { search?: ComponentType<{ children: Re
           }}
         >
           {/* The root screen sets its header itself: Recipes a bar-item title, Search its field. */}
-          <Stack.Screen name={search ? "search" : "index"} />
+          <Stack.Screen name={Provider ? "search" : "index"} />
           {/* A cookbook opens inside this stack so its sheets present over it. */}
           <Stack.Screen
             name="cookbook/[id]"
