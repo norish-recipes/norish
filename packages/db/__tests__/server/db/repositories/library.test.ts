@@ -898,6 +898,14 @@ describe("the Library union", () => {
       expect(result.items[0]).toMatchObject({ match: { field: "tags" } });
     });
 
+    it("ignores a query term the parser drops", async () => {
+      await seedBasil(["title"]);
+
+      expect(await matchOf({ search: "basil ^", searchFields: [...ALL] })).toEqual({
+        field: "title",
+      });
+    });
+
     it("carries no match without text, without the flag, or on a cookbook", async () => {
       await seedBasil(["title"]);
       await createCookbook({ userId: ownerId, title: "Basil book" });

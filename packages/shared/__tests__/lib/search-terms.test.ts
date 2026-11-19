@@ -11,6 +11,10 @@ describe("searchTerms", () => {
     expect(searchTerms("chicken,rice stir-fry 1.5")).toEqual(["chicken,rice", "stir-fry", "1.5"]);
   });
 
+  it("keeps a term the query parser drops itself, as before", () => {
+    expect(searchTerms("basil ^")).toEqual(["basil", "^"]);
+  });
+
   it("is empty when nothing searchable is left", () => {
     expect(searchTerms(" &| () ")).toEqual([]);
   });

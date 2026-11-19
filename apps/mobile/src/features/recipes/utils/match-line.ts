@@ -39,8 +39,17 @@ export function highlightSegments(text: string, search: string): MatchSegment[] 
 
   const marked: [number, number][] = [];
 
-  for (const term of searchTerms(search).map(foldChar)) {
-    for (let from = folded.indexOf(term); from !== -1; from = folded.indexOf(term, from + 1)) {
+  // A term that folds away (a lone "^") would match everywhere, so it is skipped.
+  const terms = searchTerms(search)
+    .map(foldChar)
+    .filter((term) => term.length > 0);
+
+  for (const term of new Set(terms)) {
+    for (
+      let from = folded.indexOf(term);
+      from !== -1 && from < folded.length;
+      from = folded.indexOf(term, from + 1)
+    ) {
       const startsWord = from === 0 || !/[\p{L}\p{N}]/u.test(folded[from - 1]!);
 
       if (startsWord) marked.push([starts[from]!, ends[from + term.length - 1]!]);

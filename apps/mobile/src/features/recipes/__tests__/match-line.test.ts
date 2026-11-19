@@ -1,8 +1,42 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { highlightSegments, matchLine } from "../utils/match-line";
 
+/** Runs `fn` with indexOf capped, so a scan that stops advancing fails instead of hanging. */
+function bounded<T>(fn: () => T): T {
+  const indexOf = String.prototype.indexOf;
+  let calls = 0;
+  const spy = vi.spyOn(String.prototype, "indexOf").mockImplementation(function (
+    this: string,
+    search: string,
+    position?: number
+  ) {
+    if (++calls > 10_000) throw new Error("the highlighter stopped advancing");
+
+    return indexOf.call(this, search, position);
+  });
+
+  try {
+    return fn();
+  } finally {
+    spy.mockRestore();
+  }
+}
+
 describe("highlightSegments", () => {
+  it("ends on terms that fold to nothing", { timeout: 1000 }, () => {
+    expect(bounded(() => highlightSegments("Basil pesto", "basil ^"))).toEqual([
+      { text: "Basil", highlighted: true },
+      { text: " pesto", highlighted: false },
+    ]);
+    expect(bounded(() => highlightSegments("Basil pesto", "^ ` \u00b4"))).toEqual([
+      { text: "Basil pesto", highlighted: false },
+    ]);
+    expect(bounded(() => highlightSegments("Basil pesto", ""))).toEqual([
+      { text: "Basil pesto", highlighted: false },
+    ]);
+  });
+
   it("marks the term wherever it starts a word, ignoring case", () => {
     expect(highlightSegments("Hoisin Chicken and chicken stock", "chicken")).toEqual([
       { text: "Hoisin ", highlighted: false },
