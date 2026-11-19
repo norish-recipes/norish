@@ -232,10 +232,11 @@ export async function listLibrary(
 
   const union = sql.join(branches, sql` UNION ALL `);
   const baseOrder = LIBRARY_ORDER_BY[sortMode] ?? LIBRARY_ORDER_BY.dateDesc;
+  const relevanceFirst = Boolean(search) && !(sortBeatsRank && sortMode !== "none");
   const orderBy = sql`ORDER BY ${sql.join(
     [
       ...(pantryCoverage ? [sql`pantry_coverage DESC`] : []),
-      ...(search && !(sortBeatsRank && sortMode !== "none") ? [sql`pinned DESC, rank DESC`] : []),
+      ...(relevanceFirst ? [sql`pinned DESC, rank DESC`] : []),
       baseOrder,
       sql`id ASC`,
     ],
