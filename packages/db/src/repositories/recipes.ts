@@ -3,6 +3,7 @@ import { and, asc, desc, eq, ilike, inArray, isNull, lte, notInArray, or, sql } 
 import z from "zod";
 
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { LibraryMatchDTO } from "@norish/shared/contracts/dto/cookbook";
 import type {
   FullRecipeDTO,
   FullRecipeInsertDTO,
@@ -384,6 +385,22 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
 
 export { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
+/** The text as a prefix-OR tsquery body, or null when nothing searchable is left. */
+function searchTsqueryTerms(search: string): string | null {
+  // Sanitize terms to remove PostgreSQL tsquery special characters.
+  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
+
+  return (
+    search
+      .trim()
+      .split(/\s+/)
+      .map(sanitizeTsqueryTerm)
+      .filter((term) => term.length > 0)
+      .map((term) => `${term}:*`)
+      .join(" | ") || null
+  );
+}
+
 /**
  * The weighted search document and its rank, for whichever fields the reader
  * has chosen.
@@ -405,16 +422,7 @@ export function recipeSearchSql(
 ): { match: ReturnType<typeof sql>; rank: ReturnType<typeof sql<number>> } | null {
   if (!search || searchFields.length === 0) return null;
 
-  // Sanitize terms to remove PostgreSQL tsquery special characters.
-  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
-
-  const searchTerms = search
-    .trim()
-    .split(/\s+/)
-    .map(sanitizeTsqueryTerm)
-    .filter((term) => term.length > 0)
-    .map((term) => `${term}:*`)
-    .join(" | ");
+  const searchTerms = searchTsqueryTerms(search);
 
   if (!searchTerms) return null;
 
@@ -470,6 +478,121 @@ export function recipeSearchSql(
     match: sql`(${document}) @@ ${query}`,
     rank: sql<number>`ts_rank(${document}, ${query})`,
   };
+}
+
+/** One fragment around the hit; ts_headline takes no empty markers, so these are stripped after. */
+const MATCH_SNIPPET_OPTIONS =
+  "MaxFragments=1, MinWords=6, MaxWords=14, StartSel=\uE000, StopSel=\uE001";
+const plainSnippet = (snippet: string) => snippet.replace(/[\uE000\uE001]/g, "");
+
+/**
+ * Why each of `ids` matched `search`: the strongest hit within `searchFields`,
+ * ordered title > tag > ingredient > description > step.
+ *
+ * Each field is tested with the same tsquery `recipeSearchSql` filters by. The
+ * query is an OR of prefix terms, so testing a tag, a line or a step on its own
+ * agrees with testing the field's concatenated vector. It runs for the page
+ * being returned only. Written with `"recipes"."…"` by hand like the builder.
+ */
+export async function recipeSearchMatches(
+  ids: string[],
+  search: string | undefined,
+  searchFields: SearchField[]
+): Promise<Map<string, LibraryMatchDTO>> {
+  const terms = search ? searchTsqueryTerms(search) : null;
+  const matches = new Map<string, LibraryMatchDTO>();
+
+  if (!terms || ids.length === 0 || searchFields.length === 0) return matches;
+
+  const query = sql`to_tsquery('simple', ${terms})`;
+  const inScope = (field: SearchField) => searchFields.includes(field);
+  const idList = sql.join(
+    ids.map((id) => sql`${id}::uuid`),
+    sql`, `
+  );
+
+  const result = await db.execute(sql`
+    SELECT "recipes"."id" AS id,
+      ${
+        inScope("title")
+          ? sql`to_tsvector('simple', coalesce("recipes"."name", '')) @@ ${query}`
+          : sql`false`
+      } AS title_hit,
+      ${
+        inScope("tags")
+          ? sql`(
+              SELECT match_tag.name
+              FROM ${recipeTags} match_rt
+              INNER JOIN ${tags} match_tag ON match_rt.tag_id = match_tag.id
+              WHERE match_rt.recipe_id = "recipes"."id"
+                AND to_tsvector('simple', match_tag.name) @@ ${query}
+              ORDER BY match_rt."order", match_tag.name
+              LIMIT 1
+            )`
+          : sql`NULL::text`
+      } AS tag,
+      ${
+        inScope("ingredients")
+          ? sql`(
+              SELECT match_ri.name
+              FROM ${recipeIngredients} match_ri
+              WHERE match_ri.recipe_id = "recipes"."id"
+                AND to_tsvector('simple', match_ri.name) @@ ${query}
+              ORDER BY match_ri."order" NULLS LAST, match_ri.created_at, match_ri.id
+              LIMIT 1
+            )`
+          : sql`NULL::text`
+      } AS ingredient,
+      ${
+        inScope("description")
+          ? sql`CASE WHEN to_tsvector('simple', coalesce("recipes"."description", '')) @@ ${query}
+              THEN ts_headline('simple', "recipes"."description", ${query}, ${MATCH_SNIPPET_OPTIONS})
+            END`
+          : sql`NULL::text`
+      } AS description,
+      ${
+        inScope("steps")
+          ? sql`(
+              SELECT numbered.n || ':' || ts_headline('simple', numbered.step, ${query}, ${MATCH_SNIPPET_OPTIONS})
+              FROM (
+                SELECT match_step.step,
+                  row_number() OVER (ORDER BY match_step."order" NULLS LAST, match_step.created_at, match_step.id) AS n
+                FROM ${stepsTable} match_step
+                WHERE match_step.recipe_id = "recipes"."id"
+              ) numbered
+              WHERE to_tsvector('simple', numbered.step) @@ ${query}
+              ORDER BY numbered.n
+              LIMIT 1
+            )`
+          : sql`NULL::text`
+      } AS step
+    FROM ${recipes}
+    WHERE "recipes"."id" IN (${idList})
+  `);
+
+  const rows = (result as unknown as { rows: Record<string, string | boolean | null>[] }).rows;
+
+  for (const row of rows) {
+    const id = row.id as string;
+
+    if (row.title_hit === true) matches.set(id, { field: "title" });
+    else if (row.tag) matches.set(id, { field: "tags", text: row.tag as string });
+    else if (row.ingredient)
+      matches.set(id, { field: "ingredients", text: row.ingredient as string });
+    else if (row.description)
+      matches.set(id, { field: "description", text: plainSnippet(row.description as string) });
+    else if (row.step) {
+      const [number, ...snippet] = (row.step as string).split(":");
+
+      matches.set(id, {
+        field: "steps",
+        step: Number(number),
+        text: plainSnippet(snippet.join(":")),
+      });
+    }
+  }
+
+  return matches;
 }
 
 /**

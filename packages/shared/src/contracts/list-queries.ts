@@ -5,6 +5,8 @@ export type ListQueryFilters = Partial<ReturnType<typeof toRecipesQueryFilters>>
   limit?: number;
   /** Mobile Search only: an explicit sort orders a search instead of relevance. */
   sortBeatsRank?: boolean;
+  /** Mobile Search only: each result says which field matched. */
+  withMatch?: boolean;
 };
 
 /** The fields and defaults both list queries share. */
@@ -47,6 +49,7 @@ export function libraryListInput(filters: ListQueryFilters = {}) {
     type: filters.type ?? "all",
     // Left out unless set, so every other caller's input and cache key stay as they were.
     ...(filters.sortBeatsRank ? { sortBeatsRank: true } : {}),
+    ...(filters.withMatch ? { withMatch: true } : {}),
   };
 }
 

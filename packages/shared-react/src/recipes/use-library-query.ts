@@ -14,6 +14,7 @@ type LibraryFilters = RecipeFilters & {
   type?: LibraryTypeFilter;
   favoritesOnly?: boolean;
   sortBeatsRank?: boolean;
+  withMatch?: boolean;
 };
 
 type LibraryQueryResult = {

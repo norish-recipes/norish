@@ -162,8 +162,21 @@ export const CookbookListResultSchema = z.object({
  * discriminated union and every reader of them has to say which kind it is
  * drawing.
  */
+export const LibraryMatchSchema = z.object({
+  field: z.enum(["title", "tags", "ingredients", "description", "steps"]),
+  /** The tag, the ingredient line, or a snippet around the hit; none for the title. */
+  text: z.string().optional(),
+  /** The step's 1-based number, for a steps match. */
+  step: z.number().int().positive().optional(),
+});
+
 export const LibraryItemSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("recipe"), recipe: RecipeDashboardSchema }),
+  z.object({
+    kind: z.literal("recipe"),
+    recipe: RecipeDashboardSchema,
+    /** Why the recipe matched the search text; only when the query asked for it. */
+    match: LibraryMatchSchema.optional(),
+  }),
   z.object({ kind: z.literal("cookbook"), cookbook: CookbookSummarySchema }),
 ]);
 
@@ -185,6 +198,10 @@ export const LibraryListInputSchema = RecipeListInputSchema.extend({
     .boolean()
     .default(false)
     .describe("Let an explicit sort order a search instead of relevance."),
+  withMatch: z
+    .boolean()
+    .default(false)
+    .describe("Say, for each recipe a search returns, which field matched and where."),
 });
 
 export const LibraryListResultSchema = z.object({

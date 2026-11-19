@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import type {
   CookbookSummaryDTO,
   FilterMode,
+  LibraryMatchDTO,
   LibraryTypeFilter,
   RecipeCategory,
   RecipeDashboardDTO,
@@ -25,7 +26,12 @@ import {
 import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { pantryCoverageSql } from "./pantry-coverage";
-import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
+import {
+  buildOwnerPolicyCondition,
+  listDashboardRecipesByIds,
+  recipeSearchMatches,
+  recipeSearchSql,
+} from "./recipes";
 
 export type LibraryListParams = {
   limit: number;
@@ -43,11 +49,13 @@ export type LibraryListParams = {
   type?: LibraryTypeFilter;
   /** An explicit sort orders a search too; only `none` still ranks. */
   sortBeatsRank?: boolean;
+  /** Say, for each recipe of a search, which field matched. */
+  withMatch?: boolean;
 };
 
 /** One row of the Library, discriminated by what kind of thing it is. */
 export type LibraryListItem =
-  | { kind: "recipe"; recipe: RecipeDashboardDTO }
+  | { kind: "recipe"; recipe: RecipeDashboardDTO; match?: LibraryMatchDTO }
   | { kind: "cookbook"; cookbook: CookbookSummaryDTO };
 
 /**
@@ -121,6 +129,7 @@ export async function listLibrary(
     pantryOnly,
     type = "all",
     sortBeatsRank = false,
+    withMatch = false,
   } = params;
 
   const searchSql = recipeSearchSql(search, searchFields);
@@ -254,12 +263,14 @@ export async function listLibrary(
   const page = rowsOf<{ kind: string; id: string; pantry_coverage: number | null }>(pageResult);
   const total = Number(rowsOf<{ total: number | string }>(totalResult)[0]?.total ?? 0);
 
-  const [recipeCards, cookbookCards] = await Promise.all([
-    listDashboardRecipesByIds(page.filter((row) => row.kind === "recipe").map((row) => row.id)),
+  const pageRecipeIds = page.filter((row) => row.kind === "recipe").map((row) => row.id);
+  const [recipeCards, cookbookCards, matches] = await Promise.all([
+    listDashboardRecipesByIds(pageRecipeIds),
     listCookbooksByIds(
       ctx,
       page.filter((row) => row.kind === "cookbook").map((row) => row.id)
     ),
+    withMatch ? recipeSearchMatches(pageRecipeIds, search, searchFields) : undefined,
   ]);
 
   const recipesById = new Map(recipeCards.map((recipe) => [recipe.id, recipe]));
@@ -271,6 +282,8 @@ export async function listLibrary(
 
       if (!recipe) return [];
 
+      const match = matches?.get(row.id);
+
       return [
         {
           kind: "recipe" as const,
@@ -278,6 +291,7 @@ export async function listLibrary(
             row.pantry_coverage === null
               ? recipe
               : { ...recipe, pantryCoverage: row.pantry_coverage },
+          ...(match ? { match } : {}),
         },
       ];
     }

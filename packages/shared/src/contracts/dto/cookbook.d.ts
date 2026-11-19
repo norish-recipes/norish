@@ -12,6 +12,7 @@ import type {
   LibraryItemSchema,
   LibraryListInputSchema,
   LibraryListResultSchema,
+  LibraryMatchSchema,
 } from "@norish/shared/contracts/zod";
 
 export type CookbookSummaryDTO = z.output<typeof CookbookSummarySchema>;
@@ -23,5 +24,6 @@ export type CookbookListResult = z.output<typeof CookbookListResultSchema>;
 export type CookbookMembershipInput = z.infer<typeof CookbookMembershipInputSchema>;
 export type CookbookMemberIdsInput = z.infer<typeof CookbookMemberIdsInputSchema>;
 export type LibraryItemDTO = z.output<typeof LibraryItemSchema>;
+export type LibraryMatchDTO = z.output<typeof LibraryMatchSchema>;
 export type LibraryListInput = z.input<typeof LibraryListInputSchema>;
 export type LibraryListResult = z.output<typeof LibraryListResultSchema>;

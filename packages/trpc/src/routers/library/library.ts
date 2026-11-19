@@ -32,6 +32,7 @@ const list = authedProcedure
       pantryOnly: input.pantryOnly,
       type: input.type,
       sortBeatsRank: input.sortBeatsRank,
+      withMatch: input.withMatch,
     });
 
     log.debug({ count: result.items.length, total: result.total }, "Listed the library");

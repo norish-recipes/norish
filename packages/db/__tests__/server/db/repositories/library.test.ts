@@ -22,11 +22,14 @@ import {
   ingredients,
   pantryIngredients,
   recipeRatings,
+  recipeTags,
+  tags as tagsTable,
 } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import {
   createTestRecipe,
+  createTestRecipeStep,
   createTestUser,
   getTestDb,
   insertTestRecipeLine,
@@ -552,6 +555,159 @@ describe("the Library union", () => {
 
         expect(titles(result.items), level).toContain("Left behind");
       }
+    });
+  });
+
+  describe("why a result matched", () => {
+    const ALL = ["title", "tags", "ingredients", "description", "steps"] as const;
+
+    /** One recipe with a hit for "basil" in each of the five fields, or in the ones named. */
+    async function seedBasil(hits: readonly (typeof ALL)[number][]) {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, {
+        name: hits.includes("title") ? "Basil pesto" : "Green sauce",
+        description: hits.includes("description")
+          ? "A bright sauce made with fresh basil leaves and pine nuts for pasta"
+          : "A bright sauce",
+      });
+
+      if (hits.includes("tags")) {
+        const [tag] = await getTestDb()
+          .insert(tagsTable)
+          .values({ name: "basil" })
+          .onConflictDoNothing()
+          .returning();
+
+        await getTestDb()
+          .insert(recipeTags)
+          .values({ recipeId: recipe.id, tagId: tag!.id, order: 0 });
+      }
+
+      if (hits.includes("ingredients")) {
+        await insertTestRecipeLine({ recipeId: recipe.id, name: "fresh basil leaves", order: "0" });
+      }
+
+      await createTestRecipeStep(recipe.id, "metric", { step: "Chop the onion", order: "0" });
+      await createTestRecipeStep(recipe.id, "metric", {
+        step: hits.includes("steps") ? "Pound the basil with salt" : "Stir well",
+        order: "1",
+      });
+
+      return recipe;
+    }
+
+    const matchOf = async (params: Partial<LibraryListParams>) => {
+      const result = await listLibrary(viewer(ownerId), {
+        ...base,
+        search: "basil",
+        withMatch: true,
+        ...params,
+      });
+      const [item] = result.items;
+
+      return item?.kind === "recipe" ? item.match : undefined;
+    };
+
+    it("reports the title without text", async () => {
+      await seedBasil(["title"]);
+
+      expect(await matchOf({ searchFields: [...ALL] })).toEqual({ field: "title" });
+    });
+
+    it("reports the tag", async () => {
+      await seedBasil(["tags"]);
+
+      expect(await matchOf({ searchFields: [...ALL] })).toEqual({ field: "tags", text: "basil" });
+    });
+
+    it("reports the ingredient line as written", async () => {
+      await seedBasil(["ingredients"]);
+
+      expect(await matchOf({ searchFields: [...ALL] })).toEqual({
+        field: "ingredients",
+        text: "fresh basil leaves",
+      });
+    });
+
+    it("reports a snippet of the description around the hit", async () => {
+      await seedBasil(["description"]);
+
+      const match = await matchOf({ searchFields: [...ALL] });
+
+      expect(match?.field).toBe("description");
+      expect(match?.text).toContain("basil");
+      expect(match?.text).not.toContain("<");
+    });
+
+    it("reports the step with its number", async () => {
+      await seedBasil(["steps"]);
+
+      const match = await matchOf({ searchFields: [...ALL] });
+
+      expect(match).toMatchObject({ field: "steps", step: 2 });
+      expect(match?.text).toContain("basil");
+    });
+
+    it("prefers title, then tag, ingredient, description, step", async () => {
+      await seedBasil([...ALL]);
+
+      const order: [readonly (typeof ALL)[number][], string][] = [
+        [ALL, "title"],
+        [ALL.slice(1), "tags"],
+        [ALL.slice(2), "ingredients"],
+        [ALL.slice(3), "description"],
+        [ALL.slice(4), "steps"],
+      ];
+
+      for (const [fields, expected] of order) {
+        expect((await matchOf({ searchFields: [...fields] }))?.field).toBe(expected);
+      }
+    });
+
+    it("ignores a hit outside the Search Scope and reports the next one in it", async () => {
+      await seedBasil(["title", "ingredients", "steps"]);
+
+      expect((await matchOf({ searchFields: ["ingredients", "steps"] }))?.field).toBe(
+        "ingredients"
+      );
+      expect((await matchOf({ searchFields: ["description", "steps"] }))?.field).toBe("steps");
+    });
+
+    it("gives every recipe the search returns a match, matching by prefix too", async () => {
+      await seedBasil(["ingredients"]);
+
+      const result = await listLibrary(viewer(ownerId), {
+        ...base,
+        search: "bas",
+        searchFields: [...ALL],
+        withMatch: true,
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items.every((item) => item.kind === "recipe" && item.match)).toBe(true);
+    });
+
+    it("carries no match without text, without the flag, or on a cookbook", async () => {
+      await seedBasil(["title"]);
+      await createCookbook({ userId: ownerId, title: "Basil book" });
+
+      const noText = await listLibrary(viewer(ownerId), { ...base, withMatch: true });
+      const noFlag = await listLibrary(viewer(ownerId), { ...base, search: "basil" });
+      const both = await listLibrary(viewer(ownerId), {
+        ...base,
+        search: "basil",
+        withMatch: true,
+      });
+
+      for (const result of [noText, noFlag]) {
+        expect(result.items.some((item) => "match" in item)).toBe(false);
+      }
+
+      expect(both.items.map((item) => [item.kind, "match" in item])).toEqual([
+        ["cookbook", false],
+        ["recipe", true],
+      ]);
     });
   });
 });
