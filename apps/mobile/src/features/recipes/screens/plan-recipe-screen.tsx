@@ -1,5 +1,5 @@
 import React, { useDeferredValue, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
 import { IconButton } from "@/components/icon-button";
@@ -7,7 +7,7 @@ import { Loader } from "@/components/loader";
 import { PlanPicker } from "@/components/plan-block";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
-import { SliceHairline } from "@/components/slice-row";
+import { SliceHairline, sliceRowClass } from "@/components/slice-row";
 import { asSlot } from "@/lib/slot-segments";
 import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -24,7 +24,6 @@ import {
 } from "@norish/shared-react/recipes";
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
-import { pickRowClass } from "../components/pick-row";
 import { usePlanExit } from "../hooks/use-plan-exit";
 
 const SKELETON_ROWS = [0, 1, 2, 3];
@@ -122,7 +121,7 @@ export function PlanRecipeScreen() {
               {isLoading ? (
                 SKELETON_ROWS.map((row) => (
                   <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
-                    <Skeleton className="size-11 rounded-xl" />
+                    <Skeleton className="size-10 rounded-xl" />
                     <Skeleton className="h-4 w-40 rounded-md" />
                   </View>
                 ))
@@ -138,11 +137,11 @@ export function PlanRecipeScreen() {
         data={recipes}
         keyExtractor={(recipe) => recipe.id}
         renderItem={({ item: recipe, index }) => (
-          <Button
+          <Pressable
             accessibilityLabel={recipe.name}
-            className={`h-auto justify-start rounded-none ${pickRowClass({ first: false, last: index === recipes.length - 1 })}`}
+            accessibilityRole="button"
+            className={sliceRowClass({ first: false, last: index === recipes.length - 1 }, true)}
             testID={`plan-recipe-${recipe.id}`}
-            variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
           >
             <SliceHairline tall first={false} />
@@ -155,7 +154,7 @@ export function PlanRecipeScreen() {
               label={intl.formatMessage({ id: "common.actions.add" })}
               onPress={() => planRecipe(recipe, slot)}
             />
-          </Button>
+          </Pressable>
         )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.6}

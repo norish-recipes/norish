@@ -2,7 +2,6 @@ import React from "react";
 import { Text, View } from "react-native";
 import { IconButton } from "@/components/icon-button";
 import { SheetInput } from "@/components/sheet-input";
-import { SliceHairline } from "@/components/slice-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { TextField, useThemeColor } from "heroui-native";
@@ -11,7 +10,7 @@ import { useIntl } from "react-intl";
 import { useCookbookMembership } from "@norish/shared-react/recipes";
 
 import { CookbookCover } from "../components/cookbook-cover";
-import { PickRow, pickRowClass } from "../components/pick-row";
+import { PickRow } from "../components/pick-row";
 import { PickSheet } from "../components/pick-sheet";
 
 /** Add to cookbook: tick the cookbooks the recipe belongs in, or ask for a new one, then Save. */
@@ -85,29 +84,25 @@ export function AddToCookbookScreen() {
                 String(item.kind === "pending" ? item.entry.key : item.cookbook.id),
               renderRow: (item, position) =>
                 item.kind === "pending" ? (
-                  <View
-                    className={pickRowClass(position)}
+                  <PickRow
+                    media={
+                      <View className="bg-thumb size-10 items-center justify-center rounded-xl">
+                        <Ionicons color={muted} name="book-outline" size={20} />
+                      </View>
+                    }
+                    position={position}
+                    subtitle={intl.formatMessage({ id: "recipes.cookbooks.willBeCreated" })}
                     testID={`add-to-cookbook-pending-${item.entry.key}`}
-                  >
-                    <SliceHairline tall first={position.first} />
-                    <View className="bg-thumb size-10 items-center justify-center rounded-xl">
-                      <Ionicons color={muted} name="book-outline" size={20} />
-                    </View>
-                    <View className="min-w-0 flex-1">
-                      <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
-                        {item.entry.title}
-                      </Text>
-                      <Text className="text-muted text-[13px]">
-                        {intl.formatMessage({ id: "recipes.cookbooks.willBeCreated" })}
-                      </Text>
-                    </View>
-                    <IconButton
-                      icon="close"
-                      label={intl.formatMessage({ id: "common.actions.remove" })}
-                      testID={`add-to-cookbook-unstage-${item.entry.key}`}
-                      onPress={() => unstage(item.entry.key)}
-                    />
-                  </View>
+                    title={item.entry.title}
+                    trailing={
+                      <IconButton
+                        icon="close"
+                        label={intl.formatMessage({ id: "common.actions.remove" })}
+                        testID={`add-to-cookbook-unstage-${item.entry.key}`}
+                        onPress={() => unstage(item.entry.key)}
+                      />
+                    }
+                  />
                 ) : (
                   <PickRow
                     media={

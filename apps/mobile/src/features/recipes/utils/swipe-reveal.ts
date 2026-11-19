@@ -2,6 +2,7 @@
 export const FULL_SWIPE_OVERSHOOT = 64;
 // Room a full swipe leaves at the screen's left edge, for a finger that starts on the card's right.
 const FULL_SWIPE_EDGE = 64;
+
 // How far back past the full swipe a finger must go to leave it, so jitter on the line ticks once.
 export const FULL_SWIPE_HYSTERESIS = 16;
 // The least a full swipe goes past the open width, however little room the card leaves.
