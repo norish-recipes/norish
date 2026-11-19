@@ -64,7 +64,7 @@ export function FoodScreen() {
             />
           </CardRow>
           {keeps && onTheList ? (
-            <CardRow label={intl.formatMessage({ id: "navbar.nav.groceries" })}>
+            <CardRow label={intl.formatMessage({ id: "groceries.page.title" })}>
               <OnTheListChip />
             </CardRow>
           ) : null}
