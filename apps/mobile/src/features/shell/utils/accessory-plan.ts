@@ -1,3 +1,4 @@
+import type { GroceriesSection } from "@/lib/groceries-section";
 import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
@@ -21,8 +22,6 @@ export type AccessoryPlan = { add: Action; capsule: boolean };
 
 // Recipes is every other path.
 const PATH_TABS = ["groceries", "calendar"] as const;
-// The Pantry and the sheets it opens (`/groceries/pantry` prefixes the add sheet).
-const PANTRY_PATHS = [TAB_ROUTES.groceries.pantry, TAB_ROUTES.groceries.food];
 
 const TAB_ACTIONS: Record<(typeof PATH_TABS)[number], Action> = {
   groceries: {
@@ -84,8 +83,6 @@ const cookAction = (recipeId: string): Action => ({
   route: cookModeRoute(recipeId),
 });
 
-const onPantry = (path: string) => PANTRY_PATHS.some((route) => path.startsWith(route));
-
 const tabOf = (path: string) => PATH_TABS.find((tab) => path.startsWith(TAB_ROUTES[tab].root));
 
 /** The tab `path` is on: its own first segment, Recipes for the library, its pages and sheets. */
@@ -96,6 +93,11 @@ export function shellTab(path: string) {
     ? first
     : "recipes";
 }
+
+/** The tab page shown at `path`: itself on a tab, else the last one, under a root sheet such as the
+ * timers, so the accessory keeps that page's action while the sheet opens and closes. */
+export const tabPage = (path: string, onTab: boolean, lastTabPage: string) =>
+  onTab ? path : lastTabPage;
 
 /** The screen the accessory is for at `path`, whose recipe is `recipeId`: the recipe's once its page
  * is shown with it, until then the last path that was not a recipe's, on the Recipes tab. */
@@ -112,18 +114,19 @@ export function accessoryScreen(
   return { path: tabOf(lastNonRecipePath) ? TAB_ROUTES.recipes.root : lastNonRecipePath };
 }
 
-/** The accessory for `screen`: Cook on a recipe, Add to pantry on the Pantry, else the tab's own
- * action; `editableCookbook` is the cookbook on screen when the Reader may edit it. */
+/** The accessory for `screen`: Cook on a recipe, Add to pantry while the Groceries page shows the
+ * Pantry (`groceries`, sheets too), else the tab's own; `editableCookbook` is one the Reader may edit. */
 export function accessoryPlan(
   { path, recipeId }: AccessoryScreen,
   hasTimers: boolean,
   lens: LibraryTypeFilter,
-  editableCookbook: string | null = null
+  editableCookbook: string | null = null,
+  groceries: GroceriesSection = "list"
 ): AccessoryPlan {
   const tab = tabOf(path);
   const add = recipeId
     ? cookAction(recipeId)
-    : onPantry(path)
+    : tab === "groceries" && groceries === "pantry"
       ? ADD_TO_PANTRY
       : tab
         ? TAB_ACTIONS[tab]

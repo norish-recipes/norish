@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { ShellAccessory } from "@/features/shell/components/shell-accessory";
-import { accessoryPlan, accessoryScreen, shellTab } from "@/features/shell/utils/accessory-plan";
+import {
+  accessoryPlan,
+  accessoryScreen,
+  shellTab,
+  tabPage,
+} from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { useGroceriesSection } from "@/lib/groceries-section";
 import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
 import { TabAccessoryPlacementProbe } from "@/lib/tab-accessory-placement";
 import { useTabBarHidden } from "@/lib/tab-bar-visibility";
 import { cookbookIdOf, recipeIdOf, TAB_ROUTES } from "@/lib/tab-routes";
-import { usePathname } from "expo-router";
+import { usePathname, useSegments } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";
 
@@ -25,25 +31,31 @@ export function ShellTabs() {
   const path = usePathname();
   const hidden = useTabBarHidden();
   const hasTimers = useTimerStore((state) => state.timers.length > 0);
-  const recipeId = recipeIdOf(path);
+  // A root sheet (the timers, Add recipe, the editor) is outside the tabs, over the page it opened on.
+  const onTab = useSegments()[0] === "(tabs)";
+  const [lastTabPage, setLastTabPage] = useState(onTab ? path : TAB_ROUTES.recipes.root);
+  const page = tabPage(path, onTab, lastTabPage);
+  const recipeId = recipeIdOf(page);
   // A link straight to a recipe has the list under it.
   const [lastNonRecipePath, setLastNonRecipePath] = useState(() =>
-    recipeId ? TAB_ROUTES.recipes.root : path
+    recipeId ? TAB_ROUTES.recipes.root : page
   );
   const shown = useShownRecipe();
   const lens = useLibraryLens();
+  const groceries = useGroceriesSection();
   const { recipe } = useRecipeQuery(shown);
   // A loading or missing recipe keeps the last other screen's action.
-  const screen = accessoryScreen(path, recipeId, lastNonRecipePath, recipe ? shown : null);
+  const screen = accessoryScreen(page, recipeId, lastNonRecipePath, recipe ? shown : null);
   const { cookbook } = useCookbookQuery(cookbookIdOf(screen.path) ?? "");
   const { canEdit } = useOwnerRights();
   const plan = accessoryPlan(
     screen,
     hasTimers,
     lens,
-    cookbook && canEdit(cookbook) ? cookbook.id : null
+    cookbook && canEdit(cookbook) ? cookbook.id : null,
+    groceries
   );
-  const tab = shellTab(path);
+  const tab = shellTab(page);
   // UIKit keeps one minimised state for every tab: a switch holds the bar expanded through the
   // switch, after which it follows the new tab's list.
   const [barTab, setBarTab] = useState(tab);
@@ -54,7 +66,8 @@ export function ShellTabs() {
     return () => clearTimeout(settle);
   }, [tab]);
 
-  if (!recipeId && path !== lastNonRecipePath) setLastNonRecipePath(path);
+  if (page !== lastTabPage) setLastTabPage(page);
+  if (!recipeId && page !== lastNonRecipePath) setLastNonRecipePath(page);
 
   return (
     <NativeTabs
