@@ -517,10 +517,10 @@ One glass rule, one panel anatomy, native large titles on the tab roots, our own
 
 ### Drag
 
-- Headings and stores never move while dragging. `react-native-reorderable-list` goes; `DragList` keeps its interface (`rows`, headings, `onDrop`) and the FlatList stays virtualised, with our own drag on Gesture Handler and Reanimated, modelled on web:
+- Rows part while dragging (2026-11-19, Mike: "like web"); headings shift only to make room. `react-native-reorderable-list` goes; `DragList` keeps its interface (`rows`, headings, `onDrop`) and the FlatList stays virtualised, with our own drag on Gesture Handler and Reanimated, modelled on web:
   - ~250 ms hold decided on the UI thread, haptic on lift.
   - An opaque card with a shadow follows the finger; the source stays as a faded ghost.
-  - Nothing reflows until the drop: a line shows where the row lands and the target section is highlighted.
+  - The rows between part to make room and the faded source sits where the row lands (no drop line, 2026-11-19); the target section is outlined.
   - A light haptic on crossing into another section, medium on drop.
   - Frame-driven auto-scroll.
   - A drop on a heading lands in that section, so empty and collapsed sections take drops; a drop above the first heading snaps back. No remount on drop.
