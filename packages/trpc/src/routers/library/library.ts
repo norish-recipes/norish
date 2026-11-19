@@ -23,6 +23,7 @@ const list = authedProcedure
       search: input.search,
       searchFields: input.searchFields,
       tags: input.tags,
+      ingredientIds: input.ingredientIds,
       filterMode: input.filterMode,
       sortMode: input.sortMode,
       minRating: input.minRating,

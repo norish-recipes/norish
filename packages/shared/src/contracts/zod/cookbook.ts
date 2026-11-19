@@ -205,6 +205,11 @@ export const LibraryListInputSchema = RecipeListInputSchema.extend({
     .default(false)
     .describe("Restrict to the caller's favourites. Recipes only."),
   pantryOnly: PantryOnlySchema,
+  ingredientIds: z
+    .array(z.string().uuid())
+    .max(20)
+    .optional()
+    .describe("Keep recipes with a line naming each Ingredient, or a kind of it. Recipes only."),
   sortBeatsRank: z
     .boolean()
     .default(false)

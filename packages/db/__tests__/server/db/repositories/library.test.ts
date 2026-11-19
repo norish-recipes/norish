@@ -19,6 +19,7 @@ import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import {
   cookbooks as cookbooksTable,
+  ingredientAliases,
   ingredients,
   pantryIngredients,
   recipeRatings,
@@ -520,6 +521,162 @@ describe("the Library union", () => {
       expect(members.recipes.map((recipe) => [recipe.name, recipe.pantryCoverage])).toEqual(
         coverage
       );
+    });
+  });
+
+  describe("the ingredient filter", () => {
+    const FOODS = ["onion", "red onion", "pearl onion", "garlic", "chicken"] as const;
+
+    /** Onion > red onion > pearl onion, garlic and chicken apart; one recipe per case. */
+    async function seedFoods() {
+      await deleteRecipeById(baseRecipeId);
+
+      const resolved = await resolveIngredients([...FOODS], { userId: ownerId });
+      const food = Object.fromEntries(FOODS.map((name, i) => [name, resolved[i]!]));
+      const db = getTestDb();
+
+      for (const [child, parent] of [
+        ["red onion", "onion"],
+        ["pearl onion", "red onion"],
+      ] as const) {
+        await db
+          .update(ingredients)
+          .set({ parentId: food[parent]!.ingredientId })
+          .where(eq(ingredients.id, food[child]!.ingredientId));
+      }
+
+      async function recipe(name: string, foods: (typeof FOODS)[number][], aliasIds?: string[]) {
+        const made = await createTestRecipe(ownerId, { name });
+
+        for (const [i, line] of foods.entries()) {
+          await insertTestRecipeLine({ recipeId: made.id, name: line, order: String(i) }, [
+            aliasIds?.[i] ?? food[line]!.aliasId,
+          ]);
+        }
+
+        return made;
+      }
+
+      return { food, recipe };
+    }
+
+    async function tag(recipeIds: string[], name: string) {
+      const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
+
+      await getTestDb()
+        .insert(recipeTags)
+        .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+    }
+
+    const named = async (params: Partial<LibraryListParams>) =>
+      titles((await listLibrary(viewer(ownerId), { limit: 50, type: "recipes", ...params })).items)
+        .slice()
+        .sort();
+
+    it("keeps recipes naming the Ingredient or any descendant, never an ancestor", async () => {
+      const { food, recipe } = await seedFoods();
+
+      await recipe("Onion soup", ["onion"]);
+      await recipe("Red salad", ["red onion"]);
+      await recipe("Pearl stew", ["pearl onion"]);
+      await recipe("Garlic bread", ["garlic"]);
+
+      expect(await named({ ingredientIds: [food.onion!.ingredientId] })).toEqual([
+        "Onion soup",
+        "Pearl stew",
+        "Red salad",
+      ]);
+      expect(await named({ ingredientIds: [food["red onion"]!.ingredientId] })).toEqual([
+        "Pearl stew",
+        "Red salad",
+      ]);
+      expect(await named({ ingredientIds: [food["pearl onion"]!.ingredientId] })).toEqual([
+        "Pearl stew",
+      ]);
+    });
+
+    it("finds a line reached through an alias of the Ingredient", async () => {
+      const { food, recipe } = await seedFoods();
+      const [alias] = await getTestDb()
+        .insert(ingredientAliases)
+        .values({
+          text: "spring onion",
+          fold: "spring onion",
+          ingredientId: food.onion!.ingredientId,
+        })
+        .returning();
+
+      await recipe("Spring bowl", ["onion"], [alias!.id]);
+
+      expect(await named({ ingredientIds: [food.onion!.ingredientId] })).toEqual(["Spring bowl"]);
+    });
+
+    it("returns none for an Ingredient no recipe names, and drops cookbooks", async () => {
+      const { food, recipe } = await seedFoods();
+
+      await recipe("Onion soup", ["onion"]);
+      await createCookbook({ userId: ownerId, title: "Chicken book" });
+
+      const result = await listLibrary(viewer(ownerId), {
+        limit: 50,
+        ingredientIds: [food.chicken!.ingredientId],
+      });
+
+      expect(result).toEqual({ items: [], total: 0 });
+    });
+
+    it("applies All and Any to tags and Ingredients together", async () => {
+      const { food, recipe } = await seedFoods();
+      await recipe("Onion soup", ["onion"]);
+      const redSalad = await recipe("Red salad", ["red onion"]);
+      const garlicBread = await recipe("Garlic bread", ["garlic"]);
+      await recipe("Onion and garlic", ["onion", "garlic"]);
+
+      await tag([redSalad.id, garlicBread.id], "vegan");
+
+      const onion = food.onion!.ingredientId;
+      const garlic = food.garlic!.ingredientId;
+
+      expect(await named({ tags: ["vegan"], ingredientIds: [onion], filterMode: "AND" })).toEqual([
+        "Red salad",
+      ]);
+      expect(await named({ tags: ["vegan"], ingredientIds: [onion], filterMode: "OR" })).toEqual([
+        "Garlic bread",
+        "Onion and garlic",
+        "Onion soup",
+        "Red salad",
+      ]);
+      expect(await named({ ingredientIds: [onion, garlic], filterMode: "AND" })).toEqual([
+        "Onion and garlic",
+      ]);
+      expect(await named({ ingredientIds: [onion, garlic], filterMode: "OR" })).toEqual([
+        "Garlic bread",
+        "Onion and garlic",
+        "Onion soup",
+        "Red salad",
+      ]);
+    });
+
+    it("answers a cycle in the parents instead of looping", async () => {
+      const { food, recipe } = await seedFoods();
+
+      await recipe("Pearl stew", ["pearl onion"]);
+      await getTestDb()
+        .update(ingredients)
+        .set({ parentId: food["pearl onion"]!.ingredientId })
+        .where(eq(ingredients.id, food.onion!.ingredientId));
+
+      expect(await named({ ingredientIds: [food.onion!.ingredientId] })).toEqual(["Pearl stew"]);
+    });
+
+    it("changes nothing without ids", async () => {
+      const { recipe } = await seedFoods();
+
+      await recipe("Onion soup", ["onion"]);
+
+      const plain = await listLibrary(viewer(ownerId), { limit: 50 });
+
+      expect(await listLibrary(viewer(ownerId), { limit: 50, ingredientIds: [] })).toEqual(plain);
     });
   });
 

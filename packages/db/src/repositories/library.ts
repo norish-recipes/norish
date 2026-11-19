@@ -25,6 +25,7 @@ import {
 } from "../schema";
 import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
+import { lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
 import {
   buildOwnerPolicyCondition,
@@ -39,6 +40,8 @@ export type LibraryListParams = {
   search?: string;
   searchFields?: SearchField[];
   tags?: string[];
+  /** Ingredient ids: a recipe needs a line naming each (or one, under Any) or a kind of it. */
+  ingredientIds?: string[];
   filterMode?: FilterMode;
   sortMode?: SortOrder;
   minRating?: number;
@@ -79,6 +82,7 @@ function hasRecipeOnlyFilter(params: LibraryListParams): boolean {
     params.maxCookingTime !== undefined ||
     (params.categories?.length ?? 0) > 0 ||
     (params.tags?.length ?? 0) > 0 ||
+    (params.ingredientIds?.length ?? 0) > 0 ||
     params.favoritesOnly === true ||
     params.pantryOnly === true
   );
@@ -120,6 +124,7 @@ export async function listLibrary(
     search,
     searchFields = ["title", "ingredients"],
     tags,
+    ingredientIds,
     filterMode = "AND",
     sortMode = "dateDesc",
     minRating,
@@ -186,6 +191,9 @@ export async function listLibrary(
       )`);
     }
 
+    // Tags and Ingredients are one All/Any group: every one of them, or at least one.
+    const group: SQL[] = [];
+
     if (tags?.length) {
       const normalized = tags.map((tag) => tag.toLowerCase());
       const required = filterMode === "AND" ? normalized.length : 1;
@@ -197,13 +205,24 @@ export async function listLibrary(
         sql`, `
       );
 
-      conditions.push(sql`(
+      group.push(sql`(
         SELECT COUNT(DISTINCT lower(filter_tag.name))
         FROM ${recipeTags} AS filter_rt
         INNER JOIN ${tagsTable} AS filter_tag ON filter_rt.tag_id = filter_tag.id
         WHERE filter_rt.recipe_id = "recipes"."id"
           AND lower(filter_tag.name) IN (${nameList})
       ) >= ${required}`);
+    }
+
+    for (const id of new Set(ingredientIds)) {
+      group.push(sql`EXISTS (
+        SELECT 1 FROM recipe_ingredients filter_line
+        WHERE filter_line.recipe_id = "recipes"."id" AND ${lineNamesKindSql("filter_line", [id])}
+      )`);
+    }
+
+    if (group.length) {
+      conditions.push(sql`(${sql.join(group, filterMode === "AND" ? sql` AND ` : sql` OR `)})`);
     }
 
     branches.push(sql`
