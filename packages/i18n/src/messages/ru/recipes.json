@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}",
     "noMatch": "Нет рецептов по запросу «{text}»",
     "searchAllFields": "Искать во всех полях",
-    "filtersOn": "Фильтры, включено: {count}"
+    "filtersOn": "Фильтры, включено: {count}",
+    "matchTitle": "В названии",
+    "matchTag": "Тег:",
+    "matchIngredient": "Ингредиент:",
+    "matchStep": "Шаг {number}:"
   }
 }

@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# рецепта} other {# рецепти}}",
     "noMatch": "Няма рецепти за „{text}“",
     "searchAllFields": "Търсене във всички полета",
-    "filtersOn": "Филтри, включени: {count}"
+    "filtersOn": "Филтри, включени: {count}",
+    "matchTitle": "В заглавието",
+    "matchTag": "Таг:",
+    "matchIngredient": "Съставка:",
+    "matchStep": "Стъпка {number}:"
   }
 }

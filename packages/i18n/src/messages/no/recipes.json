@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
     "noMatch": "Ingen oppskrifter samsvarer med «{text}»",
     "searchAllFields": "Søk i alle felt",
-    "filtersOn": "Filtre, {count} på"
+    "filtersOn": "Filtre, {count} på",
+    "matchTitle": "I tittelen",
+    "matchTag": "Tagg:",
+    "matchIngredient": "Ingrediens:",
+    "matchStep": "Trinn {number}:"
   }
 }

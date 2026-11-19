@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# recept} other {# recept}}",
     "noMatch": "Inga recept matchar ”{text}”",
     "searchAllFields": "Sök i alla fält",
-    "filtersOn": "Filter, {count} aktiva"
+    "filtersOn": "Filter, {count} aktiva",
+    "matchTitle": "I titeln",
+    "matchTag": "Tagg:",
+    "matchIngredient": "Ingrediens:",
+    "matchStep": "Steg {number}:"
   }
 }

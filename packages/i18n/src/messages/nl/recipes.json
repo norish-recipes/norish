@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# recept} other {# recepten}}",
     "noMatch": "Geen recepten met “{text}”",
     "searchAllFields": "Zoek in alle velden",
-    "filtersOn": "Filters, {count} aan"
+    "filtersOn": "Filters, {count} aan",
+    "matchTitle": "In de titel",
+    "matchTag": "Tag:",
+    "matchIngredient": "Ingrediënt:",
+    "matchStep": "Stap {number}:"
   }
 }

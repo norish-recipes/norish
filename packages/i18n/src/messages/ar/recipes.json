@@ -565,6 +565,10 @@
     "count": "{count, plural, zero {# وصفة} one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}",
     "noMatch": "لا توجد وصفات تطابق «{text}»",
     "searchAllFields": "البحث في كل الحقول",
-    "filtersOn": "عوامل التصفية، {count} مفعّلة"
+    "filtersOn": "عوامل التصفية، {count} مفعّلة",
+    "matchTitle": "في العنوان",
+    "matchTag": "وسم:",
+    "matchIngredient": "المكوّن:",
+    "matchStep": "الخطوة {number}:"
   }
 }

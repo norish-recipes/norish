@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# recette} other {# recettes}}",
     "noMatch": "Aucune recette pour « {text} »",
     "searchAllFields": "Chercher dans tous les champs",
-    "filtersOn": "Filtres, {count} actifs"
+    "filtersOn": "Filtres, {count} actifs",
+    "matchTitle": "Dans le titre",
+    "matchTag": "Tag :",
+    "matchIngredient": "Ingrédient :",
+    "matchStep": "Étape {number} :"
   }
 }

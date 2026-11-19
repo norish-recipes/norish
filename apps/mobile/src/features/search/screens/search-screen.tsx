@@ -41,6 +41,7 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
   // Recipes only, and an explicit sort beats rank; nothing is read until Results show.
   const list = useLibraryList({
     sortBeatsRank: true,
+    withMatch: true,
     filters,
     enabled: showsResults({ ...input, resultCount: null }),
   });
@@ -102,8 +103,10 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           }
           isFetchingNextPage={list.isFetchingNextPage}
           isLoading={list.isLoading}
+          matches={list.matches}
           noResults={noResults}
           recipes={list.recipes}
+          search={filters.rawInput.trim()}
           scroll={scroll}
           testID="search-results"
           onEndReached={list.loadMore}

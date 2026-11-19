@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# receta} other {# recetas}}",
     "noMatch": "Ninguna receta coincide con «{text}»",
     "searchAllFields": "Buscar en todos los campos",
-    "filtersOn": "Filtros, {count} activos"
+    "filtersOn": "Filtros, {count} activos",
+    "matchTitle": "En el título",
+    "matchTag": "Etiqueta:",
+    "matchIngredient": "Ingrediente:",
+    "matchStep": "Paso {number}:"
   }
 }

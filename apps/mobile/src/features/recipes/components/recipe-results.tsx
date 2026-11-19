@@ -10,6 +10,8 @@ const FADE_HEIGHT = 120;
 /** Recipes as the Library's cards, paged: the list Search shows its results in. */
 export function RecipeResults({
   recipes,
+  matches,
+  search,
   header,
   isLoading,
   isFetchingNextPage,
@@ -31,7 +33,9 @@ export function RecipeResults({
           actions={actions}
           allergies={allergies}
           isFavorite={isFavorite(recipe.id)}
+          match={matches?.[recipe.id]}
           recipe={recipe}
+          search={search}
           variant={variant}
         />
       )}

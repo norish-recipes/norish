@@ -565,6 +565,10 @@
     "count": "{count, plural, other {레시피 #개}}",
     "noMatch": "“{text}”와(과) 일치하는 레시피 없음",
     "searchAllFields": "모든 필드에서 검색",
-    "filtersOn": "필터, {count}개 켜짐"
+    "filtersOn": "필터, {count}개 켜짐",
+    "matchTitle": "제목에서",
+    "matchTag": "태그:",
+    "matchIngredient": "재료:",
+    "matchStep": "{number}단계:"
   }
 }

@@ -10,7 +10,7 @@ import { lightImpact } from "@/lib/haptics";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useIntl } from "react-intl";
 
-import type { RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { LibraryMatchDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
@@ -25,6 +25,7 @@ import {
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
+import { HighlightedTitle, MatchText } from "./match-text";
 import { SwipeActions } from "./swipe-actions";
 import { TAG_GAP, TagChips } from "./tag-chips";
 
@@ -34,6 +35,9 @@ type Props = {
   isFavorite: boolean;
   allergies: string[];
   actions: CardActions;
+  /** While searching: why the recipe matched, shown in place of its description. */
+  match?: LibraryMatchDTO;
+  search?: string;
 };
 
 /** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions.
@@ -44,6 +48,8 @@ export const RecipeCard = memo(function RecipeCard({
   isFavorite,
   allergies,
   actions,
+  match,
+  search,
 }: Props) {
   const intl = useIntl();
   const { navigation } = usePlatform();
@@ -112,7 +118,14 @@ export const RecipeCard = memo(function RecipeCard({
             requireToFail={doubleTap}
             onPress={open}
           >
-            <Card facts={facts} isFavorite={isFavorite} photoGesture={doubleTap} recipe={recipe} />
+            <Card
+              facts={facts}
+              isFavorite={isFavorite}
+              match={match}
+              photoGesture={doubleTap}
+              recipe={recipe}
+              search={search}
+            />
           </PressTap>
         </CardMenu>
       </View>
@@ -126,7 +139,24 @@ type CardProps = {
   isFavorite: boolean;
   /** The double tap the photo owns. */
   photoGesture: ReturnType<typeof useTapGesture>;
+  match?: LibraryMatchDTO;
+  search?: string;
 };
+
+/** The recipe's title and the line under it: the match while searching, else the description. */
+function titleAndLine({ recipe, facts, match, search }: CardProps) {
+  if (!match || !search) return { title: recipe.name, line: facts.description };
+
+  return {
+    title:
+      match.field === "title" ? (
+        <HighlightedTitle name={recipe.name} search={search} />
+      ) : (
+        recipe.name
+      ),
+    line: <MatchText match={match} search={search} />,
+  };
+}
 
 function DoubleTapPhoto({
   gesture,
@@ -144,8 +174,10 @@ function DoubleTapPhoto({
   );
 }
 
-function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
-  const { description, tagNames, allergySet, timeLabel, servings } = facts;
+function RowCard(props: CardProps) {
+  const { recipe, facts, isFavorite, photoGesture } = props;
+  const { tagNames, allergySet, timeLabel, servings } = facts;
+  const { title, line } = titleAndLine(props);
 
   return (
     <View className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]">
@@ -159,10 +191,10 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
           ellipsizeMode="tail"
           numberOfLines={1}
         >
-          {recipe.name}
+          {title}
         </Text>
         <Text className="text-muted text-sm" ellipsizeMode="tail" numberOfLines={1}>
-          {description}
+          {line}
         </Text>
         <View className="mt-auto flex-row overflow-hidden" style={{ gap: TAG_GAP }}>
           {timeLabel ? (
@@ -187,8 +219,10 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
   );
 }
 
-function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
-  const { description, tagNames, allergySet, timeLabel, servings } = facts;
+function GridCard(props: CardProps) {
+  const { recipe, facts, isFavorite, photoGesture } = props;
+  const { tagNames, allergySet, timeLabel, servings } = facts;
+  const { title, line } = titleAndLine(props);
 
   return (
     <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">
@@ -204,10 +238,10 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
       </DoubleTapPhoto>
       <View className="min-h-0 flex-1 px-3 pt-2.5 pb-3">
         <Text className="text-foreground text-sm leading-[19px] font-semibold" numberOfLines={2}>
-          {recipe.name}
+          {title}
         </Text>
         <Text className="text-muted mt-0.5 text-xs" numberOfLines={1}>
-          {description}
+          {line}
         </Text>
         <View className="border-border mt-auto flex-row gap-1 overflow-hidden border-t pt-2.5">
           {timeLabel ? (

@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# opskrift} other {# opskrifter}}",
     "noMatch": "Ingen opskrifter matcher “{text}”",
     "searchAllFields": "Søg i alle felter",
-    "filtersOn": "Filtre, {count} aktive"
+    "filtersOn": "Filtre, {count} aktive",
+    "matchTitle": "I titlen",
+    "matchTag": "Tag:",
+    "matchIngredient": "Ingrediens:",
+    "matchStep": "Trin {number}:"
   }
 }

@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}",
     "noMatch": "Brak przepisów pasujących do „{text}”",
     "searchAllFields": "Szukaj we wszystkich polach",
-    "filtersOn": "Filtry, włączone: {count}"
+    "filtersOn": "Filtry, włączone: {count}",
+    "matchTitle": "W tytule",
+    "matchTag": "Tag:",
+    "matchIngredient": "Składnik:",
+    "matchStep": "Krok {number}:"
   }
 }

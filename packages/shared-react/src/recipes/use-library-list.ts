@@ -1,5 +1,6 @@
 "use client";
 
+import type { LibraryMatchDTO } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
@@ -24,17 +25,23 @@ export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
 /**
  * The Library under the reader's filters, with its recipes in grid order. Until the stored
  * filters are applied it stays loading: the defaults would show recipes the reader filters away.
- * `sortBeatsRank` and `filters` (read instead of the store's) are mobile Search's; `enabled: false`
+ * `sortBeatsRank`, `withMatch` (each recipe of a search says why it matched, in `matches` by id) and `filters` (read instead of the store's) are mobile Search's; `enabled: false`
  * reads nothing.
  */
 export function useLibraryList({
   sortBeatsRank,
+  withMatch,
   enabled = true,
   filters,
-}: { sortBeatsRank?: boolean; enabled?: boolean; filters?: CanonicalRecipeFilters } = {}) {
+}: {
+  sortBeatsRank?: boolean;
+  withMatch?: boolean;
+  enabled?: boolean;
+  filters?: CanonicalRecipeFilters;
+} = {}) {
   const { queryFilters, isHydrated } = useLibraryQueryFilters(filters);
   const library = useLibraryQuery(
-    { ...queryFilters, sortBeatsRank },
+    { ...queryFilters, sortBeatsRank, withMatch },
     { enabled: isHydrated && enabled }
   );
 
@@ -42,6 +49,11 @@ export function useLibraryList({
     ...library,
     isLoading: library.isLoading || !isHydrated,
     recipes: library.items.flatMap((item) => (item.kind === "recipe" ? [item.recipe] : [])),
+    matches: Object.fromEntries(
+      library.items.flatMap((item) =>
+        item.kind === "recipe" && item.match ? [[item.recipe.id, item.match] as const] : []
+      )
+    ) as Record<string, LibraryMatchDTO>,
   };
 }
 

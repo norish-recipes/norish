@@ -565,6 +565,10 @@
     "count": "{count, plural, one {# resepti} other {# reseptiä}}",
     "noMatch": "Ei reseptejä haulle ”{text}”",
     "searchAllFields": "Hae kaikista kentistä",
-    "filtersOn": "Suodattimet, {count} käytössä"
+    "filtersOn": "Suodattimet, {count} käytössä",
+    "matchTitle": "Otsikossa",
+    "matchTag": "Tunniste:",
+    "matchIngredient": "Ainesosa:",
+    "matchStep": "Vaihe {number}:"
   }
 }

@@ -1,0 +1,97 @@
+import type { LibraryMatchDTO } from "@norish/shared/contracts";
+
+export type MatchSegment = { text: string; highlighted: boolean };
+
+/** What the card's line says: an i18n label (none for a snippet) and the matched text, split for highlighting. */
+export type MatchLine = {
+  labelId: string | null;
+  labelValues?: { number: number };
+  segments: MatchSegment[];
+};
+
+const foldChar = (char: string) => char.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/** The terms the server searched by: whitespace-split, tsquery characters dropped. */
+function searchTerms(search: string): string[] {
+  return search
+    .split(/\s+/)
+    .map((term) => foldChar(term.replace(/[&|!():<>*\\'"]/g, "")))
+    .filter((term) => term.length > 0);
+}
+
+/**
+ * `text` split around the places a search term starts a word, ignoring case and accents.
+ * A term that is nowhere literally (the server stems) leaves the text whole, unhighlighted.
+ */
+export function highlightSegments(text: string, search: string): MatchSegment[] {
+  let folded = "";
+  // For each folded code unit, where its original character starts and ends in `text`.
+  const starts: number[] = [];
+  const ends: number[] = [];
+  let at = 0;
+
+  for (const char of text) {
+    const piece = foldChar(char);
+
+    for (let i = 0; i < piece.length; i++) {
+      starts.push(at);
+      ends.push(at + char.length);
+    }
+    folded += piece;
+    at += char.length;
+  }
+
+  const marked: [number, number][] = [];
+
+  for (const term of searchTerms(search)) {
+    for (let from = folded.indexOf(term); from !== -1; from = folded.indexOf(term, from + 1)) {
+      const startsWord = from === 0 || !/[\p{L}\p{N}]/u.test(folded[from - 1]!);
+
+      if (startsWord) marked.push([starts[from]!, ends[from + term.length - 1]!]);
+    }
+  }
+
+  marked.sort((a, b) => a[0] - b[0]);
+
+  const segments: MatchSegment[] = [];
+  let cursor = 0;
+
+  for (const [start, end] of marked) {
+    if (end <= cursor) continue;
+    if (start > cursor) segments.push({ text: text.slice(cursor, start), highlighted: false });
+
+    const previous = segments.at(-1);
+    const piece = text.slice(Math.max(start, cursor), end);
+
+    if (previous?.highlighted) previous.text += piece;
+    else segments.push({ text: piece, highlighted: true });
+    cursor = end;
+  }
+
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), highlighted: false });
+
+  return segments.length > 0 ? segments : [{ text, highlighted: false }];
+}
+
+/** The match line the card shows in place of its description while searching. */
+export function matchLine(match: LibraryMatchDTO, search: string): MatchLine {
+  const text = match.text ?? "";
+  const segments = highlightSegments(text, search);
+
+  switch (match.field) {
+    case "title":
+      return { labelId: "recipes.search.matchTitle", segments: [] };
+    case "tags":
+      return { labelId: "recipes.search.matchTag", segments };
+    case "ingredients":
+      return { labelId: "recipes.search.matchIngredient", segments };
+    case "steps":
+      return {
+        labelId: "recipes.search.matchStep",
+        labelValues: { number: match.step ?? 1 },
+        segments,
+      };
+    case "description":
+      return { labelId: null, segments };
+  }
+}
