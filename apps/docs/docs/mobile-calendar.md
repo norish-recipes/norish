@@ -24,6 +24,10 @@ item, choose **Remove** from the header's **Actions** menu and confirm.
 
 ![A planned item sheet with date, slot and Save](/img/screenshots/mobile-calendar-item.png)
 
+To move an item from its menu, choose **Move**, select a slot and tap the plus
+button on a day card. Use the day strip above the cards to choose a day, then
+tap **Save** in the header.
+
 Hold an item to lift it, then drag it to another day. The day headings stay still. It keeps its slot and moves to the end of
 that slot. You can browse saved plans and make changes offline. Norish sends
 those changes when you reconnect.

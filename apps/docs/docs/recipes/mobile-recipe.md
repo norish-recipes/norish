@@ -9,10 +9,9 @@ Tap a recipe in your library to open it. The page shows its ingredients, steps,
 nutrition and other details. Use the heart to favourite it, the stars to rate it,
 or the menu to edit, share, plan or delete it.
 
-To share a public link, choose **Share link** from the menu, select when it
-expires and tap **Create link** in the sheet header. Under **Current links**, each row shows its
-status and expiry. Copy a newly created link, or use the row controls to revoke,
-reactivate or delete a link.
+To share a public link, choose **Share link** from the menu, choose an expiry from the menu row and tap **Create link** in the sheet header.
+Under **Current links**, each row shows its status and expiry. Copy or share a
+newly created link, or use the row controls to revoke, reactivate or delete a link.
 
 ![A recipe page with ingredients and steps](/img/screenshots/mobile-recipe-page.png)
 

@@ -16,6 +16,7 @@ Done section. When the list has no items, an empty card appears.
 
 Tap **Add items**, enter a grocery and choose its amount, Store and repeat as
 needed. Tap a grocery to edit it, including its Store, aisle, repeat and price.
+If a grocery came from a recipe, the edit sheet shows the recipe in a row.
 Use **Repeat** for groceries you buy regularly. To delete a grocery, choose
 **Delete** from the edit sheet's **Actions** menu.
 
@@ -24,8 +25,8 @@ Use **Repeat** for groceries you buy regularly. To delete a grocery, choose
 ## Stores and aisles
 
 Open **Manage stores** from the list settings to add, edit or delete Stores and
-name their aisles. Tap **Add store** in the sheet header to add a Store. Hold a
-Store or aisle to lift it, then drag to change its order. On the list, hold a
+name their aisles. Tap the plus button in the sheet header to add a Store, or tap
+a Store to edit it. Hold a Store or aisle to lift it, then drag to change its order. On the list, hold a
 grocery to lift it, then drag to reorder it or drop it on a heading to move it
 to that Store or aisle. Headings and other rows stay still while you drag. Norish remembers the aisle for that food at that Store.
 

@@ -68,10 +68,11 @@ that fit, followed by +N for any remaining tags.
 ![The Filters sheet with Apply and Clear filters in its header](/img/screenshots/mobile-recipes-filters.png)
 
 Swipe a recipe card to reveal actions that fan out for adding its ingredients to
-groceries, planning it or deleting it. A full swipe runs the first action.
+groceries, planning it or deleting it. A full swipe deletes the recipe after you confirm.
 Long-press for those actions, to favourite it or add it to a cookbook. Inside a
 cookbook, you can also remove it from the cookbook. Double-tap a recipe photo to
-favourite or unfavourite it. To plan a recipe, choose a day and meal slot.
+favourite or unfavourite it. To plan a recipe, choose a meal slot, then tap the
+plus button on a day card. The day strip above the cards lets you choose a day.
 
 When adding a recipe to groceries, adjust the servings and select the ingredients
 to add. Ingredients already in your pantry appear separately.
@@ -91,8 +92,8 @@ You can also long-press a cookbook card to add recipes, rename or delete it.
 Tap **Add recipe** and choose **From a link** or **From text**. If your server
 has AI enabled, **From photos** lets you choose photos or take a photo. A copied
 link, including one copied as text, can appear as **Import `host`** in the sheet.
-Tap it to import the link. Imports appear in the
-library while they are processing.
+Tap it to import the link. In **From text**, tap the info button to see the
+length limit. Imports appear in the library while they are processing.
 
 ![Add recipe sheet](/img/screenshots/mobile-add-recipe.png)
 
