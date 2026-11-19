@@ -32,3 +32,4 @@ Round 1 fixes:
 - 1-3: one `confirmOff` local, header title style/subtitle size/max width in `lib/header-title.ts` (used by both stacks and `ModalHeader`), test mock renamed to `header`.
 - 4-6: Product shows "Product" + store name; Move and Share subtitles are the item/recipe name (`RecipeSheetGate` `subtitle` is a boolean); `calendar.today.moveSubtitle` and `recipes.sharePanel.subtitle` removed from every locale (web did not read them).
 - 7-8: dropped subtitles the boards don't show (and the `name`/`title` route params only they read); `SheetRow`/`TITLE_INSET` deleted, add-to-groceries rows align with the card edge.
+- Exit gate on `05a010d99`: all six gates exit 0; Release build installed on Mike's iPhone 17 Pro.
