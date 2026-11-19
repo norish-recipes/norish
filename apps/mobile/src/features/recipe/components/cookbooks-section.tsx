@@ -31,7 +31,7 @@ export function CookbooksSection() {
           onPress={() =>
             router.push({
               pathname: "/add-to-cookbook",
-              params: { recipeId: recipe.id, name: recipe.name },
+              params: { recipeId: recipe.id },
             })
           }
         />

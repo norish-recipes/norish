@@ -36,14 +36,6 @@ export function NewCookbookScreen() {
       emptyId="recipes.cookbooks.noRecipesToAdd"
       name="new-cookbook"
       pick={pick}
-      subtitle={
-        pick.selected.length > 0
-          ? intl.formatMessage(
-              { id: "recipes.cookbooks.recipeCount" },
-              { count: pick.selected.length }
-            )
-          : undefined
-      }
       title={intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
     >
       <TextField>

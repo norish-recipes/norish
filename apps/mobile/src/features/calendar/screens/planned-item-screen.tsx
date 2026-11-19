@@ -73,7 +73,6 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
           confirmRemove(item)
         ),
       ]}
-      subtitle={recipeId ? undefined : (subtitle ?? undefined)}
       title={recipeId ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" }) : title}
     >
       <SheetBody>

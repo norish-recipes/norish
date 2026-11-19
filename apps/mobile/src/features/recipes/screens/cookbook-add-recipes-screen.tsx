@@ -38,7 +38,6 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
       }
       name="cookbook-add-recipes"
       pick={{ ...pick, recipes: addable }}
-      subtitle={cookbook.title}
       title={intl.formatMessage({ id: "recipes.cookbooks.addRecipes" })}
     />
   );
@@ -47,7 +46,7 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
 /** Add recipes: search what the cookbook does not hold, tick any number, then Add; inert without edit rights. */
 export function CookbookAddRecipesScreen() {
   const intl = useIntl();
-  const { cookbookId, title } = useLocalSearchParams<{ cookbookId: string; title?: string }>();
+  const { cookbookId } = useLocalSearchParams<{ cookbookId: string }>();
   const { cookbook } = useCookbookQuery(cookbookId ?? "");
   const { canEdit } = useOwnerRights();
 
@@ -58,7 +57,6 @@ export function CookbookAddRecipesScreen() {
       actions={{ confirm: { label: intl.formatMessage({ id: "common.actions.add" }) } }}
       emptyId="recipes.cookbooks.noRecipesToAdd"
       name="cookbook-add-recipes"
-      subtitle={title}
       title={intl.formatMessage({ id: "recipes.cookbooks.addRecipes" })}
     />
   );

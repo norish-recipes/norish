@@ -17,7 +17,7 @@ import { PickSheet } from "../components/pick-sheet";
 export function AddToCookbookScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const { recipeId, name } = useLocalSearchParams<{ recipeId: string; name?: string }>();
+  const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
   const [muted] = useThemeColor(["muted"] as const);
   const {
     cookbooks,
@@ -130,7 +130,6 @@ export function AddToCookbookScreen() {
             }
       }
       name="add-to-cookbook"
-      subtitle={name}
       title={intl.formatMessage({ id: "recipes.cookbooks.panelTitle" })}
     />
   );

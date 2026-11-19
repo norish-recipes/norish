@@ -42,10 +42,7 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
     plan: (recipe: Recipe) =>
       router.push({ pathname: "/plan", params: { recipeId: recipe.id, name: recipe.name } }),
     addToCookbook: (recipe: Recipe) =>
-      router.push({
-        pathname: "/add-to-cookbook",
-        params: { recipeId: recipe.id, name: recipe.name },
-      }),
+      router.push({ pathname: "/add-to-cookbook", params: { recipeId: recipe.id } }),
     canRemoveFromCookbook: cookbook ? canEdit(cookbook) : false,
     removeFromCookbook: (recipe: Recipe) => {
       if (!cookbook) return;
@@ -71,10 +68,7 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
       });
     },
     addRecipes: (cookbook: Cookbook) =>
-      router.push({
-        pathname: "/cookbook-add-recipes",
-        params: { cookbookId: cookbook.id, title: cookbook.title },
-      }),
+      router.push({ pathname: "/cookbook-add-recipes", params: { cookbookId: cookbook.id } }),
     renameCookbook: (cookbook: Cookbook) =>
       router.push({ pathname: "/cookbook-rename", params: { cookbookId: cookbook.id } }),
     deleteCookbook: (cookbook: Cookbook, onDeleted?: () => void) =>
