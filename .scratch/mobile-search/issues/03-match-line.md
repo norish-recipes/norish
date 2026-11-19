@@ -6,9 +6,15 @@
 
 **Status:** ready-for-agent
 
-- [ ] Server: `library.list` results carry `{ field, text }` when there is search text: title → no text; tag → the tag; ingredient → the line as written; description/step → a short snippet around the first hit (step with its number). Only fields in the Search Scope count. `recipeSearchSql` (`packages/db/src/repositories/recipes.ts:402-468`) computes the vector at query time; derive the match from the same terms rather than a second matcher.
-- [ ] Repository tests for each field, scope respected, and no match data without text.
-- [ ] Mobile: the line reads "In the title", "Tag: …", "Ingredient: …", "Step 3: …" or the snippet, with the hit highlighted (i18n); without search text the card shows its description as on the Recipes tab.
-- [ ] Gates green.
+- [x] Server: `library.list` results carry `{ field, text }` when there is search text: title → no text; tag → the tag; ingredient → the line as written; description/step → a short snippet around the first hit (step with its number). Only fields in the Search Scope count. `recipeSearchSql` (`packages/db/src/repositories/recipes.ts:402-468`) computes the vector at query time; derive the match from the same terms rather than a second matcher.
+- [x] Repository tests for each field, scope respected, and no match data without text.
+- [x] Mobile: the line reads "In the title", "Tag: …", "Ingredient: …", "Step 3: …" or the snippet, with the hit highlighted (i18n); without search text the card shows its description as on the Recipes tab.
+- [x] Gates green.
 
 ## Comments
+
+Implementation (2026-11-19):
+- Derived by `recipeSearchMatches` (`recipes.ts`): the same sanitised prefix-OR tsquery as `recipeSearchSql` (one shared `searchTsqueryTerms`), tested per tag, line and step; an OR query agrees with the field's concatenated vector. Snippets are one `ts_headline` fragment (6-14 words, markers stripped).
+- Computed only for the returned page and only with a new `withMatch` request flag, which only mobile Search sends (`useLibraryList({ withMatch })`), so web's query and cost are unchanged.
+- Shape: recipe items carry `match?: { field: "title"|"tags"|"ingredients"|"description"|"steps", text?, step? }`; `step` is the 1-based number, `text` for an ingredient is its `name` (the column the vector reads), title has neither.
+- Mobile: wording and highlighting are `features/recipes/utils/match-line.ts` (prefix-of-word, case/accent-insensitive; stemmed hits stay unhighlighted); `RecipeCard` takes `match` + `search`, the Recipes tab passes neither. Keys `recipes.search.match{Title,Tag,Ingredient,Step}` in all 18 locales. Grid cards show the line too; not seen on device.
