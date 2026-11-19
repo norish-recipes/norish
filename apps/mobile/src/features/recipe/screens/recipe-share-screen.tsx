@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { Share, Text, View } from "react-native";
-import { Card } from "@/components/card";
+import { Card, CardRow } from "@/components/card";
 import { Pill } from "@/components/pill";
 import { PillButton } from "@/components/pill-button";
 import { SectionLabel } from "@/components/section-label";
-import { SliceHairline } from "@/components/slice-row";
-import { Segmented } from "@/components/segmented";
 import { SheetScrollView } from "@/components/sheet";
+import { SliceHairline } from "@/components/slice-row";
+import { useTokenColor } from "@/hooks/use-token-color";
 import { useServerUrl } from "@/lib/network/server-url";
+import { Button, Host, Menu, RNHostView } from "@expo/ui/swift-ui";
+import { accessibilityIdentifier, accessibilityLabel } from "@expo/ui/swift-ui/modifiers";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams } from "expo-router";
 import { Skeleton } from "heroui-native";
@@ -136,23 +139,37 @@ function ShareBody({
   const recipe = useLoadedPageRecipe();
   const { shares, isLoading } = useRecipeSharesQuery(recipe.id);
   const t = useShareT();
+  const muted = useTokenColor("muted");
   const rows = shares.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
     <SheetScrollView contentClassName="gap-4">
-      <View className="gap-2">
-        <SectionLabel>{t("expiresAfter")}</SectionLabel>
-        <Segmented
-          segments={EXPIRIES.map((expiry) => ({
-            value: expiry,
-            label: t(`expiryOptions.${expiry}`),
-            testID: `recipe-share-expiry-${expiry}`,
-          }))}
-          testID="recipe-share-expiry"
-          value={expiresIn}
-          onChange={setExpiresIn}
-        />
-      </View>
+      <Card>
+        <Host matchContents={{ vertical: true }} style={{ alignSelf: "stretch" }}>
+          <Menu
+            label={
+              <RNHostView matchContents>
+                <CardRow first label={t("expiresAfter")} value={t(`expiryOptions.${expiresIn}`)}>
+                  <Ionicons color={muted} name="chevron-expand" size={16} />
+                </CardRow>
+              </RNHostView>
+            }
+            modifiers={[
+              accessibilityLabel(t("expiresAfter")),
+              accessibilityIdentifier("recipe-share-expiry"),
+            ]}
+          >
+            {EXPIRIES.map((expiry) => (
+              <Button
+                key={expiry}
+                label={t(`expiryOptions.${expiry}`)}
+                systemImage={expiry === expiresIn ? "checkmark" : undefined}
+                onPress={() => setExpiresIn(expiry)}
+              />
+            ))}
+          </Menu>
+        </Host>
+      </Card>
 
       {rows.length > 0 || isLoading ? <SectionLabel>{t("currentLinks")}</SectionLabel> : null}
       {isLoading ? (

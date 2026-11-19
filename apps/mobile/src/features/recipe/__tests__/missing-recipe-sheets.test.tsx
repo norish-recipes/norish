@@ -12,7 +12,16 @@ vi.mock("@/components/toggle-chip", () => ({ ToggleChip: () => null }));
 vi.mock("@/components/card", () => ({ Card: () => null }));
 vi.mock("@/components/pill", () => ({ Pill: () => null }));
 vi.mock("@/components/pill-button", () => ({ PillButton: () => null }));
-vi.mock("@/components/segmented", () => ({ Segmented: () => null }));
+vi.mock("@expo/ui/swift-ui", () => ({
+  Button: () => null,
+  Host: () => null,
+  Menu: () => null,
+  RNHostView: () => null,
+}));
+vi.mock("@expo/ui/swift-ui/modifiers", () => ({
+  accessibilityIdentifier: () => null,
+  accessibilityLabel: () => null,
+}));
 vi.mock("@/components/stepper", () => ({ Stepper: () => null }));
 vi.mock("@/components/servings-stepper", () => ({ useServingsStepper: () => ({}) }));
 vi.mock("react-native", () => ({
