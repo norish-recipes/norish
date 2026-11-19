@@ -68,7 +68,8 @@
     "sortByTitle": "Título",
     "sortByDate": "Fecha",
     "clearFilters": "Borrar filtros",
-    "minRating": "Valoración mínima"
+    "minRating": "Valoración mínima",
+    "minRatingStars": "Al menos {count} de 5"
   },
   "time": {
     "minutes": "min",

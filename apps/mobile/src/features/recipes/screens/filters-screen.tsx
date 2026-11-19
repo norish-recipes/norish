@@ -1,7 +1,8 @@
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { Segmented } from "@/components/segmented";
 import { Sheet, SheetScrollView } from "@/components/sheet";
+import { StarRating } from "@/components/star-rating";
 import { ToggleChip } from "@/components/toggle-chip";
 import { FilterSection } from "@/features/recipes/components/filter-section";
 import { useCategoryLabel } from "@/hooks/use-category-label";
@@ -19,9 +20,8 @@ const MODES: { value: FilterMode; label: string }[] = [
   { value: "OR", label: "common.filters.modeAny" },
 ];
 
-const STARS = [1, 2, 3, 4, 5];
-
-/** The Library's filters, web's less "Search in" (the Search tab owns search), applied together with Apply. */
+/** The Library's filters in web's order, less search and "Search in" (the Search tab owns search),
+ * applied together with Apply. */
 export function FiltersScreen() {
   const intl = useIntl();
   const categoryLabel = useCategoryLabel();
@@ -66,94 +66,6 @@ export function FiltersScreen() {
       title={intl.formatMessage({ id: "common.filters.title" })}
     >
       <SheetScrollView contentClassName="gap-3">
-        <FilterSection title={intl.formatMessage({ id: "common.filters.categories" })}>
-          <View className="flex-row flex-wrap gap-2">
-            {categories.map((category) => (
-              <ToggleChip
-                key={category}
-                active={draft.categories.includes(category)}
-                label={categoryLabel(category)}
-                testID={`filters-category-${category}`}
-                onPress={() => toggleCategory(category)}
-              />
-            ))}
-          </View>
-        </FilterSection>
-
-        <FilterSection title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
-          <View className="flex-row flex-wrap gap-2">
-            {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => (
-              <ToggleChip
-                key={value}
-                active={draft.maxCookingTime === value}
-                label={intl.formatMessage({ id: `common.filters.${labelKey}` })}
-                testID={`filters-time-${value}`}
-                onPress={() => toggleCookingTime(value)}
-              />
-            ))}
-          </View>
-        </FilterSection>
-
-        <FilterSection
-          title={intl.formatMessage({ id: "common.filters.tags" })}
-          trailing={
-            <Segmented
-              segments={MODES.map(({ value, label }) => ({
-                value,
-                label: intl.formatMessage({ id: label }),
-                testID: `filters-mode-${value}`,
-              }))}
-              size="compact"
-              testID="filters-mode"
-              value={draft.filterMode}
-              onChange={(value) => update({ filterMode: value })}
-            />
-          }
-        >
-          {tagsLoading ? (
-            <View className="flex-row flex-wrap gap-2">
-              {[72, 96, 64, 88].map((width) => (
-                <Skeleton key={width} className="h-9 rounded-full" style={{ width }} />
-              ))}
-            </View>
-          ) : (
-            <View className="flex-row flex-wrap gap-2">
-              {tags.map((tag) => (
-                <ToggleChip
-                  key={tag}
-                  active={draft.searchTags.includes(tag)}
-                  label={tag}
-                  testID={`filters-tag-${tag}`}
-                  onPress={() => toggleTag(tag)}
-                />
-              ))}
-            </View>
-          )}
-        </FilterSection>
-
-        {showRatings ? (
-          <FilterSection title={intl.formatMessage({ id: "common.filters.minRating" })}>
-            <View className="flex-row flex-wrap gap-2">
-              <ToggleChip
-                active={draft.minRating === null}
-                label={intl.formatMessage({ id: "common.filters.modeAny" })}
-                testID="filters-rating-any"
-                onPress={() => update({ minRating: null })}
-              />
-              {STARS.map((value) => (
-                <ToggleChip
-                  key={value}
-                  active={draft.minRating === value}
-                  icon="star"
-                  label={value === 5 ? "5" : `${value}+`}
-                  testID={`filters-rating-${value}`}
-                  onPress={() => update({ minRating: value })}
-                />
-              ))}
-            </View>
-          </FilterSection>
-        ) : null}
-
         <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
           <View className="flex-row flex-wrap gap-2">
             {(["title", "date"] as const).map((key) => {
@@ -182,6 +94,19 @@ export function FiltersScreen() {
           </View>
         </FilterSection>
 
+        <FilterSection title={intl.formatMessage({ id: "common.filters.mode" })}>
+          <Segmented
+            segments={MODES.map(({ value, label }) => ({
+              value,
+              label: intl.formatMessage({ id: label }),
+              testID: `filters-mode-${value}`,
+            }))}
+            testID="filters-mode"
+            value={draft.filterMode}
+            onChange={(value) => update({ filterMode: value })}
+          />
+        </FilterSection>
+
         {showFavorites ? (
           <FilterSection title={intl.formatMessage({ id: "common.filters.favorites" })}>
             <View className="flex-row">
@@ -196,6 +121,26 @@ export function FiltersScreen() {
           </FilterSection>
         ) : null}
 
+        {showRatings ? (
+          <FilterSection
+            title={intl.formatMessage({ id: "common.filters.minRating" })}
+            trailing={
+              draft.minRating === null ? null : (
+                <Text className="text-muted text-[13px] font-medium">{`${draft.minRating}+`}</Text>
+              )
+            }
+          >
+            <StarRating
+              labelFor={(count) =>
+                intl.formatMessage({ id: "common.filters.minRatingStars" }, { count })
+              }
+              testID="filters-rating"
+              value={draft.minRating}
+              onChange={(minRating) => update({ minRating })}
+            />
+          </FilterSection>
+        ) : null}
+
         <FilterSection title={intl.formatMessage({ id: "common.filters.pantry" })}>
           <View className="flex-row">
             <ToggleChip
@@ -206,6 +151,56 @@ export function FiltersScreen() {
               onPress={() => update({ showPantryOnly: !draft.showPantryOnly })}
             />
           </View>
+        </FilterSection>
+
+        <FilterSection title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
+          <View className="flex-row flex-wrap gap-2">
+            {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => (
+              <ToggleChip
+                key={value}
+                active={draft.maxCookingTime === value}
+                label={intl.formatMessage({ id: `common.filters.${labelKey}` })}
+                testID={`filters-time-${value}`}
+                onPress={() => toggleCookingTime(value)}
+              />
+            ))}
+          </View>
+        </FilterSection>
+
+        <FilterSection title={intl.formatMessage({ id: "common.filters.categories" })}>
+          <View className="flex-row flex-wrap gap-2">
+            {categories.map((category) => (
+              <ToggleChip
+                key={category}
+                active={draft.categories.includes(category)}
+                label={categoryLabel(category)}
+                testID={`filters-category-${category}`}
+                onPress={() => toggleCategory(category)}
+              />
+            ))}
+          </View>
+        </FilterSection>
+
+        <FilterSection title={intl.formatMessage({ id: "common.filters.tags" })}>
+          {tagsLoading ? (
+            <View className="flex-row flex-wrap gap-2">
+              {[72, 96, 64, 88].map((width) => (
+                <Skeleton key={width} className="h-9 rounded-full" style={{ width }} />
+              ))}
+            </View>
+          ) : (
+            <View className="flex-row flex-wrap gap-2">
+              {tags.map((tag) => (
+                <ToggleChip
+                  key={tag}
+                  active={draft.searchTags.includes(tag)}
+                  label={tag}
+                  testID={`filters-tag-${tag}`}
+                  onPress={() => toggleTag(tag)}
+                />
+              ))}
+            </View>
+          )}
         </FilterSection>
       </SheetScrollView>
     </Sheet>

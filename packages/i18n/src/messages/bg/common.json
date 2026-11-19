@@ -68,7 +68,8 @@
     "sortByTitle": "Заглавие",
     "sortByDate": "Дата",
     "clearFilters": "Изчисти филтрите",
-    "minRating": "Минимална оценка"
+    "minRating": "Минимална оценка",
+    "minRatingStars": "Поне {count} от 5"
   },
   "time": {
     "minutes": "мин",

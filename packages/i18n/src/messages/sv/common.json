@@ -68,7 +68,8 @@
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
     "clearFilters": "Rensa filter",
-    "minRating": "Lägsta betyg"
+    "minRating": "Lägsta betyg",
+    "minRatingStars": "Minst {count} av 5"
   },
   "time": {
     "minutes": "min",

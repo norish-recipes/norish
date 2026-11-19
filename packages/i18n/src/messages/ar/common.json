@@ -68,7 +68,8 @@
     "sortByTitle": "الاسم",
     "sortByDate": "التاريخ",
     "clearFilters": "مسح عوامل التصفية",
-    "minRating": "الحد الأدنى للتقييم"
+    "minRating": "الحد الأدنى للتقييم",
+    "minRatingStars": "{count} من 5 على الأقل"
   },
   "time": {
     "minutes": "د",

@@ -1,7 +1,6 @@
+import type { StarTap } from "@/lib/motion/star-motion";
+import { liveTap, STAR_STAGGER_MS, starMotion } from "@/lib/motion/star-motion";
 import { describe, expect, it } from "vitest";
-
-import type { StarTap } from "../utils/star-motion";
-import { liveTap, STAR_STAGGER_MS, starMotion } from "../utils/star-motion";
 
 const row = (from: number, to: number) => [1, 2, 3, 4, 5].map((star) => starMotion(star, from, to));
 const still = { delay: 0, pop: false };

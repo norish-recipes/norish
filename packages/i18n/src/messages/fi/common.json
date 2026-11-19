@@ -68,7 +68,8 @@
     "sortByTitle": "Nimi",
     "sortByDate": "Päivämäärä",
     "clearFilters": "Tyhjennä suodattimet",
-    "minRating": "Vähimmäisarvosana"
+    "minRating": "Vähimmäisarvosana",
+    "minRatingStars": "Vähintään {count}/5"
   },
   "time": {
     "minutes": "min",
