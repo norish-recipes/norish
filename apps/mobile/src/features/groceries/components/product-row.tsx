@@ -1,6 +1,6 @@
 import React from "react";
-import { CardRow } from "@/components/card";
 import { Text } from "react-native";
+import { CardRow } from "@/components/card";
 import { useIntl } from "react-intl";
 
 import type { GroceryPrice } from "@norish/shared-react/groceries";

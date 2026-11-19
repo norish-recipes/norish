@@ -1,9 +1,9 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { HintButton } from "@/components/hint-button";
 import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
 import { SheetTextArea } from "@/components/sheet-input";
-import { HintButton } from "@/components/hint-button";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { FieldError, TextField } from "heroui-native";
 import { useIntl } from "react-intl";

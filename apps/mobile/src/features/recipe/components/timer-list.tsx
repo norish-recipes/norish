@@ -44,10 +44,7 @@ function TimerRow({
         );
 
   return (
-    <View
-      className="flex-row items-center gap-1.5 py-2 pr-3 pl-4"
-      testID={`timer-row-${timer.id}`}
-    >
+    <View className="flex-row items-center gap-1.5 py-2 pr-3 pl-4" testID={`timer-row-${timer.id}`}>
       <SliceHairline first={first} />
       {/* Cook mode's own pill has nothing to open, so its rows are no button. */}
       <PressableScale

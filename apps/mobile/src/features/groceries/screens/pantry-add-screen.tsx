@@ -1,9 +1,9 @@
-import { SectionLabel } from "@/components/section-label";
 import type { SheetSearchInput } from "@/components/sheet-search-field";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
+import { SectionLabel } from "@/components/section-label";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
@@ -91,7 +91,9 @@ export function PantryAddScreen() {
                 onSubmit={submit}
               />
               {fromYourRecipes ? (
-                <SectionLabel className="pt-3">{intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}</SectionLabel>
+                <SectionLabel className="pt-3">
+                  {intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}
+                </SectionLabel>
               ) : null}
             </View>
           }

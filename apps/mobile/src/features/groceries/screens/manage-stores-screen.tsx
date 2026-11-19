@@ -91,7 +91,9 @@ export function ManageStoresScreen() {
     return true;
   };
   const confirmDelete = (store: StoreDto) => {
-    const count = groceries.filter((grocery) => grocery.storeId === store.id && !grocery.isDone).length;
+    const count = groceries.filter(
+      (grocery) => grocery.storeId === store.id && !grocery.isDone
+    ).length;
     const title = intl.formatMessage(
       { id: "groceries.mobile.deleteStoreTitle" },
       { store: store.name }
@@ -180,7 +182,10 @@ export function ManageStoresScreen() {
           renderHeading={() => null}
           renderItem={({ store, edge }) => (
             <StoreListRow
-              count={groceries.filter((grocery) => grocery.storeId === store.id && !grocery.isDone).length}
+              count={
+                groceries.filter((grocery) => grocery.storeId === store.id && !grocery.isDone)
+                  .length
+              }
               edge={edge}
               store={store}
               onDelete={() => confirmDelete(store)}
