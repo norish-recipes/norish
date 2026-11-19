@@ -17,14 +17,12 @@ export type Slot =
     })
   | null;
 
-/** Where a held row would land. `gap` is the index in the rows it lands before; `line` and `box` are
- * the drop line and the section's outline in the content. */
-export type Target = {
-  gap: number;
-  section: string;
-  line: { y: number; x: number; width: number } | null;
-  box: Box | null;
-};
+/** Where a held row would land: `gap` is the index in the rows it lands before. */
+export type Target = { gap: number; section: string };
+
+/** Where the held row's after-image sits while carried: the row at `from` moves by `offset`, and
+ * the rows between it and `gap` move by `height` the other way to make room. */
+export type Place = { from: number; gap: number; height: number; offset: number };
 
 /** Each row's section: a heading's from `sectionOf` (its key by default), an item's from the heading above it. Rows above
  * the first heading have none (a drop there snaps back); a list without headings is one section. */
@@ -73,53 +71,30 @@ function sectionAt(slots: readonly Slot[], gap: number) {
   return below && !below.heading ? below.section : null;
 }
 
-/** What a finger at content `y` targets while row `from` is held: a line at the gap (none where it
- * lands in place) and an outline around its section's drawn cards. */
-export function targetAt(slots: readonly Slot[], from: number, y: number): Target | null {
+/** What a finger at content `y` targets: the gap and its section. Counted in the rows as laid
+ * out, never as shifted, so the target can't chase the rows it moves. */
+export function targetAt(slots: readonly Slot[], y: number): Target | null {
   "worklet";
   const gap = gapAt(slots, y);
   const section = gap === null ? null : sectionAt(slots, gap);
 
-  if (gap === null || section === null) return null;
-
-  const above = slots[gap - 1];
-  const below = slots[gap];
-  const inPlace = gap === from || gap === from + 1;
-  const edge = above
-    ? {
-        y: above.top + above.card.top + above.card.height,
-        x: above.card.x,
-        width: above.card.width,
-      }
-    : below
-      ? { y: below.top + below.card.top, x: below.card.x, width: below.card.width }
-      : null;
-  const line = inPlace ? null : edge;
-  let box: Target["box"] = null;
-
-  if (section !== "") {
-    for (const slot of slots) {
-      if (!slot || slot.section !== section) continue;
-      const top = Math.min(box?.top ?? Infinity, slot.top + slot.card.top);
-      const bottom = Math.max(
-        box ? box.top + box.height : -Infinity,
-        slot.top + slot.card.top + slot.card.height
-      );
-
-      box = { top, height: bottom - top, x: slot.card.x, width: slot.card.width };
-    }
-  }
-
-  return { gap, section, line, box };
+  return gap === null || section === null ? null : { gap, section };
 }
 
-/** The drop of the row at `from` into `gap`; null when it lands where it was. */
-export function dropAt<H, T>(rows: DragRow<H, T>[], from: number, gap: number): Drop<H, T> | null {
-  const to = gap > from ? gap - 1 : gap;
+/** How far the row at `index` is moved while the held row sits at `place`. */
+export function shiftOf(index: number, place: Place | null) {
+  "worklet";
+  if (!place) return 0;
+  const { from, gap, height, offset } = place;
 
-  return to === from ? null : resolveDrop(rows, from, to);
+  if (index === from) return offset;
+  if (gap > from && index > from && index < gap) return -height;
+  if (gap < from && index >= gap && index < from) return height;
+
+  return 0;
 }
 
+// Above placeAt: a worklet captures what it calls as it is defined, so callees go first.
 /** Where the held row's cell top lands for `gap`, in the content as it is now: rows between close
  * up behind it, or make room in front. `own` is where it was, its top when it lands in place. */
 export function landingTop(slots: readonly Slot[], gap: number | null, from: number, own: Span) {
@@ -133,4 +108,53 @@ export function landingTop(slots: readonly Slot[], gap: number | null, from: num
   if (edge === null) return null;
 
   return gap > from ? edge - own.height : edge;
+}
+
+/** The held row at `from` (laid out at `own`) sitting at `gap`; null where nothing moves: it lands
+ * in place, snaps back, or lands where neither side is drawn. */
+export function placeAt(
+  slots: readonly Slot[],
+  gap: number | null,
+  from: number,
+  own: Span
+): Place | null {
+  "worklet";
+  const top = landingTop(slots, gap, from, own);
+
+  return gap === null || top === null || top === own.top
+    ? null
+    : { from, gap, height: own.height, offset: top - own.top };
+}
+
+/** The outline around a section's drawn cards where they sit, moved by `place`, with the held row's
+ * after-image counted in once it is placed. None in a list without headings. */
+export function sectionBox(
+  slots: readonly Slot[],
+  section: string,
+  from: number,
+  place: Place | null
+): Box | null {
+  "worklet";
+  if (section === "") return null;
+  let box: Box | null = null;
+
+  for (let index = 0; index < slots.length; index++) {
+    const slot = slots[index];
+
+    if (!slot || (slot.section !== section && !(index === from && place))) continue;
+    const top = slot.top + shiftOf(index, place) + slot.card.top;
+    const upper = Math.min(box?.top ?? Infinity, top);
+    const lower = Math.max(box ? box.top + box.height : -Infinity, top + slot.card.height);
+
+    box = { top: upper, height: lower - upper, x: slot.card.x, width: slot.card.width };
+  }
+
+  return box;
+}
+
+/** The drop of the row at `from` into `gap`; null when it lands where it was. */
+export function dropAt<H, T>(rows: DragRow<H, T>[], from: number, gap: number): Drop<H, T> | null {
+  const to = gap > from ? gap - 1 : gap;
+
+  return to === from ? null : resolveDrop(rows, from, to);
 }

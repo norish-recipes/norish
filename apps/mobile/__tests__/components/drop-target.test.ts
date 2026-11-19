@@ -4,10 +4,15 @@ import {
   dropAt,
   gapAt,
   landingTop,
+  placeAt,
+  sectionBox,
   sectionsOf,
+  shiftOf,
   targetAt,
 } from "@/components/drag-list/drop-target";
 import { describe, expect, it } from "vitest";
+
+import { releaseModule } from "../release-module";
 
 const heading = (key: string): DragRow<string, string> => ({ kind: "heading", key, value: key });
 const item = (key: string): DragRow<string, string> => ({ kind: "item", key, value: key });
@@ -81,19 +86,9 @@ describe("gapAt", () => {
 });
 
 describe("targetAt", () => {
-  it("draws the line under the row above the gap and outlines the section's cards", () => {
-    // a1 held, pointed at b1's bottom half.
-    expect(targetAt(slots, 1, 240)).toEqual({
-      gap: 5,
-      section: "B",
-      line: { y: 250, x: 20, width: 300 },
-      box: { top: 160, height: 90, x: 20, width: 300 },
-    });
-  });
-
-  it("draws no line where the row would land in place", () => {
-    expect(targetAt(slots, 1, 60)?.line).toBeNull();
-    expect(targetAt(slots, 1, 90)?.line).toBeNull();
+  it("gives the gap and its section", () => {
+    // Pointed at b1's bottom half.
+    expect(targetAt(slots, 240)).toEqual({ gap: 5, section: "B" });
   });
 
   it("snaps back above the first heading", () => {
@@ -102,17 +97,94 @@ describe("targetAt", () => {
       ...slots,
     ];
 
-    expect(targetAt(aboveSlots, 2, -40)).toBeNull();
+    expect(targetAt(aboveSlots, -40)).toBeNull();
+  });
+
+  it("makes a list without headings one section", () => {
+    const flatSlots: Slot[] = [slots[1]!, slots[2]!].map((slot) => ({ ...slot!, section: "" }));
+
+    expect(targetAt(flatSlots, 140)).toEqual({ gap: 2, section: "" });
+  });
+});
+
+describe("placeAt and shiftOf", () => {
+  const own = (index: number) => ({ top: index * 50, height: 50 });
+  const shiftedOrder = (from: number, gap: number) => {
+    const place = placeAt(slots, gap, from, own(from));
+
+    return rows
+      .map((row, index) => ({ key: row.key, top: slots[index]!.top + shiftOf(index, place) }))
+      .sort((a, b) => a.top - b.top)
+      .map((row) => row.key);
+  };
+
+  it("moves the after-image to where it lands and the rows between out of its way", () => {
+    expect(placeAt(slots, 5, 1, own(1))).toEqual({ from: 1, gap: 5, height: 50, offset: 150 });
+    expect(placeAt(slots, 1, 4, own(4))).toEqual({ from: 4, gap: 1, height: 50, offset: -150 });
+    expect([0, 1, 2, 3, 4, 5].map((index) => shiftOf(index, placeAt(slots, 5, 1, own(1))))).toEqual(
+      [0, 150, -50, -50, -50, 0]
+    );
+    expect([0, 1, 2, 3, 4, 5].map((index) => shiftOf(index, placeAt(slots, 1, 4, own(4))))).toEqual(
+      [0, 50, 50, 50, -150, 0]
+    );
+  });
+
+  it("shows the rows in the order the drop commits", () => {
+    for (const [from, gap] of [
+      [1, 5],
+      [1, 6],
+      [4, 1],
+      [2, 4],
+    ] as const) {
+      expect(shiftedOrder(from, gap)).toEqual(dropAt(rows, from, gap)?.rows.map((row) => row.key));
+    }
+  });
+
+  it("moves nothing where it lands in place, snaps back, or lands with neither side drawn", () => {
+    const drawn = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
+
+    expect(placeAt(slots, 1, 1, own(1))).toBeNull();
+    expect(placeAt(slots, 2, 1, own(1))).toBeNull();
+    expect(placeAt(slots, null, 1, own(1))).toBeNull();
+    expect(placeAt(drawn, 4, 1, own(1))).toBeNull();
+    expect(shiftOf(2, null)).toBe(0);
+  });
+
+  it("reaches landingTop as the worklets plugin builds it, which captures it when placeAt is defined", () => {
+    const built = releaseModule<{ placeAt: typeof placeAt }>(
+      new URL("../../src/components/drag-list/drop-target.ts", import.meta.url).pathname,
+      { "./resolve-drop": {} }
+    );
+
+    expect(built.placeAt(slots, 5, 1, own(1))).toEqual({
+      from: 1,
+      gap: 5,
+      height: 50,
+      offset: 150,
+    });
+  });
+});
+
+describe("sectionBox", () => {
+  const own = (index: number) => ({ top: index * 50, height: 50 });
+
+  it("outlines the section's cards where they moved, with the after-image in it", () => {
+    // a1 placed under b1: B's heading and b1 move up a row, a1 sits below them.
+    expect(sectionBox(slots, "B", 1, placeAt(slots, 5, 1, own(1)))).toEqual({
+      top: 110,
+      height: 140,
+      x: 20,
+      width: 300,
+    });
+  });
+
+  it("leaves out a held row that is not placed in the section", () => {
+    expect(sectionBox(slots, "B", 1, null)).toEqual({ top: 160, height: 90, x: 20, width: 300 });
+    expect(sectionBox(slots, "A", 1, null)).toEqual({ top: 10, height: 140, x: 20, width: 300 });
   });
 
   it("outlines nothing in a list without headings", () => {
-    const flatSlots: Slot[] = [slots[1]!, slots[2]!].map((slot) => ({ ...slot!, section: "" }));
-
-    expect(targetAt(flatSlots, 0, 140)).toMatchObject({
-      gap: 2,
-      section: "",
-      box: null,
-    });
+    expect(sectionBox(slots, "", 1, null)).toBeNull();
   });
 });
 
@@ -144,37 +216,37 @@ describe("dropAt", () => {
 
 describe("landingTop", () => {
   const own = (index: number) => ({ top: index * 50, height: 50 });
-  const gapOf = (from: number, y: number) => targetAt(slots, from, y)?.gap ?? null;
+  const gapOf = (y: number) => targetAt(slots, y)?.gap ?? null;
 
   it("lands where the rows close up behind the row, or make room in front", () => {
-    expect(landingTop(slots, gapOf(1, 240), 1, own(1))).toBe(200);
-    expect(landingTop(slots, gapOf(4, 60), 4, own(4))).toBe(50);
+    expect(landingTop(slots, gapOf(240), 1, own(1))).toBe(200);
+    expect(landingTop(slots, gapOf(60), 4, own(4))).toBe(50);
   });
 
   it("goes back to its own place when it lands in place or snaps back", () => {
     expect(landingTop(slots, null, 4, own(4))).toBe(200);
-    expect(landingTop(slots, gapOf(1, 60), 1, own(1))).toBe(50);
+    expect(landingTop(slots, gapOf(60), 1, own(1))).toBe(50);
   });
 
   it("lands under the last drawn row when the finger is past the rendered rows", () => {
     // Rows 3 and 4 left the window; the held row (5) is still drawn.
-    const window = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
-    const gap = gapAt(window, 160);
+    const drawn = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
+    const gap = gapAt(drawn, 160);
 
     expect(gap).toBe(3);
-    expect(landingTop(window, gap, 5, own(5))).toBe(150);
+    expect(landingTop(drawn, gap, 5, own(5))).toBe(150);
   });
 
   it("has no top for a ruled gap with neither side drawn", () => {
     // Calendar's `landAt` gap 4, between rows 3 and 4, which left the window.
-    const window = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
+    const drawn = slots.map((slot, index) => (index === 3 || index === 4 ? null : slot));
 
-    expect(landingTop(window, 4, 1, own(1))).toBeNull();
+    expect(landingTop(drawn, 4, 1, own(1))).toBeNull();
   });
 
   it("goes back to the held row's own top after its cell left the window", () => {
-    const window = slots.map((slot, index) => (index === 4 ? null : slot));
+    const drawn = slots.map((slot, index) => (index === 4 ? null : slot));
 
-    expect(landingTop(window, null, 4, own(4))).toBe(200);
+    expect(landingTop(drawn, null, 4, own(4))).toBe(200);
   });
 });

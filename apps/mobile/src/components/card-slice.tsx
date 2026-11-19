@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
-import { useDragCard, useIsLifted } from "@/components/drag-list/drag-list";
+import { useDragCard, useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
 import { useOnSheet } from "@/components/on-sheet";
 
 /** One row's slice of its section's card: the card is flat rows, so the heading rounds the top
@@ -38,7 +38,7 @@ export function CardSlice({
 /** A slice's ground: sand on a sheet, the surface off one. */
 const useSliceFill = () => (useOnSheet() ? "bg-sand" : "bg-surface");
 
-/** A page's cards, and a sheet's tighter ones; `lifted` is the card a drag carries. */
+/** A page's cards, and a sheet's tighter ones; `lifted` is the pill a lifted row becomes. */
 const SIZES: Record<
   "page" | "sheet",
   { inset: string; liftedInset?: string; top: string; bottom: string; lifted: string }
@@ -48,13 +48,13 @@ const SIZES: Record<
     liftedInset: "px-3.5",
     top: "rounded-t-3xl",
     bottom: "rounded-b-3xl",
-    lifted: "rounded-[20px]",
+    lifted: "rounded-[32px]",
   },
   sheet: {
     inset: "px-4",
     top: "rounded-t-[22px]",
     bottom: "rounded-b-[22px]",
-    lifted: "rounded-[22px]",
+    lifted: "rounded-[28px]",
   },
 };
 
@@ -68,7 +68,8 @@ const sliceClass = (
 
 const TILT = { transform: [{ rotate: "-1.5deg" }] };
 
-/** An item row's slice; in the card a drag carries, a card of its own. */
+/** An item row's slice; lifted, a pill of its own: the carried one widens, tilts and casts the
+ * shadow, the faded copy where it lands stays flat, in the cell's inset and height. */
 export function ItemSlice({
   edge,
   separated = true,
@@ -83,26 +84,34 @@ export function ItemSlice({
   children: ReactNode;
 }) {
   const lifted = useIsLifted();
+  const carried = useIsCarried();
   const reduceMotion = useReducedMotion();
   const onCardLayout = useDragCard();
   const sized = SIZES[size];
   const ground = useSliceFill();
   const fill = className ?? ground;
 
+  // The pill keeps the slice's hairline as a clear border, so the faded copy's cell never resizes.
+  const hairline = !edge.top && separated ? "border-t border-transparent" : "";
+
   return (
     <View
-      className={lifted ? (sized.liftedInset ?? sized.inset) : sized.inset}
-      style={lifted && !reduceMotion ? TILT : undefined}
+      className={carried ? (sized.liftedInset ?? sized.inset) : sized.inset}
+      style={carried && !reduceMotion ? TILT : undefined}
     >
+      {/* Unflattened: as the faded copy restyles at the lift, Fabric would otherwise re-parent the
+          row's views, and that cancels the hold's gesture. */}
       <View
         className={
           lifted
-            ? `overflow-hidden ${fill} ${sized.lifted}`
+            ? `${fill} ${sized.lifted} ${hairline} ${carried ? "shadow-lg" : "overflow-hidden"}`
             : sliceClass(edge, fill, separated, sized)
         }
+        collapsable={false}
         onLayout={onCardLayout}
       >
-        {children}
+        {/* The carried pill's shadow would be clipped with it, so its row clips one level down. */}
+        {carried ? <View className={`overflow-hidden ${sized.lifted}`}>{children}</View> : children}
       </View>
     </View>
   );

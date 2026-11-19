@@ -93,6 +93,7 @@ vi.mock("@/components/drag-list/drag-list", () => ({
   DragScrollView: ({ children }: Props) => children,
   DragHandle: ({ children }: Props) => children,
   useIsLifted: () => false,
+  useIsCarried: () => false,
   DragList: ({
     rows,
     renderItem,

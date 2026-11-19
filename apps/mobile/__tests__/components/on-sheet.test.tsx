@@ -25,6 +25,7 @@ vi.mock("react-native-reanimated", () => ({ useReducedMotion: () => false }));
 vi.mock("@/components/drag-list/drag-list", () => ({
   useDragCard: () => undefined,
   useIsLifted: () => false,
+  useIsCarried: () => false,
 }));
 vi.mock("heroui-native", () => ({
   useThemeColor: (names: string[]) => names,

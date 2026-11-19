@@ -4,7 +4,7 @@ import React from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DayTitle, formatDay } from "@/components/day-card";
-import { DragPressable, useIsLifted } from "@/components/drag-list/drag-list";
+import { DragPressable, useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
 import { PlannedThumb } from "@/components/planned-thumb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
@@ -21,6 +21,9 @@ import {
   slotLabelHeight,
   TIMELINE,
 } from "../utils/timeline-rows";
+
+// The room above and below a carried item's line inside its pill.
+const LIFTED_PAD = 10;
 
 /** Today's ring, drawn over each of its card's slices: the sides, and the top or bottom at its ends. */
 function TodayRing({ edge }: { edge: Edge }) {
@@ -102,28 +105,35 @@ export function PlannedItemRow({ row, onOpen }: { row: TimelineItem; onOpen: () 
   const { fontScale } = useWindowDimensions();
   const { title, subtitle } = usePlannedItemText()(row.item);
   const lifted = useIsLifted();
+  const carried = useIsCarried();
   const edge = { top: false, bottom: row.lastOfDay };
+  const line = itemLineHeight(fontScale);
+  const lineTop = row.firstInSlot ? 0 : TIMELINE.itemGap;
+  // The carried pill pads its line evenly; the faded copy keeps the row's layout.
+  const size = carried
+    ? { height: line + 2 * LIFTED_PAD, justifyContent: "center" as const }
+    : { height: itemHeight(row, fontScale), paddingTop: lineTop };
 
-  return (
+  const slice = (
     <ItemSlice edge={edge} separated={false}>
       <DragPressable
         accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
         accessibilityRole="button"
         className="justify-start px-4"
-        style={{
-          height: itemHeight(row, fontScale),
-          paddingTop: row.firstInSlot ? 0 : TIMELINE.itemGap,
-        }}
+        style={size}
         testID={`calendar-item-${row.item.id}`}
         onPress={onOpen}
       >
-        <PlannedItemLine height={itemLineHeight(fontScale)} subtitle={subtitle} title={title}>
+        <PlannedItemLine height={line} subtitle={subtitle} title={title}>
           <PlannedThumb className="size-[52px] rounded-[14px]" item={row.item} />
         </PlannedItemLine>
       </DragPressable>
       {row.isToday && !lifted ? <TodayRing edge={edge} /> : null}
     </ItemSlice>
   );
+
+  // The settle lands the carried card's top on the cell's, so its line meets the row's line there.
+  return carried ? <View style={{ marginTop: lineTop - LIFTED_PAD }}>{slice}</View> : slice;
 }
 
 /** A planned item's thumbnail, name and details on one line, `height` tall. */

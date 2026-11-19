@@ -11,16 +11,20 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { lightImpact } from "@/lib/haptics";
+import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
 
-import type { Box, Slot, Span, Target } from "./drop-target";
-import { landingTop, targetAt } from "./drop-target";
+import type { Box, Place, Slot, Span, Target } from "./drop-target";
+import { landingTop, placeAt, sectionBox, targetAt } from "./drop-target";
 
 /** The band at either end of the visible list that scrolls it, and the speed at its far edge. */
 const EDGE = 80;
 const EDGE_SPEED = 900;
-/** How long the lifted card takes to settle where it lands. */
+/** How long the lifted card takes to settle where it lands; the rows are done making room by then. */
 const SETTLE_MS = 180;
+
+/** How long the rows, and the section's outline, take to make room. */
+export const SHIFT_MS = 150;
 
 /** The lifted row: where its cell was, and where the list's content started on screen then. */
 type Lift = Span & { key: string; origin: number };
@@ -35,11 +39,28 @@ export type Page = {
   setLocked: (locked: boolean) => void;
 };
 
-/** What the drag tells React, on the JS thread. `rule` gives where a drop lands by a rule. */
+/** What the drag tells React, on the JS thread: `placed` is where the rows make room for the held
+ * row. `rule` gives where a drop lands by a rule. */
 type Events = {
   lifted: (key: string) => void;
+  placed: (place: Place | null) => void;
   finished: (key: string, gap: number | null) => void;
   rule?: (key: string, gap: number) => number | null;
+};
+
+const samePlace = (a: Place | null, b: Place | null) => {
+  "worklet";
+
+  return a === b || (!!a && !!b && a.gap === b.gap && a.from === b.from && a.offset === b.offset);
+};
+
+const sameBox = (a: Box | null, b: Box | null) => {
+  "worklet";
+
+  return (
+    a === b ||
+    (!!a && !!b && a.top === b.top && a.height === b.height && a.x === b.x && a.width === b.width)
+  );
 };
 
 /** The drag on the UI thread: the lift, the frame loop that carries the card and auto-scrolls,
@@ -67,6 +88,15 @@ export function useDragEngine({
   const cardTop = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
   const target = useSharedValue<Target | null>(null);
+  // The gap the finger last pointed at, the gap the rows make room at (a rule's answer to it), and
+  // where they make room.
+  const aimed = useSharedValue<number | null>(null);
+  const landGap = useSharedValue<number | null>(null);
+  const place = useSharedValue<Place | null>(null);
+  // The section's outline: where it is headed, and its animated top and height.
+  const outline = useSharedValue<Box | null>(null);
+  const outlineTop = useSharedValue(0);
+  const outlineHeight = useSharedValue(0);
   // The section the card was last over, which a haptic marks leaving.
   const overSection = useSharedValue<string | null>(null);
   const contentHeight = useSharedValue(0);
@@ -79,6 +109,7 @@ export function useDragEngine({
   // The worklets reach React through the latest render's events, as they are kept.
   const eventsRef = useRef<Events>(events);
   const onLifted = (key: string) => eventsRef.current.lifted(key);
+  const onPlaced = (at: Place | null) => eventsRef.current.placed(at);
   const onFinished = (key: string, gap: number | null) => eventsRef.current.finished(key, gap);
 
   const slotsNow = () => {
@@ -123,9 +154,42 @@ export function useDragEngine({
     cardTop.set(cell.top);
     cardOpacity.set(1);
     target.set(null);
+    aimed.set(null);
+    landGap.set(null);
+    place.set(null);
+    outline.set(null);
     overSection.set(rowsNow.get()[indexOf(key)]?.section ?? null);
     scheduleOnRN(onLifted, key);
   };
+
+  /** Tells React where the rows make room, when that changed. */
+  const placeRows = (at: Place | null) => {
+    "worklet";
+    if (samePlace(at, place.get())) return;
+    place.set(at);
+    scheduleOnRN(onPlaced, at);
+  };
+
+  // Once shown, the outline slides with the rows; it appears where it is.
+  const drawOutline = (box: Box | null) => {
+    "worklet";
+    const was = outline.get();
+
+    if (sameBox(box, was)) return;
+    outline.set(box);
+    if (!box) return;
+    outlineTop.set(was ? timedTo(box.top, SHIFT_MS, { easing: EASE_OUT }) : box.top);
+    outlineHeight.set(was ? timedTo(box.height, SHIFT_MS, { easing: EASE_OUT }) : box.height);
+  };
+
+  // A rule's answer for the gap the finger still points at.
+  const aimRuled = (key: string, gap: number, landed: number | null) => {
+    "worklet";
+    if (lift.get()?.key === key && aimed.get() === gap) landGap.set(landed);
+  };
+
+  const onAim = (key: string, gap: number) =>
+    scheduleOnUI(aimRuled, key, gap, eventsRef.current.rule?.(key, gap) ?? null);
 
   // Another finger's row is not the one carried.
   const move = (key: string, translation: number) => {
@@ -145,8 +209,12 @@ export function useDragEngine({
       scheduleOnRN(onFinished, key, gap);
     };
 
-    const top = landingTop(slotsNow(), gap, indexOf(key), carried);
+    const slots = slotsNow();
+    const from = indexOf(key);
+    const top = landingTop(slots, gap, from, carried);
 
+    // The rows make room where it lands, or close up again, while the card settles.
+    placeRows(placeAt(slots, gap, from, carried));
     // A landing off screen has no top to slide to: the card fades where it is.
     if (top === null) cardOpacity.set(timedTo(0, SETTLE_MS, {}, done));
     else cardTop.set(timedTo(top, SETTLE_MS, {}, done));
@@ -162,6 +230,7 @@ export function useDragEngine({
     const gap = canceled ? null : (target.get()?.gap ?? null);
 
     target.set(null);
+    drawOutline(null);
     // A list with a rule asks it where the row lands first.
     if (ruled && gap !== null) scheduleOnRN(onRuled, key, gap);
     else settle(key, gap);
@@ -212,10 +281,23 @@ export function useDragEngine({
 
     // The card's top in the content, which the list scrolled under by `shift` this frame.
     const cardY = carried.top + travel.get() + carried.origin - content.pageY + shift;
-    const now = targetAt(slotsNow(), indexOf(carried.key), cardY + carried.height / 2);
+    const slots = slotsNow();
+    const from = indexOf(carried.key);
+    const now = targetAt(slots, cardY + carried.height / 2);
+    const gap = now?.gap ?? null;
 
     cardTop.set(cardY);
-    target.set(ruled && now ? { ...now, line: null } : now);
+    target.set(now);
+    if (gap !== aimed.get()) {
+      aimed.set(gap);
+      // A list with a rule asks it where the row lands; the rows stay put until it answers.
+      if (ruled && gap !== null) scheduleOnRN(onAim, carried.key, gap);
+      else landGap.set(gap);
+    }
+    const at = placeAt(slots, landGap.get(), from, carried);
+
+    placeRows(at);
+    drawOutline(now ? sectionBox(slots, now.section, from, at) : null);
     if (now && now.section !== overSection.get()) {
       overSection.set(now.section);
       scheduleOnRN(lightImpact);
@@ -228,6 +310,7 @@ export function useDragEngine({
         loop.setActive(true);
         events.lifted(key);
       },
+      placed: events.placed,
       finished: (key, gap) => {
         loop.setActive(false);
         events.finished(key, gap);
@@ -242,7 +325,7 @@ export function useDragEngine({
     cells,
     cards,
     card: { top: cardTop, opacity: cardOpacity },
-    target,
+    outline: { box: outline, top: outlineTop, height: outlineHeight },
     contentHeight,
     start,
     move,

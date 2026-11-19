@@ -17,6 +17,7 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
@@ -25,31 +26,62 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useComposedEventHandler,
+  useReducedMotion,
   useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { mediumImpact } from "@/lib/haptics";
+import { EASE_OUT_CSS } from "@/lib/motion/ease";
 
-import type { Box, Target } from "./drop-target";
+import type { Box, Place } from "./drop-target";
 import type { DragRow, Drop } from "./resolve-drop";
 import type { Page } from "./use-drag-engine";
-import { sectionsOf } from "./drop-target";
-import { useDragEngine } from "./use-drag-engine";
+import { sectionsOf, shiftOf } from "./drop-target";
+import { SHIFT_MS, useDragEngine } from "./use-drag-engine";
 import { useHeldRows } from "./use-held-rows";
 
 export type { Drop, DragRow };
 
 /** How long a row is held before it lifts, as web's touch drag. */
 const HOLD_MS = 250;
-/** The lifted row's source, as web's. */
+/** The lifted row's source, its after-image where it lands, as web's. */
 const GHOST_OPACITY = 0.5;
+/** Rows make room by a CSS transition of a transform React renders, so the drop's commit can clear
+ * it with the new order in one commit: the transition is detached before React commits. */
+const MAKING_ROOM = {
+  transitionProperty: "transform",
+  transitionDuration: SHIFT_MS,
+  transitionTimingFunction: EASE_OUT_CSS,
+} as const;
+
+/** Where the rows make room, outside React state: each cell subscribes to its own shift, so a new
+ * gap re-renders only the cells it moves. */
+function placeStore() {
+  let place: Place | null = null;
+  const listeners = new Set<() => void>();
+
+  return {
+    get: () => place,
+    set: (next: Place | null) => {
+      place = next;
+      for (const listener of listeners) listener();
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+
+      return () => listeners.delete(listener);
+    },
+  };
+}
+
+type Places = ReturnType<typeof placeStore>;
 
 type AnyRow = DragRow<unknown, unknown>;
 type ScrollHandler = ReturnType<typeof useAnimatedScrollHandler>;
 type LayoutAnimation = ComponentProps<typeof Animated.View>["layout"];
 
-/** What a cell needs from its list: where to record its layout, the drag's worklets, and whether it
- * is the lifted row's source or the row a drop just placed (which skips the layout animation). */
+/** What a cell needs from its list: where it records its layout, the drag's worklets, the lifted
+ * row, where rows make room for it and whether they slide, and whether this commit is a drop's. */
 type DragState = {
   cells: Boxes;
   cards: Boxes;
@@ -58,25 +90,36 @@ type DragState = {
   release: (key: string, canceled: boolean) => void;
   canLift: (index: number) => boolean;
   lifted: string | null;
-  dropped: string | null;
+  places: Places;
+  /** Rows slide: from the lift until the drop's commit, or until a refused drop's rows are back. */
+  moving: boolean;
+  dropped: boolean;
+  /** Rows jump instead of sliding, for Reduce Motion. */
+  still: boolean;
   layout: LayoutAnimation;
 };
 
 const DragContext = createContext<DragState | null>(null);
+const NO_PLACES = placeStore();
 
 /** A row's gesture, and whether the touch it last saw lifted the row. */
 type Handle = { gesture: PanGesture; liftedRef: RefObject<boolean> };
 
 const HandleContext = createContext<Handle | null>(null);
 const CardContext = createContext<((event: LayoutChangeEvent) => void) | undefined>(undefined);
-const LiftedContext = createContext(false);
+
+/** The lifted row's two drawings: the card the finger carries, and the faded one where it lands. */
+type Lift = "carried" | "ghost" | null;
+const LiftedContext = createContext<Lift>(null);
 const PageContext = createContext<Page | null>(null);
 
-/** True inside the card a drag carries, for its lifted look. */
-export const useIsLifted = () => use(LiftedContext);
+/** True inside the lifted row's carried card and its faded copy, for the lifted (pill) look. */
+export const useIsLifted = () => use(LiftedContext) !== null;
+/** True only inside the card the finger carries. */
+export const useIsCarried = () => use(LiftedContext) === "carried";
 
 /** The `onLayout` of a row's visible card inside its cell (a slice of a section's card), which the
- * drop line and the section outline are drawn against. */
+ * section outline is drawn around. */
 export const useDragCard = () => use(CardContext);
 
 /** The part of a row a hold lifts it by; anywhere else (a checkbox) the row stays put. */
@@ -116,6 +159,8 @@ function ItemHandle({
   children: ReactNode;
 }) {
   const { key } = row;
+  // The worklets capture these alone, not the whole drag state (its layout animation can't copy).
+  const { start, move, release } = drag;
   const liftedRef = useRef(false);
   const touched = (lifted: boolean) => {
     liftedRef.current = lifted;
@@ -130,16 +175,16 @@ function ItemHandle({
     onActivate: () => {
       "worklet";
       scheduleOnRN(touched, true);
-      drag.start(key);
+      start(key);
     },
     onUpdate: (event) => {
       "worklet";
-      drag.move(key, event.translationY);
+      move(key, event.translationY);
     },
     // Failed or cancelled (the app left, a system gesture): the row goes back.
     onDeactivate: (event) => {
       "worklet";
-      drag.release(key, event.canceled);
+      release(key, event.canceled);
     },
   });
 
@@ -176,8 +221,8 @@ const recordHeight =
     then?.(width, height);
   };
 
-/** A row's cell: records where it is laid out, fades as the lifted row's source, and gives an item
- * its handle. FlatList's `CellRendererComponent`, and each row of a nested list. */
+/** A row's cell: records its layout, makes room for the lifted row (whose faded source moves to where
+ * it lands), and gives an item its handle. FlatList's `CellRendererComponent`, or a nested row. */
 function DragCell({
   item: row,
   index,
@@ -195,6 +240,11 @@ function DragCell({
   const { key } = row;
   const cells = drag?.cells;
   const cards = drag?.cards;
+  const places = drag?.places ?? NO_PLACES;
+  // Layout counts rows unshifted: a transform never reaches onLayout, so hit-testing holds still.
+  const shift = useSyncExternalStore(places.subscribe, () =>
+    drag?.lifted ? shiftOf(index, places.get()) : 0
+  );
 
   // A cell that leaves the window takes its layout with it, so only drawn rows are hit.
   useEffect(() => {
@@ -211,21 +261,28 @@ function DragCell({
 
   return (
     <Animated.View
-      layout={key === drag.dropped ? undefined : drag.layout}
-      style={[style, key === drag.lifted ? { opacity: GHOST_OPACITY } : null]}
+      layout={drag.dropped ? undefined : drag.layout}
+      style={[
+        style,
+        { transform: [{ translateY: shift }] },
+        drag.moving && !drag.still ? MAKING_ROOM : null,
+        key === drag.lifted ? { opacity: GHOST_OPACITY } : null,
+      ]}
       onLayout={(event) => {
         recordInto(cells, key)(event);
         onLayout?.(event);
       }}
     >
       <CardContext value={recordCard}>
-        {row.kind === "item" ? (
-          <ItemHandle drag={drag} index={index} row={row}>
-            {children}
-          </ItemHandle>
-        ) : (
-          children
-        )}
+        <LiftedContext value={key === drag.lifted ? "ghost" : null}>
+          {row.kind === "item" ? (
+            <ItemHandle drag={drag} index={index} row={row}>
+              {children}
+            </ItemHandle>
+          ) : (
+            children
+          )}
+        </LiftedContext>
       </CardContext>
     </Animated.View>
   );
@@ -261,47 +318,38 @@ function LiftedCard({
   }));
 
   return (
-    <Animated.View
-      className="absolute inset-x-0 top-0 shadow-lg"
-      pointerEvents="none"
-      style={style}
-    >
-      <LiftedContext value>{children}</LiftedContext>
+    <Animated.View className="absolute inset-x-0 top-0" pointerEvents="none" style={style}>
+      <LiftedContext value="carried">{children}</LiftedContext>
     </Animated.View>
   );
 }
 
-/** Where the dragged row would land and the section it would land in. */
-function DropMarks({ target }: { target: SharedValue<Target | null> }) {
-  const line = useAnimatedStyle(() => {
-    const at = target.get()?.line;
-
-    return at
-      ? { opacity: 1, left: at.x, width: at.width, transform: [{ translateY: at.y - 1.5 }] }
-      : { opacity: 0 };
-  });
-  const outline = useAnimatedStyle(() => {
-    const at = target.get()?.box;
+/** The section the held row would land in, outlined around its rows as they make room. */
+function SectionOutline({
+  box,
+  top,
+  height,
+}: {
+  box: SharedValue<Box | null>;
+  top: SharedValue<number>;
+  height: SharedValue<number>;
+}) {
+  const style = useAnimatedStyle(() => {
+    const at = box.get();
 
     return at
       ? {
           opacity: 1,
           left: at.x,
           width: at.width,
-          height: at.height,
-          transform: [{ translateY: at.top }],
+          height: height.get(),
+          transform: [{ translateY: top.get() }],
         }
       : { opacity: 0 };
   });
 
   return (
-    <>
-      <Animated.View
-        className="border-accent absolute top-0 rounded-3xl border-2"
-        style={outline}
-      />
-      <Animated.View className="bg-accent absolute top-0 h-[3px] rounded-full" style={line} />
-    </>
+    <Animated.View className="border-accent absolute top-0 rounded-3xl border-2" style={style} />
   );
 }
 
@@ -333,7 +381,7 @@ type DragListProps<H, T> = Omit<
   /** Whether an item can be lifted; all can by default. */
   canLift?: (item: T) => boolean;
   /** Where a drop lands by a rule rather than where the card is: its gap in `rows` (the rows
-   * shown), or null where it changes nothing. The list then draws no line, only the outline. */
+   * shown), or null where it changes nothing. The rows make room where the rule puts it. */
   landAt?: (drop: Drop<H, T>, rows: DragRow<H, T>[]) => number | null;
   /** The bars over the list's ends, inside which auto-scroll starts (none by default); the top one
    * is also where scrolling up stops. */
@@ -358,8 +406,8 @@ const RowList = Animated.createAnimatedComponent(RowFlatList) as <R>(
   props: AnimatedProps<FlatListProps<R>> & { ref?: Ref<FlatList<R>> }
 ) => ReactNode;
 
-/** A list whose items a hold lifts and a drag carries over still rows: a line shows where it lands
- * and its section is outlined, and nothing moves until the drop. Headings never move. */
+/** A list whose items a hold lifts and a drag carries: as web's sortable list, the rows make room
+ * where it would land, its faded source sits there, and its section is outlined. */
 export function DragList<H, T>({
   rows,
   renderHeading,
@@ -382,10 +430,13 @@ export function DragList<H, T>({
   const outer = use(PageContext);
   const page = nested ? outer : null;
   const [lifted, setLifted] = useState<string | null>(null);
-  const [dropped, setDropped] = useState<string | null>(null);
+  const [places] = useState(placeStore);
+  const [dropped, setDropped] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const still = useReducedMotion();
   // The rows in the order a drag counts in, with each one's section, for the UI thread.
   const sections = sectionsOf(shown, sectionOf);
-  const { listRef, layerRef, cells, cards, card, target, contentHeight, start, move, release } =
+  const { listRef, layerRef, cells, cards, card, outline, contentHeight, start, move, release } =
     useDragEngine({
       order: shown.map((row, index) => ({
         key: row.key,
@@ -398,15 +449,21 @@ export function DragList<H, T>({
         lifted: (key) => {
           mediumImpact();
           heldRows.lift();
+          places.set(null);
           setLifted(key);
-          setDropped(null);
+          setMoving(true);
+          setDropped(false);
         },
+        placed: places.set,
+        // A kept drop renders the new order with every transform cleared in the same commit; a
+        // refused one leaves the order, and the rows slide back.
         finished: (key, gap) => {
           const kept = heldRows.drop(key, gap);
 
           if (kept) mediumImpact();
           setLifted(null);
-          setDropped(kept ? key : null);
+          setMoving(!kept);
+          setDropped(kept);
         },
         rule: landAt
           ? (key, gap) => {
@@ -426,10 +483,18 @@ export function DragList<H, T>({
     if (shownRef) shownRef.current = shown;
   });
 
-  // The drop's commit placed its row without the layout animation; later changes animate again.
+  // The drop's commit moved its rows without the layout animation; later changes animate again.
   useEffect(() => {
-    if (dropped) setDropped(null);
+    if (dropped) setDropped(false);
   }, [dropped]);
+
+  // A refused drop's rows slide back after the let-go, then stop carrying the transition.
+  useEffect(() => {
+    if (!moving || lifted) return;
+    const timer = setTimeout(() => setMoving(false), SHIFT_MS);
+
+    return () => clearTimeout(timer);
+  }, [moving, lifted]);
 
   // Held from the lift until it is let go or the list goes, so a page is never left locked.
   const heldChanged = useEffectEvent((isHeld: boolean) => {
@@ -448,7 +513,10 @@ export function DragList<H, T>({
     cells,
     cards,
     lifted,
+    places,
+    moving,
     dropped,
+    still,
     layout: itemLayoutAnimation,
     canLift: (index) => {
       const row = shown[index];
@@ -470,11 +538,10 @@ export function DragList<H, T>({
       collapsable={false}
       pointerEvents="none"
     >
+      <SectionOutline {...outline} />
       {liftedRow?.kind === "item" ? (
         <LiftedCard {...card}>{renderItem(liftedRow.value)}</LiftedCard>
       ) : null}
-      {/* Over the card, which the finger keeps over the gap. */}
-      <DropMarks target={target} />
     </Animated.View>
   );
 
@@ -501,6 +568,10 @@ export function DragList<H, T>({
         CellRendererComponent={DragCell}
         data={shown}
         keyExtractor={(row) => row.key}
+        // While rows move by transforms, iOS would scroll to keep its anchor row's moving frame still,
+        // and Android would clip a row moved in from outside its laid-out bounds.
+        maintainVisibleContentPosition={moving ? undefined : rest.maintainVisibleContentPosition}
+        removeClippedSubviews={moving ? false : rest.removeClippedSubviews}
         renderItem={({ index }) => renderRow(shown[index]!, index)}
         renderScrollComponent={(props) => <OverlayScrollView {...props} overlay={overlay} />}
         onContentSizeChange={recordHeight(contentHeight, onContentSizeChange)}
