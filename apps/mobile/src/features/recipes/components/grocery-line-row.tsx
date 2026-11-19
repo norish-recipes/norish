@@ -7,13 +7,17 @@ import { Tick } from "@/components/tick";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
-const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
-const rowClass = (first: boolean) => `${ROW} ${first ? "" : "border-line border-t"}`;
+const ROW = "min-h-[52px] flex-row items-center gap-3 px-4";
+
+/** The hairline above a row, from the tick's side to the card's far edge. */
+const Hairline = ({ first }: { first: boolean }) =>
+  first ? null : <View className="bg-line absolute top-0 right-0 left-4 h-px" />;
 
 /** A row's shell while its line loads: the tick and the name, in the row's own layout. */
 export function GroceryLineRowSkeleton({ first }: { first: boolean }) {
   return (
-    <View className={rowClass(first)}>
+    <View className={ROW}>
+      <Hairline first={first} />
       <Skeleton className="size-6 rounded-full" />
       <Skeleton className="h-6 flex-1 rounded-md" />
     </View>
@@ -48,7 +52,8 @@ export function GroceryLineRow({
   const intl = useIntl();
 
   return (
-    <View className={rowClass(first)}>
+    <View className={ROW}>
+      <Hairline first={first} />
       <Pressable
         accessibilityLabel={amountNameLabel(amount, name)}
         accessibilityRole="checkbox"

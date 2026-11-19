@@ -35,8 +35,8 @@ function ServingsRow({ children }: { children?: ReactNode }) {
   const intl = useIntl();
 
   return (
-    <View className="h-[34px] flex-row items-center justify-between">
-      <Text className="text-foreground text-[15px] font-medium">
+    <View className="min-h-11 flex-row items-center justify-between px-2">
+      <Text className="text-foreground text-base font-semibold">
         {intl.formatMessage({ id: "groceries.panel.servings" })}
       </Text>
       {children}
@@ -80,10 +80,6 @@ function LineSection({
 
   return (
     <GroceryLinesSection
-      count={intl.formatMessage(
-        { id: "groceries.panel.selectedCount" },
-        { selected, total: lines.length }
-      )}
       testID={testID}
       title={title}
       toggleLabel={intl.formatMessage({
@@ -165,7 +161,10 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
         ) : (
           <>
             {pantry.isUnavailable ? (
-              <Text className="text-muted text-xs" testID="add-to-groceries-pantry-unavailable">
+              <Text
+                className="text-muted px-2 text-sm"
+                testID="add-to-groceries-pantry-unavailable"
+              >
                 {intl.formatMessage({ id: "groceries.panel.pantryUnavailable" })}
               </Text>
             ) : null}

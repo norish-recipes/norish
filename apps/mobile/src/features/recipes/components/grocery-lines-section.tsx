@@ -5,48 +5,43 @@ import { Card } from "@/components/card";
 import { PillButton } from "@/components/pill-button";
 import { Skeleton } from "heroui-native";
 
-const HEADER = "flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5";
+/** A section's label row: its name beside the pill, above the card of lines. */
+const HEADER = "flex-row items-end justify-between gap-2 px-2";
 
-/** A section's shell while its lines load: the header's name and button over the rows given. */
+/** A section's shell while its lines load: the label's name and pill over the rows given. */
 export function GroceryLinesSectionSkeleton({ children }: { children: ReactNode }) {
   return (
-    <Card>
+    <View className="gap-1.5">
       <View className={HEADER}>
         <Skeleton className="h-5 w-24 rounded-md" />
-        <View className="flex-1" />
-        <Skeleton className="h-[30px] w-20 rounded-full" />
+        <Skeleton className="h-[34px] w-24 rounded-full" />
       </View>
-      {children}
-    </Card>
+      <Card>{children}</Card>
+    </View>
   );
 }
 
-/** One section of the Add to groceries sheet: its name, how many lines are ticked, select-all, then its lines. */
+/** One section of the Add to groceries sheet: its name and select-all, then a card of its lines. */
 export function GroceryLinesSection({
   title,
-  count,
   toggleLabel,
   testID,
   onToggleAll,
   children,
 }: {
   title: string;
-  count: string;
   toggleLabel: string;
   testID: string;
   onToggleAll: () => void;
   children: ReactNode;
 }) {
   return (
-    <Card testID={testID}>
+    <View className="gap-1.5" testID={testID}>
       <View className={HEADER}>
-        <Text className="text-foreground text-[15px] font-semibold">{title}</Text>
-        <Text className="text-muted flex-1 text-[13px]" numberOfLines={1}>
-          {count}
-        </Text>
+        <Text className="text-muted pb-1.5 text-[13px] font-semibold">{title}</Text>
         <PillButton label={toggleLabel} testID={`${testID}-toggle`} onPress={onToggleAll} />
       </View>
-      {children}
-    </Card>
+      <Card>{children}</Card>
+    </View>
   );
 }
