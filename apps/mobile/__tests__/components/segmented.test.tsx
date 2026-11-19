@@ -8,6 +8,7 @@ type Props = {
   children?: ReactNode;
   accessibilityLabel?: string;
   accessibilityState?: { selected?: boolean };
+  className?: string;
   testID?: string;
   onPress?: () => void;
 };
@@ -16,9 +17,17 @@ const host = ({ children, testID }: Props) => <div data-testid={testID}>{childre
 vi.mock("react-native", () => ({
   View: host,
   Text: ({ children }: Props) => <span>{children}</span>,
-  Pressable: ({ children, accessibilityLabel, accessibilityState, testID, onPress }: Props) => (
+  Pressable: ({
+    children,
+    accessibilityLabel,
+    accessibilityState,
+    className,
+    testID,
+    onPress,
+  }: Props) => (
     <button
       aria-label={accessibilityLabel}
+      className={className}
       aria-selected={accessibilityState?.selected}
       data-testid={testID}
       onClick={onPress}
@@ -27,6 +36,8 @@ vi.mock("react-native", () => ({
     </button>
   ),
 }));
+vi.mock("react-native-reanimated", () => import("./../mocks/reanimated"));
+vi.mock("@/lib/motion/spring", () => ({ springTo: (to: number) => to }));
 vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: (name: string) => name }));
 
 const { Segmented } = await import("@/components/segmented");
@@ -58,6 +69,13 @@ describe("Segmented", () => {
 
     expect(screen.getByTestId("seg-a").getAttribute("aria-selected")).toBe("false");
     expect(screen.getByTestId("seg-b").getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("fills the picked segment until the thumb is placed, so its first frame shows the pick", () => {
+    segmented("b");
+
+    expect(screen.getByTestId("seg-b").className).toContain("bg-thumb");
+    expect(screen.getByTestId("seg-a").className).not.toContain("bg-thumb");
   });
 
   it("picks none for a null value", () => {
