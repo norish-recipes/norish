@@ -515,6 +515,31 @@ type MatchRow = {
   step: { number: number | null; snippet: string } | null;
 };
 
+/** `ids` as a SQL list of uuids. */
+const uuidListSql = (ids: string[]) =>
+  sql.join(
+    ids.map((id) => sql`${id}::uuid`),
+    sql`, `
+  );
+
+/** The rows of a raw `db.execute` result. */
+export function rowsOf<T>(result: unknown): T[] {
+  return ((result as { rows?: T[] }).rows ?? []) as T[];
+}
+
+/** Adds to `matches` the match each of `rows` has, by its recipe id. */
+function addMatches<T extends { id: string }>(
+  matches: Map<string, LibraryMatchDTO>,
+  rows: T[],
+  matchOf: (row: T) => LibraryMatchDTO | null
+) {
+  for (const row of rows) {
+    const match = matchOf(row);
+
+    if (match) matches.set(row.id, match);
+  }
+}
+
 /** One row per recipe of `ids`: what each in-scope field holds that `query` finds. */
 async function recipeMatchRows(
   ids: string[],
@@ -522,12 +547,9 @@ async function recipeMatchRows(
   query: ReturnType<typeof sql>
 ): Promise<MatchRow[]> {
   const inScope = (field: SearchField) => searchFields.includes(field);
-  const idList = sql.join(
-    ids.map((id) => sql`${id}::uuid`),
-    sql`, `
-  );
 
-  const result = await db.execute(sql`
+  return rowsOf<MatchRow>(
+    await db.execute(sql`
     SELECT "recipes"."id" AS id,
       ${
         inScope("title")
@@ -586,10 +608,9 @@ async function recipeMatchRows(
           : sql`NULL::json`
       } AS step
     FROM ${recipes}
-    WHERE "recipes"."id" IN (${idList})
-  `);
-
-  return (result as unknown as { rows: MatchRow[] }).rows;
+    WHERE "recipes"."id" IN (${uuidListSql(ids)})
+  `)
+  );
 }
 
 function toLibraryMatch(row: MatchRow): LibraryMatchDTO | null {
@@ -633,11 +654,7 @@ export async function recipeSearchMatches(
 
     if (pending.length === 0) break;
 
-    for (const row of await recipeMatchRows(pending, searchFields, query)) {
-      const match = toLibraryMatch(row);
-
-      if (match) matches.set(row.id, match);
-    }
+    addMatches(matches, await recipeMatchRows(pending, searchFields, query), toLibraryMatch);
   }
 
   return matches;
@@ -652,20 +669,18 @@ export async function recipeIngredientMatches(
 
   if (ids.length === 0 || ingredientIds.length === 0) return matches;
 
-  const idList = sql.join(
-    ids.map((id) => sql`${id}::uuid`),
-    sql`, `
-  );
-  const result = await db.execute(sql`
+  const rows = rowsOf<Pick<MatchRow, "id" | "ingredient">>(
+    await db.execute(sql`
     SELECT "recipes"."id" AS id,
       ${ingredientLineSql(lineNamesKindSql("match_ri", ingredientIds))} AS ingredient
     FROM ${recipes}
-    WHERE "recipes"."id" IN (${idList})
-  `);
+    WHERE "recipes"."id" IN (${uuidListSql(ids)})
+  `)
+  );
 
-  for (const row of (result as unknown as { rows: Pick<MatchRow, "id" | "ingredient">[] }).rows) {
-    if (row.ingredient) matches.set(row.id, { field: "ingredients", ...row.ingredient });
-  }
+  addMatches(matches, rows, ({ ingredient }) =>
+    ingredient ? { field: "ingredients", ...ingredient } : null
+  );
 
   return matches;
 }

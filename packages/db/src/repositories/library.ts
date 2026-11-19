@@ -34,6 +34,7 @@ import {
   recipeIngredientMatches,
   recipeSearchMatches,
   recipeSearchSql,
+  rowsOf,
 } from "./recipes";
 
 export type LibraryListParams = {
@@ -88,10 +89,6 @@ function hasRecipeOnlyFilter(params: LibraryListParams): boolean {
     params.favoritesOnly === true ||
     params.pantryOnly === true
   );
-}
-
-function rowsOf<T>(result: unknown): T[] {
-  return ((result as { rows?: T[] }).rows ?? []) as T[];
 }
 
 /**
