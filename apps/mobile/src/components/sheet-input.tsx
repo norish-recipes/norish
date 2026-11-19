@@ -3,13 +3,13 @@ import React from "react";
 import { Text } from "react-native";
 import { Input, InputGroup, TextArea } from "heroui-native";
 
-/** The one sheet field: the default fill, a capsule 48 pt tall, no ring, shadow or focus outline. */
+/** The one field: the sand fill, a capsule 48 pt tall, no ring, shadow or focus outline. */
 export const SHEET_FIELD =
-  "bg-default h-12 rounded-full text-base ios:shadow-none ios:focus:outline-transparent";
+  "bg-sand h-12 rounded-full text-base ios:shadow-none ios:focus:outline-transparent";
 
-/** The same field for several lines: the fill and no ring, rounded to a card instead of a capsule. */
+/** The same field for several lines: the sand fill and no ring, rounded to a card instead of a capsule. */
 const SHEET_TEXT_AREA =
-  "bg-default rounded-3xl px-4 py-3.5 text-base leading-[23px] ios:shadow-none ios:focus:outline-transparent";
+  "bg-sand rounded-3xl px-4 py-3.5 text-base leading-[23px] ios:shadow-none ios:focus:outline-transparent";
 
 /** A sheet's multi-line field, as tall as its `style` makes it. */
 export function SheetTextArea({ className, ...props }: ComponentProps<typeof TextArea>) {

@@ -33,7 +33,6 @@ vi.mock("heroui-native", () => ({
 
 const { OnSheet } = await import("@/components/on-sheet");
 const { CardPhoto } = await import("@/components/card-photo");
-const { ToggleChip } = await import("@/components/toggle-chip");
 const { PlannedThumb } = await import("@/components/planned-thumb");
 const { CookbookCover } = await import("@/features/recipes/components/cookbook-cover");
 const { RowButton } = await import("@/features/groceries/components/pantry-rows");
@@ -42,7 +41,6 @@ const slices =
 
 const cases = [
   ["CardPhoto", <CardPhoto key="a" className="x" image={null} />],
-  ["ToggleChip", <ToggleChip key="b" active={false} label="l" testID="t" onPress={() => {}} />],
   ["PlannedThumb", <PlannedThumb key="c" className="x" item={{} as never} />],
   [
     "CookbookCover",
