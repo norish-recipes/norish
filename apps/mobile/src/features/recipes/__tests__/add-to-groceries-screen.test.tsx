@@ -30,8 +30,7 @@ vi.mock("expo-router", () => ({
     },
   },
 }));
-vi.mock("@/components/stepper", () => ({ Stepper: () => null }));
-vi.mock("@/components/animated-number", () => ({ AnimatedNumber: () => null }));
+vi.mock("@/components/servings-stepper", () => ({ ServingsStepper: () => null }));
 vi.mock("@/lib/add-to-groceries", () => ({ groceriesStartServings: () => undefined }));
 vi.mock("@/components/sheet", async () => {
   const { ModalHeader } = await import("@/components/modal-header");

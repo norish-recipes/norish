@@ -1,6 +1,6 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { CardRow } from "@/components/card";
 import { Switch } from "@/components/switch";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useRouter } from "expo-router";
@@ -80,17 +80,14 @@ export function AddGroceriesScreen() {
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.addTitle" })}
       trailingRows={
-        <View className="border-separator min-h-[52px] flex-row items-center border-t px-4">
-          <Text className="text-foreground flex-1 text-base">
-            {intl.formatMessage({ id: "groceries.panel.addAnother" })}
-          </Text>
+        <CardRow label={intl.formatMessage({ id: "groceries.panel.addAnother" })}>
           <Switch
             accessibilityLabel={intl.formatMessage({ id: "groceries.panel.addAnother" })}
             isSelected={another}
             testID="add-grocery-another"
             onSelectedChange={setAnother}
           />
-        </View>
+        </CardRow>
       }
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}

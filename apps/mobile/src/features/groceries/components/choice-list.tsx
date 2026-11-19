@@ -1,9 +1,9 @@
 import React from "react";
 import { View } from "react-native";
 import { Card } from "@/components/card";
+import { Checkmark } from "@/components/checkmark";
 import { SheetBody } from "@/components/sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
+import { Button } from "heroui-native";
 
 export type Choice = { id: string | null; label: string; color?: string };
 
@@ -21,8 +21,6 @@ function ChoiceRow({
   testID: string;
   onPick: () => void;
 }) {
-  const [accent] = useThemeColor(["accent"] as const);
-
   return (
     <View className={first ? "" : "border-separator border-t"}>
       <Button
@@ -37,7 +35,7 @@ function ChoiceRow({
         <Button.Label className="text-foreground flex-1 text-base font-normal">
           {choice.label}
         </Button.Label>
-        {selected ? <Ionicons color={accent} name="checkmark" size={18} /> : null}
+        {selected ? <Checkmark /> : null}
       </Button>
     </View>
   );

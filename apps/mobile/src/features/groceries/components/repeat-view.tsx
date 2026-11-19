@@ -2,8 +2,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Segmented } from "@/components/segmented";
 import { SheetBody } from "@/components/sheet";
+import { Stepper } from "@/components/stepper";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
@@ -40,7 +41,7 @@ export function RepeatBody({
 }) {
   const intl = useIntl();
   const label = useRecurrenceLabel();
-  const [foreground, accentText] = useThemeColor(["foreground", "accent"] as const);
+  const [accentText] = useThemeColor(["accent"] as const);
   const text = (key: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id: `common.recurrence.${key}` }, values);
   const next = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
@@ -64,35 +65,22 @@ export function RepeatBody({
           <View className="pt-2.5">
             <FieldLabel>{text("interval")}</FieldLabel>
           </View>
-          <View className="flex-row items-center gap-2.5">
-            <Button
-              isIconOnly
-              accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.decreaseInterval" })}
-              className="bg-sand size-11 rounded-full"
-              isDisabled={pattern.interval <= 1}
-              testID="repeat-interval-decrease"
-              variant="secondary"
-              onPress={() => onChange(stepRecurrenceInterval(pattern, -1))}
-            >
-              <Ionicons color={foreground} name="remove" size={16} />
-            </Button>
-            <View className="bg-sand h-11 flex-1 flex-row items-baseline justify-center gap-1.5 rounded-full pt-2">
+          <Stepper
+            wide
+            canDecrement={pattern.interval > 1}
+            decreaseLabel={intl.formatMessage({ id: "groceries.mobile.decreaseInterval" })}
+            increaseLabel={intl.formatMessage({ id: "groceries.mobile.increaseInterval" })}
+            testID="repeat-interval"
+            onDecrement={() => onChange(stepRecurrenceInterval(pattern, -1))}
+            onIncrement={() => onChange(stepRecurrenceInterval(pattern, 1))}
+          >
+            <View className="flex-row items-baseline gap-1.5">
               <Text className="text-foreground text-[22px] font-bold" testID="repeat-interval">
                 {pattern.interval}
               </Text>
               <Text className="text-muted text-[13px]">{text(recurrenceUnitKey(pattern))}</Text>
             </View>
-            <Button
-              isIconOnly
-              accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.increaseInterval" })}
-              className="bg-sand size-11 rounded-full"
-              testID="repeat-interval-increase"
-              variant="secondary"
-              onPress={() => onChange(stepRecurrenceInterval(pattern, 1))}
-            >
-              <Ionicons color={foreground} name="add" size={16} />
-            </Button>
-          </View>
+          </Stepper>
         </>
       ) : null}
       {recurrenceHasWeekday(pattern) && pattern ? (

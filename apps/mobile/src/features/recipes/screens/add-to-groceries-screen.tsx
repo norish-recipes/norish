@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
-import { AnimatedNumber } from "@/components/animated-number";
+import { ServingsStepper } from "@/components/servings-stepper";
 import { Sheet, SheetRow, SheetScrollView } from "@/components/sheet";
-import { Stepper } from "@/components/stepper";
 import { groceriesStartServings } from "@/lib/add-to-groceries";
-import { useServingsStepper } from "@/lib/use-servings-stepper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -17,7 +15,6 @@ import {
   useGroceryLines,
 } from "@norish/shared-react/groceries";
 import {
-  formatServings,
   useRecipeFoodsToBuy,
   useRecipeQuery,
   useRecipeSubscription,
@@ -124,7 +121,6 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
     decrementServings,
     scaledIngredients,
   } = useRecipeFoodsToBuy(recipe.id, servings, groceriesStartServings(startParam, servings));
-  const servingsStepper = useServingsStepper(picked);
   const {
     pantry,
     toBuy,
@@ -157,19 +153,12 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
     >
       <SheetScrollView contentClassName="gap-3">
         <ServingsRow>
-          <Stepper
-            {...servingsStepper}
+          <ServingsStepper
+            servings={picked}
             testID="add-to-groceries-servings"
             onDecrement={decrementServings}
             onIncrement={incrementServings}
-          >
-            <View className="min-w-8 items-center" testID="add-to-groceries-servings-value">
-              <AnimatedNumber
-                className="text-foreground text-base font-semibold"
-                value={formatServings(picked)}
-              />
-            </View>
-          </Stepper>
+          />
         </ServingsRow>
         {loading ? (
           <LinesSkeleton />

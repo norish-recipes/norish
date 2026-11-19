@@ -4,7 +4,7 @@ import { CardSlice } from "@/components/card-slice";
 import { IconButton } from "@/components/icon-button";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useOnSheet } from "@/components/on-sheet";
-import { Pill } from "@/components/pill";
+import { OnTheListChip } from "@/components/on-the-list-chip";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
@@ -16,17 +16,6 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { PantryRow } from "../utils/pantry-rows";
 import { SkeletonCard } from "./groceries-states";
-
-/** A kept food that still has a grocery to buy: handled, so nobody adds it twice. */
-export function OnTheListChip() {
-  const intl = useIntl();
-
-  return (
-    <Pill size="row" testID="on-the-list" tone="active">
-      {intl.formatMessage({ id: "groceries.pantry.onTheList" })}
-    </Pill>
-  );
-}
 
 /** One food of the Pantry's lists: its icon, its name, what it says under the name, and an end. */
 export function FoodRow({

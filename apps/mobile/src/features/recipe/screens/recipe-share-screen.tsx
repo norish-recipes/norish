@@ -85,7 +85,7 @@ function ShareRow({
               ? url.replace(/^https?:\/\//, "")
               : t("linkCreated", { date: date(share.createdAt) })}
           </Text>
-          <Pill size="row" tone={STATUS_TONE[share.status]}>
+          <Pill size="tag" tone={STATUS_TONE[share.status]}>
             {t(`status.${share.status}`)}
           </Pill>
         </View>

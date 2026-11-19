@@ -76,7 +76,7 @@ vi.mock("@/components/card", () => ({
   Card: ({ children }: { children: React.ReactNode }) => children,
   CardRow: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock("../components/pantry-rows", () => ({ OnTheListChip: () => null }));
+vi.mock("@/components/on-the-list-chip", () => ({ OnTheListChip: () => null }));
 vi.mock("@norish/shared-react/groceries", () => ({
   useOnTheList: () => [],
   usePantryMutations: () => ({ removePantryIngredient: store.remove }),

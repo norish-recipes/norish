@@ -1,11 +1,9 @@
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { AnimatedNumber } from "@/components/animated-number";
 import { HintButton } from "@/components/hint-button";
-import { Stepper } from "@/components/stepper";
+import { ServingsStepper } from "@/components/servings-stepper";
 import { ToggleChip } from "@/components/toggle-chip";
-import { useServingsStepper } from "@/lib/use-servings-stepper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -13,7 +11,7 @@ import { useIntl } from "react-intl";
 import type { RecipeFormState } from "@norish/shared-react/recipes";
 import type { RecipeCategory } from "@norish/shared/contracts";
 import { useTagsQuery } from "@norish/shared-react/config";
-import { formatServings, servingsDown, servingsUp } from "@norish/shared-react/recipes";
+import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 
 import { SectionCard } from "../tint";
 import { EditorInput } from "./editor-parts";
@@ -230,7 +228,6 @@ export function ServingsAndTimeCard({
   error?: string;
 }) {
   const intl = useIntl();
-  const servingsStepper = useServingsStepper(form.servings ?? 1);
   const text = (id: string) => intl.formatMessage({ id });
   const minutes = text("recipes.editor.minutes");
   const time = (field: "prepMinutes" | "cookMinutes" | "totalMinutes", id: string) => (
@@ -247,19 +244,12 @@ export function ServingsAndTimeCard({
     <SectionCard title={text("recipes.editor.servingsAndTime")}>
       <View className="flex-row items-center justify-between pb-3">
         <Text className="text-foreground text-[17px]">{text("recipes.form.servings")}</Text>
-        <Stepper
-          {...servingsStepper}
+        <ServingsStepper
+          servings={form.servings ?? 1}
           testID="editor-servings"
           onDecrement={() => set("servings", servingsDown(form.servings ?? 1))}
           onIncrement={() => set("servings", servingsUp(form.servings ?? 1))}
-        >
-          <View className="min-w-8 items-center" testID="editor-servings-value">
-            <AnimatedNumber
-              className="text-foreground text-base font-semibold"
-              value={formatServings(form.servings ?? 1)}
-            />
-          </View>
-        </Stepper>
+        />
       </View>
       {error ? <Text className="text-danger pb-2 text-[13px] font-medium">{error}</Text> : null}
       <View className="flex-row gap-2">

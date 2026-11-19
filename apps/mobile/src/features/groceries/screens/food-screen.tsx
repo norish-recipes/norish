@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
+import { OnTheListChip } from "@/components/on-the-list-chip";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { Switch } from "@/components/switch";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,8 +9,6 @@ import { useIntl } from "react-intl";
 
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-
-import { OnTheListChip } from "../components/pantry-rows";
 
 /** A kept food: whether the household keeps it, and nothing else of the Ingredient. */
 export function FoodScreen() {
