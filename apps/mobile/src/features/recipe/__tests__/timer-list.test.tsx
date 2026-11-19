@@ -51,10 +51,12 @@ vi.mock("react-intl", () => ({
 }));
 vi.mock("@/components/timer-ring", () => ({ TimerRing: () => null }));
 vi.mock("@/components/pressable-scale", () => ({ PressableScale: host }));
-vi.mock("../components/tint", () => ({ useTint: () => null }));
+vi.mock("@/components/icon-button", () => ({
+  IconButton: ({ label, onPress }: { label: string; onPress: () => void }) =>
+    host({ accessibilityLabel: label, onPress }),
+}));
 
 const { AllTimers } = await import("../components/timer-list");
-const { OnSheet } = await import("@/components/on-sheet");
 const { useTimerStore } = await import("@norish/shared-react/recipes/timers");
 
 const timer = (id: string, status: "running" | "paused" | "completed") => ({
@@ -95,20 +97,6 @@ describe("AllTimers", () => {
       "running",
       "running",
     ]);
-  });
-
-  it.each([
-    [true, "bg-sand"],
-    [false, "bg-default"],
-  ])("fills its round buttons for a sheet=%s with %s", (onSheet, fill) => {
-    useTimerStore.setState({ timers: [timer("a", "paused")] });
-    render(
-      <OnSheet value={onSheet}>
-        <AllTimers onEmpty={() => {}} />
-      </OnSheet>
-    );
-
-    expect(screen.getByLabelText("recipes.cookMode.resumeTimer").className).toContain(fill);
   });
 
   it("opens the tapped row's timer, and a round button beside it only does its own action", () => {

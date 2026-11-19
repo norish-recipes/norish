@@ -2,7 +2,7 @@ import React, { useDeferredValue, useState } from "react";
 import { Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
-import { GlassIconButton } from "@/components/glass";
+import { IconButton } from "@/components/icon-button";
 import { Loader } from "@/components/loader";
 import { MoveFields } from "@/components/move-fields";
 import { Sheet, SheetList } from "@/components/sheet";
@@ -23,6 +23,7 @@ import {
 } from "@norish/shared-react/recipes";
 import { parseDateKey } from "@norish/shared/lib/helpers";
 
+import { pickRowClass } from "../components/pick-row";
 import { usePlanExit } from "../hooks/use-plan-exit";
 
 const SKELETON_ROWS = [0, 1, 2, 3];
@@ -93,7 +94,7 @@ export function PlanRecipeScreen() {
           />
         )}
         {error ? (
-          <Text className="text-danger border-separator border-t p-4 text-base">
+          <Text className="text-danger border-line border-t p-4 text-base">
             {intl.formatMessage({ id: "calendar.panel.failedToLoadRecipes" })}
           </Text>
         ) : null}
@@ -116,7 +117,7 @@ export function PlanRecipeScreen() {
       <SheetList
         ListEmptyComponent={
           error ? undefined : (
-            <View className="bg-sand border-separator rounded-b-[22px] border-t">
+            <View className="bg-sand border-line rounded-b-[22px] border-t">
               {isLoading ? (
                 SKELETON_ROWS.map((row) => (
                   <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
@@ -138,7 +139,7 @@ export function PlanRecipeScreen() {
         renderItem={({ item: recipe, index }) => (
           <Button
             accessibilityLabel={recipe.name}
-            className={`border-separator bg-sand h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+            className={`h-auto justify-start rounded-none ${pickRowClass({ first: false, last: index === recipes.length - 1 })}`}
             testID={`plan-recipe-${recipe.id}`}
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
@@ -147,7 +148,11 @@ export function PlanRecipeScreen() {
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>
-            <GlassIconButton size="small" symbol="plus" />
+            <IconButton
+              icon="add"
+              label={intl.formatMessage({ id: "common.actions.add" })}
+              onPress={() => planRecipe(recipe, slot)}
+            />
           </Button>
         )}
         onEndReached={loadMore}

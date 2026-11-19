@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { IconButton } from "@/components/icon-button";
 import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -17,11 +18,7 @@ export function AddToCookbookScreen() {
   const intl = useIntl();
   const router = useRouter();
   const { recipeId, name } = useLocalSearchParams<{ recipeId: string; name?: string }>();
-  const [foreground, muted, accentForeground] = useThemeColor([
-    "foreground",
-    "muted",
-    "accent-foreground",
-  ] as const);
+  const [muted] = useThemeColor(["muted"] as const);
   const {
     cookbooks,
     isLoading,
@@ -64,17 +61,14 @@ export function AddToCookbookScreen() {
               onSubmitEditing={stageNew}
             />
           </TextField>
-          <Pressable
-            accessibilityLabel={newLabel}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !canStage }}
-            className={`size-12 items-center justify-center rounded-full ${canStage ? "bg-accent" : "bg-sand"}`}
+          <IconButton
             disabled={!canStage}
+            icon="add"
+            label={newLabel}
             testID="add-to-cookbook-new-add"
+            tone="accent"
             onPress={stageNew}
-          >
-            <Ionicons color={canStage ? accentForeground : muted} name="add" size={22} />
-          </Pressable>
+          />
         </View>
       }
       list={
@@ -106,15 +100,12 @@ export function AddToCookbookScreen() {
                         {intl.formatMessage({ id: "recipes.cookbooks.willBeCreated" })}
                       </Text>
                     </View>
-                    <Pressable
-                      accessibilityLabel={intl.formatMessage({ id: "common.actions.remove" })}
-                      accessibilityRole="button"
-                      className="bg-sand size-8 items-center justify-center rounded-full"
+                    <IconButton
+                      icon="close"
+                      label={intl.formatMessage({ id: "common.actions.remove" })}
                       testID={`add-to-cookbook-unstage-${item.entry.key}`}
                       onPress={() => unstage(item.entry.key)}
-                    >
-                      <Ionicons color={foreground} name="close" size={16} />
-                    </Pressable>
+                    />
                   </View>
                 ) : (
                   <PickRow

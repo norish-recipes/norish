@@ -3,8 +3,8 @@ import type { ImagePickerAsset } from "expo-image-picker";
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Alert, Image, Pressable, Text, useWindowDimensions, View } from "react-native";
-import { GlassCloseButton } from "@/components/glass";
 import { HintButton } from "@/components/hint-button";
+import { IconButton } from "@/components/icon-button";
 import { Sheet, SHEET_INSET, SheetBody } from "@/components/sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
@@ -131,12 +131,12 @@ export function ImportPhotosScreen() {
                 source={{ uri: photo.uri }}
               />
               <View className="absolute top-1.5 right-1.5">
-                <GlassCloseButton
+                <IconButton
+                  icon="close"
                   label={intl.formatMessage(
                     { id: "recipes.addRecipe.removePhoto" },
                     { number: index + 1 }
                   )}
-                  size="small"
                   testID={`import-photos-remove-${index}`}
                   onPress={() => setPhotos(photos.filter((other) => other !== photo))}
                 />

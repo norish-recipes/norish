@@ -1,9 +1,9 @@
 import type { Edge } from "@/lib/card-edges";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { ItemSlice } from "@/components/card-slice";
 import { DragPressable } from "@/components/drag-list/drag-list";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { IconButton } from "@/components/icon-button";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -11,34 +11,6 @@ import { useIntl } from "react-intl";
 import type { StoreDto } from "@norish/shared/contracts";
 
 import { useStoreColor } from "../hooks/use-store-color";
-
-function CircleButton({
-  icon,
-  label,
-  testID,
-  danger = false,
-  onPress,
-}: {
-  icon: "pencil" | "trash-outline";
-  label: string;
-  testID: string;
-  danger?: boolean;
-  onPress: () => void;
-}) {
-  const [foreground, dangerColor] = useThemeColor(["foreground", "danger"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className="bg-sand size-9 items-center justify-center rounded-full"
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons color={danger ? dangerColor : foreground} name={icon} size={16} />
-    </Pressable>
-  );
-}
 
 /** A Store of Manage stores: its grip, its dot and name, and edit and delete. A tap opens the
  * editor and a hold lifts the row; while it is carried it is a card of its own. */
@@ -72,7 +44,7 @@ export function StoreListRow({
             {store.name}
           </Text>
         </DragPressable>
-        <CircleButton
+        <IconButton
           icon="pencil"
           label={intl.formatMessage(
             { id: "groceries.mobile.editStoreLabel" },
@@ -81,14 +53,14 @@ export function StoreListRow({
           testID={`store-edit-${store.id}`}
           onPress={onEdit}
         />
-        <CircleButton
-          danger
+        <IconButton
           icon="trash-outline"
           label={intl.formatMessage(
             { id: "groceries.mobile.deleteStoreLabel" },
             { store: store.name }
           )}
           testID={`store-delete-${store.id}`}
+          tone="danger"
           onPress={onDelete}
         />
       </View>

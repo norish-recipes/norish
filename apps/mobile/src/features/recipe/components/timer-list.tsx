@@ -1,7 +1,7 @@
 import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { useGroupedFill, useOnSheet } from "@/components/on-sheet";
+import { IconButton } from "@/components/icon-button";
 import { PressableScale } from "@/components/pressable-scale";
 import { TimerRing } from "@/components/timer-ring";
 import { lightImpact } from "@/lib/haptics";
@@ -15,37 +15,6 @@ import { sortTimers, timerAdjustStep, useTimerStore } from "@norish/shared-react
 import { formatTimerMs } from "@norish/shared/lib/helpers";
 
 import { toggleTimer } from "../utils/toggle-timer";
-import { useTint } from "./tint";
-
-function RoundAction({
-  icon,
-  label,
-  onPress,
-  plain = false,
-}: {
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  onPress: () => void;
-  plain?: boolean;
-}) {
-  const tint = useTint();
-  const onSheet = useOnSheet();
-  const fill = useGroupedFill();
-  const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className={`size-9 items-center justify-center rounded-full ${plain ? "" : fill}`}
-      hitSlop={4}
-      style={!plain && !onSheet && tint ? { backgroundColor: tint.soft } : undefined}
-      onPress={onPress}
-    >
-      <Ionicons color={plain ? muted : foreground} name={icon} size={plain ? 16 : 15} />
-    </Pressable>
-  );
-}
 
 function TimerRow({
   timer,
@@ -121,7 +90,7 @@ function TimerRow({
         </Text>
       </PressableScale>
       {done ? (
-        <RoundAction
+        <IconButton
           icon="refresh"
           label={intl.formatMessage({ id: "recipes.cookMode.restartTimer" })}
           onPress={() => {
@@ -131,17 +100,17 @@ function TimerRow({
         />
       ) : (
         <>
-          <RoundAction
+          <IconButton
             icon="remove"
             label={intl.formatMessage({ id: "recipes.cookMode.decreaseTimer" }, { time: stepText })}
             onPress={() => adjustTimer(timer.id, -step)}
           />
-          <RoundAction
+          <IconButton
             icon="add"
             label={intl.formatMessage({ id: "recipes.cookMode.increaseTimer" }, { time: stepText })}
             onPress={() => adjustTimer(timer.id, step)}
           />
-          <RoundAction
+          <IconButton
             icon={timer.status === "running" ? "pause" : "play"}
             label={intl.formatMessage(
               {
@@ -156,8 +125,7 @@ function TimerRow({
           />
         </>
       )}
-      <RoundAction
-        plain
+      <IconButton
         icon="close"
         label={intl.formatMessage({ id: "recipes.cookMode.dismissTimer" })}
         onPress={() => removeTimer(timer.id)}

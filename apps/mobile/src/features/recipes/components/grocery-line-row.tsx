@@ -1,13 +1,14 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
-import { GlassIconButton } from "@/components/glass";
+import { IconButton } from "@/components/icon-button";
+import { OnTheListChip } from "@/components/on-the-list-chip";
 import { Tick } from "@/components/tick";
-import { Chip, Skeleton } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
-const rowClass = (first: boolean) => `${ROW} ${first ? "" : "border-separator border-t"}`;
+const rowClass = (first: boolean) => `${ROW} ${first ? "" : "border-line border-t"}`;
 
 /** A row's shell while its line loads: the tick and the name, in the row's own layout. */
 export function GroceryLineRowSkeleton({ first }: { first: boolean }) {
@@ -16,17 +17,6 @@ export function GroceryLineRowSkeleton({ first }: { first: boolean }) {
       <Skeleton className="size-6 rounded-full" />
       <Skeleton className="h-6 flex-1 rounded-md" />
     </View>
-  );
-}
-
-/** The mark of a kept line whose food is already on the groceries list, as web's. */
-function OnTheList({ testID }: { testID: string }) {
-  const intl = useIntl();
-
-  return (
-    <Chip className="shrink-0" color="accent" size="sm" testID={testID} variant="soft">
-      <Chip.Label>{intl.formatMessage({ id: "groceries.pantry.onTheList" })}</Chip.Label>
-    </Chip>
   );
 }
 
@@ -71,15 +61,14 @@ export function GroceryLineRow({
         <AmountName amount={amount} className="min-w-0 flex-1 text-base" name={name} />
       </Pressable>
       {canKeep ? (
-        <GlassIconButton
+        <IconButton
+          icon="file-tray-full-outline"
           label={intl.formatMessage({ id: "groceries.panel.weKeepThis" })}
-          size="small"
-          symbol="tray.full"
           testID={`${testID}-keep`}
           onPress={onKeep}
         />
       ) : onTheList ? (
-        <OnTheList testID={`${testID}-on-the-list`} />
+        <OnTheListChip testID={`${testID}-on-the-list`} />
       ) : null}
     </View>
   );

@@ -61,7 +61,7 @@ vi.mock("@expo/ui/swift-ui", async () => {
     Host: ({ children }: { children?: React.ReactNode }) => children,
     Image: () => null,
     Button: ({ children, onPress }: { children?: React.ReactNode; onPress?: () => void }) =>
-      createElement("span", { "data-testid": "plan-recipe-plus", onClick: onPress }, children),
+      createElement("span", { onClick: onPress }, children),
     DatePicker: ({ onDateChange }: { onDateChange: (date: Date) => void }) => {
       held.pickDate = onDateChange;
 
@@ -86,6 +86,21 @@ vi.mock("@/components/pressable-scale", () => ({ PressableScale: () => null }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
 vi.mock("@/components/card-photo", () => ({ CardPhoto: () => null }));
+vi.mock("@/components/icon-button", async () => {
+  const { createElement } = await import("react");
+
+  // A press target of its own: stopping the bubble stands in for RN, where it takes the tap.
+  return {
+    IconButton: ({ onPress }: { onPress: () => void }) =>
+      createElement("span", {
+        "data-testid": "plan-recipe-plus",
+        onClick: (event: { stopPropagation: () => void }) => {
+          event.stopPropagation();
+          onPress();
+        },
+      }),
+  };
+});
 vi.mock("@/components/day-card", () => ({ formatDay: () => "day" }));
 vi.mock("@/components/sheet", async () => {
   const { createElement } = await import("react");
@@ -198,7 +213,7 @@ describe("PlanRecipeScreen", () => {
     expect(held.planned.at(-1)).toEqual(new Date(2026, 10, 20));
   });
 
-  it("plans the recipe once for a tap on its row or its plus, which is no press target", () => {
+  it("plans the recipe once for a tap on its row or its plus", () => {
     render(<PlanRecipeScreen />);
     fireEvent.click(screen.getByTestId("plan-recipe-plus"));
 
