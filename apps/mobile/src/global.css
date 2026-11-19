@@ -23,7 +23,8 @@
   :is(.light),
   :where(.light),
   [data-theme="light"] {
-    --sand: rgb(234 228 214);
+    --sand: rgb(241 237 228);
+    --shop-ink: oklch(50% 0.11 85);
     --stroke: oklch(45% 0.03 85 / 0.16);
     --line: oklch(45% 0.03 85 / 0.15);
     --tick-border: oklch(56% 0.015 80);
@@ -35,7 +36,8 @@
   :is(.dark),
   :where(.dark),
   [data-theme="dark"] {
-    --sand: rgb(46 42 34);
+    --sand: rgb(45 43 38);
+    --shop-ink: oklch(84% 0.14 92);
     --stroke: oklch(100% 0 0 / 0.14);
     --line: oklch(100% 0 0 / 0.1);
     --tick-border: oklch(64% 0.01 80);
