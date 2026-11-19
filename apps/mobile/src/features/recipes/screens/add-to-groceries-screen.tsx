@@ -35,7 +35,7 @@ function ServingsRow({ children }: { children?: ReactNode }) {
   const intl = useIntl();
 
   return (
-    <View className="min-h-11 flex-row items-center justify-between px-2">
+    <View className="mb-3 min-h-11 flex-row items-center justify-between px-2">
       <Text className="text-foreground text-base font-semibold">
         {intl.formatMessage({ id: "groceries.panel.servings" })}
       </Text>
@@ -47,11 +47,11 @@ function ServingsRow({ children }: { children?: ReactNode }) {
 /** What the lines look like while they load: two sections of rows, in the real shells. */
 function LinesSkeleton() {
   return (
-    <View className="gap-3" testID="add-to-groceries-skeleton">
+    <View className="gap-4" testID="add-to-groceries-skeleton">
       {[5, 3].map((rows) => (
         <GroceryLinesSectionSkeleton key={rows}>
           {Array.from({ length: rows }, (_, index) => (
-            <GroceryLineRowSkeleton key={index} first={index === 0} />
+            <GroceryLineRowSkeleton key={index} />
           ))}
         </GroceryLinesSectionSkeleton>
       ))}
@@ -80,6 +80,10 @@ function LineSection({
 
   return (
     <GroceryLinesSection
+      count={intl.formatMessage(
+        { id: "groceries.panel.selectedCount" },
+        { selected, total: lines.length }
+      )}
       testID={testID}
       title={title}
       toggleLabel={intl.formatMessage({
@@ -87,12 +91,11 @@ function LineSection({
       })}
       onToggleAll={() => controls.toggleSection(lines, other)}
     >
-      {lines.map((item, index) => (
+      {lines.map((item) => (
         <GroceryLineRow
           key={item.id}
           amount={formatSpacedAmountUnit(item.amount, item.unit)}
           canKeep={controls.canKeep(item)}
-          first={index === 0}
           name={item.ingredientName}
           selected={controls.isSelected(item.id)}
           testID={`grocery-line-${item.id}`}
@@ -147,7 +150,7 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
       subtitle={recipe.name}
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
-      <SheetScrollView contentClassName="gap-3">
+      <SheetScrollView contentClassName="gap-4">
         <ServingsRow>
           <ServingsStepper
             servings={picked}
@@ -216,7 +219,7 @@ export function AddToGroceriesScreen() {
       name="add-to-groceries"
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
-      <SheetScrollView contentClassName="gap-3">
+      <SheetScrollView contentClassName="gap-4">
         <ServingsRow />
         <LinesSkeleton />
       </SheetScrollView>

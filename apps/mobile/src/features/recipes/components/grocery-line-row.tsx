@@ -8,13 +8,13 @@ import { Tick } from "@/components/tick";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
-const ROW = "min-h-[52px] flex-row items-center gap-3 px-4";
+const ROW = "min-h-[58px] flex-row items-center gap-3 px-4 py-2";
 
 /** A row's shell while its line loads: the tick and the name, in the row's own layout. */
-export function GroceryLineRowSkeleton({ first }: { first: boolean }) {
+export function GroceryLineRowSkeleton() {
   return (
     <View className={ROW}>
-      <SliceHairline first={first} />
+      <SliceHairline first={false} />
       <Skeleton className="size-6 rounded-full" />
       <Skeleton className="h-6 flex-1 rounded-md" />
     </View>
@@ -29,7 +29,6 @@ export function GroceryLineRow({
   amount,
   name,
   selected,
-  first,
   canKeep,
   onTheList,
   testID,
@@ -39,7 +38,6 @@ export function GroceryLineRow({
   amount: string;
   name: string;
   selected: boolean;
-  first: boolean;
   canKeep: boolean;
   onTheList: boolean;
   testID: string;
@@ -50,7 +48,8 @@ export function GroceryLineRow({
 
   return (
     <View className={ROW}>
-      <SliceHairline first={first} />
+      {/* Each line sits under its section's heading, so every one has the hairline above it. */}
+      <SliceHairline first={false} />
       <Pressable
         accessibilityLabel={amountNameLabel(amount, name)}
         accessibilityRole="checkbox"
