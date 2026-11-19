@@ -1,13 +1,14 @@
 import React from "react";
-import { View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Card } from "@/components/card";
 import { Checkmark } from "@/components/checkmark";
 import { SheetBody } from "@/components/sheet";
-import { Button } from "heroui-native";
+import { SliceHairline } from "@/components/slice-row";
 
 export type Choice = { id: string | null; label: string; color?: string };
 
-/** One choice of a list: its mark, its label and a check where it is the one held. */
+/** One choice of a list: its dot (a gap where it has none, so labels line up), its label and a
+ * check where it is the one held. */
 function ChoiceRow({
   choice,
   selected,
@@ -22,22 +23,21 @@ function ChoiceRow({
   onPick: () => void;
 }) {
   return (
-    <View className={first ? "" : "border-separator border-t"}>
-      <Button
-        className="h-[52px] justify-start gap-3 rounded-none px-4"
-        testID={testID}
-        variant="ghost"
-        onPress={onPick}
-      >
-        {choice.color ? (
-          <View className="size-2.5 rounded-full" style={{ backgroundColor: choice.color }} />
-        ) : null}
-        <Button.Label className="text-foreground flex-1 text-base font-normal">
-          {choice.label}
-        </Button.Label>
-        {selected ? <Checkmark /> : null}
-      </Button>
-    </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      className="min-h-[52px] flex-row items-center gap-3 px-4"
+      testID={testID}
+      onPress={onPick}
+    >
+      <SliceHairline first={first} />
+      <View
+        className="size-2.5 rounded-full"
+        style={choice.color ? { backgroundColor: choice.color } : undefined}
+      />
+      <Text className="text-foreground flex-1 text-base">{choice.label}</Text>
+      {selected ? <Checkmark /> : null}
+    </Pressable>
   );
 }
 

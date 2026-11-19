@@ -81,7 +81,7 @@ export function RepeatPills({
         </Pressable>
       ) : null}
       {confirmed ? (
-        <View className="bg-accent/10 h-8 flex-row items-center rounded-full pl-3">
+        <View className="bg-sand border-stroke h-8 flex-row items-center rounded-full border-[0.5px] pl-3">
           <Pressable accessibilityRole="button" testID="repeat-confirmed" onPress={onEdit}>
             <Text className="text-accent-text text-sm font-medium">{label(confirmed)}</Text>
           </Pressable>
@@ -100,11 +100,7 @@ export function RepeatPills({
   );
 }
 
-/** A small caps label over a group of controls. */
+/** A label over a group of controls. */
 export function FieldLabel({ children }: { children: string }) {
-  return (
-    <Text className="text-muted px-2 text-xs font-semibold tracking-[0.6px] uppercase">
-      {children}
-    </Text>
-  );
+  return <Text className="text-muted px-2 text-[13px] font-medium">{children}</Text>;
 }
