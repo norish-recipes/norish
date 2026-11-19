@@ -1,3 +1,4 @@
+import type { ComponentRef } from "react";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput } from "react-native";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
@@ -16,7 +17,7 @@ export function TypedServings({
 }) {
   const intl = useIntl();
   const [draft, setDraft] = useState<string | null>(null);
-  const fieldRef = useFocusOnMount<TextInput>(draft !== null);
+  const fieldRef = useFocusOnMount<ComponentRef<typeof TextInput>>(draft !== null);
 
   if (draft === null) {
     return (
