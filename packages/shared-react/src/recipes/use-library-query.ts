@@ -13,6 +13,7 @@ import { useTRPC } from "../trpc";
 type LibraryFilters = RecipeFilters & {
   type?: LibraryTypeFilter;
   favoritesOnly?: boolean;
+  sortBeatsRank?: boolean;
 };
 
 type LibraryQueryResult = {

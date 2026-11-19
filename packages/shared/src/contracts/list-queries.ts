@@ -3,6 +3,8 @@ import type { toRecipesQueryFilters } from "./filter-contract";
 /** Filters as the list queries take them: toRecipesQueryFilters' answer, or any part of it. */
 export type ListQueryFilters = Partial<ReturnType<typeof toRecipesQueryFilters>> & {
   limit?: number;
+  /** Mobile Search only: an explicit sort orders a search instead of relevance. */
+  sortBeatsRank?: boolean;
 };
 
 /** The fields and defaults both list queries share. */
@@ -40,7 +42,12 @@ function listQueryInput(
 export function libraryListInput(filters: ListQueryFilters = {}) {
   // The recipe list's default too, so the Warm Set's floor and the first page are one cache entry
   // (ADR-0009).
-  return { ...listQueryInput(filters, filters.limit ?? 100), type: filters.type ?? "all" };
+  return {
+    ...listQueryInput(filters, filters.limit ?? 100),
+    type: filters.type ?? "all",
+    // Left out unless set, so every other caller's input and cache key stay as they were.
+    ...(filters.sortBeatsRank ? { sortBeatsRank: true } : {}),
+  };
 }
 
 export type LibraryListInput = ReturnType<typeof libraryListInput>;

@@ -22,10 +22,17 @@ export function useLibraryQueryFilters() {
 /**
  * The Library under the reader's filters, with its recipes in grid order. Until the stored
  * filters are applied it stays loading: the defaults would show recipes the reader filters away.
+ * `sortBeatsRank` is mobile Search's; `enabled: false` reads nothing.
  */
-export function useLibraryList() {
+export function useLibraryList({
+  sortBeatsRank,
+  enabled = true,
+}: { sortBeatsRank?: boolean; enabled?: boolean } = {}) {
   const { queryFilters, isHydrated } = useLibraryQueryFilters();
-  const library = useLibraryQuery(queryFilters, { enabled: isHydrated });
+  const library = useLibraryQuery(
+    { ...queryFilters, sortBeatsRank },
+    { enabled: isHydrated && enabled }
+  );
 
   return {
     ...library,
