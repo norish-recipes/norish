@@ -31,3 +31,7 @@
 
 Round 1 fixes: the picker sits above the day list (offsets start at `DAY_LIST_TOP`, `PLAN_PICKER_HEIGHT` gone, test added); `PlanDayList` takes a `name` and builds the "+" label, and its doc says what the code does; `DayCard` testIDs take the block prefix (flow and tests updated); the strip scrolls to the picked day; Today's ring is full strength; the icon-button mock is shared.
 Not fixed: 8, `plan-recipe-screen.tsx:68` reads it: `onDateChange={(next, fromStrip) => setPicked({ day: next, fromStrip })}`. 10 rejected. 4: the slot tab is now in view, only the "+" id changed.
+
+- Re-review of the fix range (Opus): all round-1 fixes confirmed, no regression. Dispositions:
+  1. fix: `day-strip.tsx:36,48` recomputes `contentOffset` from `start` every render, so a changed offset may jump the strip before the animated `scrollTo`; keep the initial offset frozen, use `start` only in the scroll effect.
+  2. fix: the strip's scroll-to-picked-day (6b1d09d55) has no unit test; add one (mocked strip exposing `scrollTo`, rerender with a later day, assert the call; a day off the strip makes none).
