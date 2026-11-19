@@ -16,8 +16,11 @@ export function TypedServings({
   onChange: (servings: number) => void;
 }) {
   const intl = useIntl();
-  const [draft, setDraft] = useState<string | null>(null);
+  const [draft, setDraft] = useState<{ text: string; sent: number } | null>(null);
   const fieldRef = useFocusOnMount<ComponentRef<typeof TextInput>>(draft !== null);
+
+  // A change that did not come from typing (stepper, chip) ends the edit.
+  if (draft !== null && draft.sent !== servings) setDraft(null);
 
   if (draft === null) {
     return (
@@ -25,7 +28,7 @@ export function TypedServings({
         accessibilityRole="button"
         className="min-w-24 items-center py-2"
         testID="recipe-servings-sheet-value"
-        onPress={() => setDraft(formatAmountAsDecimal(servings))}
+        onPress={() => setDraft({ text: formatAmountAsDecimal(servings), sent: servings })}
       >
         <Text className="text-foreground text-base font-semibold">
           {intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
@@ -42,13 +45,15 @@ export function TypedServings({
       className="text-foreground min-w-24 py-2 text-center text-base font-semibold"
       inputMode="decimal"
       testID="recipe-servings-input"
-      value={draft}
+      value={draft.text}
       onBlur={() => setDraft(null)}
       onChangeText={(text) => {
         const typed = Number(text.replace(",", "."));
 
-        setDraft(text);
-        if (typed >= MIN_SERVINGS) onChange(typed);
+        const valid = typed >= MIN_SERVINGS;
+
+        setDraft({ text, sent: valid ? typed : draft.sent });
+        if (valid) onChange(typed);
       }}
       onSubmitEditing={() => setDraft(null)}
     />

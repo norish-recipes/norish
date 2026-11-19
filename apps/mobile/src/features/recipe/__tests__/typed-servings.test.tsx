@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 type Props = {
@@ -54,5 +54,22 @@ describe("TypedServings", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     fireEvent.blur(input);
     expect(screen.getByTestId("recipe-servings-sheet-value")).toBeTruthy();
+  });
+
+  it("leaves edit mode when the servings change from outside", () => {
+    let setOutside: (servings: number) => void = () => {};
+    const Parent = () => {
+      const [servings, setServings] = React.useState(4);
+
+      setOutside = setServings;
+      return <TypedServings servings={servings} onChange={setServings} />;
+    };
+
+    render(<Parent />);
+    fireEvent.click(screen.getByTestId("recipe-servings-sheet-value"));
+    fireEvent.change(screen.getByTestId("recipe-servings-input"), { target: { value: "6" } });
+    expect(screen.getByTestId("recipe-servings-input")).toBeTruthy();
+    act(() => setOutside(7));
+    expect(screen.queryByTestId("recipe-servings-input")).toBeNull();
   });
 });
