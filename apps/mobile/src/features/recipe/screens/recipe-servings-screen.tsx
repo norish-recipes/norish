@@ -16,6 +16,7 @@ import {
 } from "@norish/shared-react/recipes";
 
 import { RecipeSheetGate } from "../components/recipe-sheet-gate";
+import { TypedServings } from "../components/typed-servings";
 
 const MULTIPLIERS = [0.5, 1, 2, 3, 4];
 const LABEL = "text-muted px-1 text-[13px] font-semibold";
@@ -40,11 +41,7 @@ function ServingsBody() {
         onDecrement={() => setServings(servingsDown(servings))}
         onIncrement={() => setServings(servingsUp(servings))}
       >
-        <View testID="recipe-servings-sheet-value">
-          <Text className="text-foreground text-base font-semibold">
-            {intl.formatMessage({ id: "recipes.glanceBar.servings" }, { count: servings })}
-          </Text>
-        </View>
+        <TypedServings servings={servings} onChange={setServings} />
       </Stepper>
       <Text className={LABEL}>{intl.formatMessage({ id: "recipes.detail.multiplier" })}</Text>
       <View className="flex-row gap-2">
