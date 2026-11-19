@@ -9,6 +9,9 @@
 - [ ] Each board in /private/tmp/claude-501/-Users-mike-Documents-norish/d38bec8b-911e-4dc6-bbb1-96fe9e0bbaac/scratchpad/boards compared with the app (screenshots side by side, both themes); differences fixed or listed with a reason.
 - [ ] Contrast spot-check on a sheet over a photo in both themes.
 - [ ] Maestro flows for sheets that changed pass.
-- [ ] Docs (Terra): iPhone guide pages in `apps/docs` that describe or show these sheets updated; outdated screenshots listed for Mike.
+- [x] Docs (Terra): iPhone guide pages in `apps/docs` that describe or show these sheets updated; outdated screenshots listed for Mike.
 
 ## Comments
+
+- Updated the iPhone guides for planning, swipe deletion, sharing, groceries and text import. Docs install, build and root format check passed.
+- Retake: `mobile-recipes-filters.png`, `mobile-new-cookbook.png`, `mobile-add-recipe.png`, `mobile-calendar-plan.png`, `mobile-calendar-item.png`, `mobile-recipe-timers.png`, `mobile-groceries-add.png`, `mobile-groceries-stores.png`, `mobile-pantry-suggestions.png` in `apps/docs/static/img/screenshots/`.
