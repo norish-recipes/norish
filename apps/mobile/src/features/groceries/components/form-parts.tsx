@@ -17,6 +17,7 @@ export function NameField({
   placeholderId,
   testID,
   fieldRef,
+  keepsFocus = false,
   onChange,
   onSubmit,
 }: {
@@ -24,6 +25,8 @@ export function NameField({
   placeholderId: string;
   testID: string;
   fieldRef?: ComponentProps<typeof Input>["ref"];
+  /** Return submits with the keyboard left up, for the next one. */
+  keepsFocus?: boolean;
   onChange: (value: string) => void;
   onSubmit: () => void;
 }) {
@@ -36,6 +39,7 @@ export function NameField({
         accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.itemLabel" })}
         placeholder={intl.formatMessage({ id: placeholderId })}
         returnKeyType="done"
+        submitBehavior={keepsFocus ? "submit" : "blurAndSubmit"}
         testID={testID}
         value={value}
         onChangeText={onChange}

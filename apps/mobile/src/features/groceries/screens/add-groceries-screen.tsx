@@ -48,7 +48,9 @@ export function AddGroceriesScreen() {
     aisle.commit();
     form.reset();
     setAdded(added + 1);
-    if (!another) router.back();
+    // Add another keeps the keyboard up for the next one, the Add button's tap included.
+    if (another) fieldRef.current?.focus();
+    else router.back();
   };
 
   return (
@@ -66,6 +68,7 @@ export function AddGroceriesScreen() {
       field={
         <NameField
           fieldRef={fieldRef}
+          keepsFocus={another}
           placeholderId="groceries.panel.editPlaceholder"
           testID="add-grocery-field"
           value={form.itemName}
