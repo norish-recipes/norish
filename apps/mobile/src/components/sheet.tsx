@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from "react";
 import type { FlatListProps, KeyboardEvent, ScrollViewProps } from "react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { FlatList, Keyboard, ScrollView, useWindowDimensions, View } from "react-native";
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
@@ -27,7 +27,7 @@ export const SHEET_INSET = 16;
 /** A tall field's height on a fit sheet, which is as tall as its content, so no field can fill it. */
 export const FIT_SHEET_FIELD_HEIGHT = 200;
 
-/** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
+/** Where the native title starts, which a `SheetRow` lines up with. */
 const TITLE_INSET = 24;
 
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
@@ -110,7 +110,7 @@ export function SheetStrip({
   );
 }
 
-/** A row whose content lines up with the sheet's subtitle. */
+/** A row whose content lines up with the sheet's title. */
 export function SheetRow({
   className = "",
   children,
@@ -169,7 +169,7 @@ export function Sheet({
   /** The testID prefix: `<name>-sheet` on the sheet. */
   name: string;
   title: string;
-  /** A muted line above the body: the header's system title has no subtitle. */
+  /** A muted second line in the header's title. */
   subtitle?: string;
   /** A step inside a sheet: the header's left item is a Back chevron. */
   back?: boolean;
@@ -195,18 +195,10 @@ export function Sheet({
           back={back}
           confirm={confirm}
           secondary={secondary}
+          subtitle={subtitle}
           title={title}
           onClose={onClose}
         />
-        {subtitle ? (
-          <Text
-            className="text-muted pb-3 text-sm leading-[17px]"
-            numberOfLines={1}
-            style={{ paddingHorizontal: TITLE_INSET }}
-          >
-            {subtitle}
-          </Text>
-        ) : null}
         {children}
       </View>
     </OnSheet>

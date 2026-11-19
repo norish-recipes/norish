@@ -1,5 +1,6 @@
 import type { HeaderItem } from "@/lib/header-item";
 import React, { useEffect, useRef } from "react";
+import { Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -42,16 +43,19 @@ export const destructiveAction = (
   onPress: HeaderAction["onPress"]
 ): HeaderAction => ({ label, symbol: "trash", destructive: true, onPress });
 
-/** A sheet's or modal's native header: the title, a glass Close (Back with `back`) on the left, and
+/** A sheet's or modal's native header: the title (with an optional subtitle), a glass Close (Back with `back`) on the left, and
  * on the right the secondary actions (one a glass item, several one menu) then the confirm. */
 export function ModalHeader({
   title,
+  subtitle,
   back = false,
   onClose,
   confirm,
   secondary = [],
 }: {
   title: string;
+  /** A second, muted line under the title; the title becomes a two-line view. */
+  subtitle?: string;
   /** The left item goes back to the sheet's form instead of closing the sheet. */
   back?: boolean;
   /** Going back by default. */
@@ -61,7 +65,12 @@ export function ModalHeader({
 }) {
   const intl = useIntl();
   const router = useRouter();
-  const [danger] = useThemeColor(["danger"] as const);
+  const [danger, accent, foreground, muted] = useThemeColor([
+    "danger",
+    "accent",
+    "foreground",
+    "muted",
+  ] as const);
   // The native item is replaced a moment after a render: it calls this, so a press in that gap still runs the latest handler.
   const latestRef = useRef({ confirm, secondary });
   const busyRef = useRef(false);
@@ -131,6 +140,21 @@ export function ModalHeader({
     <Stack.Screen
       options={{
         title,
+        headerTitle: subtitle
+          ? () => (
+              <View className="items-center" style={{ maxWidth: 200 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{ color: foreground, fontSize: 17, fontWeight: "600" }}
+                >
+                  {title}
+                </Text>
+                <Text numberOfLines={1} style={{ color: muted, fontSize: 12.5 }}>
+                  {subtitle}
+                </Text>
+              </View>
+            )
+          : undefined,
         headerBackVisible: false,
         unstable_headerLeftItems: () => [
           {
@@ -153,6 +177,7 @@ export function ModalHeader({
                     ? ({ type: "sfSymbol", name: confirm.symbol } as const)
                     : undefined,
                   variant: "prominent",
+                  tintColor: confirm.disabled || !confirm.onPress ? undefined : accent,
                   disabled: confirm.disabled || !confirm.onPress,
                   // The native item type requires a handler; `disabled` above keeps it from firing.
                   onPress: () => run(latestRef.current.confirm),

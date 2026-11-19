@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { render } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { screen as dom, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const screen = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ type Item = {
 };
 type Options = {
   title: string;
+  headerTitle?: () => ReactNode;
   unstable_headerLeftItems: () => Item[];
   unstable_headerRightItems: () => Item[];
 };
@@ -32,7 +34,14 @@ vi.mock("expo-router", () => ({
     },
   },
 }));
-vi.mock("heroui-native", () => ({ useThemeColor: () => ["red"] }));
+vi.mock("react-native", () => ({
+  Text: ({ children }: { children?: ReactNode }) => <span>{children}</span>,
+  View: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+}));
+vi.mock("heroui-native", () => ({
+  useThemeColor: (names: string[]) =>
+    names.map((name) => (name === "danger" ? "red" : `<${name}>`)),
+}));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
@@ -246,5 +255,27 @@ describe("ModalHeader", () => {
         variant: "prominent",
       },
     ]);
+  });
+
+  it("keeps the plain native title without a subtitle", () => {
+    render(<ModalHeader title="Move" />);
+
+    expect(declared().headerTitle).toBeUndefined();
+  });
+
+  it("renders title and subtitle in the header's title view", () => {
+    render(<ModalHeader subtitle="Hoisin Chicken" title="Move" />);
+    render(<>{declared().headerTitle?.()}</>);
+
+    expect(dom.getByText("Move")).toBeTruthy();
+    expect(dom.getByText("Hoisin Chicken")).toBeTruthy();
+  });
+
+  it("tints an enabled prominent primary with the accent and leaves a disabled one plain", () => {
+    render(<ModalHeader confirm={{ label: "Save", onPress: vi.fn() }} title="Edit" />);
+    expect(declared().unstable_headerRightItems()[0]).toMatchObject({ tintColor: "<accent>" });
+
+    render(<ModalHeader confirm={{ label: "Save" }} title="Edit" />);
+    expect(declared().unstable_headerRightItems()[0]?.tintColor).toBeUndefined();
   });
 });
