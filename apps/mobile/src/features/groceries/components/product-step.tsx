@@ -114,7 +114,8 @@ export function ProductStep({
               },
             ]
       }
-      title={store.name}
+      subtitle={store.name}
+      title={text("groceries.mobile.product")}
       onClose={onBack}
     >
       <SheetBody contentClassName="gap-4">
