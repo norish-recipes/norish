@@ -79,7 +79,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
         {recipeId ? (
           <Pressable
             accessibilityRole="button"
-            className="flex-row items-center gap-3.5 px-2 pb-3"
+            className="bg-sand border-stroke mb-3 min-h-[60px] flex-row items-center gap-3 rounded-[22px] border-[0.5px] px-4"
             testID="planned-item-recipe"
             onPress={() => {
               openAfterSheet(
@@ -89,14 +89,14 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
               );
             }}
           >
-            <PlannedThumb className="size-14 rounded-2xl" item={item} />
+            <PlannedThumb className="size-10 rounded-xl" item={item} />
             <View className="min-w-0 flex-1">
               <Text className="text-foreground text-base font-medium" numberOfLines={2}>
                 {title}
               </Text>
               {subtitle ? <Text className="text-muted text-sm">{subtitle}</Text> : null}
             </View>
-            <Ionicons color={muted} name="chevron-forward" size={18} />
+            <Ionicons color={muted} name="chevron-forward" size={16} />
           </Pressable>
         ) : null}
         {recipeId ? null : (
