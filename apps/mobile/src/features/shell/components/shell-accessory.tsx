@@ -19,14 +19,16 @@ export function ShellAccessory({ plan: { add, capsule } }: { plan: AccessoryPlan
     <Animated.View className="h-full flex-row items-center justify-center">
       <Animated.View className="h-full flex-1" layout={SPRING_LAYOUT}>
         {/* Keyed by the action, the old one fades out over the new; Reduce Motion swaps them. */}
-        <Animated.View
-          key={add.testID}
-          entering={SPRING_FADE_IN}
-          exiting={SPRING_FADE_OUT}
-          style={StyleSheet.absoluteFill}
-        >
-          <AccessoryAction action={add} />
-        </Animated.View>
+        {add ? (
+          <Animated.View
+            key={add.testID}
+            entering={SPRING_FADE_IN}
+            exiting={SPRING_FADE_OUT}
+            style={StyleSheet.absoluteFill}
+          >
+            <AccessoryAction action={add} />
+          </Animated.View>
+        ) : null}
       </Animated.View>
       {capsule ? (
         <Animated.View entering={SPRING_ZOOM_IN} exiting={SPRING_ZOOM_OUT}>

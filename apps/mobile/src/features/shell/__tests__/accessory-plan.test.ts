@@ -17,7 +17,7 @@ const holds = (
 ) => {
   const plan = accessoryPlan({ path, recipeId }, hasTimers, lens, editableCookbook, groceries);
 
-  return { add: plan.add.testID, capsule: plan.capsule };
+  return { add: plan.add?.testID, capsule: plan.capsule };
 };
 
 describe("accessoryPlan", () => {
@@ -120,7 +120,7 @@ describe("accessoryPlan on a cookbook", () => {
     const library = accessoryPlan({ path: "/" }, false, "all").add;
     const cookbook = accessoryPlan({ path: "/cookbook/c1" }, false, "all", "c1").add;
 
-    expect(library.testID).not.toBe(cookbook.testID);
+    expect(library?.testID).not.toBe(cookbook?.testID);
   });
 });
 
@@ -166,7 +166,7 @@ describe("accessoryPlan under a root sheet", () => {
     const page = tabPage(sheet, false, lastTabPage);
     const screen = accessoryScreen(page, recipeIdOf(page), "/", shownRecipe);
 
-    return accessoryPlan(screen, true, "all", null, groceries).add.testID;
+    return accessoryPlan(screen, true, "all", null, groceries).add?.testID;
   };
 
   it("keeps the page's own action over the timers and Add recipe", () => {
@@ -192,6 +192,39 @@ describe("shellTab", () => {
     expect(shellTab("/groceries/food")).toBe("groceries");
     expect(shellTab("/calendar/item")).toBe("calendar");
     expect(shellTab("/settings")).toBe("settings");
-    expect(shellTab("/search")).toBe("search");
+  });
+
+  it("names Search for every page in its stack, whose paths carry no tab", () => {
+    expect(shellTab("/search", true)).toBe("search");
+    expect(shellTab("/recipe/r1", true)).toBe("search");
+    expect(shellTab("/filters", true)).toBe("search");
+  });
+});
+
+describe("the accessory in Search's stack", () => {
+  it("adds nothing on its own pages and sheets, with or without a timer", () => {
+    for (const path of ["/search", "/filters"]) {
+      expect(accessoryPlan({ path, search: true }, false, "all").add).toBeNull();
+      expect(accessoryPlan({ path, search: true }, true, "all")).toEqual({
+        add: null,
+        capsule: true,
+      });
+    }
+  });
+
+  it("holds Cook on a shown recipe, as in the Recipes tab", () => {
+    const screen = accessoryScreen("/recipe/r1", "r1", "/search", "r1", true);
+
+    expect(accessoryPlan(screen, true, "all")).toMatchObject({
+      add: { testID: "cook-recipe" },
+      capsule: true,
+    });
+  });
+
+  it("does not fall back to Add recipe while the recipe loads", () => {
+    const screen = accessoryScreen("/recipe/r1", "r1", "/search", null, true);
+
+    expect(screen).toEqual({ path: "/search", search: true });
+    expect(accessoryPlan(screen, false, "all").add).toBeNull();
   });
 });
