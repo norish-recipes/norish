@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -139,13 +139,6 @@ function EditSheet({
       }
       name="edit-grocery"
       noStoreLabelId="groceries.mobile.noStore"
-      notes={
-        recipeName ? (
-          <Text className="text-muted px-2 text-[13px]">
-            {intl.formatMessage({ id: "groceries.mobile.fromRecipe" }, { recipe: recipeName })}
-          </Text>
-        ) : null
-      }
       product={(open) => (
         <ProductRow held={held} price={price} onPress={field.pointsAtShop ? open : undefined} />
       )}
@@ -163,6 +156,14 @@ function EditSheet({
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}
+      trailingRows={
+        recipeName ? (
+          <CardRow
+            label={intl.formatMessage({ id: "calendar.timeline.recipe" })}
+            value={recipeName}
+          />
+        ) : null
+      }
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}
       onRepeat={(pattern) => form.setConfirmedPattern(pattern)}

@@ -188,7 +188,6 @@
     "emptyHint": "Ajoutez des articles avec le bouton ci-dessous.",
     "addTitle": "Ajouter des courses",
     "editTitle": "Modifier l'article",
-    "fromRecipe": "De {recipe}",
     "store": "Magasin",
     "noStore": "Aucun magasin",
     "automatic": "Automatique",

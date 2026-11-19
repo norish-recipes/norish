@@ -188,7 +188,6 @@
     "emptyHint": "Add items with the button below.",
     "addTitle": "Add groceries",
     "editTitle": "Edit grocery",
-    "fromRecipe": "From {recipe}",
     "store": "Store",
     "noStore": "No store",
     "automatic": "Automatic",

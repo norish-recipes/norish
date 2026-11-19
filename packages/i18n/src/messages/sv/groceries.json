@@ -188,7 +188,6 @@
     "emptyHint": "Lägg till varor med knappen nedan.",
     "addTitle": "Lägg till varor",
     "editTitle": "Redigera vara",
-    "fromRecipe": "Från {recipe}",
     "store": "Butik",
     "noStore": "Ingen butik",
     "automatic": "Automatisk",

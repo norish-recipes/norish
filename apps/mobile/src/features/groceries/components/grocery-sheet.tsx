@@ -28,7 +28,6 @@ export function GrocerySheet({
   title,
   subtitle,
   field,
-  notes,
   product,
   productStep,
   stores,
@@ -51,7 +50,6 @@ export function GrocerySheet({
   subtitle?: string;
   field: ReactNode;
   /** What sits under the field, such as where the grocery came from. */
-  notes?: ReactNode;
   /** The Store Product the grocery is priced by, the form's first row; `open` shows its search. */
   product?: (open: () => void) => ReactNode;
   /** The product search that replaces the form, given what goes back to it. */
@@ -122,7 +120,6 @@ export function GrocerySheet({
             onEdit={openRepeat}
             onRemove={() => onRepeat(null)}
           />
-          {notes}
           <Card>
             {product?.(() => setView("product"))}
             <CardRow

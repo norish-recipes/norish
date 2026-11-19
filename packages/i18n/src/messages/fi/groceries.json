@@ -188,7 +188,6 @@
     "emptyHint": "Lisää tuotteita alla olevalla painikkeella.",
     "addTitle": "Lisää ostokset",
     "editTitle": "Muokkaa tuotetta",
-    "fromRecipe": "Reseptistä {recipe}",
     "store": "Kauppa",
     "noStore": "Ei kauppaa",
     "automatic": "Automaattinen",
