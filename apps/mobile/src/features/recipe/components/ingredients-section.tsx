@@ -11,7 +11,6 @@ import { useCardActions } from "@/hooks/use-card-actions";
 import { lightImpact } from "@/lib/haptics";
 import { useFadeTo } from "@/lib/motion/fade-to";
 import { recipeRoute } from "@/lib/tab-routes";
-import { Button as NativeButton } from "@expo/ui/swift-ui";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
@@ -79,32 +78,32 @@ export function OptionsMenu() {
   return (
     <IconMenu
       icon="options-outline"
+      items={[
+        {
+          key: "amount-mode",
+          label: intl.formatMessage({
+            id:
+              mode === "fraction"
+                ? "recipes.detail.switchToDecimal"
+                : "recipes.detail.switchToFraction",
+          }),
+          systemImage: "plusminus",
+          onPress: toggleMode,
+        },
+        ...(conversion.isAvailable
+          ? conversion.options
+              .filter((option) => option.withAI || option.system !== conversion.currentSystem)
+              .map((option) => ({
+                key: option.key,
+                label: intl.formatMessage({ id: `recipes.convert.${option.labelKey}` }),
+                systemImage: option.withAI ? "sparkles" : "arrow.left.arrow.right",
+                onPress: () => conversion.convertTo(option),
+              }))
+          : []),
+      ]}
       label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
       testID="recipe-ingredient-options"
-    >
-      <NativeButton
-        label={intl.formatMessage({
-          id:
-            mode === "fraction"
-              ? "recipes.detail.switchToDecimal"
-              : "recipes.detail.switchToFraction",
-        })}
-        systemImage="plusminus"
-        onPress={toggleMode}
-      />
-      {conversion.isAvailable
-        ? conversion.options
-            .filter((option) => option.withAI || option.system !== conversion.currentSystem)
-            .map((option) => (
-              <NativeButton
-                key={option.key}
-                label={intl.formatMessage({ id: `recipes.convert.${option.labelKey}` })}
-                systemImage={option.withAI ? "sparkles" : "arrow.left.arrow.right"}
-                onPress={() => conversion.convertTo(option)}
-              />
-            ))
-        : null}
-    </IconMenu>
+    />
   );
 }
 

@@ -45,8 +45,8 @@ export function DayStrip({
   return (
     // heroui-native has no day strip, so these chips are hand-built.
     <SheetStrip
-      accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
       ref={scrollRef}
+      accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
       contentOffset={{ x: openAt, y: 0 }}
       testID={`${testID}-days`}
     >
@@ -87,7 +87,8 @@ export function DayStrip({
         );
       })}
       <View className="h-16 justify-center">
-        <Host matchContents>
+        {/* Ignores the safe area, or it shifts by the bars' insets as the page scrolls under them. */}
+        <Host matchContents ignoreSafeArea="all">
           <DatePicker
             modifiers={[
               accessibilityIdentifier(`${testID}-other-day`),
