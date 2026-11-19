@@ -1,84 +1,67 @@
+import type { RefObject } from "react";
 import type { SearchBarCommands } from "react-native-screens";
 import { useEffect, useRef, useState } from "react";
-import { isSearchConfirmed, setSearchConfirmed } from "@/lib/search-session";
 
 import { useLibraryFilters, useLibraryFiltersStoreApi } from "@norish/shared-react/recipes";
 
-import { hasSearchFilters } from "../utils/search-state";
+import type { FieldEvent, FieldState } from "../utils/search-field";
+import { fieldStep, FRESH_FIELD } from "../utils/search-field";
 
-// UIKit empties the field on Cancel next to its event, in either order, as it does on the clear button.
-const CANCEL_AFTER_CLEAR_MS = 300;
+function pushKeptText(
+  store: ReturnType<typeof useLibraryFiltersStoreApi>,
+  barRef: RefObject<SearchBarCommands | null>
+) {
+  const kept = store.getState().filters.rawInput;
 
-/** Wires the header search field to Search's text: typing edits it, the search key confirms, × dismisses
- * the keyboard and keeps everything, ⊗ clears the text. */
+  if (kept) barRef.current?.setText(kept);
+}
+
+type NativeText = { nativeEvent: { text: string } };
+
+/** Wires the header search field to Search's text: the decisions are `fieldStep`'s, this hands it the
+ * native events and the kept state. */
 export function useSearchField() {
   const store = useLibraryFiltersStoreApi();
   const text = useLibraryFilters((state) => state.filters.rawInput);
   const barRef = useRef<SearchBarCommands | null>(null);
-  const cancelledAtRef = useRef(0);
-  const clearedRef = useRef<{ text: string; confirmed: boolean; at: number } | null>(null);
+  const timingRef = useRef<Pick<FieldState, "cancelledAt" | "wiped">>(FRESH_FIELD);
   const [focused, setFocused] = useState(false);
 
-  // A remount leaves the native field empty over the kept text.
-  useEffect(() => {
-    if (store.getState().filters.rawInput)
-      barRef.current?.setText(store.getState().filters.rawInput);
-  }, [store]);
+  // A remount, or coming back to the tab, leaves the native field empty over the kept text.
+  const showKeptText = () => pushKeptText(store, barRef);
 
-  const setText = (next: string) => {
-    const { filters, setFilters } = store.getState();
+  useEffect(() => pushKeptText(store, barRef), [store]);
 
-    if (next === filters.rawInput) return;
+  const send = (event: FieldEvent) => {
+    const { filters, searchConfirmed, setFilters, setSearchConfirmed } = store.getState();
+    const { state, push } = fieldStep(
+      { ...timingRef.current, text: filters.rawInput, confirmed: searchConfirmed },
+      event,
+      Date.now()
+    );
 
-    // The empty text that follows a Cancel is UIKit's, not the reader's.
-    if (next === "" && Date.now() - cancelledAtRef.current < CANCEL_AFTER_CLEAR_MS) {
-      barRef.current?.setText(filters.rawInput);
+    timingRef.current = state;
 
-      return;
-    }
+    if (state.text !== filters.rawInput) setFilters({ rawInput: state.text });
 
-    clearedRef.current =
-      next === ""
-        ? { text: filters.rawInput, confirmed: isSearchConfirmed(), at: Date.now() }
-        : null;
-    setFilters({ rawInput: next });
-    // Typing edits a confirmed search back into a question; chips keep their results when ⊗ clears the text.
-    setSearchConfirmed(next === "" && hasSearchFilters(store.getState().filters));
-  };
+    setSearchConfirmed(state.confirmed);
 
-  const restoreWipedText = () => {
-    cancelledAtRef.current = Date.now();
-
-    const wiped = clearedRef.current;
-
-    if (!wiped || Date.now() - wiped.at >= CANCEL_AFTER_CLEAR_MS) return;
-
-    setText(wiped.text);
-    setSearchConfirmed(wiped.confirmed);
-    barRef.current?.setText(wiped.text);
+    if (push !== undefined) barRef.current?.setText(push);
   };
 
   const field = {
     text,
     focused,
-    onChangeText: (event: { nativeEvent: { text: string } }) => setText(event.nativeEvent.text),
-    onSearchButtonPress: (event: { nativeEvent: { text: string } }) => {
-      setText(event.nativeEvent.text);
-
-      if (event.nativeEvent.text.trim() !== "") setSearchConfirmed(true);
-    },
+    onChangeText: ({ nativeEvent }: NativeText) => send({ type: "typed", text: nativeEvent.text }),
+    onSearchButtonPress: ({ nativeEvent }: NativeText) =>
+      send({ type: "submitted", text: nativeEvent.text }),
     onCancelButtonPress: () => {
-      restoreWipedText();
+      send({ type: "cancelled" });
       barRef.current?.blur();
     },
     // The search tab's × closes the field and leaves the tab, wiping the text first.
-    onClose: restoreWipedText,
-    // Coming back, the native field is empty over the kept text.
-    onOpen: () => {
-      const kept = store.getState().filters.rawInput;
-
-      if (kept) barRef.current?.setText(kept);
-    },
+    onClose: () => send({ type: "cancelled" }),
+    onOpen: showKeptText,
     onFocus: () => setFocused(true),
     onBlur: () => setFocused(false),
   };

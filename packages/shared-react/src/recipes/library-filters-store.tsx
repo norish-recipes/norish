@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { StoreApi } from "zustand";
 import { useState } from "react";
 import { createStore } from "zustand";
 
@@ -24,8 +25,12 @@ type LibraryFiltersState = {
   setFilters: (next: Partial<CanonicalRecipeFilters>) => void;
   /** Filters a clear leaves alone, besides the Library's type: Search keeps its text, scope and sort. */
   keepOnClear: readonly (keyof CanonicalRecipeFilters)[];
-  /** Every filter but the Library's type, a lens that clearing a search must not move (ADR-0026). */
+  /** Resets every filter except the Library's type, a lens that clearing a search must not move
+   * (ADR-0026), and those in `keepOnClear`. */
   clearFilters: () => void;
+  /** Search's: whether its text was confirmed with the search key. */
+  searchConfirmed: boolean;
+  setSearchConfirmed: (confirmed: boolean) => void;
   toggleSearchField: (field: SearchField) => void;
   /** The browser's stored filters win over the cookie's: a kept document can be old. */
   applyStored: (stored: PersistedRecipeFilters | null) => void;
@@ -43,6 +48,8 @@ export function createLibraryFiltersStore(
     hydrated: initial !== undefined,
     setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
     keepOnClear: [],
+    searchConfirmed: false,
+    setSearchConfirmed: (searchConfirmed) => set({ searchConfirmed }),
     clearFilters: () =>
       set((state) => ({
         filters: {
@@ -69,17 +76,32 @@ export function createLibraryFiltersStore(
   }));
 }
 
-const libraryFilters = createPageStoreContext("LibraryFiltersProvider", createLibraryFiltersStore);
+type LibraryFiltersStore = ReturnType<typeof createLibraryFiltersStore>;
+type InitialFilters = PersistedRecipeFilters | CanonicalRecipeFilters | undefined;
 
-/** Makes the Library's filters once from `initial`; a later render's value is the store's own. */
+const isStore = (key: InitialFilters | StoreApi<LibraryFiltersState>): key is LibraryFiltersStore =>
+  key !== undefined && "getState" in key;
+
+const libraryFilters = createPageStoreContext(
+  "LibraryFiltersProvider",
+  (key: InitialFilters | StoreApi<LibraryFiltersState>) =>
+    isStore(key) ? key : createLibraryFiltersStore(key)
+);
+
+/**
+ * Makes the Library's filters once from `initial`; a later render's value is the store's own.
+ * A `store` made elsewhere is used as it is, for filters that outlive the provider's tree.
+ */
 export function LibraryFiltersProvider({
   initial,
+  store,
   children,
 }: {
-  initial: PersistedRecipeFilters | CanonicalRecipeFilters | undefined;
+  initial?: InitialFilters;
+  store?: LibraryFiltersStore;
   children: ReactNode;
 }) {
-  const [first] = useState(initial);
+  const [first] = useState(store ?? initial);
 
   return <libraryFilters.Provider pageKey={first}>{children}</libraryFilters.Provider>;
 }

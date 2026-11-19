@@ -1,28 +1,27 @@
-import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-
-/** Which page of Search shows. Later tickets add typing suggestions, discover sections and Offline here. */
+/** Which page of Search shows. */
 export type SearchView = "rested" | "focused" | "typing" | "results" | "none";
 
 /** What the choice reads: `resultCount` is null while the search is loading. */
 export type SearchViewInput = {
   text: string;
-  /** The search key, a chip or a discover row was used since the text last changed. */
+  /** The search key was used since the text last changed. */
   confirmed: boolean;
+  /** At least one filter chip is applied. */
+  hasChips: boolean;
   focused: boolean;
   resultCount: number | null;
 };
 
-export function searchView({ text, confirmed, focused, resultCount }: SearchViewInput): SearchView {
-  if (confirmed) return resultCount === 0 ? "none" : "results";
-  if (text.trim().length > 0) return "typing";
+/** Results show for a confirmed text, or while a chip filters an empty one; no text and no chips rests. */
+export const showsResults = ({ text, confirmed, hasChips }: SearchViewInput) =>
+  text.trim() === "" ? hasChips : confirmed;
 
-  return focused ? "focused" : "rested";
+export function searchView(input: SearchViewInput): SearchView {
+  if (showsResults(input)) return input.resultCount === 0 ? "none" : "results";
+  if (input.text.trim().length > 0) return "typing";
+
+  return input.focused ? "focused" : "rested";
 }
-
-/** Whether a chip filters, not counting the text: the text is the field's, not a chip. */
-export const hasSearchFilters = (filters: CanonicalRecipeFilters) =>
-  hasAppliedRecipeFilters({ ...filters, rawInput: "" });
 
 export type NoResults = "clear-filters" | "search-all-fields" | "plain";
 

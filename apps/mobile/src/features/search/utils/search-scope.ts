@@ -1,5 +1,4 @@
 import type { SearchField } from "@norish/shared/contracts";
-import { DEFAULT_SEARCH_FIELDS } from "@norish/shared/contracts";
 
 /** The Search Scope's fields in the order the chips show, and the order a scope is kept in. */
 export const SCOPE_FIELDS: readonly SearchField[] = [
@@ -9,8 +8,6 @@ export const SCOPE_FIELDS: readonly SearchField[] = [
   "description",
   "steps",
 ];
-
-export const DEFAULT_SCOPE: readonly SearchField[] = DEFAULT_SEARCH_FIELDS;
 
 /** `field` flipped in `scope`. At least one field always stays on: turning off the last does nothing. */
 export function toggleScope(scope: readonly SearchField[], field: SearchField): SearchField[] {

@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { ALL_SCOPE, DEFAULT_SCOPE, isScopeNarrowed, toggleScope } from "../utils/search-scope";
+import { ALL_SCOPE, isScopeNarrowed, toggleScope } from "../utils/search-scope";
 
 describe("the Search Scope", () => {
-  it("starts on Title and Ingredients", () => {
-    expect(DEFAULT_SCOPE).toEqual(["title", "ingredients"]);
-  });
-
   it("lets several fields be on, kept in chip order", () => {
     expect(toggleScope(["title", "ingredients"], "steps")).toEqual([
       "title",
@@ -25,7 +21,7 @@ describe("the Search Scope", () => {
   });
 
   it("is narrowed unless every field is on", () => {
-    expect(isScopeNarrowed(DEFAULT_SCOPE)).toBe(true);
+    expect(isScopeNarrowed(["title", "ingredients"])).toBe(true);
     expect(isScopeNarrowed(ALL_SCOPE)).toBe(false);
   });
 });

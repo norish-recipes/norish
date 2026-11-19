@@ -8,10 +8,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIntl } from "react-intl";
 
 import type { SortOrder } from "@norish/shared/contracts";
-import { COOKING_TIME_OPTIONS, useLibraryFilters } from "@norish/shared-react/recipes";
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 
-import type { FilterChip } from "../utils/search-chips";
-import { chipKey, filterChips, withoutChip } from "../utils/search-chips";
+import type { ChipSpeech, FilterChip } from "../utils/search-chips";
+import { chipKey, chipLabel, filterChips, withoutChip } from "../utils/search-chips";
 import { shownSort, sortOptions } from "../utils/search-sort";
 
 const SORT_LABELS: Record<SortOrder, string> = {
@@ -22,38 +22,17 @@ const SORT_LABELS: Record<SortOrder, string> = {
   titleDesc: "recipes.search.sortZA",
 };
 
-/** What an applied filter's chip says. */
-export function useChipLabel() {
+function useChipSpeech(): ChipSpeech {
   const intl = useIntl();
-  const categoryLabel = useCategoryLabel();
+  const category = useCategoryLabel();
 
-  return (chip: FilterChip): string => {
-    switch (chip.kind) {
-      case "category":
-        return categoryLabel(chip.value);
-      case "tag":
-        return chip.value;
-      case "time": {
-        const option = COOKING_TIME_OPTIONS.find((item) => item.value === chip.value);
-
-        return option
-          ? intl.formatMessage({ id: `common.filters.${option.labelKey}` })
-          : `<${chip.value} min`;
-      }
-      case "rating":
-        return intl.formatMessage({ id: "recipes.search.ratingChip" }, { count: chip.value });
-      case "favorites":
-        return intl.formatMessage({ id: "common.filters.favorites" });
-      case "pantry":
-        return intl.formatMessage({ id: "common.filters.pantryOnly" });
-    }
-  };
+  return { say: (id, values) => intl.formatMessage({ id }, values), category };
 }
 
 function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove: () => void }) {
   const intl = useIntl();
   const muted = useTokenColor("muted");
-  const label = useChipLabel()(chip);
+  const label = chipLabel(chip, useChipSpeech());
 
   return (
     <PressableScale

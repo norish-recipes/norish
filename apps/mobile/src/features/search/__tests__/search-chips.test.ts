@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import {
+  DEFAULT_RECIPE_FILTERS,
+  hasAppliedRecipeFilters,
+} from "@norish/shared/contracts/filter-contract";
 
-import { chipKey, filterChips, withoutChip } from "../utils/search-chips";
-import { hasSearchFilters } from "../utils/search-state";
+import {
+  chipKey,
+  chipLabel,
+  filterChips,
+  hasChips,
+  withoutChip,
+  withoutHiddenFilters,
+} from "../utils/search-chips";
 
 const applied = {
   ...DEFAULT_RECIPE_FILTERS,
@@ -15,24 +24,53 @@ const applied = {
   showPantryOnly: true,
 };
 
+const everything = {
+  showRatings: true,
+  showFavorites: true,
+  showConversion: true,
+  showProvenance: true,
+  showNutrition: true,
+  showNotes: true,
+  showCookbooks: true,
+  showIngredientIcons: true,
+};
+
 describe("filter chips", () => {
   it("has none for the defaults, and the text is not one", () => {
     expect(filterChips(DEFAULT_RECIPE_FILTERS)).toEqual([]);
     expect(filterChips({ ...DEFAULT_RECIPE_FILTERS, rawInput: "soup" })).toEqual([]);
+    expect(hasChips({ ...DEFAULT_RECIPE_FILTERS, rawInput: "soup" })).toBe(false);
   });
 
-  it("has one per applied filter, matching what hasSearchFilters counts", () => {
+  it("has one per applied filter", () => {
     expect(filterChips(applied).map(chipKey)).toEqual([
       "category:Dinner",
       "tag:vegan",
       "tag:quick",
       "time:30",
       "rating:4",
-      "favorites:",
-      "pantry:",
+      "favorites:true",
+      "pantry:true",
     ]);
-    expect(hasSearchFilters(applied)).toBe(true);
-    expect(hasSearchFilters(DEFAULT_RECIPE_FILTERS)).toBe(false);
+    expect(hasChips(applied)).toBe(true);
+  });
+
+  it("has a chip for every filter the shared rule counts, so the two cannot drift", () => {
+    const each = [
+      { categories: ["Dinner"] },
+      { searchTags: ["vegan"] },
+      { maxCookingTime: 30 },
+      { minRating: 4 },
+      { showFavoritesOnly: true },
+      { showPantryOnly: true },
+    ];
+
+    for (const patch of each) {
+      const filters = { ...DEFAULT_RECIPE_FILTERS, ...patch };
+
+      expect(hasAppliedRecipeFilters(filters)).toBe(true);
+      expect(hasChips(filters)).toBe(true);
+    }
   });
 
   it("removes only the one it names", () => {
@@ -42,7 +80,50 @@ describe("filter chips", () => {
     expect(withoutChip(applied, { kind: "category", value: "Dinner" })).toEqual({ categories: [] });
     expect(withoutChip(applied, { kind: "time", value: 30 })).toEqual({ maxCookingTime: null });
     expect(withoutChip(applied, { kind: "rating", value: 4 })).toEqual({ minRating: null });
-    expect(withoutChip(applied, { kind: "favorites" })).toEqual({ showFavoritesOnly: false });
-    expect(withoutChip(applied, { kind: "pantry" })).toEqual({ showPantryOnly: false });
+    expect(withoutChip(applied, { kind: "favorites", value: true })).toEqual({
+      showFavoritesOnly: false,
+    });
+    expect(withoutChip(applied, { kind: "pantry", value: true })).toEqual({
+      showPantryOnly: false,
+    });
+  });
+
+  it("says each kind from its own message", () => {
+    const speech = {
+      say: (id: string, values?: Record<string, string | number>) =>
+        values ? `${id}:${Object.values(values).join()}` : id,
+      category: (name: string) => `cat ${name}`,
+    };
+
+    expect(chipLabel({ kind: "category", value: "Dinner" }, speech)).toBe("cat Dinner");
+    expect(chipLabel({ kind: "tag", value: "vegan" }, speech)).toBe("vegan");
+    expect(chipLabel({ kind: "time", value: 30 }, speech)).toBe(
+      "common.filters.cookingTimeUnder30"
+    );
+    expect(chipLabel({ kind: "time", value: 45 }, speech)).toBe("common.filters.cookingTime");
+    expect(chipLabel({ kind: "rating", value: 4 }, speech)).toBe("recipes.search.ratingChip:4");
+    expect(chipLabel({ kind: "favorites", value: true }, speech)).toBe("common.filters.favorites");
+    expect(chipLabel({ kind: "pantry", value: true }, speech)).toBe("common.filters.pantryOnly");
+  });
+});
+
+describe("filters the reader hid", () => {
+  it("drops a kept favourites or rating filter once its item is hidden", () => {
+    expect(
+      withoutHiddenFilters(applied, { ...everything, showFavorites: false, showRatings: false })
+    ).toEqual({ showFavoritesOnly: false, minRating: null });
+    expect(withoutHiddenFilters(applied, { ...everything, showRatings: false })).toEqual({
+      minRating: null,
+    });
+  });
+
+  it("leaves everything else, and does nothing while the items show", () => {
+    expect(withoutHiddenFilters(applied, everything)).toBeNull();
+    expect(
+      withoutHiddenFilters(
+        { ...DEFAULT_RECIPE_FILTERS, searchTags: ["vegan"] },
+        { ...everything, showFavorites: false, showRatings: false }
+      )
+    ).toBeNull();
   });
 });
