@@ -43,3 +43,6 @@
   18. reject: Share's native Share button only on the link made this visit: only that link has its URL client-side (no feature to invent).
   19. reject: `bg-accent/10` / `/15` tints in page content (`source-section`, `empty-card`, `library-states`, `steps-section`): accent tints, not the content fill the spec makes solid.
   20. kept for ticket 55: cook mode's timer pill now uses the solid rows and red cross; checked on device there.
+
+- Round 1 fixes: 1-10, 12-15 done (typed servings tap the stepper value, test in `typed-servings.test.tsx`; kit gained `IconMenu`, `SectionLabel`, `CardRow` `media`/`leading`/`detail`/`chevron`; `pickRowClass` and `GlassIconMenu` removed; `fromRecipe` and `paste.label` left every locale; `groceries.item.items` reads "No items" at zero and the store row counts open items).
+- Not fixed: 11 does not hold, the first result row follows the Random/Note row in the same card, so its hairline is the divider (`header` card, `plan-recipe-screen.tsx`). Share expiry is now a menu row (item 12 held: "1 settimana", "Безстроково" overflow a 71 pt segment). Maestro flows need no change (testIDs kept).
