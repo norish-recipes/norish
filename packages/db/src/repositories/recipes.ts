@@ -527,13 +527,16 @@ async function recipeMatchRows(
       ${
         inScope("ingredients")
           ? sql`(
-              SELECT json_build_object(
-                'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name)
+              SELECT CASE WHEN match_ri.name ~ ${HEADING_PATTERN}
+                THEN json_build_object('amount', NULL, 'unit', NULL,
+                  'name', regexp_replace(btrim(match_ri.name), ${HEADING_MARKS}, ''))
+                ELSE json_build_object(
+                  'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name) END
               FROM ${recipeIngredients} match_ri
               WHERE match_ri.recipe_id = "recipes"."id"
-                AND match_ri.name !~ ${HEADING_PATTERN}
                 AND to_tsvector('simple', match_ri.name) @@ ${query}
-              ORDER BY (match_ri.system_used <> "recipes"."system_used"),
+              ORDER BY (match_ri.name ~ ${HEADING_PATTERN}),
+                (match_ri.system_used <> "recipes"."system_used"),
                 match_ri."order" NULLS LAST, match_ri.created_at, match_ri.id
               LIMIT 1
             )`

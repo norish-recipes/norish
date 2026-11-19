@@ -898,6 +898,28 @@ describe("the Library union", () => {
       expect(result.items[0]).toMatchObject({ match: { field: "tags", tag: "chicken" } });
     });
 
+    it("reports a heading-only ingredient hit as the heading's text", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
+
+      await insertTestRecipeLine({
+        recipeId: recipe.id,
+        name: "## For the basil",
+        amount: "1",
+        unit: "g",
+        order: "0",
+      });
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "olive oil", order: "1" });
+
+      expect(await matchOf({ searchFields: ["ingredients"] })).toEqual({
+        field: "ingredients",
+        amount: null,
+        unit: null,
+        name: "For the basil",
+      });
+    });
+
     it("ignores a query term the parser drops", async () => {
       await seedBasil(["title"]);
 
