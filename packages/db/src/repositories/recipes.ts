@@ -394,8 +394,11 @@ export function hasSearchTerms(search: string | undefined): search is string {
   return !!search && searchTsqueryTerms(search) !== null;
 }
 
-/** The text as a prefix-OR tsquery body, or null when nothing searchable is left. */
+/** The text as a prefix-OR tsquery body, or null when nothing searchable is left: no word at all,
+ * as for "^", which the query parser drops and so would match no recipe. */
 function searchTsqueryTerms(search: string): string | null {
+  if (searchWords(search).length === 0) return null;
+
   return (
     searchTerms(search)
       .map((term) => `${term}:*`)
