@@ -1,5 +1,6 @@
 import React from "react";
 import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { HEADER_TITLE_STYLE } from "@/lib/header-title";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { Stack } from "expo-router";
 
@@ -29,7 +30,7 @@ export function RecipesStack() {
           screenOptions={{
             headerTransparent: true,
             headerShadowVisible: false,
-            headerTitleStyle: { fontSize: 17, fontWeight: "600" },
+            headerTitleStyle: HEADER_TITLE_STYLE,
           }}
         >
           {/* The list screen sets its header, a bar-item title, itself. */}

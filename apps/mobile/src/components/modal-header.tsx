@@ -1,6 +1,11 @@
 import type { HeaderItem } from "@/lib/header-item";
 import React, { useEffect, useRef } from "react";
 import { Text, View } from "react-native";
+import {
+  HEADER_SUBTITLE_SIZE,
+  HEADER_TITLE_MAX_WIDTH,
+  HEADER_TITLE_STYLE,
+} from "@/lib/header-title";
 import { Stack, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -132,6 +137,8 @@ export function ModalHeader({
     }));
   };
 
+  const confirmOff = !confirm?.onPress || !!confirm.disabled;
+
   const leftLabel = intl.formatMessage({
     id: back ? "common.actions.back" : "common.actions.close",
   });
@@ -142,14 +149,11 @@ export function ModalHeader({
         title,
         headerTitle: subtitle
           ? () => (
-              <View className="items-center" style={{ maxWidth: 200 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{ color: foreground, fontSize: 17, fontWeight: "600" }}
-                >
+              <View className="items-center" style={{ maxWidth: HEADER_TITLE_MAX_WIDTH }}>
+                <Text numberOfLines={1} style={{ ...HEADER_TITLE_STYLE, color: foreground }}>
                   {title}
                 </Text>
-                <Text numberOfLines={1} style={{ color: muted, fontSize: 12.5 }}>
+                <Text numberOfLines={1} style={{ color: muted, fontSize: HEADER_SUBTITLE_SIZE }}>
                   {subtitle}
                 </Text>
               </View>
@@ -177,8 +181,8 @@ export function ModalHeader({
                     ? ({ type: "sfSymbol", name: confirm.symbol } as const)
                     : undefined,
                   variant: "prominent",
-                  tintColor: confirm.disabled || !confirm.onPress ? undefined : accent,
-                  disabled: confirm.disabled || !confirm.onPress,
+                  tintColor: confirmOff ? undefined : accent,
+                  disabled: confirmOff,
                   // The native item type requires a handler; `disabled` above keeps it from firing.
                   onPress: () => run(latestRef.current.confirm),
                 },

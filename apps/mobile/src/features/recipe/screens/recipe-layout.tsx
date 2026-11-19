@@ -1,5 +1,6 @@
 import React from "react";
 import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { HEADER_TITLE_STYLE } from "@/lib/header-title";
 import { useMarkRecipeShown } from "@/lib/shown-recipe";
 import { Stack, useLocalSearchParams } from "expo-router";
 
@@ -38,7 +39,7 @@ export function RecipeLayout() {
         screenOptions={{
           headerTransparent: true,
           headerShadowVisible: false,
-          headerTitleStyle: { fontSize: 17, fontWeight: "600" },
+          headerTitleStyle: HEADER_TITLE_STYLE,
         }}
       >
         <Stack.Screen name="index" options={{ title: "" }} />
