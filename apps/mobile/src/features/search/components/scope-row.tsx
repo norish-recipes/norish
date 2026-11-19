@@ -9,6 +9,7 @@ import { useIntl } from "react-intl";
 
 import type { SearchField } from "@norish/shared/contracts";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { useTimerStore } from "@norish/shared-react/recipes/timers";
 
 import { useKeyboardHeight } from "../hooks/use-keyboard-height";
 import { SCOPE_FIELDS, toggleScope } from "../utils/search-scope";
@@ -16,11 +17,14 @@ import { SCOPE_FIELDS, toggleScope } from "../utils/search-scope";
 // Clear of the field: the keyboard's top, or the tab bar's search pill at rest.
 const ABOVE_KEYBOARD = 62;
 const ABOVE_TAB_BAR = homeIndicator + 48;
+// The timer accessory sits between the row and the tab bar's field while a timer runs; the keyboard hides it.
+const ACCESSORY = 54;
 
 /** The Search Scope: glass chips floating above the field, one per field the search looks in. */
 export function ScopeRow() {
   const intl = useIntl();
   const keyboard = useKeyboardHeight();
+  const hasTimers = useTimerStore((state) => state.timers.length > 0);
   const scope = useLibraryFilters((state) => state.filters.searchFields);
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const [foreground, muted] = useThemeColor(["foreground", "muted"] as const);
@@ -29,7 +33,10 @@ export function ScopeRow() {
     <View
       className="absolute inset-x-0"
       pointerEvents="box-none"
-      style={{ bottom: keyboard > 0 ? keyboard + ABOVE_KEYBOARD : ABOVE_TAB_BAR }}
+      style={{
+        bottom:
+          keyboard > 0 ? keyboard + ABOVE_KEYBOARD : ABOVE_TAB_BAR + (hasTimers ? ACCESSORY : 0),
+      }}
       testID="search-scope"
     >
       <ScrollView
