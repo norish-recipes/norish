@@ -48,6 +48,7 @@ export function libraryListInput(filters: ListQueryFilters = {}) {
     ...listQueryInput(filters, filters.limit ?? 100),
     type: filters.type ?? "all",
     // Left out unless set, so every other caller's input and cache key stay as they were.
+    ...(filters.ingredientIds?.length ? { ingredientIds: filters.ingredientIds } : {}),
     ...(filters.sortBeatsRank ? { sortBeatsRank: true } : {}),
     ...(filters.withMatch ? { withMatch: true } : {}),
   };

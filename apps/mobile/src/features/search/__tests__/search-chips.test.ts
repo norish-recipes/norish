@@ -15,10 +15,14 @@ import {
   withoutHiddenFilters,
 } from "../utils/search-chips";
 
+const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
+const garlic = { id: "a0000000-0000-4000-8000-000000000002", name: "garlic" };
+
 const applied = {
   ...DEFAULT_RECIPE_FILTERS,
   categories: ["Dinner"],
   searchTags: ["vegan", "quick"],
+  ingredients: [onion, garlic],
   maxCookingTime: 30,
   minRating: 4,
   showFavoritesOnly: true,
@@ -48,6 +52,8 @@ describe("filter chips", () => {
       "category:Dinner",
       "tag:vegan",
       "tag:quick",
+      `ingredient:${onion.id}`,
+      `ingredient:${garlic.id}`,
       "time:30",
       "rating:4",
       "favorites:true",
@@ -60,6 +66,7 @@ describe("filter chips", () => {
     const each = [
       { categories: ["Dinner"] },
       { searchTags: ["vegan"] },
+      { ingredients: [onion] },
       { maxCookingTime: 30 },
       { minRating: 4 },
       { showFavoritesOnly: true },
@@ -77,6 +84,9 @@ describe("filter chips", () => {
   it("removes only the one it names", () => {
     expect(withoutChip(applied, { kind: "tag", value: "vegan" })).toEqual({
       searchTags: ["quick"],
+    });
+    expect(withoutChip(applied, { kind: "ingredient", value: onion })).toEqual({
+      ingredients: [garlic],
     });
     expect(withoutChip(applied, { kind: "category", value: "Dinner" })).toEqual({ categories: [] });
     expect(withoutChip(applied, { kind: "time", value: 30 })).toEqual({ maxCookingTime: null });
@@ -98,6 +108,7 @@ describe("filter chips", () => {
 
     expect(chipLabel({ kind: "category", value: "Dinner" }, speech)).toBe("cat Dinner");
     expect(chipLabel({ kind: "tag", value: "vegan" }, speech)).toBe("vegan");
+    expect(chipLabel({ kind: "ingredient", value: onion }, speech)).toBe("onion");
     expect(chipLabel({ kind: "time", value: 30 }, speech)).toBe(
       "common.filters.cookingTimeUnder30"
     );
@@ -144,6 +155,8 @@ describe("the filters Search reads", () => {
       "category",
       "tag",
       "tag",
+      "ingredient",
+      "ingredient",
       "time",
       "pantry",
     ]);

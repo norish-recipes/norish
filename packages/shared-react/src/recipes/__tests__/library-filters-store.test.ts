@@ -12,7 +12,7 @@ describe("createLibraryFiltersStore", () => {
   it("starts on the cookie's filters, applied", () => {
     const { filters, hydrated } = createLibraryFiltersStore(TITLE_SORTED).getState();
 
-    expect(filters).toEqual({ ...TITLE_SORTED, rawInput: "" });
+    expect(filters).toEqual({ ...TITLE_SORTED, rawInput: "", ingredients: [] });
     expect(hydrated).toBe(true);
   });
 
@@ -60,6 +60,22 @@ describe("createLibraryFiltersStore", () => {
       sortMode: TITLE_SORTED.sortMode,
       libraryType: "recipes",
     });
+  });
+
+  it("narrows to an Ingredient once, keeping its name, and clears it with the chips", () => {
+    const store = createLibraryFiltersStore(undefined);
+    const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
+    const garlic = { id: "a0000000-0000-4000-8000-000000000002", name: "garlic" };
+
+    store.getState().addIngredient(onion);
+    store.getState().addIngredient(garlic);
+    store.getState().addIngredient(onion);
+
+    expect(store.getState().filters.ingredients).toEqual([onion, garlic]);
+
+    store.getState().clearFilters();
+
+    expect(store.getState().filters.ingredients).toEqual([]);
   });
 
   it("takes the stored filters over a kept document's", () => {

@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
+import { IngredientIcon } from "@/components/ingredient-icon";
 import { NativeMenu } from "@/components/native-menu";
 import { PressableScale } from "@/components/pressable-scale";
 import { useCategoryLabel } from "@/hooks/use-category-label";
@@ -8,6 +9,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIntl } from "react-intl";
 
 import type { SortOrder } from "@norish/shared/contracts";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 
 import type { ChipSpeech, FilterChip } from "../utils/search-chips";
@@ -46,6 +48,9 @@ function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove: () => 
       testID={`search-chip-${chipKey(chip)}`}
       onPress={onRemove}
     >
+      {chip.kind === "ingredient" ? (
+        <IngredientIcon ingredientId={chip.value.id} size={20} />
+      ) : null}
       <Text className="text-foreground text-[15px] font-medium">{label}</Text>
       <Ionicons color={muted} name="close" size={14} />
     </PressableScale>
@@ -85,6 +90,9 @@ function SortChip() {
 export function ChipRow({ chips }: { chips: FilterChip[] }) {
   const filters = useSearchFilters();
   const setFilters = useLibraryFilters((state) => state.setFilters);
+
+  // One read for every Ingredient chip's icon; the row that added it has usually read it already.
+  useIngredientIcons(filters.ingredients.map((ingredient) => ingredient.id));
 
   return (
     <ScrollView

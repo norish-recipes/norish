@@ -11,9 +11,14 @@ import {
 } from "@norish/shared/contracts";
 import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 
+/** An Ingredient filter, with the name its chip says; its icon is read by id. */
+export type FilterIngredient = { id: string; name: string };
+
 export type CanonicalRecipeFilters = {
   rawInput: string;
   searchTags: string[];
+  /** Mobile Search only, never persisted: the Ingredients a recipe must name, or a kind of. */
+  ingredients: FilterIngredient[];
   searchFields: SearchField[];
   filterMode: FilterMode;
   sortMode: SortOrder;
@@ -32,7 +37,7 @@ export type CanonicalRecipeFilters = {
   libraryType: LibraryTypeFilter;
 };
 
-export type PersistedRecipeFilters = Omit<CanonicalRecipeFilters, "rawInput">;
+export type PersistedRecipeFilters = Omit<CanonicalRecipeFilters, "rawInput" | "ingredients">;
 
 export type RecipeFilterPreset = {
   id: string;
@@ -59,6 +64,7 @@ export const DEFAULT_PERSISTED_RECIPE_FILTERS: PersistedRecipeFilters = {
 
 export const DEFAULT_RECIPE_FILTERS: CanonicalRecipeFilters = {
   rawInput: "",
+  ingredients: [],
   ...DEFAULT_PERSISTED_RECIPE_FILTERS,
 };
 
@@ -172,6 +178,7 @@ export function hasAppliedRecipeFilters(filters: CanonicalRecipeFilters): boolea
   return (
     filters.rawInput.trim().length > 0 ||
     filters.searchTags.length > 0 ||
+    filters.ingredients.length > 0 ||
     filters.categories.length > 0 ||
     filters.maxCookingTime !== null ||
     filters.minRating !== null ||
@@ -186,6 +193,10 @@ export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
     searchFields: filters.searchFields,
     tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
     categories: filters.categories.length > 0 ? filters.categories : undefined,
+    // Left out unless set, so web's input and cache keys stay as they were.
+    ...(filters.ingredients.length > 0
+      ? { ingredientIds: filters.ingredients.map((ingredient) => ingredient.id) }
+      : {}),
     filterMode: filters.filterMode,
     sortMode: filters.sortMode,
     minRating: filters.minRating ?? undefined,

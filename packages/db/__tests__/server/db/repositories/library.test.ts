@@ -704,9 +704,7 @@ describe("the Library union", () => {
       expect(await match([food.onion!.ingredientId], { search: "stew" })).toEqual([
         { field: "title" },
       ]);
-      expect(
-        await match([food.onion!.ingredientId], { withMatch: false })
-      ).toEqual([undefined]);
+      expect(await match([food.onion!.ingredientId], { withMatch: false })).toEqual([undefined]);
     });
 
     it("changes nothing without ids", async () => {

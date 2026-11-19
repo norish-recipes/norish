@@ -32,6 +32,15 @@ describe("the Search session", () => {
     expect(getSearchConfirmed()).toBe(false);
   });
 
+  it("drops its Ingredient filters when the session ends", () => {
+    searchStore
+      .getState()
+      .addIngredient({ id: "a0000000-0000-4000-8000-000000000001", name: "onion" });
+    resetSearchSession();
+
+    expect(searchStore.getState().filters.ingredients).toEqual([]);
+  });
+
   it("leaves the text, scope and sort when Clear filters clears the chips", () => {
     searchStore
       .getState()

@@ -30,6 +30,18 @@ describe("recipe filter contract", () => {
     expect(serializeRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(JSON.stringify(queryFilters));
   });
 
+  it("sends Ingredient ids only when there are some, and never persists them", () => {
+    const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
+
+    expect(
+      toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, ingredients: [onion] })
+    ).toMatchObject({
+      ingredientIds: [onion.id],
+    });
+    expect(toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS)).not.toHaveProperty("ingredientIds");
+    expect(DEFAULT_PERSISTED_RECIPE_FILTERS).not.toHaveProperty("ingredients");
+  });
+
   it("normalizes persisted filter payloads and rejects invalid values", () => {
     expect(
       normalizePersistedRecipeFilters({

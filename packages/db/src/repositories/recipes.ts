@@ -63,6 +63,7 @@ import {
   recipeInAnyCategorySql,
 } from "./categories";
 import { replaceRecipeCuisinesTx } from "./cuisines";
+import { lineNamesKindSql } from "./ingredient-kinds";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
@@ -70,7 +71,6 @@ import {
   resolvedRecipeLineValues,
   writeRecipeLineFoodsTx,
 } from "./ingredients";
-import { lineNamesKindSql } from "./ingredient-kinds";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
