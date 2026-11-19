@@ -41,6 +41,8 @@ export type LibraryListParams = {
   favoritesOnly?: boolean;
   pantryOnly?: boolean;
   type?: LibraryTypeFilter;
+  /** An explicit sort orders a search too; only `none` still ranks. */
+  sortBeatsRank?: boolean;
 };
 
 /** One row of the Library, discriminated by what kind of thing it is. */
@@ -118,6 +120,7 @@ export async function listLibrary(
     favoritesOnly,
     pantryOnly,
     type = "all",
+    sortBeatsRank = false,
   } = params;
 
   const searchSql = recipeSearchSql(search, searchFields);
@@ -232,7 +235,7 @@ export async function listLibrary(
   const orderBy = sql`ORDER BY ${sql.join(
     [
       ...(pantryCoverage ? [sql`pantry_coverage DESC`] : []),
-      ...(search ? [sql`pinned DESC, rank DESC`] : []),
+      ...(search && !(sortBeatsRank && sortMode !== "none") ? [sql`pinned DESC, rank DESC`] : []),
       baseOrder,
       sql`id ASC`,
     ],

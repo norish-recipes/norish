@@ -277,6 +277,120 @@ describe("the Library union", () => {
     });
   });
 
+  describe("an explicit sort while searching", () => {
+    // Rank order is Twice, Zesty, Plain; the dates and titles each disagree with it.
+    async function seedRanked() {
+      await deleteRecipeById(baseRecipeId);
+
+      const minute = (n: number) => new Date(Date.UTC(2026, 0, 1, 12, n));
+
+      for (const [name, at] of [
+        ["Soup soup", 0],
+        ["Soup", 1],
+        ["Zesty soup", 2],
+      ] as const) {
+        await createTestRecipe(ownerId, { name, createdAt: minute(at) });
+      }
+    }
+
+    const order = async (params: Partial<LibraryListParams>) =>
+      titles((await listLibrary(viewer(ownerId), { ...base, search: "soup", ...params })).items);
+
+    it("keeps the best match first without the flag, whatever the sort", async () => {
+      await seedRanked();
+
+      for (const sortMode of ["none", "dateAsc", "titleDesc"] as const) {
+        expect((await order({ sortMode }))[0]).toBe("Soup soup");
+      }
+    });
+
+    it("follows rank for none with the flag", async () => {
+      await seedRanked();
+
+      expect(await order({ sortMode: "none", sortBeatsRank: true })).toEqual([
+        "Soup soup",
+        "Zesty soup",
+        "Soup",
+      ]);
+    });
+
+    it("follows the chosen sort over rank with the flag", async () => {
+      await seedRanked();
+
+      expect(await order({ sortMode: "dateDesc", sortBeatsRank: true })).toEqual([
+        "Zesty soup",
+        "Soup",
+        "Soup soup",
+      ]);
+      expect(await order({ sortMode: "dateAsc", sortBeatsRank: true })).toEqual([
+        "Soup soup",
+        "Soup",
+        "Zesty soup",
+      ]);
+      expect(await order({ sortMode: "titleAsc", sortBeatsRank: true })).toEqual([
+        "Soup",
+        "Soup soup",
+        "Zesty soup",
+      ]);
+      expect(await order({ sortMode: "titleDesc", sortBeatsRank: true })).toEqual([
+        "Zesty soup",
+        "Soup soup",
+        "Soup",
+      ]);
+    });
+
+    it("keeps newest first for none without text", async () => {
+      await seedRanked();
+
+      expect(await order({ search: undefined, sortMode: "none", sortBeatsRank: true })).toEqual([
+        "Zesty soup",
+        "Soup",
+        "Soup soup",
+      ]);
+    });
+
+    it("still orders a Pantry-only list by coverage first", async () => {
+      await deleteRecipeById(baseRecipeId);
+
+      const names = ["onion", "salt"];
+      const resolved = await resolveIngredients(names, { userId: ownerId });
+
+      await getTestDb()
+        .insert(pantryIngredients)
+        .values([
+          {
+            userId: ownerId,
+            ingredientId: resolved[0]!.ingredientId,
+            ingredientAliasId: resolved[0]!.aliasId,
+          },
+        ]);
+
+      for (const [name, foods] of [
+        ["Aaa half", [0, 1]],
+        ["Zzz full", [0]],
+      ] as const) {
+        const made = await createTestRecipe(ownerId, { name });
+
+        for (const i of foods) {
+          await insertTestRecipeLine({ recipeId: made.id, name: names[i]! }, [
+            resolved[i]!.aliasId,
+          ]);
+        }
+      }
+
+      for (const sortBeatsRank of [false, true]) {
+        const result = await listLibrary(viewer(ownerId), {
+          ...base,
+          pantryOnly: true,
+          sortMode: "titleAsc",
+          sortBeatsRank,
+        });
+
+        expect(titles(result.items)).toEqual(["Zzz full", "Aaa half"]);
+      }
+    });
+  });
+
   describe("recipe-only filters", () => {
     it("restricts the results to recipes", async () => {
       await seedMixedLibrary();

@@ -181,6 +181,10 @@ export const LibraryListInputSchema = RecipeListInputSchema.extend({
     .default(false)
     .describe("Restrict to the caller's favourites. Recipes only."),
   pantryOnly: PantryOnlySchema,
+  sortBeatsRank: z
+    .boolean()
+    .default(false)
+    .describe("Let an explicit sort order a search instead of relevance."),
 });
 
 export const LibraryListResultSchema = z.object({

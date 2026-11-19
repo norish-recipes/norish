@@ -31,6 +31,7 @@ const list = authedProcedure
       favoritesOnly: input.favoritesOnly,
       pantryOnly: input.pantryOnly,
       type: input.type,
+      sortBeatsRank: input.sortBeatsRank,
     });
 
     log.debug({ count: result.items.length, total: result.total }, "Listed the library");
