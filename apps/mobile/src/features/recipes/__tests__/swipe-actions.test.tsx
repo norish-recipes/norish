@@ -96,7 +96,7 @@ describe("SwipeActions", () => {
     swipe.translation.value = 0;
   });
 
-  it("runs the first action once on the release of a full swipe, and closes the row", () => {
+  it("runs the outermost action once on the release of a full swipe, and closes the row", () => {
     const { rerender } = render(ui());
 
     act(() => {
@@ -106,7 +106,8 @@ describe("SwipeActions", () => {
     dragTo(300, rerender);
     act(() => swipe.props!.onSwipeableWillOpen());
 
-    expect(actions[0]!.onPress).toHaveBeenCalledTimes(1);
+    expect(actions[2]!.onPress).toHaveBeenCalledTimes(1);
+    expect(actions[0]!.onPress).not.toHaveBeenCalled();
     expect(swipe.close).toHaveBeenCalledTimes(1);
   });
 
@@ -140,10 +141,10 @@ describe("SwipeActions", () => {
 
     // Back short of the full swipe, a release only opens.
     act(() => swipe.props!.onSwipeableWillOpen());
-    expect(actions[0]!.onPress).not.toHaveBeenCalled();
+    expect(actions[2]!.onPress).not.toHaveBeenCalled();
   });
 
-  it("runs the first action when the settle after a full swipe moves the card back first", () => {
+  it("runs the outermost action when the settle after a full swipe moves the card back first", () => {
     const { rerender } = render(ui());
 
     act(() => {
@@ -156,11 +157,11 @@ describe("SwipeActions", () => {
     dragTo(216, rerender);
     act(() => swipe.props!.onSwipeableWillOpen());
 
-    expect(actions[0]!.onPress).toHaveBeenCalledTimes(1);
+    expect(actions[2]!.onPress).toHaveBeenCalledTimes(1);
     expect(haptics.mediumImpact).toHaveBeenCalledTimes(1);
   });
 
-  it("plays the delete, then hands over the removal once; a recycled cell draws its new item", () => {
+  it("plays the delete, then slides, collapses and hands over the removal once; a recycled cell draws its new item", () => {
     vi.useFakeTimers();
     const ref = React.createRef<Handle>();
     const remove = vi.fn();
@@ -170,7 +171,7 @@ describe("SwipeActions", () => {
     expect(queryByTestId("card-leaving")).not.toBeNull();
     expect(remove).not.toHaveBeenCalled();
 
-    act(() => void vi.advanceTimersByTime(460));
+    act(() => void vi.advanceTimersByTime(610));
     expect(remove).toHaveBeenCalledTimes(1);
 
     // The removed card's cell, recycled for another recipe, is not hidden.

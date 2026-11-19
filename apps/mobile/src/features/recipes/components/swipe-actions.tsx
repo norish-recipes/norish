@@ -12,6 +12,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withDelay,
+  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -26,7 +27,14 @@ import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-prefere
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
 import type { SwipeZone } from "../utils/swipe-reveal";
-import { actionOffset, fullSwipeAt, swipeZone } from "../utils/swipe-reveal";
+import {
+  actionOffset,
+  dropAway,
+  FULL_SWIPE_OVERSHOOT,
+  fullSwipeAction,
+  fullSwipeAt,
+  swipeZone,
+} from "../utils/swipe-reveal";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -51,11 +59,11 @@ const GROUND: Record<SwipeAction["key"], string> = {
 /** Plays the card's delete, then calls `done`, which removes it from the list. */
 export type SwipeActionsHandle = { leave: (done: () => void) => void };
 
-// The web card's delete: red fills it from the right as its content fades, then the red fades.
-const LEAVE_EASE = Easing.out(Easing.ease);
-const FILL_MS = 220;
-const CONTENT_FADE_MS = 180;
-const RED_FADE_MS = 240;
+// A confirmed delete: the card slides off with the Delete circle on its edge, then the row closes.
+const LEAVE_EASE = Easing.out(Easing.cubic);
+const SLIDE_MS = 260;
+const POP_MS = 120;
+const COLLAPSE_MS = 350;
 // ponytail: the removal is async, so the card stays hidden this long; a failed delete brings it back after it.
 const HIDDEN_MS = 1000;
 
@@ -69,6 +77,7 @@ const LAYOUTS = {
   list: {
     width: (count: number) => 8 + (208 / 3) * count,
     panel: "flex-row pl-2",
+    step: 208 / 3,
     slot: "flex-1",
     button: "items-center justify-center gap-[7px]",
     circle: "size-12",
@@ -76,6 +85,7 @@ const LAYOUTS = {
   },
   grid: {
     width: () => 84,
+    step: 0,
     panel: "items-center justify-center gap-[18px] pl-1",
     slot: "w-[72px]",
     button: "items-center gap-1.5",
@@ -113,27 +123,48 @@ export function SwipeActions({
   const reduceMotion = useReducedMotion();
   const [leftKey, setLeftKey] = useState<string | null>(null);
   const leaving = leftKey === itemKey;
-  const fill = useSharedValue(0);
-  const content = useSharedValue(1);
-  const red = useSharedValue(1);
-  const contentStyle = useAnimatedStyle(() => ({ opacity: leaving ? content.get() : 1 }));
-  const redStyle = useAnimatedStyle(() => ({ width: `${fill.get() * 100}%`, opacity: red.get() }));
+  const screenWidth = useWindowDimensions().width;
+  // The card's travel when it has left the screen, the Delete circle after it.
+  const slideBy = screenWidth + FULL_SWIPE_OVERSHOOT;
+  const slide = useSharedValue(0);
+  const pop = useSharedValue(0);
+  const collapse = useSharedValue(0);
+  const boxHeight = useSharedValue(0);
+  const contentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: leaving ? -slide.get() * slideBy : 0 }],
+  }));
+  const circleStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(pop.get() * 4, 1),
+    transform: [{ translateX: -slide.get() * slideBy }, { scale: 0.8 + pop.get() * 0.35 }],
+  }));
+  const rowStyle = useAnimatedStyle(() =>
+    leaving && variant === "list" ? { height: boxHeight.get() * (1 - collapse.get()) } : {}
+  );
 
   useImperativeHandle(ref, () => ({
     leave: (done) => {
       if (reduceMotion) return done();
-      fill.set(0);
-      content.set(1);
-      red.set(1);
+      slide.set(0);
+      pop.set(0);
+      collapse.set(0);
       setLeftKey(itemKey);
-      fill.set(withTiming(1, { duration: FILL_MS, easing: LEAVE_EASE }));
-      content.set(withTiming(0, { duration: CONTENT_FADE_MS, easing: LEAVE_EASE }));
-      red.set(withDelay(FILL_MS, withTiming(0, { duration: RED_FADE_MS, easing: LEAVE_EASE })));
+      slide.set(withTiming(1, { duration: SLIDE_MS, easing: LEAVE_EASE }));
+      // The circle pops to 1.15 as it appears, then settles to 1 (pop 1 reads as scale 1.15).
+      pop.set(
+        withSequence(withTiming(1, { duration: POP_MS }), withTiming(0.43, { duration: POP_MS }))
+      );
+      if (variant === "list")
+        collapse.set(
+          withDelay(SLIDE_MS, withTiming(1, { duration: COLLAPSE_MS, easing: LEAVE_EASE }))
+        );
       // On a timer, so a cancelled animation or a cell gone mid-way still deletes what was confirmed.
-      setTimeout(() => {
-        done();
-        setTimeout(() => setLeftKey(null), HIDDEN_MS);
-      }, FILL_MS + RED_FADE_MS);
+      setTimeout(
+        () => {
+          done();
+          setTimeout(() => setLeftKey(null), HIDDEN_MS);
+        },
+        SLIDE_MS + (variant === "list" ? COLLAPSE_MS : 0)
+      );
     },
   }));
   const rowRef = useRef<SwipeableMethods>(null);
@@ -141,9 +172,8 @@ export function SwipeActions({
   const openRow = useOpenRow(rowRef);
   // Whether a finger is on the card: the settle after a release neither ticks nor clears a full swipe.
   const dragging = useSharedValue(false);
-  // Whether the finger is past the full swipe: a release there runs the first action.
+  // Whether the finger is past the full swipe: a release there runs the outermost action.
   const fullSwipe = useSharedValue(false);
-  const screenWidth = useWindowDimensions().width;
   // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
   const [rightEdge, setRightEdge] = useState(screenWidth);
   const startDrag = () =>
@@ -164,6 +194,7 @@ export function SwipeActions({
       dragging.set(false);
     },
   });
+  const [onDanger] = useThemeColor(["danger-foreground"] as const);
   const { width, ...look } = LAYOUTS[variant];
   const layout: Layout = { ...look, width: width(actions.length), count: actions.length };
   const fullAt = fullSwipeAt(layout.width, rightEdge);
@@ -171,9 +202,13 @@ export function SwipeActions({
   return (
     // A touch on this row closes any other open one, and stops there: the list closes on any other.
     <GestureDetector gesture={finger}>
-      <View
+      <Animated.View
         ref={boxRef}
-        className={variant === "grid" ? "flex-1" : undefined}
+        className={`${variant === "grid" ? "flex-1" : ""} ${leaving ? "overflow-hidden" : ""}`}
+        style={rowStyle}
+        onLayout={(event) => {
+          if (!leaving) boxHeight.set(event.nativeEvent.layout.height);
+        }}
         onTouchStart={(event) => {
           event.stopPropagation();
           closeOpenRow(openRow.row);
@@ -210,9 +245,11 @@ export function SwipeActions({
           onSwipeableOpen={() => setIsOpen(true)}
           onSwipeableOpenStartDrag={startDrag}
           onSwipeableWillOpen={() => {
-            if (fullSwipe.get() && actions[0]) {
+            const commit = fullSwipeAction(actions);
+
+            if (fullSwipe.get() && commit) {
               rowRef.current?.close();
-              actions[0].onPress();
+              commit.onPress();
             } else openRow.opened();
           }}
         >
@@ -222,13 +259,19 @@ export function SwipeActions({
         </ReanimatedSwipeable>
         {leaving ? (
           <Animated.View
-            className="bg-danger absolute inset-y-0 right-0"
+            className="absolute inset-y-0 left-full justify-center pl-2"
             pointerEvents="none"
-            style={[{ borderRadius: variant === "grid" ? 24 : 20 }, redStyle]}
             testID="card-leaving"
-          />
+          >
+            <Animated.View
+              className={`bg-danger items-center justify-center rounded-full ${layout.circle}`}
+              style={[CIRCLE_SHADOW, circleStyle]}
+            >
+              <Ionicons color={onDanger} name={ICONS.delete} size={layout.icon} />
+            </Animated.View>
+          </Animated.View>
         ) : null}
-      </View>
+      </Animated.View>
     </GestureDetector>
   );
 }
@@ -323,12 +366,21 @@ function ActionButton({
   onPress: () => void;
 }) {
   const reduceMotion = useReducedMotion();
-  const { width, count } = layout;
-  const slide = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: actionOffset(-translation.get(), width, index, count, reduceMotion) },
-    ],
-  }));
+  const { width, count, step } = layout;
+  const outermost = index === count - 1;
+  const slide = useAnimatedStyle(() => {
+    const travel = -translation.get();
+    // Past the open width the outermost circle pops a little, the others shrink and fade.
+    const drop = reduceMotion ? 0 : dropAway(travel, width);
+
+    return {
+      opacity: outermost ? 1 : 1 - drop,
+      transform: [
+        { translateX: actionOffset(travel, width, index, count, step, reduceMotion) },
+        { scale: outermost ? 1 + 0.15 * drop : 1 - 0.4 * drop },
+      ],
+    };
+  });
   const [onColour] = useThemeColor(["danger-foreground"] as const);
   const shopForeground = useTokenColor("shop-foreground");
   const icon = action.key === "groceries" && shopForeground ? shopForeground : onColour;

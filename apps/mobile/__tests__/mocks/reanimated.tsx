@@ -35,6 +35,7 @@ export const useAnimatedRef = () => ({ current: null });
 export const useScrollOffset = () => sharedValue(0);
 export const withSpring = (value: number) => value;
 export const withTiming = (value: number) => value;
+export const withSequence = (...values: number[]) => values[values.length - 1];
 export const withDelay = (_delay: number, value: number) => value;
 export const cancelAnimation = () => {};
 export const useAnimatedScrollHandler = () => undefined;

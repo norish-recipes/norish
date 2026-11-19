@@ -1,15 +1,17 @@
 import {
   actionOffset,
+  dropAway,
   FULL_SWIPE_FLOOR,
   FULL_SWIPE_HYSTERESIS,
   FULL_SWIPE_OVERSHOOT,
+  fullSwipeAction,
   fullSwipeAt,
   swipeZone,
 } from "@/features/recipes/utils/swipe-reveal";
 import { describe, expect, it } from "vitest";
 
 const offsets = (travel: number, reduceMotion = false) =>
-  [0, 1, 2].map((index) => actionOffset(travel, 300, index, 3, reduceMotion));
+  [0, 1, 2].map((index) => actionOffset(travel, 300, index, 3, 100, reduceMotion));
 
 describe("actionOffset", () => {
   it("hides every action a panel's width away and seats them all once it is open", () => {
@@ -17,9 +19,19 @@ describe("actionOffset", () => {
     expect(offsets(300)).toEqual([0, 0, 0]);
   });
 
-  it("past the open width, moves the first action with the card's edge and leaves the rest", () => {
-    expect(offsets(450)).toEqual([-150, 0, 0]);
+  it("past the open width, moves the outermost action with the card's edge and leaves the rest", () => {
+    expect(offsets(300 + FULL_SWIPE_OVERSHOOT)).toEqual([0, 0, -FULL_SWIPE_OVERSHOOT - 200]);
     expect(offsets(450, true)).toEqual([-150, -150, -150]);
+  });
+
+  it("starts the outermost action's follow where it rests", () => {
+    expect(offsets(300.001)[2]).toBeCloseTo(0, 1);
+  });
+
+  it("drops the other actions away over the overshoot", () => {
+    expect(dropAway(300, 300)).toBe(0);
+    expect(dropAway(300 + FULL_SWIPE_OVERSHOOT / 2, 300)).toBe(0.5);
+    expect(dropAway(900, 300)).toBe(1);
   });
 
   it("keeps the first action on the card's edge and lets each outer one lag further behind", () => {
@@ -52,6 +64,14 @@ const LIST_ACTION = 208 / 3;
 const list = (count: number) => 8 + LIST_ACTION * count;
 const GRID = 84;
 
+describe("fullSwipeAction", () => {
+  it("is the outermost action: Delete when offered, else the last one", () => {
+    expect(fullSwipeAction(["groceries", "plan", "delete"])).toBe("delete");
+    expect(fullSwipeAction(["groceries", "plan"])).toBe("plan");
+    expect(fullSwipeAction([])).toBeUndefined();
+  });
+});
+
 describe("fullSwipeAt", () => {
   it("is the open width plus the overshoot wherever the card leaves room", () => {
     expect(fullSwipeAt(list(3), 382)).toBe(list(3) + FULL_SWIPE_OVERSHOOT);
@@ -72,7 +92,7 @@ describe("fullSwipeAt", () => {
 });
 
 describe("swipeZone", () => {
-  it("opens past the open threshold and runs the first action past the full swipe", () => {
+  it("opens past the open threshold and runs the outermost action past the full swipe", () => {
     const fullAt = fullSwipeAt(GRID, 195);
 
     expect(swipeZone(30, 40, fullAt)).toBe("closed");
