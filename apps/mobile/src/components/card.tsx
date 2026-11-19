@@ -33,6 +33,7 @@ export function CardRow({
   dotColor,
   first = false,
   disabled = false,
+  selected,
   chevron = true,
   testID,
   onPress,
@@ -51,6 +52,8 @@ export function CardRow({
   first?: boolean;
   /** Dimmed to 40% and gives no press. */
   disabled?: boolean;
+  /** The row's selected state for a choice list. */
+  selected?: boolean;
   /** The chevron a pressable row ends with; false where its `children` end it, as a choice's check. */
   chevron?: boolean;
   testID?: string;
@@ -102,7 +105,7 @@ export function CardRow({
   return onPress ? (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, selected }}
       className={className}
       disabled={disabled}
       testID={testID}

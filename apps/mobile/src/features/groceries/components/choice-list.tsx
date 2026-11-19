@@ -26,6 +26,7 @@ export function ChoiceList({
             chevron={false}
             first={index === 0}
             label={choice.label}
+            selected={choice.id === value}
             leading={
               <View
                 className="size-2.5 rounded-full"
