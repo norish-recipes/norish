@@ -6,14 +6,14 @@ import { PillButton } from "@/components/pill-button";
 import { SectionLabel } from "@/components/section-label";
 import { Skeleton } from "heroui-native";
 
-/** A section's label row: its name beside the pill, above the card of lines. */
-const HEADER = "flex-row items-end justify-between gap-2 px-2";
+/** A section's label row: its name beside the pill (the label carries its own inset), above the card of lines. */
+const HEADER = "flex-row items-end justify-between gap-2";
 
 /** A section's shell while its lines load: the label's name and pill over the rows given. */
 export function GroceryLinesSectionSkeleton({ children }: { children: ReactNode }) {
   return (
     <View className="gap-1.5">
-      <View className={HEADER}>
+      <View className={`${HEADER} px-2`}>
         <Skeleton className="h-5 w-24 rounded-md" />
         <Skeleton className="h-[34px] w-24 rounded-full" />
       </View>
