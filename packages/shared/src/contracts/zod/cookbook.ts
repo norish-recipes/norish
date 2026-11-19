@@ -6,6 +6,9 @@ import { RecipeDashboardSchema, RecipeListInputSchema } from "./recipe";
 /** The Cookbook title. Trimmed, because a title made of spaces is not a title. */
 export const CookbookTitleSchema = z.string().trim().min(1).max(120);
 
+/** How many Ingredients one Library search can be narrowed to. */
+export const MAX_FILTER_INGREDIENTS = 20;
+
 /** How many member titles a cookbook's derived description names. */
 export const COOKBOOK_DESCRIPTION_TITLE_LIMIT = 6;
 
@@ -207,7 +210,7 @@ export const LibraryListInputSchema = RecipeListInputSchema.extend({
   pantryOnly: PantryOnlySchema,
   ingredientIds: z
     .array(z.uuid())
-    .max(20)
+    .max(MAX_FILTER_INGREDIENTS)
     .optional()
     .describe("Keep recipes with a line naming each Ingredient, or a kind of it. Recipes only."),
   sortBeatsRank: z

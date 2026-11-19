@@ -5,6 +5,7 @@ import {
   DEFAULT_PERSISTED_RECIPE_FILTERS,
   DEFAULT_RECIPE_FILTERS,
 } from "@norish/shared/contracts/filter-contract";
+import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 
 const TITLE_SORTED = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" as const };
 
@@ -76,6 +77,22 @@ describe("createLibraryFiltersStore", () => {
     store.getState().clearFilters();
 
     expect(store.getState().filters.ingredients).toEqual([]);
+  });
+
+  it("stops narrowing to more Ingredients than a search accepts", () => {
+    const store = createLibraryFiltersStore(undefined);
+    const ingredient = (n: number) => ({
+      id: `a0000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
+      name: `food ${n}`,
+    });
+
+    for (let n = 0; n < MAX_FILTER_INGREDIENTS + 1; n++)
+      store.getState().addIngredient(ingredient(n));
+
+    expect(store.getState().filters.ingredients).toHaveLength(MAX_FILTER_INGREDIENTS);
+    expect(store.getState().filters.ingredients.at(-1)).toEqual(
+      ingredient(MAX_FILTER_INGREDIENTS - 1)
+    );
   });
 
   it("takes the stored filters over a kept document's", () => {

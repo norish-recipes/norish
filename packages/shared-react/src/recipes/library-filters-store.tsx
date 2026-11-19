@@ -16,6 +16,7 @@ import {
   DEFAULT_RECIPE_FILTERS,
   toggleSearchFieldIn,
 } from "@norish/shared/contracts/filter-contract";
+import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 
 import { createPageStoreContext } from "../page-store";
 
@@ -30,7 +31,7 @@ type LibraryFiltersState = {
    * (ADR-0026), and those in `keepOnClear`. */
   clearFilters: () => void;
   toggleSearchField: (field: SearchField) => void;
-  /** Narrows to an Ingredient; one already narrowed to stays as it is. */
+  /** Narrows to an Ingredient; one already narrowed to, or one past the limit a search accepts, changes nothing. */
   addIngredient: (ingredient: FilterIngredient) => void;
   /** The browser's stored filters win over the cookie's: a kept document can be old. */
   applyStored: (stored: PersistedRecipeFilters | null) => void;
@@ -65,6 +66,7 @@ export function createLibraryFiltersStore(
       })),
     addIngredient: (ingredient) =>
       set((state) =>
+        state.filters.ingredients.length >= MAX_FILTER_INGREDIENTS ||
         state.filters.ingredients.some((item) => item.id === ingredient.id)
           ? state
           : {
