@@ -12,3 +12,7 @@
 - [ ] Tests and Maestro flows follow moved controls; gates green.
 
 ## Comments
+
+- Part A (Recipes-tab sheets): kit gained `CardRow` `icon`/`hint`/`disabled` (inset hairline), `PillButton` tone `accent` (the clipboard Import), `IconButton` `small` (photo remove), `SheetInput` `onClear` (board's clear circle), and `slice-row.tsx` (sand rows of a virtualised card, used by pick rows and the choice sheet). New copy `recipes.addRecipe.fromClipboard` in every locale; `importHost` left every locale.
+- Filters follow the board's order (Category, Cooking time, Tags, Rating); Rating is chips Any/1+..4+/5 (the app has 1-5, the board shows 3+/4+/5); Sort, Favorites and Pantry-only stay as extra sections after Rating, since the app has them and the board doesn't.
+- Not built: Add to groceries drops the "x of y selected" count (board has only label + Select all; web still reads the key); Import from text drops the label and info button, the limit shows as a note under the field; the board's `choice` is the editor's Cuisine sheet, the groceries Store/Aisle choice list is Part C. Share/Timers/Repeat boxes are for B and C, so no checkbox ticked here.
