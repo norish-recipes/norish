@@ -1,38 +1,20 @@
 // @vitest-environment jsdom
-import { createRequire } from "node:module";
 import path from "node:path";
 import * as React from "react";
 import * as compilerRuntime from "react/compiler-runtime";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { releaseModule } from "../release-module";
+
 type AfterSheet = typeof import("@/lib/after-sheet");
 
-const fromExpo = createRequire(createRequire(import.meta.filename).resolve("expo/package.json"));
-const preset = fromExpo.resolve("babel-preset-expo");
-/** The one call this needs from the preset's own Babel. */
-type Babel = { transformFileSync(file: string, options: object): { code?: string | null } | null };
-const babel: Babel = createRequire(preset)("@babel/core");
-const modules: Record<string, unknown> = {
-  react: React,
-  "react/compiler-runtime": compilerRuntime,
-};
-
-/** A fresh copy of the module as a release build has it: Expo's preset with the React Compiler on. */
-function releaseAfterSheet(): AfterSheet {
-  const code =
-    babel.transformFileSync(path.join(import.meta.dirname, "../../src/lib/after-sheet.ts"), {
-      babelrc: false,
-      configFile: false,
-      presets: [preset],
-      caller: { name: "metro", platform: "ios", isDev: false, supportsReactCompiler: true },
-    })?.code ?? "";
-  const exports = {};
-
-  new Function("exports", "require", code)(exports, (id: string) => modules[id]);
-
-  return exports as AfterSheet;
-}
+/** A fresh copy of the module as a release build has it. */
+const releaseAfterSheet = () =>
+  releaseModule<AfterSheet>(path.join(import.meta.dirname, "../../src/lib/after-sheet.ts"), {
+    react: React,
+    "react/compiler-runtime": compilerRuntime,
+  });
 
 describe("after-sheet in a release build", () => {
   it("opens once its sheet has gone, once for a double tap", () => {
