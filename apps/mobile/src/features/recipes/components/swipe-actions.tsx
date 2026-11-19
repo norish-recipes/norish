@@ -9,10 +9,10 @@ import Animated, {
   Easing,
   useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withDelay,
-  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -26,11 +26,14 @@ import { useThemeColor } from "heroui-native";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 import type { RecipeSwipeAction } from "../utils/card-actions";
-import type { SwipeZone } from "../utils/swipe-reveal";
+import type { Reveal, SwipeZone } from "../utils/swipe-reveal";
 import {
   actionOffset,
+  cardTravel,
+  collapseHeight,
   dropAway,
   FULL_SWIPE_OVERSHOOT,
+  FULL_SWIPE_POP,
   fullSwipeAction,
   fullSwipeAt,
   swipeZone,
@@ -57,12 +60,19 @@ const GROUND: Record<SwipeAction["key"], string> = {
 };
 
 /** Plays the card's delete, then calls `done`, which removes it from the list. */
-export type SwipeActionsHandle = { leave: (done: () => void) => void };
+export type SwipeActionsHandle = {
+  leave: (done: () => void) => void;
+  /** Springs a card held for a delete's confirm back closed. */
+  restore: () => void;
+};
 
-// A confirmed delete: the card slides off with the Delete circle on its edge, then the row closes.
+// A delete: the card is held at the full swipe for the confirm, slides off with the Delete circle
+// stopped on that edge, which shrinks and fades as the row closes.
 const LEAVE_EASE = Easing.out(Easing.cubic);
+const HOLD_MS = 120;
+const RESTORE_MS = 250;
 const SLIDE_MS = 260;
-const POP_MS = 120;
+const CIRCLE_EXIT_MS = 200;
 const COLLAPSE_MS = 350;
 // ponytail: the removal is async, so the card stays hidden this long; a failed delete brings it back after it.
 const HIDDEN_MS = 1000;
@@ -71,13 +81,14 @@ const HIDDEN_MS = 1000;
 // drag (plus a toss from its velocity) passes `-rightThreshold`, so the tick uses the same value.
 const OPEN_THRESHOLD = 40;
 
-// List circles are 48 pt in a 208 pt panel, the card 8 pt short of it; grid circles 44 pt in an
-// 80 pt one, 4 pt short.
+// List circles are 48 pt in a 208 pt panel of three, the card 8 pt short of it; grid circles 44 pt in
+// an 80 pt one, 4 pt short.
+const LIST_STEP = 208 / 3;
 const LAYOUTS = {
   list: {
-    width: (count: number) => 8 + (208 / 3) * count,
+    width: (count: number) => 8 + LIST_STEP * count,
     panel: "flex-row pl-2",
-    step: 208 / 3,
+    step: LIST_STEP,
     slot: "flex-1",
     button: "items-center justify-center gap-[7px]",
     circle: "size-12",
@@ -94,7 +105,15 @@ const LAYOUTS = {
   },
 };
 
-type Layout = Omit<(typeof LAYOUTS)[RecipeViewMode], "width"> & { width: number; count: number };
+type Layout = Omit<(typeof LAYOUTS)[RecipeViewMode], "width"> & Reveal;
+
+/** The delete's motion on the UI thread: how far the card is `extra` past its swipe, how much it is
+ * `held` (0 to 1) at the full swipe, and how far its circle is `gone`. */
+type DeleteMotion = {
+  extra: SharedValue<number>;
+  held: SharedValue<number>;
+  gone: SharedValue<number>;
+};
 
 // A CSS `0 2px 8px` shadow at 14% black; iOS's radius is half the CSS blur.
 const CIRCLE_SHADOW = {
@@ -127,32 +146,45 @@ export function SwipeActions({
   // The card's travel when it has left the screen, the Delete circle after it.
   const slideBy = screenWidth + FULL_SWIPE_OVERSHOOT;
   const slide = useSharedValue(0);
-  const pop = useSharedValue(0);
+  const held = useSharedValue(0);
+  const gone = useSharedValue(0);
   const collapse = useSharedValue(0);
   const boxHeight = useSharedValue(0);
-  const contentStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: leaving ? -slide.get() * slideBy : 0 }],
-  }));
-  const circleStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(pop.get() * 4, 1),
-    transform: [{ translateX: -slide.get() * slideBy }, { scale: 0.8 + pop.get() * 0.35 }],
-  }));
-  const rowStyle = useAnimatedStyle(() =>
-    leaving && variant === "list" ? { height: boxHeight.get() * (1 - collapse.get()) } : {}
+  const rowRef = useRef<SwipeableMethods>(null);
+  const { width, ...look } = LAYOUTS[variant];
+  const openWidth = width(actions.length);
+  // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
+  const [rightEdge, setRightEdge] = useState(screenWidth);
+  const fullAt = fullSwipeAt(openWidth, rightEdge);
+  const layout: Layout = { ...look, width: openWidth, count: actions.length, fullAt };
+  const collapses = leaving && variant === "list";
+  // The card sits `openWidth` out while held, so only the rest of its travel is its own.
+  const extra = useDerivedValue(
+    () => cardTravel(held.get(), slide.get(), fullAt, slideBy) - openWidth * held.get()
   );
+  const motion: DeleteMotion = { extra, held, gone };
+  const contentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: leaving ? -extra.get() : 0 }],
+  }));
+  const rowStyle = useAnimatedStyle(() => ({
+    height: collapseHeight(collapses, boxHeight.get(), collapse.get()),
+  }));
+
+  // Holds the card where the full swipe left it, for the confirm.
+  const hold = () => {
+    setLeftKey(itemKey);
+    held.set(withTiming(1, { duration: HOLD_MS, easing: LEAVE_EASE }));
+  };
 
   useImperativeHandle(ref, () => ({
     leave: (done) => {
       if (reduceMotion) return done();
       slide.set(0);
-      pop.set(0);
+      gone.set(0);
       collapse.set(0);
       setLeftKey(itemKey);
       slide.set(withTiming(1, { duration: SLIDE_MS, easing: LEAVE_EASE }));
-      // The circle pops to 1.15 as it appears, then settles to 1 (pop 1 reads as scale 1.15).
-      pop.set(
-        withSequence(withTiming(1, { duration: POP_MS }), withTiming(0.43, { duration: POP_MS }))
-      );
+      gone.set(withDelay(SLIDE_MS, withTiming(1, { duration: CIRCLE_EXIT_MS })));
       if (variant === "list")
         collapse.set(
           withDelay(SLIDE_MS, withTiming(1, { duration: COLLAPSE_MS, easing: LEAVE_EASE }))
@@ -161,21 +193,27 @@ export function SwipeActions({
       setTimeout(
         () => {
           done();
+          // Closed for the cell's next item, with the card still off screen.
+          rowRef.current?.reset();
+          held.set(0);
           setTimeout(() => setLeftKey(null), HIDDEN_MS);
         },
         SLIDE_MS + (variant === "list" ? COLLAPSE_MS : 0)
       );
     },
+    restore: () => {
+      if (held.get() === 0) return;
+      rowRef.current?.close();
+      held.set(withTiming(0, { duration: RESTORE_MS, easing: LEAVE_EASE }));
+      setTimeout(() => setLeftKey(null), RESTORE_MS);
+    },
   }));
-  const rowRef = useRef<SwipeableMethods>(null);
   const boxRef = useRef<ComponentRef<typeof View>>(null);
   const openRow = useOpenRow(rowRef);
   // Whether a finger is on the card: the settle after a release neither ticks nor clears a full swipe.
   const dragging = useSharedValue(false);
   // Whether the finger is past the full swipe: a release there runs the outermost action.
   const fullSwipe = useSharedValue(false);
-  // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
-  const [rightEdge, setRightEdge] = useState(screenWidth);
   const startDrag = () =>
     boxRef.current?.measureInWindow((x, _y, boxWidth) => setRightEdge(x + boxWidth));
   // Never activates; it only follows the finger on the UI thread, where a release beats the settle.
@@ -194,10 +232,6 @@ export function SwipeActions({
       dragging.set(false);
     },
   });
-  const [onDanger] = useThemeColor(["danger-foreground"] as const);
-  const { width, ...look } = LAYOUTS[variant];
-  const layout: Layout = { ...look, width: width(actions.length), count: actions.length };
-  const fullAt = fullSwipeAt(layout.width, rightEdge);
 
   return (
     // A touch on this row closes any other open one, and stops there: the list closes on any other.
@@ -206,8 +240,9 @@ export function SwipeActions({
         ref={boxRef}
         className={`${variant === "grid" ? "flex-1" : ""} ${leaving ? "overflow-hidden" : ""}`}
         style={rowStyle}
+        testID={leaving ? "card-leaving" : undefined}
         onLayout={(event) => {
-          if (!leaving) boxHeight.set(event.nativeEvent.layout.height);
+          if (!collapses) boxHeight.set(event.nativeEvent.layout.height);
         }}
         onTouchStart={(event) => {
           event.stopPropagation();
@@ -230,6 +265,7 @@ export function SwipeActions({
                 isOpen={isOpen}
                 layout={layout}
                 methods={methods}
+                motion={motion}
                 progress={progress}
                 translation={translation}
               />
@@ -245,11 +281,13 @@ export function SwipeActions({
           onSwipeableOpen={() => setIsOpen(true)}
           onSwipeableOpenStartDrag={startDrag}
           onSwipeableWillOpen={() => {
-            const commit = fullSwipeAction(actions);
+            const fullAction = fullSwipeAction(actions);
 
-            if (fullSwipe.get() && commit) {
-              rowRef.current?.close();
-              commit.onPress();
+            if (fullSwipe.get() && fullAction) {
+              // A delete holds the card for its confirm; Reduce Motion deletes from rest.
+              if (fullAction.key === "delete" && !reduceMotion) hold();
+              else rowRef.current?.close();
+              fullAction.onPress();
             } else openRow.opened();
           }}
         >
@@ -257,20 +295,6 @@ export function SwipeActions({
             {children}
           </Animated.View>
         </ReanimatedSwipeable>
-        {leaving ? (
-          <Animated.View
-            className="absolute inset-y-0 left-full justify-center pl-2"
-            pointerEvents="none"
-            testID="card-leaving"
-          >
-            <Animated.View
-              className={`bg-danger items-center justify-center rounded-full ${layout.circle}`}
-              style={[CIRCLE_SHADOW, circleStyle]}
-            >
-              <Ionicons color={onDanger} name={ICONS.delete} size={layout.icon} />
-            </Animated.View>
-          </Animated.View>
-        ) : null}
       </Animated.View>
     </GestureDetector>
   );
@@ -315,6 +339,7 @@ function ActionsPanel({
   isOpen,
   layout,
   methods,
+  motion,
   progress,
   translation,
 }: {
@@ -322,6 +347,7 @@ function ActionsPanel({
   isOpen: boolean;
   layout: Layout;
   methods: SwipeableMethods;
+  motion: DeleteMotion;
   progress: SharedValue<number>;
   translation: SharedValue<number>;
 }) {
@@ -340,6 +366,7 @@ function ActionsPanel({
           action={action}
           index={index}
           layout={layout}
+          motion={motion}
           translation={translation}
           onPress={() => {
             methods.close();
@@ -356,28 +383,33 @@ function ActionButton({
   action,
   index,
   layout,
+  motion,
   translation,
   onPress,
 }: {
   action: SwipeAction;
   index: number;
   layout: Layout;
+  motion: DeleteMotion;
   translation: SharedValue<number>;
   onPress: () => void;
 }) {
   const reduceMotion = useReducedMotion();
-  const { width, count, step } = layout;
-  const outermost = index === count - 1;
+  const outermost = index === layout.count - 1;
   const slide = useAnimatedStyle(() => {
-    const travel = -translation.get();
+    const finger = -translation.get();
+    // A deleted card carries on past the swipe; the circle stays on the edge it was held at.
+    const travel = Math.max(finger, Math.min(finger + motion.extra.get(), layout.fullAt));
     // Past the open width the outermost circle pops a little, the others shrink and fade.
-    const drop = reduceMotion ? 0 : dropAway(travel, width);
+    const drop = reduceMotion ? 0 : dropAway(travel, layout);
+    const pop = 1 + (FULL_SWIPE_POP - 1) * drop * (1 - motion.held.get());
+    const exit = outermost ? motion.gone.get() : 0;
 
     return {
-      opacity: outermost ? 1 : 1 - drop,
+      opacity: (outermost ? 1 : 1 - drop) * (1 - exit),
       transform: [
-        { translateX: actionOffset(travel, width, index, count, step, reduceMotion) },
-        { scale: outermost ? 1 + 0.15 * drop : 1 - 0.4 * drop },
+        { translateX: actionOffset(travel, layout, index, reduceMotion) },
+        { scale: (outermost ? pop : 1 - 0.4 * drop) * (1 - 0.7 * exit) },
       ],
     };
   });

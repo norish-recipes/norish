@@ -50,11 +50,11 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
       setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook });
       removeMember(recipe.id);
     },
-    /** `leave` plays the card's delete before it calls `remove`. */
+    /** `card` plays its delete before `remove` and takes back a cancelled one. */
     deleteRecipe: (
       recipe: Recipe,
       onDeleted?: () => void,
-      leave?: (remove: () => void) => void
+      card?: { leave: (remove: () => void) => void; restore: () => void }
     ) => {
       const remove = () => {
         deleteRecipes([{ id: recipe.id, version: recipe.version }]);
@@ -64,7 +64,8 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
       confirm({
         title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
         message: intl.formatMessage({ id: "recipes.deleteModal.warning" }),
-        onConfirm: () => (leave ? leave(remove) : remove()),
+        onConfirm: () => (card ? card.leave(remove) : remove()),
+        onCancel: card?.restore,
       });
     },
     addRecipes: (cookbook: Cookbook) =>

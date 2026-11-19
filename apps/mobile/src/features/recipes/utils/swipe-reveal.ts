@@ -8,25 +8,25 @@ export const FULL_SWIPE_HYSTERESIS = 16;
 // The least a full swipe goes past the open width, however little room the card leaves.
 export const FULL_SWIPE_FLOOR = 32;
 
-/** How far right of its place action `index` of `count` sits with the card `travel` pt over a
- * `width` pt panel: each moves at `(count - index) / count` of the finger, as one under Reduce Motion.
- * `step` is the gap between neighbours' places. */
-export function actionOffset(
-  travel: number,
-  width: number,
-  index: number,
-  count: number,
-  step: number,
-  reduceMotion: boolean
-) {
+// The scale a full swipe's circle pops to under the finger, and back to 1 once the swipe is held.
+export const FULL_SWIPE_POP = 1.15;
+
+/** The panel's geometry: open `width`, `count` actions `step` pt apart, and the commit point `fullAt`. */
+export type Reveal = { width: number; count: number; step: number; fullAt: number };
+
+/** How far right of its place action `index` sits with the card `travel` pt over the panel: each moves
+ * at `(count - index) / count` of the finger, as one under Reduce Motion. */
+export function actionOffset(travel: number, reveal: Reveal, index: number, reduceMotion: boolean) {
   "worklet";
+
+  const { width, count, step } = reveal;
 
   // Past the open width the outermost action, the one a full swipe runs, closes on the card's edge.
   if (travel > width) {
     if (reduceMotion) return width - travel;
     if (index !== count - 1) return 0;
 
-    return width - travel - step * index * dropAway(travel, width);
+    return width - travel - step * index * dropAway(travel, reveal);
   }
 
   const left = 1 - Math.max(travel / width, 0);
@@ -35,11 +35,28 @@ export function actionOffset(
   return width * left * rate;
 }
 
-/** 0 to 1 over the overshoot past the open width: the other actions shrink and fade as it grows. */
-export function dropAway(travel: number, width: number) {
+/** 0 to 1 from the open width to the commit point: the other actions shrink and fade as it grows. */
+export function dropAway(travel: number, { width, fullAt }: Reveal) {
   "worklet";
 
-  return Math.min(Math.max((travel - width) / FULL_SWIPE_OVERSHOOT, 0), 1);
+  return Math.min(Math.max((travel - width) / (fullAt - width), 0), 1);
+}
+
+/** A collapsing row's height; unset otherwise, so a recycled cell drops the last one set on its view. */
+export function collapseHeight(collapses: boolean, height: number, collapse: number) {
+  "worklet";
+
+  return collapses ? height * (1 - collapse) : undefined;
+}
+
+/** How far a deleted card has travelled: from rest, or from the full swipe it was `held` at (0 to 1),
+ * to `slideBy` as `slide` (0 to 1) runs. */
+export function cardTravel(held: number, slide: number, fullAt: number, slideBy: number) {
+  "worklet";
+
+  const from = fullAt * held;
+
+  return from + slide * (slideBy - from);
 }
 
 /** The action a full swipe runs: the outermost, the last of `actions`. */

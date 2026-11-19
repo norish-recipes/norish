@@ -1,5 +1,7 @@
 import {
   actionOffset,
+  cardTravel,
+  collapseHeight,
   dropAway,
   FULL_SWIPE_FLOOR,
   FULL_SWIPE_HYSTERESIS,
@@ -10,8 +12,9 @@ import {
 } from "@/features/recipes/utils/swipe-reveal";
 import { describe, expect, it } from "vitest";
 
+const reveal = { width: 300, count: 3, step: 100, fullAt: 300 + FULL_SWIPE_OVERSHOOT };
 const offsets = (travel: number, reduceMotion = false) =>
-  [0, 1, 2].map((index) => actionOffset(travel, 300, index, 3, 100, reduceMotion));
+  [0, 1, 2].map((index) => actionOffset(travel, reveal, index, reduceMotion));
 
 describe("actionOffset", () => {
   it("hides every action a panel's width away and seats them all once it is open", () => {
@@ -29,9 +32,16 @@ describe("actionOffset", () => {
   });
 
   it("drops the other actions away over the overshoot", () => {
-    expect(dropAway(300, 300)).toBe(0);
-    expect(dropAway(300 + FULL_SWIPE_OVERSHOOT / 2, 300)).toBe(0.5);
-    expect(dropAway(900, 300)).toBe(1);
+    expect(dropAway(300, reveal)).toBe(0);
+    expect(dropAway(300 + FULL_SWIPE_OVERSHOOT / 2, reveal)).toBe(0.5);
+    expect(dropAway(900, reveal)).toBe(1);
+  });
+
+  it("finishes dropping at the commit point, however early it comes", () => {
+    const early = { ...reveal, fullAt: 300 + FULL_SWIPE_FLOOR };
+
+    expect(dropAway(early.fullAt, early)).toBe(1);
+    expect(dropAway(300 + FULL_SWIPE_FLOOR / 2, early)).toBe(0.5);
   });
 
   it("keeps the first action on the card's edge and lets each outer one lag further behind", () => {
@@ -119,5 +129,25 @@ describe("swipeZone", () => {
     expect(fired).toBe(2);
     drag(fullAt + 1);
     expect(fired).toBe(3);
+  });
+});
+
+describe("collapseHeight", () => {
+  it("is the measured height shrunk by the collapse, and unset once the row is not collapsing", () => {
+    expect(collapseHeight(true, 120, 0)).toBe(120);
+    expect(collapseHeight(true, 120, 0.5)).toBe(60);
+    expect(collapseHeight(true, 120, 1)).toBe(0);
+    // A recycled or restored cell must drop the height, or the last 0 sticks to the view.
+    expect(collapseHeight(false, 120, 1)).toBeUndefined();
+  });
+});
+
+describe("cardTravel", () => {
+  it("runs from rest to the screen's far side, or from the held full swipe when held", () => {
+    expect(cardTravel(0, 0, 280, 466)).toBe(0);
+    expect(cardTravel(0, 1, 280, 466)).toBe(466);
+    expect(cardTravel(1, 0, 280, 466)).toBe(280);
+    expect(cardTravel(1, 0.5, 280, 466)).toBe(373);
+    expect(cardTravel(1, 1, 280, 466)).toBe(466);
   });
 });

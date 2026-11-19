@@ -18,6 +18,7 @@ const swipe = vi.hoisted(() => ({
   finger: null as Finger | null,
   translation: { value: 0, get: () => swipe.translation.value },
   close: vi.fn(),
+  reset: vi.fn(),
 }));
 const haptics = vi.hoisted(() => ({ lightImpact: vi.fn(), mediumImpact: vi.fn() }));
 
@@ -45,7 +46,7 @@ vi.mock("react-native-reanimated", async () => {
 });
 vi.mock("react-native-gesture-handler/ReanimatedSwipeable", () => ({
   default: React.forwardRef((props: Props, ref) => {
-    React.useImperativeHandle(ref, () => ({ close: swipe.close }));
+    React.useImperativeHandle(ref, () => ({ close: swipe.close, reset: swipe.reset }));
     swipe.props = props;
 
     return (
@@ -96,7 +97,7 @@ describe("SwipeActions", () => {
     swipe.translation.value = 0;
   });
 
-  it("runs the outermost action once on the release of a full swipe, and closes the row", () => {
+  it("runs the outermost action once on the release of a full swipe, holding a delete's card open", () => {
     const { rerender } = render(ui());
 
     act(() => {
@@ -108,7 +109,55 @@ describe("SwipeActions", () => {
 
     expect(actions[2]!.onPress).toHaveBeenCalledTimes(1);
     expect(actions[0]!.onPress).not.toHaveBeenCalled();
+    expect(swipe.close).not.toHaveBeenCalled();
+  });
+
+  it("closes the row on a full swipe that commits another action", () => {
+    const [groceries, plan] = actions;
+    const { rerender } = render(
+      <SwipeActions actions={[groceries!, plan!]} itemKey="r1" variant="list">
+        {null}
+      </SwipeActions>
+    );
+
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
+    swipe.translation.value = -300;
+    rerender(
+      <SwipeActions actions={[groceries!, plan!]} itemKey="r1" variant="list">
+        {null}
+      </SwipeActions>
+    );
+    act(() => swipe.props!.onSwipeableWillOpen());
+
+    expect(plan!.onPress).toHaveBeenCalledTimes(1);
     expect(swipe.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("springs a held card back closed when the confirm is cancelled, and ignores a card never held", () => {
+    vi.useFakeTimers();
+    const ref = React.createRef<Handle>();
+    const { queryByTestId, rerender } = render(ui(ref));
+
+    act(() => ref.current!.restore());
+    expect(swipe.close).not.toHaveBeenCalled();
+
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
+    swipe.translation.value = -300;
+    rerender(ui(ref));
+    act(() => swipe.props!.onSwipeableWillOpen());
+    expect(queryByTestId("card-leaving")).not.toBeNull();
+
+    act(() => ref.current!.restore());
+    expect(swipe.close).toHaveBeenCalledTimes(1);
+    act(() => void vi.advanceTimersByTime(300));
+    expect(queryByTestId("card-leaving")).toBeNull();
+    vi.useRealTimers();
   });
 
   it("only opens the actions on the release of a swipe short of it", () => {
@@ -173,6 +222,7 @@ describe("SwipeActions", () => {
 
     act(() => void vi.advanceTimersByTime(610));
     expect(remove).toHaveBeenCalledTimes(1);
+    expect(swipe.reset).toHaveBeenCalledTimes(1);
 
     // The removed card's cell, recycled for another recipe, is not hidden.
     rerender(ui(ref, "r2"));

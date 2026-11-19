@@ -57,10 +57,7 @@ export const RecipeCard = memo(function RecipeCard({
     plan: () => actions.plan(recipe),
     addToCookbook: () => actions.addToCookbook(recipe),
     removeFromCookbook: () => actions.removeFromCookbook(recipe),
-    delete: () =>
-      actions.deleteRecipe(recipe, undefined, (remove) =>
-        swipeRef.current ? swipeRef.current.leave(remove) : remove()
-      ),
+    delete: () => actions.deleteRecipe(recipe, undefined, swipeRef.current ?? undefined),
   };
   const definition = (key: RecipeMenuAction) =>
     RECIPE_ACTION_DEFINITIONS[key === "favourite" && isFavorite ? "unfavourite" : key];
