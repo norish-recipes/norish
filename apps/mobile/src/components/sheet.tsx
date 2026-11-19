@@ -27,9 +27,6 @@ export const SHEET_INSET = 16;
 /** A tall field's height on a fit sheet, which is as tall as its content, so no field can fill it. */
 export const FIT_SHEET_FIELD_HEIGHT = 200;
 
-/** Where the native title starts, which a `SheetRow` lines up with. */
-const TITLE_INSET = 24;
-
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pt-1 pb-4 ${contentClassName}`;
 
@@ -107,21 +104,6 @@ export function SheetStrip({
       showsHorizontalScrollIndicator={false}
       {...props}
     />
-  );
-}
-
-/** A row whose content lines up with the sheet's title. */
-export function SheetRow({
-  className = "",
-  children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <View className={className} style={{ paddingHorizontal: TITLE_INSET - SHEET_INSET }}>
-      {children}
-    </View>
   );
 }
 

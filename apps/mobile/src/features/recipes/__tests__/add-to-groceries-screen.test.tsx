@@ -36,7 +36,6 @@ vi.mock("@/components/sheet", async () => {
   const { ModalHeader } = await import("@/components/modal-header");
 
   return {
-    SheetRow: () => null,
     SheetScrollView: ({ children }: { children?: ReactNode }) => <>{children}</>,
     Sheet: ({ confirm, secondary, children }: Record<string, never> & { children?: ReactNode }) => (
       <>
