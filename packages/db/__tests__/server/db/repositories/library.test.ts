@@ -705,6 +705,12 @@ describe("the Library union", () => {
         { field: "title" },
       ]);
       expect(await match([food.onion!.ingredientId], { withMatch: false })).toEqual([undefined]);
+      // Text with no search terms is no text: the Ingredient's line still shows.
+      for (const search of ["  ", "^"]) {
+        expect(await match([food.onion!.ingredientId], { search })).toEqual([
+          { field: "ingredients", amount: 4, unit: "g", name: "pearl onions, peeled" },
+        ]);
+      }
     });
 
     it("changes nothing without ids", async () => {

@@ -198,7 +198,7 @@ export function hasAppliedRecipeFilters(filters: CanonicalRecipeFilters): boolea
 
 export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
   return {
-    search: filters.rawInput || undefined,
+    search: filters.rawInput.trim() || undefined,
     searchFields: filters.searchFields,
     tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
     categories: filters.categories.length > 0 ? filters.categories : undefined,

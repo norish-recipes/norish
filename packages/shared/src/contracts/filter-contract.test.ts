@@ -43,6 +43,14 @@ describe("recipe filter contract", () => {
     expect(DEFAULT_PERSISTED_RECIPE_FILTERS).not.toHaveProperty("ingredients");
   });
 
+  it("sends the search text trimmed, and none for blank text", () => {
+    const search = (rawInput: string) =>
+      toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, rawInput }).search;
+
+    expect(search("  ")).toBeUndefined();
+    expect(search(" soup ")).toBe("soup");
+  });
+
   it("keeps the search text and Ingredients out of what is persisted", () => {
     const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
     const persisted = persistedRecipeFilters({

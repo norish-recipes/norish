@@ -389,6 +389,11 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
 
 export { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
+/** Whether `search` holds a term a match can look for; blank or punctuation-only text holds none. */
+export function hasSearchTerms(search: string | undefined): search is string {
+  return !!search && searchTsqueryTerms(search) !== null;
+}
+
 /** The text as a prefix-OR tsquery body, or null when nothing searchable is left. */
 function searchTsqueryTerms(search: string): string | null {
   return (

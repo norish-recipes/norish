@@ -29,6 +29,7 @@ import { lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
 import {
   buildOwnerPolicyCondition,
+  hasSearchTerms,
   listDashboardRecipesByIds,
   recipeIngredientMatches,
   recipeSearchMatches,
@@ -292,7 +293,7 @@ export async function listLibrary(
     ),
     // The text's match wins; without text, the line that satisfied the Ingredient filter.
     withMatch
-      ? search
+      ? hasSearchTerms(search)
         ? recipeSearchMatches(pageRecipeIds, search, searchFields)
         : recipeIngredientMatches(pageRecipeIds, [...new Set(ingredientIds)])
       : undefined,
