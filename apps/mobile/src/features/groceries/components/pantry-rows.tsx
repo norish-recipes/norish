@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { IngredientIcon } from "@/components/ingredient-icon";
-import { useGroupedFill } from "@/components/on-sheet";
+import { useGroupedFill, useOnSheet } from "@/components/on-sheet";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
@@ -255,8 +255,23 @@ export function ShowMore({ onPress }: { onPress: () => void }) {
 /** What the Pantry looks like while it loads: one card of rows, in the real shell. */
 export function PantrySkeleton() {
   return (
-    <View className="px-5 pt-3.5" testID="pantry-skeleton">
-      <SkeletonCard rowClassName="h-[52px] gap-3 px-3.5" rows={6}>
+    <View className="pt-3.5" testID="pantry-skeleton">
+      <FoodRowsSkeleton rows={6} />
+    </View>
+  );
+}
+
+/** A card of food rows still to come, on a sheet's fill there. */
+export function FoodRowsSkeleton({ rows, testID }: { rows: number; testID?: string }) {
+  const onSheet = useOnSheet();
+
+  return (
+    <View className="px-5" testID={testID}>
+      <SkeletonCard
+        className={onSheet ? "bg-fill" : "bg-surface"}
+        rowClassName="h-[52px] gap-3 px-3.5"
+        rows={rows}
+      >
         <Skeleton className="size-7 rounded-full" />
         <Skeleton className="h-5 w-36 rounded-md" />
       </SkeletonCard>

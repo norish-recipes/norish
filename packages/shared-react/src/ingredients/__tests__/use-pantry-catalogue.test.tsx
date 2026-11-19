@@ -58,9 +58,12 @@ describe("usePantryCatalogue", () => {
   it("offers the matches once typing pauses, without the kept ones", async () => {
     const { result } = render("oli", new Set(["a"]));
 
-    expect(result.current).toEqual([]);
+    expect(result.current).toEqual({ matches: [], searching: true });
     await act(() => vi.advanceTimersByTimeAsync(300));
-    await waitFor(() => expect(result.current.map((item) => item.name)).toEqual(["Olives"]));
+    await waitFor(() =>
+      expect(result.current.matches.map((item) => item.name)).toEqual(["Olives"])
+    );
+    expect(result.current.searching).toBe(false);
   });
 
   it("asks nothing for one character, and offers nothing for a text not yet asked", async () => {
@@ -68,9 +71,10 @@ describe("usePantryCatalogue", () => {
 
     await act(() => vi.advanceTimersByTimeAsync(300));
     expect(mocks.asked).toEqual([]);
+    expect(result.current.searching).toBe(false);
 
     rerender({ text: "oli" });
-    expect(result.current).toEqual([]);
+    expect(result.current).toEqual({ matches: [], searching: true });
   });
 
   it("asks nothing offline", async () => {
@@ -79,6 +83,6 @@ describe("usePantryCatalogue", () => {
 
     await act(() => vi.advanceTimersByTimeAsync(300));
     expect(mocks.asked).toEqual([]);
-    expect(result.current).toEqual([]);
+    expect(result.current).toEqual({ matches: [], searching: false });
   });
 });

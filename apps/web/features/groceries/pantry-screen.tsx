@@ -47,7 +47,7 @@ export function PantryScreen() {
   const [openId, setOpenId] = useState<string | null>(null);
   const fieldRef = useRef<HTMLInputElement>(null);
   const keptIds = new Set(items.map((item) => item.ingredientId));
-  const matches = usePantryCatalogue(typed, locale, keptIds);
+  const { matches } = usePantryCatalogue(typed, locale, keptIds);
 
   if (isUnavailable) {
     return (

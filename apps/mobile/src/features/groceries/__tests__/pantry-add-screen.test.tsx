@@ -7,6 +7,7 @@ const pantry = vi.hoisted(() => ({
   isRead: true,
 }));
 const kept = vi.hoisted(() => [] as unknown[]);
+const catalogue = vi.hoisted(() => ({ searching: false, canAdd: false }));
 const suggestions = vi.hoisted(() => [
   { ingredientId: "i-garlic", name: "Garlic", localeNames: {}, recipeCount: 3 },
 ]);
@@ -70,6 +71,10 @@ vi.mock("@/components/sheet-search-field", async () => {
       }),
   };
 });
+vi.mock("react-native-reanimated", () => ({
+  default: { View: ({ children }: { children: React.ReactNode }) => children },
+}));
+vi.mock("@/lib/motion/layout", () => ({ SPRING_FADE_IN: {}, SPRING_FADE_OUT: {} }));
 vi.mock("@/hooks/use-focus-on-mount", () => ({ useFocusOnMount: () => ({ current: null }) }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => "#000" }));
 vi.mock("@/lib/haptics", () => ({ successNotification: () => {} }));
@@ -100,8 +105,13 @@ vi.mock("@norish/shared-react/config", async () => {
 vi.mock("@norish/shared-react/ingredients", () => ({
   foodNamedAsTyped: () => null,
   useIngredientIcons: () => undefined,
-  usePantryCatalogue: (typed: string) =>
-    typed === "" ? [] : [{ id: "i-olive-oil", name: "Olive oil", localeNames: {} }],
+  usePantryCatalogue: (typed: string) => ({
+    matches:
+      typed === "" || catalogue.searching
+        ? []
+        : [{ id: "i-olive-oil", name: "Olive oil", localeNames: {} }],
+    searching: catalogue.searching,
+  }),
 }));
 vi.mock("@norish/shared-react/groceries", async () => {
   const { useState } = await import("react");
@@ -114,7 +124,7 @@ vi.mock("@norish/shared-react/groceries", async () => {
         draft,
         setDraft,
         typed: draft.trim(),
-        canAdd: false,
+        canAdd: catalogue.canAdd,
         keep: (food: unknown) => kept.push(food),
       };
     },
@@ -129,6 +139,8 @@ describe("Add to pantry's From your recipes", () => {
   beforeEach(() => {
     pantry.isRead = true;
     kept.length = 0;
+    catalogue.searching = false;
+    catalogue.canAdd = false;
     suggestions.splice(1);
   });
 
@@ -185,5 +197,16 @@ describe("Add to pantry's From your recipes", () => {
     expect(screen.queryByText("Fennel")).not.toBeNull();
     expect(screen.queryByText("Honey")).toBeNull();
     expect(screen.queryByTestId("pantry-show-more")).not.toBeNull();
+  });
+
+  it("shows rows to come while the catalogue answers, the text as typed waiting with them", () => {
+    catalogue.searching = true;
+    catalogue.canAdd = true;
+    render(<PantryAddScreen />);
+    fireEvent.change(screen.getByTestId("pantry-add-field"), { target: { value: "oil" } });
+
+    expect(screen.queryByTestId("pantry-add-searching")).not.toBeNull();
+    expect(screen.queryByTestId("pantry-add-none")).toBeNull();
+    expect(screen.queryByTestId("pantry-add-custom")).toBeNull();
   });
 });

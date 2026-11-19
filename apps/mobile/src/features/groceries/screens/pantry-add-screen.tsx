@@ -1,10 +1,12 @@
 import type { SheetSearchInput } from "@/components/sheet-search-field";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
+import { SPRING_FADE_IN, SPRING_FADE_OUT } from "@/lib/motion/layout";
 import { useIntl } from "react-intl";
 
 import { useSpellingRules } from "@norish/shared-react/config";
@@ -17,7 +19,7 @@ import {
 import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
 
 import { PantryAddRowView } from "../components/pantry-add-row";
-import { ShowMore } from "../components/pantry-rows";
+import { FoodRowsSkeleton, ShowMore } from "../components/pantry-rows";
 import { useKeepingField } from "../hooks/use-keeping-field";
 import { pantryAddList, pickedFood } from "../utils/pantry-add-rows";
 
@@ -27,7 +29,7 @@ export function PantryAddScreen() {
   const rules = useSpellingRules();
   const { items, isRead } = usePantryQuery();
   const { draft, setDraft, typed, canAdd, keep } = useKeepingField(items, intl.locale, rules);
-  const matches = usePantryCatalogue(
+  const { matches, searching } = usePantryCatalogue(
     typed,
     intl.locale,
     new Set(items.map((item) => item.ingredientId))
@@ -38,8 +40,9 @@ export function PantryAddScreen() {
   const custom = canAdd && !named ? typed : null;
   const { suggestions: offered } = usePantrySuggestions(items);
   const [showAll, setShowAll] = useState(false);
+  // The text as typed waits with the matches, so the card does not jump when they arrive.
   const { rows, fromYourRecipes, more } = pantryAddList(
-    { typed, isRead, offered, showAll, matches, custom },
+    { typed, isRead, offered, showAll, matches, custom: searching ? null : custom },
     intl.locale
   );
   const label = intl.formatMessage({ id: "groceries.pantry.fieldPlaceholder" });
@@ -62,7 +65,12 @@ export function PantryAddScreen() {
       <IngredientIconSlots rows={rows}>
         <SheetList
           ListEmptyComponent={
-            typed === "" ? undefined : (
+            searching ? (
+              // Fades out over the matches fading in, one crossfade.
+              <Animated.View exiting={SPRING_FADE_OUT}>
+                <FoodRowsSkeleton rows={3} testID="pantry-add-searching" />
+              </Animated.View>
+            ) : typed === "" ? undefined : (
               <Text className="text-muted px-5 py-6 text-center" testID="pantry-add-none">
                 {intl.formatMessage({ id: "common.status.noResults" })}
               </Text>
@@ -91,7 +99,11 @@ export function PantryAddScreen() {
           data={rows}
           inset={false}
           keyExtractor={(row) => row.key}
-          renderItem={({ item }) => <PantryAddRowView row={item} onKeep={keep} />}
+          renderItem={({ item }) => (
+            <Animated.View entering={typed === "" ? undefined : SPRING_FADE_IN}>
+              <PantryAddRowView row={item} onKeep={keep} />
+            </Animated.View>
+          )}
           testID="pantry-add-list"
         />
       </IngredientIconSlots>

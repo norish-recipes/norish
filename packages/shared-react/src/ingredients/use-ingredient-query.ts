@@ -42,11 +42,11 @@ export function useIngredientSearchQuery(
   options: Pick<IngredientListInput, "listedOnly"> = {}
 ) {
   const trpc = useTRPC();
-  const { data, isFetching } = useQuery(
+  const { data, isFetching, isLoading } = useQuery(
     trpc.ingredients.list.queryOptions(search === null ? skipToken : { search, locale, ...options })
   );
 
-  return { items: data?.items ?? [], isFetching };
+  return { items: data?.items ?? [], isFetching, isLoading };
 }
 
 /** The kinds filed under each parent, read as each is asked for, in the order asked. */
