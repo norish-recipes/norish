@@ -18,6 +18,8 @@ type ChipKind<V> = {
   values: (filters: CanonicalRecipeFilters) => V[];
   label: (value: V, speech: ChipSpeech) => string;
   remove: (filters: CanonicalRecipeFilters, value: V) => Patch;
+  /** The Ingredient whose icon the chip shows; absent for no icon. */
+  icon?: (value: V) => string;
   /** What tells one value from another, for a key; absent for the value itself. */
   key?: (value: V) => string;
   /** Whether the reader's Hidden Items leave this filter on offer; absent for always. */
@@ -46,6 +48,7 @@ const CHIP_KINDS = {
     values: (filters) => filters.ingredients,
     label: (value) => value.name,
     key: (value) => value.id,
+    icon: (value) => value.id,
     remove: (filters, value) => ({
       ingredients: filters.ingredients.filter((item) => item.id !== value.id),
     }),
@@ -102,6 +105,9 @@ export const hasChips = (filters: CanonicalRecipeFilters) => filterChips(filters
 /** What `chip` says. */
 export const chipLabel = (chip: FilterChip, speech: ChipSpeech) =>
   kindOf(chip).label(chip.value, speech);
+
+/** The Ingredient whose icon `chip` shows, or null. */
+export const chipIcon = (chip: FilterChip) => kindOf(chip).icon?.(chip.value) ?? null;
 
 /** `filters` less `chip`, as the patch to apply. */
 export const withoutChip = (filters: CanonicalRecipeFilters, chip: FilterChip): Patch =>

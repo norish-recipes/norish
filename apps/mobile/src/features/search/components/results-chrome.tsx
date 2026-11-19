@@ -14,7 +14,7 @@ import { useLibraryFilters } from "@norish/shared-react/recipes";
 
 import type { ChipSpeech, FilterChip } from "../utils/search-chips";
 import { useSearchFilters } from "../hooks/use-search-filters";
-import { chipKey, chipLabel, withoutChip } from "../utils/search-chips";
+import { chipIcon, chipKey, chipLabel, withoutChip } from "../utils/search-chips";
 import { shownSort, sortOptions } from "../utils/search-sort";
 
 const SORT_LABELS: Record<SortOrder, string> = {
@@ -36,6 +36,7 @@ function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove: () => 
   const intl = useIntl();
   const muted = useTokenColor("muted");
   const label = chipLabel(chip, useChipSpeech());
+  const icon = chipIcon(chip);
 
   return (
     <PressableScale
@@ -48,9 +49,7 @@ function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove: () => 
       testID={`search-chip-${chipKey(chip)}`}
       onPress={onRemove}
     >
-      {chip.kind === "ingredient" ? (
-        <IngredientIcon ingredientId={chip.value.id} size={20} />
-      ) : null}
+      {icon ? <IngredientIcon ingredientId={icon} size={20} /> : null}
       <Text className="text-foreground text-[15px] font-medium">{label}</Text>
       <Ionicons color={muted} name="close" size={14} />
     </PressableScale>

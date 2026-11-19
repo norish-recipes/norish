@@ -6,6 +6,7 @@ import {
 } from "@norish/shared/contracts/filter-contract";
 
 import {
+  chipIcon,
   chipKey,
   chipLabel,
   filterChips,
@@ -116,6 +117,14 @@ describe("filter chips", () => {
     expect(chipLabel({ kind: "rating", value: 4 }, speech)).toBe("recipes.search.ratingChip:4");
     expect(chipLabel({ kind: "favorites", value: true }, speech)).toBe("common.filters.favorites");
     expect(chipLabel({ kind: "pantry", value: true }, speech)).toBe("common.filters.pantryOnly");
+  });
+});
+
+describe("a chip's icon", () => {
+  it("is the Ingredient's for an Ingredient chip and none for the rest", () => {
+    expect(chipIcon({ kind: "ingredient", value: onion })).toBe(onion.id);
+    expect(chipIcon({ kind: "tag", value: "vegan" })).toBeNull();
+    expect(chipIcon({ kind: "time", value: 30 })).toBeNull();
   });
 });
 
