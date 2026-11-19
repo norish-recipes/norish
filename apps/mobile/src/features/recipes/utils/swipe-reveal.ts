@@ -8,26 +8,26 @@ export const FULL_SWIPE_HYSTERESIS = 16;
 // The least a full swipe goes past the open width, however little room the card leaves.
 export const FULL_SWIPE_FLOOR = 32;
 
-// The scale a full swipe's circle pops to under the finger, and back to 1 once the swipe is held.
-export const FULL_SWIPE_POP = 1.15;
-
 /** The panel's geometry: open `width`, `count` actions `step` pt apart, and the commit point `fullAt`. */
 export type Reveal = { width: number; count: number; step: number; fullAt: number };
+
+// Above capsuleStretch: a worklet captures what it calls as it is defined, so callees go first.
+/** 0 to 1 from the open width to the commit point: the other actions shrink and fade as it grows. */
+export function dropAway(travel: number, { width, fullAt }: Reveal) {
+  "worklet";
+
+  return Math.min(Math.max((travel - width) / (fullAt - width), 0), 1);
+}
 
 /** How far right of its place action `index` sits with the card `travel` pt over the panel: each moves
  * at `(count - index) / count` of the finger, as one under Reduce Motion. */
 export function actionOffset(travel: number, reveal: Reveal, index: number, reduceMotion: boolean) {
   "worklet";
 
-  const { width, count, step } = reveal;
+  const { width, count } = reveal;
 
-  // Past the open width the outermost action, the one a full swipe runs, closes on the card's edge.
-  if (travel > width) {
-    if (reduceMotion) return width - travel;
-    if (index !== count - 1) return 0;
-
-    return width - travel - step * index * dropAway(travel, reveal);
-  }
+  // Past the open width the actions stay put: the outermost stretches instead (`capsuleStretch`).
+  if (travel > width) return reduceMotion ? width - travel : 0;
 
   const left = 1 - Math.max(travel / width, 0);
   const rate = reduceMotion ? 1 : (count - index) / count;
@@ -35,11 +35,15 @@ export function actionOffset(travel: number, reveal: Reveal, index: number, redu
   return width * left * rate;
 }
 
-/** 0 to 1 from the open width to the commit point: the other actions shrink and fade as it grows. */
-export function dropAway(travel: number, { width, fullAt }: Reveal) {
+/** How far left the outermost circle stretches into a red capsule with the card `travel` pt over: it
+ * takes the other actions' room by the commit point, then follows the card's edge, at most `reach`. */
+export function capsuleStretch(travel: number, reveal: Reveal, reach: number) {
   "worklet";
 
-  return Math.min(Math.max((travel - width) / (fullAt - width), 0), 1);
+  if (travel <= reveal.width) return 0;
+  const room = reveal.step * (reveal.count - 1) * dropAway(travel, reveal);
+
+  return Math.min(travel - reveal.width + room, reach);
 }
 
 /** A collapsing row's height; unset otherwise, so a recycled cell drops the last one set on its view. */

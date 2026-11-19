@@ -43,6 +43,7 @@ export const Easing = {
   bezierFn: () => (t: number) => t,
   ease: (t: number) => t,
   out: (easing: (t: number) => number) => easing,
+  inOut: (easing: (t: number) => number) => easing,
 };
 export const Extrapolation = { CLAMP: "clamp" };
 // Piecewise linear over `input`, held at its ends, as `Extrapolation.CLAMP` does.

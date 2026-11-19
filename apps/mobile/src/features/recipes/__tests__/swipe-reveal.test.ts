@@ -1,5 +1,6 @@
 import {
   actionOffset,
+  capsuleStretch,
   cardTravel,
   collapseHeight,
   dropAway,
@@ -12,6 +13,8 @@ import {
 } from "@/features/recipes/utils/swipe-reveal";
 import { describe, expect, it } from "vitest";
 
+import { releaseModule } from "../../../../__tests__/release-module";
+
 const reveal = { width: 300, count: 3, step: 100, fullAt: 300 + FULL_SWIPE_OVERSHOOT };
 const offsets = (travel: number, reduceMotion = false) =>
   [0, 1, 2].map((index) => actionOffset(travel, reveal, index, reduceMotion));
@@ -22,13 +25,32 @@ describe("actionOffset", () => {
     expect(offsets(300)).toEqual([0, 0, 0]);
   });
 
-  it("past the open width, moves the outermost action with the card's edge and leaves the rest", () => {
-    expect(offsets(300 + FULL_SWIPE_OVERSHOOT)).toEqual([0, 0, -FULL_SWIPE_OVERSHOOT - 200]);
+  it("past the open width, leaves every action in place, or moves them with the card under Reduce Motion", () => {
+    expect(offsets(300 + FULL_SWIPE_OVERSHOOT)).toEqual([0, 0, 0]);
     expect(offsets(450, true)).toEqual([-150, -150, -150]);
   });
 
-  it("starts the outermost action's follow where it rests", () => {
+  it("starts the outermost action's stretch where it rests", () => {
     expect(offsets(300.001)[2]).toBeCloseTo(0, 1);
+    expect(capsuleStretch(300.001, reveal, 1000)).toBeCloseTo(0, 1);
+  });
+});
+
+describe("capsuleStretch", () => {
+  it("is nothing until the open width, takes the other actions' room by the commit point, then follows the card", () => {
+    expect(capsuleStretch(200, reveal, 1000)).toBe(0);
+    expect(capsuleStretch(300 + FULL_SWIPE_OVERSHOOT / 2, reveal, 1000)).toBe(32 + 100);
+    expect(capsuleStretch(300 + FULL_SWIPE_OVERSHOOT, reveal, 1000)).toBe(64 + 200);
+    expect(capsuleStretch(500, reveal, 1000)).toBe(200 + 200);
+    expect(capsuleStretch(900, reveal, 350)).toBe(350);
+  });
+
+  it("reaches dropAway as the worklets plugin builds it, which captures it when capsuleStretch is defined", () => {
+    const built = releaseModule<{ capsuleStretch: typeof capsuleStretch }>(
+      new URL("../utils/swipe-reveal.ts", import.meta.url).pathname
+    );
+
+    expect(built.capsuleStretch(300 + FULL_SWIPE_OVERSHOOT, reveal, 1000)).toBe(264);
   });
 
   it("drops the other actions away over the overshoot", () => {
