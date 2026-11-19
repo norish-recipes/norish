@@ -191,7 +191,7 @@ export async function listLibrary(
     }
 
     // Tags and Ingredients are one All/Any group: every one of them, or at least one.
-    const group: SQL[] = [];
+    const tagAndIngredientClauses: SQL[] = [];
 
     if (tags?.length) {
       const normalized = tags.map((tag) => tag.toLowerCase());
@@ -204,7 +204,7 @@ export async function listLibrary(
         sql`, `
       );
 
-      group.push(sql`(
+      tagAndIngredientClauses.push(sql`(
         SELECT COUNT(DISTINCT lower(filter_tag.name))
         FROM ${recipeTags} AS filter_rt
         INNER JOIN ${tagsTable} AS filter_tag ON filter_rt.tag_id = filter_tag.id
@@ -214,14 +214,16 @@ export async function listLibrary(
     }
 
     for (const id of new Set(ingredientIds)) {
-      group.push(sql`EXISTS (
+      tagAndIngredientClauses.push(sql`EXISTS (
         SELECT 1 FROM recipe_ingredients filter_line
         WHERE filter_line.recipe_id = "recipes"."id" AND ${lineNamesKindSql("filter_line", [id])}
       )`);
     }
 
-    if (group.length) {
-      conditions.push(sql`(${sql.join(group, filterMode === "AND" ? sql` AND ` : sql` OR `)})`);
+    if (tagAndIngredientClauses.length) {
+      conditions.push(
+        sql`(${sql.join(tagAndIngredientClauses, filterMode === "AND" ? sql` AND ` : sql` OR `)})`
+      );
     }
 
     branches.push(sql`

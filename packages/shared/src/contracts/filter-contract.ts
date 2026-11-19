@@ -202,7 +202,7 @@ export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
     searchFields: filters.searchFields,
     tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
     categories: filters.categories.length > 0 ? filters.categories : undefined,
-    // Left out unless set, so web's input and cache keys stay as they were.
+    // Left out unless set: web never sets it, so its input and cache keys hold no such field.
     ...(filters.ingredients.length > 0
       ? { ingredientIds: filters.ingredients.map((ingredient) => ingredient.id) }
       : {}),
