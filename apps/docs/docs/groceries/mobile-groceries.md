@@ -28,7 +28,7 @@ Open **Manage stores** from the list settings to add, edit or delete Stores and
 name their aisles. Tap the plus button in the sheet header to add a Store, or tap
 a Store to edit it. Hold a Store or aisle to lift it, then drag to change its order. On the list, hold a
 grocery to lift it, then drag to reorder it or drop it on a heading to move it
-to that Store or aisle. Headings and other rows stay still while you drag. Norish remembers the aisle for that food at that Store.
+to that Store or aisle. Headings and other rows move apart as you drag, and a faded copy shows where the row will land. Norish remembers the aisle for that food at that Store.
 
 ![Manage stores with a Store's aisles](/img/screenshots/mobile-groceries-stores.png)
 
