@@ -28,3 +28,6 @@
   8. fix (verify): `PlanDayList` inherits `onDateChange(day, fromChip)` though no caller uses `fromChip`; narrow it if so.
   9. fix: `DayCard` testIDs ignore the block's `testID` prefix (`day-card.tsx:108,121`); prefix them and update tests and flows.
   10. reject: Plan this recipe's "+" planning at once in the picked slot: the board labels it "Plan on {day}" and fix 1 keeps the slot tabs in view; the slot menu it replaced is gone per the board.
+
+Round 1 fixes: the picker sits above the day list (offsets start at `DAY_LIST_TOP`, `PLAN_PICKER_HEIGHT` gone, test added); `PlanDayList` takes a `name` and builds the "+" label, and its doc says what the code does; `DayCard` testIDs take the block prefix (flow and tests updated); the strip scrolls to the picked day; Today's ring is full strength; the icon-button mock is shared.
+Not fixed: 8, `plan-recipe-screen.tsx:68` reads it: `onDateChange={(next, fromStrip) => setPicked({ day: next, fromStrip })}`. 10 rejected. 4: the slot tab is now in view, only the "+" id changed.
