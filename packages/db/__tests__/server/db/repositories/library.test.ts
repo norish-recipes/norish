@@ -278,16 +278,18 @@ describe("the Library union", () => {
   });
 
   describe("an explicit sort while searching", () => {
-    // Rank order is Twice, Zesty, Plain; the dates and titles each disagree with it.
+    // Rank: "Soup soup" first (two hits), then "Zesty soup", "Soup" and "Brisk soup" tied.
+    // Each flagged sort disagrees with rank-first, and the tie shows the tie-break.
     async function seedRanked() {
       await deleteRecipeById(baseRecipeId);
 
       const minute = (n: number) => new Date(Date.UTC(2026, 0, 1, 12, n));
 
       for (const [name, at] of [
-        ["Soup soup", 0],
-        ["Soup", 1],
-        ["Zesty soup", 2],
+        ["Zesty soup", 0],
+        ["Soup soup", 1],
+        ["Soup", 2],
+        ["Brisk soup", 3],
       ] as const) {
         await createTestRecipe(ownerId, { name, createdAt: minute(at) });
       }
@@ -296,11 +298,19 @@ describe("the Library union", () => {
     const order = async (params: Partial<LibraryListParams>) =>
       titles((await listLibrary(viewer(ownerId), { ...base, search: "soup", ...params })).items);
 
-    it("keeps the best match first without the flag, whatever the sort", async () => {
+    it("orders by rank without the flag, the chosen sort only breaking ties", async () => {
       await seedRanked();
 
-      for (const sortMode of ["none", "dateAsc", "titleDesc"] as const) {
-        expect((await order({ sortMode }))[0]).toBe("Soup soup");
+      const expected = {
+        none: ["Soup soup", "Brisk soup", "Soup", "Zesty soup"],
+        dateDesc: ["Soup soup", "Brisk soup", "Soup", "Zesty soup"],
+        dateAsc: ["Soup soup", "Zesty soup", "Soup", "Brisk soup"],
+        titleAsc: ["Soup soup", "Brisk soup", "Soup", "Zesty soup"],
+        titleDesc: ["Soup soup", "Zesty soup", "Soup", "Brisk soup"],
+      } as const;
+
+      for (const [sortMode, titlesInOrder] of Object.entries(expected)) {
+        expect(await order({ sortMode: sortMode as keyof typeof expected })).toEqual(titlesInOrder);
       }
     });
 
@@ -309,43 +319,31 @@ describe("the Library union", () => {
 
       expect(await order({ sortMode: "none", sortBeatsRank: true })).toEqual([
         "Soup soup",
-        "Zesty soup",
+        "Brisk soup",
         "Soup",
+        "Zesty soup",
       ]);
     });
 
-    it("follows the chosen sort over rank with the flag", async () => {
+    it.each([
+      ["dateDesc", ["Brisk soup", "Soup", "Soup soup", "Zesty soup"]],
+      ["dateAsc", ["Zesty soup", "Soup soup", "Soup", "Brisk soup"]],
+      ["titleAsc", ["Brisk soup", "Soup", "Soup soup", "Zesty soup"]],
+      ["titleDesc", ["Zesty soup", "Soup soup", "Soup", "Brisk soup"]],
+    ] as const)("follows %s over rank with the flag", async (sortMode, expected) => {
       await seedRanked();
 
-      expect(await order({ sortMode: "dateDesc", sortBeatsRank: true })).toEqual([
-        "Zesty soup",
-        "Soup",
-        "Soup soup",
-      ]);
-      expect(await order({ sortMode: "dateAsc", sortBeatsRank: true })).toEqual([
-        "Soup soup",
-        "Soup",
-        "Zesty soup",
-      ]);
-      expect(await order({ sortMode: "titleAsc", sortBeatsRank: true })).toEqual([
-        "Soup",
-        "Soup soup",
-        "Zesty soup",
-      ]);
-      expect(await order({ sortMode: "titleDesc", sortBeatsRank: true })).toEqual([
-        "Zesty soup",
-        "Soup soup",
-        "Soup",
-      ]);
+      expect(await order({ sortMode, sortBeatsRank: true })).toEqual(expected);
     });
 
     it("keeps newest first for none without text", async () => {
       await seedRanked();
 
       expect(await order({ search: undefined, sortMode: "none", sortBeatsRank: true })).toEqual([
-        "Zesty soup",
+        "Brisk soup",
         "Soup",
         "Soup soup",
+        "Zesty soup",
       ]);
     });
 
