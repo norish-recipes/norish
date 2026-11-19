@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { IconButton } from "@/components/icon-button";
 import { PressableScale } from "@/components/pressable-scale";
+import { SliceHairline } from "@/components/slice-row";
 import { TimerRing } from "@/components/timer-ring";
 import { lightImpact } from "@/lib/haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -44,9 +45,10 @@ function TimerRow({
 
   return (
     <View
-      className={`flex-row items-center gap-1.5 py-2 pr-3 pl-4 ${first ? "" : "border-separator border-t"}`}
+      className="flex-row items-center gap-1.5 py-2 pr-3 pl-4"
       testID={`timer-row-${timer.id}`}
     >
+      <SliceHairline first={first} />
       {/* Cook mode's own pill has nothing to open, so its rows are no button. */}
       <PressableScale
         accessibilityLabel={onOpen ? openLabel : undefined}

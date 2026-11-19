@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { SliceHairline } from "@/components/slice-row";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -57,11 +58,7 @@ export function CardRow({
   const className = `${tall ? "min-h-[60px]" : "min-h-[52px]"} flex-row items-center gap-3 px-4 ${disabled ? "opacity-40" : ""}`;
   const content = (
     <>
-      {first ? null : (
-        <View
-          className={`bg-line absolute top-0 right-0 h-px ${tall ? "left-[68px]" : "left-4"}`}
-        />
-      )}
+      <SliceHairline first={first} tall={Boolean(tall)} />
       {icon ? (
         <View className="size-10 items-center justify-center">
           <Ionicons color={accentText} name={icon} size={23} />
