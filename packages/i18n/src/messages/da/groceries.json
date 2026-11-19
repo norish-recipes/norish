@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Unavngivet vare",
-    "items": "{count, plural, one {# vare} other {# varer}}"
+    "items": "{count, plural, =0 {Ingen varer} one {# vare} other {# varer}}"
   },
   "store": {
     "unsorted": "Usorteret",

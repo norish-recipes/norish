@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Без названия",
-    "items": "{count, plural, one {# позиция} few {# позиции} many {# позиций} other {# позиций}}"
+    "items": "{count, plural, =0 {Нет позиций} one {# позиция} few {# позиции} many {# позиций} other {# позиций}}"
   },
   "store": {
     "unsorted": "Без категории",

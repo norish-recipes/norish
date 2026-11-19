@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Позиція без назви",
-    "items": "{count, plural, one {# позиція} few {# позиції} many {# позицій} other {# позиції}}"
+    "items": "{count, plural, =0 {Немає позицій} one {# позиція} few {# позиції} many {# позицій} other {# позиції}}"
   },
   "store": {
     "unsorted": "Без магазину",

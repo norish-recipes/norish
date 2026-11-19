@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Item sem nome",
-    "items": "{count, plural, one {# item} other {# itens}}"
+    "items": "{count, plural, =0 {Nenhum item} one {# item} other {# itens}}"
   },
   "store": {
     "unsorted": "Sem classificação",
