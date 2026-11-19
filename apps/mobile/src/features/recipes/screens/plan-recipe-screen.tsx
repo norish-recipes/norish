@@ -145,7 +145,7 @@ export function PlanRecipeScreen() {
             variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
           >
-            <SliceHairline first={false} tall />
+            <SliceHairline tall first={false} />
             <CardPhoto className="size-10 rounded-xl" image={recipe.image} />
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}

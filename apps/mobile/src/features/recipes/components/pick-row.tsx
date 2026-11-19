@@ -13,7 +13,7 @@ export const pickRowClass = (position: RowPosition) => sliceRowClass(position, t
 export function PickRowSkeleton({ position }: { position: RowPosition }) {
   return (
     <View className={pickRowClass(position)}>
-      <SliceHairline first={position.first} tall />
+      <SliceHairline tall first={position.first} />
       <Skeleton className="size-10 rounded-xl" />
       <Skeleton className="h-6 flex-1 rounded-md" />
       <Skeleton className="size-6 rounded-full" />
@@ -49,7 +49,7 @@ export function PickRow({
       testID={testID}
       onPress={onToggle}
     >
-      <SliceHairline first={position.first} tall />
+      <SliceHairline tall first={position.first} />
       {media}
       <View className="min-w-0 flex-1 gap-px">
         <Text className="text-foreground text-base" numberOfLines={1}>

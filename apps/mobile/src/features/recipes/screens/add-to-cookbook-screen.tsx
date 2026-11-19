@@ -89,7 +89,7 @@ export function AddToCookbookScreen() {
                     className={pickRowClass(position)}
                     testID={`add-to-cookbook-pending-${item.entry.key}`}
                   >
-                    <SliceHairline first={position.first} tall />
+                    <SliceHairline tall first={position.first} />
                     <View className="bg-thumb size-10 items-center justify-center rounded-xl">
                       <Ionicons color={muted} name="book-outline" size={20} />
                     </View>
