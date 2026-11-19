@@ -1,5 +1,5 @@
 import type { ScrollViewInstance } from "react-native";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { stripDays } from "@/lib/strip-days";
@@ -34,6 +34,8 @@ export function DayStrip({
   const scrollRef = useRef<ScrollViewInstance>(null);
   const index = days.indexOf(date);
   const start = Math.max(0, index * (CHIP + GAP) - CHIP);
+  // Frozen at the first render: a later offset prop could jump the strip before the animated scroll.
+  const [openAt] = useState(start);
 
   // Whichever control picked the day, the strip shows it; a day past the strip leaves it be.
   useEffect(() => {
@@ -45,7 +47,7 @@ export function DayStrip({
     <SheetStrip
       accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
       ref={scrollRef}
-      contentOffset={{ x: start, y: 0 }}
+      contentOffset={{ x: openAt, y: 0 }}
       testID={`${testID}-days`}
     >
       {days.map((key, offset) => {
