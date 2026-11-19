@@ -43,6 +43,13 @@ export const segmentedMock = {
   ),
 };
 
+/** An icon button as a plain button with its testID. */
+export const iconButtonMock = {
+  IconButton: ({ testID, onPress }: { testID?: string; onPress: () => void }) => (
+    <button data-testid={testID} onClick={onPress} />
+  ),
+};
+
 export const reactNative = {
   Text: ({ children }: Children) => <span>{children}</span>,
   View: ({ children }: Children) => <div>{children}</div>,
@@ -122,23 +129,29 @@ const Sheet = ({
   </div>
 );
 
-/** The list renders its header and rows in place. */
-const SheetList = ({
-  ListHeaderComponent,
-  data,
-  renderItem,
-}: {
+type ListProps = {
   ListHeaderComponent?: ReactNode;
   data: unknown[];
+  getItemLayout?: (data: unknown, index: number) => { length: number; offset: number };
   renderItem: (info: { item: unknown; index: number }) => ReactNode;
-}) => (
-  <div>
-    {ListHeaderComponent}
-    {data.map((item, index) => (
-      <div key={index}>{renderItem({ item, index })}</div>
-    ))}
-  </div>
-);
+};
+
+/** What the list was last handed, for a test to read its layout from. */
+export const listProps: { current: ListProps | null } = { current: null };
+
+/** The list renders its header and rows in place. */
+const SheetList = (props: ListProps) => {
+  listProps.current = props;
+
+  return (
+    <div>
+      {props.ListHeaderComponent}
+      {props.data.map((item, index) => (
+        <div key={index}>{props.renderItem({ item, index })}</div>
+      ))}
+    </div>
+  );
+};
 
 export const sheet = { Sheet, SheetBody: pass, SheetStrip: pass, SheetList };
 

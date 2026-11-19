@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { picks } from "../../../../__tests__/mocks/plan-sheet";
+import { listProps, picks } from "../../../../__tests__/mocks/plan-sheet";
 
 const held = vi.hoisted(() => ({ planOnDay: vi.fn() }));
 
@@ -30,18 +30,17 @@ vi.mock(
   "react-intl",
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).reactIntl
 );
-vi.mock("heroui-native", () => ({ Skeleton: () => null, useThemeColor: () => [] }));
+vi.mock(
+  "heroui-native",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).heroui
+);
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
-vi.mock("@/components/icon-button", async () => {
-  const { createElement } = await import("react");
-
-  return {
-    IconButton: ({ testID, onPress }: { testID?: string; onPress: () => void }) =>
-      createElement("button", { "data-testid": testID, onClick: onPress }),
-  };
-});
+vi.mock(
+  "@/components/icon-button",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).iconButtonMock
+);
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ recipeId: "r1", name: "Soup" }),
 }));
@@ -58,6 +57,7 @@ vi.mock("@norish/shared-react/calendar", () => ({
 }));
 vi.mock("../hooks/use-plan-exit", () => ({ usePlanExit: () => vi.fn() }));
 
+const { DAY_LIST_TOP } = await import("@/lib/day-card-height");
 const { PlanCalendarScreen } = await import("../screens/plan-calendar-screen");
 
 describe("PlanCalendarScreen", () => {
@@ -87,10 +87,18 @@ describe("PlanCalendarScreen", () => {
     expect(held.planOnDay).toHaveBeenCalledWith("2027-01-09", "Dinner");
   });
 
+  it("keeps the picker above the list, so the list's offsets start at its own top", () => {
+    render(<PlanCalendarScreen />);
+
+    expect(listProps.current?.ListHeaderComponent).toBeUndefined();
+    expect(listProps.current?.getItemLayout?.(null, 0).offset).toBe(DAY_LIST_TOP);
+    expect(screen.getByTestId("plan-day-1")).toBeTruthy();
+  });
+
   it("plans on a card's day in the picked slot from its plus", () => {
     render(<PlanCalendarScreen />);
     fireEvent.click(screen.getByTestId("plan-slot-Snack"));
-    fireEvent.click(screen.getByTestId("day-add-2026-11-13"));
+    fireEvent.click(screen.getByTestId("plan-day-add-2026-11-13"));
 
     expect(held.planOnDay).toHaveBeenCalledWith("2026-11-13", "Snack");
   });

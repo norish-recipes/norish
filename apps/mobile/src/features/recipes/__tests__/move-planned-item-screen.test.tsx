@@ -39,14 +39,10 @@ vi.mock(
   "@/components/sheet",
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).sheet
 );
-vi.mock("@/components/icon-button", async () => {
-  const { createElement } = await import("react");
-
-  return {
-    IconButton: ({ testID, onPress }: { testID?: string; onPress: () => void }) =>
-      createElement("button", { "data-testid": testID, onClick: onPress }),
-  };
-});
+vi.mock(
+  "@/components/icon-button",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).iconButtonMock
+);
 vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/hooks/use-confirm", () => ({ useConfirm: () => held.confirm }));
@@ -125,7 +121,7 @@ describe("MovePlannedItemScreen", () => {
 
   it("moves to the day a card's plus picks", () => {
     render(<MovePlannedItemScreen />);
-    fireEvent.click(screen.getByTestId("day-add-2026-11-14"));
+    fireEvent.click(screen.getByTestId("move-day-add-2026-11-14"));
     fireEvent.click(screen.getByTestId("move-confirm"));
 
     expect(held.saveItem).toHaveBeenCalledWith("note-1", { date: "2026-11-14" });

@@ -1,5 +1,4 @@
 import React from "react";
-import { formatDay } from "@/components/day-card";
 import { PlanDayList } from "@/components/plan-block";
 import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
 import { Sheet } from "@/components/sheet";
@@ -37,12 +36,7 @@ function MoveSheet({ item }: { item: PlannedItemFromQuery }) {
     >
       <PlanDayList
         {...fields}
-        addLabel={(day) =>
-          intl.formatMessage(
-            { id: "calendar.panel.planOnDay" },
-            { name: title, day: formatDay(intl, day) }
-          )
-        }
+        name={title}
         testID="move"
         onAdd={(key) => fields.onDateChange(key)}
       />

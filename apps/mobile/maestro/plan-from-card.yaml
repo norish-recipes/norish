@@ -31,13 +31,13 @@ appId: dev.norish.app
     id: recipe-swipe-plan-${output.curry}
 - extendedWaitUntil:
     visible:
-      id: day-add-.*
+      id: plan-day-add-.*
       text: .* ${output.day}
     timeout: 20000
 - tapOn:
     id: plan-slot-${output.slot}
 - tapOn:
-    id: day-add-.*
+    id: plan-day-add-.*
     text: .* ${output.day}
 - runFlow:
     file: subflows/planned.yaml

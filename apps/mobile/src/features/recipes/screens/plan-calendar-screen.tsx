@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { formatDay } from "@/components/day-card";
 import { PlanDayList } from "@/components/plan-block";
 import { Sheet } from "@/components/sheet";
 import { useLocalSearchParams } from "expo-router";
@@ -35,13 +34,8 @@ export function PlanCalendarScreen() {
       title={intl.formatMessage({ id: "calendar.panel.planThisRecipe" })}
     >
       <PlanDayList
-        addLabel={(day) =>
-          intl.formatMessage(
-            { id: "calendar.panel.planOnDay" },
-            { name: name ?? "", day: formatDay(intl, day) }
-          )
-        }
         date={date}
+        name={name ?? ""}
         slot={slot}
         testID="plan"
         onAdd={(key) => planOnDay(key, slot)}

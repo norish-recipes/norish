@@ -1,7 +1,7 @@
 import type { FlatList } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
-import { DayCard, DayCardSkeleton } from "@/components/day-card";
+import { DayCard, DayCardSkeleton, formatDay } from "@/components/day-card";
 import { DayStrip } from "@/components/day-strip";
 import { Segmented } from "@/components/segmented";
 import { SheetList } from "@/components/sheet";
@@ -10,9 +10,9 @@ import {
   DAY_LIST_TOP,
   dayCardHeight,
   dayCardOffsets,
-  PLAN_PICKER_HEIGHT,
 } from "@/lib/day-card-height";
 import { useSlotSegments } from "@/lib/slot-segments";
+import { useIntl } from "react-intl";
 
 import type { Slot } from "@norish/shared/contracts";
 import { useMiniCalendar } from "@norish/shared-react/calendar";
@@ -57,24 +57,25 @@ export function PlanPicker({
 }
 
 /**
- * The whole plan block: the picker, then a day card for every day from last month to next month,
- * opened on today. A day's "+" calls `onAdd`; the strip and "+" scroll the list to their day.
+ * The whole plan block: the picker, fixed above a list of day cards from last month to next month,
+ * opened on today. A day's "+" calls `onAdd`; a strip pick scrolls the list to its day.
  */
 export function PlanDayList({
   testID,
-  addLabel,
+  name,
   onAdd,
   ...picker
 }: PickerProps & {
-  /** What VoiceOver calls a day's "+". */
-  addLabel: (day: Date) => string;
+  /** What a day's "+" plans or moves, for its VoiceOver label. */
+  name: string;
   onAdd: (dayKey: string) => void;
 }) {
+  const intl = useIntl();
   const today = parseDateKey(useToday());
   const { days, todayKey, todayIndex, calendarData, isLoading } = useMiniCalendar(today);
   const rows: Array<Date | number> = isLoading ? SKELETONS : days;
   const heights = days.map((day) => dayCardHeight(calendarData[dateKey(day)] ?? []));
-  const offsets = dayCardOffsets(heights, DAY_LIST_TOP + PLAN_PICKER_HEIGHT);
+  const offsets = dayCardOffsets(heights, DAY_LIST_TOP);
   const todayTop = offsets[todayIndex];
   const listRef = useRef<FlatList<Date | number>>(null);
   const touchedRef = useRef(false);
@@ -94,22 +95,21 @@ export function PlanDayList({
   };
 
   return (
-    <SheetList
+    <View className="flex-1" collapsable={false}>
+      <View className="px-4 pt-1 pb-3">
+        <PlanPicker
+          {...picker}
+          testID={testID}
+          onDateChange={(day, fromChip) => {
+            picker.onDateChange(day, fromChip);
+            scrollTo(day);
+          }}
+        />
+      </View>
+      <SheetList
       // The list remounts when the plan arrives, so it opens on today instead of jumping there.
       key={isLoading ? "loading" : "days"}
       ref={listRef}
-      ListHeaderComponent={
-        <View className="pb-3">
-          <PlanPicker
-            {...picker}
-            testID={testID}
-            onDateChange={(day, fromChip) => {
-              picker.onDateChange(day, fromChip);
-              scrollTo(day);
-            }}
-          />
-        </View>
-      }
       data={rows}
       getItemLayout={
         isLoading
@@ -127,7 +127,7 @@ export function PlanDayList({
       onScrollBeginDrag={() => {
         touchedRef.current = true;
       }}
-      renderItem={({ item, index }) => {
+      renderItem={({ item }) => {
         if (typeof item === "number") {
           return (
             <View className="pb-3">
@@ -138,18 +138,23 @@ export function PlanDayList({
         const key = dateKey(item);
 
         return (
-          <View className="pb-3" testID={`${testID}-day-card-${index}`}>
+          <View className="pb-3">
             <DayCard
-              addLabel={addLabel(item)}
+              addLabel={intl.formatMessage(
+                { id: "calendar.panel.planOnDay" },
+                { name, day: formatDay(intl, item) }
+              )}
               date={item}
               dateKey={key}
               isToday={key === todayKey}
               items={calendarData[key] ?? []}
+              testID={testID}
               onAdd={() => onAdd(key)}
             />
           </View>
         );
       }}
-    />
+      />
+    </View>
   );
 }

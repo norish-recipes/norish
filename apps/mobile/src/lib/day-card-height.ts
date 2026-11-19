@@ -23,9 +23,6 @@ export const DAY_CARD = {
   gap: 12,
 } as const;
 
-/** The plan block's strip, slot tabs and the gaps around them, which head the day list: 64 + 12 + 44 + 12. */
-export const PLAN_PICKER_HEIGHT = 132;
-
 /** What a sheet list's content starts below: its `pt-1`, which a card's offset has to include. */
 export const DAY_LIST_TOP = 4;
 

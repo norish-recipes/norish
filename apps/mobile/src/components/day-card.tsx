@@ -63,13 +63,13 @@ export function DayTitle({
 }
 
 /** One planned item: its photo, or a note's glyph, and its name. */
-function PlannedRow({ item }: { item: PlannedItemFromQuery }) {
+function PlannedRow({ item, testID }: { item: PlannedItemFromQuery; testID: string }) {
   const { title } = usePlannedItemText()(item);
 
   return (
     <View
       className={`flex-row items-center gap-3 ${DAY_CARD_CLASS.row}`}
-      testID={`day-item-${item.id}`}
+      testID={`${testID}-day-item-${item.id}`}
     >
       <PlannedThumb className="size-10 rounded-[11px]" item={item} />
       <Text className="text-foreground flex-1 text-[15px]" numberOfLines={1}>
@@ -89,6 +89,7 @@ export function DayCard({
   isToday,
   items,
   addLabel,
+  testID,
   onAdd,
 }: {
   date: Date;
@@ -97,6 +98,8 @@ export function DayCard({
   items: PlannedItemFromQuery[];
   /** What VoiceOver calls the "+". */
   addLabel: string;
+  /** The prefix of every testID in the card. */
+  testID: string;
   onAdd: () => void;
 }) {
   const intl = useIntl();
@@ -105,11 +108,11 @@ export function DayCard({
   return (
     <View
       className={`bg-sand rounded-3xl pr-2 pl-3.5 ${DAY_CARD_CLASS.card}`}
-      testID={`day-card-${dateKey}`}
+      testID={`${testID}-day-card-${dateKey}`}
     >
       {isToday ? (
         <View
-          className="border-accent-text/55 absolute inset-0 rounded-3xl border-2"
+          className="border-accent-text absolute inset-0 rounded-3xl border-2"
           pointerEvents="none"
         />
       ) : null}
@@ -118,7 +121,7 @@ export function DayCard({
         <IconButton
           icon="add"
           label={addLabel}
-          testID={`day-add-${dateKey}`}
+          testID={`${testID}-day-add-${dateKey}`}
           tone="accent"
           onPress={onAdd}
         />
@@ -127,7 +130,7 @@ export function DayCard({
         <View
           key={slot}
           className={`border-separator pr-1.5 ${DAY_CARD_CLASS.slot}`}
-          testID={`day-slot-${dateKey}-${slot}`}
+          testID={`${testID}-day-slot-${dateKey}-${slot}`}
         >
           <View className={`flex-row items-center gap-1.5 ${DAY_CARD_CLASS.slotLabel}`}>
             <SlotGlyph slot={slot} />
@@ -136,7 +139,7 @@ export function DayCard({
             </Text>
           </View>
           {bySlot[slot].map((item) => (
-            <PlannedRow key={item.id} item={item} />
+            <PlannedRow key={item.id} item={item} testID={testID} />
           ))}
         </View>
       ))}
