@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Card } from "@/components/card";
 import { Checkmark } from "@/components/checkmark";
+import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
+import { SliceHairline } from "@/components/slice-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -33,10 +35,11 @@ function ProductOption({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: picked }}
-      className={`min-h-14 flex-row items-center gap-3 px-4 py-2.5 ${first ? "" : "border-separator border-t"}`}
+      className="min-h-14 flex-row items-center gap-3 px-4 py-2.5"
       testID="product-option"
       onPress={onPick}
     >
+      <SliceHairline first={first} />
       <View className="min-w-0 flex-1">
         <Text className="text-foreground text-base" numberOfLines={1}>
           {row.name}
@@ -119,32 +122,28 @@ export function ProductStep({
       onClose={onBack}
     >
       <SheetBody contentClassName="gap-4">
-        <View className="justify-center">
-          <View className="absolute left-4 z-10" pointerEvents="none">
-            <Ionicons color={muted} name="search" size={18} />
-          </View>
-          <TextField>
-            <SheetInput
-              // eslint-disable-next-line jsx-a11y-x/no-autofocus -- the search opens focused, which also asks the Store what it knows
-              autoFocus
-              accessibilityLabel={text("groceries.picker.searchPlaceholder")}
-              autoCapitalize="none"
-              autoCorrect={false}
-              className="pr-4 pl-11"
-              editable={field.canSearch}
-              placeholder={text(
-                field.canSearch
-                  ? "groceries.picker.searchPlaceholder"
-                  : "groceries.picker.cannotSearch"
-              )}
-              returnKeyType="search"
-              testID="product-search"
-              value={field.term}
-              onChangeText={field.onTermInput}
-              onFocus={field.ask}
-            />
-          </TextField>
-        </View>
+        <TextField>
+          <SheetInput
+            // eslint-disable-next-line jsx-a11y-x/no-autofocus -- the search opens focused, which also asks the Store what it knows
+            autoFocus
+            accessibilityLabel={text("groceries.picker.searchPlaceholder")}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={field.canSearch}
+            placeholder={text(
+              field.canSearch
+                ? "groceries.picker.searchPlaceholder"
+                : "groceries.picker.cannotSearch"
+            )}
+            prefix={<Ionicons color={muted} name="search" size={18} />}
+            returnKeyType="search"
+            testID="product-search"
+            value={field.term}
+            onChangeText={field.onTermInput}
+            onClear={() => field.onTermInput("")}
+            onFocus={field.ask}
+          />
+        </TextField>
 
         {field.knownRows.length > 0 ? (
           <Group title={text("groceries.picker.knownGroup")}>{rowsOf(field.knownRows)}</Group>
@@ -172,16 +171,14 @@ export function ProductStep({
         ) : null}
 
         {linked && !field.unlinked ? (
-          <Pressable
-            accessibilityRole="button"
-            className="self-start px-2"
-            testID="product-unlink"
-            onPress={field.unlink}
-          >
-            <Text className="text-muted text-[15px] font-medium">
-              {text("groceries.picker.unlink")}
-            </Text>
-          </Pressable>
+          <View className="items-center">
+            <PillButton
+              label={text("groceries.picker.unlink")}
+              testID="product-unlink"
+              tone="danger"
+              onPress={field.unlink}
+            />
+          </View>
         ) : null}
 
         {typing ? (

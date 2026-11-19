@@ -38,8 +38,26 @@ vi.mock("heroui-native", async () => {
 
   Button.Label = ({ children }: { children?: React.ReactNode }) => children;
 
+  const Field = ({
+    testID,
+    value,
+    onChangeText,
+  }: {
+    testID?: string;
+    value?: string;
+    onChangeText?: (v: string) => void;
+  }) =>
+    createElement("input", {
+      "data-testid": testID,
+      value,
+      onChange: (e: { target: { value: string } }) => onChangeText?.(e.target.value),
+    });
+  const Slot = ({ children }: { children?: React.ReactNode }) => children;
+  const InputGroup = Object.assign(Slot, { Prefix: Slot, Suffix: Slot, Input: Field });
+
   return {
     Button,
+    InputGroup,
     Input: ({
       testID,
       value,
@@ -94,6 +112,19 @@ vi.mock("@/components/sheet", async () => {
 });
 vi.mock("@/components/card", () => ({
   Card: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  CardRow: ({
+    value,
+    testID,
+    onPress,
+  }: {
+    value?: string;
+    testID?: string;
+    onPress?: () => void;
+  }) => (
+    <button data-testid={testID} type="button" onClick={onPress}>
+      {value}
+    </button>
+  ),
 }));
 
 const { ProductStep } = await import("../components/product-step");
@@ -214,8 +245,7 @@ describe("the product row", () => {
       <ProductRow held={{ name: "AH Avocado", detail: "€0.99 · per piece" }} price={none} />
     );
 
-    expect(screen.getByText("AH Avocado")).toBeTruthy();
-    expect(screen.getByText("€0.99 · per piece")).toBeTruthy();
+    expect(screen.getByText("AH Avocado · €0.99 · per piece")).toBeTruthy();
 
     rerender(<ProductRow price={none} />);
     expect(container.textContent).toBe("");
