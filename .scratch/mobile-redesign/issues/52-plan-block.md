@@ -4,7 +4,7 @@
 
 **Blocked by:** 50, 51
 
-**Status:** ready
+**Status:** done
 
 - [x] Day strip (sand day chips, accent selected) and slot tabs (Segmented standard) from the kit.
 - [x] Day cards: sand card, date heading, slot sections with icon + thumbnail rows, a solid + icon button per day.
@@ -35,3 +35,4 @@ Not fixed: 8, `plan-recipe-screen.tsx:68` reads it: `onDateChange={(next, fromSt
 - Re-review of the fix range (Opus): all round-1 fixes confirmed, no regression. Dispositions:
   1. fix: `day-strip.tsx:36,48` recomputes `contentOffset` from `start` every render, so a changed offset may jump the strip before the animated `scrollTo`; keep the initial offset frozen, use `start` only in the scroll effect.
   2. fix: the strip's scroll-to-picked-day (6b1d09d55) has no unit test; add one (mocked strip exposing `scrollTo`, rerender with a later day, assert the call; a day off the strip makes none).
+- Exit gate on `c61631ab5`: all six gates exit 0 (fixer's run after the last change).
