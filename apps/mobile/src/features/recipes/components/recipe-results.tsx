@@ -1,8 +1,5 @@
-import type { TabScroll } from "@/lib/use-tab-scroll";
-import type { ReactElement } from "react";
+import type { RecipeResultsProps } from "@/lib/recipe-results-props";
 import React from "react";
-
-import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import { LibraryCards } from "./library-cards";
 import { RecipeCard } from "./recipe-card";
@@ -20,19 +17,9 @@ export function RecipeResults({
   noResults,
   scroll,
   testID,
-}: {
-  recipes: RecipeDashboardDTO[];
-  header: ReactElement;
-  isLoading: boolean;
-  isFetchingNextPage: boolean;
-  onEndReached: () => void;
-  noResults: ReactElement;
-  scroll: TabScroll;
-  testID?: string;
-}) {
+}: RecipeResultsProps) {
   return (
     <LibraryCards
-      empty={<></>}
       fadeHeight={FADE_HEIGHT}
       header={header}
       insets="automatic"

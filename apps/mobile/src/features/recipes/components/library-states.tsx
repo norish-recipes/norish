@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { EmptyCard } from "@/components/empty-card";
-import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
+import { NoResultsCard } from "@/components/no-results-card";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -67,27 +67,18 @@ export function CookbooksEmpty() {
 /** Filters left nothing to show; Clear filters undoes them. */
 export function LibraryNoResults({ onClear }: { onClear: () => void }) {
   const intl = useIntl();
-  const warningInk = useWarningInkColor();
 
   return (
-    <EmptyCard
+    <NoResultsCard
+      action={{
+        label: intl.formatMessage({ id: "common.filters.clearFilters" }),
+        icon: "refresh",
+        testID: "library-clear-filters",
+        onPress: onClear,
+      }}
       description={intl.formatMessage({ id: "recipes.empty.noResultsHint" })}
       icon="funnel-outline"
       testID="library-no-results"
-      title={intl.formatMessage({ id: "recipes.empty.noResults" })}
-      tone="warning"
-    >
-      <Pressable
-        accessibilityRole="button"
-        className="bg-warning/20 h-11 flex-row items-center justify-center gap-2 rounded-full"
-        testID="library-clear-filters"
-        onPress={onClear}
-      >
-        <Ionicons color={warningInk} name="refresh" size={18} />
-        <Text className="text-warning-ink text-[15px] font-medium">
-          {intl.formatMessage({ id: "common.filters.clearFilters" })}
-        </Text>
-      </Pressable>
-    </EmptyCard>
+    />
   );
 }

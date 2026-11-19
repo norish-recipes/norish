@@ -72,7 +72,7 @@ export function CardList<Row>({
   rows: Row[];
   variant: RecipeViewMode;
   header: ReactElement;
-  empty: ReactElement;
+  empty?: ReactElement;
   isFetchingNextPage: boolean;
   rowKey: (row: Row) => string;
   /** The card in `variant`, the view its cell is drawn in. */

@@ -1,7 +1,7 @@
 import type { HeaderItem } from "@/lib/header-item";
 import React, { useState } from "react";
 import { View } from "react-native";
-import { GlassIconButton } from "@/components/glass";
+import { FiltersButton } from "@/components/filters-button";
 import { RollingText } from "@/components/rolling-text";
 import { Segmented } from "@/components/segmented";
 import { lightImpact } from "@/lib/haptics";
@@ -53,26 +53,16 @@ export function ViewToggle() {
 }
 
 /** The Filters button, marked while any filter is on. */
-export function FiltersButton() {
+function LibraryFiltersButton() {
   const intl = useIntl();
-  const router = useRouter();
   const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
 
   return (
-    <View>
-      <GlassIconButton
-        label={intl.formatMessage({ id: "common.filters.title" })}
-        symbol="line.3.horizontal.decrease"
-        testID="library-filters-button"
-        onPress={() => router.push("/filters")}
-      />
-      {filtersOn ? (
-        <View
-          className="bg-accent absolute top-1 right-1 size-2 rounded-full"
-          pointerEvents="none"
-        />
-      ) : null}
-    </View>
+    <FiltersButton
+      count={filtersOn ? 1 : 0}
+      label={intl.formatMessage({ id: "common.filters.title" })}
+      testID="library-filters-button"
+    />
   );
 }
 
@@ -109,7 +99,7 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
     return (
       <View className="flex-row items-center justify-end gap-2 px-5 pt-[18px] pb-3.5">
         <ViewToggle />
-        <FiltersButton />
+        <LibraryFiltersButton />
       </View>
     );
   }

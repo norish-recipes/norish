@@ -1,8 +1,5 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
-import { EmptyCard } from "@/components/empty-card";
-import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { NoResultsCard } from "@/components/no-results-card";
 import { useIntl } from "react-intl";
 
 import type { NoResults } from "../utils/search-state";
@@ -21,16 +18,15 @@ export function SearchNoResults({
   onSearchAllFields: () => void;
 }) {
   const intl = useIntl();
-  const warningInk = useWarningInkColor();
+  const className = "bg-surface mx-5 mt-4";
 
   if (variant === "plain") {
     return (
-      <EmptyCard
-        className="bg-surface mx-5 mt-4"
+      <NoResultsCard
+        className={className}
         icon="search-outline"
         testID="search-no-results"
         title={intl.formatMessage({ id: "recipes.search.noMatch" }, { text })}
-        tone="warning"
       />
     );
   }
@@ -38,27 +34,26 @@ export function SearchNoResults({
   const clearing = variant === "clear-filters";
 
   return (
-    <EmptyCard
-      className="bg-surface mx-5 mt-4"
+    <NoResultsCard
+      action={
+        clearing
+          ? {
+              label: intl.formatMessage({ id: "common.filters.clearFilters" }),
+              icon: "refresh",
+              testID: "search-clear-filters",
+              onPress: onClearFilters,
+            }
+          : {
+              label: intl.formatMessage({ id: "recipes.search.searchAllFields" }),
+              icon: "search",
+              testID: "search-all-fields",
+              onPress: onSearchAllFields,
+            }
+      }
+      className={className}
       description={clearing ? intl.formatMessage({ id: "recipes.empty.noResultsHint" }) : undefined}
       icon={clearing ? "funnel-outline" : "search-outline"}
       testID="search-no-results"
-      title={intl.formatMessage({ id: "recipes.empty.noResults" })}
-      tone="warning"
-    >
-      <Pressable
-        accessibilityRole="button"
-        className="bg-warning/20 h-11 flex-row items-center justify-center gap-2 rounded-full"
-        testID={clearing ? "search-clear-filters" : "search-all-fields"}
-        onPress={clearing ? onClearFilters : onSearchAllFields}
-      >
-        <Ionicons color={warningInk} name={clearing ? "refresh" : "search"} size={18} />
-        <Text className="text-warning-ink text-[15px] font-medium">
-          {intl.formatMessage({
-            id: clearing ? "common.filters.clearFilters" : "recipes.search.searchAllFields",
-          })}
-        </Text>
-      </Pressable>
-    </EmptyCard>
+    />
   );
 }

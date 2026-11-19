@@ -1,0 +1,53 @@
+import type { ComponentProps } from "react";
+import React from "react";
+import { Pressable, Text } from "react-native";
+import { EmptyCard } from "@/components/empty-card";
+import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useIntl } from "react-intl";
+
+type Icon = ComponentProps<typeof Ionicons>["name"];
+
+/** Nothing matched: the warning card, and the one action that would change that. */
+export function NoResultsCard({
+  icon,
+  title,
+  description,
+  className,
+  testID,
+  action,
+}: {
+  icon: Icon;
+  /** Defaults to "No results". */
+  title?: string;
+  description?: string;
+  className?: string;
+  testID: string;
+  action?: { label: string; icon: Icon; testID: string; onPress: () => void };
+}) {
+  const intl = useIntl();
+  const warningInk = useWarningInkColor();
+
+  return (
+    <EmptyCard
+      className={className}
+      description={description}
+      icon={icon}
+      testID={testID}
+      title={title ?? intl.formatMessage({ id: "recipes.empty.noResults" })}
+      tone="warning"
+    >
+      {action ? (
+        <Pressable
+          accessibilityRole="button"
+          className="bg-warning/20 h-11 flex-row items-center justify-center gap-2 rounded-full"
+          testID={action.testID}
+          onPress={action.onPress}
+        >
+          <Ionicons color={warningInk} name={action.icon} size={18} />
+          <Text className="text-warning-ink text-[15px] font-medium">{action.label}</Text>
+        </Pressable>
+      ) : null}
+    </EmptyCard>
+  );
+}

@@ -48,7 +48,7 @@ export function LibraryCards<Row>({
   isFetchingNextPage: boolean;
   header: ReactElement;
   /** What shows when nothing is loading, no filter is on and there is no row. */
-  empty: ReactElement;
+  empty?: ReactElement;
   /** Replaces the Clear filters card, for a list whose text is not a filter, as Search's. */
   noResults?: ReactElement;
   cookbook?: CookbookSummaryDTO;
