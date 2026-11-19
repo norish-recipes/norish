@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Header = {
   confirm?: { label: string; onPress?: () => void };
-  secondary?: { label: string; inMenu?: boolean; destructive?: boolean; onPress: () => void }[];
+  secondary?: { label: string; destructive?: boolean; onPress: () => void }[];
 };
 
 const held = vi.hoisted(() => ({ remove: vi.fn(), save: vi.fn(), back: vi.fn() }));
@@ -31,7 +31,6 @@ vi.mock("../components/grocery-sheet", () => ({
         createElement("button", {
           key: action.label,
           "data-testid": action.label,
-          "data-menu": String(action.inMenu),
           "data-destructive": String(action.destructive),
           onClick: action.onPress,
         })
@@ -79,11 +78,10 @@ const { EditGroceryScreen } = await import("../screens/edit-grocery-screen");
 describe("EditGroceryScreen", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("deletes the grocery and closes from its Delete menu entry, never from Save", () => {
+  it("deletes the grocery and closes from its Delete bin, never from Save", () => {
     render(<EditGroceryScreen />);
     const del = screen.getByTestId("common.actions.delete");
 
-    expect(del.dataset.menu).toBe("true");
     expect(del.dataset.destructive).toBe("true");
     expect(held.remove).not.toHaveBeenCalled();
 

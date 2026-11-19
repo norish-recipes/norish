@@ -34,17 +34,13 @@ export type HeaderAction = {
   disabled?: boolean;
   /** In the danger colour, as a button or a menu entry. */
   destructive?: boolean;
-  /** Always a menu entry, never a lone glass item: removing data sits one tap from the confirm. */
-  inMenu?: boolean;
 };
 
-/** The one destructive action: a menu entry for removing data (Delete on a grocery, Remove on a
- * planned item), or with `inMenu: false` a glass item for clearing a setting. */
+/** The red bin: Delete on a grocery, Remove on a planned item or a repeat. */
 export const destructiveAction = (
   label: string,
-  onPress: HeaderAction["onPress"],
-  { inMenu = true }: { inMenu?: boolean } = {}
-): HeaderAction => ({ label, symbol: "trash", destructive: true, inMenu, onPress });
+  onPress: HeaderAction["onPress"]
+): HeaderAction => ({ label, symbol: "trash", destructive: true, onPress });
 
 /** A sheet's or modal's native header: the title, a glass Close (Back with `back`) on the left, and
  * on the right the secondary actions (one a glass item, several one menu) then the confirm. */
@@ -93,7 +89,7 @@ export function ModalHeader({
     const icon = ({ symbol }: HeaderAction) => ({ type: "sfSymbol", name: symbol }) as const;
     const press = (index: number) => () => run(latestRef.current.secondary[index]);
 
-    if (secondary.length > 1 || secondary.some((action) => action.inMenu)) {
+    if (secondary.length > 1) {
       const label = intl.formatMessage({ id: "recipes.actions.actionsLabel" });
 
       return [

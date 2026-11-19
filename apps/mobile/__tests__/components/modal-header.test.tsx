@@ -222,11 +222,11 @@ describe("ModalHeader", () => {
     expect(act).not.toHaveBeenCalled();
   });
 
-  it("puts a destructive data action in the menu even when it is the only one", () => {
+  it("shows a lone destructive action as the red bin, not a one-entry menu", () => {
     render(<ModalHeader secondary={[destructiveAction("Delete", vi.fn())]} title="Edit grocery" />);
 
     expect(declared().unstable_headerRightItems()).toMatchObject([
-      { type: "menu", menu: { items: [{ label: "Delete", destructive: true }] } },
+      { type: "button", label: "Delete", icon: { name: "trash" }, tintColor: expect.anything() },
     ]);
   });
 

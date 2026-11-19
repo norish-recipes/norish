@@ -166,14 +166,10 @@ export function GrocerySheet({
         secondary={
           repeat
             ? [
-                destructiveAction(
-                  text("common.actions.remove"),
-                  () => {
-                    onRepeat(null);
-                    back();
-                  },
-                  { inMenu: false }
-                ),
+                destructiveAction(text("common.actions.remove"), () => {
+                  onRepeat(null);
+                  back();
+                }),
               ]
             : []
         }
