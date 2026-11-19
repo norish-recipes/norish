@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { screen as dom, render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const screen = vi.hoisted(() => ({
+const header = vi.hoisted(() => ({
   options: null as Record<string, unknown> | null,
   back: vi.fn(),
 }));
@@ -25,10 +25,10 @@ type Options = {
 };
 
 vi.mock("expo-router", () => ({
-  useRouter: () => ({ back: screen.back }),
+  useRouter: () => ({ back: header.back }),
   Stack: {
     Screen: ({ options }: { options: Record<string, unknown> }) => {
-      screen.options = options;
+      header.options = options;
 
       return null;
     },
@@ -48,7 +48,7 @@ vi.mock("react-intl", () => ({
 
 const { ModalHeader, destructiveAction } = await import("@/components/modal-header");
 
-const declared = () => screen.options as unknown as Options;
+const declared = () => header.options as unknown as Options;
 
 describe("ModalHeader", () => {
   it("declares the system title and a Close on the left, with no confirm item", () => {
@@ -67,7 +67,7 @@ describe("ModalHeader", () => {
     render(<ModalHeader title="Rename" />);
 
     (declared().unstable_headerLeftItems()[0] as unknown as { onPress: () => void }).onPress();
-    expect(screen.back).toHaveBeenCalledOnce();
+    expect(header.back).toHaveBeenCalledOnce();
   });
 
   it("shows a Back chevron instead of Close for a step", () => {
@@ -267,8 +267,8 @@ describe("ModalHeader", () => {
     render(<ModalHeader subtitle="Hoisin Chicken" title="Move" />);
     render(<>{declared().headerTitle?.()}</>);
 
-    expect(dom.getByText("Move")).toBeTruthy();
-    expect(dom.getByText("Hoisin Chicken")).toBeTruthy();
+    expect(screen.getByText("Move")).toBeTruthy();
+    expect(screen.getByText("Hoisin Chicken")).toBeTruthy();
   });
 
   it("tints an enabled prominent primary with the accent and leaves a disabled one plain", () => {
