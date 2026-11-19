@@ -1,4 +1,4 @@
-import type { ScrollView } from "react-native";
+import type { ScrollViewInstance } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
@@ -31,7 +31,7 @@ export function DayStrip({
   const intl = useIntl();
   const accentText = useAccentTextColor();
   const days = stripDays(useToday());
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const index = days.indexOf(date);
   const start = Math.max(0, index * (CHIP + GAP) - CHIP);
 

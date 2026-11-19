@@ -1,5 +1,10 @@
 import type { ReactNode, Ref } from "react";
-import type { FlatListProps, KeyboardEvent, ScrollViewProps } from "react-native";
+import type {
+  FlatListProps,
+  KeyboardEvent,
+  ScrollViewInstance,
+  ScrollViewProps,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { FlatList, Keyboard, ScrollView, useWindowDimensions, View } from "react-native";
 import { initialWindowMetrics } from "react-native-safe-area-context";
@@ -95,7 +100,10 @@ export function SheetBody({ children, ...layout }: BodyLayout & { children: Reac
 export function SheetStrip({
   contentClassName = "",
   ...props
-}: Omit<ScrollViewProps, SheetOwnedProps | "horizontal"> & { contentClassName?: string }) {
+}: Omit<ScrollViewProps, SheetOwnedProps | "horizontal"> & {
+  contentClassName?: string;
+  ref?: Ref<ScrollViewInstance>;
+}) {
   return (
     <ScrollView
       horizontal

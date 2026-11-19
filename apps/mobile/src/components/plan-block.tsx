@@ -5,12 +5,7 @@ import { DayCard, DayCardSkeleton, formatDay } from "@/components/day-card";
 import { DayStrip } from "@/components/day-strip";
 import { Segmented } from "@/components/segmented";
 import { SheetList } from "@/components/sheet";
-import {
-  DAY_CARD,
-  DAY_LIST_TOP,
-  dayCardHeight,
-  dayCardOffsets,
-} from "@/lib/day-card-height";
+import { DAY_CARD, DAY_LIST_TOP, dayCardHeight, dayCardOffsets } from "@/lib/day-card-height";
 import { useSlotSegments } from "@/lib/slot-segments";
 import { useIntl } from "react-intl";
 
@@ -107,53 +102,53 @@ export function PlanDayList({
         />
       </View>
       <SheetList
-      // The list remounts when the plan arrives, so it opens on today instead of jumping there.
-      key={isLoading ? "loading" : "days"}
-      ref={listRef}
-      data={rows}
-      getItemLayout={
-        isLoading
-          ? undefined
-          : (_, index) => ({
-              length: heights[index]! + DAY_CARD.gap,
-              offset: offsets[index]!,
-              index,
-            })
-      }
-      initialNumToRender={8}
-      initialScrollIndex={isLoading || todayIndex < 0 ? undefined : todayIndex}
-      keyExtractor={(item) => (typeof item === "number" ? `skeleton-${item}` : dateKey(item))}
-      maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-      onScrollBeginDrag={() => {
-        touchedRef.current = true;
-      }}
-      renderItem={({ item }) => {
-        if (typeof item === "number") {
+        // The list remounts when the plan arrives, so it opens on today instead of jumping there.
+        key={isLoading ? "loading" : "days"}
+        ref={listRef}
+        data={rows}
+        getItemLayout={
+          isLoading
+            ? undefined
+            : (_, index) => ({
+                length: heights[index]! + DAY_CARD.gap,
+                offset: offsets[index]!,
+                index,
+              })
+        }
+        initialNumToRender={8}
+        initialScrollIndex={isLoading || todayIndex < 0 ? undefined : todayIndex}
+        keyExtractor={(item) => (typeof item === "number" ? `skeleton-${item}` : dateKey(item))}
+        maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+        onScrollBeginDrag={() => {
+          touchedRef.current = true;
+        }}
+        renderItem={({ item }) => {
+          if (typeof item === "number") {
+            return (
+              <View className="pb-3">
+                <DayCardSkeleton />
+              </View>
+            );
+          }
+          const key = dateKey(item);
+
           return (
             <View className="pb-3">
-              <DayCardSkeleton />
+              <DayCard
+                addLabel={intl.formatMessage(
+                  { id: "calendar.panel.planOnDay" },
+                  { name, day: formatDay(intl, item) }
+                )}
+                date={item}
+                dateKey={key}
+                isToday={key === todayKey}
+                items={calendarData[key] ?? []}
+                testID={testID}
+                onAdd={() => onAdd(key)}
+              />
             </View>
           );
-        }
-        const key = dateKey(item);
-
-        return (
-          <View className="pb-3">
-            <DayCard
-              addLabel={intl.formatMessage(
-                { id: "calendar.panel.planOnDay" },
-                { name, day: formatDay(intl, item) }
-              )}
-              date={item}
-              dateKey={key}
-              isToday={key === todayKey}
-              items={calendarData[key] ?? []}
-              testID={testID}
-              onAdd={() => onAdd(key)}
-            />
-          </View>
-        );
-      }}
+        }}
       />
     </View>
   );
