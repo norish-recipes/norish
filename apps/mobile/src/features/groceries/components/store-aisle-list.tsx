@@ -115,7 +115,7 @@ export function StoreAisleList({
       ListFooterComponent={
         <View className="px-4">
           <View
-            className={`bg-fill overflow-hidden ${rows.length > 0 ? "border-separator rounded-b-[22px] border-t" : "rounded-[22px]"}`}
+            className={`bg-sand overflow-hidden ${rows.length > 0 ? "border-separator rounded-b-[22px] border-t" : "rounded-[22px]"}`}
           >
             <View className="h-12 flex-row items-center gap-2 pr-2 pl-4">
               <Input
@@ -137,7 +137,7 @@ export function StoreAisleList({
                 accessibilityLabel={text("groceries.storeManager.addAisle")}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !canAdd }}
-                className={`bg-fill size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
+                className={`bg-sand size-8 items-center justify-center rounded-full ${canAdd ? "" : "opacity-40"}`}
                 disabled={!canAdd}
                 testID="aisle-add"
                 onPress={add}

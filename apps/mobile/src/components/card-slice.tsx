@@ -36,7 +36,7 @@ export function CardSlice({
 }
 
 /** A slice's ground: the translucent fill on a sheet, the surface off one. */
-const useSliceFill = () => (useOnSheet() ? "bg-fill" : "bg-surface");
+const useSliceFill = () => (useOnSheet() ? "bg-sand" : "bg-surface");
 
 /** A page's cards, and a sheet's tighter ones; `lifted` is the card a drag carries. */
 const SIZES: Record<

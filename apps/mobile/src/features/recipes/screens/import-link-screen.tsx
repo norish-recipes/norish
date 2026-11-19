@@ -77,7 +77,7 @@ export function ImportLinkScreen() {
                 <Pressable
                   accessibilityLabel={intl.formatMessage({ id: "common.actions.clear" })}
                   accessibilityRole="button"
-                  className="bg-fill size-7 items-center justify-center rounded-full"
+                  className="bg-sand size-7 items-center justify-center rounded-full"
                   hitSlop={8}
                   testID="import-link-clear"
                   onPress={() => {

@@ -58,7 +58,7 @@ export function DayStrip({
             })}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
-            className={`h-16 items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-fill"}`}
+            className={`h-16 items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-sand"}`}
             style={{ width: CHIP, marginRight: GAP }}
             testID={`${testID}-day-${offset}`}
             onPress={() => onChange(key, true)}

@@ -98,7 +98,7 @@ describe("AllTimers", () => {
   });
 
   it.each([
-    [true, "bg-fill"],
+    [true, "bg-sand"],
     [false, "bg-default"],
   ])("fills its round buttons for a sheet=%s with %s", (onSheet, fill) => {
     useTimerStore.setState({ timers: [timer("a", "paused")] });

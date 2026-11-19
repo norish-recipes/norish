@@ -268,7 +268,7 @@ export function FoodRowsSkeleton({ rows, testID }: { rows: number; testID?: stri
   return (
     <View className="px-5" testID={testID}>
       <SkeletonCard
-        className={onSheet ? "bg-fill" : "bg-surface"}
+        className={onSheet ? "bg-sand" : "bg-surface"}
         rowClassName="h-[52px] gap-3 px-3.5"
         rows={rows}
       >

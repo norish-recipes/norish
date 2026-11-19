@@ -70,7 +70,7 @@ function OptionRow({ option, first }: { option: Option; first: boolean }) {
       // The chosen way's sheet replaces this one, so only one sheet is ever stacked.
       onPress={() => router.replace(option.to)}
     >
-      <View className="bg-fill size-10 items-center justify-center rounded-xl">
+      <View className="bg-sand size-10 items-center justify-center rounded-xl">
         <Ionicons color={accentText} name={option.icon} size={20} />
       </View>
       <View className="min-w-0 flex-1 gap-px">
@@ -132,7 +132,7 @@ export function AddRecipeScreen() {
         {copiedLink ? (
           <CopiedLinkRow url={copiedLink} onPress={startImport(() => importRecipe(copiedLink))} />
         ) : null}
-        <View className="bg-fill overflow-hidden rounded-3xl">
+        <View className="bg-sand overflow-hidden rounded-3xl">
           {options.map((option, index) => (
             <OptionRow key={option.key} first={index === 0} option={option} />
           ))}

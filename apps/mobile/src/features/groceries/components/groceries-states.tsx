@@ -30,7 +30,7 @@ export function SkeletonCard({
   rows: number;
   rowClassName: string;
   heading?: ReactNode;
-  /** The card's fill; a sheet's is `bg-fill`. */
+  /** The card's fill; a sheet's is `bg-sand`. */
   className?: string;
   children: ReactNode;
 }) {

@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { GlassPill } from "@/components/glass";
 import { Skeleton } from "heroui-native";
 
-const SECTION = "bg-fill overflow-hidden rounded-[22px]";
+const SECTION = "bg-sand overflow-hidden rounded-[22px]";
 const HEADER = "flex-row items-center gap-2.5 py-2.5 pr-2.5 pl-3.5";
 
 /** A section's shell while its lines load: the header's name and button over the rows given. */

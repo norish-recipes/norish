@@ -102,7 +102,7 @@ export function RepeatPills({
 
 /** The sheet's rows on one rounded card. */
 export function FormCard({ children }: { children: ReactNode }) {
-  return <View className="bg-fill overflow-hidden rounded-[22px]">{children}</View>;
+  return <View className="bg-sand overflow-hidden rounded-[22px]">{children}</View>;
 }
 
 /** A row of the form: its label, its value (with a Store's dot), and a chevron where it opens a choice. */
@@ -157,7 +157,7 @@ export function Segmented<T extends string>({
   onChange: (id: T) => void;
 }) {
   return (
-    <View className="bg-fill h-11 flex-row gap-0.5 rounded-full p-1" testID={testID}>
+    <View className="bg-sand h-11 flex-row gap-0.5 rounded-full p-1" testID={testID}>
       {options.map((option) => (
         <Pressable
           key={option.id}

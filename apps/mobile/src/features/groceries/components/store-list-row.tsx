@@ -31,7 +31,7 @@ function CircleButton({
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
-      className="bg-fill size-9 items-center justify-center rounded-full"
+      className="bg-sand size-9 items-center justify-center rounded-full"
       testID={testID}
       onPress={onPress}
     >

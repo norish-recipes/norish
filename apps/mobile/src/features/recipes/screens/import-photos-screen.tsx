@@ -126,7 +126,7 @@ export function ImportPhotosScreen() {
             >
               <Image
                 accessibilityIgnoresInvertColors
-                className="bg-fill size-full"
+                className="bg-sand size-full"
                 resizeMode="cover"
                 source={{ uri: photo.uri }}
               />
@@ -149,7 +149,7 @@ export function ImportPhotosScreen() {
               accessibilityLabel={intl.formatMessage({ id: SOURCE_TILE[source].labelId })}
               accessibilityRole="button"
               accessibilityState={{ disabled: isFull }}
-              className={`bg-fill items-center justify-center gap-1.5 rounded-[20px] ${isFull ? "opacity-40" : ""}`}
+              className={`bg-sand items-center justify-center gap-1.5 rounded-[20px] ${isFull ? "opacity-40" : ""}`}
               disabled={isFull}
               style={{ width: tile, height: tile }}
               testID={`import-photos-${source}`}

@@ -6,4 +6,4 @@ export const OnSheet = createContext(false);
 export const useOnSheet = () => useContext(OnSheet);
 
 /** A grouped row's ground: the translucent fill on a sheet, solid off one. */
-export const useGroupedFill = () => (useOnSheet() ? "bg-fill" : "bg-default");
+export const useGroupedFill = () => (useOnSheet() ? "bg-sand" : "bg-default");

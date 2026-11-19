@@ -156,8 +156,8 @@ export function ManageStoresScreen() {
     >
       {!isRead ? (
         <SheetBody>
-          <SkeletonCard className="bg-fill" rowClassName="h-14 gap-3 px-4" rows={3}>
-            <View className="bg-fill size-3.5 rounded-full" />
+          <SkeletonCard className="bg-sand" rowClassName="h-14 gap-3 px-4" rows={3}>
+            <View className="bg-sand size-3.5 rounded-full" />
           </SkeletonCard>
         </SheetBody>
       ) : stores.length === 0 ? (

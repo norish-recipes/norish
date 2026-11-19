@@ -62,13 +62,13 @@ describe.each(cases)("%s ground", (_, element) => {
   };
 
   it("is the translucent fill on a sheet", () => {
-    expect(ground(true)).toContain("bg-fill");
+    expect(ground(true)).toContain("bg-sand");
     expect(ground(true)).not.toContain("bg-default");
   });
 
   it("is solid off a sheet", () => {
     expect(ground(false)).toContain("bg-default");
-    expect(ground(false)).not.toContain("bg-fill");
+    expect(ground(false)).not.toContain("bg-sand");
   });
 });
 
@@ -93,13 +93,13 @@ describe.each(sliceCases)("%s ground", (_, element) => {
     render(<OnSheet value={onSheet}>{element}</OnSheet>).container.innerHTML;
 
   it("is the translucent fill on a sheet", () => {
-    expect(ground(true)).toContain("bg-fill");
+    expect(ground(true)).toContain("bg-sand");
     expect(ground(true)).not.toContain("bg-surface");
   });
 
   it("is the surface off a sheet", () => {
     expect(ground(false)).toContain("bg-surface");
-    expect(ground(false)).not.toContain("bg-fill");
+    expect(ground(false)).not.toContain("bg-sand");
   });
 });
 
