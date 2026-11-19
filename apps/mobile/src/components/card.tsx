@@ -28,6 +28,8 @@ export function CardRow({
   media,
   leading,
   value,
+  detail,
+  valueLines = 1,
   dotColor,
   first = false,
   disabled = false,
@@ -42,6 +44,9 @@ export function CardRow({
   media?: ReactNode;
   leading?: ReactNode;
   value?: string;
+  /** A muted second line under the value, which may run to `valueLines` lines. */
+  detail?: ReactNode;
+  valueLines?: number;
   dotColor?: string;
   first?: boolean;
   /** Dimmed to 40% and gives no press. */
@@ -78,9 +83,16 @@ export function CardRow({
         <View className="size-2.5 rounded-full" style={{ backgroundColor: dotColor }} />
       ) : null}
       {value === undefined ? null : (
-        <Text className="text-muted max-w-[62%] text-base" numberOfLines={1}>
-          {value}
-        </Text>
+        <View className="max-w-[62%] items-end gap-px">
+          <Text className="text-muted text-base" numberOfLines={valueLines}>
+            {value}
+          </Text>
+          {detail ? (
+            <Text className="text-muted text-[13px]" numberOfLines={1}>
+              {detail}
+            </Text>
+          ) : null}
+        </View>
       )}
       {children}
       {onPress && chevron ? <Ionicons color={muted} name="chevron-forward" size={16} /> : null}
