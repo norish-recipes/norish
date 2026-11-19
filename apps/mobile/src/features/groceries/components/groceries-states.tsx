@@ -15,6 +15,7 @@ export function GroceriesEmpty() {
       icon="cart-outline"
       testID="groceries-empty"
       title={intl.formatMessage({ id: "groceries.empty.title" })}
+      tone="shop"
     />
   );
 }

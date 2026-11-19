@@ -3,6 +3,7 @@ import type { Edge } from "@/lib/card-edges";
 import React, { useState } from "react";
 import { Alert, Text, View } from "react-native";
 import { DragList } from "@/components/drag-list/drag-list";
+import { EmptyCard } from "@/components/empty-card";
 import { Sheet, SHEET_SCROLL_END, SheetBody } from "@/components/sheet";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { edgeAt } from "@/lib/card-edges";
@@ -163,9 +164,13 @@ export function ManageStoresScreen() {
         </SheetBody>
       ) : stores.length === 0 ? (
         <SheetBody>
-          <Text className="text-muted py-8 text-center" testID="stores-empty">
-            {text("groceries.storeManager.noStoresYet")}
-          </Text>
+          <EmptyCard
+            className="bg-sand"
+            icon="storefront-outline"
+            testID="stores-empty"
+            title={text("groceries.storeManager.noStoresYet")}
+            tone="shop"
+          />
         </SheetBody>
       ) : (
         <DragList

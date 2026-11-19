@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
+import { EmptyCard } from "@/components/empty-card";
 import { IconButton } from "@/components/icon-button";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useOnSheet } from "@/components/on-sheet";
@@ -71,8 +72,12 @@ export type PantryActions = {
 
 /** The note rows' test ids and messages. */
 const NOTES = {
-  empty: { testID: "pantry-empty", messageId: "groceries.pantry.empty" },
-  noMatch: { testID: "pantry-no-match", messageId: "common.status.noResults" },
+  empty: { testID: "pantry-empty", messageId: "groceries.pantry.empty", icon: "archive-outline" },
+  noMatch: {
+    testID: "pantry-no-match",
+    messageId: "common.status.noResults",
+    icon: "search-outline",
+  },
 } as const;
 
 const SECTION_LABEL = "text-muted text-xs font-semibold tracking-[0.6px] uppercase";
@@ -115,11 +120,12 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
       const note = NOTES[row.text];
 
       return (
-        <CardSlice edge={{ top: true, bottom: true }}>
-          <Text className="text-muted px-4 py-[22px] text-center text-[15px]" testID={note.testID}>
-            {intl.formatMessage({ id: note.messageId })}
-          </Text>
-        </CardSlice>
+        <EmptyCard
+          icon={note.icon}
+          testID={note.testID}
+          title={intl.formatMessage({ id: note.messageId })}
+          tone="shop"
+        />
       );
     }
     case "suggestions":

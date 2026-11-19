@@ -27,10 +27,12 @@ vi.mock("react-native", async () => {
     Alert: { alert: held.alert },
     Text: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
       createElement("span", { "data-testid": testID }, children),
-    View: ({ children }: { children?: React.ReactNode }) => createElement("div", null, children),
+    View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
+      createElement("div", { "data-testid": testID }, children),
   };
 });
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("heroui-native", async () => {
   const { createElement } = await import("react");
   const Button = ({
