@@ -101,9 +101,8 @@ export function shellTab(path: string, inSearch = false) {
 export const tabPage = (path: string, onTab: boolean, lastTabPage: string) =>
   onTab ? path : lastTabPage;
 
-/** The screen the accessory is for at `path`, whose recipe is `recipeId`: the recipe's once its page
- * is shown with it, until then the last path that was not a recipe's, on the Recipes tab, or in
- * Search's stack when `search`. */
+/** The screen the accessory is for at `path` (in Search's stack when `search`): the recipe's once
+ * its page is shown with it, until then the last path that was not a recipe's. */
 export function accessoryScreen(
   path: string,
   recipeId: string | undefined,
