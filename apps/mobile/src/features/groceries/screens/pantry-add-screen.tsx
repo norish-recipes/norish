@@ -90,7 +90,7 @@ export function PantryAddScreen() {
                 onSubmit={submit}
               />
               {fromYourRecipes ? (
-                <Text className="text-muted px-2 pt-3 text-xs font-semibold uppercase">
+                <Text className="text-muted px-2 pt-3 text-[13px] font-medium">
                   {intl.formatMessage({ id: "groceries.pantry.fromYourRecipes" })}
                 </Text>
               ) : null}

@@ -56,7 +56,6 @@ export function FoodScreen() {
       <SheetBody>
         <Card>
           <CardRow first label={label}>
-            {keeps && onTheList ? <OnTheListChip /> : null}
             <Switch
               accessibilityLabel={label}
               isSelected={keeps}
@@ -64,6 +63,11 @@ export function FoodScreen() {
               onSelectedChange={setKeeps}
             />
           </CardRow>
+          {keeps && onTheList ? (
+            <CardRow label={intl.formatMessage({ id: "navbar.nav.groceries" })}>
+              <OnTheListChip />
+            </CardRow>
+          ) : null}
         </Card>
       </SheetBody>
     </Sheet>
