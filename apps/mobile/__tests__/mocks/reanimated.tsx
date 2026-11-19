@@ -38,7 +38,11 @@ export const withTiming = (value: number) => value;
 export const withDelay = (_delay: number, value: number) => value;
 export const cancelAnimation = () => {};
 export const useAnimatedScrollHandler = () => undefined;
-export const Easing = { bezierFn: () => (t: number) => t };
+export const Easing = {
+  bezierFn: () => (t: number) => t,
+  ease: (t: number) => t,
+  out: (easing: (t: number) => number) => easing,
+};
 export const Extrapolation = { CLAMP: "clamp" };
 // Piecewise linear over `input`, held at its ends, as `Extrapolation.CLAMP` does.
 export const interpolate = (x: number, input: number[], output: number[]) => {

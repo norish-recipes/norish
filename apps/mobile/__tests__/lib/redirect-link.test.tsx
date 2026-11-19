@@ -9,6 +9,7 @@ const dismissAll = vi.fn();
 vi.mock("expo-router", () => ({
   router: { dismissAll: () => dismissAll() },
   useIsFocused: () => true,
+  useNavigation: () => ({ addListener: () => () => {} }),
 }));
 
 describe("redirectLink", () => {
