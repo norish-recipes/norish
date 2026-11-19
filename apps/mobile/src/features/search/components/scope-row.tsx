@@ -15,7 +15,7 @@ import { SCOPE_FIELDS, toggleScope } from "../utils/search-scope";
 
 // Clear of the field: the keyboard's top, or the tab bar's search pill at rest.
 const ABOVE_KEYBOARD = 62;
-const ABOVE_TAB_BAR = homeIndicator + 66;
+const ABOVE_TAB_BAR = homeIndicator + 48;
 
 /** The Search Scope: glass chips floating above the field, one per field the search looks in. */
 export function ScopeRow() {

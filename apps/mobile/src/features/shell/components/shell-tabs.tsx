@@ -75,7 +75,7 @@ export function ShellTabs() {
       minimizeBehavior={tab === barTab ? "onScrollDown" : "never"}
       tintColor={accent}
     >
-      {hidden ? null : (
+      {hidden || (tab === "search" && !hasTimers) ? null : (
         <NativeTabs.BottomAccessory>
           <ShellAccessory plan={plan} />
           {/* Rendered twice (a regular and an inline copy), both in the one accessory: each reads its

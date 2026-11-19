@@ -40,6 +40,9 @@ export function setSearchConfirmed(next: boolean) {
   listeners.forEach((listener) => listener());
 }
 
+/** Whether Results show now. */
+export const isSearchConfirmed = () => confirmed;
+
 export const useSearchConfirmed = () => useSyncExternalStore(subscribe, () => confirmed);
 
 /** A new session starts Search over. */
