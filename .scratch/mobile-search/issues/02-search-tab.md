@@ -4,7 +4,7 @@
 
 **Blocked by:** none (the sort chip sends `sortMode`; 01 makes it apply while searching)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The `role="search"` tab becomes a stack that shares the recipe routes (`recipe/[id]/*`, and the sheets they open), so a result opens inside Search and back returns to the results with the scroll kept.
 - [x] Search's own filter store (a second `LibraryFiltersProvider`, not persisted), separate from the Recipes tab's. The funnel opens the existing Filters sheet bound to Search's store, with a count badge.
@@ -35,3 +35,10 @@ Fix round (2026-11-19):
 - The accessory knows it is in Search's stack (`(search)` segment): no Add recipe on Search's pages, Cook on a recipe opened there, `barTab` stays "search"; the Scope row clears the timer accessory (keyboard hides it). A kept favourites/rating filter is dropped once its item is hidden. One chip definition per kind (`search-chips.ts`); Funnel/no-results card are shared `components/`.
 - Q5: no supported way to keep the Search tab on the native ×. react-native-screens builds a plain `UISearchTab` (`ios/tabs/host/RNSTabBarController.mm:735-755`), the only search-tab option is `automaticallyActivatesSearch`, and the only selection hook, `preventNativeSelection` (`:458`), blocks every user tab selection; UIKit's own cancel returns to the previous tab. Device (iPhone 18 Pro, Release): × leaves for Recipes, query and results kept on return. Left as is; your call.
 - Cooking-time chips with a value outside the four options read "Cooking time" (no key for an arbitrary count).
+
+Review (2026-11-19), range `f29e4df63..02bdd9114`, two review rounds:
+- fixed, round 1 (`601a4615e..80a29dfbf`): `worklet-closures` timed out in the full gate (cold Babel/React Compiler load inside the first case; warmed in `beforeAll`); results only for a confirmed text or a chip; the shell knows Search's stack (no Add recipe there, the bar stays on Search); Scope row above the timer accessory; field rules in a reducer with tests; hidden favourites/rating filters; chip labels through i18n; one definition per chip kind; shared `FiltersButton` and `NoResultsCard`; one results-props type; dead props and stale comments.
+- fixed, round 2 (`af6812643..02bdd9114`): hidden filters are left out by a pure read (`visibleFilters`), no effect; ⊗ then × no longer restores the query; `searchConfirmed` moved from the shared store to `lib/search-session.ts`; `RecipesStack` takes `Provider`; `FiltersButton` takes `on` or `count`.
+- rejected: mixed i18n namespaces (the placeholder and scope labels reuse web's keys); `searchView` states nothing reads yet (tickets 05-07 do); `RecipeResults` as a middle man (the route hands it over, features can't import each other); `sortBeatsRank` and `keepOnClear` on shared code (a client flag has to reach the server; the shared Filters sheet calls the store's Clear); typing with chips hides Results (the spec's typing state); Add recipe fading out on a tab switch with a timer (the accessory's own exit); the Recipes root's native Filters bar item (a descriptor, not the component).
+- asked: (1) the native × on the search tab leaves for the Recipes tab; react-native-screens builds a plain `UISearchTab` with no option for it (`RNSTabBarController.mm:735-755`), so "× dismisses the keyboard and keeps everything" needs a patch or a changed spec. (2) the header shows the avatar beside the funnel; the board draws the funnel alone.
+- not done: the last-chip fix's test was rewritten after the code, not seen failing first; a cooking-time chip outside the four standard values reads "Cooking time" without its number.
