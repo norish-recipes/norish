@@ -22,6 +22,8 @@ type LibraryFiltersState = {
   /** False until the stored filters are applied: without the cookie, the first render's are the defaults. */
   hydrated: boolean;
   setFilters: (next: Partial<CanonicalRecipeFilters>) => void;
+  /** Filters a clear leaves alone, besides the Library's type: Search keeps its text, scope and sort. */
+  keepOnClear: readonly (keyof CanonicalRecipeFilters)[];
   /** Every filter but the Library's type, a lens that clearing a search must not move (ADR-0026). */
   clearFilters: () => void;
   toggleSearchField: (field: SearchField) => void;
@@ -40,9 +42,14 @@ export function createLibraryFiltersStore(
     filters: { ...DEFAULT_RECIPE_FILTERS, ...initial },
     hydrated: initial !== undefined,
     setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
+    keepOnClear: [],
     clearFilters: () =>
       set((state) => ({
-        filters: { ...DEFAULT_RECIPE_FILTERS, libraryType: state.filters.libraryType },
+        filters: {
+          ...DEFAULT_RECIPE_FILTERS,
+          ...Object.fromEntries(state.keepOnClear.map((key) => [key, state.filters[key]])),
+          libraryType: state.filters.libraryType,
+        },
       })),
     toggleSearchField: (field) =>
       set((state) => ({

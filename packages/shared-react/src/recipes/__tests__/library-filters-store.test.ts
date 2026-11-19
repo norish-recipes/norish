@@ -45,6 +45,21 @@ describe("createLibraryFiltersStore", () => {
     expect(store.getState().filters).toEqual({ ...DEFAULT_RECIPE_FILTERS, libraryType: "recipes" });
   });
 
+  it("clears all but what it is told to keep", () => {
+    const store = createLibraryFiltersStore({ ...TITLE_SORTED, libraryType: "recipes" });
+
+    store.setState({ keepOnClear: ["rawInput", "sortMode"] });
+    store.getState().setFilters({ rawInput: "soup", searchTags: ["Quick"], categories: ["Dinner"] });
+    store.getState().clearFilters();
+
+    expect(store.getState().filters).toEqual({
+      ...DEFAULT_RECIPE_FILTERS,
+      rawInput: "soup",
+      sortMode: TITLE_SORTED.sortMode,
+      libraryType: "recipes",
+    });
+  });
+
   it("takes the stored filters over a kept document's", () => {
     const store = createLibraryFiltersStore({
       ...DEFAULT_PERSISTED_RECIPE_FILTERS,
