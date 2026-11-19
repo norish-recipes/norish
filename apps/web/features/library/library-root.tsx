@@ -17,6 +17,7 @@ import {
   useRatingsSubscription,
   useRecipeListSubscription,
 } from "@norish/shared-react/recipes";
+import { persistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 // The filters the store last held in this document, search text included, so a root remounted on
 // return to the Library starts from them. Written only from effects, so the server never holds any.
@@ -24,10 +25,8 @@ let lastFilters: CanonicalRecipeFilters | undefined;
 
 // The device's storage keeps the filters; the cookie tells the server, so a full load draws the same list.
 function keep(filters: CanonicalRecipeFilters) {
-  const { rawInput: _rawInput, ...persisted } = filters;
-
   lastFilters = filters;
-  writeRecipeFiltersCookie(persisted);
+  writeRecipeFiltersCookie(persistedRecipeFilters(filters));
 }
 
 /** What the Library draws kept current, and the filters kept in the browser and the cookie. */

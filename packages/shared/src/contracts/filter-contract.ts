@@ -73,6 +73,15 @@ export function canonicalRecipeFilters(filters: PersistedRecipeFilters): Canonic
   return { ...DEFAULT_RECIPE_FILTERS, ...filters };
 }
 
+/** `filters` as persisted: without the search text and the Ingredient filter, which are never kept. */
+export function persistedRecipeFilters({
+  rawInput: _rawInput,
+  ingredients: _ingredients,
+  ...persisted
+}: CanonicalRecipeFilters): PersistedRecipeFilters {
+  return persisted;
+}
+
 /** The stored fields where `filters` differs from `base`. */
 export function changedRecipeFilters(
   filters: PersistedRecipeFilters,

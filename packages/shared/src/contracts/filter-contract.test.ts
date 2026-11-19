@@ -5,6 +5,7 @@ import {
   DEFAULT_RECIPE_FILTERS,
   hasAppliedRecipeFilters,
   normalizePersistedRecipeFilters,
+  persistedRecipeFilters,
   serializeRecipeFilters,
   toggleSearchFieldIn,
   toRecipesQueryFilters,
@@ -40,6 +41,17 @@ describe("recipe filter contract", () => {
     });
     expect(toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS)).not.toHaveProperty("ingredientIds");
     expect(DEFAULT_PERSISTED_RECIPE_FILTERS).not.toHaveProperty("ingredients");
+  });
+
+  it("keeps the search text and Ingredients out of what is persisted", () => {
+    const onion = { id: "a0000000-0000-4000-8000-000000000001", name: "onion" };
+    const persisted = persistedRecipeFilters({
+      ...DEFAULT_RECIPE_FILTERS,
+      rawInput: "soup",
+      ingredients: [onion],
+    });
+
+    expect(JSON.stringify(persisted)).toBe(JSON.stringify(DEFAULT_PERSISTED_RECIPE_FILTERS));
   });
 
   it("normalizes persisted filter payloads and rejects invalid values", () => {

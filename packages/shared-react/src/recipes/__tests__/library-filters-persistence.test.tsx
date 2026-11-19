@@ -78,6 +78,38 @@ describe("useLibraryFiltersPersistence", () => {
     expect(written).not.toHaveProperty("rawInput");
   });
 
+  it("writes exactly the fields it wrote before Ingredient filters, and keeps those out", () => {
+    const { storage, values } = memoryStorage({});
+    const kept: unknown[] = [];
+    const { result } = renderHook(
+      () => {
+        useLibraryFiltersPersistence({ storage, resumed: false, onKeep: (f) => kept.push(f) });
+
+        return useLibraryFiltersStoreApi();
+      },
+      { wrapper }
+    );
+
+    expect(values[RECIPE_FILTERS_STORAGE_KEY]).toBe(
+      JSON.stringify(DEFAULT_PERSISTED_RECIPE_FILTERS)
+    );
+
+    act(() =>
+      result.current
+        .getState()
+        .setFilters({
+          sortMode: "dateAsc",
+          rawInput: "soup",
+          ingredients: [{ id: "a0000000-0000-4000-8000-000000000001", name: "onion" }],
+        })
+    );
+
+    expect(values[RECIPE_FILTERS_STORAGE_KEY]).toBe(
+      JSON.stringify({ ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "dateAsc" })
+    );
+    expect(kept.at(-1)).toMatchObject({ rawInput: "soup" });
+  });
+
   it("starts from the defaults when storage throws on read", () => {
     const { storage } = memoryStorage({});
     const throwing: PlatformStorage = {
