@@ -20,16 +20,14 @@ import {
 
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 
-const RULES = [
-  ["day", "daily", "everyDay"],
-  ["week", "weekly", "everyWeek"],
-  ["month", "monthly", "everyMonth"],
-  ["year", "yearly", "everyYear"],
-] as const satisfies readonly (readonly [RecurrenceRule, string, string])[];
+const RULES: Record<RecurrenceRule, { frequency: string; every: string }> = {
+  day: { frequency: "daily", every: "everyDay" },
+  week: { frequency: "weekly", every: "everyWeek" },
+  month: { frequency: "monthly", every: "everyMonth" },
+  year: { frequency: "yearly", every: "everyYear" },
+};
+const RULE_ORDER: readonly RecurrenceRule[] = ["day", "week", "month", "year"];
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-
-const everyKey = (rule: RecurrenceRule) =>
-  RULES.find(([candidate]) => candidate === rule)?.[2] ?? "everyWeek";
 
 /** The body of Repeat: frequency, interval, weekday and what it will read as. */
 export function RepeatBody({
@@ -50,9 +48,9 @@ export function RepeatBody({
     <SheetBody contentClassName="gap-2">
       <SectionLabel>{text("frequency")}</SectionLabel>
       <Segmented
-        segments={RULES.map(([rule, key]) => ({
+        segments={RULE_ORDER.map((rule) => ({
           value: rule,
-          label: text(key),
+          label: text(RULES[rule].frequency),
           testID: `repeat-frequency-${rule}`,
         }))}
         testID="repeat-frequency"
@@ -74,7 +72,7 @@ export function RepeatBody({
             onIncrement={() => onChange(stepRecurrenceInterval(pattern, 1))}
           >
             <Text className="text-foreground text-[15px] font-semibold" testID="repeat-interval">
-              {text(everyKey(pattern.rule), { interval: pattern.interval })}
+              {text(RULES[pattern.rule].every, { interval: pattern.interval })}
             </Text>
           </Stepper>
         </>
