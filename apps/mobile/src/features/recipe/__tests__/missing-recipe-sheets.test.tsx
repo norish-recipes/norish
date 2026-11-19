@@ -9,6 +9,12 @@ type Props = { testID?: string; children?: ReactNode };
 // A link to a recipe that is gone: the page store has nothing, and the server said NOT_FOUND.
 vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("@/components/toggle-chip", () => ({ ToggleChip: () => null }));
+vi.mock("@/components/card", () => ({ Card: () => null }));
+vi.mock("@/components/pill", () => ({ Pill: () => null }));
+vi.mock("@/components/pill-button", () => ({ PillButton: () => null }));
+vi.mock("@/components/segmented", () => ({ Segmented: () => null }));
+vi.mock("@/components/stepper", () => ({ Stepper: () => null }));
+vi.mock("@/components/servings-stepper", () => ({ useServingsStepper: () => ({}) }));
 vi.mock("react-native", () => ({
   View: ({ testID, children }: Props) => <div data-testid={testID}>{children}</div>,
   Text: ({ children }: Props) => <span>{children}</span>,
@@ -47,7 +53,8 @@ vi.mock("@norish/shared-react/recipes", async () => {
   const { TRPCClientError } = await import("@trpc/client");
 
   return {
-    MIN_SERVINGS: 0.1,
+    servingsDown: (servings: number) => servings,
+    servingsUp: (servings: number) => servings,
     useRecipeQuery: () => ({ recipe: null, error: new TRPCClientError("") }),
     // As the real hook: it throws without a recipe.
     useLoadedPageRecipe: () => {

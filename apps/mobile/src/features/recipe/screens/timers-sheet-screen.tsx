@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
+import { Card } from "@/components/card";
 import { Sheet } from "@/components/sheet";
 import { openAfterSheet, useSheetPresenting } from "@/lib/after-sheet";
 import { cookModeRoute } from "@/lib/tab-routes";
@@ -26,20 +27,22 @@ export function TimersSheetScreen() {
         showsVerticalScrollIndicator={false}
         style={{ maxHeight: height * MAX_HEIGHT_SHARE }}
       >
-        <View className="pb-4">
-          <AllTimers
-            onEmpty={() => router.back()}
-            onOpen={(timer) => {
-              const cook = cookModeRoute(timer.recipeId, timer.stepIndex);
+        <View className="px-4 pb-4">
+          <Card>
+            <AllTimers
+              onEmpty={() => router.back()}
+              onOpen={(timer) => {
+                const cook = cookModeRoute(timer.recipeId, timer.stepIndex);
 
-              // UIKit cannot present cook mode while the sheet is still leaving.
-              openAfterSheet(
-                sheet,
-                () => router.back(),
-                () => router.push(cook)
-              );
-            }}
-          />
+                // UIKit cannot present cook mode while the sheet is still leaving.
+                openAfterSheet(
+                  sheet,
+                  () => router.back(),
+                  () => router.push(cook)
+                );
+              }}
+            />
+          </Card>
         </View>
       </ScrollView>
     </Sheet>

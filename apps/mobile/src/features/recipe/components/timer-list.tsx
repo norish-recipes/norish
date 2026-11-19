@@ -44,7 +44,7 @@ function TimerRow({
 
   return (
     <View
-      className={`flex-row items-center gap-1.5 py-2.5 pr-2 pl-3 ${first ? "" : "border-separator border-t"}`}
+      className={`flex-row items-center gap-1.5 py-2 pr-3 pl-4 ${first ? "" : "border-separator border-t"}`}
       testID={`timer-row-${timer.id}`}
     >
       {/* Cook mode's own pill has nothing to open, so its rows are no button. */}
@@ -128,6 +128,7 @@ function TimerRow({
       <IconButton
         icon="close"
         label={intl.formatMessage({ id: "recipes.cookMode.dismissTimer" })}
+        tone="danger"
         onPress={() => removeTimer(timer.id)}
       />
     </View>

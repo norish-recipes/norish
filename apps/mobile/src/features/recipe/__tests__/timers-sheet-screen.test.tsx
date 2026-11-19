@@ -17,6 +17,7 @@ vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
+vi.mock("@/components/card", () => ({ Card: ({ children }: Props) => <div>{children}</div> }));
 vi.mock("@/components/sheet", () => ({ Sheet: ({ children }: Props) => <div>{children}</div> }));
 vi.mock("../components/timer-list", () => ({
   AllTimers: ({ onOpen }: { onOpen: (timer: { recipeId: string; stepIndex: number }) => void }) => (
