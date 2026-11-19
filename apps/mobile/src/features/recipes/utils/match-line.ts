@@ -1,4 +1,6 @@
 import type { LibraryMatchDTO } from "@norish/shared/contracts";
+import { stripDiacritics } from "@norish/shared/lib/fold-name";
+import { searchTerms } from "@norish/shared/lib/search-terms";
 
 export type MatchSegment = { text: string; highlighted: boolean };
 
@@ -9,15 +11,7 @@ export type MatchLine = {
   segments: MatchSegment[];
 };
 
-const foldChar = (char: string) => char.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-
-/** The terms the server searched by: whitespace-split, tsquery characters dropped. */
-function searchTerms(search: string): string[] {
-  return search
-    .split(/\s+/)
-    .map((term) => foldChar(term.replace(/[&|!():<>*\\'"]/g, "")))
-    .filter((term) => term.length > 0);
-}
+const foldChar = (text: string) => stripDiacritics(text).toLowerCase();
 
 /**
  * `text` split around the places a search term starts a word, ignoring case and accents.
@@ -43,7 +37,7 @@ export function highlightSegments(text: string, search: string): MatchSegment[] 
 
   const marked: [number, number][] = [];
 
-  for (const term of searchTerms(search)) {
+  for (const term of searchTerms(search).map(foldChar)) {
     for (let from = folded.indexOf(term); from !== -1; from = folded.indexOf(term, from + 1)) {
       const startsWord = from === 0 || !/[\p{L}\p{N}]/u.test(folded[from - 1]!);
 

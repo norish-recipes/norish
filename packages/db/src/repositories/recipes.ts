@@ -29,6 +29,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
+import { searchTerms } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
@@ -387,15 +388,8 @@ export { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
 /** The text as a prefix-OR tsquery body, or null when nothing searchable is left. */
 function searchTsqueryTerms(search: string): string | null {
-  // Sanitize terms to remove PostgreSQL tsquery special characters.
-  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
-
   return (
-    search
-      .trim()
-      .split(/\s+/)
-      .map(sanitizeTsqueryTerm)
-      .filter((term) => term.length > 0)
+    searchTerms(search)
       .map((term) => `${term}:*`)
       .join(" | ") || null
   );
