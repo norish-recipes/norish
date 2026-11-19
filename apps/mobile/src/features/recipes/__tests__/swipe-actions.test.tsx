@@ -70,6 +70,7 @@ vi.mock("heroui-native", () => ({ useThemeColor: () => ["white"] }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 
 const { SwipeActions } = await import("@/features/recipes/components/swipe-actions");
+type Handle = import("@/features/recipes/components/swipe-actions").SwipeActionsHandle;
 
 const actions = ["groceries", "plan", "delete"].map((key) => ({
   key: key as "groceries",
@@ -78,8 +79,8 @@ const actions = ["groceries", "plan", "delete"].map((key) => ({
   testID: key,
 }));
 // A list row with three actions opens at 216 pt; the full swipe is 64 pt further.
-const ui = () => (
-  <SwipeActions actions={actions} variant="list">
+const ui = (ref?: React.Ref<Handle>, itemKey = "r1") => (
+  <SwipeActions ref={ref} actions={actions} itemKey={itemKey} variant="list">
     {null}
   </SwipeActions>
 );
@@ -157,5 +158,24 @@ describe("SwipeActions", () => {
 
     expect(actions[0]!.onPress).toHaveBeenCalledTimes(1);
     expect(haptics.mediumImpact).toHaveBeenCalledTimes(1);
+  });
+
+  it("plays the delete, then hands over the removal once; a recycled cell draws its new item", () => {
+    vi.useFakeTimers();
+    const ref = React.createRef<Handle>();
+    const remove = vi.fn();
+    const { queryByTestId, rerender } = render(ui(ref));
+
+    act(() => ref.current!.leave(remove));
+    expect(queryByTestId("card-leaving")).not.toBeNull();
+    expect(remove).not.toHaveBeenCalled();
+
+    act(() => void vi.advanceTimersByTime(460));
+    expect(remove).toHaveBeenCalledTimes(1);
+
+    // The removed card's cell, recycled for another recipe, is not hidden.
+    rerender(ui(ref, "r2"));
+    expect(queryByTestId("card-leaving")).toBeNull();
+    vi.useRealTimers();
   });
 });

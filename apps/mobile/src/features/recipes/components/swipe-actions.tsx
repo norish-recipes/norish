@@ -1,15 +1,18 @@
-import type { ComponentProps, ComponentRef, ReactNode } from "react";
+import type { ComponentProps, ComponentRef, ReactNode, Ref } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
-import React, { useRef, useState } from "react";
+import React, { useImperativeHandle, useRef, useState } from "react";
 import { Text, useWindowDimensions, View } from "react-native";
 import { GestureDetector, useManualGesture } from "react-native-gesture-handler";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
+  Easing,
   useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withDelay,
+  withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { PressableScale } from "@/components/pressable-scale";
@@ -44,6 +47,17 @@ const GROUND: Record<SwipeAction["key"], string> = {
   plan: "bg-plan",
   delete: "bg-danger",
 };
+
+/** Plays the card's delete, then calls `done`, which removes it from the list. */
+export type SwipeActionsHandle = { leave: (done: () => void) => void };
+
+// The web card's delete: red fills it from the right as its content fades, then the red fades.
+const LEAVE_EASE = Easing.out(Easing.ease);
+const FILL_MS = 220;
+const CONTENT_FADE_MS = 180;
+const RED_FADE_MS = 240;
+// ponytail: the removal is async, so the card stays hidden this long; a failed delete brings it back after it.
+const HIDDEN_MS = 1000;
 
 // How far a card is dragged, in pt, for a release to open it: ReanimatedSwipeable opens when the
 // drag (plus a toss from its velocity) passes `-rightThreshold`, so the tick uses the same value.
@@ -80,17 +94,48 @@ const CIRCLE_SHADOW = {
   shadowOffset: { width: 0, height: 2 },
 };
 
-/** The card's swipe-left actions: coloured circles on the page with a neutral label under each. */
+/** The card's swipe-left actions: coloured circles on the page with a neutral label under each.
+ * `ref` plays the card's delete; `itemKey` says which item that hid, as a recycled cell draws another. */
 export function SwipeActions({
+  ref,
+  itemKey,
   variant,
   actions,
   children,
 }: {
+  ref?: Ref<SwipeActionsHandle>;
+  itemKey: string;
   variant: RecipeViewMode;
   actions: SwipeAction[];
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const [leftKey, setLeftKey] = useState<string | null>(null);
+  const leaving = leftKey === itemKey;
+  const fill = useSharedValue(0);
+  const content = useSharedValue(1);
+  const red = useSharedValue(1);
+  const contentStyle = useAnimatedStyle(() => ({ opacity: leaving ? content.get() : 1 }));
+  const redStyle = useAnimatedStyle(() => ({ width: `${fill.get() * 100}%`, opacity: red.get() }));
+
+  useImperativeHandle(ref, () => ({
+    leave: (done) => {
+      if (reduceMotion) return done();
+      fill.set(0);
+      content.set(1);
+      red.set(1);
+      setLeftKey(itemKey);
+      fill.set(withTiming(1, { duration: FILL_MS, easing: LEAVE_EASE }));
+      content.set(withTiming(0, { duration: CONTENT_FADE_MS, easing: LEAVE_EASE }));
+      red.set(withDelay(FILL_MS, withTiming(0, { duration: RED_FADE_MS, easing: LEAVE_EASE })));
+      // On a timer, so a cancelled animation or a cell gone mid-way still deletes what was confirmed.
+      setTimeout(() => {
+        done();
+        setTimeout(() => setLeftKey(null), HIDDEN_MS);
+      }, FILL_MS + RED_FADE_MS);
+    },
+  }));
   const rowRef = useRef<SwipeableMethods>(null);
   const boxRef = useRef<ComponentRef<typeof View>>(null);
   const openRow = useOpenRow(rowRef);
@@ -171,8 +216,18 @@ export function SwipeActions({
             } else openRow.opened();
           }}
         >
-          {children}
+          <Animated.View className={variant === "grid" ? "flex-1" : undefined} style={contentStyle}>
+            {children}
+          </Animated.View>
         </ReanimatedSwipeable>
+        {leaving ? (
+          <Animated.View
+            className="bg-danger absolute inset-y-0 right-0"
+            pointerEvents="none"
+            style={[{ borderRadius: variant === "grid" ? 24 : 20 }, redStyle]}
+            testID="card-leaving"
+          />
+        ) : null}
       </View>
     </GestureDetector>
   );
