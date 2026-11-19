@@ -49,7 +49,9 @@ describe("createLibraryFiltersStore", () => {
     const store = createLibraryFiltersStore({ ...TITLE_SORTED, libraryType: "recipes" });
 
     store.setState({ keepOnClear: ["rawInput", "sortMode"] });
-    store.getState().setFilters({ rawInput: "soup", searchTags: ["Quick"], categories: ["Dinner"] });
+    store
+      .getState()
+      .setFilters({ rawInput: "soup", searchTags: ["Quick"], categories: ["Dinner"] });
     store.getState().clearFilters();
 
     expect(store.getState().filters).toEqual({
