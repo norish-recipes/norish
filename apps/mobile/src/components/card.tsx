@@ -17,16 +17,20 @@ export function Card({ children, testID }: { children: ReactNode; testID?: strin
 }
 
 /** A card row: its label, a `value` (with a Store's dot), then a chevron where `onPress` opens a
- * choice, or `children` as the end. An `icon` adds a glyph before the label (and a `hint` under
- * it); the hairline above all but the `first` starts at the label. */
+ * choice, or `children` as the end. An `icon` or a 40 pt `media` picture goes before the label (and
+ * a `hint` under it), a `leading` node (a choice's dot) before it at the row's own height; the
+ * hairline above all but the `first` starts at the label. */
 export function CardRow({
   label,
   hint,
   icon,
+  media,
+  leading,
   value,
   dotColor,
   first = false,
   disabled = false,
+  chevron = true,
   testID,
   onPress,
   children,
@@ -34,23 +38,28 @@ export function CardRow({
   label: string;
   hint?: string;
   icon?: ComponentProps<typeof Ionicons>["name"];
+  media?: ReactNode;
+  leading?: ReactNode;
   value?: string;
   dotColor?: string;
   first?: boolean;
   /** Dimmed to 40% and gives no press. */
   disabled?: boolean;
+  /** The chevron a pressable row ends with; false where its `children` end it, as a choice's check. */
+  chevron?: boolean;
   testID?: string;
   onPress?: () => void;
   children?: ReactNode;
 }) {
   const muted = useTokenColor("muted");
   const accentText = useTokenColor("accent-text");
-  const className = `${icon ? "min-h-[60px]" : "min-h-[52px]"} flex-row items-center gap-3 px-4 ${disabled ? "opacity-40" : ""}`;
+  const tall = icon || media;
+  const className = `${tall ? "min-h-[60px]" : "min-h-[52px]"} flex-row items-center gap-3 px-4 ${disabled ? "opacity-40" : ""}`;
   const content = (
     <>
       {first ? null : (
         <View
-          className={`bg-line absolute top-0 right-0 h-px ${icon ? "left-[68px]" : "left-4"}`}
+          className={`bg-line absolute top-0 right-0 h-px ${tall ? "left-[68px]" : "left-4"}`}
         />
       )}
       {icon ? (
@@ -58,6 +67,8 @@ export function CardRow({
           <Ionicons color={accentText} name={icon} size={23} />
         </View>
       ) : null}
+      {media}
+      {leading}
       {hint ? (
         <View className="min-w-0 flex-1 gap-px">
           <Text className="text-foreground text-base">{label}</Text>
@@ -75,7 +86,7 @@ export function CardRow({
         </Text>
       )}
       {children}
-      {onPress ? <Ionicons color={muted} name="chevron-forward" size={16} /> : null}
+      {onPress && chevron ? <Ionicons color={muted} name="chevron-forward" size={16} /> : null}
     </>
   );
 

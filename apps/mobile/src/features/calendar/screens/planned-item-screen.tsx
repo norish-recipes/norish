@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { View } from "react-native";
+import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { PlanPicker } from "@/components/plan-block";
 import { PlannedItemSkeleton } from "@/components/planned-item-skeleton";
@@ -11,9 +12,8 @@ import { useConfirmRemovePlanned } from "@/hooks/use-confirm-remove-planned";
 import { usePlannedItemSheet } from "@/hooks/use-planned-item-sheet";
 import { openAfterSheet, useSheetPresenting } from "@/lib/after-sheet";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { TextField, useThemeColor } from "heroui-native";
+import { TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -44,7 +44,6 @@ export function PlannedItemScreen() {
 function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: string }) {
   const intl = useIntl();
   const router = useRouter();
-  const [muted] = useThemeColor(["muted"] as const);
   const { navigation } = usePlatform();
   const confirmRemove = useConfirmRemovePlanned();
   const { title, subtitle } = usePlannedItemText()(item);
@@ -77,27 +76,24 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
     >
       <SheetBody>
         {recipeId ? (
-          <Pressable
-            accessibilityRole="button"
-            className="bg-sand border-stroke mb-3 min-h-[60px] flex-row items-center gap-3 rounded-[22px] border-[0.5px] px-4"
-            testID="planned-item-recipe"
-            onPress={() => {
-              openAfterSheet(
-                sheet,
-                () => router.back(),
-                () => navigation.toRecipe(recipeId)
-              );
-            }}
-          >
-            <PlannedThumb className="size-10 rounded-xl" item={item} />
-            <View className="min-w-0 flex-1">
-              <Text className="text-foreground text-base font-medium" numberOfLines={2}>
-                {title}
-              </Text>
-              {subtitle ? <Text className="text-muted text-sm">{subtitle}</Text> : null}
-            </View>
-            <Ionicons color={muted} name="chevron-forward" size={16} />
-          </Pressable>
+          <View className="mb-3">
+            <Card>
+              <CardRow
+                first
+                hint={subtitle || undefined}
+                label={title}
+                media={<PlannedThumb className="size-10 rounded-xl" item={item} />}
+                testID="planned-item-recipe"
+                onPress={() => {
+                  openAfterSheet(
+                    sheet,
+                    () => router.back(),
+                    () => navigation.toRecipe(recipeId)
+                  );
+                }}
+              />
+            </Card>
+          </View>
         ) : null}
         {recipeId ? null : (
           <TextField className="mb-3">

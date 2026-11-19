@@ -20,6 +20,7 @@ vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "g1" }),
   useRouter: () => ({ back: held.back }),
 }));
+vi.mock("@/components/card", () => ({ CardRow: () => null }));
 vi.mock("@/components/sheet", () => ({ Sheet: () => null, SheetBody: () => null }));
 vi.mock("../components/grocery-sheet", () => ({
   // The header actions the screen hands the sheet, pressed by their own ids.

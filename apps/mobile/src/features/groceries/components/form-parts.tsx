@@ -1,8 +1,8 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Pill } from "@/components/pill";
 import { SheetInput } from "@/components/sheet-input";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -62,7 +62,6 @@ export function RepeatPills({
 }) {
   const intl = useIntl();
   const label = useRecurrenceLabel();
-  const accent = useAccentTextColor();
   const [muted] = useThemeColor(["muted"] as const);
 
   if (!detected && !confirmed) return null;
@@ -81,9 +80,11 @@ export function RepeatPills({
         </Pressable>
       ) : null}
       {confirmed ? (
-        <View className="bg-sand border-stroke h-8 flex-row items-center rounded-full border-[0.5px] pl-3">
+        <View className="flex-row items-center">
           <Pressable accessibilityRole="button" testID="repeat-confirmed" onPress={onEdit}>
-            <Text className="text-accent-text text-sm font-medium">{label(confirmed)}</Text>
+            <Pill icon="repeat" size="tag">
+              {label(confirmed)}
+            </Pill>
           </Pressable>
           <Pressable
             accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.removeRepeat" })}
@@ -92,7 +93,7 @@ export function RepeatPills({
             testID="repeat-remove"
             onPress={onRemove}
           >
-            <Ionicons color={accent} name="close" size={14} />
+            <Ionicons color={muted} name="close" size={14} />
           </Pressable>
         </View>
       ) : null}

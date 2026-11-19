@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { ReactNode } from "react";
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -32,6 +33,12 @@ vi.mock(
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).swiftUiModifiers
 );
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  CardRow: ({ testID, onPress }: { testID: string; onPress: () => void }) => (
+    <button data-testid={testID} type="button" onClick={onPress} />
+  ),
+}));
 vi.mock("@/components/icon-button", () => ({ IconButton: () => null }));
 vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
