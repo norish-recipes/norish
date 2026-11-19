@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type { ScrollView } from "react-native";
+import React, { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { stripDays } from "@/lib/strip-days";
@@ -30,13 +31,20 @@ export function DayStrip({
   const intl = useIntl();
   const accentText = useAccentTextColor();
   const days = stripDays(useToday());
-  // Opens with the picked day in view, not scrolled back to today.
-  const [start] = useState(() => Math.max(0, days.indexOf(date) * (CHIP + GAP) - CHIP));
+  const scrollRef = useRef<ScrollView>(null);
+  const index = days.indexOf(date);
+  const start = Math.max(0, index * (CHIP + GAP) - CHIP);
+
+  // Whichever control picked the day, the strip shows it; a day past the strip leaves it be.
+  useEffect(() => {
+    if (index >= 0) scrollRef.current?.scrollTo({ x: start, animated: true });
+  }, [index, start]);
 
   return (
     // heroui-native has no day strip, so these chips are hand-built.
     <SheetStrip
       accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
+      ref={scrollRef}
       contentOffset={{ x: start, y: 0 }}
       testID={`${testID}-days`}
     >
