@@ -4,12 +4,12 @@
 
 **Blocked by:** 50
 
-**Status:** ready
+**Status:** done
 
-- [ ] Subtitle support, used where the boards show one.
-- [ ] The primary renders as the native prominent bar item with the accent tint (not a solid capsule, not untinted); disabled = plain glass.
-- [ ] No sheet paints its own header strip; the system scroll edge effect stays.
-- [ ] Tests for the subtitle and the menu/secondary split; gates green.
+- [x] Subtitle support, used where the boards show one.
+- [x] The primary renders as the native prominent bar item with the accent tint (not a solid capsule, not untinted); disabled = plain glass.
+- [x] No sheet paints its own header strip; the system scroll edge effect stays.
+- [x] Tests for the subtitle and the menu/secondary split; gates green.
 
 ## Comments
 
