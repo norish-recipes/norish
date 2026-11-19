@@ -46,3 +46,13 @@
 
 - Round 1 fixes: 1-10, 12-15 done (typed servings tap the stepper value, test in `typed-servings.test.tsx`; kit gained `IconMenu`, `SectionLabel`, `CardRow` `media`/`leading`/`detail`/`chevron`; `pickRowClass` and `GlassIconMenu` removed; `fromRecipe` and `paste.label` left every locale; `groceries.item.items` reads "No items" at zero and the store row counts open items).
 - Not fixed: 11 does not hold, the first result row follows the Random/Note row in the same card, so its hairline is the divider (`header` card, `plan-recipe-screen.tsx`). Share expiry is now a menu row (item 12 held: "1 settimana", "Безстроково" overflow a 71 pt segment). Maestro flows need no change (testIDs kept).
+
+- Re-review of the fix range (Opus), dispositions:
+  1. fix (bug): 9012aca77 removed `common.import.paste.label` from every locale but web's `import-from-paste-modal.tsx:66` reads `t("label")`; restore it in every locale (revert that commit).
+  2. fix (bug): the typed servings field goes stale (`typed-servings.tsx:37-52`): type 6, tap + -> servings 7, field still "6" (the sheet keeps taps with `keyboardShouldPersistTaps: "handled"`). The field shows the current servings after any outside change (stepper, chip) and leaves edit mode on those presses. Test first.
+  3. fix: `grocery-lines-section.tsx:42` doubles the label padding (`HEADER` px-2 + `SectionLabel` px-2); the Servings and Share labels moved from px-1 to px-2. `SectionLabel` carries the board's label inset (`Panel.dc.html` label rule) and no caller adds its own.
+  4. fix: `choice-list.tsx:26-38` lost `accessibilityState={{ selected }}` when it moved onto `CardRow` (`card.tsx:105` passes only disabled); `CardRow` takes `selected` and passes it through.
+  5. fix: the delete-store alert now counts only open items (`manage-stores-screen.tsx:94`) while deleting a store affects every grocery in it (web's dialog counts all via `stores.getGroceryCount`); the alert counts all, the row keeps open items.
+  6. reject: the decimal pad has no return key; tapping outside the field ends editing, as in the other sheets' numeric fields.
+
+- Round 2 fixes: 1-5 done (paste label restored; typed servings leave edit on outside changes, tested; label inset once; choice rows report selected; delete-store alert counts all lines, tested). 6 rejected.
