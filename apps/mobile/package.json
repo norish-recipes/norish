@@ -30,6 +30,7 @@
     "@norish/shared-react": "workspace:*",
     "@norish/tailwind-config": "workspace:*",
     "@norish/trpc": "workspace:*",
+    "@shopify/flash-list": "2.3.2",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",

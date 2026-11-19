@@ -1,5 +1,6 @@
-import { useEffect } from "react";
-import { useIsFocused } from "expo-router";
+import type { NativeStackNavigationProp } from "expo-router/native-stack";
+import { useEffect, useState } from "react";
+import { useIsFocused, useNavigation } from "expo-router";
 
 import { createMark } from "./mark";
 
@@ -33,7 +34,19 @@ export function useHideTabBar() {
 }
 
 /** Marks a sheet open while it is mounted and in front, so a link to another tab shows that tab's
- * bar: the shared `Sheet` calls this. */
+ * bar: the shared `Sheet` calls this. The bar returns as the sheet starts sliding down, not after. */
 export function useMarkSheetOpen() {
-  useCounted(sheets, useIsFocused());
+  const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    const stops = [
+      navigation.addListener("transitionStart", ({ data }) => setClosing(data.closing)),
+      navigation.addListener("gestureCancel", () => setClosing(false)),
+    ];
+
+    return () => stops.forEach((stop) => stop());
+  }, [navigation]);
+
+  useCounted(sheets, useIsFocused() && !closing);
 }

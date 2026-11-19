@@ -1,6 +1,6 @@
 import type { CardActions } from "@/hooks/use-card-actions";
 import type { ReactNode } from "react";
-import React from "react";
+import React, { memo, useRef } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
@@ -15,7 +15,7 @@ import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
 
 import type { RecipeMenuAction } from "../utils/card-actions";
-import type { SwipeAction } from "./swipe-actions";
+import type { SwipeAction, SwipeActionsHandle } from "./swipe-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import {
   RECIPE_ACTION_DEFINITIONS,
@@ -36,20 +36,31 @@ type Props = {
   actions: CardActions;
 };
 
-/** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions. */
-export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: Props) {
+/** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions.
+ * Memoised: a page or refetch redraws the list's cells, and an unchanged card skips its gestures and menu. */
+export const RecipeCard = memo(function RecipeCard({
+  recipe,
+  variant,
+  isFavorite,
+  allergies,
+  actions,
+}: Props) {
   const intl = useIntl();
   const { navigation } = usePlatform();
   const facts = recipeCardFacts(recipe, allergies);
   const Card = variant === "grid" ? GridCard : RowCard;
   const canDelete = actions.canDelete(recipe);
+  const swipeRef = useRef<SwipeActionsHandle>(null);
   const handlers: Record<RecipeMenuAction, () => void> = {
     favourite: () => actions.toggleFavourite(recipe),
     groceries: () => actions.addToGroceries(recipe),
     plan: () => actions.plan(recipe),
     addToCookbook: () => actions.addToCookbook(recipe),
     removeFromCookbook: () => actions.removeFromCookbook(recipe),
-    delete: () => actions.deleteRecipe(recipe),
+    delete: () =>
+      actions.deleteRecipe(recipe, undefined, (remove) =>
+        swipeRef.current ? swipeRef.current.leave(remove) : remove()
+      ),
   };
   const definition = (key: RecipeMenuAction) =>
     RECIPE_ACTION_DEFINITIONS[key === "favourite" && isFavorite ? "unfavourite" : key];
@@ -84,7 +95,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
   });
 
   return (
-    <SwipeActions actions={swipe} variant={variant}>
+    <SwipeActions ref={swipeRef} actions={swipe} itemKey={recipe.id} variant={variant}>
       <View
         accessible
         {...accessibilityProps}
@@ -110,7 +121,7 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
       </View>
     </SwipeActions>
   );
-}
+});
 
 type CardProps = {
   recipe: RecipeDashboardDTO;
@@ -189,7 +200,7 @@ function GridCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
         {isFavorite ? <FavouriteMark size={32} /> : null}
         <TagChips
           allergySet={allergySet}
-          look="glass"
+          look="photo"
           tags={tagNames}
           testID={`recipe-card-tags-${recipe.id}`}
         />

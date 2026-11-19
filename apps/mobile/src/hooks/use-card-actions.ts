@@ -53,15 +53,23 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
       setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook });
       removeMember(recipe.id);
     },
-    deleteRecipe: (recipe: Recipe, onDeleted?: () => void) =>
+    /** `leave` plays the card's delete before it calls `remove`. */
+    deleteRecipe: (
+      recipe: Recipe,
+      onDeleted?: () => void,
+      leave?: (remove: () => void) => void
+    ) => {
+      const remove = () => {
+        deleteRecipes([{ id: recipe.id, version: recipe.version }]);
+        onDeleted?.();
+      };
+
       confirm({
         title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
         message: intl.formatMessage({ id: "recipes.deleteModal.warning" }),
-        onConfirm: () => {
-          deleteRecipes([{ id: recipe.id, version: recipe.version }]);
-          onDeleted?.();
-        },
-      }),
+        onConfirm: () => (leave ? leave(remove) : remove()),
+      });
+    },
     addRecipes: (cookbook: Cookbook) =>
       router.push({
         pathname: "/cookbook-add-recipes",

@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
  * runs on): fixed, as the measured header height arrives a few renders late. */
 const BAR_HEIGHT = 54;
 
-/** A tab's list scroll, wired once: `onScroll` goes on the list, and `offset` (points scrolled past
- * the rest under the bar, on the UI thread) drives the title. */
+/** A tab's list scroll, wired once: `onScroll` goes on a ScrollView (`CardList` sets `offset` from its
+ * own), and `offset` (points scrolled past the rest under the bar, on the UI thread) drives the title. */
 export function useTabScroll() {
   const barBottom = useSafeAreaInsets().top + BAR_HEIGHT;
   const offset = useSharedValue(0);
