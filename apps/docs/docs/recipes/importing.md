@@ -20,6 +20,12 @@ paste the link there instead.
 
 ![Norish asking to import a copied link](/img/screenshots/import-clipboard-prompt.png)
 
+The notes in a WP Recipe Maker or Tasty Recipes recipe card import into the
+recipe's notes. A page with several recipe cards imports no notes, because
+Norish can't tell which belong to the recipe.
+
+![The Notes card on a recipe imported from a link](/img/screenshots/import-recipe-notes.png)
+
 Video links from YouTube, Instagram, TikTok and other sites import too when
 [video import](../configuration/ai-provider.md#video-import) is set up.
 

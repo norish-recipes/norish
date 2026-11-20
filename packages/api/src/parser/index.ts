@@ -12,6 +12,7 @@ import {
 } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
 import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
+import { extractRecipeNotes } from "@norish/api/parser/recipe-notes";
 import {
   getContentIndicators,
   isAIEnabled,
@@ -110,6 +111,15 @@ function getStructuredFailureMessage(code: string): string {
   return `Python parser failed: ${code}`;
 }
 
+/** The recipe with the notes from the page's recipe card, unless it already has some. */
+function withPageNotes(recipe: FullRecipeInsertDTO, html: string): FullRecipeInsertDTO {
+  if (recipe.notes) return recipe;
+
+  const notes = extractRecipeNotes(html);
+
+  return notes ? { ...recipe, notes } : recipe;
+}
+
 /**
  * Attempt AI extraction. If requireAI = true, throws when AI is disabled.
  *
@@ -138,7 +148,10 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return await extractRecipeWithAI(source, recipeId, { url, jsonLd, householdCategories });
+    return withPageNotes(
+      await extractRecipeWithAI(source, recipeId, { url, jsonLd, householdCategories }),
+      source
+    );
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -202,7 +215,7 @@ async function tryStructuredParser(
 
     if (hasRecipeName(adapted)) {
       return {
-        recipe: adapted,
+        recipe: withPageNotes(adapted, html),
         failure: null,
         ingredientLines: collectIngredientStrings(response.recipe),
       };
