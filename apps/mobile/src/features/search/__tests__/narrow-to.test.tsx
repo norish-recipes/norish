@@ -49,6 +49,15 @@ const view = (text: string, confirmed: boolean) =>
     focused: true,
     resultCount: 3,
   });
+// The page the real field text, session flag and chips choose; the result count is still loading.
+const page = (field: { text: string }) =>
+  searchView({
+    text: field.text,
+    confirmed: getSearchConfirmed(),
+    hasChips: filterChips(state()).length > 0,
+    focused: true,
+    resultCount: null,
+  });
 
 describe("a Narrow-to row", () => {
   beforeEach(() => {
@@ -69,7 +78,7 @@ describe("a Narrow-to row", () => {
     expect(queryClient.getQueryData(["names", chicken])).toEqual({ [chicken]: "Kip" });
     expect(state().rawInput).toBe("");
     expect(result.current.field.text).toBe("");
-    expect(view(state().rawInput, false)).toBe("results");
+    expect(page(result.current.field)).toBe("results");
   });
 
   it("adds one Tag chip, and one Category chip, each clearing the text", () => {
@@ -87,7 +96,7 @@ describe("a Narrow-to row", () => {
 
     expect(state().categories).toEqual(["Dinner"]);
     expect(filterChips(state())).toHaveLength(2);
-    expect(view(state().rawInput, false)).toBe("results");
+    expect(page(result.current.field)).toBe("results");
   });
 
   it("adds a second chip on a second narrow, and still shows Results", () => {
@@ -102,7 +111,7 @@ describe("a Narrow-to row", () => {
     act(() => result.current.narrowTo({ kind: "tag", name: "quick" }));
 
     expect(filterChips(state())).toHaveLength(2);
-    expect(view(state().rawInput, false)).toBe("results");
+    expect(page(result.current.field)).toBe("results");
   });
 });
 
