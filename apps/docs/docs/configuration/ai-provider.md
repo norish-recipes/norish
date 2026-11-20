@@ -195,7 +195,7 @@ job used.
 ### Enriching existing recipes
 
 Automatic enrichment only runs on new recipes. To catch up the rest, use
-**Settings => Admin => AI & processing => Bulk enrichment => Enrich**. It runs every enabled enrichment on every recipe, which can be costly.
+**Settings => Admin => AI & processing => Bulk enrichment => Enrich**. It runs every enabled enrichment on every recipe, which can be costly. Follow its progress in the [job monitor](./admin-settings.md#job-queues).
 
 ![Bulk enrichment image count](/img/screenshots/bulk-enrichment-image-count.png)
 

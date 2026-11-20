@@ -128,11 +128,13 @@ location /norish {
 
 ## Auth rate limiting
 
-| Variable                  | Description                        | Default |
-| ------------------------- | ---------------------------------- | ------- |
-| `AUTH_RATE_LIMIT_ENABLED` | Enable auth endpoint rate limiting | `true`  |
-| `AUTH_RATE_LIMIT_WINDOW`  | Window length in seconds           | `60`    |
-| `AUTH_RATE_LIMIT_MAX`     | Requests allowed per window        | `20`    |
+| Variable                    | Description                             | Default |
+| --------------------------- | --------------------------------------- | ------- |
+| `AUTH_RATE_LIMIT_ENABLED`   | Enable auth endpoint rate limiting      | `true`  |
+| `AUTH_RATE_LIMIT_WINDOW`    | Window length in seconds                | `60`    |
+| `AUTH_RATE_LIMIT_MAX`       | Requests allowed per window             | `20`    |
+| `API_KEY_RATE_LIMIT_WINDOW` | API key window length in seconds        | `3600`  |
+| `API_KEY_RATE_LIMIT_MAX`    | Requests allowed per API key per window | `500`   |
 
 :::warning
 Turning this off removes brute-force protection from sign-in.
