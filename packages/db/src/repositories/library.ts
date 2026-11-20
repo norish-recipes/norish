@@ -39,7 +39,7 @@ import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
-import { lineNamesKindSql } from "./ingredient-kinds";
+import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { rowsOf } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
@@ -433,19 +433,13 @@ export async function listLibrarySuggestions(
  * recipes naming it or a kind of it), most first. The walk down the kinds starts at the matches. */
 async function matchedFoods(visible: SQL, search: IngredientSearch) {
   const result = await db.execute(sql`
-    WITH RECURSIVE candidates AS (
-      SELECT ${ingredients.id} AS id FROM ${ingredients} WHERE ${matchingSearch(search, undefined, true)}
-    ), walk(root, id, depth) AS (
-      SELECT id, id, 0 FROM candidates
-      UNION
-      SELECT walk.root, kind.id, walk.depth + 1 FROM walk
-      JOIN ${ingredients} kind ON kind.parent_id = walk.id
-      WHERE walk.depth < 32
-    )
+    WITH RECURSIVE ${kindWalkSql(
+      sql`SELECT ${ingredients.id} FROM ${ingredients} WHERE ${matchingSearch(search, undefined, true)}`
+    )}
     SELECT ${ingredients.id} AS id, ${ingredients.name} AS name
-    FROM walk
-    JOIN ${ingredients} ON ${ingredients.id} = walk.root
-    JOIN ${ingredientAliases} spelling ON spelling.ingredient_id = walk.id
+    FROM kinds
+    JOIN ${ingredients} ON ${ingredients.id} = kinds.root
+    JOIN ${ingredientAliases} spelling ON spelling.ingredient_id = kinds.ingredient_id
     JOIN ${recipeIngredientFoods} food ON food.ingredient_alias_id = spelling.id
     JOIN ${recipeIngredients} line ON line.id = food.recipe_ingredient_id
     JOIN ${recipes} ON ${recipes.id} = line.recipe_id

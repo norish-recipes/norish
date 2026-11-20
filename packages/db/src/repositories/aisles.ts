@@ -7,6 +7,8 @@ import { db } from "@norish/db/drizzle";
 import { aisleLinks, aisles } from "@norish/db/schema";
 import { AisleLinkSelectSchema, AisleSelectSchema } from "@norish/shared/contracts/zod";
 
+import { uuidListSql } from "./raw-sql";
+
 const AislesSchema = z.array(AisleSelectSchema);
 const AisleLinksSchema = z.array(AisleLinkSelectSchema);
 
@@ -160,10 +162,7 @@ export async function listInheritedAisleLinks(
 ): Promise<AisleLinkDto[]> {
   if (storeIds.length === 0 || userIds.length === 0) return [];
 
-  const stores = sql.join(
-    storeIds.map((id) => sql`${id}::uuid`),
-    sql`, `
-  );
+  const stores = uuidListSql(storeIds);
   const users = sql.join(
     userIds.map((id) => sql`${id}`),
     sql`, `
