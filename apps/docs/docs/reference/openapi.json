@@ -5536,7 +5536,7 @@
       "get": {
         "operationId": "plannedRecipesRange",
         "summary": "Get planned recipes for a date range",
-        "description": "`start` and `end` are inclusive YYYY-MM-DD dates covering at most 366 days. `include=notes` also returns planned notes.",
+        "description": "`start` and `end` are inclusive YYYY-MM-DD dates covering at most 366 days; an impossible date, `end` before `start` or a longer range is a 400. `include=notes` also returns planned notes.",
         "tags": [
           "Planned Recipes"
         ],
@@ -5686,7 +5686,7 @@
             }
           },
           "400": {
-            "description": "Invalid dates, end before start, or a range over 366 days",
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": {
@@ -5710,7 +5710,7 @@
       "post": {
         "operationId": "plannedRecipeCreate",
         "summary": "Create a planned recipe or note",
-        "description": "Send `recipeId` to plan a recipe, or `title` to plan a note. Exactly one is required.",
+        "description": "Send `recipeId` to plan a recipe, or `title` to plan a note. Exactly one is required; neither or both is a 400.",
         "tags": [
           "Planned Recipes"
         ],
@@ -5788,7 +5788,7 @@
             }
           },
           "400": {
-            "description": "Invalid dates, end before start, or a range over 366 days",
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": {
@@ -6611,7 +6611,7 @@
           "message": {
             "type": "string",
             "description": "The error message",
-            "example": "Invalid dates, end before start, or a range over 366 days"
+            "example": "Invalid input"
           },
           "code": {
             "type": "string",
@@ -6641,11 +6641,11 @@
           "code"
         ],
         "additionalProperties": false,
-        "title": "Invalid dates, end before start, or a range over 366 days error (400)",
+        "title": "Invalid input error (400)",
         "description": "The error information",
         "example": {
           "code": "BAD_REQUEST",
-          "message": "Invalid dates, end before start, or a range over 366 days",
+          "message": "Invalid input",
           "issues": []
         }
       }

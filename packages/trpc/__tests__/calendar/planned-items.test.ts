@@ -312,6 +312,17 @@ describe("calendar planned recipe openapi procedures", () => {
     });
   });
 
+  it.each(["2026-13-01", "2026-00-10", "2026-01-32"])("names %s as no real date", async (start) => {
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.listPlannedRecipesRange({ start, end: "2026-12-31" })
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("Not a real date"),
+    });
+  });
+
   it("accepts a range of exactly 366 days", async () => {
     listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
 

@@ -46,7 +46,11 @@ const MAX_RANGE_DAYS = 366;
 const dayKey = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
-  .refine((v) => new Date(`${v}T00:00:00Z`).toISOString().startsWith(v), "Not a real date");
+  .refine((v) => {
+    const date = new Date(`${v}T00:00:00Z`);
+
+    return !isNaN(date.getTime()) && date.toISOString().startsWith(v);
+  }, "Not a real date");
 
 export const listPlannedRecipesRangeInput = z
   .object({ start: dayKey, end: dayKey, include: z.enum(["notes"]).optional() })
