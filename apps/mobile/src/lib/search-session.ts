@@ -35,8 +35,8 @@ export function resetSearchSession() {
   setSearchConfirmed(false);
 }
 
-/** Starts Search over the moment its account changes: a switch, sign-out or Session Expiry. A wipe
- * reopens the same account's data, so the session stays. */
+/** Starts Search over the moment its account changes: a direct switch; `endSession` covers
+ * sign-out and expiry. A wipe reopens the same account's data, so the session stays. */
 export function followSearchOwner(ownerData: CacheManager["ownerData"]): () => void {
   let sessionOwner = ownerData.owner();
 

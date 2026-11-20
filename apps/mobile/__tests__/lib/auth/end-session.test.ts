@@ -14,6 +14,8 @@ vi.mock("@/lib/calendar-widgets", () => ({
 }));
 
 const { endSession } = await import("@/lib/auth/end-session");
+const { getSearchConfirmed, SEARCH_START, searchStore, setSearchConfirmed } =
+  await import("@/lib/search-session");
 
 describe("endSession", () => {
   const authClient = {
@@ -47,6 +49,15 @@ describe("endSession", () => {
       "timers ended",
       "widgets cleared: Sign in",
     ]);
+  });
+
+  it("starts Search over, whatever the Offline Cache's owner signal did", async () => {
+    searchStore.getState().setFilters({ rawInput: "soup", searchTags: ["Quick"] });
+    setSearchConfirmed(true);
+
+    await endSession(authClient, "device", "Sign in");
+
+    expect([searchStore.getState().filters, getSearchConfirmed()]).toEqual([SEARCH_START, false]);
   });
 
   it("always succeeds: an unreachable server or a failed reset still ends it on this device", async () => {

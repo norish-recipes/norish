@@ -1,5 +1,6 @@
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import { clearCalendarWidgets } from "@/lib/calendar-widgets";
+import { resetSearchSession } from "@/lib/search-session";
 import { endRecipeTimers } from "@/lib/timer-notifications";
 import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
 
@@ -24,6 +25,9 @@ export async function endSession(
 ): Promise<void> {
   // A 401 may be a passing server error, so Session Expiry ends only the device's copy.
   if (scope === "everywhere") await signOutRemotely(authClient);
+
+  // Every sign-out and expiry passes here, so Search starts over even when the owner signal missed it.
+  resetSearchSession();
 
   // Not awaited: a socket mid-reconnect closes only once it opens. A retired client's 401s are ignored.
   void closeMobileTrpcConnections();
