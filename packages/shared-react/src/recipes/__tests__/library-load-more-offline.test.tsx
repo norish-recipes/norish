@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { useLibraryQuery } from "../use-library-query";
 
-const world = vi.hoisted(() => ({ offline: false, pages: [] as number[] }));
+const world = vi.hoisted(() => ({ offline: false, pages: [] as number[], lastPage: 1 }));
 
 vi.mock("../../offline/react", () => ({ useConnectivity: () => ({ isOffline: world.offline }) }));
 vi.mock("../../trpc", () => ({
@@ -20,7 +20,11 @@ vi.mock("../../trpc", () => ({
           queryFn: ({ pageParam }: { pageParam: number }) => {
             world.pages.push(pageParam);
 
-            return Promise.resolve({ items: [], total: 0, nextCursor: pageParam === 0 ? 1 : null });
+            return Promise.resolve({
+              items: [],
+              total: 0,
+              nextCursor: pageParam < world.lastPage ? pageParam + 1 : null,
+            });
           },
         }),
       },
@@ -114,5 +118,44 @@ describe("loadMore", () => {
     await act(async () => {});
 
     expect(world.pages).toEqual([0, 0]);
+  });
+
+  it("forgets the ask when the page count changed before Live, fetching no run of pages", async () => {
+    world.pages = [];
+    world.offline = false;
+    world.lastPage = 5;
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result, rerender } = renderHook(() => useLibraryQuery(), { wrapper });
+
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+    await act(() => result.current.loadMore());
+    await waitFor(() => expect(world.pages).toEqual([0, 1]));
+    await act(() => result.current.loadMore());
+    await waitFor(() => expect(world.pages).toEqual([0, 1, 2]));
+
+    world.offline = true;
+    rerender();
+    act(() => result.current.loadMore());
+    // The list shrank meanwhile: only its first page is held.
+    act(() =>
+      queryClient.setQueryData(
+        result.current.queryKey,
+        (data: { pages: unknown[]; pageParams: unknown[] }) => ({
+          pages: data.pages.slice(0, 1),
+          pageParams: data.pageParams.slice(0, 1),
+        })
+      )
+    );
+
+    world.offline = false;
+    rerender();
+    await act(async () => {});
+    await act(async () => {});
+
+    expect(world.pages).toEqual([0, 1, 2]);
+    world.lastPage = 1;
   });
 });

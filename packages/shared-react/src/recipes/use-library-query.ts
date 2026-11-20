@@ -72,8 +72,8 @@ export function useLibraryQuery(
   const items = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data?.pages]);
   const hasMore = hasNextPage ?? false;
   const queryHash = hashKey(queryKey);
-  // The query and page count a loadMore was swallowed Offline for; it is asked again when Live
-  // until a page lands, as Recovery's refetch can cancel the first ask.
+  // The query and page count a loadMore was swallowed Offline for: one page past that count, asked
+  // again when Live until it lands (Recovery's refetch can cancel it), forgotten once the count moves.
   const swallowed = useRef<{ hash: string; pages: number } | null>(null);
   const pageCount = data?.pages?.length ?? 0;
 
@@ -81,7 +81,7 @@ export function useLibraryQuery(
     const asked = swallowed.current;
 
     if (asked === null || isOffline || isFetching || error) return;
-    if (asked.hash !== queryHash || pageCount > asked.pages || !hasMore) {
+    if (asked.hash !== queryHash || pageCount !== asked.pages || !hasMore) {
       swallowed.current = null;
 
       return;
