@@ -12,7 +12,7 @@ import {
   toggleTag,
 } from "../utils/discover";
 
-const shown = { recentCount: 3, categoryCount: 4, tagCount: 6 };
+const shown = { recentCount: 3, categories: 4, tags: 6 };
 const quick = (key: string) => QUICK_FILTERS.find((item) => item.key === key)!;
 
 describe("discoverSections", () => {
@@ -30,15 +30,21 @@ describe("discoverSections", () => {
   });
 
   it("leaves out Recent when empty, and sections with no data", () => {
-    expect(
-      discoverSections({ focused: false, recentCount: 0, categoryCount: 0, tagCount: 0 })
-    ).toEqual(["quickFilters"]);
+    expect(discoverSections({ focused: false, recentCount: 0, categories: 0, tags: 0 })).toEqual([
+      "quickFilters",
+    ]);
   });
 
   it("keeps a loading section, for its skeleton", () => {
     expect(
-      discoverSections({ focused: false, recentCount: 0, categoryCount: null, tagCount: null })
+      discoverSections({ focused: false, recentCount: 0, categories: "loading", tags: "loading" })
     ).toEqual(["categories", "quickFilters", "tags"]);
+  });
+
+  it("hides a section whose read failed with nothing cached", () => {
+    expect(
+      discoverSections({ focused: false, recentCount: 0, categories: "failed", tags: "failed" })
+    ).toEqual(["quickFilters"]);
   });
 });
 

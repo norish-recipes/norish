@@ -14,6 +14,7 @@ import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-con
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { useLibraryDiscover, useLibraryFilters } from "@norish/shared-react/recipes";
 
+import type { SectionRead } from "../utils/discover";
 import { useRecentSearches } from "../hooks/use-recent-searches";
 import {
   discoverSections,
@@ -249,11 +250,13 @@ export function Discover({
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const { recents } = useRecentSearches();
   const discover = useLibraryDiscover();
+  const read = (count: number | undefined): SectionRead =>
+    count ?? (discover.isError ? "failed" : "loading");
   const sections = discoverSections({
     focused,
     recentCount: recents.length,
-    categoryCount: discover.data ? discover.data.categories.length : null,
-    tagCount: discover.data ? discover.data.tags.length : null,
+    categories: read(discover.data?.categories.length),
+    tags: read(discover.data?.tags.length),
   });
   const pick = (patch: Partial<CanonicalRecipeFilters>) => {
     setFilters(patch);

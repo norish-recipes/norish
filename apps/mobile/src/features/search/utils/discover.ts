@@ -5,31 +5,37 @@ type Patch = Partial<CanonicalRecipeFilters>;
 
 export type DiscoverSection = "recent" | "categories" | "quickFilters" | "tags";
 
-/** What the sections' choice reads: a count is null while its read is loading. */
+/** A section's read: how many it loaded (cached data counts), or that it is loading or failed. */
+export type SectionRead = number | "loading" | "failed";
+
+/** What the sections' choice reads. */
 export type DiscoverInput = {
   /** The keyboard is up: only Recent and Categories show behind the field. */
   focused: boolean;
   recentCount: number;
-  categoryCount: number | null;
-  tagCount: number | null;
+  categories: SectionRead;
+  tags: SectionRead;
 };
 
-/** The sections to show, in order: a section with no data is left out (a loading one shows its
- * skeleton), Recent only when there is one, Quick filters and Tags only with the keyboard down. */
+// A loading section shows its skeleton; a failed or empty one is left out.
+const shows = (read: SectionRead) => read === "loading" || (typeof read === "number" && read > 0);
+
+/** The sections to show, in order: Recent only when there is one, Quick filters and Tags only
+ * with the keyboard down. */
 export function discoverSections({
   focused,
   recentCount,
-  categoryCount,
-  tagCount,
+  categories,
+  tags,
 }: DiscoverInput): DiscoverSection[] {
   const sections: DiscoverSection[] = [];
 
   if (recentCount > 0) sections.push("recent");
-  if (categoryCount === null || categoryCount > 0) sections.push("categories");
+  if (shows(categories)) sections.push("categories");
   if (focused) return sections;
 
   sections.push("quickFilters");
-  if (tagCount === null || tagCount > 0) sections.push("tags");
+  if (shows(tags)) sections.push("tags");
 
   return sections;
 }
