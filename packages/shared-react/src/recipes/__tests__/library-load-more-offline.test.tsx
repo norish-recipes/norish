@@ -29,7 +29,7 @@ vi.mock("../../trpc", () => ({
 }));
 
 describe("loadMore", () => {
-  it("fetches nothing Offline and the next page Live", async () => {
+  it("fetches nothing Offline", async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -42,10 +42,53 @@ describe("loadMore", () => {
     act(() => result.current.loadMore());
     expect(world.pages).toEqual([0]);
     expect(result.current.isFetchingNextPage).toBe(false);
+  });
+
+  it("runs a loadMore swallowed Offline once when Live again, without another call", async () => {
+    world.pages = [];
+    world.offline = false;
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result, rerender } = renderHook(() => useLibraryQuery(), { wrapper });
+
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+    world.offline = true;
+    rerender();
+    act(() => result.current.loadMore());
+    expect(world.pages).toEqual([0]);
 
     world.offline = false;
     rerender();
-    act(() => result.current.loadMore());
     await waitFor(() => expect(world.pages).toEqual([0, 1]));
+    rerender();
+    await act(async () => {});
+    expect(world.pages).toEqual([0, 1]);
+  });
+
+  it("runs nothing when the query changed meanwhile", async () => {
+    world.pages = [];
+    world.offline = false;
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result, rerender } = renderHook(
+      ({ search }: { search: string }) => useLibraryQuery({ search }),
+      { wrapper, initialProps: { search: "a" } }
+    );
+
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+    world.offline = true;
+    rerender({ search: "a" });
+    act(() => result.current.loadMore());
+    rerender({ search: "b" });
+    world.offline = false;
+    rerender({ search: "b" });
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+    await act(async () => {});
+
+    expect(world.pages).toEqual([0, 0]);
   });
 });

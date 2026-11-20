@@ -1,8 +1,8 @@
 "use client";
 
 import type { QueryKey } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { hashKey, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { LibraryItemDTO, LibraryTypeFilter } from "@norish/shared/contracts";
 import { byNextCursor, libraryListInput } from "@norish/shared/contracts/list-queries";
@@ -63,6 +63,17 @@ export function useLibraryQuery(
 
   const items = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data?.pages]);
   const hasMore = hasNextPage ?? false;
+  const queryHash = hashKey(queryKey);
+  // The query a loadMore was swallowed Offline for; it runs once when the app is Live again.
+  const swallowedFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (swallowedFor.current === null || isOffline || isFetching) return;
+    const sameQuery = swallowedFor.current === queryHash;
+
+    swallowedFor.current = null;
+    if (sameQuery && hasMore) void fetchNextPage();
+  }, [isOffline, isFetching, hasMore, queryHash, fetchNextPage]);
 
   return {
     items,
@@ -75,9 +86,10 @@ export function useLibraryQuery(
     hasMore,
     error,
     loadMore: useCallback(() => {
-      // Offline the end of what is held is the end: no page is asked for, no spinner draws.
-      if (hasMore && !isFetching && !isOffline) fetchNextPage();
-    }, [hasMore, isFetching, isOffline, fetchNextPage]),
+      // Offline no page is asked for and no spinner draws; the ask is remembered for Live.
+      if (isOffline) swallowedFor.current = queryHash;
+      else if (hasMore && !isFetching) fetchNextPage();
+    }, [hasMore, isFetching, isOffline, queryHash, fetchNextPage]),
     invalidate: useCallback(() => {
       void queryClient.invalidateQueries({ queryKey });
     }, [queryClient, queryKey]),
