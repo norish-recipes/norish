@@ -8,6 +8,7 @@ import type { Page } from "@playwright/test";
 
 import type { OfflineHarness } from "./fixture";
 import { readDevicePreferences, setDevicePreferences } from "../harness/device-preferences";
+import { readOfflineStore } from "../harness/offline-store";
 import {
   expect,
   persistedReadsHold,
@@ -42,6 +43,20 @@ async function openDoneRows(target: Page): Promise<void> {
     await doneRow.getByRole("button").first().click();
   }
   await expect(target.locator('[data-testid="done-heading"][data-state="closed"]')).toHaveCount(0);
+}
+
+/** Whether the saved copy of the reads holds `name` ticked: saves are throttled behind the Outbox. */
+async function persistedGroceryDone(target: Page, name: string): Promise<boolean> {
+  const found = (value: unknown): boolean =>
+    Array.isArray(value)
+      ? value.some(found)
+      : value !== null &&
+        typeof value === "object" &&
+        (((value as { name?: unknown }).name === name &&
+          (value as { isDone?: unknown }).isDone === true) ||
+          Object.values(value).some(found));
+
+  return found(await readOfflineStore(target, "keyval"));
 }
 
 async function addGroceryViaUi(target: Page, name: string) {
@@ -79,6 +94,8 @@ test("a Live visit installs the app shell and warms the Warm Set", async () => {
       { timeout: 60_000 }
     )
     .toBe(true);
+  // Reads save on a throttle after the warm; going offline before then finds no saved copy.
+  await expect.poll(() => persistedReadsHold(page, SEEDED_RECIPE_NAME)).toBe(true);
 });
 
 test("backend-down unseen navigation boots every Warm Set surface", async () => {
@@ -274,6 +291,8 @@ test("an offline grocery toggle survives navigation and a document cold launch",
   await openDoneRows(page);
   await expect(page.getByRole("checkbox", { name: SEEDED_GROCERY_NAME })).toBeChecked();
   await expect.poll(() => readOutbox(page)).toHaveLength(1);
+  // A load before the throttled save lands would read the pre-tick copy.
+  await expect.poll(() => persistedGroceryDone(page, SEEDED_GROCERY_NAME)).toBe(true);
 
   await page.goto("/calendar");
   await page.goto("/groceries");
