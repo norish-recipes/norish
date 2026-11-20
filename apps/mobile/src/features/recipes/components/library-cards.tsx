@@ -42,6 +42,7 @@ export function LibraryCards<Row>({
   insets,
   scroll,
   testID,
+  variant: forced,
 }: {
   rows: Row[];
   isLoading: boolean;
@@ -59,8 +60,11 @@ export function LibraryCards<Row>({
   insets?: "automatic" | "never";
   scroll: TabScroll;
   testID?: string;
+  /** Draws the cards in this view instead of the reader's Library view. */
+  variant?: RecipeViewMode;
 }) {
-  const [variant] = useDevicePreference("recipeViewMode");
+  const [preferred] = useDevicePreference("recipeViewMode");
+  const variant = forced ?? preferred;
   const filters = useLibraryFilters((state) => state.filters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const { isFavorite, allergies } = useLibraryCards();

@@ -13,7 +13,7 @@ function hitOf(matches: RecipeResultsProps["matches"], id: string): SearchHit | 
   return matches && match ? { match, search: matches.search } : undefined;
 }
 
-/** Recipes as the Library's cards, paged: the list Search shows its results in. */
+/** Recipes as the Library's list cards, paged: the list Search shows its results in. */
 export function RecipeResults({
   recipes,
   matches,
@@ -47,6 +47,7 @@ export function RecipeResults({
       rows={recipes}
       scroll={scroll}
       testID={testID}
+      variant="list"
       onEndReached={onEndReached}
     />
   );
