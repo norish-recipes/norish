@@ -12,7 +12,9 @@ vi.mock("@norish/shared-react/recipes", () => ({
   useLibraryCards: () => ({ isFavorite: () => false, allergies: [] }),
   useLibraryFilters: () => ({}),
 }));
-vi.mock("@norish/shared/contracts/filter-contract", () => ({ hasAppliedRecipeFilters: () => false }));
+vi.mock("@norish/shared/contracts/filter-contract", () => ({
+  hasAppliedRecipeFilters: () => false,
+}));
 vi.mock("@/features/recipes/components/library-skeleton", () => ({ LibrarySkeleton: () => null }));
 vi.mock("@/features/recipes/components/library-states", () => ({ LibraryNoResults: () => null }));
 // Draws each row's card in the variant the list hands it.
