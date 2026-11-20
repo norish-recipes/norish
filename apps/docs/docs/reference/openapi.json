@@ -2306,7 +2306,7 @@
                               "additionalProperties": {
                                 "type": "number"
                               },
-                              "description": "Other nutrients per serving, only those known: cholesterol, sodium, potassium, calcium, iron and vitaminC in milligrams, vitaminA in micrograms RAE, the rest in grams. The recipe's own value wins; the others are worked out from its lines."
+                              "description": "Other nutrients per serving, only those known: cholesterol, sodium, potassium, calcium, iron and vitaminC in milligrams, vitaminA in micrograms RAE, the rest in grams. The recipe's own value wins; where it supplies no calories or macros, the others are worked out from its lines."
                             }
                           },
                           "required": [

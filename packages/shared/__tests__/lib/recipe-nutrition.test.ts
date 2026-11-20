@@ -22,6 +22,7 @@ import {
   nutritionLinesOf,
   seasoningPhrases,
   suppliesNutrition,
+  withStatedExtras,
   workedOutSources,
   workOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
@@ -626,5 +627,26 @@ describe("workOutNutrition's other nutrients", () => {
 
     expect(result.perServing?.extras).toEqual({});
     expect(result.extrasCoverage).toEqual({});
+  });
+});
+
+describe("withStatedExtras", () => {
+  it("lets each extra the recipe states win, known in full, beside the lines' others", () => {
+    const worked = {
+      perServing: { calories: 1, fat: 0, carbs: 0, protein: 0, extras: { fiber: 2, sugars: 3 } },
+      extrasCoverage: { fiber: 0.5, sugars: 0.8 },
+    };
+
+    expect(withStatedExtras({ fiber: 9, sodium: "x" }, worked)).toEqual({
+      nutritionExtras: { fiber: 9, sugars: 3 },
+      extrasCoverage: { fiber: 1, sugars: 0.8 },
+    });
+  });
+
+  it("is the stated extras alone where nothing was worked out", () => {
+    expect(withStatedExtras({ fiber: 9 }, null)).toEqual({
+      nutritionExtras: { fiber: 9 },
+      extrasCoverage: { fiber: 1 },
+    });
   });
 });

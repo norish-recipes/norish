@@ -43,7 +43,7 @@ import {
   NUTRITION_CREDIT_NAMES,
   NUTRITION_CREDITS,
 } from "@norish/shared/contracts/ingredient-nutrition";
-import { EXTRA_NUTRIENTS } from "@norish/shared/contracts/nutrients";
+import { EXTRA_NUTRIENTS, knownExtras } from "@norish/shared/contracts/nutrients";
 import { foldName } from "@norish/shared/lib/fold-name";
 
 import type { LineWithFoods } from "./line-foods";
@@ -135,8 +135,16 @@ export interface NutritionPerServing {
  * - `no-spoon-weight`: measured by volume, and its food has no density;
  * - `no-piece-weight`: counted, and its food has no piece weight.
  */
-export type LeftOutReason =
-  "seasoning" | "no-amount" | "no-size" | "no-numbers" | "no-spoon-weight" | "no-piece-weight";
+export const LEFT_OUT_REASONS = [
+  "seasoning",
+  "no-amount",
+  "no-size",
+  "no-numbers",
+  "no-spoon-weight",
+  "no-piece-weight",
+] as const;
+
+export type LeftOutReason = (typeof LEFT_OUT_REASONS)[number];
 
 /** The reasons whose fix is a fact in the Ingredient's panel: its numbers, a spoon's or a piece's weight. */
 export const PANEL_REASONS: ReadonlySet<LeftOutReason> = new Set<LeftOutReason>([
@@ -205,6 +213,22 @@ export interface WorkedOutNutrition {
   credits: NutritionCredit[];
   /** Whether a counted line took a fact from the household's own correction. */
   household: boolean;
+}
+
+/** Each extra the recipe states wins over its lines' one, known in full (coverage 1). */
+export function withStatedExtras(
+  statedValues: object | null | undefined,
+  worked: Pick<WorkedOutNutrition, "perServing" | "extrasCoverage"> | null
+): { nutritionExtras: ExtraNutrients; extrasCoverage: Partial<Record<ExtraNutrient, number>> } {
+  const stated = knownExtras(statedValues);
+
+  return {
+    nutritionExtras: { ...worked?.perServing?.extras, ...stated },
+    extrasCoverage: {
+      ...worked?.extrasCoverage,
+      ...Object.fromEntries(Object.keys(stated).map((key) => [key, 1])),
+    },
+  };
 }
 
 /** Whom a worked-out total credits: the datasets by name, then the household's numbers. */

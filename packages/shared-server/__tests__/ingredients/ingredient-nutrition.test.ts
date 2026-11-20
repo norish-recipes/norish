@@ -608,33 +608,39 @@ describe("Ingredient Nutrition", () => {
       await expect(workOutRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toBeNull();
     });
 
-    it("answers an API reader with the recipe's own numbers, and the other nutrients its lines know", async () => {
+    it("answers an API reader with the recipe's own numbers, working nothing out beside them", async () => {
       const answer = await readRecipeNutrition(recipe(320), NO_HOUSEHOLD);
 
-      expect(answer.source).toBe("supplied");
-      expect(answer.perServing).toMatchObject({
-        calories: 320,
-        fat: null,
-        carbs: null,
-        protein: null,
+      expect(answer).toEqual({
+        source: "supplied",
+        perServing: { calories: 320, fat: null, carbs: null, protein: null, extras: {} },
+        estimated: false,
+        leftOut: [],
+        credits: [],
+        extrasCoverage: {},
       });
-      // Two onions are 300 g, over two servings: 1.7 g fiber and 4.3 g sugars per 100 g.
-      expect(answer.perServing?.extras.fiber).toBeCloseTo(2.55);
-      expect(answer.perServing?.extras.sugars).toBeCloseTo(6.45);
-      expect(answer.extrasCoverage).toEqual({ fiber: 1, sugars: 1 });
-      expect(answer.leftOut).toEqual([]);
-      // The onions' piece weight is Open Food Facts'.
-      expect(answer.credits).toEqual(["ciqual", "off"]);
     });
 
-    it("lets a nutrient the recipe states win over its lines', each on its own", async () => {
+    it("answers an API reader with the nutrients the recipe states, each fully known", async () => {
       const answer = await readRecipeNutrition(
         { ...recipe(320), nutritionExtras: { fiber: 9 } },
         NO_HOUSEHOLD
       );
 
+      expect(answer.perServing?.extras).toEqual({ fiber: 9 });
+      expect(answer.extrasCoverage).toEqual({ fiber: 1 });
+    });
+
+    it("lets a nutrient the recipe states win over its lines', each on its own", async () => {
+      const answer = await readRecipeNutrition(
+        { ...recipe(), nutritionExtras: { fiber: 9 } },
+        NO_HOUSEHOLD
+      );
+
       expect(answer.perServing?.extras.fiber).toBe(9);
+      // Two onions are 300 g, over two servings, at 4.3 g sugars per 100 g.
       expect(answer.perServing?.extras.sugars).toBeCloseTo(6.45);
+      expect(answer.extrasCoverage).toEqual({ fiber: 1, sugars: 1 });
     });
 
     it("answers an API reader with the worked-out total and the model's share, as the page shows it", async () => {

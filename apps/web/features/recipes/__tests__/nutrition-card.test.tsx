@@ -17,11 +17,16 @@ const mocks = vi.hoisted(() => ({
   shown: null as unknown,
   marked: undefined as boolean | undefined,
   panel: null as { id: string | null; open: boolean } | null,
+  hookOptions: [] as unknown[],
 }));
 
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  useWorkedOutNutrition: () => mocks.workedOut,
+  useWorkedOutNutrition: (_recipe: unknown, ...options: unknown[]) => {
+    mocks.hookOptions = options;
+
+    return mocks.workedOut;
+  },
 }));
 
 vi.mock("@/components/ingredients/ingredient-panel", () => ({
@@ -321,6 +326,14 @@ describe("NutritionCard", () => {
 
       expect(mocks.shown).toMatchObject({ id: "recipe-1" });
       expect(screen.queryByTestId("nutrition-credit")).not.toBeInTheDocument();
+    });
+
+    it("works nothing out beside what the recipe supplies", () => {
+      mocks.hasData = true;
+
+      renderCard();
+
+      expect(mocks.hookOptions).toEqual([]);
     });
 
     it("is absent where no line counted", () => {
