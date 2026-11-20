@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { FoodName } from "@norish/shared/lib/ingredient-names";
+
 import { useTRPC } from "../trpc";
 import { useCachedAnswers } from "./cached-answers";
 
@@ -8,7 +10,7 @@ import { useCachedAnswers } from "./cached-answers";
 function useNameAnswers() {
   const trpc = useTRPC();
 
-  return useCachedAnswers<string>(trpc.ingredients.names.pathKey());
+  return useCachedAnswers<FoodName>(trpc.ingredients.names.pathKey());
 }
 
 /** One read of a surface's foods' names; each selects its own with `useIngredientName`. A set
@@ -37,19 +39,22 @@ export function useIngredientNames(ids: readonly string[]): void {
   });
 }
 
-/** One food's name from any cached answer, the surface's own first; undefined until one names it. */
-export function useIngredientName(ingredientId: string | null): string | undefined {
+/** One food's names from any cached answer, the surface's own first; undefined until one names it.
+ * The caller picks the reader's spelling with `ingredientDisplayName`. */
+export function useIngredientName(ingredientId: string | null): FoodName | undefined {
   const { subscribe, read } = useNameAnswers();
   const name = () => (ingredientId ? read(ingredientId)?.value : undefined);
 
   return useSyncExternalStore(subscribe, name, name);
 }
 
-/** Puts a name the caller already holds in the cache `useIngredientName` reads, so it shows at once. */
+/** Puts names the caller already holds in the cache `useIngredientName` reads, so they show at once. */
 export function usePrimeIngredientName() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return ({ id, name }: { id: string; name: string }) =>
-    queryClient.setQueryData(trpc.ingredients.names.queryKey({ ids: [id] }), { [id]: name });
+  return ({ id, name, localeNames }: { id: string } & FoodName) =>
+    queryClient.setQueryData(trpc.ingredients.names.queryKey({ ids: [id] }), {
+      [id]: { name, localeNames },
+    });
 }

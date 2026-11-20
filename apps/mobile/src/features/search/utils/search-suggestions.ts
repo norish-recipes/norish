@@ -1,5 +1,6 @@
 import type { LibrarySuggestionsDTO } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import type { FoodName } from "@norish/shared/lib/ingredient-names";
 import { MAX_FILTER_INGREDIENTS, SUGGEST_TEXT_MAX } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
@@ -17,9 +18,10 @@ export const suggestionText = (text: string) => (hasSearchText(text) ? text.trim
 /** How many Categories the typing state offers. */
 const CATEGORY_ROWS = 3;
 
-/** One "Narrow to" row: the filter it adds (a Category by its stored `name`) and the name it shows. */
+/** One "Narrow to" row: the filter it adds (a Category by its stored `name`) and the name it shows;
+ * an Ingredient's `food` primes its chip. */
 export type NarrowRow =
-  | { kind: "ingredient"; id: string; name: string }
+  | { kind: "ingredient"; id: string; name: string; food: FoodName }
   | { kind: "tag"; name: string }
   | { kind: "category"; name: string; label: string };
 
@@ -76,10 +78,11 @@ export function narrowRows(
           applied.ingredients.length < MAX_FILTER_INGREDIENTS &&
           !applied.ingredients.includes(food.id)
       )
-      .map((food) => ({
+      .map(({ id, name, localeNames }) => ({
         kind: "ingredient" as const,
-        id: food.id,
-        name: ingredientDisplayName(food, locale),
+        id,
+        name: ingredientDisplayName({ name, localeNames }, locale),
+        food: { name, localeNames },
       })),
     ...suggestions.tags
       .filter((name) => !tags.has(name.toLowerCase()))

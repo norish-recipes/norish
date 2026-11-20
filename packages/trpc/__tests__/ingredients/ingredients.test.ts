@@ -53,7 +53,10 @@ const cleanup = vi.hoisted(() => ({
 }));
 const aliases = vi.hoisted(() => ({
   findLocaleNames: vi.fn(async () => new Map()),
-  findIngredientNamesByIds: vi.fn(async (): Promise<Map<string, string>> => new Map()),
+  findIngredientDisplayNames: vi.fn(
+    async (): Promise<Map<string, { name: string; localeNames: Record<string, string> }>> =>
+      new Map()
+  ),
 }));
 const junkPile = vi.hoisted(() => ({
   addToJunkPile: vi.fn(async () => 1),
@@ -706,12 +709,14 @@ describe("the list", () => {
 });
 
 describe("Ingredient names", () => {
-  it("names every food asked in one read, leaving out one that is gone", async () => {
-    aliases.findIngredientNamesByIds.mockResolvedValue(new Map([[ONION, "onion"]]));
+  it("names every food asked in one read, with its spellings, leaving out one that is gone", async () => {
+    const onion = { name: "onion", localeNames: { nl: "ui" } };
 
-    await expect(callerFor().names({ ids: [ONION, UIEN] })).resolves.toEqual({ [ONION]: "onion" });
-    expect(aliases.findIngredientNamesByIds).toHaveBeenCalledTimes(1);
-    expect(aliases.findIngredientNamesByIds).toHaveBeenCalledWith([ONION, UIEN]);
+    aliases.findIngredientDisplayNames.mockResolvedValue(new Map([[ONION, onion]]));
+
+    await expect(callerFor().names({ ids: [ONION, UIEN] })).resolves.toEqual({ [ONION]: onion });
+    expect(aliases.findIngredientDisplayNames).toHaveBeenCalledTimes(1);
+    expect(aliases.findIngredientDisplayNames).toHaveBeenCalledWith([ONION, UIEN]);
   });
 });
 

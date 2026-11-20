@@ -21,6 +21,9 @@ export interface NamedFood {
   localeNames: LocaleNames;
 }
 
+/** What names a food, without its id. */
+export type FoodName = Omit<NamedFood, "id">;
+
 /**
  * The catalogue languages each Norish locale reads names in, most specific
  * first. A locale missing here reads its base language.

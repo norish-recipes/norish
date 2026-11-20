@@ -9,6 +9,7 @@ import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useIngredientName } from "@norish/shared-react/ingredients";
+import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { FilterChip } from "../utils/search-chips";
 import { chipIcon, chipKey, chipLabel } from "../utils/search-chips";
@@ -18,7 +19,8 @@ export function FilterChipView({ chip, onRemove }: { chip: FilterChip; onRemove:
   const intl = useIntl();
   const category = useCategoryLabel();
   const muted = useTokenColor("muted");
-  const name = useIngredientName(chip.kind === "ingredient" ? chip.value : null);
+  const food = useIngredientName(chip.kind === "ingredient" ? chip.value : null);
+  const name = food && ingredientDisplayName(food, intl.locale);
   const unnamed = chip.kind === "ingredient" && name === undefined;
   const label = chipLabel(chip, {
     say: (id, values) => intl.formatMessage({ id }, values),

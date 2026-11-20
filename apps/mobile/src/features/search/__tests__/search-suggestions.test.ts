@@ -70,8 +70,18 @@ describe("what the suggestions leave out", () => {
 describe("the rows to narrow to", () => {
   it("lists Ingredients, then Tags, then Categories, with an Ingredient in the reader's language", () => {
     expect(rows(none, { locale: "nl" })).toEqual([
-      { kind: "ingredient", id: "chicken", name: "Kip" },
-      { kind: "ingredient", id: "chickpea", name: "Chickpea" },
+      {
+        kind: "ingredient",
+        id: "chicken",
+        name: "Kip",
+        food: { name: "Chicken", localeNames: { nl: "Kip" } },
+      },
+      {
+        kind: "ingredient",
+        id: "chickpea",
+        name: "Chickpea",
+        food: { name: "Chickpea", localeNames: {} },
+      },
       { kind: "tag", name: "chicken" },
       { kind: "tag", name: "Chicken curry" },
       { kind: "category", name: "Chicken dinner", label: "Chicken dinner" },
@@ -90,7 +100,12 @@ describe("the rows to narrow to", () => {
     });
 
     expect(left).toEqual([
-      { kind: "ingredient", id: "chickpea", name: "Chickpea" },
+      {
+        kind: "ingredient",
+        id: "chickpea",
+        name: "Chickpea",
+        food: { name: "Chickpea", localeNames: {} },
+      },
       { kind: "tag", name: "Chicken curry" },
     ]);
   });

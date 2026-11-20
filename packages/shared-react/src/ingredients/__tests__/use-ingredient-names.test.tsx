@@ -28,7 +28,9 @@ vi.mock("../../trpc", () => ({
             mocks.reads.push(input.ids);
 
             return Object.fromEntries(
-              input.ids.flatMap((id) => (id in mocks.names ? [[id, mocks.names[id]]] : []))
+              input.ids.flatMap((id) =>
+                id in mocks.names ? [[id, { name: mocks.names[id], localeNames: {} }]] : []
+              )
             );
           },
         }),
@@ -42,8 +44,8 @@ function useChips(ids: string[]) {
   useIngredientNames(ids);
 
   return {
-    first: useIngredientName(ids[0] ?? null),
-    last: useIngredientName(ids.at(-1) ?? null),
+    first: useIngredientName(ids[0] ?? null)?.name,
+    last: useIngredientName(ids.at(-1) ?? null)?.name,
     prime: usePrimeIngredientName(),
   };
 }
@@ -75,7 +77,7 @@ describe("Ingredient chip names", () => {
     await waitFor(() => expect(result.current.first).toBe("onion"));
     mocks.reads = [];
 
-    act(() => result.current.prime({ id: "b", name: "garlic" }));
+    act(() => result.current.prime({ id: "b", name: "garlic", localeNames: {} }));
     rerender({ ids: ["a", "b"] });
 
     expect(result.current.last).toBe("garlic");
@@ -86,7 +88,7 @@ describe("Ingredient chip names", () => {
   it("shows a renamed food's new name after a refetch", async () => {
     const { client, result, rerender } = render([]);
 
-    act(() => result.current.prime({ id: "a", name: "onion" }));
+    act(() => result.current.prime({ id: "a", name: "onion", localeNames: {} }));
     rerender({ ids: ["a"] });
     expect(result.current.first).toBe("onion");
 

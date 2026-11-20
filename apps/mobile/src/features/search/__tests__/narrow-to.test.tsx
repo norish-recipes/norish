@@ -79,11 +79,20 @@ describe("a Narrow-to row", () => {
     act(() => result.current.field.onChangeText(typed("chick")));
     expect(view(state().rawInput, false)).toBe("typing");
 
-    act(() => result.current.narrowTo({ kind: "ingredient", id: chicken, name: "Kip" }));
+    act(() =>
+      result.current.narrowTo({
+        kind: "ingredient",
+        id: chicken,
+        name: "Kip",
+        food: { name: "Chicken", localeNames: { nl: "Kip" } },
+      })
+    );
 
     expect(state().ingredients).toEqual([chicken]);
     expect(filterChips(state())).toHaveLength(1);
-    expect(queryClient.getQueryData(["names", chicken])).toEqual({ [chicken]: "Kip" });
+    expect(queryClient.getQueryData(["names", chicken])).toEqual({
+      [chicken]: { name: "Chicken", localeNames: { nl: "Kip" } },
+    });
     expect(state().rawInput).toBe("");
     expect(result.current.field.text).toBe("");
     expect(page(result.current.field)).toBe("results");
@@ -111,7 +120,14 @@ describe("a Narrow-to row", () => {
     const { result } = mount();
 
     act(() => result.current.field.onChangeText(typed("chick")));
-    act(() => result.current.narrowTo({ kind: "ingredient", id: chicken, name: "Chicken" }));
+    act(() =>
+      result.current.narrowTo({
+        kind: "ingredient",
+        id: chicken,
+        name: "Chicken",
+        food: { name: "Chicken", localeNames: {} },
+      })
+    );
     act(() => result.current.field.onChangeText(typed("quick")));
 
     expect(view(state().rawInput, false)).toBe("typing");

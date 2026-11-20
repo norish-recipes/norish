@@ -12,7 +12,7 @@ export function useNarrowTo(narrowed: () => void) {
   const setFilters = useLibraryFilters((state) => state.setFilters);
 
   return (row: NarrowRow) => {
-    if (row.kind === "ingredient") addIngredient({ id: row.id, name: row.name });
+    if (row.kind === "ingredient") addIngredient({ id: row.id, ...row.food });
     else setFilters(narrowPatch(row, store.getState().filters));
 
     narrowed();

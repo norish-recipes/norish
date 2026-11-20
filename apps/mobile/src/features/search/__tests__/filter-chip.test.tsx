@@ -22,7 +22,11 @@ type Props = {
   onPress?: () => void;
 };
 
-const mocks = vi.hoisted(() => ({ reads: [] as string[][], skeletons: 0 }));
+const mocks = vi.hoisted(() => ({
+  reads: [] as string[][],
+  skeletons: 0,
+  names: {} as Record<string, { name: string; localeNames: Record<string, string> }>,
+}));
 
 vi.mock("react-native", () => ({ Text: ({ children }: Props) => <span>{children}</span> }));
 vi.mock("@/components/pressable-scale", () => ({
@@ -44,6 +48,7 @@ vi.mock("heroui-native", () => ({
 }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({
+    locale: "nl",
     formatMessage: ({ id }: { id: string }, values?: Record<string, string>) =>
       values ? `${id}(${Object.values(values).join()})` : id,
   }),
@@ -59,7 +64,9 @@ vi.mock("@norish/shared-react/trpc", () => ({
           queryFn: async () => {
             mocks.reads.push(input.ids);
 
-            return {};
+            return Object.fromEntries(
+              input.ids.flatMap((id) => (mocks.names[id] ? [[id, mocks.names[id]]] : []))
+            );
           },
         }),
       },
@@ -86,7 +93,12 @@ function Chips() {
           onRemove={() => setFilters({ ingredients: ids.filter((other) => other !== id) })}
         />
       ))}
-      <button onClick={() => add({ id: "garlic-id", name: "garlic" })}>add</button>
+      <button onClick={() => add({ id: "garlic-id", name: "garlic", localeNames: {} })}>add</button>
+      <button
+        onClick={() => add({ id: "chicken-id", name: "Chicken", localeNames: { nl: "Kip" } })}
+      >
+        add chicken
+      </button>
     </>
   );
 }
@@ -94,17 +106,20 @@ function Chips() {
 function renderChips(ingredients: string[]) {
   const store = createLibraryFiltersStore({ ...DEFAULT_RECIPE_FILTERS, ingredients });
 
+  const client = createOfflineQueryClient();
+
   mocks.reads = [];
   mocks.skeletons = 0;
+  mocks.names = {};
   render(
-    <QueryClientProvider client={createOfflineQueryClient()}>
+    <QueryClientProvider client={client}>
       <LibraryFiltersProvider store={store}>
         <Chips />
       </LibraryFiltersProvider>
     </QueryClientProvider>
   );
 
-  return store;
+  return { store, client };
 }
 
 describe("an Ingredient chip", () => {
@@ -119,8 +134,21 @@ describe("an Ingredient chip", () => {
     expect(mocks.reads).toEqual([]);
   });
 
+  it("keeps the reader's language after a refetch answers the same food", async () => {
+    const { client } = renderChips([]);
+
+    act(() => fireEvent.click(screen.getByText("add chicken")));
+    expect(screen.getByTestId("search-chip-ingredient:chicken-id").textContent).toBe("Kip");
+
+    mocks.names = { "chicken-id": { name: "Chicken", localeNames: { nl: "Kip" } } };
+    await act(() => client.invalidateQueries());
+
+    await waitFor(() => expect(mocks.reads).toContainEqual(["chicken-id"]));
+    expect(screen.getByTestId("search-chip-ingredient:chicken-id").textContent).toBe("Kip");
+  });
+
   it("shows a placeholder for a food no read names, and is still removable", async () => {
-    const store = renderChips(["gone-id"]);
+    const { store } = renderChips(["gone-id"]);
 
     await waitFor(() => expect(mocks.reads).toEqual([["gone-id"]]));
     expect(screen.getByTestId("skeleton")).toBeTruthy();
