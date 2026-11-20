@@ -136,6 +136,31 @@ RUN pnpm deploy --filter @norish/web --prod /app/deploy && \
   # server loads the CommonJS build alone.
   rm -rf next@*/node_modules/next/dist/esm next@*/node_modules/next/dist/docs && \
   find next@*/node_modules/next -name '*.runtime.dev.js' -delete && \
+  # The production runtimes (compiled/next-server) carry React inside them and the server loads
+  # the react package, so Next's own React copies never load. Fails if config asks experimental React.
+  node -e "if (require('/app/apps/web/node_modules/next/dist/lib/needs-experimental-react') \
+  .needsExperimentalReact(require('/app/apps/web/.next/required-server-files.json').config)) \
+  throw new Error('next.config selects experimental React: keep its builds')" && \
+  N=$(echo next@*/node_modules/next/dist) && \
+  rm -rf $N/compiled/react $N/compiled/react-dom $N/compiled/react-server-dom-* $N/compiled/scheduler \
+  $N/compiled/*-experimental $N/compiled/next-server/*experimental* \
+  # Build-time parts: Babel, next/font's loaders, the file tracer, Terser, the CSS minifiers and
+  # the bundle analyzer's UI. @vercel/og loads only for an ImageResponse, which no route draws.
+  $N/compiled/babel $N/compiled/babel-packages $N/compiled/@next/font $N/compiled/@vercel/nft \
+  $N/compiled/terser $N/compiled/postcss-preset-env $N/compiled/cssnano-simple $N/bundle-analyzer \
+  $N/compiled/@vercel/og && \
+  # pdfjs-dist draws PDFs in the browser; the server render bundles build/pdf.mjs into .next.
+  rm -rf pdfjs-dist@*/node_modules/pdfjs-dist/legacy pdfjs-dist@*/node_modules/pdfjs-dist/web \
+  pdfjs-dist@*/node_modules/pdfjs-dist/types pdfjs-dist@*/node_modules/pdfjs-dist/image_decoders \
+  # openai runs from its compiled .mjs files; src/ is the TypeScript they came from.
+  openai@*/node_modules/openai/src \
+  # heic-decode loads libheif-js/wasm-bundle, the one build that embeds its WebAssembly.
+  libheif-js@*/node_modules/libheif-js/libheif libheif-js@*/node_modules/libheif-js/libheif-wasm/libheif.* \
+  libheif-js@*/node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs \
+  # The server imports date-fns per function and passes no locale, so only en-US loads.
+  date-fns@*/node_modules/date-fns/fp && \
+  find date-fns@*/node_modules/date-fns/locale -mindepth 1 -maxdepth 1 ! -name _lib ! -name 'en-US*' \
+  -exec rm -rf {} + && \
   # Source maps, type declarations and documentation load at no point, nor do
   # the test suites and test helpers packages ship (`ai/test` among them).
   find /app/deploy/node_modules -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' \
@@ -198,7 +223,9 @@ EOF
 RUN for copy in /app/deploy/node_modules/.pnpm/*/node_modules/@norish/*; do \
   rm -rf "$copy/dist" && \
   find "$copy" -type f \( -name 'vitest.config.*' -o -name 'tsconfig*.json' -o -name 'eslint.config.*' \
-  -o -name 'turbo.json' \) -delete; \
+  -o -name 'turbo.json' \) -delete && \
+  # Drizzle's migrator reads meta/_journal.json and the .sql files; the snapshots are drizzle-kit's.
+  rm -f "$copy"/src/migrations/meta/*_snapshot.json; \
   done && \
   for dir in /app/packages/*/; do \
   name=$(node -p "require('${dir}package.json').name") && \
