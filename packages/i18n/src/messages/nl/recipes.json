@@ -581,6 +581,7 @@
     "quickFilters": "Snelle filters",
     "underThirty": "Minder dan 30 min",
     "fourAndUp": "4 en hoger",
-    "editRecent": "“{text}” bewerken"
+    "editRecent": "“{text}” bewerken",
+    "offline": "Zoeken heeft een verbinding nodig"
   }
 }

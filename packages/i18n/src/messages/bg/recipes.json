@@ -581,6 +581,7 @@
     "quickFilters": "Бързи филтри",
     "underThirty": "Под 30 мин",
     "fourAndUp": "4 и нагоре",
-    "editRecent": "Редактиране на „{text}“"
+    "editRecent": "Редактиране на „{text}“",
+    "offline": "Търсенето изисква връзка"
   }
 }

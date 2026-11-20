@@ -581,6 +581,7 @@
     "quickFilters": "عوامل تصفية سريعة",
     "underThirty": "أقل من 30 دقيقة",
     "fourAndUp": "4 فأكثر",
-    "editRecent": "تعديل «{text}»"
+    "editRecent": "تعديل «{text}»",
+    "offline": "يحتاج البحث إلى اتصال"
   }
 }

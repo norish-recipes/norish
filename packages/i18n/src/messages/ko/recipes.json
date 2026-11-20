@@ -581,6 +581,7 @@
     "quickFilters": "빠른 필터",
     "underThirty": "30분 미만",
     "fourAndUp": "4점 이상",
-    "editRecent": "“{text}” 수정"
+    "editRecent": "“{text}” 수정",
+    "offline": "검색하려면 연결이 필요합니다"
   }
 }

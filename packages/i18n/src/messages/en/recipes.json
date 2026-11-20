@@ -581,6 +581,7 @@
     "quickFilters": "Quick filters",
     "underThirty": "Under 30 min",
     "fourAndUp": "4 and up",
-    "editRecent": "Edit “{text}”"
+    "editRecent": "Edit “{text}”",
+    "offline": "Search needs a connection"
   }
 }

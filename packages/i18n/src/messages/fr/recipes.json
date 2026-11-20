@@ -581,6 +581,7 @@
     "quickFilters": "Filtres rapides",
     "underThirty": "Moins de 30 min",
     "fourAndUp": "4 et plus",
-    "editRecent": "Modifier « {text} »"
+    "editRecent": "Modifier « {text} »",
+    "offline": "La recherche nécessite une connexion"
   }
 }

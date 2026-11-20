@@ -581,6 +581,7 @@
     "quickFilters": "Pikasuodattimet",
     "underThirty": "Alle 30 min",
     "fourAndUp": "4 ja yli",
-    "editRecent": "Muokkaa “{text}”"
+    "editRecent": "Muokkaa “{text}”",
+    "offline": "Haku tarvitsee yhteyden"
   }
 }

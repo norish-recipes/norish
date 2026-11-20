@@ -581,6 +581,7 @@
     "quickFilters": "Hurtigfiltre",
     "underThirty": "Under 30 min",
     "fourAndUp": "4 og opp",
-    "editRecent": "Rediger “{text}”"
+    "editRecent": "Rediger “{text}”",
+    "offline": "Søk krever en tilkobling"
   }
 }

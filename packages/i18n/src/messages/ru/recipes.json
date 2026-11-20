@@ -581,6 +581,7 @@
     "quickFilters": "Быстрые фильтры",
     "underThirty": "Менее 30 мин",
     "fourAndUp": "4 и выше",
-    "editRecent": "Изменить «{text}»"
+    "editRecent": "Изменить «{text}»",
+    "offline": "Для поиска нужно подключение"
   }
 }

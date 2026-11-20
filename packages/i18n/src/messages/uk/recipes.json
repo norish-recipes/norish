@@ -581,6 +581,7 @@
     "quickFilters": "Швидкі фільтри",
     "underThirty": "До 30 хв",
     "fourAndUp": "4 і вище",
-    "editRecent": "Змінити «{text}»"
+    "editRecent": "Змінити «{text}»",
+    "offline": "Для пошуку потрібне з’єднання"
   }
 }

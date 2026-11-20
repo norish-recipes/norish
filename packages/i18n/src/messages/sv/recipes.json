@@ -581,6 +581,7 @@
     "quickFilters": "Snabbfilter",
     "underThirty": "Under 30 min",
     "fourAndUp": "4 och uppåt",
-    "editRecent": "Redigera ”{text}”"
+    "editRecent": "Redigera ”{text}”",
+    "offline": "Sökning kräver en anslutning"
   }
 }
