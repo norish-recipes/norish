@@ -6,13 +6,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { PendingRecipeDTO } from "@norish/shared/contracts";
 
 import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
+import { rereadInWindow } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import {
   applyRecipeUpdateToLibrary,
   applyRecipeUpdateToMembers,
   libraryQueryHolds,
 } from "./library-cache";
-import { rereadAfterBurst } from "./reread-burst";
 
 export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 
@@ -97,9 +97,11 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
 
   // The library path holds the Library's list and the Categories and Tags Search shows from it.
   const invalidate = useCallback(() => {
-    rereadAfterBurst(queryClient, trpc.recipes.list.pathKey());
-    rereadAfterBurst(queryClient, trpc.library.pathKey());
-    rereadAfterBurst(queryClient, trpc.cookbooks.recipes.pathKey());
+    rereadInWindow(queryClient, [
+      trpc.recipes.list.pathKey(),
+      trpc.library.pathKey(),
+      trpc.cookbooks.recipes.pathKey(),
+    ]);
   }, [queryClient, trpc]);
 
   const addPendingRecipe = useCallback(

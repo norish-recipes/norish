@@ -19,7 +19,7 @@ import {
 } from "@norish/shared/contracts/realtime/recipes";
 
 import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
-import { REREAD_BURST_MS } from "../reread-burst";
+import { LIVE_WINDOW_MS } from "../../realtime/use-realtime-subscription";
 import { useRecipeSelection } from "../selection-store";
 import { useRecipesCacheHelpers } from "../use-recipes-cache";
 import {
@@ -177,7 +177,7 @@ const pendingRereads = () => rereadsOf(PENDING_KEY);
 /** Lets the rereads asked for in one burst be made. */
 function endBurst() {
   act(() => {
-    vi.advanceTimersByTime(REREAD_BURST_MS);
+    vi.advanceTimersByTime(LIVE_WINDOW_MS);
   });
 }
 
@@ -352,6 +352,18 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(rereadsOf(LIBRARY_KEY)).toBe(1);
   });
 
+  it("reads web's Library once for a mixed delete that lands with a Cursor Mark", () => {
+    subscribe("onDeleted");
+    act(() => subscription("onDeleted").onData(trackedCursorMark()));
+    emit("onDeleted", { ids: ["recipe-1"] });
+    emit("onDeleteKept", { ids: ["recipe-2"] });
+    act(() => rendered.result.current.invalidate());
+    endBurst();
+
+    expect(rereadsOf(LIBRARY_KEY)).toBe(1);
+    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+  });
+
   it.each([
     ["onImported", { recipe: dashboardRecipe({ id: "r2" }) }],
     ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "r2" })] }],
@@ -359,7 +371,9 @@ describe("the recipe list events and recipe outcomes", () => {
     emit(name, payload);
     endBurst();
 
-    expect(invalidateQueries.mock.calls).toEqual([[{ queryKey: [["library", "discover"]] }]]);
+    expect(invalidateQueries).toHaveBeenCalledTimes(1);
+    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+    expect([rereadsOf(LIST_KEY), rereadsOf(LIBRARY_KEY)]).toEqual([0, 0]);
   });
 
   it.each(["auto-tagging", "allergy-detection", "auto-categorization", "image-generation"])(

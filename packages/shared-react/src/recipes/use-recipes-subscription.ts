@@ -15,9 +15,8 @@ import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import { usePlatform } from "../platform/platform";
-import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
+import { rereadInWindow, useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
-import { rereadAfterBurst } from "./reread-burst";
 import { useRecipeSelection } from "./selection-store";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
@@ -93,12 +92,12 @@ const DISCOVER_ENRICHMENTS: ReadonlySet<RecipeEnrichmentKind> = new Set([
   "image-generation",
 ]);
 
-/** Rereads Search's Categories and Tags, built from the recipes rather than patched, once per burst. */
+/** Rereads Search's Categories and Tags, built from the recipes rather than patched, once per window. */
 function rereadDiscover(
   queryClient: ReturnType<typeof useQueryClient>,
   trpc: ReturnType<typeof useTRPC>
 ) {
-  rereadAfterBurst(queryClient, trpc.library.discover.pathKey());
+  rereadInWindow(queryClient, [trpc.library.discover.pathKey()]);
 }
 
 /**
