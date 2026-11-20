@@ -1,25 +1,14 @@
-import type { inferRouterOutputs } from "@trpc/server";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import {
-  matchQuery,
-  notifyManager,
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
-import type { AppRouter } from "@norish/trpc/client";
 import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { StoredIcon } from "./types";
 import { answered } from "../offline/settled";
 import { useTRPC } from "../trpc";
+import { useCachedAnswers } from "./cached-answers";
 import { useCatalogueFailure } from "./use-catalogue-failure";
-
-/** Each food's icon by its Ingredient's id, null where it has none: one read's answer. */
-type IconAnswer = inferRouterOutputs<AppRouter>["ingredients"]["icons"];
 
 /** One read of a surface's foods' icons; each icon selects its own with `useIngredientIconAddress`. */
 export function useIngredientIcons(ids: readonly (string | null | undefined)[]): void {
@@ -33,43 +22,11 @@ export function useIngredientIcons(ids: readonly (string | null | undefined)[]):
   });
 }
 
-/** Reads the icon answers cached by every surface: one food's address, newest and watched first. */
+/** The icon answers cached by every surface. */
 function useIconAnswers() {
   const trpc = useTRPC();
-  const queryCache = useQueryClient().getQueryCache();
-  const subscribe = (onChange: () => void) =>
-    // Batched as TanStack's observers are, so a change made during a render notifies after it.
-    queryCache.subscribe(
-      notifyManager.batchCalls(({ query }) => {
-        if (matchQuery({ queryKey: trpc.ingredients.icons.pathKey() }, query)) onChange();
-      })
-    );
-  const read = (ingredientId: string) => {
-    let address: string | null | undefined;
-    let answeredWatched = false;
-    let answeredAt = -1;
 
-    for (const query of queryCache.findAll({ queryKey: trpc.ingredients.icons.pathKey() })) {
-      const answer = query.state.data as IconAnswer | undefined;
-      // A read a surface watches outranks an earlier one, as a seed carries the server's clock.
-      const watched = query.getObserversCount() > 0;
-      const at = query.state.dataUpdatedAt;
-
-      if (
-        answer &&
-        Object.hasOwn(answer, ingredientId) &&
-        (watched !== answeredWatched ? watched : at > answeredAt)
-      ) {
-        address = answer[ingredientId];
-        answeredWatched = watched;
-        answeredAt = at;
-      }
-    }
-
-    return address;
-  };
-
-  return { subscribe, read };
+  return useCachedAnswers<string | null>(trpc.ingredients.icons.pathKey());
 }
 
 /** One food's icon address from a surface's own read, else the newest earlier read that answered
@@ -78,17 +35,15 @@ export function useIngredientIconAddress(ingredientId: string): string | null | 
   const { subscribe, read } = useIconAnswers();
 
   // A string or null, so an unchanged address renders nothing.
-  return useSyncExternalStore(
-    subscribe,
-    () => read(ingredientId),
-    () => read(ingredientId)
-  );
+  const address = () => read(ingredientId)?.value;
+
+  return useSyncExternalStore(subscribe, address, address);
 }
 
 /** Whether any food of a list has an icon: only then does a food without one keep an empty slot. */
 export function useListHasIcon(ids: readonly (string | null | undefined)[]): boolean {
   const { subscribe, read } = useIconAnswers();
-  const any = () => ids.some((id) => Boolean(id && read(id)));
+  const any = () => ids.some((id) => Boolean(id && read(id)?.value));
 
   return useSyncExternalStore(subscribe, any, any);
 }
