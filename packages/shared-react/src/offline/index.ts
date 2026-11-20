@@ -5,6 +5,7 @@ export type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
 export { createOutboxStore } from "./outbox-store";
 export { isEncodedFormData } from "./input-codec";
 export type { LockManagerLike } from "./leader";
+export type { CacheManager } from "./cache-manager";
 export { createOfflineQueryClient, QUERY_STALE_TIME_MS } from "./cache-manager";
 export type { WarmedRecipe } from "./warm-set";
 export { LIVE_PROBE_INTERVAL_MS } from "./connectivity-machine";

@@ -135,6 +135,9 @@ export interface CacheManager {
   ownerData: {
     /** The owner whose data is open: null with none applied and while its data is being cleared. */
     owner(): string | null;
+    /** While closed, the owner it reopens for: another after a switch, the same after a wipe, null
+     * after a sign-out. While open, the open owner. */
+    next(): string | null;
     read<T>(owner: string, name: string): Promise<T | undefined>;
     write(owner: string, name: string, value: unknown): Promise<void>;
     /** Told when the open owner changes, as a switch, sign-out or wipe starts and ends. */
@@ -172,6 +175,7 @@ export function createCacheManager({
   let inFlight: Promise<void> = Promise.resolve();
   const appliedListeners = new Set<() => void>();
   let dataOwner: string | null = null;
+  let dataNext: string | null = null;
   const dataListeners = new Set<() => void>();
   // Bumped whenever the open owner changes; a write made under an older one is stale.
   let dataGeneration = 0;
@@ -181,7 +185,8 @@ export function createCacheManager({
   // Counts the identity requests that closed owner data; only the newest one reopens it.
   let identityRequest = 0;
 
-  function openOwnerData(owner: string | null): void {
+  function openOwnerData(owner: string | null, next = owner): void {
+    dataNext = next;
     if (owner === dataOwner) return;
 
     dataOwner = owner;
@@ -369,11 +374,15 @@ export function createCacheManager({
     return sessionUserId ?? (isOffline ? (appliedOwner ?? bootOwner) : null);
   }
 
-  /** Queues `task`; a request that changes owner closes owner data now, before it waits its turn. */
-  function enqueue(task: () => Promise<void>, closesOwnerData: boolean): Promise<void> {
+  /** Queues `task`; a request that changes owner closes owner data now, on its way to `next`. */
+  function enqueue(
+    task: () => Promise<void>,
+    closesOwnerData: boolean,
+    next: string | null
+  ): Promise<void> {
     if (closesOwnerData) {
       identityRequest++;
-      openOwnerData(null);
+      openOwnerData(null, next);
     }
 
     const request = identityRequest;
@@ -434,36 +443,45 @@ export function createCacheManager({
       // interleave a restore with a switch.
       const nextOwner = targetOwner(inputs);
 
-      return enqueue(() => applyIdentity(inputs), nextOwner !== null && nextOwner !== dataOwner);
+      return enqueue(
+        () => applyIdentity(inputs),
+        nextOwner !== null && nextOwner !== dataOwner,
+        nextOwner
+      );
     },
 
     resetOfflineCopy(cause) {
-      return enqueue(async () => {
-        const owner = appliedOwner ?? bootOwner;
+      return enqueue(
+        async () => {
+          const owner = appliedOwner ?? bootOwner;
 
-        clearClient();
+          clearClient();
 
-        if (owner) {
-          await clearOwnerReadArtifacts(owner);
-        } else {
-          await Promise.allSettled([clearPersonalCaches()]);
-        }
+          if (owner) {
+            await clearOwnerReadArtifacts(owner);
+          } else {
+            await Promise.allSettled([clearPersonalCaches()]);
+          }
 
-        if (cause === "sign-out") {
-          appliedOwner = null;
-          bootOwner = null;
-          writeLastOwner(null);
-          notifyOwnerApplied();
+          if (cause === "sign-out") {
+            appliedOwner = null;
+            bootOwner = null;
+            writeLastOwner(null);
+            notifyOwnerApplied();
 
-          return;
-        }
+            return;
+          }
 
-        if (owner) subscribeToPersistence(owner);
-      }, true);
+          if (owner) subscribeToPersistence(owner);
+        },
+        true,
+        cause === "sign-out" ? null : (appliedOwner ?? bootOwner)
+      );
     },
 
     ownerData: {
       owner: () => dataOwner,
+      next: () => dataNext,
       read: async <T>(owner: string, name: string) =>
         owner === dataOwner ? keyval.get<T>(ownerDataKey(owner, name)) : undefined,
       write: async (owner, name, value) => {

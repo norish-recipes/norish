@@ -566,6 +566,30 @@ describe("createCacheManager", () => {
     expect(open).toEqual(["u1", null, "u1", null, "u2", null]);
   });
 
+  it("says, while closed, which owner the data reopens for: the same after a wipe", async () => {
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+    const told: Array<[string | null, string | null]> = [];
+
+    manager.ownerData.subscribe(() =>
+      told.push([manager.ownerData.owner(), manager.ownerData.next()])
+    );
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    await manager.resetOfflineCopy("manual");
+    await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+    await manager.resetOfflineCopy("sign-out");
+
+    expect(told).toEqual([
+      ["u1", "u1"],
+      [null, "u1"],
+      ["u1", "u1"],
+      [null, "u2"],
+      ["u2", "u2"],
+      [null, null],
+    ]);
+  });
+
   it("writes nothing under the departing owner once a switch starts clearing it", async () => {
     storage.lastOwner.set("u1");
 
