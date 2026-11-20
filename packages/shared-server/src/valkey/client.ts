@@ -112,6 +112,9 @@ export async function createSubscriberClient(): Promise<Valkey> {
   // A SUBSCRIBE waits out an outage rather than failing like a publisher's command.
   const subscriber = publisher.duplicate({
     commandTimeout: undefined,
+    // The hub resubscribes itself: ioredis's own SUBSCRIBE on reconnect has no handler, so a
+    // connection closing before Valkey answers it would end the process on an unhandled rejection.
+    autoResubscribe: false,
     connectionName: `norish:${process.pid}:realtime-hub`,
   });
 
