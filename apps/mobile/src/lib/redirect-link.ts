@@ -10,8 +10,8 @@ const DISMISS_MS = 400;
 // `/groceries/pantry`, as a path or the end of a full link, before any query.
 const PANTRY_LINK = /(^|\/)groceries\/pantry\/?([?#].*)?$/;
 
-// The app path of a link: after a dev server's `/--`, or after the scheme of `norish://recipe/b`.
-const APP_PATH = /^(?:.*\/--|[a-z][\w+.-]*:\/)(\/.*)?$/i;
+// The app path of a link: after a dev server's `scheme://host/--`, or after the scheme of `norish://recipe/b`.
+const APP_PATH = /^(?:[a-z][\w+.-]*:\/\/[^/?#]*\/--|[a-z][\w+.-]*:\/)(\/.*)?$/i;
 
 // Today and the recipe and cookbook pages, which Recipes' and Search's stacks share.
 const SHARED_PAGE = /^\/+((?:recipe|cookbook)\/[^?#]*)?([?#].*)?$/;

@@ -76,6 +76,12 @@ describe("redirectLink", () => {
       ["exp://192.168.1.2:8081/--/recipe/b", "/(recipes)/recipe/b"],
       ["norish://cookbook/c", "/(recipes)/cookbook/c"],
       ["norish://calendar?day=2026-11-20", "norish://calendar?day=2026-11-20"],
+      ["/recipe/b/cook?step=2", "/(recipes)/recipe/b/cook?step=2"],
+      ["/cookbook/c", "/(recipes)/cookbook/c"],
+      ["exp://192.168.1.2:8081/--/cookbook/c?x=1", "/(recipes)/cookbook/c?x=1"],
+      ["norish://calendar?next=/--/recipe/b", "norish://calendar?next=/--/recipe/b"],
+      ["/calendar?next=/--/recipe/b", "/calendar?next=/--/recipe/b"],
+      ["/groceries", "/groceries"],
     ];
 
     for (const [path, opened] of cases) {
