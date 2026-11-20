@@ -41,15 +41,14 @@ import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
+import { rowsOf } from "./raw-sql";
+import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 import {
   buildOwnerPolicyCondition,
   hasSearchTerms,
   listDashboardRecipesByIds,
-  recipeIngredientMatches,
-  recipeSearchMatches,
   recipeSearchSql,
-  rowsOf,
 } from "./recipes";
 
 export type LibraryListParams = {
