@@ -1,6 +1,6 @@
 # Mobile Search
 
-Status: tickets 01-08 open
+Status: tickets 01-08 done; 09-10 open (device feedback, 2026-11-20)
 
 Settled in a `/grill-with-docs` session on 2026-11-19. The design is the Search page of the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz#page-b651411d24f3, Version 114): SearchPage, SrFocused, SrTyping, SrBrowse, SrResults, SrNone, each light and dark. Vocabulary is CONTEXT.md's: **Search Scope**, **Recent Search**, **Category**, **Tag**, **Ingredient**, **Parent Ingredient**, **Ingredient Icon**, **Hidden Item**, **Offline**, **Offline Cache**. Part of the mobile redesign (`.scratch/mobile-redesign/spec.md`), branch `feat/mobile-redesign`, Target Version 0.27.0-beta.
 

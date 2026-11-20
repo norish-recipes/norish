@@ -4,12 +4,12 @@
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Maestro flows: confirm a search → results → open a recipe → back keeps the results; Narrow to an Ingredient; re-run a Recent Search. First-run green.
 - [x] Device check, light and dark, every board on the Search page against the canvas.
-- [ ] Docs page for mobile Search with screenshots and the release-notes lines for the Target Version (Terra).
-- [ ] Gates green; `.scratch/mobile-search/spec.md` Status updated.
+- [x] Docs page for mobile Search with screenshots and the release-notes lines for the Target Version (Terra).
+- [x] Gates green; `.scratch/mobile-search/spec.md` Status updated.
 
 ## Comments
 
@@ -27,3 +27,5 @@ Part B, device (2026-11-20, Release build of e3e8e1b54, iPhone 18 Pro iOS 27.2):
 - Found and fixed: Narrow to Ingredient rows never asked for their foods' icons, so they were blank until another screen had loaded them; `TypingSuggestions` now calls `useIngredientIcons` (test first, 0081a535a, 67e8ca79f). Seen on device after a rebuild; the Maestro runs above were on the build before it.
 - Screenshots (light, 1206x2622, `apps/docs/static/img/screenshots/`, commit d5a393c2d): `mobile-search-page` (Recent, Categories, Quick filters, Tags), `mobile-search-typing` ("salad": two suggestions, Narrow to Ingredient with icon, Tag, Category, Scope chips; scrolled so none is clipped, so the "Search for" row is behind the header), `mobile-search-results` (Dinner chip, Best match, "In the title" and "Tag: Curry"), `mobile-search-ingredient` (chicken chip with icon, "Ingredient: ..." lines), `mobile-search-no-results` (Clear filters), `mobile-search-offline`.
 - Not done: no "Ingredient: ..." line beside "In the title" in one shot (Tags scope was on for the Tag line); no thighs line (cards show breasts and stock). Android not run.
+
+Close (2026-11-20): docs by Terra, `c16331cd3` (`apps/docs/docs/mobile-search.md`, linked from the iPhone overview, six screenshots) and `22e656fee` (0.27.0-beta release notes). Web E2E at `eaa95a835`: 278 passed, 2 failed; both were specs left stale by earlier mobile-redesign commits (`33bc07aa9` "No items", `0c6b089ba` per-entry offline cache), fixed in `668706855` and `eb2cad316`, both files 5/5 green on repeat. Base-path E2E not run locally (CI runs it). Follow-ups from Mike's iPhone feedback are tickets 09 and 10.
