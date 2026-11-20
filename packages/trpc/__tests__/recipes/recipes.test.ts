@@ -55,6 +55,12 @@ vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
+const readRecipeNutrition = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/shared-server/ingredients/nutrition/recipe-nutrition", () => ({
+  readRecipeNutrition,
+}));
+
 // The Dish Colour helpers are pinned by their own suite
 // (shared-server __tests__/media/dish-color.test.ts); here they return a
 // sentinel so the tests can prove the router threads them into the writes.
@@ -517,6 +523,46 @@ describe("recipes procedures", () => {
 
       expect(canAccessResource).not.toHaveBeenCalled();
       expect(result).toEqual(mockRecipe);
+    });
+  });
+
+  describe("nutrition", () => {
+    const recipeId = "88888888-8888-4888-8888-888888888888";
+    const answer = {
+      source: "supplied",
+      perServing: { calories: 320, fat: 10, carbs: 40, protein: 12, extras: {} },
+      estimated: false,
+      leftOut: [],
+      credits: [],
+      extrasCoverage: {},
+    };
+    const caller = () =>
+      recipesRouter.createCaller({ ...ctx, connectionId: null, operationId: null });
+
+    it("answers the recipe's nutrition for the reader's household", async () => {
+      const recipe = createValidFullRecipe({ id: recipeId, userId: "other-user-id" });
+
+      getRecipeFull.mockResolvedValue(recipe);
+      canAccessResource.mockResolvedValue(true);
+      readRecipeNutrition.mockResolvedValue(answer);
+
+      await expect(caller().nutrition({ id: recipeId })).resolves.toEqual(answer);
+      expect(readRecipeNutrition).toHaveBeenCalledWith(recipe, {
+        householdUserIds: ctx.userIds,
+      });
+    });
+
+    it("is NOT_FOUND for a recipe that is missing or the reader may not view", async () => {
+      getRecipeFull.mockResolvedValue(null);
+      await expect(caller().nutrition({ id: recipeId })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+
+      getRecipeFull.mockResolvedValue(createValidFullRecipe({ id: recipeId, userId: "other" }));
+      canAccessResource.mockResolvedValue(false);
+      await expect(caller().nutrition({ id: recipeId })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
     });
   });
 

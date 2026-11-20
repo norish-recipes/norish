@@ -6,8 +6,8 @@ import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
 import { createTRPCClientLinks } from "../trpc/trpc-links";
 import { classifyReplayError, isStaleResult } from "./error-classification";
 
-/** What a mutation through the app's own links fails with when a proxy answers in HTML. */
-async function proxyAnswer(status: number): Promise<unknown> {
+/** What a call through the app's own links fails with when a proxy answers in HTML. */
+async function proxyAnswer(status: number, type: "mutation" | "query" = "mutation") {
   vi.stubGlobal(
     "fetch",
     vi.fn(
@@ -27,7 +27,13 @@ async function proxyAnswer(status: number): Promise<unknown> {
     }),
   });
 
-  return client.mutation("admin.enrichAllRecipes", {}).catch((error: unknown) => error);
+  // A query that is not an admin read goes through the batch link.
+  const call =
+    type === "mutation"
+      ? client.mutation("admin.enrichAllRecipes", {})
+      : client.query("recipes.get", { id: "recipe-1" });
+
+  return call.catch((error: unknown) => error);
 }
 
 afterEach(() => {
@@ -38,6 +44,14 @@ describe("a proxy's HTML answer", () => {
   it("504: the request reached a server that may have run it, so it is ambiguous", async () => {
     const error = await proxyAnswer(504);
 
+    expect(isBackendUnreachableError(error)).toBe(false);
+    expect(classifyReplayError(error)).toBe("ambiguous");
+  });
+
+  it("504 on a batched read: ambiguous too, not offline", async () => {
+    const error = await proxyAnswer(504, "query");
+
+    expect(String(vi.mocked(fetch).mock.calls[0]?.[0])).toContain("batch=1");
     expect(isBackendUnreachableError(error)).toBe(false);
     expect(classifyReplayError(error)).toBe("ambiguous");
   });
