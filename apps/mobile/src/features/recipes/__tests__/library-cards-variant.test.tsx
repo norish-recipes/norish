@@ -30,7 +30,11 @@ vi.mock("@/features/recipes/components/card-list", () => ({
   }) => rows.map((row) => <div key={String(row)}>{renderCard(row, variant)}</div>),
 }));
 vi.mock("@/features/recipes/components/recipe-card", () => ({
-  RecipeCard: ({ variant }: { variant: string }) => void seen.cards.push(variant) ?? null,
+  RecipeCard: ({ variant }: { variant: string }) => {
+    seen.cards.push(variant);
+
+    return null;
+  },
 }));
 
 const { RecipeResults } = await import("@/features/recipes/components/recipe-results");
@@ -44,6 +48,7 @@ describe("Search results", () => {
         header={<div />}
         isFetchingNextPage={false}
         isLoading={false}
+        noResults={<div />}
         recipes={[{ id: "a" }] as never}
         scroll={{} as never}
         onEndReached={() => {}}
