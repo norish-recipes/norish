@@ -59,7 +59,12 @@ const list = authedProcedure
 const suggest = authedProcedure
   .input(LibrarySuggestionsInputSchema)
   .output(LibrarySuggestionsSchema)
-  .query(async ({ ctx, input }) => listLibrarySuggestions(viewerOf(ctx), input.text));
+  .query(async ({ ctx, input }) =>
+    listLibrarySuggestions(viewerOf(ctx), input.text, {
+      ingredientIds: input.exceptIngredientIds,
+      tags: input.exceptTags,
+    })
+  );
 
 /** What Search offers with no text: Categories with a photo and the most-used Tags. */
 const discover = authedProcedure

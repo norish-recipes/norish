@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { LibrarySuggestionsDTO } from "@norish/shared/contracts";
-import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
+import { MAX_FILTER_INGREDIENTS, SUGGEST_TEXT_MAX } from "@norish/shared/contracts/zod";
 
 import type { FieldState } from "../utils/search-field";
 import { fieldStep, FRESH_FIELD } from "../utils/search-field";
@@ -10,6 +10,7 @@ import {
   matchingCategories,
   narrowPatch,
   narrowRows,
+  suggestionsExcept,
   suggestionText,
 } from "../utils/search-suggestions";
 
@@ -44,6 +45,25 @@ describe("suggestion text", () => {
     expect(suggestionText("  chick ")).toBe("chick");
 
     for (const text of ["", "   ", "^", "!!"]) expect(suggestionText(text)).toBe("");
+  });
+});
+
+describe("what the suggestions leave out", () => {
+  it("names the applied Ingredients and Tags, so the server caps what is left", () => {
+    expect(suggestionsExcept({ ingredients: ["chicken"], searchTags: ["Soup"] })).toEqual({
+      exceptIngredientIds: ["chicken"],
+      exceptTags: ["Soup"],
+    });
+  });
+
+  it("stays within what the server takes; the rows still drop the rest", () => {
+    const tags = Array.from({ length: MAX_FILTER_INGREDIENTS + 5 }, (_, i) => `tag ${i}`);
+    const except = suggestionsExcept({
+      ingredients: [],
+      searchTags: ["a".repeat(SUGGEST_TEXT_MAX + 1), ...tags],
+    });
+
+    expect(except.exceptTags).toEqual(tags.slice(0, MAX_FILTER_INGREDIENTS));
   });
 });
 

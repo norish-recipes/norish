@@ -232,6 +232,16 @@ export const LibraryListResultSchema = z.object({
 
 export const LibrarySuggestionsInputSchema = z.object({
   text: z.string().max(SUGGEST_TEXT_MAX).describe("What the reader has typed."),
+  exceptIngredientIds: z
+    .array(z.uuid())
+    .max(MAX_FILTER_INGREDIENTS)
+    .default([])
+    .describe("Ingredients already applied, left out before the cap."),
+  exceptTags: z
+    .array(z.string().max(SUGGEST_TEXT_MAX))
+    .max(MAX_FILTER_INGREDIENTS)
+    .default([])
+    .describe("Tags already applied, in any case, left out before the cap."),
 });
 
 /** What the typed text can narrow a search to, each kind capped and most used first. */

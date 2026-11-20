@@ -1,6 +1,6 @@
 import type { LibrarySuggestionsDTO } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
+import { MAX_FILTER_INGREDIENTS, SUGGEST_TEXT_MAX } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { hasSearchText } from "@norish/shared/lib/search-terms";
@@ -90,6 +90,16 @@ export function narrowRows(
       label: categoryLabel(name),
     })),
   ];
+}
+
+/** The applied Ingredients and Tags the server leaves out before its cap, within what it takes. */
+export function suggestionsExcept(applied: Pick<Applied, "ingredients" | "searchTags">) {
+  return {
+    exceptIngredientIds: applied.ingredients.slice(0, MAX_FILTER_INGREDIENTS),
+    exceptTags: applied.searchTags
+      .filter((tag) => tag.length <= SUGGEST_TEXT_MAX)
+      .slice(0, MAX_FILTER_INGREDIENTS),
+  };
 }
 
 /** The filters a Tag or Category row adds; an Ingredient row is added through `useAddIngredient`. */

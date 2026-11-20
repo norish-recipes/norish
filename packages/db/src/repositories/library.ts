@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, notInArray, sql } from "drizzle-orm";
 
 import type {
   CookbookSummaryDTO,
@@ -42,7 +42,7 @@ import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
-import { rowsOf } from "./raw-sql";
+import { rowsOf, uuidListSql } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
@@ -386,7 +386,8 @@ const SUGGESTIONS_PER_KIND = 3;
  */
 export async function listLibrarySuggestions(
   ctx: RecipeListContext,
-  text: string
+  text: string,
+  except: { ingredientIds: string[]; tags: string[] } = { ingredientIds: [], tags: [] }
 ): Promise<LibrarySuggestionsDTO> {
   const search = parseIngredientSearch(text, { fields: ["name", "translations"] });
 
@@ -394,10 +395,19 @@ export async function listLibrarySuggestions(
 
   const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
   const [foods, tagNames, categoryNames] = await Promise.all([
-    matchedFoods(visible, search),
+    matchedFoods(visible, search, except.ingredientIds),
     namesOnVisible(
       TAG_NAMES,
-      and(visible, nameStartsWith(tagsTable.name, search.fold)),
+      and(
+        visible,
+        nameStartsWith(tagsTable.name, search.fold),
+        except.tags.length
+          ? notInArray(
+              sql`lower(${tagsTable.name})`,
+              except.tags.map((tag) => tag.toLowerCase())
+            )
+          : undefined
+      ),
       SUGGESTIONS_PER_KIND
     ),
     namesOnVisible(CATEGORY_NAMES, visible),
@@ -413,11 +423,12 @@ export async function listLibrarySuggestions(
 
 /** The text-matched Ingredients with the distinct visible recipes narrowing to each returns (the
  * recipes naming it or a kind of it), most first. The walk down the kinds starts at the matches. */
-async function matchedFoods(visible: SQL, search: IngredientSearch) {
+async function matchedFoods(visible: SQL, search: IngredientSearch, except: string[]) {
+  const roots = except.length
+    ? sql`${matchingSearch(search, undefined, true)} AND ${ingredients.id} NOT IN (${uuidListSql(except)})`
+    : matchingSearch(search, undefined, true);
   const result = await db.execute(sql`
-    WITH RECURSIVE ${kindWalkSql(
-      sql`SELECT ${ingredients.id} FROM ${ingredients} WHERE ${matchingSearch(search, undefined, true)}`
-    )}
+    WITH RECURSIVE ${kindWalkSql(sql`SELECT ${ingredients.id} FROM ${ingredients} WHERE ${roots}`)}
     SELECT ${ingredients.id} AS id, ${ingredients.name} AS name
     FROM kinds
     JOIN ${ingredients} ON ${ingredients.id} = kinds.root

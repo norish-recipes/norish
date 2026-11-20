@@ -154,6 +154,23 @@ describe("the typing suggestions", () => {
       expect(await names("ch")).toEqual(["Chicory", "Chard", "Cherry"]);
     });
 
+    it("leaves out the applied Ingredients before the cap", async () => {
+      const popular = await food("Chicory");
+
+      await recipeNaming(ownerId, [popular]);
+      await recipeNaming(ownerId, [popular]);
+      for (const each of [await food("Chard"), await food("Cherry"), await food("Chive")]) {
+        await recipeNaming(ownerId, [each]);
+      }
+
+      const answer = await listLibrarySuggestions(viewer(ownerId), "ch", {
+        ingredientIds: [popular.ingredientId],
+        tags: [],
+      });
+
+      expect(answer.ingredients.map((each) => each.name)).toEqual(["Chard", "Cherry", "Chive"]);
+    });
+
     it("leaves out a food only a recipe the reader cannot see names", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
@@ -289,6 +306,25 @@ describe("the typing suggestions", () => {
       await tagRecipes([one.id], "Quail");
 
       expect((await ask("qu")).tags).toEqual(["Quick meal", "Quail", "quiche"]);
+    });
+
+    it("leaves out the applied Tags, in any case, before the cap", async () => {
+      const [one, two] = [
+        await recipeNaming(ownerId, [], "One"),
+        await recipeNaming(ownerId, [], "Two"),
+      ];
+
+      await tagRecipes([one.id, two.id], "Quick meal");
+      await tagRecipes([one.id], "quiche");
+      await tagRecipes([one.id], "Quinoa");
+      await tagRecipes([one.id], "Quail");
+
+      const answer = await listLibrarySuggestions(viewer(ownerId), "qu", {
+        ingredientIds: [],
+        tags: ["quick MEAL"],
+      });
+
+      expect(answer.tags).toEqual(["Quail", "quiche", "Quinoa"]);
     });
 
     it("folds case and accents and matches the start of a word", async () => {

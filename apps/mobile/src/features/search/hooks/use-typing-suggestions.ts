@@ -5,6 +5,7 @@ import { useSettledText } from "@norish/shared-react/settled-text";
 import {
   RECIPE_SUGGESTIONS,
   SUGGESTIONS_DEBOUNCE_MS,
+  suggestionsExcept,
   suggestionText,
 } from "../utils/search-suggestions";
 import { useSearchFilters } from "./use-search-filters";
@@ -25,7 +26,7 @@ export function useTypingSuggestions(text: string, typing: boolean) {
     filters: { ...filters, rawInput: asked },
     enabled: typing && asked !== "",
   });
-  const narrow = useLibrarySuggestions(asked, typing);
+  const narrow = useLibrarySuggestions(asked, typing, suggestionsExcept(filters));
 
   return {
     asked,

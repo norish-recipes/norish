@@ -30,7 +30,9 @@ vi.mock("@norish/shared-react/trpc", () => ({
     },
   }),
 }));
-vi.mock("../hooks/use-search-filters", () => ({ useSearchFilters: () => ({}) }));
+vi.mock("../hooks/use-search-filters", () => ({
+  useSearchFilters: () => ({ ingredients: [], searchTags: [] }),
+}));
 vi.mock("@norish/shared-react/recipes", async () => ({
   ...(await vi.importActual<object>("@norish/shared-react/recipes")),
   useLibraryList: () => ({ isLoading: false, recipes: [{ id: "r1" }] }),
