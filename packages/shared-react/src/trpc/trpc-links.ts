@@ -53,6 +53,8 @@ export type CreateTRPCProviderBundleOptions<TRouter extends AnyTRPCRouter> = {
   getBaseUrl?: () => string;
   getWsUrl?: () => string;
   getHeaders?: () => HTTPHeaders;
+  /** The HTTP requests' fetch credentials; mobile sends its session as a header and passes "omit". */
+  credentials?: RequestCredentials;
   getWebSocketImpl?: () => typeof WebSocket | undefined;
   wsLazyEnabled?: boolean;
   wsLazyCloseMs?: number;
@@ -168,13 +170,15 @@ function createUnauthorizedLink<TRouter extends AnyTRPCRouter>(
 }
 
 /** tRPC parses a proxy's HTML 504 as JSON and loses its status; the error's cause keeps it. */
-const keepGatewayTimeout: typeof fetch = async (input, init) => {
-  const response = await fetch(input, init);
+function gatewayTimeoutFetch(credentials: RequestCredentials | undefined): typeof fetch {
+  return async (input, init) => {
+    const response = await fetch(input, credentials ? { ...init, credentials } : init);
 
-  if (response.status === 504) throw new GatewayTimeoutError();
+    if (response.status === 504) throw new GatewayTimeoutError();
 
-  return response;
-};
+    return response;
+  };
+}
 
 /**
  * The HTTP links are built against `AnyTRPCRouter`: tRPC types the transformer
@@ -184,19 +188,21 @@ const keepGatewayTimeout: typeof fetch = async (input, init) => {
  */
 function createPlainHttpLink(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders
+  getHeaders: () => HTTPHeaders,
+  send: typeof fetch
 ): TRPCLink<AnyTRPCRouter> {
   return httpLink({
     url: `${getBaseUrl()}/api/trpc`,
     headers: createRequestHeadersResolver(getHeaders),
     transformer: superjson,
-    fetch: keepGatewayTimeout,
+    fetch: send,
   });
 }
 
 function createHttpFormDataMutationLink(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders
+  getHeaders: () => HTTPHeaders,
+  send: typeof fetch
 ): TRPCLink<AnyTRPCRouter> {
   return httpLink({
     url: `${getBaseUrl()}/api/trpc`,
@@ -205,20 +211,23 @@ function createHttpFormDataMutationLink(
       serialize: (data: unknown) => data,
       deserialize: superjson.deserialize,
     },
-    fetch: keepGatewayTimeout,
+    fetch: send,
   });
 }
 
 function createHttpTransportLink(
   getBaseUrl: () => string,
-  getHeaders: () => HTTPHeaders
+  getHeaders: () => HTTPHeaders,
+  credentials: RequestCredentials | undefined
 ): TRPCLink<AnyTRPCRouter> {
+  const send = gatewayTimeoutFetch(credentials);
+
   return splitLink({
     condition: (op) => op.type === "mutation",
     true: splitLink({
       condition: (op) => isNonJsonSerializable(op.input),
-      true: createHttpFormDataMutationLink(getBaseUrl, getHeaders),
-      false: createPlainHttpLink(getBaseUrl, getHeaders),
+      true: createHttpFormDataMutationLink(getBaseUrl, getHeaders, send),
+      false: createPlainHttpLink(getBaseUrl, getHeaders, send),
     }),
     false: splitLink({
       // These reads can carry a key being typed, which must not reach a URL and access logs.
@@ -228,14 +237,14 @@ function createHttpTransportLink(
         headers: createRequestHeadersResolver(getHeaders),
         transformer: superjson,
         methodOverride: "POST",
-        fetch: keepGatewayTimeout,
+        fetch: send,
       }),
       false: splitLink({
         // A batch answers when its slowest read does, and these read the job queues or walk the
         // ingredient catalogue: left in one, every setting that loads beside them waits for them.
         condition: (op) =>
           op.path.startsWith("admin.jobs.") || op.path.startsWith("admin.ingredientCatalogue."),
-        true: createPlainHttpLink(getBaseUrl, getHeaders),
+        true: createPlainHttpLink(getBaseUrl, getHeaders, send),
         false: httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           headers: createBatchRequestHeadersResolver(getHeaders),
@@ -243,7 +252,7 @@ function createHttpTransportLink(
           // A batch's inputs ride in its GET URL: split it, or a large warm set fails every read
           // batched with it.
           maxURLLength: MAX_BATCH_URL_LENGTH,
-          fetch: keepGatewayTimeout,
+          fetch: send,
         }),
       }),
     }),
@@ -275,6 +284,7 @@ export function createTRPCClientLinks<TRouter extends AnyTRPCRouter>({
   getBaseUrl = defaultGetBaseUrl,
   getWsUrl = defaultGetWsUrl,
   getHeaders = defaultGetHeaders,
+  credentials,
   getWebSocketImpl,
   includeSubscriptions = true,
   wsLazyEnabled = true,
@@ -315,9 +325,9 @@ export function createTRPCClientLinks<TRouter extends AnyTRPCRouter>({
           client: webSocketClient,
           transformer: superjson,
         }),
-        false: createHttpTransportLink(getBaseUrl, getHeaders),
+        false: createHttpTransportLink(getBaseUrl, getHeaders, credentials),
       })
-    : createHttpTransportLink(getBaseUrl, getHeaders);
+    : createHttpTransportLink(getBaseUrl, getHeaders, credentials);
 
   return [
     ...(enableLoggerLink

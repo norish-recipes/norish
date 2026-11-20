@@ -235,3 +235,30 @@ describe("the HTTP read transport", () => {
     expect(settings[0]).toContain("admin.getAllConfigs");
   });
 });
+
+describe("the HTTP transport's credentials", () => {
+  it("sends every read and write with the credentials it was given", async () => {
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response("{}"));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = createTRPCUntypedClient({
+      links: createTRPCClientLinks({
+        logger,
+        includeSubscriptions: false,
+        enableLoggerLink: false,
+        getBaseUrl: () => "http://localhost:3000",
+        credentials: "omit",
+      }),
+    });
+
+    await Promise.allSettled([
+      client.query("user.get"),
+      client.query("admin.jobs.list"),
+      client.mutation("user.update", {}),
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    for (const [, init] of fetchMock.mock.calls) expect(init?.credentials).toBe("omit");
+  });
+});
