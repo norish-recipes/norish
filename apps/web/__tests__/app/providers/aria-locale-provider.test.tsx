@@ -1,6 +1,6 @@
 /**
- * HeroUI's components read their direction from React Aria, which would follow
- * the browser's language: the provider hands them the app's locale instead.
+ * React Aria follows the browser's language for number parsing and dates; the
+ * provider hands it the app's locale only on right-to-left pages, for direction.
  */
 import { AriaLocaleProvider } from "@/app/providers/aria-locale-provider";
 import { useLocale } from "@heroui/react";
@@ -33,9 +33,9 @@ describe("AriaLocaleProvider", () => {
     expect(screen.getByText("ar rtl")).toBeInTheDocument();
   });
 
-  it("keeps HeroUI left to right on an English page", () => {
-    renderIn("en");
+  it("leaves React Aria on the browser's locale on a left-to-right page", () => {
+    renderIn("nl");
 
-    expect(screen.getByText("en ltr")).toBeInTheDocument();
+    expect(screen.getByText(`${navigator.language} ltr`)).toBeInTheDocument();
   });
 });
