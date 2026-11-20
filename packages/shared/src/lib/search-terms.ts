@@ -1,12 +1,12 @@
 /** The most words a search looks for; the rest of a longer text is ignored. */
 export const SEARCH_WORDS_MAX = 16;
 
-/** The words of a search, as the server queries them: whitespace-split, tsquery characters dropped. */
+/** The words of a search, as the server queries them: whitespace-split, tsquery characters and wordless terms dropped. */
 export function searchTerms(search: string): string[] {
   return search
     .split(/\s+/)
     .map((term) => term.replace(/[&|!():<>*\\'"]/g, "").trim())
-    .filter((term) => term.length > 0)
+    .filter((term) => /[\p{L}\p{M}\p{N}]/u.test(term))
     .slice(0, SEARCH_WORDS_MAX);
 }
 

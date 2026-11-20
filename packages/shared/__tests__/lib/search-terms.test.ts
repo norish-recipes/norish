@@ -16,8 +16,8 @@ describe("searchTerms", () => {
     expect(searchTerms("chicken,rice stir-fry 1.5")).toEqual(["chicken,rice", "stir-fry", "1.5"]);
   });
 
-  it("keeps a term the query parser drops itself, as before", () => {
-    expect(searchTerms("basil ^")).toEqual(["basil", "^"]);
+  it("drops a term with no letter or digit", () => {
+    expect(searchTerms("basil ^ -")).toEqual(["basil"]);
   });
 
   it("is empty when nothing searchable is left", () => {
@@ -50,6 +50,13 @@ describe("the word cap", () => {
     const joined = Array.from({ length: 40 }, (_, i) => `w${i}`).join(",");
 
     expect(searchWords(joined)).toHaveLength(16);
+  });
+
+  it("counts only terms with a letter or digit toward the cap", () => {
+    const text = `${Array.from({ length: 16 }, () => "-").join(" ")} soup`;
+
+    expect(searchTerms(text)).toEqual(["soup"]);
+    expect(hasSearchText(text)).toBe(true);
   });
 
   it("leaves an ordinary search as it was", () => {

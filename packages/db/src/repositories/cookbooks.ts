@@ -103,7 +103,7 @@ export function cookbookTitleMatch(search: string) {
     .trim()
     .split(/\s+/)
     .map((term) => term.trim())
-    .filter((term) => term.length > 0)
+    .filter((term) => /[\p{L}\p{M}\p{N}]/u.test(term))
     .slice(0, SEARCH_WORDS_MAX);
 
   if (terms.length === 0) return undefined;
