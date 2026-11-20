@@ -378,12 +378,8 @@ export async function listLibraryDiscover(ctx: RecipeListContext): Promise<Libra
 /** How many of each kind the typing state offers. */
 const SUGGESTIONS_PER_KIND = 3;
 
-/**
- * What the typed text can narrow the Library to. Ingredients: a name or any spelling that starts a
- * word with it, whose narrowing returns a recipe the reader can see (named directly or through a
- * kind), most recipes first. Tags that match, likewise. Categories: every one on a visible recipe,
- * for the client to match by the label the reader sees.
- */
+/** The Ingredients and Tags whose word starts with `text` and that narrow to a visible recipe, most
+ * used first and `except` left out before the cap; every Category on a visible recipe. */
 export async function listLibrarySuggestions(
   ctx: RecipeListContext,
   text: string,

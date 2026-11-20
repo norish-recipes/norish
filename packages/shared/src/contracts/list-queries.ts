@@ -3,9 +3,9 @@ import type { toRecipesQueryFilters } from "./filter-contract";
 /** Filters as the list queries take them: toRecipesQueryFilters' answer, or any part of it. */
 export type ListQueryFilters = Partial<ReturnType<typeof toRecipesQueryFilters>> & {
   limit?: number;
-  /** Mobile Search only: an explicit sort orders a search instead of relevance. */
+  /** An explicit sort orders a search instead of relevance; only `none` still ranks. */
   sortBeatsRank?: boolean;
-  /** Mobile Search only: each result says which field matched. */
+  /** Each recipe a search returns says which field matched, and where. */
   withMatch?: boolean;
 };
 

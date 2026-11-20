@@ -22,8 +22,8 @@ export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };
 }
 
-/** The Library under the reader's filters, in grid order; loading until they apply. `sortBeatsRank`,
- * `withMatch` (`matches` by recipe id), `limit`, `filters` and `enabled` (false reads nothing) are Search's. */
+/** The Library under `filters` (else the reader's), in grid order, loading until they apply; with
+ * `withMatch`, `matches` holds each recipe's match by id, and `enabled: false` reads nothing. */
 export function useLibraryList({
   sortBeatsRank,
   withMatch,

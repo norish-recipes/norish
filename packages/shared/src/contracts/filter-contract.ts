@@ -14,7 +14,7 @@ import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 export type CanonicalRecipeFilters = {
   rawInput: string;
   searchTags: string[];
-  /** Mobile Search only, never persisted: ids of the Ingredients a recipe must name, or a kind of. */
+  /** Ids of the Ingredients a recipe must name, or a kind of one; never persisted. */
   ingredients: string[];
   searchFields: SearchField[];
   filterMode: FilterMode;
