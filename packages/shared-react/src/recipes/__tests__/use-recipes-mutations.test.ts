@@ -43,7 +43,10 @@ vi.mock("../../trpc", () => {
         delete: procedure("delete", vi.fn()),
         convertMeasurements: procedure("convertMeasurements", server.convert),
       },
-      library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
+      library: {
+        pathKey: () => [["library"]],
+        list: { queryKey: key("library", "list"), pathKey: key("library", "list") },
+      },
       cookbooks: { recipes: { pathKey: key("cookbooks", "recipes") } },
     }),
   };

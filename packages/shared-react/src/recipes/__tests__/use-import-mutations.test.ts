@@ -38,7 +38,10 @@ vi.mock("../../trpc", () => {
         importFromImages: procedure("importFromImages"),
         importFromPaste: procedure("importFromPaste"),
       },
-      library: { list: { queryKey: key("library", "list"), pathKey: key("library", "list") } },
+      library: {
+        pathKey: () => [["library"]],
+        list: { queryKey: key("library", "list"), pathKey: key("library", "list") },
+      },
       cookbooks: { recipes: { pathKey: key("cookbooks", "recipes") } },
     }),
   };
