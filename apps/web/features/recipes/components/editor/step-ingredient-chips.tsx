@@ -212,7 +212,7 @@ export function StepIngredientChips({
         return (
           <li
             key={`${ref.ingredientOrder}`}
-            className="border-border bg-surface flex items-center gap-0.5 rounded-full border py-0.5 pr-1 pl-2.5"
+            className="border-border bg-surface flex max-w-full min-w-0 items-center gap-0.5 rounded-full border py-0.5 pr-1 pl-2.5"
           >
             {customIndex === index ? (
               <>
@@ -262,11 +262,14 @@ export function StepIngredientChips({
               <Dropdown>
                 <Button
                   aria-label={t("shareLabel", { name: line.ingredientName })}
-                  className="h-6 min-w-0 bg-transparent px-1 text-sm font-normal"
+                  className="h-6 min-w-0 shrink bg-transparent px-1 text-sm font-normal"
                   size="sm"
                   variant="tertiary"
                 >
-                  {label}
+                  {/* A long line name truncates so the chip's remove button stays on screen. */}
+                  <span className="truncate" title={label}>
+                    {label}
+                  </span>
                 </Button>
                 <Dropdown.Popover className="bg-overlay z-[500]">
                   <Dropdown.Menu aria-label={t("shareLabel", { name: line.ingredientName })}>
@@ -297,7 +300,7 @@ export function StepIngredientChips({
             <Button
               isIconOnly
               aria-label={t("removeLabel", { name: line.ingredientName })}
-              className="h-5 w-5 min-w-0 bg-transparent"
+              className="h-5 w-5 min-w-0 shrink-0 bg-transparent"
               size="sm"
               variant="tertiary"
               onPress={() => removeAt(index)}
