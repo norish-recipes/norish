@@ -229,3 +229,21 @@ export const LibraryListResultSchema = z.object({
   total: z.number().int().nonnegative(),
   nextCursor: z.number().int().nonnegative().nullable(),
 });
+
+export const LibrarySuggestionsInputSchema = z.object({
+  text: z.string().max(200).describe("What the reader has typed."),
+});
+
+/** What the typed text can narrow a search to, each kind capped and most used first. */
+export const LibrarySuggestionsSchema = z.object({
+  ingredients: z.array(
+    z.object({
+      id: z.uuid(),
+      name: z.string(),
+      /** The best spelling per catalogue language, for the name in the reader's locale. */
+      localeNames: z.record(z.string(), z.string()),
+    })
+  ),
+  tags: z.array(z.string()),
+  categories: z.array(z.string()),
+});

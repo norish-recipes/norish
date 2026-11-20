@@ -85,7 +85,7 @@ const DIACRITICS = (() => {
 
 /** `foldName` in SQL, for a name with no fold column: marks dropped, recomposed, lowercased, every
  * other run one space. `forWords`: an ASCII name only lowercased, as a typed word holds no punctuation. */
-function folded(value: AnyPgColumn, forWords = false): SQL {
+export function folded(value: AnyPgColumn, forWords = false): SQL {
   const words = (text: SQL) =>
     sql`btrim(regexp_replace(lower(${text}), '[^[:alnum:]]+', ' ', 'g'))`;
   const ascii = forWords ? sql`lower(${value})` : words(sql`${value}`);
@@ -94,7 +94,7 @@ function folded(value: AnyPgColumn, forWords = false): SQL {
 }
 
 /** Whether a folded text holds `word` as written (`start`: at the start of one of its words). */
-function holds(text: SQL, word: string, start = false): SQL {
+export function holds(text: SQL, word: string, start = false): SQL {
   const escaped = escapeLike(word);
 
   return start

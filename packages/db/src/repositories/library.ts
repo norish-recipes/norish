@@ -1,10 +1,12 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type {
   CookbookSummaryDTO,
   FilterMode,
   LibraryMatchDTO,
+  LibrarySuggestionsDTO,
   LibraryTypeFilter,
   RecipeCategory,
   RecipeDashboardDTO,
@@ -12,12 +14,19 @@ import type {
   SortOrder,
 } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
+import { foldName } from "@norish/shared/lib/fold-name";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { RecipeListContext } from "./recipes";
 import {
+  categories,
   cookbooks,
+  ingredientAliases,
+  ingredients,
+  recipeCategories,
   recipeFavorites,
+  recipeIngredientFoods,
+  recipeIngredients,
   recipeRatings,
   recipes,
   recipeTags,
@@ -25,6 +34,8 @@ import {
 } from "../schema";
 import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
+import { findLocaleNames } from "./ingredient-aliases";
+import { folded, holds } from "./ingredient-catalogue";
 import { lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
 import {
@@ -327,4 +338,71 @@ export async function listLibrary(
   });
 
   return { items, total };
+}
+
+/** How many of each kind the typing state offers. */
+const SUGGESTIONS_PER_KIND = 3;
+
+/**
+ * What the typed text can narrow to: Ingredients (a name or any spelling), Tags and Categories
+ * that start a word with it, folded as the catalogue folds, held by recipes the reader can see
+ * and most used first. A food shows its name and its translations, as other Ingredient rows do.
+ */
+export async function listLibrarySuggestions(
+  ctx: RecipeListContext,
+  text: string
+): Promise<LibrarySuggestionsDTO> {
+  const fold = foldName(text);
+
+  if (!fold) return { ingredients: [], tags: [], categories: [] };
+
+  const visible = await buildOwnerPolicyCondition(ctx, recipes.userId, "view");
+  const named = alias(ingredientAliases, "named_spelling");
+  const uses = sql<number>`count(distinct ${recipes.id})::int`;
+  // Any spelling of the food, in any language: its own name is one of them.
+  const spelled = sql`exists (select 1 from ingredient_aliases spelling
+    where spelling.ingredient_id = "ingredients"."id" and ${holds(sql`spelling.fold`, fold, true)})`;
+
+  const foods = await db
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(ingredients)
+    .innerJoin(named, eq(named.ingredientId, ingredients.id))
+    .innerJoin(recipeIngredientFoods, eq(recipeIngredientFoods.ingredientAliasId, named.id))
+    .innerJoin(
+      recipeIngredients,
+      eq(recipeIngredients.id, recipeIngredientFoods.recipeIngredientId)
+    )
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(and(visible, spelled))
+    .groupBy(ingredients.id)
+    .orderBy(desc(uses), asc(sql`lower(${ingredients.name})`), asc(ingredients.id))
+    .limit(SUGGESTIONS_PER_KIND);
+
+  const tagNames = await db
+    .select({ name: tagsTable.name })
+    .from(tagsTable)
+    .innerJoin(recipeTags, eq(recipeTags.tagId, tagsTable.id))
+    .innerJoin(recipes, eq(recipes.id, recipeTags.recipeId))
+    .where(and(visible, holds(folded(tagsTable.name), fold, true)))
+    .groupBy(tagsTable.id)
+    .orderBy(desc(uses), asc(sql`lower(${tagsTable.name})`), asc(tagsTable.id))
+    .limit(SUGGESTIONS_PER_KIND);
+
+  const categoryNames = await db
+    .select({ name: categories.name })
+    .from(categories)
+    .innerJoin(recipeCategories, eq(recipeCategories.categoryId, categories.id))
+    .innerJoin(recipes, eq(recipes.id, recipeCategories.recipeId))
+    .where(and(visible, holds(folded(categories.name), fold, true)))
+    .groupBy(categories.id)
+    .orderBy(desc(uses), asc(sql`lower(${categories.name})`), asc(categories.id))
+    .limit(SUGGESTIONS_PER_KIND);
+
+  const localeNames = await findLocaleNames(foods.map((food) => food.id));
+
+  return {
+    ingredients: foods.map((food) => ({ ...food, localeNames: localeNames.get(food.id) ?? {} })),
+    tags: tagNames.map((row) => row.name),
+    categories: categoryNames.map((row) => row.name),
+  };
 }
