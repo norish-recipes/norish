@@ -41,8 +41,11 @@ appId: dev.norish.app
     id: recipe-swipe-delete-${output.doomed}
 - tapOn:
     id: recipe-swipe-delete-${output.doomed}
-# The native alert asks first.
-- tapOn: Delete
+# The native alert asks first; the swiped row's own Delete action is still on screen behind it, so
+# the alert's button is the one below its message.
+- tapOn:
+    text: Delete
+    below: This action cannot be undone.
 - extendedWaitUntil:
     notVisible:
       id: recipe-card-${output.doomed}
