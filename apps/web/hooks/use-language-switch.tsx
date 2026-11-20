@@ -61,7 +61,7 @@ export function useLanguageSwitch() {
     }
   };
 
-  const icon = <GlobeAltIcon className="size-4" />;
+  const icon = <GlobeAltIcon className="size-5" />;
 
   // Use enabled locale name, fallback to static names
   const label = localeNames[currentLocale] ?? currentLocale;

@@ -18,15 +18,15 @@ function LanguageSwitchPlaceholder() {
   const tStatus = useTranslations("common.status");
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <>
       <span className="text-muted opacity-50">
-        <GlobeAltIcon className="size-4" />
+        <GlobeAltIcon className="size-5" />
       </span>
       <div className="flex flex-col items-start opacity-50">
         <span className="text-base leading-tight font-medium">{t("title")}</span>
         <span className="text-muted text-xs leading-tight">{tStatus("loading")}</span>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -36,7 +36,7 @@ function LanguageSwitchLabel({ icon, label, isChanging }: LanguageSwitchContentP
   const tStatus = useTranslations("common.status");
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <>
       <span className="text-muted">{icon}</span>
       <div className="flex flex-col items-start">
         <span className="text-base leading-tight font-medium">{t("title")}</span>
@@ -44,7 +44,7 @@ function LanguageSwitchLabel({ icon, label, isChanging }: LanguageSwitchContentP
           {isChanging ? tStatus("changing") : label}
         </span>
       </div>
-    </div>
+    </>
   );
 }
 
