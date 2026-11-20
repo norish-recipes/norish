@@ -5,6 +5,7 @@ import React, { memo, useRef } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
+import { HighlightedTitle } from "@/components/highlighted-text";
 import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { lightImpact } from "@/lib/haptics";
@@ -26,7 +27,7 @@ import {
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
-import { HighlightedTitle, MatchText } from "./match-text";
+import { MatchText } from "./match-text";
 import { SwipeActions } from "./swipe-actions";
 import { TAG_GAP, TagChips } from "./tag-chips";
 
