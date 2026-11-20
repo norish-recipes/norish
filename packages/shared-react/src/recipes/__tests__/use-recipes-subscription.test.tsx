@@ -362,6 +362,28 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(invalidateQueries.mock.calls).toEqual([[{ queryKey: [["library", "discover"]] }]]);
   });
 
+  it.each(["auto-tagging", "allergy-detection", "auto-categorization", "image-generation"])(
+    "rereads Search's Categories and Tags, not the household's, after %s",
+    (kind) => {
+      emit("onUpdated", { recipe: fullRecipe(), source: "enrichment", kind });
+      emit("onUpdated", { recipe: fullRecipe({ id: "recipe-2" }), source: "enrichment", kind });
+      endBurst();
+
+      expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+      expect(rereadsOf(CATEGORIES_KEY)).toBe(0);
+    }
+  );
+
+  it.each(["nutrition-estimation", "recipe-provenance", "ingredient-linking"])(
+    "rereads nothing after %s, which changes nothing Discover lists",
+    (kind) => {
+      emit("onUpdated", { recipe: fullRecipe(), source: "enrichment", kind });
+      endBurst();
+
+      expect(invalidateQueries).not.toHaveBeenCalled();
+    }
+  );
+
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
     emit("onDeleted", { ids: ["recipe-1"] });
 

@@ -8,7 +8,10 @@
 import { z } from "zod";
 
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
-import type { RecipeEnrichmentLifecycleEventDto } from "@norish/shared/lib/recipe-enrichment";
+import type {
+  RecipeEnrichmentKind,
+  RecipeEnrichmentLifecycleEventDto,
+} from "@norish/shared/lib/recipe-enrichment";
 import { RecipeShareLifecycleEventSchema } from "@norish/shared/contracts/zod/recipe-shares";
 
 import { defineRealtimeCatalogue } from "./catalogue";
@@ -60,7 +63,12 @@ export const recipesRealtime = defineRealtimeCatalogue("recipe", {
   // z.custom: FullRecipeDTO has no standalone zod schema yet.
   updated: {
     scope: "policy",
-    payload: z.custom<{ recipe: FullRecipeDTO; source?: "enrichment" }>(),
+    // An enrichment's update names its kind.
+    payload: z.custom<{
+      recipe: FullRecipeDTO;
+      source?: "enrichment";
+      kind?: RecipeEnrichmentKind;
+    }>(),
   },
   deleted: { scope: "policy", payload: z.object({ ids: z.array(z.string()) }) },
   /** The caller's delete found these recipes edited elsewhere, so they were kept. */

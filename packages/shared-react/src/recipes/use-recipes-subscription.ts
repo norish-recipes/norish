@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import {
   NO_RECIPE_FOUND_REASON,
   NOT_A_RECIPE_REASON,
@@ -83,6 +84,14 @@ function recipeListKeys(trpc: ReturnType<typeof useTRPC>) {
     trpc.cookbooks.recipes.pathKey(),
   ];
 }
+
+/** The enrichments that write what Search's Discover shows: a recipe's Tags, Categories or photo. */
+const DISCOVER_ENRICHMENTS: ReadonlySet<RecipeEnrichmentKind> = new Set([
+  "auto-tagging",
+  "allergy-detection",
+  "auto-categorization",
+  "image-generation",
+]);
 
 /** Rereads Search's Categories and Tags, built from the recipes rather than patched, once per burst. */
 function rereadDiscover(
@@ -218,12 +227,13 @@ export function useRecipeListSubscription() {
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
     ...live,
-    onEvent: ({ recipe, source }) => {
+    onEvent: ({ recipe, source, kind }) => {
       updateRecipeInList(recipe);
       queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
 
-      // An enrichment changes no Category.
+      // An enrichment adds no household Category; some change what Discover lists.
       if (source !== "enrichment") rereadFacets();
+      else if (kind && DISCOVER_ENRICHMENTS.has(kind)) rereadDiscover(queryClient, trpc);
     },
   });
 
