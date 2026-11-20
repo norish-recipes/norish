@@ -95,15 +95,6 @@ export const reactConfig = defineConfig(
       "@eslint-react/immutability": "error",
       "@eslint-react/set-state-in-effect": "error",
       "@stylistic/jsx-self-closing-comp": "warn",
-      "@stylistic/jsx-sort-props": [
-        "warn",
-        {
-          callbacksLast: true,
-          shorthandFirst: true,
-          noSortAlphabetically: false,
-          reservedFirst: true,
-        },
-      ],
       "jsx-a11y-x/click-events-have-key-events": "warn",
       "jsx-a11y-x/interactive-supports-focus": "warn",
     },

@@ -194,9 +194,9 @@ describe("parseTimerDurations", () => {
         expect(parseTimerDurations("اخبز 1 ساعة، ثم أخرجها", arabic)[0]?.durationSeconds).toBe(
           3600
         );
-        expect(
-          parseTimerDurations("حرّك 30 ثانية؛ ثم أطفئ النار", arabic)[0]?.durationSeconds
-        ).toBe(30);
+        expect(parseTimerDurations("حرّك 30 ثانية؛ ثم أطفئ النار", arabic)[0]?.durationSeconds).toBe(
+          30
+        );
         expect(parseTimerDurations("هل تكفي 10 دقائق؟", arabic)[0]?.durationSeconds).toBe(600);
       });
 

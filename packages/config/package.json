@@ -24,7 +24,7 @@
     "test": "vitest run --config ./vitest.config.ts"
   },
   "dependencies": {
-    "dotenv": "18.0.9",
+    "dotenv": "18.0.10",
     "server-only": "catalog:",
     "zod": "catalog:"
   },
