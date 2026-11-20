@@ -562,6 +562,7 @@
     "sortLabel": "정렬: {sort}",
     "ratingChip": "별 {count}개 이상",
     "removeFilter": "{filter} 제거",
+    "ingredientFilter": "재료 필터",
     "count": "{count, plural, other {레시피 #개}}",
     "noMatch": "“{text}”와(과) 일치하는 레시피 없음",
     "searchAllFields": "모든 필드에서 검색",

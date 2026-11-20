@@ -102,6 +102,9 @@ export function createOfflineQueryClient({
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
 
+  // A filter chip's name, primed by what added it, kept while the Search session can show it.
+  queryClient.setQueryDefaults(keys.ingredients.names.pathKey(), { gcTime: Infinity });
+
   // Settings are read as they are now: a reveal after a save must show the saved key.
   queryClient.setQueryDefaults(keys.admin.pathKey(), { staleTime: 0, gcTime: 0 });
 

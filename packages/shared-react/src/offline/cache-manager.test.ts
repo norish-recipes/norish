@@ -455,6 +455,22 @@ describe("createCacheManager", () => {
     expect(queryClient.getQueryData(elsewhere)).toBeUndefined();
   });
 
+  it("keeps a primed Ingredient name for the whole session, past the cache's maxAge", async () => {
+    useFakeTimers();
+
+    const { queryClient } = createManager();
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient,
+    });
+    const primed = trpc.ingredients.names.queryKey({ ids: ["i1"] });
+
+    queryClient.setQueryData(primed, { i1: "onion" });
+    await vi.advanceTimersByTimeAsync(CACHE_MAX_AGE_MS + 1);
+
+    expect(queryClient.getQueryData(primed)).toEqual({ i1: "onion" });
+  });
+
   it("resets every personalized read artifact while preserving the Outbox and app shell", async () => {
     const clearPersonalCaches = vi.fn(async () => {});
 

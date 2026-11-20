@@ -562,6 +562,7 @@
     "sortLabel": "Järjestys: {sort}",
     "ratingChip": "{count}+ tähteä",
     "removeFilter": "Poista {filter}",
+    "ingredientFilter": "ainesosasuodatin",
     "count": "{count, plural, one {# resepti} other {# reseptiä}}",
     "noMatch": "Ei reseptejä haulle ”{text}”",
     "searchAllFields": "Hae kaikista kentistä",

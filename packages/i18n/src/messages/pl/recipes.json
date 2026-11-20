@@ -562,6 +562,7 @@
     "sortLabel": "Sortowanie: {sort}",
     "ratingChip": "{count}+ gwiazdek",
     "removeFilter": "Usuń {filter}",
+    "ingredientFilter": "filtr składnika",
     "count": "{count, plural, one {# przepis} few {# przepisy} many {# przepisów} other {# przepisu}}",
     "noMatch": "Brak przepisów pasujących do „{text}”",
     "searchAllFields": "Szukaj we wszystkich polach",

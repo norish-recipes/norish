@@ -562,6 +562,7 @@
     "sortLabel": "Сортировка: {sort}",
     "ratingChip": "{count}+ звёзд",
     "removeFilter": "Убрать {filter}",
+    "ingredientFilter": "фильтр по ингредиенту",
     "count": "{count, plural, one {# рецепт} few {# рецепта} many {# рецептов} other {# рецепта}}",
     "noMatch": "Нет рецептов по запросу «{text}»",
     "searchAllFields": "Искать во всех полях",

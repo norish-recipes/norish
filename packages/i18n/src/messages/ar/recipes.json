@@ -562,6 +562,7 @@
     "sortLabel": "الترتيب: {sort}",
     "ratingChip": "{count}+ نجوم",
     "removeFilter": "إزالة {filter}",
+    "ingredientFilter": "عامل تصفية المكوّن",
     "count": "{count, plural, zero {# وصفة} one {وصفة واحدة} two {وصفتان} few {# وصفات} many {# وصفة} other {# وصفة}}",
     "noMatch": "لا توجد وصفات تطابق «{text}»",
     "searchAllFields": "البحث في كل الحقول",

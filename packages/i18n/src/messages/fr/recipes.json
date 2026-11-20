@@ -562,6 +562,7 @@
     "sortLabel": "Tri : {sort}",
     "ratingChip": "{count}+ étoiles",
     "removeFilter": "Retirer {filter}",
+    "ingredientFilter": "le filtre d’ingrédient",
     "count": "{count, plural, one {# recette} other {# recettes}}",
     "noMatch": "Aucune recette pour « {text} »",
     "searchAllFields": "Chercher dans tous les champs",

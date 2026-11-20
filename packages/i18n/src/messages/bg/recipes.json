@@ -562,6 +562,7 @@
     "sortLabel": "Подредба: {sort}",
     "ratingChip": "{count}+ звезди",
     "removeFilter": "Премахни {filter}",
+    "ingredientFilter": "филтър по съставка",
     "count": "{count, plural, one {# рецепта} other {# рецепти}}",
     "noMatch": "Няма рецепти за „{text}“",
     "searchAllFields": "Търсене във всички полета",

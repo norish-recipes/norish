@@ -562,6 +562,7 @@
     "sortLabel": "Sortering: {sort}",
     "ratingChip": "{count}+ stjärnor",
     "removeFilter": "Ta bort {filter}",
+    "ingredientFilter": "ingrediensfilter",
     "count": "{count, plural, one {# recept} other {# recept}}",
     "noMatch": "Inga recept matchar ”{text}”",
     "searchAllFields": "Sök i alla fält",

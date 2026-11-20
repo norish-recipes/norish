@@ -562,6 +562,7 @@
     "sortLabel": "Sorteren: {sort}",
     "ratingChip": "{count}+ sterren",
     "removeFilter": "{filter} verwijderen",
+    "ingredientFilter": "Ingrediëntfilter",
     "count": "{count, plural, one {# recept} other {# recepten}}",
     "noMatch": "Geen recepten met “{text}”",
     "searchAllFields": "Zoek in alle velden",

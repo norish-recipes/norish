@@ -562,6 +562,7 @@
     "sortLabel": "Sortering: {sort}",
     "ratingChip": "{count}+ stjerner",
     "removeFilter": "Fjern {filter}",
+    "ingredientFilter": "ingrediensfilter",
     "count": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
     "noMatch": "Ingen oppskrifter samsvarer med «{text}»",
     "searchAllFields": "Søk i alle felt",
