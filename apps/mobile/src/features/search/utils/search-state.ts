@@ -1,5 +1,6 @@
 /** Which page of Search shows. */
-export type SearchView = "rested" | "focused" | "typing" | "results" | "none" | "offline";
+export type SearchView =
+  "rested" | "focused" | "typing" | "results" | "none" | "offline" | "failed";
 
 /** What the choice reads: `resultCount` is null while the search is loading. */
 export type SearchViewInput = {
@@ -14,6 +15,8 @@ export type SearchViewInput = {
   offline: boolean;
   /** Results for exactly this search are held: loaded Live earlier, or from the Offline Cache. */
   held: boolean;
+  /** The read failed (after its retry); with nothing held it never counts as an empty answer. */
+  failed: boolean;
 };
 
 /** Results show for a confirmed text, or while a chip filters an empty one; no text and no chips rests. */
@@ -24,10 +27,13 @@ export const showsResults = ({
 }: Pick<SearchViewInput, "text" | "confirmed" | "hasChips">) =>
   text.trim() === "" ? hasChips : confirmed;
 
-/** Offline, a search with nothing held says it needs a connection rather than loading or finding none. */
+/** With nothing held, Offline says it needs a connection and a failed read says it failed; neither is "none". */
 export function searchView(input: SearchViewInput): SearchView {
   if (showsResults(input)) {
-    if (input.offline && !input.held) return "offline";
+    if (!input.held) {
+      if (input.offline) return "offline";
+      if (input.failed) return "failed";
+    }
 
     return input.resultCount === 0 ? "none" : "results";
   }

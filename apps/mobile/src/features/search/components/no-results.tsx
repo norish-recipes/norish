@@ -72,3 +72,18 @@ export function SearchOffline() {
     />
   );
 }
+
+/** The card in Results' place when a Live read failed and nothing is held: not "no results". */
+export function SearchFailed() {
+  const intl = useIntl();
+
+  return (
+    <NoResultsCard
+      className="bg-surface mx-5 mt-4"
+      icon="alert-circle-outline"
+      testID="search-failed"
+      tone="neutral"
+      title={intl.formatMessage({ id: "common.errorPage.title" })}
+    />
+  );
+}

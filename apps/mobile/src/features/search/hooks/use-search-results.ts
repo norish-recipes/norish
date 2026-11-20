@@ -26,8 +26,9 @@ export function useSearchResults(input: {
     ...input,
     offline: isOffline,
     held: list.held,
+    failed: list.error != null,
     resultCount: list.isLoading ? null : list.recipes.length,
   });
 
-  return { list, view, loading: view !== "offline" && list.isLoading };
+  return { list, view, loading: view !== "offline" && view !== "failed" && list.isLoading };
 }

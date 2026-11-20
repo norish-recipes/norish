@@ -10,6 +10,7 @@ const base = {
   resultCount: null,
   offline: false,
   held: false,
+  failed: false,
 };
 
 describe("which state shows", () => {
@@ -29,6 +30,20 @@ describe("which state shows", () => {
       "results"
     );
     expect(searchView({ ...base, text: "soup", confirmed: true, resultCount: 0 })).toBe("none");
+  });
+});
+
+describe("a failed search", () => {
+  const confirmed = { ...base, text: "soup", confirmed: true, resultCount: 0 };
+
+  it("is never no results while nothing is held: Live it failed, Offline it needs a connection", () => {
+    expect(searchView({ ...confirmed, failed: true })).toBe("failed");
+    expect(searchView({ ...confirmed, failed: true, offline: true })).toBe("offline");
+  });
+
+  it("keeps held results when a refetch fails", () => {
+    expect(searchView({ ...confirmed, resultCount: 2, held: true, failed: true })).toBe("results");
+    expect(searchView({ ...confirmed, held: true, failed: true })).toBe("none");
   });
 });
 

@@ -14,7 +14,7 @@ import { useIntl } from "react-intl";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
 
 import { Discover } from "../components/discover";
-import { SearchNoResults, SearchOffline } from "../components/no-results";
+import { SearchFailed, SearchNoResults, SearchOffline } from "../components/no-results";
 import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
 import { TypingSuggestions } from "../components/typing-suggestions";
@@ -72,6 +72,8 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
   const noResults =
     view === "offline" ? (
       <SearchOffline />
+    ) : view === "failed" ? (
+      <SearchFailed />
     ) : (
       <SearchNoResults
         text={field.text.trim()}
@@ -80,7 +82,8 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
         onSearchAllFields={() => setFilters({ searchFields: [...ALL_SCOPE] })}
       />
     );
-  const showsList = view === "results" || view === "none" || view === "offline";
+  const showsList =
+    view === "results" || view === "none" || view === "offline" || view === "failed";
 
   return (
     <>

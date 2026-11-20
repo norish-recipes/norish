@@ -135,6 +135,7 @@ describe("confirming and narrowing", () => {
         resultCount: 3,
         offline: false,
         held: false,
+        failed: false,
       });
 
     expect(state).toMatchObject({ text: "", confirmed: false });
@@ -153,6 +154,7 @@ describe("confirming and narrowing", () => {
       hasChips: true,
       offline: false,
       held: false,
+      failed: false,
     };
 
     expect(searchView({ ...input, focused: true, resultCount: 2 })).toBe("results");
@@ -170,6 +172,7 @@ describe("confirming and narrowing", () => {
         resultCount: 3,
         offline: false,
         held: false,
+        failed: false,
       })
     ).toBe("typing");
   });

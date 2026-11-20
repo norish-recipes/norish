@@ -52,6 +52,7 @@ const view = (text: string, confirmed: boolean) =>
     resultCount: 3,
     offline: false,
     held: false,
+    failed: false,
   });
 // The page the real field text, session flag and chips choose; the result count is still loading.
 const page = (field: { text: string }) =>
@@ -63,6 +64,7 @@ const page = (field: { text: string }) =>
     resultCount: null,
     offline: false,
     held: false,
+    failed: false,
   });
 
 describe("a Narrow-to row", () => {
