@@ -12,6 +12,7 @@ import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
+import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
 
@@ -160,6 +161,9 @@ export function TypingSuggestions({
 }) {
   const intl = useIntl();
   const accent = useTokenColor("accent-text");
+
+  // No other surface has read these foods' icons yet.
+  useIngredientIcons(narrowRows.flatMap((row) => (row.kind === "ingredient" ? [row.id] : [])));
 
   return (
     <ScrollView

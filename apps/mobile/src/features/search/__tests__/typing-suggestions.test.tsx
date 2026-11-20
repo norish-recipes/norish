@@ -49,11 +49,14 @@ vi.mock("react-intl", () => ({
 vi.mock("@norish/shared-react/platform", () => ({
   usePlatform: () => ({ navigation: { toRecipe: mocks.open } }),
 }));
+vi.mock("@norish/shared-react/ingredients", () => ({
+  useIngredientIcons: (ids: string[]) => mocks.icons(ids),
+}));
 vi.mock("@norish/shared-react/recipes", () => ({
   recipeCardFacts: () => ({ timeLabel: "30m", servings: 4 }),
 }));
 
-const mocks = vi.hoisted(() => ({ open: vi.fn() }));
+const mocks = vi.hoisted(() => ({ open: vi.fn(), icons: vi.fn() }));
 
 const recipe = { id: "r1", name: "Hoisin Chicken", image: null } as RecipeDashboardDTO;
 const base = {
@@ -117,5 +120,17 @@ describe("the typing state", () => {
 
     expect(screen.queryByText("recipes.search.narrowTo")).toBeNull();
     expect(screen.getByTestId("search-for-row")).toBeTruthy();
+  });
+
+  it("reads the icons of the suggested foods, as no other surface may have", () => {
+    const food = { id: "f1", name: "chicken" };
+    const narrowRows = [
+      { kind: "ingredient" as const, id: "f1", name: "chicken", food },
+      { kind: "tag" as const, name: "chicken" },
+    ];
+
+    render(<TypingSuggestions {...base} narrowRows={narrowRows} />);
+
+    expect(mocks.icons).toHaveBeenLastCalledWith(["f1"]);
   });
 });
