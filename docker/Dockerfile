@@ -79,8 +79,13 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=cache,target=/root/.local/share/uv/python \
   UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked --group yt-dlp && \
-  # The test suites the parser's packages ship load at no point.
-  find /app/apps/parser-api/.venv/lib -type d -path '*/site-packages/*/tests' -prune -exec rm -rf {} + && \
+  # The test suites the parser's packages ship load at no point (Cryptodome's is SelfTest).
+  find /app/apps/parser-api/.venv/lib -type d \( -path '*/site-packages/*/tests' \
+  -o -path '*/site-packages/Cryptodome/SelfTest' \) -prune -exec rm -rf {} + && \
+  # lxml's Cython sources and C headers serve only extensions built against it.
+  rm -rf /app/apps/parser-api/.venv/lib/python3.*/site-packages/lxml/includes && \
+  find /app/apps/parser-api/.venv/lib/python3.*/site-packages/lxml \( -name '*.pyx' -o -name '*.pxi' \
+  -o -name '*.pxd' -o -name '*.h' \) -delete && \
   # yt-dlp's and mutagen's man pages and shell completions.
   rm -rf /app/apps/parser-api/.venv/share && \
   # Wheels ship their native libraries with debug info (curl_cffi's is 39 MB, 6 MB without).
@@ -88,14 +93,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
   find /app/apps/parser-api/.venv/lib -type f \( -name '*.so' -o -name '*.so.*' \) \
   -exec strip --strip-unneeded {} +
 
-# What the parser never loads from the Python it runs on: the shared library
-# (the interpreter is linked statically, so nothing links it), Tk and its
-# demos, IDLE, the bundled pip and its installer, and the C headers.
+# What the parser and yt-dlp never load from their static Python: libpython, Tk, IDLE, pip, headers,
+# build config, the REPL, pydoc topics, unittest, profilers, turtle; binaries lose symbol tables.
 RUN cd /app/.uv/python/cpython-* && \
-  rm -rf lib/libpython3*.so* include share lib/tcl* lib/tk* lib/itcl* lib/thread* \
-  lib/python3.*/tkinter lib/python3.*/idlelib lib/python3.*/turtledemo \
-  lib/python3.*/ensurepip lib/python3.*/site-packages/pip* \
-  lib/python3.*/lib-dynload/_tkinter*
+  rm -rf lib/libpython3*.so* include share lib/tcl* lib/tk* lib/itcl* lib/thread* lib/libtcl* \
+  lib/pkgconfig lib/python3.*/tkinter lib/python3.*/idlelib lib/python3.*/turtledemo \
+  lib/python3.*/turtle.py lib/python3.*/ensurepip lib/python3.*/site-packages/pip* \
+  lib/python3.*/lib-dynload/_tkinter* lib/python3.*/config-3.* lib/python3.*/_pyrepl \
+  lib/python3.*/pydoc_data lib/python3.*/unittest lib/python3.*/profiling \
+  bin/idle3* bin/pip* bin/pydoc3* bin/python3*-config && \
+  strip --strip-unneeded bin/python3.* lib/python3.*/lib-dynload/*.so
 
 # NODE_ENV matches what CI exports around the same `pnpm run build` (and turbo
 # passes it through to every package build), so the image build can never
