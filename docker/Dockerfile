@@ -312,5 +312,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 
 ENTRYPOINT ["norish-entrypoint"]
 
-# Run directly with node; the custom server starts the embedded parser API when needed
-CMD ["node", "--import", "tsx", "/app/apps/web/server/index.ts"]
+# Run directly with node; the custom server starts the embedded parser API when needed.
+# A small young generation: loading the server's modules grows it, and its RSS is never given back.
+CMD ["node", "--max-semi-space-size=4", "--import", "tsx", "/app/apps/web/server/index.ts"]
