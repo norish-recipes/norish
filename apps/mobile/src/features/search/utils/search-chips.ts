@@ -1,8 +1,18 @@
+import type Ionicons from "@expo/vector-icons/Ionicons";
+import type { ComponentProps } from "react";
+
 import type { HiddenItemVisibility } from "@norish/shared-react/reader";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { COOKING_TIME_OPTIONS } from "@norish/shared-react/recipes";
 
 type Patch = Partial<CanonicalRecipeFilters>;
+
+/** A Quick filter: one tap sets `on`, shown with the Filters sheet's icon for the same filter. */
+type QuickSetting = {
+  labelId: string;
+  icon: ComponentProps<typeof Ionicons>["name"];
+  on: Patch;
+};
 
 /** How a chip says its filter: a message by id, a category by its name, an Ingredient by its id. */
 export type ChipSpeech = {
@@ -20,6 +30,8 @@ type ChipKind<V> = {
   icon?: (value: V) => string;
   /** Whether the reader's Hidden Items leave this filter on offer; absent for always. */
   offered?: (visibility: HiddenItemVisibility) => boolean;
+  /** The Quick filter Search offers for this kind with no text; absent for none. */
+  quick?: QuickSetting;
 };
 
 const kind = <V>(definition: ChipKind<V>) => definition;
@@ -56,23 +68,39 @@ const CHIP_KINDS = {
       return say(option ? `common.filters.${option.labelKey}` : "common.filters.cookingTime");
     },
     remove: () => ({ maxCookingTime: null }),
+    quick: {
+      labelId: "recipes.search.underThirty",
+      icon: "time-outline",
+      on: { maxCookingTime: 30 },
+    },
   }),
   rating: kind<number>({
     values: (filters) => (filters.minRating === null ? [] : [filters.minRating]),
     label: (value, { say }) => say("recipes.search.ratingChip", { count: value }),
     remove: () => ({ minRating: null }),
     offered: (visibility) => visibility.showRatings,
+    quick: { labelId: "recipes.search.fourAndUp", icon: "star", on: { minRating: 4 } },
   }),
   favorites: kind<true>({
     values: (filters) => (filters.showFavoritesOnly ? [true] : []),
     label: (_value, { say }) => say("common.filters.favorites"),
     remove: () => ({ showFavoritesOnly: false }),
     offered: (visibility) => visibility.showFavorites,
+    quick: {
+      labelId: "common.filters.favorites",
+      icon: "heart-outline",
+      on: { showFavoritesOnly: true },
+    },
   }),
   pantry: kind<true>({
     values: (filters) => (filters.showPantryOnly ? [true] : []),
     label: (_value, { say }) => say("common.filters.pantryOnly"),
     remove: () => ({ showPantryOnly: false }),
+    quick: {
+      labelId: "common.filters.pantryOnly",
+      icon: "file-tray-full-outline",
+      on: { showPantryOnly: true },
+    },
   }),
 };
 
@@ -130,6 +158,19 @@ export function visibleFilters(filters: CanonicalRecipeFilters, visibility: Hidd
 
   return hidden ? { ...filters, ...hidden } : filters;
 }
+
+/** The Quick filters in the board's order. */
+const QUICK_ORDER = ["favorites", "time", "rating", "pantry"] as const;
+
+type QuickFilter = QuickSetting & { kind: (typeof QUICK_ORDER)[number] };
+
+/** The Quick filters the reader's Hidden Items leave on offer. */
+export const quickFilters = (visibility: HiddenItemVisibility): QuickFilter[] =>
+  QUICK_ORDER.flatMap((kind) => {
+    const { quick, offered } = CHIP_KINDS[kind];
+
+    return quick && offered?.(visibility) !== false ? [{ kind, ...quick }] : [];
+  });
 
 /** A key for a chip that is stable while the others come and go. */
 export const chipKey = (chip: FilterChip) => `${chip.kind}:${String(chip.value)}`;

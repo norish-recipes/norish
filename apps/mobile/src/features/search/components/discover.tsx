@@ -16,7 +16,8 @@ import { useLibraryDiscover, useLibraryFilters } from "@norish/shared-react/reci
 
 import type { SectionRead } from "../utils/discover";
 import { useRecentSearches } from "../hooks/use-recent-searches";
-import { discoverSections, offeredQuickFilters } from "../utils/discover";
+import { discoverSections } from "../utils/discover";
+import { quickFilters } from "../utils/search-chips";
 
 const TILE_COUNT = 4;
 const SKELETON_TAG_WIDTHS = ["w-24", "w-28", "w-24", "w-20", "w-24", "w-16"];
@@ -167,13 +168,13 @@ function QuickFiltersSection({
   return (
     <Section title={intl.formatMessage({ id: "recipes.search.quickFilters" })}>
       <View className="flex-row flex-wrap gap-2" testID="search-quick-filters">
-        {offeredQuickFilters(visibility).map((quick) => (
+        {quickFilters(visibility).map((quick) => (
           <ToggleChip
-            key={quick.key}
+            key={quick.kind}
             active={false}
             icon={quick.icon}
             label={intl.formatMessage({ id: quick.labelId })}
-            testID={`search-quick-${quick.key}`}
+            testID={`search-quick-${quick.kind}`}
             onPress={() => onPick(quick.on)}
           />
         ))}

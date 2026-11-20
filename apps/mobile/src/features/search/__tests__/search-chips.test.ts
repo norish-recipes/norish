@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { hiddenItemVisibility } from "@norish/shared-react/reader";
 import {
   DEFAULT_RECIPE_FILTERS,
   hasAppliedRecipeFilters,
@@ -11,6 +12,7 @@ import {
   chipLabel,
   filterChips,
   hasChips,
+  quickFilters,
   visibleFilters,
   withoutChip,
   withoutHiddenFilters,
@@ -179,5 +181,35 @@ describe("the filters Search reads", () => {
 
   it("is the filters themselves while the items show", () => {
     expect(visibleFilters(applied, everything)).toBe(applied);
+  });
+});
+
+describe("Quick filters", () => {
+  const all = quickFilters(hiddenItemVisibility([]));
+
+  it("hides Favorites and 4 and up as Hidden Items hides them", () => {
+    const kinds = (hidden: string[]) =>
+      quickFilters(hiddenItemVisibility(hidden)).map((item) => item.kind);
+
+    expect(kinds([])).toEqual(["favorites", "time", "rating", "pantry"]);
+    expect(kinds(["favorites"])).toEqual(["time", "rating", "pantry"]);
+    expect(kinds(["rating"])).toEqual(["favorites", "time", "pantry"]);
+  });
+
+  it("sets the filter the board names, which its chip's × removes", () => {
+    expect(Object.fromEntries(all.map((item) => [item.kind, item.on]))).toEqual({
+      favorites: { showFavoritesOnly: true },
+      time: { maxCookingTime: 30 },
+      rating: { minRating: 4 },
+      pantry: { showPantryOnly: true },
+    });
+
+    for (const quick of all) {
+      const on = { ...DEFAULT_RECIPE_FILTERS, ...quick.on };
+      const [chip] = filterChips(on);
+
+      expect(chip?.kind).toBe(quick.kind);
+      expect(hasAppliedRecipeFilters({ ...on, ...withoutChip(on, chip!) })).toBe(false);
+    }
   });
 });

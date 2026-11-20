@@ -1,8 +1,3 @@
-import type { HiddenItemVisibility } from "@norish/shared-react/reader";
-import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
-
-type Patch = Partial<CanonicalRecipeFilters>;
-
 export type DiscoverSection = "recent" | "categories" | "quickFilters" | "tags";
 
 /** A section's read: how many it loaded (cached data counts), or that it is loading or failed. */
@@ -39,47 +34,3 @@ export function discoverSections({
 
   return sections;
 }
-
-/** A one-tap filter: the words it reads, the filters it sets, and what Hidden Items must allow. */
-export type QuickFilter = {
-  key: "favorites" | "underThirty" | "fourAndUp" | "pantry";
-  labelId: string;
-  icon: "heart-outline" | "time-outline" | "star" | "file-tray-outline";
-  on: Patch;
-  offered: (visibility: HiddenItemVisibility) => boolean;
-};
-
-export const QUICK_FILTERS: readonly QuickFilter[] = [
-  {
-    key: "favorites",
-    labelId: "common.filters.favorites",
-    icon: "heart-outline",
-    on: { showFavoritesOnly: true },
-    offered: (visibility) => visibility.showFavorites,
-  },
-  {
-    key: "underThirty",
-    labelId: "recipes.search.underThirty",
-    icon: "time-outline",
-    on: { maxCookingTime: 30 },
-    offered: () => true,
-  },
-  {
-    key: "fourAndUp",
-    labelId: "recipes.search.fourAndUp",
-    icon: "star",
-    on: { minRating: 4 },
-    offered: (visibility) => visibility.showRatings,
-  },
-  {
-    key: "pantry",
-    labelId: "common.filters.pantryOnly",
-    icon: "file-tray-outline",
-    on: { showPantryOnly: true },
-    offered: () => true,
-  },
-];
-
-/** The Quick filters the reader's Hidden Items leave on offer. */
-export const offeredQuickFilters = (visibility: HiddenItemVisibility) =>
-  QUICK_FILTERS.filter((quick) => quick.offered(visibility));
