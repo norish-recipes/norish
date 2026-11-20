@@ -81,7 +81,6 @@ export {
   useStorePrices,
   useStorePricesSubscription,
 } from "./use-store-prices";
-export { useSettledName } from "./use-settled-name";
 export { useStoreTotal } from "./use-store-total";
 export { useStoresMutations } from "./use-stores-mutations";
 export { useStoreGroceryCount, useStoresQuery } from "./use-stores-query";
@@ -106,3 +105,6 @@ export { useSaveStore } from "./use-save-store";
 export type { ProductRow } from "./product-rows";
 export { useProductField } from "./use-product-field";
 export { useProductChoice } from "./use-product-choice";
+
+/** How long a shopper stops typing a grocery's name before its food and link are read. */
+export const GROCERY_LOOKUP_DEBOUNCE_MS = 400;

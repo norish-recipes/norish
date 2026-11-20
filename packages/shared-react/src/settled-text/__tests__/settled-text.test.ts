@@ -1,14 +1,14 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useSettledName } from "../use-settled-name";
+import { useSettledText } from "..";
 
-describe("useSettledName", () => {
+describe("useSettledText", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("holds the last settled name until typing has stopped", () => {
-    const { result, rerender } = renderHook(({ name }) => useSettledName(name), {
+  it("holds the last settled text until typing has stopped", () => {
+    const { result, rerender } = renderHook(({ name }) => useSettledText(name, 400), {
       initialProps: { name: "mel" },
     });
 
@@ -19,7 +19,7 @@ describe("useSettledName", () => {
   });
 
   it("settles an emptied field at once", () => {
-    const { result, rerender } = renderHook(({ name }) => useSettledName(name), {
+    const { result, rerender } = renderHook(({ name }) => useSettledText(name, 400), {
       initialProps: { name: "melk" },
     });
 

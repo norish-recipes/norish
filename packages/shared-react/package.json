@@ -15,6 +15,7 @@
     "./ingredients": "./src/ingredients/index.ts",
     "./reader": "./src/reader/index.ts",
     "./page-store": "./src/page-store/index.tsx",
+    "./settled-text": "./src/settled-text/index.ts",
     "./recipes": "./src/recipes/index.ts",
     "./recipes/timers": "./src/recipes/timers.ts",
     "./realtime": "./src/realtime/index.ts",

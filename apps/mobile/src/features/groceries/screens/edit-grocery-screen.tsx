@@ -8,6 +8,7 @@ import { useIntl } from "react-intl";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import {
+  GROCERY_LOOKUP_DEBOUNCE_MS,
   lineOf,
   useAisleChoice,
   useGroceriesQuery,
@@ -20,10 +21,10 @@ import {
   useProductField,
   useRecurrenceDetection,
   useRecurringGroceryFor,
-  useSettledName,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import { useIngredientFor } from "@norish/shared-react/ingredients";
+import { useSettledText } from "@norish/shared-react/settled-text";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import { NameField } from "../components/form-parts";
@@ -52,7 +53,7 @@ function EditSheet({
   const [seeded, setSeeded] = useState(false);
   const { detectedPattern } = useRecurrenceDetection({ itemName: form.itemName });
   const groceryName = useParsedGroceryName(form.itemName);
-  const settledName = useSettledName(groceryName);
+  const settledName = useSettledText(groceryName, GROCERY_LOOKUP_DEBOUNCE_MS);
   const ingredientId = useIngredientFor(groceryName, settledName, grocery);
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
   const [productValid, setProductValid] = useState(true);

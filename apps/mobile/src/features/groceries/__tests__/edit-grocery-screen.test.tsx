@@ -45,6 +45,7 @@ vi.mock("../components/product-step", () => ({ ProductStep: () => null }));
 vi.mock("../hooks/use-pack-size-words", () => ({ usePackSizeWords: () => [] }));
 vi.mock("@norish/shared-react/ingredients", () => ({ useIngredientFor: () => null }));
 vi.mock("@norish/shared/contracts/recurrence", () => ({ recurrencePatternOf: () => null }));
+vi.mock("@norish/shared-react/settled-text", () => ({ useSettledText: (text: string) => text }));
 vi.mock("@norish/shared-react/groceries", () => ({
   lineOf: () => ({}),
   useAisleChoice: () => ({ aisleId: null, aisles: [], setAisleId: vi.fn(), commit: vi.fn() }),
@@ -70,7 +71,7 @@ vi.mock("@norish/shared-react/groceries", () => ({
   useProductField: () => ({ picked: null, hasTypedPrice: false, unlinked: false }),
   useRecurrenceDetection: () => ({ detectedPattern: null }),
   useRecurringGroceryFor: () => null,
-  useSettledName: (name: string) => name,
+  GROCERY_LOOKUP_DEBOUNCE_MS: 0,
   useStoresQuery: () => ({ stores: [] }),
 }));
 

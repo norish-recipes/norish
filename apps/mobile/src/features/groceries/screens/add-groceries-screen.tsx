@@ -8,15 +8,16 @@ import { Input } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
+  GROCERY_LOOKUP_DEBOUNCE_MS,
   useAisleChoice,
   useGroceriesMutations,
   useGroceryFormState,
   useParsedGroceryName,
   useRecurrenceDetection,
-  useSettledName,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import { useIngredientFor } from "@norish/shared-react/ingredients";
+import { useSettledText } from "@norish/shared-react/settled-text";
 
 import { NameField } from "../components/form-parts";
 import { GrocerySheet } from "../components/grocery-sheet";
@@ -35,7 +36,10 @@ export function AddGroceriesScreen() {
   const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
   const { detectedPattern } = useRecurrenceDetection({ itemName: form.itemName });
   const groceryName = useParsedGroceryName(form.itemName);
-  const ingredientId = useIngredientFor(groceryName, useSettledName(groceryName));
+  const ingredientId = useIngredientFor(
+    groceryName,
+    useSettledText(groceryName, GROCERY_LOOKUP_DEBOUNCE_MS)
+  );
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
   const aisle = useAisleChoice({ groceryName, ingredientId, store, resetOn: added });
   const trimmed = form.itemName.trim();
