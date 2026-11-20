@@ -14,6 +14,11 @@ const dbInsertValuesMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined)
 const dbInsertMock = vi.hoisted(() => vi.fn().mockReturnValue({ values: dbInsertValuesMock }));
 const getDatabaseHealthMock = vi.hoisted(() => vi.fn());
 const getValkeyHealthMock = vi.hoisted(() => vi.fn());
+const parserStateMock = vi.hoisted(() => vi.fn(() => "running"));
+
+vi.mock("@norish/shared-server/embedded-parser", () => ({
+  embeddedParserState: parserStateMock,
+}));
 
 vi.mock("@norish/auth/providers", () => ({
   getAvailableProviders: vi.fn().mockResolvedValue([]),
@@ -144,6 +149,7 @@ describe("openapi liveness and readiness endpoints", () => {
     getDatabaseHealthMock.mockResolvedValue({ status: "ok" });
     getValkeyHealthMock.mockReset();
     getValkeyHealthMock.mockResolvedValue({ status: "ok" });
+    parserStateMock.mockReturnValue("running");
   });
 
   afterEach(() => {
@@ -167,6 +173,19 @@ describe("openapi liveness and readiness endpoints", () => {
       });
       expect(getDatabaseHealthMock).not.toHaveBeenCalled();
       expect(getValkeyHealthMock).not.toHaveBeenCalled();
+    });
+
+    it("answers 200 with the parser idle until an import starts it, asking it nothing", async () => {
+      const fetchMock = vi.fn();
+
+      vi.stubGlobal("fetch", fetchMock);
+      parserStateMock.mockReturnValue("idle");
+
+      const response = await get("/health/live");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ status: "ok", parser: { status: "idle" } });
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("answers 503 when the parser does not answer", async () => {

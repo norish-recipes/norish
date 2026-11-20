@@ -7,6 +7,7 @@
     "./logger": "./src/logger.ts",
     "./cache/household": "./src/cache/household.ts",
     "./config/server-config-loader": "./src/config/server-config-loader.ts",
+    "./embedded-parser": "./src/embedded-parser.ts",
     "./media/ffmpeg": "./src/media/ffmpeg.ts",
     "./media/storage": "./src/media/storage.ts",
     "./media/avatar-cleanup": "./src/media/avatar-cleanup.ts",

@@ -20,15 +20,13 @@ import { initializeVideoProcessing } from "@norish/api/startup/video-processing"
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
+import { stopEmbeddedParser } from "@norish/shared-server/embedded-parser";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
 import { startRealtimeHub } from "@norish/shared-server/realtime/hub";
 import { addBasePath, BASE_PATH } from "@norish/shared/lib/base-path";
 
-import { startEmbeddedParser } from "./embedded-parser";
-
 async function main() {
   const config = initializeServerConfig();
-  const embeddedParser = await startEmbeddedParser(config);
 
   log.info("-".repeat(50));
   log.info("Server configuration loaded:");
@@ -105,10 +103,8 @@ async function main() {
 
   const { server, hostname, port } = await createServer();
 
-  registerShutdownHandlers(
-    server,
-    embeddedParser ? [{ name: "Stop embedded parser", run: embeddedParser.stop }] : []
-  );
+  // The parser starts on the first URL import, not here.
+  registerShutdownHandlers(server, [{ name: "Stop embedded parser", run: stopEmbeddedParser }]);
 
   server.listen(port, hostname, () => {
     log.info("-".repeat(50));

@@ -41,7 +41,7 @@
       "get": {
         "operationId": "healthLive",
         "summary": "Check whether Norish is alive",
-        "description": "Answers 200 while the server responds and its internal parser answers its own health check. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
+        "description": "Answers 200 while the server responds and its internal parser, when running, answers its own health check. The parser starts on the first URL import and stops when idle, reported as `idle`. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
         "tags": [
           "Health"
         ],
