@@ -4,7 +4,7 @@
  */
 
 import { act } from "react";
-import { matchQuery, QueryClient } from "@tanstack/react-query";
+import { matchQuery, QueryClient, QueryObserver } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -341,29 +341,6 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(rereadsOf(DISCOVER_KEY)).toBe(1);
   });
 
-  it("rereads Search's Categories and Tags once for a delete that also kept some", () => {
-    emit("onDeleted", { ids: ["recipe-1"] });
-    emit("onDeleteKept", { ids: ["recipe-2"] });
-    // The delete's success, for the recipes it kept.
-    act(() => rendered.result.current.invalidate());
-    endBurst();
-
-    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
-    expect(rereadsOf(LIBRARY_KEY)).toBe(1);
-  });
-
-  it("reads web's Library once for a mixed delete that lands with a Cursor Mark", () => {
-    subscribe("onDeleted");
-    act(() => subscription("onDeleted").onData(trackedCursorMark()));
-    emit("onDeleted", { ids: ["recipe-1"] });
-    emit("onDeleteKept", { ids: ["recipe-2"] });
-    act(() => rendered.result.current.invalidate());
-    endBurst();
-
-    expect(rereadsOf(LIBRARY_KEY)).toBe(1);
-    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
-  });
-
   it.each([
     ["onImported", { recipe: dashboardRecipe({ id: "r2" }) }],
     ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "r2" })] }],
@@ -582,5 +559,127 @@ describe("Search's own lists", () => {
     expect(
       (queryClient.getQueryData(LIBRARY_KEY) as { pages: { items: unknown[] }[] }).pages[0]?.items
     ).toHaveLength(2);
+  });
+});
+
+describe("the rereads Library and Discover are asked for", () => {
+  type Gate = { release: () => void; wait: Promise<void> };
+  const open = (): Gate => {
+    let release = () => {};
+    const wait = new Promise<void>((resolve) => (release = resolve));
+
+    return { release, wait };
+  };
+  const stops: (() => void)[] = [];
+
+  /** Mounts a real observer on `queryKey`; `requests` counts the fetches that reach its queryFn. */
+  function observe(queryKey: unknown[]) {
+    const read = { requests: 0, gate: null as Gate | null };
+    const observer = new QueryObserver(queryClient, {
+      queryKey,
+      staleTime: Infinity,
+      queryFn: async () => {
+        read.requests++;
+        await read.gate?.wait;
+
+        return queryClient.getQueryData(queryKey) ?? null;
+      },
+    });
+
+    stops.push(observer.subscribe(() => undefined));
+
+    return read;
+  }
+
+  /** A write in flight: `settle` ends it as a success, or as the failure it is told. */
+  function startWrite() {
+    const gate = open();
+    let fail = false;
+    const mutation = queryClient.getMutationCache().build(queryClient, {
+      mutationFn: async () => {
+        await gate.wait;
+        if (fail) throw new Error("write failed");
+      },
+    });
+
+    void mutation.execute(undefined).catch(() => undefined);
+
+    return {
+      settle: async (failed = false) => {
+        fail = failed;
+        gate.release();
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(0);
+        });
+      },
+    };
+  }
+
+  async function elapse(ms: number) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  }
+
+  /** A delete that also kept some: both events, then the mutation's success. */
+  function mixedDelete() {
+    emit("onDeleted", { ids: ["recipe-1"] });
+    emit("onDeleteKept", { ids: ["recipe-2"] });
+    act(() => rendered.result.current.invalidate());
+  }
+
+  afterEach(() => stops.splice(0).forEach((stop) => stop()));
+
+  it("makes one request per observed query for a mixed delete", async () => {
+    const [library, discover] = [observe(LIBRARY_KEY), observe(DISCOVER_KEY)];
+
+    mixedDelete();
+    await elapse(LIVE_WINDOW_MS);
+
+    expect([library.requests, discover.requests]).toEqual([1, 1]);
+
+    await elapse(LIVE_WINDOW_MS * 4);
+
+    expect([library.requests, discover.requests]).toEqual([1, 1]);
+  });
+
+  it.each([
+    ["succeeds", false],
+    ["fails", true],
+  ])("waits for a write in flight, and rereads once it %s", async (_label, failed) => {
+    const [library, discover] = [observe(LIBRARY_KEY), observe(DISCOVER_KEY)];
+    const write = startWrite();
+
+    mixedDelete();
+    await elapse(LIVE_WINDOW_MS * 4);
+
+    expect([library.requests, discover.requests]).toEqual([0, 0]);
+
+    await write.settle(failed);
+    await elapse(LIVE_WINDOW_MS);
+
+    expect([library.requests, discover.requests]).toEqual([1, 1]);
+  });
+
+  it("rereads once after a matching read in flight, never joining it", async () => {
+    const library = observe(LIBRARY_KEY);
+
+    library.gate = open();
+    void queryClient.refetchQueries({ queryKey: LIBRARY_KEY });
+    await elapse(0);
+    expect(library.requests).toBe(1);
+
+    mixedDelete();
+    await elapse(LIVE_WINDOW_MS * 4);
+
+    expect(library.requests).toBe(1);
+
+    const gate = library.gate;
+
+    library.gate = null;
+    gate.release();
+    await elapse(LIVE_WINDOW_MS);
+
+    expect(library.requests).toBe(2);
   });
 });
