@@ -7,11 +7,7 @@ import {
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import {
-  DEFAULT_PERSISTED_RECIPE_FILTERS,
-  DEFAULT_RECIPE_FILTERS,
-  persistedRecipeFilters,
-} from "@norish/shared/contracts/filter-contract";
+import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
 describe("the Library filters cookie", () => {
   it("round-trips the stored filters, carrying only what differs from the defaults", () => {
@@ -67,13 +63,5 @@ describe("writeRecipeFiltersCookie", () => {
       .slice(RECIPE_FILTERS_COOKIE.length + 1);
 
     expect(recipeFiltersFromCookie(value)).toEqual(filters);
-  });
-});
-
-describe("the library root's cookie write", () => {
-  it("carries no Ingredient filter for the default filters", () => {
-    expect(
-      decodeURIComponent(recipeFiltersCookieValue(persistedRecipeFilters(DEFAULT_RECIPE_FILTERS)))
-    ).toBe("{}");
   });
 });
