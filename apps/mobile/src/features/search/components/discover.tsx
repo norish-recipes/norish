@@ -154,8 +154,8 @@ function QuickFiltersSection({
         {quickFilters(visibility).map((quick) => (
           <ToggleChip
             key={quick.kind}
-            active={false}
             solid
+            active={false}
             icon={quick.icon}
             mutedIcon={quick.icon !== "star"}
             label={intl.formatMessage({ id: quick.labelId })}
@@ -184,8 +184,8 @@ function TagsSection({
           ? tags.map((tag) => (
               <ToggleChip
                 key={tag}
-                active={false}
                 solid
+                active={false}
                 label={tag}
                 testID={`search-tag-${tag}`}
                 onPress={() => onPick({ searchTags: [tag] })}
