@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
+import type { NarrowRow } from "../utils/search-suggestions";
 import { TypingSuggestions } from "../components/typing-suggestions";
 
 type Box = { children?: ReactNode; testID?: string };
@@ -123,10 +124,9 @@ describe("the typing state", () => {
   });
 
   it("reads the icons of the suggested foods, as no other surface may have", () => {
-    const food = { id: "f1", name: "chicken" };
-    const narrowRows = [
-      { kind: "ingredient" as const, id: "f1", name: "chicken", food },
-      { kind: "tag" as const, name: "chicken" },
+    const narrowRows: NarrowRow[] = [
+      { kind: "ingredient", id: "f1", name: "chicken", food: { name: "chicken", localeNames: {} } },
+      { kind: "tag", name: "chicken" },
     ];
 
     render(<TypingSuggestions {...base} narrowRows={narrowRows} />);
