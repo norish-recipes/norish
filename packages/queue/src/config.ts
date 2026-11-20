@@ -60,6 +60,8 @@ export interface QueueSettings {
   concurrency: number;
   /** How often (ms) its worker looks for a stalled job. */
   stalledInterval: number;
+  /** How often a stalled job is put back to run again, where it differs from the workers' default. */
+  maxStalledCount?: number;
   /** How long (ms) a job runs before the job monitor flags it as hanging. */
   hangingThresholdMs: number;
   /** Its jobs do not carry the operation context they were enqueued under. */
@@ -197,10 +199,11 @@ export const QUEUE_SETTINGS: Record<QueueName, QueueSettings> = {
     hangingThresholdMs: 24 * 60 * 60_000,
   },
   [QUEUE_NAMES.ENRICH_ALL]: {
-    // Never retried: a rerun with Replace existing would pay for every finished run again.
+    // Never rerun, by retry or stall recovery: with Replace existing it would pay again.
     jobOptions: { attempts: 1 },
     concurrency: 1,
     stalledInterval: 60_000,
+    maxStalledCount: 0,
     // Enrolling a large library takes minutes.
     hangingThresholdMs: 60 * 60_000,
   },
