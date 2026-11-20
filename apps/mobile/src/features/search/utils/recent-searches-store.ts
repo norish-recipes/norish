@@ -15,9 +15,10 @@ function publish(next: string[]) {
   listeners.forEach((listener) => listener());
 }
 
-/** Follows the signed-in account: its list is read from the device, and none is shown without one. */
+/** Follows the owner whose data is open: its list is read from the device, and none is shown
+ * without one, so a switch, sign-out or wipe empties it the moment it starts. */
 function followOwner() {
-  const owner = cache.owner();
+  const owner = cache.ownerData.owner();
 
   if (owner === loadedFor) return;
 
@@ -26,16 +27,18 @@ function followOwner() {
 
   if (!owner) return;
 
-  void cache.ownerData.read<unknown>(STORED_NAME).then((stored) => {
+  void cache.ownerData.read<unknown>(owner, STORED_NAME).then((stored) => {
     if (loadedFor === owner) publish(parseRecents(stored));
   });
 }
 
-// A sign-out or account switch empties the Offline Cache's owner data and applies a new owner.
-cache.subscribe(followOwner);
+cache.ownerData.subscribe(followOwner);
 followOwner();
 
-const save = () => void cache.ownerData.write(STORED_NAME, recents);
+// Only to the owner the list was loaded for; the manager drops it once that owner closes.
+const save = () => {
+  if (loadedFor) void cache.ownerData.write(loadedFor, STORED_NAME, recents);
+};
 
 /** Keeps a confirmed text, newest first. */
 export function addRecentSearch(text: string) {

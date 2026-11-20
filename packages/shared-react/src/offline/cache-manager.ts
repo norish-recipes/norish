@@ -126,12 +126,16 @@ export interface CacheManager {
   /** Clear the complete local read copy without touching queued mutations or the app shell. */
   resetOfflineCopy(cause: "manual" | "sign-out"): Promise<void>;
   /**
-   * A named value the applied owner's screens keep on the device (Recent Searches). It goes with
-   * the owner's read copy; with no owner applied it reads nothing and writes nothing.
+   * Named values an owner's screens keep on the device (Recent Searches), cleared with the owner's
+   * read copy. Only the open owner's data is read or written; a call for any other does nothing.
    */
   ownerData: {
-    read<T>(name: string): Promise<T | undefined>;
-    write(name: string, value: unknown): Promise<void>;
+    /** The owner whose data is open: null with none applied and while its data is being cleared. */
+    owner(): string | null;
+    read<T>(owner: string, name: string): Promise<T | undefined>;
+    write(owner: string, name: string, value: unknown): Promise<void>;
+    /** Told when the open owner changes, as a switch, sign-out or wipe starts and ends. */
+    subscribe(listener: () => void): () => void;
   };
   /** Observe the one applied-owner value. */
   subscribe(listener: () => void): () => void;
@@ -164,6 +168,17 @@ export function createCacheManager({
   let flushPending: () => Promise<void> = async () => undefined;
   let inFlight: Promise<void> = Promise.resolve();
   const appliedListeners = new Set<() => void>();
+  let dataOwner: string | null = null;
+  const dataListeners = new Set<() => void>();
+  // Owner-data writes still landing, which a clear waits for so none survives it.
+  let ownerWrites: Promise<unknown> = Promise.resolve();
+
+  function openOwnerData(owner: string | null): void {
+    if (owner === dataOwner) return;
+
+    dataOwner = owner;
+    dataListeners.forEach((listener) => listener());
+  }
 
   /** `held`: reads already in the client, which no event would save. */
   function subscribeToPersistence(owner: string, held: string[] = []): void {
@@ -229,6 +244,7 @@ export function createCacheManager({
   function clearClient(): void {
     unsubscribe?.();
     unsubscribe = null;
+    openOwnerData(null);
     queryClient.clear();
     onClear?.();
   }
@@ -246,6 +262,7 @@ export function createCacheManager({
   async function clearOwnerData(owner: string): Promise<void> {
     const prefix = ownerDataPrefix(owner);
 
+    await ownerWrites;
     const keys = (await keyval.keys()).filter((key) => key.startsWith(prefix));
 
     await Promise.all(keys.map((key) => keyval.del(key)));
@@ -293,6 +310,7 @@ export function createCacheManager({
     bootOwner = owner;
     writeLastOwner(owner);
     notifyOwnerApplied();
+    openOwnerData(owner);
   }
 
   async function applyIdentity({
@@ -370,6 +388,7 @@ export function createCacheManager({
           }
 
           if (owner) subscribeToPersistence(owner);
+          openOwnerData(appliedOwner);
         })
         .catch(() => undefined);
 
@@ -377,10 +396,23 @@ export function createCacheManager({
     },
 
     ownerData: {
-      read: async <T>(name: string) =>
-        appliedOwner ? keyval.get<T>(ownerDataKey(appliedOwner, name)) : undefined,
-      write: async (name, value) => {
-        if (appliedOwner) await keyval.set(ownerDataKey(appliedOwner, name), value);
+      owner: () => dataOwner,
+      read: async <T>(owner: string, name: string) =>
+        owner === dataOwner ? keyval.get<T>(ownerDataKey(owner, name)) : undefined,
+      write: async (owner, name, value) => {
+        if (owner !== dataOwner) return;
+
+        const written = keyval.set(ownerDataKey(owner, name), value);
+
+        ownerWrites = Promise.allSettled([ownerWrites, written]);
+        await written;
+      },
+      subscribe(listener) {
+        dataListeners.add(listener);
+
+        return () => {
+          dataListeners.delete(listener);
+        };
       },
     },
 

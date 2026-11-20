@@ -517,26 +517,91 @@ describe("createCacheManager", () => {
 
     const manager = createManager();
 
-    expect(await manager.ownerData.read("recent")).toBeUndefined();
-    await manager.ownerData.write("recent", ["ignored"]);
+    expect(manager.ownerData.owner()).toBeNull();
+    expect(await manager.ownerData.read("u1", "recent")).toBeUndefined();
+    await manager.ownerData.write("u1", "recent", ["ignored"]);
     await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
-    await manager.ownerData.write("recent", ["soup"]);
+    await manager.ownerData.write("u1", "recent", ["soup"]);
+    await manager.ownerData.write("u2", "recent", ["not open"]);
 
-    expect(await manager.ownerData.read("recent")).toEqual(["soup"]);
+    expect(await manager.ownerData.read("u1", "recent")).toEqual(["soup"]);
+    expect(await manager.ownerData.read("u2", "recent")).toBeUndefined();
     expect(await storage.keyval.get("owner-data:u1:recent")).toEqual(["soup"]);
 
     await manager.resetOfflineCopy("sign-out");
 
     expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
-    expect(await manager.ownerData.read("recent")).toBeUndefined();
+    expect(manager.ownerData.owner()).toBeNull();
 
     await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
-    await manager.ownerData.write("recent", ["soup"]);
+    await manager.ownerData.write("u1", "recent", ["soup"]);
     await manager.reconcileIdentity({ sessionUserId: "u3", isOffline: false });
 
     expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
     expect(await storage.keyval.get("owner-data:u2:recent")).toBeUndefined();
-    expect(await manager.ownerData.read("recent")).toBeUndefined();
+    expect(await manager.ownerData.read("u3", "recent")).toBeUndefined();
+  });
+
+  it("closes the owner's data while a wipe or switch clears it, and tells its readers", async () => {
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+    const open: Array<string | null> = [];
+
+    manager.ownerData.subscribe(() => open.push(manager.ownerData.owner()));
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    await manager.ownerData.write("u1", "recent", ["soup"]);
+    await manager.resetOfflineCopy("manual");
+
+    expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
+
+    await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+    await manager.resetOfflineCopy("sign-out");
+
+    expect(open).toEqual(["u1", null, "u1", null, "u2", null]);
+  });
+
+  it("writes nothing under the departing owner once a switch starts clearing it", async () => {
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+
+    const listKeys = storage.keyval.keys.bind(storage.keyval);
+
+    // A confirm lands while the purge lists the departing owner's keys.
+    vi.spyOn(storage.keyval, "keys").mockImplementation(async () => {
+      const keys = await listKeys();
+
+      await manager.ownerData.write("u1", "recent", ["late"]);
+
+      return keys;
+    });
+    await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+
+    expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
+  });
+
+  it("clears a write still landing when the switch starts", async () => {
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+
+    const setValue = storage.keyval.set.bind(storage.keyval);
+
+    vi.spyOn(storage.keyval, "set").mockImplementationOnce(async (key, value) => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await setValue(key, value);
+    });
+    const landed = manager.ownerData.write("u1", "recent", ["slow"]);
+
+    await manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+    await landed;
+
+    expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
   });
 
   it("forgets the cache owner after a sign-out reset", async () => {
