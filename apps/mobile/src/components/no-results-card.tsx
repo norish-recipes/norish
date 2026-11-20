@@ -8,11 +8,12 @@ import { useIntl } from "react-intl";
 
 type Icon = ComponentProps<typeof Ionicons>["name"];
 
-/** Nothing matched: the warning card, and the one action that would change that. */
+/** Nothing to show: the card in the warning tone unless `tone` says otherwise, and the one action that would change that. */
 export function NoResultsCard({
   icon,
   title,
   description,
+  tone = "warning",
   className,
   testID,
   action,
@@ -21,6 +22,7 @@ export function NoResultsCard({
   /** Defaults to "No results". */
   title?: string;
   description?: string;
+  tone?: "warning" | "neutral";
   className?: string;
   testID: string;
   action?: { label: string; icon: Icon; testID: string; onPress: () => void };
@@ -35,7 +37,7 @@ export function NoResultsCard({
       icon={icon}
       testID={testID}
       title={title ?? intl.formatMessage({ id: "recipes.empty.noResults" })}
-      tone="warning"
+      tone={tone}
     >
       {action ? (
         <Pressable

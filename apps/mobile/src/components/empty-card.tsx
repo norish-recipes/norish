@@ -4,14 +4,20 @@ import { Text, View } from "react-native";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-type Tone = "accent" | "shop" | "warning";
+type Tone = "accent" | "shop" | "warning" | "neutral";
 
 const GROUND: Record<Tone, string> = {
   accent: "bg-accent/10",
   shop: "bg-shop/25",
   warning: "bg-warning/20",
+  neutral: "bg-muted/10",
 };
-const INK: Record<Tone, string> = { accent: "accent-text", shop: "shop-ink", warning: "warning" };
+const INK: Record<Tone, string> = {
+  accent: "accent-text",
+  shop: "shop-ink",
+  warning: "warning",
+  neutral: "muted",
+};
 
 /** A list with nothing in it: the area's icon in its tint on the left, title and at most one line
  * on the right, and an optional action under them. A sheet passes its own `className` fill. */
