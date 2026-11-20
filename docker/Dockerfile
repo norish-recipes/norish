@@ -1,9 +1,13 @@
 # syntax=docker/dockerfile:1.26
 
+# The runtime stage is this Alpine with the node binary alone, so the pair moves together.
+ARG NODE_VERSION=26.13.1
+ARG ALPINE_VERSION=3.24
+
 ##############################
-# Base image (minimal, no pnpm needed at runtime)
+# Base image for the build stages
 ##############################
-FROM node:26.13.1-alpine3.24 AS base
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS base
 
 # Security: upgrade all packages to latest versions to fix CVEs
 RUN apk upgrade --no-cache && \
@@ -208,15 +212,21 @@ RUN cd apps/web && node /app/docker/compile-workspace.mjs \
 ##############################
 # Runtime stage (minimal, no pnpm)
 ##############################
-FROM base AS runtime
+# Plain Alpine plus the node binary: removing npm and Node's headers from the node image
+# in a later layer would leave them in its base layer.
+FROM alpine:${ALPINE_VERSION} AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/norish-recipes/norish"
 
-# Install runtime-only system deps (base already ran apk upgrade)
-RUN apk add --no-cache ffmpeg su-exec && \
-  # Clean up npm (not needed, we use node directly)
-  rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack && \
-  rm -rf /var/cache/apk/* /tmp/* /root/.npm
+COPY --from=base /usr/local/bin/node /usr/local/bin/node
+
+# Security: upgrade all packages to latest versions to fix CVEs. Node links libstdc++
+# and libgcc; the node user is UID/GID 1000, as in the node image.
+RUN apk upgrade --no-cache && \
+  apk add --no-cache ca-certificates libc6-compat libstdc++ libgcc ffmpeg su-exec && \
+  addgroup -g 1000 node && \
+  adduser -u 1000 -G node -s /bin/sh -D node && \
+  rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /app
 
@@ -236,7 +246,7 @@ RUN test -n "${NORISH_VERSION_REPORT_JSON}"
 ENV NORISH_VERSION_REPORT_JSON=${NORISH_VERSION_REPORT_JSON}
 
 # Use non-root user for runtime.
-# The node image already has user 'node' with UID/GID 1000.
+# The stage above creates user 'node' with UID/GID 1000.
 # For custom UID/GID, create a new user; otherwise reuse 'node'.
 ARG UID=1000
 ARG GID=1000
