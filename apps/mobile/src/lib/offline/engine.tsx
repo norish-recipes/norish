@@ -7,6 +7,7 @@ import { createMMKV } from "react-native-mmkv";
 import { APP_VERSION } from "@/lib/app-version";
 import { getAuthClient } from "@/lib/auth/auth-client";
 import { getServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
+import { followSearchOwner } from "@/lib/search-session";
 import { focusManager } from "@tanstack/react-query";
 import { addNetworkStateListener } from "expo-network";
 
@@ -43,6 +44,8 @@ export const offlineEngine = withSavedShares(
   appGroupInbox,
   () => getServerAddress()
 );
+
+followSearchOwner(offlineEngine.cache.ownerData);
 
 // React Native has no window focus, so the foreground is focus: stale reads refetch on return.
 // iOS `inactive` (Face ID, the share sheet, the switcher peek) is not leaving, so it changes nothing.

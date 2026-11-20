@@ -1,6 +1,5 @@
 import { resetAuthClientStorage } from "@/lib/auth/auth-client";
 import { clearCalendarWidgets } from "@/lib/calendar-widgets";
-import { resetSearchSession } from "@/lib/search-session";
 import { endRecipeTimers } from "@/lib/timer-notifications";
 import { closeMobileTrpcConnections } from "@/lib/trpc/trpc-provider";
 
@@ -34,9 +33,6 @@ export async function endSession(
   } catch (error) {
     log.warn({ error }, "Failed to reset auth client storage during sign out");
   }
-
-  // The next account must not see this one's query, chips, scope or sort.
-  resetSearchSession();
 
   // Neither rejects: a failed end is logged and the next session's syncs still run.
   await Promise.all([endRecipeTimers(), clearCalendarWidgets(widgetSignIn)]);

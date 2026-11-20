@@ -1,3 +1,4 @@
+import type { CacheManager } from "@norish/shared-react/offline";
 import type { SortOrder } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { createLibraryFiltersStore } from "@norish/shared-react/recipes";
@@ -32,4 +33,18 @@ export const useSearchConfirmed = confirmed.use;
 export function resetSearchSession() {
   searchStore.setState({ filters: SEARCH_START });
   setSearchConfirmed(false);
+}
+
+/** Starts Search over the moment its account changes: a switch, sign-out or Session Expiry. A wipe
+ * reopens the same account's data, so the session stays. */
+export function followSearchOwner(ownerData: CacheManager["ownerData"]): () => void {
+  let sessionOwner = ownerData.owner();
+
+  return ownerData.subscribe(() => {
+    const owner = ownerData.owner() ?? ownerData.next();
+
+    if (owner === sessionOwner) return;
+    if (sessionOwner !== null) resetSearchSession();
+    sessionOwner = owner;
+  });
 }
