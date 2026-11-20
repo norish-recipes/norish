@@ -1,10 +1,10 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { Section } from "@/components/section";
 import { Segmented } from "@/components/segmented";
 import { Sheet, SheetScrollView } from "@/components/sheet";
 import { StarRating } from "@/components/star-rating";
 import { ToggleChip } from "@/components/toggle-chip";
-import { FilterSection } from "@/features/recipes/components/filter-section";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useRouter } from "expo-router";
 import { Skeleton } from "heroui-native";
@@ -66,7 +66,7 @@ export function FiltersScreen() {
       title={intl.formatMessage({ id: "common.filters.title" })}
     >
       <SheetScrollView contentClassName="gap-3">
-        <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
+        <Section title={intl.formatMessage({ id: "common.filters.sort" })}>
           <View className="flex-row flex-wrap gap-2">
             {(["title", "date"] as const).map((key) => {
               const active = draft.sortMode.startsWith(key);
@@ -92,9 +92,9 @@ export function FiltersScreen() {
               );
             })}
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.mode" })}>
+        <Section title={intl.formatMessage({ id: "common.filters.mode" })}>
           <Segmented
             segments={MODES.map(({ value, label }) => ({
               value,
@@ -105,10 +105,10 @@ export function FiltersScreen() {
             value={draft.filterMode}
             onChange={(value) => update({ filterMode: value })}
           />
-        </FilterSection>
+        </Section>
 
         {showFavorites ? (
-          <FilterSection title={intl.formatMessage({ id: "common.filters.favorites" })}>
+          <Section title={intl.formatMessage({ id: "common.filters.favorites" })}>
             <View className="flex-row">
               <ToggleChip
                 active={draft.showFavoritesOnly}
@@ -118,11 +118,11 @@ export function FiltersScreen() {
                 onPress={() => update({ showFavoritesOnly: !draft.showFavoritesOnly })}
               />
             </View>
-          </FilterSection>
+          </Section>
         ) : null}
 
         {showRatings ? (
-          <FilterSection
+          <Section
             title={intl.formatMessage({ id: "common.filters.minRating" })}
             trailing={
               draft.minRating === null ? null : (
@@ -138,10 +138,10 @@ export function FiltersScreen() {
               value={draft.minRating}
               onChange={(minRating) => update({ minRating })}
             />
-          </FilterSection>
+          </Section>
         ) : null}
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.pantry" })}>
+        <Section title={intl.formatMessage({ id: "common.filters.pantry" })}>
           <View className="flex-row">
             <ToggleChip
               active={draft.showPantryOnly}
@@ -151,9 +151,9 @@ export function FiltersScreen() {
               onPress={() => update({ showPantryOnly: !draft.showPantryOnly })}
             />
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
+        <Section title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
           <View className="flex-row flex-wrap gap-2">
             {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => (
               <ToggleChip
@@ -165,9 +165,9 @@ export function FiltersScreen() {
               />
             ))}
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.categories" })}>
+        <Section title={intl.formatMessage({ id: "common.filters.categories" })}>
           <View className="flex-row flex-wrap gap-2">
             {categories.map((category) => (
               <ToggleChip
@@ -179,9 +179,9 @@ export function FiltersScreen() {
               />
             ))}
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.tags" })}>
+        <Section title={intl.formatMessage({ id: "common.filters.tags" })}>
           {tagsLoading ? (
             <View className="flex-row flex-wrap gap-2">
               {[72, 96, 64, 88].map((width) => (
@@ -201,7 +201,7 @@ export function FiltersScreen() {
               ))}
             </View>
           )}
-        </FilterSection>
+        </Section>
       </SheetScrollView>
     </Sheet>
   );

@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
-import { SectionLabel } from "@/components/section-label";
+import { Section } from "@/components/section";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
@@ -22,26 +22,6 @@ import { quickFilters } from "../utils/search-chips";
 const TILE_COUNT = 4;
 const SKELETON_TAG_WIDTHS = ["w-24", "w-28", "w-24", "w-20", "w-24", "w-16"];
 
-function Section({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <View className="gap-2">
-      <View className="flex-row items-center justify-between">
-        <SectionLabel>{title}</SectionLabel>
-        {action}
-      </View>
-      {children}
-    </View>
-  );
-}
-
 function RecentSection({
   onRun,
   onEdit,
@@ -56,7 +36,8 @@ function RecentSection({
 
   return (
     <Section
-      action={
+      title={intl.formatMessage({ id: "recipes.search.recent" })}
+      trailing={
         <Pressable
           accessibilityRole="button"
           className="px-2"
@@ -69,7 +50,6 @@ function RecentSection({
           </Text>
         </Pressable>
       }
-      title={intl.formatMessage({ id: "recipes.search.recent" })}
     >
       <Card testID="search-recent">
         {recents.map((text, index) => (

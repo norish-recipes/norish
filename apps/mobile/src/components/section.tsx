@@ -3,8 +3,8 @@ import React from "react";
 import { View } from "react-native";
 import { SectionLabel } from "@/components/section-label";
 
-/** One Filters sheet section: a small heading, an optional control beside it, then its choices. */
-export function FilterSection({
+/** A small heading, an optional control beside it, then what it heads: a Filters sheet or Search section. */
+export function Section({
   title,
   trailing,
   children,

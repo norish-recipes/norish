@@ -5,7 +5,7 @@ import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
 import { HighlightedText } from "@/components/highlighted-text";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
-import { SectionLabel } from "@/components/section-label";
+import { Section } from "@/components/section";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
@@ -58,12 +58,7 @@ function SuggestionSection({
 }) {
   if (!loading && empty) return null;
 
-  return (
-    <View className="gap-2">
-      <SectionLabel>{title}</SectionLabel>
-      {loading ? skeleton : children}
-    </View>
-  );
+  return <Section title={title}>{loading ? skeleton : children}</Section>;
 }
 
 function RecipeRow({
