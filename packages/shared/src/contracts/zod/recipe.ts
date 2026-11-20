@@ -173,9 +173,6 @@ export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
 export const measurementSystems = measurementSystemEnum.enumValues;
 
 // tRPC input schemas
-/** The text a recipe search and the typing suggestions read; one definition, no length cap of its own. */
-export const RecipeSearchTextSchema = z.string();
-
 /** The longest text `library.suggest` takes; each word adds `like` clauses to its query. */
 export const SUGGEST_TEXT_MAX = 200;
 
@@ -193,7 +190,7 @@ export const RecipeListInputSchema = z.object({
     .max(200)
     .default(50)
     .describe("Maximum number of recipes to return. Defaults to 50."),
-  search: RecipeSearchTextSchema.optional().describe("Optional free-text search term."),
+  search: z.string().optional().describe("Optional free-text search term."),
   searchFields: z
     .array(z.enum(["title", "description", "ingredients", "steps", "tags"]))
     .default(["title", "ingredients"])

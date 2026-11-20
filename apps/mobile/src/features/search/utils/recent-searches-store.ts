@@ -66,6 +66,4 @@ export const addRecentSearch = (text: string) => change((list) => addRecent(list
 
 export const clearRecentSearches = () => change(() => []);
 
-export const getRecentSearches = recents.get;
-
 export const useRecentSearchList = recents.use;

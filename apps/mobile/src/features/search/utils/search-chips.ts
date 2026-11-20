@@ -122,9 +122,6 @@ export const filterChips = (filters: CanonicalRecipeFilters) =>
       .map((value) => ({ kind: name, value }) as FilterChip)
   );
 
-/** Whether a chip filters, not counting the text: the text is the field's, not a chip. */
-export const hasChips = (filters: CanonicalRecipeFilters) => filterChips(filters).length > 0;
-
 /** What `chip` says. */
 export const chipLabel = (chip: FilterChip, speech: ChipSpeech) =>
   kindOf(chip).label(chip.value, speech);
@@ -136,27 +133,19 @@ export const chipIcon = (chip: FilterChip) => kindOf(chip).icon?.(chip.value) ??
 export const withoutChip = (filters: CanonicalRecipeFilters, chip: FilterChip): Patch =>
   kindOf(chip).remove(filters, chip.value);
 
-/** The patch that drops the filters the reader's Hidden Items took off offer, so none narrows the
- * list unseen; null when none is. */
-export function withoutHiddenFilters(
+/** `filters` as Search reads them: without the favourites and rating filters Hidden Items hides, so
+ * none narrows the list or shows a chip; the same object while none is. */
+export function visibleFilters(
   filters: CanonicalRecipeFilters,
   visibility: HiddenItemVisibility
-): Patch | null {
+): CanonicalRecipeFilters {
   const hidden = filterChips(filters).filter(
     (chip) => kindOf(chip).offered?.(visibility) === false
   );
 
   return hidden.length === 0
-    ? null
-    : Object.assign({}, ...hidden.map((chip) => withoutChip(filters, chip)));
-}
-
-/** `filters` as Search reads them: without the favourites and rating filters Hidden Items hides, so
- * none narrows the list or shows a chip. */
-export function visibleFilters(filters: CanonicalRecipeFilters, visibility: HiddenItemVisibility) {
-  const hidden = withoutHiddenFilters(filters, visibility);
-
-  return hidden ? { ...filters, ...hidden } : filters;
+    ? filters
+    : Object.assign({ ...filters }, ...hidden.map((chip) => withoutChip(filters, chip)));
 }
 
 /** The Quick filters in the board's order. */

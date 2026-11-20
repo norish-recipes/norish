@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const device = vi.hoisted(() => {
@@ -40,8 +42,11 @@ const device = vi.hoisted(() => {
 
 vi.mock("@/lib/offline/engine", () => ({ offlineEngine: { cache: device.cache } }));
 
-const { addRecentSearch, clearRecentSearches, getRecentSearches } =
+const { addRecentSearch, clearRecentSearches, useRecentSearchList } =
   await import("../utils/recent-searches-store");
+
+/** The list a screen reading it shows now. */
+const getRecentSearches = () => renderHook(() => useRecentSearchList()).result.current;
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
