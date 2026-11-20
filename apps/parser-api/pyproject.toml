@@ -17,3 +17,8 @@ dependencies = [
 
 [tool.setuptools]
 packages = ["app"]
+
+[dependency-groups]
+# Keep in step with DEFAULT_YT_DLP_VERSION in packages/config/src/zod/server-config.ts:
+# the image runs this release as /app/bin/yt-dlp, and that constant is the version the server reports.
+yt-dlp = ["yt-dlp[default,curl-cffi]==2026.10.26"]

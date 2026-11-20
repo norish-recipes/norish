@@ -71,11 +71,18 @@ RUN --mount=type=cache,target=/root/.local/share/uv/python \
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
   pnpm install --frozen-lockfile --ignore-scripts --child-concurrency=1
 
+# The yt-dlp group is the release the image runs as /app/bin/yt-dlp, on this same Python.
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=cache,target=/root/.local/share/uv/python \
-  UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked && \
+  UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked --group yt-dlp && \
   # The test suites the parser's packages ship load at no point.
-  find /app/apps/parser-api/.venv/lib -type d -path '*/site-packages/*/tests' -prune -exec rm -rf {} +
+  find /app/apps/parser-api/.venv/lib -type d -path '*/site-packages/*/tests' -prune -exec rm -rf {} + && \
+  # yt-dlp's and mutagen's man pages and shell completions.
+  rm -rf /app/apps/parser-api/.venv/share && \
+  # Wheels ship their native libraries with debug info (curl_cffi's is 39 MB, 6 MB without).
+  apk add --no-cache binutils && \
+  find /app/apps/parser-api/.venv/lib -type f \( -name '*.so' -o -name '*.so.*' \) \
+  -exec strip --strip-unneeded {} +
 
 # What the parser never loads from the Python it runs on: the shared library
 # (the interpreter is linked statically, so nothing links it), Tk and its
@@ -199,34 +206,6 @@ RUN cd apps/web && node /app/docker/compile-workspace.mjs \
   /app/deploy/node_modules/.pnpm/*/node_modules/@norish/* /app/apps/web/server
 
 ##############################
-# yt-dlp download (cached separately from app build)
-##############################
-FROM base AS ytdlp
-
-# Keep in step with DEFAULT_YT_DLP_VERSION in packages/config/src/zod/server-config.ts:
-# this is the binary the image actually ships, and that constant is the version
-# the server reports for it.
-ARG YT_DLP_VERSION=2026.10.26
-ARG TARGETARCH
-
-RUN apk add --no-cache curl
-
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-  YT_DLP_BINARY="yt-dlp_musllinux_aarch64"; \
-  else \
-  YT_DLP_BINARY="yt-dlp_musllinux"; \
-  fi && \
-  mkdir -p /ytdlp && \
-  curl --fail --silent --show-error \
-  --location \
-  --retry 5 \
-  --retry-all-errors \
-  --retry-delay 3 \
-  "https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/${YT_DLP_BINARY}" \
-  --output /ytdlp/yt-dlp && \
-  chmod +x /ytdlp/yt-dlp
-
-##############################
 # Runtime stage (minimal, no pnpm)
 ##############################
 FROM base AS runtime
@@ -294,13 +273,11 @@ COPY --chown=${UID}:${GID} docker/compiled-workspace-hooks.mjs ./compiled-worksp
 # packages/<dir>/src (AI prompts, migrations, the icon set).
 COPY --from=build --chown=${UID}:${GID} /app/runtime-packages/ ./packages/
 
-# Create upload and bin parent directories only.
-# Subdirectories (recipes/, avatars/, video-temp/) are created on-demand
+# Uploads' subdirectories (recipes/, avatars/, video-temp/) are created on demand;
+# /app/bin/yt-dlp is the parser venv's entry point (its yt-dlp group).
 RUN mkdir -p /app/uploads /app/bin && \
-  chown -R ${UID}:${GID} /app/uploads /app/bin
-
-# Copy pre-downloaded yt-dlp binary from dedicated build stage
-COPY --from=ytdlp --chown=${UID}:${GID} /ytdlp/yt-dlp /app/bin/yt-dlp
+  chown -R ${UID}:${GID} /app/uploads /app/bin && \
+  ln -s /app/apps/parser-api/.venv/bin/yt-dlp /app/bin/yt-dlp
 
 # The container starts as root only so the entrypoint can hand the uploads
 # folder to this user; the server itself runs as it.

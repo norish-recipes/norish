@@ -41,8 +41,8 @@ const ZIPAPP_ASSET = "yt-dlp";
  * TLS trust with it — a Python with no CA bundle (a python.org install whose
  * `Install Certificates.command` was never run is the common one) turns every
  * fetch into CERTIFICATE_VERIFY_FAILED, on sites that work fine from any
- * other program on the same machine. The image has always shipped a platform
- * build (docker/Dockerfile); this is development catching up to it.
+ * other program on the same machine. The image runs yt-dlp on its own Python,
+ * with certifi's bundle (docker/Dockerfile).
  *
  * Pure, so every branch is testable from one machine.
  */
