@@ -41,6 +41,7 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
 const CATEGORIES_KEY = [["config", "categories"]];
+const DISCOVER_KEY = [["library", "discover"], { type: "query" }];
 const PENDING_KEY = [["recipes", "getPending"], { type: "query" }];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
 
@@ -78,6 +79,8 @@ vi.mock("../../trpc", () => ({
       onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
     },
     library: {
+      pathKey: () => [["library"]],
+      discover: { pathKey: () => [["library", "discover"]] },
       list: {
         pathKey: () => [["library", "list"]],
         queryKey: () => [["library", "list"], { input: {}, type: "query" }],
@@ -191,6 +194,7 @@ beforeEach(() => {
   queryClient.setQueryData(detailKey("recipe-1"), fullRecipe());
   queryClient.setQueryData(PENDING_KEY, []);
   queryClient.setQueryData(CATEGORIES_KEY, { categories: [], builtInAliases: {} });
+  queryClient.setQueryData(DISCOVER_KEY, { categories: [], tags: [] });
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
 
   platform = fakePlatformAdapter();
@@ -288,7 +292,7 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(queryClient.getQueryData<FullRecipeDTO>(detailKey("recipe-1"))?.images).toEqual([photo]);
   });
 
-  it("rereads only the Categories for an update that is not an enrichment", () => {
+  it("rereads only what is built from the recipes for an update that is not an enrichment", () => {
     const calendarKey = [
       ["calendar", "listItems"],
       { input: { startISO: "2026-01-01", endISO: "2026-01-07" }, type: "query" },
@@ -310,6 +314,20 @@ describe("the recipe list events and recipe outcomes", () => {
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: CATEGORIES_KEY });
     }
   );
+
+  it.each([
+    ["onCreated", { recipe: dashboardRecipe({ id: "r2" }) }],
+    ["onUpdated", { recipe: fullRecipe({ name: "Renamed" }) }],
+    ["onDeleted", { ids: ["recipe-1"] }],
+    ["onImported", { recipe: dashboardRecipe({ id: "r2" }) }],
+    ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "r2" })] }],
+    ["onFailed", {}],
+    ["onDeleteKept", { ids: ["recipe-1"] }],
+  ])("rereads Search's Categories and Tags once on %s", (name, payload) => {
+    emit(name, payload);
+
+    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+  });
 
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
     emit("onDeleted", { ids: ["recipe-1"] });

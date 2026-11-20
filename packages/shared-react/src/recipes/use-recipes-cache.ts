@@ -94,9 +94,10 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
     [queryClient, trpc]
   );
 
+  // The library path holds the Library's list and the Categories and Tags Search shows from it.
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: trpc.recipes.list.pathKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.library.list.pathKey() });
+    queryClient.invalidateQueries({ queryKey: trpc.library.pathKey() });
     queryClient.invalidateQueries({ queryKey: trpc.cookbooks.recipes.pathKey() });
   }, [queryClient, trpc]);
 

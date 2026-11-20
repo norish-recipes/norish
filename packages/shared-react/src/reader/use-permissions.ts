@@ -70,11 +70,11 @@ export function usePermissionsSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   // The policy itself, and which recipes the reader may see: the paged lists are infinite
-  // queries, so they match by path. Nothing else depends on it.
+  // queries, so they match by path; the library path also holds Search's Categories and Tags.
   const affectedKeys = [
     trpc.permissions.get.queryKey(),
     trpc.recipes.list.pathKey(),
-    trpc.library.list.pathKey(),
+    trpc.library.pathKey(),
     trpc.cookbooks.recipes.pathKey(),
   ];
 

@@ -77,9 +77,20 @@ function recipeListKeys(trpc: ReturnType<typeof useTRPC>) {
     trpc.recipes.list.pathKey(),
     trpc.recipes.get.pathKey(),
     trpc.recipes.getPending.queryKey(),
-    trpc.library.list.pathKey(),
+    // The Library's list and Search's Categories and Tags built from it.
+    trpc.library.pathKey(),
     trpc.cookbooks.recipes.pathKey(),
   ];
+}
+
+/** Rereads what is built from the recipes rather than patched: the household's Categories, and
+ * Search's Categories and Tags. The server saves after the mutation answers, so it waits for the event. */
+function rereadRecipeFacets(
+  queryClient: ReturnType<typeof useQueryClient>,
+  trpc: ReturnType<typeof useTRPC>
+) {
+  void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
+  void queryClient.invalidateQueries({ queryKey: trpc.library.discover.pathKey() });
 }
 
 /**
@@ -116,6 +127,7 @@ export function useRecipeOutcomesSubscription() {
       replaceOldestOptimisticPendingRecipe(pendingId);
       removePendingRecipe(pendingId);
       setAllRecipesData(prependRecipes([payload.recipe]));
+      rereadRecipeFacets(queryClient, trpc);
       toast.show({
         severity: payload.incomplete ? "warning" : "success",
         title: toast.translate("recipes.toasts.imported"),
@@ -173,10 +185,7 @@ export function useRecipeListSubscription() {
   const dropFromSelection = useRecipeSelection((state) => state.drop);
 
   const live = { liveQueryKeys: [...recipeListKeys(trpc), trpc.config.categories.queryKey()] };
-  // The server saves after the mutation answers, so the household's Categories
-  // are reread when the save is announced, not when the mutation succeeds.
-  const rereadCategories = () =>
-    void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
+  const rereadFacets = () => rereadRecipeFacets(queryClient, trpc);
 
   const updateRecipeInList = (updatedRecipe: FullRecipeDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -199,7 +208,7 @@ export function useRecipeListSubscription() {
     onEvent: ({ recipe }) => {
       removePendingRecipe(recipe.id);
       setAllRecipesData(prependRecipes([recipe]));
-      rereadCategories();
+      rereadFacets();
     },
   });
 
@@ -210,7 +219,7 @@ export function useRecipeListSubscription() {
       queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
 
       // An enrichment changes no Category.
-      if (source !== "enrichment") rereadCategories();
+      if (source !== "enrichment") rereadFacets();
     },
   });
 
@@ -219,7 +228,7 @@ export function useRecipeListSubscription() {
     onEvent: ({ ids }) => {
       setAllRecipesData((prev) => removeRecipesFromLists(prev, new Set(ids)));
       dropFromSelection(ids);
-      rereadCategories();
+      rereadFacets();
 
       for (const id of ids) {
         void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
@@ -239,6 +248,9 @@ export function useRecipeListSubscription() {
 
   useRealtimeSubscription<Payload<"recipeBatchCreated">>(trpc.recipes.onRecipeBatchCreated, {
     ...live,
-    onEvent: ({ recipes }) => setAllRecipesData(prependRecipes(recipes)),
+    onEvent: ({ recipes }) => {
+      setAllRecipesData(prependRecipes(recipes));
+      rereadFacets();
+    },
   });
 }
