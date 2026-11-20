@@ -52,7 +52,10 @@ function save() {
   if (loadedFor) void cache.ownerData.write(loadedFor, STORED_NAME, recents.get());
 }
 
+// With no owner's data open a confirm changes nothing, so no list shows that is stored nowhere.
 function change(edit: Edit) {
+  if (!loadedFor) return;
+
   recents.update(edit);
   if (loading) loading.push(edit);
   else save();

@@ -6,8 +6,8 @@ const device = vi.hoisted(() => {
     owner: null as string | null,
     data: new Map<string, unknown>(),
     listeners: new Set<() => void>(),
-    /** Reads held back until the test lets them answer. */
-    held: null as Array<() => void> | null,
+    /** Reads held back until the test lets them answer, by the owner each was made for. */
+    held: null as Array<{ owner: string; answer: () => void }> | null,
   };
   const key = (owner: string, name: string) => `${owner}:${name}`;
 
@@ -23,11 +23,11 @@ const device = vi.hoisted(() => {
         },
         read: (owner: string, name: string) =>
           new Promise<unknown>((resolve) => {
-            // The manager answers only for the open owner, as of when the read lands.
-            const answer = () =>
-              resolve(owner === state.owner ? state.data.get(key(owner, name)) : undefined);
+            // The manager reads only for the open owner, as of when the read is made.
+            const value = owner === state.owner ? state.data.get(key(owner, name)) : undefined;
+            const answer = () => resolve(value);
 
-            if (state.held) state.held.push(answer);
+            if (state.held) state.held.push({ owner, answer });
             else answer();
           }),
         write: async (owner: string, name: string, value: unknown) => {
@@ -61,7 +61,13 @@ async function answerReads() {
   const held = device.state.held ?? [];
 
   device.state.held = null;
-  held.forEach((answer) => answer());
+  held.forEach(({ answer }) => answer());
+  await settle();
+}
+
+/** Lets the held read made for `owner` answer. */
+async function answerReadFor(owner: string) {
+  device.state.held?.find((read) => read.owner === owner)?.answer();
   await settle();
 }
 
@@ -75,7 +81,7 @@ describe("Recent Searches on the device", () => {
   it("keeps a list per account and shows none without one", async () => {
     addRecentSearch("tacos");
 
-    expect(getRecentSearches()).toEqual(["tacos"]);
+    expect(getRecentSearches()).toEqual([]);
 
     await applyOwner("u1");
     addRecentSearch("pizza");
@@ -140,6 +146,9 @@ describe("Recent Searches on the device", () => {
 
     // A confirm during the switch reaches nobody's stored list.
     addRecentSearch("mid-switch");
+
+    expect(getRecentSearches()).toEqual([]);
+
     device.state.data.delete("u1:recent-searches");
     await applyOwner("u2");
 
@@ -154,9 +163,14 @@ describe("Recent Searches on the device", () => {
     openOwner("u1");
     openOwner(null);
     openOwner("u2");
-    await answerReads();
+    await answerReadFor("u2");
+    addRecentSearch("soup");
+    await settle();
+    await answerReadFor("u1");
 
-    expect(getRecentSearches()).toEqual(["theirs"]);
+    expect(getRecentSearches()).toEqual(["soup", "theirs"]);
+    expect(device.state.data.get("u2:recent-searches")).toEqual(["soup", "theirs"]);
+    expect(device.state.data.get("u1:recent-searches")).toEqual(["mine"]);
   });
 
   it("merges a search confirmed while the stored list loads", async () => {

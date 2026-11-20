@@ -178,6 +178,8 @@ export function createCacheManager({
   // Per owner-data key: its chain of writes, and the newest value that chain has yet to write.
   const writeChains = new Map<string, Promise<void>>();
   const pendingWrites = new Map<string, { value: unknown; generation: number }>();
+  // Counts the identity requests that closed owner data; only the newest one reopens it.
+  let identityRequest = 0;
 
   function openOwnerData(owner: string | null): void {
     if (owner === dataOwner) return;
@@ -355,18 +357,43 @@ export function createCacheManager({
     bootOwner = owner;
     writeLastOwner(owner);
     notifyOwnerApplied();
-    openOwnerData(owner);
   }
 
-  async function applyIdentity({
+  function targetOwner({
     sessionUserId,
     isOffline,
   }: {
     sessionUserId: string | null;
     isOffline: boolean;
+  }): string | null {
+    return sessionUserId ?? (isOffline ? (appliedOwner ?? bootOwner) : null);
+  }
+
+  /** Queues `task`; a request that changes owner closes owner data now, before it waits its turn. */
+  function enqueue(task: () => Promise<void>, closesOwnerData: boolean): Promise<void> {
+    if (closesOwnerData) {
+      identityRequest++;
+      openOwnerData(null);
+    }
+
+    const request = identityRequest;
+
+    inFlight = inFlight
+      .then(task)
+      .catch(() => undefined)
+      .then(() => {
+        if (request === identityRequest) openOwnerData(appliedOwner);
+      });
+
+    return inFlight;
+  }
+
+  async function applyIdentity(inputs: {
+    sessionUserId: string | null;
+    isOffline: boolean;
   }): Promise<void> {
     const knownOwner = appliedOwner ?? bootOwner;
-    const nextOwner = sessionUserId ?? (isOffline ? knownOwner : null);
+    const nextOwner = targetOwner(inputs);
 
     if (!nextOwner || appliedOwner === nextOwner) {
       return;
@@ -405,39 +432,34 @@ export function createCacheManager({
     reconcileIdentity(inputs) {
       // Serialize resolutions so a rapid identity/connectivity change can't
       // interleave a restore with a switch.
-      inFlight = inFlight.then(() => applyIdentity(inputs)).catch(() => undefined);
+      const nextOwner = targetOwner(inputs);
 
-      return inFlight;
+      return enqueue(() => applyIdentity(inputs), nextOwner !== null && nextOwner !== dataOwner);
     },
 
     resetOfflineCopy(cause) {
-      inFlight = inFlight
-        .then(async () => {
-          const owner = appliedOwner ?? bootOwner;
+      return enqueue(async () => {
+        const owner = appliedOwner ?? bootOwner;
 
-          clearClient();
+        clearClient();
 
-          if (owner) {
-            await clearOwnerReadArtifacts(owner);
-          } else {
-            await Promise.allSettled([clearPersonalCaches()]);
-          }
+        if (owner) {
+          await clearOwnerReadArtifacts(owner);
+        } else {
+          await Promise.allSettled([clearPersonalCaches()]);
+        }
 
-          if (cause === "sign-out") {
-            appliedOwner = null;
-            bootOwner = null;
-            writeLastOwner(null);
-            notifyOwnerApplied();
+        if (cause === "sign-out") {
+          appliedOwner = null;
+          bootOwner = null;
+          writeLastOwner(null);
+          notifyOwnerApplied();
 
-            return;
-          }
+          return;
+        }
 
-          if (owner) subscribeToPersistence(owner);
-          openOwnerData(appliedOwner);
-        })
-        .catch(() => undefined);
-
-      return inFlight;
+        if (owner) subscribeToPersistence(owner);
+      }, true);
     },
 
     ownerData: {

@@ -689,6 +689,33 @@ describe("createCacheManager", () => {
     expect(await storage.keyval.keys()).not.toContain("owner-data:u1:recent");
   });
 
+  it("closes the departing owner's data the moment a switch or sign-out is asked for", async () => {
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+
+    // Queued behind another resolution, so the switch has not started when the confirm lands.
+    const resolving = manager.reconcileIdentity({ sessionUserId: "u1", isOffline: true });
+    const switching = manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false });
+
+    expect(manager.ownerData.owner()).toBeNull();
+    await manager.ownerData.write("u1", "recent", ["mid-switch"]);
+    await Promise.all([resolving, switching]);
+
+    expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
+    expect(manager.ownerData.owner()).toBe("u2");
+
+    const signingOut = manager.resetOfflineCopy("sign-out");
+
+    expect(manager.ownerData.owner()).toBeNull();
+    await manager.ownerData.write("u2", "recent", ["mid-sign-out"]);
+    await signingOut;
+
+    expect(await storage.keyval.get("owner-data:u2:recent")).toBeUndefined();
+  });
+
   it("writes one owner's value in the order it changed, only the newest still waiting", async () => {
     useFakeTimers();
     storage.lastOwner.set("u1");
