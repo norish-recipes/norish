@@ -12,6 +12,7 @@ export function ToggleChip({
   active,
   even = false,
   mutedIcon = false,
+  solid = false,
   onPress,
   testID,
 }: {
@@ -22,6 +23,8 @@ export function ToggleChip({
   even?: boolean;
   /** Draw the icon muted rather than in the warning colour. */
   mutedIcon?: boolean;
+  /** Inactive, a solid default fill without the hairline, as on a page rather than a sheet. */
+  solid?: boolean;
   onPress: () => void;
   testID?: string;
 }) {
@@ -33,7 +36,7 @@ export function ToggleChip({
     <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      className={`h-9 flex-row items-center gap-1.5 rounded-full ${even ? "flex-1 justify-center" : "flex-none px-3.5"} ${active ? "bg-accent" : "bg-sand border-stroke border-[0.5px]"}`}
+      className={`h-9 flex-row items-center gap-1.5 rounded-full ${even ? "flex-1 justify-center" : "flex-none px-3.5"} ${active ? "bg-accent" : solid ? "bg-default" : "bg-sand border-stroke border-[0.5px]"}`}
       testID={testID}
       onPress={onPress}
     >

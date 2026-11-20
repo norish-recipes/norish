@@ -44,6 +44,13 @@ describe("ToggleChip", () => {
     expect(screen.getByTestId("c").getAttribute("aria-selected")).toBe("true");
   });
 
+  it("is the solid default fill without a hairline while off when solid", () => {
+    render(<ToggleChip active={false} label="Lunch" solid testID="c" onPress={() => {}} />);
+
+    expect(screen.getByTestId("c").className).toContain("bg-default");
+    expect(screen.getByTestId("c").className).not.toContain("border");
+  });
+
   it("reports a press", () => {
     const onPress = vi.fn();
 

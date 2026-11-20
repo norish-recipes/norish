@@ -155,6 +155,7 @@ function QuickFiltersSection({
           <ToggleChip
             key={quick.kind}
             active={false}
+            solid
             icon={quick.icon}
             mutedIcon={quick.icon !== "star"}
             label={intl.formatMessage({ id: quick.labelId })}
@@ -184,6 +185,7 @@ function TagsSection({
               <ToggleChip
                 key={tag}
                 active={false}
+                solid
                 label={tag}
                 testID={`search-tag-${tag}`}
                 onPress={() => onPick({ searchTags: [tag] })}
