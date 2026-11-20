@@ -50,10 +50,8 @@ function smallDecimal(num: number): string {
   return Number(fixed) !== 0 ? fixed.replace(/0+$/, "") : String(Number(num.toPrecision(1)));
 }
 
-/**
- * A decimal without trailing zeros; small metric units (g, ml) are whole from 10 up, else one
- * decimal, and below 0.1 any unit shows two decimals, never 0 for a non-zero amount.
- */
+/** A decimal without trailing zeros; g and ml are whole from 10 up, else one decimal, and
+ * below 0.1 any unit shows two decimals, never 0 for a non-zero amount. */
 export function formatAmountAsDecimal(n: number | null | string, unit?: string | null): string {
   if (n == null || n === "") return "";
 

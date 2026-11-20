@@ -20,10 +20,8 @@ function joinLines(lines: string[]): string {
   }, "");
 }
 
-/**
- * The notes from the page's recipe card, as Markdown text, or undefined when it has none. A page
- * with several recipe cards has several notes, and nothing says which belongs to the recipe.
- */
+/** The recipe card's notes as Markdown, or undefined when it has none or the page has several
+ * cards, since nothing says which notes belong to the recipe. */
 export function extractRecipeNotes(html: string): string | undefined {
   const $ = cheerio.load(html);
   const $notes = $(NOTES_SELECTOR);

@@ -1,7 +1,5 @@
-/**
- * React Aria follows the browser's language for number parsing and dates; the
- * provider hands it the app's locale only on right-to-left pages, for direction.
- */
+/** React Aria keeps the browser's locale for numbers and dates; only a right-to-left page
+ * hands it the app's locale, for direction. */
 import { AriaLocaleProvider } from "@/app/providers/aria-locale-provider";
 import { useLocale } from "@heroui/react";
 import { render, screen } from "@testing-library/react";

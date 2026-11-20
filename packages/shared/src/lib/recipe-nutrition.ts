@@ -194,11 +194,8 @@ export interface NutritionGapEstimate {
 export interface WorkedOutNutrition {
   /** Null where no line counted toward a total. */
   perServing: NutritionPerServing | null;
-  /**
-   * For each extra nutrient in `perServing.extras`, the share of the counted
-   * lines' grams whose food knew it, from 0 to 1: below 1 the value is low by
-   * whatever the other lines hold.
-   */
+  /** Per extra nutrient in `perServing.extras`, the share (0-1) of counted grams whose food
+   * knew it; below 1 the value is low by what the other lines hold. */
   extrasCoverage: Partial<Record<ExtraNutrient, number>>;
   /** Every line left out of the counted total, in the recipe's order, each with why. */
   leftOut: LeftOutLine[];

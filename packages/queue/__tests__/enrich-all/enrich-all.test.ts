@@ -1,8 +1,6 @@
 // @vitest-environment node
-/**
- * Enrich All runs in the worker: queueing it returns before the sweep starts, a second ask
- * while one waits or runs is deduplicated onto it, and the job runs the sweep it was asked for.
- */
+/** Enrich All runs in the worker: queueing returns before the sweep, a second ask joins the one
+ * waiting or running, and the job runs the sweep it was asked for. */
 import type { Job } from "bullmq";
 import { describe, expect, it, vi } from "vitest";
 

@@ -276,11 +276,8 @@ export async function listCatalogueAliasesOf(ingredientId: string): Promise<Cata
     .orderBy(asc(ingredientAliases.createdAt), asc(ingredientAliases.id));
 }
 
-/**
- * Whether a recipe line names the food with this id (`rowsNaming`). A join on purpose: written as
- * `rowsNaming`'s correlated IN, Postgres can plan it as a check of every food against every recipe
- * line, which took a 1,500-recipe instance over 30 seconds.
- */
+/** Whether a recipe line names this food; a join, as `rowsNaming`'s correlated IN can plan as
+ * every food against every line (over 30 s on 1,500 recipes). */
 function namedByARecipeLine(food: SQL): SQL {
   return exists(
     db

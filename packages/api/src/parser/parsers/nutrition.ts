@@ -100,10 +100,8 @@ export function extractNutrition(json: unknown): ParsedNutrition {
   };
 }
 
-/**
- * A value schema.org states in milligrams by convention ("480 mg"), read as
- * milligrams whichever mass unit it is written in: "0.48 g" is 480 mg.
- */
+/** A value schema.org states in milligrams ("480 mg"), read as milligrams whatever mass unit
+ * it is written in: "0.48 g" is 480 mg. */
 export function parseMilligrams(value: unknown): number | null {
   const parsed = parseNutritionValue(value);
 

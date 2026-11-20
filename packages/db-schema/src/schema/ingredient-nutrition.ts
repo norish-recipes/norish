@@ -14,10 +14,8 @@ import { users } from "./auth";
 import { ingredients } from "./ingredients";
 import { mutableRowColumns } from "./shared";
 
-/**
- * Nutrients beyond the four, by the keys of `@norish/shared/contracts/nutrients`,
- * holding only those known. Readers check them through `knownExtras`.
- */
+/** Nutrients beyond the four, by `@norish/shared/contracts/nutrients` keys, only those known;
+ * readers check them through `knownExtras`. */
 export type StoredNutrients = Partial<Record<string, number>>;
 
 /**

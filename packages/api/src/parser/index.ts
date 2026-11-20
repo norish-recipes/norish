@@ -356,9 +356,8 @@ export async function parseRecipeFromUrl(
   const aiEnabled = await isAIEnabled();
 
   if (structured.recipe) {
-    // Import triage, question 3: an incomplete parse goes through AI extraction, and stays
-    // flagged when it is kept or replaced by a recipe without steps. A parse with nothing to cook
-    // from needs no Decision Model to call it incomplete.
+    // Triage question 3: an incomplete parse goes through AI extraction and stays flagged if kept;
+    // one with nothing to cook from needs no Decision Model to call it incomplete.
     const incomplete =
       hasNothingToCook(structured.recipe) || (await isParseComplete(structured.recipe)) === false;
 
@@ -463,10 +462,8 @@ export async function isPageLikelyRecipe(html: string): Promise<boolean> {
   return holdsRecipe(html, html, await getContentIndicators());
 }
 
-/**
- * The rule itself: recipe markup in the HTML, or two indicators in `text`. A renderer's wait passes
- * the sanitized text, because a client-rendered shell's scripts name enough indicators to pass.
- */
+/** Recipe markup in the HTML, or two indicators in `text`; a renderer's wait passes sanitized
+ * text, since a client-rendered shell's scripts name enough indicators to pass. */
 function holdsRecipe(html: string, text: string, indicators: ContentIndicatorsConfig): boolean {
   const loweredHtml = html.toLowerCase();
   const loweredText = text.toLowerCase();

@@ -1,11 +1,5 @@
-/**
- * The nutrients Norish knows beyond calories and the three macros: one list
- * that the source table, Ingredient Nutrition, a recipe's own Nutrition
- * Information, the language model's estimate, the API and the recipe page all
- * read. Each value is per 100 g for a food and per serving for a recipe, in
- * the unit named here, and is only present where it is known: a missing key
- * means unknown, never zero.
- */
+/** The nutrients beyond calories and macros, one list for every reader: per 100 g for a food,
+ * per serving for a recipe, in the unit named here; a missing key is unknown, never zero. */
 import { z } from "zod";
 
 export const EXTRA_NUTRIENTS = [
@@ -43,11 +37,8 @@ export const EXTRA_NUTRIENT_UNITS: Record<ExtraNutrient, "g" | "mg" | "µg"> = {
   vitaminA: "µg",
 };
 
-/**
- * The nutrients a language model is asked to estimate: the ones a cook's
- * knowledge of the ingredients reaches. Minerals and vitamins come only from
- * the datasets, which measured them.
- */
+/** The nutrients a language model estimates, those a cook's knowledge reaches; minerals and
+ * vitamins come only from the datasets that measured them. */
 export const ESTIMATED_EXTRA_NUTRIENTS = [
   "saturatedFat",
   "sugars",
@@ -57,13 +48,8 @@ export const ESTIMATED_EXTRA_NUTRIENTS = [
 
 export type ExtraNutrients = Partial<Record<ExtraNutrient, number>>;
 
-/**
- * A language model's answer schema in which each estimated extra it leaves
- * out reads as null (unknown). The extras stay required in the JSON schema the
- * model is given, as strict structured outputs need, but an answer without
- * them, from a provider that drops them or a fixture written before them, is
- * not refused whole: the four values it does give still count.
- */
+/** Fills each estimated extra a model's answer leaves out with null (unknown): strict outputs
+ * keep them required, but an answer without them still counts for its four values. */
 export function missingExtrasAsNull<T extends z.ZodType>(schema: T) {
   const unknown = Object.fromEntries(ESTIMATED_EXTRA_NUTRIENTS.map((key) => [key, null]));
 

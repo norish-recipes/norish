@@ -51,12 +51,8 @@ type RollingTextProps = {
   className?: string;
 };
 
-/**
- * Scripts whose letters connect to their neighbours: Arabic (with its
- * supplements and presentation forms), Syriac, Thaana, N'Ko, Mongolian and the
- * Indic scripts. Split into one slot per character, each letter would show in
- * its isolated form.
- */
+/** Joining scripts (Arabic and its forms, Syriac, Thaana, N'Ko, Mongolian, Indic): split into
+ * one slot per character, each letter would show in its isolated form. */
 const JOINING_SCRIPT = /[\u0600-\u08FF\u0900-\u0DFF\u1800-\u18AF\uFB50-\uFDFF\uFE70-\uFEFF]/;
 
 /**
@@ -114,9 +110,8 @@ export function RollingText({
   const isSplit = [...value].length > 1;
   const hideSlots = Boolean(srValue) && isSplit;
 
-  // Each slot is a flex item, and a right-to-left page lays flex items out
-  // right to left: "25" would read "52". What reaches here is a number or a
-  // left-to-right word, so the row keeps its own direction.
+  // An RTL page lays flex slots out right to left ("25" reads "52"); what reaches here is a
+  // number or an LTR word, so the row keeps its own direction.
   return (
     <span className={`inline-flex ${className}`} dir="ltr">
       {hideSlots && <span className="sr-only">{srValue}</span>}

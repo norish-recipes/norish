@@ -1,9 +1,7 @@
 import * as cheerio from "cheerio";
 
-/**
- * An <article> holding less of the page's text than this is a card on the page: a customer review
- * or a related post. Reading only that card would lose the recipe.
- */
+/** An <article> with less of the page's text than this is a card (a review, a related post);
+ * reading only that card would lose the recipe. */
 const MIN_ARTICLE_SHARE = 0.5;
 
 function textLength(text: string): number {

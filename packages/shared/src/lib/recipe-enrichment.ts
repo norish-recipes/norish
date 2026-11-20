@@ -172,10 +172,8 @@ export interface NutritionGroupInput extends Partial<Record<ExtraNutrient, numbe
   protein?: number | string | null;
 }
 
-/**
- * Nutrition Information as stored: calories is an integer, the macros are
- * decimal strings, and the other nutrients sit together, only those known.
- */
+/** Nutrition Information as stored: integer calories, decimal-string macros, and the other
+ * nutrients together, only those known. */
 export interface NutritionGroup {
   calories: number | null;
   fat: string | null;

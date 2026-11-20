@@ -64,12 +64,8 @@ export interface ReadNutritionPerServing {
   extras: ExtraNutrients;
 }
 
-/**
- * A recipe's nutrition per serving as an API client reads it: what the recipe
- * supplies, else what its lines work out to for the reader's household, with
- * the language model's stored share of the lines left out, as the recipe page
- * shows it.
- */
+/** A recipe's nutrition per serving for an API client: what it supplies, else its lines' total
+ * for the reader's household plus the model's stored share of lines left out, as the page shows. */
 export interface RecipeNutritionAnswer {
   /** `supplied` by the recipe, `worked-out` from its lines, or `none` where neither gives a number. */
   source: "supplied" | "worked-out" | "none";
@@ -80,10 +76,8 @@ export interface RecipeNutritionAnswer {
   leftOut: { name: string; reason: LeftOutReason; estimatedByAI: boolean }[];
   /** The datasets a worked-out total took a fact from. */
   credits: NutritionCredit[];
-  /**
-   * For each extra nutrient, the share of the counted lines' grams whose food
-   * knew it (1 where the recipe states it): below 1 the value is low.
-   */
+  /** Per extra nutrient, the share of counted grams whose food knew it (1 where stated); below 1
+   * the value is low. */
   extrasCoverage: Partial<Record<ExtraNutrient, number>>;
 }
 

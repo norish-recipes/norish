@@ -170,16 +170,8 @@ function NutritionDonut({
   );
 }
 
-/**
- * A recipe's nutrition values: a macro ring with the stored calories in its
- * centre and the macros as its legend, saturates and sugars beneath fat and
- * carbs as labels list them, and fiber and sodium behind "More nutrients",
- * each with its share of an adult's reference intake.
- * A recipe with calories and no macros has no ring to draw, so its calories
- * are shown as a row of their own. `marked` puts an asterisk after the
- * calories of a worked-out total that left lines out; what it means is said
- * beneath, by the card.
- */
+/** A macro ring around the calories (a plain row without macros), sub-nutrients as labels list
+ * them, the rest behind "More nutrients"; `marked` stars a worked-out total that left lines out. */
 export function NutritionBody({
   recipe,
   portions,

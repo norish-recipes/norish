@@ -28,10 +28,8 @@ import { router } from "../../trpc";
 
 const QueueNameSchema = z.enum(Object.values(QUEUE_NAMES) as [QueueName, ...QueueName[]]);
 
-/**
- * Latest in a job's life first: the states are read one at a time, so a job that moves between
- * two reads turns up in both, and it is listed under the first, where it ended up.
- */
+/** Latest in a job's life first: states are read one at a time, so a job moving between reads
+ * shows in both and is listed under the first, where it ended up. */
 const LISTABLE_STATES = [
   "completed",
   "failed",
@@ -50,11 +48,8 @@ const FAILED_REASON_DETAIL_LENGTH = 10_000;
 const MAX_JSON_STRING_LENGTH = 2048;
 const MAX_STACKTRACE_ENTRY_LENGTH = 5000;
 const MAX_LOG_LINES = 200;
-/**
- * How far back each state of each queue is read when listing every queue. There are many queues
- * and the monitor polls, so reading all of them to the full limit is most of the server's work on
- * the admin page; picking one queue reads it to the full limit.
- */
+/** How far back each queue's states are read when listing all: the monitor polls many queues,
+ * so only a single picked queue is read to the full limit. */
 const ALL_QUEUES_PER_STATE_LIMIT = 25;
 
 /**

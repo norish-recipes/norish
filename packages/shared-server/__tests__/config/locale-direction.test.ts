@@ -1,8 +1,5 @@
 // @vitest-environment node
-/**
- * The page's `dir` comes from its locale: Arabic runs right to left, whatever
- * region its code carries.
- */
+/** The page's `dir` comes from its locale: Arabic runs right to left, whatever its region. */
 import { describe, expect, it } from "vitest";
 
 import { getLocaleDirection } from "@norish/i18n/config";

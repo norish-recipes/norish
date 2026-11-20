@@ -1,7 +1,5 @@
-/**
- * While their data is on its way, the Page Renderers card, the job monitor and
- * a job's detail say so, rather than showing a form switched off or no jobs.
- */
+/** While their data loads, Page Renderers, the job monitor and a job's detail say so,
+ * rather than showing a form switched off or no jobs. */
 
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";

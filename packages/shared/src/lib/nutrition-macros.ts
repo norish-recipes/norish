@@ -26,11 +26,8 @@ const CALORIES_PER_GRAM: Record<MacroKey, number> = {
   protein: 4,
 };
 
-/**
- * What an adult is advised to take in per day, per nutrient: the reference
- * intakes EU food labels use (Regulation 1169/2011, Annex XIII), with sodium
- * from its 6 g of salt, and fiber, which that list leaves out, at EFSA's 25 g.
- */
+/** An adult's daily reference intakes as EU labels use them (Reg. 1169/2011, Annex XIII), sodium
+ * from its 6 g of salt, and fiber, which that list leaves out, at EFSA's 25 g. */
 export const ADULT_REFERENCE_INTAKE = {
   calories: 2000,
   fat: 70,

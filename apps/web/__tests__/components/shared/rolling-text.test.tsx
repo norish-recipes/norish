@@ -1,9 +1,5 @@
-/**
- * RollingText splits a value into one slot per character, and a right-to-left
- * page would lay those slots out right to left: "25" read as "52". Arabic is
- * never split at all, since its letters join their neighbours and each would
- * show in its isolated form on its own.
- */
+/** One slot per character must not read "25" as "52" on an RTL page, and Arabic is never
+ * split, since its joined letters would each show in isolated form. */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
