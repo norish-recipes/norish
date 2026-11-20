@@ -12,6 +12,7 @@ import {
   applyRecipeUpdateToMembers,
   libraryQueryHolds,
 } from "./library-cache";
+import { rereadAfterBurst } from "./reread-burst";
 
 export const OPTIMISTIC_PENDING_RECIPE_PREFIX = "optimistic-pending-recipe:";
 
@@ -96,9 +97,9 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
 
   // The library path holds the Library's list and the Categories and Tags Search shows from it.
   const invalidate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: trpc.recipes.list.pathKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.library.pathKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.cookbooks.recipes.pathKey() });
+    rereadAfterBurst(queryClient, trpc.recipes.list.pathKey());
+    rereadAfterBurst(queryClient, trpc.library.pathKey());
+    rereadAfterBurst(queryClient, trpc.cookbooks.recipes.pathKey());
   }, [queryClient, trpc]);
 
   const addPendingRecipe = useCallback(

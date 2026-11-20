@@ -16,6 +16,7 @@ import type { InfiniteRecipeData } from "./library-cache";
 import { usePlatform } from "../platform/platform";
 import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
+import { rereadAfterBurst } from "./reread-burst";
 import { useRecipeSelection } from "./selection-store";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
@@ -83,14 +84,12 @@ function recipeListKeys(trpc: ReturnType<typeof useTRPC>) {
   ];
 }
 
-/** Rereads what is built from the recipes rather than patched: the household's Categories, and
- * Search's Categories and Tags. The server saves after the mutation answers, so it waits for the event. */
-function rereadRecipeFacets(
+/** Rereads Search's Categories and Tags, built from the recipes rather than patched, once per burst. */
+function rereadDiscover(
   queryClient: ReturnType<typeof useQueryClient>,
   trpc: ReturnType<typeof useTRPC>
 ) {
-  void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
-  void queryClient.invalidateQueries({ queryKey: trpc.library.discover.pathKey() });
+  rereadAfterBurst(queryClient, trpc.library.discover.pathKey());
 }
 
 /**
@@ -127,7 +126,7 @@ export function useRecipeOutcomesSubscription() {
       replaceOldestOptimisticPendingRecipe(pendingId);
       removePendingRecipe(pendingId);
       setAllRecipesData(prependRecipes([payload.recipe]));
-      rereadRecipeFacets(queryClient, trpc);
+      rereadDiscover(queryClient, trpc);
       toast.show({
         severity: payload.incomplete ? "warning" : "success",
         title: toast.translate("recipes.toasts.imported"),
@@ -185,7 +184,12 @@ export function useRecipeListSubscription() {
   const dropFromSelection = useRecipeSelection((state) => state.drop);
 
   const live = { liveQueryKeys: [...recipeListKeys(trpc), trpc.config.categories.queryKey()] };
-  const rereadFacets = () => rereadRecipeFacets(queryClient, trpc);
+  // The server saves after the mutation answers, so what is built from the recipes is reread
+  // when the save is announced, not when the mutation succeeds.
+  const rereadFacets = () => {
+    void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
+    rereadDiscover(queryClient, trpc);
+  };
 
   const updateRecipeInList = (updatedRecipe: FullRecipeDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -250,7 +254,7 @@ export function useRecipeListSubscription() {
     ...live,
     onEvent: ({ recipes }) => {
       setAllRecipesData(prependRecipes(recipes));
-      rereadFacets();
+      rereadDiscover(queryClient, trpc);
     },
   });
 }

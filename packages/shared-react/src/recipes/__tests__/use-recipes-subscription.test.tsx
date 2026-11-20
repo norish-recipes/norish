@@ -19,7 +19,9 @@ import {
 } from "@norish/shared/contracts/realtime/recipes";
 
 import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { REREAD_BURST_MS } from "../reread-burst";
 import { useRecipeSelection } from "../selection-store";
+import { useRecipesCacheHelpers } from "../use-recipes-cache";
 import {
   useRecipeListSubscription,
   useRecipeOutcomesSubscription,
@@ -172,8 +174,15 @@ function rereadsOf(queryKey: unknown[]) {
 
 const pendingRereads = () => rereadsOf(PENDING_KEY);
 
+/** Lets the rereads asked for in one burst be made. */
+function endBurst() {
+  act(() => {
+    vi.advanceTimersByTime(REREAD_BURST_MS);
+  });
+}
+
 let queryClient: QueryClient;
-let rendered: ReturnType<typeof renderHook>;
+let rendered: ReturnType<typeof renderHook<ReturnType<typeof useRecipesCacheHelpers>, unknown>>;
 let invalidateQueries: ReturnType<typeof vi.spyOn>;
 let platform: ReturnType<typeof fakePlatformAdapter>;
 
@@ -202,6 +211,8 @@ beforeEach(() => {
     () => {
       useRecipeListSubscription();
       useRecipeOutcomesSubscription();
+
+      return useRecipesCacheHelpers();
     },
     { wrapper: createTestWrapper(queryClient, platform) }
   );
@@ -325,8 +336,30 @@ describe("the recipe list events and recipe outcomes", () => {
     ["onDeleteKept", { ids: ["recipe-1"] }],
   ])("rereads Search's Categories and Tags once on %s", (name, payload) => {
     emit(name, payload);
+    endBurst();
 
     expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+  });
+
+  it("rereads Search's Categories and Tags once for a delete that also kept some", () => {
+    emit("onDeleted", { ids: ["recipe-1"] });
+    emit("onDeleteKept", { ids: ["recipe-2"] });
+    // The delete's success, for the recipes it kept.
+    act(() => rendered.result.current.invalidate());
+    endBurst();
+
+    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+    expect(rereadsOf(LIBRARY_KEY)).toBe(1);
+  });
+
+  it.each([
+    ["onImported", { recipe: dashboardRecipe({ id: "r2" }) }],
+    ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "r2" })] }],
+  ])("rereads nothing a web page shows on %s, Discover alone", (name, payload) => {
+    emit(name, payload);
+    endBurst();
+
+    expect(invalidateQueries.mock.calls).toEqual([[{ queryKey: [["library", "discover"]] }]]);
   });
 
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
@@ -340,6 +373,7 @@ describe("the recipe list events and recipe outcomes", () => {
 
   it("rereads the recipes a delete kept and announces them once, from the outcomes", () => {
     emit("onDeleteKept", { ids: ["recipe-1"] });
+    endBurst();
 
     expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(LIBRARY_KEY)?.isInvalidated).toBe(true);
