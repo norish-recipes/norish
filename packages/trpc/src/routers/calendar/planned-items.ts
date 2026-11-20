@@ -26,9 +26,32 @@ import {
   deletePlannedRecipeOutputSchema,
   listItemsInput,
   listPlannedRecipesInput,
+  listPlannedRecipesRangeInput,
   plannedRecipeListItemSchema,
   plannedRecipeMutationOutputSchema,
 } from "./planned-items-openapi-types";
+
+export const listPlannedRecipesRangeProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/planned-recipes",
+      protect: true,
+      tags: ["Planned Recipes"],
+      summary: "Get planned recipes for a date range",
+      description:
+        "`start` and `end` are inclusive YYYY-MM-DD dates covering at most 366 days. `include=notes` also returns planned notes.",
+      errorResponses: {
+        400: "Invalid dates, end before start, or a range over 366 days",
+        401: "Missing or invalid API credentials",
+      },
+    },
+  })
+  .input(listPlannedRecipesRangeInput)
+  .output(z.array(plannedRecipeListItemSchema))
+  .query(async ({ ctx, input }) =>
+    listPlannedRecipesByRange(ctx, input.start, input.end, input.include === "notes")
+  );
 
 export const listTodayPlannedRecipesProcedure = authedProcedure
   .meta({
@@ -116,8 +139,11 @@ export const createPlannedRecipeProcedure = authedProcedure
       path: "/planned-recipes",
       protect: true,
       tags: ["Planned Recipes"],
-      summary: "Create a planned recipe",
+      summary: "Create a planned recipe or note",
+      description:
+        "Send `recipeId` to plan a recipe, or `title` to plan a note. Exactly one is required.",
       errorResponses: {
+        400: "Neither or both of recipeId and title were sent",
         401: "Missing or invalid API credentials",
       },
     },
@@ -129,8 +155,9 @@ export const createPlannedRecipeProcedure = authedProcedure
       id: input.id,
       date: input.date,
       slot: input.slot,
-      itemType: "recipe",
+      itemType: input.recipeId ? "recipe" : "note",
       recipeId: input.recipeId,
+      title: input.title,
     });
   });
 

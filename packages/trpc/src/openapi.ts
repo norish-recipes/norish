@@ -9,6 +9,7 @@ import {
   createPlannedRecipeProcedure,
   deletePlannedRecipeProcedure,
   listMonthPlannedRecipesProcedure,
+  listPlannedRecipesRangeProcedure,
   listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipesProcedure,
 } from "./routers/calendar/planned-items";
@@ -54,6 +55,7 @@ export const openApiRouter = router({
   groceryAssignStore: assignGroceryToStoreProcedure,
   storeList: listStoresProcedure,
   storeCreate: createStoreProcedure,
+  plannedRecipesRange: listPlannedRecipesRangeProcedure,
   plannedRecipesToday: listTodayPlannedRecipesProcedure,
   plannedRecipesWeek: listWeekPlannedRecipesProcedure,
   plannedRecipesMonth: listMonthPlannedRecipesProcedure,
