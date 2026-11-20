@@ -15,15 +15,16 @@ const GROUND: Record<Tone, string> = {
 const INK: Record<Tone, string> = {
   accent: "accent-text",
   shop: "shop-ink",
-  warning: "warning-ink",
+  warning: "warning",
   neutral: "muted",
 };
 
-/** A list with nothing in it: the area's icon in its tint on the left, title and at most one line
- * on the right, and an optional action under them. A sheet passes its own `className` fill. */
+/** A list with nothing in it: the area's icon in its tint (or the `ink` token) on the left, title and
+ * at most one line on the right, an optional action under them. A sheet passes its own `className`. */
 export function EmptyCard({
   icon,
   tone = "accent",
+  ink,
   title,
   description,
   className = "bg-surface mx-5",
@@ -32,19 +33,20 @@ export function EmptyCard({
 }: {
   icon: ComponentProps<typeof Ionicons>["name"];
   tone?: Tone;
+  ink?: string;
   title: string;
   description?: string;
   className?: string;
   testID: string;
   children?: ReactNode;
 }) {
-  const ink = useTokenColor(INK[tone]);
+  const iconColor = useTokenColor(ink ?? INK[tone]);
 
   return (
     <View className={`${className} gap-3.5 rounded-3xl p-[18px]`} testID={testID}>
       <View className="flex-row items-center gap-3.5">
         <View className={`${GROUND[tone]} size-12 items-center justify-center rounded-full`}>
-          <Ionicons color={ink} name={icon} size={22} />
+          <Ionicons color={iconColor} name={icon} size={22} />
         </View>
         <View className="min-w-0 flex-1 gap-0.5">
           <Text className="text-foreground text-lg font-semibold">{title}</Text>

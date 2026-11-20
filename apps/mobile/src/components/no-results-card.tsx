@@ -14,6 +14,7 @@ export function NoResultsCard({
   title,
   description,
   tone = "warning",
+  ink,
   className,
   testID,
   action,
@@ -23,6 +24,8 @@ export function NoResultsCard({
   title?: string;
   description?: string;
   tone?: "warning" | "neutral";
+  /** The icon's colour token, over the tone's own. */
+  ink?: string;
   className?: string;
   testID: string;
   action?: { label: string; icon: Icon; testID: string; onPress: () => void };
@@ -35,6 +38,7 @@ export function NoResultsCard({
       className={className}
       description={description}
       icon={icon}
+      ink={ink}
       testID={testID}
       title={title ?? intl.formatMessage({ id: "recipes.empty.noResults" })}
       tone={tone}

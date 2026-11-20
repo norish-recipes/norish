@@ -25,6 +25,7 @@ export function SearchNoResults({
       <NoResultsCard
         className={className}
         icon="search-outline"
+        ink="warning-ink"
         testID="search-no-results"
         title={intl.formatMessage({ id: "recipes.search.noMatch" }, { text })}
       />
@@ -53,6 +54,7 @@ export function SearchNoResults({
       className={className}
       description={clearing ? intl.formatMessage({ id: "recipes.empty.noResultsHint" }) : undefined}
       icon={clearing ? "funnel-outline" : "search-outline"}
+      ink="warning-ink"
       testID="search-no-results"
     />
   );
