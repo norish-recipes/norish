@@ -9,6 +9,7 @@ import type {
   CookbookMembershipInputSchema,
   CookbookSummarySchema,
   CookbookUpdateInputSchema,
+  LibraryDiscoverSchema,
   LibraryItemSchema,
   LibraryListInputSchema,
   LibraryListResultSchema,
@@ -29,3 +30,4 @@ export type LibraryMatchDTO = z.output<typeof LibraryMatchSchema>;
 export type LibraryListInput = z.input<typeof LibraryListInputSchema>;
 export type LibraryListResult = z.output<typeof LibraryListResultSchema>;
 export type LibrarySuggestionsDTO = z.output<typeof LibrarySuggestionsSchema>;
+export type LibraryDiscoverDTO = z.output<typeof LibraryDiscoverSchema>;

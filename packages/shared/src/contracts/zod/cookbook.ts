@@ -247,3 +247,15 @@ export const LibrarySuggestionsSchema = z.object({
   tags: z.array(z.string()),
   categories: z.array(z.string()),
 });
+
+/** What Search offers with no text: a few Categories with a photo, and the most-used Tags. */
+export const LibraryDiscoverSchema = z.object({
+  categories: z.array(
+    z.object({
+      name: z.string(),
+      /** The primary image of the newest visible recipe in it that has one. */
+      image: z.string().nullable(),
+    })
+  ),
+  tags: z.array(z.string()),
+});

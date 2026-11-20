@@ -5,6 +5,7 @@ import { and, asc, desc, eq, sql } from "drizzle-orm";
 import type {
   CookbookSummaryDTO,
   FilterMode,
+  LibraryDiscoverDTO,
   LibraryMatchDTO,
   LibrarySuggestionsDTO,
   LibraryTypeFilter,
@@ -15,6 +16,7 @@ import type {
 } from "@norish/shared/contracts";
 import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 
@@ -39,6 +41,7 @@ import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
+import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 import {
   buildOwnerPolicyCondition,
   hasSearchTerms,
@@ -339,6 +342,49 @@ export async function listLibrary(
   });
 
   return { items, total };
+}
+
+/** How many Categories and Tags Search offers with no text. */
+const DISCOVER_CATEGORIES = 4;
+const DISCOVER_TAGS = 12;
+
+/**
+ * What Search offers with no text. Categories: up to four that hold a recipe the reader can see,
+ * the built-ins first in their fixed order, each with the primary image of its newest visible
+ * recipe that has one (none when no recipe of it does). Tags: the most used over visible recipes.
+ */
+export async function listLibraryDiscover(ctx: RecipeListContext): Promise<LibraryDiscoverDTO> {
+  const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
+  const [categoryRows, tagNames] = await Promise.all([
+    db.execute(sql`
+      SELECT DISTINCT ON (${categories.id}) ${categories.name} AS name, ${PRIMARY_IMAGE_SQL} AS image
+      FROM ${categories}
+      JOIN ${recipeCategories} link ON link.category_id = ${categories.id}
+      JOIN ${recipes} ON ${recipes.id} = link.recipe_id
+      WHERE ${visible}
+      ORDER BY ${categories.id}, (${PRIMARY_IMAGE_SQL} IS NULL), ${recipes.createdAt} DESC, ${recipes.id} DESC
+    `),
+    namesOnVisible(
+      { table: tagsTable, id: tagsTable.id, name: tagsTable.name },
+      { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
+      visible,
+      DISCOVER_TAGS
+    ),
+  ]);
+  const builtInRank = (name: string) => {
+    const rank = (BUILT_IN_CATEGORIES as readonly string[]).indexOf(name);
+
+    return rank === -1 ? BUILT_IN_CATEGORIES.length : rank;
+  };
+  const picked = rowsOf<{ name: string; image: string | null }>(categoryRows)
+    .sort(
+      (a, b) =>
+        builtInRank(a.name) - builtInRank(b.name) ||
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    )
+    .slice(0, DISCOVER_CATEGORIES);
+
+  return { categories: picked, tags: tagNames };
 }
 
 /** How many of each kind the typing state offers. */

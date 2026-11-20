@@ -1,6 +1,11 @@
-import { listLibrary, listLibrarySuggestions } from "@norish/db/repositories/library";
+import {
+  listLibrary,
+  listLibraryDiscover,
+  listLibrarySuggestions,
+} from "@norish/db/repositories/library";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
+  LibraryDiscoverSchema,
   LibraryListInputSchema,
   LibraryListResultSchema,
   LibrarySuggestionsInputSchema,
@@ -56,4 +61,9 @@ const suggest = authedProcedure
   .output(LibrarySuggestionsSchema)
   .query(async ({ ctx, input }) => listLibrarySuggestions(viewerOf(ctx), input.text));
 
-export const libraryProcedures = router({ list, suggest });
+/** What Search offers with no text: Categories with a photo and the most-used Tags. */
+const discover = authedProcedure
+  .output(LibraryDiscoverSchema)
+  .query(async ({ ctx }) => listLibraryDiscover(viewerOf(ctx)));
+
+export const libraryProcedures = router({ list, suggest, discover });
