@@ -576,6 +576,11 @@
     "narrowTo": "Стесни до",
     "typeIngredient": "Съставка",
     "typeTag": "Таг",
-    "typeCategory": "Категория"
+    "typeCategory": "Категория",
+    "recent": "Скорошни",
+    "quickFilters": "Бързи филтри",
+    "underThirty": "Под 30 мин",
+    "fourAndUp": "4 и нагоре",
+    "editRecent": "Редактиране на „{text}“"
   }
 }

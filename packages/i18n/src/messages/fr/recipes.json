@@ -576,6 +576,11 @@
     "narrowTo": "Affiner par",
     "typeIngredient": "Ingrédient",
     "typeTag": "Tag",
-    "typeCategory": "Catégorie"
+    "typeCategory": "Catégorie",
+    "recent": "Récentes",
+    "quickFilters": "Filtres rapides",
+    "underThirty": "Moins de 30 min",
+    "fourAndUp": "4 et plus",
+    "editRecent": "Modifier « {text} »"
   }
 }

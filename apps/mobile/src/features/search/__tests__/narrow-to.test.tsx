@@ -14,6 +14,8 @@ import { useSearchField } from "../hooks/use-search-field";
 import { filterChips } from "../utils/search-chips";
 import { searchView } from "../utils/search-state";
 
+vi.mock("../utils/recent-searches-store", () => ({ addRecentSearch: vi.fn() }));
+
 vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     ingredients: { names: { queryKey: ({ ids }: { ids: string[] }) => ["names", ...ids] } },

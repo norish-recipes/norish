@@ -576,6 +576,11 @@
     "narrowTo": "Acotar a",
     "typeIngredient": "Ingrediente",
     "typeTag": "Etiqueta",
-    "typeCategory": "Categoría"
+    "typeCategory": "Categoría",
+    "recent": "Recientes",
+    "quickFilters": "Filtros rápidos",
+    "underThirty": "Menos de 30 min",
+    "fourAndUp": "4 o más",
+    "editRecent": "Editar “{text}”"
   }
 }

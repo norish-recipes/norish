@@ -576,6 +576,11 @@
     "narrowTo": "Уточнить по",
     "typeIngredient": "Ингредиент",
     "typeTag": "Тег",
-    "typeCategory": "Категория"
+    "typeCategory": "Категория",
+    "recent": "Недавние",
+    "quickFilters": "Быстрые фильтры",
+    "underThirty": "Менее 30 мин",
+    "fourAndUp": "4 и выше",
+    "editRecent": "Изменить «{text}»"
   }
 }

@@ -576,6 +576,11 @@
     "narrowTo": "Begränsa till",
     "typeIngredient": "Ingrediens",
     "typeTag": "Tagg",
-    "typeCategory": "Kategori"
+    "typeCategory": "Kategori",
+    "recent": "Senaste",
+    "quickFilters": "Snabbfilter",
+    "underThirty": "Under 30 min",
+    "fourAndUp": "4 och uppåt",
+    "editRecent": "Redigera ”{text}”"
   }
 }

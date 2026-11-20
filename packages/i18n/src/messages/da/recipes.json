@@ -576,6 +576,11 @@
     "narrowTo": "Begræns til",
     "typeIngredient": "Ingrediens",
     "typeTag": "Tag",
-    "typeCategory": "Kategori"
+    "typeCategory": "Kategori",
+    "recent": "Seneste",
+    "quickFilters": "Hurtige filtre",
+    "underThirty": "Under 30 min",
+    "fourAndUp": "4 og op",
+    "editRecent": "Rediger “{text}”"
   }
 }

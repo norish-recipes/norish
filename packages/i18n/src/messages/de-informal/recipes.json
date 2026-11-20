@@ -576,6 +576,11 @@
     "narrowTo": "Eingrenzen auf",
     "typeIngredient": "Zutat",
     "typeTag": "Tag",
-    "typeCategory": "Kategorie"
+    "typeCategory": "Kategorie",
+    "recent": "Zuletzt gesucht",
+    "quickFilters": "Schnellfilter",
+    "underThirty": "Unter 30 Min.",
+    "fourAndUp": "4 und mehr",
+    "editRecent": "„{text}“ bearbeiten"
   }
 }

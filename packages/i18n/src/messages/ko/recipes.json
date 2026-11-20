@@ -576,6 +576,11 @@
     "narrowTo": "범위 좁히기",
     "typeIngredient": "재료",
     "typeTag": "태그",
-    "typeCategory": "카테고리"
+    "typeCategory": "카테고리",
+    "recent": "최근 검색",
+    "quickFilters": "빠른 필터",
+    "underThirty": "30분 미만",
+    "fourAndUp": "4점 이상",
+    "editRecent": "“{text}” 수정"
   }
 }

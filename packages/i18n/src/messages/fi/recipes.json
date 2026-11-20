@@ -576,6 +576,11 @@
     "narrowTo": "Rajaa",
     "typeIngredient": "Ainesosa",
     "typeTag": "Tunniste",
-    "typeCategory": "Luokka"
+    "typeCategory": "Luokka",
+    "recent": "Viimeisimmät",
+    "quickFilters": "Pikasuodattimet",
+    "underThirty": "Alle 30 min",
+    "fourAndUp": "4 ja yli",
+    "editRecent": "Muokkaa “{text}”"
   }
 }

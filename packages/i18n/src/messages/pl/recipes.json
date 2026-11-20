@@ -576,6 +576,11 @@
     "narrowTo": "Zawęź do",
     "typeIngredient": "Składnik",
     "typeTag": "Tag",
-    "typeCategory": "Kategoria"
+    "typeCategory": "Kategoria",
+    "recent": "Ostatnie",
+    "quickFilters": "Szybkie filtry",
+    "underThirty": "Poniżej 30 min",
+    "fourAndUp": "4 i więcej",
+    "editRecent": "Edytuj „{text}”"
   }
 }

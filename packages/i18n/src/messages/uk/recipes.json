@@ -576,6 +576,11 @@
     "narrowTo": "Уточнити за",
     "typeIngredient": "Інгредієнт",
     "typeTag": "Тег",
-    "typeCategory": "Категорія"
+    "typeCategory": "Категорія",
+    "recent": "Нещодавні",
+    "quickFilters": "Швидкі фільтри",
+    "underThirty": "До 30 хв",
+    "fourAndUp": "4 і вище",
+    "editRecent": "Змінити «{text}»"
   }
 }

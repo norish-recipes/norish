@@ -576,6 +576,11 @@
     "narrowTo": "Beperken tot",
     "typeIngredient": "Ingrediënt",
     "typeTag": "Tag",
-    "typeCategory": "Categorie"
+    "typeCategory": "Categorie",
+    "recent": "Recent",
+    "quickFilters": "Snelle filters",
+    "underThirty": "Minder dan 30 min",
+    "fourAndUp": "4 en hoger",
+    "editRecent": "“{text}” bewerken"
   }
 }

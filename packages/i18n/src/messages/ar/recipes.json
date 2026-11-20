@@ -576,6 +576,11 @@
     "narrowTo": "تضييق إلى",
     "typeIngredient": "مكوّن",
     "typeTag": "وسم",
-    "typeCategory": "فئة"
+    "typeCategory": "فئة",
+    "recent": "الأخيرة",
+    "quickFilters": "عوامل تصفية سريعة",
+    "underThirty": "أقل من 30 دقيقة",
+    "fourAndUp": "4 فأكثر",
+    "editRecent": "تعديل «{text}»"
   }
 }

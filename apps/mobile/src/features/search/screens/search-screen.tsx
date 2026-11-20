@@ -13,6 +13,7 @@ import { useIntl } from "react-intl";
 
 import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
 
+import { Discover } from "../components/discover";
 import { SearchNoResults } from "../components/no-results";
 import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
@@ -133,7 +134,13 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           onNarrow={narrowTo}
         />
       ) : (
-        <View className="bg-background flex-1" testID="search-screen" />
+        <Discover
+          filters={filters}
+          focused={field.focused}
+          onEdit={field.edit}
+          onPicked={field.blur}
+          onRun={field.run}
+        />
       )}
       {field.text.trim() !== "" ? <ScopeRow /> : null}
     </>
