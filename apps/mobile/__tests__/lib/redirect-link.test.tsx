@@ -26,16 +26,20 @@ describe("redirectLink", () => {
 
     expect(dismissAll).toHaveBeenCalledTimes(1);
     await vi.runAllTimersAsync();
-    await expect(result).resolves.toBe("/recipe/b");
+    await expect(result).resolves.toBe("/(recipes)/recipe/b");
     sheet.unmount();
   });
 
   it("leaves a link alone with no sheet open, and the first link of a launch", async () => {
-    await expect(redirectLink({ path: "/recipe/b", initial: false })).resolves.toBe("/recipe/b");
+    await expect(redirectLink({ path: "/recipe/b", initial: false })).resolves.toBe(
+      "/(recipes)/recipe/b"
+    );
 
     const sheet = renderHook(() => useMarkSheetOpen());
 
-    await expect(redirectLink({ path: "/recipe/b", initial: true })).resolves.toBe("/recipe/b");
+    await expect(redirectLink({ path: "/recipe/b", initial: true })).resolves.toBe(
+      "/(recipes)/recipe/b"
+    );
     expect(dismissAll).not.toHaveBeenCalled();
     sheet.unmount();
   });
@@ -60,5 +64,22 @@ describe("redirectLink", () => {
     );
     expect(section.result.current).toBe("pantry");
     section.unmount();
+  });
+
+  it("opens Today and a recipe link in the Recipes tab, which shares those routes with Search", async () => {
+    const cases = [
+      ["norish://", "/(recipes)"],
+      ["norish:///", "/(recipes)"],
+      ["/", "/(recipes)"],
+      ["norish://recipe/b", "/(recipes)/recipe/b"],
+      ["norish:///recipe/b/cook?step=2", "/(recipes)/recipe/b/cook?step=2"],
+      ["exp://192.168.1.2:8081/--/recipe/b", "/(recipes)/recipe/b"],
+      ["norish://cookbook/c", "/(recipes)/cookbook/c"],
+      ["norish://calendar?day=2026-11-20", "norish://calendar?day=2026-11-20"],
+    ];
+
+    for (const [path, opened] of cases) {
+      await expect(redirectLink({ path: path!, initial: true })).resolves.toBe(opened);
+    }
   });
 });
