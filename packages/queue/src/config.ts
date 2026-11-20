@@ -196,4 +196,12 @@ export const QUEUE_SETTINGS: Record<QueueName, QueueSettings> = {
     // Fill gaps over the catalogue asks thousands of foods.
     hangingThresholdMs: 24 * 60 * 60_000,
   },
+  [QUEUE_NAMES.ENRICH_ALL]: {
+    // Never retried: a rerun with Replace existing would pay for every finished run again.
+    jobOptions: { attempts: 1 },
+    concurrency: 1,
+    stalledInterval: 60_000,
+    // Enrolling a large library takes minutes.
+    hangingThresholdMs: 60 * 60_000,
+  },
 };

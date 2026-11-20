@@ -880,7 +880,7 @@
         "costWarning": "Puede ser una operación costosa: con muchas recetas puede tardar mucho y, con un proveedor de IA de pago, consumir una cantidad significativa de créditos.",
         "confirmButton": "Ejecutar",
         "confirmButtonReplace": "Sobrescribir",
-        "queued": "{queued, plural, =0 {Ninguna ejecución en cola} one {# ejecución en cola} other {# ejecuciones en cola}} para {recipes, plural, one {# receta} other {# recetas}}",
+        "started": "Iniciado en segundo plano. El monitor de tareas muestra su progreso.",
         "aiDisabled": "La IA está deshabilitada en este servidor. Habilita la IA primero.",
         "error": "No se pudo iniciar el enriquecimiento masivo",
         "imageCount": "{count, plural, =0 {No se generará ninguna imagen.} one {Se generará # imagen.} other {Se generarán # imágenes.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Consulta de tienda",
         "ingredient-review": "Preguntar a la IA sobre ingredientes",
         "ingredient-icons": "Dibujar iconos de ingredientes",
-        "ingredient-fill": "Completar huecos de ingredientes"
+        "ingredient-fill": "Completar huecos de ingredientes",
+        "enrich-all-recipes": "Enriquecimiento masivo"
       },
       "summary": {
         "failed": "Fallidos: {count}"

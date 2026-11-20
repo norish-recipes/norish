@@ -880,7 +880,7 @@
         "costWarning": "Dit kan een kostbare bewerking zijn: met veel recepten kan het lang duren en bij een betaalde AI-provider veel tegoed verbruiken.",
         "confirmButton": "Uitvoeren",
         "confirmButtonReplace": "Overschrijven",
-        "queued": "{queued, plural, =0 {Geen runs in wachtrij} one {# run in wachtrij} other {# runs in wachtrij}} voor {recipes, plural, one {# recept} other {# recepten}}",
+        "started": "Op de achtergrond gestart. De jobmonitor toont de voortgang.",
         "aiDisabled": "AI is uitgeschakeld op deze server. Schakel eerst AI in.",
         "error": "Bulkverrijking starten mislukt",
         "imageCount": "{count, plural, =0 {Er worden geen afbeeldingen gegenereerd.} one {Er wordt # afbeelding gegenereerd.} other {Er worden # afbeeldingen gegenereerd.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Winkelopzoeking",
         "ingredient-review": "AI vragen over ingrediënten",
         "ingredient-icons": "Ingrediënticonen tekenen",
-        "ingredient-fill": "Gaten in ingrediënten aanvullen"
+        "ingredient-fill": "Gaten in ingrediënten aanvullen",
+        "enrich-all-recipes": "Bulkverrijking"
       },
       "summary": {
         "failed": "{count} mislukt"

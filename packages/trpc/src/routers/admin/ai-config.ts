@@ -20,7 +20,7 @@ import {
 } from "@norish/config/zod/server-config";
 import { getImageGenerationSweepCounts } from "@norish/db/repositories/recipes";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
-import { enrollEnrichmentForAllRecipes } from "@norish/queue";
+import { addEnrichAllJob } from "@norish/queue";
 import {
   listModels,
   listTranscriptionModels,
@@ -369,17 +369,12 @@ const enrichAllRecipes = adminProcedure
       });
     }
 
-    const result = await enrollEnrichmentForAllRecipes(
-      {
-        userId: ctx.user.id,
-        householdKey: ctx.household?.id ?? "",
-      },
-      { replaceExisting: input.replaceExisting }
-    );
-
-    log.info({ ...result, replaceExisting: input.replaceExisting }, "Bulk enrichment jobs queued");
-
-    return result;
+    // A library-sized sweep outlives any proxy's timeout, so the worker runs it, not the request.
+    await addEnrichAllJob({
+      userId: ctx.user.id,
+      householdKey: ctx.household?.id ?? "",
+      replaceExisting: input.replaceExisting,
+    });
   });
 
 /**

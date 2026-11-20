@@ -15,7 +15,7 @@ export default function BulkEnrichmentForm() {
   // Deliberately not remembered between openings: overwriting the library is a
   // choice to make each time, not a setting that lies in wait.
   const [replaceExisting, setReplaceExisting] = useState(false);
-  const { enrichAll, queued, isPending } = useEnrichAllRecipesMutation();
+  const { enrichAll, started, isPending } = useEnrichAllRecipesMutation();
   const openConfirm = () => {
     setReplaceExisting(false);
     setIsConfirmOpen(true);
@@ -29,11 +29,7 @@ export default function BulkEnrichmentForm() {
     <div className="flex flex-col gap-4">
       <p className="text-muted text-sm">{t("description")}</p>
       <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
-        {queued && (
-          <span className="text-success text-sm">
-            {t("queued", { recipes: queued.recipes, queued: queued.queued })}
-          </span>
-        )}
+        {started && <span className="text-success text-sm">{t("started")}</span>}
         <ActionButton
           action="apply"
           icon={SparklesIcon}

@@ -880,7 +880,7 @@
         "costWarning": "Dette kan være en kostbar operasjon: Med mange oppskrifter kan det ta lang tid og hos en betalt AI-leverandør bruke betydelig kreditt.",
         "confirmButton": "Kjør",
         "confirmButtonReplace": "Overskriv",
-        "queued": "{queued, plural, =0 {Ingen kjøringer i kø} one {# kjøring i kø} other {# kjøringer i kø}} for {recipes, plural, one {# oppskrift} other {# oppskrifter}}",
+        "started": "Startet i bakgrunnen. Jobbovervåkingen viser fremdriften.",
         "aiDisabled": "AI er deaktivert på denne serveren. Aktiver AI først.",
         "error": "Kunne ikke starte masseberikelse",
         "imageCount": "{count, plural, =0 {Ingen bilder blir generert.} one {# bilde blir generert.} other {# bilder blir generert.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Butikkoppslag",
         "ingredient-review": "Spør AI om ingredienser",
         "ingredient-icons": "Tegn ingrediensikoner",
-        "ingredient-fill": "Fyll inn hull i ingredienser"
+        "ingredient-fill": "Fyll inn hull i ingredienser",
+        "enrich-all-recipes": "Masseberikelse"
       },
       "summary": {
         "failed": "{count} mislyktes"

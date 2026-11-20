@@ -880,7 +880,7 @@
         "costWarning": "Cette opération peut être coûteuse : avec beaucoup de recettes, elle peut prendre longtemps et, avec un fournisseur d'IA payant, consommer une quantité importante de crédits.",
         "confirmButton": "Exécuter",
         "confirmButtonReplace": "Écraser",
-        "queued": "{queued, plural, =0 {Aucune exécution en file d'attente} one {# exécution en file d'attente} other {# exécutions en file d'attente}} pour {recipes, plural, one {# recette} other {# recettes}}",
+        "started": "Lancé en arrière-plan. Le moniteur des tâches affiche sa progression.",
         "aiDisabled": "L'IA est désactivée sur ce serveur. Activez d'abord l'IA.",
         "error": "Échec du démarrage de l'enrichissement en masse",
         "imageCount": "{count, plural, =0 {Aucune image ne sera générée.} one {# image sera générée.} other {# images seront générées.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Recherche en boutique",
         "ingredient-review": "Demander à l'IA sur les ingrédients",
         "ingredient-icons": "Dessin des icônes d’ingrédients",
-        "ingredient-fill": "Complétion des manques des ingrédients"
+        "ingredient-fill": "Complétion des manques des ingrédients",
+        "enrich-all-recipes": "Enrichissement en masse"
       },
       "summary": {
         "failed": "{count} en échec"

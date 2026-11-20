@@ -880,7 +880,7 @@
         "costWarning": "Dies kann ein teurer Vorgang sein: Bei vielen Rezepten kann es lange dauern und bei einem kostenpflichtigen KI-Anbieter erhebliches Guthaben verbrauchen.",
         "confirmButton": "Ausführen",
         "confirmButtonReplace": "Überschreiben",
-        "queued": "{queued, plural, =0 {Keine Läufe in Warteschlange} one {# Lauf in Warteschlange} other {# Läufe in Warteschlange}} für {recipes, plural, one {# Rezept} other {# Rezepte}}",
+        "started": "Im Hintergrund gestartet. Der Job-Monitor zeigt den Fortschritt.",
         "aiDisabled": "KI ist auf diesem Server deaktiviert. Aktiviere zuerst KI.",
         "error": "Massen-Anreicherung konnte nicht gestartet werden",
         "imageCount": "{count, plural, =0 {Es werden keine Bilder generiert.} one {Es wird # Bild generiert.} other {Es werden # Bilder generiert.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Geschäftsabfrage",
         "ingredient-review": "KI zu Zutaten fragen",
         "ingredient-icons": "Zutatensymbole zeichnen",
-        "ingredient-fill": "Lücken bei Zutaten füllen"
+        "ingredient-fill": "Lücken bei Zutaten füllen",
+        "enrich-all-recipes": "Massen-Anreicherung"
       },
       "summary": {
         "failed": "{count} fehlgeschlagen"

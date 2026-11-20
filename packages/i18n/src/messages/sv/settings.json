@@ -880,7 +880,7 @@
         "costWarning": "Detta kan bli kostsamt: med många recept kan det ta lång tid och förbruka mycket krediter hos en betald AI-leverantör.",
         "confirmButton": "Kör",
         "confirmButtonReplace": "Skriv över",
-        "queued": "{queued, plural, =0 {Inga körningar köade} one {# körning köad} other {# körningar köade}} för {recipes, plural, one {# recept} other {# recept}}",
+        "started": "Startad i bakgrunden. Jobbövervakningen visar förloppet.",
         "aiDisabled": "AI är avstängt på servern. Aktivera AI först.",
         "error": "Det gick inte att starta kompletteringen",
         "imageCount": "{count, plural, =0 {Körningen skapar inga bilder.} one {Körningen skapar # bild.} other {Körningen skapar # bilder.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Butikssökning",
         "ingredient-review": "Fråga AI om ingredienser",
         "ingredient-icons": "Skapa ingrediensikoner",
-        "ingredient-fill": "Fyll luckor i ingredienser"
+        "ingredient-fill": "Fyll luckor i ingredienser",
+        "enrich-all-recipes": "Komplettera alla recept"
       },
       "summary": {
         "failed": "{count} misslyckade"

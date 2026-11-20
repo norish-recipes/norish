@@ -9,6 +9,7 @@ import { startAutoCategorizationWorker } from "@norish/queue/auto-categorization
 import { startAutoTaggingWorker } from "@norish/queue/auto-tagging/worker";
 import { startCaldavSyncWorker } from "@norish/queue/caldav-sync/worker";
 import { closeWorkers } from "@norish/queue/create-worker";
+import { startEnrichAllWorker } from "@norish/queue/enrich-all/worker";
 import { startImageGenerationWorker } from "@norish/queue/image-generation/worker";
 import { startImageImportWorker } from "@norish/queue/image-import/worker";
 import { startIngredientFillWorker } from "@norish/queue/ingredient-fill/worker";
@@ -57,6 +58,7 @@ export async function startWorkers(): Promise<void> {
   startIngredientReviewWorker();
   startIngredientIconsWorker();
   startIngredientFillWorker();
+  startEnrichAllWorker();
   startCaldavSyncWorker();
   startScheduledTasksWorker();
   startStoreLookupWorker();

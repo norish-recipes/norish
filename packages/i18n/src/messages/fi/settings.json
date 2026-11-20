@@ -880,7 +880,7 @@
         "costWarning": "Tämä voi olla raskas toiminto: jos reseptejä on paljon, se voi kestää kauan ja kuluttaa maksullisella tekoälypalvelulla huomattavasti krediittejä.",
         "confirmButton": "Aja",
         "confirmButtonReplace": "Korvaa",
-        "queued": "{queued, plural, =0 {Ei jonotettuja ajoja} one {# ajo jonossa} other {# ajoa jonossa}}, {recipes, plural, one {# reseptille} other {# reseptille}}",
+        "started": "Käynnistetty taustalla. Työvalvonta näyttää edistymisen.",
         "aiDisabled": "Tekoäly on pois käytöstä tällä palvelimella. Ota tekoäly ensin käyttöön.",
         "error": "Joukkorikastuksen käynnistys epäonnistui",
         "imageCount": "{count, plural, =0 {Ajo ei luo yhtään kuvaa.} one {Ajo luo # kuvan.} other {Ajo luo # kuvaa.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Kaupan haku",
         "ingredient-review": "Kysy tekoälyltä ainesosista",
         "ingredient-icons": "Ainesosien kuvakkeiden piirto",
-        "ingredient-fill": "Ainesosien aukkojen täydennys"
+        "ingredient-fill": "Ainesosien aukkojen täydennys",
+        "enrich-all-recipes": "Joukkorikastus"
       },
       "summary": {
         "failed": "{count} epäonnistui"

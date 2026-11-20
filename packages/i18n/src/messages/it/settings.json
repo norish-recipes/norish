@@ -880,7 +880,7 @@
         "costWarning": "Può essere un'operazione costosa: con molte ricette può richiedere molto tempo e, con un provider di IA a pagamento, consumare una quantità significativa di crediti.",
         "confirmButton": "Esegui",
         "confirmButtonReplace": "Sovrascrivi",
-        "queued": "{queued, plural, =0 {Nessuna esecuzione in coda} one {# esecuzione in coda} other {# esecuzioni in coda}} per {recipes, plural, one {# ricetta} other {# ricette}}",
+        "started": "Avviato in background. Il monitor dei job ne mostra l'avanzamento.",
         "aiDisabled": "L'IA è disabilitata su questo server. Abilita prima l'IA.",
         "error": "Avvio dell'arricchimento in blocco non riuscito",
         "imageCount": "{count, plural, =0 {Non verrà generata nessuna immagine.} one {Verrà generata # immagine.} other {Verranno generate # immagini.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Ricerca nel negozio",
         "ingredient-review": "Chiedere all'IA sugli ingredienti",
         "ingredient-icons": "Disegno delle icone degli ingredienti",
-        "ingredient-fill": "Completamento delle lacune degli ingredienti"
+        "ingredient-fill": "Completamento delle lacune degli ingredienti",
+        "enrich-all-recipes": "Arricchimento in blocco"
       },
       "summary": {
         "failed": "Non riusciti: {count}"

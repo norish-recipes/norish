@@ -9,7 +9,7 @@ const enrichAll = vi.fn();
 const sweepCounts = vi.hoisted(() => ({ current: undefined as unknown }));
 
 vi.mock("@norish/shared-react/admin", () => ({
-  useEnrichAllRecipesMutation: () => ({ enrichAll, queued: undefined, isPending: false }),
+  useEnrichAllRecipesMutation: () => ({ enrichAll, started: false, isPending: false }),
   useImageGenerationSweepCount: () => sweepCounts.current,
 }));
 

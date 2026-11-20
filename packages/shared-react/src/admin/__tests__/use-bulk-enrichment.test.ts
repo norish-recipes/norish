@@ -21,15 +21,16 @@ function setUp() {
 afterEach(resetTRPCFake);
 
 describe("useEnrichAllRecipesMutation", () => {
-  it("hands back what a run queued", async () => {
+  it("says the run started once the server took it", async () => {
     const { wrapper } = setUp();
     const { result } = renderHook(() => useEnrichAllRecipesMutation(), { wrapper });
 
     act(() => result.current.enrichAll(true));
     expect((await sentCall("admin.enrichAllRecipes")).input).toEqual({ replaceExisting: true });
-    await answerCall("admin.enrichAllRecipes", { recipes: 3, queued: 5 });
+    expect(result.current.started).toBe(false);
+    await answerCall("admin.enrichAllRecipes", undefined);
 
-    await waitFor(() => expect(result.current.queued).toEqual({ recipes: 3, queued: 5 }));
+    await waitFor(() => expect(result.current.started).toBe(true));
   });
 
   it("warns that AI is off when the server says so, and errors otherwise", async () => {

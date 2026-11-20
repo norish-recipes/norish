@@ -13,11 +13,11 @@ export function useImageGenerationSweepCount() {
   return data;
 }
 
-/** Queues every enabled enrichment for every recipe; a refusal toasts why. */
+/** Starts Enrich All in the background; a refusal toasts why. */
 export function useEnrichAllRecipesMutation() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
-  const { mutate, data, isPending } = useMutation(
+  const { mutate, isSuccess, isPending } = useMutation(
     trpc.admin.enrichAllRecipes.mutationOptions({
       onError: (error) => {
         if (error.data?.code === "PRECONDITION_FAILED") {
@@ -39,8 +39,8 @@ export function useEnrichAllRecipesMutation() {
 
   return {
     enrichAll: (replaceExisting: boolean) => mutate({ replaceExisting }),
-    /** The last run's counts, once it was queued. */
-    queued: data,
+    /** The server took the run; it goes on in the background. */
+    started: isSuccess,
     isPending,
   };
 }

@@ -880,7 +880,7 @@
         "costWarning": "To może być kosztowna operacja: przy wielu przepisach może potrwać długo, a u płatnego dostawcy AI zużyć znaczną ilość kredytów.",
         "confirmButton": "Uruchom",
         "confirmButtonReplace": "Nadpisz",
-        "queued": "{queued, plural, =0 {Brak uruchomień w kolejce} one {# uruchomienie w kolejce} few {# uruchomienia w kolejce} many {# uruchomień w kolejce} other {# uruchomienia w kolejce}} dla {recipes, plural, one {# przepisu} few {# przepisów} many {# przepisów} other {# przepisu}}",
+        "started": "Uruchomiono w tle. Monitor zadań pokazuje postęp.",
         "aiDisabled": "AI jest wyłączone na tym serwerze. Najpierw włącz AI.",
         "error": "Nie udało się uruchomić masowego wzbogacania",
         "imageCount": "{count, plural, =0 {Nie zostanie wygenerowany żaden obraz.} one {Zostanie wygenerowany # obraz.} few {Zostaną wygenerowane # obrazy.} many {Zostanie wygenerowanych # obrazów.} other {Zostanie wygenerowanych # obrazu.}}"
@@ -1249,7 +1249,8 @@
         "store-lookup": "Wyszukiwanie w sklepie",
         "ingredient-review": "Zapytaj AI o składniki",
         "ingredient-icons": "Rysowanie ikon składników",
-        "ingredient-fill": "Uzupełnianie braków składników"
+        "ingredient-fill": "Uzupełnianie braków składników",
+        "enrich-all-recipes": "Masowe wzbogacanie"
       },
       "summary": {
         "failed": "Nieudane: {count}"

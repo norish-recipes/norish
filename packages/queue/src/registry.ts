@@ -14,6 +14,7 @@ import { Queue as BullQueue } from "bullmq";
 import type { JobRetentionConfig } from "@norish/config/zod/server-config";
 import type {
   CaldavSyncJobData,
+  EnrichAllJobData,
   ImageImportJobData,
   IngredientFillJobData,
   IngredientIconsJobData,
@@ -69,6 +70,7 @@ interface QueueRegistry {
   ingredientReview: Queue<IngredientReviewJobData>;
   ingredientIcons: Queue<IngredientIconsJobData>;
   ingredientFill: Queue<IngredientFillJobData>;
+  enrichAll: Queue<EnrichAllJobData>;
 }
 
 /**
@@ -93,6 +95,7 @@ const QUEUE_KEYS: Record<keyof QueueRegistry, QueueName> = {
   ingredientReview: QUEUE_NAMES.INGREDIENT_REVIEW,
   ingredientIcons: QUEUE_NAMES.INGREDIENT_ICONS,
   ingredientFill: QUEUE_NAMES.INGREDIENT_FILL,
+  enrichAll: QUEUE_NAMES.ENRICH_ALL,
 };
 
 /**

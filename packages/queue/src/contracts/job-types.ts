@@ -105,6 +105,13 @@ export interface RecipeEnrichmentJobData {
   replaceExisting?: boolean;
 }
 
+/** An administrator's Enrich All: who asked, and whether the sweep overwrites what is stored. */
+export interface EnrichAllJobData {
+  userId: string;
+  householdKey: string;
+  replaceExisting: boolean;
+}
+
 /** An enrollment as it is asked for; the producer gives it its run identity. */
 export type RecipeEnrichmentJobInput = Omit<RecipeEnrichmentJobData, "runId" | "runSequence">;
 
