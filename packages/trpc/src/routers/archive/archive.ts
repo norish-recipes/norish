@@ -5,12 +5,6 @@ import type {
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
 import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
-import {
-  ArchiveFormat,
-  calculateBatchSize,
-  getArchiveInfo,
-  importArchive as runArchiveImport,
-} from "@norish/shared-server/archive/parser";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { archive } from "@norish/shared-server/realtime/archive";
@@ -71,7 +65,9 @@ const importArchive = authedProcedure
         buffer.byteOffset + buffer.byteLength
       ) as ArrayBuffer;
       const zip = await JSZip.loadAsync(arrayBuffer);
-
+      // The format parsers and what they read archives with load with the first import.
+      const { ArchiveFormat, getArchiveInfo } =
+        await import("@norish/shared-server/archive/parser");
       const { format, count: total } = await getArchiveInfo(zip);
 
       log.debug({ userId: ctx.user.id, format, total }, "Archive format detected");
@@ -134,6 +130,8 @@ async function runArchiveImportAsync(
   // Archive-created recipes reach whoever the view policy says may see them,
   // like every other recipe create.
   const viewPolicy = (await getRecipePermissionPolicy()).view;
+  const { calculateBatchSize, importArchive: runArchiveImport } =
+    await import("@norish/shared-server/archive/parser");
   const target = { viewPolicy, userId, householdKey };
 
   // Calculate dynamic batch size based on total

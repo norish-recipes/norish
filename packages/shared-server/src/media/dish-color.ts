@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import path from "path";
-import sharp from "sharp";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { serverLogger as log } from "@norish/shared-server/logger";
@@ -68,6 +67,8 @@ function hexFromOklch(L: number, c: number, h: number): string {
  * Returns null for anything sharp cannot read.
  */
 export async function extractDishColor(bytes: Buffer): Promise<string | null> {
+  const { default: sharp } = await import("sharp");
+
   try {
     const { data, info } = await sharp(bytes)
       .resize(SAMPLE_SIZE, SAMPLE_SIZE, { fit: "cover" })

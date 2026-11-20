@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import YAML from "yaml";
 
+import type { QueueApiHandlers } from "@norish/queue/api-handlers";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import type { MeasurementSystem } from "@norish/shared/contracts/dto/recipe";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
@@ -78,7 +79,10 @@ function toNutritionText(value: unknown): string | null {
   return parsed == null ? null : String(parsed);
 }
 
-function normalizeYamlTags(value: unknown): { name: string }[] {
+function normalizeYamlTags(
+  value: unknown,
+  parseTags: QueueApiHandlers["parseTags"]
+): { name: string }[] {
   if (typeof value === "string") {
     return Array.from(
       new Set(
@@ -89,8 +93,6 @@ function normalizeYamlTags(value: unknown): { name: string }[] {
       )
     ).map((name) => ({ name }));
   }
-
-  const parseTags = requireQueueApiHandler("parseTags");
 
   return parseTags(value);
 }
@@ -180,7 +182,7 @@ async function normalizeRecipeFromYamlValue(
   recipeId: string,
   householdCategories: readonly string[]
 ): Promise<{ recipe: FullRecipeInsertDTO | null; importedRating: number | null }> {
-  const parseCategories = requireQueueApiHandler("parseCategories");
+  const parseCategories = await requireQueueApiHandler("parseCategories");
   const units = await getUnits();
   const ingredientLines = rawRecipe.ingredients;
   const stepLines = rawRecipe.steps;
@@ -240,7 +242,9 @@ async function normalizeRecipeFromYamlValue(
     householdCategories
   );
   const tagNames = new Set([
-    ...normalizeYamlTags(rawRecipe.tags).map((tag) => tag.name),
+    ...normalizeYamlTags(rawRecipe.tags, await requireQueueApiHandler("parseTags")).map(
+      (tag) => tag.name
+    ),
     ...categoryTags.map((name) => name.toLowerCase()),
   ]);
 
@@ -335,8 +339,10 @@ async function parseStructuredJson(
   text: string,
   householdCategories: readonly string[]
 ): Promise<StructuredPasteImportRecipe[] | null> {
-  const extractRecipeNodesFromJsonValue = requireQueueApiHandler("extractRecipeNodesFromJsonValue");
-  const normalizeRecipeFromJson = requireQueueApiHandler("normalizeRecipeFromJson");
+  const extractRecipeNodesFromJsonValue = await requireQueueApiHandler(
+    "extractRecipeNodesFromJsonValue"
+  );
+  const normalizeRecipeFromJson = await requireQueueApiHandler("normalizeRecipeFromJson");
 
   let parsedJson: unknown;
 

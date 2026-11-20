@@ -23,16 +23,7 @@ import { createReadStream } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import type { z } from "zod";
-import {
-  APICallError,
-  asSchema,
-  experimental_decide as decideWithModel,
-  generateImage as generateImageWithModel,
-  generateText,
-  Output,
-  transcribe as transcribeWithModel,
-} from "ai";
-import { APIError } from "openai";
+import { APICallError } from "@ai-sdk/provider";
 
 import type {
   AIConfig,
@@ -81,15 +72,6 @@ import {
 } from "./image-parameter-fallback";
 import { forgetKeyRejection, noteKeyRejection } from "./key-rejections";
 import { recordModelUse, requestSignal } from "./model-use-ledger";
-import {
-  canDegradeToJsonMode,
-  createDecisionModelFromConfig,
-  createGenericTranscriptionClient,
-  createImageModelFromConfig,
-  createModelsFromConfig,
-  createTranscriptionModel,
-  requestOllamaTranscription,
-} from "./providers";
 import { SYSTEM_MESSAGES as SYSTEM_MESSAGE_TEXTS } from "./system-messages";
 import { withWavCopy } from "./wav-copy";
 
@@ -159,6 +141,7 @@ export interface GenerateOptions<T> {
  * instruction anyone should be able to edit away.
  */
 async function jsonModeInstruction<T>(schema: z.ZodType<T>): Promise<string> {
+  const { asSchema } = await import("ai");
   const jsonSchema = await asSchema(schema).jsonSchema;
 
   return [
@@ -213,6 +196,10 @@ async function requestObject<T>({
   images,
   jsonMode,
 }: ObjectRequest<T>): Promise<Answered<T>> {
+  const [{ generateText, Output }, { createModelsFromConfig }] = await Promise.all([
+    import("ai"),
+    import("./providers"),
+  ]);
   const { model, visionModel, providerName } = createModelsFromConfig(config, {
     structuredOutputs: !jsonMode,
   });
@@ -346,7 +333,7 @@ export async function generateStructured<T>(options: GenerateOptions<T>): Promis
 
   // A configuration that cannot build a client is refused here, before the
   // ledger: a missing key is not a request that failed, it is one never sent.
-  createModelsFromConfig(config, { structuredOutputs: true });
+  (await import("./providers")).createModelsFromConfig(config, { structuredOutputs: true });
 
   // One ledger entry per request a feature made, whichever request shape
   // ended up answering it.
@@ -402,6 +389,8 @@ async function requestStructured<T>(request: {
   try {
     return await requestObject({ ...request, jsonMode: false });
   } catch (error) {
+    const { canDegradeToJsonMode } = await import("./providers");
+
     if (!canDegradeToJsonMode(config.provider) || !isRequestShapeRejection(error)) {
       reportFailure(promptName, error);
     }
@@ -537,6 +526,14 @@ async function transcribeWithProvider(
   provider: Exclude<TranscriptionProvider, "disabled">,
   { audioPath, apiKey, model, endpoint, timeoutMs }: TranscriptionRequest
 ): Promise<string> {
+  const [{ transcribe: transcribeWithModel }, { APIError }, providers] = await Promise.all([
+    import("ai"),
+    import("openai"),
+    import("./providers"),
+  ]);
+  const { createGenericTranscriptionClient, createTranscriptionModel, requestOllamaTranscription } =
+    providers;
+
   switch (provider) {
     case "openai":
     case "groq":
@@ -653,6 +650,8 @@ export interface GeneratedImageBytes {
  * and provider failures follow the SDK's own retryability.
  */
 export async function generateImage(options: GenerateImageOptions): Promise<GeneratedImageBytes> {
+  const [{ generateImage: generateImageWithModel }, { createImageModelFromConfig }] =
+    await Promise.all([import("ai"), import("./providers")]);
   const { prompt: promptName, sections = [], shape = "landscape", tier, transparent } = options;
 
   const [aiConfig, imageConfig] = await Promise.all([
@@ -940,6 +939,8 @@ async function requestDecision<Q extends DecisionQuestions>({
   timeoutMs,
   deadlineMs,
 }: DecisionRequest<Q>): Promise<Answered<DecisionResult<Q>>> {
+  const [{ experimental_decide: decideWithModel }, { createDecisionModelFromConfig }] =
+    await Promise.all([import("ai"), import("./providers")]);
   const decisionModel = createDecisionModelFromConfig({ ...settings, timeoutMs });
   const asked: DecisionQuestions = questions;
 
@@ -1155,6 +1156,10 @@ export async function testDecisionModel(
 export async function testPerplexityKey(
   apiKey: string
 ): Promise<{ success: boolean; error?: string }> {
+  const [{ generateText }, { createModelsFromConfig }] = await Promise.all([
+    import("ai"),
+    import("./providers"),
+  ]);
   const { model } = createModelsFromConfig({
     provider: "perplexity",
     model: "fast",

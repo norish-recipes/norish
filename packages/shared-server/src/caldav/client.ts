@@ -1,5 +1,4 @@
 import type { DAVCalendar, DAVClient as DAVClientType } from "tsdav";
-import tsdav from "tsdav";
 import { v4 as uuidv4 } from "uuid";
 
 import type {
@@ -17,14 +16,14 @@ import { fetchTrusting, isUntrustedChain, readServerCertificate } from "./truste
 export type { CreateEventInput, CreatedEvent, CalDavClientOptions, ConnectionTestResult };
 
 const log = createLogger("caldav-client");
-const { DAVClient } = tsdav;
 
 export class CalDavClient {
   private serverUrl: string;
   private calendarUrl: string | undefined;
   private username: string;
   private password: string;
-  private client: DAVClientType;
+  /** The tsdav client, loaded with the first request rather than with the server. */
+  private client: () => Promise<DAVClientType>;
   private _calendars: DAVCalendar[] | null = null;
 
   constructor(opts: CalDavClientOptions) {
@@ -45,16 +44,22 @@ export class CalDavClient {
       this.serverUrl += "/";
     }
 
-    this.client = new DAVClient({
-      serverUrl: this.serverUrl,
-      credentials: {
-        username: this.username,
-        password: this.password,
-      },
-      authMethod: "Basic",
-      defaultAccountType: "caldav",
-      fetch: opts.trustedCertificate ? fetchTrusting(opts.trustedCertificate) : undefined,
-    });
+    let client: Promise<DAVClientType> | undefined;
+
+    this.client = () =>
+      (client ??= import("tsdav").then(
+        ({ default: { DAVClient } }) =>
+          new DAVClient({
+            serverUrl: this.serverUrl,
+            credentials: {
+              username: this.username,
+              password: this.password,
+            },
+            authMethod: "Basic",
+            defaultAccountType: "caldav",
+            fetch: opts.trustedCertificate ? fetchTrusting(opts.trustedCertificate) : undefined,
+          })
+      ));
   }
 
   /**
@@ -66,8 +71,8 @@ export class CalDavClient {
       return this._calendars;
     }
 
-    await this.client.login();
-    const allCalendars = await this.client.fetchCalendars();
+    await (await this.client()).login();
+    const allCalendars = await (await this.client()).fetchCalendars();
 
     // Filter to only calendars that support VEVENT (not VTODO task lists)
     this._calendars = allCalendars.filter((cal) => {
@@ -219,7 +224,9 @@ export class CalDavClient {
       "Writing CalDAV event"
     );
 
-    const response = await this.client.createCalendarObject({
+    const response = await (
+      await this.client()
+    ).createCalendarObject({
       calendar: targetCalendar,
       iCalString: ics,
       filename,
@@ -264,7 +271,9 @@ export class CalDavClient {
     log.debug({ calendarUrl: targetCalendar.url, eventUid }, "Deleting CalDAV event");
 
     // Fetch events to find the one to delete
-    const events = await this.client.fetchCalendarObjects({
+    const events = await (
+      await this.client()
+    ).fetchCalendarObjects({
       calendar: targetCalendar,
     });
 
@@ -276,7 +285,9 @@ export class CalDavClient {
       return;
     }
 
-    const response = await this.client.deleteCalendarObject({
+    const response = await (
+      await this.client()
+    ).deleteCalendarObject({
       calendarObject: eventToDelete,
     });
 

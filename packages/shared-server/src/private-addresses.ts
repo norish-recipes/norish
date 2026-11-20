@@ -5,7 +5,7 @@ import { lookup as lookupEach } from "node:dns";
 import { lookup } from "node:dns/promises";
 import { BlockList, isIP } from "node:net";
 import type { LookupAddress } from "node:dns";
-import { Agent, buildConnector } from "undici";
+import type { Agent } from "undici";
 
 /**
  * Loopback, RFC1918, CGNAT (Tailscale), benchmarking, link-local, multicast, reserved, unique-local,
@@ -57,44 +57,51 @@ export async function isRefusedHost(
 
 const refusal = (host: string) => new Error(`Refused to connect to a private address (${host})`);
 
-const connect = buildConnector({
-  lookup: (hostname, options, callback) =>
-    lookupEach(hostname, options, (err, address, family) => {
-      const found = typeof address === "string" ? [{ address, family }] : address;
-
-      callback(!err && found.some(isPrivate) ? refusal(hostname) : err, address, family);
-    }),
-});
-
 /**
  * Refuses private addresses as each socket connects, so a name that resolves differently the
- * second time (DNS rebinding) or a redirect cannot reach one.
+ * second time (DNS rebinding) or a redirect cannot reach one. undici loads with the first fetch.
  */
-const publicOnly = new Agent({
-  connect: (options, callback) => {
-    const family = isIP(options.hostname);
+let publicOnly: Promise<Agent> | undefined;
 
-    if (family && isPrivate({ address: options.hostname, family })) {
-      callback(refusal(options.hostname), null);
+async function createPublicOnly(): Promise<Agent> {
+  const { Agent, buildConnector } = await import("undici");
+  const connect = buildConnector({
+    lookup: (hostname, options, callback) =>
+      lookupEach(hostname, options, (err, address, family) => {
+        const found = typeof address === "string" ? [{ address, family }] : address;
 
-      return;
-    }
+        callback(!err && found.some(isPrivate) ? refusal(hostname) : err, address, family);
+      }),
+  });
 
-    connect(options, callback);
-  },
-});
+  return new Agent({
+    connect: (options, callback) => {
+      const family = isIP(options.hostname);
+
+      if (family && isPrivate({ address: options.hostname, family })) {
+        callback(refusal(options.hostname), null);
+
+        return;
+      }
+
+      connect(options, callback);
+    },
+  });
+}
 
 /**
  * `fetch` that refuses private addresses unless the administrator allows them. The DOM lib's
  * RequestInit leaves out the `dispatcher` Node's fetch takes, hence the cast.
  */
-export function guardedFetch(
+export async function guardedFetch(
   url: string,
   init: RequestInit,
   allowPrivateAddresses: boolean
 ): Promise<Response> {
-  return fetch(
-    url,
-    allowPrivateAddresses ? init : ({ ...init, dispatcher: publicOnly } as RequestInit)
-  );
+  if (allowPrivateAddresses) return fetch(url, init);
+
+  return fetch(url, {
+    ...init,
+    dispatcher: await (publicOnly ??= createPublicOnly()),
+  } as RequestInit);
 }

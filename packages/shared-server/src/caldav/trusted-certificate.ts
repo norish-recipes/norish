@@ -6,8 +6,11 @@
 import { X509Certificate } from "node:crypto";
 import { isIP } from "node:net";
 import tls from "node:tls";
-import type { RequestInfo as UndiciRequestInfo, RequestInit as UndiciRequestInit } from "undici";
-import { Agent, fetch as undiciFetch } from "undici";
+import type {
+  Agent,
+  RequestInfo as UndiciRequestInfo,
+  RequestInit as UndiciRequestInit,
+} from "undici";
 
 import type { UntrustedCertificate } from "@norish/shared/contracts/dto/caldav";
 
@@ -42,23 +45,23 @@ const agents = new Map<string, Agent>();
  * The agent comes from the same undici as the fetch, which is what a dispatcher needs.
  */
 export function fetchTrusting(pem: string): typeof fetch {
-  let dispatcher = agents.get(pem);
+  return async (url, init) => {
+    const { Agent, fetch: undiciFetch } = await import("undici");
+    let dispatcher = agents.get(pem);
 
-  if (!dispatcher) {
-    // Partial chains let a server's own certificate, not only a root, be the anchor.
-    dispatcher = new Agent({
-      connect: { ca: [...tls.getCACertificates("default"), pem], allowPartialTrustChain: true },
-    });
-    agents.set(pem, dispatcher);
-  }
+    if (!dispatcher) {
+      // Partial chains let a server's own certificate, not only a root, be the anchor.
+      dispatcher = new Agent({
+        connect: { ca: [...tls.getCACertificates("default"), pem], allowPartialTrustChain: true },
+      });
+      agents.set(pem, dispatcher);
+    }
 
-  const trusting = dispatcher;
-
-  return (url, init) =>
-    undiciFetch(url as UndiciRequestInfo, {
+    return undiciFetch(url as UndiciRequestInfo, {
       ...(init as UndiciRequestInit),
-      dispatcher: trusting,
+      dispatcher,
     }) as unknown as Promise<Response>;
+  };
 }
 
 /**

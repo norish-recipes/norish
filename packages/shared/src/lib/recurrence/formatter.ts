@@ -1,4 +1,6 @@
-import { differenceInDays, format, parseISO } from "date-fns";
+import { differenceInDays } from "date-fns/differenceInDays";
+import { format } from "date-fns/format";
+import { parseISO } from "date-fns/parseISO";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
 

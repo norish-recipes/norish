@@ -43,7 +43,7 @@ const log = createLogger("worker:recipe-import");
  * Resolves to the recipe the import ended on, an existing one for a known URL.
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> {
-  const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
+  const parseRecipeFromUrl = await requireQueueApiHandler("parseRecipeFromUrl");
   const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
 
   log.info(

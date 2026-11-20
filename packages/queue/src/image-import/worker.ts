@@ -29,7 +29,7 @@ const log = createLogger("worker:image-import");
  * Process a single image import job.
  */
 export async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
-  const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
+  const extractRecipeFromImages = await requireQueueApiHandler("extractRecipeFromImages");
   const { recipeId, userId, householdKey, householdUserIds, files } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");

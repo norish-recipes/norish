@@ -18,7 +18,7 @@
  * A dish's landscape is a preference too: a model that refuses it draws the
  * square, which the save path crops (Gemini takes only 1024×1024).
  */
-import { APICallError } from "ai";
+import { APICallError } from "@ai-sdk/provider";
 
 /**
  * The parameters a request may go without: the model draws at its own

@@ -1,4 +1,6 @@
-import { format, startOfMonth, subMonths } from "date-fns";
+import { format } from "date-fns/format";
+import { startOfMonth } from "date-fns/startOfMonth";
+import { subMonths } from "date-fns/subMonths";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { deleteDoneGroceriesBefore } from "@norish/db/repositories/groceries";

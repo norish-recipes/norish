@@ -103,8 +103,11 @@ export interface QueueApiHandlers {
   readProduct(html: string, url: string): ProductReading | null;
 }
 
+type HandlerLoader = () => Promise<Partial<QueueApiHandlers>>;
+
 const globalForQueueApiHandlers = globalThis as typeof globalThis & {
   __norishQueueApiHandlers__?: Partial<QueueApiHandlers>;
+  __norishQueueApiHandlerLoad__?: HandlerLoader | Promise<void>;
 };
 
 function getRegisteredHandlers(): Partial<QueueApiHandlers> {
@@ -115,16 +118,32 @@ function getRegisteredHandlers(): Partial<QueueApiHandlers> {
   return globalForQueueApiHandlers.__norishQueueApiHandlers__;
 }
 
-export function registerQueueApiHandlers(handlers: Partial<QueueApiHandlers>): void {
+/** The handlers, or a loader the first lookup calls: the parser and AI stacks load with the first job. */
+export function registerQueueApiHandlers(
+  handlers: Partial<QueueApiHandlers> | HandlerLoader
+): void {
+  if (typeof handlers === "function") {
+    globalForQueueApiHandlers.__norishQueueApiHandlerLoad__ = handlers;
+
+    return;
+  }
   globalForQueueApiHandlers.__norishQueueApiHandlers__ = {
     ...getRegisteredHandlers(),
     ...handlers,
   };
 }
 
-export function requireQueueApiHandler<K extends keyof QueueApiHandlers>(
+export async function requireQueueApiHandler<K extends keyof QueueApiHandlers>(
   name: K
-): QueueApiHandlers[K] {
+): Promise<QueueApiHandlers[K]> {
+  const pending = globalForQueueApiHandlers.__norishQueueApiHandlerLoad__;
+
+  if (typeof pending === "function") {
+    globalForQueueApiHandlers.__norishQueueApiHandlerLoad__ =
+      pending().then(registerQueueApiHandlers);
+  }
+  await globalForQueueApiHandlers.__norishQueueApiHandlerLoad__;
+
   const handler = getRegisteredHandlers()[name];
 
   if (!handler) {
@@ -136,4 +155,5 @@ export function requireQueueApiHandler<K extends keyof QueueApiHandlers>(
 
 export function resetQueueApiHandlersForTests(): void {
   globalForQueueApiHandlers.__norishQueueApiHandlers__ = {};
+  globalForQueueApiHandlers.__norishQueueApiHandlerLoad__ = undefined;
 }
