@@ -34,11 +34,10 @@ const NAME = `Planned Stew ${Date.now()}`;
  * recipe lists long before the plan is.
  */
 async function persistedCalendarHolds(page: Page, text: string): Promise<boolean> {
-  type Persisted = {
-    clientState?: { queries?: { queryKey: unknown; state: { data: unknown } }[] };
-  };
+  // One `keyval` entry per persisted read; other entries hold no `query`.
+  type Persisted = { query?: { queryKey: unknown; state: { data: unknown } } };
   const ranges = ((await readOfflineStore(page, "keyval")) as Persisted[])
-    .flatMap((client) => client?.clientState?.queries ?? [])
+    .flatMap((entry) => (entry?.query ? [entry.query] : []))
     .filter((query) => JSON.stringify(query.queryKey).includes("listItems"));
 
   return ranges.some((query) => JSON.stringify(query.state.data).includes(text));
