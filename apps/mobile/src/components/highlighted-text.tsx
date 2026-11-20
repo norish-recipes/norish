@@ -20,7 +20,7 @@ export function Segments({ segments }: { segments: MatchSegment[] }) {
   );
 }
 
-/** A recipe title with the search terms highlighted; goes inside a `Text`. */
-export function HighlightedTitle({ name, search }: { name: string; search: string }) {
-  return <Segments segments={highlightSegments(name, search)} />;
+/** A text (a title, an Ingredient, Tag or Category name) with the search terms highlighted; goes inside a `Text`. */
+export function HighlightedText({ text, search }: { text: string; search: string }) {
+  return <Segments segments={highlightSegments(text, search)} />;
 }

@@ -1,4 +1,7 @@
+import type { LibrarySuggestionsDTO } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
+import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { searchWords } from "@norish/shared/lib/search-terms";
 
@@ -11,25 +14,50 @@ export const RECIPE_SUGGESTIONS = 2;
 /** The text suggestions are read for: itself, or "" while it holds no word to look for. */
 export const suggestionText = (text: string) => (searchWords(text).length > 0 ? text.trim() : "");
 
-/** One "Narrow to" row: the filter it adds, and for an Ingredient the name its chip shows. */
+/** How many Categories the typing state offers. */
+const CATEGORY_ROWS = 3;
+
+/** One "Narrow to" row: the filter it adds (a Category by its stored `name`) and the name it shows. */
 export type NarrowRow =
   | { kind: "ingredient"; id: string; name: string }
   | { kind: "tag"; name: string }
-  | { kind: "category"; name: string };
+  | { kind: "category"; name: string; label: string };
 
-export type NarrowSuggestions = {
-  ingredients: { id: string; name: string; localeNames: Record<string, string> }[];
-  tags: string[];
-  categories: string[];
+/** What the rows are read from: the suggestions, and how the reader's language shows a Category. */
+export type NarrowSource = {
+  suggestions: LibrarySuggestionsDTO | undefined;
+  locale: string;
+  /** The text typed: a Category matches by the label shown, which the server does not know. */
+  text: string;
+  categoryLabel: (name: string) => string;
 };
+
+/** The Categories whose shown label has a word starting with the text, folded; at most three. */
+export function matchingCategories(
+  names: readonly string[],
+  text: string,
+  categoryLabel: (name: string) => string
+): string[] {
+  const typed = foldName(text);
+
+  if (!typed) return [];
+
+  return names
+    .filter((name) => {
+      const label = foldName(categoryLabel(name));
+
+      return label.startsWith(typed) || label.includes(` ${typed}`);
+    })
+    .slice(0, CATEGORY_ROWS);
+}
 
 type Applied = Pick<CanonicalRecipeFilters, "ingredients" | "searchTags" | "categories">;
 
-/** The rows to narrow to, Ingredients then Tags then Categories; one already a chip is not offered again. */
+/** The rows to narrow to, Ingredients then Tags then Categories; one already a chip is not offered
+ * again, and no Ingredient is at the limit of Ingredient chips. */
 export function narrowRows(
-  suggestions: NarrowSuggestions | undefined,
-  applied: Applied,
-  locale: string
+  { suggestions, locale, text, categoryLabel }: NarrowSource,
+  applied: Applied
 ): NarrowRow[] {
   if (!suggestions) return [];
 
@@ -39,7 +67,11 @@ export function narrowRows(
 
   return [
     ...suggestions.ingredients
-      .filter((food) => !applied.ingredients.includes(food.id))
+      .filter(
+        (food) =>
+          applied.ingredients.length < MAX_FILTER_INGREDIENTS &&
+          !applied.ingredients.includes(food.id)
+      )
       .map((food) => ({
         kind: "ingredient" as const,
         id: food.id,
@@ -48,9 +80,9 @@ export function narrowRows(
     ...suggestions.tags
       .filter((name) => !tags.has(name.toLowerCase()))
       .map((name) => ({ kind: "tag" as const, name })),
-    ...suggestions.categories
+    ...matchingCategories(suggestions.categories, text, categoryLabel)
       .filter((name) => !categories.has(name.toLowerCase()))
-      .map((name) => ({ kind: "category" as const, name })),
+      .map((name) => ({ kind: "category" as const, name, label: categoryLabel(name) })),
   ];
 }
 

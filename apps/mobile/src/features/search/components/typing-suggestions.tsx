@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import React from "react";
 import { ScrollView, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
-import { HighlightedTitle } from "@/components/highlighted-text";
+import { HighlightedText } from "@/components/highlighted-text";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { SectionLabel } from "@/components/section-label";
 import { useTokenColor } from "@/hooks/use-token-color";
@@ -15,7 +16,7 @@ import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
 
 import type { NarrowRow } from "../utils/search-suggestions";
-import { narrowRowKey } from "../utils/search-suggestions";
+import { narrowRowKey, RECIPE_SUGGESTIONS } from "../utils/search-suggestions";
 
 const TYPE_LABELS = {
   ingredient: "recipes.search.typeIngredient",
@@ -23,19 +24,45 @@ const TYPE_LABELS = {
   category: "recipes.search.typeCategory",
 } as const;
 
-function SkeletonRows({ count, tall }: { count: number; tall: boolean }) {
+/** Rows as tall as the ones that replace them: a recipe's has a photo, a Narrow-to row's a small mark. */
+function SkeletonRows({ count, photo, testID }: { count: number; photo: boolean; testID: string }) {
   return (
-    <Card testID="search-suggestions-loading">
+    <Card testID={testID}>
       {Array.from({ length: count }, (_, index) => (
-        <View
+        <CardRow
           key={index}
-          className={`${tall ? "min-h-[60px]" : "min-h-[52px]"} flex-row items-center gap-3 px-4`}
-        >
-          <Skeleton className={tall ? "size-10 rounded-xl" : "size-7 rounded-full"} />
-          <Skeleton className="h-4 w-40 rounded-md" />
-        </View>
+          first={index === 0}
+          hint={<Skeleton className="h-3.5 w-24 rounded-md" />}
+          label={<Skeleton className="h-4 w-40 rounded-md" />}
+          leading={photo ? undefined : <Skeleton className="size-7 rounded-full" />}
+          media={photo ? <Skeleton className="size-10 rounded-xl" /> : undefined}
+        />
       ))}
     </Card>
+  );
+}
+
+/** A heading over its rows, or over skeletons while loading; nothing for a kind with no rows. */
+function SuggestionSection({
+  title,
+  loading,
+  skeleton,
+  empty,
+  children,
+}: {
+  title: string;
+  loading: boolean;
+  skeleton: ReactNode;
+  empty: boolean;
+  children: ReactNode;
+}) {
+  if (!loading && empty) return null;
+
+  return (
+    <View className="gap-2">
+      <SectionLabel>{title}</SectionLabel>
+      {loading ? skeleton : children}
+    </View>
   );
 }
 
@@ -60,7 +87,7 @@ function RecipeRow({
     <CardRow
       first={first}
       hint={facts.join(" · ")}
-      label={<HighlightedTitle name={recipe.name} search={search} />}
+      label={<HighlightedText search={search} text={recipe.name} />}
       media={<CardPhoto className="size-10 overflow-hidden rounded-xl" image={recipe.image} />}
       testID={`search-suggestion-recipe-${recipe.id}`}
       chevron={false}
@@ -88,7 +115,9 @@ function NarrowRowView({
       chevron={false}
       first={first}
       hint={intl.formatMessage({ id: TYPE_LABELS[row.kind] })}
-      label={<HighlightedTitle name={row.name} search={search} />}
+      label={
+        <HighlightedText search={search} text={row.kind === "category" ? row.label : row.name} />
+      }
       leading={
         row.kind === "ingredient" ? (
           <IngredientIcon ingredientId={row.id} size={28} />
@@ -150,51 +179,40 @@ export function TypingSuggestions({
           onPress={onConfirm}
         />
       </Card>
-      {loading || recipes.length > 0 ? (
-        <View className="gap-2">
-          <SectionLabel>{intl.formatMessage({ id: "recipes.search.recipes" })}</SectionLabel>
-          {loading ? (
-            <SkeletonRows count={2} tall />
-          ) : (
-            <Card>
-              {recipes.map((recipe, index) => (
-                <RecipeRow
-                  key={recipe.id}
-                  first={index === 0}
-                  recipe={recipe}
-                  search={searchWords}
-                />
-              ))}
-            </Card>
-          )}
-        </View>
-      ) : null}
-      {loading || narrowRows.length > 0 ? (
-        <View className="gap-2">
-          <SectionLabel>{intl.formatMessage({ id: "recipes.search.narrowTo" })}</SectionLabel>
-          {loading ? (
-            <SkeletonRows count={3} tall={false} />
-          ) : (
-            <IngredientIconSlots
-              rows={narrowRows.map((row) => ({
-                foodId: row.kind === "ingredient" ? row.id : null,
-              }))}
-            >
-              <Card>
-                {narrowRows.map((row, index) => (
-                  <NarrowRowView
-                    key={narrowRowKey(row)}
-                    first={index === 0}
-                    row={row}
-                    search={searchWords}
-                    onNarrow={onNarrow}
-                  />
-                ))}
-              </Card>
-            </IngredientIconSlots>
-          )}
-        </View>
-      ) : null}
+      <SuggestionSection
+        empty={recipes.length === 0}
+        loading={loading}
+        skeleton={<SkeletonRows count={RECIPE_SUGGESTIONS} photo testID="search-recipes-loading" />}
+        title={intl.formatMessage({ id: "recipes.search.recipes" })}
+      >
+        <Card>
+          {recipes.map((recipe, index) => (
+            <RecipeRow key={recipe.id} first={index === 0} recipe={recipe} search={searchWords} />
+          ))}
+        </Card>
+      </SuggestionSection>
+      <SuggestionSection
+        empty={narrowRows.length === 0}
+        loading={loading}
+        skeleton={<SkeletonRows count={3} photo={false} testID="search-narrow-loading" />}
+        title={intl.formatMessage({ id: "recipes.search.narrowTo" })}
+      >
+        <IngredientIconSlots
+          rows={narrowRows.map((row) => ({ foodId: row.kind === "ingredient" ? row.id : null }))}
+        >
+          <Card>
+            {narrowRows.map((row, index) => (
+              <NarrowRowView
+                key={narrowRowKey(row)}
+                first={index === 0}
+                row={row}
+                search={searchWords}
+                onNarrow={onNarrow}
+              />
+            ))}
+          </Card>
+        </IngredientIconSlots>
+      </SuggestionSection>
     </ScrollView>
   );
 }

@@ -5,6 +5,7 @@ import React from "react";
 import { View } from "react-native";
 import { FiltersButton } from "@/components/filters-button";
 import { TabRootHeader } from "@/components/tab-root-header";
+import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useSearchConfirmed } from "@/lib/search-session";
 import { useTabScroll } from "@/lib/use-tab-scroll";
 import { Stack } from "expo-router";
@@ -12,19 +13,18 @@ import { useIntl } from "react-intl";
 
 import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
 
-import type { NarrowRow } from "../utils/search-suggestions";
 import { SearchNoResults } from "../components/no-results";
 import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
 import { TypingSuggestions } from "../components/typing-suggestions";
-import { useAddIngredient } from "../hooks/use-add-ingredient";
+import { useNarrowTo } from "../hooks/use-narrow-to";
 import { useSearchField } from "../hooks/use-search-field";
 import { useSearchFilters } from "../hooks/use-search-filters";
 import { useTypingSuggestions } from "../hooks/use-typing-suggestions";
 import { filterChips } from "../utils/search-chips";
 import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
 import { noResultsVariant, searchView, showsResults } from "../utils/search-state";
-import { narrowPatch, narrowRows } from "../utils/search-suggestions";
+import { narrowRows } from "../utils/search-suggestions";
 
 /** Search: the field in the tab bar, its Search Scope while it has text, and Results once confirmed.
  * `Results` is the Recipes feature's card list, which the route file hands in. */
@@ -50,16 +50,14 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
     filters,
     enabled: showsResults({ ...input, resultCount: null }),
   });
-  const typing = useTypingSuggestions(field.text);
-  const addIngredient = useAddIngredient();
-  const rows = narrowRows(typing.narrow, filters, intl.locale);
-  const narrowTo = (row: NarrowRow) => {
-    if (row.kind === "ingredient") addIngredient({ id: row.id, name: row.name });
-    else setFilters(narrowPatch(row, filters));
-
-    field.narrowed();
-  };
   const view = searchView({ ...input, resultCount: list.isLoading ? null : list.recipes.length });
+  const typing = useTypingSuggestions(field.text, view === "typing");
+  const categoryLabel = useCategoryLabel();
+  const rows = narrowRows(
+    { suggestions: typing.narrow, locale: intl.locale, text: typing.asked, categoryLabel },
+    filters
+  );
+  const narrowTo = useNarrowTo(field.narrowed);
   const chipCount = chips.length;
   const funnel: HeaderItem = {
     type: "custom",

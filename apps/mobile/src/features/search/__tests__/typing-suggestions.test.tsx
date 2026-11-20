@@ -28,7 +28,7 @@ vi.mock("@/components/card", () => ({
 }));
 vi.mock("@/components/card-photo", () => ({ CardPhoto: () => null }));
 vi.mock("@/components/highlighted-text", () => ({
-  HighlightedTitle: ({ name }: { name: string }) => <span>{name}</span>,
+  HighlightedText: ({ text }: { text: string }) => <span>{text}</span>,
 }));
 vi.mock("@/components/ingredient-icon", () => ({
   IngredientIcon: () => null,
@@ -60,7 +60,10 @@ const base = {
   text: "chick",
   loading: false,
   recipes: [recipe],
-  narrowRows: [{ kind: "tag" as const, name: "chicken" }],
+  narrowRows: [
+    { kind: "tag" as const, name: "chicken" },
+    { kind: "category" as const, name: "Dinner", label: "Diner" },
+  ],
   searchWords: "chick",
   onConfirm: vi.fn(),
   onNarrow: vi.fn(),
@@ -81,12 +84,27 @@ describe("the typing state", () => {
     expect(onNarrow).toHaveBeenCalledWith({ kind: "tag", name: "chicken" });
   });
 
+  it("shows a Category by its label and narrows by its stored name", () => {
+    const onNarrow = vi.fn();
+
+    render(<TypingSuggestions {...base} onNarrow={onNarrow} />);
+
+    expect(screen.getByTestId("search-narrow-category-Dinner").textContent).toContain("Diner");
+
+    fireEvent.click(screen.getByTestId("search-narrow-category-Dinner"));
+
+    expect(onNarrow).toHaveBeenCalledWith({ kind: "category", name: "Dinner", label: "Diner" });
+  });
+
   it("shows the Search for row and skeletons while loading, never an empty area", () => {
     render(<TypingSuggestions {...base} loading recipes={[]} narrowRows={[]} />);
 
     expect(screen.getByTestId("search-for-row")).toBeTruthy();
     expect(screen.getAllByTestId("skeleton").length).toBeGreaterThan(0);
     expect(screen.getByText("recipes.search.recipes")).toBeTruthy();
+    // One skeleton block per section, each with its own id.
+    expect(screen.getByTestId("search-recipes-loading")).toBeTruthy();
+    expect(screen.getByTestId("search-narrow-loading")).toBeTruthy();
   });
 
   it("leaves out the heading of a kind with no rows, and all of them with no matches", () => {

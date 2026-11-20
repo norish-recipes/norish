@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-
 import { useLibraryList, useLibrarySuggestions } from "@norish/shared-react/recipes";
+import { useSettledText } from "@norish/shared-react/settled-text";
 
 import {
   RECIPE_SUGGESTIONS,
@@ -9,31 +8,19 @@ import {
 } from "../utils/search-suggestions";
 import { useSearchFilters } from "./use-search-filters";
 
-/** The text once the reader has stopped typing for the debounce. */
-function useSettled(text: string) {
-  const [settled, setSettled] = useState(text);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(text), SUGGESTIONS_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [text]);
-
-  return settled;
-}
-
 /** What the typing state suggests for `text`: the top recipes of the results it would confirm to (the
- * same Search Scope, filters and sort) and the Ingredients, Tags and Categories to narrow to. */
-export function useTypingSuggestions(text: string) {
+ * same Search Scope, filters and sort) and the Ingredients, Tags and Categories to narrow to. Nothing
+ * is read unless `typing`: the state shows. */
+export function useTypingSuggestions(text: string, typing: boolean) {
   const filters = useSearchFilters();
-  const asked = suggestionText(useSettled(text));
+  const asked = suggestionText(useSettledText(text, SUGGESTIONS_DEBOUNCE_MS));
   const recipes = useLibraryList({
     sortBeatsRank: true,
     limit: RECIPE_SUGGESTIONS,
     filters: { ...filters, rawInput: asked },
-    enabled: asked !== "",
+    enabled: typing && asked !== "",
   });
-  const narrow = useLibrarySuggestions(asked);
+  const narrow = useLibrarySuggestions(asked, typing);
 
   return {
     asked,

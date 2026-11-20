@@ -5,7 +5,7 @@ import React, { memo, useRef } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
-import { HighlightedTitle } from "@/components/highlighted-text";
+import { HighlightedText } from "@/components/highlighted-text";
 import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { lightImpact } from "@/lib/haptics";
@@ -148,7 +148,7 @@ function titleAndLine({ recipe, facts, hit }: CardProps) {
   return {
     title:
       hit.match.field === "title" ? (
-        <HighlightedTitle name={recipe.name} search={hit.search} />
+        <HighlightedText search={hit.search} text={recipe.name} />
       ) : (
         recipe.name
       ),
