@@ -150,25 +150,82 @@ describe("admin job queue procedures", () => {
 
       registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, createMockQueue([job]));
 
-      const rows = await createCaller().list({ queue: QUEUE_NAMES.RECIPE_IMPORT, limit: 50 });
+      const rows = await createCaller().list({
+        queue: QUEUE_NAMES.RECIPE_IMPORT,
+        states: ["active"],
+        limit: 50,
+      });
 
       expect(rows[0]?.state).toBe("active");
       expect(rows[0]?.isHanging).toBe(true);
     });
 
-    it("skips getState when filtering by a single state", async () => {
-      const job = createMockJob();
+    it("knows each job's state from the state it was read under", async () => {
+      const failed = createMockJob({ id: "failed" });
+      const waiting = createMockJob({ id: "waiting" });
+      const queue = createMockQueue();
+      const inState: Record<string, unknown[]> = { failed: [failed], waiting: [waiting] };
 
-      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, createMockQueue([job]));
+      queue.getJobs.mockImplementation(([state]: string[]) =>
+        Promise.resolve(inState[state!] ?? [])
+      );
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, queue);
 
-      const rows = await createCaller().list({
+      const rows = await createCaller().list({ queue: QUEUE_NAMES.RECIPE_IMPORT, limit: 50 });
+
+      expect(Object.fromEntries(rows.map((row) => [row.id, row.state]))).toEqual({
+        failed: "failed",
+        waiting: "waiting",
+      });
+      expect(failed.getState).not.toHaveBeenCalled();
+      expect(waiting.getState).not.toHaveBeenCalled();
+    });
+
+    it("lists a job caught in two states once, under the later one", async () => {
+      const moved = createMockJob({ id: "moved" });
+      const queue = createMockQueue();
+      const inState: Record<string, unknown[]> = { active: [moved], completed: [moved] };
+
+      queue.getJobs.mockImplementation(([state]: string[]) =>
+        Promise.resolve(inState[state!] ?? [])
+      );
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, queue);
+
+      const rows = await createCaller().list({ queue: QUEUE_NAMES.RECIPE_IMPORT, limit: 50 });
+
+      expect(rows.map((row) => [row.id, row.state])).toEqual([["moved", "completed"]]);
+    });
+
+    it("reads only the states asked for", async () => {
+      const queue = createMockQueue();
+
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, queue);
+
+      await createCaller().list({
         queue: QUEUE_NAMES.RECIPE_IMPORT,
-        states: ["failed"],
+        states: ["waiting", "delayed"],
         limit: 50,
       });
 
-      expect(job.getState).not.toHaveBeenCalled();
-      expect(rows[0]?.state).toBe("failed");
+      expect(queue.getJobs.mock.calls.map(([states]) => states).sort()).toEqual([
+        ["delayed"],
+        ["waiting"],
+      ]);
+    });
+
+    it("reads one queue to the full limit, and every queue less deeply", async () => {
+      const oneQueue = createMockQueue();
+      const another = createMockQueue();
+
+      registryMock.queues.set(QUEUE_NAMES.RECIPE_IMPORT, oneQueue);
+      registryMock.queues.set(QUEUE_NAMES.AUTO_TAGGING, another);
+
+      await createCaller().list({ queue: QUEUE_NAMES.RECIPE_IMPORT, limit: 200 });
+      expect(oneQueue.getJobs).toHaveBeenLastCalledWith(expect.any(Array), 0, 199);
+
+      await createCaller().list({ limit: 200 });
+      expect(oneQueue.getJobs).toHaveBeenLastCalledWith(expect.any(Array), 0, 24);
+      expect(another.getJobs).toHaveBeenLastCalledWith(expect.any(Array), 0, 24);
     });
 
     it("merges jobs across all queues sorted newest first", async () => {

@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Description, Label, Radio, RadioGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useCleanUpCatalogueMutation, useCleanUpCounts } from "@norish/shared-react/admin";
+import {
+  useCleanUpCatalogueMutation,
+  useCleanUpCounts,
+  useCleanUpRunning,
+} from "@norish/shared-react/admin";
 
 import { CatalogueAIRun } from "./catalogue-ai-run";
 
@@ -19,10 +23,10 @@ export default function CleanUpCatalogue() {
   const t = useTranslations("settings.admin.aiProcessing.ingredientCatalogue.cleanUpCatalogue");
   const [isOpen, setIsOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("recipe-foods");
-  const counts = useCleanUpCounts();
+  const counts = useCleanUpCounts(isOpen);
+  const running = useCleanUpRunning();
   const { start, isStarting } = useCleanUpCatalogueMutation();
   const count = counts?.[COUNT_OF[scope]] ?? 0;
-  const running = counts?.running ?? false;
 
   return (
     <CatalogueAIRun

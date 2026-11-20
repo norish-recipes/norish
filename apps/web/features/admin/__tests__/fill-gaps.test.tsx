@@ -12,10 +12,17 @@ import { setConfigs } from "./admin-config-fake";
 
 const start = vi.fn();
 const counts = vi.hoisted(() => ({ current: undefined as unknown }));
+const running = vi.hoisted(() => ({ current: false }));
+const opens = vi.hoisted(() => [] as boolean[]);
 
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
-  useFillGapsCounts: () => counts.current,
+  useFillGapsCounts: (isOpen: boolean) => {
+    opens.push(isOpen);
+
+    return isOpen ? counts.current : undefined;
+  },
+  useFillGapsRunning: () => running.current,
   useFillGapsMutation: () => ({ start, isStarting: false }),
 }));
 vi.mock("next-intl", () => ({
@@ -28,12 +35,22 @@ const { default: FillGaps } = await import("@/features/admin/components/catalogu
 beforeEach(() => {
   start.mockReset().mockResolvedValue(true);
   setConfigs({ ai_config: { enabled: true } });
-  counts.current = { nutrition: 4, conversions: 0, icons: 2, running: false };
+  opens.length = 0;
+  running.current = false;
+  counts.current = { nutrition: 4, conversions: 0, icons: 2 };
 });
 
 const box = (kind: string) => screen.getByRole("checkbox", { name: `kinds.${kind}` });
 
 describe("FillGaps", () => {
+  it("does not count the catalogue until its dialog opens", () => {
+    render(<FillGaps />);
+
+    expect(opens.every((isOpen) => !isOpen)).toBe(true);
+    fireEvent.click(screen.getByTestId("fill-gaps"));
+    expect(opens.at(-1)).toBe(true);
+  });
+
   it("names each box's count and starts the run over the boxes picked", () => {
     render(<FillGaps />);
     fireEvent.click(screen.getByTestId("fill-gaps"));
@@ -64,7 +81,7 @@ describe("FillGaps", () => {
   });
 
   it("offers no Icons where nothing can draw", () => {
-    counts.current = { nutrition: 4, conversions: 1, icons: null, running: false };
+    counts.current = { nutrition: 4, conversions: 1, icons: null };
     render(<FillGaps />);
     fireEvent.click(screen.getByTestId("fill-gaps"));
 
@@ -73,7 +90,7 @@ describe("FillGaps", () => {
   });
 
   it("is disabled while a run is on", () => {
-    counts.current = { nutrition: 4, conversions: 1, icons: 2, running: true };
+    running.current = true;
     render(<FillGaps />);
 
     expect(screen.getByTestId("fill-gaps")).toBeDisabled();

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SwitchRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
+import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import SettingsSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import SecretInput from "@/components/shared/secret-input";
@@ -91,6 +92,21 @@ export default function PageRenderersCard() {
       navigationTimeoutMs: parseInt(form.navigationTimeoutMs) || DEFAULT_TIMEOUT_MS,
     });
 
+  // Until the setting arrives the form would read as everything switched off.
+  if (isLoading) {
+    return (
+      <SettingsCard
+        contentClassName="gap-6"
+        data-testid="page-renderers-card"
+        description={t("description")}
+        icon={GlobeAltIcon}
+        title={t("title")}
+      >
+        <SkeletonRows count={4} />
+      </SettingsCard>
+    );
+  }
+
   return (
     <SettingsCard
       badges={isDirty ? <UnsavedChangesChip /> : null}
@@ -103,7 +119,6 @@ export default function PageRenderersCard() {
       <SwitchRow description={t("obscuraDescription")} title={t("obscura")}>
         <SettingsSwitch
           aria-label={t("obscura")}
-          isDisabled={isLoading}
           isSelected={form.obscuraEnabled}
           onValueChange={set("obscuraEnabled")}
         />
@@ -145,7 +160,6 @@ export default function PageRenderersCard() {
         defaultEndpoint={CHROMIUM_DEFAULT}
         enabled={form.chromiumEnabled}
         endpoint={form.chromiumEndpoint}
-        isLoading={isLoading}
         renderer="chromium"
         onEnabledChange={set("chromiumEnabled")}
         onEndpointChange={set("chromiumEndpoint")}
@@ -157,7 +171,6 @@ export default function PageRenderersCard() {
         defaultEndpoint={SOLVER_DEFAULT}
         enabled={form.solverEnabled}
         endpoint={form.solverEndpoint}
-        isLoading={isLoading}
         renderer="solver"
         onEnabledChange={set("solverEnabled")}
         onEndpointChange={set("solverEndpoint")}
@@ -171,7 +184,6 @@ export default function PageRenderersCard() {
       >
         <SettingsSwitch
           aria-label={t("allowPrivateAddresses")}
-          isDisabled={isLoading}
           isSelected={form.allowPrivateAddresses}
           onValueChange={set("allowPrivateAddresses")}
         />
@@ -205,7 +217,6 @@ function TestedRenderer({
   defaultEndpoint,
   enabled,
   endpoint,
-  isLoading,
   onEnabledChange,
   onEndpointChange,
 }: {
@@ -213,7 +224,6 @@ function TestedRenderer({
   defaultEndpoint: string;
   enabled: boolean;
   endpoint: string;
-  isLoading: boolean;
   onEnabledChange: (enabled: boolean) => void;
   onEndpointChange: (endpoint: string) => void;
 }) {
@@ -236,7 +246,6 @@ function TestedRenderer({
       <SwitchRow description={t(`${renderer}Description`)} title={t(renderer)}>
         <SettingsSwitch
           aria-label={t(renderer)}
-          isDisabled={isLoading}
           isSelected={enabled}
           onValueChange={handleSwitch}
         />

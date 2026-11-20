@@ -9,7 +9,7 @@ import {
   MinusCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Accordion, Chip, Modal, Spinner } from "@heroui/react";
+import { Accordion, Chip, Modal, Skeleton, Spinner } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { JobRef } from "@norish/shared-react/admin";
@@ -177,6 +177,23 @@ function AttemptBody({ attempt, t }: { attempt: AdminJobAttemptDTO; t: Translate
   );
 }
 
+/** The overview grid and input block, in grey, until the job arrives. */
+function JobDetailSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" data-testid="job-detail-skeleton">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        {Array.from({ length: 6 }, (_, field) => (
+          <div key={field} className="flex flex-col gap-1">
+            <Skeleton className="h-3 w-16 rounded" />
+            <Skeleton className="h-4 w-32 rounded" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-24 w-full rounded-lg" />
+    </div>
+  );
+}
+
 /** The detail of the job picked in the table, while one is. */
 export default function JobDetailModal({
   job: picked,
@@ -262,11 +279,7 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
         </div>
       </Modal.Header>
       <Modal.Body className="gap-6">
-        {isLoading && !job ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
-        ) : null}
+        {isLoading && !job ? <JobDetailSkeleton /> : null}
         {error && !job ? <p className="text-danger text-sm">{t("detail.notFound")}</p> : null}
         {job ? (
           <>

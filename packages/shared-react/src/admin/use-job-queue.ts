@@ -30,14 +30,13 @@ export function useJobListQuery(filter: JobListFilter = {}) {
   return { jobs: data ?? [], error, isLoading, isPlaceholderData };
 }
 
-/** One job, polled while its detail is open; the last answer stays on screen while a retry rereads it. */
+/** One job, polled while its detail is open; another job never stands in while this one loads. */
 export function useJobDetailQuery(job: JobRef) {
   const trpc = useTRPC();
   const { data, error, isLoading } = useQuery(
     trpc.admin.jobs.detail.queryOptions(job, {
       refetchInterval: LIST_REFETCH_INTERVAL_MS,
       retry: false,
-      placeholderData: keepPreviousData,
     })
   );
 

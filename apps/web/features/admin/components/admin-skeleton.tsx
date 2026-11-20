@@ -4,6 +4,7 @@ import { SettingsCardsSkeleton } from "@/components/settings/settings-skeleton";
 import {
   Cog6ToothIcon,
   DocumentMagnifyingGlassIcon,
+  GlobeAltIcon,
   KeyIcon,
   LinkIcon,
   QueueListIcon,
@@ -28,6 +29,7 @@ export default function AdminSkeleton() {
           description: true,
           rows: 2,
         },
+        { icon: GlobeAltIcon, section: "admin.pageRenderers", description: true, rows: 4 },
         { icon: SparklesIcon, section: "admin.aiProcessing", description: true, rows: 3 },
         { icon: QueueListIcon, section: "admin.jobQueue", rows: 3 },
         { icon: WrenchScrewdriverIcon, section: "admin.system", rows: 2 },

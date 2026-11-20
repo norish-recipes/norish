@@ -12,10 +12,17 @@ import { configs, setConfigs } from "./admin-config-fake";
 
 const start = vi.fn();
 const counts = vi.hoisted(() => ({ current: undefined as unknown }));
+const running = vi.hoisted(() => ({ current: false }));
+const opens = vi.hoisted(() => [] as boolean[]);
 
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
-  useCleanUpCounts: () => counts.current,
+  useCleanUpCounts: (isOpen: boolean) => {
+    opens.push(isOpen);
+
+    return isOpen ? counts.current : undefined;
+  },
+  useCleanUpRunning: () => running.current,
   useCleanUpCatalogueMutation: () => ({ start, isStarting: false }),
 }));
 vi.mock("next-intl", () => ({
@@ -28,11 +35,21 @@ const { default: CleanUpCatalogue } =
 
 beforeEach(() => {
   start.mockReset().mockResolvedValue(true);
-  counts.current = { recipeFoods: 2, wholeCatalogue: 40, running: false };
+  opens.length = 0;
+  running.current = false;
+  counts.current = { recipeFoods: 2, wholeCatalogue: 40 };
   setConfigs({ ai_config: { enabled: true } });
 });
 
 describe("CleanUpCatalogue", () => {
+  it("does not count the catalogue until its dialog opens", () => {
+    render(<CleanUpCatalogue />);
+
+    expect(opens.every((isOpen) => !isOpen)).toBe(true);
+    fireEvent.click(screen.getByTestId("clean-up-catalogue"));
+    expect(opens.at(-1)).toBe(true);
+  });
+
   it("names each scope's count and starts the run over the one picked, closing once it started", async () => {
     render(<CleanUpCatalogue />);
     fireEvent.click(screen.getByTestId("clean-up-catalogue"));
@@ -47,14 +64,14 @@ describe("CleanUpCatalogue", () => {
   });
 
   it("is disabled while a run is on, or AI is off", () => {
-    counts.current = { recipeFoods: 2, wholeCatalogue: 40, running: true };
+    running.current = true;
     const { unmount } = render(<CleanUpCatalogue />);
 
     expect(screen.getByTestId("clean-up-catalogue")).toBeDisabled();
     expect(screen.getByText("running")).toBeInTheDocument();
     unmount();
 
-    counts.current = { recipeFoods: 2, wholeCatalogue: 40, running: false };
+    running.current = false;
     configs.ai_config = { enabled: false };
     render(<CleanUpCatalogue />);
     expect(screen.getByTestId("clean-up-catalogue")).toBeDisabled();

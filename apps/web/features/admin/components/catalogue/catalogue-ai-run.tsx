@@ -55,7 +55,7 @@ export function CatalogueAIRun({
       <AIButton
         fullWidth
         data-testid={testId}
-        isDisabled={!aiEnabled || !counted || running}
+        isDisabled={!aiEnabled || running}
         variant="tertiary"
         onPress={() => onOpenChange(true)}
       >

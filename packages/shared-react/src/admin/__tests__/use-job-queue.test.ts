@@ -8,7 +8,12 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
-import { useJobListQuery, useJobQueueMutations, useJobRetentionMutation } from "../use-job-queue";
+import {
+  useJobDetailQuery,
+  useJobListQuery,
+  useJobQueueMutations,
+  useJobRetentionMutation,
+} from "../use-job-queue";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -134,5 +139,26 @@ describe("useJobListQuery", () => {
     await act(async () => answerFailed([{ id: "failed" }]));
     await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
     expect(result.current.jobs).toEqual([{ id: "failed" }]);
+  });
+});
+
+describe("useJobDetailQuery", () => {
+  it("does not show the previous job while the next one loads", async () => {
+    serveTRPC((path, input) => {
+      const { jobId } = input as { jobId: string };
+
+      return jobId === "a" ? Promise.resolve({ id: "a" }) : new Promise(() => undefined);
+    });
+    const wrapper = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+    const { result, rerender } = renderHook(({ jobId }) => useJobDetailQuery({ ...JOB, jobId }), {
+      wrapper,
+      initialProps: { jobId: "a" },
+    });
+
+    await waitFor(() => expect(result.current.job).toEqual({ id: "a" }));
+
+    rerender({ jobId: "b" });
+    expect(result.current.job).toBeNull();
+    expect(result.current.isLoading).toBe(true);
   });
 });
