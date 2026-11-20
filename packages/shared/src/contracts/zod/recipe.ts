@@ -174,7 +174,7 @@ export const measurementSystems = measurementSystemEnum.enumValues;
 
 // tRPC input schemas
 /** The text a recipe search and the typing suggestions read; one definition, no length cap of its own. */
-export const RecipeSearchTextSchema = z.string().describe("Free-text search term.");
+export const RecipeSearchTextSchema = z.string();
 
 export const RecipeListInputSchema = z.object({
   cursor: z
@@ -190,7 +190,7 @@ export const RecipeListInputSchema = z.object({
     .max(200)
     .default(50)
     .describe("Maximum number of recipes to return. Defaults to 50."),
-  search: RecipeSearchTextSchema.optional(),
+  search: RecipeSearchTextSchema.optional().describe("Optional free-text search term."),
   searchFields: z
     .array(z.enum(["title", "description", "ingredients", "steps", "tags"]))
     .default(["title", "ingredients"])
