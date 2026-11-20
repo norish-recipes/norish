@@ -1,5 +1,8 @@
-import { auth } from "@norish/auth/auth";
+import { serverPackage } from "@/lib/server-package";
+
 import { addBasePath, BASE_PATH } from "@norish/shared/lib/base-path";
+
+const { auth } = await serverPackage<typeof import("@norish/auth/auth")>("@norish/auth/auth");
 
 // Next strips the base path before a Route Handler runs; Better Auth routes on the public path.
 function withBasePath(request: Request): Request {

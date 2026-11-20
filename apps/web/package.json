@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "build": "pnpm run build:web",
-    "build:web": "next build",
+    "build:web": "NODE_OPTIONS=\"--import tsx $NODE_OPTIONS\" next build",
     "start": "node --import tsx server/index.ts",
     "test": "vitest --config ./vitest.config.ts",
     "test:run": "vitest run --config ./vitest.config.ts",

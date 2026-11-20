@@ -1,8 +1,10 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
+import { serverPackage } from "@/lib/server-package";
 
-import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
+const { appRouter, createHttpContextFromHeaders } =
+  await serverPackage<typeof import("@norish/trpc/server")>("@norish/trpc/server");
 
 function shouldRenderNotFound(error: unknown): boolean {
   if (!error || typeof error !== "object" || !("code" in error)) {

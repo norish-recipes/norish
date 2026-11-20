@@ -1,6 +1,12 @@
-import { auth } from "@norish/auth/auth";
-import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
-import { serverLogger as log } from "@norish/shared-server/logger";
+import { serverPackage } from "@/lib/server-package";
+
+const { auth } = await serverPackage<typeof import("@norish/auth/auth")>("@norish/auth/auth");
+const { buildCatalogueExport } = await serverPackage<
+  typeof import("@norish/shared-server/ingredients/seed/catalogue-export")
+>("@norish/shared-server/ingredients/seed/catalogue-export");
+const { serverLogger: log } = await serverPackage<typeof import("@norish/shared-server/logger")>(
+  "@norish/shared-server/logger"
+);
 
 export const runtime = "nodejs";
 

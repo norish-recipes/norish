@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
+import { serverPackage } from "@/lib/server-package";
 
-import { canAccessResource } from "@norish/auth/permissions";
-import { readSessionPrincipal } from "@norish/auth/session";
-import { isUserServerAdmin } from "@norish/db";
-import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
+const { canAccessResource } = await serverPackage<typeof import("@norish/auth/permissions")>(
+  "@norish/auth/permissions"
+);
+const { readSessionPrincipal } =
+  await serverPackage<typeof import("@norish/auth/session")>("@norish/auth/session");
+const { isUserServerAdmin } = await serverPackage<typeof import("@norish/db")>("@norish/db");
+const { getCachedHouseholdForUser } = await serverPackage<
+  typeof import("@norish/shared-server/cache/household")
+>("@norish/shared-server/cache/household");
 
 function notFound(): Response {
   return NextResponse.json(

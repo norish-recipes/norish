@@ -2,8 +2,11 @@ import "server-only";
 
 import { cache } from "react";
 import { readRequestProfile } from "@/lib/request-profile";
+import { serverPackage } from "@/lib/server-package";
 
-import { getCaldavConfigByUserId } from "@norish/db/repositories/caldav-config";
+const { getCaldavConfigByUserId } = await serverPackage<
+  typeof import("@norish/db/repositories/caldav-config")
+>("@norish/db/repositories/caldav-config");
 
 /**
  * Whether the reader has a CalDAV config and whether it is enabled. `cache` shares the read

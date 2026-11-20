@@ -2,8 +2,11 @@ import "server-only";
 
 import { cache } from "react";
 import { readRequestProfile } from "@/lib/request-profile";
+import { serverPackage } from "@/lib/server-package";
 
-import { getHouseholdForUser } from "@norish/db/repositories/households";
+const { getHouseholdForUser } = await serverPackage<
+  typeof import("@norish/db/repositories/households")
+>("@norish/db/repositories/households");
 
 /**
  * Whether the reader has a household and administers it. `cache` shares the read between the

@@ -6,12 +6,17 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { QuerySeedBoundary } from "@/components/query-seed-boundary";
 import { isDocumentRequest } from "@/lib/document-request";
+import { serverPackage } from "@/lib/server-package";
 import { dehydrate, QueryClient } from "@tanstack/react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
-import { serverLogger as log } from "@norish/shared-server/logger";
-import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
+
+const { serverLogger: log } = await serverPackage<typeof import("@norish/shared-server/logger")>(
+  "@norish/shared-server/logger"
+);
+const { appRouter, createHttpContextFromHeaders } =
+  await serverPackage<typeof import("@norish/trpc/server")>("@norish/trpc/server");
 
 /** Each read a page seeds; `false` or `undefined` for one it leaves out. */
 type Seeds = (Promise<unknown> | false | undefined)[];

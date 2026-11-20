@@ -2,12 +2,17 @@ import "server-only";
 
 import { cache } from "react";
 import { headers } from "next/headers";
+import { serverPackage } from "@/lib/server-package";
 
 import type { DeviceKind } from "@norish/shared/contracts/zod/device-preferences";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
-import { readSessionPrincipal, verifySessionPrincipal } from "@norish/auth/session";
-import { getUserPreferences } from "@norish/db/repositories/users";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
+
+const { readSessionPrincipal, verifySessionPrincipal } =
+  await serverPackage<typeof import("@norish/auth/session")>("@norish/auth/session");
+const { getUserPreferences } = await serverPackage<typeof import("@norish/db/repositories/users")>(
+  "@norish/db/repositories/users"
+);
 
 const NO_PREFERENCES: UserPreferencesDto = {};
 

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveCookbookMedia } from "@/lib/recipe-media";
+import { serverPackage } from "@/lib/server-package";
 
-import { getCookbookRow } from "@norish/db/repositories/cookbooks";
+const { getCookbookRow } = await serverPackage<typeof import("@norish/db/repositories/cookbooks")>(
+  "@norish/db/repositories/cookbooks"
+);
 
 const VALID_UUID_PATTERN = /^[a-f0-9-]{36}$/i;
 

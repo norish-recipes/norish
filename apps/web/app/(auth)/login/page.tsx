@@ -1,9 +1,14 @@
 import { LoginScreen } from "@/features/auth/login-screen";
 import { readRequestProfile } from "@/lib/request-profile";
+import { serverPackage } from "@/lib/server-package";
 
-import { getAvailableProviders } from "@norish/auth/providers";
-import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 import { APP_ROOT } from "@norish/shared/lib/base-path";
+
+const { getAvailableProviders } =
+  await serverPackage<typeof import("@norish/auth/providers")>("@norish/auth/providers");
+const { isRegistrationEnabled } = await serverPackage<
+  typeof import("@norish/shared-server/config/server-config-loader")
+>("@norish/shared-server/config/server-config-loader");
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
