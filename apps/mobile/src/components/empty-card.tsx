@@ -15,7 +15,7 @@ const GROUND: Record<Tone, string> = {
 const INK: Record<Tone, string> = {
   accent: "accent-text",
   shop: "shop-ink",
-  warning: "warning",
+  warning: "warning-ink",
   neutral: "muted",
 };
 
