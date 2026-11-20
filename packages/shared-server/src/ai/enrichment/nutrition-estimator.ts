@@ -1,4 +1,6 @@
+import type { ExtraNutrients } from "@norish/shared/contracts/nutrients";
 import { aiLogger } from "@norish/shared-server/logger";
+import { knownExtras } from "@norish/shared/contracts/nutrients";
 
 import type { NutritionEstimate } from "./nutrition.schema";
 import type { ValidationMode } from "./verification";
@@ -36,6 +38,7 @@ export interface EstimatedLineShare {
   fat: number;
   carbs: number;
   protein: number;
+  extras: ExtraNutrients;
 }
 
 /** A line Ingredient Nutrition already counted, with what it brought for the whole line. */
@@ -81,7 +84,7 @@ function countedSection(counted: readonly CountedForEstimation[]): string {
 /** How the estimate of the lines left out is wanted: each numbered line's own share. */
 const PER_LINE_SECTION = [
   "Per ingredient:",
-  "The ingredients above are numbered. Give each one its own per-serving share, under its number: the four values of an entry are what that ingredient alone contributes to one serving. Include every number once.",
+  "The ingredients above are numbered. Give each one its own per-serving share, under its number: the values of an entry are what that ingredient alone contributes to one serving. Include every number once.",
 ].join("\n");
 
 /**
@@ -213,10 +216,16 @@ export async function estimateNutritionGap(
     );
   }
 
-  const shares = output.lines.map(({ line, ...figures }) => ({
-    key: lines[line - 1]!.key,
-    ...figures,
-  }));
+  const shares = output.lines.map(
+    ({ line, calories, fat, carbs, protein, saturatedFat, sugars, fiber, sodium }) => ({
+      key: lines[line - 1]!.key,
+      calories,
+      fat,
+      carbs,
+      protein,
+      extras: knownExtras({ saturatedFat, sugars, fiber, sodium }),
+    })
+  );
   const total = shares.reduce(
     (sum, share) => ({
       calories: sum.calories + share.calories,

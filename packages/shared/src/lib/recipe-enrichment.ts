@@ -6,6 +6,8 @@
  * conditional repository writes, and the worker's own output validation.
  * Null, whitespace-only, and empty values are absent everywhere.
  */
+import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
+import { knownExtras } from "@norish/shared/contracts/nutrients";
 
 export const ENRICHMENT_KINDS = [
   "auto-tagging",
@@ -163,19 +165,23 @@ export function isRecipeEnrichmentLifecycleEvent(
   );
 }
 
-export interface NutritionGroupInput {
+export interface NutritionGroupInput extends Partial<Record<ExtraNutrient, number | null>> {
   calories?: number | string | null;
   fat?: number | string | null;
   carbs?: number | string | null;
   protein?: number | string | null;
 }
 
-/** Nutrition Information as stored: calories is an integer, the macros are decimal strings. */
+/**
+ * Nutrition Information as stored: calories is an integer, the macros are
+ * decimal strings, and the other nutrients sit together, only those known.
+ */
 export interface NutritionGroup {
   calories: number | null;
   fat: string | null;
   carbs: string | null;
   protein: string | null;
+  nutritionExtras: ExtraNutrients | null;
 }
 
 export const EMPTY_NUTRITION_GROUP: NutritionGroup = {
@@ -183,6 +189,7 @@ export const EMPTY_NUTRITION_GROUP: NutritionGroup = {
   fat: null,
   carbs: null,
   protein: null,
+  nutritionExtras: null,
 };
 
 function normalizeNumeric(value: number | string | null | undefined): number | null {
@@ -239,12 +246,14 @@ export function normalizeNutritionGroup(nutrition: NutritionGroupInput): Nutriti
   const fat = normalizeNumeric(nutrition.fat);
   const carbs = normalizeNumeric(nutrition.carbs);
   const protein = normalizeNumeric(nutrition.protein);
+  const extras = knownExtras(nutrition);
 
   return {
     calories: calories === null ? null : Math.round(calories),
     fat: fat === null ? null : String(fat),
     carbs: carbs === null ? null : String(carbs),
     protein: protein === null ? null : String(protein),
+    nutritionExtras: Object.keys(extras).length > 0 ? extras : null,
   };
 }
 

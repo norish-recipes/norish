@@ -1,6 +1,6 @@
 import type { SourceFood } from "./types";
 import { parseRecords } from "../read/csv";
-import { compositionValue, macros } from "../read/values";
+import { compositionValue, extrasOf, macros, vitaminA } from "../read/values";
 
 /**
  * CALNUT 2020 (ANSES): CIQUAL with its gaps filled, keyed by CIQUAL code. Each
@@ -21,6 +21,24 @@ export function readCalnut(text: string): SourceFood[] {
       protein: compositionValue(row.proteines_g),
     });
 
-    return code && name && numbers ? [{ code, name, ...numbers }] : [];
+    const extras = extrasOf({
+      saturatedFat: compositionValue(row.ags_g),
+      monounsaturatedFat: compositionValue(row.agmi_g),
+      polyunsaturatedFat: compositionValue(row.agpi_g),
+      sugars: compositionValue(row.sucres_g),
+      fiber: compositionValue(row.fibres_g),
+      cholesterol: compositionValue(row.cholesterol_mg),
+      sodium: compositionValue(row.sodium_mg),
+      potassium: compositionValue(row.potassium_mg),
+      calcium: compositionValue(row.calcium_mg),
+      iron: compositionValue(row.fer_mg),
+      vitaminC: compositionValue(row.vitamine_c_mg),
+      vitaminA: vitaminA(
+        compositionValue(row.retinol_mcg),
+        compositionValue(row.beta_carotene_mcg)
+      ),
+    });
+
+    return code && name && numbers ? [{ code, name, ...numbers, extras }] : [];
   });
 }

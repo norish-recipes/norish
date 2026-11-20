@@ -1,3 +1,5 @@
+import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
+
 /**
  * A composition table's value, as Ingredient Nutrition reads it (ADR-0039):
  * a number (a decimal comma or point), "traces" as 0, "< x" as half of x,
@@ -42,4 +44,22 @@ export function macros(values: {
   return kcal === null || fat === null || carbs === null || protein === null
     ? null
     : { kcal, fat, carbs, protein };
+}
+
+/** The other nutrients a row gives, dropping the ones it does not: a missing value is unknown, not zero. */
+export function extrasOf(values: Partial<Record<ExtraNutrient, number | null>>): ExtraNutrients {
+  const known: ExtraNutrients = {};
+
+  for (const [key, value] of Object.entries(values) as Array<[ExtraNutrient, number | null]>) {
+    if (value !== null && value !== undefined) known[key] = round(value);
+  }
+
+  return known;
+}
+
+/** Vitamin A as retinol activity equivalents: retinol plus a twelfth of beta-carotene, where either is known. */
+export function vitaminA(retinol: number | null, betaCarotene: number | null): number | null {
+  return retinol === null && betaCarotene === null
+    ? null
+    : (retinol ?? 0) + (betaCarotene ?? 0) / 12;
 }

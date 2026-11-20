@@ -13,14 +13,18 @@ import {
 import { useSpellingRules, useUnitsQuery } from "../config";
 import { useTRPC } from "../trpc";
 
-/** Nutrition summed from a recipe's lines (ADR-0039); null if it has its own or while reading. */
+/**
+ * Nutrition summed from a recipe's lines (ADR-0039); null if it has its own or while reading.
+ * `evenIfSupplied` works it out anyway, for the nutrients beyond the four a recipe states.
+ */
 export function useWorkedOutNutrition(
-  recipe: RecipeForNutrition | null
+  recipe: RecipeForNutrition | null,
+  { evenIfSupplied = false }: { evenIfSupplied?: boolean } = {}
 ): WorkedOutNutrition | null {
   const trpc = useTRPC();
   const { units } = useUnitsQuery();
   const rules = useSpellingRules();
-  const supplied = !recipe || suppliesNutrition(recipe);
+  const supplied = !recipe || (suppliesNutrition(recipe) && !evenIfSupplied);
   const lines = recipe && !supplied ? nutritionLinesOf(recipe) : [];
   const ingredientIds = [
     ...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))),

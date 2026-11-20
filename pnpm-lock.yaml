@@ -1809,6 +1809,9 @@ importers:
 
   tooling/nutrition:
     dependencies:
+      '@norish/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@norish/shared-server':
         specifier: workspace:*
         version: link:../../packages/shared-server

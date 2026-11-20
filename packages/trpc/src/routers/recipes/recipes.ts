@@ -43,6 +43,7 @@ import {
   getRecipePermissionPolicy,
   isVideoParsingEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
   updateResolvedRecipe,
@@ -84,6 +85,7 @@ import {
   recipeIdInputSchema,
   recipeImportPasteInputSchema,
   recipeImportPasteOutputSchema,
+  recipeNutritionOutputSchema,
 } from "./recipes-openapi-types";
 
 // Procedures
@@ -173,6 +175,34 @@ export const getProcedure = authedProcedure
     }
 
     return recipe;
+  });
+
+export const nutritionProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/recipes/{id}/nutrition",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "Get a recipe's nutrition per serving",
+      description:
+        "The recipe's own Nutrition Information, else the total worked out from its ingredients, as the recipe page shows it.",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Recipe not found",
+      },
+    },
+  })
+  .input(RecipeGetInputSchema)
+  .output(recipeNutritionOutputSchema)
+  .query(async ({ ctx, input }) => {
+    const recipe = await findRecipeForViewer(ctx, input.id);
+
+    if (!recipe) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+    }
+
+    return await readRecipeNutrition(recipe, { householdUserIds: ctx.userIds });
   });
 
 export const getEditableProcedure = authedProcedure
@@ -977,6 +1007,7 @@ const enrichmentStatus = authedProcedure
 export const recipesProcedures = router({
   list: listProcedure,
   get: getProcedure,
+  nutrition: nutritionProcedure,
   getEditable: getEditableProcedure,
   create: createRecipeProcedure,
   update,

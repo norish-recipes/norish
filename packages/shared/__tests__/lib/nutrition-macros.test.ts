@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { macroCalorieShares } from "@norish/shared/lib/nutrition-macros";
+import { macroCalorieShares, percentOfReferenceIntake } from "@norish/shared/lib/nutrition-macros";
 
 describe("macroCalorieShares", () => {
   it("weighs fat at nine calories a gram and the rest at four", () => {
@@ -54,5 +54,14 @@ describe("macroCalorieShares", () => {
     const shares = macroCalorieShares({ fat: -5, carbs: 10 });
 
     expect(shares.map((entry) => entry.key)).toEqual(["carbs"]);
+  });
+});
+
+describe("percentOfReferenceIntake", () => {
+  it("reads each amount against an adult's reference intake, rounded", () => {
+    expect(percentOfReferenceIntake("calories", 500)).toBe(25);
+    expect(percentOfReferenceIntake("fat", 7)).toBe(10);
+    expect(percentOfReferenceIntake("sodium", 480)).toBe(20);
+    expect(percentOfReferenceIntake("carbs", 84.1)).toBe(32);
   });
 });

@@ -5,6 +5,7 @@ import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
 import { cleanCategoryName } from "../../lib/categories";
 import { primaryRecipeImage } from "../../lib/recipe-media";
+import { ExtraNutrientsSchema } from "../nutrients";
 import { CuisineSummarySchema } from "./cuisine";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
@@ -19,16 +20,22 @@ import { TagNameSchema, TagSummarySchema } from "./tag";
 /** A Category name: trimmed, inner whitespace collapsed, 1 to 40 characters (ADR-0040). */
 export const recipeCategorySchema = z.string().overwrite(cleanCategoryName).min(1).max(40);
 
+// The stored nutrients beyond the four, by the catalogue's keys rather than as any JSON.
+const nutritionExtras = ExtraNutrientsSchema.nullish();
+
 export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
   userId: z.string().nullable(),
+  nutritionExtras,
 });
-export const RecipeInsertBaseSchema = createInsertSchema(recipes).omit({
-  id: true,
-  updatedAt: true,
-  createdAt: true,
-  userId: true, // set from session server-side
-});
-export const RecipeUpdateBaseSchema = createUpdateSchema(recipes);
+export const RecipeInsertBaseSchema = createInsertSchema(recipes)
+  .omit({
+    id: true,
+    updatedAt: true,
+    createdAt: true,
+    userId: true, // set from session server-side
+  })
+  .extend({ nutritionExtras });
+export const RecipeUpdateBaseSchema = createUpdateSchema(recipes).extend({ nutritionExtras });
 
 export const AuthorSchema = z
   .object({
@@ -127,6 +134,9 @@ export const RecipeNutritionEstimateSchema = z.object({
       fat: z.number(),
       carbs: z.number(),
       protein: z.number(),
+      // The other nutrients the model estimated for the line; dropped by an
+      // undeclared key, they would never reach the page.
+      extras: ExtraNutrientsSchema.optional(),
     })
   ),
 });
