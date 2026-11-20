@@ -345,6 +345,34 @@ describe("Paprika Parser", () => {
       expect(dto.url).toBe("https://source.com");
     });
 
+    it("gives no URL when source is free text", async () => {
+      mockRecipe.source_url = "";
+      mockRecipe.source = "My collection";
+
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
+
+      expect(dto.url).toBeUndefined();
+    });
+
+    it("skips a source_url that is not a URL", async () => {
+      mockRecipe.source_url = "My collection";
+      mockRecipe.source = " https://source.com ";
+
+      const dto = await parsePaprikaRecipeToDTO(
+        mockRecipe,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
+
+      expect(dto.url).toBe("https://source.com");
+    });
+
     it("throws on missing recipe name", async () => {
       mockRecipe.name = "";
 
