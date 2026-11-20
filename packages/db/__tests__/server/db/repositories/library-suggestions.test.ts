@@ -6,11 +6,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { listLibrarySuggestions } from "@norish/db/repositories/library";
+import { listLibrary, listLibrarySuggestions } from "@norish/db/repositories/library";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import {
   categories,
   ingredientAliases,
+  ingredients,
   recipeCategories,
   recipeTags,
   tags as tagsTable,
@@ -171,6 +172,103 @@ describe("the typing suggestions", () => {
       expect(await names("leek", strangerId)).toEqual(["Hidden leek"]);
     });
 
+    it("matches the Ingredient's own name when no alias holds it", async () => {
+      const chicken = await food("Chicken");
+
+      // The food's only spelling is "Hen": nothing holds its name as an alias.
+      await getTestDb()
+        .update(ingredientAliases)
+        .set({ text: "Hen", fold: "hen" })
+        .where(sql`${ingredientAliases.id} = ${chicken.aliasId}`);
+      await recipeNaming(ownerId, [chicken]);
+
+      expect(await names("chick")).toEqual(["Chicken"]);
+      expect(await names("hen")).toEqual(["Chicken"]);
+    });
+
+    describe("kinds", () => {
+      async function kindOf(parent: { ingredientId: string }, kind: { ingredientId: string }) {
+        await getTestDb()
+          .update(ingredients)
+          .set({ parentId: parent.ingredientId })
+          .where(sql`${ingredients.id} = ${kind.ingredientId}`);
+      }
+
+      it("suggests a parent food whose recipes only name its kinds", async () => {
+        const chicken = await food("Chicken");
+        const thighs = await food("Chicken thighs");
+
+        await kindOf(chicken, thighs);
+        await recipeNaming(ownerId, [thighs]);
+
+        expect(await names("chicken")).toEqual(["Chicken", "Chicken thighs"]);
+      });
+
+      it("ranks a parent by the recipes of its kinds, each recipe once", async () => {
+        const chicken = await food("Chicken");
+        const thighs = await food("Chicken thighs");
+        const wings = await food("Chicken wings");
+        const chickpea = await food("Chickpea");
+
+        await kindOf(chicken, thighs);
+        await kindOf(chicken, wings);
+        await recipeNaming(ownerId, [thighs, wings]);
+        await recipeNaming(ownerId, [thighs]);
+        await recipeNaming(ownerId, [chickpea]);
+        await recipeNaming(ownerId, [chickpea]);
+
+        // Chicken: 2 recipes through its kinds; thighs 2; chickpea 2; wings 1. Ties by name.
+        expect(await names("chick")).toEqual(["Chicken", "Chicken thighs", "Chickpea"]);
+      });
+
+      it("leaves out an ancestor whose name does not match, and counts only visible recipes", async () => {
+        await setConfig(
+          ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+          { view: "owner", edit: "owner", delete: "owner" },
+          null,
+          false
+        );
+
+        const poultry = await food("Poultry");
+        const thighs = await food("Chicken thighs");
+        const chicken = await food("Chicken");
+
+        await kindOf(poultry, chicken);
+        await kindOf(chicken, thighs);
+        await recipeNaming(ownerId, [thighs]);
+        await recipeNaming(strangerId, [thighs]);
+
+        expect(await names("chick")).toEqual(["Chicken", "Chicken thighs"]);
+        expect(await names("poul")).toEqual(["Poultry"]);
+        expect(await names("zzz")).toEqual([]);
+      });
+
+      it("only suggests what narrowing to would return at least one recipe for", async () => {
+        const chicken = await food("Chicken");
+        const thighs = await food("Chicken thighs");
+        const unused = await food("Chicken livers");
+
+        await kindOf(chicken, thighs);
+        await kindOf(chicken, unused);
+        await recipeNaming(ownerId, [thighs]);
+
+        const suggested = (await ask("chick")).ingredients;
+
+        expect(suggested.length).toBeGreaterThan(0);
+
+        for (const { id } of suggested) {
+          const { total } = await listLibrary(viewer(ownerId), {
+            limit: 10,
+            ingredientIds: [id],
+            type: "recipes",
+          });
+
+          expect(total).toBeGreaterThan(0);
+        }
+        expect(suggested.map((each) => each.name)).not.toContain("Chicken livers");
+      });
+    });
+
     it("leaves out a food no recipe names", async () => {
       await food("Unused");
 
@@ -179,42 +277,47 @@ describe("the typing suggestions", () => {
   });
 
   describe("Tags and Categories", () => {
-    it("lists those on a recipe the reader can see, most used first, at most three", async () => {
-      const [one, two, three] = [
+    it("lists Tags that match, most used first, at most three", async () => {
+      const [one, two] = [
         await recipeNaming(ownerId, [], "One"),
         await recipeNaming(ownerId, [], "Two"),
-        await recipeNaming(ownerId, [], "Three"),
       ];
 
       await tagRecipes([one.id, two.id], "Quick meal");
       await tagRecipes([one.id], "quiche");
       await tagRecipes([one.id], "Quinoa");
       await tagRecipes([one.id], "Quail");
-      await categorise([one.id, two.id], "Dinner");
-      await categorise([three.id], "Dessert");
-      await categorise([three.id], "Drinks");
-      await categorise([three.id], "Dips");
-      await categorise([three.id], "Dumplings");
 
-      const result = await ask("qu");
-
-      expect(result.tags).toEqual(["Quick meal", "Quail", "quiche"]);
-      expect((await ask("d")).categories).toEqual(["Dinner", "Dessert", "Dips"]);
+      expect((await ask("qu")).tags).toEqual(["Quick meal", "Quail", "quiche"]);
     });
 
     it("folds case and accents and matches the start of a word", async () => {
       const recipe = await recipeNaming(ownerId, [], "Soup");
 
       await tagRecipes([recipe.id], "Crème brûlée");
-      await categorise([recipe.id], "Main dish");
 
       expect((await ask("CREME")).tags).toEqual(["Crème brûlée"]);
       expect((await ask("brul")).tags).toEqual(["Crème brûlée"]);
-      expect((await ask("dish")).categories).toEqual(["Main dish"]);
       expect((await ask("rème")).tags).toEqual([]);
     });
 
-    it("leaves out those only on a recipe the reader cannot see", async () => {
+    it("lists every Category on a recipe the reader can see, most used first, whatever was typed", async () => {
+      const [one, two, three] = [
+        await recipeNaming(ownerId, [], "One"),
+        await recipeNaming(ownerId, [], "Two"),
+        await recipeNaming(ownerId, [], "Three"),
+      ];
+
+      await categorise([one.id, two.id], "Dinner");
+      await categorise([three.id], "Dessert");
+      await categorise([three.id], "Drinks");
+      await categorise([three.id], "Dips");
+
+      // The reader's language names a Category, so the client matches the text, not the server.
+      expect((await ask("diner")).categories).toEqual(["Dinner", "Dessert", "Dips", "Drinks"]);
+    });
+
+    it("leaves out Tags and Categories only on a recipe the reader cannot see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
         { view: "owner", edit: "owner", delete: "owner" },
@@ -229,9 +332,7 @@ describe("the typing suggestions", () => {
       await tagRecipes([mine.id], "sesame");
       await categorise([theirs.id], "Supper");
 
-      const result = await ask("se");
-
-      expect(result.tags).toEqual(["sesame"]);
+      expect((await ask("se")).tags).toEqual(["sesame"]);
       expect((await ask("sup")).categories).toEqual([]);
     });
   });

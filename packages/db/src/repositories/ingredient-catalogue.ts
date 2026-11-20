@@ -110,19 +110,24 @@ const searchedName = {
 };
 
 /** A searched text (the name, its translations, the parent's) that is the fold exactly, or
- * (contains) holds every typed word, in any order. */
-function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; name: AnyPgColumn }) {
+ * (contains) holds every typed word, in any order; `start`: each word at the start of one of the
+ * text's words. `parents` is only joined for a search of the `parent` field. */
+export function matchingSearch(
+  search: IngredientSearch,
+  parents?: { id: AnyPgColumn; name: AnyPgColumn },
+  start = false
+) {
   const test = (text: SQL) =>
     search.match === "exact"
       ? sql`${text} = ${search.fold}`
-      : (and(...search.words.map((word) => holds(text, word))) ?? sql`true`);
+      : (and(...search.words.map((word) => holds(text, word, start))) ?? sql`true`);
   // A name also by its lowercased phrase, as before folding: a C-locale database folds non-ASCII away.
   const name = (column: AnyPgColumn) =>
     or(
       test(folded(column, search.match === "contains")),
       search.match === "exact"
         ? sql`lower(${column}) = ${search.fold}`
-        : sql`lower(${column}) like ${`%${escapeLike(search.fold)}%`}`
+        : holds(sql`lower(${column})`, search.fold, start)
     ) ?? sql`false`;
   const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
     sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${test(sql`${ingredientAliases.fold}`)})`;
@@ -130,10 +135,20 @@ function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; na
   const byField: Record<IngredientSearchField, SQL> = {
     name: name(ingredients.name),
     translations: spellingOf(ingredients.id),
-    parent: or(name(parents.name), spellingOf(sql`${parents.id}`)) ?? sql`false`,
+    parent: parents
+      ? (or(name(parents.name), spellingOf(sql`${parents.id}`)) ?? sql`false`)
+      : sql`false`,
   };
 
   return or(...search.fields.map((field) => byField[field])) ?? sql`false`;
+}
+
+/** Whether a Tag or Category name starts a word with the typed `fold`: folded, or by its lowercase. */
+export function nameStartsWith(column: AnyPgColumn, fold: string): SQL {
+  return (
+    or(holds(folded(column, true), fold, true), holds(sql`lower(${column})`, fold, true)) ??
+    sql`false`
+  );
 }
 
 /** The search's order over the name and the translations in the reader's `languages` (or none):

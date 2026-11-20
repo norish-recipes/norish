@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
+import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
 
 import type {
   CookbookSummaryDTO,
@@ -13,9 +13,10 @@ import type {
   SearchField,
   SortOrder,
 } from "@norish/shared/contracts";
+import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
-import { foldName } from "@norish/shared/lib/fold-name";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
+import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 
 import type { RecipeListContext } from "./recipes";
 import {
@@ -35,7 +36,7 @@ import {
 import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { findLocaleNames } from "./ingredient-aliases";
-import { folded, holds } from "./ingredient-catalogue";
+import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { lineNamesKindSql } from "./ingredient-kinds";
 import { pantryCoverageSql } from "./pantry-coverage";
 import {
@@ -344,65 +345,97 @@ export async function listLibrary(
 const SUGGESTIONS_PER_KIND = 3;
 
 /**
- * What the typed text can narrow to: Ingredients (a name or any spelling), Tags and Categories
- * that start a word with it, folded as the catalogue folds, held by recipes the reader can see
- * and most used first. A food shows its name and its translations, as other Ingredient rows do.
+ * What the typed text can narrow the Library to. Ingredients: a name or any spelling that starts a
+ * word with it, whose narrowing returns a recipe the reader can see (named directly or through a
+ * kind), most recipes first. Tags that match, likewise. Categories: every one on a visible recipe,
+ * for the client to match by the label the reader sees.
  */
 export async function listLibrarySuggestions(
   ctx: RecipeListContext,
   text: string
 ): Promise<LibrarySuggestionsDTO> {
-  const fold = foldName(text);
+  const search = parseIngredientSearch(text, { fields: ["name", "translations"] });
 
-  if (!fold) return { ingredients: [], tags: [], categories: [] };
+  if (!search) return { ingredients: [], tags: [], categories: [] };
 
-  const visible = await buildOwnerPolicyCondition(ctx, recipes.userId, "view");
-  const named = alias(ingredientAliases, "named_spelling");
-  const uses = sql<number>`count(distinct ${recipes.id})::int`;
-  // Any spelling of the food, in any language: its own name is one of them.
-  const spelled = sql`exists (select 1 from ingredient_aliases spelling
-    where spelling.ingredient_id = "ingredients"."id" and ${holds(sql`spelling.fold`, fold, true)})`;
-
-  const foods = await db
-    .select({ id: ingredients.id, name: ingredients.name })
-    .from(ingredients)
-    .innerJoin(named, eq(named.ingredientId, ingredients.id))
-    .innerJoin(recipeIngredientFoods, eq(recipeIngredientFoods.ingredientAliasId, named.id))
-    .innerJoin(
-      recipeIngredients,
-      eq(recipeIngredients.id, recipeIngredientFoods.recipeIngredientId)
-    )
-    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
-    .where(and(visible, spelled))
-    .groupBy(ingredients.id)
-    .orderBy(desc(uses), asc(sql`lower(${ingredients.name})`), asc(ingredients.id))
-    .limit(SUGGESTIONS_PER_KIND);
-
-  const tagNames = await db
-    .select({ name: tagsTable.name })
-    .from(tagsTable)
-    .innerJoin(recipeTags, eq(recipeTags.tagId, tagsTable.id))
-    .innerJoin(recipes, eq(recipes.id, recipeTags.recipeId))
-    .where(and(visible, holds(folded(tagsTable.name), fold, true)))
-    .groupBy(tagsTable.id)
-    .orderBy(desc(uses), asc(sql`lower(${tagsTable.name})`), asc(tagsTable.id))
-    .limit(SUGGESTIONS_PER_KIND);
-
-  const categoryNames = await db
-    .select({ name: categories.name })
-    .from(categories)
-    .innerJoin(recipeCategories, eq(recipeCategories.categoryId, categories.id))
-    .innerJoin(recipes, eq(recipes.id, recipeCategories.recipeId))
-    .where(and(visible, holds(folded(categories.name), fold, true)))
-    .groupBy(categories.id)
-    .orderBy(desc(uses), asc(sql`lower(${categories.name})`), asc(categories.id))
-    .limit(SUGGESTIONS_PER_KIND);
-
+  const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
+  const [foods, tagNames, categoryNames] = await Promise.all([
+    matchedFoods(visible, search),
+    namesOnVisible(
+      { table: tagsTable, id: tagsTable.id, name: tagsTable.name },
+      { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
+      and(visible, nameStartsWith(tagsTable.name, search.fold)),
+      SUGGESTIONS_PER_KIND
+    ),
+    namesOnVisible(
+      { table: categories, id: categories.id, name: categories.name },
+      {
+        table: recipeCategories,
+        recipeId: recipeCategories.recipeId,
+        entityId: recipeCategories.categoryId,
+      },
+      visible
+    ),
+  ]);
   const localeNames = await findLocaleNames(foods.map((food) => food.id));
 
   return {
     ingredients: foods.map((food) => ({ ...food, localeNames: localeNames.get(food.id) ?? {} })),
-    tags: tagNames.map((row) => row.name),
-    categories: categoryNames.map((row) => row.name),
+    tags: tagNames,
+    categories: categoryNames,
   };
+}
+
+/** The text-matched Ingredients with the distinct visible recipes narrowing to each returns (the
+ * recipes naming it or a kind of it), most first. The walk down the kinds starts at the matches. */
+async function matchedFoods(visible: SQL, search: IngredientSearch) {
+  const result = await db.execute(sql`
+    WITH RECURSIVE candidates AS (
+      SELECT ${ingredients.id} AS id FROM ${ingredients} WHERE ${matchingSearch(search, undefined, true)}
+    ), walk(root, id, depth) AS (
+      SELECT id, id, 0 FROM candidates
+      UNION
+      SELECT walk.root, kind.id, walk.depth + 1 FROM walk
+      JOIN ${ingredients} kind ON kind.parent_id = walk.id
+      WHERE walk.depth < 32
+    )
+    SELECT ${ingredients.id} AS id, ${ingredients.name} AS name
+    FROM walk
+    JOIN ${ingredients} ON ${ingredients.id} = walk.root
+    JOIN ${ingredientAliases} spelling ON spelling.ingredient_id = walk.id
+    JOIN ${recipeIngredientFoods} food ON food.ingredient_alias_id = spelling.id
+    JOIN ${recipeIngredients} line ON line.id = food.recipe_ingredient_id
+    JOIN ${recipes} ON ${recipes.id} = line.recipe_id
+    WHERE ${visible}
+    GROUP BY ${ingredients.id}, ${ingredients.name}
+    ORDER BY count(DISTINCT ${recipes.id}) DESC, lower(${ingredients.name}) ASC, ${ingredients.id} ASC
+    LIMIT ${SUGGESTIONS_PER_KIND}
+  `);
+
+  return rowsOf<{ id: string; name: string }>(result);
+}
+
+/** The names of an entity (Tag or Category) on recipes that satisfy `where`, most used first. */
+async function namesOnVisible(
+  entity: { table: PgTable; id: AnyPgColumn; name: AnyPgColumn },
+  link: { table: PgTable; recipeId: AnyPgColumn; entityId: AnyPgColumn },
+  where: SQL | undefined,
+  limit?: number
+): Promise<string[]> {
+  const query = db
+    .select({ name: sql<string>`${entity.name}` })
+    .from(entity.table)
+    .innerJoin(link.table, eq(link.entityId, entity.id))
+    .innerJoin(recipes, eq(recipes.id, link.recipeId))
+    .where(where)
+    .groupBy(entity.id, entity.name)
+    .orderBy(
+      desc(sql`count(distinct ${recipes.id})`),
+      asc(sql`lower(${entity.name})`),
+      asc(entity.id)
+    )
+    .$dynamic();
+  const rows = await (limit === undefined ? query : query.limit(limit));
+
+  return rows.map((row) => row.name);
 }
