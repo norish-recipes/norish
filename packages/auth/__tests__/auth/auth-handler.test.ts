@@ -311,6 +311,41 @@ describe("OIDC sign-in", () => {
   });
 });
 
+describe("OIDC sign-in from the app", () => {
+  it("hands the app its session cookie on the norish:// return", async () => {
+    const { auth } = authModule;
+    const start = await auth.handler(
+      new Request(`${AUTH_URL}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "expo-origin": "norish://" },
+        body: JSON.stringify({ provider: "oidc", callbackURL: "norish:///" }),
+      })
+    );
+    const { url } = (await start.json()) as { url: string };
+    const callback = idp.authorize(new URL(url), ADA);
+    const response = await auth.handler(
+      new Request(callback, { headers: { cookie: cookiesFrom(start) } })
+    );
+    const location = new URL(response.headers.get("location") ?? "");
+
+    expect(location.protocol).toBe("norish:");
+
+    const setCookie = location.searchParams.get("cookie") ?? "";
+    const cookie = splitSetCookieHeader(setCookie)
+      .map((part) => part.split(";")[0])
+      .join("; ");
+    const session = await auth.handler(
+      new Request(`${AUTH_URL}/api/auth/get-session`, {
+        headers: { cookie, "expo-origin": "norish://" },
+      })
+    );
+
+    expect(((await session.json()) as { user?: { email: string } } | null)?.user?.email).toBe(
+      ADA.email
+    );
+  });
+});
+
 describe("account linking", () => {
   it("refuses to link an OIDC sign-in to an existing user with the same verified email", async () => {
     const ctx = await context();
