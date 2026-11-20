@@ -361,12 +361,7 @@ export async function listLibraryDiscover(ctx: RecipeListContext): Promise<Libra
       WHERE ${visible}
       ORDER BY ${categories.id}, (${PRIMARY_IMAGE_SQL} IS NULL), ${recipes.createdAt} DESC, ${recipes.id} DESC
     `),
-    namesOnVisible(
-      { table: tagsTable, id: tagsTable.id, name: tagsTable.name },
-      { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
-      visible,
-      DISCOVER_TAGS
-    ),
+    namesOnVisible(TAG_NAMES, visible, DISCOVER_TAGS),
   ]);
   const builtInRank = (name: string) => {
     const rank = (BUILT_IN_CATEGORIES as readonly string[]).indexOf(name);
@@ -405,20 +400,11 @@ export async function listLibrarySuggestions(
   const [foods, tagNames, categoryNames] = await Promise.all([
     matchedFoods(visible, search),
     namesOnVisible(
-      { table: tagsTable, id: tagsTable.id, name: tagsTable.name },
-      { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
+      TAG_NAMES,
       and(visible, nameStartsWith(tagsTable.name, search.fold)),
       SUGGESTIONS_PER_KIND
     ),
-    namesOnVisible(
-      { table: categories, id: categories.id, name: categories.name },
-      {
-        table: recipeCategories,
-        recipeId: recipeCategories.recipeId,
-        entityId: recipeCategories.categoryId,
-      },
-      visible
-    ),
+    namesOnVisible(CATEGORY_NAMES, visible),
   ]);
   const localeNames = await findLocaleNames(foods.map((food) => food.id));
 
@@ -452,10 +438,28 @@ async function matchedFoods(visible: SQL, search: IngredientSearch) {
   return rowsOf<{ id: string; name: string }>(result);
 }
 
+type NamedEntity = {
+  entity: { table: PgTable; id: AnyPgColumn; name: AnyPgColumn };
+  link: { table: PgTable; recipeId: AnyPgColumn; entityId: AnyPgColumn };
+};
+
+const TAG_NAMES: NamedEntity = {
+  entity: { table: tagsTable, id: tagsTable.id, name: tagsTable.name },
+  link: { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
+};
+
+const CATEGORY_NAMES: NamedEntity = {
+  entity: { table: categories, id: categories.id, name: categories.name },
+  link: {
+    table: recipeCategories,
+    recipeId: recipeCategories.recipeId,
+    entityId: recipeCategories.categoryId,
+  },
+};
+
 /** The names of an entity (Tag or Category) on recipes that satisfy `where`, most used first. */
 async function namesOnVisible(
-  entity: { table: PgTable; id: AnyPgColumn; name: AnyPgColumn },
-  link: { table: PgTable; recipeId: AnyPgColumn; entityId: AnyPgColumn },
+  { entity, link }: NamedEntity,
   where: SQL | undefined,
   limit?: number
 ): Promise<string[]> {
