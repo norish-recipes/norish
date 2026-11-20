@@ -4,7 +4,7 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Server: one suggestion procedure for the typed text returns up to 3 Ingredients (name or any Ingredient Alias, folded as the ingredient catalogue folds; only foods named by recipes the reader can see; most-used first), 3 Tags and 3 Categories whose names match, visible ones only. Repository tests for alias matching, visibility and order.
 - [x] Recipe suggestions are `library.list` with the same text, Search Scope and filters, limit 2, so a suggestion is the top of the results. Debounced as the web field is.
@@ -27,3 +27,11 @@ Fix round (2026-11-20):
 - Device (iPhone 18 Pro, iOS 27.2, Release build, light and dark, throwaway stack): typing, skeleton heights, both confirm paths, recipe open/back, parent narrow (kind recipes), two chips and ×, every match line, `basil ^`, Hidden Items icons, leaving to Recipes and back all matched the boards; nothing needed a code fix.
 - Board deviations left: 2 recipe suggestions, `SectionLabel` headings, Category tile icon; cards are the Recipes tab's grid, not the board's list.
 - Not fixed: a Recipes-tab card with no text shows its raw description markdown ("**bold**"), not this ticket's code. The Maestro flows were not run (no `maestro` on this machine).
+
+Review (2026-11-20), range `a63f3333e..39330543e`, two review rounds and a device pass:
+- fixed, round 1 (`1be90c49a..6bfa03dd3`): an Ingredient matches on its own name, its locale names or any alias (the catalogue's predicate); a food is suggested when narrowing to it would return a recipe, kinds included, counted in distinct visible recipes; Categories match and show the reader's label; no Ingredient rows at the 20-Ingredient limit; suggestion reads only in the typing state; wiring tests through the real store; one `useSettledText` debounce; the contract type, `CardRow` skeletons, one section component, one names query, `HighlightedText`.
+- fixed, device pass (`5f411c737`, `ce652c98f`): Search results always use the list card (a grid preference cut the match line); card descriptions are plain text, on the Recipes tab too.
+- fixed, round 2 (`d20d49c71..39330543e`): `library.suggest` caps its text at 200 again (`SUGGEST_TEXT_MAX`) and the client skips the read beyond it; applied Categories are removed before the cap of 3; the narrow-to test reads the real state.
+- rejected: narrowing giving no results under other chips (the spec scopes suggestions to visible recipes, not current filters; the no-results state offers Clear filters); per-keystroke query cost and categories re-read per text (grouped reads over a household's library).
+- decided here, not in the ticket: suggestions follow the filter, so a parent food is offered when only its kinds are named (user stories 3 and 4).
+- device (iPhone 18 Pro, iOS 27.2, Release, light and dark): typing, Narrow to, chips, every match line, Hidden Items and ticket 02's flows pass. Board deviations left: 2 recipe suggestions (the spec's number), `SectionLabel` headings, the Category row's tile icon.
