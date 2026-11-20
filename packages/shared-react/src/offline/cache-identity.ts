@@ -62,12 +62,16 @@ function ownerFromPrefixedKey(key: unknown, prefix: string): string | null {
   return owner.length > 0 ? owner : null;
 }
 
-/** Extract the owner id from a `queryCacheKey`, or null if the key isn't one. */
-export function ownerFromCacheKey(key: unknown): string | null {
-  const rest = ownerFromPrefixedKey(key, QUERY_CACHE_KEY_PREFIX);
-  const owner = rest?.split(":", 1)[0];
+/** The owner id of a key that holds `<prefix><owner>:<rest>`, or null if the key isn't one. */
+function ownerBeforeColon(key: unknown, prefix: string): string | null {
+  const owner = ownerFromPrefixedKey(key, prefix)?.split(":", 1)[0];
 
   return owner ? owner : null;
+}
+
+/** Extract the owner id from a `queryCacheKey`, or null if the key isn't one. */
+export function ownerFromCacheKey(key: unknown): string | null {
+  return ownerBeforeColon(key, QUERY_CACHE_KEY_PREFIX);
 }
 
 /**
@@ -87,7 +91,7 @@ export async function purgeForeignReadArtifacts(
         const owner =
           ownerFromCacheKey(key) ??
           ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX) ??
-          ownerFromPrefixedKey(key, OWNER_DATA_KEY_PREFIX)?.split(":", 1)[0];
+          ownerBeforeColon(key, OWNER_DATA_KEY_PREFIX);
 
         if (owner && owner !== keepOwnerId) {
           await keyval.del(key);
