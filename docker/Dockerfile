@@ -3,7 +3,7 @@
 ##############################
 # Base image (minimal, no pnpm needed at runtime)
 ##############################
-FROM node:26.13.0-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
 
 # Security: upgrade all packages to latest versions to fix CVEs
 RUN apk upgrade --no-cache && \
@@ -26,7 +26,7 @@ RUN --mount=type=bind,source=package.json,target=/tmp/package.json \
 # inside node_modules.
 ENV PNPM_CONFIG_STORE_DIR=/root/.local/share/pnpm/store
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.9 /uv /uvx /bin/
 
 ENV UV_LINK_MODE=copy \
   UV_PYTHON_DOWNLOADS=0 \
