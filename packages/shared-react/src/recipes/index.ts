@@ -20,6 +20,7 @@ export { libraryGridItems, recipeGridItems, type LibraryGridItem } from "./libra
 export { coverMosaicColumns } from "./cover-mosaic";
 export { recipeCardFacts } from "./recipe-card-facts";
 export { useLibraryQuery } from "./use-library-query";
+export { useLibrarySuggestions } from "./use-library-suggestions";
 export {
   useCookbookList,
   useLibraryCards,
