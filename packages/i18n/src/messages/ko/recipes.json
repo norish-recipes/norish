@@ -570,6 +570,12 @@
     "matchTitle": "제목에서",
     "matchTag": "태그:",
     "matchIngredient": "재료:",
-    "matchStep": "{number}단계:"
+    "matchStep": "{number}단계:",
+    "searchFor": "“{text}” 검색",
+    "recipes": "레시피",
+    "narrowTo": "범위 좁히기",
+    "typeIngredient": "재료",
+    "typeTag": "태그",
+    "typeCategory": "카테고리"
   }
 }

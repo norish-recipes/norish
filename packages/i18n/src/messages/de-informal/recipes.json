@@ -570,6 +570,12 @@
     "matchTitle": "Im Titel",
     "matchTag": "Tag:",
     "matchIngredient": "Zutat:",
-    "matchStep": "Schritt {number}:"
+    "matchStep": "Schritt {number}:",
+    "searchFor": "Suchen nach „{text}“",
+    "recipes": "Rezepte",
+    "narrowTo": "Eingrenzen auf",
+    "typeIngredient": "Zutat",
+    "typeTag": "Tag",
+    "typeCategory": "Kategorie"
   }
 }

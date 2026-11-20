@@ -62,6 +62,16 @@ export function useSearchField() {
     },
     // The search tab's × closes the field and leaves the tab, wiping the text first.
     onClose: () => send({ type: "cancelled" }),
+    // The "Search for" row confirms the text as the search key does.
+    confirm: () => {
+      send({ type: "submitted", text: store.getState().filters.rawInput });
+      barRef.current?.blur();
+    },
+    // A Narrow-to row has added its chip: the text goes, Results show.
+    narrowed: () => {
+      send({ type: "narrowed" });
+      barRef.current?.blur();
+    },
     onOpen: showKeptText,
     onFocus: () => setFocused(true),
     onBlur: () => setFocused(false),

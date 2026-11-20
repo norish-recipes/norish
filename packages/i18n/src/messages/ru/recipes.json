@@ -570,6 +570,12 @@
     "matchTitle": "В названии",
     "matchTag": "Тег:",
     "matchIngredient": "Ингредиент:",
-    "matchStep": "Шаг {number}:"
+    "matchStep": "Шаг {number}:",
+    "searchFor": "Искать «{text}»",
+    "recipes": "Рецепты",
+    "narrowTo": "Уточнить по",
+    "typeIngredient": "Ингредиент",
+    "typeTag": "Тег",
+    "typeCategory": "Категория"
   }
 }

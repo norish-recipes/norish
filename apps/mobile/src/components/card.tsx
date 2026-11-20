@@ -39,8 +39,8 @@ export function CardRow({
   onPress,
   children,
 }: {
-  label: string;
-  hint?: string;
+  label: ReactNode;
+  hint?: ReactNode;
   icon?: ComponentProps<typeof Ionicons>["name"];
   media?: ReactNode;
   leading?: ReactNode;

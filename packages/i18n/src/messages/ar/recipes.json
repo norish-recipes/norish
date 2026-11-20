@@ -570,6 +570,12 @@
     "matchTitle": "في العنوان",
     "matchTag": "وسم:",
     "matchIngredient": "المكوّن:",
-    "matchStep": "الخطوة {number}:"
+    "matchStep": "الخطوة {number}:",
+    "searchFor": "البحث عن «{text}»",
+    "recipes": "الوصفات",
+    "narrowTo": "تضييق إلى",
+    "typeIngredient": "مكوّن",
+    "typeTag": "وسم",
+    "typeCategory": "فئة"
   }
 }

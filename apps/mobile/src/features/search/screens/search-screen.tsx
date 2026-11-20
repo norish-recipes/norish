@@ -12,14 +12,19 @@ import { useIntl } from "react-intl";
 
 import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
 
+import type { NarrowRow } from "../utils/search-suggestions";
 import { SearchNoResults } from "../components/no-results";
 import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
+import { TypingSuggestions } from "../components/typing-suggestions";
+import { useAddIngredient } from "../hooks/use-add-ingredient";
 import { useSearchField } from "../hooks/use-search-field";
 import { useSearchFilters } from "../hooks/use-search-filters";
+import { useTypingSuggestions } from "../hooks/use-typing-suggestions";
 import { filterChips } from "../utils/search-chips";
 import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
 import { noResultsVariant, searchView, showsResults } from "../utils/search-state";
+import { narrowPatch, narrowRows } from "../utils/search-suggestions";
 
 /** Search: the field in the tab bar, its Search Scope while it has text, and Results once confirmed.
  * `Results` is the Recipes feature's card list, which the route file hands in. */
@@ -45,6 +50,15 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
     filters,
     enabled: showsResults({ ...input, resultCount: null }),
   });
+  const typing = useTypingSuggestions(field.text);
+  const addIngredient = useAddIngredient();
+  const rows = narrowRows(typing.narrow, filters, intl.locale);
+  const narrowTo = (row: NarrowRow) => {
+    if (row.kind === "ingredient") addIngredient({ id: row.id, name: row.name });
+    else setFilters(narrowPatch(row, filters));
+
+    field.narrowed();
+  };
   const view = searchView({ ...input, resultCount: list.isLoading ? null : list.recipes.length });
   const chipCount = chips.length;
   const funnel: HeaderItem = {
@@ -109,6 +123,16 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           scroll={scroll}
           testID="search-results"
           onEndReached={list.loadMore}
+        />
+      ) : view === "typing" ? (
+        <TypingSuggestions
+          loading={typing.loading}
+          narrowRows={rows}
+          recipes={typing.recipes}
+          searchWords={typing.asked}
+          text={field.text}
+          onConfirm={field.confirm}
+          onNarrow={narrowTo}
         />
       ) : (
         <View className="bg-background flex-1" testID="search-screen" />

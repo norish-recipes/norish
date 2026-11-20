@@ -570,6 +570,12 @@
     "matchTitle": "I tittelen",
     "matchTag": "Tagg:",
     "matchIngredient": "Ingrediens:",
-    "matchStep": "Trinn {number}:"
+    "matchStep": "Trinn {number}:",
+    "searchFor": "Søk etter «{text}»",
+    "recipes": "Oppskrifter",
+    "narrowTo": "Begrens til",
+    "typeIngredient": "Ingrediens",
+    "typeTag": "Tagg",
+    "typeCategory": "Kategori"
   }
 }

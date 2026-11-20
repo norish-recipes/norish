@@ -570,6 +570,12 @@
     "matchTitle": "In de titel",
     "matchTag": "Tag:",
     "matchIngredient": "Ingrediënt:",
-    "matchStep": "Stap {number}:"
+    "matchStep": "Stap {number}:",
+    "searchFor": "Zoeken naar “{text}”",
+    "recipes": "Recepten",
+    "narrowTo": "Beperken tot",
+    "typeIngredient": "Ingrediënt",
+    "typeTag": "Tag",
+    "typeCategory": "Categorie"
   }
 }

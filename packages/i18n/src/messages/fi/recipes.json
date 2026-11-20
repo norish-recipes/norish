@@ -570,6 +570,12 @@
     "matchTitle": "Otsikossa",
     "matchTag": "Tunniste:",
     "matchIngredient": "Ainesosa:",
-    "matchStep": "Vaihe {number}:"
+    "matchStep": "Vaihe {number}:",
+    "searchFor": "Hae ”{text}”",
+    "recipes": "Reseptit",
+    "narrowTo": "Rajaa",
+    "typeIngredient": "Ainesosa",
+    "typeTag": "Tunniste",
+    "typeCategory": "Luokka"
   }
 }

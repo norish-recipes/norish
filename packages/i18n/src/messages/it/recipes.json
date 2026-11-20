@@ -570,6 +570,12 @@
     "matchTitle": "Nel titolo",
     "matchTag": "Tag:",
     "matchIngredient": "Ingrediente:",
-    "matchStep": "Passaggio {number}:"
+    "matchStep": "Passaggio {number}:",
+    "searchFor": "Cerca “{text}”",
+    "recipes": "Ricette",
+    "narrowTo": "Restringi a",
+    "typeIngredient": "Ingrediente",
+    "typeTag": "Tag",
+    "typeCategory": "Categoria"
   }
 }

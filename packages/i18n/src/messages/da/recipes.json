@@ -570,6 +570,12 @@
     "matchTitle": "I titlen",
     "matchTag": "Tag:",
     "matchIngredient": "Ingrediens:",
-    "matchStep": "Trin {number}:"
+    "matchStep": "Trin {number}:",
+    "searchFor": "Søg efter “{text}”",
+    "recipes": "Opskrifter",
+    "narrowTo": "Begræns til",
+    "typeIngredient": "Ingrediens",
+    "typeTag": "Tag",
+    "typeCategory": "Kategori"
   }
 }
