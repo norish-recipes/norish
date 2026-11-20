@@ -309,6 +309,24 @@ describe("the Library union", () => {
     });
   });
 
+  describe("a very long search", () => {
+    const filler = Array.from({ length: 300 }, (_, i) => `zz${i}`).join(" ");
+
+    it("searches the first 16 words only", async () => {
+      await createTestRecipe(ownerId, { name: "Pantry pasta" });
+      await createCookbook({ userId: ownerId, title: "Pasta nights" });
+
+      const search = (text: string) =>
+        listLibrary(viewer(ownerId), { ...base, search: text, withMatch: true });
+
+      expect(titles((await search(`pasta ${filler}`)).items)).toEqual([
+        "Pasta nights",
+        "Pantry pasta",
+      ]);
+      expect((await search(`${filler} pasta`)).items).toEqual([]);
+    });
+  });
+
   describe("an explicit sort while searching", () => {
     // Rank: "Soup soup" first (two hits), then "Zesty soup", "Soup" and "Brisk soup" tied.
     // Each flagged sort disagrees with rank-first, and the tie shows the tie-break.

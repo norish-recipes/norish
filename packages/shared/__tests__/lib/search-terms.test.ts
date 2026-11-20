@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { searchTerms, searchWords } from "../../src/lib/search-terms";
+import { SEARCH_WORDS_MAX, searchTerms, searchWords } from "../../src/lib/search-terms";
 
 describe("searchTerms", () => {
   it("splits on whitespace and drops tsquery characters", () => {
@@ -29,5 +29,26 @@ describe("searchWords", () => {
       "fry",
       "crème",
     ]);
+  });
+});
+
+describe("the word cap", () => {
+  const many = Array.from({ length: 300 }, (_, i) => `w${i}`).join(" ");
+
+  it("keeps the first SEARCH_WORDS_MAX terms and words of a long text", () => {
+    expect(SEARCH_WORDS_MAX).toBe(16);
+    expect(searchTerms(many)).toEqual(Array.from({ length: 16 }, (_, i) => `w${i}`));
+    expect(searchWords(`${many},extra`)).toEqual(Array.from({ length: 16 }, (_, i) => `w${i}`));
+  });
+
+  it("caps the words a few comma-joined terms split into", () => {
+    const joined = Array.from({ length: 40 }, (_, i) => `w${i}`).join(",");
+
+    expect(searchWords(joined)).toHaveLength(16);
+  });
+
+  it("leaves an ordinary search as it was", () => {
+    expect(searchTerms("chicken rice soup")).toEqual(["chicken", "rice", "soup"]);
+    expect(searchWords("chicken,rice soup")).toEqual(["chicken", "rice", "soup"]);
   });
 });
