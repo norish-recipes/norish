@@ -35,7 +35,7 @@ export function ShellTabs() {
   const segments = useSegments();
   const onTab = segments[0] === "(tabs)";
   // Search's pages are the Recipes tab's routes, told apart by the stack they are in.
-  const group: string | undefined = segments[1];
+  const group: string | undefined = segments.at(1);
   const inSearchNow = group === "(search)";
   const [lastTabPage, setLastTabPage] = useState(onTab ? path : TAB_ROUTES.recipes.root);
   const [lastInSearch, setLastInSearch] = useState(onTab && inSearchNow);
