@@ -143,32 +143,19 @@ function RecipeSectionComponent({
     propsActiveGroceries.map((g) => g.id)
   );
 
-  // Track previous props active IDs to detect external changes
-  const prevPropsActiveIdsRef = useRef<string[]>(propsActiveGroceries.map((g) => g.id));
-
-  // Sync orderedIds when groceries change from external source (not during drag)
-  // Only update if the set of IDs changed (new items added, items removed, etc.)
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (activeId) return; // Don't sync during drag
+  // Rebuild the order when items are added or removed from outside, never during a drag.
+  const propsIds = propsActiveGroceries.map((g) => g.id);
+  const [prevPropsIds, setPrevPropsIds] = useState(propsIds);
+  const prevPropsSet = new Set(prevPropsIds);
+  const idsChanged =
+    new Set(propsIds).size !== prevPropsSet.size || propsIds.some((id) => !prevPropsSet.has(id));
 
-    const currentPropsIds = propsActiveGroceries.map((g) => g.id);
-    const prevPropsIds = prevPropsActiveIdsRef.current;
-
-    // Check if the set of IDs changed
-    const currentSet = new Set(currentPropsIds);
-    const prevSet = new Set(prevPropsIds);
-    const setsEqual =
-      currentSet.size === prevSet.size && [...currentSet].every((id) => prevSet.has(id));
-
-    if (!setsEqual) {
-      // IDs changed (items added/removed) - rebuild from props
-      setOrderedIds(currentPropsIds);
-    }
-
-    prevPropsActiveIdsRef.current = currentPropsIds;
-  }, [propsActiveGroceries, activeId]);
+  if (!activeId && idsChanged) {
+    setPrevPropsIds(propsIds);
+    setOrderedIds(propsIds);
+  }
 
   // Build ordered active groceries from orderedIds
   const groceryMap = new Map(propsActiveGroceries.map((g) => [g.id, g]));
