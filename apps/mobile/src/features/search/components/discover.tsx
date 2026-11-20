@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
+import { PressableScale } from "@/components/pressable-scale";
 import { Section } from "@/components/section";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useCategoryLabel } from "@/hooks/use-category-label";
@@ -95,7 +96,7 @@ function CategoryTile({
   const label = useCategoryLabel()(name);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       className="h-[84px] w-[48.5%] justify-end overflow-hidden rounded-[20px]"
       testID={`search-category-${name}`}
@@ -104,7 +105,7 @@ function CategoryTile({
       <CardPhoto className="absolute inset-0" image={image} />
       <View className="absolute inset-0 bg-black/35" />
       <Text className="px-3.5 pb-[11px] text-[17px] font-semibold text-white">{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
