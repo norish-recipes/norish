@@ -8,6 +8,7 @@ import { useIntl } from "react-intl";
 import type { SortOrder } from "@norish/shared/contracts";
 import { useIngredientIcons, useIngredientNames } from "@norish/shared-react/ingredients";
 import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { hasSearchText } from "@norish/shared/lib/search-terms";
 
 import type { FilterChip } from "../utils/search-chips";
 import { useSearchFilters } from "../hooks/use-search-filters";
@@ -27,7 +28,7 @@ function SortChip() {
   const intl = useIntl();
   const muted = useTokenColor("muted");
   const sortMode = useLibraryFilters((state) => state.filters.sortMode);
-  const hasText = useLibraryFilters((state) => state.filters.rawInput.trim() !== "");
+  const hasText = useLibraryFilters((state) => hasSearchText(state.filters.rawInput));
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const shown = shownSort(sortMode, hasText);
   const label = intl.formatMessage({ id: SORT_LABELS[shown] });

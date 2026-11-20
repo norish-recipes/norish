@@ -28,7 +28,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
-import { searchTerms, searchWords } from "@norish/shared/lib/search-terms";
+import { hasSearchText, searchTerms } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
@@ -385,15 +385,10 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
 
 export { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
-/** Whether `search` holds a term a match can look for; blank or punctuation-only text holds none. */
-export function hasSearchTerms(search: string | undefined): search is string {
-  return !!search && searchTsqueryTerms(search) !== null;
-}
-
 /** The text as a prefix-OR tsquery body, or null when nothing searchable is left: no word at all,
  * as for "^", which the query parser drops and so would match no recipe. */
 export function searchTsqueryTerms(search: string): string | null {
-  if (searchWords(search).length === 0) return null;
+  if (!hasSearchText(search)) return null;
 
   return (
     searchTerms(search)

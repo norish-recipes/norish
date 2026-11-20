@@ -12,6 +12,11 @@ describe("addRecent", () => {
     expect(addRecent(["tacos"], "   ")).toEqual(["tacos"]);
   });
 
+  it("saves no text without search words", () => {
+    expect(addRecent(["tacos"], "-")).toEqual(["tacos"]);
+    expect(addRecent(["tacos"], " ^ ! ")).toEqual(["tacos"]);
+  });
+
   it("moves a repeat to the top in any case, with the latest spelling", () => {
     expect(addRecent(["pizza", "Tacos", "soup"], "tacos ")).toEqual(["tacos", "pizza", "soup"]);
   });

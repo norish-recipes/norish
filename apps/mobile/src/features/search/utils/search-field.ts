@@ -1,3 +1,5 @@
+import { hasSearchText } from "@norish/shared/lib/search-terms";
+
 // UIKit empties the field right after its Cancel event; an emptying before any Cancel is the reader's.
 export const CANCEL_WINDOW_MS = 300;
 
@@ -29,7 +31,7 @@ export function fieldStep(state: FieldState, event: FieldEvent, now: number): Fi
     case "submitted": {
       const { state: next, push } = typed(state, event.text, now);
 
-      return { state: { ...next, confirmed: next.text.trim() !== "" || next.confirmed }, push };
+      return { state: { ...next, confirmed: hasSearchText(next.text) || next.confirmed }, push };
     }
     case "cancelled":
       return { state: { ...state, cancelledAt: now } };

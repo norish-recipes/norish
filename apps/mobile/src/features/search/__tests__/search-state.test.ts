@@ -33,6 +33,17 @@ describe("which state shows", () => {
   });
 });
 
+describe("text with no search words", () => {
+  it("is no text: no typing state, no confirmed search, results only for a chip", () => {
+    for (const text of ["-", "^ !", " , "]) {
+      expect(searchView({ ...base, text, focused: true })).toBe("focused");
+      expect(searchView({ ...base, text, confirmed: true, resultCount: 3 })).toBe("rested");
+      expect(showsResults({ text, confirmed: true, hasChips: false })).toBe(false);
+      expect(showsResults({ text, confirmed: false, hasChips: true })).toBe(true);
+    }
+  });
+});
+
 describe("a failed search", () => {
   const confirmed = { ...base, text: "soup", confirmed: true, resultCount: 0 };
 

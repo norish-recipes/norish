@@ -10,6 +10,11 @@ export function searchTerms(search: string): string[] {
     .slice(0, SEARCH_WORDS_MAX);
 }
 
+/** Whether `text` holds a search word: text without one ("-", "  ") counts as no text anywhere. */
+export function hasSearchText(text: string | undefined): boolean {
+  return text !== undefined && searchWords(text).length > 0;
+}
+
 /** Each term split at punctuation: what the match's any-word fallback ORs ("chicken,rice" → chicken, rice). */
 export function searchWords(search: string): string[] {
   return searchTerms(search)

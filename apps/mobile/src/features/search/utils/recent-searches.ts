@@ -1,14 +1,16 @@
+import { hasSearchText } from "@norish/shared/lib/search-terms";
+
 /** The most Recent Searches kept. */
 export const RECENT_LIMIT = 10;
 
 const sameText = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 /** `list` with `text` newest: trimmed, a repeat in any case moves to the top with the latest spelling,
- * the oldest drop past the limit; blank text changes nothing. */
+ * the oldest drop past the limit; text with no search word changes nothing. */
 export function addRecent(list: readonly string[], text: string): string[] {
   const kept = text.trim();
 
-  if (kept === "") return [...list];
+  if (!hasSearchText(kept)) return [...list];
 
   return [kept, ...list.filter((item) => !sameText(item, kept))].slice(0, RECENT_LIMIT);
 }

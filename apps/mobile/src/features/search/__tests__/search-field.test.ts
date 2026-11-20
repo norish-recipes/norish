@@ -25,6 +25,12 @@ describe("the search field", () => {
     );
   });
 
+  it("confirms nothing for a text with no search words", () => {
+    for (const text of ["-", "^ !"]) {
+      expect(fieldStep(holding(""), { type: "submitted", text }, 1000).state.confirmed).toBe(false);
+    }
+  });
+
   it("keeps a text that is not changed", () => {
     const state = holding("soup", true);
 

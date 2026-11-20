@@ -1,3 +1,5 @@
+import { hasSearchText } from "@norish/shared/lib/search-terms";
+
 /** Which page of Search shows. */
 export type SearchView =
   "rested" | "focused" | "typing" | "results" | "none" | "offline" | "failed";
@@ -25,7 +27,7 @@ export const showsResults = ({
   confirmed,
   hasChips,
 }: Pick<SearchViewInput, "text" | "confirmed" | "hasChips">) =>
-  text.trim() === "" ? hasChips : confirmed;
+  hasSearchText(text) ? confirmed : hasChips;
 
 /** With nothing held, Offline says it needs a connection and a failed read says it failed; neither is "none". */
 export function searchView(input: SearchViewInput): SearchView {
@@ -37,7 +39,7 @@ export function searchView(input: SearchViewInput): SearchView {
 
     return input.resultCount === 0 ? "none" : "results";
   }
-  if (input.text.trim().length > 0) return "typing";
+  if (hasSearchText(input.text)) return "typing";
 
   return input.focused ? "focused" : "rested";
 }

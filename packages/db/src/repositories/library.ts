@@ -19,6 +19,7 @@ import { db } from "@norish/db/drizzle";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
+import { hasSearchText } from "@norish/shared/lib/search-terms";
 
 import type { RecipeListContext } from "./recipes";
 import {
@@ -44,12 +45,7 @@ import { pantryCoverageSql } from "./pantry-coverage";
 import { rowsOf } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
-import {
-  buildOwnerPolicyCondition,
-  hasSearchTerms,
-  listDashboardRecipesByIds,
-  recipeSearchSql,
-} from "./recipes";
+import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
 
 export type LibraryListParams = {
   limit: number;
@@ -149,7 +145,7 @@ export async function listLibrary(
     withMatch = false,
   } = params;
   // Text with no search terms ("^", "  ") is no text: no title filter, no pinning, the plain sort.
-  const search = hasSearchTerms(params.search) ? params.search : undefined;
+  const search = hasSearchText(params.search) ? params.search : undefined;
   const searchSql = recipeSearchSql(search, searchFields);
   const cookbookTitleCondition = search ? cookbookTitleMatch(search) : undefined;
   const includeRecipes = type !== "cookbooks";

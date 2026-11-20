@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { SEARCH_WORDS_MAX, searchTerms, searchWords } from "../../src/lib/search-terms";
+import {
+  hasSearchText,
+  SEARCH_WORDS_MAX,
+  searchTerms,
+  searchWords,
+} from "../../src/lib/search-terms";
 
 describe("searchTerms", () => {
   it("splits on whitespace and drops tsquery characters", () => {
@@ -50,5 +55,15 @@ describe("the word cap", () => {
   it("leaves an ordinary search as it was", () => {
     expect(searchTerms("chicken rice soup")).toEqual(["chicken", "rice", "soup"]);
     expect(searchWords("chicken,rice soup")).toEqual(["chicken", "rice", "soup"]);
+  });
+});
+
+describe("hasSearchText", () => {
+  it("is true only for text with a search word", () => {
+    expect(hasSearchText("chick")).toBe(true);
+    expect(hasSearchText(" crème ")).toBe(true);
+
+    for (const text of [undefined, "", "  ", "-", "^ !", " , "])
+      expect(hasSearchText(text)).toBe(false);
   });
 });

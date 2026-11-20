@@ -3,7 +3,7 @@ import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-con
 import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 import { foldName } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { searchWords } from "@norish/shared/lib/search-terms";
+import { hasSearchText } from "@norish/shared/lib/search-terms";
 
 /** How long the reader stops typing before suggestions are read, as web's search field waits. */
 export const SUGGESTIONS_DEBOUNCE_MS = 300;
@@ -12,7 +12,7 @@ export const SUGGESTIONS_DEBOUNCE_MS = 300;
 export const RECIPE_SUGGESTIONS = 2;
 
 /** The text suggestions are read for: itself, or "" while it holds no word to look for. */
-export const suggestionText = (text: string) => (searchWords(text).length > 0 ? text.trim() : "");
+export const suggestionText = (text: string) => (hasSearchText(text) ? text.trim() : "");
 
 /** How many Categories the typing state offers. */
 const CATEGORY_ROWS = 3;

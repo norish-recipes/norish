@@ -12,6 +12,7 @@ import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
 import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { hasSearchText } from "@norish/shared/lib/search-terms";
 
 import { Discover } from "../components/discover";
 import { SearchFailed, SearchNoResults, SearchOffline } from "../components/no-results";
@@ -140,7 +141,7 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           onRun={field.run}
         />
       )}
-      {field.text.trim() !== "" ? <ScopeRow /> : null}
+      {hasSearchText(field.text) ? <ScopeRow /> : null}
     </>
   );
 }
