@@ -159,6 +159,33 @@ describe("Recent Searches on the device", () => {
     expect(getRecentSearches()).toEqual(["theirs"]);
   });
 
+  it("merges a search confirmed while the stored list loads", async () => {
+    device.state.data.set("u1:recent-searches", ["pizza", "tacos"]);
+    device.state.held = [];
+    openOwner("u1");
+    addRecentSearch("falafel");
+    addRecentSearch("Pizza");
+
+    expect(device.state.data.get("u1:recent-searches")).toEqual(["pizza", "tacos"]);
+
+    await answerReads();
+
+    expect(getRecentSearches()).toEqual(["Pizza", "falafel", "tacos"]);
+    expect(device.state.data.get("u1:recent-searches")).toEqual(getRecentSearches());
+  });
+
+  it("applies a clear made while the stored list loads", async () => {
+    device.state.data.set("u1:recent-searches", ["pizza"]);
+    device.state.held = [];
+    openOwner("u1");
+    clearRecentSearches();
+    addRecentSearch("soup");
+    await answerReads();
+
+    expect(getRecentSearches()).toEqual(["soup"]);
+    expect(device.state.data.get("u1:recent-searches")).toEqual(["soup"]);
+  });
+
   it("clears the list and the stored copy", async () => {
     await applyOwner("u1");
     addRecentSearch("pizza");

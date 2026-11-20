@@ -15,6 +15,11 @@ function publish(next: string[]) {
   listeners.forEach((listener) => listener());
 }
 
+type Edit = (list: string[]) => string[];
+
+// The edits made while the owner's stored list loads, replayed over it once it arrives.
+let loading: Edit[] | null = null;
+
 /** Follows the owner whose data is open: its list is read from the device, and none is shown
  * without one, so a switch, sign-out or wipe empties it the moment it starts. */
 function followOwner() {
@@ -23,33 +28,45 @@ function followOwner() {
   if (owner === loadedFor) return;
 
   loadedFor = owner;
+  loading = null;
   publish([]);
 
   if (!owner) return;
 
-  void cache.ownerData.read<unknown>(owner, STORED_NAME).then((stored) => {
-    if (loadedFor === owner) publish(parseRecents(stored));
-  });
+  const edits: Edit[] = [];
+
+  loading = edits;
+
+  void cache.ownerData
+    .read<unknown>(owner, STORED_NAME)
+    .catch(() => undefined)
+    .then((stored) => {
+      if (loading !== edits) return;
+
+      loading = null;
+      publish(edits.reduce((list, edit) => edit(list), parseRecents(stored)));
+      if (edits.length > 0) save();
+    });
 }
 
 cache.ownerData.subscribe(followOwner);
 followOwner();
 
 // Only to the owner the list was loaded for; the manager drops it once that owner closes.
-const save = () => {
+function save() {
   if (loadedFor) void cache.ownerData.write(loadedFor, STORED_NAME, recents);
-};
-
-/** Keeps a confirmed text, newest first. */
-export function addRecentSearch(text: string) {
-  publish(addRecent(recents, text));
-  save();
 }
 
-export function clearRecentSearches() {
-  publish([]);
-  save();
+function change(edit: Edit) {
+  publish(edit(recents));
+  if (loading) loading.push(edit);
+  else save();
 }
+
+/** Keeps a confirmed text, newest first; re-running a Recent Search moves it to the top. */
+export const addRecentSearch = (text: string) => change((list) => addRecent(list, text));
+
+export const clearRecentSearches = () => change(() => []);
 
 export const getRecentSearches = () => recents;
 
