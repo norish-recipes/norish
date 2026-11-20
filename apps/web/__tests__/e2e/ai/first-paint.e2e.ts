@@ -437,7 +437,8 @@ const RECIPE = {
   protein: "10",
   systemUsed: "metric",
   recipeIngredients: [
-    { ingredientName: "oat milk", ingredientId: null, amount: 0.5, unit: "l", order: 0 },
+    // A cup, not a litre: a metric amount always reads as a decimal, so it never shows ½.
+    { ingredientName: "oat milk", ingredientId: null, amount: 0.5, unit: "cup", order: 0 },
     { ingredientName: "rolled oats", ingredientId: null, amount: 200, unit: "g", order: 1 },
   ],
   steps: [
