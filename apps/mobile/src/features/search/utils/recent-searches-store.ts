@@ -1,3 +1,4 @@
+import { createMark } from "@/lib/mark";
 import { offlineEngine } from "@/lib/offline/engine";
 
 import { addRecent, parseRecents } from "./recent-searches";
@@ -6,14 +7,8 @@ const STORED_NAME = "recent-searches";
 const { cache } = offlineEngine;
 
 // Module scope: the tRPC provider remounts the tree when the session settles or ends.
-let recents: string[] = [];
+const recents = createMark<string[]>([]);
 let loadedFor: string | null = null;
-const listeners = new Set<() => void>();
-
-function publish(next: string[]) {
-  recents = next;
-  listeners.forEach((listener) => listener());
-}
 
 type Edit = (list: string[]) => string[];
 
@@ -29,7 +24,7 @@ function followOwner() {
 
   loadedFor = owner;
   loading = null;
-  publish([]);
+  recents.set([]);
 
   if (!owner) return;
 
@@ -44,7 +39,7 @@ function followOwner() {
       if (loading !== edits) return;
 
       loading = null;
-      publish(edits.reduce((list, edit) => edit(list), parseRecents(stored)));
+      recents.set(edits.reduce((list, edit) => edit(list), parseRecents(stored)));
       if (edits.length > 0) save();
     });
 }
@@ -54,11 +49,11 @@ followOwner();
 
 // Only to the owner the list was loaded for; the manager drops it once that owner closes.
 function save() {
-  if (loadedFor) void cache.ownerData.write(loadedFor, STORED_NAME, recents);
+  if (loadedFor) void cache.ownerData.write(loadedFor, STORED_NAME, recents.get());
 }
 
 function change(edit: Edit) {
-  publish(edit(recents));
+  recents.update(edit);
   if (loading) loading.push(edit);
   else save();
 }
@@ -68,10 +63,6 @@ export const addRecentSearch = (text: string) => change((list) => addRecent(list
 
 export const clearRecentSearches = () => change(() => []);
 
-export const getRecentSearches = () => recents;
+export const getRecentSearches = recents.get;
 
-export function subscribeRecentSearches(listener: () => void) {
-  listeners.add(listener);
-
-  return () => listeners.delete(listener);
-}
+export const useRecentSearchList = recents.use;

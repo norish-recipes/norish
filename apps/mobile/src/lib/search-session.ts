@@ -1,9 +1,9 @@
-import { useSyncExternalStore } from "react";
-
 import type { SortOrder } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { createLibraryFiltersStore } from "@norish/shared-react/recipes";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+
+import { createMark } from "./mark";
 
 /** Best match is the server's `none`: rank while there is text, newest otherwise. It is Search's default. */
 export const BEST_MATCH: SortOrder = "none";
@@ -21,26 +21,12 @@ export const searchStore = createLibraryFiltersStore(SEARCH_START);
 
 searchStore.setState({ keepOnClear: ["rawInput", "searchFields", "sortMode"] });
 
-let confirmed = false;
-const listeners = new Set<() => void>();
-
 /** Whether Search's text was confirmed with the search key; it outlives the provider with the filters. */
-export function setSearchConfirmed(next: boolean) {
-  if (next === confirmed) return;
+const confirmed = createMark(false);
 
-  confirmed = next;
-  listeners.forEach((listener) => listener());
-}
-
-export const getSearchConfirmed = () => confirmed;
-
-export function useSearchConfirmed() {
-  return useSyncExternalStore((listener) => {
-    listeners.add(listener);
-
-    return () => listeners.delete(listener);
-  }, getSearchConfirmed);
-}
+export const setSearchConfirmed = confirmed.set;
+export const getSearchConfirmed = confirmed.get;
+export const useSearchConfirmed = confirmed.use;
 
 /** A new session starts Search over. */
 export function resetSearchSession() {
