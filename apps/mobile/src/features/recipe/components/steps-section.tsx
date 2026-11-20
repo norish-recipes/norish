@@ -189,7 +189,7 @@ export function StepChips({
       <View className="flex-row flex-wrap gap-1.5">
         {chips.map(({ item, foodId }) => {
           const label = [
-            item.amount != null ? formatAmount(item.amount, mode) : "",
+            item.amount != null ? formatAmount(item.amount, mode, item.unit) : "",
             item.unit ? formatUnitOnly(item.unit, item.amount) : "",
             plainText(item.name),
           ]

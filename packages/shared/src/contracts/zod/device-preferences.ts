@@ -1,7 +1,5 @@
 import z from "zod";
 
-import type { AmountDisplayMode } from "../../lib/format-amount";
-
 export const DEVICE_KINDS = ["phone", "desktop"] as const;
 
 export type DeviceKind = (typeof DEVICE_KINDS)[number];
@@ -10,10 +8,7 @@ export const GROCERY_VIEW_MODES = ["store", "recipe"] as const;
 
 export type GroceryViewMode = (typeof GROCERY_VIEW_MODES)[number];
 
-export const AMOUNT_DISPLAY_MODES = [
-  "fraction",
-  "decimal",
-] as const satisfies readonly AmountDisplayMode[];
+export const AMOUNT_DISPLAY_MODES = ["fraction", "decimal"] as const;
 
 /** Recipe pages take their hue from the dish (ADR-0023) or stay on the theme. */
 export const RECIPE_PAGE_COLORS = ["dish", "theme"] as const;

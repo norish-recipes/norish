@@ -171,3 +171,17 @@ describe("formatAmount", () => {
     expect(formatAmount(null, "fraction")).toBe("");
   });
 });
+
+describe("formatAmount with a unit (#744)", () => {
+  it.each(["decimal", "fraction"] as const)("rounds scaled metric amounts in %s mode", (mode) => {
+    expect(formatAmount((142 * 37) / 36, mode, "gram")).toBe("146");
+    expect(formatAmount((131 * 37) / 36, mode, "g")).toBe("135");
+    expect(formatAmount(2.345, mode, "g")).toBe("2.3");
+    expect(formatAmount(1.5, mode, "kg")).toBe("1.5");
+  });
+
+  it("keeps odd denominators out of other units", () => {
+    expect(formatAmount(0.636, "fraction", "cup")).toBe("0.64");
+    expect(formatAmount(1 / 3, "fraction", "cup")).toBe("⅓");
+  });
+});

@@ -74,7 +74,7 @@ function StepIngredientsRowContent({
   return (
     <ul className="flex flex-wrap gap-1.5">
       {resolved.map((item) => {
-        const amount = item.amount != null ? formatAmount(item.amount, mode) : "";
+        const amount = item.amount != null ? formatAmount(item.amount, mode, item.unit) : "";
         const unit = item.unit ? formatUnitOnly(item.unit, item.amount) : "";
         const label = [amount, unit, item.name].filter(Boolean).join(" ");
 

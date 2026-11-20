@@ -18,7 +18,7 @@ import type { MeasurementSystem } from "@norish/shared/contracts";
 
 import type { UnitId } from "./units";
 import { formatAmountAsDecimal, formatAmountAsFraction } from "./format-amount";
-import { resolveUnit, unitById } from "./units";
+import { METRIC_UNITS, resolveUnit, unitById } from "./units";
 
 /** What a line's food tells a conversion: grams per millilitre, and whether it is poured. */
 export interface FoodMeasure {
@@ -33,16 +33,6 @@ export interface Measure {
 }
 
 const SPOONS: ReadonlySet<UnitId> = new Set(["teaspoon", "tablespoon"]);
-
-const METRIC_UNITS: ReadonlySet<UnitId> = new Set([
-  "gram",
-  "kilogram",
-  "milligram",
-  "milliliter",
-  "centiliter",
-  "deciliter",
-  "liter",
-]);
 
 /** The volume below which a weight converted to US is spooned rather than weighed: ¼ cup. */
 const SPOONFUL_ML = 60;
@@ -179,7 +169,8 @@ function parseNumber(text: string): number {
 }
 
 function written({ amount, unit }: Measure, target: MeasurementSystem): string {
-  const number = target === "us" ? formatAmountAsFraction(amount) : formatAmountAsDecimal(amount);
+  const number =
+    target === "us" ? formatAmountAsFraction(amount, unit) : formatAmountAsDecimal(amount, unit);
   const [one, many] = LABELS[unit] ?? [unit, unit];
 
   return `${number} ${amount > 1 ? many : one}`;

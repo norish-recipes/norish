@@ -84,7 +84,7 @@ export default function RecipePrintCard({
     <>
       <strong>
         {[
-          amount == null ? "" : formatAmount(amount, amountMode),
+          amount == null ? "" : formatAmount(amount, amountMode, unit),
           unit ? formatUnitOnly(unit, amount) : "",
         ]
           .filter(Boolean)

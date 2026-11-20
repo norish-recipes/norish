@@ -70,7 +70,7 @@ export function CookIngredients({
             <Line
               key={row.key}
               large
-              amount={formatAmount(row.line.amount, mode)}
+              amount={formatAmount(row.line.amount, mode, row.line.unit)}
               checked={checked.has(row.index)}
               foodId={row.foodId}
               index={row.index}

@@ -52,7 +52,7 @@ export function seedIngredientRows(
       const parts: string[] = [];
 
       if (ing.amount !== null)
-        parts.push(mode ? formatAmount(ing.amount, mode) : String(ing.amount));
+        parts.push(mode ? formatAmount(ing.amount, mode, ing.unit) : String(ing.amount));
       if (ing.unit) parts.push(ing.unit);
       if (ing.ingredientName) parts.push(ing.ingredientName);
 
@@ -363,7 +363,7 @@ export function stepChipLabel(
   if (lineAmount == null) return `${formatAmount(share, "fraction")} × ${line.ingredientName}`;
 
   return [
-    formatAmount(deriveStepIngredientAmount(lineAmount, share), "decimal"),
+    formatAmount(deriveStepIngredientAmount(lineAmount, share), "decimal", line.unit),
     line.unit ?? "",
     line.ingredientName,
   ]

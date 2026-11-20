@@ -93,7 +93,7 @@ function ReadonlyIngredientsListContent({
           return (
             <IngredientLine
               key={it.order}
-              amount={formatAmount(it.amount, mode)}
+              amount={formatAmount(it.amount, mode, it.unit)}
               icon={it.icon}
               idx={idx}
               ingredientId={it.ingredientId}

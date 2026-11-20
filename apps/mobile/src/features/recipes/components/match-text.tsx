@@ -16,7 +16,7 @@ export function MatchText({ match, search }: { match: LibraryMatchDTO; search: s
   // The amount and unit read as on the recipe page.
   const prefix =
     match.field === "ingredients"
-      ? [formatAmount(match.amount, mode), formatUnitOnly(match.unit, match.amount)]
+      ? [formatAmount(match.amount, mode, match.unit), formatUnitOnly(match.unit, match.amount)]
           .filter(Boolean)
           .join(" ")
       : "";

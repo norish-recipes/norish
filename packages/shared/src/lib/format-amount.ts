@@ -1,6 +1,9 @@
 import Fraction from "fraction.js";
 
-export type AmountDisplayMode = "decimal" | "fraction";
+import type { AMOUNT_DISPLAY_MODES } from "../contracts/zod/device-preferences";
+import { METRIC_UNITS, resolveUnit } from "./units";
+
+export type AmountDisplayMode = (typeof AMOUNT_DISPLAY_MODES)[number];
 
 /**
  * Unicode fraction symbols for common cooking fractions.
@@ -31,17 +34,33 @@ function toUnicodeFraction(fractionStr: string): string {
   return UNICODE_FRACTIONS[fractionStr] ?? fractionStr;
 }
 
+/** The small metric units read as whole numbers from 10 up and one decimal below. */
+const SMALL_METRIC = new Set(["gram", "milligram", "milliliter", "centiliter", "deciliter"]);
+
+function metricId(unit: string | null | undefined) {
+  const id = resolveUnit(unit)?.id;
+
+  return id && METRIC_UNITS.has(id) ? id : null;
+}
+
 /**
  * Format a number as a clean decimal string.
  * Removes unnecessary trailing zeros (e.g., 2.50 -> 2.5, 2.00 -> 2)
+ * A small metric unit (g, ml) rounds to a whole number from 10 up, else one decimal.
  */
-export function formatAmountAsDecimal(n: number | null | string): string {
+export function formatAmountAsDecimal(n: number | null | string, unit?: string | null): string {
   if (n == null || n === "") return "";
 
   const num = typeof n === "string" ? parseFloat(n) : n;
 
   if (isNaN(num)) return String(n);
   if (Number.isInteger(num)) return String(num);
+
+  const id = metricId(unit);
+
+  if (id && SMALL_METRIC.has(id)) {
+    return Math.abs(num) >= 10 ? String(Math.round(num)) : num.toFixed(1).replace(/\.0$/, "");
+  }
 
   // Remove trailing zeros (e.g., 2.50 -> 2.5); a zero only starts the run when
   // no zero or point stands before it, so the match never restarts inside one.
@@ -58,13 +77,14 @@ export function formatAmountAsDecimal(n: number | null | string): string {
  *
  * Falls back to decimal for numbers that don't convert to nice fractions.
  */
-export function formatAmountAsFraction(n: number | null | string): string {
+export function formatAmountAsFraction(n: number | null | string, unit?: string | null): string {
   if (n == null || n === "") return "";
 
   const num = typeof n === "string" ? parseFloat(n) : n;
 
   if (isNaN(num)) return String(n);
   if (Number.isInteger(num)) return String(num);
+  if (metricId(unit)) return formatAmountAsDecimal(num, unit);
 
   try {
     // Use fraction.js with simplification to handle floating point imprecision
@@ -85,13 +105,8 @@ export function formatAmountAsFraction(n: number | null | string): string {
     const fractionStr = fracPart.toFraction();
     const unicodeFrac = toUnicodeFraction(fractionStr);
 
-    // Check if we got a reasonable fraction (denominator <= 16)
-    // If not, fall back to decimal
-    const denominator = fracPart.d;
-
-    if (denominator > 16) {
-      return formatAmountAsDecimal(num);
-    }
+    // Only common kitchen fractions read as fractions; anything else is decimal.
+    if (!(fractionStr in UNICODE_FRACTIONS)) return formatAmountAsDecimal(num);
 
     const sign = isNegative ? "-" : "";
 
@@ -111,11 +126,8 @@ export function formatAmountAsFraction(n: number | null | string): string {
  */
 export function formatAmount(
   n: number | null | string,
-  mode: AmountDisplayMode = "decimal"
+  mode: AmountDisplayMode = "decimal",
+  unit?: string | null
 ): string {
-  if (mode === "fraction") {
-    return formatAmountAsFraction(n);
-  }
-
-  return formatAmountAsDecimal(n);
+  return mode === "fraction" ? formatAmountAsFraction(n, unit) : formatAmountAsDecimal(n, unit);
 }
