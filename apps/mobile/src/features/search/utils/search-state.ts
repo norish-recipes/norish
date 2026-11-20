@@ -12,18 +12,22 @@ export type SearchViewInput = {
   resultCount: number | null;
   /** The app is Offline: the backend cannot be reached. */
   offline: boolean;
-  /** Results for exactly this search are held (loaded Live earlier, or from the Offline Cache). */
-  cached: boolean;
+  /** Results for exactly this search are held: loaded Live earlier, or from the Offline Cache. */
+  held: boolean;
 };
 
 /** Results show for a confirmed text, or while a chip filters an empty one; no text and no chips rests. */
-export const showsResults = ({ text, confirmed, hasChips }: SearchViewInput) =>
+export const showsResults = ({
+  text,
+  confirmed,
+  hasChips,
+}: Pick<SearchViewInput, "text" | "confirmed" | "hasChips">) =>
   text.trim() === "" ? hasChips : confirmed;
 
 /** Offline, a search with nothing held says it needs a connection rather than loading or finding none. */
 export function searchView(input: SearchViewInput): SearchView {
   if (showsResults(input)) {
-    if (input.offline && !input.cached) return "offline";
+    if (input.offline && !input.held) return "offline";
 
     return input.resultCount === 0 ? "none" : "results";
   }

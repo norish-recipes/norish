@@ -10,6 +10,9 @@ import { SUGGEST_TEXT_MAX } from "@norish/shared/contracts/zod";
 import { useTypingSuggestions } from "../hooks/use-typing-suggestions";
 
 const asked = vi.hoisted(() => [] as unknown[]);
+const connectivity = vi.hoisted(() => ({ isOffline: false }));
+
+vi.mock("@norish/shared-react/offline/react", () => ({ useConnectivity: () => connectivity }));
 
 vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
@@ -37,7 +40,7 @@ vi.mock("@norish/shared-react/settled-text", () => ({ useSettledText: (text: str
 describe("useTypingSuggestions", () => {
   it("asks nothing for a text over the cap and is not loading", () => {
     const { result } = renderHook(
-      () => useTypingSuggestions("a".repeat(SUGGEST_TEXT_MAX + 1), true, false),
+      () => useTypingSuggestions("a".repeat(SUGGEST_TEXT_MAX + 1), true),
       {
         wrapper: createTestWrapper(new QueryClient()),
       }
@@ -50,7 +53,8 @@ describe("useTypingSuggestions", () => {
 
   it("suggests nothing Offline, not even a skeleton while typing ahead", () => {
     asked.length = 0;
-    const { result } = renderHook(() => useTypingSuggestions("soup", true, true), {
+    connectivity.isOffline = true;
+    const { result } = renderHook(() => useTypingSuggestions("soup", true), {
       wrapper: createTestWrapper(new QueryClient()),
     });
 

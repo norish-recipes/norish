@@ -9,7 +9,7 @@ const base = {
   focused: false,
   resultCount: null,
   offline: false,
-  cached: false,
+  held: false,
 };
 
 describe("which state shows", () => {
@@ -70,15 +70,15 @@ describe("Offline", () => {
   });
 
   it("keeps results held for exactly this search, and never reads none from an unheld one", () => {
-    const held = { ...off, text: "soup", confirmed: true, cached: true };
+    const held = { ...off, text: "soup", confirmed: true, held: true };
 
     expect(searchView({ ...held, resultCount: 4 })).toBe("results");
     expect(searchView({ ...held, resultCount: 0 })).toBe("none");
-    expect(searchView({ ...held, cached: false, resultCount: 0 })).toBe("offline");
+    expect(searchView({ ...held, held: false, resultCount: 0 })).toBe("offline");
   });
 
   it("is unchanged Live whether or not results are held", () => {
-    expect(searchView({ ...base, hasChips: true, cached: true, resultCount: 2 })).toBe("results");
+    expect(searchView({ ...base, hasChips: true, held: true, resultCount: 2 })).toBe("results");
     expect(searchView({ ...base, hasChips: true, resultCount: null })).toBe("results");
   });
 });

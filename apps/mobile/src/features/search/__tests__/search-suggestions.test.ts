@@ -134,7 +134,7 @@ describe("confirming and narrowing", () => {
         focused: true,
         resultCount: 3,
         offline: false,
-        cached: false,
+        held: false,
       });
 
     expect(state).toMatchObject({ text: "", confirmed: false });
@@ -152,11 +152,11 @@ describe("confirming and narrowing", () => {
       confirmed: second.confirmed,
       hasChips: true,
       offline: false,
-      cached: false,
+      held: false,
     };
 
     expect(searchView({ ...input, focused: true, resultCount: 2 })).toBe("results");
-    expect(showsResults({ ...input, focused: true, resultCount: 2 })).toBe(true);
+    expect(showsResults(input)).toBe(true);
   });
 
   it("shows the typing state, not Results, for text typed over a chip", () => {
@@ -169,7 +169,7 @@ describe("confirming and narrowing", () => {
         focused: true,
         resultCount: 3,
         offline: false,
-        cached: false,
+        held: false,
       })
     ).toBe("typing");
   });

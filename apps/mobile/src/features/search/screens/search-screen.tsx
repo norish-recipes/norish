@@ -11,8 +11,7 @@ import { useTabScroll } from "@/lib/use-tab-scroll";
 import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
-import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
+import { useLibraryFilters } from "@norish/shared-react/recipes";
 
 import { Discover } from "../components/discover";
 import { SearchNoResults, SearchOffline } from "../components/no-results";
@@ -22,10 +21,11 @@ import { TypingSuggestions } from "../components/typing-suggestions";
 import { useNarrowTo } from "../hooks/use-narrow-to";
 import { useSearchField } from "../hooks/use-search-field";
 import { useSearchFilters } from "../hooks/use-search-filters";
+import { useSearchResults } from "../hooks/use-search-results";
 import { useTypingSuggestions } from "../hooks/use-typing-suggestions";
 import { filterChips } from "../utils/search-chips";
 import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
-import { noResultsVariant, searchView, showsResults } from "../utils/search-state";
+import { noResultsVariant } from "../utils/search-state";
 import { narrowRows } from "../utils/search-suggestions";
 
 /** Search: the field in the tab bar, its Search Scope while it has text, and Results once confirmed.
@@ -39,28 +39,13 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
   const chips = filterChips(filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
-  const { isOffline } = useConnectivity();
-  const input = {
+  const { list, view, loading } = useSearchResults({
     text: field.text,
     confirmed,
     hasChips: chips.length > 0,
     focused: field.focused,
-    offline: isOffline,
-  };
-  // Recipes only, and an explicit sort beats rank; nothing is read until Results show, or Offline
-  // (the cache still answers a search it holds, and Live again reads it).
-  const list = useLibraryList({
-    sortBeatsRank: true,
-    withMatch: true,
-    filters,
-    enabled: showsResults({ ...input, resultCount: null, cached: false }) && !isOffline,
   });
-  const view = searchView({
-    ...input,
-    resultCount: list.isLoading ? null : list.recipes.length,
-    cached: list.hasData,
-  });
-  const typing = useTypingSuggestions(field.text, view === "typing", isOffline);
+  const typing = useTypingSuggestions(field.text, view === "typing");
   const categoryLabel = useCategoryLabel();
   const rows = narrowRows(
     { suggestions: typing.narrow, locale: intl.locale, text: typing.asked, categoryLabel },
@@ -84,16 +69,17 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
     hidesSharedBackground: true,
   };
 
-  const noResults = isOffline ? (
-    <SearchOffline />
-  ) : (
-    <SearchNoResults
-      text={field.text.trim()}
-      variant={noResultsVariant(chips.length > 0, isScopeNarrowed(filters.searchFields))}
-      onClearFilters={clearFilters}
-      onSearchAllFields={() => setFilters({ searchFields: [...ALL_SCOPE] })}
-    />
-  );
+  const noResults =
+    view === "offline" ? (
+      <SearchOffline />
+    ) : (
+      <SearchNoResults
+        text={field.text.trim()}
+        variant={noResultsVariant(chips.length > 0, isScopeNarrowed(filters.searchFields))}
+        onClearFilters={clearFilters}
+        onSearchAllFields={() => setFilters({ searchFields: [...ALL_SCOPE] })}
+      />
+    );
   const showsList = view === "results" || view === "none" || view === "offline";
 
   return (
@@ -121,11 +107,11 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           header={
             <View className="pt-2">
               <ChipRow chips={chips} />
-              {view === "results" && !list.isLoading ? <RecipeCount count={list.total} /> : null}
+              {view === "results" && !loading ? <RecipeCount count={list.total} /> : null}
             </View>
           }
           isFetchingNextPage={list.isFetchingNextPage}
-          isLoading={list.isLoading}
+          isLoading={loading}
           matches={{ byId: list.matches, search: filters.rawInput.trim() }}
           noResults={noResults}
           recipes={list.recipes}
