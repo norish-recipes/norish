@@ -348,14 +348,12 @@ export async function listLibrary(
 const DISCOVER_CATEGORIES = 4;
 const DISCOVER_TAGS = 12;
 
-/**
- * What Search offers with no text. Categories: up to four that hold a recipe the reader can see,
- * the built-ins first in their fixed order, each with the primary image of its newest visible
- * recipe that has one (none when no recipe of it does). Tags: the most used over visible recipes.
- */
+/** What Search offers with no text: up to four Categories holding a visible recipe, built-ins first
+ * in their fixed order, and the Tags most used over visible recipes. */
 export async function listLibraryDiscover(ctx: RecipeListContext): Promise<LibraryDiscoverDTO> {
   const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
   const [categoryRows, tagNames] = await Promise.all([
+    // A Category's photo is the newest visible recipe that has an image; none when no recipe does.
     db.execute(sql`
       SELECT DISTINCT ON (${categories.id}) ${categories.name} AS name, ${PRIMARY_IMAGE_SQL} AS image
       FROM ${categories}
