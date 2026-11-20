@@ -25,6 +25,7 @@ import type { OfflineStorage } from "./storage";
 /** Prefix for an owner's persisted reads in the `keyval` store, one entry per read. */
 const QUERY_CACHE_KEY_PREFIX = "query-cache:";
 const LAST_WARMED_KEY_PREFIX = "last-warmed:";
+const OWNER_DATA_KEY_PREFIX = "owner-data:";
 
 /** The start of every `keyval` key holding one of `ownerId`'s persisted reads. */
 export function queryCachePrefix(ownerId: string): string {
@@ -39,6 +40,16 @@ export function queryCacheKey(ownerId: string, queryHash: string): string {
 /** `keyval` key holding a given owner's Warm Set completion time. */
 export function lastWarmedKey(ownerId: string): string {
   return `${LAST_WARMED_KEY_PREFIX}${ownerId}`;
+}
+
+/** The start of every `keyval` key holding a named value one of `ownerId`'s screens keeps. */
+export function ownerDataPrefix(ownerId: string): string {
+  return `${OWNER_DATA_KEY_PREFIX}${ownerId}:`;
+}
+
+/** `keyval` key under which `ownerId`'s value `name` lives. */
+export function ownerDataKey(ownerId: string, name: string): string {
+  return `${ownerDataPrefix(ownerId)}${name}`;
 }
 
 function ownerFromPrefixedKey(key: unknown, prefix: string): string | null {
@@ -73,7 +84,10 @@ export async function purgeForeignReadArtifacts(
 
     await Promise.all(
       keys.map(async (key) => {
-        const owner = ownerFromCacheKey(key) ?? ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX);
+        const owner =
+          ownerFromCacheKey(key) ??
+          ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX) ??
+          ownerFromPrefixedKey(key, OWNER_DATA_KEY_PREFIX)?.split(":", 1)[0];
 
         if (owner && owner !== keepOwnerId) {
           await keyval.del(key);

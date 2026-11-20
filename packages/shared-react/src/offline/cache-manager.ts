@@ -9,7 +9,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@norish/trpc/client";
 
 import type { OfflineStorage } from "./storage";
-import { purgeForeignReadArtifacts } from "./cache-identity";
+import { ownerDataKey, ownerDataPrefix, purgeForeignReadArtifacts } from "./cache-identity";
 import { clearLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
 import { shareEqual } from "./share-equal";
@@ -98,6 +98,8 @@ export function createOfflineQueryClient({
     keys.ingredients.icons.pathKey(),
     // And the Library's grid, which no observer holds through a long cooking session.
     keys.library.list.pathKey(),
+    // And Search's Categories and Tags, which show Offline.
+    keys.library.discover.pathKey(),
   ]) {
     queryClient.setQueryDefaults(pathKey, { gcTime: CACHE_MAX_AGE_MS });
   }
@@ -123,6 +125,14 @@ export interface CacheManager {
   reconcileIdentity(inputs: { sessionUserId: string | null; isOffline: boolean }): Promise<void>;
   /** Clear the complete local read copy without touching queued mutations or the app shell. */
   resetOfflineCopy(cause: "manual" | "sign-out"): Promise<void>;
+  /**
+   * A named value the applied owner's screens keep on the device (Recent Searches). It goes with
+   * the owner's read copy; with no owner applied it reads nothing and writes nothing.
+   */
+  ownerData: {
+    read<T>(name: string): Promise<T | undefined>;
+    write(name: string, value: unknown): Promise<void>;
+  };
   /** Observe the one applied-owner value. */
   subscribe(listener: () => void): () => void;
   /** Save a throttled pending change now, as the app leaves the foreground. */
@@ -233,12 +243,21 @@ export function createCacheManager({
     await storage.clearPersonalCaches?.();
   }
 
+  async function clearOwnerData(owner: string): Promise<void> {
+    const prefix = ownerDataPrefix(owner);
+
+    const keys = (await keyval.keys()).filter((key) => key.startsWith(prefix));
+
+    await Promise.all(keys.map((key) => keyval.del(key)));
+  }
+
   async function clearOwnerReadArtifacts(owner: string): Promise<void> {
     // A failure in one store must not prevent the other cleanup attempts
     // or strand the manager between lifecycle states.
     await Promise.allSettled([
       queryStore.clear(owner),
       clearLastWarmedAt(owner, keyval),
+      clearOwnerData(owner),
       clearPersonalCaches(),
     ]);
   }
@@ -355,6 +374,14 @@ export function createCacheManager({
         .catch(() => undefined);
 
       return inFlight;
+    },
+
+    ownerData: {
+      read: async <T>(name: string) =>
+        appliedOwner ? keyval.get<T>(ownerDataKey(appliedOwner, name)) : undefined,
+      write: async (name, value) => {
+        if (appliedOwner) await keyval.set(ownerDataKey(appliedOwner, name), value);
+      },
     },
 
     flush: () => flushPending(),
