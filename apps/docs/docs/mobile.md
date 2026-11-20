@@ -1,4 +1,6 @@
 ---
+# Hidden until the iPhone app ships on TestFlight.
+draft: true
 title: Mobile app
 description: Use Norish on iPhone.
 sidebar_position: 4

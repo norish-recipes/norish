@@ -1,4 +1,6 @@
 ---
+# Hidden until the iPhone app ships on TestFlight.
+draft: true
 title: Calendar on iPhone
 description: Plan meals on iPhone.
 ---

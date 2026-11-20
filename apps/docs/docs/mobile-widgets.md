@@ -1,4 +1,6 @@
 ---
+# Hidden until the iPhone app ships on TestFlight.
+draft: true
 title: Calendar widgets on iPhone
 description: See planned meals on your Home Screen.
 ---

@@ -1,4 +1,6 @@
 ---
+# Hidden until the iPhone app ships on TestFlight.
+draft: true
 title: Search on iPhone
 description: Find recipes on iPhone.
 ---

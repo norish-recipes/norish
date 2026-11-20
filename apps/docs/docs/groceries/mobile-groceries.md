@@ -1,4 +1,6 @@
 ---
+# Hidden until the iPhone app ships on TestFlight.
+draft: true
 title: Groceries on iPhone
 description: Shop and manage your pantry on iPhone.
 ---

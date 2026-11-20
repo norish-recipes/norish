@@ -1,4 +1,6 @@
 ---
+# Hidden until the iPhone app ships on TestFlight.
+draft: true
 title: Recipes on iPhone
 description: Read and cook a recipe on iPhone.
 ---
