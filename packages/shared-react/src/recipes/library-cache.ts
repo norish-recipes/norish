@@ -8,6 +8,7 @@ import type {
 } from "@norish/shared/contracts";
 import type { LibraryListInput } from "@norish/shared/contracts/list-queries";
 import { lensHoldsKind } from "@norish/shared/contracts";
+import { isSearchListInput } from "@norish/shared/contracts/list-queries";
 
 import type { InfiniteCookbookData } from "./cookbook-types";
 
@@ -32,12 +33,12 @@ export function libraryQueryHolds(queryKey: readonly unknown[], kind: LibraryKin
   return lensHoldsKind(params?.input?.type ?? "all", kind);
 }
 
-/** Search's own reads, the only ones that let a sort beat rank: a patch would drop their match
- * lines and ignore their text, so they are reread instead. */
+/** Search's own reads: a patch would drop their match lines and ignore their text, so they are
+ * reread instead. */
 export function isSearchRead(queryKey: readonly unknown[]): boolean {
   const params = queryKey[1] as { input?: Partial<LibraryListInput> } | undefined;
 
-  return params?.input?.sortBeatsRank === true;
+  return isSearchListInput(params?.input);
 }
 
 /**

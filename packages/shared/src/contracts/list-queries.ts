@@ -56,6 +56,10 @@ export function libraryListInput(filters: ListQueryFilters = {}) {
 
 export type LibraryListInput = ReturnType<typeof libraryListInput>;
 
+/** Whether a Library input is one of Search's own reads: only those let a sort beat rank. */
+export const isSearchListInput = (input: Partial<LibraryListInput> | undefined) =>
+  input?.sortBeatsRank === true;
+
 /** The members query's input, as the cookbook page asks; the Warm Set and the server use it too. */
 export function cookbookRecipesInput(cookbookId: string, filters: ListQueryFilters = {}) {
   return { cookbookId, ...listQueryInput(filters, filters.limit ?? 50) };

@@ -6,7 +6,9 @@ import { dehydrate, hydrate, partialMatchKey, QueryClient } from "@tanstack/reac
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
+import type { LibraryListInput } from "@norish/shared/contracts/list-queries";
 import type { AppRouter } from "@norish/trpc/client";
+import { isSearchListInput } from "@norish/shared/contracts/list-queries";
 
 import type { OfflineStorage } from "./storage";
 import { ownerDataKey, ownerDataPrefix, purgeForeignReadArtifacts } from "./cache-identity";
@@ -50,12 +52,20 @@ const NEVER_PERSISTED = [
   keys.admin.pathKey(),
   keys.caldav.getPassword.pathKey(),
   keys.caldav.checkConnection.pathKey(),
+  // Keyed by what is typed in Search, which is never kept (CONTEXT.md: Recent Search).
+  keys.library.suggest.pathKey(),
 ];
+
+/** Search's own Library reads, keyed by its text like the suggestions. */
+const isSearchListRead = (queryKey: readonly unknown[]) =>
+  partialMatchKey(queryKey, keys.library.list.pathKey()) &&
+  isSearchListInput((queryKey[1] as { input?: Partial<LibraryListInput> } | undefined)?.input);
 
 /** Persist usable read data even when its latest background refetch failed. */
 const shouldDehydrateQuery = (query: { queryKey: readonly unknown[]; state: { data: unknown } }) =>
   query.state.data !== undefined &&
-  !NEVER_PERSISTED.some((key) => partialMatchKey(query.queryKey, key));
+  !NEVER_PERSISTED.some((key) => partialMatchKey(query.queryKey, key)) &&
+  !isSearchListRead(query.queryKey);
 
 /** The engine's QueryClient defaults; a client renders its server pass with its own copy. */
 export function createOfflineQueryClient({

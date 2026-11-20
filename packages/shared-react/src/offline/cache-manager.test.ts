@@ -4,6 +4,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { libraryListInput } from "@norish/shared/contracts/list-queries";
 
 import type { OfflineStorage } from "./storage";
 import { queryCachePrefix } from "./cache-identity";
@@ -378,6 +379,39 @@ describe("createCacheManager", () => {
     expect(stored.map((query) => query.queryKey)).toContainEqual(kept);
     expect(JSON.stringify(stored)).not.toContain("secret");
     expect(JSON.stringify(stored)).not.toContain("checked");
+  });
+
+  it("never persists Search's text-keyed reads, and keeps the Library's and Discover as before", async () => {
+    const manager = createManager();
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient: manager.queryClient,
+    });
+    const page = { pages: [{ items: [], total: 0, nextCursor: null }], pageParams: [0] };
+    const listKey = (filters: Parameters<typeof libraryListInput>[0]) =>
+      trpc.library.list.infiniteQueryKey(libraryListInput(filters));
+    const skipped = [
+      trpc.library.suggest.queryKey({ text: "chick" }),
+      listKey({ search: "soup", sortBeatsRank: true, withMatch: true, type: "recipes" }),
+      listKey({ search: "so", sortBeatsRank: true, limit: 2, type: "recipes" }),
+    ];
+    const kept = [
+      listKey({}),
+      listKey({ search: "soup" }),
+      listKey({ search: "soup", type: "recipes", ingredientIds: ["i1"] }),
+      trpc.library.discover.queryKey(),
+    ];
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    for (const key of [...skipped, ...kept]) manager.queryClient.setQueryData(key, page);
+    await manager.flush();
+
+    const stored = (await persisted(storage, "u1")).map((query) => query.queryKey);
+
+    expect(stored).toEqual(expect.arrayContaining(kept));
+    expect(stored).toHaveLength(kept.length);
+    // Still on screen from memory.
+    for (const key of skipped) expect(manager.queryClient.getQueryData(key)).toEqual(page);
   });
 
   it("does not restore a query whose initial request failed without data", async () => {
