@@ -2,9 +2,9 @@ import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
 import { apiKey } from "@better-auth/api-key";
 import { expo } from "@better-auth/expo";
-import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 
