@@ -43,10 +43,16 @@ function metricId(unit: string | null | undefined) {
   return id && METRIC_UNITS.has(id) ? id : null;
 }
 
+/** Two decimals below 0.1, and never 0 for an amount that is not. */
+function smallDecimal(num: number): string {
+  const fixed = num.toFixed(2);
+
+  return Number(fixed) !== 0 ? fixed.replace(/0+$/, "") : String(Number(num.toPrecision(1)));
+}
+
 /**
- * Format a number as a clean decimal string.
- * Removes unnecessary trailing zeros (e.g., 2.50 -> 2.5, 2.00 -> 2)
- * A small metric unit (g, ml) rounds to a whole number from 10 up, else one decimal.
+ * A decimal without trailing zeros; small metric units (g, ml) are whole from 10 up, else one
+ * decimal, and below 0.1 any unit shows two decimals, never 0 for a non-zero amount.
  */
 export function formatAmountAsDecimal(n: number | null | string, unit?: string | null): string {
   if (n == null || n === "") return "";
@@ -55,6 +61,7 @@ export function formatAmountAsDecimal(n: number | null | string, unit?: string |
 
   if (isNaN(num)) return String(n);
   if (Number.isInteger(num)) return String(num);
+  if (Math.abs(num) < 0.1) return smallDecimal(num);
 
   const id = metricId(unit);
 
@@ -98,15 +105,17 @@ export function formatAmountAsFraction(n: number | null | string, unit?: string 
     const fracPart = frac.mod(1).abs();
 
     if (fracPart.valueOf() === 0) {
-      // It's a whole number after simplification
-      return String(Math.round(num));
+      // A whole number after simplification, unless that whole is a non-zero amount's 0.
+      return Math.round(num) === 0 ? formatAmountAsDecimal(num) : String(Math.round(num));
     }
 
     const fractionStr = fracPart.toFraction();
     const unicodeFrac = toUnicodeFraction(fractionStr);
 
-    // Only common kitchen fractions read as fractions; anything else is decimal.
-    if (!(fractionStr in UNICODE_FRACTIONS)) return formatAmountAsDecimal(num);
+    // Only common kitchen fractions and sixteenths read as fractions; anything else is decimal.
+    if (!(fractionStr in UNICODE_FRACTIONS) && !fractionStr.endsWith("/16")) {
+      return formatAmountAsDecimal(num);
+    }
 
     const sign = isNegative ? "-" : "";
 

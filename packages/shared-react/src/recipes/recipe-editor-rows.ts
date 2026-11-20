@@ -41,8 +41,15 @@ export function createIngredientRow(
   return { id: `ing-${nextIngredientRowId++}`, text, ...meta };
 }
 
-/** The editor's rows for the given lines, plus the empty row to type into; amounts read in `mode`
- * where given, as the recipe page shows them, and the stored line is the one parsed back. */
+/** A row's amount: in `mode`'s fraction where the page shows one, else unrounded, so Save keeps it. */
+function editableAmount(amount: number, mode: AmountDisplayMode | undefined, unit: string | null) {
+  const shown = mode ? formatAmount(amount, mode, unit) : "";
+
+  return /[^\d.-]/.test(shown) ? shown : String(amount);
+}
+
+/** The editor's rows for the given lines, plus the empty row to type into; the stored line
+ * is the one parsed back. */
 export function seedIngredientRows(
   ingredients: ParsedIngredient[],
   mode?: AmountDisplayMode
@@ -51,8 +58,7 @@ export function seedIngredientRows(
     ...ingredients.map((ing) => {
       const parts: string[] = [];
 
-      if (ing.amount !== null)
-        parts.push(mode ? formatAmount(ing.amount, mode, ing.unit) : String(ing.amount));
+      if (ing.amount !== null) parts.push(editableAmount(ing.amount, mode, ing.unit));
       if (ing.unit) parts.push(ing.unit);
       if (ing.ingredientName) parts.push(ing.ingredientName);
 

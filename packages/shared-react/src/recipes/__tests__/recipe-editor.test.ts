@@ -135,6 +135,20 @@ describe("the editor's rows round-trip a stored recipe", () => {
     expect(ingredientRowsToLines(rows, {}, "metric")[0]).toEqual(line);
   });
 
+  it.each(["decimal", "fraction"] as const)(
+    "never seeds a row with the page's rounding in %s mode",
+    (mode) => {
+      const line = { ...seededForm().ingredients[0]!, ingredientName: "salt" };
+
+      expect(seedIngredientRows([{ ...line, amount: 12.5, unit: "g" }], mode)[0]?.text).toBe(
+        "12.5 g salt"
+      );
+      expect(seedIngredientRows([{ ...line, amount: 0.636, unit: "cup" }], mode)[0]?.text).toBe(
+        "0.636 cup salt"
+      );
+    }
+  );
+
   it("gives back every line, section, order and reference untouched", () => {
     const form = seededForm();
     const rows = seedIngredientRows(form.ingredients);
