@@ -176,6 +176,9 @@ export const measurementSystems = measurementSystemEnum.enumValues;
 /** The text a recipe search and the typing suggestions read; one definition, no length cap of its own. */
 export const RecipeSearchTextSchema = z.string();
 
+/** The longest text `library.suggest` takes; each word adds `like` clauses to its query. */
+export const SUGGEST_TEXT_MAX = 200;
+
 export const RecipeListInputSchema = z.object({
   cursor: z
     .number()

@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { clientMintedId } from "./common";
-import { RecipeDashboardSchema, RecipeListInputSchema, RecipeSearchTextSchema } from "./recipe";
+import { RecipeDashboardSchema, RecipeListInputSchema, SUGGEST_TEXT_MAX } from "./recipe";
 
 /** The Cookbook title. Trimmed, because a title made of spaces is not a title. */
 export const CookbookTitleSchema = z.string().trim().min(1).max(120);
@@ -231,7 +231,7 @@ export const LibraryListResultSchema = z.object({
 });
 
 export const LibrarySuggestionsInputSchema = z.object({
-  text: RecipeSearchTextSchema.describe("What the reader has typed."),
+  text: z.string().max(SUGGEST_TEXT_MAX).describe("What the reader has typed."),
 });
 
 /** What the typed text can narrow a search to, each kind capped and most used first. */

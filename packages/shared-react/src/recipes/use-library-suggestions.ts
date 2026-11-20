@@ -2,15 +2,17 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { SUGGEST_TEXT_MAX } from "@norish/shared/contracts/zod";
+
 import { useTRPC } from "../trpc";
 
 /** The Ingredients, Tags and Categories the text can narrow the Library to; nothing is read for
- * empty text, or while `enabled` is false. */
+ * empty text, text over what the server takes, or while `enabled` is false. */
 export function useLibrarySuggestions(text: string, enabled = true) {
   const trpc = useTRPC();
 
   return useQuery({
     ...trpc.library.suggest.queryOptions({ text }),
-    enabled: enabled && text !== "",
+    enabled: enabled && text !== "" && text.length <= SUGGEST_TEXT_MAX,
   });
 }
