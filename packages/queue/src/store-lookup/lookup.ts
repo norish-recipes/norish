@@ -122,8 +122,8 @@ export async function searchStore(
   searchAddress: string,
   term: string
 ): Promise<{ candidates: PricedCandidate[]; answered: boolean }> {
-  const fetchStorePage = await requireQueueApiHandler("fetchStorePage");
-  const readSearchResults = await requireQueueApiHandler("readSearchResults");
+  const fetchStorePage = requireQueueApiHandler("fetchStorePage");
+  const readSearchResults = requireQueueApiHandler("readSearchResults");
   const url = resolveSearchAddress(searchAddress, term);
   const visit = await paceStoreVisit(visitKey(url), () =>
     fetchStorePage(url, (html, at) => pricedCandidates(readSearchResults(html, at)).length === 0)
@@ -193,8 +193,8 @@ export async function matchGroceryName(input: {
     return { matched: false };
   }
 
-  const fetchStorePage = await requireQueueApiHandler("fetchStorePage");
-  const readProduct = await requireQueueApiHandler("readProduct");
+  const fetchStorePage = requireQueueApiHandler("fetchStorePage");
+  const readProduct = requireQueueApiHandler("readProduct");
 
   await input.onStep?.("searching");
   const { candidates, answered: shopAnswered } = await searchStore(store.searchAddress, name);
@@ -314,8 +314,8 @@ export async function refreshProducts(input: {
 
   if (stale.length === 0) return { refreshed: 0 };
 
-  const fetchStorePage = await requireQueueApiHandler("fetchStorePage");
-  const readProduct = await requireQueueApiHandler("readProduct");
+  const fetchStorePage = requireQueueApiHandler("fetchStorePage");
+  const readProduct = requireQueueApiHandler("readProduct");
   let refreshed = 0;
 
   for (const product of stale) {

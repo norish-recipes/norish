@@ -11,17 +11,8 @@
  * how Norish reacts to it.
  */
 
-import type { NoImageGeneratedError, NoObjectGeneratedError, RetryError } from "ai";
-import { APICallError, InvalidResponseDataError } from "@ai-sdk/provider";
-
-/** The `ai` errors' own `isInstance` marker check, without loading `ai` before a model call. */
-function isAiError<T>(name: string, error: unknown): error is T {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as Record<symbol, unknown>)[Symbol.for(`vercel.ai.error.${name}`)] === true
-  );
-}
+import { InvalidResponseDataError } from "@ai-sdk/provider";
+import { APICallError, NoImageGeneratedError, NoObjectGeneratedError, RetryError } from "ai";
 
 export abstract class AIError extends Error {
   /** Whether the same request could succeed on a retry, without operator action. */
@@ -95,7 +86,7 @@ function describeAPICallError(error: APICallError): string {
 function providerFailure(error: unknown): unknown {
   const cause = error instanceof AIError ? error.cause : error;
 
-  return isAiError<RetryError>("AI_RetryError", cause) ? cause.lastError : cause;
+  return RetryError.isInstance(cause) ? cause.lastError : cause;
 }
 
 const TIMEOUT_NAMES = new Set(["TimeoutError", "HeadersTimeoutError", "BodyTimeoutError"]);
@@ -178,15 +169,15 @@ export function toAIError(error: unknown): AIError {
   if (error instanceof AIError) return error;
 
   // The SDK's own retries gave up: classify the last attempt, so a 429 stays a rate limit (#645).
-  if (isAiError<RetryError>("AI_RetryError", error)) return toAIError(error.lastError);
+  if (RetryError.isInstance(error)) return toAIError(error.lastError);
 
-  if (isAiError<NoObjectGeneratedError>("AI_NoObjectGeneratedError", error)) {
+  if (NoObjectGeneratedError.isInstance(error)) {
     return new AIResponseError("The model's response did not match the expected shape.", {
       cause: error,
     });
   }
 
-  if (isAiError<NoImageGeneratedError>("AI_NoImageGeneratedError", error)) {
+  if (NoImageGeneratedError.isInstance(error)) {
     // The provider answered but produced no usable image — the image-model
     // sibling of a schema mismatch, and just as worth a retry.
     return new AIResponseError("The model returned no usable image.", { cause: error });

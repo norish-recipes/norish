@@ -25,8 +25,8 @@ type CaldavItemStatusUpdatedPayload = CaldavSyncEventData["itemStatusUpdated"];
  * Process a single CalDAV sync job.
  */
 async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> {
-  const deletePlannedItem = await requireQueueApiHandler("deletePlannedItem");
-  const syncPlannedItem = await requireQueueApiHandler("syncPlannedItem");
+  const deletePlannedItem = requireQueueApiHandler("deletePlannedItem");
+  const syncPlannedItem = requireQueueApiHandler("syncPlannedItem");
   const { userId, itemId, itemType, plannedItemId, eventTitle, operation } = job.data;
 
   log.info(
@@ -118,7 +118,7 @@ async function handleJobFailed(
   job: Job<CaldavSyncJobData> | undefined,
   error: Error
 ): Promise<void> {
-  const truncateErrorMessage = await requireQueueApiHandler("truncateErrorMessage");
+  const truncateErrorMessage = requireQueueApiHandler("truncateErrorMessage");
 
   if (!job) return;
 

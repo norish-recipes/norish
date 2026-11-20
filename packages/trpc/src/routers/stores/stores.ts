@@ -290,7 +290,7 @@ const checkSearchAddress = authedProcedure
     const website = input.website === undefined ? store.website : input.website;
 
     if (!searchAddress && website) {
-      searchAddress = await (await requireQueueApiHandler("discoverSearchAddress"))(website);
+      searchAddress = await requireQueueApiHandler("discoverSearchAddress")(website);
 
       if (searchAddress) {
         const saved = await updateStore({ id: store.id, searchAddress });
@@ -302,9 +302,10 @@ const checkSearchAddress = authedProcedure
     }
     if (!searchAddress) return { searchAddress: null, outcome: "no-address" };
 
-    const check = await (
-      await requireQueueApiHandler("verifySearchAddress")
-    )(searchAddress, input.term ?? null);
+    const check = await requireQueueApiHandler("verifySearchAddress")(
+      searchAddress,
+      input.term ?? null
+    );
 
     log.info({ userId: ctx.user.id, storeId: store.id, ...check }, "Checked a Search Address");
 

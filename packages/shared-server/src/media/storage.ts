@@ -2,6 +2,7 @@ import { spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
+import sharp from "sharp";
 import { v5 as uuidv5 } from "uuid";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -172,8 +173,6 @@ async function convertToJpeg(
   sourceExt: string,
   fit: "inside" | "cover" = "inside"
 ): Promise<Buffer> {
-  const { default: sharp } = await import("sharp");
-
   try {
     // Validate input buffer
     if (!isValidImageBuffer(buffer)) {

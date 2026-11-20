@@ -23,7 +23,6 @@ const STARTUP_TIMEOUT_MS = 15_000;
 const HEALTHCHECK_TIMEOUT_MS = 1_000;
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 const POLL_INTERVAL_MS = 100;
-
 /** How long the parser stays up after the last import that used it. */
 export const PARSER_IDLE_STOP_MS = 10 * 60_000;
 

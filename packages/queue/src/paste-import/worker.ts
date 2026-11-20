@@ -57,7 +57,7 @@ async function parseFromPastedText(
   forceAI: boolean | undefined,
   householdCategories: readonly string[]
 ): Promise<ParseResult> {
-  const extractRecipeWithAI = await requireQueueApiHandler("extractRecipeWithAI");
+  const extractRecipeWithAI = requireQueueApiHandler("extractRecipeWithAI");
   const trimmed = text.trim();
 
   if (!trimmed) throw new Error("No text provided");

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
@@ -151,8 +152,6 @@ function foodBounds(pixels: Buffer, width: number, height: number) {
  * away first; a picture with no flat background is fitted as it is.
  */
 export async function makeIngredientIcon(input: Buffer): Promise<Buffer> {
-  const { default: sharp } = await import("sharp");
-
   if (input.length > SERVER_CONFIG.MAX_IMAGE_FILE_SIZE) {
     throw new Error(
       `Image too large: ${input.length} bytes (max: ${SERVER_CONFIG.MAX_IMAGE_FILE_SIZE})`
@@ -206,7 +205,6 @@ const TILE_EDGE = 2;
  * round food curves first, and a can or a glass is taller than it is wide.
  */
 export async function standsOnTile(icon: Buffer): Promise<boolean> {
-  const { default: sharp } = await import("sharp");
   const { data, info } = await sharp(icon)
     .ensureAlpha()
     .raw()

@@ -19,10 +19,10 @@ import { QUEUE_NAMES } from "../queue-names";
 const log = createLogger("worker:scheduled-tasks");
 
 async function processScheduledTask(job: Job<ScheduledTaskJobData>): Promise<void> {
-  const cleanupOrphanedImages = await requireQueueApiHandler("cleanupOrphanedImages");
-  const cleanupOrphanedAvatars = await requireQueueApiHandler("cleanupOrphanedAvatars");
-  const cleanupOrphanedStepImages = await requireQueueApiHandler("cleanupOrphanedStepImages");
-  const cleanupOldTempFiles = await requireQueueApiHandler("cleanupOldTempFiles");
+  const cleanupOrphanedImages = requireQueueApiHandler("cleanupOrphanedImages");
+  const cleanupOrphanedAvatars = requireQueueApiHandler("cleanupOrphanedAvatars");
+  const cleanupOrphanedStepImages = requireQueueApiHandler("cleanupOrphanedStepImages");
+  const cleanupOldTempFiles = requireQueueApiHandler("cleanupOldTempFiles");
   const { taskType } = job.data;
 
   log.info({ jobId: job.id, taskType }, "Processing scheduled task");
