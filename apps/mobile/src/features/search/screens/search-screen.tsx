@@ -11,10 +11,11 @@ import { useTabScroll } from "@/lib/use-tab-scroll";
 import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useLibraryFilters, useLibraryList } from "@norish/shared-react/recipes";
 
 import { Discover } from "../components/discover";
-import { SearchNoResults } from "../components/no-results";
+import { SearchNoResults, SearchOffline } from "../components/no-results";
 import { ChipRow, RecipeCount } from "../components/results-chrome";
 import { ScopeRow } from "../components/scope-row";
 import { TypingSuggestions } from "../components/typing-suggestions";
@@ -38,21 +39,28 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
   const chips = filterChips(filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
+  const { isOffline } = useConnectivity();
   const input = {
     text: field.text,
     confirmed,
     hasChips: chips.length > 0,
     focused: field.focused,
+    offline: isOffline,
   };
-  // Recipes only, and an explicit sort beats rank; nothing is read until Results show.
+  // Recipes only, and an explicit sort beats rank; nothing is read until Results show, or Offline
+  // (the cache still answers a search it holds, and Live again reads it).
   const list = useLibraryList({
     sortBeatsRank: true,
     withMatch: true,
     filters,
-    enabled: showsResults({ ...input, resultCount: null }),
+    enabled: showsResults({ ...input, resultCount: null, cached: false }) && !isOffline,
   });
-  const view = searchView({ ...input, resultCount: list.isLoading ? null : list.recipes.length });
-  const typing = useTypingSuggestions(field.text, view === "typing");
+  const view = searchView({
+    ...input,
+    resultCount: list.isLoading ? null : list.recipes.length,
+    cached: list.hasData,
+  });
+  const typing = useTypingSuggestions(field.text, view === "typing", isOffline);
   const categoryLabel = useCategoryLabel();
   const rows = narrowRows(
     { suggestions: typing.narrow, locale: intl.locale, text: typing.asked, categoryLabel },
@@ -76,7 +84,9 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
     hidesSharedBackground: true,
   };
 
-  const noResults = (
+  const noResults = isOffline ? (
+    <SearchOffline />
+  ) : (
     <SearchNoResults
       text={field.text.trim()}
       variant={noResultsVariant(chips.length > 0, isScopeNarrowed(filters.searchFields))}
@@ -84,7 +94,7 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
       onSearchAllFields={() => setFilters({ searchFields: [...ALL_SCOPE] })}
     />
   );
-  const showsList = view === "results" || view === "none";
+  const showsList = view === "results" || view === "none" || view === "offline";
 
   return (
     <>

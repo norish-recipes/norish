@@ -30,14 +30,14 @@ vi.mock("@norish/shared-react/trpc", () => ({
 vi.mock("../hooks/use-search-filters", () => ({ useSearchFilters: () => ({}) }));
 vi.mock("@norish/shared-react/recipes", async () => ({
   ...(await vi.importActual<object>("@norish/shared-react/recipes")),
-  useLibraryList: () => ({ isLoading: false, recipes: [] }),
+  useLibraryList: () => ({ isLoading: false, recipes: [{ id: "r1" }] }),
 }));
 vi.mock("@norish/shared-react/settled-text", () => ({ useSettledText: (text: string) => text }));
 
 describe("useTypingSuggestions", () => {
   it("asks nothing for a text over the cap and is not loading", () => {
     const { result } = renderHook(
-      () => useTypingSuggestions("a".repeat(SUGGEST_TEXT_MAX + 1), true),
+      () => useTypingSuggestions("a".repeat(SUGGEST_TEXT_MAX + 1), true, false),
       {
         wrapper: createTestWrapper(new QueryClient()),
       }
@@ -45,6 +45,18 @@ describe("useTypingSuggestions", () => {
 
     expect(asked).toHaveLength(0);
     expect(result.current.loading).toBe(false);
+    expect(result.current.narrow).toBeUndefined();
+  });
+
+  it("suggests nothing Offline, not even a skeleton while typing ahead", () => {
+    asked.length = 0;
+    const { result } = renderHook(() => useTypingSuggestions("soup", true, true), {
+      wrapper: createTestWrapper(new QueryClient()),
+    });
+
+    expect(asked).toHaveLength(0);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.recipes).toEqual([]);
     expect(result.current.narrow).toBeUndefined();
   });
 });

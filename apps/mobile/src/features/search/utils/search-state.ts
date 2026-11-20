@@ -1,5 +1,5 @@
 /** Which page of Search shows. */
-export type SearchView = "rested" | "focused" | "typing" | "results" | "none";
+export type SearchView = "rested" | "focused" | "typing" | "results" | "none" | "offline";
 
 /** What the choice reads: `resultCount` is null while the search is loading. */
 export type SearchViewInput = {
@@ -10,14 +10,23 @@ export type SearchViewInput = {
   hasChips: boolean;
   focused: boolean;
   resultCount: number | null;
+  /** The app is Offline: the backend cannot be reached. */
+  offline: boolean;
+  /** Results for exactly this search are held (loaded Live earlier, or from the Offline Cache). */
+  cached: boolean;
 };
 
 /** Results show for a confirmed text, or while a chip filters an empty one; no text and no chips rests. */
 export const showsResults = ({ text, confirmed, hasChips }: SearchViewInput) =>
   text.trim() === "" ? hasChips : confirmed;
 
+/** Offline, a search with nothing held says it needs a connection rather than loading or finding none. */
 export function searchView(input: SearchViewInput): SearchView {
-  if (showsResults(input)) return input.resultCount === 0 ? "none" : "results";
+  if (showsResults(input)) {
+    if (input.offline && !input.cached) return "offline";
+
+    return input.resultCount === 0 ? "none" : "results";
+  }
   if (input.text.trim().length > 0) return "typing";
 
   return input.focused ? "focused" : "rested";

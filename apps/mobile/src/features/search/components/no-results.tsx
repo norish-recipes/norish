@@ -57,3 +57,17 @@ export function SearchNoResults({
     />
   );
 }
+
+/** Where Results would be while Offline: a search needs the backend, and runs when it is back. */
+export function SearchOffline() {
+  const intl = useIntl();
+
+  return (
+    <NoResultsCard
+      className="bg-surface mx-5 mt-4"
+      icon="cloud-offline-outline"
+      testID="search-offline"
+      title={intl.formatMessage({ id: "recipes.search.offline" })}
+    />
+  );
+}

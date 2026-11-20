@@ -133,6 +133,8 @@ describe("confirming and narrowing", () => {
         hasChips,
         focused: true,
         resultCount: 3,
+        offline: false,
+        cached: false,
       });
 
     expect(state).toMatchObject({ text: "", confirmed: false });
@@ -145,7 +147,13 @@ describe("confirming and narrowing", () => {
     const first = fieldStep(holding("chick"), { type: "narrowed" }, 1000).state;
     const typed = fieldStep(first, { type: "typed", text: "tom" }, 2000).state;
     const second = fieldStep(typed, { type: "narrowed" }, 3000).state;
-    const input = { text: second.text, confirmed: second.confirmed, hasChips: true };
+    const input = {
+      text: second.text,
+      confirmed: second.confirmed,
+      hasChips: true,
+      offline: false,
+      cached: false,
+    };
 
     expect(searchView({ ...input, focused: true, resultCount: 2 })).toBe("results");
     expect(showsResults({ ...input, focused: true, resultCount: 2 })).toBe(true);
@@ -154,7 +162,16 @@ describe("confirming and narrowing", () => {
   it("shows the typing state, not Results, for text typed over a chip", () => {
     const state = fieldStep(holding(""), { type: "typed", text: "tom" }, 1000).state;
 
-    expect(searchView({ ...state, hasChips: true, focused: true, resultCount: 3 })).toBe("typing");
+    expect(
+      searchView({
+        ...state,
+        hasChips: true,
+        focused: true,
+        resultCount: 3,
+        offline: false,
+        cached: false,
+      })
+    ).toBe("typing");
   });
 });
 

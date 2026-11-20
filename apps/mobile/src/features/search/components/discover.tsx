@@ -12,6 +12,7 @@ import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
 import { useLibraryDiscover, useLibraryFilters } from "@norish/shared-react/recipes";
 
@@ -210,6 +211,7 @@ export function Discover({
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const { recents } = useRecentSearches();
   const discover = useLibraryDiscover();
+  const { isOffline } = useConnectivity();
   const read = (count: number | undefined): SectionRead =>
     count ?? (discover.isError ? "failed" : "loading");
   const sections = discoverSections({
@@ -217,6 +219,7 @@ export function Discover({
     recentCount: recents.length,
     categories: read(discover.data?.categories.length),
     tags: read(discover.data?.tags.length),
+    offline: isOffline,
   });
   const pick = (patch: Partial<CanonicalRecipeFilters>) => {
     setFilters(patch);

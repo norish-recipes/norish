@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { noResultsVariant, searchView, showsResults } from "../utils/search-state";
 
-const base = { text: "", confirmed: false, hasChips: false, focused: false, resultCount: null };
+const base = {
+  text: "",
+  confirmed: false,
+  hasChips: false,
+  focused: false,
+  resultCount: null,
+  offline: false,
+  cached: false,
+};
 
 describe("which state shows", () => {
   it("rests and focuses with no text", () => {
@@ -43,6 +51,35 @@ describe("when Results show", () => {
 
   it("is no results for a loaded empty list", () => {
     expect(searchView({ ...base, hasChips: true, resultCount: 0 })).toBe("none");
+  });
+});
+
+describe("Offline", () => {
+  const off = { ...base, offline: true };
+
+  it("rests, focuses and types as Live does", () => {
+    expect(searchView(off)).toBe("rested");
+    expect(searchView({ ...off, focused: true })).toBe("focused");
+    expect(searchView({ ...off, text: "soup", focused: true })).toBe("typing");
+  });
+
+  it("says search needs a connection for a confirmed text or chips with nothing held", () => {
+    expect(searchView({ ...off, text: "soup", confirmed: true })).toBe("offline");
+    expect(searchView({ ...off, hasChips: true })).toBe("offline");
+    expect(searchView({ ...off, hasChips: true, resultCount: 0 })).toBe("offline");
+  });
+
+  it("keeps results held for exactly this search, and never reads none from an unheld one", () => {
+    const held = { ...off, text: "soup", confirmed: true, cached: true };
+
+    expect(searchView({ ...held, resultCount: 4 })).toBe("results");
+    expect(searchView({ ...held, resultCount: 0 })).toBe("none");
+    expect(searchView({ ...held, cached: false, resultCount: 0 })).toBe("offline");
+  });
+
+  it("is unchanged Live whether or not results are held", () => {
+    expect(searchView({ ...base, hasChips: true, cached: true, resultCount: 2 })).toBe("results");
+    expect(searchView({ ...base, hasChips: true, resultCount: null })).toBe("results");
   });
 });
 
