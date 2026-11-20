@@ -6,18 +6,20 @@ description: Sync meal plans with a CalDAV calendar.
 
 # CalDAV
 
-Open **Settings => CalDAV** at `/settings/caldav` to sync meal plans with a CalDAV calendar.
+In **Settings**, open **CalDAV** to sync meal plans with an external calendar.
 
 ## Set up a connection
 
-Enter the **Server URL**, **Username** and **Password**, then press **Test**. Choose a **Calendar** and press **Save**. If the test reports an untrusted certificate, see [Private certificates](/configuration/server-runtime#private-certificates).
+Enter the **Server URL**, **Username** and **Password**, then select **Test**.
+Choose a **Calendar** and select **Save**. If the test reports an untrusted
+certificate, see [Private certificates](./server-runtime.md#private-certificates).
 
-Under **Advanced settings**, set the breakfast, lunch, dinner and snack times in `HH:MM-HH:MM` format. Invalid times cannot be saved.
+Set meal times in **Advanced settings** using `HH:MM-HH:MM`.
 
 ## Manage sync
 
-Use the switch under **CalDAV configuration** to enable or disable sync. The connection badge shows **Checking...**, **Connected** or **Disconnected**.
+Use the switch under **CalDAV configuration** to pause or resume syncing.
+Check **Sync status** for errors or select **Sync now** to run a sync.
 
-Press **Edit** to change the configuration, or **Delete** to remove it. When deleting, select **Delete synced events** to also remove events Norish created in the calendar.
-
-**Sync status** lists items and their sync status. Press a status badge to filter the list, or **Clear filter** to show all items. Press **Sync now** to start a sync.
+Choose **Edit** to change the connection or **Delete** to remove it. Select
+**Delete synced events** if you also want to remove events Norish created.

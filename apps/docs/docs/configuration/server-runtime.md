@@ -6,14 +6,11 @@ description: Core server settings, the encryption key, health checks, networking
 
 # Server & runtime
 
-Most server settings have working defaults. You must provide your own
-`MASTER_KEY`.
-
 ## Core
 
 | Variable     | Description                                                             | Default                                |
 | ------------ | ----------------------------------------------------------------------- | -------------------------------------- |
-| `MASTER_KEY` | 32+ character key for encryption derivation                             | (required)                             |
+| `MASTER_KEY` | Encryption key, at least 32 characters                                  | (required)                             |
 | `AUTH_URL`   | Public URL used for auth callbacks and links                            | `http://localhost:3000`                |
 | `NODE_ENV`   | Runtime environment                                                     | `production` (set by the Docker image) |
 | `HOST`       | Server bind address                                                     | `0.0.0.0`                              |
@@ -21,29 +18,33 @@ Most server settings have working defaults. You must provide your own
 | `VALKEY_URL` | Valkey connection URL (`valkey://` or `valkeys://`) for events and jobs | (required)                             |
 
 :::info Generate a `MASTER_KEY`
-`MASTER_KEY` is used to derive encryption keys for stored secrets. Changing
-it makes those secrets unreadable. Generate one with:
-
-```bash
-openssl rand -base64 32
-```
+Generate a key with `openssl rand -base64 32`. Keep it when you move or update
+Norish so it can still read your saved secrets.
 
 :::
 
+## Database
+
+Set `DATABASE_URL` to point Norish at PostgreSQL.
+
+```yaml title="docker-compose.yml (environment)"
+DATABASE_URL: postgres://postgres:norish@db:5432/norish
+```
+
+Leave `DATABASE_URL` unset to use these variables.
+
+| Variable            | Default     |
+| ------------------- | ----------- |
+| `DATABASE_HOST`     | `localhost` |
+| `DATABASE_PORT`     | `5432`      |
+| `DATABASE`          | `norish`    |
+| `DATABASE_USER`     | `postgres`  |
+| `DATABASE_PASSWORD` | `norish`    |
+
 ## Health checks
 
-| Endpoint               | Answers 200 when                                                        | Use it for                                                      |
-| ---------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `/api/v1/health/live`  | The server responds and the parser answers if running                   | Restarting Norish: the image's healthcheck, Kubernetes liveness |
-| `/api/v1/health/ready` | The database and Valkey answer; the parser is reported but never counts | Sending traffic: Kubernetes readiness, load balancers           |
-
-The parser starts on the first URL import and stops after 10 minutes without an
-import. Both checks report it as `idle` when stopped and `starting` while it
-starts. A running parser that does not answer causes live to return 503, but
-does not affect ready. The ready response includes `version`, the running
-Norish version.
-
-`/api/v1/health` is deprecated and answers like `/api/v1/health/ready`. Point new probes at live or ready.
+- Use `/api/v1/health/live` to decide when to restart Norish.
+- Use `/api/v1/health/ready` to decide when to send it traffic.
 
 ## Networking & origins
 
@@ -52,34 +53,62 @@ Norish version.
 | `TRUSTED_ORIGINS` | Comma-separated additional trusted origins                 | (empty) |
 | `TRUSTED_PROXIES` | Comma-separated IPs or CIDR ranges of your reverse proxies | (empty) |
 
-Set `TRUSTED_ORIGINS` when people use more than one server address, for
-example `http://192.168.1.100:3000,https://norish.example.com`. The WebSocket
-refuses origins it doesn't trust, see
-[Origin check](./websocket.md#origin-check).
+Set `TRUSTED_ORIGINS` if people use more than one address for Norish. See
+[Origin check](#origin-check).
 
-Set `TRUSTED_PROXIES` when the server sits behind more than one reverse proxy, such as
-Cloudflare in front of Nginx Proxy Manager. List the address or range of every proxy; for
-Cloudflare that is its [published ranges](https://www.cloudflare.com/ips/). Without it,
-visitors share one rate limit for sign-in and session checks.
-Behind a single proxy it is not needed.
+Behind multiple reverse proxies, list each proxy's IP address or range in
+`TRUSTED_PROXIES` so visitors get separate rate limits. For Cloudflare, use
+its [published ranges](https://www.cloudflare.com/ips/). Restrict access to
+the app port to your proxy to prevent forged `X-Forwarded-For` headers.
 
-Visitors are identified by the `X-Forwarded-For` header your proxy adds, so only
-the proxy should be able to reach the app's port. A visitor who connects to the port directly can set that
-header themselves and get a sign-in rate limit of their own.
+## WebSocket & realtime
+
+If changes appear only after a refresh, check that your proxy forwards
+WebSocket upgrades to Norish at `/trpc`.
+
+### nginx
+
+```nginx
+location / {
+    proxy_pass         http://norish:3000;
+    proxy_http_version 1.1;
+    proxy_set_header   Upgrade $http_upgrade;
+    proxy_set_header   Connection "upgrade";
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+    proxy_read_timeout 60s;
+}
+```
+
+Keep `proxy_read_timeout` above 25 seconds.
+
+### Caddy
+
+```caddyfile
+norish.example.com {
+    reverse_proxy norish:3000
+}
+```
+
+### Traefik
+
+Traefik forwards upgrades by default. If you set
+`respondingTimeouts.readTimeout`, keep it above 25 seconds.
+
+### Origin check
+
+For a WebSocket `403 Forbidden`, check that the origin matches `AUTH_URL`,
+an entry in `TRUSTED_ORIGINS`, or the request host. If your proxy rewrites the
+host and users connect at a different address, add that origin to
+`TRUSTED_ORIGINS`.
 
 ## Private certificates
 
-Norish refuses a server whose HTTPS certificate no public authority vouches for,
-such as one signed by your own certificate authority. The error reads
-`unable to get local issuer certificate` or `self-signed certificate`.
+If CalDAV reports an untrusted certificate, verify its fingerprint before
+choosing **Trust** for that connection.
 
-CalDAV asks you: when the connection test is refused over the certificate, it
-shows the certificate's name and SHA-256 fingerprint. Press **Trust** to trust
-that certificate for your CalDAV connection only. A certificate issued to
-another host, or an expired one, stays refused.
-
-To trust your certificate authority everywhere, AI endpoints included, mount
-its certificate and point `NODE_EXTRA_CA_CERTS` at it:
+To trust a private certificate authority across Norish, mount its certificate
+and set `NODE_EXTRA_CA_CERTS`.
 
 ```yaml
 services:
@@ -92,14 +121,7 @@ services:
 
 ## Base path
 
-To serve the app under a path such as `https://example.com/norish`, build it with
-`NEXT_PUBLIC_BASE_PATH`.
-
-| Variable                | Description                     | Default           |
-| ----------------------- | ------------------------------- | ----------------- |
-| `NEXT_PUBLIC_BASE_PATH` | The path the image is built for | (empty, the root) |
-
-The path is part of the build, so the published image serves the root. Build your own:
+Build a custom image to serve Norish under a path such as `/norish`.
 
 ```bash
 docker build -f docker/Dockerfile \
@@ -108,13 +130,13 @@ docker build -f docker/Dockerfile \
   -t norish:base-path .
 ```
 
-Set `AUTH_URL` to the same address and path; a mismatch prevents startup:
+Set `AUTH_URL` to the same public address and path. A mismatch prevents startup.
 
 ```dotenv
 AUTH_URL=https://example.com/norish
 ```
 
-Have the proxy forward the path unchanged, WebSocket included:
+Forward the path unchanged through your proxy and allow WebSocket upgrades.
 
 ```nginx
 location /norish {
@@ -142,18 +164,12 @@ Turning this off removes brute-force protection from sign-in.
 
 ## Registration
 
-| Variable              | Description                 | Default |
-| --------------------- | --------------------------- | ------- |
-| `ENABLE_REGISTRATION` | Allow new-user registration | `false` |
-
-Registration turns off after the first user signs in, see
-[Authentication](./authentication.md).
+Registration closes after the first sign-in. To reopen it, turn on
+**Allow new user registration** under **General** in admin settings.
 
 ## Logging
 
-| Variable                | Description                                      | Default |
-| ----------------------- | ------------------------------------------------ | ------- |
-| `NEXT_PUBLIC_LOG_LEVEL` | Log verbosity (`debug`, `info`, `warn`, `error`) | `info`  |
+Set `NEXT_PUBLIC_LOG_LEVEL` to `debug`, `info`, `warn` or `error`. The default is `info`.
 
 ## Uploads
 
@@ -166,9 +182,7 @@ Registration turns off after the first user signs in, see
 
 ## Scheduler
 
-| Variable                   | Description                        | Default |
-| -------------------------- | ---------------------------------- | ------- |
-| `SCHEDULER_CLEANUP_MONTHS` | Cleanup retention period in months | `3`     |
+Set `SCHEDULER_CLEANUP_MONTHS` to change the cleanup period. The default is three months.
 
 ## Ingredient catalogue
 
@@ -177,9 +191,21 @@ Registration turns off after the first user signs in, see
 | `INGREDIENT_CATALOGUE_URL`      | Catalogue seed URL, fetched at startup and nightly. Empty disables fetching                                     | The Open Food Facts ingredients taxonomy |
 | `INGREDIENT_REVIEW_CONCURRENCY` | Concurrent AI ingredient reviews (1–50). Lower this for self-hosted models that struggle with parallel requests | `10`                                     |
 
-The [ingredient catalogue](../groceries/ingredients.md) is seeded from the
-[Open Food Facts](https://world.openfoodfacts.org) ingredients taxonomy and
-refreshed every night at midnight.
+For a server without internet access, mirror `ingredients.txt` and point
+`INGREDIENT_CATALOGUE_URL` at that copy.
 
-On a server without internet, serve a copy of `ingredients.txt` from a local
-mirror and point `INGREDIENT_CATALOGUE_URL` at it.
+## Languages
+
+Choose languages under **General** in admin settings or set them in Compose.
+
+| Variable          | Description                             | Default       |
+| ----------------- | --------------------------------------- | ------------- |
+| `DEFAULT_LOCALE`  | Instance default locale                 | `en`          |
+| `ENABLED_LOCALES` | Comma-separated list of enabled locales | (all enabled) |
+
+```yaml title="docker-compose.yml (environment)"
+DEFAULT_LOCALE: en
+ENABLED_LOCALES: en,nl,no
+```
+
+See the [supported language codes](https://github.com/norish-recipes/Norish/blob/main/packages/i18n/src/locales.ts).

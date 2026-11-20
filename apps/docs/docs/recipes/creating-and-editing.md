@@ -6,23 +6,18 @@ description: The recipe form, with headings (#), recipe links (/) and step ingre
 
 # Creating and editing recipes
 
-Open the form with **Add Recipe**, or **Edit** in a recipe's actions menu.
-
-- **Ingredients** are free text, one per line, like `200 g spaghetti`. The
-  amount and unit are read as you type.
-- **Steps** go one per row. Drag a row to reorder it.
-- **Photos** go on the recipe or on a step. A step can have several.
+Choose **Add Recipe**, or **Edit** in a recipe's menu. Enter one ingredient per
+line, such as `200 g spaghetti`. Enter one step per row and drag to reorder.
+Add photos to the recipe or to a step.
 
 ## Categories
 
-Breakfast, Lunch, Dinner and Snack are built in. To add another, like Drinks
-or Desserts, type it in **Add a category** under **Tags & Categories** and
-press Enter. From then on your household can pick it and filter by it. Other
-households don't see it.
+Under **Tags & Categories**, type a name in **Add a category** and press Enter.
+Your household can then select it or use it as a filter.
 
 ![Drinks added beside the built-in Categories on the recipe form](/img/screenshots/recipe-form-add-category.png)
 
-A Category stays on your list while one of your household's recipes has it.
+A category stays on the list while a recipe in your household uses it.
 
 ## Headings with `#`
 
@@ -33,30 +28,51 @@ Start an ingredient or a step with `#` to make it a heading, like
 
 ## Recipe links with `/`
 
-Type `/` and a recipe name in a step to link that recipe, for example a dough
-or a stock you keep as its own recipe. Readers tap the link to open it.
+Type `/` in a step and pick a recipe to link to it.
 
 ![The / recipe autocomplete open over a step](/img/screenshots/editor-recipe-link-autocomplete.png)
 
-## Step ingredients with `@`
+## Step ingredients with `@` {#step-ingredients}
 
-Type `@` in a step and pick an ingredient. The word goes into your sentence as
-plain text, and the ingredient shows as a chip under the step.
+Type `@` in a step and pick an ingredient. Norish adds its name to the step
+and shows a chip below it.
 
 ![The @ mention autocomplete, with chips beneath the step](/img/screenshots/editor-mention-chips.png)
 
-Use **Link ingredient** below a step to add chips without changing its text;
-_"add the spices"_ can link all the spices.
-
-For ingredient lines with an amount, a prompt asks how much this step uses.
-Type the number and press Enter, or press Escape to use the whole line.
+Use **Link ingredient** to add a chip without editing the step. If Norish asks
+for an amount, enter it or press Escape to use the full amount.
 
 ![Amount entry for a newly linked ingredient](/img/screenshots/editor-amount-ask.png)
 
-**Amount…** on a chip changes it later: half, a third, a quarter, or an exact
-amount. On a line of five eggs, entering **3** makes the step read _3 eggs_.
-Tap a chip to remove it.
+Choose **Amount…** on the chip to change the quantity. Tap the chip to remove it.
 
 ![Amount entry on a chip beneath a step](/img/screenshots/editor-amount-entry.png)
 
-See [Step ingredients](./step-ingredients.md) for how these show on the recipe.
+Linked amounts scale with servings. **Link Ingredients to Steps** in the
+recipe menu fills steps that have no links.
+
+## Recipe origin
+
+Set the country, region, cuisines and note in the provenance fields. The
+country flag appears beside the recipe title.
+
+![Editing recipe provenance in the recipe form](/img/screenshots/provenance-form.png)
+
+## Fill in recipe details with AI
+
+With AI enabled, use the recipe's **⋯** menu for **Auto-tag**, **Detect
+Allergies**, **Auto Categorize**, **Estimate Nutrition**, **Work Out Provenance**,
+**Link Ingredients to Steps** or **Generate Picture**. **Detect Allergies**
+requires household allergies, and **Generate Picture** needs an
+[image provider](../configuration/ai-provider.md#image-generation).
+
+These actions can replace categories, nutrition, provenance or the main
+picture. [Automatic enrichment](../configuration/ai-provider.md#automatic-enrichment)
+keeps details you entered or imported.
+
+## Cookbooks
+
+Use the recipe's quick actions to add it to a cookbook. Cookbooks follow
+your server's [recipe permissions](../configuration/admin-settings.md#permissions).
+Deleting a cookbook keeps its recipes. Deleting a recipe removes it from
+every cookbook.

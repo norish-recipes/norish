@@ -6,9 +6,8 @@ description: How the repository is laid out, where code goes, and how data moves
 
 # Architecture
 
-Norish is one Node server and two clients, a Next.js web app and an Expo mobile
-app. The clients talk to the server through tRPC. Queries and mutations go over
-HTTP, and realtime events over one WebSocket.
+The Next.js web app and Expo mobile app use one Node server. tRPC queries and
+mutations use HTTP. Realtime events use a WebSocket.
 
 ## Folder structure
 
@@ -50,210 +49,118 @@ norish/
 
 ### In an app
 
-Web and mobile use the same layout. Web keeps its folders at the root of
-`apps/web`, mobile in `apps/mobile/src`.
+Web uses the root of `apps/web`. Mobile uses `apps/mobile/src`.
 
-- `app/` holds the route files, which render screens from features. On web a
-  route file also does the server-only work: seeding the cache, metadata and
-  params, repository reads and redirects.
-- `features/<feature>/` holds one domain's screens, components, hooks and
-  helpers. Web features cover `library` (with the cookbook page),
-  `recipes` (with the shared recipe page), `groceries`, `calendar`,
-  `account`, `household`, `ingredients`, `admin` and `auth`. Auth holds the
-  login, signup and auth-error screens; `app/(auth)/` keeps the layout,
-  `loading.tsx` files and each page's server work. The settings route composes five features: `account`,
-  `household`, `ingredients`, `admin` and CalDAV in `calendar`. Each tab has
-  its own route and renders its feature screen. `components/settings/` holds
-  UI shared by tabs.
-- A feature groups its `components/` by area. An area's `index.ts` re-exports
-  only pieces more than one screen draws; import a piece one screen draws by
-  file, and omit the index when nothing is shared. The bundler ships every file
-  an index re-exports, so mixing pieces puts one screen's code in another's
-  chunk. Groceries has `header/`, `list/`, `panels/`, `pantry/` and `stores/`.
-  Recipes has `page/`, `share/`, `editor/`, `read-only/`, `media/` and
-  `skeleton/`. Library has `grid/`, `header/`, `filters/`, `selection/`,
-  `panels/` and `skeleton/`. Calendar has `timeline/`, `panels/`, `caldav/` and `skeleton/`,
-  with `hooks/` beside `components/`. Skeletons, `loading.tsx` files and the shared
-  recipe page import files directly.
-- Features never import each other. Lint blocks `@/features/<x>` and
-  `@/features/<x>/**` outside feature `<x>`, except in route files. Panels
-  several features open live in `components/Panel/consumers/`.
-- A feature's tests sit in one flat `features/<feature>/__tests__/` folder on web or `src/features/<feature>/__tests__/` on mobile.
-- One root draws the views that share a layout.
-  `app/(app)/groceries/layout.tsx` renders `GroceriesRoot`, which holds the
-  header and the subscriptions and draws the list or the Pantry from the
-  address, so switching views stays on the client. The layout seeds the reads
-  of the view a full load opens on. `page.tsx` and `pantry/page.tsx` render
-  nothing and only give each view an address.
-- Code two or more features use goes in the app's shared folders: `components/`,
-  `hooks/` and `lib/` on web, `hooks/` and `lib/` on mobile.
-  `components/imports/` holds the URL, paste and image import modals, the
-  copied-link prompt and `use-import-recipe`. The library header and shell open
-  the import UI.
+- `app/` owns routes, layouts and loading states. Web routes also handle metadata,
+  redirects and server-side reads for the first render.
+- `features/<feature>/` owns the screens, components, hooks and helpers for a
+  domain. For example, the Library owns cookbooks, and Calendar owns CalDAV.
+  Settings tabs render screens from their owning features.
+- Put feature tests in `features/<feature>/__tests__/`. Group feature components
+  by area. Use an area's `index.ts` for components used by multiple screens.
+  Import a component used by one screen directly to keep it out of other bundles.
+- A feature can import app-wide code from `components/`, `hooks/` or `lib/`,
+  depending on the app. Routes can import feature screens. Features cannot import each other.
+  Put panels used by several web features in `components/Panel/consumers/`.
+  Shared import UI lives in `components/imports/`.
 
-Imports run one way: shared folders, then features, then routes.
+For views with one layout, mount a root at the layout. For example,
+`GroceriesRoot` owns the header and subscriptions for the grocery list and
+Pantry. The route selects the view, and the layout seeds its first reads.
 
 ### In shared-react
 
-A domain folder in `packages/shared-react/src/`, such as `groceries/`, holds one
-domain's hooks, client stores, realtime subscriptions and types. Apps import it
-as `@norish/shared-react/<domain>`, and its tests sit in
-`src/<domain>/__tests__/`. One domain can serve several app features. The domain folders are `admin`,
-`calendar`, `groceries`, `ingredients` and `recipes`. CalDAV belongs to
-`calendar`. `recipes` holds `useImportMutations` alongside `useRecipesMutations`.
+Put shared domain hooks, stores and subscriptions in a folder such as
+`packages/shared-react/src/groceries/`. Apps use
+`@norish/shared-react/<domain>`. Tests live in `src/<domain>/__tests__/`.
+CalDAV belongs to `calendar`. Import mutations belong to `recipes`.
 
-The cross-cutting folders serve every domain:
+| Folder        | What goes there                                                                        |
+| ------------- | -------------------------------------------------------------------------------------- |
+| `trpc/`       | Client links, providers and the shared `useTRPC` context.                              |
+| `platform/`   | App adapters for navigation, toasts, errors, storage, device kind and session actions. |
+| `offline/`    | Offline Cache, Outbox, Replay, Recovery and optimistic updates.                        |
+| `config/`     | Reference data and sign-in provider queries.                                           |
+| `reader/`     | Identity, account, household, permissions, Device Preferences and session cleanup.     |
+| `realtime/`   | `useRealtimeSubscription` and `useKeepsCurrent`.                                       |
+| `page-store/` | `createPageStoreContext` for stores scoped to a page key.                              |
 
-- `trpc/` creates the one tRPC context, so every hook imports `useTRPC` from
-  here. It also builds the links and each app's provider.
-- `platform/` is the adapter each app mounts once, for toasts, navigation, error
-  display, storage, Device Kind, the session, `endSession(scope)` (`"everywhere"`
-  or `"device"`), `leave(reason)` and the offline engine clear.
-- `offline/` is the offline engine: the Offline Cache, the Outbox, Replay,
-  Recovery, and the optimistic-update helpers every domain's mutations use.
-- `config/` reads reference data such as units, tags and recurrence words,
-  and provides `useAuthProvidersQuery`.
-- `reader/` holds the signed-in Reader and Account: identity, household,
-  profile, allergies, Sign-in Methods, site tokens, their writes, permissions
-  and Device Preferences. `reader/session-end.ts` holds `useSignOut`,
-  `useSessionExpiry` and `expireSession`, each app's 401 and 4401 callback. Web
-  mounts `useSessionExpiry` in the signed-in shell; mobile mounts it in
-  `AuthProviders` from sign-in until leaving. Web's sign-in screen forgets the
-  Offline Cache when reached with a `callbackUrl`, except after sign-out.
-- `realtime/` holds `useRealtimeSubscription`, which every subscription is built
-  on, and `useKeepsCurrent`.
-- `page-store/` provides `createPageStoreContext`, which returns a provider that
-  creates a store once from the page's key and a hook that selects a slice of it.
-
-A domain never imports another domain, and a cross-cutting folder never imports
-a domain. Lint enforces both.
+A domain can import these shared folders. Lint forbids imports between domains
+and imports from a shared folder into a domain.
 
 ### Contracts
 
-Clients and server both import `@norish/shared`. Its `src/contracts/` holds the
-DTO types, the zod schemas and the Realtime Catalogues (`contracts/realtime/`).
-Its `src/lib/` holds helpers both sides run, such as the recurrence calculator.
-A type or schema both sides need goes here.
+Put types and Zod schemas used by both the clients and server in
+`packages/shared/src/contracts/`. Realtime Catalogues live in
+`contracts/realtime/`. Shared helpers, such as recurrence, live in `src/lib/`.
 
 ### On the server
 
-- `packages/trpc/src/routers/<domain>/` holds the procedures. A procedure
-  validates its input with zod, checks that the Reader may touch the data, does
-  the work, and publishes Realtime Events after the write. Longer logic goes in a
-  helper file beside the router, such as `groceries-helpers.ts`, or in
-  `packages/shared-server`.
-- `packages/db/src/repositories/` holds every database query. Routers read and
-  write through repositories, never with queries of their own.
-- `packages/api` holds what the server entry in `apps/web/server/` runs: the
-  HTTP server, which serves Next and attaches the tRPC WebSocket from
-  `packages/trpc`, and the boot tasks (`startup/`), the import parser
-  (`parser/`), CalDAV sync (`caldav/`) and video processing (`video/`).
-- `packages/queue` runs background jobs. Jobs reach the parser, CalDAV sync and
-  media cleanup through handlers `packages/api` registers at boot.
+- Put procedures in `packages/trpc/src/routers/<domain>/`. Validate inputs,
+  check permissions and publish Realtime Events after writes. Put longer
+  domain logic in a router helper or `packages/shared-server`.
+- Put database queries in `packages/db/src/repositories/`. Routers call
+  repositories for every database read and write.
+- `apps/web/server/` starts the HTTP server in `packages/api`. It serves Next.js
+  and attaches the tRPC WebSocket. `packages/api` also owns startup tasks,
+  imports, CalDAV and video processing.
+- `packages/queue` runs background jobs through handlers registered by
+  `packages/api` at startup.
 
 ### The AI boundary
 
-Everything under `packages/shared-server/src/ai/` is AI:
+AI code lives under `packages/shared-server/src/ai/`.
 
-- `runtime/` is the one place that talks to a model
-  ([ADR-0015](https://github.com/norish-recipes/Norish/blob/main/docs/adr/ai/0015-norish-issues-every-model-request-through-one-runtime.md)).
-- `prompts/` holds the prompts an administrator can edit, and their loader.
-- `enrichment/` holds the features that read a stored recipe and claim something
-  about it, such as its allergens or its nutrition.
-- `resolution/` holds the features that decide which catalogue entry a name is.
-- `providers/` lists the models a provider offers, for admin settings.
+- `runtime/` sends model requests. See [ADR-0015](https://github.com/norish-recipes/Norish/blob/main/docs/adr/ai/0015-norish-issues-every-model-request-through-one-runtime.md).
+- `prompts/` loads prompts that admins can edit.
+- `enrichment/` derives details such as allergens from stored recipes.
+- `resolution/` matches names to catalogue entries.
+- `providers/` lists the models a provider offers.
 
-Recipe extraction uses AI but belongs to the import pipeline, so it lives with
-the parser in `packages/api/src/parser/`. A feature calls
-`ai/runtime/runtime.ts` with the name of a prompt and the sections to append to
-it. It never builds a provider client or passes a finished prompt
-([ADR-0016](https://github.com/norish-recipes/Norish/blob/main/docs/adr/ai/0016-prompts-are-appended-to-never-interpolated.md)).
+Recipe extraction belongs to the import pipeline in `packages/api/src/parser/`.
+For model requests, call `ai/runtime/runtime.ts` with a prompt name and the
+sections to append. See [ADR-0016](https://github.com/norish-recipes/Norish/blob/main/docs/adr/ai/0016-prompts-are-appended-to-never-interpolated.md).
 
 ## Decisions
 
-[CONTRIBUTING.md](https://github.com/norish-recipes/Norish/blob/main/CONTRIBUTING.md#app-architecture)
-gives the reasons for decisions without an ADR.
+See [App architecture in CONTRIBUTING.md](https://github.com/norish-recipes/Norish/blob/main/CONTRIBUTING.md#app-architecture)
+for the full rules.
 
-- Components use named shared-react hooks for every server read and write.
-  They never call tRPC directly. `restrictTRPC` bans `useTRPC` and
-  `useTRPCClient` in both apps, with no exceptions today.
-- Components read server data through hooks over the TanStack Query cache, the
-  one copy on a client, which offline mode persists
-  ([ADR-0001](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md)).
-  Nothing copies it into a context or a store.
-- Use generated builders (`queryKey()`, `mutationKey()`, `pathKey()`, `pathFilter()`,
-  `queryFilter()`, `infiniteQueryKey()`) for tRPC query keys and a named constant
-  for a non-tRPC query key; lint reports hand-written keys, and a key that matches
-  no query fails silently. Match a list read as an infinite query with `pathKey()`,
-  not `queryKey()` with no input.
-- A realtime handler merges an event into the cache by id, so a repeated event
-  changes nothing and no client needs to skip its own
-  ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
-- A fresh subscription rereads its `liveQueryKeys` once its Cursor Mark says it
-  is live. Rereads due within 50 ms are combined. A reread requested while a matching read is in flight runs after it lands. A reread waits until no write is pending, and one an optimistic write cancels runs again then. A write waiting in the Outbox does not count as pending. A subscription that falls behind ends Lagged, starts
-  fresh and rereads the same keys once live
-  ([ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)).
-  A reconnect resumes missed events from a bounded buffer without a reread
-  ([ADR-0034](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0034-resume-is-a-bounded-buffer-not-a-guarantee.md)).
-- Every mutation carries an operation id, so one the Outbox replays runs once
-  ([ADR-0002](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0002-replay-idempotency-via-operation-id-middleware.md)).
-- A create takes a Client-Minted Id, so changes queued behind it point at the
-  right row
-  ([ADR-0003](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0003-client-minted-entity-ids-on-create.md)).
-- zustand holds client state several components share, and state one component
-  owns stays in `useState`. A store holds ids, never a copy of server data.
-- The page's provider creates a store whose first value comes from the page,
-  such as the recipe page's recipe id, and hands it down through a context that
-  holds only the store. A module-level store is one object on the server, shared
-  by every request.
-- A write's rollback and settle go in `useMutation`'s own options. A `mutate`
-  call's callbacks run only for the last call, so an overlapped failure would
-  keep its change.
-- The component that draws data mounts its subscriptions: a feature root for
-  its screens, a panel while open, and the shell for its own data and the
-  Reader. A screen also mounts subscriptions for other domains it draws, so
-  unused pages don't stay subscribed. The shell mounts the Reader's household
-  and permissions, admin config, `useRecipeOutcomesSubscription` and the archive
-  import outcome, each showing its own toasts through the platform adapter.
-  Library's root mounts recipe list events, ratings, cookbooks and the Pantry.
-  Calendar's root and today's meals on the dashboard mount calendar events and
-  recipe updates, which change a planned recipe's name and image.
-  The editor also mounts recipe list events, which reread its category choices,
-  and Add to Groceries mounts the subscription of the recipe it draws. The Account screen mounts
-  archive import progress for its bar. A component inside `Panel` mounts its
-  reads and subscriptions while open and through the exit animation. Each
-  opening rereads data nothing kept current; hooks need no `enabled` or `open`
-  flag.
-- A realtime subscription names the reads it keeps current with
-  `useKeepsCurrent`, so web doesn't read them again on mount until they go
-  stale. A mounted subscription vouches only for a read that arrived after it
-  mounted, so a read from before a gap in its subscription is fetched again. A
-  subscription mounting with the screen rereads its `liveQueryKeys` once live.
-- Each layout seeds only what its screens draw in the first frame, and some
-  seeded reads are reread once their subscriptions are live to cover changes
-  made before registration. `(app)` seeds permissions and Device
-  Preferences; `(library)` and the recipe layout seed favourites, the household
-  and the reader's allergies through `lib/reader-recipe-seeds.ts`; `(dashboard)`
-  seeds pending imports. The shell reads the Reader's profile (`user.get`) itself.
-- Web, mobile, shared-react and `packages/ui` compile with the React Compiler,
-  and lint reports every component or hook it skips.
+- Read and write server data with named shared-react hooks. The `restrictTRPC`
+  rule forbids direct calls to `useTRPC` and `useTRPCClient` in both apps.
+- Keep server data in TanStack Query. Offline mode persists that cache. Use
+  `useState` for state owned by one component and Zustand for shared UI state.
+  Page stores hold IDs and UI state and are created per page provider.
+  See [ADR-0001](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0001-web-offline-is-a-persisted-query-cache.md).
+- Use generated tRPC key builders and named constants for other keys. To
+  invalidate all variants of an infinite query, use `pathKey()`.
+- Keep rollback and settle callbacks in `useMutation` options so they run for
+  every call. Mutations carry operation IDs for safe replay. Creates use
+  client-minted IDs so queued edits can refer to the new record.
+  See [ADR-0002](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0002-replay-idempotency-via-operation-id-middleware.md)
+  and [ADR-0003](https://github.com/norish-recipes/Norish/blob/main/docs/adr/offline/0003-client-minted-entity-ids-on-create.md).
+- Mount subscriptions with the UI that draws the data. The shell owns its own
+  reads and subscriptions, the feature root owns its screens, and a panel owns
+  its reads and subscriptions while open. Seed only reads needed for the first
+  render.
+- Use `useKeepsCurrent` to declare which queries a subscription keeps current.
+  Fresh subscriptions reread their `liveQueryKeys` once live, including after
+  lag. A reconnect can resume events from the bounded buffer.
+  See [ADR-0032](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0032-realtime-is-one-hub-one-catalogue-one-idiom.md)
+  and [ADR-0034](https://github.com/norish-recipes/Norish/blob/main/docs/adr/realtime/0034-resume-is-a-bounded-buffer-not-a-guarantee.md).
+- Web, mobile, shared-react and `packages/ui` use the React Compiler. Lint
+  reports components or hooks it skips.
 
 ## How data flows
 
-The examples follow a grocery on the list. Other domains work the same way.
+These examples follow a grocery list item.
 
 ### A read
 
-A component asks a hook for what it draws. `useGroceryFor(id)` in
-`@norish/shared-react/groceries` takes `trpc` from `useTRPC()` and calls
-`useQuery` with `trpc.groceries.list.queryOptions()` and a `select` that picks
-one row, so the component re-renders only when that row changes.
-
-When the Query cache holds a fresh list, nothing leaves the client. Otherwise
-the tRPC links batch the read into an HTTP request to `/api/trpc`, which
-`app/api/trpc/[trpc]/route.ts` hands to the router in `packages/trpc`. The
-`groceries.list` procedure reads through the grocery repositories in
-`packages/db`, and the answer lands in the cache.
+`useGroceryFor(id)` selects a row from the grocery list query. If the list is
+missing or stale, tRPC batches the request to `/api/trpc`. The
+`groceries.list` procedure reads from the repository and returns the list to
+the Query cache.
 
 ```mermaid
 sequenceDiagram
@@ -276,29 +183,18 @@ sequenceDiagram
   Q-->>C: the selected row
 ```
 
-On a full page load the route runs the same reads on the server through
-`QuerySeed`, which calls the router without HTTP, and sends the answers with the
-document. While Offline the Offline Cache answers with what it stored.
+On a full page load, `QuerySeed` can run the read on the server without HTTP.
+Offline, the Offline Cache supplies saved data.
 
 ### A write
 
-A component calls an action from `useGroceriesMutations()`, such as
-`toggleGroceries(ids, isDone)`. The action runs a `useMutation` whose options
-hold the whole write:
+`useGroceriesMutations()` exposes actions such as `toggleGroceries(ids, isDone)`.
+`onMutate` updates the Query cache before the request. The server checks the
+operation ID and household access, then writes through the repository and
+publishes an event. `onError` rolls back a failed write.
 
-1. `onMutate` keeps the list as it is and writes the change into the cache, so
-   the rows change before the server answers.
-2. The tRPC links stamp an operation id on the mutation and send it over HTTP to
-   `/api/trpc`.
-3. On the server the idempotency middleware claims the operation id. The
-   `groceries.toggle` procedure checks household access, writes through
-   `updateGroceries` in `packages/db`, and publishes an `updated` event.
-4. If the write fails, `onError` puts the kept list back and shows an error.
-
-While Offline the mutation can't reach the server. The Outbox link stores it in
-the Outbox and passes the error on, which `onError` reads as Queued, so the
-change stays. Once the server is reachable, Recovery replays the Outbox with the
-same operation ids.
+Offline, a queued write keeps its local change. Recovery replays the Outbox
+with the original operation IDs when the server is reachable.
 
 ```mermaid
 sequenceDiagram
@@ -324,25 +220,13 @@ sequenceDiagram
 
 ### A realtime update
 
-After the write, `toggleGroceriesData` in `groceries-helpers.ts` calls
-`groceries.publish("updated", { changedGroceries }, { householdKey })`.
-`groceries` is the server side of the groceries Realtime Catalogue, in
-`packages/shared-server/src/realtime/groceries.ts`. `publish` checks the payload
-against the catalogue, stamps the operation id, and runs one Valkey script that
-adds the event to the channel's Resume Buffer and publishes it.
+After committing the write, `groceries.publish("updated", ...)` validates the
+payload, adds it to the Valkey Resume Buffer and publishes it. The server's
+Realtime Hub sends the event to subscribers on the household channel.
 
-Each server process has one Realtime Hub (`realtime/hub.ts`), its only Valkey
-subscriber. The hub hands the event to every subscription on the household's
-channel. Each subscription procedure is one
-`realtimeSubscription(groceries, "updated")` line, from
-`packages/trpc/src/realtime-subscription.ts`, and sends the event as an Envelope
-over the WebSocket.
-
-On web, `GroceriesRoot` mounts `useGroceriesSubscription`, which builds
-each subscription on `useRealtimeSubscription`. Its `updated` handler merges the
-changed rows into the cached list by id with `setQueryData`, and the components
-whose slice changed re-render. The client that made the change gets the event
-too, and merging it again changes nothing.
+`GroceriesRoot` mounts `useGroceriesSubscription`. Its handler merges event rows
+into the Query cache by ID. It can apply the same event twice with the same
+result, including on the client that made the change.
 
 ```mermaid
 sequenceDiagram

@@ -1,73 +1,56 @@
 ---
 # Hidden until the iPhone app ships on TestFlight.
 draft: true
-title: Recipes on iPhone
-description: Read and cook a recipe on iPhone.
+title: Find and cook recipes on iPhone
+description: Search, import, edit and cook recipes on iPhone.
 ---
 
-# Recipes on iPhone
+# Find and cook recipes on iPhone
 
-Tap a recipe in your library to open it. The page shows its ingredients, steps,
-nutrition and other details. Use the heart to favourite it, the stars to rate it,
-or the menu to edit, share, plan or delete it.
+## Find a recipe
 
-To share a public link, choose **Share link** from the menu, choose an expiry from the menu row and tap **Create link** in the sheet header.
-Under **Current links**, each row shows its status and expiry. Copy or share a
-newly created link, or use the row controls to revoke, reactivate or delete a link.
+In **Search**, enter a name, ingredient or tag. Tap a recipe to open it,
+**Narrow to** to filter, or **Search for** to see all text matches. Use the
+chips above the field to search specific fields such as **Ingredients**.
 
-![A recipe page with ingredients and steps](/img/screenshots/mobile-recipe-page.png)
+![Recipe suggestions, Narrow to rows and Search Scope chips](/img/screenshots/mobile-search-typing.png)
 
-Tap the recipe photo to open the viewer. Swipe through photos and videos, pinch
-to zoom a photo, or swipe down to close. Play a video in the viewer and use its
-full-screen button to enlarge it. Step photos open in a viewer too.
+Tap × on a chip to clear that filter. Searching needs a connection. Open
+saved recipes offline from **Recipes**.
 
-![A recipe photo in the full-screen viewer](/img/screenshots/mobile-recipe-viewer.png)
+In your library, open **Cookbooks** and tap **+** to create one. Hold a recipe
+to add it to a cookbook.
 
-## Write or edit a recipe
+## Add or share a recipe
 
-Tap **Add recipe** and choose **Write it yourself** to create a recipe. On an
-existing recipe, choose **Edit** from the menu. Add ingredients and steps, then
-tap **Create** or **Save**. Use `#` for a section and `@` in a step to select an
-ingredient. Drag the grips to reorder rows.
+Tap **Add recipe** to write or import a recipe. Photo imports need AI. To
+import from another app, share a link, text or up to 10 photos and choose
+**Norish**. If you share offline, open Norish when you reconnect.
 
-![The recipe editor with ingredients and steps](/img/screenshots/mobile-recipe-editor.png)
+![Share Extension importing a recipe link](/img/screenshots/mobile-share-extension.png)
 
-## Servings and nutrition
+To send someone a public link, choose **Share link** in the recipe menu,
+set an expiry, then tap **Create link**. Use **Current links** to copy or
+revoke a link.
 
-Use the servings controls to scale ingredient amounts. Tap the servings count to
-enter a number. The options menu switches between **Show decimals** and **Show
-fractions** and offers **Convert to Metric** or **Convert to US**. The Nutrition
-section shows values per serving when they are available.
+## Edit and scale a recipe
 
-![Servings controls and nutrition on a recipe](/img/screenshots/mobile-recipe-servings.png)
+Choose **Edit** from the recipe menu. Use `#` to start a section or `@` to
+link an ingredient to a step. Drag the grips to reorder rows, then tap **Save**.
 
-## Cook mode
+Use the servings controls to scale ingredients, or tap the count to enter
+a number. The options menu has **Show decimals**, **Show fractions**, and
+metric or US conversion.
 
-Tap **Cook** in the bottom bar, beside the running timer when there is one. Swipe through steps or use the previous and next
-controls. Switch between **Steps** and **Ingredients** to check the ingredients
-while cooking. Cook mode keeps the screen awake and shows progress and an
-estimated ready time.
+## Cook mode and timers
+
+Tap **Cook** in the bottom bar. Swipe between steps and switch between
+**Steps** and **Ingredients**. Cook mode keeps the screen awake.
 
 ![Cook mode showing a step and its timer](/img/screenshots/mobile-recipe-cook.png)
 
-## Recipe Timers
+Tap a time in a step to start, pause or resume a timer. Hold it to reset or
+remove it. Tap a timer in the bottom bar's timer list to jump to its step.
 
-Tap a time in a step to start its timer. Tap it again to pause or resume; hold it
-for reset and remove actions. Timers work on the recipe page and in cook mode.
-They keep running when you leave cook mode or close Norish.
-
-The timer in the bottom bar opens the timer list. In cook mode, tap the clock to
-open the list. There you can pause, resume, adjust, restart or remove timers.
-From the bottom bar's timer sheet, tap a timer row to open cook mode at its step.
-
-![The timer list with running and paused timers](/img/screenshots/mobile-recipe-timers.png)
-
-Norish asks for notification permission when you start your first timer. Allow
-notifications to receive an alert when a timer finishes while the app is closed
-or your phone is locked. Tap the notification to open its step in cook mode.
-
-The Live Activity shows timers on the Lock Screen and in the Dynamic Island.
-Tap it to open cook mode on the next timer's step. Signing out ends the device's
-timers.
-
-![A Recipe Timer Live Activity on the Lock Screen](/img/screenshots/mobile-recipe-live-activity.png)
+Allow notifications to get alerts when Norish is closed or the phone is
+locked. Signing out ends your timers.
