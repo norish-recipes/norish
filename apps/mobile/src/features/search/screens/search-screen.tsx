@@ -135,7 +135,6 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
         />
       ) : (
         <Discover
-          filters={filters}
           focused={field.focused}
           onEdit={field.edit}
           onPicked={field.blur}

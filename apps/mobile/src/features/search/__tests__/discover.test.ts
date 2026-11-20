@@ -1,19 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { hiddenItemVisibility } from "@norish/shared-react/reader";
-import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
-import {
-  discoverSections,
-  offeredQuickFilters,
-  QUICK_FILTERS,
-  toggleCategory,
-  toggleQuickFilter,
-  toggleTag,
-} from "../utils/discover";
+import { discoverSections, offeredQuickFilters, QUICK_FILTERS } from "../utils/discover";
 
 const shown = { recentCount: 3, categories: 4, tags: 6 };
-const quick = (key: string) => QUICK_FILTERS.find((item) => item.key === key)!;
 
 describe("discoverSections", () => {
   it("shows every section with the keyboard down", () => {
@@ -58,35 +49,12 @@ describe("Quick filters", () => {
     expect(keys(["rating"])).toEqual(["favorites", "underThirty", "pantry"]);
   });
 
-  it("sets the filter the board names, and a second tap removes it", () => {
-    const settings = {
+  it("sets the filter the board names", () => {
+    expect(Object.fromEntries(QUICK_FILTERS.map((item) => [item.key, item.on]))).toEqual({
       favorites: { showFavoritesOnly: true },
       underThirty: { maxCookingTime: 30 },
       fourAndUp: { minRating: 4 },
       pantry: { showPantryOnly: true },
-    };
-
-    for (const [key, patch] of Object.entries(settings)) {
-      const filters = { ...DEFAULT_RECIPE_FILTERS };
-      const on = { ...filters, ...toggleQuickFilter(filters, quick(key)) };
-
-      expect(on).toMatchObject(patch);
-      expect(quick(key).isOn(on)).toBe(true);
-      expect(quick(key).isOn({ ...on, ...toggleQuickFilter(on, quick(key)) })).toBe(false);
-    }
-  });
-});
-
-describe("toggling a Category or Tag", () => {
-  const filters = { ...DEFAULT_RECIPE_FILTERS, categories: ["Dinner"], searchTags: ["vegan"] };
-
-  it("adds one that is off", () => {
-    expect(toggleCategory(filters, "Lunch")).toEqual({ categories: ["Dinner", "Lunch"] });
-    expect(toggleTag(filters, "quick")).toEqual({ searchTags: ["vegan", "quick"] });
-  });
-
-  it("removes one that is on, in any case", () => {
-    expect(toggleCategory(filters, "dinner")).toEqual({ categories: [] });
-    expect(toggleTag(filters, "Vegan")).toEqual({ searchTags: [] });
+    });
   });
 });

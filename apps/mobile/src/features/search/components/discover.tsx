@@ -16,15 +16,7 @@ import { useLibraryDiscover, useLibraryFilters } from "@norish/shared-react/reci
 
 import type { SectionRead } from "../utils/discover";
 import { useRecentSearches } from "../hooks/use-recent-searches";
-import {
-  discoverSections,
-  isCategoryOn,
-  isTagOn,
-  offeredQuickFilters,
-  toggleCategory,
-  toggleQuickFilter,
-  toggleTag,
-} from "../utils/discover";
+import { discoverSections, offeredQuickFilters } from "../utils/discover";
 
 const TILE_COUNT = 4;
 const SKELETON_TAG_WIDTHS = ["w-24", "w-28", "w-24", "w-20", "w-24", "w-16"];
@@ -113,12 +105,10 @@ function RecentSection({
 function CategoryTile({
   name,
   image,
-  on,
   onPress,
 }: {
   name: string;
   image: string | null;
-  on: boolean;
   onPress: () => void;
 }) {
   const label = useCategoryLabel()(name);
@@ -126,27 +116,22 @@ function CategoryTile({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected: on }}
       className="h-[84px] w-[48.5%] justify-end overflow-hidden rounded-[20px]"
       testID={`search-category-${name}`}
       onPress={onPress}
     >
       <CardPhoto className="absolute inset-0" image={image} />
       <View className="absolute inset-0 bg-black/35" />
-      <Text className="px-3.5 pb-[11px] text-[17px] font-semibold text-white">
-        {on ? `✓ ${label}` : label}
-      </Text>
+      <Text className="px-3.5 pb-[11px] text-[17px] font-semibold text-white">{label}</Text>
     </Pressable>
   );
 }
 
 function CategoriesSection({
   categories,
-  filters,
   onPick,
 }: {
   categories: { name: string; image: string | null }[] | undefined;
-  filters: CanonicalRecipeFilters;
   onPick: (patch: Partial<CanonicalRecipeFilters>) => void;
 }) {
   const intl = useIntl();
@@ -160,8 +145,7 @@ function CategoriesSection({
                 key={category.name}
                 image={category.image}
                 name={category.name}
-                on={isCategoryOn(filters, category.name)}
-                onPress={() => onPick(toggleCategory(filters, category.name))}
+                onPress={() => onPick({ categories: [category.name] })}
               />
             ))
           : Array.from({ length: TILE_COUNT }, (_, index) => (
@@ -173,10 +157,8 @@ function CategoriesSection({
 }
 
 function QuickFiltersSection({
-  filters,
   onPick,
 }: {
-  filters: CanonicalRecipeFilters;
   onPick: (patch: Partial<CanonicalRecipeFilters>) => void;
 }) {
   const intl = useIntl();
@@ -188,11 +170,11 @@ function QuickFiltersSection({
         {offeredQuickFilters(visibility).map((quick) => (
           <ToggleChip
             key={quick.key}
-            active={quick.isOn(filters)}
+            active={false}
             icon={quick.icon}
             label={intl.formatMessage({ id: quick.labelId })}
             testID={`search-quick-${quick.key}`}
-            onPress={() => onPick(toggleQuickFilter(filters, quick))}
+            onPress={() => onPick(quick.on)}
           />
         ))}
       </View>
@@ -202,11 +184,9 @@ function QuickFiltersSection({
 
 function TagsSection({
   tags,
-  filters,
   onPick,
 }: {
   tags: string[] | undefined;
-  filters: CanonicalRecipeFilters;
   onPick: (patch: Partial<CanonicalRecipeFilters>) => void;
 }) {
   const intl = useIntl();
@@ -218,10 +198,10 @@ function TagsSection({
           ? tags.map((tag) => (
               <ToggleChip
                 key={tag}
-                active={isTagOn(filters, tag)}
+                active={false}
                 label={tag}
                 testID={`search-tag-${tag}`}
-                onPress={() => onPick(toggleTag(filters, tag))}
+                onPress={() => onPick({ searchTags: [tag] })}
               />
             ))
           : SKELETON_TAG_WIDTHS.map((width, index) => (
@@ -233,16 +213,14 @@ function TagsSection({
 }
 
 /** The page with no text: Recent Searches, Categories, and with the keyboard down Quick filters and
- * Tags. A tap on a Category, Quick filter or Tag toggles its chip; `onPicked` is told after it. */
+ * Tags. It shows only with no chip applied, so a tap's chip is the only one; `onPicked` follows. */
 export function Discover({
   focused,
-  filters,
   onRun,
   onEdit,
   onPicked,
 }: {
   focused: boolean;
-  filters: CanonicalRecipeFilters;
   onRun: (text: string) => void;
   onEdit: (text: string) => void;
   onPicked: () => void;
@@ -279,21 +257,13 @@ export function Discover({
               <CategoriesSection
                 key={section}
                 categories={discover.data?.categories}
-                filters={filters}
                 onPick={pick}
               />
             );
           case "quickFilters":
-            return <QuickFiltersSection key={section} filters={filters} onPick={pick} />;
+            return <QuickFiltersSection key={section} onPick={pick} />;
           case "tags":
-            return (
-              <TagsSection
-                key={section}
-                filters={filters}
-                tags={discover.data?.tags}
-                onPick={pick}
-              />
-            );
+            return <TagsSection key={section} tags={discover.data?.tags} onPick={pick} />;
         }
       })}
     </ScrollView>
