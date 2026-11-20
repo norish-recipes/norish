@@ -254,10 +254,10 @@ LABEL org.opencontainers.image.source="https://github.com/norish-recipes/norish"
 
 COPY --from=base /usr/local/bin/node /usr/local/bin/node
 
-# Security: upgrade all packages to latest versions to fix CVEs. Node links libstdc++
-# and libgcc; the node user is UID/GID 1000, as in the node image.
+# Security: upgrade all packages to latest versions to fix CVEs. Node links libstdc++,
+# libgcc and libatomic; the node user is UID/GID 1000, as in the node image.
 RUN apk upgrade --no-cache && \
-  apk add --no-cache ca-certificates libc6-compat libstdc++ libgcc ffmpeg su-exec && \
+  apk add --no-cache ca-certificates libc6-compat libstdc++ libgcc libatomic ffmpeg su-exec && \
   addgroup -g 1000 node && \
   adduser -u 1000 -G node -s /bin/sh -D node && \
   rm -rf /var/cache/apk/* /tmp/*
