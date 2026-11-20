@@ -107,6 +107,8 @@ describe("getBrowser – a renderer's connection", () => {
     const first = getBrowser("obscura", ENDPOINT, undefined, TIMEOUT);
     const second = getBrowser("obscura", ENDPOINT, undefined, TIMEOUT);
 
+    // playwright-core loads on first use, so the dial follows a tick later.
+    await vi.waitFor(() => expect(mockConnectOverCDP).toHaveBeenCalled());
     connect(browser);
 
     await expect(first).resolves.toBe(browser);
@@ -163,6 +165,7 @@ describe("getBrowser – a renderer's connection", () => {
     const first = getBrowser("obscura", ENDPOINT, undefined, TIMEOUT);
     const second = getBrowser("obscura", "ws://elsewhere.test:9222", undefined, TIMEOUT);
 
+    await vi.waitFor(() => expect(connects).toHaveLength(2));
     connects[1]?.(newer);
     await second;
     connects[0]?.(older);

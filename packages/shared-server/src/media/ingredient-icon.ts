@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import convert from "heic-convert";
 import sharp from "sharp";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -159,7 +158,9 @@ export async function makeIngredientIcon(input: Buffer): Promise<Buffer> {
     );
   }
 
-  const bytes = isHeic(input)
+  // Loaded on use: its libheif WASM is held for the life of the process.
+  const convert = isHeic(input) ? (await import("heic-convert")).default : null;
+  const bytes = convert
     ? Buffer.from(
         new Uint8Array(
           // heic-convert takes a Uint8Array whatever its types say.

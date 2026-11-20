@@ -1,5 +1,4 @@
 import { isIP } from "node:net";
-import { chromium } from "playwright-core";
 import { z } from "zod";
 
 import { getPageRenderersConfig } from "@norish/shared-server/config/server-config-loader";
@@ -82,6 +81,8 @@ export async function testPageRenderer(
     if (renderer === "solver") {
       await solve(TEST_PAGE, endpoint, navigationTimeoutMs);
     } else {
+      // Loaded on use: playwright-core costs tens of MB a server that never renders would carry.
+      const { chromium } = await import("playwright-core");
       const browser = await chromium.connectOverCDP(await byAddress(endpoint), {
         timeout: navigationTimeoutMs,
       });
