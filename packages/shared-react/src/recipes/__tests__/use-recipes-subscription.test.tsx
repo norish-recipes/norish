@@ -532,3 +532,55 @@ describe("the recipe list events and recipe outcomes", () => {
     ]);
   });
 });
+
+describe("Search's own lists", () => {
+  const SEARCH_KEY = [
+    ["library", "list"],
+    {
+      input: { search: "soup", sortBeatsRank: true, withMatch: true, type: "recipes" },
+      type: "infinite",
+    },
+  ];
+  const SUGGEST_KEY = [
+    ["library", "list"],
+    { input: { search: "soup", sortBeatsRank: true, limit: 2, type: "recipes" }, type: "infinite" },
+  ];
+  const held = (id: string) => ({
+    kind: "recipe",
+    recipe: dashboardRecipe({ id, name: `Soup ${id}` }),
+    match: { field: "title" },
+  });
+  const cached = () => ({
+    pages: [{ items: [held("recipe-1"), held("recipe-2")], total: 2, nextCursor: null }],
+    pageParams: [0],
+  });
+
+  beforeEach(() => {
+    queryClient.setQueryData(SEARCH_KEY, cached());
+    queryClient.setQueryData(SUGGEST_KEY, cached());
+  });
+
+  it.each([
+    ["onUpdated", { recipe: fullRecipe({ name: "Renamed" }) }],
+    ["onCreated", { recipe: dashboardRecipe({ id: "r3", name: "Cake" }) }],
+    ["onImported", { recipe: dashboardRecipe({ id: "r3", name: "Cake" }) }],
+    ["onDeleted", { ids: ["recipe-1"] }],
+  ])("are never patched by %s, keeping their match lines, and are reread once", (name, payload) => {
+    emit(name, payload);
+    emit(name, payload);
+    endBurst();
+
+    for (const key of [SEARCH_KEY, SUGGEST_KEY]) {
+      expect(queryClient.getQueryData(key)).toEqual(cached());
+      expect(rereadsOf(key)).toBe(1);
+    }
+  });
+
+  it("still patches the Library's own list as before", () => {
+    emit("onCreated", { recipe: dashboardRecipe({ id: "r3", name: "Cake" }) });
+
+    expect(
+      (queryClient.getQueryData(LIBRARY_KEY) as { pages: { items: unknown[] }[] }).pages[0]?.items
+    ).toHaveLength(2);
+  });
+});

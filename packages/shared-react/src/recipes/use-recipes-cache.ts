@@ -1,5 +1,6 @@
 "use client";
 
+import type { QueryKey } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -11,6 +12,7 @@ import { useTRPC } from "../trpc";
 import {
   applyRecipeUpdateToLibrary,
   applyRecipeUpdateToMembers,
+  isSearchRead,
   libraryQueryHolds,
 } from "./library-cache";
 
@@ -74,10 +76,16 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
         queryClient.setQueryData<InfiniteRecipeData>(key, updater);
       }
 
+      const searchReads: QueryKey[] = [];
+
       for (const [key] of queryClient.getQueriesData<InfiniteLibraryData>({
         queryKey: trpc.library.list.pathKey(),
       })) {
         if (!libraryQueryHolds(key, "recipe")) continue;
+        if (isSearchRead(key)) {
+          searchReads.push(key);
+          continue;
+        }
 
         queryClient.setQueryData<InfiniteLibraryData>(key, (previous) =>
           applyRecipeUpdateToLibrary(previous, updater)
@@ -91,6 +99,8 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
           applyRecipeUpdateToMembers(previous, updater)
         );
       }
+
+      rereadInWindow(queryClient, searchReads);
     },
     [queryClient, trpc]
   );

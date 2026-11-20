@@ -32,6 +32,14 @@ export function libraryQueryHolds(queryKey: readonly unknown[], kind: LibraryKin
   return lensHoldsKind(params?.input?.type ?? "all", kind);
 }
 
+/** Search's own reads, the only ones that let a sort beat rank: a patch would drop their match
+ * lines and ignore their text, so they are reread instead. */
+export function isSearchRead(queryKey: readonly unknown[]): boolean {
+  const params = queryKey[1] as { input?: Partial<LibraryListInput> } | undefined;
+
+  return params?.input?.sortBeatsRank === true;
+}
+
 /**
  * Reconcile one kind's rows back into the Library's interleaved pages.
  *
