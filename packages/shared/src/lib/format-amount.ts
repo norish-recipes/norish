@@ -45,9 +45,9 @@ function metricId(unit: string | null | undefined) {
 
 /** Two decimals below 0.1, and never 0 for an amount that is not. */
 function smallDecimal(num: number): string {
-  const fixed = num.toFixed(2);
+  const fixed = Number(num.toFixed(2));
 
-  return Number(fixed) !== 0 ? fixed.replace(/0+$/, "") : String(Number(num.toPrecision(1)));
+  return String(fixed !== 0 ? fixed : Number(num.toPrecision(1)));
 }
 
 /** A decimal without trailing zeros; g and ml are whole from 10 up, else one decimal, and
