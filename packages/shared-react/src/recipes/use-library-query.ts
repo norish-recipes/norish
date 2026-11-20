@@ -55,25 +55,39 @@ export function useLibraryQuery(
   );
   const queryKey = infiniteQueryOptions.queryKey;
 
-  const { data, error, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useInfiniteQuery({
-      ...infiniteQueryOptions,
-      enabled,
-    });
+  const {
+    data,
+    dataUpdatedAt,
+    error,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    ...infiniteQueryOptions,
+    enabled,
+  });
 
   const items = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data?.pages]);
   const hasMore = hasNextPage ?? false;
   const queryHash = hashKey(queryKey);
-  // The query a loadMore was swallowed Offline for; it runs once when the app is Live again.
-  const swallowedFor = useRef<string | null>(null);
+  // The query and page count a loadMore was swallowed Offline for; it is asked again when Live
+  // until a page lands, as Recovery's refetch can cancel the first ask.
+  const swallowed = useRef<{ hash: string; pages: number } | null>(null);
+  const pageCount = data?.pages?.length ?? 0;
 
   useEffect(() => {
-    if (swallowedFor.current === null || isOffline || isFetching) return;
-    const sameQuery = swallowedFor.current === queryHash;
+    const asked = swallowed.current;
 
-    swallowedFor.current = null;
-    if (sameQuery && hasMore) void fetchNextPage();
-  }, [isOffline, isFetching, hasMore, queryHash, fetchNextPage]);
+    if (asked === null || isOffline || isFetching || error) return;
+    if (asked.hash !== queryHash || pageCount > asked.pages || !hasMore) {
+      swallowed.current = null;
+
+      return;
+    }
+    void fetchNextPage();
+  }, [isOffline, isFetching, error, hasMore, queryHash, pageCount, dataUpdatedAt, fetchNextPage]);
 
   return {
     items,
@@ -87,9 +101,9 @@ export function useLibraryQuery(
     error,
     loadMore: useCallback(() => {
       // Offline no page is asked for and no spinner draws; the ask is remembered for Live.
-      if (isOffline) swallowedFor.current = queryHash;
+      if (isOffline) swallowed.current = { hash: queryHash, pages: pageCount };
       else if (hasMore && !isFetching) fetchNextPage();
-    }, [hasMore, isFetching, isOffline, queryHash, fetchNextPage]),
+    }, [hasMore, isFetching, isOffline, queryHash, pageCount, fetchNextPage]),
     invalidate: useCallback(() => {
       void queryClient.invalidateQueries({ queryKey });
     }, [queryClient, queryKey]),

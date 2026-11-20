@@ -67,6 +67,30 @@ describe("loadMore", () => {
     expect(world.pages).toEqual([0, 1]);
   });
 
+  it("asks again when Recovery's refetch cancelled the page it ran", async () => {
+    world.pages = [];
+    world.offline = false;
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result, rerender } = renderHook(() => useLibraryQuery(), { wrapper });
+
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+    world.offline = true;
+    rerender();
+    act(() => result.current.loadMore());
+
+    world.offline = false;
+    rerender();
+    // Recovery refetches the active queries the moment the app is Live, which cancels a page in flight.
+    await act(async () => {
+      await queryClient.refetchQueries({ type: "active" });
+    });
+
+    await waitFor(() => expect(result.current.hasMore).toBe(false));
+  });
+
   it("runs nothing when the query changed meanwhile", async () => {
     world.pages = [];
     world.offline = false;
