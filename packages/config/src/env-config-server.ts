@@ -137,6 +137,9 @@ const ServerConfigFields = z.object({
     .transform((value) => value === "true"),
   AUTH_RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
+  // Requests one API key may make per fixed window.
+  API_KEY_RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(3600),
+  API_KEY_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(500),
 
   // During build, allow placeholder DB URL so server-only modules can be imported
   // without requiring runtime secrets. Runtime still enforces a real URL.

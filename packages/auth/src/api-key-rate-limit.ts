@@ -1,12 +1,10 @@
 import { createHash } from "node:crypto";
 import { APIError } from "better-auth/api";
 
+import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 import { valkeySecondaryStorage } from "./secondary-storage";
-
-const WINDOW_SECONDS = 60 * 60;
-const MAX_REQUESTS = 500;
 
 export function apiKeyRateLimited(retryAfterSeconds: number): APIError {
   return new APIError(
@@ -17,14 +15,17 @@ export function apiKeyRateLimited(retryAfterSeconds: number): APIError {
 }
 
 /**
- * Counts an API key's requests in fixed hourly windows. Better Auth's own limit
+ * Counts an API key's requests in fixed windows, an hour by default. Better Auth's limit
  * restarts its hour at every request, so a steady poller never got a new one.
  */
 export async function consumeApiKeyRequest(key: string): Promise<true> {
   const counter = `api-key-rate:${createHash("sha256").update(key).digest("base64url")}`;
-  const count = await valkeySecondaryStorage.increment(counter, WINDOW_SECONDS);
+  const count = await valkeySecondaryStorage.increment(
+    counter,
+    SERVER_CONFIG.API_KEY_RATE_LIMIT_WINDOW
+  );
 
-  if (count <= MAX_REQUESTS) {
+  if (count <= SERVER_CONFIG.API_KEY_RATE_LIMIT_MAX) {
     return true;
   }
 
