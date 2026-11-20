@@ -3,12 +3,9 @@ name: Publish browser images
 # The Page Renderer browsers, Obscura and Chromium, are published on their own cadence, not with
 # every application release: an image changes only when its `docker/<browser>/pin.env` moves.
 # Bumping the pin is enough. The push to `rc/**` publishes the new tag, and the push to `main`
-# moves `latest` to it, the way the Norish image is promoted. Daily, fingerprint-chromium's latest
-# release is published as `<version>-norish.1` too, so a pin bump finds it built.
+# moves `latest` to it, the way the Norish image is promoted. Pins are checked by hand before
+# each release, like yt-dlp's.
 on:
-  schedule:
-    # Around midnight in the Netherlands. GitHub starts schedules late under load, lately by about 8 hours.
-    - cron: "37 23 * * *"
   workflow_dispatch:
     inputs:
       browser:
@@ -60,7 +57,6 @@ jobs:
       builds: ${{ steps.plan.outputs.builds }}
       publish: ${{ steps.plan.outputs.publish }}
       promote: ${{ steps.plan.outputs.promote }}
-      release: ${{ steps.plan.outputs.release }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -75,12 +71,10 @@ jobs:
           dockerhub-password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       # A push publishes a tag the registry does not have; a manual run refuses one it has unless
-      # told to overwrite it. A pull request builds every image and publishes nothing. The daily
-      # run publishes fingerprint-chromium's latest release in place of the pinned one.
+      # told to overwrite it. A pull request builds every image and publishes nothing.
       - name: Decide what to publish
         id: plan
         env:
-          GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
           ONLY: ${{ inputs.browser }}
@@ -92,25 +86,12 @@ jobs:
           promote=()
           for browser in obscura chromium; do
             if [ -n "$ONLY" ] && [ "$browser" != "$ONLY" ]; then continue; fi
-            if [ "$EVENT" = "schedule" ] && [ "$browser" != "chromium" ]; then continue; fi
             build=false
             if [ "$EVENT" = "pull_request" ]; then
               build=true
             else
               pin="docker/$browser/pin.env"
               tag="$(sed -n "s/^${browser^^}_IMAGE_TAG=//p" "$pin")"
-              if [ "$EVENT" = "schedule" ]; then
-                repo="$(sed -n "s|^CHROMIUM_REPO=https://github.com/||p" "$pin")"
-                read -r version archive digest < <(gh api "repos/$repo/releases/latest" --jq \
-                  '[.tag_name, (.assets[] | select(.name | endswith("x86_64_linux.tar.xz")) | .name, .digest)] | join(" ")')
-                if [ -z "$archive" ] || [[ "$digest" != sha256:* ]]; then
-                  echo "$repo $version has no x86_64 Linux archive with a digest." >&2
-                  exit 1
-                fi
-                tag="${version}-norish.1"
-                printf 'release<<EOF\nCHROMIUM_VERSION=%s\nCHROMIUM_ARCHIVE=%s\nCHROMIUM_SHA256=%s\nCHROMIUM_IMAGE_TAG=%s\nEOF\n' \
-                  "$version" "$archive" "${digest#sha256:}" "$tag" >> "$GITHUB_OUTPUT"
-              fi
               ref="$(sed -n "s/^${browser^^}_IMAGE=//p" "$pin"):$tag"
               if ! docker buildx imagetools inspect --raw "$ref" >/dev/null 2>&1; then
                 echo "$ref is unpublished, publishing."
@@ -126,7 +107,7 @@ jobs:
                 echo "$ref is already published, nothing to build."
               fi
               if [ "$build" = "true" ]; then publish+=("$browser"); fi
-              if [ "$REF" = "refs/heads/main" ] && [ "$EVENT" != "schedule" ]; then promote+=("$browser"); fi
+              if [ "$REF" = "refs/heads/main" ]; then promote+=("$browser"); fi
             fi
             if [ "$build" = "true" ]; then
               # Obscura ships both architectures; fingerprint-chromium builds Linux for x86_64 only.
@@ -164,15 +145,9 @@ jobs:
 
       # The pin's release lines are the build's args; the image name and tag stay out of them.
       - name: Read pin.env
-        env:
-          RELEASE: ${{ needs.plan.outputs.release }}
         run: |
           set -euo pipefail
           pin="docker/${BROWSER}/pin.env"
-          if [ -n "$RELEASE" ]; then
-            { grep -Ev '^CHROMIUM_(VERSION|ARCHIVE|SHA256|IMAGE_TAG)=' "$pin"; echo "$RELEASE"; } > "$RUNNER_TEMP/pin.env"
-            pin="$RUNNER_TEMP/pin.env"
-          fi
           sed -n "s/^${BROWSER^^}_IMAGE=/IMAGE=/p" "$pin" >> "$GITHUB_ENV"
           {
             echo "BUILD_ARGS<<EOF"
@@ -253,11 +228,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Read pin.env
-        env:
-          RELEASE: ${{ needs.plan.outputs.release }}
         run: |
           sed -n "s/^${BROWSER^^}_IMAGE=/IMAGE=/p" "docker/${BROWSER}/pin.env" >> "$GITHUB_ENV"
-          sed -n "s/^${BROWSER^^}_IMAGE_TAG=/TAG=/p" <<< "${RELEASE:-$(cat "docker/${BROWSER}/pin.env")}" >> "$GITHUB_ENV"
+          sed -n "s/^${BROWSER^^}_IMAGE_TAG=/TAG=/p" "docker/${BROWSER}/pin.env" >> "$GITHUB_ENV"
 
       - name: Download digests
         uses: actions/download-artifact@v8
