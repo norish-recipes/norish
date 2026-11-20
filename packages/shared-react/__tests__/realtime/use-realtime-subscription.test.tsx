@@ -410,6 +410,30 @@ describe("useRealtimeSubscription", () => {
       expect(read.queryFn).toHaveBeenCalledTimes(2);
     });
 
+    it("rereads a read in flight when an event lands, since its answer may predate the event", async () => {
+      const read = observe(GROCERIES);
+      const onEvent = vi.fn(() => queryClient.setQueryData(GROCERIES, ["after"]));
+
+      render({ onEvent, liveQueryKeys: [GROCERIES] });
+      act(() => current().observer.onData?.(tracked(envelope({ n: 1 }))));
+      await act(async () => read.answers[0]!.resolve(["before"]));
+
+      expect(read.queryFn).toHaveBeenCalledTimes(2);
+      await act(async () => read.answers[1]!.resolve(["after"]));
+      expect(queryClient.getQueryData(GROCERIES)).toEqual(["after"]);
+    });
+
+    it("rereads nothing for an event when no read is in flight", async () => {
+      const read = observe(GROCERIES);
+
+      await act(async () => read.answers[0]!.resolve(["g"]));
+      render({ onEvent: vi.fn(), liveQueryKeys: [GROCERIES] });
+      act(() => current().observer.onData?.(tracked(envelope({ n: 1 }))));
+      await act(async () => vi.runOnlyPendingTimers());
+
+      expect(read.queryFn).toHaveBeenCalledTimes(1);
+    });
+
     it("rereads a read in flight when asked, once it lands", async () => {
       const read = observe(GROCERIES);
 

@@ -211,6 +211,17 @@ export function useRealtimeSubscription<P>(
 
       assertEventEnvelope<P>(item);
       handlers.onEvent(item.payload, item.meta);
+
+      // A read in flight may predate this event and land over what onEvent wrote: reread it after.
+      const liveKeys = handlers.liveQueryKeys ?? [];
+      const inFlight = queryClient.getQueryCache().findAll({
+        fetchStatus: "fetching",
+        predicate: (query) => liveKeys.some((key) => partialMatchKey(query.queryKey, key)),
+      });
+
+      if (inFlight.length > 0) {
+        rereadOnceWritesSettle(queryClient, (query) => inFlight.includes(query));
+      }
     },
     onError: (err) => {
       if (!isRealtimeLagged(err)) return;
