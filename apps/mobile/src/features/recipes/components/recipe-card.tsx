@@ -9,6 +9,7 @@ import { HighlightedText } from "@/components/highlighted-text";
 import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { lightImpact } from "@/lib/haptics";
+import { plainText } from "@/lib/plain-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useIntl } from "react-intl";
 
@@ -143,7 +144,7 @@ type CardProps = {
 
 /** The recipe's title and the line under it: the match while searching, else the description. */
 function titleAndLine({ recipe, facts, hit }: CardProps) {
-  if (!hit) return { title: recipe.name, line: facts.description };
+  if (!hit) return { title: recipe.name, line: plainText(facts.description) };
 
   return {
     title:
