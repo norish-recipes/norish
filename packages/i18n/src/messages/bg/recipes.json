@@ -282,7 +282,8 @@
     "referenceIntake": "% от дневния референтен прием за възрастен ({calories} kcal)",
     "showingPortions": "Показани стойности за {count} {count, plural, one {порция} other {порции}}",
     "estimated": "Приблизително",
-    "leftOut": "{count, plural, one {# ред не е отчетен} other {# реда не са отчетени}}, затова стойностите с * може да са по-високи",
+    "leftOut": "{count, plural, one {# ред не е отчетен} other {# реда не са отчетени}}",
+    "leftOutStarred": "{count, plural, one {# ред не е отчетен} other {# реда не са отчетени}}, затова стойностите с * може да са по-високи",
     "estimatedByAI": "изчислено от ИИ",
     "reasons": {
       "seasoning": "подправка",

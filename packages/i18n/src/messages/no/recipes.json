@@ -282,7 +282,8 @@
     "referenceIntake": "% av daglig referanseinntak for en voksen ({calories} kcal)",
     "showingPortions": "Viser verdier for {count} {count, plural, one {porsjon} other {porsjoner}}",
     "estimated": "Anslått",
-    "leftOut": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}, så verdier med * kan være høyere",
+    "leftOut": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}",
+    "leftOutStarred": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}, så verdier med * kan være høyere",
     "estimatedByAI": "anslått av AI",
     "reasons": {
       "seasoning": "krydder",

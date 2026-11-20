@@ -175,7 +175,7 @@ function WorkedOutNotes({ workedOut }: { workedOut: WorkedOutNutrition }) {
             onClick={() => setListOpen((wasOpen) => !wasOpen)}
           >
             <span aria-hidden>*</span>
-            <span>{t("leftOut", { count: workedOut.leftOut.length })}</span>
+            <span>{t("leftOutStarred", { count: workedOut.leftOut.length })}</span>
             <ChevronRightIcon
               className={`size-4 shrink-0 transition-transform ${listOpen ? "rotate-90" : ""}`}
             />

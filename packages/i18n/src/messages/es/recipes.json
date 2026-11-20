@@ -282,7 +282,8 @@
     "referenceIntake": "% de la ingesta diaria de referencia para un adulto ({calories} kcal)",
     "showingPortions": "Mostrando valores para {count} {count, plural, one {porción} other {porciones}}",
     "estimated": "Estimado",
-    "leftOut": "{count, plural, one {# línea sin contar} other {# líneas sin contar}}, así que los valores con * pueden ser mayores",
+    "leftOut": "{count, plural, one {# línea sin contar} other {# líneas sin contar}}",
+    "leftOutStarred": "{count, plural, one {# línea sin contar} other {# líneas sin contar}}, así que los valores con * pueden ser mayores",
     "estimatedByAI": "estimado por IA",
     "reasons": {
       "seasoning": "condimento",

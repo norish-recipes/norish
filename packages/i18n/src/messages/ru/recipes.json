@@ -282,7 +282,8 @@
     "referenceIntake": "% от суточной референсной нормы для взрослого ({calories} kcal)",
     "showingPortions": "Показаны значения для {count} {count, plural, one {порции} few {порций} many {порций} other {порции}}",
     "estimated": "Приблизительно",
-    "leftOut": "{count, plural, one {# строка не учтена} few {# строки не учтены} many {# строк не учтено} other {# строки не учтено}}, поэтому значения со * могут быть выше",
+    "leftOut": "{count, plural, one {# строка не учтена} few {# строки не учтены} many {# строк не учтено} other {# строки не учтено}}",
+    "leftOutStarred": "{count, plural, one {# строка не учтена} few {# строки не учтены} many {# строк не учтено} other {# строки не учтено}}, поэтому значения со * могут быть выше",
     "estimatedByAI": "оценено ИИ",
     "reasons": {
       "seasoning": "приправа",

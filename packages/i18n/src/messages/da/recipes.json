@@ -282,7 +282,8 @@
     "referenceIntake": "% af det daglige referenceindtag for en voksen ({calories} kcal)",
     "showingPortions": "Viser værdier for {count} {count, plural, one {portion} other {portioner}}",
     "estimated": "Anslået",
-    "leftOut": "{count, plural, one {# linje ikke talt med} other {# linjer ikke talt med}}, så værdier med * kan være højere",
+    "leftOut": "{count, plural, one {# linje ikke talt med} other {# linjer ikke talt med}}",
+    "leftOutStarred": "{count, plural, one {# linje ikke talt med} other {# linjer ikke talt med}}, så værdier med * kan være højere",
     "estimatedByAI": "anslået af AI",
     "reasons": {
       "seasoning": "krydderi",

@@ -282,7 +282,8 @@
     "referenceIntake": "% de l’apport quotidien de référence pour un adulte ({calories} kcal)",
     "showingPortions": "Affichage des valeurs pour {count} {count, plural, one {portion} other {portions}}",
     "estimated": "Estimé",
-    "leftOut": "{count, plural, one {# ligne non comptée} other {# lignes non comptées}} ; les valeurs marquées d’un * peuvent être plus élevées",
+    "leftOut": "{count, plural, one {# ligne non comptée} other {# lignes non comptées}}",
+    "leftOutStarred": "{count, plural, one {# ligne non comptée} other {# lignes non comptées}} ; les valeurs marquées d’un * peuvent être plus élevées",
     "estimatedByAI": "estimé par l'IA",
     "reasons": {
       "seasoning": "assaisonnement",

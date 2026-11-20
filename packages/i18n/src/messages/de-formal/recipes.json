@@ -282,7 +282,8 @@
     "referenceIntake": "% der täglichen Referenzmenge für Erwachsene ({calories} kcal)",
     "showingPortions": "Zeige Werte für {count} {count, plural, one {Portion} other {Portionen}}",
     "estimated": "Geschätzt",
-    "leftOut": "{count, plural, one {# Zeile nicht mitgezählt} other {# Zeilen nicht mitgezählt}}; mit * markierte Werte können höher sein",
+    "leftOut": "{count, plural, one {# Zeile nicht mitgezählt} other {# Zeilen nicht mitgezählt}}",
+    "leftOutStarred": "{count, plural, one {# Zeile nicht mitgezählt} other {# Zeilen nicht mitgezählt}}; mit * markierte Werte können höher sein",
     "estimatedByAI": "von KI geschätzt",
     "reasons": {
       "seasoning": "Gewürz",

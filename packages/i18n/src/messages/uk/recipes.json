@@ -282,7 +282,8 @@
     "referenceIntake": "% від добової референтної норми для дорослого ({calories} kcal)",
     "showingPortions": "Значення для {count} {count, plural, one {порції} few {порцій} many {порцій} other {порції}}",
     "estimated": "Оцінка",
-    "leftOut": "{count, plural, one {# рядок не враховано} few {# рядки не враховано} many {# рядків не враховано} other {# рядка не враховано}}, тому значення із * можуть бути вищими",
+    "leftOut": "{count, plural, one {# рядок не враховано} few {# рядки не враховано} many {# рядків не враховано} other {# рядка не враховано}}",
+    "leftOutStarred": "{count, plural, one {# рядок не враховано} few {# рядки не враховано} many {# рядків не враховано} other {# рядка не враховано}}, тому значення із * можуть бути вищими",
     "estimatedByAI": "оцінено ШІ",
     "reasons": {
       "seasoning": "приправа",

@@ -282,7 +282,8 @@
     "referenceIntake": "% من الكمية اليومية المرجعية للبالغين ({calories} kcal)",
     "showingPortions": "القيم معروضة لـ {count, plural, one {حصة واحدة} two {حصتين} few {# حصص} many {# حصة} other {# حصة}}",
     "estimated": "تقديري",
-    "leftOut": "{count, plural, one {سطر واحد لم يُحتسب} two {سطران لم يُحتسبا} few {# أسطر لم تُحتسب} many {# سطرًا لم يُحتسب} other {# سطر لم يُحتسب}}، لذا قد تكون القيم المميزة بـ * أعلى",
+    "leftOut": "{count, plural, one {سطر واحد لم يُحتسب} two {سطران لم يُحتسبا} few {# أسطر لم تُحتسب} many {# سطرًا لم يُحتسب} other {# سطر لم يُحتسب}}",
+    "leftOutStarred": "{count, plural, one {سطر واحد لم يُحتسب} two {سطران لم يُحتسبا} few {# أسطر لم تُحتسب} many {# سطرًا لم يُحتسب} other {# سطر لم يُحتسب}}، لذا قد تكون القيم المميزة بـ * أعلى",
     "estimatedByAI": "مقدّر بالذكاء الاصطناعي",
     "reasons": {
       "seasoning": "بهارات",

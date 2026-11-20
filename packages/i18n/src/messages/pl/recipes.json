@@ -282,7 +282,8 @@
     "referenceIntake": "% referencyjnej dziennej wartości spożycia dla osoby dorosłej ({calories} kcal)",
     "showingPortions": "Wartości dla {count} {count, plural, one {porcji} other {porcji}}",
     "estimated": "Szacunkowo",
-    "leftOut": "{count, plural, one {# niewliczony wiersz} few {# niewliczone wiersze} many {# niewliczonych wierszy} other {# niewliczonego wiersza}}, więc wartości z * mogą być wyższe",
+    "leftOut": "{count, plural, one {# niewliczony wiersz} few {# niewliczone wiersze} many {# niewliczonych wierszy} other {# niewliczonego wiersza}}",
+    "leftOutStarred": "{count, plural, one {# niewliczony wiersz} few {# niewliczone wiersze} many {# niewliczonych wierszy} other {# niewliczonego wiersza}}, więc wartości z * mogą być wyższe",
     "estimatedByAI": "oszacowane przez AI",
     "reasons": {
       "seasoning": "przyprawa",

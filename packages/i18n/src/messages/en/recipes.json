@@ -282,7 +282,8 @@
     "referenceIntake": "% of the daily reference intake for an adult ({calories} kcal)",
     "showingPortions": "Showing values for {count} {count, plural, one {portion} other {portions}}",
     "estimated": "Estimated",
-    "leftOut": "{count, plural, one {# line not counted} other {# lines not counted}}, so starred values may be higher",
+    "leftOut": "{count, plural, one {# line not counted} other {# lines not counted}}",
+    "leftOutStarred": "{count, plural, one {# line not counted} other {# lines not counted}}, so starred values may be higher",
     "estimatedByAI": "estimated by AI",
     "reasons": {
       "seasoning": "seasoning",

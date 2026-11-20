@@ -248,7 +248,7 @@ describe("NutritionCard", () => {
       renderCard();
 
       expect(mocks.marked).toBe(true);
-      expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveTextContent("leftOut: 4");
+      expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveTextContent("leftOutStarred: 4");
       expect(screen.getByTestId("nutrition-left-out-toggle")).toHaveAttribute(
         "aria-expanded",
         "false"

@@ -282,7 +282,8 @@
     "referenceIntake": "% av det dagliga referensintaget för en vuxen ({calories} kcal)",
     "showingPortions": "Visar värden för {count} {count, plural, one {portion} other {portioner}}",
     "estimated": "Uppskattat",
-    "leftOut": "{count, plural, one {# rad ej medräknad} other {# rader ej medräknade}}, så värden med * kan vara högre",
+    "leftOut": "{count, plural, one {# rad ej medräknad} other {# rader ej medräknade}}",
+    "leftOutStarred": "{count, plural, one {# rad ej medräknad} other {# rader ej medräknade}}, så värden med * kan vara högre",
     "estimatedByAI": "uppskattat av AI",
     "reasons": {
       "seasoning": "krydda",
