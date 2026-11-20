@@ -1,5 +1,5 @@
 # Saves recipes on the server and keeps each id as output[key]. Callers pass RECIPES via runFlow env:
-# a JSON array of { name, key, ingredients?, steps?, tags? }.
+# a JSON array of { name, key, ingredients?, steps?, tags?, categories? }.
 appId: dev.norish.app
 ---
 - evalScript: |
@@ -11,6 +11,7 @@ appId: dev.norish.app
             ingredients: recipe.ingredients || [],
             steps: recipe.steps || [],
             tags: recipe.tags || [],
+            categories: recipe.categories || [],
           }),
         });
         output[recipe.key] = json(answer.body).id;
