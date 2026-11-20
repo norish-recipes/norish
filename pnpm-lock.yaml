@@ -685,9 +685,6 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 4.4.0
-      esbuild:
-        specifier: ^0.28.2
-        version: 0.28.2
       next:
         specifier: 'catalog:'
         version: 16.4.6(@babel/core@7.29.7(supports-color@10.2.2))(@playwright/test@1.65.1)(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -703,9 +700,6 @@ importers:
       server-only:
         specifier: 'catalog:'
         version: 0.0.1
-      tsx:
-        specifier: 'catalog:'
-        version: 4.23.15
       ws:
         specifier: 'catalog:'
         version: 8.23.0
@@ -827,6 +821,9 @@ importers:
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.3.1)
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       eslint:
         specifier: 'catalog:'
         version: 10.15.0(jiti@2.7.0)(supports-color@10.2.2)
@@ -872,6 +869,9 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.5
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
       tw-animate-css:
         specifier: 1.4.0
         version: 1.4.0

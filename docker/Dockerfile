@@ -110,7 +110,7 @@ RUN pnpm deploy --filter @norish/web --prod /app/deploy && \
   cd /app/deploy/node_modules/.pnpm && \
   # Build-time packages that reach the production closure through required
   # peers: TypeScript as tRPC's, and Babel, type declarations and Tailwind with
-  # them. The server runs through tsx and esbuild, so those two stay.
+  # them.
   rm -rf typescript@* @babel+* @types+* tailwindcss@* @tailwindcss+* \
   # SWC compiles only during next build.
   @next+swc-* && \
@@ -191,6 +191,12 @@ RUN for copy in /app/deploy/node_modules/.pnpm/*/node_modules/@norish/*; do \
   ln -s "../../$copy/src" "/app/runtime-packages/$(basename $dir)/src"; \
   fi; \
   done
+
+# The server runs as JavaScript, without tsx: the deployed copies' TypeScript and the custom
+# server's compile in place with esbuild, the transform tsx applied at every start, and the
+# copies' exports name the .js. docker/compiled-workspace-hooks.mjs resolves them at runtime.
+RUN cd apps/web && node /app/docker/compile-workspace.mjs \
+  /app/deploy/node_modules/.pnpm/*/node_modules/@norish/* /app/apps/web/server
 
 ##############################
 # yt-dlp download (cached separately from app build)
@@ -276,12 +282,12 @@ COPY --from=build --chown=${UID}:${GID} /app/apps/web/public/ ./apps/web/public/
 COPY --from=build --chown=${UID}:${GID} /app/apps/parser-api/ ./apps/parser-api/
 COPY --from=build --chown=${UID}:${GID} /app/.uv/python/ /app/.uv/python/
 
-# --- Custom server, run from source through tsx ---
-# Its package.json says "type": "module". No tsconfig.json comes over: from
-# /app or /app/apps/web, tsx would apply apps/web's @norish/queue/* path alias
-# into /app/packages and load a second queue registry.
+# --- Custom server, compiled to JavaScript ---
+# Its package.json says "type": "module". The hooks resolve the compiled workspace's
+# extensionless imports in the server's own thread.
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/server/ ./apps/web/server/
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/package.json ./apps/web/package.json
+COPY --chown=${UID}:${GID} docker/compiled-workspace-hooks.mjs ./compiled-workspace-hooks.mjs
 
 # --- Workspace packages: package.json and a src link into the deployed copy ---
 # The code runs from node_modules; the links serve the data files read from
@@ -314,4 +320,5 @@ ENTRYPOINT ["norish-entrypoint"]
 
 # Run directly with node; the custom server starts the embedded parser API when needed.
 # A small young generation: loading the server's modules grows it, and its RSS is never given back.
-CMD ["node", "--max-semi-space-size=4", "--import", "tsx", "/app/apps/web/server/index.ts"]
+# optimize-for-size trades a slower start for ~30 MB less resident code and heap.
+CMD ["node", "--max-semi-space-size=4", "--optimize-for-size", "--import", "/app/compiled-workspace-hooks.mjs", "/app/apps/web/server/index.js"]
