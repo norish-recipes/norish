@@ -23,6 +23,7 @@ import { observable } from "@trpc/server/observable";
 import superjson from "superjson";
 
 import { BASE_PATH } from "@norish/shared/lib/base-path";
+import { GatewayTimeoutError } from "@norish/shared/lib/trpc-errors";
 
 import { createOperationIdLink } from "./operation-id-link";
 import { createBatchRequestHeadersResolver, createRequestHeadersResolver } from "./request-headers";
@@ -166,6 +167,15 @@ function createUnauthorizedLink<TRouter extends AnyTRPCRouter>(
   };
 }
 
+/** tRPC parses a proxy's HTML 504 as JSON and loses its status; the error's cause keeps it. */
+const keepGatewayTimeout: typeof fetch = async (input, init) => {
+  const response = await fetch(input, init);
+
+  if (response.status === 504) throw new GatewayTimeoutError();
+
+  return response;
+};
+
 /**
  * The HTTP links are built against `AnyTRPCRouter`: tRPC types the transformer
  * option on the router's client types, and for a generic router that
@@ -180,6 +190,7 @@ function createPlainHttpLink(
     url: `${getBaseUrl()}/api/trpc`,
     headers: createRequestHeadersResolver(getHeaders),
     transformer: superjson,
+    fetch: keepGatewayTimeout,
   });
 }
 
@@ -194,6 +205,7 @@ function createHttpFormDataMutationLink(
       serialize: (data: unknown) => data,
       deserialize: superjson.deserialize,
     },
+    fetch: keepGatewayTimeout,
   });
 }
 
@@ -216,6 +228,7 @@ function createHttpTransportLink(
         headers: createRequestHeadersResolver(getHeaders),
         transformer: superjson,
         methodOverride: "POST",
+        fetch: keepGatewayTimeout,
       }),
       false: splitLink({
         // A batch answers when its slowest read does, and these read the job queues or walk the
@@ -230,6 +243,7 @@ function createHttpTransportLink(
           // A batch's inputs ride in its GET URL: split it, or a large warm set fails every read
           // batched with it.
           maxURLLength: MAX_BATCH_URL_LENGTH,
+          fetch: keepGatewayTimeout,
         }),
       }),
     }),

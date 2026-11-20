@@ -1,6 +1,56 @@
-import { describe, expect, it } from "vitest";
+import { createTRPCUntypedClient } from "@trpc/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
+
+import { createTRPCClientLinks } from "../trpc/trpc-links";
 import { classifyReplayError, isStaleResult } from "./error-classification";
+
+/** What a mutation through the app's own links fails with when a proxy answers in HTML. */
+async function proxyAnswer(status: number): Promise<unknown> {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response("<html><body>Gateway</body></html>", {
+          status,
+          headers: { "content-type": "text/html" },
+        })
+    )
+  );
+  const client = createTRPCUntypedClient({
+    links: createTRPCClientLinks({
+      logger: { info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+      getBaseUrl: () => "http://norish.test",
+      includeSubscriptions: false,
+      enableLoggerLink: false,
+    }),
+  });
+
+  return client.mutation("admin.enrichAllRecipes", {}).catch((error: unknown) => error);
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("a proxy's HTML answer", () => {
+  it("504: the request reached a server that may have run it, so it is ambiguous", async () => {
+    const error = await proxyAnswer(504);
+
+    expect(isBackendUnreachableError(error)).toBe(false);
+    expect(classifyReplayError(error)).toBe("ambiguous");
+  });
+
+  it("502 and 503: the backend is down behind the proxy, so it is unreachable", async () => {
+    for (const status of [502, 503]) {
+      const error = await proxyAnswer(status);
+
+      expect(isBackendUnreachableError(error)).toBe(true);
+      expect(classifyReplayError(error)).toBe("unreachable");
+    }
+  });
+});
 
 describe("classifyReplayError", () => {
   it("classifies a network failure as unreachable (halt, resume on recovery)", () => {
