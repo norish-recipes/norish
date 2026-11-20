@@ -32,11 +32,13 @@ export type NarrowSource = {
   categoryLabel: (name: string) => string;
 };
 
-/** The Categories whose shown label has a word starting with the text, folded; at most three. */
+/** The Categories whose shown label has a word starting with the text, folded, leaving out the
+ * `applied` ones (lowercased) before the cap; at most three. */
 export function matchingCategories(
   names: readonly string[],
   text: string,
-  categoryLabel: (name: string) => string
+  categoryLabel: (name: string) => string,
+  applied: ReadonlySet<string> = new Set()
 ): string[] {
   const typed = foldName(text);
 
@@ -44,6 +46,8 @@ export function matchingCategories(
 
   return names
     .filter((name) => {
+      if (applied.has(name.toLowerCase())) return false;
+
       const label = foldName(categoryLabel(name));
 
       return label.startsWith(typed) || label.includes(` ${typed}`);
@@ -80,9 +84,11 @@ export function narrowRows(
     ...suggestions.tags
       .filter((name) => !tags.has(name.toLowerCase()))
       .map((name) => ({ kind: "tag" as const, name })),
-    ...matchingCategories(suggestions.categories, text, categoryLabel)
-      .filter((name) => !categories.has(name.toLowerCase()))
-      .map((name) => ({ kind: "category" as const, name, label: categoryLabel(name) })),
+    ...matchingCategories(suggestions.categories, text, categoryLabel, categories).map((name) => ({
+      kind: "category" as const,
+      name,
+      label: categoryLabel(name),
+    })),
   ];
 }
 

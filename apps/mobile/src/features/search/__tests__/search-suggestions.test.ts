@@ -178,4 +178,16 @@ describe("matching Categories by their shown label", () => {
   it("matches nothing for text with no word", () => {
     expect(matchingCategories(names, "  ", label)).toEqual([]);
   });
+
+  it("takes out an applied Category before the cap, so a fourth match fills its row", () => {
+    const four = { ...suggestions, categories: ["Dinner", "Dessert", "Drinks", "Dips"] };
+    const shown = (applied: string[]) =>
+      rows(
+        { ...none, categories: applied },
+        { suggestions: four, text: "d", categoryLabel: (n) => n }
+      ).flatMap((row) => (row.kind === "category" ? [row.name] : []));
+
+    expect(shown([])).toEqual(["Dinner", "Dessert", "Drinks"]);
+    expect(shown(["dessert"])).toEqual(["Dinner", "Drinks", "Dips"]);
+  });
 });
