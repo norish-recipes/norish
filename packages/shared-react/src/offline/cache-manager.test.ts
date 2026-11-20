@@ -7,7 +7,12 @@ import type { AppRouter } from "@norish/trpc/client";
 
 import type { OfflineStorage } from "./storage";
 import { queryCachePrefix } from "./cache-identity";
-import { CACHE_MAX_AGE_MS, createCacheManager, PERSIST_THROTTLE_MS } from "./cache-manager";
+import {
+  CACHE_MAX_AGE_MS,
+  createCacheManager,
+  OWNER_WRITE_WAIT_MS,
+  PERSIST_THROTTLE_MS,
+} from "./cache-manager";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
 import { createMemoryStorage } from "./testing/memory-storage";
@@ -602,6 +607,109 @@ describe("createCacheManager", () => {
     await landed;
 
     expect(await storage.keyval.get("owner-data:u1:recent")).toBeUndefined();
+  });
+
+  /** Holds every owner-data write until `land()`; a held write stores its value as it lands. */
+  function holdOwnerDataWrites() {
+    const setValue = storage.keyval.set.bind(storage.keyval);
+    const held: Array<() => Promise<void>> = [];
+    const values: unknown[] = [];
+
+    vi.spyOn(storage.keyval, "set").mockImplementation((key, value) => {
+      if (!key.startsWith("owner-data:")) return setValue(key, value);
+
+      values.push(value);
+
+      return new Promise<void>((resolve) => {
+        held.push(() => setValue(key, value).then(resolve));
+      });
+    });
+
+    return {
+      held,
+      values,
+      land: async (index = 0) => {
+        await held[index]?.();
+        await vi.advanceTimersByTimeAsync(0);
+      },
+    };
+  }
+
+  it("ends a session and switches owner though an owner-data write never settles", async () => {
+    useFakeTimers();
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    holdOwnerDataWrites();
+    void manager.ownerData.write("u1", "recent", ["stuck"]);
+
+    let switched = false;
+
+    void manager.reconcileIdentity({ sessionUserId: "u2", isOffline: false }).then(() => {
+      switched = true;
+    });
+    await vi.advanceTimersByTimeAsync(OWNER_WRITE_WAIT_MS);
+
+    expect(switched).toBe(true);
+    expect(manager.owner()).toBe("u2");
+
+    void manager.ownerData.write("u2", "recent", ["stuck too"]);
+
+    let signedOut = false;
+
+    void manager.resetOfflineCopy("sign-out").then(() => {
+      signedOut = true;
+    });
+    await vi.advanceTimersByTimeAsync(OWNER_WRITE_WAIT_MS);
+
+    expect(signedOut).toBe(true);
+    expect(manager.owner()).toBeNull();
+  });
+
+  it("leaves no key behind for a write that lands after its owner's data was cleared", async () => {
+    useFakeTimers();
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+
+    const writes = holdOwnerDataWrites();
+
+    void manager.ownerData.write("u1", "recent", ["late"]);
+
+    const signedOut = manager.resetOfflineCopy("sign-out");
+
+    await vi.advanceTimersByTimeAsync(OWNER_WRITE_WAIT_MS);
+    await signedOut;
+    await writes.land();
+
+    expect(await storage.keyval.keys()).not.toContain("owner-data:u1:recent");
+  });
+
+  it("writes one owner's value in the order it changed, only the newest still waiting", async () => {
+    useFakeTimers();
+    storage.lastOwner.set("u1");
+
+    const manager = createManager();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+
+    const writes = holdOwnerDataWrites();
+
+    void manager.ownerData.write("u1", "recent", ["first"]);
+    await vi.advanceTimersByTimeAsync(0);
+    void manager.ownerData.write("u1", "recent", ["second"]);
+    void manager.ownerData.write("u1", "recent", ["third"]);
+    await vi.advanceTimersByTimeAsync(0);
+    // The newest write is let land first, as an adapter that does not order them would.
+    await writes.land(writes.held.length - 1);
+    for (let index = 0; index < writes.held.length; index++) await writes.land(index);
+
+    expect(await storage.keyval.get("owner-data:u1:recent")).toEqual(["third"]);
+    expect(writes.values).toEqual([["first"], ["third"]]);
   });
 
   it("forgets the cache owner after a sign-out reset", async () => {

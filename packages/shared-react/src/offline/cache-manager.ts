@@ -31,6 +31,9 @@ const whenIdle = (run: () => void) => {
   }
 };
 
+/** A clear waits at most this long for owner-data writes still landing. */
+export const OWNER_WRITE_WAIT_MS = 250;
+
 export type RefetchOnMount = boolean | "always" | ((query: Query) => boolean | "always");
 
 // Names tRPC's path keys; it never sends a request or touches a client.
@@ -170,14 +173,41 @@ export function createCacheManager({
   const appliedListeners = new Set<() => void>();
   let dataOwner: string | null = null;
   const dataListeners = new Set<() => void>();
-  // Owner-data writes still landing, which a clear waits for so none survives it.
-  let ownerWrites: Promise<unknown> = Promise.resolve();
+  // Bumped whenever the open owner changes; a write made under an older one is stale.
+  let dataGeneration = 0;
+  // Per owner-data key: its chain of writes, and the newest value that chain has yet to write.
+  const writeChains = new Map<string, Promise<void>>();
+  const pendingWrites = new Map<string, { value: unknown; generation: number }>();
 
   function openOwnerData(owner: string | null): void {
     if (owner === dataOwner) return;
 
     dataOwner = owner;
+    dataGeneration++;
+    pendingWrites.clear();
     dataListeners.forEach((listener) => listener());
+  }
+
+  function writeOwnerData(key: string, value: unknown): Promise<void> {
+    pendingWrites.set(key, { value, generation: dataGeneration });
+
+    const step = (writeChains.get(key) ?? Promise.resolve()).then(async () => {
+      const next = pendingWrites.get(key);
+
+      if (!next) return;
+      pendingWrites.delete(key);
+      await keyval.set(key, next.value);
+      // Landed after its owner's data closed, so the clear may have missed it.
+      if (next.generation !== dataGeneration) await keyval.del(key);
+    });
+    const chain = step.catch(() => undefined);
+
+    writeChains.set(key, chain);
+    void chain.then(() => {
+      if (writeChains.get(key) === chain) writeChains.delete(key);
+    });
+
+    return step;
   }
 
   /** `held`: reads already in the client, which no event would save. */
@@ -262,7 +292,22 @@ export function createCacheManager({
   async function clearOwnerData(owner: string): Promise<void> {
     const prefix = ownerDataPrefix(owner);
 
-    await ownerWrites;
+    const landing = [...writeChains]
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([, chain]) => chain);
+
+    // Bounded, so a write that never settles cannot hold a session open; a later one undoes itself.
+    if (landing.length > 0) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+
+      await Promise.race([
+        Promise.all(landing),
+        new Promise((resolve) => {
+          timer = setTimeout(resolve, OWNER_WRITE_WAIT_MS);
+        }),
+      ]);
+      clearTimeout(timer);
+    }
     const keys = (await keyval.keys()).filter((key) => key.startsWith(prefix));
 
     await Promise.all(keys.map((key) => keyval.del(key)));
@@ -400,12 +445,7 @@ export function createCacheManager({
       read: async <T>(owner: string, name: string) =>
         owner === dataOwner ? keyval.get<T>(ownerDataKey(owner, name)) : undefined,
       write: async (owner, name, value) => {
-        if (owner !== dataOwner) return;
-
-        const written = keyval.set(ownerDataKey(owner, name), value);
-
-        ownerWrites = Promise.allSettled([ownerWrites, written]);
-        await written;
+        if (owner === dataOwner) await writeOwnerData(ownerDataKey(owner, name), value);
       },
       subscribe(listener) {
         dataListeners.add(listener);
