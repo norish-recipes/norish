@@ -5,11 +5,20 @@ import { SliceHairline } from "@/components/slice-row";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-/** The kit's one card: rows on a solid sand card with a hairline edge. */
-export function Card({ children, testID }: { children: ReactNode; testID?: string }) {
+/** The kit's one card: rows on a solid sand card with a hairline edge, or with `surface` on the
+ * edgeless surface the recipe cards use. */
+export function Card({
+  children,
+  surface = false,
+  testID,
+}: {
+  children: ReactNode;
+  surface?: boolean;
+  testID?: string;
+}) {
   return (
     <View
-      className="bg-sand border-stroke overflow-hidden rounded-[22px] border-[0.5px]"
+      className={`overflow-hidden ${surface ? "bg-surface rounded-[20px]" : "bg-sand border-stroke rounded-[22px] border-[0.5px]"}`}
       testID={testID}
     >
       {children}

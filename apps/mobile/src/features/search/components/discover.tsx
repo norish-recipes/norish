@@ -38,6 +38,7 @@ function RecentSection({
 
   return (
     <Section
+      dense
       title={intl.formatMessage({ id: "recipes.search.recent" })}
       trailing={
         <Pressable
@@ -53,7 +54,7 @@ function RecentSection({
         </Pressable>
       }
     >
-      <Card testID="search-recent">
+      <Card surface testID="search-recent">
         {recents.map((text, index) => (
           <CardRow
             key={text}
@@ -120,7 +121,7 @@ function CategoriesSection({
   const intl = useIntl();
 
   return (
-    <Section title={intl.formatMessage({ id: "common.filters.categories" })}>
+    <Section dense title={intl.formatMessage({ id: "common.filters.categories" })}>
       <View className="flex-row flex-wrap justify-between gap-y-2.5" testID="search-categories">
         {categories
           ? categories.map((category) => (
@@ -148,13 +149,14 @@ function QuickFiltersSection({
   const visibility = useHiddenItemVisibility();
 
   return (
-    <Section title={intl.formatMessage({ id: "recipes.search.quickFilters" })}>
+    <Section dense title={intl.formatMessage({ id: "recipes.search.quickFilters" })}>
       <View className="flex-row flex-wrap gap-2" testID="search-quick-filters">
         {quickFilters(visibility).map((quick) => (
           <ToggleChip
             key={quick.kind}
             active={false}
             icon={quick.icon}
+            mutedIcon={quick.icon !== "star"}
             label={intl.formatMessage({ id: quick.labelId })}
             testID={`search-quick-${quick.kind}`}
             onPress={() => onPick(quick.on)}
@@ -175,7 +177,7 @@ function TagsSection({
   const intl = useIntl();
 
   return (
-    <Section title={intl.formatMessage({ id: "common.filters.tags" })}>
+    <Section dense title={intl.formatMessage({ id: "common.filters.tags" })}>
       <View className="flex-row flex-wrap gap-2" testID="search-tags">
         {tags
           ? tags.map((tag) => (

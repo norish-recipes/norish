@@ -11,6 +11,7 @@ export function ToggleChip({
   icon,
   active,
   even = false,
+  mutedIcon = false,
   onPress,
   testID,
 }: {
@@ -19,10 +20,13 @@ export function ToggleChip({
   active: boolean;
   /** Share the row evenly with its siblings, the label centred. */
   even?: boolean;
+  /** Draw the icon muted rather than in the warning colour. */
+  mutedIcon?: boolean;
   onPress: () => void;
   testID?: string;
 }) {
   const warning = useTokenColor("warning");
+  const muted = useTokenColor("muted");
   const accentForeground = useTokenColor("accent-foreground");
 
   return (
@@ -33,7 +37,13 @@ export function ToggleChip({
       testID={testID}
       onPress={onPress}
     >
-      {icon ? <Ionicons color={active ? accentForeground : warning} name={icon} size={15} /> : null}
+      {icon ? (
+        <Ionicons
+          color={active ? accentForeground : mutedIcon ? muted : warning}
+          name={icon}
+          size={15}
+        />
+      ) : null}
       <Text
         className={`text-[15px] ${active ? "text-accent-foreground font-semibold" : "text-foreground font-medium"}`}
       >

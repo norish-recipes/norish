@@ -27,7 +27,7 @@ const TYPE_LABELS = {
 /** Rows as tall as the ones that replace them: a recipe's has a photo, a Narrow-to row's a small mark. */
 function SkeletonRows({ count, photo, testID }: { count: number; photo: boolean; testID: string }) {
   return (
-    <Card testID={testID}>
+    <Card surface testID={testID}>
       {Array.from({ length: count }, (_, index) => (
         <CardRow
           key={index}
@@ -58,7 +58,11 @@ function SuggestionSection({
 }) {
   if (!loading && empty) return null;
 
-  return <Section title={title}>{loading ? skeleton : children}</Section>;
+  return (
+    <Section dense title={title}>
+      {loading ? skeleton : children}
+    </Section>
+  );
 }
 
 function RecipeRow({
@@ -164,7 +168,7 @@ export function TypingSuggestions({
       keyboardShouldPersistTaps="handled"
       testID="search-typing"
     >
-      <Card>
+      <Card surface>
         <CardRow
           chevron={false}
           first
@@ -180,7 +184,7 @@ export function TypingSuggestions({
         skeleton={<SkeletonRows count={RECIPE_SUGGESTIONS} photo testID="search-recipes-loading" />}
         title={intl.formatMessage({ id: "recipes.search.recipes" })}
       >
-        <Card>
+        <Card surface>
           {recipes.map((recipe, index) => (
             <RecipeRow key={recipe.id} first={index === 0} recipe={recipe} search={searchWords} />
           ))}
@@ -195,7 +199,7 @@ export function TypingSuggestions({
         <IngredientIconSlots
           rows={narrowRows.map((row) => ({ foodId: row.kind === "ingredient" ? row.id : null }))}
         >
-          <Card>
+          <Card surface>
             {narrowRows.map((row, index) => (
               <NarrowRowView
                 key={narrowRowKey(row)}
