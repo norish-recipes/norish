@@ -2,11 +2,12 @@
 import {
   followSearchOwner,
   getSearchConfirmed,
+  resetSearchSession,
   SEARCH_START,
   searchStore,
   setSearchConfirmed,
 } from "@/lib/search-session";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const state = {
   owner: null as string | null,
@@ -73,5 +74,52 @@ describe("Search's session", () => {
 
     expect(searchStore.getState().filters.rawInput).toBe("soup");
     expect(getSearchConfirmed()).toBe(true);
+  });
+});
+
+afterEach(resetSearchSession);
+
+describe("the Search session", () => {
+  it("starts on recipes only, ranked by Best match, Title and Ingredients", () => {
+    expect(searchStore.getState().filters).toMatchObject({
+      libraryType: "recipes",
+      sortMode: "none",
+      searchFields: ["title", "ingredients"],
+      rawInput: "",
+    });
+    expect(getSearchConfirmed()).toBe(false);
+  });
+
+  it("keeps what it is given until the session ends", () => {
+    searchStore.getState().setFilters({ rawInput: "soup" });
+    setSearchConfirmed(true);
+
+    expect(searchStore.getState().filters.rawInput).toBe("soup");
+
+    resetSearchSession();
+
+    expect(searchStore.getState().filters).toEqual(SEARCH_START);
+    expect(getSearchConfirmed()).toBe(false);
+  });
+
+  it("drops its Ingredient filters when the session ends", () => {
+    searchStore.getState().addIngredient("a0000000-0000-4000-8000-000000000001");
+    resetSearchSession();
+
+    expect(searchStore.getState().filters.ingredients).toEqual([]);
+  });
+
+  it("leaves the text, scope and sort when Clear filters clears the chips", () => {
+    searchStore
+      .getState()
+      .setFilters({ rawInput: "soup", searchTags: ["vegan"], sortMode: "titleAsc" });
+    searchStore.getState().clearFilters();
+
+    expect(searchStore.getState().filters).toMatchObject({
+      rawInput: "soup",
+      searchTags: [],
+      sortMode: "titleAsc",
+      libraryType: "recipes",
+    });
   });
 });
