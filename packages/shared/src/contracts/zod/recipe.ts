@@ -173,6 +173,9 @@ export const FullRecipeUpdateSchema = RecipeUpdateBaseSchema.extend({
 export const measurementSystems = measurementSystemEnum.enumValues;
 
 // tRPC input schemas
+/** The longest text `library.suggest` takes; each word adds `like` clauses to its query. */
+export const SUGGEST_TEXT_MAX = 200;
+
 export const RecipeListInputSchema = z.object({
   cursor: z
     .number()

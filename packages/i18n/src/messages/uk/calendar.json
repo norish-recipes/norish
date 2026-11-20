@@ -11,8 +11,7 @@
     "openRecipe": "Відкрити рецепт",
     "move": "Перемістити…",
     "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day}).",
-    "moveTitle": "Перемістити",
-    "moveSubtitle": "«{name}», {slot} сьогодні"
+    "moveTitle": "Перемістити"
   },
   "editNote": {
     "title": "Редагувати нотатку",

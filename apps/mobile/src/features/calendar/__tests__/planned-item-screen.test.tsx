@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
@@ -12,6 +13,7 @@ const held = vi.hoisted(() => ({
   deleteItem: vi.fn(),
   confirm: vi.fn(),
   back: vi.fn(),
+  toRecipe: vi.fn(),
 }));
 
 vi.mock(
@@ -31,8 +33,19 @@ vi.mock(
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).swiftUiModifiers
 );
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  CardRow: ({ testID, onPress }: { testID: string; onPress: () => void }) => (
+    <button data-testid={testID} type="button" onClick={onPress} />
+  ),
+}));
+vi.mock("@/components/icon-button", () => ({ IconButton: () => null }));
 vi.mock("@/components/planned-thumb", () => ({ PlannedThumb: () => null }));
 vi.mock("@/hooks/use-accent-text-color", () => ({ useAccentTextColor: () => null }));
+vi.mock(
+  "@/components/segmented",
+  async () => (await import("../../../../__tests__/mocks/plan-sheet")).segmentedMock
+);
 vi.mock(
   "@/components/sheet",
   async () => (await import("../../../../__tests__/mocks/plan-sheet")).sheet
@@ -48,7 +61,7 @@ vi.mock("expo-router", () => ({
   useIsFocused: () => true,
 }));
 vi.mock("@norish/shared-react/platform", () => ({
-  usePlatform: () => ({ navigation: { toRecipe: vi.fn() } }),
+  usePlatform: () => ({ navigation: { toRecipe: held.toRecipe } }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-12" }));
 // The draft is the real one; only the writes it hands to are held.
@@ -64,6 +77,7 @@ vi.mock("@norish/shared-react/calendar", async (importOriginal) => ({
 }));
 
 const { PlannedItemScreen } = await import("../screens/planned-item-screen");
+const { useSheetExit } = await import("@/lib/after-sheet");
 
 const note: PlannedItemFromQuery = {
   id: "note-1",
@@ -177,7 +191,7 @@ describe("PlannedItemScreen", () => {
 
   it("removes only once the confirm is accepted", () => {
     render(<PlannedItemScreen />);
-    fireEvent.click(screen.getByTestId("planned-item-remove"));
+    fireEvent.click(screen.getByTestId("planned-item-action-common.actions.remove"));
 
     expect(held.confirm).toHaveBeenCalledTimes(1);
     expect(held.deleteItem).not.toHaveBeenCalled();
@@ -185,5 +199,33 @@ describe("PlannedItemScreen", () => {
     held.confirm.mock.calls[0]![0].onConfirm();
 
     expect(held.deleteItem).toHaveBeenCalledWith("note-1");
+  });
+
+  it("opens the recipe once from its row, double-tapped, after the sheet has gone", () => {
+    held.items = [{ ...note, itemType: "recipe", recipeId: "r1" }];
+    const sheet = render(<PlannedItemScreen />);
+
+    expect(screen.queryByTestId("planned-item-action-calendar.timeline.goToRecipe")).toBeNull();
+
+    const stack = renderHook(() => useSheetExit());
+
+    act(() => stack.result.current());
+    fireEvent.click(screen.getByTestId("planned-item-recipe"));
+    fireEvent.click(screen.getByTestId("planned-item-recipe"));
+
+    expect(held.back).toHaveBeenCalledOnce();
+    expect(held.toRecipe).not.toHaveBeenCalled();
+
+    sheet.unmount();
+    act(() => stack.result.current());
+
+    expect(held.toRecipe).toHaveBeenCalledExactlyOnceWith("r1");
+    stack.unmount();
+  });
+
+  it("has no recipe row for a note", () => {
+    render(<PlannedItemScreen />);
+
+    expect(screen.queryByTestId("planned-item-recipe")).toBeNull();
   });
 });

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { CardRow } from "@/components/card";
+import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Skeleton } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { GroceryDto, RecurringGroceryDto } from "@norish/shared/contracts";
 import {
+  GROCERY_LOOKUP_DEBOUNCE_MS,
   lineOf,
   useAisleChoice,
   useGroceriesQuery,
@@ -19,10 +21,10 @@ import {
   useProductField,
   useRecurrenceDetection,
   useRecurringGroceryFor,
-  useSettledName,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import { useIngredientFor } from "@norish/shared-react/ingredients";
+import { useSettledText } from "@norish/shared-react/settled-text";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 
 import { NameField } from "../components/form-parts";
@@ -51,7 +53,7 @@ function EditSheet({
   const [seeded, setSeeded] = useState(false);
   const { detectedPattern } = useRecurrenceDetection({ itemName: form.itemName });
   const groceryName = useParsedGroceryName(form.itemName);
-  const settledName = useSettledName(groceryName);
+  const settledName = useSettledText(groceryName, GROCERY_LOOKUP_DEBOUNCE_MS);
   const ingredientId = useIngredientFor(groceryName, settledName, grocery);
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
   const [productValid, setProductValid] = useState(true);
@@ -111,28 +113,21 @@ function EditSheet({
 
   return (
     <GrocerySheet
-      actions={
-        <Button
-          className="h-[50px]"
-          testID="edit-grocery-delete"
-          variant="secondary"
-          onPress={() => {
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.save" }),
+          disabled: !trimmed || !productValid,
+          onPress: submit,
+        },
+        secondary: [
+          destructiveAction(intl.formatMessage({ id: "common.actions.delete" }), () => {
             remove();
             router.back();
-          }}
-        >
-          <Button.Label className="text-danger font-medium">
-            {intl.formatMessage({ id: "common.actions.delete" })}
-          </Button.Label>
-        </Button>
-      }
+          }),
+        ],
+      }}
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
-      confirm={{
-        label: intl.formatMessage({ id: "common.actions.save" }),
-        disabled: !trimmed || !productValid,
-        onPress: submit,
-      }}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField
@@ -145,13 +140,6 @@ function EditSheet({
       }
       name="edit-grocery"
       noStoreLabelId="groceries.mobile.noStore"
-      notes={
-        recipeName ? (
-          <Text className="text-muted px-2 text-[13px]">
-            {intl.formatMessage({ id: "groceries.mobile.fromRecipe" }, { recipe: recipeName })}
-          </Text>
-        ) : null
-      }
       product={(open) => (
         <ProductRow held={held} price={price} onPress={field.pointsAtShop ? open : undefined} />
       )}
@@ -169,6 +157,14 @@ function EditSheet({
       storeId={storeId}
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.editTitle" })}
+      trailingRows={
+        recipeName ? (
+          <CardRow
+            label={intl.formatMessage({ id: "calendar.timeline.recipe" })}
+            value={recipeName}
+          />
+        ) : null
+      }
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}
       onRepeat={(pattern) => form.setConfirmedPattern(pattern)}

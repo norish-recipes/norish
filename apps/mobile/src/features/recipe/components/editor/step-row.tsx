@@ -23,7 +23,7 @@ import {
 } from "@norish/shared-react/recipes";
 
 import type { PendingPhoto } from "../../hooks/use-editor-uploads";
-import { EditorInput, RowIconButton } from "./editor-parts";
+import { EditorInput, EditorRow, RowIconButton } from "./editor-parts";
 import { MentionPopup } from "./mention-popup";
 import { StepPhotos } from "./step-photos";
 
@@ -46,7 +46,6 @@ export function StepRow({
   suggestions,
   foods,
   inputProps,
-  drag,
   onType,
   onLeave,
   onMention,
@@ -71,7 +70,6 @@ export function StepRow({
     onFocus: () => void;
     onSubmitEditing: () => void;
   };
-  drag: () => void;
   onType: (text: string) => void;
   onLeave: () => void;
   /** An `@` pick: the text with the line's name in place of the query. */
@@ -136,10 +134,7 @@ export function StepRow({
     );
 
   return (
-    <View
-      className={`flex-row gap-3 py-3 ${index === 0 ? "" : "border-separator border-t"}`}
-      testID={`editor-step-${index}`}
-    >
+    <EditorRow className="flex-row gap-3 py-3" first={index === 0} testID={`editor-step-${index}`}>
       <View className="bg-default size-7 items-center justify-center rounded-full">
         {heading || number === null ? null : (
           <Text className="text-foreground text-[13px] font-semibold">{number}</Text>
@@ -220,9 +215,9 @@ export function StepRow({
             onPress={onRemove}
           />
         ) : hasStepContent(row) ? (
-          <DragGrip label={text("recipes.gallery.dragToReorder")} onDrag={drag} />
+          <DragGrip label={text("recipes.gallery.dragToReorder")} />
         ) : null}
       </View>
-    </View>
+    </EditorRow>
   );
 }

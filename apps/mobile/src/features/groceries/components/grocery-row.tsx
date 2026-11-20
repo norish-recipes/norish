@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
+import { DragPressable } from "@/components/drag-list/drag-list";
 import { useIntl } from "react-intl";
 
 import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
@@ -20,7 +21,6 @@ export function GroceryRow({
   dotted = false,
   onToggle,
   onEdit,
-  onDrag,
 }: {
   grocery: GroceryDto;
   store: StoreDto | null;
@@ -30,8 +30,6 @@ export function GroceryRow({
   dotted?: boolean;
   onToggle: (id: string, isDone: boolean) => void;
   onEdit: (id: string) => void;
-  /** Lifts the row; left out on a done line, which stays put. */
-  onDrag?: () => void;
 }) {
   const intl = useIntl();
   const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
@@ -49,11 +47,10 @@ export function GroceryRow({
         testID={`grocery-tick-${grocery.id}`}
         onPress={() => onToggle(grocery.id, !done)}
       />
-      <Pressable
+      <DragPressable
         accessibilityRole="button"
         className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
         testID={`grocery-${grocery.id}`}
-        onLongPress={onDrag}
         onPress={() => onEdit(grocery.id)}
       >
         <View className="min-w-0 flex-1 gap-0.5">
@@ -70,7 +67,7 @@ export function GroceryRow({
           ) : null}
         </View>
         <GroceryPrice line={lineOf(grocery)} muted={done} />
-      </Pressable>
+      </DragPressable>
     </View>
   );
 }

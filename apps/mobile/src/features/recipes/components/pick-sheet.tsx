@@ -1,10 +1,10 @@
-import type { HeaderConfirm } from "@/components/modal-header";
+import type { SheetActions } from "@/components/modal-header";
+import type { RowPosition } from "@/components/slice-row";
 import type { ReactElement } from "react";
 import React from "react";
 import { View } from "react-native";
 import { Sheet, SheetList } from "@/components/sheet";
 
-import type { PickRowPosition } from "./pick-row";
 import { PickRowSkeleton } from "./pick-row";
 
 const SKELETON_ROWS = [0, 1, 2, 3, 4];
@@ -15,19 +15,19 @@ export type PickList<Item> = {
   /** Shown when there is no item. */
   empty: ReactElement;
   keyExtractor: (item: Item) => string;
-  renderRow: (item: Item, position: PickRowPosition) => ReactElement;
+  renderRow: (item: Item, position: RowPosition) => ReactElement;
   onEndReached?: () => void;
 };
 
-/** A sheet of things to tick: `header` over `list`'s rows, `action` as the header's confirm
- * (off without an `onPress`). Without a `list` the rows are skeletons. */
+/** A sheet of things to tick: `header` over `list`'s rows, `actions` in the header (a confirm is
+ * off without an `onPress`). Without a `list` the rows are skeletons. */
 export function PickSheet<Item>({
   name,
   title,
   subtitle,
   header,
   list,
-  action,
+  actions,
 }: {
   /** The testID prefix of the sheet, its list and its skeleton. */
   name: string;
@@ -35,12 +35,12 @@ export function PickSheet<Item>({
   subtitle?: string;
   header: ReactElement;
   list?: PickList<Item>;
-  action: HeaderConfirm;
+  actions: SheetActions;
 }) {
   const items = list?.items ?? [];
 
   return (
-    <Sheet confirm={action} name={name} subtitle={subtitle} title={title}>
+    <Sheet {...actions} name={name} subtitle={subtitle} title={title}>
       <SheetList
         ListEmptyComponent={
           list ? (

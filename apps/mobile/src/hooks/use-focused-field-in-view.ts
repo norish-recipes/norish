@@ -1,6 +1,4 @@
-import type { DragScrollView } from "@/components/drag-list/drag-list";
-import type { ComponentRef } from "react";
-import type { ScrollView } from "react-native";
+import type { DragScrollHandle } from "@/components/drag-list/drag-list";
 import { createContext, useEffect, useEffectEvent, useRef } from "react";
 import { Keyboard } from "react-native";
 import { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
@@ -15,9 +13,6 @@ export type Measurable = {
 /** Reports a field that took focus, so the screen can bring it into view. */
 export const FocusedFieldContext = createContext<((field: Measurable) => void) | null>(null);
 
-/** The drag scroll view's ref, typed with the methods its instance has at runtime. */
-type ScrollHandle = ComponentRef<typeof DragScrollView> & ComponentRef<typeof ScrollView>;
-
 /** A scroll view scrolls to a y, a list (a `DragList` is one) to an offset. */
 type Scrollable =
   | { scrollTo: (to: { y: number; animated: boolean }) => void }
@@ -25,7 +20,7 @@ type Scrollable =
 
 /** Keeps the focused field above the keyboard and anything floating over the content: iOS lifts a
  * field only as the keyboard opens, and never past a floating control. */
-export function useFocusedFieldInView<S extends Scrollable = ScrollHandle>(
+export function useFocusedFieldInView<S extends Scrollable = DragScrollHandle>(
   clearance: number,
   /** How long the container keeps resizing after the keyboard shows, as a sheet's padding does. */
   settleMs = 0

@@ -1,11 +1,14 @@
 import { File } from "node:buffer";
 import { CACHE_OWNER_STORAGE_KEY, createIdbStorage } from "@/lib/offline/idb-storage";
-import { IDBFactory } from "fake-indexeddb";
-import { beforeEach, describe, expect, it } from "vitest";
+import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { NewOutboxEntry } from "@norish/shared-react/offline";
 import { createOutboxStore } from "@norish/shared-react/offline";
 import { describeOfflineStorageContract } from "@norish/shared-react/offline/testing";
+
+// A browser has IDBKeyRange as a global; the injected factory does not install one.
+vi.stubGlobal("IDBKeyRange", IDBKeyRange);
 
 // fake-indexeddb clones with Node's structuredClone, which keeps Node's File but not jsdom's.
 describeOfflineStorageContract("IndexedDB (web)", {

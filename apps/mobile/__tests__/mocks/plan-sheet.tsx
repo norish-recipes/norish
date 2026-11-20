@@ -5,10 +5,9 @@ import React from "react";
 
 type Children = { children?: ReactNode };
 
-/** What the date picker and the slot tabs were last handed, for a test to pick with. */
+/** What the date picker was last handed, for a test to pick with. */
 export const picks = {
   date: (_date: Date) => {},
-  slot: (_slot: string) => {},
 };
 
 const pass = ({ children }: Children) => children;
@@ -27,21 +26,29 @@ const Button = Object.assign(
   { Label: pass }
 );
 
-const Tabs = Object.assign(
-  ({ children, onValueChange }: Children & { onValueChange: (slot: string) => void }) => {
-    picks.slot = onValueChange;
+/** The segmented control: one button per segment. */
+export const segmentedMock = {
+  Segmented: ({
+    segments,
+    onChange,
+  }: {
+    segments: { value: string; testID: string }[];
+    onChange: (value: string) => void;
+  }) => (
+    <>
+      {segments.map(({ value, testID }) => (
+        <button key={value} data-testid={testID} onClick={() => onChange(value)} />
+      ))}
+    </>
+  ),
+};
 
-    return children;
-  },
-  {
-    List: pass,
-    Indicator: () => null,
-    Trigger: ({ testID, value }: { testID?: string; value: string }) => (
-      <button data-testid={testID} onClick={() => picks.slot(value)} />
-    ),
-    Label: pass,
-  }
-);
+/** An icon button as a plain button with its testID. */
+export const iconButtonMock = {
+  IconButton: ({ testID, onPress }: { testID?: string; onPress: () => void }) => (
+    <button data-testid={testID} onClick={onPress} />
+  ),
+};
 
 export const reactNative = {
   Text: ({ children }: Children) => <span>{children}</span>,
@@ -59,7 +66,6 @@ export const reactNative = {
 
 export const heroui = {
   Button,
-  Tabs,
   TextField: pass,
   Skeleton: () => null,
   useThemeColor: () => [],
@@ -94,33 +100,60 @@ export const swiftUi = {
 
 export const swiftUiModifiers = { accessibilityIdentifier: () => null, tint: () => null };
 
-const Sheet = Object.assign(
-  ({
-    children,
-    actions,
-    name,
-    confirm,
-  }: Children & {
-    actions?: ReactNode;
-    name: string;
-    confirm?: { disabled?: boolean; onPress: () => void };
-  }) => (
-    <div>
-      {children}
-      {actions}
-      {confirm ? (
-        <button
-          data-testid={`${name}-confirm`}
-          disabled={confirm.disabled}
-          onClick={confirm.onPress}
-        />
-      ) : null}
-    </div>
-  ),
-  { Actions: pass, Action: pass }
+const Sheet = ({
+  children,
+  name,
+  confirm,
+  secondary = [],
+}: Children & {
+  name: string;
+  confirm?: { disabled?: boolean; onPress: () => void };
+  secondary?: { label: string; onPress: () => void }[];
+}) => (
+  <div>
+    {children}
+    {secondary.map((action) => (
+      <button
+        key={action.label}
+        data-testid={`${name}-action-${action.label}`}
+        onClick={action.onPress}
+      />
+    ))}
+    {confirm ? (
+      <button
+        data-testid={`${name}-confirm`}
+        disabled={confirm.disabled}
+        onClick={confirm.onPress}
+      />
+    ) : null}
+  </div>
 );
 
-export const sheet = { Sheet, SheetBody: pass, SheetStrip: pass };
+type ListProps = {
+  ListHeaderComponent?: ReactNode;
+  data: unknown[];
+  getItemLayout?: (data: unknown, index: number) => { length: number; offset: number };
+  renderItem: (info: { item: unknown; index: number }) => ReactNode;
+};
+
+/** What the list was last handed, for a test to read its layout from. */
+export const listProps: { current: ListProps | null } = { current: null };
+
+/** The list renders its header and rows in place. */
+const SheetList = (props: ListProps) => {
+  listProps.current = props;
+
+  return (
+    <div>
+      {props.ListHeaderComponent}
+      {props.data.map((item, index) => (
+        <div key={index}>{props.renderItem({ item, index })}</div>
+      ))}
+    </div>
+  );
+};
+
+export const sheet = { Sheet, SheetBody: pass, SheetStrip: pass, SheetList };
 
 export const reactIntl = {
   useIntl: () => ({

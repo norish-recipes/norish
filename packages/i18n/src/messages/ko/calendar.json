@@ -11,8 +11,7 @@
     "openRecipe": "레시피 열기",
     "move": "이동…",
     "removeMessage": "{day} {slot}에서 {name}을(를) 제거합니다.",
-    "moveTitle": "이동",
-    "moveSubtitle": "{name}, 오늘의 {slot}"
+    "moveTitle": "이동"
   },
   "editNote": {
     "title": "메모 편집",

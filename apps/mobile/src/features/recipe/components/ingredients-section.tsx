@@ -2,15 +2,16 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
-import { GlassStepper } from "@/components/glass-stepper";
+import { IconMenu } from "@/components/icon-menu";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
-import { RoundTick } from "@/components/round-tick";
+import { useServingsStepper } from "@/components/servings-stepper";
+import { Stepper } from "@/components/stepper";
+import { Tick } from "@/components/tick";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { lightImpact } from "@/lib/haptics";
 import { useFadeTo } from "@/lib/motion/fade-to";
+import { plainText } from "@/lib/plain-text";
 import { recipeRoute } from "@/lib/tab-routes";
-import { Host, Menu, Button as NativeButton } from "@expo/ui/swift-ui";
-import { buttonStyle, labelStyle } from "@expo/ui/swift-ui/modifiers";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
@@ -30,7 +31,7 @@ import {
 } from "@norish/shared-react/recipes";
 import { formatAmount } from "@norish/shared/lib/format-amount";
 
-import { ingredientRows, plainText } from "../utils/recipe-rows";
+import { ingredientRows } from "../utils/recipe-rows";
 import { InlineMarkdown } from "./inline-markdown";
 import { SectionCard } from "./tint";
 
@@ -41,12 +42,11 @@ export function ServingsControl() {
   const recipe = useLoadedPageRecipe();
   const servings = usePageServings();
   const setServings = useRecipePageStore((state) => state.setServings);
+  const stepper = useServingsStepper(servings);
 
   return (
-    <GlassStepper
-      canDecrement={servingsDown(servings) !== servings}
-      decreaseLabel={intl.formatMessage({ id: "recipes.detail.decreaseServings" })}
-      increaseLabel={intl.formatMessage({ id: "recipes.detail.increaseServings" })}
+    <Stepper
+      {...stepper}
       testID="recipe-servings"
       onDecrement={() => setServings(servingsDown(servings))}
       onIncrement={() => setServings(servingsUp(servings))}
@@ -66,7 +66,7 @@ export function ServingsControl() {
           value={formatServings(servings)}
         />
       </Pressable>
-    </GlassStepper>
+    </Stepper>
   );
 }
 
@@ -77,38 +77,34 @@ export function OptionsMenu() {
   const conversion = useSystemConversion();
 
   return (
-    <View testID="recipe-ingredient-options">
-      <Host matchContents>
-        <Menu
-          label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
-          modifiers={[buttonStyle("glass"), labelStyle("iconOnly")]}
-          systemImage="slider.horizontal.3"
-        >
-          <NativeButton
-            label={intl.formatMessage({
-              id:
-                mode === "fraction"
-                  ? "recipes.detail.switchToDecimal"
-                  : "recipes.detail.switchToFraction",
-            })}
-            systemImage="plusminus"
-            onPress={toggleMode}
-          />
-          {conversion.isAvailable
-            ? conversion.options
-                .filter((option) => option.withAI || option.system !== conversion.currentSystem)
-                .map((option) => (
-                  <NativeButton
-                    key={option.key}
-                    label={intl.formatMessage({ id: `recipes.convert.${option.labelKey}` })}
-                    systemImage={option.withAI ? "sparkles" : "arrow.left.arrow.right"}
-                    onPress={() => conversion.convertTo(option)}
-                  />
-                ))
-            : null}
-        </Menu>
-      </Host>
-    </View>
+    <IconMenu
+      icon="options-outline"
+      items={[
+        {
+          key: "amount-mode",
+          label: intl.formatMessage({
+            id:
+              mode === "fraction"
+                ? "recipes.detail.switchToDecimal"
+                : "recipes.detail.switchToFraction",
+          }),
+          systemImage: "plusminus",
+          onPress: toggleMode,
+        },
+        ...(conversion.isAvailable
+          ? conversion.options
+              .filter((option) => option.withAI || option.system !== conversion.currentSystem)
+              .map((option) => ({
+                key: option.key,
+                label: intl.formatMessage({ id: `recipes.convert.${option.labelKey}` }),
+                systemImage: option.withAI ? "sparkles" : "arrow.left.arrow.right",
+                onPress: () => conversion.convertTo(option),
+              }))
+          : []),
+      ]}
+      label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
+      testID="recipe-ingredient-options"
+    />
   );
 }
 
@@ -150,7 +146,7 @@ export function Line({
         className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
         style={fade}
       >
-        <RoundTick selected={checked} />
+        <Tick selected={checked} />
         <IngredientIcon ingredientId={foodId} size={large ? 34 : undefined} />
         <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
           {amount ? (

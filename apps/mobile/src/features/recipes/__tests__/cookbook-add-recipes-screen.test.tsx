@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({ canEdit: true, addRecipesRead: vi.fn() }));
 
 vi.mock("react-native", () => ({ Text: () => null, View: () => null }));
+vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("@/components/card-photo", () => ({ CardPhoto: () => null }));
 vi.mock("heroui-native", () => ({ SearchField: () => null }));
 vi.mock("react-intl", () => ({

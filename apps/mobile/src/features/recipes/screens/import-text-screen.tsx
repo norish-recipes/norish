@@ -3,15 +3,16 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { HintButton } from "@/components/hint-button";
 import { FIT_SHEET_FIELD_HEIGHT, Sheet, SheetBody } from "@/components/sheet";
+import { SheetTextArea } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import { FieldError, Label, TextArea, TextField } from "heroui-native";
+import { FieldError, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
 import { isPasteTooLong, useImportRecipe } from "@norish/shared-react/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 
-import { ImportActions } from "../components/import-actions";
+import { useImportActions } from "../hooks/use-import-actions";
 import { useStartImport } from "../hooks/use-start-import";
 
 /** Import from text: a field for a pasted recipe or JSON-LD, in a sheet that fits it. */
@@ -21,7 +22,7 @@ export function ImportTextScreen() {
   const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importFromPaste, importFromPasteWithAI } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const fieldRef = useFocusOnMount<ComponentRef<typeof TextArea>>();
+  const fieldRef = useFocusOnMount<ComponentRef<typeof SheetTextArea>>();
   const trimmed = text.trim();
   // Only the AI import has a length cap, as on web; the field says so before a press can.
   const isTooLong = isAIEnabled && isPasteTooLong(text);
@@ -32,28 +33,22 @@ export function ImportTextScreen() {
 
   const start = (run: (text: string) => boolean | void) => startImport(() => run(trimmed));
 
+  const actions = useImportActions({
+    isAIDisabled: trimmed === "" || isTooLong,
+    isDisabled: trimmed === "",
+    onAIImport: start(importFromPasteWithAI),
+    onImport: start(importFromPaste),
+  });
+
   return (
     <Sheet
-      actions={
-        <ImportActions
-          isAIDisabled={trimmed === "" || isTooLong}
-          isDisabled={trimmed === ""}
-          name="import-text"
-          onAIImport={start(importFromPasteWithAI)}
-          onImport={start(importFromPaste)}
-        />
-      }
+      {...actions}
       name="import-text"
       title={intl.formatMessage({ id: "recipes.addRecipe.textTitle" })}
     >
       <SheetBody>
         <TextField className="gap-2" isInvalid={isTooLong}>
-          <View className="flex-row items-center justify-between pr-0.5 pl-2">
-            <Label>
-              <Label.Text className="text-foreground text-[15px] font-medium">
-                {intl.formatMessage({ id: "common.import.paste.label" })}
-              </Label.Text>
-            </Label>
+          <View className="items-end pr-0.5">
             <HintButton
               className="size-7 items-center justify-center rounded-full"
               hint={limit}
@@ -61,10 +56,9 @@ export function ImportTextScreen() {
               testID="import-text-info"
             />
           </View>
-          <TextArea
+          <SheetTextArea
             ref={fieldRef}
             scrollEnabled
-            className="bg-default ios:shadow-none rounded-3xl px-4 py-3.5 text-base leading-[23px]"
             placeholder={intl.formatMessage({ id: "common.import.paste.placeholder" })}
             style={{ height: FIT_SHEET_FIELD_HEIGHT }}
             testID="import-text-field"
@@ -72,9 +66,11 @@ export function ImportTextScreen() {
             value={text}
             onChangeText={setText}
           />
-          <FieldError className="px-2" testID="import-text-too-long">
-            {limit}
-          </FieldError>
+          {isTooLong ? (
+            <FieldError className="px-2" testID="import-text-too-long">
+              {limit}
+            </FieldError>
+          ) : null}
         </TextField>
       </SheetBody>
     </Sheet>

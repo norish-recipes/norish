@@ -1,8 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { SectionLabel } from "@/components/section-label";
+import { Segmented } from "@/components/segmented";
 import { SheetBody } from "@/components/sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
+import { Stepper } from "@/components/stepper";
 import { useIntl } from "react-intl";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
@@ -10,7 +11,6 @@ import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recu
 import {
   formatNextOccurrence,
   recurrenceTranslationsFrom,
-  recurrenceUnitKey,
 } from "@norish/shared/lib/recurrence/formatter";
 import {
   recurrenceHasWeekday,
@@ -19,14 +19,14 @@ import {
 } from "@norish/shared/lib/recurrence/pattern";
 
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
-import { FieldLabel, Segmented } from "./form-parts";
 
-const RULES = [
-  ["day", "daily"],
-  ["week", "weekly"],
-  ["month", "monthly"],
-  ["year", "yearly"],
-] as const satisfies readonly (readonly [RecurrenceRule, string])[];
+const RULES: Record<RecurrenceRule, { frequency: string; every: string }> = {
+  day: { frequency: "daily", every: "everyDay" },
+  week: { frequency: "weekly", every: "everyWeek" },
+  month: { frequency: "monthly", every: "everyMonth" },
+  year: { frequency: "yearly", every: "everyYear" },
+};
+const RULE_ORDER: readonly RecurrenceRule[] = ["day", "week", "month", "year"];
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 /** The body of Repeat: frequency, interval, weekday and what it will read as. */
@@ -39,7 +39,6 @@ export function RepeatBody({
 }) {
   const intl = useIntl();
   const label = useRecurrenceLabel();
-  const [foreground, accentText] = useThemeColor(["foreground", "accent"] as const);
   const text = (key: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id: `common.recurrence.${key}` }, values);
   const next = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
@@ -47,9 +46,13 @@ export function RepeatBody({
 
   return (
     <SheetBody contentClassName="gap-2">
-      <FieldLabel>{text("frequency")}</FieldLabel>
+      <SectionLabel>{text("frequency")}</SectionLabel>
       <Segmented
-        options={RULES.map(([rule, key]) => ({ id: rule, label: text(key) }))}
+        segments={RULE_ORDER.map((rule) => ({
+          value: rule,
+          label: text(RULES[rule].frequency),
+          testID: `repeat-frequency-${rule}`,
+        }))}
         testID="repeat-frequency"
         value={pattern?.rule ?? null}
         onChange={(rule) => onChange(withRecurrenceRule(pattern, rule))}
@@ -57,50 +60,35 @@ export function RepeatBody({
       {pattern ? (
         <>
           <View className="pt-2.5">
-            <FieldLabel>{text("interval")}</FieldLabel>
+            <SectionLabel>{text("interval")}</SectionLabel>
           </View>
-          <View className="flex-row items-center gap-2.5">
-            <Button
-              isIconOnly
-              accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.decreaseInterval" })}
-              className="bg-surface size-11 rounded-full"
-              isDisabled={pattern.interval <= 1}
-              testID="repeat-interval-decrease"
-              variant="secondary"
-              onPress={() => onChange(stepRecurrenceInterval(pattern, -1))}
-            >
-              <Ionicons color={foreground} name="remove" size={16} />
-            </Button>
-            <View className="bg-surface h-11 flex-1 flex-row items-baseline justify-center gap-1.5 rounded-full pt-2">
-              <Text className="text-foreground text-[22px] font-bold" testID="repeat-interval">
-                {pattern.interval}
-              </Text>
-              <Text className="text-muted text-[13px]">{text(recurrenceUnitKey(pattern))}</Text>
-            </View>
-            <Button
-              isIconOnly
-              accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.increaseInterval" })}
-              className="bg-surface size-11 rounded-full"
-              testID="repeat-interval-increase"
-              variant="secondary"
-              onPress={() => onChange(stepRecurrenceInterval(pattern, 1))}
-            >
-              <Ionicons color={foreground} name="add" size={16} />
-            </Button>
-          </View>
+          <Stepper
+            wide
+            canDecrement={pattern.interval > 1}
+            decreaseLabel={intl.formatMessage({ id: "groceries.mobile.decreaseInterval" })}
+            increaseLabel={intl.formatMessage({ id: "groceries.mobile.increaseInterval" })}
+            testID="repeat-interval"
+            onDecrement={() => onChange(stepRecurrenceInterval(pattern, -1))}
+            onIncrement={() => onChange(stepRecurrenceInterval(pattern, 1))}
+          >
+            <Text className="text-foreground text-[15px] font-semibold" testID="repeat-interval">
+              {text(RULES[pattern.rule].every, { interval: pattern.interval })}
+            </Text>
+          </Stepper>
         </>
       ) : null}
       {recurrenceHasWeekday(pattern) && pattern ? (
         <>
           <View className="pt-2.5">
-            <FieldLabel>{text("onDay")}</FieldLabel>
+            <SectionLabel>{text("onDay")}</SectionLabel>
           </View>
           <Segmented
-            small
-            options={WEEKDAYS.map((key, index) => ({
-              id: String(index),
+            segments={WEEKDAYS.map((key, index) => ({
+              value: String(index),
               label: text(`weekdays.${key}`),
+              testID: `repeat-weekday-${index}`,
             }))}
+            size="compact"
             testID="repeat-weekday"
             value={String(pattern.weekday ?? 1)}
             onChange={(day) => onChange({ ...pattern, weekday: Number(day) })}
@@ -108,23 +96,11 @@ export function RepeatBody({
         </>
       ) : null}
       {pattern ? (
-        <View
-          className="bg-surface mt-2.5 gap-2 rounded-[18px] px-3.5 py-3"
-          testID="repeat-preview"
-        >
-          <View className="flex-row items-center gap-2.5">
-            <Ionicons color={accentText} name="calendar-outline" size={16} />
-            <Text className="text-foreground flex-1 text-sm font-semibold">{label(pattern)}</Text>
-          </View>
-          {next ? (
-            <View className="bg-default ml-[26px] flex-row gap-1 self-start rounded-full px-3 py-1.5">
-              <Text className="text-muted text-[13px]">{text("next")}</Text>
-              <Text className="text-foreground text-[13px] font-medium">
-                {formatNextOccurrence(next, words)}
-              </Text>
-            </View>
-          ) : null}
-        </View>
+        <Text className="text-muted px-2 pt-2.5 text-[15px]" testID="repeat-preview">
+          {next
+            ? `${label(pattern)} · ${text("next")} ${formatNextOccurrence(next, words)}`
+            : label(pattern)}
+        </Text>
       ) : null}
     </SheetBody>
   );

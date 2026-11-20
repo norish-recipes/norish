@@ -2,15 +2,14 @@ import type { PhotoSource } from "@/lib/photo-source";
 import type { ImagePickerAsset } from "expo-image-picker";
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
-import { Alert, Image, Pressable, Text, useWindowDimensions, View } from "react-native";
-import { GlassCloseButton } from "@/components/glass";
+import { Alert, Image, ScrollView, Text, View } from "react-native";
+import { Card, CardRow } from "@/components/card";
 import { HintButton } from "@/components/hint-button";
-import { Sheet, SHEET_INSET, SheetBody } from "@/components/sheet";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
+import { IconButton } from "@/components/icon-button";
+import { Sheet, SheetBody } from "@/components/sheet";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
-import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useUploadLimitsQuery } from "@norish/shared-react/config";
@@ -19,10 +18,6 @@ import { MAX_OCR_FILES } from "@norish/shared/contracts/uploads";
 import { fitOcrCap, refuseOcrImage } from "@norish/shared/lib/ocr-images";
 
 import { useStartImport } from "../hooks/use-start-import";
-
-/** Three tiles a row with 8 pt gaps, inside the sheet's sides. */
-const COLUMNS = 3;
-const GAP = 8;
 
 /** The library hands several photos over in pick order; the camera's photo is one file. */
 const pickerOptions = (source: PhotoSource, room: number) =>
@@ -36,7 +31,7 @@ const pickerOptions = (source: PhotoSource, room: number) =>
         quality: 0.9,
       };
 
-const SOURCE_TILE: Record<
+const SOURCE_ROW: Record<
   PhotoSource,
   { icon: ComponentProps<typeof Ionicons>["name"]; labelId: string }
 > = {
@@ -51,9 +46,6 @@ export function ImportPhotosScreen() {
   const { limits } = useUploadLimitsQuery();
   const { importFromImages } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const accentText = useAccentTextColor();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-  const tile = (useWindowDimensions().width - 2 * SHEET_INSET - GAP * (COLUMNS - 1)) / COLUMNS;
   const isFull = photos.length >= MAX_OCR_FILES;
   const limitsText = intl.formatMessage(
     { id: "recipes.addRecipe.photoLimits" },
@@ -108,74 +100,64 @@ export function ImportPhotosScreen() {
 
   return (
     <Sheet
-      actions={
-        <Button
-          accessibilityLabel={intl.formatMessage({ id: "common.actions.importWithAI" })}
-          className="h-[50px]"
-          isDisabled={photos.length === 0}
-          testID="import-photos-submit"
-          variant="primary"
-          onPress={startImport(() => importFromImages(photos))}
-        >
-          <Ionicons color={accentForeground} name="sparkles-outline" size={18} />
-          <Button.Label className="font-semibold">
-            {intl.formatMessage({ id: "common.actions.importWithAI" })}
-          </Button.Label>
-        </Button>
-      }
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.importWithAI" }),
+        symbol: "checkmark",
+        disabled: photos.length === 0,
+        onPress: startImport(() => importFromImages(photos)),
+      }}
       name="import-photos"
       title={intl.formatMessage({ id: "recipes.addRecipe.photosTitle" })}
     >
       <SheetBody contentClassName="gap-3">
-        <View className="flex-row flex-wrap gap-2">
-          {photos.map((photo, index) => (
-            <View
-              key={photo.uri}
-              className="overflow-hidden rounded-[20px]"
-              style={{ width: tile, height: tile }}
-              testID={`import-photos-photo-${index}`}
-            >
-              <Image
-                accessibilityIgnoresInvertColors
-                className="bg-default size-full"
-                resizeMode="cover"
-                source={{ uri: photo.uri }}
-              />
-              <View className="absolute top-1.5 right-1.5">
-                <GlassCloseButton
-                  label={intl.formatMessage(
-                    { id: "recipes.addRecipe.removePhoto" },
-                    { number: index + 1 }
-                  )}
-                  size="small"
-                  testID={`import-photos-remove-${index}`}
-                  onPress={() => setPhotos(photos.filter((other) => other !== photo))}
-                />
-              </View>
+        {photos.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View className="flex-row gap-2">
+              {photos.map((photo, index) => (
+                <View
+                  key={photo.uri}
+                  className="size-24 overflow-hidden rounded-[18px]"
+                  testID={`import-photos-photo-${index}`}
+                >
+                  <Image
+                    accessibilityIgnoresInvertColors
+                    className="bg-sand size-full"
+                    resizeMode="cover"
+                    source={{ uri: photo.uri }}
+                  />
+                  <View className="absolute top-1.5 right-1.5">
+                    <IconButton
+                      small
+                      icon="close"
+                      label={intl.formatMessage(
+                        { id: "recipes.addRecipe.removePhoto" },
+                        { number: index + 1 }
+                      )}
+                      testID={`import-photos-remove-${index}`}
+                      onPress={() => setPhotos(photos.filter((other) => other !== photo))}
+                    />
+                  </View>
+                </View>
+              ))}
             </View>
-          ))}
-          {sources.map((source) => (
-            <Pressable
+          </ScrollView>
+        ) : null}
+        <Card>
+          {sources.map((source, index) => (
+            <CardRow
               key={source}
-              accessibilityLabel={intl.formatMessage({ id: SOURCE_TILE[source].labelId })}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: isFull }}
-              className={`bg-default items-center justify-center gap-1.5 rounded-[20px] ${isFull ? "opacity-40" : ""}`}
               disabled={isFull}
-              style={{ width: tile, height: tile }}
+              first={index === 0}
+              icon={SOURCE_ROW[source].icon}
+              label={intl.formatMessage({ id: SOURCE_ROW[source].labelId })}
               testID={`import-photos-${source}`}
               onPress={() =>
                 void pick(source, pickerOptions(source, MAX_OCR_FILES - photos.length), add)
               }
-            >
-              <Ionicons color={accentText} name={SOURCE_TILE[source].icon} size={24} />
-              <Text className="text-foreground text-sm font-medium">
-                {intl.formatMessage({ id: SOURCE_TILE[source].labelId })}
-              </Text>
-            </Pressable>
+            />
           ))}
-        </View>
-        <View className="flex-row items-center justify-center gap-0.5">
+        </Card>
+        <View className="flex-row items-center gap-0.5 px-2">
           <Text className="text-muted text-sm" testID="import-photos-count">
             {photos.length > 0
               ? intl.formatMessage({ id: "recipes.addRecipe.photoCount" }, { count: photos.length })

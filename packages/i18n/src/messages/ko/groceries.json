@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "이름이 없는 항목",
-    "items": "{count, plural, one {#개 항목} other {#개 항목}}"
+    "items": "{count, plural, =0 {항목 없음} one {#개 항목} other {#개 항목}}"
   },
   "store": {
     "unsorted": "정렬되지 않음",
@@ -188,7 +188,6 @@
     "emptyHint": "아래 버튼으로 항목을 추가하세요.",
     "addTitle": "식료품 추가",
     "editTitle": "식료품 수정",
-    "fromRecipe": "{recipe}에서",
     "store": "매장",
     "noStore": "매장 없음",
     "automatic": "자동",

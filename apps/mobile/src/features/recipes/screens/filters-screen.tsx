@@ -1,13 +1,13 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { Section } from "@/components/section";
+import { Segmented } from "@/components/segmented";
 import { Sheet, SheetScrollView } from "@/components/sheet";
+import { StarRating } from "@/components/star-rating";
 import { ToggleChip } from "@/components/toggle-chip";
-import { FilterSection } from "@/features/recipes/components/filter-section";
 import { useCategoryLabel } from "@/hooks/use-category-label";
-import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { Button, Skeleton, useThemeColor } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { FilterMode } from "@norish/shared/contracts";
@@ -20,15 +20,12 @@ const MODES: { value: FilterMode; label: string }[] = [
   { value: "OR", label: "common.filters.modeAny" },
 ];
 
-const STARS = [1, 2, 3, 4, 5];
-
-/** The Library's filters, web's less "Search in" (the Search tab owns search), applied together with Apply. */
+/** The Library's filters in web's order, less search and "Search in" (the Search tab owns search),
+ * applied together with Apply. */
 export function FiltersScreen() {
   const intl = useIntl();
   const categoryLabel = useCategoryLabel();
   const router = useRouter();
-  const [foreground, muted, star] = useThemeColor(["foreground", "muted", "warning"] as const);
-  const warningInk = useWarningInkColor();
   const { showRatings, showFavorites } = useHiddenItemVisibility();
   const {
     draft,
@@ -48,46 +45,29 @@ export function FiltersScreen() {
 
   return (
     <Sheet
-      actions={
-        <Sheet.Actions>
-          <Sheet.Action>
-            <Button
-              className="bg-warning/20 h-[50px]"
-              testID="filters-reset"
-              variant="secondary"
-              onPress={() => {
-                reset();
-                close();
-              }}
-            >
-              <Ionicons color={warningInk} name="refresh" size={18} />
-              <Button.Label className="text-warning-ink">
-                {intl.formatMessage({ id: "common.filters.clearFilters" })}
-              </Button.Label>
-            </Button>
-          </Sheet.Action>
-          <Sheet.Action>
-            <Button
-              className="h-[50px]"
-              testID="filters-apply"
-              variant="primary"
-              onPress={() => {
-                apply();
-                close();
-              }}
-            >
-              <Ionicons color="white" name="checkmark" size={20} />
-              <Button.Label>{intl.formatMessage({ id: "common.actions.apply" })}</Button.Label>
-            </Button>
-          </Sheet.Action>
-        </Sheet.Actions>
-      }
+      confirm={{
+        label: intl.formatMessage({ id: "common.actions.apply" }),
+        onPress: () => {
+          apply();
+          close();
+        },
+      }}
       name="filters"
+      secondary={[
+        {
+          label: intl.formatMessage({ id: "common.filters.clearFilters" }),
+          symbol: "arrow.counterclockwise",
+          onPress: () => {
+            reset();
+            close();
+          },
+        },
+      ]}
       title={intl.formatMessage({ id: "common.filters.title" })}
     >
-      <SheetScrollView contentClassName="gap-[18px]">
-        <FilterSection title={intl.formatMessage({ id: "common.filters.sort" })}>
-          <View className="flex-row flex-wrap gap-1.5">
+      <SheetScrollView contentClassName="gap-3">
+        <Section title={intl.formatMessage({ id: "common.filters.sort" })}>
+          <View className="flex-row flex-wrap gap-2">
             {(["title", "date"] as const).map((key) => {
               const active = draft.sortMode.startsWith(key);
 
@@ -112,57 +92,56 @@ export function FiltersScreen() {
               );
             })}
           </View>
-        </FilterSection>
+        </Section>
 
-        {showFavorites || showRatings ? (
-          <View className="flex-row gap-[18px]">
-            {showFavorites ? (
-              <FilterSection title={intl.formatMessage({ id: "common.filters.favorites" })}>
-                <ToggleChip
-                  active={draft.showFavoritesOnly}
-                  icon="heart-outline"
-                  label={intl.formatMessage({ id: "common.filters.favorites" })}
-                  testID="filters-favorites"
-                  onPress={() => update({ showFavoritesOnly: !draft.showFavoritesOnly })}
-                />
-              </FilterSection>
-            ) : null}
-            {showRatings ? (
-              <FilterSection title={intl.formatMessage({ id: "common.filters.minRating" })}>
-                <View className="h-[34px] flex-row items-center gap-0.5">
-                  {STARS.map((value) => (
-                    <Pressable
-                      key={value}
-                      accessibilityLabel={`${value}+`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: draft.minRating === value }}
-                      hitSlop={4}
-                      testID={`filters-rating-${value}`}
-                      onPress={() =>
-                        update({ minRating: draft.minRating === value ? null : value })
-                      }
-                    >
-                      <Ionicons
-                        color={star}
-                        name={
-                          draft.minRating !== null && value <= draft.minRating
-                            ? "star"
-                            : "star-outline"
-                        }
-                        size={22}
-                      />
-                    </Pressable>
-                  ))}
-                  {draft.minRating !== null ? (
-                    <Text className="text-muted ml-1.5 text-sm">{`${draft.minRating}+`}</Text>
-                  ) : null}
-                </View>
-              </FilterSection>
-            ) : null}
-          </View>
+        <Section title={intl.formatMessage({ id: "common.filters.mode" })}>
+          <Segmented
+            segments={MODES.map(({ value, label }) => ({
+              value,
+              label: intl.formatMessage({ id: label }),
+              testID: `filters-mode-${value}`,
+            }))}
+            testID="filters-mode"
+            value={draft.filterMode}
+            onChange={(value) => update({ filterMode: value })}
+          />
+        </Section>
+
+        {showFavorites ? (
+          <Section title={intl.formatMessage({ id: "common.filters.favorites" })}>
+            <View className="flex-row">
+              <ToggleChip
+                active={draft.showFavoritesOnly}
+                icon="heart-outline"
+                label={intl.formatMessage({ id: "common.filters.favorites" })}
+                testID="filters-favorites"
+                onPress={() => update({ showFavoritesOnly: !draft.showFavoritesOnly })}
+              />
+            </View>
+          </Section>
         ) : null}
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.pantry" })}>
+        {showRatings ? (
+          <Section
+            title={intl.formatMessage({ id: "common.filters.minRating" })}
+            trailing={
+              draft.minRating === null ? null : (
+                <Text className="text-muted text-[13px] font-medium">{`${draft.minRating}+`}</Text>
+              )
+            }
+          >
+            <StarRating
+              labelFor={(count) =>
+                intl.formatMessage({ id: "common.filters.minRatingStars" }, { count })
+              }
+              testID="filters-rating"
+              value={draft.minRating}
+              onChange={(minRating) => update({ minRating })}
+            />
+          </Section>
+        ) : null}
+
+        <Section title={intl.formatMessage({ id: "common.filters.pantry" })}>
           <View className="flex-row">
             <ToggleChip
               active={draft.showPantryOnly}
@@ -172,10 +151,10 @@ export function FiltersScreen() {
               onPress={() => update({ showPantryOnly: !draft.showPantryOnly })}
             />
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
-          <View className="flex-row flex-wrap gap-1.5">
+        <Section title={intl.formatMessage({ id: "common.filters.cookingTime" })}>
+          <View className="flex-row flex-wrap gap-2">
             {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => (
               <ToggleChip
                 key={value}
@@ -186,10 +165,10 @@ export function FiltersScreen() {
               />
             ))}
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection title={intl.formatMessage({ id: "common.filters.categories" })}>
-          <View className="flex-row flex-wrap gap-1.5">
+        <Section title={intl.formatMessage({ id: "common.filters.categories" })}>
+          <View className="flex-row flex-wrap gap-2">
             {categories.map((category) => (
               <ToggleChip
                 key={category}
@@ -200,40 +179,17 @@ export function FiltersScreen() {
               />
             ))}
           </View>
-        </FilterSection>
+        </Section>
 
-        <FilterSection
-          title={intl.formatMessage({ id: "common.filters.tags" })}
-          trailing={
-            <View className="bg-default flex-row gap-0.5 rounded-full p-[3px]">
-              {MODES.map(({ value, label }) => (
-                <Pressable
-                  key={value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: draft.filterMode === value }}
-                  className={`h-[26px] justify-center rounded-full px-3 ${draft.filterMode === value ? "bg-surface" : ""}`}
-                  testID={`filters-mode-${value}`}
-                  onPress={() => update({ filterMode: value })}
-                >
-                  <Text
-                    className="text-[13px] font-medium"
-                    style={{ color: draft.filterMode === value ? foreground : muted }}
-                  >
-                    {intl.formatMessage({ id: label })}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          }
-        >
+        <Section title={intl.formatMessage({ id: "common.filters.tags" })}>
           {tagsLoading ? (
-            <View className="flex-row flex-wrap gap-1.5">
+            <View className="flex-row flex-wrap gap-2">
               {[72, 96, 64, 88].map((width) => (
-                <Skeleton key={width} className="h-[34px] rounded-full" style={{ width }} />
+                <Skeleton key={width} className="h-9 rounded-full" style={{ width }} />
               ))}
             </View>
           ) : (
-            <View className="flex-row flex-wrap gap-1.5">
+            <View className="flex-row flex-wrap gap-2">
               {tags.map((tag) => (
                 <ToggleChip
                   key={tag}
@@ -245,7 +201,7 @@ export function FiltersScreen() {
               ))}
             </View>
           )}
-        </FilterSection>
+        </Section>
       </SheetScrollView>
     </Sheet>
   );

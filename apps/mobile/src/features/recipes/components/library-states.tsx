@@ -1,8 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { EmptyCard } from "@/components/empty-card";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import { useWarningInkColor } from "@/hooks/use-warning-ink-color";
+import { NoResultsCard } from "@/components/no-results-card";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -42,19 +41,14 @@ export function CookbookNoRecipes() {
 export function CookbooksEmpty() {
   const intl = useIntl();
   const router = useRouter();
-  const accentText = useAccentTextColor();
   const [accentForeground] = useThemeColor(["accent-foreground"] as const);
 
   return (
-    <View className="bg-surface mx-5 gap-3.5 rounded-3xl p-[18px]" testID="library-cookbooks-empty">
-      <View className="flex-row items-center gap-3.5">
-        <View className="bg-accent/10 size-12 items-center justify-center rounded-2xl">
-          <Ionicons color={accentText} name="book-outline" size={24} />
-        </View>
-        <Text className="text-foreground min-w-0 flex-1 text-lg font-semibold">
-          {intl.formatMessage({ id: "recipes.empty.noCookbooks" })}
-        </Text>
-      </View>
+    <EmptyCard
+      icon="book-outline"
+      testID="library-cookbooks-empty"
+      title={intl.formatMessage({ id: "recipes.empty.noCookbooks" })}
+    >
       <Pressable
         accessibilityRole="button"
         className="bg-accent h-11 flex-row items-center justify-center gap-2 rounded-full"
@@ -66,42 +60,25 @@ export function CookbooksEmpty() {
           {intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
         </Text>
       </Pressable>
-    </View>
+    </EmptyCard>
   );
 }
 
 /** Filters left nothing to show; Clear filters undoes them. */
 export function LibraryNoResults({ onClear }: { onClear: () => void }) {
   const intl = useIntl();
-  const warning = useThemeColor("warning");
-  const warningInk = useWarningInkColor();
 
   return (
-    <View className="bg-surface mx-5 gap-3.5 rounded-3xl p-[18px]" testID="library-no-results">
-      <View className="flex-row items-center gap-3.5">
-        <View className="bg-warning/20 size-12 items-center justify-center rounded-full">
-          <Ionicons color={warning} name="funnel-outline" size={22} />
-        </View>
-        <View className="min-w-0 flex-1 gap-0.5">
-          <Text className="text-foreground text-lg font-semibold">
-            {intl.formatMessage({ id: "recipes.empty.noResults" })}
-          </Text>
-          <Text className="text-muted text-[15px] leading-[21px]">
-            {intl.formatMessage({ id: "recipes.empty.noResultsHint" })}
-          </Text>
-        </View>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        className="bg-warning/20 h-11 flex-row items-center justify-center gap-2 rounded-full"
-        testID="library-clear-filters"
-        onPress={onClear}
-      >
-        <Ionicons color={warningInk} name="refresh" size={18} />
-        <Text className="text-warning-ink text-[15px] font-medium">
-          {intl.formatMessage({ id: "common.filters.clearFilters" })}
-        </Text>
-      </Pressable>
-    </View>
+    <NoResultsCard
+      action={{
+        label: intl.formatMessage({ id: "common.filters.clearFilters" }),
+        icon: "refresh",
+        testID: "library-clear-filters",
+        onPress: onClear,
+      }}
+      description={intl.formatMessage({ id: "recipes.empty.noResultsHint" })}
+      icon="funnel-outline"
+      testID="library-no-results"
+    />
   );
 }

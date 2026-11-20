@@ -79,6 +79,7 @@
     --shop-foreground: oklch(25% 0.03 85);
     --plan: oklch(58.82% 0.1533 253.28);
     --avatar: oklch(88% 0.07 75);
+    --thumb: oklch(100% 0.0008 150.36);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --font-sans: var(--font-inter);
@@ -142,6 +143,7 @@
     --shop-foreground: oklch(25% 0.03 85);
     --plan: oklch(62% 0.14 252.72);
     --avatar: oklch(45% 0.06 70);
+    --thumb: oklch(43% 0.008 80);
     --radius: 0.5rem;
     --field-radius: 0.75rem;
     --font-sans: var(--font-inter);
@@ -162,6 +164,7 @@
   --color-shop-foreground: var(--shop-foreground);
   --color-plan: var(--plan);
   --color-avatar: var(--avatar);
+  --color-thumb: var(--thumb);
   --color-nutrition-calories: var(--nutrition-calories);
   --color-nutrition-calories-soft: var(--nutrition-calories-soft);
   --color-nutrition-carbs: var(--nutrition-carbs);

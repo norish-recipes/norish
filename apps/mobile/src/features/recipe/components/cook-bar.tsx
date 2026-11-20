@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
-import { GlassSurface } from "@/components/glass";
+import { GLASS_CONTROL_HEIGHT, GlassSurface } from "@/components/glass";
 import { useTimersName } from "@/components/timer-glance";
 import { labelFits } from "@/lib/label-fits";
 import { useFadeTo } from "@/lib/motion/fade-to";
@@ -66,14 +66,12 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 /** What Next needs beside its label: the chevron, the gap and a side padding each way. */
 const NEXT_CHROME = 20 + 6 + 2 * 6;
 
-const PILL_HEIGHT = 40;
-
 /** Where cook mode lays the timer pill over the bar: after the group's padding, Previous and the
  * pill's margin, centred in the bar. */
 export const COOK_PILL = {
   left: BAR_SIDE + 4 + 46 + 2,
-  bottom: BAR_BOTTOM + (BAR_HEIGHT - PILL_HEIGHT) / 2,
-  height: PILL_HEIGHT,
+  bottom: BAR_BOTTOM + (BAR_HEIGHT - GLASS_CONTROL_HEIGHT) / 2,
+  height: GLASS_CONTROL_HEIGHT,
 };
 
 /** The clock in the bar; with timers, the place the timer pill floats over. */
@@ -90,7 +88,7 @@ function TimersButton({ pillWidth }: { pillWidth: number }) {
     );
   }
 
-  return <View className="mx-0.5" style={{ width: pillWidth, height: PILL_HEIGHT }} />;
+  return <View className="mx-0.5" style={{ width: pillWidth, height: GLASS_CONTROL_HEIGHT }} />;
 }
 
 export function CookBar({

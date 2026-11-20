@@ -133,24 +133,4 @@ describe("useFreshRows", () => {
     rerender({ rows: rowsOf("z", "a", "b", "c"), epoch: "1..28" });
     expect(seen.some((fresh) => fresh.size === 1)).toBe(true);
   });
-
-  it("leaves the commit a new epoch lands in unsettled, and settles it once that commit is done", () => {
-    const settled: boolean[] = [];
-    const { result, rerender } = renderHook(
-      ({ rows, epoch }) => {
-        const shown = useFreshRows(rows, true, epoch);
-
-        settled.push(shown.settled);
-
-        return shown;
-      },
-      { initialProps: { rows: rowsOf("a"), epoch: "7..21" } }
-    );
-
-    expect(settled).not.toContain(false);
-    rerender({ rows: rowsOf("z", "a"), epoch: "1..28" });
-
-    expect(settled).toContain(false);
-    expect(result.current.settled).toBe(true);
-  });
 });

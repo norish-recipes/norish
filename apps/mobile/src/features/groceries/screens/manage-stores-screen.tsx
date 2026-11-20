@@ -3,11 +3,12 @@ import type { Edge } from "@/lib/card-edges";
 import React, { useState } from "react";
 import { Alert, Text, View } from "react-native";
 import { DragList } from "@/components/drag-list/drag-list";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { EmptyCard } from "@/components/empty-card";
+import { Sheet, SHEET_SCROLL_END, SheetBody } from "@/components/sheet";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
+import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { EditingStore } from "@norish/shared-react/groceries";
@@ -60,7 +61,6 @@ function ShopCheckLine({
  * editor that replaces the list inside the same sheet. Deleting asks first, as web does. */
 export function ManageStoresScreen() {
   const intl = useIntl();
-  const [onAccent] = useThemeColor(["accent-foreground"] as const);
   const cancel = useCancelButton();
   const text = (id: string) => intl.formatMessage({ id });
   const { stores, isRead } = useStoresQuery();
@@ -148,31 +148,29 @@ export function ManageStoresScreen() {
 
   return (
     <Sheet
-      actions={
-        <Button
-          className="h-[50px]"
-          testID="store-add"
-          variant="primary"
-          onPress={() => setEditing(newEditingStore())}
-        >
-          <Ionicons color={onAccent} name="add" size={20} />
-          <Button.Label className="font-semibold">{text("groceries.mobile.addStore")}</Button.Label>
-        </Button>
-      }
+      confirm={{
+        label: text("groceries.mobile.addStore"),
+        symbol: "plus",
+        onPress: () => setEditing(newEditingStore()),
+      }}
       name="manage-stores"
       title={text("groceries.mobile.manageStores")}
     >
       {!isRead ? (
         <SheetBody>
-          <SkeletonCard rowClassName="h-14 gap-3 px-4" rows={3}>
-            <View className="bg-default size-3.5 rounded-full" />
+          <SkeletonCard className="bg-sand" rowClassName="h-14 gap-3 px-4" rows={3}>
+            <View className="bg-sand size-3.5 rounded-full" />
           </SkeletonCard>
         </SheetBody>
       ) : stores.length === 0 ? (
         <SheetBody>
-          <Text className="text-muted py-8 text-center" testID="stores-empty">
-            {text("groceries.storeManager.noStoresYet")}
-          </Text>
+          <EmptyCard
+            className="bg-sand"
+            icon="storefront-outline"
+            testID="stores-empty"
+            title={text("groceries.storeManager.noStoresYet")}
+            tone="shop"
+          />
         </SheetBody>
       ) : (
         <DragList
@@ -182,14 +180,18 @@ export function ManageStoresScreen() {
             ) : undefined
           }
           className="flex-1"
+          contentContainerStyle={SHEET_SCROLL_END}
           contentInsetAdjustmentBehavior="never"
           renderHeading={() => null}
-          renderItem={({ store, edge }, drag) => (
+          renderItem={({ store, edge }) => (
             <StoreListRow
+              count={
+                groceries.filter((grocery) => grocery.storeId === store.id && !grocery.isDone)
+                  .length
+              }
               edge={edge}
               store={store}
               onDelete={() => confirmDelete(store)}
-              onDrag={drag}
               onEdit={() => setEditing(editingStoreOf(store))}
             />
           )}

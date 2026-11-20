@@ -1,10 +1,13 @@
 import z from "zod";
 
 import { clientMintedId } from "./common";
-import { RecipeDashboardSchema, RecipeListInputSchema } from "./recipe";
+import { RecipeDashboardSchema, RecipeListInputSchema, SUGGEST_TEXT_MAX } from "./recipe";
 
 /** The Cookbook title. Trimmed, because a title made of spaces is not a title. */
 export const CookbookTitleSchema = z.string().trim().min(1).max(120);
+
+/** How many Ingredients one Library search can be narrowed to. */
+export const MAX_FILTER_INGREDIENTS = 20;
 
 /** How many member titles a cookbook's derived description names. */
 export const COOKBOOK_DESCRIPTION_TITLE_LIMIT = 6;
@@ -155,6 +158,25 @@ export const CookbookListResultSchema = z.object({
   nextCursor: z.number().int().nonnegative().nullable(),
 });
 
+/** Why a recipe matched a search: its strongest field in scope and what was found there. */
+export const LibraryMatchSchema = z.discriminatedUnion("field", [
+  z.object({ field: z.literal("title") }),
+  z.object({ field: z.literal("tags"), tag: z.string() }),
+  z.object({
+    field: z.literal("ingredients"),
+    amount: z.number().nullable(),
+    unit: z.string().nullable(),
+    name: z.string(),
+  }),
+  z.object({ field: z.literal("description"), snippet: z.string() }),
+  /** `number` is the step's place among the recipe's numbered steps; a matching heading has none. */
+  z.object({
+    field: z.literal("steps"),
+    snippet: z.string(),
+    number: z.number().int().positive().optional(),
+  }),
+]);
+
 /**
  * One Library row: a recipe or a cookbook, discriminated by kind.
  *
@@ -163,7 +185,12 @@ export const CookbookListResultSchema = z.object({
  * drawing.
  */
 export const LibraryItemSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("recipe"), recipe: RecipeDashboardSchema }),
+  z.object({
+    kind: z.literal("recipe"),
+    recipe: RecipeDashboardSchema,
+    /** Why the recipe matched the search text; only when the query asked for it. */
+    match: LibraryMatchSchema.optional(),
+  }),
   z.object({ kind: z.literal("cookbook"), cookbook: CookbookSummarySchema }),
 ]);
 
@@ -181,6 +208,19 @@ export const LibraryListInputSchema = RecipeListInputSchema.extend({
     .default(false)
     .describe("Restrict to the caller's favourites. Recipes only."),
   pantryOnly: PantryOnlySchema,
+  ingredientIds: z
+    .array(z.uuid())
+    .max(MAX_FILTER_INGREDIENTS)
+    .optional()
+    .describe("Keep recipes with a line naming each Ingredient, or a kind of it. Recipes only."),
+  sortBeatsRank: z
+    .boolean()
+    .default(false)
+    .describe("Let an explicit sort order a search instead of relevance."),
+  withMatch: z
+    .boolean()
+    .default(false)
+    .describe("Say, for each recipe a search returns, which field matched and where."),
 });
 
 export const LibraryListResultSchema = z.object({
@@ -188,4 +228,44 @@ export const LibraryListResultSchema = z.object({
   /** Counts both kinds. Nothing may read this as a recipe count. */
   total: z.number().int().nonnegative(),
   nextCursor: z.number().int().nonnegative().nullable(),
+});
+
+export const LibrarySuggestionsInputSchema = z.object({
+  text: z.string().max(SUGGEST_TEXT_MAX).describe("What the reader has typed."),
+  exceptIngredientIds: z
+    .array(z.uuid())
+    .max(MAX_FILTER_INGREDIENTS)
+    .default([])
+    .describe("Ingredients already applied, left out before the cap."),
+  exceptTags: z
+    .array(z.string().max(SUGGEST_TEXT_MAX))
+    .max(MAX_FILTER_INGREDIENTS)
+    .default([])
+    .describe("Tags already applied, in any case, left out before the cap."),
+});
+
+/** What the typed text can narrow a search to, each kind capped and most used first. */
+export const LibrarySuggestionsSchema = z.object({
+  ingredients: z.array(
+    z.object({
+      id: z.uuid(),
+      name: z.string(),
+      /** The best spelling per catalogue language, for the name in the reader's locale. */
+      localeNames: z.record(z.string(), z.string()),
+    })
+  ),
+  tags: z.array(z.string()),
+  categories: z.array(z.string()),
+});
+
+/** What Search offers with no text: a few Categories with a photo, and the most-used Tags. */
+export const LibraryDiscoverSchema = z.object({
+  categories: z.array(
+    z.object({
+      name: z.string(),
+      /** The primary image of the newest visible recipe in it that has one. */
+      image: z.string().nullable(),
+    })
+  ),
+  tags: z.array(z.string()),
 });

@@ -1,15 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { Card, CardRow } from "@/components/card";
+import { OnTheListChip } from "@/components/on-the-list-chip";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { Switch } from "@/components/switch";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Skeleton, Switch } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useOnTheList, usePantryMutations, usePantryQuery } from "@norish/shared-react/groceries";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-
-import { FormCard } from "../components/form-parts";
-import { OnTheListChip } from "../components/pantry-rows";
 
 /** A kept food: whether the household keeps it, and nothing else of the Ingredient. */
 export function FoodScreen() {
@@ -55,18 +54,21 @@ export function FoodScreen() {
       title={ingredientDisplayName(item, intl.locale)}
     >
       <SheetBody>
-        <FormCard>
-          <View className="h-14 flex-row items-center gap-2.5 px-4">
-            <Text className="text-foreground flex-1 text-base">{label}</Text>
-            {keeps && onTheList ? <OnTheListChip /> : null}
+        <Card>
+          <CardRow first label={label}>
             <Switch
               accessibilityLabel={label}
               isSelected={keeps}
               testID="pantry-food-switch"
               onSelectedChange={setKeeps}
             />
-          </View>
-        </FormCard>
+          </CardRow>
+          {keeps && onTheList ? (
+            <CardRow label={intl.formatMessage({ id: "groceries.page.title" })}>
+              <OnTheListChip />
+            </CardRow>
+          ) : null}
+        </Card>
       </SheetBody>
     </Sheet>
   );

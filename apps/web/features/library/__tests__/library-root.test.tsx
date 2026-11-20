@@ -36,6 +36,7 @@ beforeEach(async () => {
 
 let sortByTitle: () => void = () => {};
 let searchSoup: () => void = () => {};
+let addOnion: () => void = () => {};
 /** What every render drew: sort, search text, and whether the loading gate is released. */
 let frames: string[] = [];
 
@@ -44,9 +45,11 @@ function Probe() {
   const rawInput = useLibraryFilters((state) => state.filters.rawInput);
   const hydrated = useLibraryFilters((state) => state.hydrated);
   const setFilters = useLibraryFilters((state) => state.setFilters);
+  const addIngredient = useLibraryFilters((state) => state.addIngredient);
 
   sortByTitle = () => setFilters({ sortMode: "titleAsc" });
   searchSoup = () => setFilters({ rawInput: "soup" });
+  addOnion = () => addIngredient("a0000000-0000-4000-8000-000000000001");
   frames.push(`${sortMode} ${rawInput || "-"} ${hydrated ? "ready" : "waiting"}`);
 
   return <p>{sortMode}</p>;
@@ -100,6 +103,27 @@ describe("LibraryRoot", () => {
     act(() => searchSoup());
 
     expect(decodeURIComponent(document.cookie)).not.toContain("soup");
+  });
+
+  it("keeps an Ingredient filter out of the cookie, writing what it wrote before Ingredients", () => {
+    render(
+      <LibraryRoot filters={undefined}>
+        <Probe />
+      </LibraryRoot>
+    );
+
+    act(() => {
+      sortByTitle();
+      searchSoup();
+      addOnion();
+    });
+
+    const written = document.cookie
+      .split("; ")
+      .find((entry) => entry.startsWith(`${RECIPE_FILTERS_COOKIE}=`))!
+      .slice(RECIPE_FILTERS_COOKIE.length + 1);
+
+    expect(JSON.parse(decodeURIComponent(written))).toEqual({ sortMode: "titleAsc" });
   });
 
   it("releases the loading gate with no cookie and nothing stored", () => {

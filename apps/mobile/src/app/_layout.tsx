@@ -14,6 +14,7 @@ import {
   FIT_SHEET_OPTIONS,
   SEARCH_SHEET_OPTIONS,
 } from "@/components/sheet-options";
+import { SheetTouchShield } from "@/components/sheet-touch-shield";
 import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
 import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
 import { useCalendarWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
@@ -23,6 +24,7 @@ import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address"
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
 import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
+import { useSheetExit } from "@/lib/after-sheet";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
@@ -191,6 +193,7 @@ function SessionStack() {
     <>
       <RootStack signedIn={signedIn} />
       <PortalHost name="app" />
+      <SheetTouchShield />
     </>
   );
 
@@ -266,8 +269,13 @@ function AuthenticatedEffects() {
 const FIT_SHEETS = ["add-recipe", "import-link", "import-text", "import-photos", "timers"] as const;
 
 function RootStack({ signedIn }: { signedIn: boolean }) {
+  const sheetExit = useSheetExit();
+
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{ headerShown: false }}
+      unstable_nativeProps={{ onFinishTransitioning: sheetExit }}
+    >
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />

@@ -68,7 +68,8 @@
     "sortByTitle": "Titel",
     "sortByDate": "Dato",
     "clearFilters": "Ryd filtre",
-    "minRating": "Minimumsvurdering"
+    "minRating": "Minimumsvurdering",
+    "minRatingStars": "Mindst {count} af 5"
   },
   "time": {
     "minutes": "min",

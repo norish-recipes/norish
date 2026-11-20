@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Unbenannter Eintrag",
-    "items": "{count, plural, one {# Eintrag} other {# Einträge}}"
+    "items": "{count, plural, =0 {Keine Einträge} one {# Eintrag} other {# Einträge}}"
   },
   "store": {
     "unsorted": "Unsortiert",
@@ -188,7 +188,6 @@
     "emptyHint": "Fügen Sie Einträge mit der Schaltfläche unten hinzu.",
     "addTitle": "Einkäufe hinzufügen",
     "editTitle": "Einkauf bearbeiten",
-    "fromRecipe": "Aus {recipe}",
     "store": "Geschäft",
     "noStore": "Kein Geschäft",
     "automatic": "Automatisch",

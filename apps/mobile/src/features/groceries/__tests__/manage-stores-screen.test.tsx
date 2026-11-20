@@ -11,7 +11,7 @@ const store = (id: string, sortOrder: number) =>
 const held = vi.hoisted(() => ({
   stores: [] as StoreDto[],
   isRead: true,
-  lines: [] as { storeId: string }[],
+  lines: [] as { storeId: string; isDone?: boolean }[],
   reorder: vi.fn(),
   remove: vi.fn(),
   save: vi.fn(),
@@ -27,10 +27,12 @@ vi.mock("react-native", async () => {
     Alert: { alert: held.alert },
     Text: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
       createElement("span", { "data-testid": testID }, children),
-    View: ({ children }: { children?: React.ReactNode }) => createElement("div", null, children),
+    View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
+      createElement("div", { "data-testid": testID }, children),
   };
 });
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("heroui-native", async () => {
   const { createElement } = await import("react");
   const Button = ({
@@ -61,12 +63,11 @@ vi.mock("@/components/sheet", async () => {
       createElement("div", null, children, actions),
     SheetBody: ({ children }: { children?: React.ReactNode }) =>
       createElement("div", null, children),
+    SHEET_SCROLL_END: {},
   };
 });
 vi.mock("@/components/drag-list/drag-list", () => ({
-  DragList: (
-    props: typeof held.list & { renderItem: (item: never, drag: () => void) => React.ReactNode }
-  ) => {
+  DragList: (props: typeof held.list & { renderItem: (item: never) => React.ReactNode }) => {
     Object.assign(held.list, props);
 
     return (
@@ -74,7 +75,7 @@ vi.mock("@/components/drag-list/drag-list", () => ({
         {props.rows.map(
           (row) =>
             (row as unknown as { value: never; key: string }) &&
-            props.renderItem((row as unknown as { value: never }).value, () => {})
+            props.renderItem((row as unknown as { value: never }).value)
         )}
       </div>
     );
@@ -162,6 +163,15 @@ describe("Manage stores", () => {
 
     expect(held.remove).toHaveBeenNthCalledWith(1, "a", false);
     expect(held.remove).toHaveBeenNthCalledWith(2, "a", true);
+  });
+
+  it("counts ticked lines too, since deleting the Store reaches them", () => {
+    held.lines = [{ storeId: "a", isDone: true }];
+    render(<ManageStoresScreen />);
+    fireEvent.click(screen.getByTestId("delete-a"));
+    const buttons = held.alert.mock.calls[0]?.[2] as { onPress?: () => void }[];
+
+    expect(buttons).toHaveLength(3);
   });
 
   it("deletes a Store with no lines after one confirmation", () => {

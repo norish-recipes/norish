@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { AnimatedNumber } from "@/components/animated-number";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { plainText } from "@/lib/plain-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -18,7 +19,6 @@ import {
 import { reconcileCookingTime } from "@norish/shared/lib/cooking-time";
 import { isAllergenTag, tagsBesideCategories } from "@norish/shared/lib/helpers";
 
-import { plainText } from "../utils/recipe-rows";
 import { useTint } from "./tint";
 
 function Description({ text }: { text: string }) {

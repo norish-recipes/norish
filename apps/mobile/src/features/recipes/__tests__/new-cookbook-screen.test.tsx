@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("react-native", () => ({ View: () => null }));
+vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("heroui-native", () => ({ Input: () => null, TextField: () => null }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
@@ -19,8 +20,8 @@ vi.mock("expo-router", () => ({
   useRouter: () => ({ back: state.back }),
 }));
 vi.mock("../components/recipe-pick", () => ({
-  RecipePickSheet: ({ action }: { action: { onPress?: () => void } }) => {
-    state.action = action;
+  RecipePickSheet: ({ actions }: { actions: { confirm: { onPress?: () => void } } }) => {
+    state.action = actions.confirm;
 
     return null;
   },

@@ -1,3 +1,4 @@
+import type { GroceriesSection } from "@/lib/groceries-section";
 import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
@@ -5,8 +6,9 @@ import { cookbookIdOf, cookModeRoute, TAB_ROUTES } from "@/lib/tab-routes";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
-/** The screen the accessory is for: its path, and its recipe when that is a shown recipe's page. */
-export type AccessoryScreen = { path: string; recipeId?: string };
+/** The screen the accessory is for: its path, its recipe when that is a shown recipe's page, and
+ * `search` when it is in the Search tab's stack, whose pages have no path of their own to say so. */
+export type AccessoryScreen = { path: string; recipeId?: string; search?: boolean };
 
 /** One action the accessory holds: its icon, label, test id and the route it opens. */
 export type Action = {
@@ -16,13 +18,11 @@ export type Action = {
   route: Href;
 };
 
-/** What the accessory holds: an action, and the timer capsule while a timer exists. */
-export type AccessoryPlan = { add: Action; capsule: boolean };
+/** What the accessory holds: an action (none on Search's own pages), and the timer capsule while a timer exists. */
+export type AccessoryPlan = { add: Action | null; capsule: boolean };
 
 // Recipes is every other path.
 const PATH_TABS = ["groceries", "calendar"] as const;
-// The Pantry and the sheets it opens (`/groceries/pantry` prefixes the add sheet).
-const PANTRY_PATHS = [TAB_ROUTES.groceries.pantry, TAB_ROUTES.groceries.food];
 
 const TAB_ACTIONS: Record<(typeof PATH_TABS)[number], Action> = {
   groceries: {
@@ -84,50 +84,61 @@ const cookAction = (recipeId: string): Action => ({
   route: cookModeRoute(recipeId),
 });
 
-const onPantry = (path: string) => PANTRY_PATHS.some((route) => path.startsWith(route));
-
 const tabOf = (path: string) => PATH_TABS.find((tab) => path.startsWith(TAB_ROUTES[tab].root));
 
-/** The tab `path` is on: its own first segment, Recipes for the library, its pages and sheets. */
-export function shellTab(path: string) {
+/** The tab `path` is on: its own first segment, Recipes for the library, its pages and sheets;
+ * Search, `inSearch`, for every page of its stack. */
+export function shellTab(path: string, inSearch = false) {
   const first = path.split("/")[1];
 
-  return first === "groceries" || first === "calendar" || first === "settings" || first === "search"
-    ? first
-    : "recipes";
+  if (inSearch) return "search";
+
+  return first === "groceries" || first === "calendar" || first === "settings" ? first : "recipes";
 }
 
-/** The screen the accessory is for at `path`, whose recipe is `recipeId`: the recipe's once its page
- * is shown with it, until then the last path that was not a recipe's, on the Recipes tab. */
+/** The tab page shown at `path`: itself on a tab, else the last one, under a root sheet such as the
+ * timers, so the accessory keeps that page's action while the sheet opens and closes. */
+export const tabPage = (path: string, onTab: boolean, lastTabPage: string) =>
+  onTab ? path : lastTabPage;
+
+/** The screen the accessory is for at `path` (in Search's stack when `search`): the recipe's once
+ * its page is shown with it, until then the last path that was not a recipe's. */
 export function accessoryScreen(
   path: string,
   recipeId: string | undefined,
   lastNonRecipePath: string,
-  shownRecipe: string | null
+  shownRecipe: string | null,
+  search = false
 ): AccessoryScreen {
-  if (recipeId === undefined) return { path };
-  if (recipeId === shownRecipe) return { path, recipeId };
+  const inSearch = search ? { search } : {};
+
+  if (recipeId === undefined) return { path, ...inSearch };
+  if (recipeId === shownRecipe) return { path, recipeId, ...inSearch };
+  if (search) return { path: lastNonRecipePath, ...inSearch };
 
   // A recipe opens on the Recipes tab, though the way in was another tab's.
   return { path: tabOf(lastNonRecipePath) ? TAB_ROUTES.recipes.root : lastNonRecipePath };
 }
 
-/** The accessory for `screen`: Cook on a recipe, Add to pantry on the Pantry, else the tab's own
- * action; `editableCookbook` is the cookbook on screen when the Reader may edit it. */
+/** The accessory for `screen`: Cook on a recipe, Add to pantry while the Groceries page shows the
+ * Pantry (`groceries`, sheets too), else the tab's own; `editableCookbook` is one the Reader may edit. */
 export function accessoryPlan(
-  { path, recipeId }: AccessoryScreen,
+  { path, recipeId, search }: AccessoryScreen,
   hasTimers: boolean,
   lens: LibraryTypeFilter,
-  editableCookbook: string | null = null
+  editableCookbook: string | null = null,
+  groceries: GroceriesSection = "list"
 ): AccessoryPlan {
   const tab = tabOf(path);
   const add = recipeId
     ? cookAction(recipeId)
-    : onPantry(path)
-      ? ADD_TO_PANTRY
-      : tab
-        ? TAB_ACTIONS[tab]
-        : recipesAdd(path, lens, editableCookbook);
+    : search
+      ? null
+      : tab === "groceries" && groceries === "pantry"
+        ? ADD_TO_PANTRY
+        : tab
+          ? TAB_ACTIONS[tab]
+          : recipesAdd(path, lens, editableCookbook);
 
   return { add, capsule: hasTimers };
 }

@@ -17,6 +17,7 @@ import { createTestWrapper, fakePlatformAdapter } from "@norish/shared-react/pla
 
 import type { InfiniteRecipeData } from "../library-cache";
 import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { LIVE_WINDOW_MS } from "../../realtime/use-realtime-subscription";
 import { useRatingsSubscription } from "../use-ratings-subscription";
 import {
   useRecipeListSubscription,
@@ -142,7 +143,9 @@ describe("a cookbook's members under recipe events", () => {
   });
 
   it("is reread when an import fails", () => {
+    vi.useFakeTimers();
     emit("recipes.onFailed", {});
+    act(() => vi.advanceTimersByTime(LIVE_WINDOW_MS));
 
     expect(queryClient.getQueryState(cookbookKey())?.isInvalidated).toBe(true);
   });

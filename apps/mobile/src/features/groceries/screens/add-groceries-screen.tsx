@@ -1,21 +1,23 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { CardRow } from "@/components/card";
+import { Switch } from "@/components/switch";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import { useRouter } from "expo-router";
-import { Input, Switch } from "heroui-native";
+import { Input } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import {
+  GROCERY_LOOKUP_DEBOUNCE_MS,
   useAisleChoice,
   useGroceriesMutations,
   useGroceryFormState,
   useParsedGroceryName,
   useRecurrenceDetection,
-  useSettledName,
   useStoresQuery,
 } from "@norish/shared-react/groceries";
 import { useIngredientFor } from "@norish/shared-react/ingredients";
+import { useSettledText } from "@norish/shared-react/settled-text";
 
 import { NameField } from "../components/form-parts";
 import { GrocerySheet } from "../components/grocery-sheet";
@@ -34,7 +36,10 @@ export function AddGroceriesScreen() {
   const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
   const { detectedPattern } = useRecurrenceDetection({ itemName: form.itemName });
   const groceryName = useParsedGroceryName(form.itemName);
-  const ingredientId = useIngredientFor(groceryName, useSettledName(groceryName));
+  const ingredientId = useIngredientFor(
+    groceryName,
+    useSettledText(groceryName, GROCERY_LOOKUP_DEBOUNCE_MS)
+  );
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
   const aisle = useAisleChoice({ groceryName, ingredientId, store, resetOn: added });
   const trimmed = form.itemName.trim();
@@ -47,22 +52,27 @@ export function AddGroceriesScreen() {
     aisle.commit();
     form.reset();
     setAdded(added + 1);
-    if (!another) router.back();
+    // Add another keeps the keyboard up for the next one, the Add button's tap included.
+    if (another) fieldRef.current?.focus();
+    else router.back();
   };
 
   return (
     <GrocerySheet
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.add" }),
+          disabled: !trimmed,
+          onPress: submit,
+        },
+      }}
       aisleId={aisle.aisleId}
       aisles={groceryName === "" ? [] : aisle.aisles}
-      confirm={{
-        label: intl.formatMessage({ id: "common.actions.add" }),
-        disabled: !trimmed,
-        onPress: submit,
-      }}
       detected={detectedPattern?.pattern ?? null}
       field={
         <NameField
           fieldRef={fieldRef}
+          keepsFocus={another}
           placeholderId="groceries.panel.editPlaceholder"
           testID="add-grocery-field"
           value={form.itemName}
@@ -77,17 +87,14 @@ export function AddGroceriesScreen() {
       stores={stores}
       title={intl.formatMessage({ id: "groceries.mobile.addTitle" })}
       trailingRows={
-        <View className="border-separator min-h-[52px] flex-row items-center border-t px-4">
-          <Text className="text-foreground flex-1 text-base">
-            {intl.formatMessage({ id: "groceries.panel.addAnother" })}
-          </Text>
+        <CardRow label={intl.formatMessage({ id: "groceries.panel.addAnother" })}>
           <Switch
             accessibilityLabel={intl.formatMessage({ id: "groceries.panel.addAnother" })}
             isSelected={another}
             testID="add-grocery-another"
             onSelectedChange={setAnother}
           />
-        </View>
+        </CardRow>
       }
       onAisle={aisle.setAisleId}
       onConfirmDetected={() => form.handleConfirmPattern(detectedPattern)}

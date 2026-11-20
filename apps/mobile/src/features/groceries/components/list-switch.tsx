@@ -1,53 +1,66 @@
+import type { GroceriesSection } from "@/lib/groceries-section";
+import type { DerivedValue } from "react-native-reanimated";
 import React from "react";
-import { Pressable, View } from "react-native";
-import { GlassSurface } from "@/components/glass";
-import { useTokenColor } from "@/hooks/use-token-color";
+import { View } from "react-native";
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from "react-native-reanimated";
+import { Segmented } from "@/components/segmented";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useIntl } from "react-intl";
 
-export type ListSection = "list" | "pantry";
+// The switch's height, over which it fades as it rises under the bar.
+const SWITCH_HEIGHT = 44;
 
-const SEGMENTS = [
-  { value: "list", icon: "clipboard-check-outline", labelId: "groceries.page.title" },
-  { value: "pantry", icon: "archive-outline", labelId: "groceries.page.pantry" },
-] as const;
-
-/** The title row's glass switch between the list and the Pantry. */
+/** The switch between the list and the Pantry, drawn once over both lists so its thumb slides while
+ * the page does; it rides `offset`, the shown list's scroll, as if it sat in that list's header. */
 export function ListSwitch({
-  value,
+  section,
+  offset,
+  top,
   onChange,
 }: {
-  value: ListSection;
-  onChange: (value: ListSection) => void;
+  section: GroceriesSection;
+  offset: DerivedValue<number>;
+  top: number;
+  onChange: (section: GroceriesSection) => void;
 }) {
   const intl = useIntl();
-  const foreground = useTokenColor("foreground");
-  const muted = useTokenColor("muted");
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(offset.get(), [0, SWITCH_HEIGHT], [1, 0], Extrapolation.CLAMP),
+    transform: [{ translateY: -offset.get() }],
+    // Faded under the bar, it no longer takes the bar's touches.
+    pointerEvents: offset.get() >= SWITCH_HEIGHT ? ("none" as const) : ("box-none" as const),
+  }));
 
   return (
-    <View className="h-11 w-[100px] flex-row items-center gap-0.5 p-1" testID="groceries-switch">
-      <GlassSurface radius={22} />
-      {SEGMENTS.map((segment) => {
-        const selected = segment.value === value;
-
-        return (
-          <Pressable
-            key={segment.value}
-            accessibilityLabel={intl.formatMessage({ id: segment.labelId })}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            className={`h-9 flex-1 items-center justify-center rounded-full ${selected ? "bg-surface" : ""}`}
-            testID={`groceries-switch-${segment.value}`}
-            onPress={() => onChange(segment.value)}
-          >
-            <MaterialCommunityIcons
-              color={selected ? foreground : muted}
-              name={segment.icon}
-              size={20}
-            />
-          </Pressable>
-        );
-      })}
-    </View>
+    <Animated.View className="absolute inset-x-0 z-10 px-5" style={[{ top }, style]}>
+      <Segmented
+        segments={[
+          {
+            value: "list",
+            label: intl.formatMessage({ id: "groceries.page.title" }),
+            icon: (color) => (
+              <MaterialCommunityIcons color={color} name="clipboard-check-outline" size={20} />
+            ),
+            testID: "groceries-switch-list",
+          },
+          {
+            value: "pantry",
+            label: intl.formatMessage({ id: "groceries.page.pantry" }),
+            icon: (color) => (
+              <MaterialCommunityIcons color={color} name="archive-outline" size={20} />
+            ),
+            testID: "groceries-switch-pantry",
+          },
+        ]}
+        testID="groceries-switch"
+        value={section}
+        onChange={onChange}
+      />
+    </Animated.View>
   );
+}
+
+/** The room atop each list's header that the switch rides over: its height and the gap below it. */
+export function ListSwitchSpace() {
+  return <View style={{ height: SWITCH_HEIGHT + 20 }} />;
 }

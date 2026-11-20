@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { Checkmark } from "@/components/checkmark";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { SliceHairline, sliceRowClass } from "@/components/slice-row";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { ChoiceParams } from "../components/editor/choice-request";
@@ -23,7 +23,6 @@ export function EditorChoiceScreen() {
   const [request] = useState(takeChoice);
   const [selected, setSelected] = useState(request?.selected ?? []);
   const [query, setQuery] = useState("");
-  const [accent] = useThemeColor(["accent"] as const);
 
   // A relaunch restores the route without the request that opened it.
   useEffect(() => {
@@ -56,7 +55,7 @@ export function EditorChoiceScreen() {
     <Sheet name={name} title={title}>
       <SheetList
         ListHeaderComponent={
-          <View className="pb-2">
+          <View className="pb-3">
             <SheetSearchField
               label={intl.formatMessage({ id: "common.actions.search" })}
               testID={`${name}-search`}
@@ -74,12 +73,13 @@ export function EditorChoiceScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: ticked }}
-              className={`min-h-12 flex-row items-center justify-between ${index === 0 ? "" : "border-separator border-t"}`}
+              className={`${sliceRowClass({ first: index === 0, last: index === shown.length - 1 })} justify-between`}
               testID={`${name}-${item.key}`}
               onPress={() => pick(item.key)}
             >
-              <Text className="text-foreground flex-1 text-[17px]">{item.label}</Text>
-              {ticked ? <Ionicons color={accent} name="checkmark" size={20} /> : null}
+              <SliceHairline first={index === 0} />
+              <Text className="text-foreground flex-1 text-base">{item.label}</Text>
+              {ticked ? <Checkmark /> : null}
             </Pressable>
           );
         }}

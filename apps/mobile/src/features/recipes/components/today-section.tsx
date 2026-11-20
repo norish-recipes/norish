@@ -70,9 +70,14 @@ export function TodaySection({ today }: { today: Today }) {
 
   return (
     <View testID="today-section">
-      <Text className="text-muted px-5 pt-0.5 text-base leading-[19px]" testID="today-date">
-        {intl.formatDate(today.todayDate, { weekday: "long", month: "short", day: "numeric" })}
-      </Text>
+      <View className="flex-row items-baseline gap-2 px-5 pt-0.5">
+        <Text className="text-foreground text-2xl font-semibold">
+          {intl.formatMessage({ id: "calendar.mobile.today" })}
+        </Text>
+        <Text className="text-muted text-base leading-[19px]" testID="today-date">
+          {intl.formatDate(today.todayDate, { weekday: "long", month: "short", day: "numeric" })}
+        </Text>
+      </View>
       {today.isLoading ? (
         <View
           className={`flex-row overflow-hidden px-5 pt-[18px] ${TODAY_ROW_GAP}`}

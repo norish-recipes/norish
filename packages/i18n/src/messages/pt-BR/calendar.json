@@ -11,8 +11,7 @@
     "openRecipe": "Abrir receita",
     "move": "Mover…",
     "removeMessage": "{name} sai de {slot} de {day}.",
-    "moveTitle": "Mover",
-    "moveSubtitle": "{name}, {slot} de hoje"
+    "moveTitle": "Mover"
   },
   "editNote": {
     "title": "Editar nota",

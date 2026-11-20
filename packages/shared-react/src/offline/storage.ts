@@ -18,6 +18,8 @@ export interface OfflineStorage {
     set(key: string, value: unknown): Promise<void>;
     del(key: string): Promise<void>;
     keys(): Promise<string[]>;
+    /** Every key starting with `prefix` and its value, read at once. */
+    entries<T>(prefix: string): Promise<[string, T][]>;
   };
   /** The durable Outbox. Entries carry their owner, so every owner's queue shares one FIFO. */
   outbox: {

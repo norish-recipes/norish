@@ -1,19 +1,21 @@
 import type { ComponentProps, ComponentRef } from "react";
-import React, { useState } from "react";
+import React from "react";
 import { SearchField } from "heroui-native";
+
+import { SHEET_FIELD } from "./sheet-input";
 
 /** What a ref to the field holds. */
 export type SheetSearchInput = ComponentRef<typeof SearchField.Input>;
 
-/** A search field; `onChange` is absent while what it searches loads. A `ring`ed field sits on the
- * page's ground, as the Pantry's, and rings in the accent while focused. */
+/** A search field in the sheet field's look; `onChange` is absent while what it searches loads.
+ * A page on an opaque ground passes its own `className`. */
 export function SheetSearchField({
   label,
   testID,
   value,
   fieldRef,
   maxLength,
-  ring = false,
+  className = SHEET_FIELD,
   onChange,
   onSubmit,
 }: {
@@ -22,15 +24,10 @@ export function SheetSearchField({
   value?: string;
   fieldRef?: ComponentProps<typeof SearchField.Input>["ref"];
   maxLength?: number;
-  ring?: boolean;
+  className?: string;
   onChange?: (value: string) => void;
   onSubmit?: () => void;
 }) {
-  const [focused, setFocused] = useState(false);
-  const look = ring
-    ? `bg-surface rounded-full border-2 ${focused ? "border-accent" : "border-transparent"}`
-    : "bg-default rounded-3xl";
-
   return (
     <SearchField isDisabled={!onChange} value={value} onChange={onChange}>
       <SearchField.Group>
@@ -40,13 +37,11 @@ export function SheetSearchField({
           accessibilityLabel={label}
           autoCapitalize="none"
           autoCorrect={false}
-          className={`h-12 ${look}`}
+          className={className}
           maxLength={maxLength}
           placeholder={label}
           returnKeyType="search"
           testID={testID}
-          onBlur={() => setFocused(false)}
-          onFocus={() => setFocused(true)}
           onSubmitEditing={onSubmit}
         />
         <SearchField.ClearButton />

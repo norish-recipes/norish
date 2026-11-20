@@ -12,12 +12,12 @@ const SEARCH_MIN_LENGTH = 2;
 const CATALOGUE_MATCHES = 8;
 
 /** The catalogue foods the field's text finds that the household does not keep: none offline, and
- * none until the answer is for the text now in the field. */
+ * none until the answer is for the text now in the field, `searching` till then. */
 export function usePantryCatalogue(
   typed: string,
   locale: string,
   keptIngredientIds: ReadonlySet<string>
-): IngredientItem[] {
+): { matches: IngredientItem[]; searching: boolean } {
   const { isOffline } = useConnectivity();
   const [search, setSearch] = useState(typed);
 
@@ -27,13 +27,19 @@ export function usePantryCatalogue(
     return () => clearTimeout(timer);
   }, [typed]);
 
-  const { items } = useIngredientSearchQuery(
+  const { items, isLoading } = useIngredientSearchQuery(
     !isOffline && search.length >= SEARCH_MIN_LENGTH ? search : null,
     locale,
     { listedOnly: false }
   );
 
-  return !isOffline && typed.length >= SEARCH_MIN_LENGTH && search === typed
-    ? items.filter((food) => !keptIngredientIds.has(food.id)).slice(0, CATALOGUE_MATCHES)
-    : [];
+  const asked = !isOffline && typed.length >= SEARCH_MIN_LENGTH;
+  const answered = asked && search === typed && !isLoading;
+
+  return {
+    matches: answered
+      ? items.filter((food) => !keptIngredientIds.has(food.id)).slice(0, CATALOGUE_MATCHES)
+      : [],
+    searching: asked && !answered,
+  };
 }

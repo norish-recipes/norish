@@ -20,6 +20,8 @@ export { libraryGridItems, recipeGridItems, type LibraryGridItem } from "./libra
 export { coverMosaicColumns } from "./cover-mosaic";
 export { recipeCardFacts } from "./recipe-card-facts";
 export { useLibraryQuery } from "./use-library-query";
+export { useLibraryDiscover } from "./use-library-discover";
+export { useLibrarySuggestions } from "./use-library-suggestions";
 export {
   useCookbookList,
   useLibraryCards,
@@ -75,6 +77,7 @@ export { useUnitFormatter } from "./use-unit-formatter";
 export {
   createRecipePageStore,
   RecipePageProvider,
+  RecipePageStores,
   useRecipePageStore,
   type RecipePageState,
 } from "./recipe-page-store";

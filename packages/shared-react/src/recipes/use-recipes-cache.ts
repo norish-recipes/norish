@@ -1,15 +1,18 @@
 "use client";
 
+import type { QueryKey } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { PendingRecipeDTO } from "@norish/shared/contracts";
 
 import type { InfiniteLibraryData, InfiniteRecipeData } from "./library-cache";
+import { rereadInWindow } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import {
   applyRecipeUpdateToLibrary,
   applyRecipeUpdateToMembers,
+  isSearchRead,
   libraryQueryHolds,
 } from "./library-cache";
 
@@ -73,10 +76,16 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
         queryClient.setQueryData<InfiniteRecipeData>(key, updater);
       }
 
+      const searchReads: QueryKey[] = [];
+
       for (const [key] of queryClient.getQueriesData<InfiniteLibraryData>({
         queryKey: trpc.library.list.pathKey(),
       })) {
         if (!libraryQueryHolds(key, "recipe")) continue;
+        if (isSearchRead(key)) {
+          searchReads.push(key);
+          continue;
+        }
 
         queryClient.setQueryData<InfiniteLibraryData>(key, (previous) =>
           applyRecipeUpdateToLibrary(previous, updater)
@@ -90,14 +99,19 @@ export function useRecipesCacheHelpers(): RecipesCacheHelpers {
           applyRecipeUpdateToMembers(previous, updater)
         );
       }
+
+      rereadInWindow(queryClient, searchReads);
     },
     [queryClient, trpc]
   );
 
+  // The library path holds the Library's list and the Categories and Tags Search shows from it.
   const invalidate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: trpc.recipes.list.pathKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.library.list.pathKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.cookbooks.recipes.pathKey() });
+    rereadInWindow(queryClient, [
+      trpc.recipes.list.pathKey(),
+      trpc.library.pathKey(),
+      trpc.cookbooks.recipes.pathKey(),
+    ]);
   }, [queryClient, trpc]);
 
   const addPendingRecipe = useCallback(

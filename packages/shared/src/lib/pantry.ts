@@ -1,7 +1,7 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
-import { foldName } from "@norish/shared/lib/fold-name";
+import { foldName, nameWords } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import {
   BASE_SPELLING_RULES,
@@ -122,33 +122,45 @@ export function sortPantryIngredients<
   );
 }
 
-/** Whether a kept food goes by a name containing the folded text, in any language. */
-function hasNameContaining(item: PantryIngredientDto, needle: string): boolean {
-  return [item.name, ...Object.values(item.localeNames)].some((name) =>
-    foldName(name).includes(needle)
-  );
+/** Whether a kept food goes by a name, in any language, containing every one of the folded words. */
+function hasNameContaining(item: PantryIngredientDto, words: readonly string[]): boolean {
+  return [item.name, ...Object.values(item.localeNames)].some((name) => {
+    const folded = foldName(name);
+
+    return words.every((word) => folded.includes(word));
+  });
 }
 
-/** The Pantry the field narrows: every kept food whose name, in any language, contains the text,
- * or that the text names as a food, in the reader's order. No text keeps them all. */
+/** The kept foods with a name, in any language, holding every word of the text, or that the text
+ * names as a food, in the reader's order; no text keeps them all. */
 export function searchPantry(
   items: readonly PantryIngredientDto[],
   text: string,
   locale: string,
   rules: SpellingRules = BASE_SPELLING_RULES
 ): PantryIngredientDto[] {
-  const needle = foldName(text);
+  const words = nameWords(text);
 
   return sortPantryIngredients(items, locale).filter(
     (item) =>
-      needle === "" ||
-      hasNameContaining(item, needle) ||
+      words.length === 0 ||
+      hasNameContaining(item, words) ||
       pantryIngredientFor([item], { ingredientName: text }, rules) !== null
   );
 }
 
 /** How many suggested foods show before Show more. */
 export const SUGGESTIONS_SHOWN = 6;
+
+/** The suggested foods shown: the first `SUGGESTIONS_SHOWN` until Show more, and whether it shows. */
+export function shownSuggestions<T>(
+  offered: readonly T[],
+  showAll: boolean
+): { shown: T[]; more: boolean } {
+  const more = !showAll && offered.length > SUGGESTIONS_SHOWN;
+
+  return { shown: more ? offered.slice(0, SUGGESTIONS_SHOWN) : [...offered], more };
+}
 
 /** The suggested foods the Pantry does not cover, by the rule the server used to suggest them. */
 export function uncoveredSuggestions<T extends { ingredientId: string; name: string }>(

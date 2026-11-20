@@ -13,14 +13,14 @@ appId: dev.norish.app
     id: tab-groceries
 - extendedWaitUntil:
     visible:
-      id: groceries-settings
+      text: List settings
     timeout: 20000
 - tapOn:
-    id: groceries-settings
+    text: List settings
 - tapOn: Manage stores
 - extendedWaitUntil:
     visible:
-      id: store-edit-.*
+      id: store-row-.*
       text: Edit Jumbo
     timeout: 20000
 # Held on Jumbo's row (the last of three) and carried up over Lidl's, it takes the middle place.

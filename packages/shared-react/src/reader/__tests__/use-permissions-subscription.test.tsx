@@ -39,6 +39,8 @@ function listKeys() {
     trpc.recipes.list.infiniteQueryOptions({}).queryKey,
     trpc.library.list.infiniteQueryOptions({}).queryKey,
     trpc.cookbooks.recipes.infiniteQueryOptions({ cookbookId: "c1" }).queryKey,
+    // Search's Categories and Tags are built from the recipes the reader may see.
+    trpc.library.discover.queryKey(),
   ];
 }
 
@@ -75,18 +77,18 @@ afterEach(() => {
 });
 
 describe("usePermissionsSubscription", () => {
-  it("rereads every paged recipe list on a policy change", () => {
+  it("rereads every paged recipe list and the discover read on a policy change", () => {
     act(() => subscription().onData(trackedEvent({})));
 
-    expect(rereads()).toEqual([true, true, true]);
+    expect(rereads()).toEqual([true, true, true, true]);
   });
 
-  it("rereads every paged recipe list once live", () => {
+  it("rereads every paged recipe list and the discover read once live", () => {
     vi.useFakeTimers();
     subscription().subscribe({});
     act(() => subscription().onData(trackedCursorMark()));
     act(() => vi.runOnlyPendingTimers());
 
-    expect(rereads()).toEqual([true, true, true]);
+    expect(rereads()).toEqual([true, true, true, true]);
   });
 });

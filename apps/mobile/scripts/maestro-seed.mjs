@@ -27,8 +27,13 @@ function recipePage() {
   return `<!doctype html><html><head><title>${PAGE_NAME}</title><script type="application/ld+json">${JSON.stringify(recipe)}</script></head><body><h1>${PAGE_NAME}</h1></body></html>`;
 }
 
-// The flows' foods in the Open Food Facts taxonomy format; their built-in icons are keyed by these ids.
+// The flows' foods in the Open Food Facts taxonomy format; their built-in icons are keyed by these
+// ids. Chicken thighs are a kind of chicken, which is a kind of poultry: Search's Narrow to.
 const CATALOGUE = [
+  "poultry",
+  "< en:poultry\nen: chicken",
+  "< en:chicken\nen: chicken thighs",
+  "basil",
   "egg, eggs",
   "flour",
   "butter",
@@ -39,7 +44,7 @@ const CATALOGUE = [
   "salt",
   "sugar",
 ]
-  .map((names) => `en: ${names}\n`)
+  .map((entry) => (entry.startsWith("<") ? `${entry}\n` : `en: ${entry}\n`))
   .join("\n");
 
 // A page that is not a recipe, for the failed import's toast.
@@ -138,7 +143,7 @@ export function seeder({ trpc, query }) {
       }
     },
     // A recipe as the recipe form saves one; answers its id.
-    createRecipe({ name, ingredients = [], steps = [], tags = [], minutes }) {
+    createRecipe({ name, ingredients = [], steps = [], tags = [], categories = [], minutes }) {
       return trpc("recipes.create", {
         name,
         systemUsed: "metric",
@@ -158,7 +163,7 @@ export function seeder({ trpc, query }) {
         steps: steps.map((step, order) => ({ step, order, systemUsed: "metric" })),
         tags: tags.map((tag) => ({ name: tag })),
         cuisines: [],
-        categories: [],
+        categories,
         images: [],
         videos: [],
       });

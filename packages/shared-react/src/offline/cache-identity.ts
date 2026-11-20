@@ -22,18 +22,34 @@
 
 import type { OfflineStorage } from "./storage";
 
-/** Prefix for a per-owner persisted query-cache blob in the `keyval` store. */
+/** Prefix for an owner's persisted reads in the `keyval` store, one entry per read. */
 const QUERY_CACHE_KEY_PREFIX = "query-cache:";
 const LAST_WARMED_KEY_PREFIX = "last-warmed:";
+const OWNER_DATA_KEY_PREFIX = "owner-data:";
 
-/** `keyval` key under which a given owner's dehydrated cache lives. */
-export function queryCacheKey(ownerId: string): string {
+/** The start of every `keyval` key holding one of `ownerId`'s persisted reads. */
+export function queryCachePrefix(ownerId: string): string {
   return `${QUERY_CACHE_KEY_PREFIX}${ownerId}`;
+}
+
+/** `keyval` key under which one of `ownerId`'s reads lives, by its query hash. */
+export function queryCacheKey(ownerId: string, queryHash: string): string {
+  return `${queryCachePrefix(ownerId)}:${queryHash}`;
 }
 
 /** `keyval` key holding a given owner's Warm Set completion time. */
 export function lastWarmedKey(ownerId: string): string {
   return `${LAST_WARMED_KEY_PREFIX}${ownerId}`;
+}
+
+/** The start of every `keyval` key holding a named value one of `ownerId`'s screens keeps. */
+export function ownerDataPrefix(ownerId: string): string {
+  return `${OWNER_DATA_KEY_PREFIX}${ownerId}:`;
+}
+
+/** `keyval` key under which `ownerId`'s value `name` lives. */
+export function ownerDataKey(ownerId: string, name: string): string {
+  return `${ownerDataPrefix(ownerId)}${name}`;
 }
 
 function ownerFromPrefixedKey(key: unknown, prefix: string): string | null {
@@ -46,9 +62,16 @@ function ownerFromPrefixedKey(key: unknown, prefix: string): string | null {
   return owner.length > 0 ? owner : null;
 }
 
+/** The owner id of a key that holds `<prefix><owner>:<rest>`, or null if the key isn't one. */
+function ownerBeforeColon(key: unknown, prefix: string): string | null {
+  const owner = ownerFromPrefixedKey(key, prefix)?.split(":", 1)[0];
+
+  return owner ? owner : null;
+}
+
 /** Extract the owner id from a `queryCacheKey`, or null if the key isn't one. */
 export function ownerFromCacheKey(key: unknown): string | null {
-  return ownerFromPrefixedKey(key, QUERY_CACHE_KEY_PREFIX);
+  return ownerBeforeColon(key, QUERY_CACHE_KEY_PREFIX);
 }
 
 /**
@@ -65,7 +88,10 @@ export async function purgeForeignReadArtifacts(
 
     await Promise.all(
       keys.map(async (key) => {
-        const owner = ownerFromCacheKey(key) ?? ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX);
+        const owner =
+          ownerFromCacheKey(key) ??
+          ownerFromPrefixedKey(key, LAST_WARMED_KEY_PREFIX) ??
+          ownerBeforeColon(key, OWNER_DATA_KEY_PREFIX);
 
         if (owner && owner !== keepOwnerId) {
           await keyval.del(key);

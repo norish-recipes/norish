@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
-/** A value one React tree sets and another reads, as the tab bar reads what a screen shows. The
- * setter owns clearing it, so a mark never outlives the screen that set it. */
+/** A module-scope value with subscribers, read in React through `use`: one tree sets it and another
+ * reads it, as the tab bar reads what a screen shows, or it outlives the tree, as Search's state does. */
 export function createMark<T>(initial: T) {
   let value = initial;
   const listeners = new Set<() => void>();

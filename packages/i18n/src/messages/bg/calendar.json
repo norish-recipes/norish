@@ -11,8 +11,7 @@
     "openRecipe": "Отвори рецептата",
     "move": "Премести…",
     "removeMessage": "„{name}“ се премахва от {slot} ({day}).",
-    "moveTitle": "Премести",
-    "moveSubtitle": "{name}, {slot} днес"
+    "moveTitle": "Премести"
   },
   "editNote": {
     "title": "Редактиране на бележка",

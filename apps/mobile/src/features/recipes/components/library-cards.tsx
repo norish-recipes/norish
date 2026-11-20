@@ -1,4 +1,5 @@
 import type { CardActions } from "@/hooks/use-card-actions";
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactElement } from "react";
 import React from "react";
 import { useCardActions } from "@/hooks/use-card-actions";
@@ -32,27 +33,38 @@ export function LibraryCards<Row>({
   isFetchingNextPage,
   header,
   empty,
+  noResults,
   cookbook,
   rowKey,
   renderCard,
   onEndReached,
   fadeHeight,
+  insets,
+  scroll,
   testID,
+  variant: forced,
 }: {
   rows: Row[];
   isLoading: boolean;
   isFetchingNextPage: boolean;
   header: ReactElement;
   /** What shows when nothing is loading, no filter is on and there is no row. */
-  empty: ReactElement;
+  empty?: ReactElement;
+  /** Replaces the Clear filters card, for a list whose text is not a filter, as Search's. */
+  noResults?: ReactElement;
   cookbook?: CookbookSummaryDTO;
   rowKey: (row: Row) => string;
   renderCard: (row: Row, context: CardContext) => ReactElement;
   onEndReached: () => void;
   fadeHeight: FadeHeight;
+  insets?: "automatic" | "never";
+  scroll: TabScroll;
   testID?: string;
+  /** Draws the cards in this view instead of the reader's Library view. */
+  variant?: RecipeViewMode;
 }) {
-  const [variant] = useDevicePreference("recipeViewMode");
+  const [preferred] = useDevicePreference("recipeViewMode");
+  const variant = forced ?? preferred;
   const filters = useLibraryFilters((state) => state.filters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const { isFavorite, allergies } = useLibraryCards();
@@ -63,6 +75,8 @@ export function LibraryCards<Row>({
       empty={
         isLoading ? (
           <LibrarySkeleton variant={variant} />
+        ) : noResults ? (
+          noResults
         ) : hasAppliedRecipeFilters(filters) ? (
           <LibraryNoResults onClear={clearFilters} />
         ) : (
@@ -71,10 +85,15 @@ export function LibraryCards<Row>({
       }
       fadeHeight={fadeHeight}
       header={header}
+      insets={insets}
       isFetchingNextPage={isFetchingNextPage}
-      renderCard={(row) => renderCard(row, { variant, actions, allergies, isFavorite })}
+      query={filters}
+      renderCard={(row, shown) =>
+        renderCard(row, { variant: shown, actions, allergies, isFavorite })
+      }
       rowKey={rowKey}
       rows={isLoading ? [] : rows}
+      scroll={scroll}
       testID={testID}
       variant={variant}
       onEndReached={onEndReached}

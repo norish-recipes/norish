@@ -1,8 +1,10 @@
+import type { GroceriesSection } from "@/lib/groceries-section";
+import { recipeIdOf } from "@/lib/tab-routes";
 import { describe, expect, it } from "vitest";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 
-import { accessoryPlan, accessoryScreen, shellTab } from "../utils/accessory-plan";
+import { accessoryPlan, accessoryScreen, shellTab, tabPage } from "../utils/accessory-plan";
 
 // The action a plan holds, by its test id.
 const holds = (
@@ -10,11 +12,12 @@ const holds = (
   hasTimers: boolean,
   recipeId?: string,
   lens: LibraryTypeFilter = "all",
-  editableCookbook: string | null = null
+  editableCookbook: string | null = null,
+  groceries: GroceriesSection = "list"
 ) => {
-  const plan = accessoryPlan({ path, recipeId }, hasTimers, lens, editableCookbook);
+  const plan = accessoryPlan({ path, recipeId }, hasTimers, lens, editableCookbook, groceries);
 
-  return { add: plan.add.testID, capsule: plan.capsule };
+  return { add: plan.add?.testID, capsule: plan.capsule };
 };
 
 describe("accessoryPlan", () => {
@@ -31,15 +34,26 @@ describe("accessoryPlan", () => {
     expect(holds("/settings", true)).toEqual({ add: "add-recipe", capsule: true });
   });
 
-  it("reads Add to pantry, into the Pantry's add sheet, on the Pantry and its sheets", () => {
-    expect(holds("/groceries/pantry", false)).toEqual({ add: "add-pantry", capsule: false });
-    expect(holds("/groceries/pantry-add", false)?.add).toBe("add-pantry");
-    expect(holds("/groceries/food", false)?.add).toBe("add-pantry");
-    expect(holds("/groceries/pantry", true)).toEqual({ add: "add-pantry", capsule: true });
-    expect(accessoryPlan({ path: "/groceries/pantry" }, false, "all").add).toMatchObject({
+  it("reads Add to pantry, into the Pantry's add sheet, while the page shows the Pantry", () => {
+    const onPantry = (path: string, hasTimers = false) =>
+      holds(path, hasTimers, undefined, "all", null, "pantry");
+
+    expect(onPantry("/groceries")).toEqual({ add: "add-pantry", capsule: false });
+    expect(onPantry("/groceries/pantry-add")?.add).toBe("add-pantry");
+    expect(onPantry("/groceries/food")?.add).toBe("add-pantry");
+    expect(onPantry("/groceries", true)).toEqual({ add: "add-pantry", capsule: true });
+    expect(accessoryPlan({ path: "/groceries" }, false, "all", null, "pantry").add).toMatchObject({
       labelId: "groceries.pantry.add",
       route: "/groceries/pantry-add",
     });
+  });
+
+  it("reads Add items on the list, and every other tab's own action off the Groceries tab", () => {
+    expect(holds("/groceries", false)?.add).toBe("add-grocery");
+    expect(holds("/", false, undefined, "all", null, "pantry")?.add).toBe("add-recipe");
+    expect(holds("/calendar", false, undefined, "all", null, "pantry")?.add).toBe(
+      "plan-recipe-accessory"
+    );
   });
 
   it("reads Cook, into that recipe's cook mode, on a shown recipe's page and its sheets", () => {
@@ -106,7 +120,7 @@ describe("accessoryPlan on a cookbook", () => {
     const library = accessoryPlan({ path: "/" }, false, "all").add;
     const cookbook = accessoryPlan({ path: "/cookbook/c1" }, false, "all", "c1").add;
 
-    expect(library.testID).not.toBe(cookbook.testID);
+    expect(library?.testID).not.toBe(cookbook?.testID);
   });
 });
 
@@ -141,14 +155,76 @@ describe("accessoryScreen", () => {
   });
 });
 
+describe("accessoryPlan under a root sheet", () => {
+  // The action over `sheet` opened on `lastTabPage`, as the shell reads it: a root sheet is off the tabs.
+  const over = (
+    sheet: string,
+    lastTabPage: string,
+    groceries: GroceriesSection = "list",
+    shownRecipe: string | null = null
+  ) => {
+    const page = tabPage(sheet, false, lastTabPage);
+    const screen = accessoryScreen(page, recipeIdOf(page), "/", shownRecipe);
+
+    return accessoryPlan(screen, true, "all", null, groceries).add?.testID;
+  };
+
+  it("keeps the page's own action over the timers and Add recipe", () => {
+    for (const sheet of ["/timers", "/add-recipe"]) {
+      expect(over(sheet, "/groceries")).toBe("add-grocery");
+      expect(over(sheet, "/groceries", "pantry")).toBe("add-pantry");
+      expect(over(sheet, "/calendar")).toBe("plan-recipe-accessory");
+      expect(over(sheet, "/recipe/abc", "list", "abc")).toBe("cook-recipe");
+    }
+  });
+
+  it("is the path itself on a tab", () => {
+    expect(tabPage("/groceries", true, "/calendar")).toBe("/groceries");
+    expect(tabPage("/timers", false, "/calendar")).toBe("/calendar");
+  });
+});
+
 describe("shellTab", () => {
   it("names the tab a path is on, Recipes for its pages and sheets", () => {
     expect(shellTab("/")).toBe("recipes");
     expect(shellTab("/recipe/r1/cook")).toBe("recipes");
     expect(shellTab("/cookbook/c1")).toBe("recipes");
-    expect(shellTab("/groceries/pantry")).toBe("groceries");
+    expect(shellTab("/groceries/food")).toBe("groceries");
     expect(shellTab("/calendar/item")).toBe("calendar");
     expect(shellTab("/settings")).toBe("settings");
-    expect(shellTab("/search")).toBe("search");
+  });
+
+  it("names Search for every page in its stack, whose paths carry no tab", () => {
+    expect(shellTab("/search", true)).toBe("search");
+    expect(shellTab("/recipe/r1", true)).toBe("search");
+    expect(shellTab("/filters", true)).toBe("search");
+  });
+});
+
+describe("the accessory in Search's stack", () => {
+  it("adds nothing on its own pages and sheets, with or without a timer", () => {
+    for (const path of ["/search", "/filters"]) {
+      expect(accessoryPlan({ path, search: true }, false, "all").add).toBeNull();
+      expect(accessoryPlan({ path, search: true }, true, "all")).toEqual({
+        add: null,
+        capsule: true,
+      });
+    }
+  });
+
+  it("holds Cook on a shown recipe, as in the Recipes tab", () => {
+    const screen = accessoryScreen("/recipe/r1", "r1", "/search", "r1", true);
+
+    expect(accessoryPlan(screen, true, "all")).toMatchObject({
+      add: { testID: "cook-recipe" },
+      capsule: true,
+    });
+  });
+
+  it("does not fall back to Add recipe while the recipe loads", () => {
+    const screen = accessoryScreen("/recipe/r1", "r1", "/search", null, true);
+
+    expect(screen).toEqual({ path: "/search", search: true });
+    expect(accessoryPlan(screen, false, "all").add).toBeNull();
   });
 });

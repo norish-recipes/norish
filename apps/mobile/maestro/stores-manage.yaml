@@ -1,4 +1,4 @@
-# Manages Stores from Groceries' settings menu: Add store creates two, a Store's pencil renames one,
+# Manages Stores from Groceries' settings menu: Add store creates two, a Store's row renames one,
 # and its bin deletes the other after the confirm. The server holds each change in turn.
 appId: dev.norish.app
 ---
@@ -7,18 +7,17 @@ appId: dev.norish.app
     id: tab-groceries
 - extendedWaitUntil:
     visible:
-      id: groceries-settings
+      text: List settings
     timeout: 20000
 - tapOn:
-    id: groceries-settings
+    text: List settings
 - tapOn: Manage stores
 - extendedWaitUntil:
     visible:
       id: stores-empty
     timeout: 20000
-# Add store opens the editor in the same sheet; Create is its native header item.
-- tapOn:
-    id: store-add
+# Add store, the sheet's native header item, opens the editor in the same sheet; Create is its header item too.
+- tapOn: Add store
 - extendedWaitUntil:
     visible:
       id: store-name
@@ -30,12 +29,11 @@ appId: dev.norish.app
 - tapOn: Create
 - extendedWaitUntil:
     visible:
-      id: store-edit-.*
+      id: store-row-.*
       text: Edit Aldi
     timeout: 20000
 - evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi"]')).body).names}
-- tapOn:
-    id: store-add
+- tapOn: Add store
 - extendedWaitUntil:
     visible:
       id: store-name
@@ -47,13 +45,13 @@ appId: dev.norish.app
 - tapOn: Create
 - extendedWaitUntil:
     visible:
-      id: store-edit-.*
+      id: store-row-.*
       text: Edit Lidl
     timeout: 20000
 - evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi","Lidl"]')).body).names}
-# Rename: the pencil opens the editor on the Store, Save writes the new name.
+# Rename: the row opens the editor on the Store, Save writes the new name.
 - tapOn:
-    id: store-edit-.*
+    id: store-row-.*
     text: Edit Aldi
 - extendedWaitUntil:
     visible:
@@ -68,7 +66,7 @@ appId: dev.norish.app
 - tapOn: Save
 - extendedWaitUntil:
     visible:
-      id: store-edit-.*
+      id: store-row-.*
       text: Edit Aldi Noord
     timeout: 20000
 - evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi Noord","Lidl"]')).body).names}
@@ -78,7 +76,7 @@ appId: dev.norish.app
     text: Delete Lidl
 - tapOn: Cancel
 - assertVisible:
-    id: store-edit-.*
+    id: store-row-.*
     text: Edit Lidl
 - tapOn:
     id: store-delete-.*
@@ -87,10 +85,10 @@ appId: dev.norish.app
 - tapOn: Delete
 - extendedWaitUntil:
     notVisible:
-      id: store-edit-.*
+      id: store-row-.*
       text: Edit Lidl
     timeout: 20000
 - evalScript: ${output.stores = json(http.get(NORISH_PROXY_CONTROL_URL + '/stores?is=' + encodeURIComponent('["Aldi Noord"]')).body).names}
 - assertVisible:
-    id: store-edit-.*
+    id: store-row-.*
     text: Edit Aldi Noord

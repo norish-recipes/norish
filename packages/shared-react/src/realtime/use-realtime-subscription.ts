@@ -82,9 +82,10 @@ const dueByClient = new WeakMap<QueryClient, QueryKey[]>();
  * ponytail: a fixed 50 ms window, so marks spread wider refetch once per window; flush once
  * every open subscribe has its mark if that shows up as duplicate refetches.
  */
-const LIVE_WINDOW_MS = 50;
+export const LIVE_WINDOW_MS = 50;
 
-function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
+/** Rereads `queryKeys` with every other reread due in this window, each matching query once. */
+export function rereadInWindow(queryClient: QueryClient, queryKeys: QueryKey[]): void {
   const due = dueByClient.get(queryClient);
 
   if (queryKeys.length === 0) return;

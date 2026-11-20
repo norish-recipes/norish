@@ -28,6 +28,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
+import { hasSearchText, searchTerms } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
@@ -384,6 +385,18 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
 
 export { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
+/** The text as a prefix-OR tsquery body, or null when nothing searchable is left: no word at all,
+ * as for "^", which the query parser drops and so would match no recipe. */
+export function searchTsqueryTerms(search: string): string | null {
+  if (!hasSearchText(search)) return null;
+
+  return (
+    searchTerms(search)
+      .map((term) => `${term}:*`)
+      .join(" | ") || null
+  );
+}
+
 /**
  * The weighted search document and its rank, for whichever fields the reader
  * has chosen.
@@ -405,16 +418,7 @@ export function recipeSearchSql(
 ): { match: ReturnType<typeof sql>; rank: ReturnType<typeof sql<number>> } | null {
   if (!search || searchFields.length === 0) return null;
 
-  // Sanitize terms to remove PostgreSQL tsquery special characters.
-  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
-
-  const searchTerms = search
-    .trim()
-    .split(/\s+/)
-    .map(sanitizeTsqueryTerm)
-    .filter((term) => term.length > 0)
-    .map((term) => `${term}:*`)
-    .join(" | ");
+  const searchTerms = searchTsqueryTerms(search);
 
   if (!searchTerms) return null;
 

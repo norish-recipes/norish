@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type { ScrollViewInstance } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { stripDays } from "@/lib/strip-days";
@@ -30,14 +31,23 @@ export function DayStrip({
   const intl = useIntl();
   const accentText = useAccentTextColor();
   const days = stripDays(useToday());
-  // Opens with the picked day in view, not scrolled back to today.
-  const [start] = useState(() => Math.max(0, days.indexOf(date) * (CHIP + GAP) - CHIP));
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const index = days.indexOf(date);
+  const start = Math.max(0, index * (CHIP + GAP) - CHIP);
+  // Frozen at the first render: a later offset prop could jump the strip before the animated scroll.
+  const [openAt] = useState(start);
+
+  // Whichever control picked the day, the strip shows it; a day past the strip leaves it be.
+  useEffect(() => {
+    if (index >= 0) scrollRef.current?.scrollTo({ x: start, animated: true });
+  }, [index, start]);
 
   return (
     // heroui-native has no day strip, so these chips are hand-built.
     <SheetStrip
+      ref={scrollRef}
       accessibilityLabel={intl.formatMessage({ id: "calendar.panel.addToCalendar" })}
-      contentOffset={{ x: start, y: 0 }}
+      contentOffset={{ x: openAt, y: 0 }}
       testID={`${testID}-days`}
     >
       {days.map((key, offset) => {
@@ -58,7 +68,7 @@ export function DayStrip({
             })}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
-            className={`h-16 items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-surface"}`}
+            className={`h-16 items-center justify-center gap-0.5 rounded-[18px] ${selected ? "bg-accent" : "bg-sand border-stroke border-[0.5px]"}`}
             style={{ width: CHIP, marginRight: GAP }}
             testID={`${testID}-day-${offset}`}
             onPress={() => onChange(key, true)}
@@ -77,7 +87,8 @@ export function DayStrip({
         );
       })}
       <View className="h-16 justify-center">
-        <Host matchContents>
+        {/* Ignores the safe area, or it shifts by the bars' insets as the page scrolls under them. */}
+        <Host matchContents ignoreSafeArea="all">
           <DatePicker
             modifiers={[
               accessibilityIdentifier(`${testID}-other-day`),

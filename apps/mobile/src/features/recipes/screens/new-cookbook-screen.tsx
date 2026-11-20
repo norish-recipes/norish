@@ -18,27 +18,24 @@ export function NewCookbookScreen() {
   // The sheet opens on its field, so the keyboard rises with it.
   const fieldRef = useFocusOnMount<ComponentRef<typeof Input>>();
   const submit = () => {
-    void create();
+    const created = create();
+
     router.back();
+
+    return created;
   };
 
   return (
     <RecipePickSheet
-      action={{
-        label: intl.formatMessage({ id: "common.actions.create" }),
-        onPress: canCreate ? submit : undefined,
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.create" }),
+          onPress: canCreate ? submit : undefined,
+        },
       }}
       emptyId="recipes.cookbooks.noRecipesToAdd"
       name="new-cookbook"
       pick={pick}
-      subtitle={
-        pick.selected.length > 0
-          ? intl.formatMessage(
-              { id: "recipes.cookbooks.recipeCount" },
-              { count: pick.selected.length }
-            )
-          : undefined
-      }
       title={intl.formatMessage({ id: "recipes.cookbooks.createTitle" })}
     >
       <TextField>

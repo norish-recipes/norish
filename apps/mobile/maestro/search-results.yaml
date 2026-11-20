@@ -1,0 +1,50 @@
+# Searches from the Search tab: the keyboard's search key confirms, Results list the match, a recipe
+# opens inside Search, and back brings the same Results.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Lentil Soup", "key": "soup"}, {"name": "Berry Tart", "key": "tart"}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 20000
+- tapOn: Search
+- extendedWaitUntil:
+    visible:
+      id: search-screen
+    timeout: 10000
+- inputText: lentil
+- extendedWaitUntil:
+    visible:
+      id: search-for-row
+    timeout: 10000
+- pressKey: Enter
+- extendedWaitUntil:
+    visible:
+      id: search-count
+      text: 1 recipe.*
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.soup}
+- assertNotVisible:
+    id: recipe-card-${output.tart}
+# The recipe opens inside Search; back keeps the field's text and the Results.
+- tapOn:
+    id: recipe-card-${output.soup}
+- extendedWaitUntil:
+    visible:
+      id: recipe-name
+      text: Lentil Soup
+    timeout: 20000
+- tapOn: Back
+- extendedWaitUntil:
+    visible:
+      id: search-count
+      text: 1 recipe.*
+    timeout: 10000
+- assertVisible:
+    id: recipe-card-${output.soup}
+- assertNotVisible:
+    id: recipe-card-${output.tart}

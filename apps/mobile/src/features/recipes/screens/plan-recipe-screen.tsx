@@ -1,12 +1,14 @@
 import React, { useDeferredValue, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
 import { formatDay } from "@/components/day-card";
+import { IconButton } from "@/components/icon-button";
 import { Loader } from "@/components/loader";
-import { MoveFields } from "@/components/move-fields";
+import { PlanPicker } from "@/components/plan-block";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
-import { asSlot } from "@/components/slot-tabs";
+import { SliceHairline, sliceRowClass } from "@/components/slice-row";
+import { asSlot } from "@/lib/slot-segments";
 import { stripDays } from "@/lib/strip-days";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
@@ -31,7 +33,6 @@ const SKELETON_ROWS = [0, 1, 2, 3];
 export function PlanRecipeScreen() {
   const intl = useIntl();
   const params = useLocalSearchParams<{ slot?: string; date?: string }>();
-  const [foreground] = useThemeColor(["foreground"] as const);
   const today = useToday();
   const day = params.date ?? null;
   const days = stripDays(today);
@@ -59,7 +60,7 @@ export function PlanRecipeScreen() {
 
   const header = (
     <View className="gap-3">
-      <MoveFields
+      <PlanPicker
         date={date}
         days={!day}
         slot={slot}
@@ -75,7 +76,7 @@ export function PlanRecipeScreen() {
         onChange={setInput}
       />
 
-      <View className={`bg-surface ${first}`}>
+      <View className={`bg-sand ${first}`}>
         {hasNote ? (
           <ActionRow
             icon="document-text-outline"
@@ -93,7 +94,7 @@ export function PlanRecipeScreen() {
           />
         )}
         {error ? (
-          <Text className="text-danger border-separator border-t p-4 text-base">
+          <Text className="text-danger border-line border-t p-4 text-base">
             {intl.formatMessage({ id: "calendar.panel.failedToLoadRecipes" })}
           </Text>
         ) : null}
@@ -116,11 +117,11 @@ export function PlanRecipeScreen() {
       <SheetList
         ListEmptyComponent={
           error ? undefined : (
-            <View className="bg-surface border-separator rounded-b-[22px] border-t">
+            <View className="bg-sand border-line rounded-b-[22px] border-t">
               {isLoading ? (
                 SKELETON_ROWS.map((row) => (
                   <View key={row} className="flex-row items-center gap-3 px-3.5 py-2.5">
-                    <Skeleton className="size-11 rounded-xl" />
+                    <Skeleton className="size-10 rounded-xl" />
                     <Skeleton className="h-4 w-40 rounded-md" />
                   </View>
                 ))
@@ -136,21 +137,24 @@ export function PlanRecipeScreen() {
         data={recipes}
         keyExtractor={(recipe) => recipe.id}
         renderItem={({ item: recipe, index }) => (
-          <Button
+          <Pressable
             accessibilityLabel={recipe.name}
-            className={`border-separator bg-surface h-auto justify-start gap-3 rounded-none border-t px-3.5 py-2.5 ${index === recipes.length - 1 ? "rounded-b-[22px]" : ""}`}
+            accessibilityRole="button"
+            className={sliceRowClass({ first: false, last: index === recipes.length - 1 }, true)}
             testID={`plan-recipe-${recipe.id}`}
-            variant="ghost"
             onPress={() => planRecipe(recipe, slot)}
           >
-            <CardPhoto className="size-11 rounded-xl" image={recipe.image} onSheet />
+            <SliceHairline tall first={false} />
+            <CardPhoto className="size-10 rounded-xl" image={recipe.image} />
             <Text className="text-foreground flex-1 text-base" numberOfLines={1}>
               {recipe.name}
             </Text>
-            <View className="bg-default size-8 items-center justify-center rounded-full">
-              <Ionicons color={foreground} name="add" size={17} />
-            </View>
-          </Button>
+            <IconButton
+              icon="add"
+              label={intl.formatMessage({ id: "common.actions.add" })}
+              onPress={() => planRecipe(recipe, slot)}
+            />
+          </Pressable>
         )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.6}
@@ -182,7 +186,7 @@ function ActionRow({
       variant="ghost"
       onPress={onPress}
     >
-      <View className="bg-default size-11 items-center justify-center rounded-xl">
+      <View className="bg-sand size-11 items-center justify-center rounded-xl">
         {busy ? <Loader /> : <Ionicons color={accent} name={icon} size={20} />}
       </View>
       <Text className="text-foreground flex-1 text-base font-medium" numberOfLines={1}>

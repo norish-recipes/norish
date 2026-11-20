@@ -15,3 +15,41 @@
   --font-semibold: "Inter_600SemiBold";
   --font-bold: "Inter_700Bold";
 }
+
+/* The control kit's solid content fill and the retuned text colours (spec Part 8, PnOpacity):
+   every text colour passes 4.5:1 on a 65% sheet over pure black or white. */
+@layer theme {
+  :root,
+  :is(.light),
+  :where(.light),
+  [data-theme="light"] {
+    --sand: rgb(241 237 228);
+    --shop-ink: oklch(50% 0.11 85);
+    --stroke: oklch(45% 0.03 85 / 0.16);
+    --line: oklch(45% 0.03 85 / 0.15);
+    --tick-border: oklch(56% 0.015 80);
+    --muted: oklch(30% 0.012 80);
+    --field-placeholder: oklch(32% 0.012 80);
+    --accent-text: oklch(30% 0.085 150.36);
+  }
+
+  :is(.dark),
+  :where(.dark),
+  [data-theme="dark"] {
+    --sand: rgb(45 43 38);
+    --shop-ink: oklch(84% 0.14 92);
+    --stroke: oklch(100% 0 0 / 0.14);
+    --line: oklch(100% 0 0 / 0.1);
+    --tick-border: oklch(64% 0.01 80);
+    --muted: oklch(89% 0.011 80);
+    --field-placeholder: oklch(87% 0.011 80);
+    --accent-text: oklch(88% 0.11 150);
+  }
+}
+
+@theme inline {
+  --color-sand: var(--sand);
+  --color-stroke: var(--stroke);
+  --color-line: var(--line);
+  --color-tick-border: var(--tick-border);
+}

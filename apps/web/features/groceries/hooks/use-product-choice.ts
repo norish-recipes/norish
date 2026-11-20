@@ -2,11 +2,12 @@
 
 import type { StoreDto } from "@norish/shared/contracts";
 import {
+  GROCERY_LOOKUP_DEBOUNCE_MS,
   useProductChoice as useHeldProductChoice,
   useParsedGroceryName,
-  useSettledName,
 } from "@norish/shared-react/groceries";
 import { useIngredientFor } from "@norish/shared-react/ingredients";
+import { useSettledText } from "@norish/shared-react/settled-text";
 
 /** What both grocery panels hold of a Store Product: the shared choice, for the field's own text. */
 export function useProductChoice(options: {
@@ -21,7 +22,7 @@ export function useProductChoice(options: {
 }) {
   const { itemName, grocery, ...rest } = options;
   const groceryName = useParsedGroceryName(itemName);
-  const settledName = useSettledName(groceryName);
+  const settledName = useSettledText(groceryName, GROCERY_LOOKUP_DEBOUNCE_MS);
   const ingredientId = useIngredientFor(groceryName, settledName, grocery);
 
   return {

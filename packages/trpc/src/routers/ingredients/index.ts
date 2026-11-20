@@ -6,8 +6,10 @@ import type {
   IngredientNutrition,
   NutritionFoodSummary,
 } from "@norish/shared/contracts/ingredient-nutrition";
+import type { FoodName } from "@norish/shared/lib/ingredient-names";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { findIngredientDisplayNames } from "@norish/db/repositories/ingredient-aliases";
 import { listIngredientUses } from "@norish/db/repositories/ingredient-catalogue";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
 import { canDrawImages } from "@norish/shared-server/config/server-config-loader";
@@ -48,6 +50,7 @@ import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
+import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 import {
   INGREDIENT_SEARCH_FIELDS,
   INGREDIENT_SEARCH_MATCHES,
@@ -268,6 +271,14 @@ const icons = authedProcedure
   .input(z.object({ ids: z.array(z.uuid()).max(500) }))
   .query(async ({ input }): Promise<Record<string, string | null>> =>
     Object.fromEntries(await ingredientIconAddresses(input.ids))
+  );
+
+/** Each of these foods' names by id, with its spellings per language, for the chips that name them;
+ * a food that is gone has none. */
+const names = authedProcedure
+  .input(z.object({ ids: z.array(z.uuid()).max(MAX_FILTER_INGREDIENTS) }))
+  .query(async ({ input }): Promise<Record<string, FoodName>> =>
+    Object.fromEntries(await findIngredientDisplayNames(input.ids))
   );
 
 const ICON_PICTURE_TYPES: ReadonlySet<string> = new Set(ICON_PICTURE_MIME_TYPES);
@@ -507,6 +518,7 @@ export const ingredientsRouter = router({
   markDistinct,
   removeAlias,
   icons,
+  names,
   uploadIcon,
   generateIcon,
   saveDraft,

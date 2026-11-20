@@ -1,11 +1,13 @@
 import React from "react";
 import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { HEADER_TITLE_STYLE } from "@/lib/header-title";
 import { useMarkRecipeShown } from "@/lib/shown-recipe";
 import { Stack, useLocalSearchParams } from "expo-router";
 
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   RecipePageProvider,
+  RecipePageStores,
   useRecipeEnrichmentSubscription,
   useRecipeShareSubscription,
   useRecipeSubscription,
@@ -23,44 +25,58 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
   return null;
 }
 
+/** The recipe a screen of this stack shows: each route it presents names it in `id`. */
+const recipeOf = (params: object | undefined, focused: string) =>
+  params && "id" in params && typeof params.id === "string" ? params.id : focused;
+
 /** The recipe route's own stack: the page and its sheets share one page store, so the Servings
  * sheet changes the servings the page shows. The header is transparent over the photo. */
 export function RecipeLayout() {
+  // The focused recipe: Expo Router pushes a recipe linked from this page into this same stack,
+  // and a layout's params follow the focused screen.
   const { id } = useLocalSearchParams<{ id: string }>();
 
   useMarkRecipeShown(id);
 
+  // Each screen keeps its own recipe's store, so a page under a linked recipe still has its recipe.
   return (
-    <RecipePageProvider recipeId={id}>
-      <RecipeSubscriptions recipeId={id} />
-      <ScreenKeepAwake />
-      <Stack
-        screenOptions={{
-          headerTransparent: true,
-          headerShadowVisible: false,
-          headerTitleStyle: { fontSize: 17, fontWeight: "600" },
-        }}
-      >
-        <Stack.Screen name="index" options={{ title: "" }} />
-        <Stack.Screen name="servings" options={FIT_SHEET_OPTIONS} />
-        <Stack.Screen name="share" options={SHEET_OPTIONS} />
-        <Stack.Screen name="edit" options={EDITOR_OPTIONS} />
-        <Stack.Screen
-          name="viewer"
-          options={{
-            headerShown: false,
-            presentation: "fullScreenModal",
-            animation: "fade",
-            gestureEnabled: false,
-            statusBarStyle: "light",
-            contentStyle: { backgroundColor: "transparent" },
+    <RecipePageStores>
+      <RecipePageProvider recipeId={id}>
+        <RecipeSubscriptions recipeId={id} />
+        <ScreenKeepAwake />
+        <Stack
+          screenLayout={({ route, children }) => (
+            <RecipePageProvider recipeId={recipeOf(route.params, id)}>
+              {children}
+            </RecipePageProvider>
+          )}
+          screenOptions={{
+            headerTransparent: true,
+            headerShadowVisible: false,
+            headerTitleStyle: HEADER_TITLE_STYLE,
           }}
-        />
-        <Stack.Screen
-          name="cook"
-          options={{ headerShown: false, presentation: "fullScreenModal" }}
-        />
-      </Stack>
-    </RecipePageProvider>
+        >
+          <Stack.Screen name="index" options={{ title: "" }} />
+          <Stack.Screen name="servings" options={FIT_SHEET_OPTIONS} />
+          <Stack.Screen name="share" options={SHEET_OPTIONS} />
+          <Stack.Screen name="edit" options={EDITOR_OPTIONS} />
+          <Stack.Screen
+            name="viewer"
+            options={{
+              headerShown: false,
+              presentation: "fullScreenModal",
+              animation: "fade",
+              gestureEnabled: false,
+              statusBarStyle: "light",
+              contentStyle: { backgroundColor: "transparent" },
+            }}
+          />
+          <Stack.Screen
+            name="cook"
+            options={{ headerShown: false, presentation: "fullScreenModal" }}
+          />
+        </Stack>
+      </RecipePageProvider>
+    </RecipePageStores>
   );
 }

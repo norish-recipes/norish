@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Item sem nome",
-    "items": "{count, plural, one {# item} other {# itens}}"
+    "items": "{count, plural, =0 {Nenhum item} one {# item} other {# itens}}"
   },
   "store": {
     "unsorted": "Sem classificação",
@@ -188,7 +188,6 @@
     "emptyHint": "Adicione itens com o botão abaixo.",
     "addTitle": "Adicionar compras",
     "editTitle": "Editar item",
-    "fromRecipe": "De {recipe}",
     "store": "Loja",
     "noStore": "Sem loja",
     "automatic": "Automática",

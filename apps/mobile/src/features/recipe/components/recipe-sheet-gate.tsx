@@ -1,3 +1,4 @@
+import type { SheetActions } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
@@ -20,9 +21,9 @@ export function RecipeSheetGate({
 }: {
   name: string;
   title: string;
-  /** The sheet's subtitle, from the recipe's name. */
-  subtitle?: (recipeName: string) => string;
-  actions?: ReactNode;
+  /** The recipe's name as the sheet's subtitle. */
+  subtitle?: boolean;
+  actions?: SheetActions;
   children: ReactNode;
 }) {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,9 +31,9 @@ export function RecipeSheetGate({
 
   return (
     <Sheet
-      actions={recipe ? actions : undefined}
+      {...(recipe ? actions : undefined)}
       name={name}
-      subtitle={recipe && subtitle ? subtitle(recipe.name) : undefined}
+      subtitle={recipe && subtitle ? recipe.name : undefined}
       title={title}
     >
       {recipe ? (

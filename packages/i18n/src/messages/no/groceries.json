@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Navnløs vare",
-    "items": "{count, plural, one {# vare} other {# varer}}"
+    "items": "{count, plural, =0 {Ingen varer} one {# vare} other {# varer}}"
   },
   "store": {
     "unsorted": "Usortert",
@@ -188,7 +188,6 @@
     "emptyHint": "Legg til varer med knappen nedenfor.",
     "addTitle": "Legg til varer",
     "editTitle": "Rediger vare",
-    "fromRecipe": "Fra {recipe}",
     "store": "Butikk",
     "noStore": "Ingen butikk",
     "automatic": "Automatisk",

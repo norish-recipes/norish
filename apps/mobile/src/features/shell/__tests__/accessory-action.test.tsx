@@ -56,7 +56,9 @@ vi.mock("expo-router/native-tabs", () => ({
 const { AccessoryAction } = await import("@/features/shell/components/accessory-action");
 const { accessoryPlan } = await import("@/features/shell/utils/accessory-plan");
 
-const AddRecipe = () => <AccessoryAction action={accessoryPlan({ path: "/" }, false, "all").add} />;
+const AddRecipe = () => (
+  <AccessoryAction action={accessoryPlan({ path: "/" }, false, "all").add!} />
+);
 
 describe("an accessory action", () => {
   beforeEach(() => {

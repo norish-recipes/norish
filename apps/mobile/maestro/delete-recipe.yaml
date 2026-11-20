@@ -5,7 +5,7 @@ appId: dev.norish.app
 - runFlow:
     file: subflows/start.yaml
     env:
-      RECIPES: '[{"name": "Delete Me Stew", "key": "doomed"}, {"name": "Keep Me Salad", "key": "kept"}]'
+      RECIPES: '[{"name": "Keep Me Salad", "key": "kept"}, {"name": "Delete Me Stew", "key": "doomed"}]'
 - extendedWaitUntil:
     visible:
       id: recipe-card-${output.doomed}
@@ -13,7 +13,8 @@ appId: dev.norish.app
 - assertVisible:
     id: recipe-card-${output.kept}
 # A swiped row no longer scrolls itself clear, so the Library is scrolled up before each swipe to rest
-# the row clear of the Add recipe accessory in both views.
+# the row clear of the Add recipe accessory in both views. The newest recipe is the first card: a
+# swipe from its centre to near the screen's edge opens the actions and is short of a full swipe.
 - tapOn:
     id: library-view-grid
 - scroll
@@ -21,6 +22,8 @@ appId: dev.norish.app
     from:
       id: recipe-card-${output.doomed}
     direction: LEFT
+- assertVisible:
+    id: recipe-swipe-delete-${output.doomed}
 - tapOn:
     id: recipe-swipe-delete-${output.doomed}
 # The native alert asks first; cancelling keeps the card.
@@ -34,10 +37,15 @@ appId: dev.norish.app
     from:
       id: recipe-card-${output.doomed}
     direction: LEFT
+- assertVisible:
+    id: recipe-swipe-delete-${output.doomed}
 - tapOn:
     id: recipe-swipe-delete-${output.doomed}
-# The native alert asks first.
-- tapOn: Delete
+# The native alert asks first; the swiped row's own Delete action is still on screen behind it, so
+# the alert's button is the one below its message.
+- tapOn:
+    text: Delete
+    below: This action cannot be undone.
 - extendedWaitUntil:
     notVisible:
       id: recipe-card-${output.doomed}

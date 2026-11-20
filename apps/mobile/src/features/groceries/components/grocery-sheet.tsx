@@ -1,9 +1,10 @@
-import type { HeaderConfirm } from "@/components/modal-header";
+import type { SheetActions } from "@/components/modal-header";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
+import { Card, CardRow } from "@/components/card";
+import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { Button } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { AisleDto, StoreDto } from "@norish/shared/contracts";
@@ -15,7 +16,7 @@ import { useAfterKeyboard } from "../hooks/use-after-keyboard";
 import { useRecurrenceLabel } from "../hooks/use-recurrence-label";
 import { storeColorIn } from "../hooks/use-store-color";
 import { ChoiceList } from "./choice-list";
-import { FormCard, FormRow, RepeatPills } from "./form-parts";
+import { RepeatPills } from "./form-parts";
 import { RepeatBody } from "./repeat-view";
 
 type Step = "form" | "repeat" | "store" | "aisle" | "product";
@@ -27,7 +28,6 @@ export function GrocerySheet({
   title,
   subtitle,
   field,
-  notes,
   product,
   productStep,
   stores,
@@ -42,7 +42,6 @@ export function GrocerySheet({
   onConfirmDetected,
   onRepeat,
   trailingRows,
-  confirm,
   actions,
 }: {
   /** The testID prefix: `<name>-sheet`. */
@@ -51,7 +50,6 @@ export function GrocerySheet({
   subtitle?: string;
   field: ReactNode;
   /** What sits under the field, such as where the grocery came from. */
-  notes?: ReactNode;
   /** The Store Product the grocery is priced by, the form's first row; `open` shows its search. */
   product?: (open: () => void) => ReactNode;
   /** The product search that replaces the form, given what goes back to it. */
@@ -70,10 +68,8 @@ export function GrocerySheet({
   onConfirmDetected: () => void;
   onRepeat: (pattern: RecurrencePattern | null) => void;
   trailingRows?: ReactNode;
-  /** The form view's header item, Save. */
-  confirm: HeaderConfirm;
-  /** The form view's pinned actions, if any. */
-  actions?: ReactNode;
+  /** The form view's header: its confirm, Save, and any other actions. */
+  actions: SheetActions;
 }) {
   const intl = useIntl();
   const recurrence = useRecurrenceLabel();
@@ -114,7 +110,7 @@ export function GrocerySheet({
   );
   const steps: Record<Step, ReactNode> = {
     form: (
-      <Sheet actions={actions} confirm={confirm} name={name} subtitle={subtitle} title={title}>
+      <Sheet {...actions} name={name} subtitle={subtitle} title={title}>
         <SheetBody contentClassName="gap-3">
           {field}
           <RepeatPills
@@ -124,10 +120,9 @@ export function GrocerySheet({
             onEdit={openRepeat}
             onRemove={() => onRepeat(null)}
           />
-          {notes}
-          <FormCard>
+          <Card>
             {product?.(() => setView("product"))}
-            <FormRow
+            <CardRow
               dotColor={store ? dot(store.color) : undefined}
               first={!product}
               label={text("groceries.mobile.store")}
@@ -136,42 +131,27 @@ export function GrocerySheet({
               onPress={() => setView("store")}
             />
             {aisles.length > 0 ? (
-              <FormRow
+              <CardRow
                 label={text("groceries.panel.aisle")}
                 testID={`${name}-aisle`}
                 value={aisle?.name ?? text("groceries.panel.noAisle")}
                 onPress={() => setView("aisle")}
               />
             ) : null}
-            <FormRow
+            <CardRow
               label={text("common.recurrence.title")}
               testID={`${name}-repeat`}
               value={repeat ? recurrence(repeat) : text("groceries.mobile.never")}
               onPress={openRepeat}
             />
             {trailingRows}
-          </FormCard>
+          </Card>
         </SheetBody>
       </Sheet>
     ),
     repeat: (
       <Sheet
         back
-        actions={
-          repeat ? (
-            <Button
-              className="h-12"
-              testID="repeat-clear"
-              variant="secondary"
-              onPress={() => {
-                onRepeat(null);
-                back();
-              }}
-            >
-              <Button.Label className="font-medium">{text("common.actions.remove")}</Button.Label>
-            </Button>
-          ) : undefined
-        }
         confirm={{
           label: text("common.actions.done"),
           disabled: !draft,
@@ -181,6 +161,16 @@ export function GrocerySheet({
           },
         }}
         name={`${name}-repeat`}
+        secondary={
+          repeat
+            ? [
+                destructiveAction(text("common.actions.remove"), () => {
+                  onRepeat(null);
+                  back();
+                }),
+              ]
+            : []
+        }
         title={text("common.recurrence.title")}
         onClose={back}
       >

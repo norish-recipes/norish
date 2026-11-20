@@ -1,7 +1,11 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
+import { EmptyCard } from "@/components/empty-card";
+import { IconButton } from "@/components/icon-button";
 import { IngredientIcon } from "@/components/ingredient-icon";
+import { useOnSheet } from "@/components/on-sheet";
+import { OnTheListChip } from "@/components/on-the-list-chip";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
@@ -13,59 +17,6 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import type { PantryRow } from "../utils/pantry-rows";
 import { SkeletonCard } from "./groceries-states";
-
-/** A kept food that still has a grocery to buy: handled, so nobody adds it twice. */
-export function OnTheListChip() {
-  const intl = useIntl();
-  const accentText = useAccentTextColor();
-
-  return (
-    <View
-      className="bg-accent/10 h-[30px] flex-row items-center gap-1 rounded-full pr-2.5 pl-2"
-      testID="on-the-list"
-    >
-      <Ionicons color={accentText} name="checkmark" size={13} />
-      <Text className="text-accent-text text-[13px] font-semibold">
-        {intl.formatMessage({ id: "groceries.pantry.onTheList" })}
-      </Text>
-    </View>
-  );
-}
-
-/** The round 36 pt button at the end of a row. */
-export function RowButton({
-  icon,
-  label,
-  testID,
-  accent = false,
-  onPress,
-}: {
-  icon: "cart-outline" | "add";
-  label: string;
-  testID: string;
-  accent?: boolean;
-  onPress: () => void;
-}) {
-  const [foreground] = useThemeColor(["foreground"] as const);
-  const accentText = useAccentTextColor();
-
-  return (
-    <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      className="bg-default size-9 items-center justify-center rounded-full"
-      hitSlop={4}
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons
-        color={accent ? accentText : foreground}
-        name={icon}
-        size={icon === "add" ? 20 : 17}
-      />
-    </Pressable>
-  );
-}
 
 /** One food of the Pantry's lists: its icon, its name, what it says under the name, and an end. */
 export function FoodRow({
@@ -121,8 +72,12 @@ export type PantryActions = {
 
 /** The note rows' test ids and messages. */
 const NOTES = {
-  empty: { testID: "pantry-empty", messageId: "groceries.pantry.empty" },
-  noMatch: { testID: "pantry-no-match", messageId: "common.status.noResults" },
+  empty: { testID: "pantry-empty", messageId: "groceries.pantry.empty", icon: "archive-outline" },
+  noMatch: {
+    testID: "pantry-no-match",
+    messageId: "common.status.noResults",
+    icon: "search-outline",
+  },
 } as const;
 
 const SECTION_LABEL = "text-muted text-xs font-semibold tracking-[0.6px] uppercase";
@@ -130,7 +85,6 @@ const SECTION_LABEL = "text-muted text-xs font-semibold tracking-[0.6px] upperca
 /** One row of the Pantry's flat list. */
 export function PantryRowView({ row, actions }: { row: PantryRow; actions: PantryActions }) {
   const intl = useIntl();
-  const accentText = useAccentTextColor();
   const [muted] = useThemeColor(["muted"] as const);
   const addLabel = (name: string) =>
     intl.formatMessage({ id: "groceries.pantry.addFood" }, { name });
@@ -146,7 +100,7 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
               row.onList ? (
                 <OnTheListChip />
               ) : (
-                <RowButton
+                <IconButton
                   icon="cart-outline"
                   label={intl.formatMessage({ id: "groceries.pantry.putOnTheList" })}
                   testID={`pantry-put-${item.id}`}
@@ -166,11 +120,12 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
       const note = NOTES[row.text];
 
       return (
-        <CardSlice edge={{ top: true, bottom: true }}>
-          <Text className="text-muted px-4 py-[22px] text-center text-[15px]" testID={note.testID}>
-            {intl.formatMessage({ id: note.messageId })}
-          </Text>
-        </CardSlice>
+        <EmptyCard
+          icon={note.icon}
+          testID={note.testID}
+          title={intl.formatMessage({ id: note.messageId })}
+          tone="shop"
+        />
       );
     }
     case "suggestions":
@@ -207,11 +162,11 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
         <CardSlice edge={row.edge}>
           <FoodRow
             end={
-              <RowButton
-                accent
+              <IconButton
                 icon="add"
                 label={addLabel(name)}
                 testID={`pantry-suggestion-${food.ingredientId}`}
+                tone="accent"
                 onPress={() => actions.keep(food)}
               />
             }
@@ -227,26 +182,49 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
       );
     }
     case "more":
-      return (
-        <Pressable
-          accessibilityRole="button"
-          className="px-7 pt-3"
-          testID="pantry-show-more"
-          onPress={actions.showMore}
-        >
-          <Text className="text-sm font-medium" style={{ color: accentText }}>
-            {intl.formatMessage({ id: "groceries.pantry.showMore" })}
-          </Text>
-        </Pressable>
-      );
+      return <ShowMore onPress={actions.showMore} />;
   }
+}
+
+/** "From your recipes"' Show more, under the suggestions it hides. */
+export function ShowMore({ onPress }: { onPress: () => void }) {
+  const intl = useIntl();
+  const accentText = useAccentTextColor();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="px-7 pt-3"
+      testID="pantry-show-more"
+      onPress={onPress}
+    >
+      <Text className="text-sm font-medium" style={{ color: accentText }}>
+        {intl.formatMessage({ id: "groceries.pantry.showMore" })}
+      </Text>
+    </Pressable>
+  );
 }
 
 /** What the Pantry looks like while it loads: one card of rows, in the real shell. */
 export function PantrySkeleton() {
   return (
-    <View className="px-5 pt-3.5" testID="pantry-skeleton">
-      <SkeletonCard rowClassName="h-[52px] gap-3 px-3.5" rows={6}>
+    <View className="pt-3.5" testID="pantry-skeleton">
+      <FoodRowsSkeleton rows={6} />
+    </View>
+  );
+}
+
+/** A card of food rows still to come, on a sheet's fill there. */
+export function FoodRowsSkeleton({ rows, testID }: { rows: number; testID?: string }) {
+  const onSheet = useOnSheet();
+
+  return (
+    <View className="px-5" testID={testID}>
+      <SkeletonCard
+        className={onSheet ? "bg-sand" : "bg-surface"}
+        rowClassName="h-[52px] gap-3 px-3.5"
+        rows={rows}
+      >
         <Skeleton className="size-7 rounded-full" />
         <Skeleton className="h-5 w-36 rounded-md" />
       </SkeletonCard>

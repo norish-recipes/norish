@@ -10,6 +10,11 @@ export {
   useIngredientsNamed,
   useListHasIcon,
 } from "./use-ingredient-icons";
+export {
+  useIngredientName,
+  useIngredientNames,
+  usePrimeIngredientName,
+} from "./use-ingredient-names";
 export { useIngredientMutations } from "./use-ingredient-mutations";
 export { foodNamedAsTyped } from "./food-named-as-typed";
 export { usePantryCatalogue } from "./use-pantry-catalogue";

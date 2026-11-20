@@ -1,16 +1,16 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
-import { Pressable } from "react-native";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { SheetInput } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
-import { FieldError, InputGroup, Label, TextField, useThemeColor } from "heroui-native";
+import { FieldError, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useImportRecipe } from "@norish/shared-react/recipes";
 
-import { ImportActions } from "../components/import-actions";
+import { useImportActions } from "../hooks/use-import-actions";
 import { useStartImport } from "../hooks/use-start-import";
 import { isImportableLink } from "../utils/copied-link";
 
@@ -22,9 +22,9 @@ export function ImportLinkScreen() {
   const [isInvalid, setIsInvalid] = useState(false);
   const { importRecipe, importRecipeWithAI } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const [muted, foreground] = useThemeColor(["muted", "foreground"] as const);
+  const [muted] = useThemeColor(["muted"] as const);
   // An empty sheet is there to be typed into; a copied link is imported with one tap.
-  const fieldRef = useFocusOnMount<ComponentRef<typeof InputGroup.Input>>(!copiedUrl);
+  const fieldRef = useFocusOnMount<ComponentRef<typeof SheetInput>>(!copiedUrl);
   const trimmed = link.trim();
 
   // A new text clears the error the old one raised.
@@ -44,62 +44,38 @@ export function ImportLinkScreen() {
       run(trimmed);
     });
 
+  const actions = useImportActions({
+    isDisabled: trimmed === "",
+    onAIImport: start(importRecipeWithAI),
+    onImport: start(importRecipe),
+  });
+
   return (
     <Sheet
-      actions={
-        <ImportActions
-          isDisabled={trimmed === ""}
-          name="import-link"
-          onAIImport={start(importRecipeWithAI)}
-          onImport={start(importRecipe)}
-        />
-      }
+      {...actions}
       name="import-link"
       title={intl.formatMessage({ id: "recipes.addRecipe.linkTitle" })}
     >
       <SheetBody>
         <TextField className="gap-2" isInvalid={isInvalid}>
-          <Label className="px-2">
-            <Label.Text className="text-foreground text-[15px] font-medium">
-              {intl.formatMessage({ id: "common.import.url.label" })}
-            </Label.Text>
-          </Label>
-          <InputGroup>
-            <InputGroup.Prefix isDecorative className="pr-2.5 pl-4">
-              <Ionicons color={muted} name="link" size={18} />
-            </InputGroup.Prefix>
-            <InputGroup.Input
-              ref={fieldRef}
-              autoCapitalize="none"
-              autoCorrect={false}
-              className="bg-default ios:shadow-none h-[52px] rounded-full text-base"
-              keyboardType="url"
-              placeholder={intl.formatMessage({ id: "common.import.url.placeholder" })}
-              returnKeyType="go"
-              testID="import-link-field"
-              textContentType="URL"
-              value={link}
-              onChangeText={changeLink}
-              onSubmitEditing={trimmed ? start(importRecipe) : undefined}
-            />
-            {link ? (
-              <InputGroup.Suffix className="pr-3 pl-2">
-                <Pressable
-                  accessibilityLabel={intl.formatMessage({ id: "common.actions.clear" })}
-                  accessibilityRole="button"
-                  className="bg-surface size-7 items-center justify-center rounded-full"
-                  hitSlop={8}
-                  testID="import-link-clear"
-                  onPress={() => {
-                    changeLink("");
-                    fieldRef.current?.focus();
-                  }}
-                >
-                  <Ionicons color={foreground} name="close" size={14} />
-                </Pressable>
-              </InputGroup.Suffix>
-            ) : null}
-          </InputGroup>
+          <SheetInput
+            ref={fieldRef}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            placeholder={intl.formatMessage({ id: "common.import.url.placeholder" })}
+            prefix={<Ionicons color={muted} name="link" size={18} />}
+            returnKeyType="go"
+            testID="import-link-field"
+            textContentType="URL"
+            value={link}
+            onChangeText={changeLink}
+            onClear={() => {
+              changeLink("");
+              fieldRef.current?.focus();
+            }}
+            onSubmitEditing={trimmed ? start(importRecipe) : undefined}
+          />
           <FieldError className="px-2" testID="import-link-invalid">
             {intl.formatMessage({ id: "common.validation.invalidUrl" })}
           </FieldError>

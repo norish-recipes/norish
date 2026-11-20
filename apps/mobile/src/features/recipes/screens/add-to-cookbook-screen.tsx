@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { IconButton } from "@/components/icon-button";
 import { SheetInput } from "@/components/sheet-input";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,19 +10,15 @@ import { useIntl } from "react-intl";
 import { useCookbookMembership } from "@norish/shared-react/recipes";
 
 import { CookbookCover } from "../components/cookbook-cover";
-import { PickRow, pickRowClass } from "../components/pick-row";
+import { PickRow } from "../components/pick-row";
 import { PickSheet } from "../components/pick-sheet";
 
 /** Add to cookbook: tick the cookbooks the recipe belongs in, or ask for a new one, then Save. */
 export function AddToCookbookScreen() {
   const intl = useIntl();
   const router = useRouter();
-  const { recipeId, name } = useLocalSearchParams<{ recipeId: string; name?: string }>();
-  const [foreground, muted, accentForeground] = useThemeColor([
-    "foreground",
-    "muted",
-    "accent-foreground",
-  ] as const);
+  const { recipeId } = useLocalSearchParams<{ recipeId: string }>();
+  const [muted] = useThemeColor(["muted"] as const);
   const {
     cookbooks,
     isLoading,
@@ -45,9 +42,11 @@ export function AddToCookbookScreen() {
 
   return (
     <PickSheet
-      action={{
-        label: intl.formatMessage({ id: "common.actions.save" }),
-        onPress: isDirty ? () => void save(() => router.back()) : undefined,
+      actions={{
+        confirm: {
+          label: intl.formatMessage({ id: "common.actions.save" }),
+          onPress: isDirty ? () => save(() => router.back()) : undefined,
+        },
       }}
       header={
         <View className="flex-row gap-2">
@@ -62,17 +61,13 @@ export function AddToCookbookScreen() {
               onSubmitEditing={stageNew}
             />
           </TextField>
-          <Pressable
-            accessibilityLabel={newLabel}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !canStage }}
-            className={`size-12 items-center justify-center rounded-full ${canStage ? "bg-accent" : "bg-default"}`}
+          <IconButton
             disabled={!canStage}
+            icon="add"
+            label={newLabel}
             testID="add-to-cookbook-new-add"
             onPress={stageNew}
-          >
-            <Ionicons color={canStage ? accentForeground : muted} name="add" size={22} />
-          </Pressable>
+          />
         </View>
       }
       list={
@@ -89,39 +84,32 @@ export function AddToCookbookScreen() {
                 String(item.kind === "pending" ? item.entry.key : item.cookbook.id),
               renderRow: (item, position) =>
                 item.kind === "pending" ? (
-                  <View
-                    className={pickRowClass(position)}
+                  <PickRow
+                    media={
+                      <View className="bg-thumb size-10 items-center justify-center rounded-xl">
+                        <Ionicons color={muted} name="book-outline" size={20} />
+                      </View>
+                    }
+                    position={position}
+                    subtitle={intl.formatMessage({ id: "recipes.cookbooks.willBeCreated" })}
                     testID={`add-to-cookbook-pending-${item.entry.key}`}
-                  >
-                    <View className="bg-surface size-11 items-center justify-center rounded-xl">
-                      <Ionicons color={muted} name="book-outline" size={20} />
-                    </View>
-                    <View className="min-w-0 flex-1">
-                      <Text className="text-foreground text-base font-semibold" numberOfLines={1}>
-                        {item.entry.title}
-                      </Text>
-                      <Text className="text-muted text-[13px]">
-                        {intl.formatMessage({ id: "recipes.cookbooks.willBeCreated" })}
-                      </Text>
-                    </View>
-                    <Pressable
-                      accessibilityLabel={intl.formatMessage({ id: "common.actions.remove" })}
-                      accessibilityRole="button"
-                      className="bg-surface size-8 items-center justify-center rounded-full"
-                      testID={`add-to-cookbook-unstage-${item.entry.key}`}
-                      onPress={() => unstage(item.entry.key)}
-                    >
-                      <Ionicons color={foreground} name="close" size={16} />
-                    </Pressable>
-                  </View>
+                    title={item.entry.title}
+                    trailing={
+                      <IconButton
+                        icon="close"
+                        label={intl.formatMessage({ id: "common.actions.remove" })}
+                        testID={`add-to-cookbook-unstage-${item.entry.key}`}
+                        onPress={() => unstage(item.entry.key)}
+                      />
+                    }
+                  />
                 ) : (
                   <PickRow
                     media={
                       <CookbookCover
-                        className="size-11 overflow-hidden rounded-xl"
+                        className="size-10 overflow-hidden rounded-xl"
                         cookbook={item.cookbook}
                         iconSize={20}
-                        onSheet
                       />
                     }
                     position={position}
@@ -138,7 +126,6 @@ export function AddToCookbookScreen() {
             }
       }
       name="add-to-cookbook"
-      subtitle={name}
       title={intl.formatMessage({ id: "recipes.cookbooks.panelTitle" })}
     />
   );

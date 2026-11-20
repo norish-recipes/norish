@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Nimetön ostos",
-    "items": "{count, plural, one {# ostos} other {# ostosta}}"
+    "items": "{count, plural, =0 {Ei ostoksia} one {# ostos} other {# ostosta}}"
   },
   "store": {
     "unsorted": "Lajittelematta",
@@ -188,7 +188,6 @@
     "emptyHint": "Lisää tuotteita alla olevalla painikkeella.",
     "addTitle": "Lisää ostokset",
     "editTitle": "Muokkaa tuotetta",
-    "fromRecipe": "Reseptistä {recipe}",
     "store": "Kauppa",
     "noStore": "Ei kauppaa",
     "automatic": "Automaattinen",

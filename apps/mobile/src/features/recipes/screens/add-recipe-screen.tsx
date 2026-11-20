@@ -2,8 +2,8 @@ import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Card, CardRow } from "@/components/card";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { hostOf, plainLink } from "@/lib/network/host-of";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -20,36 +20,32 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type Option = { key: string; icon: IconName; title: string; hint: string; to: Href };
 
-/** The copied link, imported in one tap: the sheet's first row, on the accent. */
+/** The copied link: an accent card row with its host and where it came from; a tap imports it. */
 function CopiedLinkRow({ url, onPress }: { url: string; onPress: () => void }) {
   const intl = useIntl();
-  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
-  const title = intl.formatMessage(
-    { id: "recipes.addRecipe.importHost" },
-    { host: plainLink(hostOf(url)) }
-  );
+  const [onAccent] = useThemeColor(["accent-foreground"] as const);
+  const host = plainLink(hostOf(url));
+  const hint = intl.formatMessage({ id: "recipes.addRecipe.fromClipboard" });
 
   return (
     <Pressable
-      accessibilityHint={plainLink(url)}
-      accessibilityLabel={title}
+      accessibilityHint={intl.formatMessage({ id: "common.actions.import" })}
+      accessibilityLabel={`${host}, ${hint}`}
       accessibilityRole="button"
-      className="bg-accent flex-row items-center gap-3.5 rounded-3xl px-4 py-3"
+      className="bg-accent min-h-[60px] flex-row items-center gap-3 rounded-[22px] px-4"
       testID="add-recipe-copied-link"
       onPress={onPress}
     >
-      <View className="size-10 items-center justify-center rounded-xl bg-white/20">
-        <Ionicons color={accentForeground} name="link" size={20} />
+      <View className="size-10 items-center justify-center">
+        <Ionicons color={onAccent} name="link" size={23} />
       </View>
       <View className="min-w-0 flex-1 gap-px">
         <Text className="text-accent-foreground text-base font-semibold" numberOfLines={1}>
-          {title}
+          {host}
         </Text>
-        <Text className="text-accent-foreground text-[13px] opacity-80" numberOfLines={1}>
-          {plainLink(url)}
-        </Text>
+        <Text className="text-accent-foreground/80 text-sm">{hint}</Text>
       </View>
-      <Ionicons color={accentForeground} name="download-outline" size={20} />
+      <Ionicons color={onAccent} name="chevron-forward" size={16} />
     </Pressable>
   );
 }
@@ -57,28 +53,17 @@ function CopiedLinkRow({ url, onPress }: { url: string; onPress: () => void }) {
 /** One way to add a recipe: its icon, name and what it takes, opening that way's sheet. */
 function OptionRow({ option, first }: { option: Option; first: boolean }) {
   const router = useRouter();
-  const accentText = useAccentTextColor();
-  const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <Pressable
-      accessibilityHint={option.hint}
-      accessibilityLabel={option.title}
-      accessibilityRole="button"
-      className={`flex-row items-center gap-3.5 px-4 py-3 ${first ? "" : "border-separator border-t"}`}
+    <CardRow
+      first={first}
+      hint={option.hint}
+      icon={option.icon}
+      label={option.title}
       testID={`add-recipe-${option.key}`}
       // The chosen way's sheet replaces this one, so only one sheet is ever stacked.
       onPress={() => router.replace(option.to)}
-    >
-      <View className="bg-surface size-10 items-center justify-center rounded-xl">
-        <Ionicons color={accentText} name={option.icon} size={20} />
-      </View>
-      <View className="min-w-0 flex-1 gap-px">
-        <Text className="text-foreground text-base font-medium">{option.title}</Text>
-        <Text className="text-muted text-[13px]">{option.hint}</Text>
-      </View>
-      <Ionicons color={muted} name="chevron-forward" size={16} />
-    </Pressable>
+    />
   );
 }
 
@@ -132,11 +117,11 @@ export function AddRecipeScreen() {
         {copiedLink ? (
           <CopiedLinkRow url={copiedLink} onPress={startImport(() => importRecipe(copiedLink))} />
         ) : null}
-        <View className="bg-default overflow-hidden rounded-3xl">
+        <Card>
           {options.map((option, index) => (
             <OptionRow key={option.key} first={index === 0} option={option} />
           ))}
-        </View>
+        </Card>
       </SheetBody>
     </Sheet>
   );

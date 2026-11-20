@@ -68,7 +68,8 @@
     "sortByTitle": "Название",
     "sortByDate": "Дата",
     "clearFilters": "Очистить фильтры",
-    "minRating": "Минимальная оценка"
+    "minRating": "Минимальная оценка",
+    "minRatingStars": "Не менее {count} из 5"
   },
   "time": {
     "minutes": "мин",

@@ -167,6 +167,7 @@ export async function listIngredients(
     getIngredientPermissionPolicy(),
     listCatalogueIngredients({
       search: parseIngredientSearch(search, { match: query.match, fields: query.fields }),
+      languages,
       flaggedOnly: query.flaggedOnly ?? false,
       parentId: query.parentId,
       standaloneOnly: query.standaloneOnly ?? false,

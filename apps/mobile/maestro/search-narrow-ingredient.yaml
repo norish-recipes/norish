@@ -1,0 +1,35 @@
+# Types part of a food's name and narrows to that Ingredient: the chip shows, and Results list the
+# recipe that names a kind of it (chicken thighs) without the name in its title.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Sunday Roast", "key": "roast", "ingredients": ["2 chicken thighs", "1 onion"]}, {"name": "Berry Tart", "key": "tart", "ingredients": ["200 g flour"]}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.roast}
+    timeout: 20000
+- tapOn: Search
+- extendedWaitUntil:
+    visible:
+      id: search-screen
+    timeout: 10000
+- inputText: chick
+- extendedWaitUntil:
+    visible: chicken, Ingredient.*
+    timeout: 20000
+- tapOn: chicken, Ingredient.*
+- extendedWaitUntil:
+    visible:
+      id: search-chip-ingredient:.*
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.roast}
+    timeout: 20000
+- assertVisible:
+    id: search-count
+    text: 1 recipe.*
+- assertNotVisible:
+    id: recipe-card-${output.tart}

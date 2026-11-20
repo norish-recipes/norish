@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
-import { DestructiveMenuButton } from "@/components/destructive-menu-button";
-import { Button, Host, Menu } from "@expo/ui/swift-ui";
-import { buttonStyle, labelStyle, rotationEffect } from "@expo/ui/swift-ui/modifiers";
+import { NativeMenu } from "@/components/native-menu";
+import { useTokenColor } from "@/hooks/use-token-color";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIntl } from "react-intl";
 
 export type SectionActions = {
@@ -22,37 +22,47 @@ export function SectionMenu({
   testID: string;
 }) {
   const intl = useIntl();
+  const color = useTokenColor("foreground");
   const text = (id: string) => intl.formatMessage({ id });
 
   return (
-    <View testID={testID}>
-      <Host matchContents>
-        <Menu
-          label={label}
-          modifiers={[buttonStyle("plain"), labelStyle("iconOnly"), rotationEffect(90)]}
-          systemImage="ellipsis"
-        >
-          {actions.markAllDone ? (
-            <Button
-              label={text("groceries.store.markAllDone")}
-              systemImage="checkmark"
-              onPress={actions.markAllDone}
-            />
-          ) : null}
-          {actions.deleteDone ? (
-            <DestructiveMenuButton
-              label={text("groceries.store.deleteDone")}
-              systemImage="trash"
-              onPress={actions.deleteDone}
-            />
-          ) : null}
-          <DestructiveMenuButton
-            label={text("groceries.store.clearAll")}
-            systemImage="trash"
-            onPress={actions.clearAll}
-          />
-        </Menu>
-      </Host>
-    </View>
+    <NativeMenu
+      items={[
+        ...(actions.markAllDone
+          ? [
+              {
+                key: "mark-all-done",
+                label: text("groceries.store.markAllDone"),
+                systemImage: "checkmark",
+                onPress: actions.markAllDone,
+              },
+            ]
+          : []),
+        ...(actions.deleteDone
+          ? [
+              {
+                key: "delete-done",
+                label: text("groceries.store.deleteDone"),
+                systemImage: "trash",
+                destructive: true,
+                onPress: actions.deleteDone,
+              },
+            ]
+          : []),
+        {
+          key: "clear-all",
+          label: text("groceries.store.clearAll"),
+          systemImage: "trash",
+          destructive: true,
+          onPress: actions.clearAll,
+        },
+      ]}
+      label={label}
+      testID={testID}
+    >
+      <View className="size-9 items-center justify-center">
+        <Ionicons color={color} name="ellipsis-vertical" size={18} />
+      </View>
+    </NativeMenu>
   );
 }

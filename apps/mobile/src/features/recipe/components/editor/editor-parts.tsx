@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React, { use } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
 import { HintButton } from "@/components/hint-button";
 import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -11,6 +12,32 @@ import { withUniwind } from "uniwind";
 export const ClassIcon = withUniwind(Ionicons, {
   color: { fromClassName: "colorClassName", styleProperty: "color" },
 });
+
+/** An ingredient or step row, under a hairline unless it is the first; lifted, a card of its own,
+ * casting a shadow where the finger carries it. */
+export function EditorRow({
+  first,
+  className,
+  testID,
+  children,
+}: {
+  first: boolean;
+  className: string;
+  testID: string;
+  children: ReactNode;
+}) {
+  const lifted = useIsLifted();
+  const carried = useIsCarried();
+  // Lifted, the hairline turns clear rather than going, so the faded copy's cell keeps its height.
+  const hairline = first ? "" : `border-t ${lifted ? "border-transparent" : "border-separator"}`;
+  const card = lifted ? `bg-surface -mx-3 rounded-2xl px-3 ${carried ? "shadow-lg" : ""}` : "";
+
+  return (
+    <View className={`${className} ${hairline} ${card}`} testID={testID}>
+      {children}
+    </View>
+  );
+}
 
 /** The editor's text field: plain, 17 pt, growing with its text when multiline. */
 export function EditorInput({ onFocus, ...props }: ComponentProps<typeof TextInput>) {

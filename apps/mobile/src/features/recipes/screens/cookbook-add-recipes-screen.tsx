@@ -15,28 +15,29 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
 
   return (
     <RecipePickSheet
-      action={{
-        label:
-          pick.selected.length > 0
-            ? intl.formatMessage(
-                { id: "recipes.cookbooks.addCount" },
-                { count: pick.selected.length }
-              )
-            : intl.formatMessage({ id: "common.actions.add" }),
-        onPress:
-          pick.selected.length === 0
-            ? undefined
-            : () => {
-                save();
-                router.back();
-              },
+      actions={{
+        confirm: {
+          label:
+            pick.selected.length > 0
+              ? intl.formatMessage(
+                  { id: "recipes.cookbooks.addCount" },
+                  { count: pick.selected.length }
+                )
+              : intl.formatMessage({ id: "common.actions.add" }),
+          onPress:
+            pick.selected.length === 0
+              ? undefined
+              : () => {
+                  save();
+                  router.back();
+                },
+        },
       }}
       emptyId={
         hasRecipes ? "recipes.cookbooks.everythingAlreadyIn" : "recipes.cookbooks.noRecipesToAdd"
       }
       name="cookbook-add-recipes"
       pick={{ ...pick, recipes: addable }}
-      subtitle={cookbook.title}
       title={intl.formatMessage({ id: "recipes.cookbooks.addRecipes" })}
     />
   );
@@ -45,7 +46,7 @@ function AddRecipesSheet({ cookbook }: { cookbook: CookbookSummaryDTO }) {
 /** Add recipes: search what the cookbook does not hold, tick any number, then Add; inert without edit rights. */
 export function CookbookAddRecipesScreen() {
   const intl = useIntl();
-  const { cookbookId, title } = useLocalSearchParams<{ cookbookId: string; title?: string }>();
+  const { cookbookId } = useLocalSearchParams<{ cookbookId: string }>();
   const { cookbook } = useCookbookQuery(cookbookId ?? "");
   const { canEdit } = useOwnerRights();
 
@@ -53,12 +54,9 @@ export function CookbookAddRecipesScreen() {
     <AddRecipesSheet key={cookbook.id} cookbook={cookbook} />
   ) : (
     <RecipePickSheet
-      action={{
-        label: intl.formatMessage({ id: "common.actions.add" }),
-      }}
+      actions={{ confirm: { label: intl.formatMessage({ id: "common.actions.add" }) } }}
       emptyId="recipes.cookbooks.noRecipesToAdd"
       name="cookbook-add-recipes"
-      subtitle={title}
       title={intl.formatMessage({ id: "recipes.cookbooks.addRecipes" })}
     />
   );

@@ -1,12 +1,18 @@
-import type { ReactNode } from "react";
-import type { FlatListProps, KeyboardEvent, ScrollViewProps } from "react-native";
+import type { ReactNode, Ref } from "react";
+import type {
+  FlatListProps,
+  KeyboardEvent,
+  ScrollViewInstance,
+  ScrollViewProps,
+} from "react-native";
 import React, { useEffect, useState } from "react";
-import { FlatList, Keyboard, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { FlatList, Keyboard, Platform, ScrollView, useWindowDimensions, View } from "react-native";
 import { initialWindowMetrics } from "react-native-safe-area-context";
 import { useMarkSheetOpen } from "@/lib/tab-bar-visibility";
 
-import type { HeaderConfirm } from "./modal-header";
+import type { SheetActions } from "./modal-header";
 import { ModalHeader } from "./modal-header";
+import { OnSheet } from "./on-sheet";
 
 /** The props a body takes from the sheet rather than from the screen. */
 type SheetOwnedProps =
@@ -26,11 +32,20 @@ export const SHEET_INSET = 16;
 /** A tall field's height on a fit sheet, which is as tall as its content, so no field can fill it. */
 export const FIT_SHEET_FIELD_HEIGHT = 200;
 
-/** Where the native title starts, which the subtitle and a `SheetRow` line up with. */
-const TITLE_INSET = 24;
-
 const contentClass = ({ inset = true, contentClassName = "" }: BodyLayout) =>
   `${inset ? "px-4" : ""} pt-1 pb-4 ${contentClassName}`;
+
+/** The native header's height over a sheet's content, measured on iOS 26 and 27. */
+const SHEET_HEADER = 70;
+
+/** A nested body ends above the home indicator, which a sheet at its full height reaches. */
+const NESTED_SCROLL_END = { paddingBottom: 16 + (initialWindowMetrics?.insets.bottom ?? 0) };
+
+/** iOS react-native-screens sizes a sheet's first scroll view to the whole sheet, header included,
+ * so it runs a header's height past the sheet's bottom: its end pads past that too. */
+export const SHEET_SCROLL_END = {
+  paddingBottom: NESTED_SCROLL_END.paddingBottom + (Platform.OS === "ios" ? SHEET_HEADER : 0),
+};
 
 /** What both scrolling bodies share: they fill the sheet and meet the keyboard the same way. */
 const SCROLLER = {
@@ -52,6 +67,7 @@ export function SheetScrollView({
       {...SCROLLER}
       {...props}
       contentContainerClassName={contentClass({ inset, contentClassName })}
+      contentContainerStyle={SHEET_SCROLL_END}
     />
   );
 }
@@ -60,23 +76,35 @@ export function SheetScrollView({
 export function SheetList<T>({
   inset,
   contentClassName,
+  nested = false,
   ...props
-}: Omit<FlatListProps<T>, SheetOwnedProps> & BodyLayout) {
+}: Omit<FlatListProps<T>, SheetOwnedProps> &
+  BodyLayout & {
+    /** Under other content, where react-native-screens leaves the list its laid-out height. */
+    nested?: boolean;
+    ref?: Ref<FlatList<T>>;
+  }) {
   return (
     <FlatList
       {...SCROLLER}
       {...props}
       contentContainerClassName={contentClass({ inset, contentClassName })}
+      contentContainerStyle={nested ? NESTED_SCROLL_END : SHEET_SCROLL_END}
     />
   );
+}
+
+/** Kept first in a fit sheet: react-native-screens stretches a sheet's first-child scroll view to the
+ * sheet, so a scroll view after it keeps its own height. */
+export function SheetScrollGuard() {
+  return <View collapsable={false} />;
 }
 
 /** A fit sheet's body: as tall as its content until the sheet runs out of room, then it scrolls. */
 export function SheetBody({ children, ...layout }: BodyLayout & { children: ReactNode }) {
   return (
     <>
-      {/* Kept first: react-native-screens stretches a sheet's first-child scroll view to the sheet. */}
-      <View collapsable={false} />
+      <SheetScrollGuard />
       <ScrollView
         {...SCROLLER}
         className="shrink grow-0"
@@ -92,7 +120,10 @@ export function SheetBody({ children, ...layout }: BodyLayout & { children: Reac
 export function SheetStrip({
   contentClassName = "",
   ...props
-}: Omit<ScrollViewProps, SheetOwnedProps | "horizontal"> & { contentClassName?: string }) {
+}: Omit<ScrollViewProps, SheetOwnedProps | "horizontal"> & {
+  contentClassName?: string;
+  ref?: Ref<ScrollViewInstance>;
+}) {
   return (
     <ScrollView
       horizontal
@@ -104,35 +135,8 @@ export function SheetStrip({
   );
 }
 
-/** A row whose content lines up with the sheet's subtitle. */
-export function SheetRow({
-  className = "",
-  children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <View className={className} style={{ paddingHorizontal: TITLE_INSET - SHEET_INSET }}>
-      {children}
-    </View>
-  );
-}
-
-/** Several actions in one row; each `Sheet.Action` takes an equal share. */
-function SheetActions({ children }: { children: ReactNode }) {
-  return <View className="flex-row gap-2.5">{children}</View>;
-}
-
-function SheetAction({ children }: { children: ReactNode }) {
-  return <View className="flex-1">{children}</View>;
-}
-
 /** The top of a sheet at its full height, the window's safe-area top. */
 export const FULL_SHEET_TOP = initialWindowMetrics?.insets.top ?? 0;
-
-/** The native header's height over a sheet's content, measured on iOS 26 and 27. */
-const SHEET_HEADER = 70;
 
 /** Where a sheet's content starts at the sheet's full height, under the native header. */
 export const SHEET_BODY_TOP = FULL_SHEET_TOP + SHEET_HEADER;
@@ -157,10 +161,8 @@ function useSheetRoom() {
   return (keyboardTop ?? height) - SHEET_BODY_TOP;
 }
 
-/**
- * The one sheet layout: the native header (title, Close, and Save where it saves), the body, the
- * actions pinned below, all held to the room above the keyboard.
- */
+/** The one sheet layout: the native header (title, Close, secondary actions, confirm), then the
+ * body, held to the room above the keyboard. Nothing is pinned below the body. */
 export function Sheet({
   name,
   title,
@@ -168,22 +170,18 @@ export function Sheet({
   back = false,
   onClose,
   confirm,
-  actions,
+  secondary,
   children,
-}: {
+}: SheetActions & {
   /** The testID prefix: `<name>-sheet` on the sheet. */
   name: string;
   title: string;
-  /** A muted line above the body: the header's system title has no subtitle. */
+  /** A muted second line in the header's title. */
   subtitle?: string;
   /** A step inside a sheet: the header's left item is a Back chevron. */
   back?: boolean;
   /** What the left item does; going back by default. */
   onClose?: () => void;
-  /** The header's confirm item, for a sheet that saves. */
-  confirm?: HeaderConfirm;
-  /** One element, or a `Sheet.Actions` of `Sheet.Action`s sharing the row. */
-  actions?: ReactNode;
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
   children?: ReactNode;
 }) {
@@ -192,23 +190,24 @@ export function Sheet({
   useMarkSheetOpen();
 
   return (
-    // Not flattened, so react-native-screens never resizes the body directly.
-    <View className="grow" collapsable={false} style={{ maxHeight: room }} testID={`${name}-sheet`}>
-      <ModalHeader back={back} confirm={confirm} title={title} onClose={onClose} />
-      {subtitle ? (
-        <Text
-          className="text-muted pb-3 text-sm leading-[17px]"
-          numberOfLines={1}
-          style={{ paddingHorizontal: TITLE_INSET }}
-        >
-          {subtitle}
-        </Text>
-      ) : null}
-      {children}
-      {actions ? <View className="px-4 pt-3 pb-5">{actions}</View> : null}
-    </View>
+    <OnSheet value>
+      {/* Not flattened, so react-native-screens never resizes the body directly. */}
+      <View
+        className="grow"
+        collapsable={false}
+        style={{ maxHeight: room }}
+        testID={`${name}-sheet`}
+      >
+        <ModalHeader
+          back={back}
+          confirm={confirm}
+          secondary={secondary}
+          subtitle={subtitle}
+          title={title}
+          onClose={onClose}
+        />
+        {children}
+      </View>
+    </OnSheet>
   );
 }
-
-Sheet.Actions = SheetActions;
-Sheet.Action = SheetAction;

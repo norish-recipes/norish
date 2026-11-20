@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { StoreApi } from "zustand";
 import { useState } from "react";
 import { createStore } from "zustand";
 
@@ -14,6 +15,7 @@ import {
   DEFAULT_RECIPE_FILTERS,
   toggleSearchFieldIn,
 } from "@norish/shared/contracts/filter-contract";
+import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 
 import { createPageStoreContext } from "../page-store";
 
@@ -22,9 +24,14 @@ type LibraryFiltersState = {
   /** False until the stored filters are applied: without the cookie, the first render's are the defaults. */
   hydrated: boolean;
   setFilters: (next: Partial<CanonicalRecipeFilters>) => void;
-  /** Every filter but the Library's type, a lens that clearing a search must not move (ADR-0026). */
+  /** Filters a clear leaves alone, besides the Library's type: Search keeps its text, scope and sort. */
+  keepOnClear: readonly (keyof CanonicalRecipeFilters)[];
+  /** Resets every filter except the Library's type, a lens that clearing a search must not move
+   * (ADR-0026), and those in `keepOnClear`. */
   clearFilters: () => void;
   toggleSearchField: (field: SearchField) => void;
+  /** Narrows to an Ingredient; one already narrowed to, or one past the limit a search accepts, changes nothing. */
+  addIngredient: (ingredientId: string) => void;
   /** The browser's stored filters win over the cookie's: a kept document can be old. */
   applyStored: (stored: PersistedRecipeFilters | null) => void;
 };
@@ -40,9 +47,14 @@ export function createLibraryFiltersStore(
     filters: { ...DEFAULT_RECIPE_FILTERS, ...initial },
     hydrated: initial !== undefined,
     setFilters: (next) => set((state) => ({ filters: { ...state.filters, ...next } })),
+    keepOnClear: [],
     clearFilters: () =>
       set((state) => ({
-        filters: { ...DEFAULT_RECIPE_FILTERS, libraryType: state.filters.libraryType },
+        filters: {
+          ...DEFAULT_RECIPE_FILTERS,
+          ...Object.fromEntries(state.keepOnClear.map((key) => [key, state.filters[key]])),
+          libraryType: state.filters.libraryType,
+        },
       })),
     toggleSearchField: (field) =>
       set((state) => ({
@@ -51,6 +63,18 @@ export function createLibraryFiltersStore(
           searchFields: toggleSearchFieldIn(state.filters.searchFields, field),
         },
       })),
+    addIngredient: (ingredientId) =>
+      set((state) =>
+        state.filters.ingredients.length >= MAX_FILTER_INGREDIENTS ||
+        state.filters.ingredients.includes(ingredientId)
+          ? state
+          : {
+              filters: {
+                ...state.filters,
+                ingredients: [...state.filters.ingredients, ingredientId],
+              },
+            }
+      ),
     applyStored: (stored) =>
       set((state) => ({
         hydrated: true,
@@ -62,17 +86,32 @@ export function createLibraryFiltersStore(
   }));
 }
 
-const libraryFilters = createPageStoreContext("LibraryFiltersProvider", createLibraryFiltersStore);
+type LibraryFiltersStore = ReturnType<typeof createLibraryFiltersStore>;
+type InitialFilters = PersistedRecipeFilters | CanonicalRecipeFilters | undefined;
 
-/** Makes the Library's filters once from `initial`; a later render's value is the store's own. */
+const isStore = (key: InitialFilters | StoreApi<LibraryFiltersState>): key is LibraryFiltersStore =>
+  key !== undefined && "getState" in key;
+
+const libraryFilters = createPageStoreContext(
+  "LibraryFiltersProvider",
+  (key: InitialFilters | StoreApi<LibraryFiltersState>) =>
+    isStore(key) ? key : createLibraryFiltersStore(key)
+);
+
+/**
+ * Makes the Library's filters once from `initial`; a later render's value is the store's own.
+ * A `store` made elsewhere is used as it is, for filters that outlive the provider's tree.
+ */
 export function LibraryFiltersProvider({
   initial,
+  store,
   children,
 }: {
-  initial: PersistedRecipeFilters | CanonicalRecipeFilters | undefined;
+  initial?: InitialFilters;
+  store?: LibraryFiltersStore;
   children: ReactNode;
 }) {
-  const [first] = useState(initial);
+  const [first] = useState(store ?? initial);
 
   return <libraryFilters.Provider pageKey={first}>{children}</libraryFilters.Provider>;
 }

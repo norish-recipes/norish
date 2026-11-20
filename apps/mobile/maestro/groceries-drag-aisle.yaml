@@ -20,8 +20,8 @@ appId: dev.norish.app
 - evalScript: ${output.before = json(http.get(NORISH_PROXY_CONTROL_URL + '/aisle?store=Aldi&food=milk').body)}
 - assertTrue: ${output.before.aisle == null}
 - swipe:
-    start: 50%,25%
-    end: 50%,30%
+    start: 50%,30%
+    end: 50%,35%
     duration: 10000
 - evalScript: ${output.filed = json(http.get(NORISH_PROXY_CONTROL_URL + '/aisle?store=Aldi&food=milk&is=Dairy').body)}
 - assertTrue: ${output.filed.aisle == 'Dairy'}

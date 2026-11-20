@@ -1,6 +1,6 @@
 import React from "react";
 import { PressableScale } from "@/components/pressable-scale";
-import { RoundTick } from "@/components/round-tick";
+import { Tick } from "@/components/tick";
 import { useThemeColor } from "heroui-native";
 
 /** The round tick in the Store's colour, under a 44 pt press target. */
@@ -34,7 +34,7 @@ export function StoreTick({
       testID={testID}
       onPress={onPress}
     >
-      <RoundTick color={color ?? accent} partial={partial} selected={checked} />
+      <Tick color={color ?? accent} partial={partial} selected={checked} />
     </PressableScale>
   );
 }

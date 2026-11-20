@@ -2,7 +2,7 @@ import {
   LOAD_MORE_FOOTER_HEIGHT,
   loadMoreFooterBox,
 } from "@/features/recipes/utils/load-more-footer";
-import { accessoryTop, nextTabBarMinimised, tabListBottomInset } from "@/lib/tab-bar-placement";
+import { accessoryTop, tabListBottomInset } from "@/lib/tab-bar-placement";
 import { describe, expect, it } from "vitest";
 
 const SCREEN = 874;
@@ -55,19 +55,5 @@ describe("loadMoreFooterBox", () => {
 
   it("never shrinks below the footer's own strip", () => {
     expect(loadMoreFooterBox(34, false).height).toBeGreaterThanOrEqual(LOAD_MORE_FOOTER_HEIGHT);
-  });
-});
-
-describe("nextTabBarMinimised", () => {
-  it("minimises on a scroll down and expands on a scroll up", () => {
-    expect(nextTabBarMinimised(false, 120, 100, 900)).toBe(true);
-    expect(nextTabBarMinimised(true, 100, 120, 900)).toBe(false);
-  });
-
-  it("holds while the offset does not move, and through a bounce past either end", () => {
-    expect(nextTabBarMinimised(true, 120, 120, 900)).toBe(true);
-    expect(nextTabBarMinimised(true, 898, 905, 900)).toBe(true);
-    expect(nextTabBarMinimised(false, 905, 900, 900)).toBe(false);
-    expect(nextTabBarMinimised(true, -4, 0, 900)).toBe(true);
   });
 });

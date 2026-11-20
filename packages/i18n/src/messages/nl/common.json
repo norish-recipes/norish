@@ -68,7 +68,8 @@
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
     "clearFilters": "Filters wissen",
-    "minRating": "Minimale beoordeling"
+    "minRating": "Minimale beoordeling",
+    "minRatingStars": "Minstens {count} van de 5"
   },
   "time": {
     "minutes": "min",

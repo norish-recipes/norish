@@ -5,6 +5,7 @@ import {
   DEFAULT_RECIPE_FILTERS,
   hasAppliedRecipeFilters,
   normalizePersistedRecipeFilters,
+  persistedRecipeFilters,
   serializeRecipeFilters,
   toggleSearchFieldIn,
   toRecipesQueryFilters,
@@ -28,6 +29,37 @@ describe("recipe filter contract", () => {
       pantryOnly: false,
     });
     expect(serializeRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(JSON.stringify(queryFilters));
+  });
+
+  it("sends Ingredient ids only when there are some, and never persists them", () => {
+    const onion = "a0000000-0000-4000-8000-000000000001";
+
+    expect(
+      toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, ingredients: [onion] })
+    ).toMatchObject({
+      ingredientIds: [onion],
+    });
+    expect(toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS)).not.toHaveProperty("ingredientIds");
+    expect(DEFAULT_PERSISTED_RECIPE_FILTERS).not.toHaveProperty("ingredients");
+  });
+
+  it("sends the search text trimmed, and none for blank text", () => {
+    const search = (rawInput: string) =>
+      toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, rawInput }).search;
+
+    expect(search("  ")).toBeUndefined();
+    expect(search(" soup ")).toBe("soup");
+  });
+
+  it("keeps the search text and Ingredients out of what is persisted", () => {
+    const onion = "a0000000-0000-4000-8000-000000000001";
+    const persisted = persistedRecipeFilters({
+      ...DEFAULT_RECIPE_FILTERS,
+      rawInput: "soup",
+      ingredients: [onion],
+    });
+
+    expect(JSON.stringify(persisted)).toBe(JSON.stringify(DEFAULT_PERSISTED_RECIPE_FILTERS));
   });
 
   it("normalizes persisted filter payloads and rejects invalid values", () => {

@@ -1,5 +1,7 @@
 "use client";
 
+import type { LibraryMatchDTO } from "@norish/shared/contracts";
+import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
@@ -12,25 +14,44 @@ import { useLibraryQuery } from "./use-library-query";
 import { useRecipesMutations } from "./use-recipes-mutations";
 
 /** The Library's filters, as a list query takes them, and whether the stored ones are applied. */
-export function useLibraryQueryFilters() {
-  const filters = useLibraryFilters((state) => state.filters);
+export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
+  const stored = useLibraryFilters((state) => state.filters);
+  const filters = override ?? stored;
   const isHydrated = useLibraryFilters((state) => state.hydrated);
 
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };
 }
 
-/**
- * The Library under the reader's filters, with its recipes in grid order. Until the stored
- * filters are applied it stays loading: the defaults would show recipes the reader filters away.
- */
-export function useLibraryList() {
-  const { queryFilters, isHydrated } = useLibraryQueryFilters();
-  const library = useLibraryQuery(queryFilters, { enabled: isHydrated });
+/** The Library under `filters` (else the reader's), in grid order, loading until they apply; with
+ * `withMatch`, `matches` holds each recipe's match by id, and `enabled: false` reads nothing. */
+export function useLibraryList({
+  sortBeatsRank,
+  withMatch,
+  limit,
+  enabled = true,
+  filters,
+}: {
+  sortBeatsRank?: boolean;
+  withMatch?: boolean;
+  limit?: number;
+  enabled?: boolean;
+  filters?: CanonicalRecipeFilters;
+} = {}) {
+  const { queryFilters, isHydrated } = useLibraryQueryFilters(filters);
+  const library = useLibraryQuery(
+    { ...queryFilters, sortBeatsRank, withMatch, limit },
+    { enabled: isHydrated && enabled }
+  );
 
   return {
     ...library,
     isLoading: library.isLoading || !isHydrated,
     recipes: library.items.flatMap((item) => (item.kind === "recipe" ? [item.recipe] : [])),
+    matches: Object.fromEntries(
+      library.items.flatMap((item) =>
+        item.kind === "recipe" && item.match ? [[item.recipe.id, item.match] as const] : []
+      )
+    ) as Record<string, LibraryMatchDTO>,
   };
 }
 

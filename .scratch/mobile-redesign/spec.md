@@ -2,7 +2,7 @@
 
 Status: sign-in tickets 01-06 done; Recipes tab tickets 07-17 open; Recipe, Groceries and Calendar tickets 18-30 open
 
-Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area got its tickets once the one before it had landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below). Recipe, Groceries and Calendar were specced together on 2026-11-14 as Parts 3–5, tickets 18–30.
+Settled in a `/grilling` session on 2026-11-12. The design is the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz); each section of this spec names the boards it builds. Vocabulary is CONTEXT.md's Accounts & Sign-in section (**Server Address**, **Account**, **Sign-in Method**, **Sign-out**, **Session Expiry**). Target Version: 0.27.0-beta. Branch `feat/mobile-redesign`, cut from `refactor/app-structure`; it rebases onto rc once app-structure merges. Each area got its tickets once the one before it had landed, as app-structure did: 01–06 are sign-in, 07–17 the Recipes tab (Part 2 below). Recipe, Groceries and Calendar were specced together on 2026-11-14 as Parts 3–5, tickets 18–30. Search is specced on its own in `.scratch/mobile-search/spec.md`.
 
 ## Problem Statement
 
@@ -517,10 +517,10 @@ One glass rule, one panel anatomy, native large titles on the tab roots, our own
 
 ### Drag
 
-- Headings and stores never move while dragging. `react-native-reorderable-list` goes; `DragList` keeps its interface (`rows`, headings, `onDrop`) and the FlatList stays virtualised, with our own drag on Gesture Handler and Reanimated, modelled on web:
+- Rows part while dragging (2026-11-19, Mike: "like web"); headings shift only to make room. `react-native-reorderable-list` goes; `DragList` keeps its interface (`rows`, headings, `onDrop`) and the FlatList stays virtualised, with our own drag on Gesture Handler and Reanimated, modelled on web:
   - ~250 ms hold decided on the UI thread, haptic on lift.
   - An opaque card with a shadow follows the finger; the source stays as a faded ghost.
-  - Nothing reflows until the drop: a line shows where the row lands and the target section is highlighted.
+  - The rows between part to make room and the faded source sits where the row lands (no drop line, 2026-11-19); the target section is outlined.
   - A light haptic on crossing into another section, medium on drop.
   - Frame-driven auto-scroll.
   - A drop on a heading lands in that section, so empty and collapsed sections take drops; a drop above the first heading snaps back. No remount on drop.
@@ -537,3 +537,45 @@ Ticket 39 (rc CI) and 40 (canvas) run at the same time; then 47 (drag), 48 (copi
 ## Out of Scope
 
 - Building out the Settings tab (All settings opens what is there), Android drag, a native SwiftUI drag list.
+
+# Part 8: Panels and controls
+
+Drawn on the canvas page "Panels & controls" (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz, page `panels`, v108, 2026-11-19). The boards are the source of truth: `project/Panel.dc.html` (one base, prop `panel` = addRecipe … switch, `dark`), `PnOpacity` (layer rules) and `PnComponents` (what each board becomes in code). Local copies and light/dark renders of every panel: see "Boards" below.
+
+## Problem Statement
+
+Every sheet builds its controls locally and the glass rule of Part 7 put glass inside sheet bodies (GlassStepper, GlassSegmented, glass pills) and translucent `bg-fill` content on glass, so fills change with whatever is behind the sheet and contrast fails over photos. Neighbouring sheets disagree on field, stepper, switch and button looks.
+
+## Solution
+
+One control kit, each control with a single home that every sheet and page uses and never restyles; then every sheet rebuilt from the kit to its board.
+
+## Implementation Decisions
+
+### Rules (replacing Part 7's "Glass rule" and "Content on glass" where they differ)
+
+- **Glass only in the UI layer.** In a sheet, glass is only the native sheet itself (while not at full height) and its header: close/back, the one secondary icon (several become one menu), the primary action (native prominent bar item, accent tint, white label; plain glass when disabled). Outside sheets: tab bar, its accessory, nav buttons, Today, the heart over photos stay glass. Nothing in a sheet body or the page's content layer is glass.
+- **Content fill = solid sand.** One solid fill for fields, cards, chips, day chips, segmented and stepper tracks, on every sheet and page: light `rgb(234 228 214)`, dark `rgb(46 42 34)`. Never translucent, never on another fill. Replaces `bg-fill` on content.
+- **Body controls are solid.** Round icon buttons, pills, stepper knobs, switch thumbs, photo remove: solid white (light) / `--thumb` grey (dark), small shadow, no blur. In-body primary (Import on the clipboard row) is solid accent. Selected chip/day/tick = solid accent; segmented and switch keep the white thumb; single-pick lists show a checkmark.
+- **Text is never opacity.** Primary, secondary, placeholder and accent text are separate solid colours chosen to pass 4.5:1 on a 65% sheet over pure black or white (`PnOpacity`). Disabled (40%) is for controls only. Divider 15% light / 10% dark.
+- **Sizes.** Segmented standard 44, compact 34 (All/Any, icon switch share it). Body icon buttons 40.
+
+### The kit (PnComponents)
+
+Sheet header (`modal-header.tsx`, gains a subtitle), Field (text, search with clear, multi-line), Segmented (standard, compact, icon; `glass-segmented`, `slot-tabs`, `list-switch` become one, "Glass" leaves the name), Stepper (compact or full width; `glass-stepper` + `servings-stepper` become one), Switch (inset track, solid thumb, not glass), Card and row (one sand card, hairline rows; ends: value + chevron, switch, tick, checkmark, + button, tag), Tick (multi-select circle) and Checkmark (single pick), Chip (sand off, accent on; even-chip rows for scales), Icon button (new; tones default, accent, danger, disabled), Pill button (new; icon optional; default or danger), Tag (`pill.tsx` extended: Active green, Expired yellow, On the list green; solid fill, plain text), Plan block (day strip, slot tabs, day cards with a + per day; Plan this recipe, Move, Planned item, Plan recipe all use it, `move-fields.tsx` goes), Swipe actions (solid coloured circles; a full swipe commits the outermost action, Delete, which stays a circle and follows the card edge, the others drop away, the card slides off, the row closes).
+
+### Boards
+
+Rendered light | dark PNGs of every panel are in the orchestrating session's scratchpad (`boards/<panel>.png`) and reproducible: `node shoot.cjs Panel.dc.html 'panel=<name>' out.png [height]` with the canvas files read through the Artifact tool (`read`, `paths: ["project/Panel.dc.html"]`). Panels: addRecipe, importLink, importText, importPhotos, filters, addToGroceries, plan, planRecipe, addToCookbook, cookbookAdd, newCookbook, rename, move, servings, share, shareEmpty, timers, choice, item, addItems, editItem, storeStep, repeat, product, stores, storeEdit, pantryAdd, food, kit, switch.
+
+### Scope and order
+
+50 kit, 51 sheet header, 52 plan block, 53 sheets on the kit, 54 swipe actions, 55 device check and docs. No release notes: the mobile app is unreleased.
+
+## Testing Decisions
+
+Gates per ticket. Unit tests for kit behaviour (segmented selection, stepper bounds, switch, swipe commit), not looks. Looks are checked against the boards on the iOS 27 simulator in both themes in ticket 55, plus Maestro flows where a control moved. Web E2E is untouched by a mobile-only set and runs once at the end only if a shared package changed.
+
+## Out of Scope
+
+Web, Android-specific looks, Settings sub-pages beyond the share links sheet, the Calendar widgets.

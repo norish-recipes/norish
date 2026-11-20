@@ -76,6 +76,7 @@ export async function publishEnrichmentRecipeUpdated(
     {
       recipe,
       source: "enrichment",
+      kind: data.kind,
     },
     { viewPolicy: await viewPolicy(), ...emitContext(data) }
   );

@@ -21,6 +21,7 @@ import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { lightImpact } from "@/lib/haptics";
 import { sprung } from "@/lib/motion/spring";
 import { useHideTabBar } from "@/lib/tab-bar-visibility";
+import { cookStepOf } from "@/lib/tab-routes";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 
@@ -118,7 +119,7 @@ function CookMode() {
   const [colorMode] = useDevicePreference("recipePageColor");
   const [background] = useThemeColor(["background"] as const);
   const steps = resolveCookingModeSteps(recipe.steps ?? [], recipe.systemUsed ?? "metric");
-  const [step, setStep] = useState(() => clampStep(Number(params.step ?? 0) || 0, steps.length));
+  const [step, setStep] = useState(() => clampStep(cookStepOf(params.step), steps.length));
   const [view, setView] = useState<CookView>("steps");
   const [timersOpen, setTimersOpen] = useState(false);
   const [pillWidth, setPillWidth] = useState(0);
@@ -146,7 +147,7 @@ function CookMode() {
 
   // A new notification tap while cook mode is open moves it to that timer's step.
   useEffect(() => {
-    if (params.step !== undefined) setStep(Number(params.step) || 0);
+    if (params.step !== undefined) setStep(cookStepOf(params.step));
   }, [params.step]);
 
   const reduceMotion = useReducedMotion();

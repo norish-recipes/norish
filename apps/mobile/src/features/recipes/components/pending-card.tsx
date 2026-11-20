@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Text, View } from "react-native";
 import { ImportSpinner } from "@/features/recipes/components/import-spinner";
 import { hostOf, isWebLink, plainLink } from "@/lib/network/host-of";
@@ -8,7 +8,7 @@ import { useIntl } from "react-intl";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 
 /** A running import as a card: the link's host, and placeholders where its facts will go. */
-export function PendingCard({
+export const PendingCard = memo(function PendingCard({
   id,
   url,
   variant,
@@ -75,4 +75,4 @@ export function PendingCard({
       </View>
     </View>
   );
-}
+});

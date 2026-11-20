@@ -6,7 +6,9 @@ import {
   groceryOnTheList,
   pantryIngredientFor,
   searchPantry,
+  shownSuggestions,
   sortPantryIngredients,
+  SUGGESTIONS_SHOWN,
   uncoveredSuggestions,
 } from "@norish/shared/lib/pantry";
 
@@ -203,9 +205,33 @@ describe("searchPantry", () => {
     expect(searchPantry(kept, "alt", "en").map((i) => i.name)).toEqual(["Salt"]);
   });
 
+  it("matches when every typed word is in one name, in any order", () => {
+    expect(searchPantry(kept, "oil olive", "en").map((i) => i.name)).toEqual(["Olive Oil"]);
+    expect(searchPantry(kept, " ol  OIL ", "en").map((i) => i.name)).toEqual(["Olive Oil"]);
+    expect(searchPantry(kept, "olive salt", "en")).toEqual([]);
+    expect(searchPantry(kept, "red oil", "en")).toEqual([]);
+    expect(searchPantry(kept, "salt a", "en").map((i) => i.name)).toEqual(["Salt"]);
+  });
+
   it("matches a text that names the food, and nothing else", () => {
     expect(searchPantry(kept, "salt to taste", "en").map((i) => i.name)).toEqual(["Salt"]);
     expect(searchPantry(kept, "pepper", "en")).toEqual([]);
+  });
+});
+
+describe("shownSuggestions", () => {
+  const offered = Array.from({ length: SUGGESTIONS_SHOWN + 2 }, (_, index) => index);
+
+  it("shows the first few with Show more, then all", () => {
+    expect(shownSuggestions(offered, false)).toEqual({
+      shown: offered.slice(0, SUGGESTIONS_SHOWN),
+      more: true,
+    });
+    expect(shownSuggestions(offered, true)).toEqual({ shown: offered, more: false });
+  });
+
+  it("offers no Show more when all fit", () => {
+    expect(shownSuggestions([1, 2], false)).toEqual({ shown: [1, 2], more: false });
   });
 });
 

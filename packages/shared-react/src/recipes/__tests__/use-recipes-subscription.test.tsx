@@ -4,7 +4,7 @@
  */
 
 import { act } from "react";
-import { matchQuery, QueryClient } from "@tanstack/react-query";
+import { matchQuery, QueryClient, QueryObserver } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
 import { TRPCClientError } from "@trpc/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,7 +19,9 @@ import {
 } from "@norish/shared/contracts/realtime/recipes";
 
 import { trackedCursorMark, trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { LIVE_WINDOW_MS } from "../../realtime/use-realtime-subscription";
 import { useRecipeSelection } from "../selection-store";
+import { useRecipesCacheHelpers } from "../use-recipes-cache";
 import {
   useRecipeListSubscription,
   useRecipeOutcomesSubscription,
@@ -41,6 +43,7 @@ vi.mock("@trpc/tanstack-react-query", async () => {
 const LIST_KEY = [["recipes", "list"], { input: {}, type: "infinite" }];
 const LIBRARY_KEY = [["library", "list"], { input: {}, type: "infinite" }];
 const CATEGORIES_KEY = [["config", "categories"]];
+const DISCOVER_KEY = [["library", "discover"], { type: "query" }];
 const PENDING_KEY = [["recipes", "getPending"], { type: "query" }];
 const detailKey = (id: string) => [["recipes", "get"], { input: { id }, type: "query" }];
 
@@ -78,6 +81,8 @@ vi.mock("../../trpc", () => ({
       onRecipeBatchCreated: procedure("onRecipeBatchCreated"),
     },
     library: {
+      pathKey: () => [["library"]],
+      discover: { pathKey: () => [["library", "discover"]] },
       list: {
         pathKey: () => [["library", "list"]],
         queryKey: () => [["library", "list"], { input: {}, type: "query" }],
@@ -169,8 +174,15 @@ function rereadsOf(queryKey: unknown[]) {
 
 const pendingRereads = () => rereadsOf(PENDING_KEY);
 
+/** Lets the rereads asked for in one burst be made. */
+function endBurst() {
+  act(() => {
+    vi.advanceTimersByTime(LIVE_WINDOW_MS);
+  });
+}
+
 let queryClient: QueryClient;
-let rendered: ReturnType<typeof renderHook>;
+let rendered: ReturnType<typeof renderHook<ReturnType<typeof useRecipesCacheHelpers>, unknown>>;
 let invalidateQueries: ReturnType<typeof vi.spyOn>;
 let platform: ReturnType<typeof fakePlatformAdapter>;
 
@@ -191,6 +203,7 @@ beforeEach(() => {
   queryClient.setQueryData(detailKey("recipe-1"), fullRecipe());
   queryClient.setQueryData(PENDING_KEY, []);
   queryClient.setQueryData(CATEGORIES_KEY, { categories: [], builtInAliases: {} });
+  queryClient.setQueryData(DISCOVER_KEY, { categories: [], tags: [] });
   invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
 
   platform = fakePlatformAdapter();
@@ -198,6 +211,8 @@ beforeEach(() => {
     () => {
       useRecipeListSubscription();
       useRecipeOutcomesSubscription();
+
+      return useRecipesCacheHelpers();
     },
     { wrapper: createTestWrapper(queryClient, platform) }
   );
@@ -288,7 +303,7 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(queryClient.getQueryData<FullRecipeDTO>(detailKey("recipe-1"))?.images).toEqual([photo]);
   });
 
-  it("rereads only the Categories for an update that is not an enrichment", () => {
+  it("rereads only what is built from the recipes for an update that is not an enrichment", () => {
     const calendarKey = [
       ["calendar", "listItems"],
       { input: { startISO: "2026-01-01", endISO: "2026-01-07" }, type: "query" },
@@ -311,6 +326,55 @@ describe("the recipe list events and recipe outcomes", () => {
     }
   );
 
+  it.each([
+    ["onCreated", { recipe: dashboardRecipe({ id: "r2" }) }],
+    ["onUpdated", { recipe: fullRecipe({ name: "Renamed" }) }],
+    ["onDeleted", { ids: ["recipe-1"] }],
+    ["onImported", { recipe: dashboardRecipe({ id: "r2" }) }],
+    ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "r2" })] }],
+    ["onFailed", {}],
+    ["onDeleteKept", { ids: ["recipe-1"] }],
+  ])("rereads Search's Categories and Tags once on %s", (name, payload) => {
+    emit(name, payload);
+    endBurst();
+
+    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+  });
+
+  it.each([
+    ["onImported", { recipe: dashboardRecipe({ id: "r2" }) }],
+    ["onRecipeBatchCreated", { recipes: [dashboardRecipe({ id: "r2" })] }],
+  ])("rereads nothing a web page shows on %s, Discover alone", (name, payload) => {
+    emit(name, payload);
+    endBurst();
+
+    expect(invalidateQueries).toHaveBeenCalledTimes(1);
+    expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+    expect([rereadsOf(LIST_KEY), rereadsOf(LIBRARY_KEY)]).toEqual([0, 0]);
+  });
+
+  it.each(["auto-tagging", "allergy-detection", "auto-categorization", "image-generation"])(
+    "rereads Search's Categories and Tags, not the household's, after %s",
+    (kind) => {
+      emit("onUpdated", { recipe: fullRecipe(), source: "enrichment", kind });
+      emit("onUpdated", { recipe: fullRecipe({ id: "recipe-2" }), source: "enrichment", kind });
+      endBurst();
+
+      expect(rereadsOf(DISCOVER_KEY)).toBe(1);
+      expect(rereadsOf(CATEGORIES_KEY)).toBe(0);
+    }
+  );
+
+  it.each(["nutrition-estimation", "recipe-provenance", "ingredient-linking"])(
+    "rereads nothing after %s, which changes nothing Discover lists",
+    (kind) => {
+      emit("onUpdated", { recipe: fullRecipe(), source: "enrichment", kind });
+      endBurst();
+
+      expect(invalidateQueries).not.toHaveBeenCalled();
+    }
+  );
+
   it("removes a deleted recipe from the list and invalidates its detail query", () => {
     emit("onDeleted", { ids: ["recipe-1"] });
 
@@ -322,6 +386,7 @@ describe("the recipe list events and recipe outcomes", () => {
 
   it("rereads the recipes a delete kept and announces them once, from the outcomes", () => {
     emit("onDeleteKept", { ids: ["recipe-1"] });
+    endBurst();
 
     expect(queryClient.getQueryState(detailKey("recipe-1"))?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(LIBRARY_KEY)?.isInvalidated).toBe(true);
@@ -442,5 +507,179 @@ describe("the recipe list events and recipe outcomes", () => {
       ["danger", "common.import.paste.failed", "recipes.toasts.privateAddress"],
       ["danger", "common.import.paste.failed", "recipes.toasts.failedDescription"],
     ]);
+  });
+});
+
+describe("Search's own lists", () => {
+  const SEARCH_KEY = [
+    ["library", "list"],
+    {
+      input: { search: "soup", sortBeatsRank: true, withMatch: true, type: "recipes" },
+      type: "infinite",
+    },
+  ];
+  const SUGGEST_KEY = [
+    ["library", "list"],
+    { input: { search: "soup", sortBeatsRank: true, limit: 2, type: "recipes" }, type: "infinite" },
+  ];
+  const held = (id: string) => ({
+    kind: "recipe",
+    recipe: dashboardRecipe({ id, name: `Soup ${id}` }),
+    match: { field: "title" },
+  });
+  const cached = () => ({
+    pages: [{ items: [held("recipe-1"), held("recipe-2")], total: 2, nextCursor: null }],
+    pageParams: [0],
+  });
+
+  beforeEach(() => {
+    queryClient.setQueryData(SEARCH_KEY, cached());
+    queryClient.setQueryData(SUGGEST_KEY, cached());
+  });
+
+  it.each([
+    ["onUpdated", { recipe: fullRecipe({ name: "Renamed" }) }],
+    ["onCreated", { recipe: dashboardRecipe({ id: "r3", name: "Cake" }) }],
+    ["onImported", { recipe: dashboardRecipe({ id: "r3", name: "Cake" }) }],
+    ["onDeleted", { ids: ["recipe-1"] }],
+  ])("are never patched by %s, keeping their match lines, and are reread once", (name, payload) => {
+    emit(name, payload);
+    emit(name, payload);
+    endBurst();
+
+    for (const key of [SEARCH_KEY, SUGGEST_KEY]) {
+      expect(queryClient.getQueryData(key)).toEqual(cached());
+      expect(rereadsOf(key)).toBe(1);
+    }
+  });
+
+  it("still patches the Library's own list as before", () => {
+    emit("onCreated", { recipe: dashboardRecipe({ id: "r3", name: "Cake" }) });
+
+    expect(
+      (queryClient.getQueryData(LIBRARY_KEY) as { pages: { items: unknown[] }[] }).pages[0]?.items
+    ).toHaveLength(2);
+  });
+});
+
+describe("the rereads Library and Discover are asked for", () => {
+  type Gate = { release: () => void; wait: Promise<void> };
+  const open = (): Gate => {
+    let release = () => {};
+    const wait = new Promise<void>((resolve) => (release = resolve));
+
+    return { release, wait };
+  };
+  const stops: (() => void)[] = [];
+
+  /** Mounts a real observer on `queryKey`; `requests` counts the fetches that reach its queryFn. */
+  function observe(queryKey: unknown[]) {
+    const read = { requests: 0, gate: null as Gate | null };
+    const observer = new QueryObserver(queryClient, {
+      queryKey,
+      staleTime: Infinity,
+      queryFn: async () => {
+        read.requests++;
+        await read.gate?.wait;
+
+        return queryClient.getQueryData(queryKey) ?? null;
+      },
+    });
+
+    stops.push(observer.subscribe(() => undefined));
+
+    return read;
+  }
+
+  /** A write in flight: `settle` ends it as a success, or as the failure it is told. */
+  function startWrite() {
+    const gate = open();
+    let fail = false;
+    const mutation = queryClient.getMutationCache().build(queryClient, {
+      mutationFn: async () => {
+        await gate.wait;
+        if (fail) throw new Error("write failed");
+      },
+    });
+
+    void mutation.execute(undefined).catch(() => undefined);
+
+    return {
+      settle: async (failed = false) => {
+        fail = failed;
+        gate.release();
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(0);
+        });
+      },
+    };
+  }
+
+  async function elapse(ms: number) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  }
+
+  /** A delete that also kept some: both events, then the mutation's success. */
+  function mixedDelete() {
+    emit("onDeleted", { ids: ["recipe-1"] });
+    emit("onDeleteKept", { ids: ["recipe-2"] });
+    act(() => rendered.result.current.invalidate());
+  }
+
+  afterEach(() => stops.splice(0).forEach((stop) => stop()));
+
+  it("makes one request per observed query for a mixed delete", async () => {
+    const [library, discover] = [observe(LIBRARY_KEY), observe(DISCOVER_KEY)];
+
+    mixedDelete();
+    await elapse(LIVE_WINDOW_MS);
+
+    expect([library.requests, discover.requests]).toEqual([1, 1]);
+
+    await elapse(LIVE_WINDOW_MS * 4);
+
+    expect([library.requests, discover.requests]).toEqual([1, 1]);
+  });
+
+  it.each([
+    ["succeeds", false],
+    ["fails", true],
+  ])("waits for a write in flight, and rereads once it %s", async (_label, failed) => {
+    const [library, discover] = [observe(LIBRARY_KEY), observe(DISCOVER_KEY)];
+    const write = startWrite();
+
+    mixedDelete();
+    await elapse(LIVE_WINDOW_MS * 4);
+
+    expect([library.requests, discover.requests]).toEqual([0, 0]);
+
+    await write.settle(failed);
+    await elapse(LIVE_WINDOW_MS);
+
+    expect([library.requests, discover.requests]).toEqual([1, 1]);
+  });
+
+  it("rereads once after a matching read in flight, never joining it", async () => {
+    const library = observe(LIBRARY_KEY);
+
+    library.gate = open();
+    void queryClient.refetchQueries({ queryKey: LIBRARY_KEY });
+    await elapse(0);
+    expect(library.requests).toBe(1);
+
+    mixedDelete();
+    await elapse(LIVE_WINDOW_MS * 4);
+
+    expect(library.requests).toBe(1);
+
+    const gate = library.gate;
+
+    library.gate = null;
+    gate.release();
+    await elapse(LIVE_WINDOW_MS);
+
+    expect(library.requests).toBe(2);
   });
 });

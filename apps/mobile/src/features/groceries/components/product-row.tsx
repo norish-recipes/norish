@@ -1,7 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useThemeColor } from "heroui-native";
+import { Text } from "react-native";
+import { CardRow } from "@/components/card";
 import { useIntl } from "react-intl";
 
 import type { GroceryPrice } from "@norish/shared-react/groceries";
@@ -11,8 +10,9 @@ import { packSizeOf } from "@norish/shared/lib/pack-size";
 /** A product the form holds that the list does not price yet: a pick, or a Store's own link. */
 export type HeldProduct = { name: string; detail: string };
 
-/** The Store Product a grocery is priced by, and its cost; a held product (just chosen, or not on
- * the list) has none. With `onPress` the row opens the product search, and shows while empty. */
+/** The Store Product a grocery is priced by, as a card row: "Product", then its name and cost. A
+ * held product (just chosen, or not on the list) has no cost. With `onPress` the row opens the
+ * product search, and shows while empty. */
 export function ProductRow({
   price,
   held = null,
@@ -23,20 +23,17 @@ export function ProductRow({
   onPress?: () => void;
 }) {
   const intl = useIntl();
-  const [muted] = useThemeColor(["muted"] as const);
   const priced = held === null && price.status === "priced" ? price : null;
 
   if (!held && !priced && !onPress) return null;
 
   const format = (amount: number, currency: string) =>
     formatShelfPrice(intl.locale, amount, currency);
-  let name = intl.formatMessage({ id: "groceries.mobile.chooseProduct" });
+  let value = intl.formatMessage({ id: "groceries.mobile.chooseProduct" });
   let detail: React.ReactNode = null;
-  let cost: string | null = null;
 
   if (held) {
-    ({ name } = held);
-    detail = held.detail;
+    value = [held.name, held.detail].filter(Boolean).join(" · ");
   } else if (priced) {
     const { product, regularCost } = priced;
     const pack = packSizeOf(product);
@@ -49,8 +46,7 @@ export function ProductRow({
           })
         : intl.formatMessage({ id: "groceries.price.each" }));
 
-    name = product.name;
-    cost = format(priced.cost.cost, product.currency);
+    value = `${product.name} · ${format(priced.cost.cost, product.currency)}`;
     detail = (
       <>
         {[format(product.price, product.currency), size].filter(Boolean).join(" · ")}
@@ -62,31 +58,14 @@ export function ProductRow({
   }
 
   return (
-    <Pressable
-      accessibilityLabel={intl.formatMessage({ id: "groceries.mobile.product" })}
-      accessibilityRole={onPress ? "button" : undefined}
-      className="min-h-[52px] flex-row items-center gap-3 px-4 py-3"
-      disabled={!onPress}
+    <CardRow
+      first
+      detail={detail}
+      label={intl.formatMessage({ id: "groceries.mobile.product" })}
       testID="grocery-product"
+      value={value}
+      valueLines={2}
       onPress={onPress}
-    >
-      <View className="min-w-0 flex-1 gap-0.5">
-        <Text
-          className={`${held || priced ? "text-foreground font-medium" : "text-muted"} text-base`}
-          numberOfLines={2}
-        >
-          {name}
-        </Text>
-        {detail ? (
-          <Text className="text-muted text-[13px]" numberOfLines={1}>
-            {detail}
-          </Text>
-        ) : null}
-      </View>
-      {cost ? (
-        <Text className="text-foreground text-[17px] font-semibold tabular-nums">{cost}</Text>
-      ) : null}
-      {onPress ? <Ionicons color={muted} name="chevron-forward" size={16} /> : null}
-    </Pressable>
+    />
   );
 }

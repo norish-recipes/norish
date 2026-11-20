@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
-import { GlassStepper } from "@/components/glass-stepper";
+import { Stepper } from "@/components/stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { EASE_OUT } from "@/lib/motion/ease";
+import { timedTo } from "@/lib/motion/timed";
+import { plainText } from "@/lib/plain-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -18,7 +22,6 @@ import { workedOutSources } from "@norish/shared/lib/recipe-nutrition";
 import type { NutritionFigures } from "../utils/stored-nutrition";
 import { DAILY_REFERENCE, percentOfReference } from "../utils/nutrition-reference";
 import { aroundCount } from "../utils/portions-label";
-import { plainText } from "../utils/recipe-rows";
 import { storedNutrition } from "../utils/stored-nutrition";
 import { SectionCard } from "./tint";
 
@@ -55,7 +58,10 @@ function PortionsLabel({ portions }: { portions: number }) {
 
 const MACROS = ["protein", "carbs", "fat"] as const;
 
-/** A figure's share of its reference, as a thin bar of `color` on a track. */
+/** How long a bar takes to its new width when the portion changes. */
+const BAR_MS = 250;
+
+/** A figure's share of its reference, as a thin bar of `color` on a track; it grows or shrinks to a new share. */
 function ReferenceBar({
   percent,
   color,
@@ -67,6 +73,14 @@ function ReferenceBar({
   label: string;
   height: number;
 }) {
+  const width = Math.min(percent, 100);
+  const share = useSharedValue(width);
+  const widthStyle = useAnimatedStyle(() => ({ width: `${share.get()}%` }));
+
+  useEffect(() => {
+    share.set(timedTo(width, BAR_MS, { easing: EASE_OUT }));
+  }, [width, share]);
+
   return (
     <View
       accessibilityLabel={label}
@@ -74,14 +88,13 @@ function ReferenceBar({
       className="bg-default overflow-hidden"
       style={{ height, borderRadius: height / 2 }}
     >
-      <View
+      <Animated.View
         className={color ? "" : "bg-foreground"}
-        style={{
-          width: `${Math.min(percent, 100)}%`,
-          height,
-          borderRadius: height / 2,
-          ...(color ? { backgroundColor: color } : null),
-        }}
+        style={[
+          { height, borderRadius: height / 2 },
+          color ? { backgroundColor: color } : null,
+          widthStyle,
+        ]}
       />
     </View>
   );
@@ -191,7 +204,7 @@ export function NutritionSection() {
     <SectionCard
       right={
         shown && !estimating ? (
-          <GlassStepper
+          <Stepper
             canDecrement={portions > 1}
             decreaseLabel={intl.formatMessage({ id: "recipes.nutrition.decreasePortions" })}
             increaseLabel={intl.formatMessage({ id: "recipes.nutrition.increasePortions" })}
@@ -200,7 +213,7 @@ export function NutritionSection() {
             onIncrement={() => step(1)}
           >
             <PortionsLabel portions={portions} />
-          </GlassStepper>
+          </Stepper>
         ) : null
       }
       testID="recipe-nutrition"

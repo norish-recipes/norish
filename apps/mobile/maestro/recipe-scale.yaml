@@ -58,12 +58,12 @@ appId: dev.norish.app
     id: recipe-servings-value
 - extendedWaitUntil:
     visible:
-      id: recipe-servings-input
+      id: recipe-servings-sheet-value
     timeout: 20000
 - tapOn: Close
 - extendedWaitUntil:
     notVisible:
-      id: recipe-servings-input
+      id: recipe-servings-sheet-value
     timeout: 20000
 - assertVisible:
     id: recipe-servings-value

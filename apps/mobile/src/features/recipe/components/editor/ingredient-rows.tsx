@@ -25,7 +25,7 @@ import {
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import { useTrailingRow } from "../../hooks/use-trailing-row";
-import { AddRow, EditorInput, RowIconButton } from "./editor-parts";
+import { AddRow, EditorInput, EditorRow, RowIconButton } from "./editor-parts";
 
 /** A row per ingredient line with a grip; `#` starts a section. The trailing empty row to type
  * into shows on a new recipe or once Add ingredient asks for it. */
@@ -74,15 +74,16 @@ export function IngredientRows({
 
   useIngredientIcons([...foods.values()]);
 
-  const renderRow = (row: IngredientRow, drag: () => void) => {
+  const renderRow = (row: IngredientRow) => {
     const index = rows.indexOf(row);
     const heading = isHeadingText(row.text);
     const focused = trailingRow.focusedId === row.id;
     const filled = hasIngredientContent(row);
 
     return (
-      <View
-        className={`min-h-12 flex-row items-center gap-2.5 py-2 ${index === 0 ? "" : "border-separator border-t"}`}
+      <EditorRow
+        className="min-h-12 flex-row items-center gap-2.5 py-2"
+        first={index === 0}
         testID={`editor-ingredient-${index}`}
       >
         <IngredientIcon ingredientId={lineFoods[index]?.foodId} />
@@ -119,12 +120,9 @@ export function IngredientRows({
             onPress={() => commit(removeIngredientRow(rows, index))}
           />
         ) : filled ? (
-          <DragGrip
-            label={intl.formatMessage({ id: "recipes.gallery.dragToReorder" })}
-            onDrag={drag}
-          />
+          <DragGrip label={intl.formatMessage({ id: "recipes.gallery.dragToReorder" })} />
         ) : null}
-      </View>
+      </EditorRow>
     );
   };
 
@@ -133,8 +131,6 @@ export function IngredientRows({
       <View>
         <DragList
           nested
-          // A tap on a row's buttons or the `@` popup keeps the keyboard, as the page does.
-          keyboardShouldPersistTaps="handled"
           renderHeading={() => null}
           renderItem={renderRow}
           rows={trailingRow.visibleRows.map((row) => ({

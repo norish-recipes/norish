@@ -1,11 +1,15 @@
 import type { CardActions } from "@/hooks/use-card-actions";
+import type { SearchHit } from "@/lib/recipe-results-props";
 import type { ReactNode } from "react";
-import React from "react";
+import React, { memo, useRef } from "react";
 import { Text, View } from "react-native";
 import { GestureDetector, useTapGesture } from "react-native-gesture-handler";
 import { CardPhoto } from "@/components/card-photo";
+import { HighlightedText } from "@/components/highlighted-text";
+import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { lightImpact } from "@/lib/haptics";
+import { plainText } from "@/lib/plain-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useIntl } from "react-intl";
 
@@ -13,10 +17,9 @@ import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
-import { isAllergenTag } from "@norish/shared/lib/helpers";
 
 import type { RecipeMenuAction } from "../utils/card-actions";
-import type { SwipeAction } from "./swipe-actions";
+import type { SwipeAction, SwipeActionsHandle } from "./swipe-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import {
   RECIPE_ACTION_DEFINITIONS,
@@ -25,9 +28,9 @@ import {
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
-import { Pill } from "./pill";
+import { MatchText } from "./match-text";
 import { SwipeActions } from "./swipe-actions";
-import { TagStrip, useTagStrip } from "./tag-strip";
+import { TAG_GAP, TagChips } from "./tag-chips";
 
 type Props = {
   recipe: RecipeDashboardDTO;
@@ -35,22 +38,33 @@ type Props = {
   isFavorite: boolean;
   allergies: string[];
   actions: CardActions;
+  /** While searching: why the recipe matched, shown in place of its description. */
+  hit?: SearchHit;
 };
 
-/** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions. */
-export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: Props) {
+/** A recipe in the Library as a row or grid card; its photo double-tap favourites, swipe and long press offer actions.
+ * Memoised: a page or refetch redraws the list's cells, and an unchanged card skips its gestures and menu. */
+export const RecipeCard = memo(function RecipeCard({
+  recipe,
+  variant,
+  isFavorite,
+  allergies,
+  actions,
+  hit,
+}: Props) {
   const intl = useIntl();
   const { navigation } = usePlatform();
   const facts = recipeCardFacts(recipe, allergies);
   const Card = variant === "grid" ? GridCard : RowCard;
   const canDelete = actions.canDelete(recipe);
+  const swipeRef = useRef<SwipeActionsHandle>(null);
   const handlers: Record<RecipeMenuAction, () => void> = {
     favourite: () => actions.toggleFavourite(recipe),
     groceries: () => actions.addToGroceries(recipe),
     plan: () => actions.plan(recipe),
     addToCookbook: () => actions.addToCookbook(recipe),
     removeFromCookbook: () => actions.removeFromCookbook(recipe),
-    delete: () => actions.deleteRecipe(recipe),
+    delete: () => actions.deleteRecipe(recipe, undefined, swipeRef.current ?? undefined),
   };
   const definition = (key: RecipeMenuAction) =>
     RECIPE_ACTION_DEFINITIONS[key === "favourite" && isFavorite ? "unfavourite" : key];
@@ -83,10 +97,9 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
       handlers.favourite();
     },
   });
-  const strip = useTagStrip();
 
   return (
-    <SwipeActions actions={swipe} stripGesture={strip.gesture} variant={variant}>
+    <SwipeActions ref={swipeRef} actions={swipe} itemKey={recipe.id} variant={variant}>
       <View
         accessible
         {...accessibilityProps}
@@ -109,16 +122,16 @@ export function RecipeCard({ recipe, variant, isFavorite, allergies, actions }: 
             <Card
               facts={facts}
               isFavorite={isFavorite}
+              hit={hit}
               photoGesture={doubleTap}
               recipe={recipe}
-              strip={strip}
             />
           </PressTap>
         </CardMenu>
       </View>
     </SwipeActions>
   );
-}
+});
 
 type CardProps = {
   recipe: RecipeDashboardDTO;
@@ -126,9 +139,23 @@ type CardProps = {
   isFavorite: boolean;
   /** The double tap the photo owns. */
   photoGesture: ReturnType<typeof useTapGesture>;
-  /** The grid card's sideways tag strip. */
-  strip: ReturnType<typeof useTagStrip>;
+  hit?: SearchHit;
 };
+
+/** The recipe's title and the line under it: the match while searching, else the description. */
+function titleAndLine({ recipe, facts, hit }: CardProps) {
+  if (!hit) return { title: recipe.name, line: plainText(facts.description) };
+
+  return {
+    title:
+      hit.match.field === "title" ? (
+        <HighlightedText search={hit.search} text={recipe.name} />
+      ) : (
+        recipe.name
+      ),
+    line: <MatchText match={hit.match} search={hit.search} />,
+  };
+}
 
 function DoubleTapPhoto({
   gesture,
@@ -146,10 +173,10 @@ function DoubleTapPhoto({
   );
 }
 
-function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
-  const { description, tagNames, allergySet, timeLabel, servings } = facts;
-  const [firstTag, ...otherTags] = tagNames;
-  const overflowIsAllergen = otherTags.some((tag) => isAllergenTag(tag, allergySet));
+function RowCard(props: CardProps) {
+  const { recipe, facts, isFavorite, photoGesture } = props;
+  const { tagNames, allergySet, timeLabel, servings } = facts;
+  const { title, line } = titleAndLine(props);
 
   return (
     <View className="bg-surface h-[116px] flex-row overflow-hidden rounded-[20px]">
@@ -163,12 +190,12 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
           ellipsizeMode="tail"
           numberOfLines={1}
         >
-          {recipe.name}
+          {title}
         </Text>
         <Text className="text-muted text-sm" ellipsizeMode="tail" numberOfLines={1}>
-          {description}
+          {line}
         </Text>
-        <View className="mt-auto flex-row gap-1.5 overflow-hidden">
+        <View className="mt-auto flex-row overflow-hidden" style={{ gap: TAG_GAP }}>
           {timeLabel ? (
             <Pill icon="time-outline" size="row">
               {timeLabel}
@@ -179,58 +206,41 @@ function RowCard({ recipe, facts, isFavorite, photoGesture }: CardProps) {
               {servings}
             </Pill>
           ) : null}
-          {firstTag ? (
-            <Pill
-              icon={isAllergenTag(firstTag, allergySet) ? "warning-outline" : undefined}
-              size="row"
-              tone={isAllergenTag(firstTag, allergySet) ? "warning" : "default"}
-            >
-              {firstTag}
-            </Pill>
-          ) : null}
-          {otherTags.length > 0 ? (
-            <Pill size="row" tone={overflowIsAllergen ? "warning" : "default"}>
-              {`+${otherTags.length}`}
-            </Pill>
-          ) : null}
+          <TagChips
+            allergySet={allergySet}
+            look="plain"
+            tags={tagNames}
+            testID={`recipe-card-tags-${recipe.id}`}
+          />
         </View>
       </View>
     </View>
   );
 }
 
-function GridCard({ recipe, facts, isFavorite, photoGesture, strip }: CardProps) {
-  const { description, tagNames, allergySet, timeLabel, servings } = facts;
+function GridCard(props: CardProps) {
+  const { recipe, facts, isFavorite, photoGesture } = props;
+  const { tagNames, allergySet, timeLabel, servings } = facts;
+  const { title, line } = titleAndLine(props);
 
   return (
     <View className="bg-surface border-border h-[286px] overflow-hidden rounded-3xl border">
       <DoubleTapPhoto className="h-40" gesture={photoGesture}>
         <CardPhoto className="h-40 w-full" image={recipe.image} />
         {isFavorite ? <FavouriteMark size={32} /> : null}
-        {/* Every tag, allergens first, in a row that scrolls sideways as web's does. */}
-        <TagStrip strip={strip} testID={`recipe-card-tags-${recipe.id}`}>
-          {tagNames.map((tag) => {
-            const allergen = isAllergenTag(tag, allergySet);
-
-            return (
-              <Pill
-                key={tag}
-                icon={allergen ? "warning-outline" : undefined}
-                size="overlay"
-                tone={allergen ? "warning" : "surface"}
-              >
-                {tag}
-              </Pill>
-            );
-          })}
-        </TagStrip>
+        <TagChips
+          allergySet={allergySet}
+          look="photo"
+          tags={tagNames}
+          testID={`recipe-card-tags-${recipe.id}`}
+        />
       </DoubleTapPhoto>
       <View className="min-h-0 flex-1 px-3 pt-2.5 pb-3">
         <Text className="text-foreground text-sm leading-[19px] font-semibold" numberOfLines={2}>
-          {recipe.name}
+          {title}
         </Text>
         <Text className="text-muted mt-0.5 text-xs" numberOfLines={1}>
-          {description}
+          {line}
         </Text>
         <View className="border-border mt-auto flex-row gap-1 overflow-hidden border-t pt-2.5">
           {timeLabel ? (

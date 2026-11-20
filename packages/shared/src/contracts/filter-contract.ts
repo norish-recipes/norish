@@ -14,6 +14,8 @@ import { recipeCategorySchema } from "@norish/shared/contracts/zod";
 export type CanonicalRecipeFilters = {
   rawInput: string;
   searchTags: string[];
+  /** Ids of the Ingredients a recipe must name, or a kind of one; never persisted. */
+  ingredients: string[];
   searchFields: SearchField[];
   filterMode: FilterMode;
   sortMode: SortOrder;
@@ -32,7 +34,7 @@ export type CanonicalRecipeFilters = {
   libraryType: LibraryTypeFilter;
 };
 
-export type PersistedRecipeFilters = Omit<CanonicalRecipeFilters, "rawInput">;
+export type PersistedRecipeFilters = Omit<CanonicalRecipeFilters, "rawInput" | "ingredients">;
 
 export type RecipeFilterPreset = {
   id: string;
@@ -59,12 +61,22 @@ export const DEFAULT_PERSISTED_RECIPE_FILTERS: PersistedRecipeFilters = {
 
 export const DEFAULT_RECIPE_FILTERS: CanonicalRecipeFilters = {
   rawInput: "",
+  ingredients: [],
   ...DEFAULT_PERSISTED_RECIPE_FILTERS,
 };
 
 /** Stored filters as the Library holds them, with nothing typed in the search. */
 export function canonicalRecipeFilters(filters: PersistedRecipeFilters): CanonicalRecipeFilters {
   return { ...DEFAULT_RECIPE_FILTERS, ...filters };
+}
+
+/** `filters` as persisted: without the search text and the Ingredient filter, which are never kept. */
+export function persistedRecipeFilters({
+  rawInput: _rawInput,
+  ingredients: _ingredients,
+  ...persisted
+}: CanonicalRecipeFilters): PersistedRecipeFilters {
+  return persisted;
 }
 
 /** The stored fields where `filters` differs from `base`. */
@@ -172,6 +184,7 @@ export function hasAppliedRecipeFilters(filters: CanonicalRecipeFilters): boolea
   return (
     filters.rawInput.trim().length > 0 ||
     filters.searchTags.length > 0 ||
+    filters.ingredients.length > 0 ||
     filters.categories.length > 0 ||
     filters.maxCookingTime !== null ||
     filters.minRating !== null ||
@@ -182,10 +195,12 @@ export function hasAppliedRecipeFilters(filters: CanonicalRecipeFilters): boolea
 
 export function toRecipesQueryFilters(filters: CanonicalRecipeFilters) {
   return {
-    search: filters.rawInput || undefined,
+    search: filters.rawInput.trim() || undefined,
     searchFields: filters.searchFields,
     tags: filters.searchTags.length > 0 ? filters.searchTags : undefined,
     categories: filters.categories.length > 0 ? filters.categories : undefined,
+    // Left out unless set: web never sets it, so its input and cache keys hold no such field.
+    ...(filters.ingredients.length > 0 ? { ingredientIds: filters.ingredients } : {}),
     filterMode: filters.filterMode,
     sortMode: filters.sortMode,
     minRating: filters.minRating ?? undefined,

@@ -36,7 +36,7 @@ export function RecipePickSheet({
   emptyId: string;
   /** Above the search, such as a name field. */
   children?: ReactNode;
-} & Pick<ComponentProps<typeof PickSheet>, "name" | "title" | "subtitle" | "action">) {
+} & Pick<ComponentProps<typeof PickSheet>, "name" | "title" | "subtitle" | "actions">) {
   const intl = useIntl();
 
   return (
@@ -65,7 +65,7 @@ export function RecipePickSheet({
               keyExtractor: (recipe) => recipe.id,
               renderRow: (recipe, position) => (
                 <PickRow
-                  media={<CardPhoto className="size-11 rounded-xl" image={recipe.image} onSheet />}
+                  media={<CardPhoto className="size-10 rounded-xl" image={recipe.image} />}
                   position={position}
                   selected={pick.selected.includes(recipe.id)}
                   testID={`cookbook-add-recipes-row-${recipe.id}`}

@@ -1,5 +1,7 @@
+import type { ComponentType, ReactNode } from "react";
 import React from "react";
 import { FIT_SHEET_OPTIONS, SEARCH_SHEET_OPTIONS, SHEET_OPTIONS } from "@/components/sheet-options";
+import { HEADER_TITLE_STYLE } from "@/lib/header-title";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { Stack } from "expo-router";
 
@@ -7,10 +9,11 @@ import { AddAtOnceHost } from "./add-at-once-host";
 import { LibraryRoot } from "./library-root";
 
 // The sheets whose content can outgrow 62%; Rename and Move fit their fields.
-const SHEETS = ["filters", "plan", "add-to-groceries"] as const;
+const SHEETS = ["filters", "add-to-groceries"] as const;
 
-// The sheets with a field above a list.
+// The list sheets: a field above a list, or a list of days.
 const SEARCH_SHEETS = [
+  "plan",
   "plan-recipe",
   "add-to-cookbook",
   "cookbook-add-recipes",
@@ -19,19 +22,23 @@ const SEARCH_SHEETS = [
 
 const FIT_SHEETS = ["cookbook-rename", "move"] as const;
 
-/** The Recipes tab's stack: the list screen draws its own title and avatar and has no native header; a cookbook page keeps a transparent one for its back button. */
-export function RecipesStack() {
+/** The Recipes tab's stack, its list title a bar item that hides on scroll. Search uses it too, with
+ * `Provider` holding Search's own filters and the stack rooted at Search's screen. */
+export function RecipesStack({ Provider }: { Provider?: ComponentType<{ children: ReactNode }> }) {
+  const Root = Provider ?? LibraryRoot;
+
   return (
-    <LibraryRoot>
+    <Root>
       <AddAtOnceHost addToGroceries={TAB_ROUTES.recipes.addToGroceries}>
         <Stack
           screenOptions={{
             headerTransparent: true,
             headerShadowVisible: false,
-            headerTitleStyle: { fontSize: 17, fontWeight: "600" },
+            headerTitleStyle: HEADER_TITLE_STYLE,
           }}
         >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          {/* The root screen sets its header itself: Recipes a bar-item title, Search its field. */}
+          <Stack.Screen name={Provider ? "search" : "index"} />
           {/* A cookbook opens inside this stack so its sheets present over it. */}
           <Stack.Screen
             name="cookbook/[id]"
@@ -54,6 +61,6 @@ export function RecipesStack() {
           ))}
         </Stack>
       </AddAtOnceHost>
-    </LibraryRoot>
+    </Root>
   );
 }

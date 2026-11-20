@@ -72,7 +72,7 @@ A name with everything that is not the food taken off — amounts, units, sizes,
 _Avoid_: Clean name, English name (AI's reading of which food a name is, a different thing), Normalized name (the fold a spelling is matched by)
 
 **Parent Ingredient**:
-The more general food an Ingredient is a kind of: "onion" is the parent of "red onion", and a parent may have a parent of its own. A child with no Aisle Link at a Store is filed in its parent's Aisle, a child with no Ingredient Icon shows its parent's, and a child in the Pantry covers a recipe line for its parent, never the reverse. A Product Link never follows the tree: a recipe that asked for "red onion" is never priced as plain onion. Set on the Ingredients page, by AI when it answers that a food is a kind of a known one, or from the words of a name AI could not place, a seeded food first, else an own food a recipe names ("roodschillige krieltjes" under "krieltjes"); a parent that would make an Ingredient a kind of itself is refused.
+The more general food an Ingredient is a kind of: "onion" is the parent of "red onion", and a parent may have a parent of its own. A child with no Aisle Link at a Store is filed in its parent's Aisle, a child with no Ingredient Icon shows its parent's, and a child in the Pantry covers a recipe line for its parent, never the reverse; a search narrowed to a food finds the recipes naming any kind of it, never its parent. A Product Link never follows the tree: a recipe that asked for "red onion" is never priced as plain onion. Set on the Ingredients page, by AI when it answers that a food is a kind of a known one, or from the words of a name AI could not place, a seeded food first, else an own food a recipe names ("roodschillige krieltjes" under "krieltjes"); a parent that would make an Ingredient a kind of itself is refused.
 _Avoid_: Category (a grouping for browsing, not a food), Variant (names the child alone)
 
 **Flagged Ingredient**:
@@ -159,6 +159,14 @@ _Avoid_: Collection (a Cookbook is a collection), All recipes (the library is no
 **Orphaned**:
 A recipe or cookbook whose owner's account no longer exists. Deleting an account detaches what it made rather than destroying it, and what is detached belongs to nobody: every reader may see it, edit it and delete it, under every view policy including the strictest, where it was private a moment earlier. The widening is the price of the guarantee — a household keeps cooking from the recipes and maintaining the cookbooks it already had, and no departure quietly empties a shared Library. It is a one-way state: nothing hands an orphan to a new owner.
 _Avoid_: Unowned (suggests it never had an owner), Deleted user's recipes (names the cause rather than the state), Ownerless
+
+**Recent Search**:
+A query a reader confirmed on the Search page, kept on that device for that account so they can run it again, and forgotten when they sign out or clear the list. Typing alone never makes one.
+_Avoid_: Search history (suggests every keystroke, or a server record)
+
+**Search Scope**:
+The parts of a recipe a search's text is looked for in: its title, ingredients, tags, description and steps, title and ingredients unless the reader picks otherwise. It decides where words may match, never which recipes are allowed; that is a filter's job.
+_Avoid_: Search field (that is the box the text is typed in), Quick filter (narrows which recipes show, whatever the text)
 
 **Cookbook**:
 A titled set of recipes, owned by the person who made it and seen, edited and deleted under the same policy as a recipe. A recipe may belong to several cookbooks, and a cookbook holding none is an ordinary cookbook rather than a broken one: it may be made empty and filled later, or made from the recipe that prompted it, and taking the last recipe out never destroys the title someone chose. It is a set and not a sequence, so it keeps no order of its own and shows its members in whatever sort the reader is already using. Beyond its title it may hold an uploaded cover image, which shows instead of the cover drawn from its members; everything else is derived from its members at read time rather than supplied — the cover when none is uploaded, the description that names what is inside, the members' cooking time added up, the smallest number of people any member serves, and the tags a reader finds their allergens among — so a cookbook has nothing to keep up to date and nothing that can go stale.

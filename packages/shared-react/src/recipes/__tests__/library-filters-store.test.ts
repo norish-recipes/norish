@@ -5,6 +5,7 @@ import {
   DEFAULT_PERSISTED_RECIPE_FILTERS,
   DEFAULT_RECIPE_FILTERS,
 } from "@norish/shared/contracts/filter-contract";
+import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 
 const TITLE_SORTED = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, sortMode: "titleAsc" as const };
 
@@ -12,7 +13,7 @@ describe("createLibraryFiltersStore", () => {
   it("starts on the cookie's filters, applied", () => {
     const { filters, hydrated } = createLibraryFiltersStore(TITLE_SORTED).getState();
 
-    expect(filters).toEqual({ ...TITLE_SORTED, rawInput: "" });
+    expect(filters).toEqual({ ...TITLE_SORTED, rawInput: "", ingredients: [] });
     expect(hydrated).toBe(true);
   });
 
@@ -43,6 +44,52 @@ describe("createLibraryFiltersStore", () => {
     store.getState().clearFilters();
 
     expect(store.getState().filters).toEqual({ ...DEFAULT_RECIPE_FILTERS, libraryType: "recipes" });
+  });
+
+  it("clears all but what it is told to keep", () => {
+    const store = createLibraryFiltersStore({ ...TITLE_SORTED, libraryType: "recipes" });
+
+    store.setState({ keepOnClear: ["rawInput", "sortMode"] });
+    store
+      .getState()
+      .setFilters({ rawInput: "soup", searchTags: ["Quick"], categories: ["Dinner"] });
+    store.getState().clearFilters();
+
+    expect(store.getState().filters).toEqual({
+      ...DEFAULT_RECIPE_FILTERS,
+      rawInput: "soup",
+      sortMode: TITLE_SORTED.sortMode,
+      libraryType: "recipes",
+    });
+  });
+
+  it("narrows to an Ingredient once, by id, and clears it with the chips", () => {
+    const store = createLibraryFiltersStore(undefined);
+    const onion = "a0000000-0000-4000-8000-000000000001";
+    const garlic = "a0000000-0000-4000-8000-000000000002";
+
+    store.getState().addIngredient(onion);
+    store.getState().addIngredient(garlic);
+    store.getState().addIngredient(onion);
+
+    expect(store.getState().filters.ingredients).toEqual([onion, garlic]);
+
+    store.getState().clearFilters();
+
+    expect(store.getState().filters.ingredients).toEqual([]);
+  });
+
+  it("stops narrowing to more Ingredients than a search accepts", () => {
+    const store = createLibraryFiltersStore(undefined);
+    const ingredient = (n: number) => `a0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+
+    for (let n = 0; n < MAX_FILTER_INGREDIENTS + 1; n++)
+      store.getState().addIngredient(ingredient(n));
+
+    expect(store.getState().filters.ingredients).toHaveLength(MAX_FILTER_INGREDIENTS);
+    expect(store.getState().filters.ingredients.at(-1)).toEqual(
+      ingredient(MAX_FILTER_INGREDIENTS - 1)
+    );
   });
 
   it("takes the stored filters over a kept document's", () => {

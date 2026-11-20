@@ -1,32 +1,23 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
-import { RoundTick } from "@/components/round-tick";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Chip, Skeleton, useThemeColor } from "heroui-native";
+import { IconButton } from "@/components/icon-button";
+import { OnTheListChip } from "@/components/on-the-list-chip";
+import { SliceHairline } from "@/components/slice-row";
+import { Tick } from "@/components/tick";
+import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
-const ROW = "flex-row items-center gap-3 px-3.5 py-2.5";
-const rowClass = (first: boolean) => `${ROW} ${first ? "" : "border-separator border-t"}`;
+const ROW = "min-h-[58px] flex-row items-center gap-3 px-4 py-2";
 
 /** A row's shell while its line loads: the tick and the name, in the row's own layout. */
-export function GroceryLineRowSkeleton({ first }: { first: boolean }) {
+export function GroceryLineRowSkeleton() {
   return (
-    <View className={rowClass(first)}>
+    <View className={ROW}>
+      <SliceHairline first={false} />
       <Skeleton className="size-6 rounded-full" />
       <Skeleton className="h-6 flex-1 rounded-md" />
     </View>
-  );
-}
-
-/** The mark of a kept line whose food is already on the groceries list, as web's. */
-function OnTheList({ testID }: { testID: string }) {
-  const intl = useIntl();
-
-  return (
-    <Chip className="shrink-0" color="accent" size="sm" testID={testID} variant="soft">
-      <Chip.Label>{intl.formatMessage({ id: "groceries.pantry.onTheList" })}</Chip.Label>
-    </Chip>
   );
 }
 
@@ -38,7 +29,6 @@ export function GroceryLineRow({
   amount,
   name,
   selected,
-  first,
   canKeep,
   onTheList,
   testID,
@@ -48,7 +38,6 @@ export function GroceryLineRow({
   amount: string;
   name: string;
   selected: boolean;
-  first: boolean;
   canKeep: boolean;
   onTheList: boolean;
   testID: string;
@@ -56,10 +45,11 @@ export function GroceryLineRow({
   onKeep: () => void;
 }) {
   const intl = useIntl();
-  const [muted] = useThemeColor(["muted"] as const);
 
   return (
-    <View className={rowClass(first)}>
+    <View className={ROW}>
+      {/* Each line sits under its section's heading, so every one has the hairline above it. */}
+      <SliceHairline first={false} />
       <Pressable
         accessibilityLabel={amountNameLabel(amount, name)}
         accessibilityRole="checkbox"
@@ -68,21 +58,18 @@ export function GroceryLineRow({
         testID={testID}
         onPress={onToggle}
       >
-        <RoundTick selected={selected} />
+        <Tick selected={selected} />
         <AmountName amount={amount} className="min-w-0 flex-1 text-base" name={name} />
       </Pressable>
       {canKeep ? (
-        <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "groceries.panel.weKeepThis" })}
-          accessibilityRole="button"
-          className="bg-surface size-8 items-center justify-center rounded-full"
+        <IconButton
+          icon="file-tray-full-outline"
+          label={intl.formatMessage({ id: "groceries.panel.weKeepThis" })}
           testID={`${testID}-keep`}
           onPress={onKeep}
-        >
-          <Ionicons color={muted} name="file-tray-full-outline" size={16} />
-        </Pressable>
+        />
       ) : onTheList ? (
-        <OnTheList testID={`${testID}-on-the-list`} />
+        <OnTheListChip testID={`${testID}-on-the-list`} />
       ) : null}
     </View>
   );

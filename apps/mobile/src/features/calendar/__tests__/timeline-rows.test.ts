@@ -12,6 +12,7 @@ import {
   rowDay,
   rowLayout,
   TIMELINE,
+  timelineLanding,
   timelineRows,
 } from "../utils/timeline-rows";
 
@@ -187,6 +188,28 @@ describe("planTimelineDrop", () => {
 
   it("means nothing for an item that is gone when it lands", () => {
     expect(planTimelineDrop(drop("soup", "day:2026-11-12"), { "2026-11-13": [] })).toBeNull();
+  });
+});
+
+describe("timelineLanding", () => {
+  const at = (key: string) => rows.findIndex((row) => row.key === key);
+  const drop = (id: string, under: string) => ({ item: item(id), heading: heading(under), rows });
+
+  it("lands last in the item's slot on the day it is dropped on, wherever on the day", () => {
+    expect(timelineLanding(drop("soup", "day:2026-11-13"), rows, data)).toBe(at("item:toast") + 1);
+  });
+
+  it("lands where its slot's label goes on a day without that slot", () => {
+    expect(timelineLanding(drop("eggs", "day:2026-11-12"), rows, data)).toBe(
+      at("day:2026-11-12") + 1
+    );
+    expect(timelineLanding(drop("eggs", "slot:2026-11-13:Dinner"), rows, data)).toBe(
+      at("day:2026-11-13") + 1
+    );
+  });
+
+  it("changes nothing on the item's own day, so the card goes back", () => {
+    expect(timelineLanding(drop("soup", "slot:2026-11-11:Breakfast"), rows, data)).toBeNull();
   });
 });
 

@@ -6,7 +6,10 @@ import type {
   CanonicalRecipeFilters,
   PersistedRecipeFilters,
 } from "@norish/shared/contracts/filter-contract";
-import { normalizePersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
+import {
+  normalizePersistedRecipeFilters,
+  persistedRecipeFilters,
+} from "@norish/shared/contracts/filter-contract";
 
 import type { PlatformStorage } from "../platform";
 import { useLibraryFiltersStoreApi } from "./library-filters-store";
@@ -54,9 +57,12 @@ export function useLibraryFiltersPersistence({
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
 
-    const keep = ({ rawInput: _rawInput, ...filters }: CanonicalRecipeFilters) => {
-      void storage.setItem(RECIPE_FILTERS_STORAGE_KEY, JSON.stringify(filters));
-      onKeep?.({ rawInput: _rawInput, ...filters });
+    const keep = (filters: CanonicalRecipeFilters) => {
+      void storage.setItem(
+        RECIPE_FILTERS_STORAGE_KEY,
+        JSON.stringify(persistedRecipeFilters(filters))
+      );
+      onKeep?.(filters);
     };
     // Writing before the stored filters apply would replace them with the defaults.
     const start = () => {

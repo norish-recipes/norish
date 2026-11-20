@@ -68,7 +68,8 @@
     "sortByTitle": "Titre",
     "sortByDate": "Date",
     "clearFilters": "Effacer les filtres",
-    "minRating": "Note minimale"
+    "minRating": "Note minimale",
+    "minRatingStars": "Au moins {count} sur 5"
   },
   "time": {
     "minutes": "min",

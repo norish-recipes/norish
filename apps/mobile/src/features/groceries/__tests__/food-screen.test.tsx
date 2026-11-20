@@ -55,11 +55,13 @@ vi.mock("expo-router", () => {
 
   return { useRouter: () => router, useLocalSearchParams: () => ({ id: "p1" }) };
 });
-vi.mock("heroui-native", () => ({
-  Skeleton: () => null,
+vi.mock("@/components/switch", () => ({
   Switch: ({ onSelectedChange }: { onSelectedChange: (value: boolean) => void }) => (
     <button data-testid="switch" onClick={() => onSelectedChange(false)} />
   ),
+}));
+vi.mock("heroui-native", () => ({
+  Skeleton: () => null,
   Button: Object.assign(
     ({ onPress, testID }: { onPress: () => void; testID: string }) => (
       <button data-testid={testID} onClick={onPress} />
@@ -70,10 +72,11 @@ vi.mock("heroui-native", () => ({
 vi.mock("react-intl", () => ({
   useIntl: () => ({ locale: "en", formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("../components/form-parts", () => ({
-  FormCard: ({ children }: { children: React.ReactNode }) => children,
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children: React.ReactNode }) => children,
+  CardRow: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock("../components/pantry-rows", () => ({ OnTheListChip: () => null }));
+vi.mock("@/components/on-the-list-chip", () => ({ OnTheListChip: () => null }));
 vi.mock("@norish/shared-react/groceries", () => ({
   useOnTheList: () => [],
   usePantryMutations: () => ({ removePantryIngredient: store.remove }),

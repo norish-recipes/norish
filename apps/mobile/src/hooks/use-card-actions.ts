@@ -42,10 +42,7 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
     plan: (recipe: Recipe) =>
       router.push({ pathname: "/plan", params: { recipeId: recipe.id, name: recipe.name } }),
     addToCookbook: (recipe: Recipe) =>
-      router.push({
-        pathname: "/add-to-cookbook",
-        params: { recipeId: recipe.id, name: recipe.name },
-      }),
+      router.push({ pathname: "/add-to-cookbook", params: { recipeId: recipe.id } }),
     canRemoveFromCookbook: cookbook ? canEdit(cookbook) : false,
     removeFromCookbook: (recipe: Recipe) => {
       if (!cookbook) return;
@@ -53,20 +50,26 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
       setMembership({ cookbookId: cookbook.id, recipeIds: [recipe.id], isMember: false, cookbook });
       removeMember(recipe.id);
     },
-    deleteRecipe: (recipe: Recipe, onDeleted?: () => void) =>
+    /** `card` plays its delete before `remove` and takes back a cancelled one. */
+    deleteRecipe: (
+      recipe: Recipe,
+      onDeleted?: () => void,
+      card?: { leave: (remove: () => void) => void; restore: () => void }
+    ) => {
+      const remove = () => {
+        deleteRecipes([{ id: recipe.id, version: recipe.version }]);
+        onDeleted?.();
+      };
+
       confirm({
         title: intl.formatMessage({ id: "recipes.deleteModal.alertTitle" }, { name: recipe.name }),
         message: intl.formatMessage({ id: "recipes.deleteModal.warning" }),
-        onConfirm: () => {
-          deleteRecipes([{ id: recipe.id, version: recipe.version }]);
-          onDeleted?.();
-        },
-      }),
+        onConfirm: () => (card ? card.leave(remove) : remove()),
+        onCancel: card?.restore,
+      });
+    },
     addRecipes: (cookbook: Cookbook) =>
-      router.push({
-        pathname: "/cookbook-add-recipes",
-        params: { cookbookId: cookbook.id, title: cookbook.title },
-      }),
+      router.push({ pathname: "/cookbook-add-recipes", params: { cookbookId: cookbook.id } }),
     renameCookbook: (cookbook: Cookbook) =>
       router.push({ pathname: "/cookbook-rename", params: { cookbookId: cookbook.id } }),
     deleteCookbook: (cookbook: Cookbook, onDeleted?: () => void) =>

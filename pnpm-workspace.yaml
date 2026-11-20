@@ -81,7 +81,7 @@ ignoredOptionalDependencies:
 
 overrides:
   # One copy each of tRPC and TanStack Query across the workspaces and the
-  # packages built on them (trpc-to-openapi, query-persist-client-core), at
+  # packages built on them (trpc-to-openapi), at
   # the catalog's exact pin.
   "@tanstack/react-query": "catalog:"
   "@trpc/client": "catalog:"

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
 import { ServingsStepper } from "@/components/servings-stepper";
-import { Sheet, SheetRow, SheetScrollView } from "@/components/sheet";
+import { Sheet, SheetScrollView } from "@/components/sheet";
 import { groceriesStartServings } from "@/lib/add-to-groceries";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -30,28 +30,28 @@ import {
 /** Lines are only ever edited on web; the sheet takes each as the recipe has it. */
 const AS_WRITTEN = {};
 
-/** The servings label, lined up with the title, and the stepper once the recipe is known. */
+/** The servings label and the stepper once the recipe is known. */
 function ServingsRow({ children }: { children?: ReactNode }) {
   const intl = useIntl();
 
   return (
-    <SheetRow className="h-[34px] flex-row items-center justify-between">
-      <Text className="text-foreground text-[15px] font-medium">
+    <View className="mb-3 min-h-11 flex-row items-center justify-between px-2">
+      <Text className="text-foreground text-base font-semibold">
         {intl.formatMessage({ id: "groceries.panel.servings" })}
       </Text>
       {children}
-    </SheetRow>
+    </View>
   );
 }
 
 /** What the lines look like while they load: two sections of rows, in the real shells. */
 function LinesSkeleton() {
   return (
-    <View className="gap-3" testID="add-to-groceries-skeleton">
+    <View className="gap-4" testID="add-to-groceries-skeleton">
       {[5, 3].map((rows) => (
         <GroceryLinesSectionSkeleton key={rows}>
           {Array.from({ length: rows }, (_, index) => (
-            <GroceryLineRowSkeleton key={index} first={index === 0} />
+            <GroceryLineRowSkeleton key={index} />
           ))}
         </GroceryLinesSectionSkeleton>
       ))}
@@ -91,12 +91,11 @@ function LineSection({
       })}
       onToggleAll={() => controls.toggleSection(lines, other)}
     >
-      {lines.map((item, index) => (
+      {lines.map((item) => (
         <GroceryLineRow
           key={item.id}
           amount={formatSpacedAmountUnit(item.amount, item.unit)}
           canKeep={controls.canKeep(item)}
-          first={index === 0}
           name={item.ingredientName}
           selected={controls.isSelected(item.id)}
           testID={`grocery-line-${item.id}`}
@@ -145,13 +144,13 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
         onPress:
           loading || ticked === 0
             ? undefined
-            : () => void addTicked().then((added) => added && router.back()),
+            : () => addTicked().then((added) => added && router.back()),
       }}
       name="add-to-groceries"
       subtitle={recipe.name}
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
-      <SheetScrollView contentClassName="gap-3">
+      <SheetScrollView contentClassName="gap-4">
         <ServingsRow>
           <ServingsStepper
             servings={picked}
@@ -165,11 +164,12 @@ function GroceriesSheet({ recipe }: { recipe: FullRecipeDTO }) {
         ) : (
           <>
             {pantry.isUnavailable ? (
-              <SheetRow>
-                <Text className="text-muted text-xs" testID="add-to-groceries-pantry-unavailable">
-                  {intl.formatMessage({ id: "groceries.panel.pantryUnavailable" })}
-                </Text>
-              </SheetRow>
+              <Text
+                className="text-muted px-2 text-sm"
+                testID="add-to-groceries-pantry-unavailable"
+              >
+                {intl.formatMessage({ id: "groceries.panel.pantryUnavailable" })}
+              </Text>
             ) : null}
             {scaledIngredients.length === 0 ? (
               <Text className="text-muted py-10 text-center text-base">
@@ -219,7 +219,7 @@ export function AddToGroceriesScreen() {
       name="add-to-groceries"
       title={intl.formatMessage({ id: "recipes.detail.addToGroceries" })}
     >
-      <SheetScrollView contentClassName="gap-3">
+      <SheetScrollView contentClassName="gap-4">
         <ServingsRow />
         <LinesSkeleton />
       </SheetScrollView>

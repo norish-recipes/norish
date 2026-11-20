@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Продукт без име",
-    "items": "{count, plural, one {# продукт} other {# продукта}}"
+    "items": "{count, plural, =0 {Няма продукти} one {# продукт} other {# продукта}}"
   },
   "store": {
     "unsorted": "Некатегоризирани",
@@ -188,7 +188,6 @@
     "emptyHint": "Добавете продукти с бутона по-долу.",
     "addTitle": "Добавяне на покупки",
     "editTitle": "Редактиране на продукт",
-    "fromRecipe": "От {recipe}",
     "store": "Магазин",
     "noStore": "Без магазин",
     "automatic": "Автоматично",

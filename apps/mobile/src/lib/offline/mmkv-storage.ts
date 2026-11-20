@@ -7,6 +7,8 @@ import superjson from "superjson";
 import type { OfflineStorage, OutboxEntry } from "@norish/shared-react/offline";
 import { isEncodedFormData } from "@norish/shared-react/offline";
 
+import { stringifyStored } from "./stringify-stored";
+
 export type MmkvLike = Pick<MMKV, "getString" | "getNumber" | "set" | "remove" | "getAllKeys">;
 
 /** The upload copies in the app's own storage (expo-file-system at runtime), by file name. */
@@ -65,7 +67,7 @@ export function createMmkvStorage({
 
     return raw === undefined ? undefined : superjson.parse<T>(raw);
   };
-  const write = (key: string, value: unknown) => mmkv.set(key, superjson.stringify(value));
+  const write = (key: string, value: unknown) => mmkv.set(key, stringifyStored(value));
   const keysWith = (prefix: string) => mmkv.getAllKeys().filter((key) => key.startsWith(prefix));
   // Async, so a delete that throws synchronously settles like one that rejects.
   const deleteCopies = (names: string[]) =>
@@ -159,6 +161,14 @@ export function createMmkvStorage({
         mmkv.remove(KEYVAL_PREFIX + key);
       },
       keys: async () => keysWith(KEYVAL_PREFIX).map((key) => key.slice(KEYVAL_PREFIX.length)),
+      entries: async <T>(prefix: string) =>
+        keysWith(KEYVAL_PREFIX + prefix).flatMap((key) => {
+          const value = read<T>(key);
+
+          return value === undefined
+            ? []
+            : [[key.slice(KEYVAL_PREFIX.length), value] as [string, T]];
+        }),
     },
     outbox: {
       add(entry) {

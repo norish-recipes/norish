@@ -15,6 +15,7 @@ export function GroceriesEmpty() {
       icon="cart-outline"
       testID="groceries-empty"
       title={intl.formatMessage({ id: "groceries.empty.title" })}
+      tone="shop"
     />
   );
 }
@@ -24,15 +25,18 @@ export function SkeletonCard({
   rows,
   rowClassName,
   heading,
+  className = "bg-surface",
   children,
 }: {
   rows: number;
   rowClassName: string;
   heading?: ReactNode;
+  /** The card's fill; a sheet's is `bg-sand`. */
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <View className="bg-surface overflow-hidden rounded-3xl">
+    <View className={`${className} overflow-hidden rounded-3xl`}>
       {heading}
       {Array.from({ length: rows }, (_, index) => (
         <View

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ingredientRows, plainText, stepRows } from "../utils/recipe-rows";
+import { ingredientRows, stepRows } from "../utils/recipe-rows";
 
 describe("ingredientRows", () => {
   const lines = [
@@ -57,11 +57,5 @@ describe("stepRows", () => {
       "Cook",
       2,
     ]);
-  });
-});
-
-describe("plainText", () => {
-  it("drops markdown marks and keeps link labels", () => {
-    expect(plainText("**Mix** the [flour](http://x.y) _well_")).toBe("Mix the flour well");
   });
 });

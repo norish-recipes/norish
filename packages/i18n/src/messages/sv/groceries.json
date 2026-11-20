@@ -21,7 +21,7 @@
   },
   "item": {
     "unnamedItem": "Namnlös vara",
-    "items": "{count, plural, one {# vara} other {# varor}}"
+    "items": "{count, plural, =0 {Inga varor} one {# vara} other {# varor}}"
   },
   "store": {
     "unsorted": "Osorterat",
@@ -188,7 +188,6 @@
     "emptyHint": "Lägg till varor med knappen nedan.",
     "addTitle": "Lägg till varor",
     "editTitle": "Redigera vara",
-    "fromRecipe": "Från {recipe}",
     "store": "Butik",
     "noStore": "Ingen butik",
     "automatic": "Automatisk",

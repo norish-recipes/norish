@@ -14,8 +14,6 @@ import { deriveSearchAddress } from "@norish/shared/lib/search-address";
 import { StoreAisleList } from "./store-aisle-list";
 import { StoreColorPicker } from "./store-color-picker";
 
-const FIELD = "h-[52px] text-[17px]";
-
 /** The Store being added or edited: its name, shop link, colour and Aisles, held by the manager
  * and written only on Save. Aisles reorder by holding a row. */
 export function StoreEditorSheet({
@@ -31,7 +29,7 @@ export function StoreEditorSheet({
 }) {
   const intl = useIntl();
   const text = (id: string) => intl.formatMessage({ id });
-  const [accent] = useThemeColor(["accent"] as const);
+  const [accent, muted] = useThemeColor(["accent", "muted"] as const);
   const link = editing.link.trim();
   const derived = link ? deriveSearchAddress(link) : null;
   const label = (id: string, hintId?: string) => (
@@ -62,7 +60,6 @@ export function StoreEditorSheet({
             <TextField>
               <SheetInput
                 accessibilityLabel={text("groceries.storeManager.storeName")}
-                className={FIELD}
                 placeholder={text("groceries.storeManager.storeNamePlaceholder")}
                 returnKeyType="done"
                 testID="store-name"
@@ -78,9 +75,9 @@ export function StoreEditorSheet({
                 accessibilityLabel={text("groceries.storeManager.shopLink")}
                 autoCapitalize="none"
                 autoCorrect={false}
-                className={FIELD}
                 keyboardType="url"
                 placeholder={text("groceries.storeManager.shopLinkPlaceholder")}
+                prefix={<Ionicons color={muted} name="link" size={18} />}
                 testID="store-shop-link"
                 value={editing.link}
                 onChangeText={(next) => onChange({ ...editing, link: next })}

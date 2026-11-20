@@ -4,8 +4,8 @@
  * One database (`norish-offline`) holds every offline artefact so a single
  * connection and upgrade path govern them all:
  *
- *  - `keyval` — the persisted TanStack Query cache (one dehydrated blob per
- *    cache owner) and each owner's last-warmed time.
+ *  - `keyval` — the persisted TanStack Query cache (one entry per read, under
+ *    its owner's prefix) and each owner's last-warmed time.
  *  - `outbox` — queued mutations awaiting Replay, an auto-incrementing store so
  *    entries keep strict FIFO order across tabs.
  *
@@ -64,6 +64,8 @@ interface OfflineIdb {
   set(store: OfflineStoreName, key: IDBValidKey, value: unknown): Promise<void>;
   del(store: OfflineStoreName, key: IDBValidKey): Promise<void>;
   keys(store: OfflineStoreName): Promise<IDBValidKey[]>;
+  /** Every string key starting with `prefix` and its value, read in one transaction. */
+  entries<T>(store: OfflineStoreName, prefix: string): Promise<[string, T][]>;
   /**
    * Run one request against an object store inside a transaction, resolving with
    * its result once the transaction commits. Used by the Outbox for operations
@@ -166,6 +168,20 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
     },
     async keys(store: OfflineStoreName): Promise<IDBValidKey[]> {
       return run<IDBValidKey[]>(store, "readonly", (objectStore) => objectStore.getAllKeys());
+    },
+    async entries<T>(store: OfflineStoreName, prefix: string): Promise<[string, T][]> {
+      const db = await open();
+
+      return new Promise<[string, T][]>((resolve, reject) => {
+        const tx = db.transaction(store, "readonly");
+        const range = IDBKeyRange.bound(prefix, `${prefix}\uffff`);
+        const keys = tx.objectStore(store).getAllKeys(range);
+        const values = tx.objectStore(store).getAll(range);
+
+        tx.onabort = () => reject(tx.error);
+        tx.oncomplete = () =>
+          resolve(keys.result.map((key, index) => [String(key), values.result[index] as T]));
+      });
     },
     transaction: run,
     change,

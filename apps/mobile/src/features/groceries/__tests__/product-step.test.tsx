@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ProductRow as Row } from "@norish/shared-react/groceries";
 import type { StoreDto } from "@norish/shared/contracts";
 
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("react-native", async () => {
   const { createElement } = await import("react");
   const tag =
@@ -37,8 +38,26 @@ vi.mock("heroui-native", async () => {
 
   Button.Label = ({ children }: { children?: React.ReactNode }) => children;
 
+  const Field = ({
+    testID,
+    value,
+    onChangeText,
+  }: {
+    testID?: string;
+    value?: string;
+    onChangeText?: (v: string) => void;
+  }) =>
+    createElement("input", {
+      "data-testid": testID,
+      value,
+      onChange: (e: { target: { value: string } }) => onChangeText?.(e.target.value),
+    });
+  const Slot = ({ children }: { children?: React.ReactNode }) => children;
+  const InputGroup = Object.assign(Slot, { Prefix: Slot, Suffix: Slot, Input: Field });
+
   return {
     Button,
+    InputGroup,
     Input: ({
       testID,
       value,
@@ -68,25 +87,44 @@ vi.mock("@/components/sheet", async () => {
   return {
     Sheet: ({
       children,
-      actions,
+      secondary = [],
       confirm,
     }: {
       children?: React.ReactNode;
-      actions?: React.ReactNode;
+      secondary?: { label: string; onPress: () => void }[];
       confirm?: { onPress?: () => void };
     }) =>
       createElement(
         "div",
         null,
         children,
-        actions,
+        ...secondary.map((action, index) =>
+          createElement("button", {
+            key: index,
+            "data-testid": action.label,
+            onClick: action.onPress,
+          })
+        ),
         createElement("button", { "data-testid": "header-confirm", onClick: confirm?.onPress })
       ),
     SheetBody: box,
   };
 });
-vi.mock("../components/form-parts", () => ({
-  FormCard: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  CardRow: ({
+    value,
+    testID,
+    onPress,
+  }: {
+    value?: string;
+    testID?: string;
+    onPress?: () => void;
+  }) => (
+    <button data-testid={testID} type="button" onClick={onPress}>
+      {value}
+    </button>
+  ),
 }));
 
 const { ProductStep } = await import("../components/product-step");
@@ -159,11 +197,11 @@ describe("the product step", () => {
 
     render(<ProductStep field={f as never} linked={false} store={store} onBack={onBack} />);
     expect(screen.queryByTestId("product-price")).toBeNull();
-    fireEvent.click(screen.getByTestId("product-type-price"));
+    fireEvent.click(screen.getByTestId("groceries.mobile.typePrice"));
     fireEvent.change(screen.getByTestId("product-price"), { target: { value: "2,49" } });
 
     expect(f.editPrice).toHaveBeenCalledWith("2,49");
-    expect(screen.queryByTestId("product-type-price")).toBeNull();
+    expect(screen.queryByTestId("groceries.mobile.typePrice")).toBeNull();
     fireEvent.click(screen.getByTestId("header-confirm"));
     expect(onBack).toHaveBeenCalled();
   });
@@ -207,8 +245,7 @@ describe("the product row", () => {
       <ProductRow held={{ name: "AH Avocado", detail: "€0.99 · per piece" }} price={none} />
     );
 
-    expect(screen.getByText("AH Avocado")).toBeTruthy();
-    expect(screen.getByText("€0.99 · per piece")).toBeTruthy();
+    expect(screen.getByText("AH Avocado · €0.99 · per piece")).toBeTruthy();
 
     rerender(<ProductRow price={none} />);
     expect(container.textContent).toBe("");

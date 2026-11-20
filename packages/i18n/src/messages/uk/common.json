@@ -68,7 +68,8 @@
     "sortByTitle": "Назва",
     "sortByDate": "Дата",
     "clearFilters": "Скинути фільтри",
-    "minRating": "Мінімальна оцінка"
+    "minRating": "Мінімальна оцінка",
+    "minRatingStars": "Не менше {count} із 5"
   },
   "time": {
     "minutes": "хв",

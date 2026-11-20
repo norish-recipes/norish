@@ -67,3 +67,36 @@ describe("the library never paints unfiltered", () => {
     ]);
   });
 });
+
+describe("Search's flag and gate", () => {
+  beforeEach(() => {
+    vi.mocked(useLibraryQuery)
+      .mockReset()
+      .mockReturnValue({ items: [], total: 0, isLoading: false } as never);
+  });
+
+  const renderSearch = (options: Parameters<typeof useLibraryList>[0]) =>
+    renderHook(() => useLibraryList(options), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>
+          {children}
+        </LibraryFiltersProvider>
+      ),
+    });
+
+  it("sends sortBeatsRank only when asked, and reads nothing when disabled", () => {
+    renderSearch({ sortBeatsRank: true, enabled: false });
+
+    expect(useLibraryQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sortBeatsRank: true }),
+      { enabled: false }
+    );
+
+    renderSearch(undefined);
+
+    expect(useLibraryQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sortBeatsRank: undefined }),
+      { enabled: true }
+    );
+  });
+});

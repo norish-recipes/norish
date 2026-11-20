@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
+import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import {
   NO_RECIPE_FOUND_REASON,
   NOT_A_RECIPE_REASON,
@@ -14,7 +15,7 @@ import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { InfiniteRecipeData } from "./library-cache";
 import { usePlatform } from "../platform/platform";
-import { useRealtimeSubscription } from "../realtime/use-realtime-subscription";
+import { rereadInWindow, useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { useRecipeSelection } from "./selection-store";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -77,9 +78,26 @@ function recipeListKeys(trpc: ReturnType<typeof useTRPC>) {
     trpc.recipes.list.pathKey(),
     trpc.recipes.get.pathKey(),
     trpc.recipes.getPending.queryKey(),
-    trpc.library.list.pathKey(),
+    // The Library's list and Search's Categories and Tags built from it.
+    trpc.library.pathKey(),
     trpc.cookbooks.recipes.pathKey(),
   ];
+}
+
+/** The enrichments that write what Search's Discover shows: a recipe's Tags, Categories or photo. */
+const DISCOVER_ENRICHMENTS: ReadonlySet<RecipeEnrichmentKind> = new Set([
+  "auto-tagging",
+  "allergy-detection",
+  "auto-categorization",
+  "image-generation",
+]);
+
+/** Rereads Search's Categories and Tags, built from the recipes rather than patched, once per window. */
+function rereadDiscover(
+  queryClient: ReturnType<typeof useQueryClient>,
+  trpc: ReturnType<typeof useTRPC>
+) {
+  rereadInWindow(queryClient, [trpc.library.discover.pathKey()]);
 }
 
 /**
@@ -116,6 +134,7 @@ export function useRecipeOutcomesSubscription() {
       replaceOldestOptimisticPendingRecipe(pendingId);
       removePendingRecipe(pendingId);
       setAllRecipesData(prependRecipes([payload.recipe]));
+      rereadDiscover(queryClient, trpc);
       toast.show({
         severity: payload.incomplete ? "warning" : "success",
         title: toast.translate("recipes.toasts.imported"),
@@ -173,10 +192,12 @@ export function useRecipeListSubscription() {
   const dropFromSelection = useRecipeSelection((state) => state.drop);
 
   const live = { liveQueryKeys: [...recipeListKeys(trpc), trpc.config.categories.queryKey()] };
-  // The server saves after the mutation answers, so the household's Categories
-  // are reread when the save is announced, not when the mutation succeeds.
-  const rereadCategories = () =>
+  // The server saves after the mutation answers, so what is built from the recipes is reread
+  // when the save is announced, not when the mutation succeeds.
+  const rereadFacets = () => {
     void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
+    rereadDiscover(queryClient, trpc);
+  };
 
   const updateRecipeInList = (updatedRecipe: FullRecipeDTO) => {
     setAllRecipesData((prev: InfiniteRecipeData | undefined): InfiniteRecipeData | undefined => {
@@ -199,18 +220,19 @@ export function useRecipeListSubscription() {
     onEvent: ({ recipe }) => {
       removePendingRecipe(recipe.id);
       setAllRecipesData(prependRecipes([recipe]));
-      rereadCategories();
+      rereadFacets();
     },
   });
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
     ...live,
-    onEvent: ({ recipe, source }) => {
+    onEvent: ({ recipe, source, kind }) => {
       updateRecipeInList(recipe);
       queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
 
-      // An enrichment changes no Category.
-      if (source !== "enrichment") rereadCategories();
+      // An enrichment adds no household Category; some change what Discover lists.
+      if (source !== "enrichment") rereadFacets();
+      else if (kind && DISCOVER_ENRICHMENTS.has(kind)) rereadDiscover(queryClient, trpc);
     },
   });
 
@@ -219,7 +241,7 @@ export function useRecipeListSubscription() {
     onEvent: ({ ids }) => {
       setAllRecipesData((prev) => removeRecipesFromLists(prev, new Set(ids)));
       dropFromSelection(ids);
-      rereadCategories();
+      rereadFacets();
 
       for (const id of ids) {
         void queryClient.invalidateQueries({ queryKey: trpc.recipes.get.queryKey({ id }) });
@@ -239,6 +261,9 @@ export function useRecipeListSubscription() {
 
   useRealtimeSubscription<Payload<"recipeBatchCreated">>(trpc.recipes.onRecipeBatchCreated, {
     ...live,
-    onEvent: ({ recipes }) => setAllRecipesData(prependRecipes(recipes)),
+    onEvent: ({ recipes }) => {
+      setAllRecipesData(prependRecipes(recipes));
+      rereadDiscover(queryClient, trpc);
+    },
   });
 }
