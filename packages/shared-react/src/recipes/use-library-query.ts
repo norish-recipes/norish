@@ -8,6 +8,7 @@ import type { LibraryItemDTO, LibraryTypeFilter } from "@norish/shared/contracts
 import { byNextCursor, libraryListInput } from "@norish/shared/contracts/list-queries";
 
 import type { RecipeFilters } from "./use-recipes-query";
+import { useConnectivity } from "../offline/react";
 import { useTRPC } from "../trpc";
 
 type LibraryFilters = RecipeFilters & {
@@ -47,6 +48,7 @@ export function useLibraryQuery(
 ): LibraryQueryResult {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { isOffline } = useConnectivity();
   const infiniteQueryOptions = trpc.library.list.infiniteQueryOptions(
     libraryListInput(filters),
     byNextCursor
@@ -73,8 +75,9 @@ export function useLibraryQuery(
     hasMore,
     error,
     loadMore: useCallback(() => {
-      if (hasMore && !isFetching) fetchNextPage();
-    }, [hasMore, isFetching, fetchNextPage]),
+      // Offline the end of what is held is the end: no page is asked for, no spinner draws.
+      if (hasMore && !isFetching && !isOffline) fetchNextPage();
+    }, [hasMore, isFetching, isOffline, fetchNextPage]),
     invalidate: useCallback(() => {
       void queryClient.invalidateQueries({ queryKey });
     }, [queryClient, queryKey]),
