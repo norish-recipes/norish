@@ -11,13 +11,17 @@ export type FieldState = {
 export const FRESH_FIELD: FieldState = { text: "", confirmed: false, cancelledAt: 0 };
 
 export type FieldEvent =
-  { type: "typed"; text: string } | { type: "submitted"; text: string } | { type: "cancelled" };
+  | { type: "typed"; text: string }
+  | { type: "submitted"; text: string }
+  | { type: "cancelled" }
+  | { type: "narrowed" };
 
 /** `push` is the text the native field must show again, when the event did not take. */
 export type FieldStep = { state: FieldState; push?: string };
 
 /** The field's rules: typing edits a confirmed search back into a question, the search key confirms a
- * text, Cancel keeps everything, and the emptying UIKit does just after it is not the reader's. */
+ * text, narrowing to a filter empties it, Cancel keeps everything, and the emptying UIKit does just
+ * after it is not the reader's. The "Search for" row confirms as the key does: `submitted` with the text. */
 export function fieldStep(state: FieldState, event: FieldEvent, now: number): FieldStep {
   switch (event.type) {
     case "typed":
@@ -29,6 +33,8 @@ export function fieldStep(state: FieldState, event: FieldEvent, now: number): Fi
     }
     case "cancelled":
       return { state: { ...state, cancelledAt: now } };
+    case "narrowed":
+      return { state: { ...state, text: "", confirmed: false }, push: "" };
   }
 }
 
