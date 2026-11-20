@@ -1,5 +1,6 @@
 import type { ServerAddressState } from "@/lib/network/server-address";
 import { useEffect, useState } from "react";
+import { clearNativeCookies } from "@/lib/network/native-cookies";
 import { loadServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
 
 import { createClientLogger } from "@norish/shared/lib/logger";
@@ -26,7 +27,8 @@ export function useServerAddress(): ServerAddressResult {
 
     async function load() {
       try {
-        const url = await loadServerAddress();
+        // The session rides a header, so cookies an older build let into the native jar go first.
+        const [url] = await Promise.all([loadServerAddress(), clearNativeCookies()]);
 
         if (mounted) setState({ status: "ready", url });
       } catch (error) {

@@ -64,6 +64,8 @@ const { TRPCProviderWrapper } = createTRPCProviderBundle({
   getBaseUrl: getServerAddress,
   getWsUrl: () => getBackendWsUrl(getServerAddress()),
   getHeaders: authHeaders,
+  // The session is the Cookie header; with credentials, iOS joins its own jar's cookies onto it.
+  credentials: "omit",
   getWebSocketImpl: createMobileWebSocket,
   wsLazyEnabled: true,
   enableLoggerLink: false,
