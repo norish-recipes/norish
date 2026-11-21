@@ -20,10 +20,17 @@ import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeImageInputSchema, MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
+import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, mediaRecipeId, recipeIdOfMediaUrl } from "./helpers";
+import {
+  announceRecipeUpdated,
+  assertRecipeAccess,
+  createSettled,
+  mediaRecipeId,
+  recipeIdOfMediaUrl,
+} from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -216,6 +223,8 @@ const uploadGalleryImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
+    // A create of this id still running links the file once it is stored.
+    await createSettled(recipeId);
     await assertRecipeAccess(ctx, recipeId, "edit");
 
     // Check max images limit
@@ -259,6 +268,7 @@ const uploadGalleryImage = authedProcedure
         // A gallery upload on a stored recipe can change what the page leads
         // with; the Dish Colour follows the new hero (ADR-0023).
         await refreshDishColorForRecipe(recipeId);
+        await afterCommit(ctx, "announcing the recipe", () => announceRecipeUpdated(ctx, recipeId));
 
         log.info(
           { userId: ctx.user.id, recipeId, url, imageId: imageRecord.id },
@@ -309,18 +319,6 @@ const deleteGalleryImage = authedProcedure
     await assertRecipeAccess(ctx, imageRecord.recipeId, "edit");
 
     try {
-      // Delete from filesystem
-      try {
-        await deleteImageByUrl(imageRecord.image);
-      } catch (fsError) {
-        // Log but don't fail - file might already be deleted
-        log.warn(
-          { userId: ctx.user.id, imageId: input.imageId, error: fsError },
-          "Could not delete gallery image file"
-        );
-      }
-
-      // Delete from database
       const result = await deleteRecipeImageById(input.imageId, input.version);
 
       if (result.stale) {
@@ -332,9 +330,23 @@ const deleteGalleryImage = authedProcedure
         return { success: true, stale: true };
       }
 
+      // The row goes first: a stale delete removes nothing, the file included.
+      try {
+        await deleteImageByUrl(imageRecord.image);
+      } catch (fsError) {
+        // Log but don't fail - file might already be deleted
+        log.warn(
+          { userId: ctx.user.id, imageId: input.imageId, error: fsError },
+          "Could not delete gallery image file"
+        );
+      }
+
       // Deleting the hero image changes what the page leads with; the Dish
       // Colour follows what is left (ADR-0023).
       await refreshDishColorForRecipe(imageRecord.recipeId);
+      await afterCommit(ctx, "announcing the recipe", () =>
+        announceRecipeUpdated(ctx, imageRecord.recipeId)
+      );
 
       log.info(
         { userId: ctx.user.id, imageId: input.imageId, url: imageRecord.image },

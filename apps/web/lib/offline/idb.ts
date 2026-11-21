@@ -1,13 +1,13 @@
 /**
- * Low-level IndexedDB access for the web offline runtime.
+ * Low-level IndexedDB access behind the web storage adapter ({@link ./idb-storage}).
  *
  * One database (`norish-offline`) holds every offline artefact so a single
  * connection and upgrade path govern them all:
  *
- *  - `keyval` — the persisted TanStack Query cache (one dehydrated blob per
- *    cache owner; see {@link ../query-cache/idb-persister}).
+ *  - `keyval` — the persisted TanStack Query cache (one entry per read, under
+ *    its owner's prefix) and each owner's last-warmed time.
  *  - `outbox` — queued mutations awaiting Replay, an auto-incrementing store so
- *    entries keep strict FIFO order across tabs (see {@link ../outbox}).
+ *    entries keep strict FIFO order across tabs.
  *
  * IndexedDB is chosen over `localStorage` because the Outbox must persist real
  * `File`/`Blob` inputs by structured clone, which string storage cannot do.
@@ -16,23 +16,23 @@
  * `fake-indexeddb` in unit tests without a browser.
  */
 
-export const OFFLINE_DB_NAME = "norish-offline";
+const OFFLINE_DB_NAME = "norish-offline";
 
 /**
  * Schema version. Bump when adding an object store and extend
  * {@link applyUpgrade}; existing databases upgrade in place, so no store that
  * already holds data (notably the Outbox) is ever dropped.
  */
-export const OFFLINE_DB_VERSION = 2;
+const OFFLINE_DB_VERSION = 2;
 
 export const KEYVAL_STORE = "keyval";
 export const OUTBOX_STORE = "outbox";
 
 /** All object stores that exist at the current {@link OFFLINE_DB_VERSION}. */
-export type OfflineStoreName = typeof KEYVAL_STORE | typeof OUTBOX_STORE;
+type OfflineStoreName = typeof KEYVAL_STORE | typeof OUTBOX_STORE;
 
 /** Keypath of the Outbox store — the auto-incremented FIFO sequence number. */
-export const OUTBOX_SEQ_KEYPATH = "seq";
+const OUTBOX_SEQ_KEYPATH = "seq";
 
 function applyUpgrade(db: IDBDatabase, oldVersion: number): void {
   if (oldVersion < 1) {
@@ -57,14 +57,15 @@ function resolveFactory(factory?: IDBFactory): IDBFactory {
 
 /**
  * A lazily-opened connection to the offline database, exposing the minimal
- * typed operations the persister and Outbox need. Create one per `IDBFactory`;
- * production code shares the default {@link offlineIdb}, tests build their own.
+ * typed operations the storage adapter needs. Create one per `IDBFactory`.
  */
-export interface OfflineIdb {
+interface OfflineIdb {
   get<T>(store: OfflineStoreName, key: IDBValidKey): Promise<T | undefined>;
   set(store: OfflineStoreName, key: IDBValidKey, value: unknown): Promise<void>;
   del(store: OfflineStoreName, key: IDBValidKey): Promise<void>;
   keys(store: OfflineStoreName): Promise<IDBValidKey[]>;
+  /** Every string key starting with `prefix` and its value, read in one transaction. */
+  entries<T>(store: OfflineStoreName, prefix: string): Promise<[string, T][]>;
   /**
    * Run one request against an object store inside a transaction, resolving with
    * its result once the transaction commits. Used by the Outbox for operations
@@ -76,6 +77,12 @@ export interface OfflineIdb {
     mode: IDBTransactionMode,
     body: (objectStore: IDBObjectStore) => IDBRequest<T>
   ): Promise<T>;
+  /** In one transaction, put what `change` returns for a keyPath record; null deletes it. */
+  change<T>(
+    store: OfflineStoreName,
+    key: IDBValidKey,
+    change: (value: T) => T | null | undefined
+  ): Promise<T | null | undefined>;
 }
 
 export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
@@ -118,6 +125,34 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
       tx.onabort = () => reject(tx.error ?? request.error);
       tx.oncomplete = () => resolve(request.result);
       request.onerror = () => reject(request.error);
+      // Commit now rather than when the page's tasks run out, so a write
+      // a `pagehide` flush starts still lands once the page unloads.
+      if (mode === "readwrite") tx.commit();
+    });
+  }
+
+  async function change<T>(
+    store: OfflineStoreName,
+    key: IDBValidKey,
+    changeValue: (value: T) => T | null | undefined
+  ): Promise<T | null | undefined> {
+    const db = await open();
+
+    return new Promise<T | null | undefined>((resolve, reject) => {
+      const tx = db.transaction(store, "readwrite");
+      const objectStore = tx.objectStore(store);
+      const request = objectStore.get(key);
+      let written: T | null | undefined;
+
+      request.onsuccess = () => {
+        written = request.result === undefined ? undefined : changeValue(request.result as T);
+        if (written) objectStore.put(written);
+        if (written === null) objectStore.delete(key);
+        tx.commit();
+      };
+      tx.onabort = () => reject(tx.error ?? request.error);
+      tx.oncomplete = () => resolve(written);
+      request.onerror = () => reject(request.error);
     });
   }
 
@@ -134,9 +169,21 @@ export function createOfflineIdb(factory?: IDBFactory): OfflineIdb {
     async keys(store: OfflineStoreName): Promise<IDBValidKey[]> {
       return run<IDBValidKey[]>(store, "readonly", (objectStore) => objectStore.getAllKeys());
     },
+    async entries<T>(store: OfflineStoreName, prefix: string): Promise<[string, T][]> {
+      const db = await open();
+
+      return new Promise<[string, T][]>((resolve, reject) => {
+        const tx = db.transaction(store, "readonly");
+        const range = IDBKeyRange.bound(prefix, `${prefix}\uffff`);
+        const keys = tx.objectStore(store).getAllKeys(range);
+        const values = tx.objectStore(store).getAll(range);
+
+        tx.onabort = () => reject(tx.error);
+        tx.oncomplete = () =>
+          resolve(keys.result.map((key, index) => [String(key), values.result[index] as T]));
+      });
+    },
     transaction: run,
+    change,
   };
 }
-
-/** Shared production connection. Tests pass an injected factory instead. */
-export const offlineIdb: OfflineIdb = createOfflineIdb();

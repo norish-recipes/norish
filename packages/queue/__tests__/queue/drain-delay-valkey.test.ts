@@ -6,19 +6,18 @@
  */
 import { once } from "node:events";
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import { Worker } from "bullmq";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
-import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { baseWorkerOptions } from "../../src/config";
 import { getBullConnectionOptions } from "../../src/valkey/bullmq";
 
 let valkey: StartedValkeyContainer;
 
 beforeAll(async () => {
-  valkey = await new ValkeyContainer(VALKEY_IMAGE).start();
+  valkey = await startValkey();
 });
 
 afterAll(async () => {

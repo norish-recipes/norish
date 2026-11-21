@@ -6,24 +6,12 @@ description: Connect an AI provider for AI imports, recipe enrichment, images an
 
 # AI provider
 
-Most features work without AI. An AI provider adds:
-
-- a fallback for pages the [recipe scraper](https://github.com/hhursev/recipe-scrapers)
-  can't read
-- [image import](../recipes/importing.md#from-pasted-text-or-photos) from
-  photos and screenshots
-- [video import](#video-import) from social media
-- [recipe enrichment](../recipes/enrichment.md): tags, allergies, categories,
-  nutrition, provenance, step ingredients and pictures
-- metric and US conversion by AI, next to the built-in one
-- [ingredient catalogue cleanup](#ingredient-catalogue) and filling in missing nutrition,
-  conversions and icons
+Connect a provider for photo and video imports, recipe enrichment and
+ingredient cleanup.
 
 ## Enable AI
 
-Set `AI_ENABLED=true` and a provider, or do the same under
-**Settings => Admin**. Any OpenAI-compatible API works, like OpenAI, Azure
-OpenAI, OpenRouter, Ollama or LM Studio.
+Enable AI in admin settings or set `AI_ENABLED=true` and configure a provider.
 
 ```yaml title="docker-compose.yml (environment)"
 AI_ENABLED: "true"
@@ -54,16 +42,14 @@ or the JSON-mode fallback (`response_format: json_object`).
 
 ### Automatic enrichment
 
-Under **Settings => Admin => AI** you choose which
-[enrichments](../recipes/enrichment.md) run on every new recipe. See
-[What enrichment leaves alone](../recipes/enrichment.md#what-enrichment-leaves-alone)
-for the rules on existing data.
+Use **Automatic recipe enrichment** in admin settings to choose what Norish
+fills in on new recipes.
 
 | Switch                   | What it does                                                          | Default |
 | ------------------------ | --------------------------------------------------------------------- | ------- |
 | **Auto-tagging**         | Adds tags, never removes any                                          | Off     |
 | **Allergy detection**    | Adds allergy tags for your household's allergies                      | On      |
-| **Auto-categorization**  | Sets meal categories on recipes without any                           | Off     |
+| **Auto-categorization**  | Sets Categories from the household's list on recipes without any      | Off     |
 | **Nutrition estimation** | Fills in calories, fat, carbs and protein when one of them is missing | Off     |
 | **Recipe provenance**    | Works out the country, region, cuisines and a short note              | Off     |
 | **Ingredient linking**   | Links ingredients to steps that have none                             | Off     |
@@ -71,14 +57,11 @@ for the rules on existing data.
 
 ### Ingredient catalogue
 
-Enable [ingredient catalogue](../groceries/ingredients.md) AI options under
-**Settings => Admin => AI & processing => Ingredient catalogue**. Until then, AI
-makes no catalogue changes.
+In admin settings, open **AI & processing**, then **Ingredient catalogue**.
 
 ![The Ingredient catalogue section](/img/screenshots/admin-ingredient-catalogue.png)
 
-**Automatic for new ingredients** runs moments after a recipe, grocery or
-pantry item adds an ingredient. All options are off by default:
+Options under **Automatic for new ingredients** are off by default.
 
 | Option                       | What it does                                                                         |
 | ---------------------------- | ------------------------------------------------------------------------------------ |
@@ -87,23 +70,19 @@ pantry item adds an ingredient. All options are off by default:
 | **Fill missing conversions** | Estimates what a spoonful and one piece weigh                                        |
 | **Draw missing icons**       | Draws an icon when it has none to show. Needs an [image provider](#image-generation) |
 
-**Clean up catalogue** reviews existing ingredients. Choose **Recipe foods**
-for unreviewed ingredients from recipes, or **Whole catalogue** for all
-user-added ingredients. A whole-catalogue run ignores previous reviews and
-undone changes. Built-in ingredients are kept; only their added translations
-are checked.
-The dialog shows the review count.
+Use **Clean up catalogue** for existing ingredients. **Recipe foods** reviews
+unreviewed ingredients from recipes. **Whole catalogue** includes previously
+reviewed ingredients and can revisit changes you undid. For built-in entries,
+it reviews only added translations.
 
 ![Clean up catalogue](/img/screenshots/admin-clean-up-catalogue.png)
 
-**Fill gaps** adds missing **Nutrition**, **Conversions** or **Icons** across
-the catalogue. It never replaces existing values. Each box shows how many
-ingredients need it.
+**Fill gaps** adds missing **Nutrition**, **Conversions** or **Icons** and
+keeps existing values.
 
 ![Fill gaps](/img/screenshots/admin-fill-gaps.png)
 
-Both runs show in the [job queues](./admin-settings.md#job-queues), where you
-can cancel them.
+Track or cancel either run in [Job queues](./admin-settings.md#job-queues).
 
 ### Tag strategy
 
@@ -117,7 +96,7 @@ can cancel them.
 
 ### Cuisine strategy
 
-**Cuisine strategy** decides whether [provenance](../recipes/provenance.md) may
+**Cuisine strategy** decides whether [provenance](../recipes/creating-and-editing.md#recipe-origin) may
 add to your cuisine list:
 
 | Strategy                    | Behaviour                                           |
@@ -125,40 +104,33 @@ add to your cuisine list:
 | **Only existing cuisines**  | Pick from the list, anything else is discarded      |
 | **AI can add new cuisines** | Pick from the list, or add an entry that is missing |
 
-The default is **Only existing cuisines**. AI suggestions are
-matched against the list first, so misspellings resolve to existing cuisines.
-Manage the list under **Settings => Admin => AI & processing => Cuisines**.
+Manage the list in **AI & processing** under **Cuisines**. Renaming or deleting
+a cuisine updates recipes that use it. The default is **Only existing cuisines**.
 
 ### Image generation
 
 ![Image Generation settings](/img/screenshots/admin-image-generation.png)
 
-Image generation has its own provider, because many AI providers, like
-Anthropic, Mistral, DeepSeek, Groq and Perplexity, have no image model. You can
-also use an Ollama server running an image model. Set it up under
-**Settings => Admin => AI & processing => Image generation**:
+In **AI & processing**, open **Image generation** and choose a provider and
+image model.
 
 | Field              | Notes                                                                                                    |
 | ------------------ | -------------------------------------------------------------------------------------------------------- |
 | **Image provider** | OpenAI, Google AI, Azure OpenAI, Ollama, LM Studio, or a generic OpenAI-compatible endpoint.             |
-| **Endpoint URL**   | For Ollama, LM Studio and generic endpoints; optional custom resource URL for Azure                      |
+| **Endpoint URL**   | For Ollama, LM Studio and generic endpoints. Optional for Azure.                                         |
 | **API key**        | For the cloud providers                                                                                  |
 | **Image model**    | Must be an image model, e.g. `gpt-image-1-mini`, `gemini-2.5-flash-image` or Ollama's `x/z-image-turbo`. |
 
-When the image provider is the same as your AI provider, it reuses the AI
-endpoint and API key.
+Matching providers share the endpoint and API key.
 
-The image provider also draws [ingredient icons](../groceries/ingredient-icons.md).
+The image provider also draws [ingredient icons](../groceries/ingredients.md#change-an-icon).
 
 ### Decision Model
 
 ![Decision Model settings](/img/screenshots/admin-decision-model.png)
 
-A Decision Model answers closed questions quickly and cheaply. It identifies recipes on imported pages, makes some enrichment
-decisions and checks additions from the AI provider. Only models
-that adhere to TypeSafe's API are supported.
-
-Set it up under **Settings => Admin => AI & processing => Decision model**:
+Use **Decision model** in **AI & processing** to set up TypeSafe AI. You can
+use it with or without a general AI provider.
 
 | Field                          | Notes                                                                                                                                             |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -168,53 +140,33 @@ Set it up under **Settings => Admin => AI & processing => Decision model**:
 | **Endpoint URL**               | Optional. A proxy, gateway or self-hosted server that speaks TypeSafe's API. Empty uses `https://api.typesafe.ai/v1`                              |
 | **Use the decision model for** | _Auto-categorization_, _Auto-tagging_, _Allergy detection_, _Recipe Provenance_, _Grocery linking_, _Validate enrichments_. All are on by default |
 
-What each use does:
-
-- **Auto-categorization** decides whether a recipe is breakfast, lunch, dinner
-  or a snack.
-- **Auto-tagging** decides each tag under _Predefined tags only_. Under the
-  other strategies it checks each new tag.
-- **Allergy detection** asks one question per household allergy.
-- **Recipe Provenance** picks the country, and the cuisines under _Only
-  existing cuisines_. The AI provider writes the region and the note.
-- **Grocery linking** picks a shop product, see
-  [Prices](../groceries/prices.md#which-product).
-- **Validate enrichments** checks everything an enrichment adds before it is
-  saved.
-- **Import triage** checks whether a page holds a recipe, and warns when an
-  imported recipe may be incomplete. It is always on when a Decision Model is
-  set up, even with AI off.
-
-The Decision Model works without an AI provider. Set its provider to
-_Disabled_ to turn it off.
-
-When the Decision Model is uncertain or fails, the AI provider is used
-instead. The [job queues](./admin-settings.md#job-queues) show which models a
-job used.
+Import triage always runs when the Decision Model is enabled. If the model
+fails or is unsure, Norish uses the AI provider when available. Open the
+[job details](./admin-settings.md#job-queues) to see which models ran.
 
 ### Enriching existing recipes
 
-Automatic enrichment only runs on new recipes. To catch up the rest, use
-**Settings => Admin => AI & processing => Bulk enrichment => Enrich**. It runs every enabled enrichment on every recipe, which can be costly.
+In **AI & processing**, open **Bulk enrichment** and select **Enrich** to run
+every enabled enrichment on existing recipes. Check progress in
+[Job queues](./admin-settings.md#job-queues).
 
 ![Bulk enrichment image count](/img/screenshots/bulk-enrichment-image-count.png)
 
-**Overwrite existing data** replaces categories, nutrition, provenance and
-step ingredients, which cannot be undone and costs more on large libraries.
-Tags and allergies are only ever added to.
+**Overwrite existing data** permanently replaces categories, nutrition,
+provenance and step ingredients. Enrichment adds tags and allergy tags to
+the ones already on the recipe.
 
 ## Prompts
 
 ![The Prompts panel in admin settings](/img/screenshots/admin-prompts.png)
 
-Edit AI prompts under **Settings => Admin**.
+Open **Prompts** in admin settings to edit what Norish sends to the model.
 
 ## Video import
 
-Video import downloads the video with `yt-dlp`, transcribes the audio and has
-the AI provider read the recipe from it. Links from YouTube, Instagram, TikTok,
-Facebook, Pinterest, X, Threads, Snapchat, Vimeo, Dailymotion, Douyin, Bilibili
-and RedNote count as videos.
+Enable video parsing and configure transcription to import video links from
+YouTube, Instagram, TikTok, Facebook, Pinterest, X, Threads, Snapchat, Vimeo,
+Dailymotion, Douyin, Bilibili or RedNote.
 
 | Variable                   | Description                                                              | Default                                   |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------- |
@@ -226,8 +178,6 @@ and RedNote count as videos.
 
 ## Transcription
 
-Transcription turns a video's audio into text.
-
 | Variable                 | Description                                                                    | Default     |
 | ------------------------ | ------------------------------------------------------------------------------ | ----------- |
 | `TRANSCRIPTION_PROVIDER` | `openai`, `groq`, `mistral`, `azure`, `generic-openai`, `ollama` or `disabled` | `disabled`  |
@@ -235,10 +185,8 @@ Transcription turns a video's audio into text.
 | `TRANSCRIPTION_API_KEY`  | Transcription API key                                                          | (empty)     |
 | `TRANSCRIPTION_MODEL`    | Transcription model                                                            | `whisper-1` |
 
-When the endpoint or API key is empty, transcription uses the AI provider's.
-
-Audio is sent as MP3. A generic endpoint that refuses the MP3, like mlx-serve's
-Qwen3-ASR models, gets the audio again as 16 kHz mono WAV.
+Leave the endpoint or API key empty to use the AI provider's value. If a
+generic endpoint rejects MP3, Norish retries with 16 kHz mono WAV.
 
 Mistral transcribes with Voxtral: set the provider to `mistral`, a Mistral API
 key and a model such as `voxtral-mini-latest`.

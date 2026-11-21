@@ -62,14 +62,14 @@ describe("publishEnrichmentLifecycle", () => {
 });
 
 describe("publishEnrichmentRecipeUpdated", () => {
-  it("marks the canonical update as enrichment-originated", async () => {
+  it("marks the canonical update as enrichment-originated, naming its kind", async () => {
     const recipe = { id: "recipe-1" } as FullRecipeDTO;
 
     await publishEnrichmentRecipeUpdated(data, recipe);
 
     expect(mocks.publishRecipe).toHaveBeenCalledWith(
       "updated",
-      { recipe, source: "enrichment" },
+      { recipe, source: "enrichment", kind: data.kind },
       { viewPolicy: "household", userId: "user-1", householdKey: "household-1" }
     );
   });

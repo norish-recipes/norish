@@ -1,0 +1,73 @@
+import React from "react";
+import { Text, View } from "react-native";
+import { AmountName, amountNameLabel } from "@/components/amount-name";
+import { DragPressable } from "@/components/drag-list/drag-list";
+import { useIntl } from "react-intl";
+
+import type { GroceryDto, StoreDto } from "@norish/shared/contracts";
+import { lineOf } from "@norish/shared-react/groceries";
+import { useUnitFormatter } from "@norish/shared-react/recipes";
+import { shownAmount } from "@norish/shared/lib/grocery-grouping";
+
+import { useStoreColor } from "../hooks/use-store-color";
+import { GroceryPrice } from "./grocery-price";
+import { StoreTick } from "./store-tick";
+
+/** One grocery: its tick, its amount and name, and its price; a tap on the row opens its sheet. */
+export function GroceryRow({
+  grocery,
+  store,
+  subline,
+  dotted = false,
+  onToggle,
+  onEdit,
+}: {
+  grocery: GroceryDto;
+  store: StoreDto | null;
+  /** The line under the name: where it came from, how it repeats, or its Store. */
+  subline: string | null;
+  /** Puts the Store's dot before the subline, as the list by recipe does. */
+  dotted?: boolean;
+  onToggle: (id: string, isDone: boolean) => void;
+  onEdit: (id: string) => void;
+}) {
+  const intl = useIntl();
+  const { formatSpacedAmountUnit } = useUnitFormatter(intl.locale);
+  const color = useStoreColor(store?.color);
+  const amount = formatSpacedAmountUnit(shownAmount(grocery), grocery.unit);
+  const name = grocery.name || intl.formatMessage({ id: "groceries.item.unnamedItem" });
+  const done = grocery.isDone;
+
+  return (
+    <View className="flex-row items-center gap-1 pr-4 pl-2" testID="grocery-row">
+      <StoreTick
+        checked={done}
+        color={color}
+        label={amountNameLabel(amount, name)}
+        testID={`grocery-tick-${grocery.id}`}
+        onPress={() => onToggle(grocery.id, !done)}
+      />
+      <DragPressable
+        accessibilityRole="button"
+        className="min-h-[52px] flex-1 flex-row items-center gap-3.5 py-2 pl-1"
+        testID={`grocery-${grocery.id}`}
+        onPress={() => onEdit(grocery.id)}
+      >
+        <View className="min-w-0 flex-1 gap-0.5">
+          <AmountName amount={amount} className="text-[17px]" done={done} name={name} />
+          {subline ? (
+            <View className="flex-row items-center gap-1.5">
+              {dotted && color ? (
+                <View className="size-2 rounded-full" style={{ backgroundColor: color }} />
+              ) : null}
+              <Text className="text-muted shrink text-sm" numberOfLines={1}>
+                {subline}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <GroceryPrice line={lineOf(grocery)} muted={done} />
+      </DragPressable>
+    </View>
+  );
+}

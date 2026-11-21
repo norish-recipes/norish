@@ -27,7 +27,9 @@
       "all": "Alt",
       "recipes": "Oppskrifter",
       "cookbooks": "Kokebøker"
-    }
+    },
+    "importingCard": "Importerer…",
+    "favourited": "Favoritt"
   },
   "back": {
     "all": "Tilbake til biblioteket",
@@ -43,7 +45,8 @@
     "noResults": "Ingen oppskrifter funnet",
     "noResultsHint": "Prøv å justere eller tømme filtrene.",
     "noCookbooks": "Ingen kokebøker ennå",
-    "noCookbooksHint": "En kokebok er et navngitt sett med oppskrifter. Lag din første for å få orden i biblioteket."
+    "noCookbooksHint": "En kokebok er et navngitt sett med oppskrifter. Lag din første for å få orden i biblioteket.",
+    "descriptionMobile": "Legg til din første oppskrift fra en lenke, tekst eller bilder."
   },
   "card": {
     "noImage": "Ingen bilde tilgjengelig",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Denne oppskriften eksisterer ikke, eller du har ikke tilgang til å se den.",
     "prep": "forberedelse",
     "total": "totalt",
-    "planMeal": "Planlegg måltid",
     "recipeActions": "Oppskrifthandlinger",
     "instructions": "Fremgangsmåte",
     "cook": "Tilbered",
@@ -78,7 +80,9 @@
     "addedBy": "Lagt til av {name}",
     "decreaseServings": "Færre porsjoner",
     "increaseServings": "Flere porsjoner",
-    "multiplier": "Faktor"
+    "multiplier": "Faktor",
+    "rateStars": "Gi {count} av 5",
+    "stepPhoto": "Trinnbilde"
   },
   "actions": {
     "plan": "Planlegg",
@@ -86,7 +90,6 @@
     "edit": "Rediger",
     "delete": "Slett",
     "share": "Del",
-    "visitOriginal": "Besøk original oppskrift",
     "addToCalendar": "Legg til i kalender",
     "autoTag": "Tagg automatisk",
     "autoTagging": "Genererer tags...",
@@ -103,10 +106,13 @@
     "inferringProvenance": "Finner opphavet …",
     "linkIngredients": "Koble ingredienser til trinn",
     "linkingIngredients": "Kobler ingredienser…",
-    "enrichmentFailed": "Siste forsøk mislyktes",
     "generateImage": "Generer bilde",
     "generatingImage": "Genererer bilde…",
-    "cookbooks": "Kokebøker"
+    "cookbooks": "Kokebøker",
+    "favourite": "Favoritt",
+    "unfavourite": "Fjern fra favoritter",
+    "ai": "KI",
+    "shareLink": "Del lenke"
   },
   "sharePanel": {
     "title": "Del oppskrift",
@@ -150,7 +156,13 @@
       "title": "Slett lenke",
       "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
       "confirm": "Slett lenke"
-    }
+    },
+    "expiresAfter": "Utløper etter",
+    "expiresOn": "Utløper {date}",
+    "expiredOn": "Utløp {date}",
+    "lastOpenedOn": "Sist åpnet {date}",
+    "neverExpires": "Utløper aldri",
+    "linkCreated": "Opprettet {date}"
   },
   "convert": {
     "ariaLabel": "Konverter målesystem",
@@ -166,14 +178,14 @@
     "confirmMessage": "Er du sikker på at du vil slette \"{recipeName}\"?",
     "warning": "Denne handlingen kan ikke angres.",
     "confirmCount": "Slette {count, plural, one {# oppskrift} other {# oppskrifter}}?",
-    "keptCount": "{count, plural, one {# oppskrift blir} other {# oppskrifter blir}} igjen, fordi du ikke kan slette {count, plural, one {den} other {dem}}."
+    "keptCount": "{count, plural, one {# oppskrift blir} other {# oppskrifter blir}} igjen, fordi du ikke kan slette {count, plural, one {den} other {dem}}.",
+    "alertTitle": "Slette {name}?"
   },
   "form": {
     "createTitle": "Opprett oppskrift",
     "editTitle": "Rediger oppskrift",
     "createDescription": "Legg til en ny oppskrift i samlingen din",
     "editDescription": "Oppdater oppskriftinformasjonen din",
-    "initializingForm": "Initialiserer skjema...",
     "photo": "Bilde",
     "basicInfo": "Grunnleggende informasjon",
     "ingredients": "Ingredienser",
@@ -194,6 +206,7 @@
     "tagsHelp": "Skriv tags og klikk på forslag for å legge til. Tags på oppskriften er fylte, nye tags har stiplet kant.",
     "tagsAndCategories": "Tags og kategorier",
     "categoriesHelp": "Velg måltidskategorier for denne oppskriften.",
+    "addCategory": "Legg til kategori",
     "category": {
       "breakfast": "Frokost",
       "lunch": "Lunsj",
@@ -224,19 +237,12 @@
     "createRecipe": "Opprett oppskrift",
     "saveChanges": "Lagre endringer",
     "uploading": "Laster opp...",
-    "clickToUpload": "Klikk for å laste opp eller dra og slipp",
-    "pasteToUpload": "for å lime inn",
-    "imageFormats": "PNG, JPG, WEBP opp til 5 MB",
     "discardChangesConfirm": "Du har ulagrede endringer. Vil du forkaste dem og forlate siden?"
   },
   "gallery": {
-    "addImage": "Legg til bilde",
     "uploading": "Laster opp...",
     "uploadFailed": "Opplasting mislyktes",
-    "dragToReorder": "Dra for å omorganisere",
-    "maxImagesReached": "Maks. {max} bilder er tillatt",
-    "maxVideosReached": "Maks. {max} videoer er tillatt",
-    "invalidFileType": "Ugyldig filtype"
+    "dragToReorder": "Dra for å omorganisere"
   },
   "carousel": {
     "noImageAvailable": "Ingen bilde tilgjengelig",
@@ -245,8 +251,14 @@
       "mute": "Slå av lyd",
       "unmute": "Slå på lyd",
       "fullscreen": "Gå til fullskjerm",
-      "exitFullscreen": "Forlat fullskjerm"
-    }
+      "exitFullscreen": "Forlat fullskjerm",
+      "progress": "Videofremdrift",
+      "play": "Spill av",
+      "pause": "Pause"
+    },
+    "recipeImage": "Oppskriftsbilde",
+    "closeViewer": "Lukk bildevisning",
+    "photoOf": "Bilde {current} av {total}"
   },
   "validation": {
     "nameRequired": "Oppskriftnavn er påkrevd",
@@ -260,11 +272,18 @@
     "fat": "Fett",
     "carbs": "Karbohydrater",
     "protein": "Protein",
+    "fiber": "Kostfiber",
+    "saturatedFat": "hvorav mettede fettsyrer",
+    "sugars": "hvorav sukkerarter",
+    "sodium": "Natrium",
+    "moreNutrients": "Flere næringsstoffer",
+    "fewerNutrients": "Færre næringsstoffer",
+    "starredMayBeHigher": "Ikke alle ingredienser har denne verdien, så verdier med * kan være høyere",
+    "referenceIntake": "% av daglig referanseinntak for en voksen ({calories} kcal)",
     "showingPortions": "Viser verdier for {count} {count, plural, one {porsjon} other {porsjoner}}",
-    "noInfo": "Ingen næringsinformasjon tilgjengelig",
-    "estimateWithAI": "Estimér med AI",
     "estimated": "Anslått",
     "leftOut": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}",
+    "leftOutStarred": "{count, plural, one {# linje ikke regnet med} other {# linjer ikke regnet med}}, så verdier med * kan være høyere",
     "estimatedByAI": "anslått av AI",
     "reasons": {
       "seasoning": "krydder",
@@ -275,7 +294,12 @@
       "noPieceWeight": "ingen stykkvekt ennå"
     },
     "workedOutFrom": "Beregnet fra ingrediensene, med {sources}.",
-    "householdNumbers": "husstandens verdier"
+    "householdNumbers": "husstandens verdier",
+    "decreasePortions": "Færre porsjoner",
+    "increasePortions": "Flere porsjoner",
+    "portions": "{count, plural, one {# porsjon} other {# porsjoner}}",
+    "percentOfReference": "{percent} % av {amount}",
+    "percentOfDailyReference": "{percent} % av daglig referanse på {amount}"
   },
   "measurementSystem": {
     "label": "Målesystem",
@@ -290,7 +314,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Trinn {number}: Beskriv trinnet...",
-    "stepPlaceholderShort": "Trinn {number}"
+    "stepPlaceholderShort": "Trinn {number}",
+    "recipeSuggestions": "Oppskriftsforslag",
+    "ingredientSuggestions": "Ingrediensforslag"
   },
   "stepIngredients": {
     "rowLabel": "Koblede ingredienser",
@@ -321,16 +347,15 @@
   },
   "toasts": {
     "imported": "Oppskrift importert",
-    "failed": "Oppskrifthandling mislyktes",
     "failedDescription": "Noe gikk galt under behandling av oppskriften din. Sjekk nettleserkonsollen for tekniske detaljer.",
     "incomplete": "Denne oppskriften kan være ufullstendig. Sammenlign den med kilden.",
     "notARecipe": "Denne siden ser ikke ut som en oppskrift.",
     "privateAddress": "Import fra private nettverksadresser er ikke tillatt på denne serveren.",
-    "batchImported": "Oppskrifter importert",
-    "batchImportedDescription": "{count} oppskrifter importert fra arkiv",
     "view": "Se",
     "open": "Åpne",
-    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt."
+    "deleteKept": "{count, plural, one {# oppskrift ble} other {# oppskrifter ble}} endret av noen andre og beholdt.",
+    "deleted": "Oppskrift slettet",
+    "deletedDescription": "Denne oppskriften er fjernet."
   },
   "tags": {
     "panel": {
@@ -345,12 +370,23 @@
     "servings": "Porsjoner",
     "serving": "{count, plural, one {# porsjon} other {# porsjoner}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Sveip for å navigere mellom trinn",
-    "swipeIngredients": "Sveip til venstre for ingredienser",
-    "swipeBackToSteps": "Sveip til høyre for trinn",
     "readyAt": "Ferdig rundt {time}",
     "timers": "Tidtakere",
-    "nextStep": "Neste steg"
+    "nextStep": "Neste steg",
+    "stepLabel": "Trinn {number}",
+    "previousStep": "Forrige trinn",
+    "startTimer": "Start en tidtaker på {duration}",
+    "pauseTimer": "Sett tidtakeren på pause, {time} igjen",
+    "resumeTimer": "Fortsett tidtakeren, {time} igjen",
+    "dismissTimer": "Lukk tidtakeren",
+    "restartTimer": "Start tidtakeren på nytt",
+    "notificationsOff": "Varsler er slått av for Norish, så tidtakere ringer bare mens appen er åpen.",
+    "decreaseTimer": "Trekk fra {time}",
+    "increaseTimer": "Legg til {time}",
+    "openTimer": "{timer}, åpne {recipe} i matlagingsmodus",
+    "openTimerAtStep": "{timer}, åpne {recipe} i matlagingsmodus ved trinn {number}",
+    "timersLeft": "Tidtakere, {time} igjen",
+    "spokenTime": "{hours, plural, =0 {} one {# time } other {# timer }}{minutes, plural, =0 {} one {# minutt } other {# minutter }}{seconds, plural, =0 {} one {# sekund } other {# sekunder }}"
   },
   "enrichment": {
     "failed": "Berikelse mislyktes",
@@ -373,10 +409,7 @@
   "provenance": {
     "title": "Opphav",
     "region": "Region",
-    "cuisines": "Kjøkken",
-    "inferring": "Finner ut hvor denne oppskriften kommer fra …",
-    "noInfo": "Ingen opphavsinformasjon ennå",
-    "inferWithAI": "Finn ut med AI"
+    "cuisines": "Kjøkken"
   },
   "import": {
     "alreadyExists": "Du har allerede denne oppskriften",
@@ -430,7 +463,13 @@
     "changeImage": "Bytt bilde",
     "removeImage": "Fjern bilde",
     "imageUploadFailed": "Bildet kunne ikke lastes opp.",
-    "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen."
+    "imageNeedsConnection": "Bilder kan endres når du er tilkoblet igjen.",
+    "rename": "Gi nytt navn",
+    "deleteAlertTitle": "Slette {title}?",
+    "changeCover": "Endre omslag",
+    "renameTitle": "Gi kokeboken nytt navn",
+    "coverFromLibrary": "Velg fra bildebiblioteket",
+    "coverFromCamera": "Ta bilde"
   },
   "print": {
     "title": "Skriv ut oppskrift",
@@ -449,5 +488,109 @@
     "newCookbook": "Ny kokebok",
     "filedInto": "{count, plural, one {# oppskrift} other {# oppskrifter}} lagt til i {title}",
     "filedIntoMany": "{count, plural, one {# oppskrift} other {# oppskrifter}} lagt til i {cookbooks} kokebøker"
+  },
+  "addRecipe": {
+    "fromLink": "Fra en lenke",
+    "fromLinkHint": "Hvilken som helst oppskriftsside eller video",
+    "fromPhotos": "Fra bilder",
+    "fromPhotosHint": "Kokebokssider eller et skjermbilde",
+    "fromText": "Fra tekst",
+    "fromTextHint": "Lim inn en oppskrift eller JSON-LD",
+    "writeYourself": "Skriv den selv",
+    "writeYourselfHint": "Start med en tom oppskrift",
+    "fromClipboard": "Fra utklippstavlen din",
+    "linkTitle": "Importer fra en lenke",
+    "textTitle": "Importer fra tekst",
+    "photosTitle": "Importer fra bilder",
+    "camera": "Kamera",
+    "photoLibrary": "Bildebibliotek",
+    "photoCount": "{count, plural, one {# bilde, importert som én oppskrift} other {# bilder, importert som én oppskrift}}",
+    "photoLimits": "Opptil {max} bilder, JPEG, PNG eller WebP",
+    "removePhoto": "Fjern bilde {number}"
+  },
+  "shareExtension": {
+    "sending": "Sender til Norish…",
+    "sentTitle": "Importerer i Norish",
+    "sentBody": "Den dukker opp i biblioteket ditt om et øyeblikk.",
+    "savedTitle": "Lagret til senere",
+    "savedBody": "Norish importerer den når serveren din kan nås.",
+    "signedOut": "Åpne Norish og logg inn først.",
+    "tooOld": "Norish-serveren din må oppdateres først.",
+    "noAi": "Import av bilder krever KI, som er slått av på serveren din.",
+    "failed": "Norish kunne ikke importere dette.",
+    "close": "Lukk",
+    "photoCount": "{count, plural, one {# bilde} other {# bilder}}",
+    "text": "Tekst"
+  },
+  "editor": {
+    "newTitle": "Ny oppskrift",
+    "editTitle": "Rediger oppskrift",
+    "recipeName": "Navn på oppskrift",
+    "ingredient": "Ingrediens",
+    "sectionHeading": "Seksjonsoverskrift",
+    "step": "Steg",
+    "steps": "Steg",
+    "notesHint": "Start en linje med # for en overskrift; sett ord mellom **doble stjerner** for fet skrift.",
+    "ingredientsHint": "Skriv ingredienser som 2 kopper mel; mengder og enheter leses for deg. Start en linje med # for en seksjon.",
+    "stepsHint": "Trykk retur for neste steg. Skriv @ for å knytte til en ingrediens, # for en seksjon.",
+    "addIngredient": "Legg til ingrediens",
+    "removeIngredient": "Fjern ingrediens",
+    "addStep": "Legg til steg",
+    "removeStep": "Fjern steg",
+    "addPhoto": "Legg til bilde",
+    "addStepPhoto": "Legg til stegbilde",
+    "removePhoto": "Fjern bilde",
+    "mediaCount": "{images}/{maxImages} bilder · {videos}/{maxVideos} videoer",
+    "photosOffline": "Du kan legge til bilder når du er tilkoblet.",
+    "tagsAndCategories": "Tagger og kategorier",
+    "categories": "Kategorier",
+    "tags": "Tagger",
+    "tagsHint": "Velg et forslag eller skriv en ny tagg; nye tagger har stiplet kant.",
+    "addTag": "Legg til en tagg",
+    "removeNamed": "Fjern {name}",
+    "servingsAndTime": "Porsjoner og tid",
+    "minutes": "min",
+    "perServing": "per porsjon, valgfritt",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "Kilde",
+    "sourceUrl": "Kilde-URL",
+    "measurementSystem": "Målesystem",
+    "measurementHint": "Oppdaget fra ingrediensene dine. Å endre det gir bare nytt navn og regner ikke om; bruk Konverter etter lagring.",
+    "discardTitle": "Forkaste endringer?",
+    "discardMessage": "Du har endringer som ikke er lagret.",
+    "keepEditing": "Fortsett å redigere",
+    "discard": "Forkast"
+  },
+  "search": {
+    "sortBestMatch": "Beste treff",
+    "sortNewest": "Nyeste",
+    "sortOldest": "Eldste",
+    "sortAZ": "A–Å",
+    "sortZA": "Å–A",
+    "sortLabel": "Sortering: {sort}",
+    "ratingChip": "{count}+ stjerner",
+    "removeFilter": "Fjern {filter}",
+    "ingredientFilter": "ingrediensfilter",
+    "count": "{count, plural, one {# oppskrift} other {# oppskrifter}}",
+    "noMatch": "Ingen oppskrifter samsvarer med «{text}»",
+    "searchAllFields": "Søk i alle felt",
+    "filtersOn": "Filtre, {count} på",
+    "matchTitle": "I tittelen",
+    "matchTag": "Tagg:",
+    "matchIngredient": "Ingrediens:",
+    "matchStep": "Trinn {number}:",
+    "searchFor": "Søk etter «{text}»",
+    "recipes": "Oppskrifter",
+    "narrowTo": "Begrens til",
+    "typeIngredient": "Ingrediens",
+    "typeTag": "Tagg",
+    "typeCategory": "Kategori",
+    "recent": "Nylige",
+    "quickFilters": "Hurtigfiltre",
+    "underThirty": "Under 30 min",
+    "fourAndUp": "4 og opp",
+    "editRecent": "Rediger “{text}”",
+    "offline": "Søk krever en tilkobling"
   }
 }

@@ -1,6 +1,7 @@
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
 import type { SpellingRules } from "@norish/shared/lib/spelling-keys";
+import { foldName, nameWords } from "@norish/shared/lib/fold-name";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import {
   BASE_SPELLING_RULES,
@@ -34,10 +35,6 @@ export function pantryIngredientFor(
   },
   rules: SpellingRules = BASE_SPELLING_RULES
 ): PantryIngredientDto | null {
-  const key = foodKey(line.ingredientName, rules);
-  // Read up to a note as the resolver does ("olie om te bakken" is olie); only the resolver knows
-  // whether the words after it name a food ("kip met rijst"), which syncing settles.
-  const noted = notedParts(key, rules)?.head;
   const ids = line.ingredientId ? [line.ingredientId, ...(line.alternativeIds ?? [])] : [];
 
   return (
@@ -46,13 +43,28 @@ export function pantryIngredientFor(
       // and meanwhile is matched on its name like any unresolved text.
       ids.length > 0 && item.ingredientId
         ? ids.some((id) => item.ingredientId === id || item.ancestorIds.includes(id))
-        : key !== "" &&
-          [item.name, ...Object.values(item.localeNames ?? {})].some(
-            (name) =>
-              sameFood(name, line.ingredientName, rules) ||
-              (noted !== undefined && sameFood(name, noted, rules))
-          )
+        : textNamesFood(line.ingredientName, item, rules)
     ) ?? null
+  );
+}
+
+/** Whether `text` names `food` by spelling alone, the rule `pantryIngredientFor` uses for text:
+ * any of the food's names, plurals counted, read up to a note. */
+export function textNamesFood(
+  text: string | null | undefined,
+  food: { name: string; localeNames?: LocaleNames },
+  rules: SpellingRules = BASE_SPELLING_RULES
+): boolean {
+  const key = foodKey(text, rules);
+  // Read up to a note as the resolver does ("olie om te bakken" is olie); only the resolver knows
+  // whether the words after it name a food ("kip met rijst"), which syncing settles.
+  const noted = notedParts(key, rules)?.head;
+
+  return (
+    key !== "" &&
+    [food.name, ...Object.values(food.localeNames ?? {})].some(
+      (name) => sameFood(name, text, rules) || (noted !== undefined && sameFood(name, noted, rules))
+    )
   );
 }
 
@@ -107,5 +119,61 @@ export function sortPantryIngredients<
     ingredientDisplayName(a, locale).localeCompare(ingredientDisplayName(b, locale), locale, {
       sensitivity: "base",
     })
+  );
+}
+
+/** Whether a kept food goes by a name, in any language, containing every one of the folded words. */
+function hasNameContaining(item: PantryIngredientDto, words: readonly string[]): boolean {
+  return [item.name, ...Object.values(item.localeNames)].some((name) => {
+    const folded = foldName(name);
+
+    return words.every((word) => folded.includes(word));
+  });
+}
+
+/** The kept foods with a name, in any language, holding every word of the text, or that the text
+ * names as a food, in the reader's order; no text keeps them all. */
+export function searchPantry(
+  items: readonly PantryIngredientDto[],
+  text: string,
+  locale: string,
+  rules: SpellingRules = BASE_SPELLING_RULES
+): PantryIngredientDto[] {
+  const words = nameWords(text);
+
+  return sortPantryIngredients(items, locale).filter(
+    (item) =>
+      words.length === 0 ||
+      hasNameContaining(item, words) ||
+      pantryIngredientFor([item], { ingredientName: text }, rules) !== null
+  );
+}
+
+/** How many suggested foods show before Show more. */
+export const SUGGESTIONS_SHOWN = 6;
+
+/** The suggested foods shown: the first `SUGGESTIONS_SHOWN` until Show more, and whether it shows. */
+export function shownSuggestions<T>(
+  offered: readonly T[],
+  showAll: boolean
+): { shown: T[]; more: boolean } {
+  const more = !showAll && offered.length > SUGGESTIONS_SHOWN;
+
+  return { shown: more ? offered.slice(0, SUGGESTIONS_SHOWN) : [...offered], more };
+}
+
+/** The suggested foods the Pantry does not cover, by the rule the server used to suggest them. */
+export function uncoveredSuggestions<T extends { ingredientId: string; name: string }>(
+  items: readonly PantryIngredientDto[],
+  suggestions: readonly T[],
+  rules: SpellingRules = BASE_SPELLING_RULES
+): T[] {
+  return suggestions.filter(
+    (food) =>
+      pantryIngredientFor(
+        items,
+        { ingredientId: food.ingredientId, ingredientName: food.name },
+        rules
+      ) === null
   );
 }

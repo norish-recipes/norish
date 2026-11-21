@@ -455,7 +455,7 @@ test("an empty Store is its heading alone, takes a dropped row, and reads All do
   // The dot holds no glyph, and the only drawing in the heading is its chevron.
   await expect(heading.getByTestId("store-dot").locator("svg")).toHaveCount(0);
   await expect(heading.locator("svg")).toHaveCount(1);
-  await expect(heading.getByTestId("store-meta")).toHaveText("0 items");
+  await expect(heading.getByTestId("store-meta")).toHaveText("No items");
   await expect(storeBlock(slager).getByTestId("store-rows")).toHaveCount(0);
 
   // A bare heading is still somewhere to drop a row; the rows grow under it.

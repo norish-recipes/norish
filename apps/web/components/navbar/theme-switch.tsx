@@ -21,11 +21,11 @@ export function useThemeSwitch() {
 
   const icon =
     theme === "system" ? (
-      <ComputerDesktopIcon className="size-4" />
+      <ComputerDesktopIcon className="size-5" />
     ) : isDark ? (
-      <MoonIcon className="size-4" />
+      <MoonIcon className="size-5" />
     ) : (
-      <SunIcon className="size-4" />
+      <SunIcon className="size-5" />
     );
 
   // Return raw theme for label lookup
@@ -43,15 +43,15 @@ function ThemeSwitchPlaceholder() {
   const t = useTranslations("navbar.theme");
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <>
       <span className="text-muted opacity-50">
-        <SunIcon className="size-4" />
+        <SunIcon className="size-5" />
       </span>
       <div className="flex flex-col items-start opacity-50">
         <span className="text-base leading-tight font-medium">{t("title")}</span>
         <span className="text-muted text-xs leading-tight">{t("loading")}</span>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -63,13 +63,13 @@ function ThemeSwitchLabel({ icon, theme, isDark }: ThemeSwitchContentProps) {
     theme === "system" ? t("system") : theme === "dark" || isDark ? t("dark") : t("light");
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <>
       <span className="text-muted">{icon}</span>
       <div className="flex flex-col items-start">
         <span className="text-base leading-tight font-medium">{t("title")}</span>
         <span className="text-muted text-xs leading-tight">{label}</span>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -78,17 +78,3 @@ export const ThemeSwitchContent: FC<ThemeSwitchContentProps> = (props) => (
     <ThemeSwitchLabel {...props} />
   </Suspense>
 );
-
-export const ThemeSwitch: FC = () => {
-  const themeSwitch = useThemeSwitch();
-
-  return (
-    <button
-      className="flex w-full cursor-pointer items-center gap-2 text-left"
-      type="button"
-      onClick={themeSwitch.cycleTheme}
-    >
-      <ThemeSwitchContent {...themeSwitch} />
-    </button>
-  );
-};

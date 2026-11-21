@@ -65,7 +65,7 @@ test.afterAll(async () => {
 
 /** The Ingredients page's panel for a food, opened from its row. */
 async function openPanel(name: string): Promise<Locator> {
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill(name);
   await page
     .locator(`[data-testid="ingredient-row"][data-ingredient="${name}"]`)
@@ -201,7 +201,7 @@ test("Fill gaps' Icons draws only a food that shows no icon", async () => {
   // The run touched nothing that already showed an icon.
   expect(stack.ai.control.imageRequestCount).toBe(1);
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill("parsnip");
   await expect(
     page

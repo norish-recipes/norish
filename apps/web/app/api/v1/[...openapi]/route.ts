@@ -1,4 +1,7 @@
-import { handleOpenApiRequest } from "@norish/trpc/server";
+import { serverPackage } from "@/lib/server-package";
+
+const { handleOpenApiRequest } =
+  await serverPackage<typeof import("@norish/trpc/server")>("@norish/trpc/server");
 
 export const maxDuration = 300;
 

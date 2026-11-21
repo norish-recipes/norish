@@ -4,7 +4,7 @@ import type { Portion } from "../portions";
 import type { SourceFood } from "./types";
 import { densityOf, pieceWeightOf } from "../portions";
 import { parseRecords } from "../read/csv";
-import { compositionValue, macros } from "../read/values";
+import { compositionValue, extrasOf, macros } from "../read/values";
 
 /**
  * USDA FoodData Central (CC0): SR Legacy and Foundation Foods, from their CSV
@@ -25,6 +25,23 @@ const NUTRIENTS = {
   protein: ["1003"],
   fat: ["1004"],
   carbs: ["1005", "1050"],
+} as const;
+
+/** The other nutrients by FDC nutrient id; vitamin A is the RAE figure. */
+const EXTRA_NUTRIENT_IDS = {
+  saturatedFat: ["1258"],
+  monounsaturatedFat: ["1292"],
+  polyunsaturatedFat: ["1293"],
+  transFat: ["1257"],
+  sugars: ["2000", "1063"],
+  fiber: ["1079"],
+  cholesterol: ["1253"],
+  sodium: ["1093"],
+  potassium: ["1092"],
+  calcium: ["1087"],
+  iron: ["1089"],
+  vitaminC: ["1162"],
+  vitaminA: ["1106"],
 } as const;
 
 async function csvFiles(file: Uint8Array): Promise<Map<string, string>> {
@@ -112,6 +129,11 @@ export async function readUsda(
             name,
             ndb: kind === "sr-legacy" ? (ndbOf.get(fdcId) ?? null) : null,
             ...numbers,
+            extras: extrasOf(
+              Object.fromEntries(
+                Object.entries(EXTRA_NUTRIENT_IDS).map(([key, ids]) => [key, first(ids)])
+              )
+            ),
             pieceWeight: pieceWeightOf(own),
             density: densityOf(own),
           },

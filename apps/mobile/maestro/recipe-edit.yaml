@@ -1,0 +1,48 @@
+# Edits a recipe from its Actions menu: Edit opens the editor on it, the name is replaced, Save. The
+# page shows the new name and the server holds the one recipe under it.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Edit Me Stew", "key": "stew", "ingredients": ["2 onions"], "steps": ["Simmer."]}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.stew}
+    timeout: 20000
+- tapOn:
+    id: recipe-card-${output.stew}
+- extendedWaitUntil:
+    visible:
+      id: recipe-name
+      text: Edit Me Stew
+    timeout: 20000
+# The header's menu items carry no id; their accessibility names are Actions and Edit.
+- tapOn: Actions
+- tapOn: Edit
+- extendedWaitUntil:
+    visible:
+      id: editor-name
+      text: Edit Me Stew
+    timeout: 20000
+- tapOn:
+    id: editor-name
+- eraseText
+- inputText: Edited Stew
+- hideKeyboard
+- tapOn: Save
+- extendedWaitUntil:
+    visible:
+      id: recipe-name
+      text: Edited Stew
+    timeout: 20000
+- runFlow:
+    file: subflows/count.yaml
+    env:
+      COUNT_NAME: Edited Stew
+- assertTrue: ${output.count == 1}
+- runFlow:
+    file: subflows/count.yaml
+    env:
+      COUNT_NAME: Edit Me Stew
+- assertTrue: ${output.count == 0}

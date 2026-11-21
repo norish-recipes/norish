@@ -2,7 +2,7 @@
  * OKLab / OKLCH conversions, per Björn Ottosson's reference implementation.
  * One copy of the matrices for the whole product: the server extracts the
  * Dish Colour with them (media/dish-color.ts) and the web client derives
- * the page tint's channels from the stored hex (lib/dish-tint.ts) — two
+ * the page tint's channels from the stored hex (features/recipes/lib/dish-tint.ts) — two
  * sides of ADR-0023 that must agree digit for digit.
  */
 
@@ -70,4 +70,22 @@ export function oklchHueChromaFromSrgb(
   const h = (Math.atan2(b, a) * 180) / Math.PI;
 
   return { h: h < 0 ? h + 360 : h, c };
+}
+
+/** How much chroma a dish may put into a page ground (ADR-0023). The theme's own neutral ground
+ * sits at ~0.008-0.016, so this is a clearly visible warmth short of the accent's 0.083. */
+export const MAX_DISH_TINT_CHROMA = 0.05;
+
+/** The hue and clamped chroma a stored Dish Colour (`#rrggbb`) tints a page with, or null. */
+export function dishHueChroma(
+  dishColor: string | null | undefined
+): { h: number; c: number } | null {
+  const match = dishColor?.match(/^#([0-9a-f]{6})$/i);
+
+  if (!match) return null;
+
+  const value = parseInt(match[1]!, 16);
+  const { h, c } = oklchHueChromaFromSrgb((value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
+
+  return { h, c: Math.min(c, MAX_DISH_TINT_CHROMA) };
 }

@@ -40,7 +40,6 @@
   "status": {
     "loading": "Carregando...",
     "saving": "Salvando...",
-    "deleting": "Excluindo...",
     "error": "Erro",
     "success": "Sucesso",
     "noResults": "Nenhum resultado encontrado",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categorias",
-    "category": {
-      "breakfast": "Café da manhã",
-      "lunch": "Almoço",
-      "dinner": "Jantar",
-      "snack": "Lanche"
-    },
     "sortByTitle": "Título",
     "sortByDate": "Data",
-    "clearFilters": "Limpar filtros"
+    "clearFilters": "Limpar filtros",
+    "minRating": "Avaliação mínima",
+    "minRatingStars": "Pelo menos {count} de 5"
   },
   "time": {
     "minutes": "min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Este campo é obrigatório",
-    "invalidUrl": "Insira uma URL válida"
+    "invalidUrl": "Insira uma URL válida",
+    "invalidEmail": "Insira um endereço de e-mail válido"
   },
   "errors": {
     "operationFailed": "Falha na operação",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Conectando ao Norish...",
-    "checkInternet": "Verifique sua conexão com a internet",
-    "offlineBanner": "Você está offline, mostrando dados em cache",
-    "serverUnreachableBanner": "Não foi possível acessar o servidor Norish, mostrando dados em cache",
     "live": "Conectado",
     "offline": "Offline",
     "openDetails": "Detalhes da conexão"
@@ -157,10 +150,7 @@
       "analyzing": "Analisando suas imagens, aguarde...",
       "failed": "Falha na importação",
       "selectedCount": "{count} imagens selecionadas - elas serão combinadas em uma única receita",
-      "library": "Biblioteca",
-      "takePhoto": "Tirar foto",
-      "counter": "{count} / {max} fotos",
-      "importFromCount": "Importar de {count, plural, one {# foto} other {# fotos}}"
+      "library": "Biblioteca"
     },
     "menu": {
       "description": "Importe de uma URL, escaneie uma foto ou comece do zero."
@@ -195,9 +185,11 @@
     "year": "ano",
     "years": "anos",
     "next": "Próximo:",
-    "every": "A cada",
-    "everyOther": "A cada dois",
-    "on": "em",
+    "everyDay": "{interval, plural, =1 {Todo dia} =2 {A cada dois dias} other {A cada # dias}}",
+    "everyWeek": "{interval, plural, =1 {Toda semana} =2 {A cada duas semanas} other {A cada # semanas}}",
+    "everyMonth": "{interval, plural, =1 {Todo mês} =2 {A cada dois meses} other {A cada # meses}}",
+    "everyYear": "{interval, plural, =1 {Todo ano} =2 {A cada dois anos} other {A cada # anos}}",
+    "onWeekday": "{repeat}, {weekday}",
     "today": "hoje",
     "tomorrow": "amanhã",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Concluído",
+    "paused": "Pausado",
     "done_action": "Concluir",
     "one": "Temporizador",
     "other": "Temporizadores",
     "label_one": "1 temporizador",
     "label_other": "{count} temporizadores",
-    "notification_title": "Temporizador concluído",
-    "notification_body": "{label} terminou!",
+    "notification_body": "Temporizador concluído",
     "notifications_disabled": "As notificações estão desativadas",
-    "notifications_disabled_hint": "Ative as notificações nas configurações do navegador para receber alertas quando os temporizadores terminarem em segundo plano."
+    "notifications_disabled_hint": "Ative as notificações nas configurações do navegador para receber alertas quando os temporizadores terminarem em segundo plano.",
+    "more": "+{count} mais"
   },
   "offlineStatus": {
     "title": "Conexão e modo offline",
@@ -298,14 +291,30 @@
     "title": "Você está offline",
     "description": "Na fila — o Norish concluirá isso automaticamente quando você estiver online novamente."
   },
+  "changedElsewhere": {
+    "title": "Não salvo: foi alterado antes em outro lugar"
+  },
   "storageUnavailable": {
-    "title": "Não foi possível iniciar",
-    "description": "O Norish não conseguiu ler o armazenamento seguro e não sabe a qual servidor este aplicativo pertence. Nada foi alterado. Tente novamente ou reinicie o aplicativo.",
-    "detailsLabel": "Detalhes técnicos"
+    "title": "Armazenamento indisponível",
+    "description": "O Norish não conseguiu ler o chaveiro deste iPhone.",
+    "badgeLabel": "Armazenamento indisponível. Toque para repetir."
   },
   "aiKeyRejected": {
     "title": "Uma chave de IA parou de funcionar",
     "description": "O provedor está recusando a chave de API de {blocks} desde {since}. Salve uma nova chave para que esses recursos de IA voltem a funcionar.",
     "openSettings": "Abrir configurações"
+  },
+  "household": {
+    "adminTransferred": "Admin transferido para {name}",
+    "unknownMember": "Desconhecido",
+    "removedTitle": "Removido da casa",
+    "removedDescription": "Um administrador removeu você da casa."
+  },
+  "photos": {
+    "pickFailedTitle": "Não foi possível escolher a foto",
+    "pickFailedMessage": "Tente de novo ou escolha outra foto.",
+    "cameraDeniedTitle": "O acesso à câmera está desativado",
+    "cameraDeniedMessage": "Permita o acesso à câmera nos Ajustes para tirar uma foto.",
+    "openSettings": "Abrir ajustes"
   }
 }

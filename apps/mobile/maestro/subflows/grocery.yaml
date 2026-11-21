@@ -1,0 +1,10 @@
+# Saves groceries on the server, as another member adds them. Callers pass GROCERIES via runFlow env:
+# a JSON array of { name, store? } (store is a Store's name).
+appId: dev.norish.app
+---
+- evalScript: |
+    ${
+      for (const grocery of json(GROCERIES)) {
+        http.post(NORISH_PROXY_CONTROL_URL + '/grocery', { body: JSON.stringify(grocery) });
+      }
+    }

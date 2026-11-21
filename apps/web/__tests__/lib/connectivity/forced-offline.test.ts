@@ -3,6 +3,7 @@ import {
   OFFLINE_FORCED_AVAILABLE,
   setOfflineForced,
   subscribeOfflineForced,
+  switchOfflineForced,
 } from "@/lib/connectivity/forced-offline";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -79,5 +80,38 @@ describe("forced-offline flag", () => {
       prod.setOfflineForced(true);
       expect(prod.isOfflineForced()).toBe(false);
     });
+  });
+});
+
+describe("switchOfflineForced", () => {
+  const originalLocation = window.location;
+
+  beforeEach(() => {
+    window.localStorage.clear();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, reload: vi.fn() },
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
+  });
+
+  it("entering the dev override persists the flag and reloads", () => {
+    switchOfflineForced(true);
+
+    expect(isOfflineForced()).toBe(true);
+    expect(window.location.reload).toHaveBeenCalled();
+  });
+
+  it("exiting the dev override clears the flag without a reload (organic reconnect)", () => {
+    setOfflineForced(true);
+    switchOfflineForced(false);
+
+    expect(isOfflineForced()).toBe(false);
+    // No reload: the probe loop, held subscriptions and the controller's
+    // Offline→Live effect handle the exit (ADR-0007).
+    expect(window.location.reload).not.toHaveBeenCalled();
   });
 });

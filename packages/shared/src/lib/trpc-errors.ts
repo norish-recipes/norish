@@ -2,7 +2,7 @@ import { TRPCClientError } from "@trpc/client";
 
 export function isBackendUnreachableError(error: unknown): boolean {
   if (error instanceof TRPCClientError) {
-    return isNetworkError(error.cause) || !hasHttpStatus(error);
+    return isNetworkError(error.cause) || httpStatusOf(error) === null;
   }
 
   return isNetworkError(error);
@@ -54,8 +54,20 @@ function isNetworkError(error: unknown): boolean {
   );
 }
 
-function hasHttpStatus(error: TRPCClientError<any>): boolean {
-  const data = error.data as Record<string, unknown> | undefined;
+/** A proxy's 504: the request reached a server that may have run it, unlike a 502/503's dead backend. */
+export class GatewayTimeoutError extends Error {
+  constructor() {
+    super("Gateway timeout");
+    this.name = "GatewayTimeoutError";
+  }
+}
 
-  return typeof data?.httpStatus === "number";
+/** The HTTP status a tRPC error carries in `error.data.httpStatus` or as a proxy's 504 cause. */
+export function httpStatusOf(error: unknown): number | null {
+  const { data, cause } =
+    (error as { data?: { httpStatus?: unknown }; cause?: unknown } | null | undefined) ?? {};
+
+  if (cause instanceof GatewayTimeoutError) return 504;
+
+  return typeof data?.httpStatus === "number" ? data.httpStatus : null;
 }

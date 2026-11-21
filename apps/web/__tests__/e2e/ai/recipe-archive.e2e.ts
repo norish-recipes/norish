@@ -83,7 +83,7 @@ function exportButton() {
 
 /** Open the settings tab that holds both doorways: archive import and export. */
 async function openArchiveSettings(): Promise<void> {
-  await page.goto("/settings?tab=user");
+  await page.goto("/settings/account");
   await expect(exportButton()).toBeVisible({
     timeout: 30_000,
   });

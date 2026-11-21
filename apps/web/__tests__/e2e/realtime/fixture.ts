@@ -1,4 +1,4 @@
-import type { Browser, BrowserContext, Page } from "@playwright/test";
+import type { Browser, BrowserContext, BrowserContextOptions, Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
@@ -116,7 +116,7 @@ export interface RealtimeStack {
   readonly cookies: Record<Identity, SessionCookies>;
   readonly userIds: Record<Identity, string>;
   /** A fresh browser context signed in as `identity`, its sockets ledgered. */
-  newContext(identity: Identity): Promise<BrowserContext>;
+  newContext(identity: Identity, options?: BrowserContextOptions): Promise<BrowserContext>;
 }
 
 interface RealtimeWorkerFixtures {
@@ -142,8 +142,9 @@ function makeContextFactory(
   cookies: Record<Identity, SessionCookies>,
   open: Set<BrowserContext>
 ) {
-  return async (identity: Identity): Promise<BrowserContext> => {
+  return async (identity: Identity, options?: BrowserContextOptions): Promise<BrowserContext> => {
     const context = await browser.newContext({
+      ...options,
       baseURL,
       storageState: { cookies: cookies[identity], origins: [] },
       // The socket is what these scenarios are about; the offline runtime's

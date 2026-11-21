@@ -40,7 +40,6 @@
   "status": {
     "loading": "Laden...",
     "saving": "Opslaan...",
-    "deleting": "Verwijder...",
     "error": "Fout",
     "success": "Succes",
     "noResults": "Geen resultaten gevonden",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categorieën",
-    "category": {
-      "breakfast": "Ontbijt",
-      "lunch": "Lunch",
-      "dinner": "Diner",
-      "snack": "Snack"
-    },
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
-    "clearFilters": "Filters wissen"
+    "clearFilters": "Filters wissen",
+    "minRating": "Minimale beoordeling",
+    "minRatingStars": "Minstens {count} van de 5"
   },
   "time": {
     "minutes": "min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Dit veld is verplicht",
-    "invalidUrl": "Voer een geldige URL in"
+    "invalidUrl": "Voer een geldige URL in",
+    "invalidEmail": "Voer een geldig e-mailadres in"
   },
   "errors": {
     "operationFailed": "Bewerking mislukt",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Verbinden met Norish...",
-    "checkInternet": "Controleer uw internetverbinding",
-    "offlineBanner": "Je bent offline, opgeslagen gegevens worden getoond",
-    "serverUnreachableBanner": "Kan de Norish-server niet bereiken, opgeslagen gegevens worden getoond",
     "live": "Verbonden",
     "offline": "Offline",
     "openDetails": "Verbindingsdetails"
@@ -157,10 +150,7 @@
       "analyzing": "Afbeeldingen analyseren, even geduld...",
       "failed": "Importeren mislukt",
       "selectedCount": "{count} afbeeldingen geselecteerd - ze worden gecombineerd als één recept",
-      "library": "Bibliotheek",
-      "takePhoto": "Foto maken",
-      "counter": "{count} / {max} foto's",
-      "importFromCount": "Importeren van {count, plural, one {# foto} other {# foto's}}"
+      "library": "Bibliotheek"
     },
     "menu": {
       "description": "Importeer via een URL, scan een foto of begin vanaf nul."
@@ -195,9 +185,11 @@
     "year": "jaar",
     "years": "jaar",
     "next": "Volgende:",
-    "every": "Elke",
-    "everyOther": "Om de",
-    "on": "op",
+    "everyDay": "{interval, plural, =1 {Elke dag} =2 {Om de dag} other {Elke # dagen}}",
+    "everyWeek": "{interval, plural, =1 {Elke week} =2 {Om de week} other {Elke # weken}}",
+    "everyMonth": "{interval, plural, =1 {Elke maand} =2 {Om de maand} other {Elke # maanden}}",
+    "everyYear": "{interval, plural, =1 {Elk jaar} =2 {Om het jaar} other {Elke # jaar}}",
+    "onWeekday": "{repeat} op {weekday}",
     "today": "vandaag",
     "tomorrow": "morgen",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Klaar",
+    "paused": "Gepauzeerd",
     "done_action": "Klaar",
     "one": "Timer",
     "other": "Timers",
     "label_one": "1 timer",
     "label_other": "{count} timers",
-    "notification_title": "Timer afgelopen",
-    "notification_body": "{label} is klaar!",
+    "notification_body": "Timer afgelopen",
     "notifications_disabled": "Meldingen zijn uitgeschakeld",
-    "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen."
+    "notifications_disabled_hint": "Schakel meldingen in via je browserinstellingen om waarschuwingen te ontvangen wanneer timers op de achtergrond aflopen.",
+    "more": "+{count} meer"
   },
   "offlineStatus": {
     "title": "Verbinding & offline",
@@ -298,14 +291,30 @@
     "title": "Je bent offline",
     "description": "In de wachtrij gezet — Norish maakt dit automatisch af zodra je weer online bent."
   },
+  "changedElsewhere": {
+    "title": "Niet opgeslagen: het is eerst ergens anders gewijzigd"
+  },
   "storageUnavailable": {
-    "title": "Kan niet starten",
-    "description": "Norish kon de beveiligde opslag niet lezen en weet daardoor niet bij welke server deze app hoort. Er is niets gewijzigd. Probeer het opnieuw of herstart de app.",
-    "detailsLabel": "Technische details"
+    "title": "Opslag niet beschikbaar",
+    "description": "Norish kon de sleutelhanger van deze iPhone niet lezen.",
+    "badgeLabel": "Opslag niet beschikbaar. Tik om opnieuw af te spelen."
   },
   "aiKeyRejected": {
     "title": "Een AI-sleutel werkt niet meer",
     "description": "De provider weigert de API-sleutel voor {blocks} sinds {since}. Sla een nieuwe sleutel op om die AI-functies weer te laten werken.",
+    "openSettings": "Instellingen openen"
+  },
+  "household": {
+    "adminTransferred": "Adminrechten overgedragen aan {name}",
+    "unknownMember": "Onbekend",
+    "removedTitle": "Verwijderd uit huishouden",
+    "removedDescription": "Een admin heeft je uit het huishouden verwijderd."
+  },
+  "photos": {
+    "pickFailedTitle": "Foto kiezen mislukt",
+    "pickFailedMessage": "Probeer het opnieuw of kies een andere foto.",
+    "cameraDeniedTitle": "Cameratoegang staat uit",
+    "cameraDeniedMessage": "Sta cameratoegang toe in Instellingen om een foto te maken.",
     "openSettings": "Instellingen openen"
   }
 }

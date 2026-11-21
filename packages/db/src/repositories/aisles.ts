@@ -7,6 +7,8 @@ import { db } from "@norish/db/drizzle";
 import { aisleLinks, aisles } from "@norish/db/schema";
 import { AisleLinkSelectSchema, AisleSelectSchema } from "@norish/shared/contracts/zod";
 
+import { uuidListSql } from "./raw-sql";
+
 const AislesSchema = z.array(AisleSelectSchema);
 const AisleLinksSchema = z.array(AisleLinkSelectSchema);
 
@@ -96,8 +98,8 @@ export async function saveStoreAisles(
   }
 
   for (const [index, aisle] of input.entries()) {
-    // A known aisle is rewritten only where its name or place changed, so a
-    // Store saved for its colour leaves its aisles' versions alone.
+    // A known aisle is rewritten only where its name or place changed; only a
+    // rename bumps its version, since a move is not an edit of the aisle.
     await tx
       .insert(aisles)
       .values({ id: aisle.id, storeId, name: aisle.name, sortOrder: index })
@@ -107,7 +109,7 @@ export async function saveStoreAisles(
           name: aisle.name,
           sortOrder: index,
           updatedAt: new Date(),
-          version: sql`${aisles.version} + 1`,
+          version: sql`CASE WHEN ${aisles.name} = ${aisle.name} THEN ${aisles.version} ELSE ${aisles.version} + 1 END`,
         },
         setWhere: and(
           eq(aisles.storeId, storeId),
@@ -160,10 +162,7 @@ export async function listInheritedAisleLinks(
 ): Promise<AisleLinkDto[]> {
   if (storeIds.length === 0 || userIds.length === 0) return [];
 
-  const stores = sql.join(
-    storeIds.map((id) => sql`${id}::uuid`),
-    sql`, `
-  );
+  const stores = uuidListSql(storeIds);
   const users = sql.join(
     userIds.map((id) => sql`${id}`),
     sql`, `

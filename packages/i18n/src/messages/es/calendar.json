@@ -4,18 +4,19 @@
   },
   "mobile": {
     "today": "Hoy",
-    "scrollToToday": "Ir a hoy"
+    "scrollToToday": "Ir a hoy",
+    "planRecipe": "Planificar receta"
+  },
+  "today": {
+    "openRecipe": "Abrir receta",
+    "move": "Mover…",
+    "removeMessage": "{name} se quita de {slot} del {day}.",
+    "moveTitle": "Mover"
   },
   "editNote": {
     "title": "Editar nota",
     "noteLabel": "Nota",
     "notePlaceholder": "Escribe una nota..."
-  },
-  "navigation": {
-    "previousMonth": "Mes anterior",
-    "nextMonth": "Mes siguiente",
-    "prev": "Anterior",
-    "next": "Siguiente"
   },
   "weekdays": {
     "mon": "Lun",
@@ -50,6 +51,28 @@
     "addNote": "Añadir nota: {input}",
     "randomRecipe": "Receta aleatoria",
     "noRecipesFound": "No se han encontrado recetas.",
-    "failedToLoadRecipes": "Error al cargar las recetas."
+    "failedToLoadRecipes": "Error al cargar las recetas.",
+    "searchOrAddNote": "Busca recetas o añade una nota",
+    "random": "Receta aleatoria",
+    "planThisRecipe": "Planificar esta receta",
+    "planOnDay": "Planificar {name} el {day}",
+    "addToDay": "Añadir a {day}"
+  },
+  "caldav": {
+    "syncStarted": "Sincronización CalDAV iniciada",
+    "syncStartedDescription": "Elementos por sincronizar: {queued}",
+    "syncStartedWithFailures": "Elementos por sincronizar: {queued}. No se pudieron poner en cola: {failed}",
+    "configSaved": "Configuración guardada",
+    "configSavedDescription": "Tu configuración de CalDAV se ha guardado.",
+    "configDeleted": "Configuración eliminada",
+    "configDeletedDescription": "Tu configuración de CalDAV se ha eliminado.",
+    "retryStarted": "Sincronización iniciada",
+    "retryStartedDescription": "Reintentando los elementos pendientes y fallidos…"
+  },
+  "widgets": {
+    "nothingPlanned": "Nada planificado",
+    "signIn": "Abre Norish para iniciar sesión",
+    "open": "Abrir Norish",
+    "more": "+{count} más"
   }
 }

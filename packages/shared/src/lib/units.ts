@@ -247,6 +247,17 @@ export function isMeasure(unit: ResolvedUnit | null | undefined): boolean {
   return unit?.family === "mass" || unit?.family === "volume";
 }
 
+/** The metric units of measure; a recipe never writes these as a fraction. */
+export const METRIC_UNITS: ReadonlySet<UnitId> = new Set([
+  "gram",
+  "kilogram",
+  "milligram",
+  "milliliter",
+  "centiliter",
+  "deciliter",
+  "liter",
+]);
+
 /** The units-map entries that spell a weight or a volume: "gram", "tablespoon", "heaping_teaspoon". */
 export const MEASURE_MAP_IDS: ReadonlySet<string> = new Set(
   TABLE.flatMap((entry) => (isMeasure(entry) ? entry.mapIds : []))

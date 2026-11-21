@@ -9,6 +9,7 @@ import {
   parseMealieLegacyRecipeToDTO,
 } from "@norish/shared-server/archive/mealie-legacy-parser";
 import { ArchiveFormat, getArchiveInfo } from "@norish/shared-server/archive/parser";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 // @vitest-environment node
 
@@ -316,7 +317,9 @@ describe("Mealie Legacy Parser", () => {
       const recipe = createLegacyRecipe();
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto).not.toBeNull();
@@ -330,7 +333,9 @@ describe("Mealie Legacy Parser", () => {
       const recipe = createLegacyRecipe();
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.recipeIngredients).toHaveLength(2);
@@ -346,7 +351,9 @@ describe("Mealie Legacy Parser", () => {
       const recipe = createLegacyRecipe();
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.steps).toHaveLength(2);
@@ -358,7 +365,9 @@ describe("Mealie Legacy Parser", () => {
       const recipe = createLegacyRecipe();
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.tags).toHaveLength(3); // 2 tags + 1 category
@@ -377,7 +386,9 @@ describe("Mealie Legacy Parser", () => {
 
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.tags).toHaveLength(1);
@@ -390,7 +401,8 @@ describe("Mealie Legacy Parser", () => {
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
         "123e4567-e89b-42d3-a456-426614174000",
-        imageBuffer
+        imageBuffer,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
@@ -400,7 +412,9 @@ describe("Mealie Legacy Parser", () => {
       const recipe = createLegacyRecipe({ tags: [], recipe_category: [] });
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.tags).toHaveLength(0);
@@ -418,7 +432,9 @@ describe("Mealie Legacy Parser", () => {
 
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.calories).toBe(350);
@@ -446,7 +462,9 @@ describe("Mealie Legacy Parser", () => {
 
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.recipeIngredients).toHaveLength(1);
@@ -459,7 +477,12 @@ describe("Mealie Legacy Parser", () => {
       const recipe = createLegacyRecipe({ name: "" });
 
       await expect(
-        parseMealieLegacyRecipeToDTO(recipe, "123e4567-e89b-42d3-a456-426614174000")
+        parseMealieLegacyRecipeToDTO(
+          recipe,
+          "123e4567-e89b-42d3-a456-426614174000",
+          undefined,
+          BUILT_IN_CATEGORIES
+        )
       ).rejects.toThrow("Missing recipe name");
     });
 
@@ -521,7 +544,9 @@ describe("Mealie Legacy Parser", () => {
 
       const dto = await parseMealieLegacyRecipeToDTO(
         shawarmaRecipe,
-        "123e4567-e89b-42d3-a456-426614174000"
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
       );
 
       expect(dto.name).toBe("Homemade Chicken Shawarma");

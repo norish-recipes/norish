@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const markServerCopies = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/query-cache", () => ({ markServerCopies }));
+vi.mock("@/lib/offline/engine", () => ({ markServerCopies }));
 
 const KEY = ["library"];
 

@@ -1,0 +1,64 @@
+import type { ForegroundContinue } from "@/lib/boot/version-gate";
+import React from "react";
+import { StatusBadge } from "@/features/auth/components/status-badge";
+import { StatusScreen } from "@/features/auth/components/status-screen";
+import { useVersionRecheck } from "@/features/auth/hooks/use-version-recheck";
+import { SESSION_ROOT_HREF, SIGN_IN_HREF } from "@/features/auth/utils/hrefs";
+import { saveServerAddressLogged } from "@/features/auth/utils/save-server-address";
+import { MINIMUM_SERVER_VERSION } from "@/features/auth/utils/server-version";
+import { useHasActiveSession } from "@/lib/auth/auth-session-sync";
+import { resolveSavedServerContinue } from "@/lib/boot/version-gate";
+import { hostOf } from "@/lib/network/host-of";
+import { getServerAddress } from "@/lib/network/server-address";
+import { clearServerTooOld } from "@/lib/network/too-old-server";
+import { useRouter } from "expo-router";
+import { useIntl } from "react-intl";
+
+/** The server is older than this app supports: no Retry and no back, only the chip to another server. */
+export function UpdateServerScreen({ address, version }: { address: string; version?: string }) {
+  const intl = useIntl();
+  const router = useRouter();
+  const host = hostOf(address);
+  const signedIn = useHasActiveSession();
+
+  // Signed in: back to the app. Signed out: back to what this screen was pushed over,
+  // or on to Sign in for an address not saved yet.
+  const continueFrom = (next: ForegroundContinue) => {
+    if (next.screen === "signed-in-app") {
+      clearServerTooOld();
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace(SESSION_ROOT_HREF);
+
+      return;
+    }
+
+    const wasSaved = getServerAddress() === next.address;
+
+    // Rejected, so the re-check stays armed and tries again on the next return.
+    return saveServerAddressLogged(next.address).then(() => {
+      clearServerTooOld();
+
+      const route = resolveSavedServerContinue(wasSaved, router.canDismiss());
+
+      if (route.dismiss) router.dismissAll();
+      if (route.signIn) router.replace(SIGN_IN_HREF);
+    });
+  };
+
+  useVersionRecheck(address, signedIn, continueFrom);
+
+  return (
+    <StatusScreen
+      badge={<StatusBadge variant="update" />}
+      chipAddress={address}
+      description={intl.formatMessage(
+        {
+          id: version ? "auth.updateServer.description" : "auth.updateServer.descriptionOlder",
+        },
+        { host, version, minimumVersion: MINIMUM_SERVER_VERSION }
+      )}
+      descriptionTestID="update-server-description"
+      title={intl.formatMessage({ id: "auth.updateServer.title" })}
+    />
+  );
+}

@@ -1,0 +1,59 @@
+# Narrows the Pantry with its field and takes a food out of it: the field only filters, a food's sheet
+# keeps or drops it, and the server holds what is left.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- evalScript: |
+    ${
+      for (const name of ['milk', 'tahini']) {
+        http.post(NORISH_PROXY_CONTROL_URL + '/pantry-add', { body: JSON.stringify({ name }) });
+      }
+    }
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: groceries-switch-pantry
+    timeout: 20000
+- tapOn:
+    id: groceries-switch-pantry
+- extendedWaitUntil:
+    visible:
+      text: milk
+    timeout: 20000
+- assertVisible:
+    text: tahini
+# The field narrows the foods and adds nothing.
+- tapOn:
+    id: pantry-field
+- inputText: tah
+- extendedWaitUntil:
+    notVisible:
+      text: milk
+    timeout: 20000
+- assertVisible:
+    text: tahini
+- eraseText
+- extendedWaitUntil:
+    visible:
+      text: milk
+    timeout: 20000
+- hideKeyboard
+- waitForAnimationToEnd
+# A food's sheet drops it from the Pantry on Save.
+- tapOn: tahini
+- extendedWaitUntil:
+    visible:
+      id: pantry-food-switch
+    timeout: 20000
+- tapOn:
+    id: pantry-food-switch
+- tapOn: Save
+- extendedWaitUntil:
+    notVisible:
+      text: tahini
+    timeout: 20000
+- assertVisible:
+    text: milk
+- evalScript: ${output.pantry = json(http.get(NORISH_PROXY_CONTROL_URL + '/pantry?max=1').body).names}
+- assertTrue: ${output.pantry.length == 1 && output.pantry[0].toLowerCase() == 'milk'}

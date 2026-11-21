@@ -1,9 +1,13 @@
 # syntax=docker/dockerfile:1.26
 
+# The runtime stage is this Alpine with the node binary alone, so the pair moves together.
+ARG NODE_VERSION=26.13.1
+ARG ALPINE_VERSION=3.24
+
 ##############################
-# Base image (minimal, no pnpm needed at runtime)
+# Base image for the build stages
 ##############################
-FROM node:26.13.0-alpine3.24 AS base
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS base
 
 # Security: upgrade all packages to latest versions to fix CVEs
 RUN apk upgrade --no-cache && \
@@ -26,7 +30,7 @@ RUN --mount=type=bind,source=package.json,target=/tmp/package.json \
 # inside node_modules.
 ENV PNPM_CONFIG_STORE_DIR=/root/.local/share/pnpm/store
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.9 /uv /uvx /bin/
 
 ENV UV_LINK_MODE=copy \
   UV_PYTHON_DOWNLOADS=0 \
@@ -71,20 +75,34 @@ RUN --mount=type=cache,target=/root/.local/share/uv/python \
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
   pnpm install --frozen-lockfile --ignore-scripts --child-concurrency=1
 
+# The yt-dlp group is the release the image runs as /app/bin/yt-dlp, on this same Python.
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=cache,target=/root/.local/share/uv/python \
-  UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked && \
-  # The test suites the parser's packages ship load at no point.
-  find /app/apps/parser-api/.venv/lib -type d -path '*/site-packages/*/tests' -prune -exec rm -rf {} +
+  UV_PYTHON_DOWNLOADS=0 uv sync --project /app/apps/parser-api --locked --group yt-dlp && \
+  # The test suites the parser's packages ship load at no point (Cryptodome's is SelfTest).
+  find /app/apps/parser-api/.venv/lib -type d \( -path '*/site-packages/*/tests' \
+  -o -path '*/site-packages/Cryptodome/SelfTest' \) -prune -exec rm -rf {} + && \
+  # lxml's Cython sources and C headers serve only extensions built against it.
+  rm -rf /app/apps/parser-api/.venv/lib/python3.*/site-packages/lxml/includes && \
+  find /app/apps/parser-api/.venv/lib/python3.*/site-packages/lxml \( -name '*.pyx' -o -name '*.pxi' \
+  -o -name '*.pxd' -o -name '*.h' \) -delete && \
+  # yt-dlp's and mutagen's man pages and shell completions.
+  rm -rf /app/apps/parser-api/.venv/share && \
+  # Wheels ship their native libraries with debug info (curl_cffi's is 39 MB, 6 MB without).
+  apk add --no-cache binutils && \
+  find /app/apps/parser-api/.venv/lib -type f \( -name '*.so' -o -name '*.so.*' \) \
+  -exec strip --strip-unneeded {} +
 
-# What the parser never loads from the Python it runs on: the shared library
-# (the interpreter is linked statically, so nothing links it), Tk and its
-# demos, IDLE, the bundled pip and its installer, and the C headers.
+# What the parser and yt-dlp never load from their static Python: libpython, Tk, IDLE, pip, headers,
+# build config, the REPL, pydoc topics, unittest, profilers, turtle; binaries lose symbol tables.
 RUN cd /app/.uv/python/cpython-* && \
-  rm -rf lib/libpython3*.so* include share lib/tcl* lib/tk* lib/itcl* lib/thread* \
-  lib/python3.*/tkinter lib/python3.*/idlelib lib/python3.*/turtledemo \
-  lib/python3.*/ensurepip lib/python3.*/site-packages/pip* \
-  lib/python3.*/lib-dynload/_tkinter*
+  rm -rf lib/libpython3*.so* include share lib/tcl* lib/tk* lib/itcl* lib/thread* lib/libtcl* \
+  lib/pkgconfig lib/python3.*/tkinter lib/python3.*/idlelib lib/python3.*/turtledemo \
+  lib/python3.*/turtle.py lib/python3.*/ensurepip lib/python3.*/site-packages/pip* \
+  lib/python3.*/lib-dynload/_tkinter* lib/python3.*/config-3.* lib/python3.*/_pyrepl \
+  lib/python3.*/pydoc_data lib/python3.*/unittest lib/python3.*/profiling \
+  bin/idle3* bin/pip* bin/pydoc3* bin/python3*-config && \
+  strip --strip-unneeded bin/python3.* lib/python3.*/lib-dynload/*.so
 
 # NODE_ENV matches what CI exports around the same `pnpm run build` (and turbo
 # passes it through to every package build), so the image build can never
@@ -92,7 +110,8 @@ RUN cd /app/.uv/python/cpython-* && \
 # production internally either way; this pins the rest of the task graph.
 ENV NODE_ENV=production \
   DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
-  SKIP_ENV_VALIDATION=1
+  SKIP_ENV_VALIDATION=1 \
+  TURBO_CONCURRENCY=10
 
 # The image takes .next as it is, less what only the build and the tracer
 # read: the caches, the type output, source maps and the trace files.
@@ -109,7 +128,7 @@ RUN pnpm deploy --filter @norish/web --prod /app/deploy && \
   cd /app/deploy/node_modules/.pnpm && \
   # Build-time packages that reach the production closure through required
   # peers: TypeScript as tRPC's, and Babel, type declarations and Tailwind with
-  # them. The server runs through tsx and esbuild, so those two stay.
+  # them.
   rm -rf typescript@* @babel+* @types+* tailwindcss@* @tailwindcss+* \
   # SWC compiles only during next build.
   @next+swc-* && \
@@ -117,6 +136,31 @@ RUN pnpm deploy --filter @norish/web --prod /app/deploy && \
   # server loads the CommonJS build alone.
   rm -rf next@*/node_modules/next/dist/esm next@*/node_modules/next/dist/docs && \
   find next@*/node_modules/next -name '*.runtime.dev.js' -delete && \
+  # The production runtimes (compiled/next-server) carry React inside them and the server loads
+  # the react package, so Next's own React copies never load. Fails if config asks experimental React.
+  node -e "if (require('/app/apps/web/node_modules/next/dist/lib/needs-experimental-react') \
+  .needsExperimentalReact(require('/app/apps/web/.next/required-server-files.json').config)) \
+  throw new Error('next.config selects experimental React: keep its builds')" && \
+  N=$(echo next@*/node_modules/next/dist) && \
+  rm -rf $N/compiled/react $N/compiled/react-dom $N/compiled/react-server-dom-* $N/compiled/scheduler \
+  $N/compiled/*-experimental $N/compiled/next-server/*experimental* \
+  # Build-time parts: Babel, next/font's loaders, the file tracer, Terser, the CSS minifiers and
+  # the bundle analyzer's UI. @vercel/og loads only for an ImageResponse, which no route draws.
+  $N/compiled/babel $N/compiled/babel-packages $N/compiled/@next/font $N/compiled/@vercel/nft \
+  $N/compiled/terser $N/compiled/postcss-preset-env $N/compiled/cssnano-simple $N/bundle-analyzer \
+  $N/compiled/@vercel/og && \
+  # pdfjs-dist draws PDFs in the browser; the server render bundles build/pdf.mjs into .next.
+  rm -rf pdfjs-dist@*/node_modules/pdfjs-dist/legacy pdfjs-dist@*/node_modules/pdfjs-dist/web \
+  pdfjs-dist@*/node_modules/pdfjs-dist/types pdfjs-dist@*/node_modules/pdfjs-dist/image_decoders \
+  # openai runs from its compiled .mjs files; src/ is the TypeScript they came from.
+  openai@*/node_modules/openai/src \
+  # heic-decode loads libheif-js/wasm-bundle, the one build that embeds its WebAssembly.
+  libheif-js@*/node_modules/libheif-js/libheif libheif-js@*/node_modules/libheif-js/libheif-wasm/libheif.* \
+  libheif-js@*/node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs \
+  # The server imports date-fns per function and passes no locale, so only en-US loads.
+  date-fns@*/node_modules/date-fns/fp && \
+  find date-fns@*/node_modules/date-fns/locale -mindepth 1 -maxdepth 1 ! -name _lib ! -name 'en-US*' \
+  -exec rm -rf {} + && \
   # Source maps, type declarations and documentation load at no point, nor do
   # the test suites and test helpers packages ship (`ai/test` among them).
   find /app/deploy/node_modules -type f \( -name '*.map' -o -name '*.d.ts' -o -name '*.d.mts' \
@@ -179,7 +223,9 @@ EOF
 RUN for copy in /app/deploy/node_modules/.pnpm/*/node_modules/@norish/*; do \
   rm -rf "$copy/dist" && \
   find "$copy" -type f \( -name 'vitest.config.*' -o -name 'tsconfig*.json' -o -name 'eslint.config.*' \
-  -o -name 'turbo.json' \) -delete; \
+  -o -name 'turbo.json' \) -delete && \
+  # Drizzle's migrator reads meta/_journal.json and the .sql files; the snapshots are drizzle-kit's.
+  rm -f "$copy"/src/migrations/meta/*_snapshot.json; \
   done && \
   for dir in /app/packages/*/; do \
   name=$(node -p "require('${dir}package.json').name") && \
@@ -191,46 +237,30 @@ RUN for copy in /app/deploy/node_modules/.pnpm/*/node_modules/@norish/*; do \
   fi; \
   done
 
-##############################
-# yt-dlp download (cached separately from app build)
-##############################
-FROM base AS ytdlp
-
-# Keep in step with DEFAULT_YT_DLP_VERSION in packages/config/src/zod/server-config.ts:
-# this is the binary the image actually ships, and that constant is the version
-# the server reports for it.
-ARG YT_DLP_VERSION=2026.10.26
-ARG TARGETARCH
-
-RUN apk add --no-cache curl
-
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-  YT_DLP_BINARY="yt-dlp_musllinux_aarch64"; \
-  else \
-  YT_DLP_BINARY="yt-dlp_musllinux"; \
-  fi && \
-  mkdir -p /ytdlp && \
-  curl --fail --silent --show-error \
-  --location \
-  --retry 5 \
-  --retry-all-errors \
-  --retry-delay 3 \
-  "https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/${YT_DLP_BINARY}" \
-  --output /ytdlp/yt-dlp && \
-  chmod +x /ytdlp/yt-dlp
+# The server runs as JavaScript, without tsx: the deployed copies' TypeScript and the custom
+# server's compile in place with esbuild, the transform tsx applied at every start, and the
+# copies' exports name the .js. docker/compiled-workspace-hooks.mjs resolves them at runtime.
+RUN cd apps/web && node /app/docker/compile-workspace.mjs \
+  /app/deploy/node_modules/.pnpm/*/node_modules/@norish/* /app/apps/web/server
 
 ##############################
 # Runtime stage (minimal, no pnpm)
 ##############################
-FROM base AS runtime
+# Plain Alpine plus the node binary: removing npm and Node's headers from the node image
+# in a later layer would leave them in its base layer.
+FROM alpine:${ALPINE_VERSION} AS runtime
 
 LABEL org.opencontainers.image.source="https://github.com/norish-recipes/norish"
 
-# Install runtime-only system deps (base already ran apk upgrade)
-RUN apk add --no-cache ffmpeg su-exec && \
-  # Clean up npm (not needed, we use node directly)
-  rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack && \
-  rm -rf /var/cache/apk/* /tmp/* /root/.npm
+COPY --from=base /usr/local/bin/node /usr/local/bin/node
+
+# Security: upgrade all packages to latest versions to fix CVEs. Node links libstdc++,
+# libgcc and libatomic; the node user is UID/GID 1000, as in the node image.
+RUN apk upgrade --no-cache && \
+  apk add --no-cache ca-certificates libc6-compat libstdc++ libgcc libatomic ffmpeg su-exec && \
+  addgroup -g 1000 node && \
+  adduser -u 1000 -G node -s /bin/sh -D node && \
+  rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /app
 
@@ -250,7 +280,7 @@ RUN test -n "${NORISH_VERSION_REPORT_JSON}"
 ENV NORISH_VERSION_REPORT_JSON=${NORISH_VERSION_REPORT_JSON}
 
 # Use non-root user for runtime.
-# The node image already has user 'node' with UID/GID 1000.
+# The stage above creates user 'node' with UID/GID 1000.
 # For custom UID/GID, create a new user; otherwise reuse 'node'.
 ARG UID=1000
 ARG GID=1000
@@ -275,25 +305,23 @@ COPY --from=build --chown=${UID}:${GID} /app/apps/web/public/ ./apps/web/public/
 COPY --from=build --chown=${UID}:${GID} /app/apps/parser-api/ ./apps/parser-api/
 COPY --from=build --chown=${UID}:${GID} /app/.uv/python/ /app/.uv/python/
 
-# --- Custom server, run from source through tsx ---
-# Its package.json says "type": "module". No tsconfig.json comes over: from
-# /app or /app/apps/web, tsx would apply apps/web's @norish/queue/* path alias
-# into /app/packages and load a second queue registry.
+# --- Custom server, compiled to JavaScript ---
+# Its package.json says "type": "module". The hooks resolve the compiled workspace's
+# extensionless imports in the server's own thread.
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/server/ ./apps/web/server/
 COPY --from=build --chown=${UID}:${GID} /app/apps/web/package.json ./apps/web/package.json
+COPY --chown=${UID}:${GID} docker/compiled-workspace-hooks.mjs ./compiled-workspace-hooks.mjs
 
 # --- Workspace packages: package.json and a src link into the deployed copy ---
 # The code runs from node_modules; the links serve the data files read from
 # packages/<dir>/src (AI prompts, migrations, the icon set).
 COPY --from=build --chown=${UID}:${GID} /app/runtime-packages/ ./packages/
 
-# Create upload and bin parent directories only.
-# Subdirectories (recipes/, avatars/, video-temp/) are created on-demand
+# Uploads' subdirectories (recipes/, avatars/, video-temp/) are created on demand;
+# /app/bin/yt-dlp is the parser venv's entry point (its yt-dlp group).
 RUN mkdir -p /app/uploads /app/bin && \
-  chown -R ${UID}:${GID} /app/uploads /app/bin
-
-# Copy pre-downloaded yt-dlp binary from dedicated build stage
-COPY --from=ytdlp --chown=${UID}:${GID} /ytdlp/yt-dlp /app/bin/yt-dlp
+  chown -R ${UID}:${GID} /app/uploads /app/bin && \
+  ln -s /app/apps/parser-api/.venv/bin/yt-dlp /app/bin/yt-dlp
 
 # The container starts as root only so the entrypoint can hand the uploads
 # folder to this user; the server itself runs as it.
@@ -311,5 +339,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 
 ENTRYPOINT ["norish-entrypoint"]
 
-# Run directly with node; the custom server starts the embedded parser API when needed
-CMD ["node", "--import", "tsx", "/app/apps/web/server/index.ts"]
+# Run directly with node; the custom server starts the embedded parser API when needed.
+# A small young generation: loading the server's modules grows it, and its RSS is never given back.
+# optimize-for-size trades a slower start for ~30 MB less resident code and heap.
+CMD ["node", "--max-semi-space-size=4", "--optimize-for-size", "--import", "/app/compiled-workspace-hooks.mjs", "/app/apps/web/server/index.js"]

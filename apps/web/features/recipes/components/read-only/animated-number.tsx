@@ -1,0 +1,52 @@
+"use client";
+
+import { useState } from "react";
+import { RollingText } from "@/components/shared/rolling-text";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
+
+import { valueMagnitude } from "@norish/shared/lib/rolling-slots";
+
+type AnimatedNumberProps = {
+  /** The rendered value. A change to it is what rolls the digits. */
+  value: string;
+  className?: string;
+};
+
+/**
+ * A number that changes under the reader — an ingredient amount, a serving
+ * count, a macro.
+ *
+ * Swapping the text outright reads as a repaint and gives no sense that the two
+ * figures are the same quantity, so each character slot rolls instead. Slots
+ * are keyed from the right, so 400 → 1000 rolls what actually changed rather
+ * than shifting every digit one place, and the whole value is carried once
+ * alongside so nothing reads it out as "five, zero, zero".
+ *
+ * Only the figure belongs in here. Rolling the word beside it — "4 servings" —
+ * animates a word that did not change, which reads as a glitch rather than as a
+ * count going up.
+ */
+export function AnimatedNumber({ value, className = "" }: AnimatedNumberProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [previous, setPrevious] = useState(value);
+  const [isRising, setIsRising] = useState(true);
+
+  if (value !== previous) {
+    setPrevious(value);
+    setIsRising(valueMagnitude(value) >= valueMagnitude(previous));
+  }
+
+  if (prefersReducedMotion) {
+    return <span className={`tabular-nums ${className}`}>{value}</span>;
+  }
+
+  return (
+    <RollingText
+      className={`tabular-nums ${className}`}
+      isRising={isRising}
+      keyFrom="right"
+      srValue={value}
+      value={value}
+    />
+  );
+}

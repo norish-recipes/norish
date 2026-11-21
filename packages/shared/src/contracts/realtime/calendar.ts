@@ -42,7 +42,6 @@ export const calendarInternalCompanion = {
 export type CalendarItemEvent = keyof typeof calendarInternalCompanion;
 
 export const calendarRealtime = defineRealtimeCatalogue("calendar", {
-  failed: { scope: "household", payload: z.object({ reason: z.string() }) },
   itemCreated: { scope: "household", payload: ItemCreatedSchema },
   itemDeleted: { scope: "household", payload: ItemDeletedSchema },
   itemMoved: { scope: "household", payload: ItemMovedSchema },

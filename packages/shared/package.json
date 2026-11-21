@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared",
-  "version": "0.26.1-beta",
+  "version": "0.27.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -28,6 +28,7 @@
     "@better-auth/utils": "catalog:",
     "@norish/config": "workspace:*",
     "@norish/db-schema": "workspace:*",
+    "@norish/i18n": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
@@ -38,7 +39,7 @@
     "fraction.js": "^5.3.4",
     "html-entities": "catalog:",
     "jsonrepair": "3.15.0",
-    "parse-ingredient": "3.0.1",
+    "parse-ingredient": "3.2.1",
     "react": "catalog:",
     "superjson": "catalog:",
     "zod": "catalog:"

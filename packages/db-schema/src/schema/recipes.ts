@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -10,8 +11,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { StoredNutrients } from "./ingredient-nutrition";
 import { users } from "./auth";
-import { recipeCategoryEnum } from "./recipe-categories";
 import { versionColumn } from "./shared";
 
 export const measurementSystemEnum = pgEnum("measurement_system", ["metric", "us"]);
@@ -41,6 +42,9 @@ export const recipes = pgTable(
     fat: numeric("fat", { precision: 6, scale: 2 }),
     carbs: numeric("carbs", { precision: 6, scale: 2 }),
     protein: numeric("protein", { precision: 6, scale: 2 }),
+    // The other nutrients the recipe states per serving, by the keys of
+    // `@norish/shared/contracts/nutrients`; only those it states.
+    nutritionExtras: jsonb("nutrition_extras").$type<StoredNutrients>(),
     // Recipe Provenance. The country is an ISO-3166-1 alpha-2 code — kept
     // authoritative for flags and pickers — beside its written name, which is
     // recipe content: inference writes it in the language of the recipe
@@ -59,7 +63,6 @@ export const recipes = pgTable(
     dishColor: text("dish_color"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    categories: recipeCategoryEnum("categories").array().notNull().default([]),
     ...versionColumn,
   },
   (t) => [

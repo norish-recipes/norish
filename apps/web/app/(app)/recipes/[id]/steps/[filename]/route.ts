@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveRecipeStepMedia } from "@/lib/recipe-media";
+import { serverPackage } from "@/lib/server-package";
 
-import { getRecipeOwnerId } from "@norish/db/repositories/recipes";
+const { getRecipeOwnerId } = await serverPackage<typeof import("@norish/db/repositories/recipes")>(
+  "@norish/db/repositories/recipes"
+);
 
 export const runtime = "nodejs";
 

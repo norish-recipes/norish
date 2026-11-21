@@ -19,6 +19,7 @@ export const liveResponseSchema = z.object({
 
 export const readyResponseSchema = z.object({
   status: z.literal("ok"),
+  version: z.string().describe("The running Norish version, e.g. 0.27.0-beta."),
   db: z.object({ status: z.literal("ok") }),
   valkey: z.object({ status: z.literal("ok") }),
   parser: reportedParserSchema,

@@ -11,7 +11,8 @@ This directory repackages a release into the image the shipped Compose examples
 use. The release comes from Norish's fork,
 [norish-recipes/obscura](https://github.com/norish-recipes/obscura): upstream's
 release built with the patches in its `patches/`, which send header tokens only
-to their own site. The fork builds each new upstream release on its own.
+to their own site. Before each Norish release, run the fork's **Norish release**
+workflow for the latest upstream tag, then bump `pin.env` to it.
 
 ## Why not just pull upstream's image
 

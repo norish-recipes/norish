@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
-
 import {
-  buildLocaleDisplayMap,
+  deviceLanguage,
+  matchDeviceLocale,
   normalizeEnabledLocales,
   resolveLocaleSelection,
-} from "../../../src/lib/i18n/locale-state";
+} from "@/lib/i18n/locale-state";
+import { describe, expect, it } from "vitest";
+
+import { getBundledLocales } from "@norish/i18n/locales";
 
 describe("normalizeEnabledLocales", () => {
   it("filters invalid locale codes", () => {
@@ -45,16 +47,40 @@ describe("resolveLocaleSelection", () => {
   });
 });
 
-describe("buildLocaleDisplayMap", () => {
-  it("creates selector label map from enabled locales", () => {
-    expect(
-      buildLocaleDisplayMap([
-        { code: "en", name: "English" },
-        { code: "nl", name: "Nederlands" },
-      ])
-    ).toEqual({
-      en: "English",
-      nl: "Nederlands",
-    });
+describe("matchDeviceLocale", () => {
+  const bundled = getBundledLocales();
+  const signedOutLocale = (device: string) =>
+    resolveLocaleSelection(matchDeviceLocale(device, bundled), bundled, "en");
+
+  it("takes an exact match", () => {
+    expect(signedOutLocale("nl")).toBe("nl");
+    expect(signedOutLocale("pt-BR")).toBe("pt-BR");
+  });
+
+  it("falls back from a region to its language", () => {
+    expect(signedOutLocale("nl-BE")).toBe("nl");
+    expect(signedOutLocale("pt-PT")).toBe("pt-BR");
+    expect(signedOutLocale("nb-NO")).toBe("no");
+  });
+
+  it("gives German the informal variant", () => {
+    for (const device of ["de", "de-DE", "de-CH", "de-AT"]) {
+      expect(signedOutLocale(device)).toBe("de-informal");
+    }
+  });
+
+  it("falls back to English when no locale matches", () => {
+    expect(signedOutLocale("ja-JP")).toBe("en");
+  });
+});
+
+describe("deviceLanguage", () => {
+  it("takes the app's first iOS language, which the per-app language setting changes", () => {
+    expect(deviceLanguage(["nl-NL", "en-US"], "en-US")).toBe("nl-NL");
+  });
+
+  it("falls back when iOS reports no languages", () => {
+    expect(deviceLanguage(undefined, "en-US")).toBe("en-US");
+    expect(deviceLanguage([], "en-US")).toBe("en-US");
   });
 });

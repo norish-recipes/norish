@@ -40,7 +40,6 @@
   "status": {
     "loading": "Wird geladen...",
     "saving": "Wird gespeichert...",
-    "deleting": "Wird gelöscht...",
     "error": "Fehler",
     "success": "Erfolg",
     "noResults": "Keine Ergebnisse gefunden",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 Min",
     "cookingTimeUnder120": "<120 Min",
     "categories": "Kategorien",
-    "category": {
-      "breakfast": "Frühstück",
-      "lunch": "Mittagessen",
-      "dinner": "Abendessen",
-      "snack": "Snack"
-    },
     "sortByTitle": "Titel",
     "sortByDate": "Datum",
-    "clearFilters": "Filter löschen"
+    "clearFilters": "Filter löschen",
+    "minRating": "Mindestbewertung",
+    "minRatingStars": "Mindestens {count} von 5"
   },
   "time": {
     "minutes": "Min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Dieses Feld ist erforderlich",
-    "invalidUrl": "Bitte gib eine gültige URL ein"
+    "invalidUrl": "Bitte gib eine gültige URL ein",
+    "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein"
   },
   "errors": {
     "operationFailed": "Vorgang fehlgeschlagen",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Verbindung zu Norish wird hergestellt...",
-    "checkInternet": "Bitte überprüfe deine Internetverbindung",
-    "offlineBanner": "Du bist offline, zwischengespeicherte Daten werden angezeigt",
-    "serverUnreachableBanner": "Der Norish-Server ist nicht erreichbar, zwischengespeicherte Daten werden angezeigt",
     "live": "Verbunden",
     "offline": "Offline",
     "openDetails": "Verbindungsdetails"
@@ -157,10 +150,7 @@
       "analyzing": "Bilder werden analysiert, bitte warten...",
       "failed": "Import fehlgeschlagen",
       "selectedCount": "{count} Bilder ausgewählt - werden als ein Rezept kombiniert",
-      "library": "Mediathek",
-      "takePhoto": "Foto aufnehmen",
-      "counter": "{count} / {max} Fotos",
-      "importFromCount": "Importieren von {count, plural, one {# Foto} other {# Fotos}}"
+      "library": "Mediathek"
     },
     "menu": {
       "description": "Importiere per URL, scanne ein Foto oder starte von Grund auf."
@@ -195,9 +185,11 @@
     "year": "Jahr",
     "years": "Jahre",
     "next": "Nächste:",
-    "every": "Jeden/Jede",
-    "everyOther": "Jeden zweiten/Jede zweite",
-    "on": "am",
+    "everyDay": "{interval, plural, =1 {Jeden Tag} =2 {Jeden zweiten Tag} other {Alle # Tage}}",
+    "everyWeek": "{interval, plural, =1 {Jede Woche} =2 {Jede zweite Woche} other {Alle # Wochen}}",
+    "everyMonth": "{interval, plural, =1 {Jeden Monat} =2 {Jeden zweiten Monat} other {Alle # Monate}}",
+    "everyYear": "{interval, plural, =1 {Jedes Jahr} =2 {Jedes zweite Jahr} other {Alle # Jahre}}",
+    "onWeekday": "{repeat} am {weekday}",
     "today": "heute",
     "tomorrow": "morgen",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Fertig",
+    "paused": "Pausiert",
     "done_action": "Fertig",
     "one": "Timer",
     "other": "Timer",
     "label_one": "1 Timer",
     "label_other": "{count} Timer",
-    "notification_title": "Timer abgelaufen",
-    "notification_body": "{label} ist fertig!",
+    "notification_body": "Timer abgelaufen",
     "notifications_disabled": "Benachrichtigungen sind deaktiviert",
-    "notifications_disabled_hint": "Aktiviere Benachrichtigungen in deinen Browser-Einstellungen, um Hinweise zu erhalten, wenn Timer im Hintergrund ablaufen."
+    "notifications_disabled_hint": "Aktiviere Benachrichtigungen in deinen Browser-Einstellungen, um Hinweise zu erhalten, wenn Timer im Hintergrund ablaufen.",
+    "more": "+{count} weitere"
   },
   "offlineStatus": {
     "title": "Verbindung & Offline-Modus",
@@ -298,14 +291,30 @@
     "title": "Du bist offline",
     "description": "In der Warteschlange — Norish schließt dies automatisch ab, sobald du wieder online bist."
   },
+  "changedElsewhere": {
+    "title": "Nicht gespeichert: Es wurde zuerst anderswo geändert"
+  },
   "storageUnavailable": {
-    "title": "Start nicht möglich",
-    "description": "Norish konnte den sicheren Speicher nicht lesen und weiß daher nicht, zu welchem Server diese App gehört. Es wurde nichts geändert. Versuch es erneut oder starte die App neu.",
-    "detailsLabel": "Technische Details"
+    "title": "Speicher nicht verfügbar",
+    "description": "Norish konnte den Schlüsselbund dieses iPhones nicht lesen.",
+    "badgeLabel": "Speicher nicht verfügbar. Tippe, um die Animation zu wiederholen."
   },
   "aiKeyRejected": {
     "title": "Ein KI-Schlüssel funktioniert nicht mehr",
     "description": "Der Anbieter lehnt den API-Schlüssel für {blocks} seit {since} ab. Speichere einen neuen Schlüssel, damit diese KI-Funktionen wieder laufen.",
+    "openSettings": "Einstellungen öffnen"
+  },
+  "household": {
+    "adminTransferred": "Admin übertragen an {name}",
+    "unknownMember": "Unbekannt",
+    "removedTitle": "Aus dem Haushalt entfernt",
+    "removedDescription": "Ein Admin hat dich aus dem Haushalt entfernt."
+  },
+  "photos": {
+    "pickFailedTitle": "Foto konnte nicht gewählt werden",
+    "pickFailedMessage": "Versuch es erneut oder wähle ein anderes Foto.",
+    "cameraDeniedTitle": "Kamerazugriff ist ausgeschaltet",
+    "cameraDeniedMessage": "Erlaube den Kamerazugriff in den Einstellungen, um ein Foto aufzunehmen.",
     "openSettings": "Einstellungen öffnen"
   }
 }

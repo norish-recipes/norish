@@ -366,7 +366,9 @@ describe("the Decision route", () => {
     expect(result.answers.Breakfast).toEqual({ type: "boolean", probability: 0.04 });
     expect(result.answers.mealtime).toMatchObject({ type: "choice", choice: "dinner" });
     expect(result.response.modelId).toBe("jev-2026-09-01");
-    expect(result.providerMetadata).toEqual({ typesafe: { confidence: { mealtime: 0.91 } } });
+    expect(result.providerMetadata).toEqual({
+      typesafe: { confidence: { mealtime: 0.91 }, legend: {} },
+    });
     expect(provider.control.decisionRequestCount).toBe(1);
     expect(provider.control.requests.at(-1)?.path).toBe("/v1/systemone");
   });

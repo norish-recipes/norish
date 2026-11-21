@@ -1,0 +1,42 @@
+# Cold-launches with the server unreachable: the Library and Today open from what the app kept, and
+# a recipe card opens its page.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Offline Roast", "key": "roast"}]'
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.roast}
+    timeout: 20000
+# Leaving the app saves what it has read.
+- pressKey: home
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: cut
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.roast}
+    timeout: 20000
+- assertVisible:
+    id: today-section
+- tapOn:
+    id: recipe-card-${output.roast}
+- extendedWaitUntil:
+    visible:
+      id: recipe-name
+      text: Offline Roast
+    timeout: 20000
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore

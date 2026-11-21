@@ -123,6 +123,8 @@ export function createWorker<T>(
       connection: getBullClient(),
       ...baseWorkerOptions,
       stalledInterval: QUEUE_SETTINGS[queueName].stalledInterval,
+      maxStalledCount:
+        QUEUE_SETTINGS[queueName].maxStalledCount ?? baseWorkerOptions.maxStalledCount,
       concurrency: QUEUE_SETTINGS[queueName].concurrency,
     }
   );

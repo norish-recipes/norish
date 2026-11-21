@@ -2,7 +2,7 @@ import { and, asc, between, eq, inArray, isNotNull, like, or, sql } from "drizzl
 import { alias } from "drizzle-orm/pg-core";
 
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
-import type { LocaleNames } from "@norish/shared/lib/ingredient-names";
+import type { FoodName, LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { db } from "@norish/db/drizzle";
 import {
   ingredientAliases,
@@ -214,6 +214,20 @@ export async function findIngredientNamesByIds(
     .where(inArray(ingredients.id, unique));
 
   return new Map(rows.map((row) => [row.id, row.name]));
+}
+
+/** Each Ingredient's catalogue name and its best spelling per language, for a name in the reader's. */
+export async function findIngredientDisplayNames(
+  ids: readonly string[]
+): Promise<Map<string, FoodName>> {
+  const [names, localeNames] = await Promise.all([
+    findIngredientNamesByIds(ids),
+    findLocaleNames(ids),
+  ]);
+
+  return new Map(
+    [...names].map(([id, name]) => [id, { name, localeNames: localeNames.get(id) ?? {} }])
+  );
 }
 
 export interface MintIngredientInput {

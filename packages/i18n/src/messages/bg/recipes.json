@@ -27,7 +27,9 @@
       "all": "Всичко",
       "recipes": "Рецепти",
       "cookbooks": "Готварски книги"
-    }
+    },
+    "importingCard": "Импортиране…",
+    "favourited": "В любими"
   },
   "back": {
     "all": "Обратно към библиотеката",
@@ -43,7 +45,8 @@
     "noResults": "Няма намерени рецепти",
     "noResultsHint": "Опитай да коригираш или изчистиш филтрите си.",
     "noCookbooks": "Още няма готварски книги",
-    "noCookbooksHint": "Готварската книга е озаглавен набор от рецепти. Създайте първата си, за да подредите библиотеката си."
+    "noCookbooksHint": "Готварската книга е озаглавен набор от рецепти. Създайте първата си, за да подредите библиотеката си.",
+    "descriptionMobile": "Добавете първата си рецепта от връзка, текст или снимки."
   },
   "card": {
     "noImage": "Няма налично изображение",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Тази рецепта не съществува или нямаш права да я преглеждаш.",
     "prep": "подготовка",
     "total": "общо",
-    "planMeal": "Планирай хранене",
     "recipeActions": "Действия за рецептата",
     "instructions": "Инструкции",
     "cook": "Готви",
@@ -78,7 +80,9 @@
     "addedBy": "Добавено от {name}",
     "decreaseServings": "По-малко порции",
     "increaseServings": "Повече порции",
-    "multiplier": "Множител"
+    "multiplier": "Множител",
+    "rateStars": "Оценка {count} от 5",
+    "stepPhoto": "Снимка на стъпката"
   },
   "actions": {
     "plan": "Планирай",
@@ -86,7 +90,6 @@
     "edit": "Редактирай",
     "delete": "Изтрий",
     "share": "Сподели",
-    "visitOriginal": "Посети оригиналната рецепта",
     "addToCalendar": "Добави в календара",
     "autoTag": "Авто-етикетиране",
     "autoTagging": "Генериране на етикети...",
@@ -103,10 +106,13 @@
     "inferringProvenance": "Определяне на произхода…",
     "linkIngredients": "Свържи съставките със стъпките",
     "linkingIngredients": "Свързване на съставките…",
-    "enrichmentFailed": "Последното изпълнение е неуспешно",
     "generateImage": "Генерирай изображение",
     "generatingImage": "Генериране на изображение…",
-    "cookbooks": "Готварски книги"
+    "cookbooks": "Готварски книги",
+    "favourite": "Любима",
+    "unfavourite": "Премахни от любимите",
+    "ai": "ИИ",
+    "shareLink": "Сподели връзка"
   },
   "sharePanel": {
     "title": "Сподели рецепта",
@@ -150,7 +156,13 @@
       "title": "Изтрий връзката",
       "message": "Да се изтрие ли тази връзка за споделяне на {recipeName}? Това действие не може да бъде отменено.",
       "confirm": "Изтрий връзката"
-    }
+    },
+    "expiresAfter": "Изтича след",
+    "expiresOn": "Изтича на {date}",
+    "expiredOn": "Изтекла на {date}",
+    "lastOpenedOn": "Последно отворена {date}",
+    "neverExpires": "Не изтича",
+    "linkCreated": "Създадена на {date}"
   },
   "convert": {
     "ariaLabel": "Преобразуване на мерна система",
@@ -166,14 +178,14 @@
     "confirmMessage": "Наистина ли искаш да изтриеш „{recipeName}“?",
     "warning": "Това действие не може да бъде отменено.",
     "confirmCount": "Изтриване на {count, plural, one {# рецепта} other {# рецепти}}?",
-    "keptCount": "{count, plural, one {# рецепта остава} other {# рецепти остават}}, защото нямате право да {count, plural, one {я} other {ги}} изтриете."
+    "keptCount": "{count, plural, one {# рецепта остава} other {# рецепти остават}}, защото нямате право да {count, plural, one {я} other {ги}} изтриете.",
+    "alertTitle": "Да се изтрие ли {name}?"
   },
   "form": {
     "createTitle": "Създаване на рецепта",
     "editTitle": "Редактиране на рецепта",
     "createDescription": "Добави нова рецепта в колекцията си",
     "editDescription": "Обнови детайлите на рецептата си",
-    "initializingForm": "Инициализиране на формуляра...",
     "photo": "Снимка",
     "basicInfo": "Основна информация",
     "ingredients": "Съставки",
@@ -194,6 +206,7 @@
     "tagsHelp": "Въведи етикети и щракни върху предложенията, за да ги добавиш. Етикетите на рецептата са запълнени, новите имат прекъсната рамка.",
     "tagsAndCategories": "Етикети и категории",
     "categoriesHelp": "Избери категории хранене за тази рецепта.",
+    "addCategory": "Нова категория",
     "category": {
       "breakfast": "Закуска",
       "lunch": "Обяд",
@@ -224,19 +237,12 @@
     "createRecipe": "Създай рецепта",
     "saveChanges": "Запази промените",
     "uploading": "Качване...",
-    "clickToUpload": "Щракни, за да качиш, или плъзни и пусни",
-    "pasteToUpload": "за поставяне",
-    "imageFormats": "PNG, JPG, WEBP до 5MB",
     "discardChangesConfirm": "Имаш незапазени промени. Да се отхвърлят ли и да напуснеш страницата?"
   },
   "gallery": {
-    "addImage": "Добави изображение",
     "uploading": "Качване...",
     "uploadFailed": "Качването не бе успешно",
-    "dragToReorder": "Плъзни, за да пренаредиш",
-    "maxImagesReached": "Разрешени са максимум {max} изображения",
-    "maxVideosReached": "Разрешени са максимум {max} видеоклипа",
-    "invalidFileType": "Невалиден тип файл"
+    "dragToReorder": "Плъзни, за да пренаредиш"
   },
   "carousel": {
     "noImageAvailable": "Няма налично изображение",
@@ -245,8 +251,14 @@
       "mute": "Заглуши",
       "unmute": "Включи звука",
       "fullscreen": "Цял екран",
-      "exitFullscreen": "Изход от цял екран"
-    }
+      "exitFullscreen": "Изход от цял екран",
+      "progress": "Напредък на видеото",
+      "play": "Пусни",
+      "pause": "Пауза"
+    },
+    "recipeImage": "Изображение на рецептата",
+    "closeViewer": "Затваряне на прегледа на изображението",
+    "photoOf": "Снимка {current} от {total}"
   },
   "validation": {
     "nameRequired": "Името на рецептата е задължително",
@@ -260,11 +272,18 @@
     "fat": "Мазнини",
     "carbs": "Въглехидрати",
     "protein": "Протеини",
+    "fiber": "Фибри",
+    "saturatedFat": "от които наситени мастни киселини",
+    "sugars": "от които захари",
+    "sodium": "Натрий",
+    "moreNutrients": "Още хранителни вещества",
+    "fewerNutrients": "По-малко хранителни вещества",
+    "starredMayBeHigher": "Не всяка съставка има тази стойност, затова стойностите с * може да са по-високи",
+    "referenceIntake": "% от дневния референтен прием за възрастен ({calories} kcal)",
     "showingPortions": "Показани стойности за {count} {count, plural, one {порция} other {порции}}",
-    "noInfo": "Няма налична информация за хранителните стойности",
-    "estimateWithAI": "Изчисли с AI",
     "estimated": "Приблизително",
     "leftOut": "{count, plural, one {# ред не е отчетен} other {# реда не са отчетени}}",
+    "leftOutStarred": "{count, plural, one {# ред не е отчетен} other {# реда не са отчетени}}, затова стойностите с * може да са по-високи",
     "estimatedByAI": "изчислено от ИИ",
     "reasons": {
       "seasoning": "подправка",
@@ -275,7 +294,12 @@
       "noPieceWeight": "все още няма тегло на брой"
     },
     "workedOutFrom": "Изчислено от съставките, по данни от {sources}.",
-    "householdNumbers": "стойностите на вашето домакинство"
+    "householdNumbers": "стойностите на вашето домакинство",
+    "decreasePortions": "По-малко порции",
+    "increasePortions": "Повече порции",
+    "portions": "{count, plural, one {# порция} other {# порции}}",
+    "percentOfReference": "{percent}% от {amount}",
+    "percentOfDailyReference": "{percent}% от дневната референция {amount}"
   },
   "measurementSystem": {
     "label": "Мерна система",
@@ -290,7 +314,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Стъпка {number}: Опиши стъпката...",
-    "stepPlaceholderShort": "Стъпка {number}"
+    "stepPlaceholderShort": "Стъпка {number}",
+    "recipeSuggestions": "Предложения за рецепти",
+    "ingredientSuggestions": "Предложения за съставки"
   },
   "stepIngredients": {
     "rowLabel": "Свързани съставки",
@@ -321,16 +347,15 @@
   },
   "toasts": {
     "imported": "Рецептата е импортирана",
-    "failed": "Операцията с рецептата не бе успешна",
     "failedDescription": "Нещо се обърка при обработката на рецептата. Провери конзолата на браузъра за технически подробности.",
     "incomplete": "Тази рецепта може да е непълна. Сравнете я с източника.",
     "notARecipe": "Тази страница не прилича на рецепта.",
     "privateAddress": "Импортирането от адреси в частна мрежа не е разрешено на този сървър.",
-    "batchImported": "Рецептите са импортирани",
-    "batchImportedDescription": "{count} рецепти импортирани от архив",
     "view": "Виж",
     "open": "Отвори",
-    "deleteKept": "{count, plural, one {# рецепта е променена} other {# рецепти са променени}} от някой друг и {count, plural, one {запазена} other {запазени}}."
+    "deleteKept": "{count, plural, one {# рецепта е променена} other {# рецепти са променени}} от някой друг и {count, plural, one {запазена} other {запазени}}.",
+    "deleted": "Рецептата е изтрита",
+    "deletedDescription": "Тази рецепта беше премахната."
   },
   "tags": {
     "panel": {
@@ -345,12 +370,23 @@
     "servings": "Порции",
     "serving": "{count, plural, one {# порция} other {# порции}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Плъзни, за да преминеш между стъпките",
-    "swipeIngredients": "Плъзни наляво за съставките",
-    "swipeBackToSteps": "Плъзни надясно за стъпките",
     "readyAt": "Готово около {time}",
     "timers": "Таймери",
-    "nextStep": "Следваща стъпка"
+    "nextStep": "Следваща стъпка",
+    "stepLabel": "Стъпка {number}",
+    "previousStep": "Предишна стъпка",
+    "startTimer": "Пусни таймер за {duration}",
+    "pauseTimer": "Пауза на таймера, остават {time}",
+    "resumeTimer": "Продължи таймера, остават {time}",
+    "dismissTimer": "Затвори таймера",
+    "restartTimer": "Рестартирай таймера",
+    "notificationsOff": "Известията за Norish са изключени, затова таймерите звънят само докато приложението е отворено.",
+    "decreaseTimer": "Извади {time}",
+    "increaseTimer": "Добави {time}",
+    "openTimer": "{timer}, отвори {recipe} в режим на готвене",
+    "openTimerAtStep": "{timer}, отвори {recipe} в режим на готвене на стъпка {number}",
+    "timersLeft": "Таймери, остават {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# час } other {# часа }}{minutes, plural, =0 {} one {# минута } other {# минути }}{seconds, plural, =0 {} one {# секунда } other {# секунди }}"
   },
   "enrichment": {
     "failed": "Обогатяването е неуспешно",
@@ -373,10 +409,7 @@
   "provenance": {
     "title": "Произход",
     "region": "Регион",
-    "cuisines": "Кухни",
-    "inferring": "Определя се откъде произхожда тази рецепта…",
-    "noInfo": "Все още няма информация за произхода",
-    "inferWithAI": "Определи с AI"
+    "cuisines": "Кухни"
   },
   "import": {
     "alreadyExists": "Вече имаш тази рецепта",
@@ -430,7 +463,13 @@
     "changeImage": "Смяна на изображението",
     "removeImage": "Премахване на изображението",
     "imageUploadFailed": "Изображението не можа да бъде качено.",
-    "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн."
+    "imageNeedsConnection": "Изображенията могат да се сменят, когато отново сте онлайн.",
+    "rename": "Преименуване",
+    "deleteAlertTitle": "Да се изтрие ли {title}?",
+    "changeCover": "Смяна на корицата",
+    "renameTitle": "Преименуване на готварската книга",
+    "coverFromLibrary": "Избор от библиотеката",
+    "coverFromCamera": "Правене на снимка"
   },
   "print": {
     "title": "Печат на рецептата",
@@ -449,5 +488,109 @@
     "newCookbook": "Нова готварска книга",
     "filedInto": "{count, plural, one {# рецепта е добавена} other {# рецепти са добавени}} в {title}",
     "filedIntoMany": "{count, plural, one {# рецепта е добавена} other {# рецепти са добавени}} в {cookbooks} готварски книги"
+  },
+  "addRecipe": {
+    "fromLink": "От линк",
+    "fromLinkHint": "Всеки сайт с рецепти или видео",
+    "fromPhotos": "От снимки",
+    "fromPhotosHint": "Страници от готварска книга или екранна снимка",
+    "fromText": "От текст",
+    "fromTextHint": "Поставете рецепта или JSON-LD",
+    "writeYourself": "Напишете я сами",
+    "writeYourselfHint": "Започнете с празна рецепта",
+    "fromClipboard": "От клипборда",
+    "linkTitle": "Импортиране от линк",
+    "textTitle": "Импортиране от текст",
+    "photosTitle": "Импортиране от снимки",
+    "camera": "Камера",
+    "photoLibrary": "Фотобиблиотека",
+    "photoCount": "{count, plural, one {# снимка, импортирана като една рецепта} other {# снимки, импортирани като една рецепта}}",
+    "photoLimits": "До {max} снимки, JPEG, PNG или WebP",
+    "removePhoto": "Премахване на снимка {number}"
+  },
+  "shareExtension": {
+    "sending": "Изпращане към Norish…",
+    "sentTitle": "Импортиране в Norish",
+    "sentBody": "След малко ще се появи във вашата библиотека.",
+    "savedTitle": "Запазено за по-късно",
+    "savedBody": "Norish ще го импортира, когато сървърът ви е достъпен.",
+    "signedOut": "Първо отворете Norish и влезте.",
+    "tooOld": "Първо трябва да обновите сървъра си на Norish.",
+    "noAi": "Импортирането на снимки изисква ИИ, който е изключен на сървъра ви.",
+    "failed": "Norish не успя да импортира това.",
+    "close": "Затвори",
+    "photoCount": "{count, plural, one {# снимка} other {# снимки}}",
+    "text": "Текст"
+  },
+  "editor": {
+    "newTitle": "Нова рецепта",
+    "editTitle": "Редактиране на рецепта",
+    "recipeName": "Име на рецептата",
+    "ingredient": "Съставка",
+    "sectionHeading": "Заглавие на раздел",
+    "step": "Стъпка",
+    "steps": "Стъпки",
+    "notesHint": "Започнете ред с # за заглавие; оградете думи с **двойни звездички** за удебеляване.",
+    "ingredientsHint": "Въвеждайте съставки като 2 чаши брашно; количествата и мерните единици се разпознават вместо вас. Започнете ред с # за раздел.",
+    "stepsHint": "Натиснете Enter за следващата стъпка. Въведете @, за да свържете съставка, # за раздел.",
+    "addIngredient": "Добавяне на съставка",
+    "removeIngredient": "Премахване на съставка",
+    "addStep": "Добавяне на стъпка",
+    "removeStep": "Премахване на стъпка",
+    "addPhoto": "Добавяне на снимка",
+    "addStepPhoto": "Добавяне на снимка към стъпка",
+    "removePhoto": "Премахване на снимка",
+    "mediaCount": "Снимки: {images}/{maxImages} · видеа: {videos}/{maxVideos}",
+    "photosOffline": "Снимки можете да добавите, когато сте онлайн.",
+    "tagsAndCategories": "Етикети и категории",
+    "categories": "Категории",
+    "tags": "Етикети",
+    "tagsHint": "Изберете предложение или въведете нов етикет; новите етикети са с пунктирана рамка.",
+    "addTag": "Добавяне на етикет",
+    "removeNamed": "Премахване на {name}",
+    "servingsAndTime": "Порции и време",
+    "minutes": "мин",
+    "perServing": "на порция, по избор",
+    "kcal": "ккал",
+    "grams": "г",
+    "source": "Източник",
+    "sourceUrl": "URL на източника",
+    "measurementSystem": "Мерна система",
+    "measurementHint": "Разпозната от съставките ви. Промяната само преименува и не преизчислява; след запазване използвайте Конвертиране.",
+    "discardTitle": "Отхвърляне на промените?",
+    "discardMessage": "Имате незапазени промени.",
+    "keepEditing": "Продължаване",
+    "discard": "Отхвърляне"
+  },
+  "search": {
+    "sortBestMatch": "Най-добро съвпадение",
+    "sortNewest": "Най-нови",
+    "sortOldest": "Най-стари",
+    "sortAZ": "А–Я",
+    "sortZA": "Я–А",
+    "sortLabel": "Подредба: {sort}",
+    "ratingChip": "{count}+ звезди",
+    "removeFilter": "Премахни {filter}",
+    "ingredientFilter": "филтър по съставка",
+    "count": "{count, plural, one {# рецепта} other {# рецепти}}",
+    "noMatch": "Няма рецепти за „{text}“",
+    "searchAllFields": "Търсене във всички полета",
+    "filtersOn": "Филтри, включени: {count}",
+    "matchTitle": "В заглавието",
+    "matchTag": "Таг:",
+    "matchIngredient": "Съставка:",
+    "matchStep": "Стъпка {number}:",
+    "searchFor": "Търсене на „{text}“",
+    "recipes": "Рецепти",
+    "narrowTo": "Стесни до",
+    "typeIngredient": "Съставка",
+    "typeTag": "Таг",
+    "typeCategory": "Категория",
+    "recent": "Скорошни",
+    "quickFilters": "Бързи филтри",
+    "underThirty": "Под 30 мин",
+    "fourAndUp": "4 и нагоре",
+    "editRecent": "Редактиране на „{text}“",
+    "offline": "Търсенето изисква връзка"
   }
 }

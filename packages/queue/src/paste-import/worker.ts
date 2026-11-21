@@ -14,6 +14,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { dashboardRecipe } from "@norish/db";
+import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import {
@@ -53,7 +54,8 @@ interface ParseResult {
 async function parseFromPastedText(
   text: string,
   recipeId: string,
-  forceAI?: boolean
+  forceAI: boolean | undefined,
+  householdCategories: readonly string[]
 ): Promise<ParseResult> {
   const extractRecipeWithAI = requireQueueApiHandler("extractRecipeWithAI");
   const trimmed = text.trim();
@@ -76,7 +78,7 @@ async function parseFromPastedText(
   const html = `<html><body><main><h1>Pasted recipe</h1><p>${escapeHtml(trimmed)}</p></main></body></html>`;
 
   try {
-    const recipe = await extractRecipeWithAI(html, recipeId);
+    const recipe = await extractRecipeWithAI(html, recipeId, { householdCategories });
 
     if (hasRecipeNameIngredientsAndSteps(recipe)) {
       return { recipe, usedAI: true };
@@ -194,7 +196,12 @@ export async function processPasteImportJob(
     }
 
     await reportStep(job, "parsing-text");
-    const parseResult = await parseFromPastedText(text, recipeId, forceAI);
+    const parseResult = await parseFromPastedText(
+      text,
+      recipeId,
+      forceAI,
+      await listCategoryNamesForViewer({ userId, householdUserIds })
+    );
 
     await reportStep(job, "saving");
     const textResult = await createResolvedRecipe(

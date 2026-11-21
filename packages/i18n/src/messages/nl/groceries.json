@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "Naamloos item",
-    "fromRecipes": "Uit {count, plural, one {# recept} other {# recepten}}",
-    "items": "{count, plural, one {# item} other {# items}}"
+    "items": "{count, plural, =0 {Geen items} one {# item} other {# items}}"
   },
   "store": {
     "unsorted": "Ongeordend",
@@ -54,7 +53,6 @@
       "violet": "Violet"
     },
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
-    "deleteWarning": "Items in deze winkel worden verplaatst naar Ongeordend.",
     "noStoresYet": "Nog geen winkels",
     "createStoreHint": "Maak een winkel aan om je boodschappen te organiseren",
     "hasItems": "Deze winkel heeft {count} boodschap.",
@@ -95,6 +93,7 @@
     "unavailable": "Je voorraadkast kon niet worden gelezen. Er is niets veranderd; probeer het opnieuw als je weer online bent.",
     "fieldLabel": "Zoek of voeg een product toe",
     "fieldPlaceholder": "Zoek of voeg toe, bijv. olijfolie",
+    "findPlaceholder": "Zoek een product in je voorraad",
     "add": "Toevoegen aan voorraadkast",
     "fromCatalogue": "Product toevoegen",
     "addFood": "{name} toevoegen aan je voorraadkast",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "Boodschap toevoegen",
     "editTitle": "Boodschap bewerken",
-    "itemName": "boodschappen naam",
-    "itemNamePlaceholder": "bijv. Melk, Eieren, Brood...",
     "selectStore": "Selecteer winkel",
-    "noStore": "Geen winkel",
     "recurrence": "Herhaling",
     "savePreference": "Onthoud winkel voor dit item",
     "addAnother": "Voeg nog een toe",
     "addRepeat": "Herhaling instellen",
-    "recurrenceEnabled": "Terugkerend",
-    "recurrenceSheet": {
-      "title": "Herhaling",
-      "subtitle": "Voeg dit item automatisch opnieuw toe aan je boodschappenlijst",
-      "enable": "Herhaling inschakelen",
-      "disable": "Herhaling uitschakelen",
-      "frequency": "Frequentie",
-      "weekly": "Wekelijks",
-      "biweekly": "Elke 2 weken",
-      "monthly": "Maandelijks",
-      "confirm": "Bevestigen"
-    },
     "storeOptional": "Winkel (optioneel)",
     "autoDetectFromHistory": "Automatisch detecteren uit geschiedenis",
     "autoDetectOrSelect": "Automatisch detecteren of selecteren",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "Je voorraadkast kon niet worden gelezen, dus er is nog niets aangevinkt. Vink aan wat je moet kopen.",
     "loadingIngredients": "Ingrediënten laden...",
     "noIngredients": "Geen ingrediënten.",
-    "addSelectedToGroceries": "Voeg toe aan boodschappen",
     "ingredientsAdded": "Ingrediënten toegevoegd aan boodschappenlijst.",
     "ingredientsFailed": "Kan ingrediënten niet toevoegen aan boodschappenlijst.",
     "addToGroceries": "Toevoegen aan boodschappen",
@@ -168,7 +151,6 @@
     "productLabel": "Product bij {store}",
     "cannotSearch": "Deze winkel kan niet doorzocht worden",
     "cannotSearchHint": "Norish kon geen zoekpagina uit de winkellink van {store} lezen. Pas hem aan bij Winkels beheren en de prijzen volgen.",
-    "packSize": "Verpakking",
     "packAmount": "Hoeveelheid per verpakking",
     "packUnit": "Eenheid",
     "productPage": "Productpagina",
@@ -195,6 +177,38 @@
     "packs": "{count} × {size}",
     "onePack": "geteld als één verpakking",
     "sale": "Aanbieding",
-    "regularPrice": "Normale prijs {price}"
+    "regularPrice": "Normale prijs {price}",
+    "each": "per stuk"
+  },
+  "mobile": {
+    "viewMode": "Weergave",
+    "viewByStore": "Per winkel",
+    "viewByRecipe": "Per recept",
+    "listSettings": "Lijstinstellingen",
+    "emptyHint": "Voeg items toe met de knop hieronder.",
+    "addTitle": "Boodschappen toevoegen",
+    "editTitle": "Boodschap bewerken",
+    "store": "Winkel",
+    "noStore": "Geen winkel",
+    "automatic": "Automatisch",
+    "never": "Nooit",
+    "removeRepeat": "Herhaling verwijderen",
+    "amountFor": "{amount} voor {recipe}",
+    "expand": "Uitklappen",
+    "collapse": "Inklappen",
+    "itemLabel": "Item",
+    "decreaseInterval": "Interval verlagen",
+    "increaseInterval": "Interval verhogen",
+    "manageStores": "Winkels beheren",
+    "addStore": "Winkel toevoegen",
+    "editStore": "Winkel bewerken",
+    "editStoreLabel": "{store} bewerken",
+    "deleteStoreLabel": "{store} verwijderen",
+    "deleteStoreTitle": "{store} verwijderen?",
+    "moveItemsToUnsorted": "Items naar Ongesorteerd verplaatsen",
+    "typePrice": "Typ de prijs zelf",
+    "product": "Product",
+    "chooseProduct": "Kies een product",
+    "recipeCount": "{count, plural, one {# recept} other {# recepten}}"
   }
 }

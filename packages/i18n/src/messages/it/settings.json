@@ -4,7 +4,7 @@
     "ariaLabel": "Schede impostazioni"
   },
   "tabs": {
-    "user": "Utente",
+    "account": "Account",
     "household": "Nucleo familiare",
     "caldav": "CalDAV",
     "admin": "Amministrazione",
@@ -193,7 +193,6 @@
           "abbreviated": "Abbreviate"
         }
       },
-      "applyError": "Applicazione della preferenza non riuscita",
       "afterPlanning": {
         "title": "Dopo aver pianificato una ricetta",
         "description": "Cosa succede quando pianifichi una ricetta",
@@ -279,11 +278,7 @@
         "warning": "Diventerai un membro normale e non potrai più espellere utenti o gestire i codici di accesso.",
         "confirmButton": "Trasferisci amministratore"
       },
-      "toasts": {
-        "kickFailed": "Espulsione dell'utente non riuscita",
-        "transferSuccess": "Privilegi di amministratore trasferiti a {name}",
-        "transferFailed": "Trasferimento dei privilegi di amministratore non riuscito"
-      }
+      "unknown": "Sconosciuto"
     },
     "joinCode": {
       "title": "Codice di accesso",
@@ -291,6 +286,7 @@
       "expiresIn": "Scade tra:",
       "regenerateButton": "Rigenera",
       "expired": "Scaduto",
+      "countdown": "{minutes} min {seconds} s",
       "noCodeDescription": "Nessun codice di accesso attivo. Generane uno per invitare nuovi membri.",
       "generateButton": "Genera codice di accesso",
       "copySuccess": "Codice di accesso copiato",
@@ -356,8 +352,7 @@
       "connectionStatus": {
         "connected": "Connesso",
         "checking": "Verifica...",
-        "disconnected": "Disconnesso",
-        "unknown": "Sconosciuto"
+        "disconnected": "Disconnesso"
       }
     },
     "deleteModal": {
@@ -388,10 +383,11 @@
         "failed": "Non riuscito",
         "removed": "Rimosso"
       },
-      "emptyFiltered": "Nessun elemento {status} trovato",
+      "emptyFiltered": "Nessun elemento con questo stato",
       "emptyDefault": "Nessun record di sincronizzazione trovato",
       "errorDetails": "Dettagli errore",
-      "pagination": "Pagina {current} di {total}"
+      "pagination": "Pagina {current} di {total}",
+      "paginationLabel": "Pagine dello stato sincronizzazione"
     }
   },
   "ingredients": {
@@ -639,8 +635,6 @@
       "localesDescription": "Seleziona quali lingue gli utenti possono scegliere",
       "defaultLocale": "Lingua predefinita",
       "defaultLocaleDescription": "Lingua utilizzata per i nuovi utenti e come fallback",
-      "localesSaved": "Impostazioni lingua salvate",
-      "localesError": "Salvataggio impostazioni lingua non riuscito",
       "atLeastOneLocale": "Almeno una lingua deve essere abilitata",
       "export": {
         "title": "Archivio ricette",
@@ -673,7 +667,6 @@
       },
       "deleteTitle": "Eliminare {name}?",
       "deleteConfirm": "Questo elimina definitivamente l'account dell'utente e lo rimuove dalla sua famiglia. L'azione non può essere annullata.",
-      "deleteSuccess": "{name} è stato eliminato",
       "countSummary": "{count, plural, one {# utente} other {# utenti}} in totale"
     },
     "registration": {
@@ -834,6 +827,7 @@
         "subtitle": "Parole chiave delle unità di tempo per il rilevamento dei timer",
         "description": "Configura le parole chiave utilizzate per rilevare i timer nelle istruzioni delle ricette. Supporta più lingue.",
         "enableToggle": "Abilita rilevamento timer",
+        "keywordRequired": "È richiesta almeno una parola chiave per ore, minuti o secondi",
         "hoursLabel": "Parole chiave ore",
         "hoursPlaceholder": "ora, ore, h",
         "hoursHelp": "Parole chiave per le ore (es. ora, ore, h)",
@@ -886,7 +880,7 @@
         "costWarning": "Può essere un'operazione costosa: con molte ricette può richiedere molto tempo e, con un provider di IA a pagamento, consumare una quantità significativa di crediti.",
         "confirmButton": "Esegui",
         "confirmButtonReplace": "Sovrascrivi",
-        "queued": "{queued, plural, =0 {Nessuna esecuzione in coda} one {# esecuzione in coda} other {# esecuzioni in coda}} per {recipes, plural, one {# ricetta} other {# ricette}}",
+        "started": "Avviato in background. Il monitor dei job ne mostra l'avanzamento.",
         "aiDisabled": "L'IA è disabilitata su questo server. Abilita prima l'IA.",
         "error": "Avvio dell'arricchimento in blocco non riuscito",
         "imageCount": "{count, plural, =0 {Non verrà generata nessuna immagine.} one {Verrà generata # immagine.} other {Verranno generate # immagini.}}"
@@ -971,6 +965,7 @@
       "apiKey": "Chiave API",
       "apiKeyPlaceholder": "Inserisci chiave API",
       "temperature": "Temperatura: {value}",
+      "temperatureLabel": "Temperatura",
       "temperatureHint": "Più bassa = più focalizzata, Più alta = più creativa",
       "maxTokens": "Token massimi",
       "requestTimeout": "Timeout richiesta (ms)",
@@ -1024,6 +1019,7 @@
       "maxLength": "Durata massima video (secondi)",
       "maxLengthDescription": "I video più lunghi richiedono più tempo e risorse per l'elaborazione",
       "maxFileSize": "Dimensione massima file video",
+      "maxFileSizeUnit": "MB",
       "maxFileSizeDescription": "Dimensione massima per i file video scaricati",
       "ytDlpVersion": "Versione yt-dlp",
       "ytDlpVersionDescription": "Versione di yt-dlp in esecuzione su questo server. Non modificabile qui.",
@@ -1045,6 +1041,7 @@
         "genericOpenai": "Compatibile OpenAI generico"
       },
       "transcriptionEndpoint": "URL dell'endpoint",
+      "transcriptionEndpointPlaceholderGeneric": "http://localhost:8000 (faster-whisper-server) o http://localhost:8080 (LocalAI)",
       "transcriptionEndpointDescription": "Endpoint compatibile OpenAI con supporto Whisper, o endpoint Ollama",
       "transcriptionModel": "Modello",
       "transcriptionModelDescription": "Modello da usare per la trascrizione",
@@ -1074,8 +1071,6 @@
       "allowPrivateAddressesDescription": "Permette alle importazioni di raggiungere la tua rete locale. Obscura li rifiuta comunque.",
       "navigationTimeout": "Timeout di navigazione (ms)",
       "navigationTimeoutDescription": "Quanto tempo ha un renderer per caricare una pagina.",
-      "saved": "Renderer di pagine salvati",
-      "error": "Impossibile salvare i renderer di pagine",
       "connectionSuccess": "Connessione riuscita"
     },
     "imageGenerationConfig": {
@@ -1116,7 +1111,7 @@
       "usesPlaceholder": "Niente",
       "useNames": {
         "autoCategorization": "Categorizzazione automatica",
-        "autoCategorizationDescription": "Decidere se una ricetta è colazione, pranzo, cena o spuntino",
+        "autoCategorizationDescription": "Decidere a quali categorie della famiglia appartiene una ricetta",
         "autoTagging": "Tag automatici",
         "autoTaggingDescription": "Scegliere i tag dall'elenco predefinito e confermare ogni tag proposto dall'IA",
         "allergyDetection": "Rilevamento allergie",
@@ -1149,7 +1144,7 @@
       "autoTaggingDescription": "Questo prompt viene utilizzato per generare tag per le ricette importate. Definisci le regole di tagging e la lista dei tag predefiniti.",
       "autoTaggingPlaceholder": "Inserisci il prompt per i tag automatici...",
       "autoCategorization": "Prompt categorizzazione automatica",
-      "autoCategorizationDescription": "Questo prompt viene usato per ordinare le ricette nelle categorie dei pasti (colazione, pranzo, cena, spuntino).",
+      "autoCategorizationDescription": "Questo prompt viene usato per ordinare le ricette nelle categorie della famiglia.",
       "autoCategorizationPlaceholder": "Inserisci il prompt per la categorizzazione automatica...",
       "allergyDetection": "Prompt rilevamento allergeni",
       "allergyDetectionDescription": "Questo prompt viene usato per rilevare gli allergeni configurati della famiglia negli ingredienti di una ricetta.",
@@ -1188,9 +1183,7 @@
     "unsavedChanges": "Modifiche non salvate",
     "jsonEditor": {
       "placeholder": "Inserisci configurazione JSON...",
-      "invalidJson": "Formato JSON non valido",
-      "failedToSave": "Salvataggio non riuscito",
-      "failedToRestore": "Ripristino dei valori predefiniti non riuscito"
+      "invalidJson": "Formato JSON non valido"
     },
     "jobQueue": {
       "title": "Code dei job",
@@ -1256,7 +1249,8 @@
         "store-lookup": "Ricerca nel negozio",
         "ingredient-review": "Chiedere all'IA sugli ingredienti",
         "ingredient-icons": "Disegno delle icone degli ingredienti",
-        "ingredient-fill": "Completamento delle lacune degli ingredienti"
+        "ingredient-fill": "Completamento delle lacune degli ingredienti",
+        "enrich-all-recipes": "Arricchimento in blocco"
       },
       "summary": {
         "failed": "Non riusciti: {count}"
@@ -1327,6 +1321,13 @@
       "empty": "Ancora nessuna cucina.",
       "duplicate": "Esiste già una cucina con quel nome.",
       "saveFailed": "Impossibile salvare quella cucina."
+    },
+    "toasts": {
+      "localesSaved": "Impostazioni lingua salvate",
+      "localesError": "Salvataggio impostazioni lingua non riuscito",
+      "userDeleted": "{name} è stato eliminato",
+      "pageRenderersSaved": "Renderer di pagine salvati",
+      "pageRenderersError": "Impossibile salvare i renderer di pagine"
     }
   },
   "archiveExport": {

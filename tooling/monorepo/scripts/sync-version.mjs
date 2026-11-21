@@ -24,8 +24,8 @@ import path from "node:path";
 
 const repoRoot = path.resolve(import.meta.dirname, "../../..");
 
-/** Versioned on their own cadence: the parked mobile app and the marketing site. */
-const INDEPENDENT = new Set(["apps/mobile", "apps/landing"]);
+/** Versioned on its own cadence: the marketing site. */
+const INDEPENDENT = new Set(["apps/landing"]);
 
 const RC_BRANCH = /^rc\/(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
 const VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;

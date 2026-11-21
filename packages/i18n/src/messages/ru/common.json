@@ -40,7 +40,6 @@
   "status": {
     "loading": "Загрузка...",
     "saving": "Сохранение...",
-    "deleting": "Удаление...",
     "error": "Ошибка",
     "success": "Успешно",
     "noResults": "Ничего не найдено",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 мин",
     "cookingTimeUnder120": "<120 мин",
     "categories": "Категории",
-    "category": {
-      "breakfast": "Завтрак",
-      "lunch": "Обед",
-      "dinner": "Ужин",
-      "snack": "Перекус"
-    },
     "sortByTitle": "Название",
     "sortByDate": "Дата",
-    "clearFilters": "Очистить фильтры"
+    "clearFilters": "Очистить фильтры",
+    "minRating": "Минимальная оценка",
+    "minRatingStars": "Не менее {count} из 5"
   },
   "time": {
     "minutes": "мин",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Это поле обязательно",
-    "invalidUrl": "Введите корректный URL"
+    "invalidUrl": "Введите корректный URL",
+    "invalidEmail": "Введите действительный адрес электронной почты"
   },
   "slots": {
     "breakfast": "Завтрак",
@@ -93,9 +89,6 @@
   },
   "connection": {
     "connecting": "Подключение к Norish...",
-    "checkInternet": "Пожалуйста, проверьте подключение к интернету",
-    "offlineBanner": "Вы офлайн, показываем сохранённые данные",
-    "serverUnreachableBanner": "Не удаётся связаться с сервером Norish, показываем сохранённые данные",
     "live": "На связи",
     "offline": "Не в сети",
     "openDetails": "Подробности подключения"
@@ -152,10 +145,7 @@
       "analyzing": "Анализ изображений, пожалуйста подождите...",
       "failed": "Ошибка импорта",
       "selectedCount": "Выбрано {count} изображений — они будут объединены в один рецепт",
-      "library": "Галерея",
-      "takePhoto": "Сделать фото",
-      "counter": "{count} / {max} фото",
-      "importFromCount": "Импорт из {count, plural, one {# фото} few {# фото} many {# фото} other {# фото}}"
+      "library": "Галерея"
     },
     "menu": {
       "description": "Импортируйте по URL, отсканируйте фото или начните с нуля."
@@ -190,9 +180,11 @@
     "year": "год",
     "years": "лет",
     "next": "Следующее:",
-    "every": "Каждый",
-    "everyOther": "Каждый второй",
-    "on": "в",
+    "everyDay": "{interval, plural, =1 {Каждый день} =2 {Через день} one {Раз в # день} few {Раз в # дня} other {Раз в # дней}}",
+    "everyWeek": "{interval, plural, =1 {Каждую неделю} =2 {Раз в две недели} one {Раз в # неделю} few {Раз в # недели} other {Раз в # недель}}",
+    "everyMonth": "{interval, plural, =1 {Каждый месяц} =2 {Раз в два месяца} one {Раз в # месяц} few {Раз в # месяца} other {Раз в # месяцев}}",
+    "everyYear": "{interval, plural, =1 {Каждый год} =2 {Раз в два года} one {Раз в # год} few {Раз в # года} other {Раз в # лет}}",
+    "onWeekday": "{repeat}, {weekday}",
     "today": "сегодня",
     "tomorrow": "завтра",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Готово",
+    "paused": "На паузе",
     "done_action": "Готово",
     "one": "Таймер",
     "other": "Таймеры",
     "label_one": "1 таймер",
     "label_other": "{count} таймеров",
-    "notification_title": "Таймер завершён",
-    "notification_body": "{label} завершён!",
+    "notification_body": "Таймер завершён",
     "notifications_disabled": "Уведомления отключены",
-    "notifications_disabled_hint": "Включите уведомления в настройках браузера, чтобы получать оповещения при завершении таймеров в фоновом режиме."
+    "notifications_disabled_hint": "Включите уведомления в настройках браузера, чтобы получать оповещения при завершении таймеров в фоновом режиме.",
+    "more": "ещё {count}"
   },
   "offlineStatus": {
     "title": "Подключение и офлайн",
@@ -298,14 +291,30 @@
     "title": "Вы офлайн",
     "description": "Добавлено в очередь — Norish автоматически завершит это, когда вы снова будете в сети."
   },
+  "changedElsewhere": {
+    "title": "Не сохранено: сначала изменено в другом месте"
+  },
   "storageUnavailable": {
-    "title": "Не удалось запустить",
-    "description": "Norish не смог прочитать защищённое хранилище и не знает, к какому серверу относится это приложение. Ничего не изменено. Повторите попытку или перезапустите приложение.",
-    "detailsLabel": "Технические подробности"
+    "title": "Хранилище недоступно",
+    "description": "Norish не смог прочитать связку ключей этого iPhone.",
+    "badgeLabel": "Хранилище недоступно. Нажмите, чтобы повторить."
   },
   "aiKeyRejected": {
     "title": "Ключ ИИ перестал работать",
     "description": "Провайдер отклоняет API-ключ для {blocks} с {since}. Сохраните новый ключ, чтобы эти функции ИИ снова заработали.",
+    "openSettings": "Открыть настройки"
+  },
+  "household": {
+    "adminTransferred": "Права администратора переданы пользователю {name}",
+    "unknownMember": "Неизвестно",
+    "removedTitle": "Удалены из домохозяйства",
+    "removedDescription": "Администратор удалил вас из домохозяйства."
+  },
+  "photos": {
+    "pickFailedTitle": "Не удалось выбрать фото",
+    "pickFailedMessage": "Попробуйте ещё раз или выберите другое фото.",
+    "cameraDeniedTitle": "Доступ к камере выключен",
+    "cameraDeniedMessage": "Разрешите доступ к камере в настройках, чтобы сделать фото.",
     "openSettings": "Открыть настройки"
   }
 }

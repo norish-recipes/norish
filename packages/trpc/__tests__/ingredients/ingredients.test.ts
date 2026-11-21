@@ -51,7 +51,13 @@ const cleanup = vi.hoisted(() => ({
   findRowsNamingFood: vi.fn(async () => ({ lines: [], groceries: [], recurring: [] })),
   repointLines: vi.fn(),
 }));
-const aliases = vi.hoisted(() => ({ findLocaleNames: vi.fn(async () => new Map()) }));
+const aliases = vi.hoisted(() => ({
+  findLocaleNames: vi.fn(async () => new Map()),
+  findIngredientDisplayNames: vi.fn(
+    async (): Promise<Map<string, { name: string; localeNames: Record<string, string> }>> =>
+      new Map()
+  ),
+}));
 const junkPile = vi.hoisted(() => ({
   addToJunkPile: vi.fn(async () => 1),
   takeOffJunkPile: vi.fn(async () => 0),
@@ -477,6 +483,14 @@ describe("the tree of kinds", () => {
     );
   });
 
+  it("ranks a search by the reader's catalogue languages", async () => {
+    await callerFor().list({ search: "tom", locale: "vi" });
+
+    expect(catalogue.listCatalogueIngredients).toHaveBeenLastCalledWith(
+      expect.objectContaining({ languages: ["vi"] })
+    );
+  });
+
   it("lists the foods filed under none as the roots", async () => {
     await callerFor().list({ rootsOnly: true });
 
@@ -643,7 +657,7 @@ describe("the list", () => {
       expect.objectContaining({
         search: {
           fold: "onion",
-          pattern: "%onion%",
+          words: ["onion"],
           match: "contains",
           fields: ["name", "translations"],
         },
@@ -691,6 +705,18 @@ describe("the list", () => {
       { id: ALIAS, text: "onions", locale: null, seeded: false, canRemove: true },
       { id: "seeded-alias", text: "ui", locale: "nl", seeded: true, canRemove: false },
     ]);
+  });
+});
+
+describe("Ingredient names", () => {
+  it("names every food asked in one read, with its spellings, leaving out one that is gone", async () => {
+    const onion = { name: "onion", localeNames: { nl: "ui" } };
+
+    aliases.findIngredientDisplayNames.mockResolvedValue(new Map([[ONION, onion]]));
+
+    await expect(callerFor().names({ ids: [ONION, UIEN] })).resolves.toEqual({ [ONION]: onion });
+    expect(aliases.findIngredientDisplayNames).toHaveBeenCalledTimes(1);
+    expect(aliases.findIngredientDisplayNames).toHaveBeenCalledWith([ONION, UIEN]);
   });
 });
 

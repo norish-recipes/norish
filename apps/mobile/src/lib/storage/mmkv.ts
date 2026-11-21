@@ -1,10 +1,4 @@
 import { createMMKV } from "react-native-mmkv";
 
-/**
- * Shared MMKV storage instance for the mobile app.
- *
- * All general-purpose key-value persistence goes through this instance.
- * If a feature needs an isolated namespace, create a separate MMKV instance
- * with its own `id` rather than adding key prefixes here.
- */
+/** The app's key-value store; an isolated namespace gets its own MMKV `id`, not a key prefix here. */
 export const storage = createMMKV({ id: "norish-storage" });

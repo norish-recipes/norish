@@ -27,6 +27,7 @@ import {
   updateRecipeCategories,
   writeConvertedCopy,
 } from "@norish/db";
+import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import {
   addImageImportJob,
   addImportJob,
@@ -42,6 +43,7 @@ import {
   getRecipePermissionPolicy,
   isVideoParsingEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
   updateResolvedRecipe,
@@ -54,21 +56,28 @@ import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
-import { FilterMode, RecipeCategory, SortOrder } from "@norish/shared/contracts";
-import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
+import { FilterMode, SortOrder } from "@norish/shared/contracts";
+import {
+  FullRecipeSchema,
+  recipeCategorySchema,
+  RecipeListResultSchema,
+} from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import type { RecipeUserContext } from "./helpers";
+import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, isUploadedFile } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
 import { router } from "../../trpc";
 import {
+  announceRecipeUpdated,
   assertRecipeAccess,
   findRecipeForViewer,
   handleRecipeError,
   recipeAccess,
+  whileCreating,
 } from "./helpers";
 import {
   randomRecipeInputSchema,
@@ -76,6 +85,7 @@ import {
   recipeIdInputSchema,
   recipeImportPasteInputSchema,
   recipeImportPasteOutputSchema,
+  recipeNutritionOutputSchema,
 } from "./recipes-openapi-types";
 
 // Procedures
@@ -167,6 +177,34 @@ export const getProcedure = authedProcedure
     return recipe;
   });
 
+export const nutritionProcedure = authedProcedure
+  .meta({
+    openapi: {
+      method: "GET",
+      path: "/recipes/{id}/nutrition",
+      protect: true,
+      tags: ["Recipes"],
+      summary: "Get a recipe's nutrition per serving",
+      description:
+        "The recipe's own Nutrition Information, else the total worked out from its ingredients, as the recipe page shows it.",
+      errorResponses: {
+        401: "Missing or invalid API credentials",
+        404: "Recipe not found",
+      },
+    },
+  })
+  .input(RecipeGetInputSchema)
+  .output(recipeNutritionOutputSchema)
+  .query(async ({ ctx, input }) => {
+    const recipe = await findRecipeForViewer(ctx, input.id);
+
+    if (!recipe) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+    }
+
+    return await readRecipeNutrition(recipe, { householdUserIds: ctx.userIds });
+  });
+
 export const getEditableProcedure = authedProcedure
   .input(RecipeGetInputSchema)
   .output(FullRecipeSchema)
@@ -195,7 +233,7 @@ export const createRecipeProcedure = authedProcedure
       tags: ["Recipes"],
       summary: "Create a recipe",
       description:
-        "Creates a recipe directly from structured recipe data without parser transformation.",
+        "Creates a recipe directly from structured recipe data without parser transformation. Responds after the recipe is stored and returns an error if storing fails. Repeating a create with an ID already created by the same user returns that recipe's ID.",
       errorResponses: {
         401: "Missing or invalid API credentials",
       },
@@ -203,7 +241,7 @@ export const createRecipeProcedure = authedProcedure
   })
   .input(FullRecipeInsertSchema)
   .output(z.uuid())
-  .mutation(({ ctx, input }) => {
+  .mutation(async ({ ctx, input }) => {
     const recipeId = input.id ?? randomUUID();
 
     log.info(
@@ -212,45 +250,44 @@ export const createRecipeProcedure = authedProcedure
     );
     log.debug({ recipe: input }, "Full recipe data");
 
-    if (input.id && input.id !== recipeId) {
-      log.error({ inputId: input.id, generatedId: recipeId }, "Recipe ID mismatch detected!");
+    // The id is answered once the recipe is stored, so media uploaded with it lands on the recipe.
+    // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
+    const created = await whileCreating(recipeId, async () =>
+      createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
+        userId: ctx.user.id,
+      })
+    ).catch((err: unknown) => {
+      log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
+      throw err;
+    });
+
+    if (!created) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create recipe" });
     }
 
-    // The Dish Colour rides the payload from here: derived from the image
-    // the recipe is being stored with, overwriting anything the client sent.
-    withDishColor(input)
-      .then((dto) => createResolvedRecipe(recipeId, ctx.user.id, dto, { userId: ctx.user.id }))
-      .then(async (created) => {
-        if (!created) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to create recipe",
-          });
-        }
+    // Stored: a failure from here on only logs, so no client drops a recipe that exists.
+    void afterCommit(ctx, "announcing the created recipe", async () => {
+      const dashboardDto = await dashboardRecipe(created.recipeId);
 
-        const createdId = created.recipeId;
-        const dashboardDto = await dashboardRecipe(createdId);
+      if (dashboardDto) {
+        log.info({ userId: ctx.user.id, recipeId: created.recipeId }, "Recipe created");
+        const policy = await getRecipePermissionPolicy();
 
-        if (dashboardDto) {
-          log.info({ userId: ctx.user.id, recipeId: createdId }, "Recipe created");
-          const policy = await getRecipePermissionPolicy();
+        void recipes.publish(
+          "created",
+          { recipe: dashboardDto },
+          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+        );
+      }
 
-          void recipes.publish(
-            "created",
-            { recipe: dashboardDto },
-            { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-          );
-        }
-
-        // A manually created recipe enters the same automatic flow as an
-        // import: importing is not a prerequisite for automation.
-        await announceUsableRecipe(created, {
-          userId: ctx.user.id,
-          householdKey: ctx.householdKey,
-          householdUserIds: ctx.householdUserIds,
-        });
-      })
-      .catch((err) => handleRecipeError(ctx, err, "create recipe", { recipeId }));
+      // A manually created recipe enters the same automatic flow as an
+      // import: importing is not a prerequisite for automation.
+      await announceUsableRecipe(created, {
+        userId: ctx.user.id,
+        householdKey: ctx.householdKey,
+        householdUserIds: ctx.householdUserIds,
+      });
+    });
 
     return recipeId;
   });
@@ -278,31 +315,25 @@ async function applyRecipeUpdate(
   if (result.stale) {
     log.info({ userId: ctx.user.id, recipeId: id, version }, "Ignoring stale recipe update");
 
-    return { recipe: null, stale: true };
+    return { recipe: null, stale: true, version: null };
   }
 
-  const updatedRecipe = await getRecipeFull(id);
-
-  if (updatedRecipe) {
-    log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
-    const policy = await getRecipePermissionPolicy();
-
-    void recipes.publish(
-      "updated",
-      { recipe: updatedRecipe },
-      { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-    );
-  }
-
-  return { recipe: updatedRecipe, stale: false };
-}
-
-const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(({ ctx, input }) => {
-  applyRecipeUpdate(ctx, input).catch((err) =>
-    handleRecipeError(ctx, err, "update recipe", { recipeId: input.id })
+  log.info({ userId: ctx.user.id, recipeId: id }, "Recipe updated");
+  const updatedRecipe = await afterCommit(ctx, "announcing the recipe", () =>
+    announceRecipeUpdated(ctx, id)
   );
 
-  return { success: true };
+  return { recipe: updatedRecipe ?? null, stale: false, version: result.value };
+}
+
+// Answers once stored, with the stored version; a failure rejects, so the client rolls back.
+const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
+  const result = await applyRecipeUpdate(ctx, input).catch((err: unknown) => {
+    log.error({ err, userId: ctx.user.id, recipeId: input.id }, "Failed to update recipe");
+    throw err;
+  });
+
+  return { stale: result.stale, version: result.version };
 });
 
 export const updateRecipeProcedure = authedProcedure
@@ -337,17 +368,13 @@ const updateCategories = authedProcedure
     z.object({
       recipeId: z.uuid(),
       version: z.number().int().positive(),
-      categories: z.array(z.enum(["Breakfast", "Lunch", "Dinner", "Snack"])),
+      categories: z.array(recipeCategorySchema),
     })
   )
   .mutation(async ({ ctx, input }) => {
     await assertRecipeAccess(ctx, input.recipeId, "edit");
 
-    const result = await updateRecipeCategories(
-      input.recipeId,
-      input.categories as RecipeCategory[],
-      input.version
-    );
+    const result = await updateRecipeCategories(input.recipeId, input.categories, input.version);
 
     if (result.stale) {
       log.info(
@@ -858,7 +885,11 @@ export const importFromPasteProcedure = authedProcedure
   .input(recipeImportPasteInputSchema)
   .output(recipeImportPasteOutputSchema)
   .mutation(async ({ ctx, input }) => {
-    const preparedImport = await preparePasteImport(input.text, input.forceAI);
+    const preparedImport = await preparePasteImport(
+      input.text,
+      input.forceAI,
+      await listCategoryNamesForUsers(ctx.userIds)
+    );
 
     log.info(
       { userId: ctx.user.id, recipeIds: preparedImport.recipeIds, textLength: input.text.length },
@@ -976,6 +1007,7 @@ const enrichmentStatus = authedProcedure
 export const recipesProcedures = router({
   list: listProcedure,
   get: getProcedure,
+  nutrition: nutritionProcedure,
   getEditable: getEditableProcedure,
   create: createRecipeProcedure,
   update,

@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "Producto sin nombre",
-    "fromRecipes": "De {count, plural, one {# receta} other {# recetas}}",
-    "items": "{count, plural, one {# producto} other {# productos}}"
+    "items": "{count, plural, =0 {Sin productos} one {# producto} other {# productos}}"
   },
   "store": {
     "unsorted": "Sin asignar",
@@ -54,7 +53,6 @@
       "violet": "Violeta"
     },
     "confirmDelete": "¿Seguro que quieres eliminar {storeName}?",
-    "deleteWarning": "Los productos de esta tienda se moverán a «Sin asignar».",
     "noStoresYet": "Aún no hay tiendas",
     "createStoreHint": "Crea una tienda para organizar tu lista de la compra",
     "hasItems": "Esta tienda tiene {count} producto.",
@@ -95,6 +93,7 @@
     "unavailable": "No se pudo leer tu despensa. No ha cambiado nada; inténtalo de nuevo cuando vuelvas a estar en línea.",
     "fieldLabel": "Buscar o añadir un alimento",
     "fieldPlaceholder": "Buscar o añadir, p. ej. aceite de oliva",
+    "findPlaceholder": "Buscar un alimento de la despensa",
     "add": "Añadir a la despensa",
     "fromCatalogue": "Añadir un alimento",
     "addFood": "Añadir {name} a la despensa",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "Añadir producto",
     "editTitle": "Editar producto",
-    "itemName": "Nombre del producto",
-    "itemNamePlaceholder": "p. ej., Leche, huevos, pan...",
     "selectStore": "Seleccionar tienda",
-    "noStore": "Sin tienda",
     "recurrence": "Repetición",
     "savePreference": "Recordar tienda para este producto",
     "addAnother": "Añadir otro",
     "addRepeat": "Configurar la repetición",
-    "recurrenceEnabled": "Recurrente",
-    "recurrenceSheet": {
-      "title": "Repetición",
-      "subtitle": "Vuelve a añadir automáticamente este producto a la lista de la compra",
-      "enable": "Activar repetición",
-      "disable": "Desactivar repetición",
-      "frequency": "Frecuencia",
-      "weekly": "Semanal",
-      "biweekly": "Cada 2 semanas",
-      "monthly": "Mensual",
-      "confirm": "Confirmar"
-    },
     "storeOptional": "Tienda (opcional)",
     "autoDetectFromHistory": "Detectar automáticamente desde el historial",
     "autoDetectOrSelect": "Detectar automáticamente o seleccionar",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "No se pudo leer tu despensa, así que aún no hay nada marcado. Marca lo que necesites comprar.",
     "loadingIngredients": "Cargando ingredientes...",
     "noIngredients": "No hay ingredientes.",
-    "addSelectedToGroceries": "Añadir a la lista de la compra",
     "ingredientsAdded": "Ingredientes añadidos a la lista de la compra.",
     "ingredientsFailed": "No se han podido añadir los ingredientes a la lista de la compra.",
     "addToGroceries": "Añadir a la lista de la compra",
@@ -168,7 +151,6 @@
     "productLabel": "Producto en {store}",
     "cannotSearch": "No se puede buscar en esta tienda",
     "cannotSearchHint": "Norish no pudo sacar una página de búsqueda del enlace de {store}. Corrígelo en Gestionar tiendas y los precios llegarán.",
-    "packSize": "Tamaño del envase",
     "packAmount": "Cantidad por envase",
     "packUnit": "Unidad",
     "productPage": "Página del producto",
@@ -195,6 +177,38 @@
     "packs": "{count} × {size}",
     "onePack": "contado como un envase",
     "sale": "Oferta",
-    "regularPrice": "Precio normal {price}"
+    "regularPrice": "Precio normal {price}",
+    "each": "cada uno"
+  },
+  "mobile": {
+    "viewMode": "Vista",
+    "viewByStore": "Por tienda",
+    "viewByRecipe": "Por receta",
+    "listSettings": "Ajustes de la lista",
+    "emptyHint": "Añade artículos con el botón de abajo.",
+    "addTitle": "Añadir compras",
+    "editTitle": "Editar artículo",
+    "store": "Tienda",
+    "noStore": "Sin tienda",
+    "automatic": "Automática",
+    "never": "Nunca",
+    "removeRepeat": "Quitar repetición",
+    "amountFor": "{amount} para {recipe}",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "itemLabel": "Artículo",
+    "decreaseInterval": "Reducir intervalo",
+    "increaseInterval": "Aumentar intervalo",
+    "manageStores": "Gestionar tiendas",
+    "addStore": "Añadir tienda",
+    "editStore": "Editar tienda",
+    "editStoreLabel": "Editar {store}",
+    "deleteStoreLabel": "Eliminar {store}",
+    "deleteStoreTitle": "¿Eliminar {store}?",
+    "moveItemsToUnsorted": "Mover los artículos a Sin clasificar",
+    "typePrice": "Escribe el precio tú mismo",
+    "product": "Producto",
+    "chooseProduct": "Elegir un producto",
+    "recipeCount": "{count, plural, one {# receta} other {# recetas}}"
   }
 }

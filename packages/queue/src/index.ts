@@ -25,8 +25,7 @@ export { MAX_STRUCTURED_PASTE_RECIPES, preparePasteImport } from "./paste-import
 export { addEnrichmentJob } from "./enrichment/producer";
 export { enrichRecipe } from "./enrichment/coordinator";
 export type { RecipeEnrichmentContext, RecipeEnrichmentRequest } from "./enrichment/coordinator";
-export { enrollEnrichmentForAllRecipes } from "./enrichment/bulk";
-export type { BulkEnrichmentRequester, BulkEnrichmentResult } from "./enrichment/bulk";
+export { addEnrichAllJob } from "./enrich-all/producer";
 export {
   ENRICHMENT_QUEUE_NAMES,
   enrichmentJobId,

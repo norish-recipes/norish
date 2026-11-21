@@ -19,14 +19,18 @@ const CleanUpScopeSchema = z.enum(["recipe-foods", "whole-catalogue"] satisfies 
 
 /** How many foods each scope's Clean up catalogue asks about, and whether a run is on. */
 const cleanUpCounts = adminProcedure.query(async () => {
-  const [recipeFoods, wholeCatalogue, running] = await Promise.all([
+  const [recipeFoods, wholeCatalogue] = await Promise.all([
     listCleanUpFoods("recipe-foods"),
     listCleanUpFoods("whole-catalogue"),
-    isCatalogueCleanUpRunning(),
   ]);
 
-  return { recipeFoods: recipeFoods.length, wholeCatalogue: wholeCatalogue.length, running };
+  return { recipeFoods: recipeFoods.length, wholeCatalogue: wholeCatalogue.length };
 });
+
+/** Whether a Clean up catalogue run is on: asked on every visit, so kept apart from the counts. */
+const cleanUpRunning = adminProcedure.query(async () => ({
+  running: await isCatalogueCleanUpRunning(),
+}));
 
 /** Start a Clean up catalogue run, one job on the review queue; answers how many foods it asks about. */
 const cleanUp = adminProcedure
@@ -45,21 +49,19 @@ const cleanUp = adminProcedure
     return { queued };
   });
 
-/** How many listed foods each Fill gaps box fills (icons null where nothing draws); whether one runs. */
+/** How many listed foods each Fill gaps box fills (icons null where nothing draws). */
 const fillGapsCounts = adminProcedure.query(async () => {
-  const [foods, canDraw, running] = await Promise.all([
-    listFillGapsFoods(),
-    canDrawImages(),
-    isFillGapsRunning(),
-  ]);
+  const [foods, canDraw] = await Promise.all([listFillGapsFoods(), canDrawImages()]);
 
   return {
     nutrition: foods.nutrition.length,
     conversions: foods.conversions.length,
     icons: canDraw ? foods.icons.length : null,
-    running,
   };
 });
+
+/** Whether a Fill gaps run is on: asked on every visit, so kept apart from the counts. */
+const fillGapsRunning = adminProcedure.query(async () => ({ running: await isFillGapsRunning() }));
 
 /** Start a Fill gaps run over every listed food: a fill job, an icon job, or both. */
 const fillGaps = adminProcedure
@@ -81,7 +83,9 @@ const fillGaps = adminProcedure
 
 export const ingredientCatalogueProcedures = router({
   cleanUpCounts,
+  cleanUpRunning,
   cleanUp,
   fillGapsCounts,
+  fillGapsRunning,
   fillGaps,
 });

@@ -1,16 +1,14 @@
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  addYears,
-  format,
-  getDay,
-  isAfter,
-  isBefore,
-  isSameDay,
-  parseISO,
-  startOfDay,
-} from "date-fns";
+import { addDays } from "date-fns/addDays";
+import { addMonths } from "date-fns/addMonths";
+import { addWeeks } from "date-fns/addWeeks";
+import { addYears } from "date-fns/addYears";
+import { format } from "date-fns/format";
+import { getDay } from "date-fns/getDay";
+import { isAfter } from "date-fns/isAfter";
+import { isBefore } from "date-fns/isBefore";
+import { isSameDay } from "date-fns/isSameDay";
+import { parseISO } from "date-fns/parseISO";
+import { startOfDay } from "date-fns/startOfDay";
 
 import type { RecurrencePattern, RecurrenceRule } from "@norish/shared/contracts/recurrence";
 

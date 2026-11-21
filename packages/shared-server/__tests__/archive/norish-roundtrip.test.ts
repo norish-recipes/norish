@@ -335,6 +335,7 @@ describe("norish archive round-trip", () => {
     );
 
     expect(dto.name).toBe(recipe.name);
+    expect(dto.categories).toEqual(["Dinner"]);
     expect(dto.recipeIngredients.map((line) => line.ingredientName)).toEqual([
       "spaghetti",
       "clams",

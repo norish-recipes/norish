@@ -1,197 +1,301 @@
 import "@/global.css";
+import "@/lib/i18n/display-names";
+import "@/lib/i18n/list-format";
+import "@/lib/i18n/plural-rules";
 
-import React, { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StorageUnavailableScreen } from "@/components/shell/storage-unavailable-screen";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { LaunchProvider, LaunchSplash, useLaunchPhase } from "@/components/launch";
+import { Loader } from "@/components/loader";
+import {
+  EDITOR_OPTIONS,
+  FIT_SHEET_OPTIONS,
+  SEARCH_SHEET_OPTIONS,
+} from "@/components/sheet-options";
+import { SheetTouchShield } from "@/components/sheet-touch-shield";
+import { LaunchVersionCheck } from "@/features/auth/components/launch-version-check";
+import { StorageUnavailableScreen } from "@/features/auth/screens/storage-unavailable-screen";
+import { useCalendarWidgets } from "@/features/calendar/hooks/use-calendar-widgets";
+import { useRecipeTimers } from "@/features/recipe/hooks/use-recipe-timers";
+import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
+import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
+import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { useServerAddress } from "@/hooks/use-server-address";
+import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
+import { useSheetExit } from "@/lib/after-sheet";
+import { AuthProviders } from "@/lib/auth/auth-providers";
+import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
+import { resolveBootPhase } from "@/lib/boot/boot-state";
+import { resolveSessionView } from "@/lib/boot/session-view";
+import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
+import { timedTo } from "@/lib/motion/timed";
+import { ServerAddressContext } from "@/lib/network/server-address";
+import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
 import {
   AppearancePreferenceProvider,
   useAppearancePreference,
-} from "@/context/appearance-preference-context";
-import { AuthProvider, useAuth } from "@/context/auth-context";
-import { GroceriesProvider } from "@/context/groceries-context";
-import { HouseholdProvider } from "@/context/household-context";
-import { MobileIntlFallbackProvider, MobileIntlProvider } from "@/context/mobile-i18n-context";
-import { NetworkProvider } from "@/context/network-context";
-import { PermissionsProvider } from "@/context/permissions-context";
-import { RecipeFiltersProvider } from "@/context/recipe-filters-context";
-import { RecipesProvider } from "@/context/recipes-context";
-import { StoresProvider } from "@/context/stores-context";
-import { UserProvider } from "@/context/user-context";
-import { useBackendBaseUrl } from "@/hooks/use-backend-base-url";
-import { useCacheHydration } from "@/hooks/use-cache-hydration";
-import { useCacheInvalidationOnReconnect } from "@/hooks/use-cache-lifecycle";
-import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { useSessionRevalidation } from "@/hooks/use-session-revalidation";
-import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
-import { resolveBootPhase } from "@/lib/boot/boot-state";
-import { TrpcProvider } from "@/providers/trpc-provider";
+} from "@/lib/preferences/appearance-preference-context";
+import { TrpcProvider } from "@/lib/trpc/trpc-provider";
+import { FiraCode_400Regular } from "@expo-google-fonts/fira-code/400Regular";
+import { Fraunces_500Medium } from "@expo-google-fonts/fraunces/500Medium";
+import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
+import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
+import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
+import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import { DarkTheme, DefaultTheme, ThemeProvider, useTheme } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
-import { HeroUINativeProvider } from "heroui-native";
+import { HeroUINativeProvider, useThemeColor } from "heroui-native";
 import { PortalHost } from "heroui-native/portal";
 
-// The boot gate below renders nothing until hydration settles. Holding the
-// native splash over that window is what keeps it from showing as a blank
-// screen; every branch of the gate hides it again.
+import { useCalendarSubscription } from "@norish/shared-react/calendar";
+import { useConfigSubscription } from "@norish/shared-react/config";
+import { usePantrySubscription } from "@norish/shared-react/groceries";
+import { usePlatform } from "@norish/shared-react/platform";
+import { useHouseholdSubscription, usePermissionsSubscription } from "@norish/shared-react/reader";
+import {
+  useCookbooksSubscription,
+  useRatingsSubscription,
+  useRecipeListSubscription,
+  useRecipeOutcomesSubscription,
+} from "@norish/shared-react/recipes";
+
+// The boot gate renders nothing until hydration settles, so the native splash holds
+// until every branch's LaunchSplash is laid out and hides it.
 void SplashScreen.preventAutoHideAsync();
 
-// ============================================================================
-// Entry point
-// ============================================================================
+// The faces the font tokens in global.css name.
+const FONTS = {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Fraunces_500Medium,
+  FiraCode_400Regular,
+};
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <HeroUINativeProvider>
         <AppearancePreferenceProvider>
-          <RootLayoutContent />
+          <LaunchProvider>
+            <RootLayoutContent />
+          </LaunchProvider>
         </AppearancePreferenceProvider>
       </HeroUINativeProvider>
     </GestureHandlerRootView>
   );
 }
 
-// ============================================================================
-// Boot gate — waits for hydration, then renders provider tree
-// ============================================================================
+// The boot gate: waits for hydration, then renders the provider tree.
 
 function RootLayoutContent() {
   const { hydrated } = useAppearancePreference();
   const effectiveScheme = useResolvedColorScheme();
 
-  const backendBaseUrl = useBackendBaseUrl();
-  const cacheReady = useCacheHydration();
+  const serverAddress = useServerAddress();
+  const [fontsLoaded, fontsError] = useFonts(FONTS);
+  const [background, foreground, border, accent, danger] = useThemeColor([
+    "background",
+    "foreground",
+    "border",
+    "accent",
+    "danger",
+  ] as const);
 
   const boot = resolveBootPhase({
     appearanceHydrated: hydrated,
-    cacheReady,
-    backendBaseUrl,
+    fontsReady: fontsLoaded || fontsError !== null,
+    serverAddress,
   });
-
-  // Hand the screen over from the native splash only once there is something to
-  // show, including the failure case: a boot that cannot finish still has to say
-  // so rather than sit under the splash forever.
-  useEffect(() => {
-    if (boot.phase !== "loading") void SplashScreen.hideAsync();
-  }, [boot.phase]);
 
   // Gate: wait for all async hydration before rendering anything
   if (boot.phase === "loading") {
     return null;
   }
 
-  const theme = effectiveScheme === "dark" ? DarkTheme : DefaultTheme;
+  // The navigator paints the screens' ground, so it takes the shared theme's colours too.
+  const theme = {
+    ...(effectiveScheme === "dark" ? DarkTheme : DefaultTheme),
+    colors: {
+      primary: accent,
+      background,
+      card: background,
+      text: foreground,
+      border,
+      notification: danger,
+    },
+  };
 
-  // Secure storage could not be read, so which backend this install belongs to
-  // is unknown. Treating that as "no backend configured" would quietly drop a
-  // configured server, so surface it instead.
+  // Unreadable secure storage leaves the Server Address unknown; reading that as none
+  // would drop a configured server, so the storage screen says so instead.
   if (boot.phase === "storage-error") {
     return (
       <ThemeProvider value={theme}>
         <MobileIntlFallbackProvider>
-          <StorageUnavailableScreen error={boot.error} onRetry={backendBaseUrl.retry} />
+          <StorageUnavailableScreen onRetry={serverAddress.retry} />
+          <LaunchSplash handoff="fade" />
         </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
   }
 
-  // No backend URL configured — minimal provider tree (setup / onboarding)
+  // No Server Address — minimal provider tree (setup / onboarding)
   if (boot.phase === "onboarding") {
     return (
       <ThemeProvider value={theme}>
-        <AuthProvider backendBaseUrl={null}>
-          <MobileIntlFallbackProvider>
-            <RootStack />
-            <PortalHost name="app" />
-          </MobileIntlFallbackProvider>
-        </AuthProvider>
+        <MobileIntlFallbackProvider>
+          <RootStack signedIn={false} />
+          <PortalHost name="app" />
+          <LaunchVersionCheck enabled />
+          <LaunchSplash handoff="glide" />
+        </MobileIntlFallbackProvider>
       </ThemeProvider>
     );
   }
 
-  // Full provider tree — backend available
+  // Full provider tree — a Server Address is saved
   return (
     <ThemeProvider value={theme}>
-      <NetworkProvider backendBaseUrl={boot.backendBaseUrl}>
-        <TrpcProvider baseUrl={boot.backendBaseUrl}>
-          <AuthProvider backendBaseUrl={boot.backendBaseUrl}>
-            <MobileIntlProvider>
-              <DomainProviders>
-                <RootStack />
-                <PortalHost name="app" />
-              </DomainProviders>
-            </MobileIntlProvider>
-          </AuthProvider>
+      <ServerAddressContext value={boot.serverAddress}>
+        <TrpcProvider
+          baseUrl={boot.serverAddress}
+          getQueryClient={getOfflineQueryClient}
+          mutationLink={offlineEngine.outboxLink}
+        >
+          <ConnectivityProvider>
+            <AuthProviders>
+              <SessionStack />
+            </AuthProviders>
+          </ConnectivityProvider>
         </TrpcProvider>
-      </NetworkProvider>
+      </ServerAddressContext>
     </ThemeProvider>
   );
 }
 
-// ============================================================================
-// Domain providers — added only when authenticated
-// ============================================================================
+const getOfflineQueryClient = () => offlineEngine.queryClient;
 
-/**
- * When authenticated, wraps children with domain-specific providers
- * (permissions, user, recipes, filters). When unauthenticated, renders
- * children directly.
- */
-function DomainProviders({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+/** The stack, wrapped in the offline controller while signed in; the ground while the session
+ * restores under the splash, then the loader while one ends. */
+function SessionStack() {
+  const { session } = usePlatform();
+  const { colors } = useTheme();
+  const signedIn = session.user !== null;
+  const pending = session.isPending && !signedIn;
+  const view = resolveSessionView(pending, signedIn, useLaunchPhase());
 
-  if (!isAuthenticated) {
-    return children;
-  }
+  const app = (
+    <>
+      <RootStack signedIn={signedIn} />
+      <PortalHost name="app" />
+      <SheetTouchShield />
+    </>
+  );
 
-  return <AuthenticatedProviders>{children}</AuthenticatedProviders>;
-}
-
-function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
-  useCacheInvalidationOnReconnect();
-  useSessionRevalidation();
-
+  // One themed ground under every phase, so a session ending never shows the bare window.
   return (
-    <RecipeFiltersProvider>
-      <PermissionsProvider>
-        <UserProvider>
-          <AuthenticatedEffects />
-          <HouseholdProvider>
-            <RecipesProvider>
-              <StoresProvider>
-                <GroceriesProvider>{children}</GroceriesProvider>
-              </StoresProvider>
-            </RecipesProvider>
-          </HouseholdProvider>
-        </UserProvider>
-      </PermissionsProvider>
-    </RecipeFiltersProvider>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      {view === "loader" ? <Loader centred /> : null}
+      {view === "signed-in" ? (
+        <SignedInFade>
+          <AuthenticatedProviders>{app}</AuthenticatedProviders>
+        </SignedInFade>
+      ) : null}
+      {view === "signed-out" ? app : null}
+      <LaunchVersionCheck enabled={!pending} />
+      <LaunchSplash handoff={pending ? null : "fade"} />
+    </View>
   );
 }
 
-/** Hooks that require UserProvider + MobileIntlProvider. */
+/** The signed-in screen, faded out ahead of a session's end so the end never cuts. */
+function SignedInFade({ children }: { children: React.ReactNode }) {
+  const fading = useSignedInFadingOut();
+  const style = useAnimatedStyle(() => ({
+    // A plain fade, kept under Reduce Motion.
+    opacity: timedTo(fading ? 0 : 1, SESSION_END_FADE_MS, { keep: true }),
+  }));
+
+  // Not interactive while it fades: the session it shows is already ending.
+  return (
+    <Animated.View pointerEvents={fading ? "none" : "auto"} style={[styles.root, style]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
+  const { user } = usePlatform().session;
+
+  return (
+    <OfflineController sessionUserId={user?.id ?? null}>
+      <AuthenticatedEffects />
+      {children}
+    </OfflineController>
+  );
+}
+
+/** Effects every signed-in tab leans on: the Reader's locale and the realtime subscriptions. */
 function AuthenticatedEffects() {
+  useSignOutBeforeServerChange();
   useUserLocaleSync();
+  useHouseholdSubscription();
+  usePermissionsSubscription();
+  useConfigSubscription();
+  // An import or a delete starts on any tab, so its outcome toasts here.
+  useRecipeOutcomesSubscription();
+  // What the Share Extension saved while the server was unreachable.
+  useShareInbox();
+  // Recipe Timers outlive the screen that started them: they tick, notify and open from here.
+  useRecipeTimers();
+  useRecipeListSubscription();
+  useRatingsSubscription();
+  useCookbooksSubscription();
+  usePantrySubscription();
+  useCalendarSubscription();
+  // The Home Screen widgets show only what the app hands them while it runs.
+  useCalendarWidgets();
+
   return null;
 }
 
-// ============================================================================
-// Navigation
-// ============================================================================
+/** Sheets the accessory presents over any tab: Add recipe, its imports and the timer list. The
+ * editor's choice, a search field over a list, presents over the editor. */
+const FIT_SHEETS = ["add-recipe", "import-link", "import-text", "import-photos", "timers"] as const;
 
-function RootStack() {
-  const { isAuthenticated } = useAuth();
+function RootStack({ signedIn }: { signedIn: boolean }) {
+  const sheetExit = useSheetExit();
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={isAuthenticated}>
+    <Stack
+      screenOptions={{ headerShown: false }}
+      unstable_nativeProps={{ onFinishTransitioning: sheetExit }}
+    >
+      <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
+        <Stack.Screen name="editor-choice" options={SEARCH_SHEET_OPTIONS} />
+        {FIT_SHEETS.map((name) => (
+          <Stack.Screen key={name} name={name} options={FIT_SHEET_OPTIONS} />
+        ))}
       </Stack.Protected>
-      <Stack.Protected guard={!isAuthenticated}>
+      <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
+      {/* Reachable signed in or out, with no swipe back: only a new enough server leaves it. */}
+      <Stack.Screen
+        name="update-server"
+        options={({ route }) => ({
+          // Opened under the launch splash, it cuts in so the splash's own fade reveals it.
+          animation: route.params && "instant" in route.params ? "none" : "fade",
+          gestureEnabled: false,
+        })}
+      />
     </Stack>
   );
 }

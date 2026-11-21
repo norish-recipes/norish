@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "이름이 없는 항목",
-    "fromRecipes": "총 {count, plural, one {#개 레시피} other {#개 레시피}} 기준",
-    "items": "{count, plural, one {#개 항목} other {#개 항목}}"
+    "items": "{count, plural, =0 {항목 없음} one {#개 항목} other {#개 항목}}"
   },
   "store": {
     "unsorted": "정렬되지 않음",
@@ -54,7 +53,6 @@
       "violet": "보라"
     },
     "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
-    "deleteWarning": "이 매장의 항목은 미분류로 이동됩니다.",
     "noStoresYet": "아직 매장이 없습니다.",
     "createStoreHint": "장보기 목록을 정리할 매장을 만드세요",
     "hasItems": "이 매장에는 {count}개의 항목이 있습니다.",
@@ -95,6 +93,7 @@
     "unavailable": "팬트리를 불러오지 못했습니다. 변경된 내용은 없습니다. 다시 온라인이 되면 시도해 주세요.",
     "fieldLabel": "식품 찾기 또는 추가",
     "fieldPlaceholder": "찾기 또는 추가, 예: 올리브유",
+    "findPlaceholder": "식료품 저장실에서 식품 찾기",
     "add": "팬트리에 추가",
     "fromCatalogue": "식품 추가",
     "addFood": "{name}을(를) 팬트리에 추가",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "장보기 추가",
     "editTitle": "장보기 편집",
-    "itemName": "품목 이름",
-    "itemNamePlaceholder": "예: 우유, 계란, 빵...",
     "selectStore": "매장 선택",
-    "noStore": "매장 없음",
     "recurrence": "반복",
     "savePreference": "이 항목의 매장 기억",
     "addAnother": "하나 더 추가",
     "addRepeat": "반복 설정",
-    "recurrenceEnabled": "반복",
-    "recurrenceSheet": {
-      "title": "반복",
-      "subtitle": "이 항목을 장보기 목록에 자동으로 다시 추가합니다",
-      "enable": "반복 켜기",
-      "disable": "반복 끄기",
-      "frequency": "빈도",
-      "weekly": "매주",
-      "biweekly": "2주마다",
-      "monthly": "매월",
-      "confirm": "확인"
-    },
     "storeOptional": "매장(선택사항)",
     "autoDetectFromHistory": "기록에서 자동 감지",
     "autoDetectOrSelect": "자동 감지 또는 선택",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "팬트리를 읽을 수 없어 아직 아무것도 선택되지 않았습니다. 구매할 재료를 선택하세요.",
     "loadingIngredients": "재료 불러오는 중...",
     "noIngredients": "재료가 없습니다.",
-    "addSelectedToGroceries": "장보기에 추가",
     "ingredientsAdded": "장보기 목록에 재료가 추가되었습니다.",
     "ingredientsFailed": "장보기 목록에 재료를 추가하지 못했습니다.",
     "addToGroceries": "장보기에 추가",
@@ -168,7 +151,6 @@
     "productLabel": "{store}의 상품",
     "cannotSearch": "이 상점은 검색할 수 없습니다",
     "cannotSearchHint": "Norish가 {store}의 상점 링크에서 검색 페이지를 읽지 못했습니다. 상점 관리에서 고치면 가격이 따라옵니다.",
-    "packSize": "포장 단위",
     "packAmount": "포장 단위 수량",
     "packUnit": "단위",
     "productPage": "제품 페이지",
@@ -195,6 +177,38 @@
     "packs": "{count} × {size}",
     "onePack": "1개 포장으로 계산됨",
     "sale": "할인",
-    "regularPrice": "정가 {price}"
+    "regularPrice": "정가 {price}",
+    "each": "개당"
+  },
+  "mobile": {
+    "viewMode": "보기",
+    "viewByStore": "매장별",
+    "viewByRecipe": "레시피별",
+    "listSettings": "목록 설정",
+    "emptyHint": "아래 버튼으로 항목을 추가하세요.",
+    "addTitle": "식료품 추가",
+    "editTitle": "식료품 수정",
+    "store": "매장",
+    "noStore": "매장 없음",
+    "automatic": "자동",
+    "never": "안 함",
+    "removeRepeat": "반복 삭제",
+    "amountFor": "{recipe}용 {amount}",
+    "expand": "펼치기",
+    "collapse": "접기",
+    "itemLabel": "항목",
+    "decreaseInterval": "간격 줄이기",
+    "increaseInterval": "간격 늘리기",
+    "manageStores": "매장 관리",
+    "addStore": "매장 추가",
+    "editStore": "매장 편집",
+    "editStoreLabel": "{store} 편집",
+    "deleteStoreLabel": "{store} 삭제",
+    "deleteStoreTitle": "{store}을(를) 삭제할까요?",
+    "moveItemsToUnsorted": "항목을 미분류로 이동",
+    "typePrice": "가격 직접 입력",
+    "product": "제품",
+    "chooseProduct": "제품 선택",
+    "recipeCount": "{count, plural, other {레시피 #개}}"
   }
 }

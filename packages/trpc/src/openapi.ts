@@ -9,6 +9,7 @@ import {
   createPlannedRecipeProcedure,
   deletePlannedRecipeProcedure,
   listMonthPlannedRecipesProcedure,
+  listPlannedRecipesRangeProcedure,
   listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipesProcedure,
 } from "./routers/calendar/planned-items";
@@ -28,6 +29,7 @@ import {
   importFromUrlProcedure,
   importStatusProcedure,
   listProcedure,
+  nutritionProcedure,
   updateRecipeProcedure,
 } from "./routers/recipes/recipes";
 import { createStoreProcedure, listStoresProcedure } from "./routers/stores/stores";
@@ -38,6 +40,7 @@ export const openApiRouter = router({
   healthReady,
   health,
   recipeGet: getProcedure,
+  recipeNutrition: nutritionProcedure,
   recipeSearch: listProcedure,
   recipeCreate: createRecipeProcedure,
   recipeUpdate: updateRecipeProcedure,
@@ -52,6 +55,7 @@ export const openApiRouter = router({
   groceryAssignStore: assignGroceryToStoreProcedure,
   storeList: listStoresProcedure,
   storeCreate: createStoreProcedure,
+  plannedRecipesRange: listPlannedRecipesRangeProcedure,
   plannedRecipesToday: listTodayPlannedRecipesProcedure,
   plannedRecipesWeek: listWeekPlannedRecipesProcedure,
   plannedRecipesMonth: listMonthPlannedRecipesProcedure,

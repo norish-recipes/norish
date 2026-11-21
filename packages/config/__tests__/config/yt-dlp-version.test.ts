@@ -15,8 +15,8 @@ import { describe, expect, it } from "vitest";
 
 import { DEFAULT_YT_DLP_VERSION } from "@norish/config/zod/server-config";
 
-const dockerfile = fs.readFileSync(
-  path.resolve(import.meta.dirname, "../../../../docker/Dockerfile"),
+const parserProject = fs.readFileSync(
+  path.resolve(import.meta.dirname, "../../../../apps/parser-api/pyproject.toml"),
   "utf8"
 );
 
@@ -25,10 +25,10 @@ describe("DEFAULT_YT_DLP_VERSION", () => {
     expect(DEFAULT_YT_DLP_VERSION).toMatch(/^\d{4}\.\d{2}\.\d{2}(\.\d+)?$/);
   });
 
-  it("is the version the Docker image downloads", () => {
-    const arg = /^ARG YT_DLP_VERSION=(.+)$/m.exec(dockerfile);
+  it("is the version the Docker image installs", () => {
+    const pin = /"yt-dlp\[[^\]]*\]==([^"]+)"/.exec(parserProject);
 
-    expect(arg?.[1]).toBe(DEFAULT_YT_DLP_VERSION);
+    expect(pin?.[1]).toBe(DEFAULT_YT_DLP_VERSION);
   });
 
   it("is what YT_DLP_VERSION falls back to", async () => {

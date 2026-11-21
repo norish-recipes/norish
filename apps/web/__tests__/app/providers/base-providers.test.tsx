@@ -3,11 +3,21 @@ import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const toastProviderMock = vi.hoisted(() => vi.fn());
+const useSessionMock = vi.hoisted(() => vi.fn(() => ({ data: null, isPending: false })));
+
+vi.mock("@norish/shared/lib/auth/client", () => ({
+  signOut: vi.fn(),
+  useSession: useSessionMock,
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
   }),
+}));
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
 }));
 
 vi.mock("next-themes", () => ({
@@ -60,5 +70,16 @@ describe("BaseProviders", () => {
         disableAnimation: true,
       })
     );
+  });
+
+  // Login and share pages mount BaseProviders and read no session.
+  it("does not read the session", () => {
+    render(
+      <BaseProviders>
+        <div>content</div>
+      </BaseProviders>
+    );
+
+    expect(useSessionMock).not.toHaveBeenCalled();
   });
 });

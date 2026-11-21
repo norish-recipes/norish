@@ -90,7 +90,7 @@ async function importRecipe(name: string, extraction: unknown): Promise<void> {
 
 /** Open the Bulk Enrichment panel of the AI & Processing card. */
 async function openBulkPanel(): Promise<Locator> {
-  await page.goto("/settings?tab=admin");
+  await page.goto("/settings/admin");
 
   const trigger = page.getByRole("button", { name: /^Bulk enrichment/ }).first();
 
@@ -174,9 +174,9 @@ test("a confirmed run fills gaps through enabled kinds and defers to supplied da
   await panel.getByRole("button", { name: "Enrich", exact: true }).click();
   await page.getByRole("button", { name: "Run", exact: true }).click();
 
-  // The mutation reports what the coordinator decided: of two recipes, only
-  // the one with a category gap enrolled the one enabled kind.
-  await expect(panel.getByText("1 run queued across 2 recipes")).toBeVisible({
+  // The sweep runs as a background job; of two recipes, only the one with a
+  // category gap enrols the one enabled kind, which the stored categories show.
+  await expect(panel.getByText("Started in the background.", { exact: false })).toBeVisible({
     timeout: 30_000,
   });
 
@@ -214,8 +214,8 @@ test("overwriting redoes the supplied recipe instead of deferring to it", async 
   await expect(page.getByText("This cannot be undone.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Replace", exact: true }).click();
 
-  // Both recipes enrolled this time: having a category no longer suppresses it.
-  await expect(panel.getByText("2 runs queued across 2 recipes")).toBeVisible({
+  // Both recipes enrol this time: having a category no longer suppresses it.
+  await expect(panel.getByText("Started in the background.", { exact: false })).toBeVisible({
     timeout: 30_000,
   });
 
@@ -288,8 +288,8 @@ test("a provenance run fills the gaps around a supplied Cuisine and skips a comp
   await panel.getByRole("button", { name: "Enrich", exact: true }).click();
   await page.getByRole("button", { name: "Run", exact: true }).click();
 
-  // Of two recipes, only the one with gaps enrolled the one enabled kind.
-  await expect(panel.getByText("1 run queued across 2 recipes")).toBeVisible({
+  // Of two recipes, only the one with gaps enrols the one enabled kind.
+  await expect(panel.getByText("Started in the background.", { exact: false })).toBeVisible({
     timeout: 30_000,
   });
 

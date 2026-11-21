@@ -37,3 +37,12 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+
+// jsdom applies stylesheet animations since v31 but never fires `animationend`, so an exit
+// animation (vaul's sheet) would keep closed content mounted forever.
+if (typeof document !== "undefined") {
+  const style = document.createElement("style");
+
+  style.textContent = "*, *::before, *::after { animation: none !important; }";
+  document.head.append(style);
+}

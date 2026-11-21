@@ -1,9 +1,10 @@
 import type { BetterAuthOptions, Where } from "better-auth";
 import type { DBAdapter } from "better-auth/adapters";
 import { apiKey } from "@better-auth/api-key";
-import { betterAuth } from "better-auth";
+import { expo } from "@better-auth/expo";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 
@@ -19,6 +20,7 @@ import * as schema from "@norish/db/schema/auth";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 import { authLogger } from "@norish/shared-server/logger";
 import { keepsOfferedSignInMethod, LAST_SIGN_IN_METHOD } from "@norish/shared/contracts/dto/auth";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/auth/password";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 import { consumeApiKeyRequest } from "./api-key-rate-limit";
@@ -275,8 +277,8 @@ function buildEmailAndPasswordConfig() {
     enabled: true,
     requireEmailVerification: false,
     autoSignIn: true,
-    minPasswordLength: 8,
-    maxPasswordLength: 128,
+    minPasswordLength: MIN_PASSWORD_LENGTH,
+    maxPasswordLength: MAX_PASSWORD_LENGTH,
   };
 }
 
@@ -306,6 +308,8 @@ function createBetterAuth() {
     basePath: addBasePath("/api/auth"),
     trustedOrigins: [
       SERVER_CONFIG.AUTH_URL,
+      // The Norish app's scheme lives here, not in TRUSTED_ORIGINS, which the WebSocket check also reads.
+      "norish://",
       ...SERVER_CONFIG.TRUSTED_ORIGINS,
       ...(process.env.NODE_ENV === "development"
         ? [
@@ -523,6 +527,8 @@ function createBetterAuth() {
         customAPIKeyValidator: ({ key }) => consumeApiKeyRequest(key),
         apiKeyHeaders: [...API_KEY_HEADERS],
       }),
+
+      expo(),
 
       nextCookies(),
     ],

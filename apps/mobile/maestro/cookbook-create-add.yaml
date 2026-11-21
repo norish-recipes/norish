@@ -1,0 +1,61 @@
+# Creates a cookbook with one recipe from New cookbook, opens it, and adds a second recipe from the
+# cookbook's own Add recipes picker.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Cookbook Soup", "key": "soup"}, {"name": "Cookbook Tart", "key": "tart"}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 20000
+- tapOn:
+    id: library-lens-cookbooks
+- tapOn:
+    id: add-cookbook
+- extendedWaitUntil:
+    visible:
+      id: new-cookbook-title
+    timeout: 20000
+- inputText: Weeknight Dinners
+- hideKeyboard
+- waitForAnimationToEnd
+- tapOn:
+    id: cookbook-add-recipes-row-${output.soup}
+# A tap that never landed fails here, not as an empty cookbook later; iOS gives the state as text.
+- assertVisible:
+    id: cookbook-add-recipes-row-${output.soup}
+    text: "checkbox, checked"
+# Create is the sheet's native header item, which has no id.
+- tapOn: Create
+# The new cookbook is on the Cookbooks lens and opens with its one recipe.
+- extendedWaitUntil:
+    visible: Weeknight Dinners
+    timeout: 20000
+- tapOn: Weeknight Dinners
+- extendedWaitUntil:
+    visible:
+      id: cookbook-title
+      text: Weeknight Dinners
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.soup}
+- assertNotVisible:
+    id: recipe-card-${output.tart}
+# Add recipes files the second one.
+- tapOn:
+    id: cookbook-add-recipes-accessory
+- extendedWaitUntil:
+    visible:
+      id: cookbook-add-recipes-row-${output.tart}
+    timeout: 20000
+- tapOn:
+    id: cookbook-add-recipes-row-${output.tart}
+- tapOn: Add 1 recipe
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.tart}
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.soup}

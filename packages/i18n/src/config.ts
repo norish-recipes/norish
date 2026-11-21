@@ -81,3 +81,11 @@ export function getDateFormat(_locale: Locale): Intl.DateTimeFormatOptions {
 export function getNumberFormat(_locale: Locale): Intl.NumberFormatOptions {
   return DEFAULT_NUMBER_FORMAT;
 }
+
+/** Languages written right to left. */
+const RTL_LANGUAGES = new Set(["ar", "fa", "he", "ur"]);
+
+/** Which way a locale's text runs, for the page's `dir`, by base language ("ar-EG" is "ar"). */
+export function getLocaleDirection(locale: Locale): "ltr" | "rtl" {
+  return RTL_LANGUAGES.has(locale.split("-")[0]!.toLowerCase()) ? "rtl" : "ltr";
+}

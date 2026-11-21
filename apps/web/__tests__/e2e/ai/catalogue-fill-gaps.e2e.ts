@@ -74,7 +74,7 @@ test("Fill gaps for nutrition gives a food without dataset numbers AI's estimate
   await expect.poll(numbersSource, { timeout: 30_000 }).toBe("ai");
   expect(ai.control.ingredientRequests).toHaveLength(1);
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-search").fill("garlic");
   await page
     .locator('[data-testid="ingredient-row"][data-ingredient="garlic"]')

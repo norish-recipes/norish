@@ -1,0 +1,42 @@
+# Creates a recipe from Add recipe, Write it yourself: a name, an ingredient and a step in the
+# editor, Create. The recipe's page opens and the server holds the one recipe.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- tapOn:
+    id: add-recipe
+- tapOn:
+    id: add-recipe-write
+- extendedWaitUntil:
+    visible:
+      id: editor-name
+    timeout: 20000
+- tapOn:
+    id: editor-name
+- inputText: Hand Written Toast
+- tapOn:
+    id: editor-ingredient-input-0
+- inputText: 2 slices bread
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: editor-step-input-0
+- tapOn:
+    id: editor-step-input-0
+- inputText: Toast the bread.
+- hideKeyboard
+# Create is the editor's native header item, which has no id.
+- tapOn: Create
+- extendedWaitUntil:
+    visible:
+      id: recipe-name
+      text: Hand Written Toast
+    timeout: 20000
+- assertVisible:
+    id: recipe-ingredient-0
+    text: 2 slices bread
+- runFlow:
+    file: subflows/count.yaml
+    env:
+      COUNT_NAME: Hand Written Toast
+- assertTrue: ${output.count == 1}

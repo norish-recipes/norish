@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "Позиція без назви",
-    "fromRecipes": "З {count, plural, one {# рецепта} few {# рецептів} many {# рецептів} other {# рецепта}}",
-    "items": "{count, plural, one {# позиція} few {# позиції} many {# позицій} other {# позиції}}"
+    "items": "{count, plural, =0 {Немає позицій} one {# позиція} few {# позиції} many {# позицій} other {# позиції}}"
   },
   "store": {
     "unsorted": "Без магазину",
@@ -54,7 +53,6 @@
       "violet": "Фіолетовий"
     },
     "confirmDelete": "Ви впевнені, що хочете видалити {storeName}?",
-    "deleteWarning": "Позиції цього магазину буде переміщено в «Без магазину».",
     "noStoresYet": "Магазинів ще немає",
     "createStoreHint": "Створіть магазин, щоб упорядкувати покупки",
     "hasItems": "У цьому магазині позицій: {count}.",
@@ -95,6 +93,7 @@
     "unavailable": "Не вдалося прочитати вашу комору. Нічого не змінилося; спробуйте ще раз, коли знову будете онлайн.",
     "fieldLabel": "Знайти або додати продукт",
     "fieldPlaceholder": "Знайдіть або додайте продукт, напр. оливкова олія",
+    "findPlaceholder": "Знайти продукт у коморі",
     "add": "Додати до комори",
     "fromCatalogue": "Додати продукт",
     "addFood": "Додати {name} до комори",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "Додати покупку",
     "editTitle": "Редагувати покупку",
-    "itemName": "Назва позиції",
-    "itemNamePlaceholder": "напр., молоко, яйця, хліб...",
     "selectStore": "Вибрати магазин",
-    "noStore": "Без магазину",
     "recurrence": "Повторення",
     "savePreference": "Запам’ятати магазин для цієї позиції",
     "addAnother": "Додати ще",
     "addRepeat": "Налаштувати повторення",
-    "recurrenceEnabled": "Повторювана",
-    "recurrenceSheet": {
-      "title": "Повторення",
-      "subtitle": "Автоматично повертати цю позицію до списку покупок",
-      "enable": "Увімкнути повторення",
-      "disable": "Вимкнути повторення",
-      "frequency": "Частота",
-      "weekly": "Щотижня",
-      "biweekly": "Кожні 2 тижні",
-      "monthly": "Щомісяця",
-      "confirm": "Підтвердити"
-    },
     "storeOptional": "Магазин (необов’язково)",
     "autoDetectFromHistory": "Визначати автоматично з історії",
     "autoDetectOrSelect": "Визначити автоматично або вибрати",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "Не вдалося прочитати вашу комору, тому нічого ще не позначено. Позначте те, що треба купити.",
     "loadingIngredients": "Завантаження інгредієнтів...",
     "noIngredients": "Немає інгредієнтів.",
-    "addSelectedToGroceries": "Додати до покупок",
     "ingredientsAdded": "Інгредієнти додано до списку покупок.",
     "ingredientsFailed": "Не вдалося додати інгредієнти до списку покупок.",
     "addToGroceries": "Додати до покупок",
@@ -168,7 +151,6 @@
     "productLabel": "Товар у магазині {store}",
     "cannotSearch": "У цьому магазині неможливо шукати",
     "cannotSearchHint": "Norish не зміг визначити сторінку пошуку з посилання на магазин {store}. Виправте його в розділі «Керувати магазинами», і ціни з’являться.",
-    "packSize": "Розмір упаковки",
     "packAmount": "Кількість в упаковці",
     "packUnit": "Одиниця виміру",
     "productPage": "Сторінка товару",
@@ -188,7 +170,8 @@
     "packs": "{count} × {size}",
     "onePack": "ціна за одну упаковку",
     "sale": "Знижка",
-    "regularPrice": "Звичайна ціна {price}"
+    "regularPrice": "Звичайна ціна {price}",
+    "each": "за штуку"
   },
   "clearConfirm": {
     "listTitle": "Очистити список?",
@@ -196,5 +179,36 @@
     "sectionTitle": "Очистити {name}?",
     "sectionDescription": "Це видалить {count, plural, one {# позицію} few {# позиції} many {# позицій} other {# позиції}} із {name}. Це не можна скасувати.",
     "confirm": "Очистити"
+  },
+  "mobile": {
+    "viewMode": "Вигляд",
+    "viewByStore": "За магазинами",
+    "viewByRecipe": "За рецептами",
+    "listSettings": "Налаштування списку",
+    "emptyHint": "Додайте товари кнопкою нижче.",
+    "addTitle": "Додати покупки",
+    "editTitle": "Редагувати покупку",
+    "store": "Магазин",
+    "noStore": "Без магазину",
+    "automatic": "Автоматично",
+    "never": "Ніколи",
+    "removeRepeat": "Прибрати повтор",
+    "amountFor": "{amount} для рецепта «{recipe}»",
+    "expand": "Розгорнути",
+    "collapse": "Згорнути",
+    "itemLabel": "Товар",
+    "decreaseInterval": "Зменшити інтервал",
+    "increaseInterval": "Збільшити інтервал",
+    "manageStores": "Керування магазинами",
+    "addStore": "Додати магазин",
+    "editStore": "Змінити магазин",
+    "editStoreLabel": "Змінити {store}",
+    "deleteStoreLabel": "Видалити {store}",
+    "deleteStoreTitle": "Видалити {store}?",
+    "moveItemsToUnsorted": "Перенести товари до «Без магазину»",
+    "typePrice": "Введіть ціну самостійно",
+    "product": "Товар",
+    "chooseProduct": "Вибрати товар",
+    "recipeCount": "{count, plural, one {# рецепт} few {# рецепти} many {# рецептів} other {# рецепта}}"
   }
 }

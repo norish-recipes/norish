@@ -27,6 +27,9 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
 }));
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: vi.fn() }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: mockAddFavorite }));
+vi.mock("@norish/db/repositories/categories", () => ({
+  listCategoryNamesForUsers: vi.fn().mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
+}));
 vi.mock("@norish/db/repositories/cuisines", () => ({
   listCuisines: vi.fn().mockResolvedValue([{ id: "italian-id", name: "Italian", version: 1 }]),
 }));

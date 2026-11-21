@@ -41,7 +41,7 @@
       "get": {
         "operationId": "healthLive",
         "summary": "Check whether Norish is alive",
-        "description": "Answers 200 while the server responds and its internal parser answers its own health check. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
+        "description": "Answers 200 while the server responds and its internal parser, when running, answers its own health check. The parser starts on the first URL import and stops when idle, reported as `idle`. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
         "tags": [
           "Health"
         ],
@@ -102,7 +102,7 @@
       "get": {
         "operationId": "healthReady",
         "summary": "Check whether Norish is ready for traffic",
-        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "description": "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
         "tags": [
           "Health"
         ],
@@ -117,6 +117,10 @@
                     "status": {
                       "type": "string",
                       "const": "ok"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "The running Norish version, e.g. 0.27.0-beta."
                     },
                     "db": {
                       "type": "object",
@@ -165,6 +169,7 @@
                   },
                   "required": [
                     "status",
+                    "version",
                     "db",
                     "valkey",
                     "parser"
@@ -208,6 +213,10 @@
                       "type": "string",
                       "const": "ok"
                     },
+                    "version": {
+                      "type": "string",
+                      "description": "The running Norish version, e.g. 0.27.0-beta."
+                    },
                     "db": {
                       "type": "object",
                       "properties": {
@@ -255,6 +264,7 @@
                   },
                   "required": [
                     "status",
+                    "version",
                     "db",
                     "valkey",
                     "parser"
@@ -436,6 +446,38 @@
                         "null"
                       ]
                     },
+                    "nutritionExtras": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "saturatedFat",
+                              "monounsaturatedFat",
+                              "polyunsaturatedFat",
+                              "transFat",
+                              "sugars",
+                              "fiber",
+                              "cholesterol",
+                              "sodium",
+                              "potassium",
+                              "calcium",
+                              "iron",
+                              "vitaminC",
+                              "vitaminA"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "originCountry": {
                       "type": [
                         "string",
@@ -471,19 +513,6 @@
                     },
                     "updatedAt": {
                       "type": "string"
-                    },
-                    "categories": {
-                      "default": [],
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "enum": [
-                          "Breakfast",
-                          "Lunch",
-                          "Dinner",
-                          "Snack"
-                        ]
-                      }
                     },
                     "version": {
                       "type": "integer",
@@ -718,6 +747,15 @@
                         "additionalProperties": false
                       }
                     },
+                    "categories": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      }
+                    },
                     "author": {
                       "type": "object",
                       "properties": {
@@ -852,6 +890,31 @@
                                   },
                                   "protein": {
                                     "type": "number"
+                                  },
+                                  "extras": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "enum": [
+                                        "saturatedFat",
+                                        "monounsaturatedFat",
+                                        "polyunsaturatedFat",
+                                        "transFat",
+                                        "sugars",
+                                        "fiber",
+                                        "cholesterol",
+                                        "sodium",
+                                        "potassium",
+                                        "calcium",
+                                        "iron",
+                                        "vitaminC",
+                                        "vitaminA"
+                                      ]
+                                    },
+                                    "additionalProperties": {
+                                      "type": "number",
+                                      "minimum": 0
+                                    }
                                   }
                                 },
                                 "required": [
@@ -900,12 +963,12 @@
                     "dishColor",
                     "createdAt",
                     "updatedAt",
-                    "categories",
                     "version",
                     "recipeIngredients",
                     "steps",
                     "tags",
                     "cuisines",
+                    "categories",
                     "images",
                     "videos"
                   ],
@@ -1102,6 +1165,38 @@
                           "null"
                         ]
                       },
+                      "nutritionExtras": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "enum": [
+                                "saturatedFat",
+                                "monounsaturatedFat",
+                                "polyunsaturatedFat",
+                                "transFat",
+                                "sugars",
+                                "fiber",
+                                "cholesterol",
+                                "sodium",
+                                "potassium",
+                                "calcium",
+                                "iron",
+                                "vitaminC",
+                                "vitaminA"
+                              ]
+                            },
+                            "additionalProperties": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "originCountry": {
                         "type": [
                           "string",
@@ -1137,18 +1232,6 @@
                       },
                       "updatedAt": {
                         "type": "string"
-                      },
-                      "categories": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "enum": [
-                            "Breakfast",
-                            "Lunch",
-                            "Dinner",
-                            "Snack"
-                          ]
-                        }
                       },
                       "version": {
                         "type": "integer",
@@ -1230,6 +1313,14 @@
                           "type": "string",
                           "format": "uuid",
                           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        }
+                      },
+                      "categories": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 40
                         }
                       },
                       "steps": {
@@ -1535,6 +1626,38 @@
                                 "null"
                               ]
                             },
+                            "nutritionExtras": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string",
+                                    "enum": [
+                                      "saturatedFat",
+                                      "monounsaturatedFat",
+                                      "polyunsaturatedFat",
+                                      "transFat",
+                                      "sugars",
+                                      "fiber",
+                                      "cholesterol",
+                                      "sodium",
+                                      "potassium",
+                                      "calcium",
+                                      "iron",
+                                      "vitaminC",
+                                      "vitaminA"
+                                    ]
+                                  },
+                                  "additionalProperties": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "originCountry": {
                               "type": [
                                 "string",
@@ -1570,19 +1693,6 @@
                             },
                             "updatedAt": {
                               "type": "string"
-                            },
-                            "categories": {
-                              "default": [],
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "enum": [
-                                  "Breakfast",
-                                  "Lunch",
-                                  "Dinner",
-                                  "Snack"
-                                ]
-                              }
                             },
                             "version": {
                               "type": "integer",
@@ -1817,6 +1927,15 @@
                                 "additionalProperties": false
                               }
                             },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
+                              }
+                            },
                             "author": {
                               "type": "object",
                               "properties": {
@@ -1951,6 +2070,31 @@
                                           },
                                           "protein": {
                                             "type": "number"
+                                          },
+                                          "extras": {
+                                            "type": "object",
+                                            "propertyNames": {
+                                              "type": "string",
+                                              "enum": [
+                                                "saturatedFat",
+                                                "monounsaturatedFat",
+                                                "polyunsaturatedFat",
+                                                "transFat",
+                                                "sugars",
+                                                "fiber",
+                                                "cholesterol",
+                                                "sodium",
+                                                "potassium",
+                                                "calcium",
+                                                "iron",
+                                                "vitaminC",
+                                                "vitaminA"
+                                              ]
+                                            },
+                                            "additionalProperties": {
+                                              "type": "number",
+                                              "minimum": 0
+                                            }
                                           }
                                         },
                                         "required": [
@@ -1999,12 +2143,12 @@
                             "dishColor",
                             "createdAt",
                             "updatedAt",
-                            "categories",
                             "version",
                             "recipeIngredients",
                             "steps",
                             "tags",
                             "cuisines",
+                            "categories",
                             "images",
                             "videos"
                           ],
@@ -2044,6 +2188,240 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/error.FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipe not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recipes/{id}/nutrition": {
+      "get": {
+        "operationId": "recipeNutrition",
+        "summary": "Get a recipe's nutrition per serving",
+        "description": "The recipe's own Nutrition Information, else the total worked out from its ingredients, as the recipe page shows it.",
+        "tags": [
+          "Recipes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "supplied",
+                        "worked-out",
+                        "none"
+                      ],
+                      "description": "supplied: the recipe's own Nutrition Information. worked-out: summed from its ingredient lines' dataset numbers for your household, plus the AI's stored share of lines that could not be counted. none: neither gives a number."
+                    },
+                    "perServing": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "calories": {
+                              "description": "Calories in kcal per serving; null where the recipe does not say",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "fat": {
+                              "description": "Fat in grams per serving; null where the recipe does not say",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "carbs": {
+                              "description": "Carbohydrates in grams per serving; null where the recipe does not say",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "protein": {
+                              "description": "Protein in grams per serving; null where the recipe does not say",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "extras": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "enum": [
+                                  "saturatedFat",
+                                  "monounsaturatedFat",
+                                  "polyunsaturatedFat",
+                                  "transFat",
+                                  "sugars",
+                                  "fiber",
+                                  "cholesterol",
+                                  "sodium",
+                                  "potassium",
+                                  "calcium",
+                                  "iron",
+                                  "vitaminC",
+                                  "vitaminA"
+                                ]
+                              },
+                              "additionalProperties": {
+                                "type": "number"
+                              },
+                              "description": "Other nutrients per serving, only those known: cholesterol, sodium, potassium, calcium, iron and vitaminC in milligrams, vitaminA in micrograms RAE, the rest in grams. The recipe's own value wins; where it supplies no calories or macros, the others are worked out from its lines."
+                            }
+                          },
+                          "required": [
+                            "calories",
+                            "fat",
+                            "carbs",
+                            "protein",
+                            "extras"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "estimated": {
+                      "type": "boolean",
+                      "description": "Whether a worked-out total leans on parent foods for a tenth of its calories or more, or on the AI for a line."
+                    },
+                    "leftOut": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string",
+                            "enum": [
+                              "seasoning",
+                              "no-amount",
+                              "no-size",
+                              "no-numbers",
+                              "no-spoon-weight",
+                              "no-piece-weight"
+                            ]
+                          },
+                          "estimatedByAI": {
+                            "type": "boolean",
+                            "description": "Whether the AI's share of this line is in the total."
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "reason",
+                          "estimatedByAI"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Lines a worked-out total did not count from the datasets, in recipe order."
+                    },
+                    "credits": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "ciqual",
+                          "ciqual-2020",
+                          "calnut",
+                          "usda",
+                          "cofid",
+                          "off"
+                        ]
+                      },
+                      "description": "Datasets a worked-out total took a number from."
+                    },
+                    "extrasCoverage": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string",
+                        "enum": [
+                          "saturatedFat",
+                          "monounsaturatedFat",
+                          "polyunsaturatedFat",
+                          "transFat",
+                          "sugars",
+                          "fiber",
+                          "cholesterol",
+                          "sodium",
+                          "potassium",
+                          "calcium",
+                          "iron",
+                          "vitaminC",
+                          "vitaminA"
+                        ]
+                      },
+                      "additionalProperties": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "description": "For each extra nutrient, the share (0 to 1) of the counted ingredients by weight whose food knew it; 1 where the recipe states it. Below 1 the value is low by whatever the other ingredients hold."
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "perServing",
+                    "estimated",
+                    "leftOut",
+                    "credits",
+                    "extrasCoverage"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
                 }
               }
             }
@@ -2133,12 +2511,8 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "enum": [
-                        "Breakfast",
-                        "Lunch",
-                        "Dinner",
-                        "Snack"
-                      ]
+                      "minLength": 1,
+                      "maxLength": 40
                     }
                   },
                   "filterMode": {
@@ -2277,6 +2651,38 @@
                               }
                             ]
                           },
+                          "nutritionExtras": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string",
+                                  "enum": [
+                                    "saturatedFat",
+                                    "monounsaturatedFat",
+                                    "polyunsaturatedFat",
+                                    "transFat",
+                                    "sugars",
+                                    "fiber",
+                                    "cholesterol",
+                                    "sodium",
+                                    "potassium",
+                                    "calcium",
+                                    "iron",
+                                    "vitaminC",
+                                    "vitaminA"
+                                  ]
+                                },
+                                "additionalProperties": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "originCountry": {
                             "type": [
                               "string",
@@ -2288,19 +2694,6 @@
                           },
                           "updatedAt": {
                             "type": "string"
-                          },
-                          "categories": {
-                            "default": [],
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "enum": [
-                                "Breakfast",
-                                "Lunch",
-                                "Dinner",
-                                "Snack"
-                              ]
-                            }
                           },
                           "version": {
                             "type": "integer",
@@ -2331,6 +2724,15 @@
                                 "version"
                               ],
                               "additionalProperties": false
+                            }
+                          },
+                          "categories": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 40
                             }
                           },
                           "author": {
@@ -2394,10 +2796,10 @@
                           "originCountry",
                           "createdAt",
                           "updatedAt",
-                          "categories",
                           "version",
                           "image",
-                          "tags"
+                          "tags",
+                          "categories"
                         ],
                         "additionalProperties": false
                       }
@@ -2447,7 +2849,7 @@
       "post": {
         "operationId": "recipeCreate",
         "summary": "Create a recipe",
-        "description": "Creates a recipe directly from structured recipe data without parser transformation.",
+        "description": "Creates a recipe directly from structured recipe data without parser transformation. Responds after the recipe is stored and returns an error if storing fails. Repeating a create with an ID already created by the same user returns that recipe's ID.",
         "tags": [
           "Recipes"
         ],
@@ -2580,6 +2982,38 @@
                       "null"
                     ]
                   },
+                  "nutritionExtras": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "enum": [
+                            "saturatedFat",
+                            "monounsaturatedFat",
+                            "polyunsaturatedFat",
+                            "transFat",
+                            "sugars",
+                            "fiber",
+                            "cholesterol",
+                            "sodium",
+                            "potassium",
+                            "calcium",
+                            "iron",
+                            "vitaminC",
+                            "vitaminA"
+                          ]
+                        },
+                        "additionalProperties": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "originCountry": {
                     "type": [
                       "string",
@@ -2609,19 +3043,6 @@
                       "string",
                       "null"
                     ]
-                  },
-                  "categories": {
-                    "default": [],
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Breakfast",
-                        "Lunch",
-                        "Dinner",
-                        "Snack"
-                      ]
-                    }
                   },
                   "version": {
                     "type": "integer",
@@ -2716,6 +3137,15 @@
                       "type": "string",
                       "format": "uuid",
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "categories": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
                     }
                   },
                   "steps": {
@@ -3057,6 +3487,38 @@
                                 }
                               ]
                             },
+                            "nutritionExtras": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string",
+                                    "enum": [
+                                      "saturatedFat",
+                                      "monounsaturatedFat",
+                                      "polyunsaturatedFat",
+                                      "transFat",
+                                      "sugars",
+                                      "fiber",
+                                      "cholesterol",
+                                      "sodium",
+                                      "potassium",
+                                      "calcium",
+                                      "iron",
+                                      "vitaminC",
+                                      "vitaminA"
+                                    ]
+                                  },
+                                  "additionalProperties": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "originCountry": {
                               "type": [
                                 "string",
@@ -3068,19 +3530,6 @@
                             },
                             "updatedAt": {
                               "type": "string"
-                            },
-                            "categories": {
-                              "default": [],
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "enum": [
-                                  "Breakfast",
-                                  "Lunch",
-                                  "Dinner",
-                                  "Snack"
-                                ]
-                              }
                             },
                             "version": {
                               "type": "integer",
@@ -3111,6 +3560,15 @@
                                   "version"
                                 ],
                                 "additionalProperties": false
+                              }
+                            },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
                               }
                             },
                             "author": {
@@ -3174,10 +3632,10 @@
                             "originCountry",
                             "createdAt",
                             "updatedAt",
-                            "categories",
                             "version",
                             "image",
-                            "tags"
+                            "tags",
+                            "categories"
                           ],
                           "additionalProperties": false
                         },
@@ -3404,6 +3862,38 @@
                                 }
                               ]
                             },
+                            "nutritionExtras": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string",
+                                    "enum": [
+                                      "saturatedFat",
+                                      "monounsaturatedFat",
+                                      "polyunsaturatedFat",
+                                      "transFat",
+                                      "sugars",
+                                      "fiber",
+                                      "cholesterol",
+                                      "sodium",
+                                      "potassium",
+                                      "calcium",
+                                      "iron",
+                                      "vitaminC",
+                                      "vitaminA"
+                                    ]
+                                  },
+                                  "additionalProperties": {
+                                    "type": "number",
+                                    "minimum": 0
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "originCountry": {
                               "type": [
                                 "string",
@@ -3415,19 +3905,6 @@
                             },
                             "updatedAt": {
                               "type": "string"
-                            },
-                            "categories": {
-                              "default": [],
-                              "type": "array",
-                              "items": {
-                                "type": "string",
-                                "enum": [
-                                  "Breakfast",
-                                  "Lunch",
-                                  "Dinner",
-                                  "Snack"
-                                ]
-                              }
                             },
                             "version": {
                               "type": "integer",
@@ -3458,6 +3935,15 @@
                                   "version"
                                 ],
                                 "additionalProperties": false
+                              }
+                            },
+                            "categories": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
                               }
                             },
                             "author": {
@@ -3521,10 +4007,10 @@
                             "originCountry",
                             "createdAt",
                             "updatedAt",
-                            "categories",
                             "version",
                             "image",
-                            "tags"
+                            "tags",
+                            "categories"
                           ],
                           "additionalProperties": false
                         },
@@ -5046,6 +5532,284 @@
         }
       }
     },
+    "/planned-recipes": {
+      "get": {
+        "operationId": "plannedRecipesRange",
+        "summary": "Get planned recipes for a date range",
+        "description": "`start` and `end` are inclusive YYYY-MM-DD dates covering at most 366 days; an impossible date, `end` before `start` or a longer range is a 400. `include=notes` also returns planned notes.",
+        "tags": [
+          "Planned Recipes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "include",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "notes"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "date": {
+                        "type": "string"
+                      },
+                      "slot": {
+                        "type": "string",
+                        "enum": [
+                          "Breakfast",
+                          "Lunch",
+                          "Dinner",
+                          "Snack"
+                        ]
+                      },
+                      "sortOrder": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "itemType": {
+                        "type": "string",
+                        "enum": [
+                          "recipe",
+                          "note"
+                        ]
+                      },
+                      "recipeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "title": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "version": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "recipeName": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "recipeImage": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "servings": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "calories": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "date",
+                      "slot",
+                      "sortOrder",
+                      "itemType",
+                      "recipeId",
+                      "title",
+                      "version",
+                      "recipeName",
+                      "recipeImage",
+                      "servings",
+                      "calories"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "plannedRecipeCreate",
+        "summary": "Create a planned recipe or note",
+        "description": "Send `recipeId` to plan a recipe, or `title` to plan a note. Exactly one is required; neither or both is a 400.",
+        "tags": [
+          "Planned Recipes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "date": {
+                    "type": "string"
+                  },
+                  "slot": {
+                    "type": "string",
+                    "enum": [
+                      "Breakfast",
+                      "Lunch",
+                      "Dinner",
+                      "Snack"
+                    ]
+                  },
+                  "recipeId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "date",
+                  "slot"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/planned-recipes/today": {
       "get": {
         "operationId": "plannedRecipesToday",
@@ -5490,96 +6254,6 @@
         }
       }
     },
-    "/planned-recipes": {
-      "post": {
-        "operationId": "plannedRecipeCreate",
-        "summary": "Create a planned recipe",
-        "tags": [
-          "Planned Recipes"
-        ],
-        "security": [
-          {
-            "ApiKeyAuth": []
-          },
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  },
-                  "date": {
-                    "type": "string"
-                  },
-                  "slot": {
-                    "type": "string",
-                    "enum": [
-                      "Breakfast",
-                      "Lunch",
-                      "Dinner",
-                      "Snack"
-                    ]
-                  },
-                  "recipeId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                  }
-                },
-                "required": [
-                  "date",
-                  "slot",
-                  "recipeId"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-                    }
-                  },
-                  "required": [
-                    "id"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing or invalid API credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/planned-recipes/{itemId}": {
       "delete": {
         "operationId": "plannedRecipeDelete",
@@ -5928,6 +6602,50 @@
         "example": {
           "code": "PRECONDITION_FAILED",
           "message": "The URL is a video and AI or video parsing is not enabled",
+          "issues": []
+        }
+      },
+      "error.BAD_REQUEST": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The error message",
+            "example": "Invalid input"
+          },
+          "code": {
+            "type": "string",
+            "description": "The error code",
+            "example": "BAD_REQUEST"
+          },
+          "issues": {
+            "description": "An array of issues that were responsible for the error",
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "message",
+          "code"
+        ],
+        "additionalProperties": false,
+        "title": "Invalid input error (400)",
+        "description": "The error information",
+        "example": {
+          "code": "BAD_REQUEST",
+          "message": "Invalid input",
           "issues": []
         }
       }

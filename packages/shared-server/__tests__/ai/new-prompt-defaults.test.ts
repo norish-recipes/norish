@@ -24,10 +24,12 @@ function shipped(name: string): string {
 }
 
 describe("the shipped auto-categorization prompt", () => {
-  it("names the four categories and asks only for fitting ones", () => {
+  it("points at the appended household list and asks only for fitting ones", () => {
     const prompt = shipped("auto-categorization");
 
-    expect(prompt).toContain("Breakfast, Lunch, Dinner, Snack");
+    // The list itself is appended by the feature; the prompt names no Category.
+    expect(prompt).toContain("HOUSEHOLD CATEGORIES list");
+    expect(prompt).not.toMatch(/Breakfast/);
     expect(prompt).toMatch(/only the categories that fit/i);
   });
 });

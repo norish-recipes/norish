@@ -1,6 +1,8 @@
+import { serverPackage } from "@/lib/server-package";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { appRouter, createContext } from "@norish/trpc/server";
+const { appRouter, createContext } =
+  await serverPackage<typeof import("@norish/trpc/server")>("@norish/trpc/server");
 
 export const maxDuration = 300;
 

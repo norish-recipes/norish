@@ -27,7 +27,9 @@
       "all": "Kaikki",
       "recipes": "Reseptit",
       "cookbooks": "Keittokirjat"
-    }
+    },
+    "importingCard": "Tuodaan…",
+    "favourited": "Suosikki"
   },
   "back": {
     "all": "Takaisin kirjastoon",
@@ -43,7 +45,8 @@
     "noResults": "Reseptejä ei löytynyt",
     "noResultsHint": "Kokeile muuttaa tai tyhjentää suodattimet.",
     "noCookbooks": "Ei vielä keittokirjoja",
-    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä."
+    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä.",
+    "descriptionMobile": "Lisää ensimmäinen reseptisi linkistä, tekstistä tai kuvista."
   },
   "card": {
     "noImage": "Ei kuvaa saatavilla",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Tätä reseptiä ei ole olemassa tai sinulla ei ole oikeutta nähdä sitä.",
     "prep": "valmistelu",
     "total": "yhteensä",
-    "planMeal": "Suunnittele ateria",
     "recipeActions": "Reseptin toiminnot",
     "instructions": "Ohjeet",
     "cook": "Kokkaa",
@@ -78,7 +80,9 @@
     "addedBy": "Lisännyt {name}",
     "decreaseServings": "Vähemmän annoksia",
     "increaseServings": "Enemmän annoksia",
-    "multiplier": "Kerroin"
+    "multiplier": "Kerroin",
+    "rateStars": "Anna {count}/5",
+    "stepPhoto": "Vaiheen kuva"
   },
   "actions": {
     "plan": "Suunnittele",
@@ -86,7 +90,6 @@
     "edit": "Muokkaa",
     "delete": "Poista",
     "share": "Jaa",
-    "visitOriginal": "Avaa alkuperäinen resepti",
     "addToCalendar": "Lisää kalenteriin",
     "autoTag": "Luo tunnisteet",
     "autoTagging": "Luodaan tunnisteita...",
@@ -103,10 +106,13 @@
     "inferringProvenance": "Selvitetään alkuperää…",
     "linkIngredients": "Linkitä ainesosat työvaiheisiin",
     "linkingIngredients": "Linkitetään ainesosia…",
-    "enrichmentFailed": "Viime ajo epäonnistui",
     "generateImage": "Luo kuva",
     "generatingImage": "Luodaan kuvaa…",
-    "cookbooks": "Keittokirjat"
+    "cookbooks": "Keittokirjat",
+    "favourite": "Suosikki",
+    "unfavourite": "Poista suosikeista",
+    "ai": "Tekoäly",
+    "shareLink": "Jaa linkki"
   },
   "sharePanel": {
     "title": "Jaa resepti",
@@ -150,7 +156,13 @@
       "title": "Poista linkki",
       "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
       "confirm": "Poista linkki"
-    }
+    },
+    "expiresAfter": "Vanhenee kuluttua",
+    "expiresOn": "Vanhenee {date}",
+    "expiredOn": "Vanheni {date}",
+    "lastOpenedOn": "Viimeksi avattu {date}",
+    "neverExpires": "Ei vanhene koskaan",
+    "linkCreated": "Luotu {date}"
   },
   "convert": {
     "ariaLabel": "Muunna mittajärjestelmä",
@@ -166,14 +178,14 @@
     "confirmMessage": "Haluatko varmasti poistaa reseptin \"{recipeName}\"?",
     "warning": "Tätä toimintoa ei voi kumota.",
     "confirmCount": "Poistetaanko {count, plural, one {# resepti} other {# reseptiä}}?",
-    "keptCount": "{count, plural, one {# resepti jää} other {# reseptiä jää}}, koska sinulla ei ole oikeutta poistaa {count, plural, one {sitä} other {niitä}}."
+    "keptCount": "{count, plural, one {# resepti jää} other {# reseptiä jää}}, koska sinulla ei ole oikeutta poistaa {count, plural, one {sitä} other {niitä}}.",
+    "alertTitle": "Poistetaanko {name}?"
   },
   "form": {
     "createTitle": "Luo resepti",
     "editTitle": "Muokkaa reseptiä",
     "createDescription": "Lisää uusi resepti kokoelmaasi",
     "editDescription": "Päivitä reseptisi tiedot",
-    "initializingForm": "Alustetaan lomaketta...",
     "photo": "Kuva",
     "basicInfo": "Perustiedot",
     "ingredients": "Ainesosat",
@@ -194,6 +206,7 @@
     "tagsHelp": "Kirjoita tunnisteita ja lisää niitä napsauttamalla ehdotuksia. Reseptissä jo olevat tunnisteet ovat täytettyjä; uusilla on katkoviivareunus.",
     "tagsAndCategories": "Tunnisteet ja kategoriat",
     "categoriesHelp": "Valitse tämän reseptin ateriakategoriat.",
+    "addCategory": "Lisää kategoria",
     "category": {
       "breakfast": "Aamiainen",
       "lunch": "Lounas",
@@ -224,19 +237,12 @@
     "createRecipe": "Luo resepti",
     "saveChanges": "Tallenna muutokset",
     "uploading": "Lähetetään...",
-    "clickToUpload": "Napsauta lähettääksesi tai raahaa ja pudota",
-    "pasteToUpload": "liittääksesi",
-    "imageFormats": "PNG, JPG, WEBP enintään 5 Mt",
     "discardChangesConfirm": "Sinulla on tallentamattomia muutoksia. Hylätäänkö ne ja poistutaan tältä sivulta?"
   },
   "gallery": {
-    "addImage": "Lisää kuva",
     "uploading": "Lähetetään...",
     "uploadFailed": "Lähetys epäonnistui",
-    "dragToReorder": "Raahaa järjestääksesi",
-    "maxImagesReached": "Enintään {max} kuvaa sallittu",
-    "maxVideosReached": "Enintään {max} videota sallittu",
-    "invalidFileType": "Virheellinen tiedostotyyppi"
+    "dragToReorder": "Raahaa järjestääksesi"
   },
   "carousel": {
     "noImageAvailable": "Ei kuvaa saatavilla",
@@ -245,8 +251,14 @@
       "mute": "Mykistä",
       "unmute": "Poista mykistys",
       "fullscreen": "Siirry koko näyttöön",
-      "exitFullscreen": "Poistu koko näytöstä"
-    }
+      "exitFullscreen": "Poistu koko näytöstä",
+      "progress": "Videon edistyminen",
+      "play": "Toista",
+      "pause": "Tauko"
+    },
+    "recipeImage": "Reseptin kuva",
+    "closeViewer": "Sulje kuvanäkymä",
+    "photoOf": "Kuva {current}/{total}"
   },
   "validation": {
     "nameRequired": "Reseptin nimi on pakollinen",
@@ -260,11 +272,18 @@
     "fat": "Rasva",
     "carbs": "Hiilihydraatit",
     "protein": "Proteiini",
+    "fiber": "Kuitu",
+    "saturatedFat": "josta tyydyttyneitä rasvoja",
+    "sugars": "josta sokereita",
+    "sodium": "Natrium",
+    "moreNutrients": "Lisää ravintoaineita",
+    "fewerNutrients": "Vähemmän ravintoaineita",
+    "starredMayBeHigher": "Kaikilla ainesosilla ei ole tätä arvoa, joten tähdellä merkityt arvot voivat olla suurempia",
+    "referenceIntake": "% aikuisen päivittäisestä saannin vertailuarvosta ({calories} kcal)",
     "showingPortions": "Näytetään arvot {count} {count, plural, one {annokselle} other {annokselle}}",
-    "noInfo": "Ravintosisältötietoja ei ole saatavilla",
-    "estimateWithAI": "Arvioi tekoälyllä",
     "estimated": "Arvioitu",
     "leftOut": "{count, plural, one {# rivi jäi laskematta} other {# riviä jäi laskematta}}",
+    "leftOutStarred": "{count, plural, one {# rivi jäi laskematta} other {# riviä jäi laskematta}}, joten tähdellä merkityt arvot voivat olla suurempia",
     "estimatedByAI": "tekoälyn arvioima",
     "reasons": {
       "seasoning": "mauste",
@@ -275,7 +294,12 @@
       "noPieceWeight": "ei vielä kappaleen painoa"
     },
     "workedOutFrom": "Laskettu aineksista, lähteinä {sources}.",
-    "householdNumbers": "kotitaloutesi arvot"
+    "householdNumbers": "kotitaloutesi arvot",
+    "decreasePortions": "Vähemmän annoksia",
+    "increasePortions": "Enemmän annoksia",
+    "portions": "{count, plural, one {# annos} other {# annosta}}",
+    "percentOfReference": "{percent} % määrästä {amount}",
+    "percentOfDailyReference": "{percent} % päiväviitearvosta {amount}"
   },
   "measurementSystem": {
     "label": "Mittajärjestelmä",
@@ -290,7 +314,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Vaihe {number}: Kuvaile vaihe...",
-    "stepPlaceholderShort": "Vaihe {number}"
+    "stepPlaceholderShort": "Vaihe {number}",
+    "recipeSuggestions": "Reseptiehdotukset",
+    "ingredientSuggestions": "Ainesosaehdotukset"
   },
   "stepIngredients": {
     "rowLabel": "Linkitetyt ainesosat",
@@ -321,16 +347,15 @@
   },
   "toasts": {
     "imported": "Resepti tuotu",
-    "failed": "Reseptitoiminto epäonnistui",
     "failedDescription": "Reseptin käsittelyssä meni jokin pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
     "incomplete": "Tämä resepti voi olla puutteellinen. Vertaa sitä lähteeseen.",
     "notARecipe": "Tämä sivu ei näytä reseptiltä.",
     "privateAddress": "Tuonnit yksityisistä verkko-osoitteista eivät ole sallittuja tällä palvelimella.",
-    "batchImported": "Reseptit tuotu",
-    "batchImportedDescription": "{count} reseptiä tuotu arkistosta",
     "view": "Näytä",
     "open": "Avaa",
-    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}."
+    "deleteKept": "{count, plural, one {Joku muu muutti # reseptiä, ja se säilytettiin} other {Joku muu muutti # reseptiä, ja ne säilytettiin}}.",
+    "deleted": "Resepti poistettu",
+    "deletedDescription": "Tämä resepti on poistettu."
   },
   "tags": {
     "panel": {
@@ -345,12 +370,23 @@
     "servings": "Annokset",
     "serving": "{count, plural, one {# annos} other {# annosta}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Pyyhkäise siirtyäksesi vaiheiden välillä",
-    "swipeIngredients": "Pyyhkäise vasemmalle nähdäksesi ainesosat",
-    "swipeBackToSteps": "Pyyhkäise oikealle palataksesi vaiheisiin",
     "readyAt": "Valmis noin klo {time}",
     "timers": "Ajastimet",
-    "nextStep": "Seuraava vaihe"
+    "nextStep": "Seuraava vaihe",
+    "stepLabel": "Vaihe {number}",
+    "previousStep": "Edellinen vaihe",
+    "startTimer": "Käynnistä {duration} ajastin",
+    "pauseTimer": "Keskeytä ajastin, {time} jäljellä",
+    "resumeTimer": "Jatka ajastinta, {time} jäljellä",
+    "dismissTimer": "Sulje ajastin",
+    "restartTimer": "Käynnistä ajastin uudelleen",
+    "notificationsOff": "Norishin ilmoitukset ovat pois päältä, joten ajastimet hälyttävät vain sovelluksen ollessa auki.",
+    "decreaseTimer": "Vähennä {time}",
+    "increaseTimer": "Lisää {time}",
+    "openTimer": "{timer}, avaa {recipe} kokkaustilassa",
+    "openTimerAtStep": "{timer}, avaa {recipe} kokkaustilassa vaiheessa {number}",
+    "timersLeft": "Ajastimet, {time} jäljellä",
+    "spokenTime": "{hours, plural, =0 {} one {# tunti } other {# tuntia }}{minutes, plural, =0 {} one {# minuutti } other {# minuuttia }}{seconds, plural, =0 {} one {# sekunti } other {# sekuntia }}"
   },
   "enrichment": {
     "failed": "Rikastus epäonnistui",
@@ -373,10 +409,7 @@
   "provenance": {
     "title": "Alkuperä",
     "region": "Alue",
-    "cuisines": "Ruokakulttuurit",
-    "inferring": "Selvitetään, mistä tämä resepti on peräisin…",
-    "noInfo": "Ei vielä tietoa alkuperästä",
-    "inferWithAI": "Selvitä tekoälyllä"
+    "cuisines": "Ruokakulttuurit"
   },
   "import": {
     "alreadyExists": "Sinulla on jo tämä resepti",
@@ -430,7 +463,13 @@
     "changeImage": "Vaihda kuva",
     "removeImage": "Poista kuva",
     "imageUploadFailed": "Kuvan lataaminen epäonnistui.",
-    "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa."
+    "imageNeedsConnection": "Kuvia voi vaihtaa, kun olet taas verkossa.",
+    "rename": "Nimeä uudelleen",
+    "deleteAlertTitle": "Poistetaanko {title}?",
+    "changeCover": "Vaihda kansi",
+    "renameTitle": "Nimeä keittokirja uudelleen",
+    "coverFromLibrary": "Valitse kirjastosta",
+    "coverFromCamera": "Ota kuva"
   },
   "print": {
     "title": "Tulosta resepti",
@@ -449,5 +488,109 @@
     "newCookbook": "Uusi keittokirja",
     "filedInto": "{count, plural, one {# resepti lisätty} other {# reseptiä lisätty}} kohteeseen {title}",
     "filedIntoMany": "{count, plural, one {# resepti lisätty} other {# reseptiä lisätty}} {cookbooks} keittokirjaan"
+  },
+  "addRecipe": {
+    "fromLink": "Linkistä",
+    "fromLinkHint": "Mikä tahansa reseptisivusto tai video",
+    "fromPhotos": "Kuvista",
+    "fromPhotosHint": "Keittokirjan sivuja tai kuvakaappaus",
+    "fromText": "Tekstistä",
+    "fromTextHint": "Liitä resepti tai JSON-LD",
+    "writeYourself": "Kirjoita itse",
+    "writeYourselfHint": "Aloita tyhjästä reseptistä",
+    "fromClipboard": "Leikepöydältäsi",
+    "linkTitle": "Tuo linkistä",
+    "textTitle": "Tuo tekstistä",
+    "photosTitle": "Tuo kuvista",
+    "camera": "Kamera",
+    "photoLibrary": "Kuvakirjasto",
+    "photoCount": "{count, plural, one {# kuva, tuodaan yhtenä reseptinä} other {# kuvaa, tuodaan yhtenä reseptinä}}",
+    "photoLimits": "Enintään {max} kuvaa, JPEG, PNG tai WebP",
+    "removePhoto": "Poista kuva {number}"
+  },
+  "shareExtension": {
+    "sending": "Lähetetään Norishiin…",
+    "sentTitle": "Tuodaan Norishiin",
+    "sentBody": "Se näkyy kirjastossasi hetken kuluttua.",
+    "savedTitle": "Tallennettu myöhemmäksi",
+    "savedBody": "Norish tuo sen, kun palvelimesi on tavoitettavissa.",
+    "signedOut": "Avaa Norish ja kirjaudu ensin sisään.",
+    "tooOld": "Norish-palvelimesi on ensin päivitettävä.",
+    "noAi": "Kuvien tuonti vaatii tekoälyä, joka on poissa käytöstä palvelimellasi.",
+    "failed": "Norish ei voinut tuoda tätä.",
+    "close": "Sulje",
+    "photoCount": "{count, plural, one {# kuva} other {# kuvaa}}",
+    "text": "Teksti"
+  },
+  "editor": {
+    "newTitle": "Uusi resepti",
+    "editTitle": "Muokkaa reseptiä",
+    "recipeName": "Reseptin nimi",
+    "ingredient": "Ainesosa",
+    "sectionHeading": "Osion otsikko",
+    "step": "Vaihe",
+    "steps": "Vaiheet",
+    "notesHint": "Aloita rivi merkillä # otsikkoa varten; ympäröi sanat **kaksoistähdillä** lihavointia varten.",
+    "ingredientsHint": "Kirjoita ainesosia, kuten 2 kuppia jauhoja; määrät ja yksiköt luetaan puolestasi. Aloita rivi merkillä # osiota varten.",
+    "stepsHint": "Paina rivinvaihtoa siirtyäksesi seuraavaan vaiheeseen. Kirjoita @ liittääksesi ainesosan, # osiota varten.",
+    "addIngredient": "Lisää ainesosa",
+    "removeIngredient": "Poista ainesosa",
+    "addStep": "Lisää vaihe",
+    "removeStep": "Poista vaihe",
+    "addPhoto": "Lisää kuva",
+    "addStepPhoto": "Lisää vaiheen kuva",
+    "removePhoto": "Poista kuva",
+    "mediaCount": "{images}/{maxImages} kuvaa · {videos}/{maxVideos} videota",
+    "photosOffline": "Voit lisätä kuvia, kun olet verkossa.",
+    "tagsAndCategories": "Tunnisteet ja luokat",
+    "categories": "Luokat",
+    "tags": "Tunnisteet",
+    "tagsHint": "Valitse ehdotus tai kirjoita uusi tunniste; uusilla tunnisteilla on katkoviivareuna.",
+    "addTag": "Lisää tunniste",
+    "removeNamed": "Poista {name}",
+    "servingsAndTime": "Annokset ja aika",
+    "minutes": "min",
+    "perServing": "annosta kohden, valinnainen",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "Lähde",
+    "sourceUrl": "Lähteen URL",
+    "measurementSystem": "Mittajärjestelmä",
+    "measurementHint": "Tunnistettu ainesosistasi. Muuttaminen vaihtaa vain merkinnän eikä muunna; käytä Muunna-toimintoa tallennuksen jälkeen.",
+    "discardTitle": "Hylätäänkö muutokset?",
+    "discardMessage": "Sinulla on tallentamattomia muutoksia.",
+    "keepEditing": "Jatka muokkausta",
+    "discard": "Hylkää"
+  },
+  "search": {
+    "sortBestMatch": "Paras osuma",
+    "sortNewest": "Uusimmat",
+    "sortOldest": "Vanhimmat",
+    "sortAZ": "A–Ö",
+    "sortZA": "Ö–A",
+    "sortLabel": "Järjestys: {sort}",
+    "ratingChip": "{count}+ tähteä",
+    "removeFilter": "Poista {filter}",
+    "ingredientFilter": "ainesosasuodatin",
+    "count": "{count, plural, one {# resepti} other {# reseptiä}}",
+    "noMatch": "Ei reseptejä haulle ”{text}”",
+    "searchAllFields": "Hae kaikista kentistä",
+    "filtersOn": "Suodattimet, {count} käytössä",
+    "matchTitle": "Otsikossa",
+    "matchTag": "Tunniste:",
+    "matchIngredient": "Ainesosa:",
+    "matchStep": "Vaihe {number}:",
+    "searchFor": "Hae ”{text}”",
+    "recipes": "Reseptit",
+    "narrowTo": "Rajaa",
+    "typeIngredient": "Ainesosa",
+    "typeTag": "Tunniste",
+    "typeCategory": "Luokka",
+    "recent": "Viimeisimmät",
+    "quickFilters": "Pikasuodattimet",
+    "underThirty": "Alle 30 min",
+    "fourAndUp": "4 ja yli",
+    "editRecent": "Muokkaa “{text}”",
+    "offline": "Haku tarvitsee yhteyden"
   }
 }

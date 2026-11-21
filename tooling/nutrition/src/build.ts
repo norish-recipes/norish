@@ -34,29 +34,46 @@ export class SourceTableError extends Error {
 }
 
 function asFood(dataset: NutritionDataset, food: SourceFood): DatasetFood {
-  return { dataset, ...food, pieceWeight: null, density: null, ndb: null };
+  return {
+    dataset,
+    ...food,
+    extras: food.extras ?? null,
+    pieceWeight: null,
+    density: null,
+    ndb: null,
+  };
 }
 
 /**
  * Every dataset food the table keeps: CIQUAL 2025; CIQUAL 2020 for the codes
  * 2025 gives no numbers for; CALNUT for the codes neither does, named by
  * CIQUAL's English name where either edition has one; all of USDA; all of
- * CoFID.
+ * CoFID. A CIQUAL food takes the other nutrients CIQUAL left blank from
+ * CALNUT, which fills CIQUAL's gaps under the same codes.
  */
 export function tableFoods(sources: Sources): DatasetFood[] {
   const ciqual = new Map(sources.ciqual.foods.map((food) => [food.code, food]));
   const ciqual2020 = sources.ciqual2020.foods.filter((food) => !ciqual.has(food.code));
   const counted = new Set([...ciqual.keys(), ...ciqual2020.map((food) => food.code)]);
   const english = new Map([...sources.ciqual2020.names, ...sources.ciqual.names]);
+  const filled = new Map(sources.calnut.map((food) => [food.code, food.extras]));
+  const withGapsFilled = (food: SourceFood): SourceFood => ({
+    ...food,
+    extras: { ...filled.get(food.code), ...food.extras },
+  });
   const calnut = sources.calnut
     .filter((food) => !counted.has(food.code))
     .map((food) => ({ ...food, name: english.get(food.code) ?? food.name }));
 
   return withoutAmbiguousCodes([
-    ...sources.ciqual.foods.map((food) => asFood("ciqual", food)),
-    ...ciqual2020.map((food) => asFood("ciqual-2020", food)),
+    ...sources.ciqual.foods.map((food) => asFood("ciqual", withGapsFilled(food))),
+    ...ciqual2020.map((food) => asFood("ciqual-2020", withGapsFilled(food))),
     ...calnut.map((food) => asFood("calnut", food)),
-    ...sources.usda.map((food) => ({ dataset: "usda" as const, ...food })),
+    ...sources.usda.map((food) => ({
+      dataset: "usda" as const,
+      ...food,
+      extras: food.extras ?? null,
+    })),
     ...sources.cofid.map((food) => asFood("cofid", food)),
   ]);
 }

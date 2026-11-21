@@ -4,6 +4,7 @@ import Fuse from "fuse.js";
 import z from "zod";
 
 import type { Db } from "@norish/db/drizzle";
+import type { GroceryDto } from "@norish/shared/contracts/dto/groceries";
 import type {
   AisleDto,
   IngredientStorePreferenceDto,
@@ -14,6 +15,7 @@ import type {
 import { db } from "@norish/db/drizzle";
 import { groceries, ingredients, ingredientStorePreferences, stores } from "@norish/db/schema";
 import {
+  GrocerySelectBaseSchema,
   IngredientStorePreferenceInsertSchema,
   IngredientStorePreferenceSelectSchema,
   StoreInsertBaseSchema,
@@ -185,7 +187,8 @@ export async function reorderStores(
 
       const [row] = await trx
         .update(stores)
-        .set({ sortOrder: i, updatedAt: new Date(), version: sql`${stores.version} + 1` })
+        // Renumbering is not an edit: the version stays, so a write queued on it still lands.
+        .set({ sortOrder: i, updatedAt: new Date() })
         .where(and(eq(stores.id, storeUpdate.id), eq(stores.version, storeUpdate.version)))
         .returning();
 
@@ -201,9 +204,18 @@ export async function deleteStore(
   version: number,
   deleteGroceries: boolean,
   grocerySnapshot?: Array<{ id: string; version: number }>
-): Promise<{ deletedGroceryIds: string[]; storeDeleted: boolean; stale: boolean }> {
+): Promise<{
+  deletedGroceryIds: string[];
+  movedGroceries: GroceryDto[];
+  storeDeleted: boolean;
+  stale: boolean;
+}> {
   return await db.transaction(async (trx) => {
     let deletedGroceryIds: string[] = [];
+    const movedGroceries: GroceryDto[] = [];
+    const keepMoved = (rows: unknown[]) => {
+      for (const row of rows) movedGroceries.push(GrocerySelectBaseSchema.parse(row));
+    };
 
     const [storeRow] = await trx
       .select({ id: stores.id })
@@ -212,7 +224,7 @@ export async function deleteStore(
       .limit(1);
 
     if (!storeRow) {
-      return { deletedGroceryIds, storeDeleted: false, stale: true };
+      return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
     }
 
     if (grocerySnapshot && grocerySnapshot.length > 0) {
@@ -235,7 +247,7 @@ export async function deleteStore(
         }
       } else {
         for (const grocery of grocerySnapshot) {
-          await trx
+          const moved = await trx
             .update(groceries)
             .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
             .where(
@@ -244,7 +256,10 @@ export async function deleteStore(
                 eq(groceries.version, grocery.version),
                 eq(groceries.storeId, storeId)
               )
-            );
+            )
+            .returning();
+
+          keepMoved(moved);
         }
       }
 
@@ -269,11 +284,11 @@ export async function deleteStore(
           .returning({ id: stores.id });
 
         if (deletedStore.length === 0) {
-          return { deletedGroceryIds, storeDeleted: false, stale: true };
+          return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
         }
       }
 
-      return { deletedGroceryIds, storeDeleted: isEmpty, stale: false };
+      return { deletedGroceryIds, movedGroceries, storeDeleted: isEmpty, stale: false };
     }
 
     // Legacy path (no snapshot): process all current groceries
@@ -290,10 +305,13 @@ export async function deleteStore(
       await trx.delete(groceries).where(eq(groceries.storeId, storeId));
     } else {
       // Set storeId to null for groceries in this store
-      await trx
-        .update(groceries)
-        .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-        .where(eq(groceries.storeId, storeId));
+      keepMoved(
+        await trx
+          .update(groceries)
+          .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
+          .where(eq(groceries.storeId, storeId))
+          .returning()
+      );
     }
 
     // Delete ingredient preferences for this store
@@ -308,10 +326,10 @@ export async function deleteStore(
       .returning({ id: stores.id });
 
     if (deletedStore.length === 0) {
-      return { deletedGroceryIds, storeDeleted: false, stale: true };
+      return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
     }
 
-    return { deletedGroceryIds, storeDeleted: true, stale: false };
+    return { deletedGroceryIds, movedGroceries, storeDeleted: true, stale: false };
   });
 }
 

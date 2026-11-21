@@ -1,9 +1,8 @@
 "use client";
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useId, useMemo, useRef, useState } from "react";
 import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
-import { useTagsQuery } from "@/hooks/config";
 import {
   closestCenter,
   DndContext,
@@ -24,6 +23,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+
+import { useTagsQuery } from "@norish/shared-react/config";
 
 interface SortableTagItemProps {
   tag: string;
@@ -65,7 +66,7 @@ function SortableTagItem({ tag, onEdit }: SortableTagItemProps) {
   );
 }
 
-export interface TagInputProps {
+interface TagInputProps {
   value: string[];
   onChange: (tags: string[]) => void;
   placeholder?: string;
@@ -82,6 +83,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
 
   const defaultPlaceholder = placeholder ?? t("placeholder");
 
+  const dndId = useId();
   // Configure sensors for mouse, touch, and keyboard
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -269,6 +271,7 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
       <div className="group bg-default flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border border-(--field-border) px-3 py-2 shadow-none">
         <DndContext
           collisionDetection={closestCenter}
+          id={dndId}
           sensors={sensors}
           onDragEnd={handleDragEnd}
           onDragStart={handleDragStart}

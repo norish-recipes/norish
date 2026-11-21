@@ -24,7 +24,7 @@
     "filter": "Filter",
     "sort": "Sort",
     "import": "Import",
-    "aiImport": "AI Import",
+    "aiImport": "AI import",
     "importWithAI": "Import with AI",
     "goHome": "Go Home",
     "test": "Test",
@@ -40,7 +40,6 @@
   "status": {
     "loading": "Loading...",
     "saving": "Saving...",
-    "deleting": "Deleting...",
     "error": "Error",
     "success": "Success",
     "noResults": "No results found",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categories",
-    "category": {
-      "breakfast": "Breakfast",
-      "lunch": "Lunch",
-      "dinner": "Dinner",
-      "snack": "Snack"
-    },
     "sortByTitle": "Title",
     "sortByDate": "Date",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "minRating": "Minimum rating",
+    "minRatingStars": "At least {count} out of 5"
   },
   "time": {
     "minutes": "min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "This field is required",
-    "invalidUrl": "Please enter a valid URL"
+    "invalidUrl": "Please enter a valid URL",
+    "invalidEmail": "Please enter a valid email address"
   },
   "errors": {
     "operationFailed": "Operation failed",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Connecting to Norish...",
-    "checkInternet": "Please check your internet connection",
-    "offlineBanner": "You're offline, showing cached data",
-    "serverUnreachableBanner": "Can't reach the Norish server, showing cached data",
     "live": "Connected",
     "offline": "Offline",
     "openDetails": "Connection details"
@@ -157,10 +150,7 @@
       "analyzing": "Analyzing your images, please wait...",
       "failed": "Import failed",
       "selectedCount": "{count} images selected - they will be combined as one recipe",
-      "library": "Library",
-      "takePhoto": "Take Photo",
-      "counter": "{count} / {max} photos",
-      "importFromCount": "Import from {count, plural, one {# Photo} other {# Photos}}"
+      "library": "Library"
     },
     "menu": {
       "description": "Import from a URL, scan a photo, or start from scratch."
@@ -195,9 +185,11 @@
     "year": "year",
     "years": "years",
     "next": "Next:",
-    "every": "Every",
-    "everyOther": "Every other",
-    "on": "on",
+    "everyDay": "{interval, plural, =1 {Every day} =2 {Every other day} other {Every # days}}",
+    "everyWeek": "{interval, plural, =1 {Every week} =2 {Every other week} other {Every # weeks}}",
+    "everyMonth": "{interval, plural, =1 {Every month} =2 {Every other month} other {Every # months}}",
+    "everyYear": "{interval, plural, =1 {Every year} =2 {Every other year} other {Every # years}}",
+    "onWeekday": "{repeat} on {weekday}",
     "today": "today",
     "tomorrow": "tomorrow",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Done",
+    "paused": "Paused",
     "done_action": "Done",
     "one": "Timer",
     "other": "Timers",
     "label_one": "1 Timer",
     "label_other": "{count} Timers",
-    "notification_title": "Timer Complete",
-    "notification_body": "{label} is done!",
+    "notification_body": "Timer complete!",
     "notifications_disabled": "Notifications are disabled",
-    "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background."
+    "notifications_disabled_hint": "Enable notifications in your browser settings to get alerts when timers finish in the background.",
+    "more": "+{count} more"
   },
   "offlineStatus": {
     "title": "Connection & offline",
@@ -298,14 +291,30 @@
     "title": "You're offline",
     "description": "Queued — Norish will finish this automatically when you're back online."
   },
+  "changedElsewhere": {
+    "title": "Not saved: it changed elsewhere first"
+  },
   "storageUnavailable": {
-    "title": "Couldn't start",
-    "description": "Norish could not read its secure storage, so it cannot tell which server it belongs to. Nothing has been changed. Try again, or restart the app.",
-    "detailsLabel": "Technical details"
+    "title": "Storage unavailable",
+    "description": "Norish couldn't read this iPhone's keychain.",
+    "badgeLabel": "Storage unavailable. Tap to replay."
   },
   "aiKeyRejected": {
     "title": "An AI key stopped working",
     "description": "The provider has refused the API key for {blocks} since {since}. Save a new key to get those AI features working again.",
+    "openSettings": "Open settings"
+  },
+  "household": {
+    "adminTransferred": "Transferred admin to {name}",
+    "unknownMember": "Unknown",
+    "removedTitle": "Removed from household",
+    "removedDescription": "An admin removed you from the household."
+  },
+  "photos": {
+    "pickFailedTitle": "Couldn't pick a photo",
+    "pickFailedMessage": "Try again or choose another photo.",
+    "cameraDeniedTitle": "Camera access is off",
+    "cameraDeniedMessage": "Allow camera access in Settings to take a photo.",
     "openSettings": "Open settings"
   }
 }

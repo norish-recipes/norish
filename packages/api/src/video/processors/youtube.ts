@@ -17,7 +17,7 @@ export class YouTubeProcessor extends BaseVideoProcessor {
   readonly name = "YouTubeProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, tokens } = context;
+    const { url, recipeId, tokens, householdCategories } = context;
 
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -72,7 +72,8 @@ export class YouTubeProcessor extends BaseVideoProcessor {
             combinedCaptionAndDescription,
             metadata,
             recipeId,
-            url
+            url,
+            householdCategories
           );
 
           if (hasSteps(recipe)) {
@@ -112,7 +113,13 @@ export class YouTubeProcessor extends BaseVideoProcessor {
           .filter(Boolean)
           .join("\n\n---\n\n");
 
-        return extractRecipeFromVideo(combinedTranscriptAndDescription, metadata, recipeId, url);
+        return extractRecipeFromVideo(
+          combinedTranscriptAndDescription,
+          metadata,
+          recipeId,
+          url,
+          householdCategories
+        );
       });
 
       const savedVideo = videoPath

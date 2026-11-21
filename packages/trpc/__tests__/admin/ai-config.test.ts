@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => ({
   isAIEnabled: vi.fn(),
   getRecipePermissionPolicy: vi.fn(),
   getImageGenerationSweepCounts: vi.fn(),
-  enrollEnrichmentForAllRecipes: vi.fn(),
+  addEnrichAllJob: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/users", () => import("../mocks/users"));
@@ -40,7 +40,7 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 
 vi.mock("@norish/queue", () => ({
-  enrollEnrichmentForAllRecipes: mocks.enrollEnrichmentForAllRecipes,
+  addEnrichAllJob: mocks.addEnrichAllJob,
 }));
 
 vi.mock("@norish/auth/connection-tests", () => ({ testAIEndpoint: vi.fn() }));
@@ -80,7 +80,7 @@ beforeEach(() => {
   mocks.isImageGenerationConfigured.mockResolvedValue(true);
   mocks.isAIEnabled.mockResolvedValue(true);
   mocks.getImageGenerationSweepCounts.mockResolvedValue({ eligible: 12, missingImage: 4 });
-  mocks.enrollEnrichmentForAllRecipes.mockResolvedValue({ recipes: 12, queued: 30 });
+  mocks.addEnrichAllJob.mockResolvedValue(undefined);
 });
 
 describe("imageGenerationSweepCount", () => {
@@ -124,16 +124,15 @@ describe("enrichAllRecipes", () => {
     await expect(createCaller().enrichAllRecipes({ replaceExisting: false })).rejects.toMatchObject(
       { code: "PRECONDITION_FAILED" }
     );
-    expect(mocks.enrollEnrichmentForAllRecipes).not.toHaveBeenCalled();
+    expect(mocks.addEnrichAllJob).not.toHaveBeenCalled();
   });
 
-  it("passes the overwrite choice through to the sweep", async () => {
-    await expect(createCaller().enrichAllRecipes({ replaceExisting: true })).resolves.toEqual({
-      recipes: 12,
-      queued: 30,
-    });
-    expect(mocks.enrollEnrichmentForAllRecipes).toHaveBeenCalledWith(expect.anything(), {
-      replaceExisting: true,
-    });
+  it("queues the sweep as a job with the overwrite choice, and returns without running it", async () => {
+    await expect(
+      createCaller().enrichAllRecipes({ replaceExisting: true })
+    ).resolves.toBeUndefined();
+    expect(mocks.addEnrichAllJob).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: createMockAdminUser().id, replaceExisting: true })
+    );
   });
 });

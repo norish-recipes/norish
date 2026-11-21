@@ -10,9 +10,19 @@ import { setConfig } from "@norish/db/repositories/server-config";
 import { getDefaultConfigValue } from "@norish/shared-server/config/defaults";
 import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { config } from "@norish/shared-server/realtime/config";
 
 import { adminProcedure } from "../../middleware";
 import { router } from "../../trpc";
+
+/** The config every client reads, which a restore announces as an edit does. */
+const READ_BY_CLIENTS = new Set<string>([
+  ServerConfigKeys.UNITS,
+  ServerConfigKeys.INGREDIENT_WORDS,
+  ServerConfigKeys.RECURRENCE_CONFIG,
+  ServerConfigKeys.TIMER_KEYWORDS,
+  ServerConfigKeys.LOCALE_CONFIG,
+]);
 
 /**
  * Update scheduler cleanup months.
@@ -48,6 +58,7 @@ const restoreDefault = adminProcedure
     if (input === ServerConfigKeys.UNITS || input === ServerConfigKeys.INGREDIENT_WORDS) {
       forgetSpellingRules();
     }
+    if (READ_BY_CLIENTS.has(input)) void config.publish("changed", {}, undefined);
 
     return { success: true };
   });

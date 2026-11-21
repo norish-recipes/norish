@@ -1,0 +1,34 @@
+# Signs out from Settings, lands on Sign in for the same server without flipping back,
+# and signs in again.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: smoke-sign-out
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 20000
+- assertVisible:
+    id: server-chip
+    text: .*${NORISH_SERVER_HOST}.*
+# Gives the app 5 s to read signed in again; it must stay on sign-in.
+- extendedWaitUntil:
+    visible:
+      id: recipes-screen
+    timeout: 5000
+    # Absent is the pass: the app stays signed out.
+    optional: true
+- assertNotVisible:
+    id: recipes-screen
+- assertVisible:
+    id: login-email
+- assertVisible:
+    id: server-chip
+    text: .*${NORISH_SERVER_HOST}.*
+- runFlow: subflows/credentials.yaml

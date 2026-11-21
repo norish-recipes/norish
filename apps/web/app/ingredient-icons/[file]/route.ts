@@ -1,12 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { serverPackage } from "@/lib/server-package";
 
-import {
-  ICON_FILE_PATTERN,
-  iconSetDir,
-  ownIconsDir,
-} from "@norish/shared-server/media/ingredient-icon";
+const { ICON_FILE_PATTERN, iconSetDir, ownIconsDir } = await serverPackage<
+  typeof import("@norish/shared-server/media/ingredient-icon")
+>("@norish/shared-server/media/ingredient-icon");
 
 export const runtime = "nodejs";
 

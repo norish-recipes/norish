@@ -486,12 +486,9 @@ class ValkeyRealtimeHub implements RealtimeHub {
       "Valkey reconnected; ending live subscriptions"
     );
 
-    // ioredis re-issues every SUBSCRIBE itself (`autoResubscribe`); the hub
-    // only tells its iterables that there is a gap they cannot see across.
-    // `on()` handlers stay registered: internal listeners accept the loss window.
+    // Iterables are told of the gap they cannot see across and end. `on()` handlers stay
+    // registered, accepting the loss window, and their channels are subscribed again here.
     for (const [channel, state] of this.channels) {
-      if (state.listeners.size === 0) continue;
-
       for (const listener of state.listeners) {
         const dropped = listener.queue.length;
 
@@ -500,6 +497,8 @@ class ValkeyRealtimeHub implements RealtimeHub {
       }
 
       state.listeners.clear();
+      // The new connection holds no subscription.
+      state.subscribed = false;
       this.reconcile(channel);
     }
   }

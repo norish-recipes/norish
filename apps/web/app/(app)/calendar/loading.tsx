@@ -1,4 +1,4 @@
-import CalendarSkeleton from "@/components/skeleton/calendar-skeleton";
+import CalendarSkeleton from "@/features/calendar/components/skeleton/calendar-skeleton";
 
 export default function Loading() {
   return <CalendarSkeleton />;

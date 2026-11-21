@@ -1,6 +1,11 @@
 // A password user connects OIDC under another email in Settings, signs in with it
 // to the same account, and disconnects it again; and changes their password there.
-import { signIn } from "../harness/auth";
+import { randomUUID } from "node:crypto";
+import type { BrowserContext } from "@playwright/test";
+
+import type { ThrowawayUser } from "./admin-users-support";
+import { closeAndDelete } from "../harness/accounts";
+import { signedInContext, signIn } from "../harness/auth";
 import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, IDP_NAME, MEMBER, test } from "./fixture";
 
@@ -8,19 +13,21 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
   browser,
   aiStack,
 }) => {
-  const passwordContext = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies: await signIn(aiStack.baseURL, MEMBER), origins: [] },
-  });
-  const oidcContext = await browser.newContext({ baseURL: aiStack.baseURL });
+  const contexts: BrowserContext[] = [];
 
   try {
+    const passwordContext = await signedInContext(browser, aiStack.baseURL, MEMBER);
+
+    contexts.push(passwordContext);
+    const oidcContext = await browser.newContext({ baseURL: aiStack.baseURL });
+
+    contexts.push(oidcContext);
     const page = await passwordContext.newPage();
     const connect = page.getByRole("button", { name: `Connect ${IDP_NAME}` });
     const oidcRow = page.getByRole("listitem").filter({ hasText: IDP_NAME });
 
     // The server renders the card with its methods, so it never offers a Connect it takes back.
-    const html = await (await page.goto("/settings"))?.text();
+    const html = await (await page.goto("/settings/account"))?.text();
 
     expect(html).toContain(">Password</p>");
     expect(html).toContain(`Connect ${IDP_NAME}`);
@@ -29,12 +36,12 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
     // Cancelling at the identity provider comes back with nothing added.
     aiStack.idp.signInAs = null;
     await Promise.all([page.waitForURL(/error=access_denied/), connect.click()]);
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings\/account$/);
     await expect(connect).toBeVisible();
 
     aiStack.idp.signInAs = { sub: "member-sub", email: "member@home.lan", name: "Member" };
     await connect.click();
-    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page).toHaveURL(/\/settings\/account$/);
     await expect(oidcRow.getByRole("button", { name: "Disconnect" })).toBeVisible();
 
     const oidcPage = await oidcContext.newPage();
@@ -47,7 +54,7 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
 
     expect(session.user.email).toBe(MEMBER.email);
 
-    await oidcPage.goto("/settings");
+    await oidcPage.goto("/settings/account");
     await oidcPage
       .getByRole("listitem")
       .filter({ hasText: IDP_NAME })
@@ -56,7 +63,7 @@ test("a password user connects OIDC in Settings, signs in with it, and disconnec
     await expect(oidcPage.getByRole("button", { name: `Connect ${IDP_NAME}` })).toBeVisible();
   } finally {
     aiStack.idp.signInAs = null;
-    await Promise.all([passwordContext.close(), oidcContext.close()]);
+    await closeAndDelete(contexts, []);
   }
 });
 
@@ -64,24 +71,28 @@ test("a password user changes their password in Settings and signs out their oth
   browser,
   aiStack,
 }) => {
-  const user = await signUpThrowawayUser(aiStack, {
-    email: "change-password@norish.test",
-    name: "Change password",
-    password: "original-password",
-  });
-  const context = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies: await signIn(aiStack.baseURL, user), origins: [] },
-  });
-  const other = await browser.newContext({
-    baseURL: aiStack.baseURL,
-    storageState: { cookies: await signIn(aiStack.baseURL, user), origins: [] },
-  });
+  const tag = randomUUID().slice(0, 8);
+  // Each user and context is recorded as it is made, so `finally` removes whatever exists.
+  const users: ThrowawayUser[] = [];
+  const contexts: BrowserContext[] = [];
 
   try {
+    const user = await signUpThrowawayUser(aiStack, {
+      email: `change-password-${tag}@norish.test`,
+      name: "Change password",
+      password: "original-password",
+    });
+
+    users.push(user);
+    const context = await signedInContext(browser, aiStack.baseURL, user);
+
+    contexts.push(context);
+    const other = await signedInContext(browser, aiStack.baseURL, user);
+
+    contexts.push(other);
     const page = await context.newPage();
 
-    await page.goto("/settings");
+    await page.goto("/settings/account");
     await page
       .getByRole("listitem")
       .filter({ hasText: "Password" })
@@ -113,6 +124,6 @@ test("a password user changes their password in Settings and signs out their oth
     await expect(signIn(aiStack.baseURL, user)).rejects.toThrow();
     await signIn(aiStack.baseURL, { ...user, password: "replacement-password" });
   } finally {
-    await Promise.all([context.close(), other.close()]);
+    await closeAndDelete(contexts, users);
   }
 });

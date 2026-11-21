@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiKeyRateLimited } from "@norish/auth/api-key-rate-limit";
 
+import rootPackage from "../../../../package.json" with { type: "json" };
 import { getOpenApiDocument, handleOpenApiRequest } from "../../src/openapi";
 
 process.env.NODE_ENV = "development";
@@ -13,6 +14,11 @@ const dbInsertValuesMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined)
 const dbInsertMock = vi.hoisted(() => vi.fn().mockReturnValue({ values: dbInsertValuesMock }));
 const getDatabaseHealthMock = vi.hoisted(() => vi.fn());
 const getValkeyHealthMock = vi.hoisted(() => vi.fn());
+const parserStateMock = vi.hoisted(() => vi.fn(() => "running"));
+
+vi.mock("@norish/shared-server/embedded-parser", () => ({
+  embeddedParserState: parserStateMock,
+}));
 
 vi.mock("@norish/auth/providers", () => ({
   getAvailableProviders: vi.fn().mockResolvedValue([]),
@@ -143,6 +149,7 @@ describe("openapi liveness and readiness endpoints", () => {
     getDatabaseHealthMock.mockResolvedValue({ status: "ok" });
     getValkeyHealthMock.mockReset();
     getValkeyHealthMock.mockResolvedValue({ status: "ok" });
+    parserStateMock.mockReturnValue("running");
   });
 
   afterEach(() => {
@@ -168,6 +175,19 @@ describe("openapi liveness and readiness endpoints", () => {
       expect(getValkeyHealthMock).not.toHaveBeenCalled();
     });
 
+    it("answers 200 with the parser idle until an import starts it, asking it nothing", async () => {
+      const fetchMock = vi.fn();
+
+      vi.stubGlobal("fetch", fetchMock);
+      parserStateMock.mockReturnValue("idle");
+
+      const response = await get("/health/live");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ status: "ok", parser: { status: "idle" } });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it("answers 503 when the parser does not answer", async () => {
       vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("connect ECONNREFUSED")));
 
@@ -189,6 +209,7 @@ describe("openapi liveness and readiness endpoints", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({
         status: "ok",
+        version: rootPackage.version,
         db: { status: "ok" },
         valkey: { status: "ok" },
         parser: { status: "error", statusCode: 503 },
@@ -249,6 +270,17 @@ describe("openapi liveness and readiness endpoints", () => {
   });
 
   describe("/health", () => {
+    it("reports the server version like /health/ready", async () => {
+      parserAnswers(200);
+
+      const response = await get("/health");
+
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual(
+        expect.objectContaining({ version: rootPackage.version })
+      );
+    });
+
     it("still answers as ready, marked deprecated", async () => {
       parserAnswers(503);
       getValkeyHealthMock.mockResolvedValue({ status: "error" });

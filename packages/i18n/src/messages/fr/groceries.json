@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "Article sans nom",
-    "fromRecipes": "De {count, plural, one {# recette} other {# recettes}}",
-    "items": "{count, plural, one {# article} other {# articles}}"
+    "items": "{count, plural, =0 {Aucun article} one {# article} other {# articles}}"
   },
   "store": {
     "unsorted": "Non trié",
@@ -54,7 +53,6 @@
       "violet": "Violet"
     },
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer {storeName} ?",
-    "deleteWarning": "Les articles de ce magasin seront déplacés vers Non trié.",
     "noStoresYet": "Aucun magasin pour le moment",
     "createStoreHint": "Créez un magasin pour organiser vos courses",
     "hasItems": "Ce magasin contient {count} article.",
@@ -95,6 +93,7 @@
     "unavailable": "Votre garde-manger n'a pas pu être lu. Rien n'a changé ; réessayez une fois de retour en ligne.",
     "fieldLabel": "Chercher ou ajouter un aliment",
     "fieldPlaceholder": "Chercher ou ajouter, p. ex. huile d'olive",
+    "findPlaceholder": "Rechercher un aliment du garde-manger",
     "add": "Ajouter au garde-manger",
     "fromCatalogue": "Ajouter un aliment",
     "addFood": "Ajouter {name} au garde-manger",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "Ajouter un article",
     "editTitle": "Modifier l'article",
-    "itemName": "Nom de l'article",
-    "itemNamePlaceholder": "ex. : Lait, Œufs, Pain…",
     "selectStore": "Sélectionner un magasin",
-    "noStore": "Aucun magasin",
     "recurrence": "Récurrence",
     "savePreference": "Se souvenir du magasin pour cet article",
     "addAnother": "Ajouter un autre",
     "addRepeat": "Configurer la récurrence",
-    "recurrenceEnabled": "Récurrent",
-    "recurrenceSheet": {
-      "title": "Répétition",
-      "subtitle": "Rajouter automatiquement cet article à votre liste de courses",
-      "enable": "Activer la répétition",
-      "disable": "Désactiver la répétition",
-      "frequency": "Fréquence",
-      "weekly": "Hebdomadaire",
-      "biweekly": "Toutes les 2 semaines",
-      "monthly": "Mensuel",
-      "confirm": "Confirmer"
-    },
     "storeOptional": "Magasin (optionnel)",
     "autoDetectFromHistory": "Détection automatique depuis l'historique",
     "autoDetectOrSelect": "Détection automatique ou sélection",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "Votre garde-manger n'a pas pu être lu, donc rien n'est encore coché. Cochez ce que vous devez acheter.",
     "loadingIngredients": "Chargement des ingrédients…",
     "noIngredients": "Aucun ingrédient.",
-    "addSelectedToGroceries": "Ajouter aux courses",
     "ingredientsAdded": "Ingrédients ajoutés à la liste de courses.",
     "ingredientsFailed": "Échec de l'ajout des ingrédients à la liste de courses.",
     "addToGroceries": "Ajouter aux courses",
@@ -168,7 +151,6 @@
     "productLabel": "Produit chez {store}",
     "cannotSearch": "Cette boutique ne peut pas être cherchée",
     "cannotSearchHint": "Norish n'a pas pu tirer de page de recherche du lien de {store}. Corrigez-le dans Gérer les magasins et les prix suivront.",
-    "packSize": "Conditionnement",
     "packAmount": "Quantité par paquet",
     "packUnit": "Unité",
     "productPage": "Page du produit",
@@ -195,6 +177,38 @@
     "packs": "{count} × {size}",
     "onePack": "compté comme un seul paquet",
     "sale": "Promo",
-    "regularPrice": "Prix normal {price}"
+    "regularPrice": "Prix normal {price}",
+    "each": "pièce"
+  },
+  "mobile": {
+    "viewMode": "Affichage",
+    "viewByStore": "Par magasin",
+    "viewByRecipe": "Par recette",
+    "listSettings": "Réglages de la liste",
+    "emptyHint": "Ajoutez des articles avec le bouton ci-dessous.",
+    "addTitle": "Ajouter des courses",
+    "editTitle": "Modifier l'article",
+    "store": "Magasin",
+    "noStore": "Aucun magasin",
+    "automatic": "Automatique",
+    "never": "Jamais",
+    "removeRepeat": "Supprimer la répétition",
+    "amountFor": "{amount} pour {recipe}",
+    "expand": "Développer",
+    "collapse": "Réduire",
+    "itemLabel": "Article",
+    "decreaseInterval": "Réduire l'intervalle",
+    "increaseInterval": "Augmenter l'intervalle",
+    "manageStores": "Gérer les magasins",
+    "addStore": "Ajouter un magasin",
+    "editStore": "Modifier le magasin",
+    "editStoreLabel": "Modifier {store}",
+    "deleteStoreLabel": "Supprimer {store}",
+    "deleteStoreTitle": "Supprimer {store} ?",
+    "moveItemsToUnsorted": "Déplacer les articles vers Non triés",
+    "typePrice": "Saisir le prix soi-même",
+    "product": "Produit",
+    "chooseProduct": "Choisir un produit",
+    "recipeCount": "{count, plural, one {# recette} other {# recettes}}"
   }
 }

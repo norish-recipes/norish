@@ -6,17 +6,13 @@ description: Sign in with a password, OIDC, GitHub or Google.
 
 # Authentication
 
-Sign in with email and password, OIDC, GitHub or Google. Set up one
-provider with environment variables for the first sign-in, then manage the rest
-under **Settings => Admin**.
-
-The first user to sign in becomes the server owner and admin, and registration
-turns off.
+Configure a sign-in method before the first sign-in. Then manage providers in
+admin settings. The first account owns the server. Registration is closed after the initial sign up.
 
 ## Callback URLs
 
-When you register an OAuth or OIDC application, use these callback URLs with
-your `AUTH_URL` as the host:
+Register the callback URL for your provider. Replace the example address
+with your public `AUTH_URL`.
 
 | Provider | Callback URL                                                 |
 | -------- | ------------------------------------------------------------ |
@@ -26,9 +22,8 @@ your `AUTH_URL` as the host:
 
 ## Linking accounts
 
-Accounts aren't linked automatically. To add a sign-in method, go to
-**Settings => User => Sign-in methods** and press **Connect**. The provider's email doesn't have
-to match yours.
+In account settings, open **Sign-in methods** and select **Connect** to link
+a provider. The email addresses may differ.
 
 ![The Sign-in methods card in user settings](/img/screenshots/settings-sign-in-methods.png)
 
@@ -39,9 +34,8 @@ to match yours.
 
 ## Password
 
-Email and password sign-in is on when no other provider is set up. Set `PASSWORD_AUTH_ENABLED` to
-turn it on or off at every start, overriding the admin setting. If no other
-sign-in method is available at startup, password sign-in is turned back on.
+Set `PASSWORD_AUTH_ENABLED` to override the admin setting on startup. Norish
+enables password sign-in if no other method is available.
 
 | Variable                | Description                     | Default |
 | ----------------------- | ------------------------------- | ------- |
@@ -49,9 +43,8 @@ sign-in method is available at startup, password sign-in is turned back on.
 
 ## OIDC
 
-Works with any OpenID Connect provider, like Authentik, Pocket ID or Keycloak.
-ID tokens are checked against the provider's published signing keys. The provider
-must sign them with an RS or ES key; HS256 is not supported.
+Use an OpenID Connect provider such as Authentik, Pocket ID or Keycloak. Set it
+to sign ID tokens with an RS or ES key.
 
 ```yaml title="docker-compose.yml (environment)"
 OIDC_NAME: NoraId
@@ -85,8 +78,7 @@ automatically.
 ## GitHub
 
 [Register a new OAuth app on GitHub](https://github.com/settings/applications/new)
-under **Settings => Developer settings => OAuth Apps**, with the GitHub callback
-URL above.
+under **OAuth Apps** in GitHub developer settings. Use the GitHub callback URL above.
 
 | Variable               | Description                | Default |
 | ---------------------- | -------------------------- | ------- |
@@ -97,15 +89,10 @@ URL above.
 
 In the Google Cloud console, open
 [Credentials](https://console.cloud.google.com/apis/credentials), choose
-**Create credentials => OAuth client ID** of type **Web application**, and use
-the Google callback URL above.
+**Create credentials**, then **OAuth client ID**. Pick **Web application**
+and use the Google callback URL above.
 
 | Variable               | Description                | Default |
 | ---------------------- | -------------------------- | ------- |
 | `GOOGLE_CLIENT_ID`     | Google OAuth client id     | (empty) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | (empty) |
-
-:::info Public URL
-OAuth callbacks need `AUTH_URL` set to your public URL, see
-[Server & runtime](./server-runtime.md).
-:::

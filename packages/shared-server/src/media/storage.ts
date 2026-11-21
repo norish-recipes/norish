@@ -2,7 +2,6 @@ import { spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import convert from "heic-convert";
 import sharp from "sharp";
 import { v5 as uuidv5 } from "uuid";
 
@@ -187,6 +186,8 @@ async function convertToJpeg(
       // heic-convert actually expects Uint8Array despite what the types say
       const inputBytes = new Uint8Array(buffer);
 
+      // Loaded on use: its libheif WASM is held for the life of the process.
+      const { default: convert } = await import("heic-convert");
       const outputArrayBuffer = (await convert({
         buffer: inputBytes as unknown as ArrayBuffer,
         format: "JPEG",

@@ -8,6 +8,7 @@ import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import { dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
+import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
@@ -91,6 +92,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
 
+  const householdCategories = await listCategoryNamesForViewer({ userId, householdUserIds });
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.
   const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
@@ -104,7 +106,12 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
       : undefined
   );
   const parseResult = await withTimeout(
-    () => parseRecipeFromUrl(url, recipeId, job.data.forceAI, credentials?.tokens),
+    () =>
+      parseRecipeFromUrl(url, recipeId, {
+        forceAI: job.data.forceAI,
+        tokens: credentials?.tokens,
+        householdCategories,
+      }),
     RECIPE_IMPORT_PROCESSING_TIMEOUT_MS,
     "Recipe import parsing"
   ).catch(async (error: unknown) => {

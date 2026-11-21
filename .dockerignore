@@ -52,7 +52,7 @@ packages/ui/dist
 tooling/**/dist
 
 # Mobile app
-apps/mobile/**
+apps/mobile
 
 # Community app references
 apps/quick-import-extension/**
@@ -65,3 +65,6 @@ docs/
 **/tests
 **/*.test.ts
 **/*.test.tsx
+
+# Dev-only measurement scripts import the E2E harness, which is dropped above.
+apps/web/scripts/measure-*.ts

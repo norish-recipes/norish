@@ -1,4 +1,5 @@
 import type { PageSummary } from "@norish/api/parser/page-summary";
+import type { ContentIndicatorsConfig } from "@norish/config/zod/server-config";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { extractSanitizedBody } from "@norish/api/parser/extraction-sanitizer";
 import { isBotCheck, plainFetch, renderPage } from "@norish/api/parser/fetch";
@@ -11,6 +12,7 @@ import {
 } from "@norish/api/parser/python/adapter";
 import { callRecipeScrapersParser } from "@norish/api/parser/python/client";
 import { extractRecipeWithAI } from "@norish/api/parser/recipe-extraction";
+import { extractRecipeNotes } from "@norish/api/parser/recipe-notes";
 import {
   getContentIndicators,
   isAIEnabled,
@@ -20,6 +22,7 @@ import {
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import {
+  NO_RECIPE_FOUND_REASON,
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
 } from "@norish/shared/contracts/realtime/recipes";
@@ -102,10 +105,19 @@ const NON_RECIPE_FAILURE_CODES = new Set(["NoSchemaFoundInWildMode", "RecipeSche
 
 function getStructuredFailureMessage(code: string): string {
   if (NON_RECIPE_FAILURE_CODES.has(code)) {
-    return "Page does not appear to contain a recipe.";
+    return NO_RECIPE_FOUND_REASON;
   }
 
   return `Python parser failed: ${code}`;
+}
+
+/** The recipe with the notes from the page's recipe card, unless it already has some. */
+function withPageNotes(recipe: FullRecipeInsertDTO, html: string): FullRecipeInsertDTO {
+  if (recipe.notes) return recipe;
+
+  const notes = extractRecipeNotes(html);
+
+  return notes ? { ...recipe, notes } : recipe;
 }
 
 /**
@@ -120,7 +132,8 @@ async function tryExtractWithAI(
   recipeId: string,
   url: string,
   requireAI: boolean,
-  jsonLd: Record<string, unknown>[]
+  jsonLd: Record<string, unknown>[],
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO | null> {
   const enabled = await isAIEnabled();
 
@@ -135,7 +148,10 @@ async function tryExtractWithAI(
   log.info({ url }, "Attempting AI extraction");
 
   try {
-    return await extractRecipeWithAI(source, recipeId, url, jsonLd);
+    return withPageNotes(
+      await extractRecipeWithAI(source, recipeId, { url, jsonLd, householdCategories }),
+      source
+    );
   } catch (error) {
     log.warn({ url, err: error }, "AI extraction failed");
 
@@ -152,6 +168,7 @@ async function extractWithAIPreference(
   recipeId: string,
   url: string,
   requireAI: boolean,
+  householdCategories: readonly string[],
   ingredientLines: string[] = []
 ): Promise<FullRecipeInsertDTO | null> {
   const jsonLd = extractRecipeNodesFromJsonLd(html);
@@ -162,7 +179,8 @@ async function extractWithAIPreference(
     recipeId,
     url,
     requireAI,
-    sectioned ? [{ ...jsonLd[0], recipeIngredient: ingredientLines }] : jsonLd
+    sectioned ? [{ ...jsonLd[0], recipeIngredient: ingredientLines }] : jsonLd,
+    householdCategories
   );
 }
 
@@ -176,7 +194,8 @@ async function scrapedIngredientLines(url: string, html: string): Promise<string
 async function tryStructuredParser(
   url: string,
   html: string,
-  recipeId: string
+  recipeId: string,
+  householdCategories: readonly string[]
 ): Promise<StructuredParseOutcome> {
   try {
     const response = await callRecipeScrapersParser({ url, html });
@@ -192,11 +211,11 @@ async function tryStructuredParser(
       };
     }
 
-    const adapted = await adaptRecipeScrapersResponse(response, recipeId, url);
+    const adapted = await adaptRecipeScrapersResponse(response, recipeId, url, householdCategories);
 
     if (hasRecipeName(adapted)) {
       return {
-        recipe: adapted,
+        recipe: withPageNotes(adapted, html),
         failure: null,
         ingredientLines: collectIngredientStrings(response.recipe),
       };
@@ -235,7 +254,8 @@ async function tryStructuredParser(
 async function tryHandleVideoUrl(
   url: string,
   recipeId: string,
-  tokens?: SiteAuthTokenDecryptedDto[]
+  tokens: SiteAuthTokenDecryptedDto[] | undefined,
+  householdCategories: readonly string[]
 ): Promise<ParseRecipeResult | null> {
   if (!isVideoUrl(url)) return null;
 
@@ -251,7 +271,7 @@ async function tryHandleVideoUrl(
   }
 
   const { processVideoRecipe } = await import("@norish/api/video/processor");
-  const recipe = await processVideoRecipe(url, recipeId, tokens);
+  const recipe = await processVideoRecipe(url, recipeId, tokens, householdCategories);
 
   return { recipe, usedAI: true };
 }
@@ -274,7 +294,13 @@ async function fetchRecipePage(
     return { html: plain.html, status: plain.status };
   }
 
-  const rendered = await renderPage(url, tokens);
+  const indicators = await getContentIndicators();
+  // A client-rendered page loads as an empty shell, so read it once the recipe has arrived.
+  const rendered = await renderPage(
+    url,
+    tokens,
+    (html) => !isBotCheck(html) && holdsRecipe(html, extractSanitizedBody(html), indicators)
+  );
   // The solver reports no status, so the plain fetch's refusal stays readable.
   const status = rendered.status ?? plain.status;
 
@@ -284,13 +310,19 @@ async function fetchRecipePage(
   return { html: plain.html, status: plain.status };
 }
 
+export interface ParseRecipeFromUrlOptions {
+  forceAI?: boolean;
+  tokens?: SiteAuthTokenDecryptedDto[];
+  /** The importing household's Categories, the only ones a category may become. */
+  householdCategories: readonly string[];
+}
+
 export async function parseRecipeFromUrl(
   url: string,
   recipeId: string,
-  forceAI?: boolean,
-  tokens?: SiteAuthTokenDecryptedDto[]
+  { forceAI, tokens, householdCategories }: ParseRecipeFromUrlOptions
 ): Promise<ParseRecipeResult> {
-  const videoResult = await tryHandleVideoUrl(url, recipeId, tokens);
+  const videoResult = await tryHandleVideoUrl(url, recipeId, tokens, householdCategories);
 
   if (videoResult) return videoResult;
 
@@ -306,20 +338,28 @@ export async function parseRecipeFromUrl(
       extractRecipeNodesFromJsonLd(html).length === 1
         ? await scrapedIngredientLines(url, html)
         : [];
-    const recipe = await extractWithAIPreference(html, recipeId, url, true, ingredientLines);
+    const recipe = await extractWithAIPreference(
+      html,
+      recipeId,
+      url,
+      true,
+      householdCategories,
+      ingredientLines
+    );
 
     if (!recipe) throw new Error("AI extraction failed");
 
     return { recipe, usedAI: true };
   }
 
-  const structured = await tryStructuredParser(url, html, recipeId);
+  const structured = await tryStructuredParser(url, html, recipeId, householdCategories);
   const aiEnabled = await isAIEnabled();
 
   if (structured.recipe) {
-    // Import triage, question 3: an incomplete parse goes through AI extraction, and stays
-    // flagged when it is kept or replaced by a recipe without steps.
-    const incomplete = (await isParseComplete(structured.recipe)) === false;
+    // Triage question 3: an incomplete parse goes through AI extraction and stays flagged if kept;
+    // one with nothing to cook from needs no Decision Model to call it incomplete.
+    const incomplete =
+      hasNothingToCook(structured.recipe) || (await isParseComplete(structured.recipe)) === false;
 
     if (incomplete && aiEnabled) {
       log.info({ url }, "Structured parse judged incomplete, attempting AI extraction");
@@ -329,6 +369,7 @@ export async function parseRecipeFromUrl(
         recipeId,
         url,
         false,
+        householdCategories,
         structured.ingredientLines
       );
 
@@ -371,7 +412,7 @@ export async function parseRecipeFromUrl(
         "Structured parsing failed, attempting AI fallback"
       );
 
-      const recipe = await extractWithAIPreference(html, recipeId, url, false);
+      const recipe = await extractWithAIPreference(html, recipeId, url, false, householdCategories);
 
       if (recipe) {
         return {
@@ -399,6 +440,11 @@ export async function parseRecipeFromUrl(
   throw new Error("Cannot parse recipe.");
 }
 
+/** A page's markup can tag only its title and times, leaving the recipe itself in the page text. */
+function hasNothingToCook(recipe: FullRecipeInsertDTO): boolean {
+  return (recipe.recipeIngredients?.length ?? 0) === 0 && !hasSteps(recipe);
+}
+
 function diagnose(
   failure: StructuredParserFailure,
   html: string,
@@ -413,12 +459,17 @@ function diagnose(
  * opinion. The keyword list keeps its meaning and its admin editor.
  */
 export async function isPageLikelyRecipe(html: string): Promise<boolean> {
-  const lowered = html.toLowerCase();
-  const indicators = await getContentIndicators();
+  return holdsRecipe(html, html, await getContentIndicators());
+}
 
-  const hasSchema = indicators.schemaIndicators.some((i) => lowered.includes(i.toLowerCase()));
+/** Recipe markup in the HTML, or two indicators in `text`; a renderer's wait passes sanitized
+ * text, since a client-rendered shell's scripts name enough indicators to pass. */
+function holdsRecipe(html: string, text: string, indicators: ContentIndicatorsConfig): boolean {
+  const loweredHtml = html.toLowerCase();
+  const loweredText = text.toLowerCase();
+  const hasSchema = indicators.schemaIndicators.some((i) => loweredHtml.includes(i.toLowerCase()));
   const contentHits = indicators.contentIndicators.filter((i) =>
-    lowered.includes(i.toLowerCase())
+    loweredText.includes(i.toLowerCase())
   ).length;
 
   return hasSchema || contentHits >= 2;

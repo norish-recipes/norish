@@ -1,5 +1,4 @@
 import type { Browser } from "playwright-core";
-import { chromium } from "playwright-core";
 
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { withTimeout } from "@norish/shared/lib/with-timeout";
@@ -17,6 +16,9 @@ interface Connection {
   opening: Promise<Browser>;
   browser?: Browser;
 }
+
+// Loaded on first use: playwright-core costs tens of MB a server that never renders would carry.
+let playwright: Promise<typeof import("playwright-core")> | undefined;
 
 /** One per renderer, so a setting change or a dropped browser replaces only that renderer's. */
 const connections = new Map<BrowserRenderer, Connection>();
@@ -70,7 +72,9 @@ function connect(
   const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   const opened: Connection = {
     key,
-    opening: chromium.connectOverCDP(endpoint, { headers, timeout: timeoutMs }),
+    opening: (playwright ??= import("playwright-core")).then(({ chromium }) =>
+      chromium.connectOverCDP(endpoint, { headers, timeout: timeoutMs })
+    ),
   };
 
   opened.opening.then(

@@ -6,84 +6,43 @@ description: What the server owner and admins can change from the app.
 
 # Admin settings
 
-Manage server settings under **Settings => Admin**. Most changes apply
-right away; a badge marks those that need a restart.
-
-- [Users](./users.md)
-- Registration, whether new accounts are allowed
-- [Permissions](#permissions) for recipes and ingredients
-- Sign-in providers
-- OIDC claim mapping for admin roles and household auto-join
-- Content detection: units, [ingredient words](#ingredient-words), content
-  indicators and recurrence
-- [Page renderers](./parser.md#page-renderers) for imports
-- AI and video processing, see [AI provider](./ai-provider.md)
-- The [job queues](#job-queues)
-- The scheduler and a server restart
+Open **Settings**, then **Admin**. A badge marks settings that require a restart.
 
 ## Permissions
 
-**Recipes** sets who may view, edit and delete a recipe someone else added:
-everyone, the household, or only the owner.
+Use **Recipes** to choose who can view, edit or delete someone else's recipe.
+Choose everyone, the household or the owner.
 
-**Ingredients** sets who may edit an ingredient someone else added. The whole
-server shares one [ingredient catalogue](../groceries/ingredients.md).
-
-- **Everyone**: any signed-in user.
-- **Household**: the person who added it and their household. This is the
-  default.
-- **Owner only**: only the person who added it.
-
-Merging ingredients requires permission on both. Anyone can add a translation.
+**Ingredients** controls who can edit a shared catalogue entry. **Household**
+is the default. Merging entries requires edit permission on both. Anyone can
+add a translation.
 
 ## Ingredient words
 
-**Content detection => Ingredient words** holds the words used to identify
-foods in ingredient lines. Each locale has its own lists. All lists apply to
-every recipe because its language is unknown.
+In admin settings, open **Content detection**, then **Ingredient words**.
+Each language has a list. Norish checks all lists when it reads an ingredient.
 
-These words are taken off the name:
+| Setting         | Example                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| `preparation`   | Ignore "finely chopped" in "finely chopped onion".                |
+| `sizes`         | Ignore "large" in "2 large onions".                               |
+| `approximately` | Ignore "about" in "about 200 g flour".                            |
+| `connectors`    | Ignore "of" in "a pinch of nutmeg".                               |
+| `joiners`       | Ignore "and" between preparations in "peeled and chopped ginger". |
+| `together`      | Add both foods in "salt and pepper". Also accepts `&` and `+`.    |
+| `alternatives`  | Add the first food in "butter or oil". Also accepts `/`.          |
+| `endsBefore`    | Read "tuna" from "tuna in olive oil".                             |
+| `forms`         | Read "chicken" from "chicken strips".                             |
+| `notFoods`      | Ignore words such as "the" or "some" on their own.                |
+| `inflections`   | Match "onions" to "onion".                                        |
 
-- `preparation`: what was done to the food. "Finely chopped onion" is onion.
-- `sizes`: "2 large onions" is onions. A size used as the unit, as in "2
-  large", counts pieces.
-- `approximately`: words that make an amount a guess, like "about" in "about
-  200 g flour".
-- `connectors`: the word between an amount and the food, like "of" in "a pinch
-  of nutmeg".
-- `joiners`: the word between two preparations, like "and" in "peeled and
-  chopped ginger". It is only removed between preparations.
-
-These words split a line into separate foods:
-
-- `together`: foods you need all of, like "and" in "salt and pepper". The
-  grocery list gets salt and pepper.
-- `alternatives`: foods where any one will do, like "or" in "butter or oil".
-  The grocery list gets only the first, butter. A shorter part borrows the
-  other part's words, so "cherry or grape tomatoes" is cherry tomatoes or grape
-  tomatoes.
-
-Both lists also accept symbols: "&" and "+" in `together`, "/" in
-`alternatives`, with or without spaces ("salt/pepper"). A line is split only
-when each part is a known food, and never when the whole name is known
-("mac and cheese").
-
-These words help identify the food name:
-
-- `endsBefore`: words that start a note after the name. "Tuna in olive oil" is
-  tuna, and "greek yogurt for topping" is greek yogurt.
-- `forms`: cuts and forms that follow a food's name. "Chicken strips" goes
-  under chicken. A cut on its own is never a food, so "carrot julienne" also
-  goes under carrot.
-- `notFoods`: words that never name a food on their own, like "the" or "some".
-- `inflections`: plural endings and the singular ending each stands for, so
-  "onions" is onion and "cherries" is cherry.
+Norish splits a line only when it knows each food. A known name such as
+"mac and cheese" stays together.
 
 ## Job queues
 
-Imports, enrichment and other long tasks run as background jobs.
-**Settings => Admin => Job queues** lists them as waiting, running, finished,
-failed or cancelled. Open a job for details.
+Open **Job queues** in admin settings to check an import or AI job. Select a job
+for details.
 
 ![Job details showing the models used](/img/screenshots/admin-job-details.png)
 
@@ -91,7 +50,29 @@ failed or cancelled. Open a job for details.
 
 ![A cancelled job in the job monitor](/img/screenshots/admin-job-cancelled.png)
 
-Open a running job and press **Stop**. AI requests stop at once; other work
-finishes its current step while the button reads **Stopping…**. The job then
-shows as **Cancelled**. It is not retried automatically; press **Retry** to run
-it again.
+Open a running job and select **Stop**. AI requests stop at once. Other jobs
+finish their current step. Select **Retry** to run a cancelled job again.
+
+## Manage users
+
+Open **Users** in admin settings to manage accounts.
+
+![The Users card in admin settings](/img/screenshots/admin-users.png)
+
+### Roles
+
+The first account owns the server. Use the shield button to grant or revoke
+admin access. You can change roles for other accounts except the owner.
+
+### Delete a user
+
+Select the bin button and confirm. To delete your own account, use account
+settings. The owner is protected in this list.
+
+Deletion removes the user's groceries, meal plan, cookbook memberships and
+preferences. Another member takes over their household if one remains. The
+user's recipes become visible to everyone on the server.
+
+:::warning
+Account deletion is permanent.
+:::

@@ -2,60 +2,65 @@ packages:
   - apps/*
   - "!apps/quick-import-extension"
   - "!apps/docs"
-  - "!apps/mobile"
   - packages/*
   - tooling/*
 
 catalog:
-  "@better-auth/api-key": 1.7.14
-  "@better-auth/core": 1.7.14
+  "@better-auth/api-key": 1.7.26
+  "@better-auth/core": 1.7.26
+  "@better-auth/expo": 1.7.26
   "@better-auth/utils": 0.5.1
   "@eslint/js": ^10.0.1
   "@heroicons/react": 2.2.0
-  "@heroui/react": 3.2.6
-  "@heroui/styles": 3.2.6
-  "@tailwindcss/postcss": ^4.3.3
-  "@tanstack/react-query": 5.105.0
+  "@heroui/react": 3.2.7
+  "@heroui/styles": 3.2.7
+  "@tailwindcss/postcss": ^4.3.5
+  "@tanstack/react-query": 5.108.0
   "@testcontainers/postgresql": ^12.2.1
   "@testcontainers/valkey": ^12.2.1
-  "@trpc/client": 11.19.0
-  "@trpc/server": 11.19.0
-  "@trpc/tanstack-react-query": 11.19.0
+  "@trpc/client": 11.29.5
+  "@trpc/server": 11.29.5
+  "@trpc/tanstack-react-query": 11.29.5
   "@types/archiver": ^8.0.0
-  "@types/node": ^26.6.5
+  "@types/node": ^26.6.6
   "@types/react": 19.3.0
   "@types/react-dom": 19.3.0
-  "@vitejs/plugin-react": ^6.1.2
+  "@vitejs/plugin-react": ^6.3.0
   archiver: ^8.0.0
-  better-auth: 1.7.14
-  bullmq: ^6.5.0
+  better-auth: 1.7.26
+  bullmq: ^6.7.8
   date-fns: ^4.4.0
   drizzle-orm: 0.45.4
-  eslint: 10.13.0
+  eslint: 10.15.0
+  # The compiler the build runs and the one the lint plugin bundles move together, or lint misses
+  # the build's skips: 7.0.1 bundles 1.0.0, 7.1 a newer one. Expo's preset takes it by override.
+  babel-plugin-react-compiler: 1.0.0
+  eslint-plugin-react-hooks: 7.0.1
   fuse.js: ^7.5.0
   html-entities: ^2.6.0
   ioredis: ^6.0.0
-  jsdom: ^30.1.3
+  jsdom: ^31.0.1
   jszip: 3.10.2
-  next: 16.4.3
+  next: 16.4.6
   pg: 8.23.1
-  postcss: ^8.5.32
-  prettier: ^3.9.10
+  postcss: ^8.5.33
+  prettier: ^3.10.1
   react: 19.3.1
   react-dom: 19.3.1
   server-only: ^0.0.1
   superjson: ^2.2.6
-  tailwindcss: ^4.3.3
+  tailwindcss: ^4.3.5
   testcontainers: ^12.2.1
-  trpc-to-openapi: ^3.3.3
+  trpc-to-openapi: ^3.5.0
   tsx: 4.23.15
-  turbo: ^2.11.10
+  turbo: ^2.11.13
   typescript: 6.0.3
-  vite: ^8.3.5
-  vitest: ^5.0.5
-  ws: 8.22.0
+  vite: ^8.3.8
+  vitest: ^5.1.1
+  ws: 8.23.0
   zod: 4.6.7
   zod-openapi: ^5.4.6
+  zustand: 5.1.0
 
 
 allowBuilds:
@@ -76,16 +81,23 @@ ignoredOptionalDependencies:
 
 overrides:
   # One copy each of tRPC and TanStack Query across the workspaces and the
-  # packages built on them (trpc-to-openapi, query-persist-client-core), at
+  # packages built on them (trpc-to-openapi), at
   # the catalog's exact pin.
   "@tanstack/react-query": "catalog:"
   "@trpc/client": "catalog:"
   "@trpc/server": "catalog:"
   "@trpc/tanstack-react-query": "catalog:"
+  # The catalog's compiler for babel-preset-expo too, so mobile builds with the one lint bundles.
+  babel-plugin-react-compiler: "catalog:"
   # One zod across the workspaces, zod-openapi, trpc-to-openapi and better-auth:
   # a second copy breaks declaration emit with TS2742 errors naming
   # @norish/shared/node_modules/zod.
   zod: "catalog:"
+
+peerDependencyRules:
+  allowedVersions:
+    # 7.0.1's peer range stops at ESLint 9, but it feature-detects the context API ESLint 10 dropped.
+    eslint-plugin-react-hooks>eslint: "10"
 
 auditConfig:
   ignoreGhsas:

@@ -469,12 +469,22 @@ export function eachDayOfInterval(start: Date, end: Date): Date[] {
   return days;
 }
 
+/** `date`'s calendar day moved by `days`, at `hour` local time, so a daylight-saving change moves no hour. */
+export function addDays(date: Date, days: number, hour = 0): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days, hour);
+}
+
 export function dateKey(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
 
   return `${y}-${m}-${day}`;
+}
+
+/** A `YYYY-MM-DD` key as local midnight on that day, the inverse of {@link dateKey}. */
+export function parseDateKey(key: string): Date {
+  return new Date(`${key}T00:00:00`);
 }
 
 /** The text without its trailing slashes, where they are not part of `//` (a bare `https://` keeps both). */
@@ -507,6 +517,35 @@ export function normalizeUrl(url: string): string {
   }
 }
 
+/** The tags with a blank name dropped and each name, trimmed, kept once (case-insensitive) in its first place. */
+export function dedupeTagsByName(tags: readonly ({ name?: string | null } | null | undefined)[]) {
+  const seen = new Set<string>();
+  const deduped: { name: string }[] = [];
+
+  for (const tag of tags) {
+    const name = tag?.name?.trim();
+
+    if (!name || seen.has(name.toLowerCase())) continue;
+
+    seen.add(name.toLowerCase());
+    deduped.push({ name });
+  }
+
+  return deduped;
+}
+
+/** The tag names that don't repeat one of the recipe's stored Category names (any case). */
+export function tagsBesideCategories(tags: readonly string[], categories: readonly string[]) {
+  const named = new Set(categories.map((name) => name.toLowerCase()));
+
+  return tags.filter((tag) => !named.has(tag.toLowerCase()));
+}
+
+/** The allergies lower-cased, for a case-insensitive lookup. */
+export function allergenSet(allergies: readonly string[]): Set<string> {
+  return new Set(allergies.map((allergy) => allergy.toLowerCase()));
+}
+
 /**
  * Sort tags with allergy priority - allergens first, then rest in original order.
  *
@@ -518,7 +557,7 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
   tags: T[],
   allergies: string[]
 ): T[] {
-  const allergySet = new Set(allergies.map((a) => a.toLowerCase()));
+  const allergySet = allergenSet(allergies);
 
   // Separate allergens and non-allergens while preserving original order
   const allergenTags: T[] = [];
@@ -543,9 +582,12 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
  * @param allergySet - Pre-computed Set of lowercase allergy names for O(1) lookup
  * @returns True if the tag is an allergen
  */
-export function isAllergenTag(tagName: string, allergySet: Set<string>): boolean {
+export function isAllergenTag(tagName: string, allergySet: ReadonlySet<string>): boolean {
   return allergySet.has(tagName.toLowerCase());
 }
+
+/** The allergy set of a reader without allergies, one shared instance so it never changes. */
+export const NO_ALLERGIES: ReadonlySet<string> = new Set();
 
 /**
  * Get the Monday (ISO week start) of the week containing the provided date.
@@ -594,6 +636,23 @@ export function addWeeks(date: Date, weeks: number): Date {
   d.setDate(d.getDate() + weeks * 7);
 
   return d;
+}
+
+/** The first and last day of a calendar read, as date keys. */
+export type CalendarRange = { startISO: string; endISO: string };
+
+/** The range a calendar opens on around `today` (`YYYY-MM-DD`), the reader's date by default. */
+export function getInitialCalendarRange(
+  mode: "desktop" | "mobile",
+  today: string = dateKey(new Date())
+): CalendarRange {
+  const now = parseDateKey(today);
+  const [start, end] =
+    mode === "desktop"
+      ? [getWeekStart(now), getWeekEnd(now)]
+      : [getWeekStart(addWeeks(now, -2)), getWeekEnd(addWeeks(now, 2))];
+
+  return { startISO: dateKey(start), endISO: dateKey(end) };
 }
 
 export function buildAvatarFilename(

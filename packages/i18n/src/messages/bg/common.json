@@ -40,7 +40,6 @@
   "status": {
     "loading": "Зареждане...",
     "saving": "Запазване...",
-    "deleting": "Изтриване...",
     "error": "Грешка",
     "success": "Успех",
     "noResults": "Няма намерени резултати",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 мин",
     "cookingTimeUnder120": "<120 мин",
     "categories": "Категории",
-    "category": {
-      "breakfast": "Закуска",
-      "lunch": "Обяд",
-      "dinner": "Вечеря",
-      "snack": "Лека закуска"
-    },
     "sortByTitle": "Заглавие",
     "sortByDate": "Дата",
-    "clearFilters": "Изчисти филтрите"
+    "clearFilters": "Изчисти филтрите",
+    "minRating": "Минимална оценка",
+    "minRatingStars": "Поне {count} от 5"
   },
   "time": {
     "minutes": "мин",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Това поле е задължително",
-    "invalidUrl": "Моля, въведи валиден URL адрес"
+    "invalidUrl": "Моля, въведи валиден URL адрес",
+    "invalidEmail": "Моля, въведете валиден имейл адрес"
   },
   "errors": {
     "operationFailed": "Операцията не бе успешна",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Свързване с Norish...",
-    "checkInternet": "Провери интернет връзката си",
-    "offlineBanner": "Извън мрежа си, показват се кеширани данни",
-    "serverUnreachableBanner": "Няма връзка със сървъра на Norish, показват се кеширани данни",
     "live": "Свързано",
     "offline": "Офлайн",
     "openDetails": "Подробности за връзката"
@@ -157,10 +150,7 @@
       "analyzing": "Анализиране на изображенията, изчакай...",
       "failed": "Импортирането не бе успешно",
       "selectedCount": "Избрани са {count} изображения - те ще бъдат обединени в една рецепта",
-      "library": "Библиотека",
-      "takePhoto": "Направи снимка",
-      "counter": "{count} / {max} снимки",
-      "importFromCount": "Импортирай от {count, plural, one {# снимка} other {# снимки}}"
+      "library": "Библиотека"
     },
     "menu": {
       "description": "Импортирай от URL адрес, сканирай снимка или започни от нулата."
@@ -195,9 +185,11 @@
     "year": "година",
     "years": "години",
     "next": "Следващо:",
-    "every": "Всеки",
-    "everyOther": "През един",
-    "on": "на",
+    "everyDay": "{interval, plural, =1 {Всеки ден} =2 {През ден} other {На всеки # дни}}",
+    "everyWeek": "{interval, plural, =1 {Всяка седмица} =2 {През седмица} other {На всеки # седмици}}",
+    "everyMonth": "{interval, plural, =1 {Всеки месец} =2 {През месец} other {На всеки # месеца}}",
+    "everyYear": "{interval, plural, =1 {Всяка година} =2 {През година} other {На всеки # години}}",
+    "onWeekday": "{repeat} в {weekday}",
     "today": "днес",
     "tomorrow": "утре",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Готово",
+    "paused": "На пауза",
     "done_action": "Готово",
     "one": "Таймер",
     "other": "Таймери",
     "label_one": "1 таймер",
     "label_other": "{count} таймера",
-    "notification_title": "Таймерът приключи",
-    "notification_body": "{label} приключи!",
+    "notification_body": "Таймерът приключи",
     "notifications_disabled": "Известията са изключени",
-    "notifications_disabled_hint": "Разреши известията в настройките на браузъра си, за да получаваш сигнали, когато таймерите приключат на заден план."
+    "notifications_disabled_hint": "Разреши известията в настройките на браузъра си, за да получаваш сигнали, когато таймерите приключат на заден план.",
+    "more": "още {count}"
   },
   "offlineStatus": {
     "title": "Връзка и офлайн режим",
@@ -298,14 +291,30 @@
     "title": "В офлайн режим си",
     "description": "Добавено в опашката — Norish ще завърши това автоматично, когато връзката се възстанови."
   },
+  "changedElsewhere": {
+    "title": "Не е запазено: първо е променено другаде"
+  },
   "storageUnavailable": {
-    "title": "Стартирането е неуспешно",
-    "description": "Norish не можа да прочете защитеното хранилище и затова не знае към кой сървър принадлежи това приложение. Нищо не е променено. Опитайте отново или рестартирайте приложението.",
-    "detailsLabel": "Технически подробности"
+    "title": "Хранилището не е налично",
+    "description": "Norish не успя да прочете ключодържателя на този iPhone.",
+    "badgeLabel": "Хранилището не е налично. Докоснете, за да повторите."
   },
   "aiKeyRejected": {
     "title": "AI ключ спря да работи",
     "description": "Доставчикът отхвърля API ключа за {blocks} от {since}. Запазете нов ключ, за да заработят отново тези ИИ функции.",
     "openSettings": "Отвори настройките"
+  },
+  "household": {
+    "adminTransferred": "Администраторските права бяха прехвърлени на {name}",
+    "unknownMember": "Неизвестно",
+    "removedTitle": "Премахнати от домакинството",
+    "removedDescription": "Администратор ви премахна от домакинството."
+  },
+  "photos": {
+    "pickFailedTitle": "Снимката не може да се избере",
+    "pickFailedMessage": "Опитайте отново или изберете друга снимка.",
+    "cameraDeniedTitle": "Достъпът до камерата е изключен",
+    "cameraDeniedMessage": "Разрешете достъпа до камерата в настройките, за да направите снимка.",
+    "openSettings": "Отваряне на настройките"
   }
 }

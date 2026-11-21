@@ -7,6 +7,7 @@ import {
   createPlannedRecipeProcedure,
   deletePlannedRecipeProcedure,
   listMonthPlannedRecipesProcedure,
+  listPlannedRecipesRangeProcedure,
   listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipesProcedure,
 } from "../../src/routers/calendar/planned-items";
@@ -168,6 +169,7 @@ const openApiCalendarRouter = router({
   listTodayPlannedRecipes: listTodayPlannedRecipesProcedure,
   listWeekPlannedRecipes: listWeekPlannedRecipesProcedure,
   listMonthPlannedRecipes: listMonthPlannedRecipesProcedure,
+  listPlannedRecipesRange: listPlannedRecipesRangeProcedure,
   createPlannedRecipe: createPlannedRecipeProcedure,
   deletePlannedRecipe: deletePlannedRecipeProcedure,
 });
@@ -282,6 +284,123 @@ describe("calendar planned recipe openapi procedures", () => {
       "2025-01-01",
       "2025-01-31"
     );
+  });
+
+  it("lists planned recipes for any date range", async () => {
+    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+    await caller.listPlannedRecipesRange({ start: "2025-02-01", end: "2025-03-15" });
+
+    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
+      ctx.userIds,
+      "2025-02-01",
+      "2025-03-15"
+    );
+  });
+
+  it.each([
+    ["a malformed date", "2025-2-1", "2025-03-01"],
+    ["an impossible date", "2025-02-30", "2025-03-01"],
+    ["end before start", "2025-03-02", "2025-03-01"],
+    ["a range over 366 days", "2025-01-01", "2026-01-02"],
+  ])("rejects %s in a range", async (_name, start, end) => {
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(caller.listPlannedRecipesRange({ start, end })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it.each(["2026-13-01", "2026-00-10", "2026-01-32"])("names %s as no real date", async (start) => {
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.listPlannedRecipesRange({ start, end: "2026-12-31" })
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("Not a real date"),
+    });
+  });
+
+  it("accepts a range of exactly 366 days", async () => {
+    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+    await caller.listPlannedRecipesRange({ start: "2024-01-01", end: "2024-12-31" });
+
+    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalled();
+  });
+
+  it("creates a planned note from a title", async () => {
+    const itemId = crypto.randomUUID();
+    const row = {
+      id: itemId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "note",
+      recipeId: null,
+      title: "Eat out",
+      version: 1,
+    };
+
+    createPlannedItem.mockResolvedValue(row);
+    getPlannedItemWithRecipeById.mockResolvedValue(null);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+    const result = await caller.createPlannedRecipe({
+      date: "2025-01-20",
+      slot: "Dinner",
+      title: "Eat out",
+    });
+
+    expect(createPlannedItem).toHaveBeenCalledWith({
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      itemType: "note",
+      recipeId: null,
+      title: "Eat out",
+    });
+    expect(result).toEqual({ id: itemId });
+  });
+
+  it("requires exactly one of recipeId and title", async () => {
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+    const base = { date: "2025-01-20", slot: "Dinner" as const };
+
+    await expect(caller.createPlannedRecipe(base)).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    await expect(
+      caller.createPlannedRecipe({ ...base, title: "x", recipeId: crypto.randomUUID() })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("deletes a planned note through the same route", async () => {
+    const itemId = crypto.randomUUID();
+
+    getPlannedItemById.mockResolvedValue({
+      id: itemId,
+      userId: ctx.user.id,
+      date: "2025-01-20",
+      slot: "Dinner",
+      sortOrder: 0,
+      itemType: "note",
+      recipeId: null,
+      title: "Eat out",
+      version: 1,
+    });
+    deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
+    assertHouseholdAccess.mockResolvedValue(undefined);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+    const result = await caller.deletePlannedRecipe({ itemId, version: 1 });
+
+    expect(result).toEqual({ success: true, stale: false });
+    expect(deletePlannedItem).toHaveBeenCalledWith(itemId, 1);
   });
 
   it("creates a planned recipe item", async () => {
@@ -399,6 +518,17 @@ describe("calendar planned recipe openapi procedures", () => {
     const result = await caller.deletePlannedRecipe({ itemId, version: 2 });
 
     expect(result).toEqual({ success: true, stale: false });
+  });
+
+  it("answers 404 for a planned recipe that does not exist", async () => {
+    getPlannedItemById.mockResolvedValue(null);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.deletePlannedRecipe({ itemId: crypto.randomUUID(), version: 1 })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(deletePlannedItem).not.toHaveBeenCalled();
   });
 });
 

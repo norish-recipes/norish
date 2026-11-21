@@ -128,7 +128,7 @@ export async function recipeNamed(
   return id ? await readRecipe(baseURL, cookies, id) : null;
 }
 
-/** Wait until the recipe a create answered for is stored and `ready`: a mutation answers first. */
+/** Wait until the stored recipe is `ready`. */
 export async function waitForRecipe(
   baseURL: string,
   cookies: SessionCookies,

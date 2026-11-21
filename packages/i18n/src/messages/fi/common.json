@@ -40,7 +40,6 @@
   "status": {
     "loading": "Ladataan...",
     "saving": "Tallennetaan...",
-    "deleting": "Poistetaan...",
     "error": "Virhe",
     "success": "Onnistui",
     "noResults": "Tuloksia ei löytynyt",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Kategoriat",
-    "category": {
-      "breakfast": "Aamiainen",
-      "lunch": "Lounas",
-      "dinner": "Päivällinen",
-      "snack": "Välipala"
-    },
     "sortByTitle": "Nimi",
     "sortByDate": "Päivämäärä",
-    "clearFilters": "Tyhjennä suodattimet"
+    "clearFilters": "Tyhjennä suodattimet",
+    "minRating": "Vähimmäisarvosana",
+    "minRatingStars": "Vähintään {count}/5"
   },
   "time": {
     "minutes": "min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Tämä kenttä on pakollinen",
-    "invalidUrl": "Anna kelvollinen verkko-osoite"
+    "invalidUrl": "Anna kelvollinen verkko-osoite",
+    "invalidEmail": "Anna kelvollinen sähköpostiosoite"
   },
   "errors": {
     "operationFailed": "Toiminto epäonnistui",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Yhdistetään Norishiin...",
-    "checkInternet": "Tarkista internet-yhteytesi",
-    "offlineBanner": "Olet offline-tilassa, näytetään välimuistin tiedot",
-    "serverUnreachableBanner": "Norish-palvelinta ei tavoiteta, näytetään välimuistin tiedot",
     "live": "Yhteydessä",
     "offline": "Offline-tilassa",
     "openDetails": "Yhteyden tiedot"
@@ -157,10 +150,7 @@
       "analyzing": "Analysoidaan kuviasi, odota hetki...",
       "failed": "Tuonti epäonnistui",
       "selectedCount": "{count} kuvaa valittu – ne yhdistetään yhdeksi reseptiksi",
-      "library": "Kirjasto",
-      "takePhoto": "Ota kuva",
-      "counter": "{count} / {max} kuvaa",
-      "importFromCount": "Tuo {count, plural, one {# kuvasta} other {# kuvasta}}"
+      "library": "Kirjasto"
     },
     "menu": {
       "description": "Tuo osoitteesta, skannaa kuva tai aloita tyhjästä."
@@ -195,9 +185,11 @@
     "year": "vuosi",
     "years": "vuotta",
     "next": "Seuraava:",
-    "every": "Joka",
-    "everyOther": "Joka toinen",
-    "on": "·",
+    "everyDay": "{interval, plural, =1 {Joka päivä} =2 {Joka toinen päivä} other {# päivän välein}}",
+    "everyWeek": "{interval, plural, =1 {Joka viikko} =2 {Joka toinen viikko} other {# viikon välein}}",
+    "everyMonth": "{interval, plural, =1 {Joka kuukausi} =2 {Joka toinen kuukausi} other {# kuukauden välein}}",
+    "everyYear": "{interval, plural, =1 {Joka vuosi} =2 {Joka toinen vuosi} other {# vuoden välein}}",
+    "onWeekday": "{repeat} {weekday}",
     "today": "tänään",
     "tomorrow": "huomenna",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Valmis",
+    "paused": "Tauolla",
     "done_action": "Valmis",
     "one": "Ajastin",
     "other": "Ajastimet",
     "label_one": "1 ajastin",
     "label_other": "{count} ajastinta",
-    "notification_title": "Ajastin päättyi",
-    "notification_body": "{label} on valmis!",
+    "notification_body": "Ajastin päättyi",
     "notifications_disabled": "Ilmoitukset ovat pois käytöstä",
-    "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla."
+    "notifications_disabled_hint": "Ota ilmoitukset käyttöön selaimesi asetuksissa, niin saat hälytyksen kun ajastin päättyy taustalla.",
+    "more": "+{count} lisää"
   },
   "offlineStatus": {
     "title": "Yhteys ja offline-tila",
@@ -298,14 +291,30 @@
     "title": "Olet offline-tilassa",
     "description": "Jonossa – Norish viimeistelee tämän automaattisesti, kun yhteys palaa."
   },
+  "changedElsewhere": {
+    "title": "Ei tallennettu: sitä muutettiin ensin muualla"
+  },
   "storageUnavailable": {
-    "title": "Käynnistys epäonnistui",
-    "description": "Norish ei pystynyt lukemaan suojattua tallennustilaansa, joten se ei tiedä mille palvelimelle se kuuluu. Mitään ei ole muutettu. Yritä uudelleen tai käynnistä sovellus uudestaan.",
-    "detailsLabel": "Tekniset tiedot"
+    "title": "Tallennustila ei ole käytettävissä",
+    "description": "Norish ei voinut lukea tämän iPhonen avainnippua.",
+    "badgeLabel": "Tallennustila ei ole käytettävissä. Toista napauttamalla."
   },
   "aiKeyRejected": {
     "title": "Tekoälyavain lakkasi toimimasta",
     "description": "Palvelu on hylännyt kohteen {blocks} API-avaimen {since} alkaen. Tallenna uusi avain, jotta nämä tekoälytoiminnot toimivat taas.",
+    "openSettings": "Avaa asetukset"
+  },
+  "household": {
+    "adminTransferred": "Ylläpito siirrettiin käyttäjälle {name}",
+    "unknownMember": "Tuntematon",
+    "removedTitle": "Poistettu kotitaloudesta",
+    "removedDescription": "Ylläpitäjä poisti sinut kotitaloudesta."
+  },
+  "photos": {
+    "pickFailedTitle": "Kuvan valinta epäonnistui",
+    "pickFailedMessage": "Yritä uudelleen tai valitse toinen kuva.",
+    "cameraDeniedTitle": "Kameran käyttö on pois päältä",
+    "cameraDeniedMessage": "Salli kameran käyttö Asetuksissa, jotta voit ottaa kuvan.",
     "openSettings": "Avaa asetukset"
   }
 }

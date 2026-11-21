@@ -411,7 +411,7 @@ describe("Valkey reconnect", () => {
     await startRealtimeHub();
   });
 
-  it("logs realtime.reconnected, ends live iterables with valkey-reconnect and issues no SUBSCRIBE of its own", async () => {
+  it("logs realtime.reconnected, ends live iterables with valkey-reconnect and resubscribes only on() channels", async () => {
     const handler = vi.fn();
     const controller = new AbortController();
 
@@ -422,7 +422,8 @@ describe("Valkey reconnect", () => {
 
     await settle();
     const pending = iterator.next();
-    const callsBefore = [...subscriber.calls];
+
+    subscriber.calls.length = 0;
 
     // The first `ready` is the initial connection; the second is a reconnect.
     subscriber.emit("ready");
@@ -438,11 +439,9 @@ describe("Valkey reconnect", () => {
     );
 
     await settle();
-    // ioredis resubscribes on its own; the hub only drops the channel nobody listens on any more.
-    expect(subscriber.calls.filter((call) => call.startsWith("subscribe:"))).toEqual(
-      callsBefore.filter((call) => call.startsWith("subscribe:"))
-    );
-    expect(subscriber.calls).toContain(`unsubscribe:${CHANNEL}:live`);
+    // The new connection holds nothing: the handler's channel is subscribed again, the ended one not.
+    expect(subscriber.calls).toEqual([`subscribe:${CHANNEL}`]);
+    expect(getRealtimeHub().stats().channels).toBe(1);
 
     // on() handlers stay registered.
     deliver(subscriber, 1);

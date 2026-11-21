@@ -35,7 +35,7 @@ describe("formatAmountAsDecimal", () => {
     expect(formatAmountAsDecimal(100.001)).toBe("100");
     expect(formatAmountAsDecimal(10.1)).toBe("10.1");
     expect(formatAmountAsDecimal(100.5)).toBe("100.5");
-    expect(formatAmountAsDecimal(0.001)).toBe("0");
+    expect(formatAmountAsDecimal(0.001)).toBe("0.001");
   });
 
   it("handles string input", () => {
@@ -169,5 +169,35 @@ describe("formatAmount", () => {
   it("handles null in both modes", () => {
     expect(formatAmount(null, "decimal")).toBe("");
     expect(formatAmount(null, "fraction")).toBe("");
+  });
+});
+
+describe("formatAmount with a unit (#744)", () => {
+  it.each(["decimal", "fraction"] as const)("rounds scaled metric amounts in %s mode", (mode) => {
+    expect(formatAmount((142 * 37) / 36, mode, "gram")).toBe("146");
+    expect(formatAmount((131 * 37) / 36, mode, "g")).toBe("135");
+    expect(formatAmount(2.345, mode, "g")).toBe("2.3");
+    expect(formatAmount(1.5, mode, "kg")).toBe("1.5");
+  });
+
+  it("keeps odd denominators out of other units", () => {
+    expect(formatAmount(0.636, "fraction", "cup")).toBe("0.64");
+    expect(formatAmount(1 / 3, "fraction", "cup")).toBe("⅓");
+  });
+});
+
+describe("small amounts and sixteenths", () => {
+  it("never rounds a non-zero amount to 0, two decimals below 0.1", () => {
+    expect(formatAmount(0.04, "decimal", "g")).toBe("0.04");
+    expect(formatAmount(0.04, "fraction", "ml")).toBe("0.04");
+    expect(formatAmount(0.004, "decimal", "g")).toBe("0.004");
+    expect(formatAmount(0.004, "fraction", "tsp")).toBe("0.004");
+    expect(formatAmount(0.06, "decimal")).toBe("0.06");
+  });
+
+  it("shows sixteenths as fractions where no glyph exists", () => {
+    expect(formatAmount(1 / 16, "fraction", "tsp")).toBe("1/16");
+    expect(formatAmount(1 + 3 / 16, "fraction", "cup")).toBe("1 3/16");
+    expect(formatAmount(0.125, "fraction", "tsp")).toBe("⅛");
   });
 });

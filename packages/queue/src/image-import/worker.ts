@@ -9,6 +9,7 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import { addRecipeImages, dashboardRecipe, updateRecipeDishColor } from "@norish/db";
+import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
@@ -50,7 +51,11 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   // Vision parsing reads the images; every inference happens afterwards.
   // A failure throws with its own message — extraction, not this worker,
   // knows whether the images held a recipe.
-  const parsedRecipe = await extractRecipeFromImages(recipeId, files);
+  const parsedRecipe = await extractRecipeFromImages(
+    recipeId,
+    files,
+    await listCategoryNamesForViewer({ userId, householdUserIds })
+  );
 
   // Save the recipe
   await reportStep(job, "saving");

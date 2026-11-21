@@ -24,7 +24,9 @@ export function resolveExistingTargets(rootDir, candidates = DEFAULT_TARGETS) {
   return candidates.filter((target) => existsSync(resolve(rootDir, target)));
 }
 
-export function buildMadgeArgs(targets) {
+// Run inside the workspace with its own tsconfig: madge resolves `paths` such as `@/*` against
+// the working directory, so a shared tsconfig left every alias import out of the graph.
+export function buildMadgeArgs() {
   return [
     "dlx",
     "madge",
@@ -35,9 +37,51 @@ export function buildMadgeArgs(targets) {
     "--exclude",
     "dist/",
     "--ts-config",
-    "tooling/typescript/base.json",
-    ...targets,
+    "tsconfig.json",
+    ".",
   ];
+}
+
+/** The cycles madge finds in one workspace, each file prefixed with the workspace; null on failure. */
+function findCycles(rootDir, target, logger) {
+  const result = spawnSync("pnpm", buildMadgeArgs(), {
+    cwd: resolve(rootDir, target),
+    encoding: "utf8",
+  });
+
+  if (result.error) {
+    logger.error(`Failed to run madge in ${target}:`, result.error.message);
+    return null;
+  }
+
+  let cycles;
+
+  try {
+    cycles = JSON.parse(result.stdout || "[]");
+  } catch {
+    logger.error(`Failed to parse madge output for ${target} as JSON.`);
+    if (result.stdout) {
+      logger.error(result.stdout);
+    }
+    if (result.stderr) {
+      logger.error(result.stderr);
+    }
+    return null;
+  }
+
+  if (!Array.isArray(cycles)) {
+    logger.error(`Unexpected madge output shape for ${target}.`);
+    return null;
+  }
+
+  if (cycles.length === 0 && result.status !== 0) {
+    if (result.stderr) {
+      logger.error(result.stderr);
+    }
+    return null;
+  }
+
+  return cycles.map((cycle) => cycle.map((file) => `${target}/${file}`));
 }
 
 export function runCycleCheck({ cwd = process.cwd(), logger = console } = {}) {
@@ -48,51 +92,21 @@ export function runCycleCheck({ cwd = process.cwd(), logger = console } = {}) {
     return 1;
   }
 
-  const result = spawnSync("pnpm", buildMadgeArgs(targets), {
-    cwd,
-    encoding: "utf8",
-  });
+  const cycles = [];
 
-  if (result.error) {
-    logger.error("Failed to run madge:", result.error.message);
-    return 1;
-  }
+  for (const target of targets) {
+    const found = findCycles(cwd, target, logger);
 
-  let cycles;
-
-  try {
-    cycles = JSON.parse(result.stdout || "[]");
-  } catch {
-    logger.error("Failed to parse madge output as JSON.");
-    if (result.stdout) {
-      logger.error(result.stdout);
-    }
-    if (result.stderr) {
-      logger.error(result.stderr);
-    }
-    return 1;
-  }
-
-  if (!Array.isArray(cycles)) {
-    logger.error("Unexpected madge output shape.");
-    return 1;
+    if (found === null) return 1;
+    cycles.push(...found);
   }
 
   if (cycles.length > 0) {
     logger.error(`Found ${cycles.length} circular dependenc${cycles.length === 1 ? "y" : "ies"}.`);
     for (const cycle of cycles) {
-      if (Array.isArray(cycle)) {
-        logger.error(`- ${cycle.join(" -> ")}`);
-      }
+      logger.error(`- ${cycle.join(" -> ")}`);
     }
     return 1;
-  }
-
-  if (result.status !== 0) {
-    if (result.stderr) {
-      logger.error(result.stderr);
-    }
-    return result.status ?? 1;
   }
 
   logger.log("No circular dependencies found.");

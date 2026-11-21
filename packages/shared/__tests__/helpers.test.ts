@@ -17,6 +17,7 @@ import {
   parseIngredientWithDefaults,
   parseIsoDuration,
   stripHtmlTags,
+  tagsBesideCategories,
 } from "@norish/shared/lib/helpers";
 
 describe("parseIsoDuration", () => {
@@ -513,5 +514,25 @@ describe("avatar filename helpers", () => {
 
   it("rejects avatar paths with nested segments", () => {
     expect(avatarFilenameFromImagePath("/avatars/nested/file.png")).toBeNull();
+  });
+});
+
+describe("tagsBesideCategories", () => {
+  it("drops a tag naming one of the recipe's Categories, in any case", () => {
+    expect(tagsBesideCategories(["dinner", "rice", "LUNCH"], ["Lunch", "Dinner"])).toEqual([
+      "rice",
+    ]);
+  });
+
+  it("compares the stored Category names, not their labels in the reader's language", () => {
+    // In Dutch the header shows "Avondeten" for the Category Dinner: a tag "Dinner" still repeats it.
+    const nl: Record<string, string> = { Dinner: "Avondeten" };
+    const categories = ["Dinner"];
+    const line = [
+      ...categories.map((name) => nl[name] ?? name),
+      ...tagsBesideCategories(["Dinner", "pasta"], categories),
+    ];
+
+    expect(line).toEqual(["Avondeten", "pasta"]);
   });
 });

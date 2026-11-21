@@ -42,6 +42,23 @@ export const listPlannedRecipesInput = z.object({
   include: z.enum(["notes"]).optional(),
 });
 
+const MAX_RANGE_DAYS = 366;
+const dayKey = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
+  .refine((v) => {
+    const date = new Date(`${v}T00:00:00Z`);
+
+    return !isNaN(date.getTime()) && date.toISOString().startsWith(v);
+  }, "Not a real date");
+
+export const listPlannedRecipesRangeInput = z
+  .object({ start: dayKey, end: dayKey, include: z.enum(["notes"]).optional() })
+  .refine((v) => v.end >= v.start, { message: "end must not be before start" })
+  .refine((v) => (Date.parse(v.end) - Date.parse(v.start)) / 86_400_000 < MAX_RANGE_DAYS, {
+    message: `The range may span at most ${MAX_RANGE_DAYS} days`,
+  });
+
 export const plannedRecipeListItemSchema = z.object({
   id: z.uuid(),
   date: z.string(),
@@ -61,18 +78,24 @@ export type CreatePlannedRecipeInput = {
   id?: string;
   date: string;
   slot: z.infer<typeof slotSchema>;
-  recipeId: string;
+  recipeId?: string;
+  title?: string;
 };
 
 export const createPlannedRecipeInputSchema: z.ZodType<
   CreatePlannedRecipeInput,
   CreatePlannedRecipeInput
-> = z.object({
-  id: clientMintedId,
-  date: z.string(),
-  slot: slotSchema,
-  recipeId: z.uuid(),
-});
+> = z
+  .object({
+    id: clientMintedId,
+    date: z.string(),
+    slot: slotSchema,
+    recipeId: z.uuid().optional(),
+    title: z.string().trim().min(1).optional(),
+  })
+  .refine((v) => (v.recipeId === undefined) !== (v.title === undefined), {
+    message: "Provide exactly one of recipeId or title",
+  });
 
 export const plannedRecipeMutationOutputSchema = z.object({
   id: z.uuid(),

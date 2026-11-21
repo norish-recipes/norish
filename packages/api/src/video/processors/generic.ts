@@ -14,7 +14,7 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
   readonly name = "GenericVideoProcessor";
 
   async process(context: VideoProcessorContext): Promise<FullRecipeInsertDTO> {
-    const { url, recipeId, tokens } = context;
+    const { url, recipeId, tokens, householdCategories } = context;
 
     let audioPath: string | null = null;
     let videoPath: string | null = null;
@@ -41,7 +41,13 @@ export class GenericVideoProcessor extends BaseVideoProcessor {
       const descriptionText = metadata.description?.trim() || "";
       const combinedText = [transcript, descriptionText].filter(Boolean).join("\n\n---\n\n");
 
-      const recipe = await extractRecipeFromVideo(combinedText, metadata, recipeId, url);
+      const recipe = await extractRecipeFromVideo(
+        combinedText,
+        metadata,
+        recipeId,
+        url,
+        householdCategories
+      );
 
       const savedVideo = videoPath
         ? await this.saveVideo(videoPath, recipeId, metadata.duration)

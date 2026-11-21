@@ -9,15 +9,14 @@
  */
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 
+import type { Point, Pointer } from "../harness/pointer";
 import type { AIE2EStack } from "./fixture";
+import { fingerFor, glide, swipeOpenTo } from "../harness/pointer";
 import { waitForRecipe } from "../harness/recipes";
 import { settled } from "../harness/settled";
 import { callTrpc } from "../harness/trpc";
 import { expect, test } from "./fixture";
 import { createPlainStore } from "./grocery-aisles-support";
-
-type Pointer = "mouse" | "touch";
-type Point = { x: number; y: number };
 
 const RECIPE_NAME = "Reorder Stew";
 
@@ -128,60 +127,6 @@ async function settledGrip(page: Page, value: string): Promise<Point> {
 
 async function orderOf(page: Page, values: string[]): Promise<string[]> {
   return (await rowsShowing(page, values)).map((row) => row.value);
-}
-
-/** A pointer that presses, moves and lets go: the mouse, or one finger. */
-interface Finger {
-  down(at: Point): Promise<void>;
-  move(to: Point): Promise<void>;
-  up(): Promise<void>;
-  release(): Promise<void>;
-}
-
-async function fingerFor(page: Page, pointer: Pointer): Promise<Finger> {
-  if (pointer === "mouse") {
-    return {
-      down: async (at) => {
-        await page.mouse.move(at.x, at.y);
-        await page.mouse.down();
-      },
-      move: (to) => page.mouse.move(to.x, to.y),
-      up: () => page.mouse.up(),
-      release: async () => {},
-    };
-  }
-
-  // Chromium turns CDP touches into touch pointer events, as a phone sends them.
-  const cdp = await page.context().newCDPSession(page);
-  const touch = (type: string, at?: Point) =>
-    cdp.send("Input.dispatchTouchEvent", {
-      type: type as "touchStart" | "touchMove" | "touchEnd",
-      touchPoints: at ? [{ x: at.x, y: at.y, id: 1 }] : [],
-    });
-
-  return {
-    down: async (at) => void (await touch("touchStart", at)),
-    move: async (to) => void (await touch("touchMove", to)),
-    up: async () => void (await touch("touchEnd")),
-    release: () => cdp.detach(),
-  };
-}
-
-/**
- * Moves the pointer in small steps, a frame apart: motion reads each move
- * against the layout the last one left, so a row passes a neighbour only once
- * the list has redrawn.
- */
-async function glide(page: Page, finger: Finger, from: Point, to: Point): Promise<void> {
-  const steps = 12;
-
-  for (let step = 1; step <= steps; step++) {
-    await finger.move({
-      x: from.x + ((to.x - from.x) * step) / steps,
-      y: from.y + ((to.y - from.y) * step) / steps,
-    });
-    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-  }
 }
 
 /**
@@ -330,27 +275,7 @@ test("a recipe card swipes open to its actions with a finger", async ({ browser,
     const card = page.locator("[data-recipe-card]").filter({ hasText: name });
 
     await expect(card).toBeVisible();
-    const box = (await card.boundingBox())!;
-    const from = { x: box.x + box.width * 0.75, y: box.y + box.height / 2 };
-
-    const finger = await fingerFor(page, "touch");
-
-    try {
-      await finger.down(from);
-      await glide(page, finger, from, { x: from.x - 160, y: from.y });
-      await finger.up();
-    } finally {
-      await finger.release();
-    }
-    // The actions sit beside the card in its swipable row, hidden until it opens.
-    const action = page
-      .getByRole("row")
-      .filter({ has: card })
-      .getByRole("button", { name: "Add to calendar" });
-
-    // A click retried on a moving button scrolls it to the top, and a scroll closes the row.
-    await settled(page, () => action.boundingBox());
-    await action.click();
+    await swipeOpenTo(page, card, "Add to calendar");
     await expect(page.getByRole("dialog")).toBeVisible();
   } finally {
     await context.close();

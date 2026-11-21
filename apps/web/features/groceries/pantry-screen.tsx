@@ -1,0 +1,224 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
+import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
+import { IconActionButton } from "@/components/shared/action-button";
+import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
+import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
+import { useLocale, useTranslations } from "next-intl";
+
+import { useSpellingRules } from "@norish/shared-react/config";
+import { useOnTheList, usePantryField, usePantryQuery } from "@norish/shared-react/groceries";
+import { useIngredientIcons, usePantryCatalogue } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
+import { useHiddenItemVisibility } from "@norish/shared-react/reader";
+import { PANTRY_INGREDIENT_NAME_MAX_LENGTH } from "@norish/shared/contracts/zod";
+import { foldName } from "@norish/shared/lib/fold-name";
+import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
+import { searchPantry } from "@norish/shared/lib/pantry";
+
+import { FromYourRecipes } from "./components/pantry/from-your-recipes";
+import { PutOnTheList, usePutOnTheList } from "./components/pantry/put-on-the-list";
+
+/**
+ * The Pantry's screen: the foods the household keeps, by the name the
+ * reader reads them in, and one field that both narrows them and finds
+ * catalogue foods to add. A row opens the food's Ingredient panel and ends
+ * in _Put on the list_, or _On the list_ while a grocery of that same food
+ * is still to buy. Enter adds the text as typed, resolved by the server as
+ * a typed name always was; picking a catalogue food adds that exact food.
+ * Below, "From your recipes" offers what the household's recipes use most.
+ */
+export function PantryScreen() {
+  const t = useTranslations("groceries.pantry");
+  const tStatus = useTranslations("common.status");
+  const locale = useLocale();
+  const rules = useSpellingRules();
+  const { isOffline } = useConnectivity();
+  const { items, isLoading, isUnavailable } = usePantryQuery();
+  const { showIngredientIcons } = useHiddenItemVisibility();
+  const onTheList = useOnTheList(items);
+
+  useIngredientIcons(items.map((item) => item.ingredientId));
+  const putOnTheList = usePutOnTheList();
+  const { draft, setDraft, typed, canAdd, keep: keepFood } = usePantryField(items, locale, rules);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const fieldRef = useRef<HTMLInputElement>(null);
+  const keptIds = new Set(items.map((item) => item.ingredientId));
+  const { matches } = usePantryCatalogue(typed, locale, keptIds);
+
+  if (isUnavailable) {
+    return (
+      <p className="text-muted py-6 text-center" data-testid="pantry-unavailable">
+        {t("unavailable")}
+      </p>
+    );
+  }
+
+  const keep = (food: Parameters<typeof keepFood>[0]) => {
+    keepFood(food);
+    // The field is where the next food goes, however the last one was added.
+    fieldRef.current?.focus();
+  };
+  const kept = searchPantry(items, draft, locale, rules);
+  const addTyped = () => {
+    if (canAdd) keep(typed);
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* While the Pantry loads, the field is drawn but takes nothing: a food added then could double one already kept. */}
+      <div className="flex flex-col gap-2" inert={isLoading}>
+        <TextField aria-label={t("fieldLabel")} value={draft} onChange={setDraft}>
+          {/* Shaped as the dashboard's search field is. */}
+          <InputGroup className="h-12">
+            <InputGroup.Prefix className="pl-4">
+              <MagnifyingGlassIcon aria-hidden className="text-muted size-5" />
+            </InputGroup.Prefix>
+            <InputGroup.Input
+              ref={fieldRef}
+              data-testid="pantry-name"
+              maxLength={PANTRY_INGREDIENT_NAME_MAX_LENGTH}
+              placeholder={t("fieldPlaceholder")}
+              style={FIELD_STYLE}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addTyped();
+                }
+              }}
+            />
+            <InputGroup.Suffix className="pr-2">
+              <Button
+                isIconOnly
+                aria-label={t("add")}
+                data-testid="add-pantry-ingredient"
+                isDisabled={!canAdd}
+                size="sm"
+                variant="ghost"
+                onPress={addTyped}
+              >
+                <PlusIcon className="size-4" />
+              </Button>
+            </InputGroup.Suffix>
+          </InputGroup>
+        </TextField>
+        <p className="text-muted text-sm">{t("hint")}</p>
+        {/* A food's details are read from the server, so offline its row opens nothing. */}
+        {isOffline ? (
+          <p className="text-muted text-sm" data-testid="pantry-offline-details">
+            {t("offlineDetails")}
+          </p>
+        ) : null}
+      </div>
+
+      {isLoading ? (
+        <div
+          className="divide-border divide-y overflow-hidden rounded-lg"
+          data-testid="pantry-loading"
+        >
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2">
+              {showIngredientIcons && (
+                <Skeleton className="size-6 shrink-0 rounded-full md:size-8" />
+              )}
+              <Skeleton className="h-4 w-32 rounded-md" />
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <p className="text-muted py-2 text-center" data-testid="pantry-empty">
+          {t("empty")}
+        </p>
+      ) : kept.length === 0 ? (
+        <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
+          {tStatus("noResults")}
+        </p>
+      ) : (
+        <ul
+          className="divide-border divide-y overflow-hidden rounded-lg"
+          data-testid="pantry-ingredients"
+        >
+          {kept.map((item) => {
+            const name = ingredientDisplayName(item, locale);
+
+            return (
+              <li
+                key={item.id}
+                className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
+                data-pantry-ingredient={foldName(item.name)}
+              >
+                <IngredientIcon ingredientId={item.ingredientId} />
+                {/* Added offline, a food has no Ingredient to open until it syncs. */}
+                {item.ingredientId && !isOffline ? (
+                  <button
+                    className="min-w-0 flex-1 cursor-[var(--cursor-interactive)] truncate text-left font-medium hover:underline"
+                    type="button"
+                    onClick={() => setOpenId(item.ingredientId)}
+                  >
+                    {name}
+                  </button>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                )}
+                <PutOnTheList
+                  onPut={() => putOnTheList(item)}
+                  onTheList={onTheList.includes(item.id)}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {matches.length > 0 ? (
+        <section className="flex flex-col gap-2" data-testid="pantry-catalogue-matches">
+          <h2 className="text-muted text-xs font-semibold tracking-wide uppercase">
+            {t("fromCatalogue")}
+          </h2>
+          <ul className="divide-border divide-y overflow-hidden rounded-lg">
+            {matches.map((food) => {
+              const name = ingredientDisplayName(food, locale);
+
+              return (
+                <li
+                  key={food.id}
+                  className="bg-surface flex min-h-12 items-center gap-3 px-4 py-2"
+                  data-catalogue-food={food.name}
+                >
+                  <IngredientIcon src={food.icon ?? null} />
+                  <span className="min-w-0 flex-1 truncate">{name}</span>
+                  <IconActionButton
+                    action="add"
+                    className="shrink-0"
+                    label={t("addFood", { name })}
+                    size="sm"
+                    variant="tertiary"
+                    onPress={() =>
+                      keep({
+                        ingredientId: food.id,
+                        name: food.name,
+                        localeNames: food.localeNames,
+                      })
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      <FromYourRecipes items={items} onKeep={keep} />
+
+      <IngredientPanel
+        id={openId}
+        item={null}
+        open={openId !== null}
+        onClose={() => setOpenId(null)}
+      />
+    </div>
+  );
+}

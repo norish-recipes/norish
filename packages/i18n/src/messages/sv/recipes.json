@@ -27,7 +27,9 @@
       "all": "Alla",
       "recipes": "Recept",
       "cookbooks": "Kokböcker"
-    }
+    },
+    "importingCard": "Importerar…",
+    "favourited": "Favorit"
   },
   "back": {
     "all": "Tillbaka till biblioteket",
@@ -43,7 +45,8 @@
     "noResults": "Inga recept hittades",
     "noResultsHint": "Prova att ändra eller rensa dina filter.",
     "noCookbooks": "Inga kokböcker ännu",
-    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket."
+    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket.",
+    "descriptionMobile": "Lägg till ditt första recept från en länk, text eller bilder."
   },
   "card": {
     "noImage": "Ingen bild tillgänglig",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Det här receptet finns inte, eller så har du inte behörighet att visa det.",
     "prep": "förberedelse",
     "total": "totalt",
-    "planMeal": "Planera måltid",
     "recipeActions": "Receptåtgärder",
     "instructions": "Gör så här",
     "cook": "Laga mat",
@@ -78,7 +80,9 @@
     "addedBy": "Tillagt av {name}",
     "decreaseServings": "Färre portioner",
     "increaseServings": "Fler portioner",
-    "multiplier": "Faktor"
+    "multiplier": "Faktor",
+    "rateStars": "Betygsätt {count} av 5",
+    "stepPhoto": "Stegbild"
   },
   "actions": {
     "plan": "Planera",
@@ -86,7 +90,6 @@
     "edit": "Redigera",
     "delete": "Ta bort",
     "share": "Dela",
-    "visitOriginal": "Visa originalrecept",
     "addToCalendar": "Lägg till i kalendern",
     "autoTag": "Tagga automatiskt",
     "autoTagging": "Skapar taggar...",
@@ -103,10 +106,13 @@
     "inferringProvenance": "Tar reda på ursprung…",
     "linkIngredients": "Koppla ingredienser till steg",
     "linkingIngredients": "Kopplar ingredienser…",
-    "enrichmentFailed": "Den senaste körningen misslyckades",
     "generateImage": "Skapa bild",
     "generatingImage": "Skapar bild…",
-    "cookbooks": "Kokböcker"
+    "cookbooks": "Kokböcker",
+    "favourite": "Favorit",
+    "unfavourite": "Ta bort som favorit",
+    "ai": "AI",
+    "shareLink": "Dela länk"
   },
   "sharePanel": {
     "title": "Dela recept",
@@ -150,7 +156,13 @@
       "title": "Ta bort länk",
       "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
       "confirm": "Ta bort länk"
-    }
+    },
+    "expiresAfter": "Upphör efter",
+    "expiresOn": "Upphör {date}",
+    "expiredOn": "Upphörde {date}",
+    "lastOpenedOn": "Senast öppnad {date}",
+    "neverExpires": "Upphör aldrig",
+    "linkCreated": "Skapad {date}"
   },
   "convert": {
     "ariaLabel": "Omvandla måttsystem",
@@ -166,14 +178,14 @@
     "confirmMessage": "Vill du ta bort ”{recipeName}”?",
     "warning": "Det går inte att ångra den här åtgärden.",
     "confirmCount": "Radera {count, plural, one {# recept} other {# recept}}?",
-    "keptCount": "{count, plural, one {# recept blir kvar} other {# recept blir kvar}}, eftersom du inte får radera {count, plural, one {det} other {dem}}."
+    "keptCount": "{count, plural, one {# recept blir kvar} other {# recept blir kvar}}, eftersom du inte får radera {count, plural, one {det} other {dem}}.",
+    "alertTitle": "Ta bort {name}?"
   },
   "form": {
     "createTitle": "Skapa recept",
     "editTitle": "Redigera recept",
     "createDescription": "Lägg till ett nytt recept i din samling",
     "editDescription": "Uppdatera receptets uppgifter",
-    "initializingForm": "Förbereder formuläret...",
     "photo": "Foto",
     "basicInfo": "Grunduppgifter",
     "ingredients": "Ingredienser",
@@ -194,6 +206,7 @@
     "tagsHelp": "Skriv taggar och klicka på förslag för att lägga till dem. Befintliga taggar är fyllda, nya taggar har en streckad ram.",
     "tagsAndCategories": "Taggar och kategorier",
     "categoriesHelp": "Välj måltidskategorier för det här receptet.",
+    "addCategory": "Lägg till kategori",
     "category": {
       "breakfast": "Frukost",
       "lunch": "Lunch",
@@ -224,19 +237,12 @@
     "createRecipe": "Skapa recept",
     "saveChanges": "Spara ändringar",
     "uploading": "Laddar upp...",
-    "clickToUpload": "Klicka för att ladda upp eller dra och släpp",
-    "pasteToUpload": "för att klistra in",
-    "imageFormats": "PNG, JPG, WEBP upp till 5 MB",
     "discardChangesConfirm": "Du har osparade ändringar. Vill du kasta dem och lämna sidan?"
   },
   "gallery": {
-    "addImage": "Lägg till bild",
     "uploading": "Laddar upp...",
     "uploadFailed": "Uppladdningen misslyckades",
-    "dragToReorder": "Dra för att ändra ordning",
-    "maxImagesReached": "Högst {max} bilder tillåts",
-    "maxVideosReached": "Högst {max} videor tillåts",
-    "invalidFileType": "Ogiltig filtyp"
+    "dragToReorder": "Dra för att ändra ordning"
   },
   "carousel": {
     "noImageAvailable": "Ingen bild tillgänglig",
@@ -245,8 +251,14 @@
       "mute": "Stäng av ljud",
       "unmute": "Slå på ljud",
       "fullscreen": "Visa helskärm",
-      "exitFullscreen": "Lämna helskärm"
-    }
+      "exitFullscreen": "Lämna helskärm",
+      "progress": "Videoförlopp",
+      "play": "Spela upp",
+      "pause": "Pausa"
+    },
+    "recipeImage": "Receptbild",
+    "closeViewer": "Stäng bildvisaren",
+    "photoOf": "Bild {current} av {total}"
   },
   "validation": {
     "nameRequired": "Receptnamn krävs",
@@ -260,11 +272,18 @@
     "fat": "Fett",
     "carbs": "Kolhydrater",
     "protein": "Protein",
+    "fiber": "Fiber",
+    "saturatedFat": "varav mättat fett",
+    "sugars": "varav sockerarter",
+    "sodium": "Natrium",
+    "moreNutrients": "Fler näringsämnen",
+    "fewerNutrients": "Färre näringsämnen",
+    "starredMayBeHigher": "Alla ingredienser har inte detta värde, så värden med * kan vara högre",
+    "referenceIntake": "% av det dagliga referensintaget för en vuxen ({calories} kcal)",
     "showingPortions": "Visar värden för {count} {count, plural, one {portion} other {portioner}}",
-    "noInfo": "Inga näringsvärden tillgängliga",
-    "estimateWithAI": "Uppskatta med AI",
     "estimated": "Uppskattat",
     "leftOut": "{count, plural, one {# rad ej medräknad} other {# rader ej medräknade}}",
+    "leftOutStarred": "{count, plural, one {# rad ej medräknad} other {# rader ej medräknade}}, så värden med * kan vara högre",
     "estimatedByAI": "uppskattat av AI",
     "reasons": {
       "seasoning": "krydda",
@@ -275,7 +294,12 @@
       "noPieceWeight": "ingen styckvikt ännu"
     },
     "workedOutFrom": "Beräknat utifrån ingredienserna med {sources}.",
-    "householdNumbers": "ditt hushålls värden"
+    "householdNumbers": "ditt hushålls värden",
+    "decreasePortions": "Färre portioner",
+    "increasePortions": "Fler portioner",
+    "portions": "{count, plural, one {# portion} other {# portioner}}",
+    "percentOfReference": "{percent} % av {amount}",
+    "percentOfDailyReference": "{percent} % av dagligt referensvärde på {amount}"
   },
   "measurementSystem": {
     "label": "Måttsystem",
@@ -290,7 +314,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Steg {number}: Beskriv steget...",
-    "stepPlaceholderShort": "Steg {number}"
+    "stepPlaceholderShort": "Steg {number}",
+    "recipeSuggestions": "Receptförslag",
+    "ingredientSuggestions": "Ingrediensförslag"
   },
   "stepIngredients": {
     "rowLabel": "Kopplade ingredienser",
@@ -321,16 +347,15 @@
   },
   "toasts": {
     "imported": "Receptet har importerats",
-    "failed": "Receptåtgärden misslyckades",
     "failedDescription": "Något gick fel när receptet bearbetades. Teknisk information finns i webbläsarens konsol.",
     "incomplete": "Receptet kan vara ofullständigt. Jämför det med källan.",
     "notARecipe": "Den här sidan ser inte ut som ett recept.",
     "privateAddress": "Import från privata nätverksadresser är inte tillåten på den här servern.",
-    "batchImported": "Recepten har importerats",
-    "batchImportedDescription": "{count} recept importerade från arkivet",
     "view": "Visa",
     "open": "Öppna",
-    "deleteKept": "{count, plural, one {# recept ändrades} other {# recept ändrades}} av någon annan och behölls."
+    "deleteKept": "{count, plural, one {# recept ändrades} other {# recept ändrades}} av någon annan och behölls.",
+    "deleted": "Recept borttaget",
+    "deletedDescription": "Det här receptet har tagits bort."
   },
   "tags": {
     "panel": {
@@ -345,12 +370,23 @@
     "servings": "Portioner",
     "serving": "{count, plural, one {# portion} other {# portioner}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Svep för att byta steg",
-    "swipeIngredients": "Svep åt vänster för ingredienser",
-    "swipeBackToSteps": "Svep åt höger för steg",
     "readyAt": "Klart ungefär {time}",
     "timers": "Timrar",
-    "nextStep": "Nästa steg"
+    "nextStep": "Nästa steg",
+    "stepLabel": "Steg {number}",
+    "previousStep": "Föregående steg",
+    "startTimer": "Starta en timer på {duration}",
+    "pauseTimer": "Pausa timern, {time} kvar",
+    "resumeTimer": "Återuppta timern, {time} kvar",
+    "dismissTimer": "Stäng timern",
+    "restartTimer": "Starta om timern",
+    "notificationsOff": "Notiser är avstängda för Norish, så timrar ringer bara medan appen är öppen.",
+    "decreaseTimer": "Dra av {time}",
+    "increaseTimer": "Lägg till {time}",
+    "openTimer": "{timer}, öppna {recipe} i matlagningsläge",
+    "openTimerAtStep": "{timer}, öppna {recipe} i matlagningsläge vid steg {number}",
+    "timersLeft": "Timrar, {time} kvar",
+    "spokenTime": "{hours, plural, =0 {} one {# timme } other {# timmar }}{minutes, plural, =0 {} one {# minut } other {# minuter }}{seconds, plural, =0 {} one {# sekund } other {# sekunder }}"
   },
   "enrichment": {
     "failed": "Kompletteringen misslyckades",
@@ -373,10 +409,7 @@
   "provenance": {
     "title": "Ursprung",
     "region": "Region",
-    "cuisines": "Matkulturer",
-    "inferring": "Tar reda på var det här receptet kommer ifrån…",
-    "noInfo": "Ingen information om ursprung ännu",
-    "inferWithAI": "Ta reda på med AI"
+    "cuisines": "Matkulturer"
   },
   "import": {
     "alreadyExists": "Du har redan det här receptet",
@@ -430,7 +463,13 @@
     "changeImage": "Byt bild",
     "removeImage": "Ta bort bild",
     "imageUploadFailed": "Det gick inte att ladda upp bilden.",
-    "imageNeedsConnection": "Du kan byta bilder när du är online igen."
+    "imageNeedsConnection": "Du kan byta bilder när du är online igen.",
+    "rename": "Byt namn",
+    "deleteAlertTitle": "Ta bort {title}?",
+    "changeCover": "Byt omslag",
+    "renameTitle": "Byt namn på kokboken",
+    "coverFromLibrary": "Välj från biblioteket",
+    "coverFromCamera": "Ta ett foto"
   },
   "print": {
     "title": "Skriv ut recept",
@@ -449,5 +488,109 @@
     "newCookbook": "Ny kokbok",
     "filedInto": "{count, plural, one {# recept} other {# recept}} tillagda i {title}",
     "filedIntoMany": "{count, plural, one {# recept} other {# recept}} tillagda i {cookbooks} kokböcker"
+  },
+  "addRecipe": {
+    "fromLink": "Från en länk",
+    "fromLinkHint": "Valfri receptsajt eller video",
+    "fromPhotos": "Från foton",
+    "fromPhotosHint": "Kokbokssidor eller en skärmbild",
+    "fromText": "Från text",
+    "fromTextHint": "Klistra in ett recept eller JSON-LD",
+    "writeYourself": "Skriv det själv",
+    "writeYourselfHint": "Börja med ett tomt recept",
+    "fromClipboard": "Från ditt urklipp",
+    "linkTitle": "Importera från en länk",
+    "textTitle": "Importera från text",
+    "photosTitle": "Importera från foton",
+    "camera": "Kamera",
+    "photoLibrary": "Bildbibliotek",
+    "photoCount": "{count, plural, one {# foto, importerat som ett recept} other {# foton, importerade som ett recept}}",
+    "photoLimits": "Upp till {max} foton, JPEG, PNG eller WebP",
+    "removePhoto": "Ta bort foto {number}"
+  },
+  "shareExtension": {
+    "sending": "Skickar till Norish…",
+    "sentTitle": "Importerar i Norish",
+    "sentBody": "Det dyker upp i ditt bibliotek om en stund.",
+    "savedTitle": "Sparat till senare",
+    "savedBody": "Norish importerar det när din server går att nå.",
+    "signedOut": "Öppna Norish och logga in först.",
+    "tooOld": "Din Norish-server behöver uppdateras först.",
+    "noAi": "Import av foton kräver AI, som är avstängd på din server.",
+    "failed": "Norish kunde inte importera detta.",
+    "close": "Stäng",
+    "photoCount": "{count, plural, one {# foto} other {# foton}}",
+    "text": "Text"
+  },
+  "editor": {
+    "newTitle": "Nytt recept",
+    "editTitle": "Redigera recept",
+    "recipeName": "Receptnamn",
+    "ingredient": "Ingrediens",
+    "sectionHeading": "Avsnittsrubrik",
+    "step": "Steg",
+    "steps": "Steg",
+    "notesHint": "Börja en rad med # för en rubrik; omge ord med **dubbla asterisker** för fetstil.",
+    "ingredientsHint": "Skriv ingredienser som 2 koppar mjöl; mängder och enheter läses åt dig. Börja en rad med # för ett avsnitt.",
+    "stepsHint": "Tryck retur för nästa steg. Skriv @ för att länka en ingrediens, # för ett avsnitt.",
+    "addIngredient": "Lägg till ingrediens",
+    "removeIngredient": "Ta bort ingrediens",
+    "addStep": "Lägg till steg",
+    "removeStep": "Ta bort steg",
+    "addPhoto": "Lägg till foto",
+    "addStepPhoto": "Lägg till stegfoto",
+    "removePhoto": "Ta bort foto",
+    "mediaCount": "{images}/{maxImages} foton · {videos}/{maxVideos} videor",
+    "photosOffline": "Du kan lägga till foton när du är online.",
+    "tagsAndCategories": "Taggar och kategorier",
+    "categories": "Kategorier",
+    "tags": "Taggar",
+    "tagsHint": "Välj ett förslag eller skriv en ny tagg; nya taggar har streckad kant.",
+    "addTag": "Lägg till en tagg",
+    "removeNamed": "Ta bort {name}",
+    "servingsAndTime": "Portioner och tid",
+    "minutes": "min",
+    "perServing": "per portion, valfritt",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "Källa",
+    "sourceUrl": "Käll-URL",
+    "measurementSystem": "Måttsystem",
+    "measurementHint": "Identifierat från dina ingredienser. En ändring byter bara etikett och räknar inte om; använd Konvertera efter att du sparat.",
+    "discardTitle": "Slänga ändringarna?",
+    "discardMessage": "Du har osparade ändringar.",
+    "keepEditing": "Fortsätt redigera",
+    "discard": "Släng"
+  },
+  "search": {
+    "sortBestMatch": "Bästa träff",
+    "sortNewest": "Nyaste",
+    "sortOldest": "Äldsta",
+    "sortAZ": "A–Ö",
+    "sortZA": "Ö–A",
+    "sortLabel": "Sortering: {sort}",
+    "ratingChip": "{count}+ stjärnor",
+    "removeFilter": "Ta bort {filter}",
+    "ingredientFilter": "ingrediensfilter",
+    "count": "{count, plural, one {# recept} other {# recept}}",
+    "noMatch": "Inga recept matchar ”{text}”",
+    "searchAllFields": "Sök i alla fält",
+    "filtersOn": "Filter, {count} aktiva",
+    "matchTitle": "I titeln",
+    "matchTag": "Tagg:",
+    "matchIngredient": "Ingrediens:",
+    "matchStep": "Steg {number}:",
+    "searchFor": "Sök efter ”{text}”",
+    "recipes": "Recept",
+    "narrowTo": "Begränsa till",
+    "typeIngredient": "Ingrediens",
+    "typeTag": "Tagg",
+    "typeCategory": "Kategori",
+    "recent": "Senaste",
+    "quickFilters": "Snabbfilter",
+    "underThirty": "Under 30 min",
+    "fourAndUp": "4 och uppåt",
+    "editRecent": "Redigera ”{text}”",
+    "offline": "Sökning kräver en anslutning"
   }
 }

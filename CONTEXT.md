@@ -42,10 +42,14 @@ _Avoid_: Origin (names only one part), Provenance Inference (names the process, 
 
 **Cuisine**:
 A named culinary style a recipe belongs to, drawn from a controlled vocabulary that an administrator owns — extended by them directly, or by AI only under an explicitly permissive strategy setting. A recipe may carry several, so fusion dishes remain describable. A Cuisine name is a canonical identifier shown verbatim in every locale, never a translated label.
-_Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is the meal-time taxonomy)
+_Avoid_: Cuisine Tag (a Tag is open, a Cuisine is curated), Category (that is the course taxonomy)
 
 **Tag**:
 A free-form keyword attached to a recipe, mintable by anyone and by AI. Tags are an open folksonomy and deliberately overlap other taxonomies; Cuisines and Categories are the curated lists.
+
+**Category**:
+The course a recipe is served as — when or how it is eaten, such as Breakfast or Drinks — kept as a short list a reader picks from at a glance, never an open folksonomy. Breakfast, Lunch, Dinner and Snack are built in: fixed for everyone, translated, and never renamed or removed. A household extends the list by naming a new Category on one of its recipes; it is offered only to that household, whatever the recipe view policy, and lasts as long as one of its recipes carries it. A recipe seen from another household still shows its own Categories. AI and other apps' imports never add one: AI chooses among the household's list, and an import keeps a name it cannot match as a Tag; a Norish Recipe Archive carries its Categories over as they are. Meal plan slots are a separate, fixed set that happens to share the four built-in names.
+_Avoid_: Meal type, Course (use Category), Tag (a Tag is open, a Category is curated)
 
 **Ingredient**:
 One food, or anything else a household buys with its groceries (toilet paper, floor cleaner, dog food), known by many Ingredient Aliases: "onion", "onions", "onion, diced" and "ui" are one Ingredient once Norish knows they are. Whatever a household teaches Norish about a food is taught about the Ingredient, so it holds for every spelling. An Ingredient has a name of its own, English where known, and belongs to whoever's action minted it, or to no one when the catalogue seed wrote it (ADR-0037). Deleting an Ingredient reads every recipe line and Grocery that named it again from its own text, minting nothing: one whose words name other foods points at them ("zout en peper" under a deleted "kruidenmix"), and the rest keep their text with no food, as a Heading has none: no price, no Aisle, no nutrition; the household no longer keeps it in the Pantry. One that someone's action minted is deleted the same way once no recipe line, Grocery, recurring grocery or Pantry Ingredient has named it for three months and no food is a kind of it any more, so a one-off purchase does not stay in the catalogue; a seeded one never is, by unused-food removal or by AI. The Ingredients page lists the seeded Ingredients and those a recipe line names. An own one that only Groceries, recurring groceries or Pantry Ingredients name, a grocery food, is hidden there, read from the rows rather than stored: it keeps its Aisle and price: AI never asks about it, and no pass without AI files, merges or re-files it, until a recipe line names it.
@@ -68,7 +72,7 @@ A name with everything that is not the food taken off — amounts, units, sizes,
 _Avoid_: Clean name, English name (AI's reading of which food a name is, a different thing), Normalized name (the fold a spelling is matched by)
 
 **Parent Ingredient**:
-The more general food an Ingredient is a kind of: "onion" is the parent of "red onion", and a parent may have a parent of its own. A child with no Aisle Link at a Store is filed in its parent's Aisle, a child with no Ingredient Icon shows its parent's, and a child in the Pantry covers a recipe line for its parent, never the reverse. A Product Link never follows the tree: a recipe that asked for "red onion" is never priced as plain onion. Set on the Ingredients page, by AI when it answers that a food is a kind of a known one, or from the words of a name AI could not place, a seeded food first, else an own food a recipe names ("roodschillige krieltjes" under "krieltjes"); a parent that would make an Ingredient a kind of itself is refused.
+The more general food an Ingredient is a kind of: "onion" is the parent of "red onion", and a parent may have a parent of its own. A child with no Aisle Link at a Store is filed in its parent's Aisle, a child with no Ingredient Icon shows its parent's, and a child in the Pantry covers a recipe line for its parent, never the reverse; a search narrowed to a food finds the recipes naming any kind of it, never its parent. A Product Link never follows the tree: a recipe that asked for "red onion" is never priced as plain onion. Set on the Ingredients page, by AI when it answers that a food is a kind of a known one, or from the words of a name AI could not place, a seeded food first, else an own food a recipe names ("roodschillige krieltjes" under "krieltjes"); a parent that would make an Ingredient a kind of itself is refused.
 _Avoid_: Category (a grouping for browsing, not a food), Variant (names the child alone)
 
 **Flagged Ingredient**:
@@ -138,6 +142,10 @@ _Avoid_: Cooking Progress (implies something is kept)
 The clock time a recipe is projected to be done: the moment its Cooking Session began plus the recipe's total time. It is a projection and never a promise — nothing checks whether the cook actually started, paused, or wandered off — so it is only ever shown inside cooking mode, where the session that anchors it exists. A recipe with no total time has none.
 _Avoid_: Finish time, ETA (both read as a commitment Norish is not making)
 
+**Recipe Timer**:
+A countdown a reader starts from a duration written in a recipe's step. It belongs to the device it was started on and to nothing else: it is never sent to the server, never shared with the household, and it outlives both cooking mode and the app being closed, so a timer started while cooking still rings after the screen that started it is gone. It is not part of a Cooking Session, which keeps nothing; the session ends and its timers run on. A device may run several at once, from several recipes. Hiding recipe timers is a Hidden Item, and a reader who hides them starts none.
+_Avoid_: Cooking timer (ties it to cooking mode), Step timer (a step may hold several)
+
 **Dish Colour**:
 One colour taken from a recipe's primary image when that image is stored, and kept with the recipe so a page can be tinted before the photo has even arrived. Only its hue and a clamped amount of its saturation are ever used: lightness always comes from the reader's theme, so a recipe colours its page without ever deciding how readable that page is. A recipe with no image, or one stored before the colour existed, simply has none and renders on the plain theme background. A reader may also decline the tint outright and read every recipe on that plain background, which is a Device Preference and never a change to the recipe. It is derived from the image rather than supplied with the recipe, so it is never Supplied Recipe Data and never travels in a Recipe Archive — a receiving instance takes its own from the image it received.
 _Avoid_: Dominant colour (names the algorithm), Theme colour (collides with the reader's light and dark themes), Accent (that is the app's own, and it never shifts)
@@ -151,6 +159,14 @@ _Avoid_: Collection (a Cookbook is a collection), All recipes (the library is no
 **Orphaned**:
 A recipe or cookbook whose owner's account no longer exists. Deleting an account detaches what it made rather than destroying it, and what is detached belongs to nobody: every reader may see it, edit it and delete it, under every view policy including the strictest, where it was private a moment earlier. The widening is the price of the guarantee — a household keeps cooking from the recipes and maintaining the cookbooks it already had, and no departure quietly empties a shared Library. It is a one-way state: nothing hands an orphan to a new owner.
 _Avoid_: Unowned (suggests it never had an owner), Deleted user's recipes (names the cause rather than the state), Ownerless
+
+**Recent Search**:
+A query a reader confirmed on the Search page, kept on that device for that account so they can run it again, and forgotten when they sign out or clear the list. Typing alone never makes one.
+_Avoid_: Search history (suggests every keystroke, or a server record)
+
+**Search Scope**:
+The parts of a recipe a search's text is looked for in: its title, ingredients, tags, description and steps, title and ingredients unless the reader picks otherwise. It decides where words may match, never which recipes are allowed; that is a filter's job.
+_Avoid_: Search field (that is the box the text is typed in), Quick filter (narrows which recipes show, whatever the text)
 
 **Cookbook**:
 A titled set of recipes, owned by the person who made it and seen, edited and deleted under the same policy as a recipe. A recipe may belong to several cookbooks, and a cookbook holding none is an ordinary cookbook rather than a broken one: it may be made empty and filled later, or made from the recipe that prompted it, and taking the last recipe out never destroys the title someone chose. It is a set and not a sequence, so it keeps no order of its own and shows its members in whatever sort the reader is already using. Beyond its title it may hold an uploaded cover image, which shows instead of the cover drawn from its members; everything else is derived from its members at read time rather than supplied — the cover when none is uploaded, the description that names what is inside, the members' cooking time added up, the smallest number of people any member serves, and the tags a reader finds their allergens among — so a cookbook has nothing to keep up to date and nothing that can go stale.
@@ -253,7 +269,7 @@ The optional second AI provider that answers closed questions and generates noth
 _Avoid_: Decision provider (names the settings block, not the thing), Classifier (it also scores and ranks), Jev (a product name; the glossary names the role)
 
 **Decision**:
-One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the four categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
+One request to the Decision Model: a state — text or structured JSON, composed by the feature — plus named Choice, Score and Boolean questions, answered together with a probability for every option. The AI Runtime's fourth entry point, `decide`, beside structured generation, transcription and image generation. It has no Prompt: its criteria come from the domain (the household's Categories, the household's allergens, the administrator's Cuisines) and its instructions are code-owned, exactly as system messages are (ADR-0035).
 _Avoid_: Evaluation (the SDK's word; it reads as judging quality), Classification (only one of the three question shapes)
 
 **Clear Case**:
@@ -298,6 +314,10 @@ _Avoid_: Aborted (also names the restart interruption, which is not a cancel), K
 
 ### People & Presentation
 
+**Reader**:
+The signed-in person Norish is showing itself to right now, seen through their household: whose allergies count, which recipes they may edit, which Device Preferences apply. A signed-out visitor to a shared recipe is a reader without a household.
+_Avoid_: User (the account record, not the person at the screen), Viewer, Current user
+
 **Avatar**:
 A person's profile picture, shown as a circle at every size wherever the person appears; absent or unloadable, it degrades to their initials. Offline it is best-effort: initials are the accepted rendering, not a defect.
 _Avoid_: User icon (ambiguous with App Icon), profile photo
@@ -321,22 +341,22 @@ _Avoid_: Loader, Preloader, Spinner (a progress sign, not the page's shape)
 ### Connectivity & Offline
 
 **Offline**:
-The state in which the web client cannot reach the Norish backend — because the client lost its network, the backend is down or unreachable, or it was forced via the (development-only) Offline Toggle. Not synonymous with "no internet".
+The state in which a client cannot reach the Norish backend — because the client lost its network, the backend is down or unreachable, or it was forced via the (development-only) Offline Toggle. Not synonymous with "no internet".
 _Avoid_: disconnected (that is the WebSocket status, a narrower thing)
 
 **Live**:
-The state in which the web client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
+The state in which a client can reach the Norish backend and data exchange is permitted. Live does not require the realtime channel to be up — reaching the backend at all is what counts.
 _Avoid_: online (ambiguous with general internet connectivity)
 
 **Reachability Deadline**:
-The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launching page navigation observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
+The single bounded wait — five seconds — after which the backend counts as unreachable for the attempt at hand. The connectivity verdict and a launch observe the same deadline: a launch that outlives it proceeds Offline with what is cached rather than waiting indefinitely.
 _Avoid_: Network timeout (a mechanism, not the meaning), Launch timeout (the deadline is shared, not launch-specific)
 
 **App Shell**:
-The static assets (HTML, JS, CSS, fonts, icons) required to boot the web app without any backend response.
+The static assets (HTML, JS, CSS, fonts, icons) required to boot the web client without any backend response. Web only: the app's own bundle plays this part on a phone.
 
 **Offline Cache**:
-The personalized persisted copy of previously fetched server data that the web app serves while Offline. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
+The personalized persisted copy of previously fetched server data that a client serves while Offline, kept per signed-in account. It contains at minimum the Warm Set, treats everything else as best-effort, and excludes both the mutation Outbox and the static App Shell.
 
 **Warm Set**:
 The content guaranteed to be in the Offline Cache: the 50 most recent recipes in full (each with its primary image; further gallery images and videos are excluded from the guarantee), all groceries (including recurring) and stores, every cookbook the reader can see together with its membership, and the calendar's initial view window (roughly the current week on desktop, two weeks back/forward on mobile — enough to see the coming week's planned days). The Warm Set is a guaranteed floor — anything else fetched while Live is kept best-effort. A recipe the user creates joins the Warm Set on create (ADR-0008), so it is offline-available immediately rather than only at the next warm. A cookbook's members are guaranteed only insofar as they fall inside the fifty, so an Offline cookbook may list a recipe that cannot be opened.
@@ -352,7 +372,7 @@ The process that makes the Live view trustworthy whenever queued work may exist:
 _Avoid_: Reconnect Sequence (too narrow; Recovery is not limited to an Offline-to-Live transition)
 
 **Outbox**:
-The persisted queue of mutations that could not reach the backend, held for Replay. Admission is universal — any mutation qualifies, with no per-feature list. An admission while Live is a reachability hint: it asks the connectivity loop to probe at once, and the Live verdict that follows drains the queue. Flows outside the data API (authentication) are outside the Outbox.
+The persisted queue of mutations that could not reach the backend, held for Replay. Admission is universal — any mutation qualifies — except the admin settings and the procedures whose input is a credential, which fail with their own error and are never stored. An admission while Live is a reachability hint: it asks the connectivity loop to probe at once, and the Live verdict that follows drains the queue. Flows outside the data API (authentication) are outside the Outbox.
 
 **Queued**:
 The third outcome of a mutation, beside success and failure: the change is held in the Outbox and presented to the user as tentatively applied. Server-side-effect mutations (e.g. import-from-URL) simply run at Replay time.
@@ -364,7 +384,7 @@ Re-sending Outbox entries, in order, once the backend is reachable again. Replay
 The state of an Outbox entry that Replay has given up on automatically (deterministic rejection, or retries exhausted). Parked entries stay visible for manual retry or discard; they are never silently dropped. A parked create parks its dependent edits with it.
 
 **Conflicted**:
-A Parked flavour: the entry's target changed on the backend while the change waited in the Outbox, so the backend kept the first write and dropped this one (first write wins). The user can reapply by hand.
+A Parked flavour: the entry's target changed on the backend while the change waited in the Outbox, so the backend kept the first write and dropped this one (first write wins). The user can reapply by hand. Unlike a parked create, it parks nothing behind it: the entity exists, and each later write is decided on its own.
 
 **Client-Minted Id**:
 An entity id generated by the creating client and honoured by the backend, so that changes queued behind a create keep pointing at the right entity across Replay.
@@ -407,9 +427,25 @@ An identity change — household created, joined or left, member kicked, account
 
 ### Accounts & Sign-in
 
+**Account**:
+The one Norish account a person signs in to, by any of their Sign-in Methods, holding what is theirs rather than their household's: their name and Avatar, allergies, language, Device Preferences and API keys. The Reader is that person at the screen; the Account is what they are signed in as.
+_Avoid_: User (in anything a person reads), Profile (one part of it)
+
+**Server Address**:
+The address of the one Norish server an app is connected to, entered before anyone signs in. Every Account, Sign-in Method and Offline Cache on that app belongs to that server; changing the address means signing in again.
+_Avoid_: Backend URL, App URL, Instance URL
+
 **Sign-in Method**:
 One way a person signs in to their one Norish account: a password, Google, GitHub, or the server's OIDC provider under the name the administrator gave it. A person can have several, and every one leads to the same recipes, household and settings. A method is added only from a signed-in session, where the person has proven both sides, so its email need not match the account's; signing in never adds one, even when the email matches, because that is how an account is taken over. Adding the OIDC method applies its claims at once, as its next sign-in would.
 _Avoid_: Linked Account (collides with Site Account and suggests a second account), Provider (the server-side configuration, not what the person has), Account (the person's whole Norish account)
+
+**Sign-out**:
+The Reader ending their own session. The session ends first, then the device forgets the Offline Cache; if the session cannot be ended, nothing is forgotten and the reader is told why. A browser cannot end its session while Offline, a phone always can. Work still in the Outbox is discarded, after the reader confirms it.
+_Avoid_: Log out, Logout (in anything a person reads)
+
+**Session Expiry**:
+The server ending a session the Reader did not end: it timed out or was revoked. The device forgets the Offline Cache as at Sign-out, but the Outbox stays, kept for that Account alone, and replays when the same Account signs in again.
+_Avoid_: Sign-out (the reader's own act)
 
 ### Releases & Docs
 

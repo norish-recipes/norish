@@ -1,0 +1,162 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  DEFAULT_PERSISTED_RECIPE_FILTERS,
+  DEFAULT_RECIPE_FILTERS,
+  hasAppliedRecipeFilters,
+  normalizePersistedRecipeFilters,
+  persistedRecipeFilters,
+  serializeRecipeFilters,
+  toggleSearchFieldIn,
+  toRecipesQueryFilters,
+} from "./filter-contract";
+
+describe("recipe filter contract", () => {
+  it("keeps deterministic defaults and query serialization", () => {
+    const queryFilters = toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS);
+
+    expect(queryFilters).toEqual({
+      search: undefined,
+      searchFields: DEFAULT_RECIPE_FILTERS.searchFields,
+      tags: undefined,
+      categories: undefined,
+      filterMode: "AND",
+      sortMode: "dateDesc",
+      minRating: undefined,
+      maxCookingTime: undefined,
+      type: "all",
+      favoritesOnly: false,
+      pantryOnly: false,
+    });
+    expect(serializeRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(JSON.stringify(queryFilters));
+  });
+
+  it("sends Ingredient ids only when there are some, and never persists them", () => {
+    const onion = "a0000000-0000-4000-8000-000000000001";
+
+    expect(
+      toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, ingredients: [onion] })
+    ).toMatchObject({
+      ingredientIds: [onion],
+    });
+    expect(toRecipesQueryFilters(DEFAULT_RECIPE_FILTERS)).not.toHaveProperty("ingredientIds");
+    expect(DEFAULT_PERSISTED_RECIPE_FILTERS).not.toHaveProperty("ingredients");
+  });
+
+  it("sends the search text trimmed, and none for blank text", () => {
+    const search = (rawInput: string) =>
+      toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, rawInput }).search;
+
+    expect(search("  ")).toBeUndefined();
+    expect(search(" soup ")).toBe("soup");
+  });
+
+  it("keeps the search text and Ingredients out of what is persisted", () => {
+    const onion = "a0000000-0000-4000-8000-000000000001";
+    const persisted = persistedRecipeFilters({
+      ...DEFAULT_RECIPE_FILTERS,
+      rawInput: "soup",
+      ingredients: [onion],
+    });
+
+    expect(JSON.stringify(persisted)).toBe(JSON.stringify(DEFAULT_PERSISTED_RECIPE_FILTERS));
+  });
+
+  it("normalizes persisted filter payloads and rejects invalid values", () => {
+    expect(
+      normalizePersistedRecipeFilters({
+        sortMode: "dateDesc",
+        filterMode: "AND",
+        searchTags: ["vegetarian"],
+        searchFields: ["name"],
+        showFavoritesOnly: true,
+        showPantryOnly: true,
+        minRating: 4,
+        maxCookingTime: 30,
+        categories: ["Dinner"],
+      })
+    ).toMatchObject({
+      sortMode: "dateDesc",
+      filterMode: "AND",
+      searchTags: ["vegetarian"],
+      showFavoritesOnly: true,
+      showPantryOnly: true,
+      minRating: 4,
+      maxCookingTime: 30,
+      categories: ["Dinner"],
+    });
+
+    expect(normalizePersistedRecipeFilters({ sortMode: "invalid" })).toBeNull();
+  });
+
+  it("keeps any trimmed 1-40 character Category name and drops the rest", () => {
+    expect(
+      normalizePersistedRecipeFilters({
+        ...DEFAULT_PERSISTED_RECIPE_FILTERS,
+        categories: ["Dinner", "  Drinks ", "", "x".repeat(41), 7],
+      })?.categories
+    ).toEqual(["Dinner", "Drinks"]);
+  });
+
+  it("never leaves a reader searching no fields at all", () => {
+    expect(toggleSearchFieldIn(["title"], "steps")).toEqual(["title", "steps"]);
+    expect(toggleSearchFieldIn(["title", "steps"], "steps")).toEqual(["title"]);
+    // Unticking the last field restores the default pair rather than an empty set.
+    expect(toggleSearchFieldIn(["title"], "title")).toEqual(DEFAULT_RECIPE_FILTERS.searchFields);
+  });
+
+  describe("the Library type filter", () => {
+    it("defaults to All and serialises into the query filters", () => {
+      expect(DEFAULT_RECIPE_FILTERS.libraryType).toBe("all");
+      expect(
+        toRecipesQueryFilters({ ...DEFAULT_RECIPE_FILTERS, libraryType: "cookbooks" })
+      ).toMatchObject({ type: "cookbooks" });
+      expect(
+        serializeRecipeFilters({ ...DEFAULT_RECIPE_FILTERS, libraryType: "recipes" })
+      ).toContain('"type":"recipes"');
+    });
+
+    it("survives a persistence round-trip", () => {
+      const persisted = { ...DEFAULT_PERSISTED_RECIPE_FILTERS, libraryType: "cookbooks" as const };
+
+      expect(normalizePersistedRecipeFilters(JSON.parse(JSON.stringify(persisted)))).toMatchObject({
+        libraryType: "cookbooks",
+      });
+    });
+
+    it("normalises an absent or unrecognised value to All", () => {
+      // This is what keeps the mobile app working: it shares the contract,
+      // never renders the chip, and must not have its filters corrupted.
+      const { libraryType: _omitted, ...withoutType } = DEFAULT_PERSISTED_RECIPE_FILTERS;
+
+      expect(normalizePersistedRecipeFilters(withoutType)).toMatchObject({ libraryType: "all" });
+      expect(
+        normalizePersistedRecipeFilters({
+          ...DEFAULT_PERSISTED_RECIPE_FILTERS,
+          libraryType: "shelves",
+        })
+      ).toMatchObject({ libraryType: "all" });
+    });
+
+    it("is excluded from the applied-filters predicate", () => {
+      expect(hasAppliedRecipeFilters({ ...DEFAULT_RECIPE_FILTERS, libraryType: "cookbooks" })).toBe(
+        false
+      );
+    });
+  });
+
+  describe("hasAppliedRecipeFilters", () => {
+    it("is off for the defaults", () => {
+      expect(hasAppliedRecipeFilters(DEFAULT_RECIPE_FILTERS)).toBe(false);
+    });
+
+    it.each([
+      ["a minimum rating", { minRating: 4 }],
+      ["favourites only", { showFavoritesOnly: true }],
+      ["a category", { categories: ["Dinner"] }],
+      ["pantry only", { showPantryOnly: true }],
+    ])("is on for %s", (_name, over) => {
+      expect(hasAppliedRecipeFilters({ ...DEFAULT_RECIPE_FILTERS, ...over })).toBe(true);
+    });
+  });
+});

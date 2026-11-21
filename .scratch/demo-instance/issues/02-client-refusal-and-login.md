@@ -4,7 +4,7 @@
 
 - A tRPC link placed ahead of the Outbox's `mutationLink` in `packages/shared-react/src/providers/trpc-links.ts` refuses every mutation before it leaves and shows the toast "This is a read-only demo." Nothing is queued and no optimistic state is applied. Every button stays enabled.
 - A server refusal with the demo code (01) shows the same toast, so a write the link misses still reads the same.
-- The email/password form (`apps/web/app/(auth)/login/components/email-password-form.tsx`) comes prefilled with `demo@norish.app` / `demodemo`.
+- The email/password form (`apps/web/features/auth/components/email-password-form.tsx`) comes prefilled with `demo@norish.app` / `demodemo`.
 
 See `.scratch/demo-instance/spec.md`.
 

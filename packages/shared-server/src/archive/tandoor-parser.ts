@@ -2,9 +2,9 @@ import JSZip from "jszip";
 import { z } from "zod";
 
 import { FullRecipeInsertSchema } from "@norish/db";
-import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 
 import { galleryOf, sumMinutes, withLineFoodTexts } from "./parser-helpers";
@@ -208,7 +208,8 @@ function renderTandoorTemplate(instruction: string, ingredients: TandoorIngredie
 export async function parseTandoorRecipeToDTO(
   json: TandoorRecipe,
   recipeId: string,
-  imageBuffer?: Buffer
+  imageBuffer: Buffer | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
   const validated = TandoorRecipeSchema.parse(json);
@@ -315,15 +316,7 @@ export async function parseTandoorRecipeToDTO(
       .filter((value) => value.length > 0)
   );
 
-  const categories = Array.from(
-    new Set(
-      categoryCandidates
-        .map((value) => matchCategory(value))
-        .filter((category): category is "Breakfast" | "Lunch" | "Dinner" | "Snack" =>
-          Boolean(category)
-        )
-    )
-  );
+  const { categories } = sortSourceCategories(categoryCandidates, householdCategories);
 
   // Calculate total time
   const parseTime = (val: number | null | undefined): number | undefined => {

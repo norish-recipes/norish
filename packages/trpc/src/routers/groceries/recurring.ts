@@ -35,6 +35,7 @@ import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
 import type { GroceryProcedureContext } from "./groceries-helpers";
+import { afterCommit } from "../../after-commit";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { noticeGroceries } from "../stores/pricing";
@@ -100,13 +101,14 @@ function recurringRows(
 async function announceRecurring(ctx: GroceryProcedureContext, made: CreatedRecurringGroceries) {
   // A repeating grocery is a grocery on the list like any other: its Store
   // is asked what it knows about the name, exactly as the add panel asks.
-  await noticeGroceries(
-    ctx,
-    made.created.map(({ grocery }) => grocery)
+  await afterCommit(ctx, "pricing repeating groceries", () =>
+    noticeGroceries(
+      ctx,
+      made.created.map(({ grocery }) => grocery)
+    )
   );
 
-  // The siblings it made room among carry new versions now; every screen
-  // hears so, or its next write on one of them is refused as stale.
+  // The siblings it made room among moved down; every screen hears their new sort order.
   if (made.shifted.length > 0) {
     void groceries.publish(
       "updated",
@@ -166,13 +168,6 @@ const createRecurring = authedProcedure
       return { ...first, shifted: made.shifted };
     } catch (err) {
       log.error({ err, userId: ctx.user.id }, "Failed to create recurring grocery");
-      void groceries.publish(
-        "failed",
-        {
-          reason: "Failed to create recurring grocery",
-        },
-        { userId: ctx.user.id }
-      );
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to create recurring grocery",
@@ -206,7 +201,7 @@ const updateRecurring = authedProcedure
 
     log.debug({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Updating recurring grocery");
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -278,13 +273,14 @@ const updateRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
-        await rememberStorePreference(ctx.user.id, outcome.value.grocery.ingredientId, storeId);
-
-        // Renamed or moved, the grocery asks its Store a new question.
-        await noticeGroceries(ctx, [outcome.value.grocery]);
+        await afterCommit(ctx, "remembering the Store and pricing", async () => {
+          await rememberStorePreference(ctx.user.id, outcome.value.grocery.ingredientId, storeId);
+          // Renamed or moved, the grocery asks its Store a new question.
+          await noticeGroceries(ctx, [outcome.value.grocery]);
+        });
 
         log.debug(
           { userId: ctx.user.id, recurringGroceryId, groceryId },
@@ -300,22 +296,16 @@ const updateRecurring = authedProcedure
         );
 
         if (made) await announceRecurring(ctx, made);
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to update recurring grocery"
         );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to update recurring grocery",
-          },
-          { userId: ctx.user.id }
-        );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const detachRecurring = authedProcedure
@@ -325,7 +315,7 @@ const detachRecurring = authedProcedure
 
     log.info({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Detaching recurring grocery");
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -390,10 +380,12 @@ const detachRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
-        await rememberStorePreference(ctx.user.id, edited.ingredientId, storeId);
+        await afterCommit(ctx, "remembering the Store", () =>
+          rememberStorePreference(ctx.user.id, edited.ingredientId, storeId)
+        );
 
         log.info(
           { userId: ctx.user.id, recurringGroceryId, groceryId },
@@ -406,22 +398,16 @@ const detachRecurring = authedProcedure
           },
           { householdKey: ctx.householdKey }
         );
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to detach recurring grocery"
         );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to detach recurring grocery",
-          },
-          { userId: ctx.user.id }
-        );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const deleteRecurring = authedProcedure
@@ -436,7 +422,7 @@ const deleteRecurring = authedProcedure
 
     log.info({ userId: ctx.user.id, recurringGroceryId, version }, "Deleting recurring grocery");
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -461,7 +447,7 @@ const deleteRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
         log.info({ userId: ctx.user.id, recurringGroceryId }, "Recurring grocery deleted");
@@ -483,22 +469,16 @@ const deleteRecurring = authedProcedure
           },
           { householdKey: ctx.householdKey }
         );
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to delete recurring grocery"
         );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to delete recurring grocery",
-          },
-          { userId: ctx.user.id }
-        );
+        throw err;
       });
-
-    return { success: true };
   });
 
 const checkRecurring = authedProcedure
@@ -520,7 +500,7 @@ const checkRecurring = authedProcedure
       "Checking recurring grocery"
     );
 
-    getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryOwnerId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -584,7 +564,7 @@ const checkRecurring = authedProcedure
             { householdKey: ctx.householdKey }
           );
 
-          return;
+          return { success: true, stale: true };
         }
 
         log.debug({ userId: ctx.user.id, recurringGroceryId, isDone }, "Recurring grocery checked");
@@ -596,22 +576,16 @@ const checkRecurring = authedProcedure
           },
           { householdKey: ctx.householdKey }
         );
+
+        return { success: true, stale: false };
       })
       .catch((err) => {
         log.error(
           { err, userId: ctx.user.id, recurringGroceryId },
           "Failed to check recurring grocery"
         );
-        void groceries.publish(
-          "failed",
-          {
-            reason: err.message || "Failed to check recurring grocery",
-          },
-          { userId: ctx.user.id }
-        );
+        throw err;
       });
-
-    return { success: true };
   });
 
 export const recurringGroceriesProcedures = router({

@@ -13,6 +13,7 @@
       "description": "Administrer kontoen din"
     },
     "logout": "Logg ut",
+    "signOutOffline": "Du er frakoblet. Logg ut når du er på nett igjen.",
     "signOutConfirm": {
       "title": "Forkaste usynkroniserte endringer?",
       "description": "{count, plural, one {# endring gjort frakoblet har ennå ikke nådd serveren.} other {# endringer gjort frakoblet har ennå ikke nådd serveren.}} Når du logger ut, forkastes dette ventende arbeidet permanent, og kontoens frakoblede data fjernes fra denne enheten."
@@ -20,6 +21,10 @@
     "version": {
       "updateAvailable": "v{version} tilgjengelig"
     }
+  },
+  "accountMenu": {
+    "allSettings": "Alle innstillinger",
+    "offlineLabel": "{name}, frakoblet"
   },
   "theme": {
     "title": "Tema",
@@ -32,11 +37,6 @@
     "home": "Oppskrifter",
     "calendar": "Kalender",
     "groceries": "Handleliste"
-  },
-  "mobile": {
-    "searchPlaceholder": "Søk oppskrifter...",
-    "toggleSearch": "Slå søking på/av",
-    "goBack": "Gå tilbake"
   },
   "archiveImporter": {
     "uploading": "Laster opp…",

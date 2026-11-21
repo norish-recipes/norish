@@ -24,6 +24,7 @@ import { moveMergedAIChanges } from "./ingredient-ai-changes";
 import { rowsNaming } from "./ingredient-catalogue";
 import { writeRecipeLineFoodsTx } from "./ingredients";
 import { lockPantryFood } from "./pantry";
+import { uuidListSql } from "./raw-sql";
 
 /**
  * What moves between Ingredients (ADR-0037): a merge, an alias move, a parent. Each takes the tree
@@ -119,10 +120,7 @@ async function ancestorsOf(tx: Db, ids: readonly string[]): Promise<Map<string, 
   const result = await tx.execute<{ start: string; ancestor: string; depth: number }>(sql`
     with recursive up(start, ancestor, depth) as (
       select i.id, i.parent_id, 1 from ${ingredients} i
-      where i.id in (${sql.join(
-        wanted.map((id) => sql`${id}::uuid`),
-        sql`, `
-      )}) and i.parent_id is not null
+      where i.id in (${uuidListSql(wanted)}) and i.parent_id is not null
       union all
       select up.start, p.parent_id, up.depth + 1 from up
       join ${ingredients} p on p.id = up.ancestor

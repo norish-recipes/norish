@@ -1,0 +1,29 @@
+# Drags a grocery into an Aisle: held from its row under a Store that has aisles and carried onto the
+# Dairy heading, it is filed there, which the server holds for the food at that Store.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- evalScript: "${http.post(NORISH_PROXY_CONTROL_URL + '/store', { body: JSON.stringify({ name: 'Aldi', aisles: ['Dairy', 'Bakery'] }) })}"
+- runFlow:
+    file: subflows/grocery.yaml
+    env:
+      GROCERIES: '[{"name": "milk", "store": "Aldi"}]'
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: group-tick-.*
+      text: .*milk.*
+    timeout: 20000
+- assertVisible: DAIRY 0
+# Unfiled, nothing is under an aisle; the slow swipe holds the row and carries it onto Dairy.
+- evalScript: ${output.before = json(http.get(NORISH_PROXY_CONTROL_URL + '/aisle?store=Aldi&food=milk').body)}
+- assertTrue: ${output.before.aisle == null}
+- swipe:
+    start: 50%,30%
+    end: 50%,35%
+    duration: 10000
+- evalScript: ${output.filed = json(http.get(NORISH_PROXY_CONTROL_URL + '/aisle?store=Aldi&food=milk&is=Dairy').body)}
+- assertTrue: ${output.filed.aisle == 'Dairy'}
+- assertVisible: DAIRY 1
+- assertVisible: BAKERY 0

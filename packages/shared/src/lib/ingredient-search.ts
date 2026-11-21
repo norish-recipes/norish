@@ -1,4 +1,4 @@
-import { foldName } from "./fold-name";
+import { foldName, nameWords } from "./fold-name";
 
 /**
  * How a search of the catalogue reads what was typed: `contains` finds every
@@ -22,21 +22,17 @@ export const DEFAULT_INGREDIENT_SEARCH_FIELDS: readonly IngredientSearchField[] 
   "translations",
 ];
 
-/**
- * What a search of the catalogue asks for. `fold` is the typed text folded the
- * way spellings are, so "creme" finds "Crème fraîche"; `pattern` is that fold
- * as a `LIKE` pattern for the match, with `%` and `_` in the text escaped so
- * it is matched as written.
- */
+/** A catalogue search: `fold` is the text folded as spellings are ("creme" finds "Crème fraîche");
+ * a contains match finds each of its `words` somewhere in one text, in any order. */
 export interface IngredientSearch {
   fold: string;
-  pattern: string;
+  words: string[];
   match: IngredientSearchMatch;
   fields: IngredientSearchField[];
 }
 
 /** A `LIKE` pattern's own characters, escaped so the person's text is matched as written. */
-function literal(text: string): string {
+export function escapeLike(text: string): string {
   return text.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
@@ -50,12 +46,7 @@ export function parseIngredientSearch(
 
   if (!fold || fields.length === 0) return null;
 
-  return {
-    fold,
-    pattern: match === "exact" ? literal(fold) : `%${literal(fold)}%`,
-    match,
-    fields,
-  };
+  return { fold, words: nameWords(fold), match, fields };
 }
 
 /**

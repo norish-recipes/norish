@@ -4,18 +4,19 @@
   },
   "mobile": {
     "today": "Сьогодні",
-    "scrollToToday": "Перейти до сьогодні"
+    "scrollToToday": "Перейти до сьогодні",
+    "planRecipe": "Запланувати рецепт"
+  },
+  "today": {
+    "openRecipe": "Відкрити рецепт",
+    "move": "Перемістити…",
+    "removeMessage": "«{name}» буде прибрано з прийому їжі «{slot}» ({day}).",
+    "moveTitle": "Перемістити"
   },
   "editNote": {
     "title": "Редагувати нотатку",
     "noteLabel": "Нотатка",
     "notePlaceholder": "Введіть нотатку..."
-  },
-  "navigation": {
-    "previousMonth": "Попередній місяць",
-    "nextMonth": "Наступний місяць",
-    "prev": "Назад",
-    "next": "Далі"
   },
   "weekdays": {
     "mon": "Пн",
@@ -50,6 +51,28 @@
     "addNote": "Додати нотатку: {input}",
     "randomRecipe": "Випадковий рецепт",
     "noRecipesFound": "Рецептів не знайдено.",
-    "failedToLoadRecipes": "Не вдалося завантажити рецепти."
+    "failedToLoadRecipes": "Не вдалося завантажити рецепти.",
+    "searchOrAddNote": "Знайдіть рецепт або додайте нотатку",
+    "random": "Випадковий рецепт",
+    "planThisRecipe": "Запланувати цей рецепт",
+    "planOnDay": "Запланувати «{name}» на {day}",
+    "addToDay": "Додати на {day}"
+  },
+  "caldav": {
+    "syncStarted": "Синхронізацію CalDAV розпочато",
+    "syncStartedDescription": "Елементів для синхронізації: {queued}",
+    "syncStartedWithFailures": "Елементів для синхронізації: {queued}. Не вдалося додати до черги: {failed}",
+    "configSaved": "Конфігурацію збережено",
+    "configSavedDescription": "Ваші налаштування CalDAV збережено.",
+    "configDeleted": "Конфігурацію видалено",
+    "configDeletedDescription": "Ваші налаштування CalDAV видалено.",
+    "retryStarted": "Синхронізацію розпочато",
+    "retryStartedDescription": "Повторна спроба для очікуваних і невдалих елементів…"
+  },
+  "widgets": {
+    "nothingPlanned": "Нічого не заплановано",
+    "signIn": "Відкрийте Norish, щоб увійти",
+    "open": "Відкрити Norish",
+    "more": "ще +{count}"
   }
 }

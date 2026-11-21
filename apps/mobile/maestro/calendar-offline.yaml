@@ -1,0 +1,71 @@
+# Opens the Calendar with the server unreachable: the days and their planned items come from what the
+# app kept, and they are still on screen once the server returns.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Offline Plan Roast", "key": "roast"}]'
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
+- runFlow:
+    file: subflows/plan.yaml
+    env:
+      PLAN: '{"recipeName": "Offline Plan Roast", "offset": 1, "slot": "Dinner"}'
+- tapOn:
+    id: tab-calendar
+- extendedWaitUntil:
+    visible:
+      id: calendar-screen
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: calendar-item-.*
+      text: Offline Plan Roast.*
+- assertNotVisible:
+    id: account-offline-dot
+# Leaving the app saves what it has read.
+- pressKey: home
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: cut
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-calendar
+    timeout: 20000
+- tapOn:
+    id: tab-calendar
+- extendedWaitUntil:
+    visible:
+      id: calendar-screen
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: calendar-item-.*
+      text: Offline Plan Roast.*
+# The avatar carries the Offline dot while the server is out of reach.
+- extendedWaitUntil:
+    visible:
+      id: account-offline-dot
+    timeout: 30000
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
+# The Offline backoff tops out at 30 seconds between probes; the plan stays on screen through it,
+# and the dot clears with the connection.
+- extendedWaitUntil:
+    visible:
+      id: calendar-item-.*
+      text: Offline Plan Roast.*
+    timeout: 90000
+- extendedWaitUntil:
+    notVisible:
+      id: account-offline-dot
+    timeout: 90000

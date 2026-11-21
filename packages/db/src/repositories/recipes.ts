@@ -28,6 +28,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
+import { hasSearchText, searchTerms } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
@@ -53,6 +54,11 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
+import {
+  attachCategoriesToRecipeByInputTx,
+  RECIPE_CATEGORY_NAMES_SQL,
+  recipeInAnyCategorySql,
+} from "./categories";
 import { replaceRecipeCuisinesTx } from "./cuisines";
 import {
   attachIngredientsToRecipeByInputTx,
@@ -379,6 +385,18 @@ export async function listVisibleRecipeIds(ctx: RecipeListContext): Promise<stri
 
 export { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
+/** The text as a prefix-OR tsquery body, or null when nothing searchable is left: no word at all,
+ * as for "^", which the query parser drops and so would match no recipe. */
+export function searchTsqueryTerms(search: string): string | null {
+  if (!hasSearchText(search)) return null;
+
+  return (
+    searchTerms(search)
+      .map((term) => `${term}:*`)
+      .join(" | ") || null
+  );
+}
+
 /**
  * The weighted search document and its rank, for whichever fields the reader
  * has chosen.
@@ -400,16 +418,7 @@ export function recipeSearchSql(
 ): { match: ReturnType<typeof sql>; rank: ReturnType<typeof sql<number>> } | null {
   if (!search || searchFields.length === 0) return null;
 
-  // Sanitize terms to remove PostgreSQL tsquery special characters.
-  const sanitizeTsqueryTerm = (term: string): string => term.replace(/[&|!():<>*\\'"]/g, "").trim();
-
-  const searchTerms = search
-    .trim()
-    .split(/\s+/)
-    .map(sanitizeTsqueryTerm)
-    .filter((term) => term.length > 0)
-    .map((term) => `${term}:*`)
-    .join(" | ");
+  const searchTerms = searchTsqueryTerms(search);
 
   if (!searchTerms) return null;
 
@@ -489,7 +498,6 @@ const DASHBOARD_COLUMNS = {
   // Only the country: the dashboard flies its flag, and the rest of the
   // provenance group has nothing to show at that size.
   originCountry: true,
-  categories: true,
   createdAt: true,
   updatedAt: true,
   version: true,
@@ -679,9 +687,7 @@ export async function listRecipes(
   }
 
   if (categories?.length) {
-    const categoryArray = `{${categories.join(",")}}`;
-
-    whereConditions.push(sql`${recipes.categories} && ${categoryArray}::recipe_category[]`);
+    whereConditions.push(recipeInAnyCategorySql(categories));
   }
 
   if (maxCookingTime !== undefined) {
@@ -715,6 +721,7 @@ export async function listRecipes(
       extras: {
         // The resolved primary: the first gallery image.
         image: PRIMARY_IMAGE_SQL.as("image"),
+        categories: RECIPE_CATEGORY_NAMES_SQL.as("categories"),
         pantryCoverage: (pantryCoverage ?? sql<null>`NULL::real`).as("pantry_coverage"),
       },
       with: DASHBOARD_WITH,
@@ -770,7 +777,10 @@ export async function listDashboardRecipesByIds(ids: string[]): Promise<RecipeDa
   const rows = await db.query.recipes.findMany({
     where: inArray(recipes.id, ids),
     columns: DASHBOARD_COLUMNS,
-    extras: { image: PRIMARY_IMAGE_SQL.as("image") },
+    extras: {
+      image: PRIMARY_IMAGE_SQL.as("image"),
+      categories: RECIPE_CATEGORY_NAMES_SQL.as("categories"),
+    },
     with: DASHBOARD_WITH,
   });
 
@@ -794,6 +804,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
     extras: {
       // The resolved primary: the first gallery image.
       image: PRIMARY_IMAGE_SQL.as("image"),
+      categories: RECIPE_CATEGORY_NAMES_SQL.as("categories"),
     },
     with: {
       recipeTags: {
@@ -903,6 +914,7 @@ export async function createRecipeWithRefs(
     fat: payload.fat ?? null,
     carbs: payload.carbs ?? null,
     protein: payload.protein ?? null,
+    nutritionExtras: payload.nutritionExtras ?? null,
     originCountry: normalizeOriginCountry(payload.originCountry),
     // The written name is the code's companion: without a code there is no
     // country to name, so a name supplied alone is dropped with it.
@@ -912,17 +924,28 @@ export async function createRecipeWithRefs(
         : null,
     originRegion: payload.originRegion ? stripHtmlTags(payload.originRegion) : null,
     provenanceNote: payload.provenanceNote ? stripHtmlTags(payload.provenanceNote) : null,
-    categories: payload.categories ?? [],
   };
 
   const result = await db.transaction(async (tx): Promise<CreateRecipeResult> => {
     const [inserted] = await tx
       .insert(recipes)
       .values(toInsert)
-      .onConflictDoNothing({ target: [recipes.url, recipes.userId] })
+      .onConflictDoNothing()
       .returning({ id: recipes.id });
 
     if (!inserted) {
+      // A replayed create: its id is already stored, answered as the same owner's recipe.
+      const sameId = await tx.query.recipes.findFirst({
+        where: eq(recipes.id, recipeId),
+        columns: { userId: true },
+      });
+
+      if (sameId) {
+        if (sameId.userId !== (userId ?? null)) throw new Error("Recipe id is already taken");
+
+        return { status: "existing", recipeId };
+      }
+
       const existing = await tx.query.recipes.findFirst({
         where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId ?? "")),
         columns: { id: true },
@@ -947,6 +970,10 @@ export async function createRecipeWithRefs(
 
     if (payload.cuisines.length) {
       await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
+    }
+
+    if (payload.categories.length) {
+      await attachCategoriesToRecipeByInputTx(tx, rid, payload.categories);
     }
 
     if (payload.recipeIngredients.length) {
@@ -1039,17 +1066,21 @@ export async function updateRecipeCategories(
     whereConditions.push(eq(recipes.version, version));
   }
 
-  const updated = await db
-    .update(recipes)
-    .set({ categories, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
-    .where(and(...whereConditions))
-    .returning({ id: recipes.id });
+  return await db.transaction(async (tx) => {
+    const updated = await tx
+      .update(recipes)
+      .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
+      .where(and(...whereConditions))
+      .returning({ id: recipes.id });
 
-  if (updated.length === 0 && version) {
-    return staleOutcome();
-  }
+    if (updated.length === 0) {
+      return version ? staleOutcome() : appliedOutcome(undefined);
+    }
 
-  return appliedOutcome(undefined);
+    await attachCategoriesToRecipeByInputTx(tx, recipeId, categories);
+
+    return appliedOutcome(undefined);
+  });
 }
 
 /**
@@ -1145,15 +1176,16 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       fat: true,
       carbs: true,
       protein: true,
+      nutritionExtras: true,
       originCountry: true,
       originCountryName: true,
       originRegion: true,
       provenanceNote: true,
-      categories: true,
       createdAt: true,
       updatedAt: true,
       version: true,
     },
+    extras: { categories: RECIPE_CATEGORY_NAMES_SQL.as("categories") },
     with: {
       recipeTags: {
         columns: {},
@@ -1259,6 +1291,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
     fat: full.fat ?? null,
     carbs: full.carbs ?? null,
     protein: full.protein ?? null,
+    nutritionExtras: full.nutritionExtras ?? null,
     originCountry: full.originCountry ?? null,
     originCountryName: full.originCountryName ?? null,
     originRegion: full.originRegion ?? null,
@@ -1661,7 +1694,7 @@ export async function updateRecipeWithRefs(
   userId: string,
   input: WithIngredientResolutions<FullRecipeUpdateDTO>,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<number | null>> {
   const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeUpdateSchema.safeParse(input);
 
@@ -1687,11 +1720,10 @@ export async function updateRecipeWithRefs(
     if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
     if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
     if (payload.calories !== undefined) updateData.calories = payload.calories;
-    if (payload.categories !== undefined && payload.categories?.length > 0)
-      updateData.categories = payload.categories;
     if (payload.fat !== undefined) updateData.fat = payload.fat;
     if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
     if (payload.protein !== undefined) updateData.protein = payload.protein;
+    if (payload.nutritionExtras !== undefined) updateData.nutritionExtras = payload.nutritionExtras;
     if (payload.originCountry !== undefined)
       updateData.originCountry = normalizeOriginCountry(payload.originCountry);
     if (payload.originCountryName !== undefined || payload.originCountry !== undefined)
@@ -1720,7 +1752,7 @@ export async function updateRecipeWithRefs(
       .update(recipes)
       .set({ ...updateData, version: sql`${recipes.version} + 1` })
       .where(and(...whereConditions))
-      .returning({ id: recipes.id });
+      .returning({ id: recipes.id, version: recipes.version });
 
     if (!updatedRecipeRow && version) {
       return staleOutcome();
@@ -1730,6 +1762,11 @@ export async function updateRecipeWithRefs(
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {
       await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
+    }
+
+    // An empty list leaves the Categories alone, as it always has.
+    if (payload.categories?.length) {
+      await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories);
     }
 
     // Replace tags if provided
@@ -1813,7 +1850,8 @@ export async function updateRecipeWithRefs(
       await syncRecipeVideosTx(tx, recipeId, payload.videos);
     }
 
-    return appliedOutcome(undefined);
+    // The version this write stored, so a client can send its next edit on top of it.
+    return appliedOutcome(updatedRecipeRow?.version ?? null);
   });
 }
 
@@ -1839,7 +1877,7 @@ export async function getRandomRecipeCandidates(
   }
 
   if (category) {
-    whereConditions.push(sql`${category} = ANY(${recipes.categories})`);
+    whereConditions.push(recipeInAnyCategorySql([category]));
   }
 
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
@@ -1851,7 +1889,7 @@ export async function getRandomRecipeCandidates(
       id: recipes.id,
       name: recipes.name,
       image: PRIMARY_IMAGE_SQL,
-      categories: recipes.categories,
+      categories: RECIPE_CATEGORY_NAMES_SQL,
     })
     .from(recipes)
     .where(whereClause);

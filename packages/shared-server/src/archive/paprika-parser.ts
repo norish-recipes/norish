@@ -3,9 +3,10 @@ import { gunzip } from "zlib";
 import JSZip from "jszip";
 import { z } from "zod";
 
-import { matchCategory } from "@norish/shared-server/ai/enrichment/category-matcher";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
+import { isUrl } from "@norish/shared/lib/helpers";
 
 import {
   base64ToBuffer,
@@ -72,7 +73,8 @@ function parsePaprikaNutritionValue(
 export async function parsePaprikaRecipeToDTO(
   json: PaprikaRecipe,
   recipeId: string,
-  imageBuffer?: Buffer
+  imageBuffer: Buffer | undefined,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   // Validate against schema
   const validated = PaprikaRecipeSchema.parse(json);
@@ -86,16 +88,13 @@ export async function parsePaprikaRecipeToDTO(
   // Save image if provided
   const image = await saveBufferImage(imageBuffer, recipeId);
 
-  // Get source URL
-  const url = validated.source_url || validated.source || undefined;
+  // `source` is free text in Paprika ("My collection", a cookbook's title). An
+  // import matches recipes by URL, so a shared label would merge them all.
+  const url = [validated.source_url, validated.source]
+    .map((value) => value?.trim())
+    .find((value) => value && isUrl(value));
 
-  const categories = Array.from(
-    new Set(
-      validated.categories
-        .map((value) => matchCategory(value))
-        .filter((value): value is "Breakfast" | "Lunch" | "Dinner" | "Snack" => Boolean(value))
-    )
-  );
+  const { categories } = sortSourceCategories(validated.categories, householdCategories);
 
   const caloriesRaw = parsePaprikaNutritionValue(validated.nutritional_info, ["calories"]);
   const carbsRaw = parsePaprikaNutritionValue(validated.nutritional_info, [

@@ -17,6 +17,7 @@ import {
   createTestRecipe,
   createTestRecipeIngredients,
   createTestRecipeStep,
+  createTestUser,
   getRecipeIngredients,
   getRecipeSteps,
   getTestDb,
@@ -608,6 +609,51 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
       expect(createdSteps.map((step) => Number(step.order)).sort()).toEqual([0, 1]);
       expect(createdSteps.every((step) => step.step === "Stir well")).toBe(true);
     });
+  });
+});
+
+describe("Recipe Repository - createRecipeWithRefs replayed", () => {
+  let userId: string;
+  const testBase = new RepositoryTestBase("test_recipes_create_replay");
+  const recipe = { name: "Leek soup", systemUsed: "metric" as const };
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    const [user] = await testBase.beforeEachTest();
+
+    userId = user.id;
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("answers a repeated id from the same owner with the stored recipe", async () => {
+    const recipeId = crypto.randomUUID();
+
+    expect(await createRecipeWithRefs(recipeId, userId, recipe)).toEqual({
+      status: "inserted",
+      recipeId,
+    });
+    expect(await createRecipeWithRefs(recipeId, userId, recipe)).toEqual({
+      status: "existing",
+      recipeId,
+    });
+    expect(
+      await getTestDb().select().from(recipesTable).where(eq(recipesTable.id, recipeId))
+    ).toHaveLength(1);
+  });
+
+  it("refuses an id another owner's recipe holds", async () => {
+    const recipeId = crypto.randomUUID();
+    const other = await createTestUser();
+
+    await createRecipeWithRefs(recipeId, other.id, recipe);
+
+    await expect(createRecipeWithRefs(recipeId, userId, recipe)).rejects.toThrow();
   });
 });
 

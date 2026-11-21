@@ -4,8 +4,7 @@
  */
 import type { BrowserContext, Locator, Page } from "@playwright/test";
 
-import type { AIE2EStack } from "./fixture";
-import { callTrpc } from "../harness/trpc";
+import { planForTonight, removePlans } from "../harness/plans";
 import { seedRecipe } from "./cookbooks-support";
 import { expect, test } from "./fixture";
 
@@ -20,16 +19,6 @@ async function expectNewTab(
 
   await expect(tab).toHaveURL(url);
   await tab.close();
-}
-
-/** Plans the recipe as the owner's dinner today, in the browser's own calendar. */
-async function planForTonight(stack: AIE2EStack, recipeId: string): Promise<void> {
-  await callTrpc(stack.baseURL, stack.ownerCookies, "calendar.createItem", {
-    date: new Date().toLocaleDateString("en-CA"),
-    slot: "Dinner",
-    itemType: "recipe",
-    recipeId,
-  });
 }
 
 function libraryCard(page: Page, name: string): Locator {
@@ -54,10 +43,14 @@ test("a library card opens its recipe in a new tab and still navigates on a plai
   await expect(page).toHaveURL(/\/$/);
 
   // The options button opens the card's actions and leaves the reader on the Library.
+  // The card is focusable only while its row is swiped open.
   await card.getByLabel("Recipe options").click();
+  await expect(card).toHaveAttribute("tabindex", "0");
   await expect(page.getByRole("button", { name: "Add to calendar" }).first()).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
+  // A title click while the row still slides shut retries into a scroll that puts it under the nav.
   await card.getByLabel("Recipe options").click();
+  await expect(card).toHaveAttribute("tabindex", "-1");
 
   await title.click();
   await expect(page).toHaveURL(recipeUrl);
@@ -69,13 +62,17 @@ test("a planned recipe in Today is a link to it", async ({ aiStack, context, pag
   const id = await seedRecipe(name);
   const recipeUrl = new RegExp(`/recipes/${id}`);
 
-  await planForTonight(aiStack, id);
-  await page.goto("/");
-  const slot = page.locator('[data-slot-card="Dinner"]').getByRole("link", { name });
+  try {
+    await planForTonight(aiStack.baseURL, aiStack.ownerCookies, id);
+    await page.goto("/");
+    const slot = page.locator('[data-slot-card="Dinner"]').getByRole("link", { name });
 
-  await expect(slot).toHaveAttribute("href", recipeUrl);
-  await expectNewTab(context, slot, { button: "middle" }, recipeUrl);
+    await expect(slot).toHaveAttribute("href", recipeUrl);
+    await expectNewTab(context, slot, { button: "middle" }, recipeUrl);
 
-  await slot.click();
-  await expect(page).toHaveURL(recipeUrl);
+    await slot.click();
+    await expect(page).toHaveURL(recipeUrl);
+  } finally {
+    await removePlans(aiStack.baseURL, aiStack.ownerCookies, (plan) => plan.recipeId === id);
+  }
 });

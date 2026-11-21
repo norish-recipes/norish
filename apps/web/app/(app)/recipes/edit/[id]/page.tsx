@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
+import { serverPackage } from "@/lib/server-package";
 
-import { appRouter, createHttpContextFromHeaders } from "@norish/trpc/server";
-
-import RecipeForm from "../components/recipe-form";
+const { appRouter, createHttpContextFromHeaders } =
+  await serverPackage<typeof import("@norish/trpc/server")>("@norish/trpc/server");
 
 function shouldRenderNotFound(error: unknown): boolean {
   if (!error || typeof error !== "object" || !("code" in error)) {
@@ -34,5 +35,5 @@ export default async function EditRecipePage({ params }: PageProps<"/recipes/edi
     throw error;
   }
 
-  return <RecipeForm initialData={recipe} mode="edit" />;
+  return <RecipeEditorScreen initialData={recipe} mode="edit" />;
 }

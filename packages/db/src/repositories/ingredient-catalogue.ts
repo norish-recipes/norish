@@ -32,6 +32,7 @@ import {
   recurringGroceries,
 } from "@norish/db/schema";
 import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
+import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { RecipeListContext } from "./recipes";
@@ -69,33 +70,104 @@ export interface CatalogueOwner {
   ownerId: string | null;
 }
 
-/**
- * One search over the fields it asks for (name, translations, parent): exact compares the fold,
- * contains runs `LIKE`; a name has no fold column, so it is matched lowercased.
- */
-function matchingSearch(search: IngredientSearch, parents: { id: AnyPgColumn; name: AnyPgColumn }) {
-  const matches = (value: SQL): SQL =>
-    search.match === "exact"
-      ? sql`${value} = ${search.fold}`
-      : sql`${value} like ${search.pattern}`;
-  const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
-    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${matches(sql`${ingredientAliases.fold}`)})`;
+/** The non-ASCII marks `foldName` drops (`\p{Diacritic}`), as regex class ranges Postgres reads. */
+const DIACRITICS = (() => {
+  const marked = (code: number) => /\p{Diacritic}/u.test(String.fromCodePoint(code));
+  let ranges = "";
 
-  const byField: Record<IngredientSearchField, SQL> = {
-    name: matches(sql`lower(${ingredients.name})`),
-    translations: spellingOf(ingredients.id),
-    parent: or(matches(sql`lower(${parents.name})`), spellingOf(sql`${parents.id}`)) ?? sql`false`,
-  };
+  for (let code = 0x80; code <= 0x10000; code++) {
+    if (marked(code) && !marked(code - 1)) ranges += String.fromCodePoint(code);
+    if (!marked(code) && marked(code - 1)) ranges += `-${String.fromCodePoint(code - 1)}`;
+  }
 
-  return or(...search.fields.map((field) => byField[field]));
+  return `[${ranges}]`;
+})();
+
+/** `foldName` in SQL, for a name with no fold column: marks dropped, recomposed, lowercased, every
+ * other run one space. `forWords`: an ASCII name only lowercased, as a typed word holds no punctuation. */
+export function folded(value: AnyPgColumn, forWords = false): SQL {
+  const words = (text: SQL) =>
+    sql`btrim(regexp_replace(lower(${text}), '[^[:alnum:]]+', ' ', 'g'))`;
+  const ascii = forWords ? sql`lower(${value})` : words(sql`${value}`);
+
+  return sql`case when octet_length(${value}) = length(${value}) then ${ascii} else ${words(sql`normalize(regexp_replace(normalize(${value}, NFD), ${sql.raw(`'${DIACRITICS}'`)}, '', 'g'), NFC)`)} end`;
 }
 
-/**
- * A page of the catalogue (all, the flagged, or what a search finds by name or spelling): an exact
- * name first, then the flagged, then by name.
- */
+/** Whether a folded text holds `word` as written (`start`: at the start of one of its words). */
+export function holds(text: SQL, word: string, start = false): SQL {
+  const escaped = escapeLike(word);
+
+  return start
+    ? sql`(${text} like ${`${escaped}%`} or ${text} like ${`% ${escaped}%`})`
+    : sql`${text} like ${`%${escaped}%`}`;
+}
+
+/** The rank's folded name, joined laterally once a matched row (`offset 0` keeps Postgres from
+ * inlining it into every use). */
+const searchedName = {
+  join: sql`(select ${folded(ingredients.name)} as name offset 0) searched`,
+  fold: sql.raw("searched.name"),
+};
+
+/** A searched text (the name, its translations, the parent's) that is the fold exactly, or
+ * (contains) holds every typed word, in any order; `start`: each word at the start of one of the
+ * text's words. `parents` is only joined for a search of the `parent` field. */
+export function matchingSearch(
+  search: IngredientSearch,
+  parents?: { id: AnyPgColumn; name: AnyPgColumn },
+  start = false
+) {
+  const test = (text: SQL) =>
+    search.match === "exact"
+      ? sql`${text} = ${search.fold}`
+      : (and(...search.words.map((word) => holds(text, word, start))) ?? sql`true`);
+  // A name also by its lowercased phrase, as before folding: a C-locale database folds non-ASCII away.
+  const name = (column: AnyPgColumn) =>
+    or(
+      test(folded(column, search.match === "contains")),
+      search.match === "exact"
+        ? sql`lower(${column}) = ${search.fold}`
+        : holds(sql`lower(${column})`, search.fold, start)
+    ) ?? sql`false`;
+  const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
+    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${test(sql`${ingredientAliases.fold}`)})`;
+
+  const byField: Record<IngredientSearchField, SQL> = {
+    name: name(ingredients.name),
+    translations: spellingOf(ingredients.id),
+    parent: parents
+      ? (or(name(parents.name), spellingOf(sql`${parents.id}`)) ?? sql`false`)
+      : sql`false`,
+  };
+
+  return or(...search.fields.map((field) => byField[field])) ?? sql`false`;
+}
+
+/** Whether a Tag or Category name starts a word with the typed `fold`: folded, or by its lowercase. */
+export function nameStartsWith(column: AnyPgColumn, fold: string): SQL {
+  return (
+    or(holds(folded(column, true), fold, true), holds(sql`lower(${column})`, fold, true)) ??
+    sql`false`
+  );
+}
+
+/** The search's order over the name and the translations in the reader's `languages` (or none):
+ * the exact fold, then a word starting with the first word typed; each translation set runs once. */
+function searchRank(search: IngredientSearch, languages: readonly string[]): SQL {
+  const exact = (text: SQL) => sql`${text} = ${search.fold}`;
+  const wordStart = (text: SQL) => holds(text, search.words[0] ?? search.fold, true);
+  const translated = (test: (text: SQL) => SQL) =>
+    sql`${ingredients.id} in (select ${ingredientAliases.ingredientId} from ${ingredientAliases} where (${ingredientAliases.locale} is null or ${inArray(ingredientAliases.locale, [...languages])}) and ${test(sql`${ingredientAliases.fold}`)})`;
+
+  return sql`least(case when ${exact(searchedName.fold)} then 0 when ${wordStart(searchedName.fold)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
+}
+
+/** A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
+ * search's ranks first, then the flagged, then by name. */
 export async function listCatalogueIngredients(query: {
   search: IngredientSearch | null;
+  /** The reader's catalogue languages, whose translations rank a search (every one still matches). */
+  languages: readonly string[];
   flaggedOnly: boolean;
   /** Only the Ingredients filed under this one (null: the ones filed under none); undefined for every one. */
   parentId?: string | null;
@@ -110,14 +182,12 @@ export async function listCatalogueIngredients(query: {
 }): Promise<CatalogueIngredient[]> {
   const parents = alias(ingredients, "parent");
   const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
-  const exactFirst = query.search
-    ? [sql`case when lower(${ingredients.name}) = ${query.search.fold} then 0 else 1 end`]
-    : [];
+  const ranks = query.search ? [searchRank(query.search, query.languages)] : [];
   const listedKind = query.listedOnly
     ? sql` and ${listedFood({ id: sql`k.id`, offId: sql`k.off_id` })}`
     : sql``;
 
-  const rows = await db
+  const page = db
     .select({
       id: ingredients.id,
       name: ingredients.name,
@@ -132,6 +202,8 @@ export async function listCatalogueIngredients(query: {
     })
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
+    .$dynamic();
+  const rows = await (query.search ? page.crossJoinLateral(searchedName.join) : page)
     .where(
       and(
         query.id === undefined ? undefined : eq(ingredients.id, query.id),
@@ -152,7 +224,7 @@ export async function listCatalogueIngredients(query: {
       )
     )
     .orderBy(
-      ...exactFirst,
+      ...ranks,
       desc(ingredients.flagged),
       asc(sql`lower(${ingredients.name})`),
       asc(ingredients.id)
@@ -204,13 +276,18 @@ export async function listCatalogueAliasesOf(ingredientId: string): Promise<Cata
     .orderBy(asc(ingredientAliases.createdAt), asc(ingredientAliases.id));
 }
 
-/** Whether a recipe line names the food with this id (`rowsNaming`). */
+/** Whether a recipe line names this food; a join, as `rowsNaming`'s correlated IN can plan as
+ * every food against every line (over 30 s on 1,500 recipes). */
 function namedByARecipeLine(food: SQL): SQL {
   return exists(
     db
       .select({ one: sql`1` })
-      .from(recipeIngredientFoods)
-      .where(rowsNaming(food).lineFoods)
+      .from(ingredientAliases)
+      .innerJoin(
+        recipeIngredientFoods,
+        eq(recipeIngredientFoods.ingredientAliasId, ingredientAliases.id)
+      )
+      .where(eq(ingredientAliases.ingredientId, food))
   );
 }
 

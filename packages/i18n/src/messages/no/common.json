@@ -40,7 +40,6 @@
   "status": {
     "loading": "Laster...",
     "saving": "Lagrer...",
-    "deleting": "Sletter...",
     "error": "Feil",
     "success": "Vellykket",
     "noResults": "Ingen resultater funnet",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Kategorier",
-    "category": {
-      "breakfast": "Frokost",
-      "lunch": "Lunsj",
-      "dinner": "Middag",
-      "snack": "Snacks"
-    },
     "sortByTitle": "Tittel",
     "sortByDate": "Dato",
-    "clearFilters": "Tøm filtre"
+    "clearFilters": "Tøm filtre",
+    "minRating": "Minimumsvurdering",
+    "minRatingStars": "Minst {count} av 5"
   },
   "time": {
     "minutes": "min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Dette feltet er påkrevd",
-    "invalidUrl": "Skriv inn en gyldig URL"
+    "invalidUrl": "Skriv inn en gyldig URL",
+    "invalidEmail": "Skriv inn en gyldig e-postadresse"
   },
   "errors": {
     "operationFailed": "Handlingen mislyktes",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Kobler til Norish...",
-    "checkInternet": "Sjekk internettforbindelsen din",
-    "offlineBanner": "Du er frakoblet og ser bufrede data",
-    "serverUnreachableBanner": "Norish-serveren er ikke tilgjengelig, viser bufrede data",
     "live": "Tilkoblet",
     "offline": "Frakoblet",
     "openDetails": "Tilkoblingsdetaljer"
@@ -157,10 +150,7 @@
       "analyzing": "Analyserer bildene dine, vennligst vent...",
       "failed": "Import mislyktes",
       "selectedCount": "{count} bilder valgt – de kombineres til én oppskrift",
-      "library": "Bibliotek",
-      "takePhoto": "Ta bilde",
-      "counter": "{count} / {max} bilder",
-      "importFromCount": "Importer fra {count, plural, one {# bilde} other {# bilder}}"
+      "library": "Bibliotek"
     },
     "menu": {
       "description": "Importer fra en URL, skann et bilde eller start fra bunnen av."
@@ -195,9 +185,11 @@
     "year": "år",
     "years": "år",
     "next": "Neste:",
-    "every": "Hver",
-    "everyOther": "Annenhver",
-    "on": "på",
+    "everyDay": "{interval, plural, =1 {Hver dag} =2 {Annenhver dag} other {Hver #. dag}}",
+    "everyWeek": "{interval, plural, =1 {Hver uke} =2 {Annenhver uke} other {Hver #. uke}}",
+    "everyMonth": "{interval, plural, =1 {Hver måned} =2 {Annenhver måned} other {Hver #. måned}}",
+    "everyYear": "{interval, plural, =1 {Hvert år} =2 {Annethvert år} other {Hvert #. år}}",
+    "onWeekday": "{repeat} på {weekday}",
     "today": "i dag",
     "tomorrow": "i morgen",
     "weekdays": {
@@ -210,13 +202,13 @@
       "sat": "Lør"
     },
     "weekdaysFull": {
-      "0": "Mandag",
-      "1": "Tirsdag",
-      "2": "Onsdag",
-      "3": "Torsdag",
-      "4": "Fredag",
-      "5": "Lørdag",
-      "6": "Søndag"
+      "0": "Søndag",
+      "1": "Mandag",
+      "2": "Tirsdag",
+      "3": "Onsdag",
+      "4": "Torsdag",
+      "5": "Fredag",
+      "6": "Lørdag"
     }
   },
   "badges": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Ferdig",
+    "paused": "Satt på pause",
     "done_action": "Ferdig",
     "one": "Timer",
     "other": "Timere",
     "label_one": "1 timer",
     "label_other": "{count} timere",
-    "notification_title": "Timer ferdig",
-    "notification_body": "{label} er ferdig!",
+    "notification_body": "Timer ferdig",
     "notifications_disabled": "Varsler er deaktivert",
-    "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen."
+    "notifications_disabled_hint": "Aktiver varsler i nettleserinnstillingene for å motta alarmer når timere avsluttes i bakgrunnen.",
+    "more": "+{count} til"
   },
   "offlineStatus": {
     "title": "Tilkobling og frakoblet bruk",
@@ -298,14 +291,30 @@
     "title": "Du er frakoblet",
     "description": "Lagt i kø — Norish fullfører dette automatisk når du er tilkoblet igjen."
   },
+  "changedElsewhere": {
+    "title": "Ikke lagret: det ble endret et annet sted først"
+  },
   "storageUnavailable": {
-    "title": "Kunne ikke starte",
-    "description": "Norish klarte ikke å lese det sikre lageret og vet derfor ikke hvilken server appen hører til. Ingenting er endret. Prøv igjen, eller start appen på nytt.",
-    "detailsLabel": "Tekniske detaljer"
+    "title": "Lagring utilgjengelig",
+    "description": "Norish kunne ikke lese nøkkelringen på denne iPhonen.",
+    "badgeLabel": "Lagring utilgjengelig. Trykk for å spille av igjen."
   },
   "aiKeyRejected": {
     "title": "En AI-nøkkel har sluttet å virke",
     "description": "Leverandøren har avvist API-nøkkelen for {blocks} siden {since}. Lagre en ny nøkkel for å få disse AI-funksjonene til å virke igjen.",
+    "openSettings": "Åpne innstillinger"
+  },
+  "household": {
+    "adminTransferred": "Overførte administrator til {name}",
+    "unknownMember": "Ukjent",
+    "removedTitle": "Fjernet fra husstanden",
+    "removedDescription": "En administrator har fjernet deg fra husstanden."
+  },
+  "photos": {
+    "pickFailedTitle": "Kunne ikke velge bilde",
+    "pickFailedMessage": "Prøv igjen, eller velg et annet bilde.",
+    "cameraDeniedTitle": "Kameratilgang er slått av",
+    "cameraDeniedMessage": "Tillat kameratilgang i Innstillinger for å ta et bilde.",
     "openSettings": "Åpne innstillinger"
   }
 }

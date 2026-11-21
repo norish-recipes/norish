@@ -1,43 +1,10 @@
-import type { Page } from "@playwright/test";
-
 import { updateRecipeCategories } from "@norish/db/repositories/recipes";
 
 import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { recipeIdsNamed, seedRecipe } from "../harness/recipes";
-import { expect, test, USER_A } from "./fixture";
-
-/** The Outbox's entries in the page's IndexedDB. */
-function readOutbox(page: Page) {
-  return page.evaluate(
-    () =>
-      new Promise<Array<{ path: string; status: string }>>((resolve) => {
-        const open = indexedDB.open("norish-offline");
-
-        open.onsuccess = () => {
-          const db = open.result;
-
-          if (!db.objectStoreNames.contains("outbox")) {
-            db.close();
-            resolve([]);
-
-            return;
-          }
-          const request = db.transaction("outbox", "readonly").objectStore("outbox").getAll();
-
-          request.onsuccess = () => {
-            db.close();
-            resolve(request.result as Array<{ path: string; status: string }>);
-          };
-          request.onerror = () => {
-            db.close();
-            resolve([]);
-          };
-        };
-        open.onerror = () => resolve([]);
-      })
-  );
-}
+import { recordFrames, waitForLive } from "../realtime/support";
+import { expect, readOutbox, test, USER_A } from "./fixture";
 
 test("a bulk delete made offline keeps the recipe edited meanwhile, and says so", async ({
   offlineHarness,
@@ -58,8 +25,13 @@ test("a bulk delete made offline keeps the recipe edited meanwhile, and says so"
   await offlineHarness.context.clearCookies();
   await offlineHarness.context.addCookies(await signIn(offlineHarness.baseURL, USER_A));
   await page.setViewportSize({ width: 1280, height: 1600 });
+  const frames = recordFrames(page);
+
   await page.goto("/");
   for (const name of names) await expect(card(name)).toBeVisible();
+  // Only a subscription that has its Cursor Mark can resume; one cut off before it restarts fresh.
+  await waitForLive(frames, ["recipes.onDeleteKept"]);
+  frames.stop();
 
   await offlineHarness.transition("stopped");
   await card(names[0]!).click({ modifiers: ["Shift"] });

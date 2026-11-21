@@ -2,7 +2,7 @@
   "name": "@norish/docs",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@12.21.0",
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
@@ -25,25 +25,25 @@
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
     "@heroicons/react": "2.2.0",
-    "@heroui/react": "3.2.6",
-    "@heroui/styles": "3.2.6",
+    "@heroui/react": "3.2.7",
+    "@heroui/styles": "3.2.7",
     "@mdx-js/react": "^3.1.1",
-    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/postcss": "^4.3.5",
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
     "react": "^19.3.1",
     "react-aria-components": "1.22.1",
     "react-dom": "^19.3.1",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
     "@docusaurus/mdx-loader": "^3.10.2",
     "@docusaurus/module-type-aliases": "^3.10.2",
     "@docusaurus/tsconfig": "^3.10.2",
     "@docusaurus/types": "^3.10.2",
-    "prettier": "^3.9.10",
+    "prettier": "^3.10.1",
     "typescript": "~6.0.3",
-    "wrangler": "4.154.0"
+    "wrangler": "4.165.0"
   },
   "browserslist": {
     "production": [

@@ -4,18 +4,19 @@
   },
   "mobile": {
     "today": "I dag",
-    "scrollToToday": "Gå til i dag"
+    "scrollToToday": "Gå til i dag",
+    "planRecipe": "Planlegg oppskrift"
+  },
+  "today": {
+    "openRecipe": "Åpne oppskrift",
+    "move": "Flytt…",
+    "removeMessage": "{name} fjernes fra {slot} på {day}.",
+    "moveTitle": "Flytt"
   },
   "editNote": {
     "title": "Rediger notat",
     "noteLabel": "Notat",
     "notePlaceholder": "Skriv notat..."
-  },
-  "navigation": {
-    "previousMonth": "Forrige måned",
-    "nextMonth": "Neste måned",
-    "prev": "Forrige",
-    "next": "Neste"
   },
   "weekdays": {
     "mon": "Man",
@@ -50,6 +51,28 @@
     "addNote": "Legg til notat: {input}",
     "randomRecipe": "Tilfeldig oppskrift",
     "noRecipesFound": "Ingen oppskrifter funnet.",
-    "failedToLoadRecipes": "Kunne ikke laste oppskrifter."
+    "failedToLoadRecipes": "Kunne ikke laste oppskrifter.",
+    "searchOrAddNote": "Søk etter oppskrifter eller legg til et notat",
+    "random": "Tilfeldig oppskrift",
+    "planThisRecipe": "Planlegg denne oppskriften",
+    "planOnDay": "Planlegg {name} på {day}",
+    "addToDay": "Legg til {day}"
+  },
+  "caldav": {
+    "syncStarted": "CalDAV-synkronisering startet",
+    "syncStartedDescription": "Elementer som skal synkroniseres: {queued}",
+    "syncStartedWithFailures": "Elementer som skal synkroniseres: {queued}. Kunne ikke settes i kø: {failed}",
+    "configSaved": "Konfigurasjonen er lagret",
+    "configSavedDescription": "CalDAV-innstillingene dine er lagret.",
+    "configDeleted": "Konfigurasjonen er slettet",
+    "configDeletedDescription": "CalDAV-innstillingene dine er fjernet.",
+    "retryStarted": "Synkronisering startet",
+    "retryStartedDescription": "Prøver ventende og mislykkede elementer på nytt…"
+  },
+  "widgets": {
+    "nothingPlanned": "Ingenting planlagt",
+    "signIn": "Åpne Norish for å logge inn",
+    "open": "Åpne Norish",
+    "more": "+{count} til"
   }
 }

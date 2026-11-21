@@ -1,13 +1,13 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { CookbookSkeleton } from "@/app/(app)/cookbooks/[id]/cookbook-page";
-import CookbookRoute from "@/app/(app)/cookbooks/[id]/page";
+import CookbookLoading from "@/app/(app)/(library)/cookbooks/[id]/loading";
+import CookbookRoute from "@/app/(app)/(library)/cookbooks/[id]/page";
 import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { routeParams } from "@/app/~offline/route-params";
-import { useTRPC } from "@/app/providers/trpc-provider";
-import { cacheManager } from "@/lib/query-cache";
-import { useQueryClient } from "@tanstack/react-query";
+import { offlineEngine } from "@/lib/offline/engine";
+
+import { useCacheOwner } from "@norish/shared-react/offline/react";
+import { useHeldReads } from "@norish/shared-react/recipes";
 
 /**
  * Warmed-gated cookbook page for the offline bootstrap (ADR-0009).
@@ -19,14 +19,12 @@ import { useQueryClient } from "@tanstack/react-query";
  * for the restore: before that, absence only means "not hydrated yet".
  */
 export function OfflineCookbook({ id }: { id: string }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const held = useHeldReads();
+  const owner = useCacheOwner(offlineEngine.cache);
 
-  const owner = useSyncExternalStore(cacheManager.subscribe, cacheManager.owner, () => null);
+  if (!owner) return <CookbookLoading />;
 
-  if (!owner) return <CookbookSkeleton />;
-
-  const warmed = queryClient.getQueryData(trpc.cookbooks.get.queryOptions({ id }).queryKey);
+  const warmed = held.cookbook(id);
 
   if (!warmed) {
     return <OfflineUnavailable />;

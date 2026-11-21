@@ -20,14 +20,13 @@ import { initializeVideoProcessing } from "@norish/api/startup/video-processing"
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
+import { stopEmbeddedParser } from "@norish/shared-server/embedded-parser";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
 import { startRealtimeHub } from "@norish/shared-server/realtime/hub";
-
-import { startEmbeddedParser } from "./embedded-parser";
+import { addBasePath, BASE_PATH } from "@norish/shared/lib/base-path";
 
 async function main() {
   const config = initializeServerConfig();
-  const embeddedParser = await startEmbeddedParser(config);
 
   log.info("-".repeat(50));
   log.info("Server configuration loaded:");
@@ -104,16 +103,14 @@ async function main() {
 
   const { server, hostname, port } = await createServer();
 
-  registerShutdownHandlers(
-    server,
-    embeddedParser ? [{ name: "Stop embedded parser", run: embeddedParser.stop }] : []
-  );
+  // The parser starts on the first URL import, not here.
+  registerShutdownHandlers(server, [{ name: "Stop embedded parser", run: stopEmbeddedParser }]);
 
   server.listen(port, hostname, () => {
     log.info("-".repeat(50));
     log.info("Server ready:");
-    log.info(`  HTTP: http://${hostname}:${port}`);
-    log.info(`  WS:   ws://${hostname}:${port}/trpc`);
+    log.info(`  HTTP: http://${hostname}:${port}${BASE_PATH}`);
+    log.info(`  WS:   ws://${hostname}:${port}${addBasePath("/trpc")}`);
     log.info(`  ENV:  ${SERVER_CONFIG.NODE_ENV}`);
     log.info("-".repeat(50));
   });

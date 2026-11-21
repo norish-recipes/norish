@@ -6,47 +6,33 @@ description: Using Norish offline.
 
 # Use Norish offline
 
-An offline cache on your device lets you keep using the web app when your
-server can't be reached. It holds:
-
-- your 50 most recent recipes
-- every cookbook you can see and which recipes are in it
-- groceries, recurring groceries and stores
-- the calendar around today
-
-Anything else you opened while online usually stays in the cache until you
-close the app.
-
-Pages that aren't cached show the following:
+In the web app, you can open your 50 most recent recipes, your cookbooks,
+your groceries and stores, and the calendar around today. Other pages you
+opened may stay available until you close the app.
 
 ![The offline unavailable screen](/img/screenshots/offline-unavailable.png)
 
 ## Seeing what is stored
 
-Open the user menu and select the **Live** or **Offline** indicator at the
-bottom. The dialog shows what this device has stored.
+In the user menu, select **Live** or **Offline** to see what this browser saved.
 
 ![Connection and offline status in Norish](/img/screenshots/offline-status-modal.png)
 
-**Clear cached data** removes the offline cache and keeps your queued changes.
+**Clear cached data** frees up space and keeps changes waiting to sync.
 
 ## Changes made offline
 
-Offline changes wait in the outbox as **Queued** and are sent when the
-server is back. You don't need to keep the page open.
+Norish queues offline changes and sends them when the server is reachable. You can close the page in the meantime.
 
-A queued change can have the following states:
+- **Syncing**. Norish is sending the change or waiting to send it.
+- **Needs attention**. Norish stopped retrying after several failures.
+- **Conflict**. The item changed on the server first. Check it before retrying.
 
-- **Syncing**: waiting to be sent, or being sent.
-- **Needs attention**: sending failed several times and retries stopped.
-- **Conflict**: the same thing changed on the server first. Check it and retry
-  if you still want your change.
-
-**Sync now** in the dialog sends everything right away. **Retry all** tries the
-changes that need attention or conflict again. **Discard all** deletes every
-queued change.
+Use **Sync now** to send queued changes, **Retry all** to retry failures and
+conflicts, or **Discard all** to delete every unsent change.
 
 ## Accounts and shared devices
 
-The offline cache and the outbox belong to the signed-in account in that
-browser. Signing out discards unsent changes and clears the offline cache.
+Sign out while online. Signing out clears saved data and discards unsent
+changes. If your session expires, sign back in with the same account to sync
+any changes still waiting.

@@ -1,10 +1,14 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
+import { serverPackage } from "@/lib/server-package";
 
-import { hasCredential } from "@norish/auth/credentials";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { addBasePath } from "@norish/shared/lib/base-path";
+
+const { hasCredential } = await serverPackage<typeof import("@norish/auth/credentials")>(
+  "@norish/auth/credentials"
+);
 
 /**
  * An optimistic check, as Next intends a proxy's to be: a request without a

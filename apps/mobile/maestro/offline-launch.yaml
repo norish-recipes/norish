@@ -1,0 +1,26 @@
+# Cuts the backend and cold-launches the app: it opens on the signed-in Recipes tab.
+# `pnpm --filter @norish/mobile maestro` serves the cuttable proxy.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: cut
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: recipes-screen
+    timeout: 20000
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore

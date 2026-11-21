@@ -1,0 +1,160 @@
+import type { ComponentProps, ReactNode } from "react";
+import React, { use } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
+import { HintButton } from "@/components/hint-button";
+import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useThemeColor } from "heroui-native";
+import { withUniwind } from "uniwind";
+
+/** An icon coloured by a class, as `text-accent-text`, which has no theme colour hook. */
+export const ClassIcon = withUniwind(Ionicons, {
+  color: { fromClassName: "colorClassName", styleProperty: "color" },
+});
+
+/** An ingredient or step row, under a hairline unless it is the first; lifted, a card of its own,
+ * casting a shadow where the finger carries it. */
+export function EditorRow({
+  first,
+  className,
+  testID,
+  children,
+}: {
+  first: boolean;
+  className: string;
+  testID: string;
+  children: ReactNode;
+}) {
+  const lifted = useIsLifted();
+  const carried = useIsCarried();
+  // Lifted, the hairline turns clear rather than going, so the faded copy's cell keeps its height.
+  const hairline = first ? "" : `border-t ${lifted ? "border-transparent" : "border-separator"}`;
+  const card = lifted ? `bg-surface -mx-3 rounded-2xl px-3 ${carried ? "shadow-lg" : ""}` : "";
+
+  return (
+    <View className={`${className} ${hairline} ${card}`} testID={testID}>
+      {children}
+    </View>
+  );
+}
+
+/** The editor's text field: plain, 17 pt, growing with its text when multiline. */
+export function EditorInput({ onFocus, ...props }: ComponentProps<typeof TextInput>) {
+  const [muted] = useThemeColor(["muted"] as const);
+  const reportFocus = use(FocusedFieldContext);
+
+  return (
+    <TextInput
+      className="text-foreground py-0 text-[17px] leading-6"
+      placeholderTextColor={muted}
+      scrollEnabled={false}
+      onFocus={(event) => {
+        // The old architecture's numeric tag can't be measured; Fabric hands the element.
+        if (typeof event.currentTarget !== "number") reportFocus?.(event.currentTarget);
+        onFocus?.(event);
+      }}
+      {...props}
+    />
+  );
+}
+
+/** A labelled field in a card, ruled off above; `error` rings it in danger. */
+export function EditorField({
+  label,
+  error,
+  first = false,
+  children,
+}: {
+  label: ReactNode;
+  error?: string;
+  first?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <View
+      className={
+        error
+          ? "border-danger -mx-2 gap-1 rounded-2xl border-2 px-2 py-3"
+          : `gap-1 py-3 ${first ? "" : "border-separator border-t"}`
+      }
+    >
+      {typeof label === "string" ? (
+        <Text className="text-muted text-[13px] font-semibold">{label}</Text>
+      ) : (
+        label
+      )}
+      {children}
+      {error ? <Text className="text-danger text-[13px] font-medium">{error}</Text> : null}
+    </View>
+  );
+}
+
+/** A card title with its hint beside it. */
+export function TitleWithHint({ title, hint }: { title: string; hint: string }) {
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <Text
+        accessibilityRole="header"
+        className="text-foreground text-xl font-semibold tracking-[-0.4px]"
+      >
+        {title}
+      </Text>
+      <HintButton hint={hint} title={title} />
+    </View>
+  );
+}
+
+/** The row under a list that adds one more: a plus and its label in the accent. */
+export function AddRow({
+  label,
+  testID,
+  onPress,
+}: {
+  label: string;
+  testID: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="border-separator min-h-12 flex-row items-center gap-2.5 border-t"
+      testID={testID}
+      onPress={onPress}
+    >
+      <ClassIcon colorClassName="text-accent-text" name="add" size={20} />
+      <Text className="text-accent-text text-[17px] font-medium">{label}</Text>
+    </Pressable>
+  );
+}
+
+/** A small icon button inside a row, such as remove or add a step photo. */
+export function RowIconButton({
+  icon,
+  label,
+  testID,
+  soft = false,
+  onPress,
+}: {
+  icon: ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  testID?: string;
+  /** Sits on a soft circle, as the step photo button does. */
+  soft?: boolean;
+  onPress: () => void;
+}) {
+  const [muted] = useThemeColor(["muted"] as const);
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      className={`size-8 items-center justify-center ${soft ? "bg-default rounded-full" : ""}`}
+      hitSlop={6}
+      testID={testID}
+      onPress={onPress}
+    >
+      <Ionicons color={muted} name={icon} size={soft ? 16 : 18} />
+    </Pressable>
+  );
+}

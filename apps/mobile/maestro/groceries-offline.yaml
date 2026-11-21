@@ -1,0 +1,48 @@
+# Ticks a grocery while the server is unreachable: the list shows it ticked at once, the server does not
+# have it yet, and once the server returns the tick is stored.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      NORISH_SIGN_IN_URL: ${NORISH_PROXY_URL}
+- runFlow:
+    file: subflows/grocery.yaml
+    env:
+      GROCERIES: '[{"name": "Offline Rice"}]'
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: (group|grocery)-tick-.*
+      text: .*Offline Rice.*
+    timeout: 20000
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: cut
+- tapOn:
+    id: (group|grocery)-tick-.*
+    text: .*Offline Rice.*
+- extendedWaitUntil:
+    visible:
+      id: done-heading-.*
+      text: 1 done.*
+    timeout: 20000
+# Nothing reached the server.
+- evalScript: ${output.rice = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?done=false&name=Offline%20Rice').body)}
+- assertTrue: ${!output.rice.done}
+- runFlow:
+    file: subflows/proxy.yaml
+    env:
+      PROXY_ACTION: restore
+# The Offline backoff tops out at 30 seconds between probes, so the tick lands within about a minute.
+- evalScript: ${output.rice = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?done=true&within=90000&name=Offline%20Rice').body)}
+- assertTrue: ${output.rice.done}
+- assertVisible:
+    id: done-heading-.*
+    text: 1 done.*

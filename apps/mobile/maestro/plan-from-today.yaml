@@ -1,0 +1,27 @@
+# Plans a recipe into the slot Today shows, from its empty card. Planning opens Add to groceries, the
+# default after planning; once closed, Today shows the recipe on a card. The slot is whichever empty
+# card the app shows when it is tapped, so the flow does not depend on the time it runs.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Plan Today Pasta", "key": "pasta", "ingredients": ["2 eggs", "100 g flour"]}]'
+- extendedWaitUntil:
+    visible:
+      id: today-add-.*
+    timeout: 20000
+- assertNotVisible:
+    id: today-card-.*
+- tapOn:
+    id: today-add-.*
+- extendedWaitUntil:
+    visible:
+      id: plan-recipe-${output.pasta}
+    timeout: 20000
+- tapOn:
+    id: plan-recipe-${output.pasta}
+- runFlow:
+    file: subflows/planned.yaml
+    env:
+      PLANNED_NAME: Plan Today Pasta

@@ -29,7 +29,8 @@ export async function extractRecipeFromVideo(
   transcript: string,
   metadata: VideoMetadata,
   recipeId: string,
-  url: string
+  url: string,
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   videoLogger.info({ url, title: metadata.title }, "Starting AI video recipe extraction");
 
@@ -42,6 +43,7 @@ export async function extractRecipeFromVideo(
       description: metadata.description,
       duration: metadata.duration,
       uploader: metadata.uploader,
+      categories: householdCategories,
     }),
   });
 
@@ -86,6 +88,7 @@ export async function extractRecipeFromVideo(
     url,
     image: thumbnailPath,
     recipeId,
+    householdCategories,
   });
 
   if (!normalized) {

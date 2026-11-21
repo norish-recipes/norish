@@ -12,8 +12,17 @@ export const toc = apiToc(spec);
 
 # API reference
 
-Create an API key under **Settings => User => API keys** and send it as an `x-api-key` header or as `Authorization: Bearer <key>`. Replace `https://norish.example.com` in the examples with the address of your own server.
+In account settings, open **API keys** and create a key. Send it in an `x-api-key` header or as `Authorization: Bearer <key>`. Use your own server address in the examples.
 
-Each key allows 500 requests an hour. Further requests return `429 Too Many Requests`; the `Retry-After` header gives the wait in seconds.
+Each key allows [500 requests per hour by default](/configuration/server-runtime#auth-rate-limiting). A `429 Too Many Requests` response gives the wait in seconds in `Retry-After`.
+
+To import a URL, send it to `POST /api/v1/recipes/import/url` and poll the
+returned `statusUrl`. Add `?wait=30` to a status request to wait for up to
+30 seconds. The limit is 60 seconds.
+
+`GET /api/v1/recipes/{id}/nutrition` returns values per serving and a source
+of `supplied`, `worked-out`, or `none`. Extras are in `perServing.extras`,
+and `extrasCoverage` reports what share of the counted ingredient weight
+each extra covers.
 
 <ApiReference spec={spec} />

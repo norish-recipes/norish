@@ -4,13 +4,39 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import type { TodaySectionVisibility } from "@norish/shared/contracts/zod/device-preferences";
-import { dateKey } from "@norish/shared/lib/helpers";
+import { PlatformProvider } from "@norish/shared-react/platform";
+import { fakePlatformAdapter } from "@norish/shared-react/platform/testing";
+import { dateKey, getInitialCalendarRange } from "@norish/shared/lib/helpers";
+
+const labels: Record<string, string> = {
+  "calendar.timeline.untitled": "Untitled",
+  "calendar.timeline.note": "Note",
+  "calendar.timeline.serving": "serving",
+  "calendar.timeline.servings": "servings",
+};
+const adapter = {
+  ...fakePlatformAdapter(),
+  toast: { show: vi.fn(), translate: (id: string) => labels[id] ?? id },
+};
+
+function Today() {
+  return (
+    <PlatformProvider adapter={adapter}>
+      <TodaysMeals />
+    </PlatformProvider>
+  );
+}
 
 const pushMock = vi.fn();
-const useCalendarContextMock = vi.fn();
+const useCalendarQueryMock = vi.fn();
 const setVisibilityMock = vi.fn();
 
 let visibilityMock: TodaySectionVisibility = "always";
+let readerTodayMock: string | undefined;
+
+vi.mock("@/components/reader-today", () => ({
+  useReaderToday: () => readerTodayMock ?? dateKey(new Date()),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -18,8 +44,8 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/context/device-preferences-context", async () =>
-  (await import("../../helpers/device-preferences-mock")).mockDevicePreferences(
+vi.mock("@norish/shared-react/reader", async () =>
+  (await import("../../helpers/reader-mock")).mockDevicePreferences(
     () => ({ todaySectionVisibility: visibilityMock }),
     { set: (_key, next) => setVisibilityMock(next) }
   )
@@ -47,9 +73,12 @@ vi.mock("next-intl", () => ({
   },
 }));
 
-vi.mock("@/app/(app)/calendar/context", () => ({
-  CalendarContextProvider: ({ children }: any) => <>{children}</>,
-  useCalendarContext: () => useCalendarContextMock(),
+// `useTodaysMeals` reads through these two files of its own package, so they are what is faked.
+vi.mock("../../../../../packages/shared-react/src/calendar/use-calendar-query", () => ({
+  useCalendarQuery: (range: unknown) => useCalendarQueryMock(range),
+}));
+vi.mock("../../../../../packages/shared-react/src/calendar/use-calendar-subscription", () => ({
+  useCalendarSubscription: vi.fn(),
 }));
 
 vi.mock("@/components/Panel/consumers/mini-recipes", () => ({
@@ -102,21 +131,22 @@ function createPlannedItem(
 describe("TodaysMeals", () => {
   beforeEach(() => {
     pushMock.mockReset();
-    useCalendarContextMock.mockReset();
+    useCalendarQueryMock.mockReset();
     visibilityMock = "always";
+    readerTodayMock = undefined;
   });
 
   it("renders all meal slots and today's planned recipe", () => {
     const todayKey = dateKey(new Date());
 
-    useCalendarContextMock.mockReturnValue({
-      plannedItemsByDate: {
+    useCalendarQueryMock.mockReturnValue({
+      calendarData: {
         [todayKey]: [createPlannedItem(todayKey)],
       },
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
     expect(screen.getAllByText("Breakfast")).not.toHaveLength(0);
@@ -125,13 +155,31 @@ describe("TodaysMeals", () => {
     expect(screen.getAllByText("Snack")).not.toHaveLength(0);
     expect(screen.getByText("Pasta Night")).toBeInTheDocument();
     expect(screen.getByText("4 servings / 640 kcal")).toBeInTheDocument();
+
+    // The week the dashboard layout seeds, so hydration reads the seeded copy.
+    expect(useCalendarQueryMock).toHaveBeenCalledWith(getInitialCalendarRange("desktop", todayKey));
+  });
+
+  it("follows the reader's today into the next week", () => {
+    readerTodayMock = "2026-11-15";
+    useCalendarQueryMock.mockReturnValue({ calendarData: {}, isLoading: false });
+
+    const { rerender } = render(<Today />);
+
+    readerTodayMock = "2026-11-16";
+    rerender(<Today />);
+
+    expect(useCalendarQueryMock).toHaveBeenLastCalledWith({
+      startISO: "2026-11-16",
+      endISO: "2026-11-22",
+    });
   });
 
   it("opens planned recipes directly and empty slots in mini recipes", () => {
     const todayKey = dateKey(new Date());
 
-    useCalendarContextMock.mockReturnValue({
-      plannedItemsByDate: {
+    useCalendarQueryMock.mockReturnValue({
+      calendarData: {
         [todayKey]: [
           createPlannedItem(todayKey, { recipeId: "recipe-42", recipeName: "Pasta Night" }),
         ],
@@ -139,7 +187,7 @@ describe("TodaysMeals", () => {
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     // A real link, so it opens in a new tab too (#555).
     expect(screen.getByRole("link", { name: "Pasta Night" })).toHaveAttribute(
@@ -160,14 +208,14 @@ describe("TodaysMeals", () => {
     visibilityMock = "planned";
     const todayKey = dateKey(new Date());
 
-    useCalendarContextMock.mockReturnValue({
-      plannedItemsByDate: {
+    useCalendarQueryMock.mockReturnValue({
+      calendarData: {
         [todayKey]: [createPlannedItem(todayKey, { slot: "Dinner" })],
       },
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
     expect(screen.getAllByText("Dinner")).not.toHaveLength(0);
@@ -179,12 +227,12 @@ describe("TodaysMeals", () => {
   it("renders nothing in planned mode when nothing is planned", () => {
     visibilityMock = "planned";
 
-    useCalendarContextMock.mockReturnValue({
-      plannedItemsByDate: {},
+    useCalendarQueryMock.mockReturnValue({
+      calendarData: {},
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
   });
@@ -193,14 +241,14 @@ describe("TodaysMeals", () => {
     visibilityMock = "hidden";
     const todayKey = dateKey(new Date());
 
-    useCalendarContextMock.mockReturnValue({
-      plannedItemsByDate: {
+    useCalendarQueryMock.mockReturnValue({
+      calendarData: {
         [todayKey]: [createPlannedItem(todayKey)],
       },
       isLoading: false,
     });
 
-    render(<TodaysMeals />);
+    render(<Today />);
 
     expect(screen.queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
     expect(screen.queryByText("Pasta Night")).not.toBeInTheDocument();

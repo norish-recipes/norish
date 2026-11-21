@@ -73,16 +73,29 @@ beforeEach(() => {
 });
 
 describe("cleanUpCounts", () => {
-  it("names each scope's count and whether a run is on", async () => {
+  it("names each scope's count", async () => {
     await expect(createCaller().cleanUpCounts()).resolves.toEqual({
       recipeFoods: 1,
       wholeCatalogue: 3,
-      running: false,
     });
   });
 
   it("is an administrator's alone", async () => {
     await expect(createCaller(false).cleanUpCounts()).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
+describe("cleanUpRunning", () => {
+  it("says whether a run is on, without counting the catalogue", async () => {
+    mocks.listCleanUpFoods.mockClear();
+    mocks.isCatalogueCleanUpRunning.mockResolvedValueOnce(true);
+
+    await expect(createCaller().cleanUpRunning()).resolves.toEqual({ running: true });
+    expect(mocks.listCleanUpFoods).not.toHaveBeenCalled();
+  });
+
+  it("is an administrator's alone", async () => {
+    await expect(createCaller(false).cleanUpRunning()).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
 
@@ -108,12 +121,11 @@ describe("cleanUp", () => {
 });
 
 describe("fillGapsCounts", () => {
-  it("names each box's count, icons none where nothing can draw, and whether a run is on", async () => {
+  it("names each box's count, icons none where nothing can draw", async () => {
     await expect(createCaller().fillGapsCounts()).resolves.toEqual({
       nutrition: 4,
       conversions: 2,
       icons: 1,
-      running: false,
     });
     mocks.canDrawImages.mockResolvedValueOnce(false);
     await expect(createCaller().fillGapsCounts()).resolves.toMatchObject({ icons: null });
@@ -121,6 +133,22 @@ describe("fillGapsCounts", () => {
 
   it("is an administrator's alone", async () => {
     await expect(createCaller(false).fillGapsCounts()).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
+describe("fillGapsRunning", () => {
+  it("says whether a run is on, without counting the catalogue", async () => {
+    mocks.listFillGapsFoods.mockClear();
+    mocks.isFillGapsRunning.mockResolvedValueOnce(true);
+
+    await expect(createCaller().fillGapsRunning()).resolves.toEqual({ running: true });
+    expect(mocks.listFillGapsFoods).not.toHaveBeenCalled();
+  });
+
+  it("is an administrator's alone", async () => {
+    await expect(createCaller(false).fillGapsRunning()).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
   });
 });
 

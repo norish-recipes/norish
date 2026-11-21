@@ -57,19 +57,25 @@ function recipeVideos(
   return pick && pageVideos.includes(pick) ? [{ "@type": "VideoObject", contentUrl: pick }] : [];
 }
 
+export interface ExtractRecipeWithAIOptions {
+  /** Optional source URL of the recipe. */
+  url?: string;
+  /** The page's JSON-LD Recipe nodes, which lead over its text. */
+  jsonLd?: Record<string, unknown>[];
+  /** The importing household's Categories, the only ones it may pick. */
+  householdCategories: readonly string[];
+}
+
 /**
  * Extract a recipe using AI, in one request holding everything the source has.
  *
  * @param source - The HTML or text to extract the recipe from.
- * @param url - Optional source URL of the recipe.
- * @param jsonLd - The page's JSON-LD Recipe nodes, which lead over its text.
  * @returns The extracted recipe; throws on AI failure or when the page holds no recipe.
  */
 export async function extractRecipeWithAI(
   source: string,
   recipeId: string,
-  url?: string,
-  jsonLd: Record<string, unknown>[] = []
+  { url, jsonLd = [], householdCategories }: ExtractRecipeWithAIOptions
 ): Promise<FullRecipeInsertDTO> {
   aiLogger.info({ url }, "Starting AI recipe extraction");
 
@@ -91,6 +97,7 @@ export async function extractRecipeWithAI(
       url,
       jsonLd: jsonLdText,
       videos: pageVideos,
+      categories: householdCategories,
     }),
   });
 
@@ -125,6 +132,7 @@ export async function extractRecipeWithAI(
     imageCandidates,
     recipeId,
     videos: recipeVideos(onlyRecipe?.video, extracted.videoUrl, pageVideos),
+    householdCategories,
   });
 
   if (!normalized) {

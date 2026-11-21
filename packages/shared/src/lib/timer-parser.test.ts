@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import defaultTimerKeywords from "@norish/config/timer-keywords.default.json";
 
-import { parseTimerDurations } from "./timer-parser";
+import { markTimers, parseTimerDurations } from "./timer-parser";
 
 describe("parseTimerDurations", () => {
   describe("default keywords", () => {
@@ -194,9 +194,9 @@ describe("parseTimerDurations", () => {
         expect(parseTimerDurations("اخبز 1 ساعة، ثم أخرجها", arabic)[0]?.durationSeconds).toBe(
           3600
         );
-        expect(
-          parseTimerDurations("حرّك 30 ثانية؛ ثم أطفئ النار", arabic)[0]?.durationSeconds
-        ).toBe(30);
+        expect(parseTimerDurations("حرّك 30 ثانية؛ ثم أطفئ النار", arabic)[0]?.durationSeconds).toBe(
+          30
+        );
         expect(parseTimerDurations("هل تكفي 10 دقائق؟", arabic)[0]?.durationSeconds).toBe(600);
       });
 
@@ -388,5 +388,27 @@ describe("parseTimerDurations", () => {
       expect(matches).toHaveLength(1);
       expect(matches[0].durationSeconds).toBe(20 * 60);
     });
+  });
+});
+describe("parseTimerDurations order", () => {
+  it("returns durations in reading order, so a timer link's index is its place in the list", () => {
+    const matches = parseTimerDurations("Rest 5 minutes, then bake 1:30");
+
+    expect(matches.map((match) => match.originalText)).toEqual(["5 minutes", "1:30"]);
+  });
+});
+describe("markTimers", () => {
+  it("links each duration by its place and escapes brackets in its label", () => {
+    const text = "Rest [covered] 5 minutes, then bake 1 hour";
+    const matches = parseTimerDurations(text);
+
+    expect(markTimers(text, matches)).toBe(
+      "Rest [covered] [5 minutes](norish-timer:0), then bake [1 hour](norish-timer:1)"
+    );
+    expect(
+      markTimers("[2] min", [
+        { originalText: "[2] min", durationSeconds: 120, startIndex: 0, endIndex: 7, label: "" },
+      ])
+    ).toBe("[\\[2\\] min](norish-timer:0)");
   });
 });

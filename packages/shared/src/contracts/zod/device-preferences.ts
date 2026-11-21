@@ -1,7 +1,5 @@
 import z from "zod";
 
-import type { AmountDisplayMode } from "../../lib/format-amount";
-
 export const DEVICE_KINDS = ["phone", "desktop"] as const;
 
 export type DeviceKind = (typeof DEVICE_KINDS)[number];
@@ -10,10 +8,7 @@ export const GROCERY_VIEW_MODES = ["store", "recipe"] as const;
 
 export type GroceryViewMode = (typeof GROCERY_VIEW_MODES)[number];
 
-export const AMOUNT_DISPLAY_MODES = [
-  "fraction",
-  "decimal",
-] as const satisfies readonly AmountDisplayMode[];
+export const AMOUNT_DISPLAY_MODES = ["fraction", "decimal"] as const;
 
 /** Recipe pages take their hue from the dish (ADR-0023) or stay on the theme. */
 export const RECIPE_PAGE_COLORS = ["dish", "theme"] as const;
@@ -62,6 +57,18 @@ export const DevicePreferencesSchema = z.object({
 export type DevicePreferences = z.output<typeof DevicePreferencesSchema>;
 
 export const DEVICE_PREFERENCE_DEFAULTS: DevicePreferences = DevicePreferencesSchema.parse({});
+
+export type DeviceBlocks = Record<DeviceKind, DevicePreferences>;
+
+/** Each Device Kind's stored block, the defaults where none is stored. */
+export function deviceBlocks(
+  stored: Partial<Record<DeviceKind, DevicePreferences | undefined>>
+): DeviceBlocks {
+  return {
+    phone: stored.phone ?? DEVICE_PREFERENCE_DEFAULTS,
+    desktop: stored.desktop ?? DEVICE_PREFERENCE_DEFAULTS,
+  };
+}
 
 const shape = DevicePreferencesSchema.shape;
 

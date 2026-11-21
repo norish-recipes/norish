@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import type * as Preset from "@docusaurus/preset-classic";
 import type { Config, Plugin } from "@docusaurus/types";
@@ -27,14 +28,34 @@ function norishTheme(): Plugin {
   };
 }
 
+// Register the same redirects in the client router for links from archived docs.
+function mergedDocRedirects(): Plugin {
+  return {
+    name: "merged-doc-redirects",
+    async contentLoaded({ actions: { addRoute, createData } }) {
+      const redirects = readFileSync(path.resolve(__dirname, "static/_redirects"), "utf8").trim();
+      for (const line of redirects.split("\n")) {
+        const [from, to] = line.split(/\s+/);
+        // Frozen release notes link to these anchors on the original path.
+        const anchors =
+          from === "/recipes/recipe-page" ? ["units", "print-a-recipe-or-save-a-pdf"] : [];
+        const data = await createData(
+          `${from.slice(1).replaceAll("/", "-")}.json`,
+          JSON.stringify({ to, anchors })
+        );
+        addRoute({
+          path: from,
+          exact: true,
+          component: "@site/src/components/MergedDocRedirect",
+          modules: { redirect: data },
+        });
+      }
+    },
+  };
+}
+
 // Norish documentation site — https://docs.norish.dev
 // Hosted on Cloudflare Pages, isolated from the monorepo workspace.
-// Only English is built by default, so the docs deploy stays fast. Set
-// DOCS_LOCALES=en,pt-BR to also build the Brazilian Portuguese site.
-const DOCS_LOCALES = (process.env.DOCS_LOCALES ?? "en")
-  .split(",")
-  .map((locale) => locale.trim())
-  .filter(Boolean);
 
 const config: Config = {
   title: "Norish",
@@ -76,20 +97,12 @@ const config: Config = {
     hooks: {
       onBrokenMarkdownLinks: "warn",
     },
-    // The AI provider and prices pages draw how a Decision fits the runtime.
+    // Some guides use Mermaid diagrams.
     mermaid: true,
   },
 
   themes: ["@docusaurus/theme-mermaid"],
-  plugins: [norishTheme],
-
-  i18n: {
-    defaultLocale: "en",
-    locales: DOCS_LOCALES,
-    localeConfigs: {
-      "pt-BR": { label: "Português (Brasil)", htmlLang: "pt-BR" },
-    },
-  },
+  plugins: [norishTheme, mergedDocRedirects],
 
   presets: [
     [
@@ -106,7 +119,7 @@ const config: Config = {
           // version (don't hand-edit the label — let the script do it).
           lastVersion: "current",
           versions: {
-            current: { label: "0.26.1-beta" },
+            current: { label: "0.27.0-beta" },
           },
         },
         blog: false,

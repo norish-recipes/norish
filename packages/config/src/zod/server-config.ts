@@ -519,9 +519,9 @@ export function transcriptionProviderSupportsModelListing(
  * yt-dlp release Norish ships against.
  *
  * The single source for the `YT_DLP_VERSION` default, which is what a
- * development server downloads on its first import. The Docker build takes the
- * same value through its `YT_DLP_VERSION` build arg and must be moved with it;
- * a repo-invariant test pins the two together.
+ * development server downloads on its first import. The Docker image installs
+ * the release pinned in apps/parser-api/pyproject.toml's `yt-dlp` group, which
+ * must be moved with it; a repo-invariant test pins the two together.
  *
  * It is not what the admin screen shows. That is a report of the binary the
  * server is actually running, asked of the binary - quoting this constant there

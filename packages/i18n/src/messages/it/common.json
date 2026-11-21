@@ -40,7 +40,6 @@
   "status": {
     "loading": "Caricamento...",
     "saving": "Salvataggio...",
-    "deleting": "Eliminazione...",
     "error": "Errore",
     "success": "Successo",
     "noResults": "Nessun risultato trovato",
@@ -66,15 +65,11 @@
     "cookingTimeUnder60": "<60 min",
     "cookingTimeUnder120": "<120 min",
     "categories": "Categorie",
-    "category": {
-      "breakfast": "Colazione",
-      "lunch": "Pranzo",
-      "dinner": "Cena",
-      "snack": "Spuntino"
-    },
     "sortByTitle": "Titolo",
     "sortByDate": "Data",
-    "clearFilters": "Cancella filtri"
+    "clearFilters": "Cancella filtri",
+    "minRating": "Valutazione minima",
+    "minRatingStars": "Almeno {count} su 5"
   },
   "time": {
     "minutes": "min",
@@ -82,7 +77,8 @@
   },
   "validation": {
     "required": "Questo campo è obbligatorio",
-    "invalidUrl": "Inserisci un URL valido"
+    "invalidUrl": "Inserisci un URL valido",
+    "invalidEmail": "Inserisci un indirizzo email valido"
   },
   "errors": {
     "operationFailed": "Operazione non riuscita",
@@ -98,9 +94,6 @@
   },
   "connection": {
     "connecting": "Connessione a Norish...",
-    "checkInternet": "Controlla la tua connessione internet",
-    "offlineBanner": "Sei offline, visualizzazione dei dati memorizzati nella cache",
-    "serverUnreachableBanner": "Impossibile raggiungere il server Norish, visualizzazione dei dati memorizzati nella cache",
     "live": "Connesso",
     "offline": "Offline",
     "openDetails": "Dettagli connessione"
@@ -157,10 +150,7 @@
       "analyzing": "Analisi delle immagini in corso, attendere...",
       "failed": "Importazione non riuscita",
       "selectedCount": "{count} immagini selezionate - verranno combinate in una ricetta",
-      "library": "Libreria",
-      "takePhoto": "Scatta foto",
-      "counter": "{count} / {max} foto",
-      "importFromCount": "Importa da {count, plural, one {# foto} other {# foto}}"
+      "library": "Libreria"
     },
     "menu": {
       "description": "Importa da un URL, scansiona una foto o parti da zero."
@@ -195,9 +185,11 @@
     "year": "anno",
     "years": "anni",
     "next": "Prossimo:",
-    "every": "Ogni",
-    "everyOther": "Ogni altro",
-    "on": "il",
+    "everyDay": "{interval, plural, =1 {Ogni giorno} =2 {Ogni due giorni} other {Ogni # giorni}}",
+    "everyWeek": "{interval, plural, =1 {Ogni settimana} =2 {Ogni due settimane} other {Ogni # settimane}}",
+    "everyMonth": "{interval, plural, =1 {Ogni mese} =2 {Ogni due mesi} other {Ogni # mesi}}",
+    "everyYear": "{interval, plural, =1 {Ogni anno} =2 {Ogni due anni} other {Ogni # anni}}",
+    "onWeekday": "{repeat} il {weekday}",
     "today": "oggi",
     "tomorrow": "domani",
     "weekdays": {
@@ -224,15 +216,16 @@
   },
   "timer": {
     "done": "Finito",
+    "paused": "In pausa",
     "done_action": "Finito",
     "one": "Timer",
     "other": "Timer",
     "label_one": "1 Timer",
     "label_other": "{count} Timer",
-    "notification_title": "Timer completato",
-    "notification_body": "{label} è pronto!",
+    "notification_body": "Timer completato",
     "notifications_disabled": "Le notifiche sono disabilitate",
-    "notifications_disabled_hint": "Abilita le notifiche nelle impostazioni del browser per ricevere avvisi quando i timer terminano in background."
+    "notifications_disabled_hint": "Abilita le notifiche nelle impostazioni del browser per ricevere avvisi quando i timer terminano in background.",
+    "more": "+{count} altri"
   },
   "offlineStatus": {
     "title": "Connessione e offline",
@@ -298,14 +291,30 @@
     "title": "Sei offline",
     "description": "In coda: Norish completerà automaticamente quando tornerai online."
   },
+  "changedElsewhere": {
+    "title": "Non salvato: è stato modificato prima altrove"
+  },
   "storageUnavailable": {
-    "title": "Avvio non riuscito",
-    "description": "Norish non è riuscita a leggere l'archivio sicuro e non sa a quale server appartiene questa app. Non è stato modificato nulla. Riprova o riavvia l'app.",
-    "detailsLabel": "Dettagli tecnici"
+    "title": "Archiviazione non disponibile",
+    "description": "Norish non è riuscito a leggere il portachiavi di questo iPhone.",
+    "badgeLabel": "Archiviazione non disponibile. Tocca per riprodurre di nuovo."
   },
   "aiKeyRejected": {
     "title": "Una chiave IA ha smesso di funzionare",
     "description": "Il fornitore rifiuta la chiave API per {blocks} dal {since}. Salva una nuova chiave per far funzionare di nuovo queste funzioni IA.",
+    "openSettings": "Apri impostazioni"
+  },
+  "household": {
+    "adminTransferred": "Privilegi di amministratore trasferiti a {name}",
+    "unknownMember": "Sconosciuto",
+    "removedTitle": "Rimosso dalla famiglia",
+    "removedDescription": "Un amministratore ti ha rimosso dalla famiglia."
+  },
+  "photos": {
+    "pickFailedTitle": "Impossibile scegliere la foto",
+    "pickFailedMessage": "Riprova o scegli un'altra foto.",
+    "cameraDeniedTitle": "L’accesso alla fotocamera è disattivato",
+    "cameraDeniedMessage": "Consenti l’accesso alla fotocamera nelle Impostazioni per scattare una foto.",
     "openSettings": "Apri impostazioni"
   }
 }

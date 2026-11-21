@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "Namnlös vara",
-    "fromRecipes": "Från {count, plural, one {# recept} other {# recept}}",
-    "items": "{count, plural, one {# vara} other {# varor}}"
+    "items": "{count, plural, =0 {Inga varor} one {# vara} other {# varor}}"
   },
   "store": {
     "unsorted": "Osorterat",
@@ -54,7 +53,6 @@
       "violet": "Violett"
     },
     "confirmDelete": "Vill du ta bort {storeName}?",
-    "deleteWarning": "Varorna i den här butiken flyttas till Osorterat.",
     "noStoresYet": "Inga butiker ännu",
     "createStoreHint": "Skapa en butik för att ordna dina inköp",
     "hasItems": "Den här butiken har {count} vara.",
@@ -95,6 +93,7 @@
     "unavailable": "Det gick inte att läsa ditt skafferi. Inget har ändrats. Försök igen när du är online.",
     "fieldLabel": "Sök efter eller lägg till ett livsmedel",
     "fieldPlaceholder": "Sök efter eller lägg till ett livsmedel, t.ex. olivolja",
+    "findPlaceholder": "Hitta en vara i skafferiet",
     "add": "Lägg till i skafferiet",
     "fromCatalogue": "Lägg till livsmedel",
     "addFood": "Lägg till {name} i skafferiet",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "Lägg till vara",
     "editTitle": "Redigera vara",
-    "itemName": "Varunamn",
-    "itemNamePlaceholder": "T.ex. mjölk, ägg, bröd...",
     "selectStore": "Välj butik",
-    "noStore": "Ingen butik",
     "recurrence": "Upprepning",
     "savePreference": "Kom ihåg butik för den här varan",
     "addAnother": "Lägg till en till",
     "addRepeat": "Ställ in upprepning",
-    "recurrenceEnabled": "Återkommande",
-    "recurrenceSheet": {
-      "title": "Upprepning",
-      "subtitle": "Lägg automatiskt tillbaka den här varan på inköpslistan",
-      "enable": "Aktivera upprepning",
-      "disable": "Stäng av upprepning",
-      "frequency": "Hur ofta",
-      "weekly": "Varje vecka",
-      "biweekly": "Varannan vecka",
-      "monthly": "Varje månad",
-      "confirm": "Bekräfta"
-    },
     "storeOptional": "Butik (valfritt)",
     "autoDetectFromHistory": "Välj automatiskt från historiken",
     "autoDetectOrSelect": "Välj automatiskt eller manuellt",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "Det gick inte att läsa ditt skafferi, så inget är markerat ännu. Markera det du behöver köpa.",
     "loadingIngredients": "Läser in ingredienser...",
     "noIngredients": "Inga ingredienser.",
-    "addSelectedToGroceries": "Lägg till i inköpslistan",
     "ingredientsAdded": "Ingredienserna har lagts till i inköpslistan.",
     "ingredientsFailed": "Det gick inte att lägga till ingredienserna i inköpslistan.",
     "addToGroceries": "Lägg till i inköpslistan",
@@ -168,7 +151,6 @@
     "productLabel": "Produkt hos {store}",
     "cannotSearch": "Det går inte att söka i den här butiken",
     "cannotSearchHint": "Norish kunde inte hitta en söksida i butikslänken för {store}. Rätta länken under Hantera butiker för att få priser.",
-    "packSize": "Förpackningsstorlek",
     "packAmount": "Mängd per förpackning",
     "packUnit": "Enhet",
     "productPage": "Produktsida",
@@ -195,6 +177,38 @@
     "packs": "{count} × {size}",
     "onePack": "prissatt som en förpackning",
     "sale": "Extrapris",
-    "regularPrice": "Ordinarie pris {price}"
+    "regularPrice": "Ordinarie pris {price}",
+    "each": "st"
+  },
+  "mobile": {
+    "viewMode": "Visning",
+    "viewByStore": "Efter butik",
+    "viewByRecipe": "Efter recept",
+    "listSettings": "Listinställningar",
+    "emptyHint": "Lägg till varor med knappen nedan.",
+    "addTitle": "Lägg till varor",
+    "editTitle": "Redigera vara",
+    "store": "Butik",
+    "noStore": "Ingen butik",
+    "automatic": "Automatisk",
+    "never": "Aldrig",
+    "removeRepeat": "Ta bort upprepning",
+    "amountFor": "{amount} till {recipe}",
+    "expand": "Visa mer",
+    "collapse": "Dölj",
+    "itemLabel": "Vara",
+    "decreaseInterval": "Minska intervall",
+    "increaseInterval": "Öka intervall",
+    "manageStores": "Hantera butiker",
+    "addStore": "Lägg till butik",
+    "editStore": "Redigera butik",
+    "editStoreLabel": "Redigera {store}",
+    "deleteStoreLabel": "Ta bort {store}",
+    "deleteStoreTitle": "Ta bort {store}?",
+    "moveItemsToUnsorted": "Flytta varor till Osorterat",
+    "typePrice": "Skriv in priset själv",
+    "product": "Produkt",
+    "chooseProduct": "Välj en produkt",
+    "recipeCount": "{count, plural, one {# recept} other {# recept}}"
   }
 }

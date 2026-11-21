@@ -1,0 +1,234 @@
+import React, { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
+import { AnimatedNumber } from "@/components/animated-number";
+import { IconMenu } from "@/components/icon-menu";
+import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
+import { useServingsStepper } from "@/components/servings-stepper";
+import { Stepper } from "@/components/stepper";
+import { Tick } from "@/components/tick";
+import { useCardActions } from "@/hooks/use-card-actions";
+import { lightImpact } from "@/lib/haptics";
+import { useFadeTo } from "@/lib/motion/fade-to";
+import { plainText } from "@/lib/plain-text";
+import { recipeRoute } from "@/lib/tab-routes";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { Button, useThemeColor } from "heroui-native";
+import { useIntl } from "react-intl";
+
+import {
+  formatServings,
+  servingsDown,
+  servingsUp,
+  useAmountDisplayPreference,
+  useLoadedPageRecipe,
+  usePageIngredients,
+  usePageServings,
+  useRecipePageStore,
+  useSystemConversion,
+  useUnitFormatter,
+} from "@norish/shared-react/recipes";
+import { formatAmount } from "@norish/shared/lib/format-amount";
+
+import { ingredientRows } from "../utils/recipe-rows";
+import { InlineMarkdown } from "./inline-markdown";
+import { SectionCard } from "./tint";
+
+/** The servings stepper; the number opens the Servings sheet. */
+export function ServingsControl() {
+  const intl = useIntl();
+  const router = useRouter();
+  const recipe = useLoadedPageRecipe();
+  const servings = usePageServings();
+  const setServings = useRecipePageStore((state) => state.setServings);
+  const stepper = useServingsStepper(servings);
+
+  return (
+    <Stepper
+      {...stepper}
+      testID="recipe-servings"
+      onDecrement={() => setServings(servingsDown(servings))}
+      onIncrement={() => setServings(servingsUp(servings))}
+    >
+      <Pressable
+        accessibilityLabel={intl.formatMessage(
+          { id: "recipes.detail.servingsCount" },
+          { count: servings }
+        )}
+        accessibilityRole="button"
+        className="min-w-8 items-center py-2"
+        testID="recipe-servings-value"
+        onPress={() => router.push(recipeRoute(recipe.id, "servings"))}
+      >
+        <AnimatedNumber
+          className="text-foreground text-base font-semibold"
+          value={formatServings(servings)}
+        />
+      </Pressable>
+    </Stepper>
+  );
+}
+
+/** Fractions or decimals, and the measurement system: what changes how the lines read. */
+export function OptionsMenu() {
+  const intl = useIntl();
+  const { mode, toggleMode } = useAmountDisplayPreference();
+  const conversion = useSystemConversion();
+
+  return (
+    <IconMenu
+      icon="options-outline"
+      items={[
+        {
+          key: "amount-mode",
+          label: intl.formatMessage({
+            id:
+              mode === "fraction"
+                ? "recipes.detail.switchToDecimal"
+                : "recipes.detail.switchToFraction",
+          }),
+          systemImage: "plusminus",
+          onPress: toggleMode,
+        },
+        ...(conversion.isAvailable
+          ? conversion.options
+              .filter((option) => option.withAI || option.system !== conversion.currentSystem)
+              .map((option) => ({
+                key: option.key,
+                label: intl.formatMessage({ id: `recipes.convert.${option.labelKey}` }),
+                systemImage: option.withAI ? "sparkles" : "arrow.left.arrow.right",
+                onPress: () => conversion.convertTo(option),
+              }))
+          : []),
+      ]}
+      label={intl.formatMessage({ id: "recipes.detail.ingredientOptions" })}
+      testID="recipe-ingredient-options"
+    />
+  );
+}
+
+/** One ingredient line that ticks; `large` is cook mode's, read from across the counter. */
+export function Line({
+  index,
+  amount,
+  unit,
+  name,
+  foodId,
+  checked,
+  onToggle,
+  large = false,
+}: {
+  index: number;
+  amount: string;
+  unit: string;
+  name: string;
+  foodId: string | null;
+  checked: boolean;
+  onToggle: (index: number) => void;
+  large?: boolean;
+}) {
+  const plain = plainText(name);
+  const fade = useFadeTo(checked ? 0.5 : 1);
+
+  return (
+    <Pressable
+      accessibilityLabel={[amount, unit, plain].filter(Boolean).join(" ")}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      testID={`recipe-ingredient-${index}`}
+      onPress={() => {
+        lightImpact();
+        onToggle(index);
+      }}
+    >
+      <Animated.View
+        className={`border-separator flex-row items-center border-t ${large ? "gap-3 py-3" : "gap-2.5 py-2"}`}
+        style={fade}
+      >
+        <Tick selected={checked} />
+        <IngredientIcon ingredientId={foodId} size={large ? 34 : undefined} />
+        <View className="min-w-0 flex-1 flex-row items-baseline gap-1">
+          {amount ? (
+            <AnimatedNumber
+              className={`${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} font-bold ${checked ? "text-muted line-through" : "text-foreground"}`}
+              value={amount}
+            />
+          ) : null}
+          <Text
+            className={`min-w-0 flex-1 ${large ? "text-xl leading-[26px]" : "text-base leading-[22px]"} ${checked ? "text-muted line-through" : "text-foreground"}`}
+          >
+            {unit ? <Text className="text-accent-text font-bold">{`${unit} `}</Text> : null}
+            <InlineMarkdown disableLinks={checked} text={name} />
+          </Text>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** The Ingredients card: servings, options, ticks, and Add to groceries. */
+export function IngredientsSection() {
+  const intl = useIntl();
+  const actions = useCardActions();
+  const recipe = useLoadedPageRecipe();
+  const servings = usePageServings();
+  const display = usePageIngredients();
+  const { mode } = useAmountDisplayPreference();
+  const { formatUnitOnly } = useUnitFormatter(intl.locale);
+  const [checked, setChecked] = useState<ReadonlySet<number>>(() => new Set());
+  const [accentForeground] = useThemeColor(["accent-foreground"] as const);
+  const rows = ingredientRows(display, recipe.systemUsed);
+  const toggle = (index: number) => {
+    const next = new Set(checked);
+
+    if (!next.delete(index)) next.add(index);
+    setChecked(next);
+  };
+
+  return (
+    <IngredientIconSlots rows={rows}>
+      <SectionCard
+        right={
+          <View className="flex-row items-center gap-1.5">
+            {recipe.servings ? <ServingsControl /> : null}
+            <OptionsMenu />
+          </View>
+        }
+        testID="recipe-ingredients"
+        title={intl.formatMessage({ id: "recipes.detail.ingredients" })}
+      >
+        {rows.map((row) =>
+          row.kind === "heading" ? (
+            <Text
+              key={row.key}
+              className="text-muted border-separator border-t pt-[18px] pb-2 text-[15px] font-semibold"
+            >
+              {row.text}
+            </Text>
+          ) : (
+            <Line
+              key={row.key}
+              amount={formatAmount(row.line.amount, mode, row.line.unit)}
+              checked={checked.has(row.index)}
+              foodId={row.foodId}
+              index={row.index}
+              name={row.line.ingredientName}
+              unit={row.line.unit ? formatUnitOnly(row.line.unit, row.line.amount) : ""}
+              onToggle={toggle}
+            />
+          )
+        )}
+        <Button
+          className="mt-3 rounded-full"
+          testID="recipe-add-to-groceries"
+          variant="primary"
+          onPress={() => actions.addToGroceries(recipe, servings)}
+        >
+          <Ionicons color={accentForeground} name="bag-outline" size={18} />
+          <Button.Label>{intl.formatMessage({ id: "recipes.detail.addToGroceries" })}</Button.Label>
+        </Button>
+      </SectionCard>
+    </IngredientIconSlots>
+  );
+}

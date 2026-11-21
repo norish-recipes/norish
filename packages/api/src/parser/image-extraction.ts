@@ -1,5 +1,6 @@
 import type { ImageImportFile } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
+import { householdCategoriesSection } from "@norish/shared-server/ai/prompts/sections";
 import { AIResponseError } from "@norish/shared-server/ai/runtime/errors";
 import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { aiLogger } from "@norish/shared-server/logger";
@@ -27,7 +28,8 @@ export type { RecipeExtractionOutput };
  */
 export async function extractRecipeFromImages(
   recipeId: string,
-  files: ImageImportFile[]
+  files: ImageImportFile[],
+  householdCategories: readonly string[]
 ): Promise<FullRecipeInsertDTO> {
   if (files.length === 0) {
     throw new Error("No images provided for recipe extraction");
@@ -38,6 +40,7 @@ export async function extractRecipeFromImages(
   const jsonLd = await generateStructured({
     prompt: "image-extraction",
     schema: recipeExtractionSchema,
+    sections: [householdCategoriesSection(householdCategories)],
     // The images themselves select the vision model.
     images: files.map((file) => ({ data: file.data, mimeType: file.mimeType })),
   });
@@ -59,7 +62,7 @@ export async function extractRecipeFromImages(
   // the extraction's faithfulness.
 
   // Normalize using shared normalizer (no URL or images for image imports)
-  const normalized = await normalizeExtractionOutput(jsonLd, { recipeId });
+  const normalized = await normalizeExtractionOutput(jsonLd, { recipeId, householdCategories });
 
   if (!normalized) {
     aiLogger.error("Failed to normalize recipe from image extraction");

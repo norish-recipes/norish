@@ -60,13 +60,141 @@ describe("listCatalogueIngredients search", () => {
     await testBase.teardown();
   });
 
-  const names = async (search: ReturnType<typeof parseIngredientSearch>) =>
-    (await listCatalogueIngredients({ search, flaggedOnly: false, limit: 10, offset: 0 })).map(
-      (row) => row.name
-    );
+  const names = async (
+    search: ReturnType<typeof parseIngredientSearch>,
+    languages: readonly string[] = ["en"]
+  ) =>
+    (
+      await listCatalogueIngredients({
+        search,
+        languages,
+        flaggedOnly: false,
+        limit: 10,
+        offset: 0,
+      })
+    ).map((row) => row.name);
 
   it("finds the text anywhere in a name, the exact name first", async () => {
     expect(await names(parseIngredientSearch("onion"))).toEqual(["Onion", "Red onion"]);
+  });
+
+  it("puts the foods with a word starting with the text before those that only contain it", async () => {
+    await getTestDb()
+      .insert(schema.ingredients)
+      .values(
+        ["Alcohol", "Honey", "Hot sauce", "Red hot chili", "Ahoy"].map((name) => ({
+          name,
+          createdAt: new Date(),
+        }))
+      );
+
+    expect(await names(parseIngredientSearch("ho"))).toEqual([
+      "Honey",
+      "Hot sauce",
+      "Red hot chili",
+      "Ahoy",
+      "Alcohol",
+      "Chocolate",
+    ]);
+  });
+
+  it("finds a name with every typed word in it, in any order", async () => {
+    await getTestDb()
+      .insert(schema.ingredients)
+      .values(
+        ["Extra virgin olive oil", "Olive", "Sunflower oil"].map((name) => ({
+          name,
+          createdAt: new Date(),
+        }))
+      );
+
+    expect(await names(parseIngredientSearch("olive ex"))).toEqual(["Extra virgin olive oil"]);
+    expect(await names(parseIngredientSearch("oil olive"))).toEqual(["Extra virgin olive oil"]);
+    expect(await names(parseIngredientSearch("  oil   ex  "))).toEqual(["Extra virgin olive oil"]);
+    expect(await names(parseIngredientSearch("oil"))).toEqual([
+      "Extra virgin olive oil",
+      "Sunflower oil",
+    ]);
+    expect(await names(parseIngredientSearch("olive xyz"))).toEqual([]);
+  });
+
+  it("matches a word's % _ and backslash as written, never as a pattern", async () => {
+    const search = parseIngredientSearch("onion")!;
+
+    for (const word of ["o%n", "o_ion", "on\\ion"]) {
+      expect(await names({ ...search, fold: word, words: [word] })).toEqual([]);
+    }
+    expect(await names(parseIngredientSearch("oni%on_"))).toEqual(["Onion", "Red onion"]);
+  });
+
+  it("ranks a word start in the folded name, a translation in the reader's language or after a hyphen", async () => {
+    const db = getTestDb();
+    const [garlic] = await db
+      .insert(schema.ingredients)
+      .values({ name: "Garlic", createdAt: new Date() })
+      .returning();
+
+    await db
+      .insert(schema.ingredients)
+      .values(
+        ["Acremella", "Crème fraîche", "Semi-skimmed milk", "Halfskimmed", "Aknot", "Hokmaal"].map(
+          (name) => ({ name, createdAt: new Date() })
+        )
+      );
+    await db
+      .insert(schema.ingredientAliases)
+      .values({ text: "Knoflook", fold: "knoflook", locale: "nl", ingredientId: garlic!.id });
+
+    expect(await names(parseIngredientSearch("creme"))).toEqual(["Crème fraîche", "Acremella"]);
+    expect(await names(parseIngredientSearch("skimmed"))).toEqual([
+      "Semi-skimmed milk",
+      "Halfskimmed",
+    ]);
+    expect(await names(parseIngredientSearch("kn"))).toEqual(["Aknot", "Garlic"]);
+    expect(await names(parseIngredientSearch("kn"), ["nl"])).toEqual(["Garlic", "Aknot"]);
+    // Several words rank by the first one typed.
+    expect(await names(parseIngredientSearch("h o"))).toEqual(["Hokmaal", "Chocolate"]);
+  });
+
+  it("finds a name in any script by part of it, as foldName folds the typed text", async () => {
+    await getTestDb()
+      .insert(schema.ingredients)
+      .values(
+        ["김치찌개", "ゴボウ", "Crème brûlée", "Extra virgin olive oil"].map((name) => ({
+          name,
+          createdAt: new Date(),
+        }))
+      );
+
+    expect(await names(parseIngredientSearch("김치"))).toEqual(["김치찌개"]);
+    expect(await names(parseIngredientSearch("ボウ"))).toEqual(["ゴボウ"]);
+    expect(await names(parseIngredientSearch("brulee"))).toEqual(["Crème brûlée"]);
+    expect(await names(parseIngredientSearch("brûlée crè"))).toEqual(["Crème brûlée"]);
+    expect(await names(parseIngredientSearch("oil virgin extra"))).toEqual([
+      "Extra virgin olive oil",
+    ]);
+  });
+
+  it("ranks by the name and the translations in the reader's languages, finding every one", async () => {
+    const db = getTestDb();
+    const [prawn] = await db
+      .insert(schema.ingredients)
+      .values({ name: "Prawn", createdAt: new Date() })
+      .returning();
+
+    await db
+      .insert(schema.ingredients)
+      .values(["Tomato", "Cherry tomato"].map((name) => ({ name, createdAt: new Date() })));
+    await db
+      .insert(schema.ingredientAliases)
+      .values({ text: "Tôm", fold: "tom", locale: "vi", ingredientId: prawn!.id });
+
+    expect(await names(parseIngredientSearch("tom"))).toEqual(["Cherry tomato", "Tomato", "Prawn"]);
+    expect(await names(parseIngredientSearch("tom"), ["vi"])).toEqual([
+      "Prawn",
+      "Cherry tomato",
+      "Tomato",
+    ]);
   });
 
   it("finds a food by a translation, and not once the field is off", async () => {

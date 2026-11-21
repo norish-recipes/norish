@@ -1,0 +1,52 @@
+# Ticks a grocery and clears the list: a ticked line leaves the open ones for the Done tail, which
+# counts it, and the server has it done. Clear list asks first and empties the list on Clear.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- runFlow:
+    file: subflows/grocery.yaml
+    env:
+      GROCERIES: '[{"name": "Tick Milk"}, {"name": "Tick Bread"}]'
+- tapOn:
+    id: tab-groceries
+- extendedWaitUntil:
+    visible:
+      id: (group|grocery)-tick-.*
+      text: .*Tick Milk.*
+    timeout: 20000
+- assertVisible:
+    id: (group|grocery)-tick-.*
+    text: .*Tick Bread.*
+- assertNotVisible:
+    id: done-heading-.*
+- tapOn:
+    id: (group|grocery)-tick-.*
+    text: .*Tick Milk.*
+# The done tail counts it.
+- extendedWaitUntil:
+    visible:
+      id: done-heading-.*
+      text: 1 done.*
+    timeout: 20000
+- evalScript: ${output.milk = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?done=true&name=Tick%20Milk').body)}
+- assertTrue: ${output.milk.done}
+- evalScript: ${output.bread = json(http.get(NORISH_PROXY_CONTROL_URL + '/grocery?done=false&name=Tick%20Bread').body)}
+- assertTrue: ${!output.bread.done}
+# Clear list is in the settings menu; cancelling keeps both.
+- tapOn:
+    text: List settings
+- tapOn: Clear list
+- tapOn: Cancel
+- assertVisible:
+    id: (group|grocery)-tick-.*
+    text: .*Tick Bread.*
+- tapOn:
+    text: List settings
+- tapOn: Clear list
+- tapOn: Clear
+- extendedWaitUntil:
+    visible:
+      id: groceries-empty
+    timeout: 20000
+- evalScript: ${output.names = json(http.get(NORISH_PROXY_CONTROL_URL + '/groceries?max=0').body).names}
+- assertTrue: ${output.names.length == 0}

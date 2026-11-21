@@ -2,6 +2,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+
 const mockExtractRecipeWithAI = vi.fn();
 const mockIsVideoUrl = vi.fn(() => false);
 const mockFetchRenderedPage = vi.fn();
@@ -166,13 +168,16 @@ describe("parseRecipeFromUrl import flow", () => {
     mockIsVideoParsingEnabled.mockResolvedValue(true);
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/video", "recipe-1");
+    const result = await parseRecipeFromUrl("https://example.com/video", "recipe-1", {
+      householdCategories: ["Breakfast", "Drinks"],
+    });
 
     expect(result).toEqual({ recipe: structuredRecipe, usedAI: true });
     expect(mockProcessVideoRecipe).toHaveBeenCalledWith(
       "https://example.com/video",
       "recipe-1",
-      undefined
+      undefined,
+      ["Breakfast", "Drinks"]
     );
     expect(mockFetchRenderedPage).not.toHaveBeenCalled();
     expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();
@@ -186,9 +191,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-    await expect(parseRecipeFromUrl("https://example.com/video", "recipe-1")).rejects.toThrow(
-      /AI features are not enabled/
-    );
+    await expect(
+      parseRecipeFromUrl("https://example.com/video", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
+    ).rejects.toThrow(/AI features are not enabled/);
     expect(mockProcessVideoRecipe).not.toHaveBeenCalled();
     expect(mockFetchRenderedPage).not.toHaveBeenCalled();
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
@@ -201,9 +208,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-    await expect(parseRecipeFromUrl("https://example.com/video", "recipe-1")).rejects.toThrow(
-      "Video recipe parsing is not enabled."
-    );
+    await expect(
+      parseRecipeFromUrl("https://example.com/video", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
+    ).rejects.toThrow("Video recipe parsing is not enabled.");
     expect(mockProcessVideoRecipe).not.toHaveBeenCalled();
   });
 
@@ -234,12 +243,11 @@ describe("parseRecipeFromUrl import flow", () => {
       });
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl(
-        "https://example.com/recipe",
-        "recipe-1",
-        false,
-        tokens
-      );
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        forceAI: false,
+        tokens,
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toEqual({ recipe: structuredRecipe, usedAI: false });
       expect(mockPlainFetch).toHaveBeenCalledWith("https://example.com/recipe", "Norish", {
@@ -261,9 +269,17 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", false, tokens);
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        forceAI: false,
+        tokens,
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
-      expect(mockFetchRenderedPage).toHaveBeenCalledWith("https://example.com/recipe", tokens);
+      expect(mockFetchRenderedPage).toHaveBeenCalledWith(
+        "https://example.com/recipe",
+        tokens,
+        expect.any(Function)
+      );
     });
 
     it("reads the plain page when no Page Renderer reads it", async () => {
@@ -276,7 +292,9 @@ describe("parseRecipeFromUrl import flow", () => {
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
       await expect(
-        parseRecipeFromUrl("https://example.com/recipe", "recipe-1")
+        parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+          householdCategories: BUILT_IN_CATEGORIES,
+        })
       ).resolves.toMatchObject({ recipe: structuredRecipe });
       expect(mockCallRecipeScrapersParser).toHaveBeenCalledWith({
         url: "https://example.com/recipe",
@@ -300,9 +318,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
         const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-        await expect(parseRecipeFromUrl("https://example.com/recipe", "recipe-1")).rejects.toThrow(
-          message
-        );
+        await expect(
+          parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+            householdCategories: BUILT_IN_CATEGORIES,
+          })
+        ).rejects.toThrow(message);
         expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();
       }
     );
@@ -317,16 +337,21 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await expect(parseRecipeFromUrl("http://192.168.1.1/", "recipe-1")).rejects.toThrow(
-        "Imports from private network addresses are not allowed on this server."
-      );
+      await expect(
+        parseRecipeFromUrl("http://192.168.1.1/", "recipe-1", {
+          householdCategories: BUILT_IN_CATEGORIES,
+        })
+      ).rejects.toThrow("Imports from private network addresses are not allowed on this server.");
       expect(mockFetchRenderedPage).not.toHaveBeenCalled();
     });
   });
 
   it("uses AI directly when forceAI is true", async () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", [], true);
+    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      forceAI: true,
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
     expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();
@@ -349,16 +374,18 @@ describe("parseRecipeFromUrl import flow", () => {
       mockExtractRecipeWithAI.mockResolvedValue(stepless);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        forceAI: true,
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toMatchObject({ recipe: stepless, usedAI: true });
       expect(mockExtractRecipeWithAI).toHaveBeenCalledTimes(1);
-      expect(mockExtractRecipeWithAI).toHaveBeenCalledWith(
-        withJsonLd,
-        "recipe-1",
-        "https://example.com/recipe",
-        [expect.objectContaining({ name: "Lentil soup" })]
-      );
+      expect(mockExtractRecipeWithAI).toHaveBeenCalledWith(withJsonLd, "recipe-1", {
+        url: "https://example.com/recipe",
+        jsonLd: [expect.objectContaining({ name: "Lentil soup" })],
+        householdCategories: ["Breakfast", "Lunch", "Dinner", "Snack"],
+      });
     });
 
     it("does not ask again when AI extraction fails", async () => {
@@ -367,7 +394,10 @@ describe("parseRecipeFromUrl import flow", () => {
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
       await expect(
-        parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true)
+        parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+          forceAI: true,
+          householdCategories: BUILT_IN_CATEGORIES,
+        })
       ).rejects.toThrow("AI extraction failed");
       expect(mockExtractRecipeWithAI).toHaveBeenCalledTimes(1);
     });
@@ -380,9 +410,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
-      expect(mockExtractRecipeWithAI.mock.calls[0]?.[3]).toMatchObject([
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[2]?.jsonLd).toMatchObject([
         { name: "Lentil soup", recipeIngredient: sectioned },
       ]);
     });
@@ -394,9 +426,12 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", true);
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        forceAI: true,
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
-      expect(mockExtractRecipeWithAI.mock.calls[0]?.[3]).toMatchObject([
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[2]?.jsonLd).toMatchObject([
         { name: "Lentil soup", recipeIngredient: sectioned },
       ]);
     });
@@ -406,9 +441,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
-      expect(mockExtractRecipeWithAI.mock.calls[0]?.[3]?.[0]).not.toHaveProperty(
+      expect(mockExtractRecipeWithAI.mock.calls[0]?.[2]?.jsonLd?.[0]).not.toHaveProperty(
         "recipeIngredient"
       );
     });
@@ -418,7 +455,9 @@ describe("parseRecipeFromUrl import flow", () => {
     mockShouldAlwaysUseAI.mockResolvedValue(true);
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
     expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();
@@ -426,11 +465,13 @@ describe("parseRecipeFromUrl import flow", () => {
 
   it("returns a successful Python parser result without running AI", async () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toEqual({ recipe: structuredRecipe, usedAI: false });
     expect(mockCallRecipeScrapersParser).toHaveBeenCalled();
-    expect(mockGetContentIndicators).not.toHaveBeenCalled();
+    expect(mockGetContentIndicators).toHaveBeenCalledTimes(1);
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
   });
 
@@ -438,10 +479,12 @@ describe("parseRecipeFromUrl import flow", () => {
     mockAdaptRecipeScrapersResponse.mockResolvedValue(null);
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
-    expect(mockGetContentIndicators).toHaveBeenCalled();
+    expect(mockGetContentIndicators).toHaveBeenCalledTimes(2);
   });
 
   it("falls back to AI on structured parser failure when AI is enabled and the page is recipe-like", async () => {
@@ -453,7 +496,9 @@ describe("parseRecipeFromUrl import flow", () => {
     });
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
     expect(mockExtractRecipeWithAI).toHaveBeenCalled();
@@ -470,9 +515,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-    await expect(parseRecipeFromUrl("https://example.com/page", "recipe-1")).rejects.toThrow(
-      "Page does not appear to contain a recipe."
-    );
+    await expect(
+      parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
+    ).rejects.toThrow("Page does not appear to contain a recipe.");
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
   });
 
@@ -491,9 +538,9 @@ describe("parseRecipeFromUrl import flow", () => {
     mockIsAIEnabled.mockResolvedValue(false);
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const error = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1").catch(
-      (err: unknown) => err
-    );
+    const error = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      householdCategories: BUILT_IN_CATEGORIES,
+    }).catch((err: unknown) => err);
 
     expect(error).toMatchObject({
       name: "ErrorWithDetail",
@@ -520,7 +567,9 @@ describe("parseRecipeFromUrl import flow", () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
     await expect(
-      parseRecipeFromUrl("https://example.com/recipe", "recipe-1")
+      parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
     ).rejects.toMatchObject({
       detail: { pythonParser: { status: 500, body: "Internal Server Error" } },
     });
@@ -533,7 +582,9 @@ describe("parseRecipeFromUrl import flow", () => {
     mockAdaptRecipeScrapersResponse.mockResolvedValue({ ...structuredRecipe, name: "" });
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
-    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+    const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+      householdCategories: BUILT_IN_CATEGORIES,
+    });
 
     expect(result).toEqual({
       recipe: aiRecipe,
@@ -563,7 +614,9 @@ describe("parseRecipeFromUrl import flow", () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
     await expect(
-      parseRecipeFromUrl("https://www.ah.nl/allerhande/recept/R-R1202415", "recipe-1")
+      parseRecipeFromUrl("https://www.ah.nl/allerhande/recept/R-R1202415", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
     ).rejects.toMatchObject({
       message: "ah.nl refused the request (HTTP 403)",
       detail: {
@@ -585,7 +638,9 @@ describe("parseRecipeFromUrl import flow", () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
     await expect(
-      parseRecipeFromUrl("https://www.ah.nl/allerhande/recept/R-R1202415", "recipe-1")
+      parseRecipeFromUrl("https://www.ah.nl/allerhande/recept/R-R1202415", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
     ).rejects.toThrow("ah.nl refused the request (HTTP 403)");
   });
 
@@ -595,7 +650,9 @@ describe("parseRecipeFromUrl import flow", () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
     await expect(
-      parseRecipeFromUrl("https://example.com/recipe", "recipe-1")
+      parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
     ).resolves.toMatchObject({ recipe: structuredRecipe, usedAI: false });
   });
 
@@ -612,7 +669,11 @@ describe("parseRecipeFromUrl import flow", () => {
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-    await expect(parseRecipeFromUrl("https://example.com/page", "recipe-1")).rejects.toMatchObject({
+    await expect(
+      parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
+    ).rejects.toMatchObject({
       detail: {
         aiFallback: "skipped: the page does not look like a recipe",
         page: expect.objectContaining({ title: "Access Denied" }),
@@ -633,7 +694,9 @@ describe("parseRecipeFromUrl import flow", () => {
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
     await expect(
-      parseRecipeFromUrl("https://example.com/recipe", "recipe-1")
+      parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
     ).rejects.toMatchObject({ detail: { aiFallback: "tried: extraction found no recipe" } });
     expect(mockExtractRecipeWithAI).toHaveBeenCalled();
   });
@@ -649,10 +712,163 @@ describe("parseRecipeFromUrl import flow", () => {
 
     const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-    await expect(parseRecipeFromUrl("https://example.com/page", "recipe-1")).rejects.toThrow(
-      "Page does not appear to contain a recipe."
-    );
+    await expect(
+      parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      })
+    ).rejects.toThrow("Page does not appear to contain a recipe.");
     expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+  });
+
+  describe("a structured parse with nothing to cook from", () => {
+    const titleOnly = { ...structuredRecipe, recipeIngredients: [], steps: [] };
+
+    it("goes through AI extraction without asking the Decision Model", async () => {
+      mockAdaptRecipeScrapersResponse.mockResolvedValue(titleOnly);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result).toEqual({ recipe: aiRecipe, usedAI: true });
+      expect(mockIsParseComplete).not.toHaveBeenCalled();
+    });
+
+    it("is kept, flagged, when AI is off", async () => {
+      mockAdaptRecipeScrapersResponse.mockResolvedValue(titleOnly);
+      mockIsAIEnabled.mockResolvedValue(false);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result).toEqual({ recipe: titleOnly, usedAI: false, incomplete: true });
+      expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+    });
+
+    it("does not include a parse that has ingredients but no steps", async () => {
+      const stepless = { ...structuredRecipe, steps: [] };
+
+      mockAdaptRecipeScrapersResponse.mockResolvedValue(stepless);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result).toEqual({ recipe: stepless, usedAI: false });
+      expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("waiting for a rendered recipe", () => {
+    const RECIPE_SCHEMA = 'itemtype="https://schema.org/recipe"';
+
+    /** The wait the import hands the Page Renderers, with these indicators in force. */
+    async function renderWait() {
+      mockGetContentIndicators.mockResolvedValue({
+        schemaIndicators: [RECIPE_SCHEMA],
+        contentIndicators: ["ingredients", "directions"],
+      });
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+
+      await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      return mockFetchRenderedPage.mock.calls[0]?.[2] as (html: string) => boolean;
+    }
+
+    it("keeps waiting on a shell whose scripts name the indicators", async () => {
+      const isSettled = await renderWait();
+
+      expect(
+        isSettled(`<html><body>
+          <p>Loading</p>
+          <script>{"labels":["ingredients","directions"]}</script>
+        </body></html>`)
+      ).toBe(false);
+    });
+
+    it("keeps waiting on a page that has gone blank", async () => {
+      const isSettled = await renderWait();
+
+      expect(isSettled("<html><body></body></html>")).toBe(false);
+    });
+
+    it("stops once the recipe is in the page's text", async () => {
+      const isSettled = await renderWait();
+
+      expect(
+        isSettled(`<html><body>
+          <h2>Ingredients</h2><ul><li>9 oz ravioli</li></ul>
+          <h2>Directions</h2><p>Boil until tender.</p>
+        </body></html>`)
+      ).toBe(true);
+    });
+
+    it("stops on recipe markup without waiting for the text", async () => {
+      const isSettled = await renderWait();
+
+      expect(isSettled(`<html><body><div ${RECIPE_SCHEMA}></div></body></html>`)).toBe(true);
+    });
+
+    it("keeps waiting on a bot check that names the indicators", async () => {
+      const isSettled = await renderWait();
+
+      expect(
+        isSettled(`<html><head><title>Just a moment</title></head><body>
+          <h2>Ingredients</h2><h2>Directions</h2>
+        </body></html>`)
+      ).toBe(false);
+    });
+  });
+
+  describe("notes from the page's recipe card", () => {
+    const withNotes = `<html><body>
+      <div class="wprm-recipe-notes"><span>Use a sturdy potato.</span></div>
+    </body></html>`;
+
+    beforeEach(() => {
+      mockFetchRenderedPage.mockResolvedValue(withNotes);
+    });
+
+    it("fills them in on a structured parse", async () => {
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result.recipe).toMatchObject({
+        name: "Structured Recipe",
+        notes: "Use a sturdy potato.",
+      });
+    });
+
+    it("fills them in when AI extraction found none", async () => {
+      mockShouldAlwaysUseAI.mockResolvedValue(true);
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result.recipe).toMatchObject({ name: "AI Recipe", notes: "Use a sturdy potato." });
+    });
+
+    it("keeps the notes AI extraction found", async () => {
+      mockShouldAlwaysUseAI.mockResolvedValue(true);
+      mockExtractRecipeWithAI.mockResolvedValue({ ...aiRecipe, notes: "From the model." });
+
+      const { parseRecipeFromUrl } = await import("@norish/api/parser");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
+
+      expect(result.recipe.notes).toBe("From the model.");
+    });
   });
 
   describe("import triage with a Decision Model", () => {
@@ -674,7 +890,9 @@ describe("parseRecipeFromUrl import flow", () => {
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
       await expect(
-        parseRecipeFromUrl("https://example.com/page", "recipe-1")
+        parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+          householdCategories: BUILT_IN_CATEGORIES,
+        })
       ).rejects.toMatchObject({
         message: "This page doesn't look like a recipe.",
         // The job monitor still sees the parser's own reply.
@@ -683,7 +901,7 @@ describe("parseRecipeFromUrl import flow", () => {
       expect(mockIsRecipe).toHaveBeenCalledTimes(1);
       // The question is asked of the sanitized text, not the raw markup.
       expect(mockIsRecipe).toHaveBeenCalledWith("ingredient instructions");
-      expect(mockGetContentIndicators).not.toHaveBeenCalled();
+      expect(mockGetContentIndicators).toHaveBeenCalledTimes(1);
       expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
     });
 
@@ -695,7 +913,9 @@ describe("parseRecipeFromUrl import flow", () => {
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
       await expect(
-        parseRecipeFromUrl("https://example.com/page", "recipe-1")
+        parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+          householdCategories: BUILT_IN_CATEGORIES,
+        })
       ).rejects.toMatchObject({
         message: "This page doesn't look like a recipe.",
         detail: { aiFallback: "disabled" },
@@ -709,7 +929,9 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await parseRecipeFromUrl("https://example.com/page", "recipe-1");
+      await parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(mockIsRecipe).toHaveBeenCalledTimes(1);
       expect(mockExtractRecipeWithAI).toHaveBeenCalled();
@@ -721,10 +943,12 @@ describe("parseRecipeFromUrl import flow", () => {
       mockIsRecipe.mockResolvedValue(true);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/page", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
-      expect(mockGetContentIndicators).not.toHaveBeenCalled();
+      expect(mockGetContentIndicators).toHaveBeenCalledTimes(1);
     });
 
     it("falls back to the keyword rule when triage has no opinion", async () => {
@@ -734,17 +958,21 @@ describe("parseRecipeFromUrl import flow", () => {
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
 
-      await expect(parseRecipeFromUrl("https://example.com/page", "recipe-1")).rejects.toThrow(
-        "Page does not appear to contain a recipe."
-      );
-      expect(mockGetContentIndicators).toHaveBeenCalled();
+      await expect(
+        parseRecipeFromUrl("https://example.com/page", "recipe-1", {
+          householdCategories: BUILT_IN_CATEGORIES,
+        })
+      ).rejects.toThrow("Page does not appear to contain a recipe.");
+      expect(mockGetContentIndicators).toHaveBeenCalledTimes(2);
     });
 
     it("sends a structured parse the Decision Model scores as incomplete through AI extraction", async () => {
       mockIsParseComplete.mockResolvedValue(false);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(mockIsParseComplete).toHaveBeenCalledWith(structuredRecipe);
       expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
@@ -757,7 +985,9 @@ describe("parseRecipeFromUrl import flow", () => {
       mockExtractRecipeWithAI.mockResolvedValue(stepless);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toEqual({ recipe: stepless, usedAI: true, incomplete: true });
     });
@@ -766,7 +996,9 @@ describe("parseRecipeFromUrl import flow", () => {
       mockIsParseComplete.mockResolvedValue(true);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toEqual({ recipe: structuredRecipe, usedAI: false });
       expect(mockExtractRecipeWithAI).not.toHaveBeenCalled();
@@ -777,7 +1009,9 @@ describe("parseRecipeFromUrl import flow", () => {
       mockExtractRecipeWithAI.mockRejectedValue(new Error("provider down"));
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toEqual({ recipe: structuredRecipe, usedAI: false, incomplete: true });
     });
@@ -787,7 +1021,9 @@ describe("parseRecipeFromUrl import flow", () => {
       mockIsParseComplete.mockResolvedValue(false);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(mockIsParseComplete).toHaveBeenCalledWith(structuredRecipe);
       expect(result).toEqual({ recipe: structuredRecipe, usedAI: false, incomplete: true });
@@ -802,9 +1038,11 @@ describe("parseRecipeFromUrl import flow", () => {
       for (const opinion of [true, null]) {
         mockIsParseComplete.mockResolvedValue(opinion);
 
-        await expect(parseRecipeFromUrl("https://example.com/recipe", "recipe-1")).resolves.toEqual(
-          { recipe: structuredRecipe, usedAI: false }
-        );
+        await expect(
+          parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+            householdCategories: BUILT_IN_CATEGORIES,
+          })
+        ).resolves.toEqual({ recipe: structuredRecipe, usedAI: false });
       }
     });
 
@@ -812,7 +1050,9 @@ describe("parseRecipeFromUrl import flow", () => {
       mockShouldAlwaysUseAI.mockResolvedValue(true);
 
       const { parseRecipeFromUrl } = await import("@norish/api/parser");
-      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1");
+      const result = await parseRecipeFromUrl("https://example.com/recipe", "recipe-1", {
+        householdCategories: BUILT_IN_CATEGORIES,
+      });
 
       expect(result).toMatchObject({ recipe: aiRecipe, usedAI: true });
       expect(mockCallRecipeScrapersParser).not.toHaveBeenCalled();

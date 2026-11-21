@@ -10,6 +10,7 @@
  */
 import type { NutritionCorrectionValues } from "@norish/db/repositories/ingredient-nutrition";
 import type {
+  NUTRITION_REFUSALS,
   NutritionFoodRef,
   NutritionFoodSummary,
 } from "@norish/shared/contracts/ingredient-nutrition";
@@ -38,7 +39,7 @@ export interface NutritionCorrectionInput {
   density: CorrectedFact<{ gramsPerMl: number }>;
 }
 
-export type CorrectionRefusal = "not-found" | "unknown-food" | "empty";
+export type CorrectionRefusal = (typeof NUTRITION_REFUSALS)[number];
 
 export class NutritionCorrectionError extends Error {
   constructor(readonly refusal: CorrectionRefusal) {

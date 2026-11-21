@@ -8,8 +8,8 @@ import {
   shouldBeActive,
 } from "@norish/shared/lib/recurrence/calculator";
 
-// Mock the current date for consistent testing
-const MOCK_TODAY = new Date("2025-01-15T12:00:00Z");
+// Local noon: "today" is the device's calendar date, so it holds in every zone.
+const MOCK_TODAY = new Date(2025, 0, 15, 12);
 
 describe("recurrence/calculator", () => {
   beforeEach(() => {
@@ -110,7 +110,7 @@ describe("recurrence/calculator", () => {
 
       it("handles end of month dates", () => {
         // Mock a date at the end of January
-        vi.setSystemTime(new Date("2025-01-31T12:00:00Z"));
+        vi.setSystemTime(new Date(2025, 0, 31, 12));
 
         const pattern: RecurrencePattern = { rule: "month", interval: 1 };
         const result = calculateNextOccurrence(pattern, "2025-01-31", "2025-01-31");

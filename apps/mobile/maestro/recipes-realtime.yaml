@@ -1,0 +1,25 @@
+# Another session saves a recipe on the server: its card appears in the open Library with no reload,
+# over the realtime socket.
+appId: dev.norish.app
+env:
+  PIE_RECIPES: '[{"name": "Realtime Pie", "key": "pie"}]'
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Realtime Soup", "key": "soup"}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 20000
+- assertNotVisible: ${json(PIE_RECIPES)[0].name}
+- runFlow:
+    file: subflows/recipe.yaml
+    env:
+      RECIPES: ${PIE_RECIPES}
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.pie}
+    timeout: 20000
+- assertVisible:
+    id: recipe-card-${output.soup}

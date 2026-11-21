@@ -1,0 +1,261 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import type {
+  AisleDto,
+  AisleInput,
+  StoreCreateDto,
+  StoreDeleteInput,
+  StoreDto,
+  StoreSearchAddressResult,
+} from "@norish/shared/contracts";
+import { createClientId } from "@norish/shared/lib/operation-helpers";
+
+import type { GroceriesData, StoresData, StoresMutationsResult, StoreUpdateDraft } from "./types";
+import {
+  invalidateUnlessPreserved,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
+import { useTRPC } from "../trpc";
+
+/**
+ * The aisles as the Store will carry them once the save lands: a known aisle's
+ * version bumps only for a rename, as the server's does; a new one starts at 1 (ADR-0031).
+ */
+function optimisticAisles(storeId: string, input: AisleInput[], before: AisleDto[]): AisleDto[] {
+  const known = new Map(before.map((aisle) => [aisle.id, aisle]));
+
+  return input.map((aisle, index) => {
+    const was = known.get(aisle.id);
+    const renamed = was !== undefined && was.name !== aisle.name;
+
+    return {
+      id: aisle.id,
+      storeId,
+      name: aisle.name,
+      sortOrder: index,
+      version: was === undefined ? 1 : was.version + (renamed ? 1 : 0),
+    };
+  });
+}
+
+export function useStoresMutations(): StoresMutationsResult {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const storesKey = trpc.stores.list.queryKey();
+  // Read when an action runs, before its optimistic write, never by subscribing: the store
+  // manager doesn't re-render for the stores it is handed.
+  const heldStores = () => queryClient.getQueryData<StoresData>(storesKey) ?? [];
+  const versionOf = (stores: StoresData, storeId: string): number =>
+    stores.find((store) => store.id === storeId)?.version ?? 1;
+  const setStoresData = (updater: (prev: StoresData | undefined) => StoresData | undefined) =>
+    queryClient.setQueryData<StoresData>(storesKey, updater);
+  const invalidate = () => void queryClient.invalidateQueries({ queryKey: storesKey });
+
+  // Keep an optimistic update when its mutation was Queued for Replay.
+  const invalidateUnlessQueued = invalidateUnlessPreserved(invalidate);
+
+  /** The new Store on the list, once, under the id it is stored with. */
+  const insertCreated = (storeId: string, data: StoreCreateDto) => {
+    const newStore: StoreDto = {
+      id: storeId,
+      userId: "",
+      name: data.name,
+      color: data.color ?? "primary",
+      website: data.website ?? null,
+      searchAddress: data.searchAddress ?? null,
+      sortOrder: heldStores().length,
+      version: 1,
+      aisles: optimisticAisles(storeId, data.aisles ?? [], []),
+    };
+
+    setStoresData((prev) => {
+      if (!prev) return [newStore];
+      if (prev.some((s) => s.id === storeId)) return prev;
+
+      return [...prev, newStore];
+    });
+  };
+
+  // Each answer is handled in useMutation's own options, which run whatever is mounted: a `mutate`
+  // call's own callbacks are dropped once its observer mutates again.
+  const createOptions = trpc.stores.create.mutationOptions({
+    onSuccess: (storeId, data) => insertCreated(storeId, data),
+    onError: (error, data) => {
+      // Queued: the row goes in under the client-minted id the server honours on Replay
+      // (ADR-0003), a tentative success rather than a failure.
+      if (shouldPreserveOptimisticUpdate(error)) {
+        if (data.id) insertCreated(data.id, data);
+
+        return;
+      }
+      invalidate();
+    },
+  });
+  // A refused write leaves the optimistic row ahead of the server's: read it again.
+  const rereadIfStale = ({ stale }: { stale: boolean }) => {
+    if (stale) invalidate();
+  };
+  // Versioned writes go one at a time, in the order made: each is sent at the version the one
+  // before it bumped in the cache, so one sent ahead would be refused as stale.
+  const inOrder = { id: "store-writes" };
+  const updateOptions = trpc.stores.update.mutationOptions({
+    scope: inOrder,
+    onSuccess: rereadIfStale,
+    onError: invalidateUnlessQueued,
+  });
+  const groceriesKey = trpc.groceries.list.queryKey();
+  const deleteOptions = trpc.stores.delete.mutationOptions({
+    scope: inOrder,
+    // The Store's lines go with it, or to Unsorted at the version the server's move leaves.
+    onMutate: ({ storeId, deleteGroceries }) => {
+      const was = {
+        stores: queryClient.getQueryData<StoresData>(storesKey),
+        groceries: queryClient.getQueryData<GroceriesData>(groceriesKey),
+      };
+
+      setStoresData((prev) => prev?.filter((s) => s.id !== storeId));
+      queryClient.setQueryData<GroceriesData>(groceriesKey, (prev) => {
+        if (!prev) return prev;
+        const kept = deleteGroceries
+          ? prev.groceries.filter((g) => g.storeId !== storeId)
+          : prev.groceries.map((g) =>
+              g.storeId === storeId ? { ...g, storeId: null, version: g.version + 1 } : g
+            );
+
+        return { ...prev, groceries: kept };
+      });
+
+      return was;
+    },
+    // Kept for lines it was not shown, the Store's lines come back too: read both again.
+    onSuccess: ({ stale }) => {
+      if (!stale) return;
+      invalidate();
+      void queryClient.invalidateQueries({ queryKey: groceriesKey });
+    },
+    onError: (error, _input, was) => {
+      if (shouldPreserveOptimisticUpdate(error)) return;
+      if (was) {
+        queryClient.setQueryData(storesKey, was.stores);
+        queryClient.setQueryData(groceriesKey, was.groceries);
+      }
+      invalidate();
+    },
+  });
+  const reorderOptions = trpc.stores.reorder.mutationOptions({
+    scope: inOrder,
+    onSuccess: rereadIfStale,
+    onError: invalidateUnlessQueued,
+  });
+  const createMutation = useMutation(createOptions);
+  const { mutateAsync: mutateCreate } = createMutation;
+  const updateMutation = useMutation(updateOptions);
+  const { mutate: mutateUpdate } = updateMutation;
+  const deleteMutation = useMutation(deleteOptions);
+  const { mutate: mutateDelete } = deleteMutation;
+  const reorderMutation = useMutation(reorderOptions);
+  const { mutate: mutateReorder } = reorderMutation;
+  const { mutateAsync: mutateCheckAsync } = useMutation(
+    trpc.stores.checkSearchAddress.mutationOptions()
+  );
+
+  const createStore = (data: StoreCreateDto): Promise<string> => {
+    // Client-minted id, honoured on insert so a queued offline create stays
+    // addressable by later mutations (ADR-0003).
+    const payload = { ...data, id: createClientId() };
+
+    return mutateCreate(payload).catch((error: unknown) => {
+      if (shouldPreserveOptimisticUpdate(error)) return payload.id;
+      throw error;
+    });
+  };
+
+  const updateStore = (data: StoreUpdateDraft) => {
+    const version = versionOf(heldStores(), data.id);
+
+    setStoresData((prev) => {
+      if (!prev) return prev;
+
+      return prev.map((s) => {
+        if (s.id !== data.id) return s;
+        const { aisles, ...fields } = data;
+
+        return {
+          ...s,
+          ...fields,
+          // The server bumps the Store on every edit; holding that keeps the next write current.
+          version: s.version + 1,
+          // Absent, the aisles are not part of this save and stay as they are.
+          aisles: aisles === undefined ? s.aisles : optimisticAisles(s.id, aisles, s.aisles),
+        };
+      });
+    });
+
+    mutateUpdate({ ...data, version });
+  };
+
+  const deleteStore = (storeId: string, deleteGroceries: boolean) => {
+    const version = versionOf(heldStores(), storeId);
+    // The Store's groceries at the versions this screen holds: the server deletes or moves only those.
+    const grocerySnapshot = (queryClient.getQueryData<GroceriesData>(groceriesKey)?.groceries ?? [])
+      .filter((grocery) => grocery.storeId === storeId)
+      .map(({ id, version: groceryVersion }) => ({ id, version: groceryVersion }));
+
+    const input: StoreDeleteInput = {
+      storeId,
+      version,
+      deleteGroceries,
+      grocerySnapshot,
+    };
+
+    mutateDelete(input);
+  };
+
+  const reorderStores = (storeIds: string[]) => {
+    const held = heldStores();
+
+    setStoresData((prev) => {
+      if (!prev) return prev;
+      const storeMap = new Map(prev.map((s) => [s.id, s]));
+
+      return storeIds
+        .map((id, index) => {
+          const store = storeMap.get(id);
+
+          return store ? { ...store, sortOrder: index } : null;
+        })
+        .filter((s): s is StoreDto => s !== null);
+    });
+
+    mutateReorder({ stores: storeIds.map((id) => ({ id, version: versionOf(held, id) })) });
+  };
+
+  /**
+   * Ask a Store's shop whether Norish can search it. It never gates a save:
+   * the Store is already stored by the time this is asked, and the answer
+   * is something to tell the user rather than something to act on.
+   */
+  const checkSearchAddress = (
+    storeId: string,
+    term: string | null,
+    searchAddress: string | null,
+    website: string | null
+  ): Promise<StoreSearchAddressResult> =>
+    mutateCheckAsync({ storeId, term, searchAddress, website }).then((result) => {
+      invalidate();
+
+      return result;
+    });
+
+  return {
+    createStore,
+    updateStore,
+    deleteStore,
+    reorderStores,
+    checkSearchAddress,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isReordering: reorderMutation.isPending,
+  };
+}

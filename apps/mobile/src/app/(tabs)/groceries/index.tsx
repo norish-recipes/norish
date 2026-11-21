@@ -1,6 +1,1 @@
-import React from "react";
-import { GroceriesScreen as GroceriesTabScreen } from "@/components/groceries";
-
-export default function GroceriesScreen() {
-  return <GroceriesTabScreen />;
-}
+export { GroceriesScreen as default } from "@/features/groceries/screens/groceries-screen";

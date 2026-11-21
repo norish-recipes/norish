@@ -21,8 +21,7 @@
   },
   "item": {
     "unnamedItem": "Unbenannter Eintrag",
-    "fromRecipes": "Aus {count, plural, one {# Rezept} other {# Rezepten}}",
-    "items": "{count, plural, one {# Eintrag} other {# Einträge}}"
+    "items": "{count, plural, =0 {Keine Einträge} one {# Eintrag} other {# Einträge}}"
   },
   "store": {
     "unsorted": "Unsortiert",
@@ -54,7 +53,6 @@
       "violet": "Violett"
     },
     "confirmDelete": "Möchtest du {storeName} wirklich löschen?",
-    "deleteWarning": "Einträge in diesem Geschäft werden in \"Unsortiert\" verschoben.",
     "noStoresYet": "Noch keine Geschäfte",
     "createStoreHint": "Erstelle ein Geschäft, um deine Einkaufsliste zu organisieren",
     "hasItems": "Dieses Geschäft hat {count} Eintrag.",
@@ -95,6 +93,7 @@
     "unavailable": "Deine Vorratskammer konnte nicht gelesen werden. Es hat sich nichts geändert; versuch es erneut, wenn du wieder online bist.",
     "fieldLabel": "Lebensmittel suchen oder hinzufügen",
     "fieldPlaceholder": "Suchen oder hinzufügen, z. B. Olivenöl",
+    "findPlaceholder": "Lebensmittel in der Vorratskammer suchen",
     "add": "Zur Vorratskammer hinzufügen",
     "fromCatalogue": "Lebensmittel hinzufügen",
     "addFood": "{name} zur Vorratskammer hinzufügen",
@@ -113,26 +112,11 @@
   "panel": {
     "addTitle": "Einkauf hinzufügen",
     "editTitle": "Einkauf bearbeiten",
-    "itemName": "Name des Eintrags",
-    "itemNamePlaceholder": "z.B. Milch, Eier, Brot...",
     "selectStore": "Geschäft auswählen",
-    "noStore": "Kein Geschäft",
     "recurrence": "Wiederholung",
     "savePreference": "Geschäft für diesen Eintrag merken",
     "addAnother": "Weiteren hinzufügen",
     "addRepeat": "Wiederholung einrichten",
-    "recurrenceEnabled": "Wiederkehrend",
-    "recurrenceSheet": {
-      "title": "Wiederholung",
-      "subtitle": "Diesen Eintrag automatisch erneut zur Einkaufsliste hinzufügen",
-      "enable": "Wiederholung aktivieren",
-      "disable": "Wiederholung deaktivieren",
-      "frequency": "Häufigkeit",
-      "weekly": "Wöchentlich",
-      "biweekly": "Alle 2 Wochen",
-      "monthly": "Monatlich",
-      "confirm": "Bestätigen"
-    },
     "storeOptional": "Geschäft (optional)",
     "autoDetectFromHistory": "Aus Verlauf erkennen",
     "autoDetectOrSelect": "Erkennen oder auswählen",
@@ -143,7 +127,6 @@
     "pantryUnavailable": "Deine Vorratskammer konnte nicht gelesen werden, daher ist noch nichts angehakt. Hake an, was du kaufen musst.",
     "loadingIngredients": "Zutaten werden geladen...",
     "noIngredients": "Keine Zutaten.",
-    "addSelectedToGroceries": "Zur Einkaufsliste hinzufügen",
     "ingredientsAdded": "Zutaten zur Einkaufsliste hinzugefügt.",
     "ingredientsFailed": "Fehler beim Hinzufügen der Zutaten zur Einkaufsliste.",
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
@@ -168,7 +151,6 @@
     "productLabel": "Produkt bei {store}",
     "cannotSearch": "Dieser Shop kann nicht durchsucht werden",
     "cannotSearchHint": "Norish konnte aus dem Shop-Link von {store} keine Suchseite lesen. Korrigiere ihn unter Shops verwalten, dann folgen die Preise.",
-    "packSize": "Packungsgröße",
     "packAmount": "Menge pro Packung",
     "packUnit": "Einheit",
     "productPage": "Produktseite",
@@ -195,6 +177,38 @@
     "packs": "{count} × {size}",
     "onePack": "als eine Packung berechnet",
     "sale": "Angebot",
-    "regularPrice": "Normalpreis {price}"
+    "regularPrice": "Normalpreis {price}",
+    "each": "pro Stück"
+  },
+  "mobile": {
+    "viewMode": "Ansicht",
+    "viewByStore": "Nach Geschäft",
+    "viewByRecipe": "Nach Rezept",
+    "listSettings": "Listeneinstellungen",
+    "emptyHint": "Füge Einträge mit der Schaltfläche unten hinzu.",
+    "addTitle": "Einkäufe hinzufügen",
+    "editTitle": "Einkauf bearbeiten",
+    "store": "Geschäft",
+    "noStore": "Kein Geschäft",
+    "automatic": "Automatisch",
+    "never": "Nie",
+    "removeRepeat": "Wiederholung entfernen",
+    "amountFor": "{amount} für {recipe}",
+    "expand": "Aufklappen",
+    "collapse": "Zuklappen",
+    "itemLabel": "Eintrag",
+    "decreaseInterval": "Intervall verringern",
+    "increaseInterval": "Intervall erhöhen",
+    "manageStores": "Geschäfte verwalten",
+    "addStore": "Geschäft hinzufügen",
+    "editStore": "Geschäft bearbeiten",
+    "editStoreLabel": "{store} bearbeiten",
+    "deleteStoreLabel": "{store} löschen",
+    "deleteStoreTitle": "{store} löschen?",
+    "moveItemsToUnsorted": "Artikel nach „Unsortiert“ verschieben",
+    "typePrice": "Preis selbst eingeben",
+    "product": "Produkt",
+    "chooseProduct": "Produkt auswählen",
+    "recipeCount": "{count, plural, one {# Rezept} other {# Rezepte}}"
   }
 }

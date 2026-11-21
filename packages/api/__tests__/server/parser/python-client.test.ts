@@ -24,6 +24,11 @@ vi.mock("@norish/shared-server/logger", () => ({
   redactUrl: (value: string) => value,
 }));
 
+// The process is the launcher's concern: here the parser is simply up.
+vi.mock("@norish/shared-server/embedded-parser", () => ({
+  withEmbeddedParser: <T>(use: () => Promise<T>) => use(),
+}));
+
 describe("callRecipeScrapersParser", () => {
   afterEach(() => {
     vi.restoreAllMocks();

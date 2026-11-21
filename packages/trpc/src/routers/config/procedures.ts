@@ -2,7 +2,9 @@ import { TRPCError } from "@trpc/server";
 
 import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/providers";
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
+import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
+import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
 import {
@@ -15,8 +17,10 @@ import {
   isRegistrationEnabled,
   isTimersEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { embeddedParserState } from "@norish/shared-server/embedded-parser";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getValkeyHealth } from "@norish/shared-server/valkey/client";
+import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
 import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
@@ -29,8 +33,15 @@ import {
 /** Ready only reports the parser, so it waits on it no longer than on Valkey's ping. */
 const READY_PARSER_TIMEOUT_MS = 2_000;
 
-/** The internal parser's own health check, which Norish runs as its child process. */
+/**
+ * The internal parser's own health check, which Norish runs as its child process. It runs only
+ * between a URL import and its idle stop, so one not running is `idle` or `starting`, not down.
+ */
 async function getParserHealth(timeoutMs = SERVER_CONFIG.PARSER_API_TIMEOUT_MS) {
+  const state = embeddedParserState();
+
+  if (state === "idle" || state === "starting") return { status: state };
+
   try {
     const response = await fetch(buildInternalParserApiUrl("/health"), {
       signal: AbortSignal.timeout(timeoutMs),
@@ -98,6 +109,19 @@ const tags = authedProcedure.query(async ({ ctx }) => {
       : await listTagNamesForUsers(ctx.userIds);
 
   return { tags: tagNames };
+});
+
+/**
+ * The household's Categories. Always household-scoped, unlike `tags`: another
+ * household's Categories would fill the chip row (ADR-0040).
+ */
+const categories = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting categories");
+
+  return {
+    categories: await listCategoryNamesForUsers(ctx.userIds),
+    builtInAliases: BUILT_IN_ALIASES,
+  };
 });
 
 /**
@@ -192,7 +216,7 @@ const authProviders = publicProcedure.query(async () => {
 
 /**
  * Whether to restart Norish: only what a restart can fix. Norish runs the
- * parser itself, so a hung parser fails it; Postgres and Valkey do not, since
+ * parser itself, so a running parser that hangs fails it; Postgres and Valkey do not, since
  * restarting Norish fixes neither.
  */
 export const healthLive = publicProcedure
@@ -204,7 +228,7 @@ export const healthLive = publicProcedure
       tags: ["Health"],
       summary: "Check whether Norish is alive",
       description:
-        "Answers 200 while the server responds and its internal parser answers its own health check. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
+        "Answers 200 while the server responds and its internal parser, when running, answers its own health check. The parser starts on the first URL import and stops when idle, reported as `idle`. Checks neither the database nor Valkey. Point restart probes (Docker HEALTHCHECK, Kubernetes liveness) here.",
       successDescription: "The server and its parser are alive.",
       errorResponses: { 503: "The parser service is unhealthy or unreachable" },
     },
@@ -213,7 +237,7 @@ export const healthLive = publicProcedure
   .query(async () => {
     const parser = await getParserHealth();
 
-    if (parser.status !== "ok") {
+    if (parser.status !== "ok" && parser.status !== "idle" && parser.status !== "starting") {
       throw new TRPCError({
         code: "SERVICE_UNAVAILABLE",
         message: `Parser service is ${parser.status}`,
@@ -237,7 +261,8 @@ async function checkReady() {
     });
   }
 
-  return { status: "ok" as const, db, valkey, parser };
+  // Every workspace package carries the release version (tooling/monorepo/scripts/sync-version.mjs).
+  return { status: "ok" as const, version: configPackage.version, db, valkey, parser };
 }
 
 /**
@@ -253,7 +278,7 @@ export const healthReady = publicProcedure
       tags: ["Health"],
       summary: "Check whether Norish is ready for traffic",
       description:
-        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
+        "Answers 503 while the database or Valkey is unreachable, and 200 otherwise, reporting the running server version. The parser's state is in the response but does not fail the check. Point readiness probes and load balancers here.",
       successDescription: "The database and Valkey are healthy.",
       errorResponses: { 503: "The database or Valkey is unhealthy or unreachable" },
     },
@@ -283,6 +308,7 @@ export const health = publicProcedure
 export const configProcedures = router({
   localeConfig,
   tags,
+  categories,
   cuisines,
   units,
   ingredientWords,

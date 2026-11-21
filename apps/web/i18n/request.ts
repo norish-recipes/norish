@@ -3,14 +3,15 @@ import "server-only";
 import { cookies } from "next/headers";
 import { readReaderTimeZone } from "@/lib/reader-today-server";
 import { readRequestProfile } from "@/lib/request-profile";
+import { serverPackage } from "@/lib/server-package";
 import { getRequestConfig } from "next-intl/server";
 
 import type { Locale } from "@norish/i18n";
 import { DEFAULT_LOCALE, isValidLocale, loadLocaleMessages } from "@norish/i18n";
-import {
-  getDefaultLocale as getConfigDefaultLocale,
-  isValidEnabledLocale,
-} from "@norish/shared-server/config/server-config-loader";
+
+const { getDefaultLocale: getConfigDefaultLocale, isValidEnabledLocale } = await serverPackage<
+  typeof import("@norish/shared-server/config/server-config-loader")
+>("@norish/shared-server/config/server-config-loader");
 
 const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
 

@@ -1,3 +1,3 @@
 Classify the recipe into one or more meal categories.
-Allowed categories: Breakfast, Lunch, Dinner, Snack.
+Allowed categories: only those in the HOUSEHOLD CATEGORIES list.
 Return only the categories that fit the recipe.

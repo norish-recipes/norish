@@ -1,8 +1,8 @@
 /**
  * Grocery realtime catalogue.
  *
- * Every event is household-scoped except `failed`: a validation failure on
- * one member's change toasts that member, not the whole household.
+ * Every event is household-scoped except `failed`: a write that failed outside the app (the
+ * REST API) toasts that member alone; the app's own writes toast their rejection instead.
  */
 
 import { z } from "zod";

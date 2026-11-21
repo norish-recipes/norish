@@ -87,7 +87,7 @@ test("a recipe-foods clean-up merges a food nobody asked about, listed under Cha
   await waitForAIPasses(stack);
   expect(ai.control.ingredientRequests).toHaveLength(1);
 
-  await page.goto("/settings?tab=ingredients");
+  await page.goto("/settings/ingredients");
   await page.getByTestId("ingredients-ai-changes-open").click();
   const changes = page.getByRole("dialog", { name: "Changed by AI" });
 

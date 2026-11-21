@@ -49,16 +49,11 @@ export interface PlannedItemMoveInput {
   version: number;
   targetDate: string;
   targetSlot: Slot;
-  targetIndex: number;
+  /** Omitted: last in the target slot. */
+  targetIndex?: number;
 }
 
 export interface PlannedItemDeleteInput {
   itemId: string;
   version: number;
-}
-
-export interface PlannedItemUpdateInput {
-  itemId: string;
-  version: number;
-  title: string;
 }

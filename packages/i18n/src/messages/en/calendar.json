@@ -4,18 +4,19 @@
   },
   "mobile": {
     "today": "Today",
-    "scrollToToday": "Go to today"
+    "scrollToToday": "Go to today",
+    "planRecipe": "Plan recipe"
+  },
+  "today": {
+    "openRecipe": "Open recipe",
+    "move": "Move…",
+    "removeMessage": "{name} comes off {day}'s {slot}.",
+    "moveTitle": "Move"
   },
   "editNote": {
     "title": "Edit Note",
     "noteLabel": "Note",
     "notePlaceholder": "Enter note..."
-  },
-  "navigation": {
-    "previousMonth": "Previous month",
-    "nextMonth": "Next month",
-    "prev": "Prev",
-    "next": "Next"
   },
   "weekdays": {
     "mon": "Mon",
@@ -50,6 +51,28 @@
     "addNote": "Add Note: {input}",
     "randomRecipe": "Random Recipe",
     "noRecipesFound": "No recipes found.",
-    "failedToLoadRecipes": "Failed to load recipes."
+    "failedToLoadRecipes": "Failed to load recipes.",
+    "searchOrAddNote": "Search recipes or add a note",
+    "random": "Random recipe",
+    "planThisRecipe": "Plan this recipe",
+    "planOnDay": "Plan {name} on {day}",
+    "addToDay": "Add to {day}"
+  },
+  "caldav": {
+    "syncStarted": "CalDAV sync started",
+    "syncStartedDescription": "Items to sync: {queued}",
+    "syncStartedWithFailures": "Items to sync: {queued}. Could not be queued: {failed}",
+    "configSaved": "Configuration saved",
+    "configSavedDescription": "Your CalDAV settings have been saved.",
+    "configDeleted": "Configuration deleted",
+    "configDeletedDescription": "Your CalDAV settings have been removed.",
+    "retryStarted": "Sync started",
+    "retryStartedDescription": "Retrying pending and failed items…"
+  },
+  "widgets": {
+    "nothingPlanned": "Nothing planned",
+    "signIn": "Open Norish to sign in",
+    "open": "Open Norish",
+    "more": "+{count} more"
   }
 }

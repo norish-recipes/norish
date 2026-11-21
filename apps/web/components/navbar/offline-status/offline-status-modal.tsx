@@ -4,7 +4,8 @@ import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { usePending } from "@/hooks/use-pending";
-import { OFFLINE_FORCED_AVAILABLE } from "@/lib/connectivity";
+import { OFFLINE_FORCED_AVAILABLE, switchOfflineForced } from "@/lib/connectivity/forced-offline";
+import { offlineEngine } from "@/lib/offline/engine";
 import {
   ArrowPathIcon,
   BookmarkSquareIcon,
@@ -17,8 +18,8 @@ import {
 import { Button, Modal } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
-import type { OfflineStatus } from "./use-offline-status";
-import { useOfflineStatus } from "./use-offline-status";
+import type { OfflineStatus } from "@norish/shared-react/offline/react";
+import { useOfflineStatus } from "@norish/shared-react/offline/react";
 
 interface OfflineStatusModalProps {
   isOpen: boolean;
@@ -35,9 +36,7 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
   const t = useTranslations("common.offlineStatus");
   const isMobile = useIsMobile();
 
-  // Only mount the body — and thus the data layer (useTRPC, the Outbox
-  // subscription, the cache reads) — while the modal is open, so a closed modal
-  // costs nothing and doesn't depend on the tRPC provider being present.
+  // The body holds the tRPC reads and Outbox subscription, so it mounts only while open.
   const body = isOpen ? <OfflineStatusBody /> : null;
 
   if (isMobile) {
@@ -65,7 +64,7 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
 }
 
 function OfflineStatusBody() {
-  const status = useOfflineStatus();
+  const status = useOfflineStatus(offlineEngine);
 
   return (
     <div className="flex flex-col gap-6">
@@ -314,7 +313,7 @@ function DevToggleSection({ status }: { status: OfflineStatus }) {
         <Button
           size="sm"
           variant={status.isForced ? "danger" : "tertiary"}
-          onPress={() => status.setForcedOffline(!status.isForced)}
+          onPress={() => switchOfflineForced(!status.isForced)}
         >
           {status.isForced ? t("on") : t("off")}
         </Button>

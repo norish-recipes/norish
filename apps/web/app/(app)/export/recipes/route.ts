@@ -1,12 +1,22 @@
 import { ARCHIVE_PROBE_PARAM, ARCHIVE_PROBE_VALUE } from "@/lib/export/archive-download-protocol";
+import { serverPackage } from "@/lib/server-package";
 
-import { auth } from "@norish/auth/auth";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { isUserServerAdmin } from "@norish/db";
-import { buildNorishArchiveForViewer } from "@norish/shared-server/archive/norish-export";
-import { NORISH_ARCHIVE_EXTENSION } from "@norish/shared-server/archive/norish-format";
-import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
-import { serverLogger as log } from "@norish/shared-server/logger";
+
+const { auth } = await serverPackage<typeof import("@norish/auth/auth")>("@norish/auth/auth");
+const { isUserServerAdmin } = await serverPackage<typeof import("@norish/db")>("@norish/db");
+const { buildNorishArchiveForViewer } = await serverPackage<
+  typeof import("@norish/shared-server/archive/norish-export")
+>("@norish/shared-server/archive/norish-export");
+const { NORISH_ARCHIVE_EXTENSION } = await serverPackage<
+  typeof import("@norish/shared-server/archive/norish-format")
+>("@norish/shared-server/archive/norish-format");
+const { getCachedHouseholdForUser } = await serverPackage<
+  typeof import("@norish/shared-server/cache/household")
+>("@norish/shared-server/cache/household");
+const { serverLogger: log } = await serverPackage<typeof import("@norish/shared-server/logger")>(
+  "@norish/shared-server/logger"
+);
 
 export const runtime = "nodejs";
 

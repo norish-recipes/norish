@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { defineConfig } from "@playwright/test";
 
 import { BUILT_BASE_PATH } from "./harness/build";
@@ -20,7 +22,9 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   reporter: [["list"]],
-  outputDir: "./.results",
+  // Outside the checkout: a burst of trace files makes `turbo watch` rescan and
+  // restart a running dev server. CI uploads it from runner.temp on failure.
+  outputDir: path.join(process.env.RUNNER_TEMP ?? tmpdir(), "norish-e2e-results"),
   use: {
     headless: true,
     serviceWorkers: "allow",

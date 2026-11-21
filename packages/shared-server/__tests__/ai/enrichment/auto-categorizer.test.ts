@@ -42,6 +42,10 @@ vi.mock("@norish/shared-server/logger", () => ({ aiLogger: logger }));
 
 const { categorizeRecipe, CATEGORY_THRESHOLD } =
   await import("@norish/shared-server/ai/enrichment/auto-categorizer");
+const { MAX_QUESTIONS_PER_DECISION } =
+  await import("@norish/shared-server/ai/enrichment/verification");
+
+const BUILT_INS = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 const recipe = {
   title: "Overnight oats",
@@ -49,15 +53,13 @@ const recipe = {
   ingredients: ["rolled oats", "milk", "chia seeds", "honey"],
 };
 
-/** A Decision answer with the given probability per category. */
-function decided(
-  probabilities: Partial<Record<"Breakfast" | "Lunch" | "Dinner" | "Snack", number>>
-) {
+/** A Decision answer with the given probability per category, keyed by position. */
+function decided(probabilities: Record<string, number>, categories: readonly string[] = BUILT_INS) {
   return {
     model: "jev-2026-09-01",
     answers: Object.fromEntries(
-      (["Breakfast", "Lunch", "Dinner", "Snack"] as const).map((category) => [
-        category,
+      categories.map((category, index) => [
+        `c${index}`,
         { type: "boolean", probability: probabilities[category] ?? 0.01 },
       ])
     ),
@@ -75,7 +77,7 @@ describe("categorizeRecipe", () => {
   });
 
   it("refuses a recipe with no ingredients before asking anything", async () => {
-    await expect(categorizeRecipe({ ...recipe, ingredients: [] })).rejects.toThrow(
+    await expect(categorizeRecipe({ ...recipe, ingredients: [] }, BUILT_INS)).rejects.toThrow(
       "No ingredients provided"
     );
     expect(mocked.decide).not.toHaveBeenCalled();
@@ -86,7 +88,7 @@ describe("categorizeRecipe", () => {
     it("asks four Boolean questions on the structured recipe and no language model", async () => {
       vi.mocked(isDecisionModelConfigured).mockResolvedValue(true);
 
-      const categories = await categorizeRecipe(recipe);
+      const categories = await categorizeRecipe(recipe, BUILT_INS);
 
       expect(categories).toEqual(["Breakfast"]);
       // A Decision's answer is not validated again: it already is a Decision,
@@ -100,20 +102,59 @@ describe("categorizeRecipe", () => {
           ingredients: ["rolled oats", "milk", "chia seeds", "honey"],
         },
         questions: {
-          Breakfast: { type: "boolean", instructions: expect.stringMatching(/breakfast/i) },
-          Lunch: { type: "boolean", instructions: expect.stringMatching(/lunch/i) },
-          Dinner: { type: "boolean", instructions: expect.stringMatching(/dinner/i) },
-          Snack: { type: "boolean", instructions: expect.stringMatching(/snack/i) },
+          c0: { type: "boolean", instructions: expect.stringMatching(/breakfast/i) },
+          c1: { type: "boolean", instructions: expect.stringMatching(/lunch/i) },
+          c2: { type: "boolean", instructions: expect.stringMatching(/dinner/i) },
+          c3: { type: "boolean", instructions: expect.stringMatching(/snack/i) },
         },
       });
       expect(mocked.generateStructured).not.toHaveBeenCalled();
       expect(vi.mocked(isDecisionUseEnabled)).toHaveBeenCalledWith("autoCategorization");
     });
 
+    it("asks about a household Category by position, whatever its name, and can set it", async () => {
+      const household = [...BUILT_INS, 'Kids "fun" food'];
+
+      mocked.decide.mockResolvedValue(decided({ 'Kids "fun" food': 0.9 }, household));
+
+      await expect(categorizeRecipe(recipe, household)).resolves.toEqual(['Kids "fun" food']);
+      expect(mocked.decide.mock.calls[0]?.[0].questions.c4).toEqual({
+        type: "boolean",
+        instructions: expect.stringContaining('Kids "fun" food'),
+      });
+    });
+
+    it("splits a long list across Decisions at the question limit", async () => {
+      const household = Array.from(
+        { length: MAX_QUESTIONS_PER_DECISION + 5 },
+        (_, index) => `Category ${index}`
+      );
+      const last = household.at(-1)!;
+
+      mocked.decide.mockImplementation(({ questions }: { questions: Record<string, unknown> }) =>
+        Promise.resolve({
+          model: "jev",
+          answers: Object.fromEntries(
+            Object.keys(questions).map((id) => [
+              id,
+              { type: "boolean", probability: id === `c${household.length - 1}` ? 0.9 : 0.01 },
+            ])
+          ),
+        })
+      );
+
+      await expect(categorizeRecipe(recipe, household)).resolves.toEqual([last]);
+      expect(mocked.decide).toHaveBeenCalledTimes(2);
+      expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toHaveLength(
+        MAX_QUESTIONS_PER_DECISION
+      );
+      expect(Object.keys(mocked.decide.mock.calls[1]?.[0].questions)).toHaveLength(5);
+    });
+
     it("sets every category that clears the threshold, since a recipe may be several", async () => {
       mocked.decide.mockResolvedValue(decided({ Breakfast: 0.8, Snack: 0.7, Lunch: 0.3 }));
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Breakfast", "Snack"]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual(["Breakfast", "Snack"]);
     });
 
     it("sets a category at exactly the threshold and not one just below it", async () => {
@@ -121,20 +162,20 @@ describe("categorizeRecipe", () => {
 
       mocked.decide.mockResolvedValue(decided({ Breakfast: 0.6, Snack: 0.59 }));
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Breakfast"]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual(["Breakfast"]);
       expect(mocked.generateStructured).not.toHaveBeenCalled();
     });
 
     it("asks the language model when nothing clears the threshold, and uses its answer", async () => {
       mocked.decide.mockResolvedValue(decided({ Breakfast: 0.59, Dinner: 0.4 }));
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Dinner"]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual(["Dinner"]);
       expect(mocked.decide).toHaveBeenCalledTimes(1);
       expect(mocked.generateStructured).toHaveBeenCalledTimes(1);
     });
 
     it("says which path produced the categories", async () => {
-      await categorizeRecipe(recipe);
+      await categorizeRecipe(recipe, BUILT_INS);
 
       expect(logger.info).toHaveBeenCalledWith(
         expect.objectContaining({ path: "decision", categories: ["Breakfast"] }),
@@ -149,7 +190,7 @@ describe("categorizeRecipe", () => {
     ])("falls back to the language model on %s, logging at warn", async (_case, failure) => {
       mocked.decide.mockRejectedValue(failure);
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Dinner"]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual(["Dinner"]);
       expect(mocked.generateStructured).toHaveBeenCalledTimes(1);
       expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ err: failure, feature: "auto-categorization" }),
@@ -168,7 +209,7 @@ describe("categorizeRecipe", () => {
     });
 
     it("makes exactly today's request: one structured call under the auto-categorization prompt", async () => {
-      await categorizeRecipe(recipe);
+      await categorizeRecipe(recipe, BUILT_INS);
 
       expect(mocked.decide).not.toHaveBeenCalled();
       expect(mocked.generateStructured).toHaveBeenCalledTimes(1);
@@ -185,29 +226,44 @@ describe("categorizeRecipe", () => {
               "- chia seeds",
               "- honey",
             ].join("\n"),
+            "HOUSEHOLD CATEGORIES:\n- Breakfast\n- Lunch\n- Dinner\n- Snack",
           ],
         })
       );
     });
 
-    it("matches the model's words onto the four categories, dropping the rest", async () => {
+    it("offers the household's list as the only answers the model may give", async () => {
+      await categorizeRecipe(recipe, [...BUILT_INS, "Drinks"]);
+
+      const { schema } = mocked.generateStructured.mock.calls[0]?.[0];
+
+      expect(schema.safeParse({ categories: ["Drinks", "Dinner"] }).success).toBe(true);
+      expect(schema.safeParse({ categories: ["Dessert"] }).success).toBe(false);
+    });
+
+    it("never returns a name outside the household's list", async () => {
       mocked.generateStructured.mockResolvedValue({
-        categories: ["brunch", "Dinner", "supper", "random gibberish"],
+        categories: ["Drinks", "Dessert", "brunch", "Dinner"],
       });
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Breakfast", "Dinner"]);
+      await expect(categorizeRecipe(recipe, [...BUILT_INS, "Drinks"])).resolves.toEqual([
+        "Drinks",
+        "Dinner",
+      ]);
     });
 
     it("returns an empty list when nothing matches, leaving the worker's rule to it", async () => {
       mocked.generateStructured.mockResolvedValue({ categories: [] });
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual([]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual([]);
     });
 
     it("propagates the runtime's failure", async () => {
       mocked.generateStructured.mockRejectedValue(new AIConfigurationError("no key"));
 
-      await expect(categorizeRecipe(recipe)).rejects.toBeInstanceOf(AIConfigurationError);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).rejects.toBeInstanceOf(
+        AIConfigurationError
+      );
     });
   });
 
@@ -235,10 +291,10 @@ describe("categorizeRecipe", () => {
     });
 
     it("checks the matched categories and writes the survivors", async () => {
-      mocked.generateStructured.mockResolvedValue({ categories: ["Dinner", "brunch"] });
+      mocked.generateStructured.mockResolvedValue({ categories: ["Dinner", "Breakfast"] });
       mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.9, Breakfast: 0.05 }));
 
-      const categories = await categorizeRecipe(recipe);
+      const categories = await categorizeRecipe(recipe, BUILT_INS);
 
       expect(mocked.decide).toHaveBeenCalledTimes(1);
       expect(mocked.decide).toHaveBeenCalledWith({
@@ -259,14 +315,14 @@ describe("categorizeRecipe", () => {
     it("returns an empty list when every category was dropped, leaving the worker's rule to it", async () => {
       mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.01 }));
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual([]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual([]);
     });
 
     it("keeps a disputed category when the Validate enrichments use is off: the verdict is only logged", async () => {
       vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
       mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.01 }));
 
-      await expect(categorizeRecipe(recipe)).resolves.toEqual(["Dinner"]);
+      await expect(categorizeRecipe(recipe, BUILT_INS)).resolves.toEqual(["Dinner"]);
       expect(mocked.decide).toHaveBeenCalledTimes(1);
     });
 
@@ -277,7 +333,7 @@ describe("categorizeRecipe", () => {
 
       mocked.decide.mockResolvedValue(verdicts({ Dinner: 0.9, Snack: 0.01 }));
 
-      await expect(categorizeRecipe(stored)).resolves.toEqual(["Dinner"]);
+      await expect(categorizeRecipe(stored, BUILT_INS)).resolves.toEqual(["Dinner"]);
       expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toEqual(["Dinner"]);
     });
   });

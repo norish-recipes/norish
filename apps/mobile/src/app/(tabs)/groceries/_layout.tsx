@@ -1,19 +1,4 @@
-import React from "react";
-import { Platform } from "react-native";
-import { Stack } from "expo-router";
+export { GroceriesStack as default } from "@/features/groceries/components/groceries-stack";
 
-export default function GroceriesLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerLargeTitle: true,
-        headerTransparent: Platform.OS === "ios",
-        headerShadowVisible: false,
-        headerLargeTitleShadowVisible: false,
-      }}
-    >
-      <Stack.Screen name="index" options={{ title: "Groceries" }} />
-    </Stack>
-  );
-}
+// A link straight to a sheet still has the page under it.
+export const unstable_settings = { anchor: "index" };

@@ -40,7 +40,7 @@ type HeroFallbackImageProps = Omit<ComponentProps<"img">, "onError"> & {
   fallbackMessage?: string;
 };
 
-export type FallbackImageProps = NextFallbackImageProps | HeroFallbackImageProps;
+type FallbackImageProps = NextFallbackImageProps | HeroFallbackImageProps;
 
 export default function FallbackImage(props: FallbackImageProps) {
   const [hasError, setHasError] = useState(false);

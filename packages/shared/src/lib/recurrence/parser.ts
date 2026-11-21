@@ -159,15 +159,15 @@ function parseWithLocale(
   const match = lowerText.match(pattern);
 
   if (!match) {
-    // 3. Check for "every [weekday]" shorthand (e.g., "every friday" -> "every week on friday")
+    // 3. Check for "every [other] [weekday]" shorthand ("every friday" -> "every week on friday")
     const everyWeekdayPattern = new RegExp(
-      `${TOKEN_BOUNDARY_PREFIX}(${everyPattern})\\s+(${weekdayPattern})${TOKEN_BOUNDARY_SUFFIX}`,
+      `${TOKEN_BOUNDARY_PREFIX}(${everyPattern})\\s+(?:(${otherPattern})\\s+)?(${weekdayPattern})${TOKEN_BOUNDARY_SUFFIX}`,
       "i"
     );
     const everyWeekdayMatch = lowerText.match(everyWeekdayPattern);
 
     if (everyWeekdayMatch) {
-      const weekdayStr = everyWeekdayMatch[2];
+      const weekdayStr = everyWeekdayMatch[3];
 
       if (!weekdayStr) {
         return {
@@ -188,7 +188,7 @@ function parseWithLocale(
       return {
         recurrence: {
           rule: "week",
-          interval: 1,
+          interval: everyWeekdayMatch[2] ? 2 : 1,
           weekday: weekdayIndex,
         },
         cleanText,

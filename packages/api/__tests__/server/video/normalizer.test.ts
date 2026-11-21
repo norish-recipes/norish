@@ -7,6 +7,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
+
 const mocked = vi.hoisted(() => ({
   generateStructured: vi.fn(),
   shadowScore: vi.fn(),
@@ -86,6 +88,19 @@ beforeEach(() => {
 });
 
 describe("extractRecipeFromVideo", () => {
+  it("offers the household's Categories as a section and holds the result to them", async () => {
+    const household = ["Breakfast", "Lunch", "Dinner", "Snack", "Drinks"];
+
+    await extractRecipeFromVideo(TRANSCRIPT, METADATA, "recipe-1", "https://v.test/1", household);
+
+    expect(mocked.generateStructured.mock.calls[0]?.[0].sections).toContain(
+      "HOUSEHOLD CATEGORIES:\n- Breakfast\n- Lunch\n- Dinner\n- Snack\n- Drinks"
+    );
+    expect(mocked.normalizeExtractionOutput.mock.calls[0]?.[1].householdCategories).toEqual(
+      household
+    );
+  });
+
   it("scores its own output against the transcript in shadow, and nothing acts on the score", async () => {
     mocked.shadowScore.mockResolvedValue(0);
 
@@ -93,7 +108,8 @@ describe("extractRecipeFromVideo", () => {
       TRANSCRIPT,
       METADATA,
       "recipe-1",
-      "https://www.instagram.com/reel/ABC123/"
+      "https://www.instagram.com/reel/ABC123/",
+      BUILT_IN_CATEGORIES
     );
 
     expect(mocked.shadowScore).toHaveBeenCalledWith({
@@ -114,7 +130,13 @@ describe("extractRecipeFromVideo", () => {
     });
 
     await expect(
-      extractRecipeFromVideo(TRANSCRIPT, METADATA, "recipe-1", "https://example.com/v")
+      extractRecipeFromVideo(
+        TRANSCRIPT,
+        METADATA,
+        "recipe-1",
+        "https://example.com/v",
+        BUILT_IN_CATEGORIES
+      )
     ).rejects.toThrow(/missing required fields/);
     expect(mocked.shadowScore).not.toHaveBeenCalled();
     expect(mocked.normalizeExtractionOutput).not.toHaveBeenCalled();
@@ -126,7 +148,13 @@ describe("extractRecipeFromVideo", () => {
     mocked.generateStructured.mockResolvedValue(stepless);
 
     await expect(
-      extractRecipeFromVideo(TRANSCRIPT, METADATA, "recipe-1", "https://example.com/v")
+      extractRecipeFromVideo(
+        TRANSCRIPT,
+        METADATA,
+        "recipe-1",
+        "https://example.com/v",
+        BUILT_IN_CATEGORIES
+      )
     ).resolves.toMatchObject({ id: "recipe-1" });
     expect(mocked.normalizeExtractionOutput).toHaveBeenCalledWith(stepless, expect.anything());
   });

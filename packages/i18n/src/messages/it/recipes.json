@@ -27,7 +27,9 @@
       "all": "Tutto",
       "recipes": "Ricette",
       "cookbooks": "Libri di cucina"
-    }
+    },
+    "importingCard": "Importazione…",
+    "favourited": "Nei preferiti"
   },
   "back": {
     "all": "Torna alla libreria",
@@ -43,7 +45,8 @@
     "noResults": "Nessuna ricetta trovata",
     "noResultsHint": "Prova a modificare o cancellare i filtri.",
     "noCookbooks": "Nessun libro di cucina",
-    "noCookbooksHint": "Un libro di cucina è un insieme di ricette con un titolo. Creane uno per dare ordine alla tua libreria."
+    "noCookbooksHint": "Un libro di cucina è un insieme di ricette con un titolo. Creane uno per dare ordine alla tua libreria.",
+    "descriptionMobile": "Aggiungi la tua prima ricetta da un link, un testo o delle foto."
   },
   "card": {
     "noImage": "Nessuna immagine disponibile",
@@ -67,7 +70,6 @@
     "notFoundMessage": "Questa ricetta non esiste o non hai il permesso di visualizzarla.",
     "prep": "preparazione",
     "total": "totale",
-    "planMeal": "Pianifica pasto",
     "recipeActions": "Azioni ricetta",
     "instructions": "Istruzioni",
     "cook": "Cucina",
@@ -78,7 +80,9 @@
     "addedBy": "Aggiunto da {name}",
     "decreaseServings": "Meno porzioni",
     "increaseServings": "Più porzioni",
-    "multiplier": "Moltiplicatore"
+    "multiplier": "Moltiplicatore",
+    "rateStars": "Valuta {count} su 5",
+    "stepPhoto": "Foto del passaggio"
   },
   "actions": {
     "plan": "Pianifica",
@@ -86,7 +90,6 @@
     "edit": "Modifica",
     "delete": "Elimina",
     "share": "Condividi",
-    "visitOriginal": "Visita ricetta originale",
     "addToCalendar": "Aggiungi al calendario",
     "autoTag": "Tag automatici",
     "autoTagging": "Generazione tag...",
@@ -103,10 +106,13 @@
     "inferringProvenance": "Deduzione della provenienza…",
     "linkIngredients": "Collega gli ingredienti ai passaggi",
     "linkingIngredients": "Collegamento degli ingredienti…",
-    "enrichmentFailed": "Ultimo tentativo non riuscito",
     "generateImage": "Genera immagine",
     "generatingImage": "Generazione immagine…",
-    "cookbooks": "Libri di cucina"
+    "cookbooks": "Libri di cucina",
+    "favourite": "Preferito",
+    "unfavourite": "Rimuovi dai preferiti",
+    "ai": "IA",
+    "shareLink": "Condividi link"
   },
   "sharePanel": {
     "title": "Condividi ricetta",
@@ -150,7 +156,13 @@
       "title": "Elimina link",
       "message": "Eliminare questo link di condivisione per {recipeName}? Questa azione non può essere annullata.",
       "confirm": "Elimina link"
-    }
+    },
+    "expiresAfter": "Scade dopo",
+    "expiresOn": "Scade il {date}",
+    "expiredOn": "Scaduto il {date}",
+    "lastOpenedOn": "Ultima apertura {date}",
+    "neverExpires": "Non scade mai",
+    "linkCreated": "Creato il {date}"
   },
   "convert": {
     "ariaLabel": "Converti sistema di misura",
@@ -166,14 +178,14 @@
     "confirmMessage": "Sei sicuro di voler eliminare \"{recipeName}\"?",
     "warning": "Questa azione non può essere annullata.",
     "confirmCount": "Eliminare {count, plural, one {# ricetta} other {# ricette}}?",
-    "keptCount": "{count, plural, one {# ricetta resta} other {# ricette restano}}, perché non puoi {count, plural, one {eliminarla} other {eliminarle}}."
+    "keptCount": "{count, plural, one {# ricetta resta} other {# ricette restano}}, perché non puoi {count, plural, one {eliminarla} other {eliminarle}}.",
+    "alertTitle": "Eliminare {name}?"
   },
   "form": {
     "createTitle": "Crea ricetta",
     "editTitle": "Modifica ricetta",
     "createDescription": "Aggiungi una nuova ricetta alla tua collezione",
     "editDescription": "Aggiorna i dettagli della tua ricetta",
-    "initializingForm": "Inizializzazione modulo...",
     "photo": "Foto",
     "basicInfo": "Informazioni di base",
     "ingredients": "Ingredienti",
@@ -194,6 +206,7 @@
     "tagsHelp": "Digita i tag e clicca i suggerimenti per aggiungerli. I tag della ricetta sono pieni, i nuovi tag hanno un bordo tratteggiato.",
     "tagsAndCategories": "Tag e categorie",
     "categoriesHelp": "Seleziona le categorie di pasto per questa ricetta.",
+    "addCategory": "Aggiungi categoria",
     "category": {
       "breakfast": "Colazione",
       "lunch": "Pranzo",
@@ -224,19 +237,12 @@
     "createRecipe": "Crea ricetta",
     "saveChanges": "Salva modifiche",
     "uploading": "Caricamento...",
-    "clickToUpload": "Clicca per caricare o trascina e rilascia",
-    "pasteToUpload": "per incollare",
-    "imageFormats": "PNG, JPG, WEBP fino a 5MB",
     "discardChangesConfirm": "Hai modifiche non salvate. Scartarle e lasciare questa pagina?"
   },
   "gallery": {
-    "addImage": "Aggiungi immagine",
     "uploading": "Caricamento...",
     "uploadFailed": "Caricamento non riuscito",
-    "dragToReorder": "Trascina per riordinare",
-    "maxImagesReached": "Massimo {max} immagini consentite",
-    "maxVideosReached": "Massimo {max} video consentiti",
-    "invalidFileType": "Tipo di file non valido"
+    "dragToReorder": "Trascina per riordinare"
   },
   "carousel": {
     "noImageAvailable": "Nessuna immagine disponibile",
@@ -245,8 +251,14 @@
       "mute": "Disattiva audio",
       "unmute": "Attiva audio",
       "fullscreen": "Schermo intero",
-      "exitFullscreen": "Esci da schermo intero"
-    }
+      "exitFullscreen": "Esci da schermo intero",
+      "progress": "Avanzamento del video",
+      "play": "Riproduci",
+      "pause": "Pausa"
+    },
+    "recipeImage": "Immagine della ricetta",
+    "closeViewer": "Chiudi il visualizzatore",
+    "photoOf": "Foto {current} di {total}"
   },
   "validation": {
     "nameRequired": "Il nome della ricetta è obbligatorio",
@@ -260,11 +272,18 @@
     "fat": "Grassi",
     "carbs": "Carboidrati",
     "protein": "Proteine",
+    "fiber": "Fibre",
+    "saturatedFat": "di cui acidi grassi saturi",
+    "sugars": "di cui zuccheri",
+    "sodium": "Sodio",
+    "moreNutrients": "Altri nutrienti",
+    "fewerNutrients": "Meno nutrienti",
+    "starredMayBeHigher": "Non tutti gli ingredienti hanno questo valore, quindi i valori con * potrebbero essere più alti",
+    "referenceIntake": "% dell’assunzione giornaliera di riferimento per un adulto ({calories} kcal)",
     "showingPortions": "Valori mostrati per {count} {count, plural, one {porzione} other {porzioni}}",
-    "noInfo": "Nessuna informazione nutrizionale disponibile",
-    "estimateWithAI": "Stima con IA",
     "estimated": "Stimato",
     "leftOut": "{count, plural, one {# riga non conteggiata} other {# righe non conteggiate}}",
+    "leftOutStarred": "{count, plural, one {# riga non conteggiata} other {# righe non conteggiate}}, quindi i valori con * potrebbero essere più alti",
     "estimatedByAI": "stimato dall'IA",
     "reasons": {
       "seasoning": "condimento",
@@ -275,7 +294,12 @@
       "noPieceWeight": "ancora nessun peso del pezzo"
     },
     "workedOutFrom": "Calcolato dagli ingredienti, con {sources}.",
-    "householdNumbers": "i valori della tua famiglia"
+    "householdNumbers": "i valori della tua famiglia",
+    "decreasePortions": "Meno porzioni",
+    "increasePortions": "Più porzioni",
+    "portions": "{count, plural, one {# porzione} other {# porzioni}}",
+    "percentOfReference": "{percent}% di {amount}",
+    "percentOfDailyReference": "{percent}% del riferimento giornaliero di {amount}"
   },
   "measurementSystem": {
     "label": "Sistema di misura",
@@ -290,7 +314,9 @@
   },
   "stepInput": {
     "stepPlaceholder": "Passaggio {number}: Descrivi il passaggio...",
-    "stepPlaceholderShort": "Passaggio {number}"
+    "stepPlaceholderShort": "Passaggio {number}",
+    "recipeSuggestions": "Suggerimenti di ricette",
+    "ingredientSuggestions": "Suggerimenti di ingredienti"
   },
   "stepIngredients": {
     "rowLabel": "Ingredienti collegati",
@@ -321,16 +347,15 @@
   },
   "toasts": {
     "imported": "Ricetta importata",
-    "failed": "Operazione sulla ricetta non riuscita",
     "failedDescription": "Qualcosa è andato storto durante l'elaborazione della ricetta. Controlla la console del browser per i dettagli tecnici.",
     "incomplete": "Questa ricetta potrebbe essere incompleta. Confrontala con la fonte.",
     "notARecipe": "Questa pagina non sembra una ricetta.",
     "privateAddress": "Le importazioni da indirizzi di rete privati non sono consentite su questo server.",
-    "batchImported": "Ricette importate",
-    "batchImportedDescription": "{count} ricette importate dall'archivio",
     "view": "Visualizza",
     "open": "Apri",
-    "deleteKept": "{count, plural, one {# ricetta è stata modificata} other {# ricette sono state modificate}} da qualcun altro e {count, plural, one {mantenuta} other {mantenute}}."
+    "deleteKept": "{count, plural, one {# ricetta è stata modificata} other {# ricette sono state modificate}} da qualcun altro e {count, plural, one {mantenuta} other {mantenute}}.",
+    "deleted": "Ricetta eliminata",
+    "deletedDescription": "Questa ricetta è stata rimossa."
   },
   "tags": {
     "panel": {
@@ -345,12 +370,23 @@
     "servings": "Porzioni",
     "serving": "{count, plural, one {# porzione} other {# porzioni}}",
     "stepCounter": "{current} / {total}",
-    "swipeSteps": "Scorri per navigare tra i passaggi",
-    "swipeIngredients": "Scorri a sinistra per gli ingredienti",
-    "swipeBackToSteps": "Scorri a destra per i passaggi",
     "readyAt": "Pronto verso le {time}",
     "timers": "Timer",
-    "nextStep": "Passo successivo"
+    "nextStep": "Passo successivo",
+    "stepLabel": "Passaggio {number}",
+    "previousStep": "Passaggio precedente",
+    "startTimer": "Avvia un timer di {duration}",
+    "pauseTimer": "Metti in pausa il timer, mancano {time}",
+    "resumeTimer": "Riprendi il timer, mancano {time}",
+    "dismissTimer": "Chiudi il timer",
+    "restartTimer": "Riavvia il timer",
+    "notificationsOff": "Le notifiche di Norish sono disattivate, quindi i timer suonano solo con l’app aperta.",
+    "decreaseTimer": "Togli {time}",
+    "increaseTimer": "Aggiungi {time}",
+    "openTimer": "{timer}, apri {recipe} in modalità cucina",
+    "openTimerAtStep": "{timer}, apri {recipe} in modalità cucina al passaggio {number}",
+    "timersLeft": "Timer, mancano {time}",
+    "spokenTime": "{hours, plural, =0 {} one {# ora } other {# ore }}{minutes, plural, =0 {} one {# minuto } other {# minuti }}{seconds, plural, =0 {} one {# secondo } other {# secondi }}"
   },
   "enrichment": {
     "failed": "Arricchimento non riuscito",
@@ -373,10 +409,7 @@
   "provenance": {
     "title": "Provenienza",
     "region": "Regione",
-    "cuisines": "Cucine",
-    "inferring": "Sto capendo da dove viene questa ricetta…",
-    "noInfo": "Ancora nessuna informazione sulla provenienza",
-    "inferWithAI": "Deduci con IA"
+    "cuisines": "Cucine"
   },
   "import": {
     "alreadyExists": "Hai già questa ricetta",
@@ -430,7 +463,13 @@
     "changeImage": "Cambia immagine",
     "removeImage": "Rimuovi immagine",
     "imageUploadFailed": "Impossibile caricare l'immagine.",
-    "imageNeedsConnection": "Potrai cambiare le immagini quando sarai di nuovo online."
+    "imageNeedsConnection": "Potrai cambiare le immagini quando sarai di nuovo online.",
+    "rename": "Rinomina",
+    "deleteAlertTitle": "Eliminare {title}?",
+    "changeCover": "Cambia copertina",
+    "renameTitle": "Rinomina ricettario",
+    "coverFromLibrary": "Scegli dalla libreria",
+    "coverFromCamera": "Scatta una foto"
   },
   "print": {
     "title": "Stampa ricetta",
@@ -449,5 +488,109 @@
     "newCookbook": "Nuovo ricettario",
     "filedInto": "{count, plural, one {# ricetta aggiunta} other {# ricette aggiunte}} a {title}",
     "filedIntoMany": "{count, plural, one {# ricetta aggiunta} other {# ricette aggiunte}} a {cookbooks} ricettari"
+  },
+  "addRecipe": {
+    "fromLink": "Da un link",
+    "fromLinkHint": "Qualsiasi sito di ricette o video",
+    "fromPhotos": "Da foto",
+    "fromPhotosHint": "Pagine di un ricettario o uno screenshot",
+    "fromText": "Da testo",
+    "fromTextHint": "Incolla una ricetta o JSON-LD",
+    "writeYourself": "Scrivila tu",
+    "writeYourselfHint": "Parti da una ricetta vuota",
+    "fromClipboard": "Dagli appunti",
+    "linkTitle": "Importa da un link",
+    "textTitle": "Importa da testo",
+    "photosTitle": "Importa da foto",
+    "camera": "Fotocamera",
+    "photoLibrary": "Libreria foto",
+    "photoCount": "{count, plural, one {# foto, importata come una ricetta} other {# foto, importate come una ricetta}}",
+    "photoLimits": "Fino a {max} foto, JPEG, PNG o WebP",
+    "removePhoto": "Rimuovi foto {number}"
+  },
+  "shareExtension": {
+    "sending": "Invio a Norish…",
+    "sentTitle": "Importazione in Norish",
+    "sentBody": "Comparirà nella tua libreria tra un momento.",
+    "savedTitle": "Salvato per dopo",
+    "savedBody": "Norish lo importerà quando il tuo server sarà raggiungibile.",
+    "signedOut": "Apri Norish e accedi prima.",
+    "tooOld": "Il tuo server Norish deve prima essere aggiornato.",
+    "noAi": "Importare foto richiede l’IA, che è disattivata sul tuo server.",
+    "failed": "Norish non è riuscito a importarlo.",
+    "close": "Chiudi",
+    "photoCount": "{count, plural, one {# foto} other {# foto}}",
+    "text": "Testo"
+  },
+  "editor": {
+    "newTitle": "Nuova ricetta",
+    "editTitle": "Modifica ricetta",
+    "recipeName": "Nome della ricetta",
+    "ingredient": "Ingrediente",
+    "sectionHeading": "Titolo di sezione",
+    "step": "Passaggio",
+    "steps": "Passaggi",
+    "notesHint": "Inizia una riga con # per un titolo; racchiudi le parole tra **doppi asterischi** per il grassetto.",
+    "ingredientsHint": "Scrivi ingredienti come 2 tazze di farina; quantità e unità vengono lette per te. Inizia una riga con # per una sezione.",
+    "stepsHint": "Premi Invio per il passaggio successivo. Digita @ per collegare un ingrediente, # per una sezione.",
+    "addIngredient": "Aggiungi ingrediente",
+    "removeIngredient": "Rimuovi ingrediente",
+    "addStep": "Aggiungi passaggio",
+    "removeStep": "Rimuovi passaggio",
+    "addPhoto": "Aggiungi foto",
+    "addStepPhoto": "Aggiungi foto del passaggio",
+    "removePhoto": "Rimuovi foto",
+    "mediaCount": "{images}/{maxImages} foto · {videos}/{maxVideos} video",
+    "photosOffline": "Potrai aggiungere foto quando sei online.",
+    "tagsAndCategories": "Tag e categorie",
+    "categories": "Categorie",
+    "tags": "Tag",
+    "tagsHint": "Scegli un suggerimento o scrivi un nuovo tag; i nuovi tag hanno un bordo tratteggiato.",
+    "addTag": "Aggiungi un tag",
+    "removeNamed": "Rimuovi {name}",
+    "servingsAndTime": "Porzioni e tempo",
+    "minutes": "min",
+    "perServing": "per porzione, facoltativo",
+    "kcal": "kcal",
+    "grams": "g",
+    "source": "Fonte",
+    "sourceUrl": "URL della fonte",
+    "measurementSystem": "Sistema di misura",
+    "measurementHint": "Rilevato dai tuoi ingredienti. Cambiarlo modifica solo l’etichetta, non converte; usa Converti dopo il salvataggio.",
+    "discardTitle": "Scartare le modifiche?",
+    "discardMessage": "Hai modifiche non salvate.",
+    "keepEditing": "Continua a modificare",
+    "discard": "Scarta"
+  },
+  "search": {
+    "sortBestMatch": "Migliore corrispondenza",
+    "sortNewest": "Più recenti",
+    "sortOldest": "Meno recenti",
+    "sortAZ": "A–Z",
+    "sortZA": "Z–A",
+    "sortLabel": "Ordina: {sort}",
+    "ratingChip": "{count}+ stelle",
+    "removeFilter": "Rimuovi {filter}",
+    "ingredientFilter": "il filtro ingrediente",
+    "count": "{count, plural, one {# ricetta} other {# ricette}}",
+    "noMatch": "Nessuna ricetta corrisponde a «{text}»",
+    "searchAllFields": "Cerca in tutti i campi",
+    "filtersOn": "Filtri, {count} attivi",
+    "matchTitle": "Nel titolo",
+    "matchTag": "Tag:",
+    "matchIngredient": "Ingrediente:",
+    "matchStep": "Passaggio {number}:",
+    "searchFor": "Cerca “{text}”",
+    "recipes": "Ricette",
+    "narrowTo": "Restringi a",
+    "typeIngredient": "Ingrediente",
+    "typeTag": "Tag",
+    "typeCategory": "Categoria",
+    "recent": "Recenti",
+    "quickFilters": "Filtri rapidi",
+    "underThirty": "Meno di 30 min",
+    "fourAndUp": "4 e più",
+    "editRecent": "Modifica “{text}”",
+    "offline": "La ricerca richiede una connessione"
   }
 }

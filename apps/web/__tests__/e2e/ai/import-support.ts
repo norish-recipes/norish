@@ -19,7 +19,7 @@ export async function submitPasteImport(page: Page, text: string): Promise<void>
 
     await pasteArea.fill(text);
     await submitMutation(page, "recipes.importFromPaste", () =>
-      page.getByRole("button", { name: "AI Import" }).click({ timeout: 3_000 })
+      page.getByRole("button", { name: "AI import" }).click({ timeout: 3_000 })
     );
   }).toPass({ timeout: 90_000, intervals: [500, 1_000, 2_000] });
 }

@@ -1,0 +1,60 @@
+/**
+ * Replay failure taxonomy (ADR-0004, and the design record's failure table).
+ *
+ * A replayed mutation can end five ways beyond plain success. Each maps to a
+ * distinct Replay action, so classification must be exact:
+ *
+ *  - `unreachable`   — backend down: halt, keep the entry at the head, resume on
+ *                      recovery. Nothing lost, nothing skipped.
+ *  - `unauthorized`  — expired session: halt the whole queue ("sign in to sync")
+ *                      so a dead cookie can't wreck it.
+ *  - `ambiguous`     — a 5xx (server mid-restart), 408 or 429: bounded retry
+ *                      with backoff, then park.
+ *  - `deterministic` — a 4xx / validation error that will re-fail forever: park
+ *                      this one, but keep draining the rest.
+ *  - `conflict`      — a *successful* response carrying `stale: true`: first
+ *                      writer won, this write was dropped; park as Conflicted so
+ *                      the loss is visible, never silent.
+ */
+
+import { httpStatusOf, isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
+
+import { isUnauthorizedTRPCError } from "../trpc/trpc-links";
+
+type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
+
+export type ReplayOutcome = { kind: "success" } | { kind: "conflict" | ReplayFailureClass };
+
+/**
+ * Classify a replay's error, in order: no HTTP status is unreachable, a 401 halts the queue,
+ * a 5xx, 408 or 429 is retried, anything else re-fails forever.
+ */
+export function classifyReplayError(error: unknown): ReplayFailureClass {
+  if (isBackendUnreachableError(error)) {
+    return "unreachable";
+  }
+
+  if (isUnauthorizedTRPCError(error)) {
+    return "unauthorized";
+  }
+
+  const status = httpStatusOf(error);
+
+  // 408 and 429 ask for the retry themselves.
+  if (status !== null && (status >= 500 || status === 408 || status === 429)) {
+    return "ambiguous";
+  }
+
+  return "deterministic";
+}
+
+/**
+ * A conflict is not a transport error — it rides in on a *successful* response
+ * as `{ stale: true }`. The server dropped a version-stale write (first writer
+ * wins); Replay must inspect successful responses for it (ADR-0004).
+ */
+export function isStaleResult(result: unknown): boolean {
+  return (
+    typeof result === "object" && result !== null && (result as { stale?: unknown }).stale === true
+  );
+}

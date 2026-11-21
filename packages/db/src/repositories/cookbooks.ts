@@ -4,6 +4,7 @@ import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { SortOrder } from "@norish/shared/contracts/store-types";
 import { db } from "@norish/db/drizzle";
+import { SEARCH_WORDS_MAX } from "@norish/shared/lib/search-terms";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import type { RecipeListContext } from "./recipes";
@@ -102,7 +103,8 @@ export function cookbookTitleMatch(search: string) {
     .trim()
     .split(/\s+/)
     .map((term) => term.trim())
-    .filter((term) => term.length > 0);
+    .filter((term) => /[\p{L}\p{M}\p{N}]/u.test(term))
+    .slice(0, SEARCH_WORDS_MAX);
 
   if (terms.length === 0) return undefined;
 

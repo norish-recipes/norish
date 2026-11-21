@@ -111,6 +111,7 @@ describe("publisher connection", () => {
 
     expect(publisher.duplicate).toHaveBeenCalledExactlyOnceWith({
       commandTimeout: undefined,
+      autoResubscribe: false,
       connectionName: `norish:${process.pid}:realtime-hub`,
     });
     expect(subscriber).not.toBe(publisher);

@@ -96,7 +96,7 @@ export async function countUserRow(stack: Owner, userId: string): Promise<number
 
 /** The Users table on the admin settings page, once it has rendered. */
 export async function openUsersTable(page: Page): Promise<Locator> {
-  await page.goto("/settings?tab=admin");
+  await page.goto("/settings/admin");
 
   const table = page.getByRole("grid", { name: "Users" });
 

@@ -1,3 +1,13 @@
+/** The text without its diacritics, in composed form: what every fold here starts from. */
+export function stripDiacritics(text: string): string {
+  // Back together again: NFD takes a Hangul syllable apart too, and nothing
+  // else puts it back.
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .normalize("NFC");
+}
+
 /**
  * The one folding of a name: case, diacritics, punctuation and whitespace and
  * nothing else — "Oude Kaas", "oude  kaas" and "Oude kaas!" fold alike,
@@ -9,17 +19,10 @@
 export function foldName(name: string | null | undefined): string {
   if (!name) return "";
 
-  return (
-    name
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      // Back together again: NFD takes a Hangul syllable apart too, and nothing
-      // above put it back.
-      .normalize("NFC")
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}]+/gu, " ")
-      .trim()
-  );
+  return stripDiacritics(name)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 }
 
 /** The words of a folded name, as the auto-link rule counts them. */

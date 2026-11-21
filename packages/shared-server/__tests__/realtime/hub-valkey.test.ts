@@ -6,7 +6,6 @@
  * dead socket is dropped and reconnected, and a live iterable ends Lagged.
  */
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
-import { ValkeyContainer } from "@testcontainers/valkey";
 import Valkey from "ioredis";
 import superjson from "superjson";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
@@ -20,7 +19,7 @@ import {
   stopRealtimeHub,
 } from "../../src/realtime/hub";
 import { closeValkeyConnections, VALKEY_SOCKET_TIMEOUT_MS } from "../../src/valkey/client";
-import { freezableProxy, VALKEY_IMAGE } from "../helpers/valkey";
+import { freezableProxy, startValkey } from "../helpers/valkey";
 
 const config = vi.hoisted(() => ({ url: "" }));
 
@@ -52,7 +51,7 @@ let proxy: ReturnType<typeof freezableProxy>;
 let direct: Valkey;
 
 beforeAll(async () => {
-  container = await new ValkeyContainer(VALKEY_IMAGE).start();
+  container = await startValkey();
   proxy = freezableProxy({ host: container.getHost(), port: container.getPort() });
   config.url = await proxy.listen();
   direct = new Valkey(container.getConnectionUrl());

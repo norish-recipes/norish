@@ -596,6 +596,20 @@
       "when": 1793647791062,
       "tag": "0084_caldav_trusted_certificate",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1794039412223,
+      "tag": "0085_categories_become_rows",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1795171967880,
+      "tag": "0086_extra_nutrients",
+      "breakpoints": true
     }
   ]
 }

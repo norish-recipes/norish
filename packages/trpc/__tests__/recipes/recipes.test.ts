@@ -55,6 +55,12 @@ vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
+const readRecipeNutrition = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/shared-server/ingredients/nutrition/recipe-nutrition", () => ({
+  readRecipeNutrition,
+}));
+
 // The Dish Colour helpers are pinned by their own suite
 // (shared-server __tests__/media/dish-color.test.ts); here they return a
 // sentinel so the tests can prove the router threads them into the writes.
@@ -520,54 +526,96 @@ describe("recipes procedures", () => {
     });
   });
 
-  describe("create", () => {
-    it("returns recipe ID and emits created event on success", async () => {
-      const mockDashboard = createMockRecipeDashboard({ name: "New Recipe" });
+  describe("nutrition", () => {
+    const recipeId = "88888888-8888-4888-8888-888888888888";
+    const answer = {
+      source: "supplied",
+      perServing: { calories: 320, fat: 10, carbs: 40, protein: 12, extras: {} },
+      estimated: false,
+      leftOut: [],
+      credits: [],
+      extrasCoverage: {},
+    };
+    const caller = () =>
+      recipesRouter.createCaller({ ...ctx, connectionId: null, operationId: null });
 
-      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
+    it("answers the recipe's nutrition for the reader's household", async () => {
+      const recipe = createValidFullRecipe({ id: recipeId, userId: "other-user-id" });
+
+      getRecipeFull.mockResolvedValue(recipe);
+      canAccessResource.mockResolvedValue(true);
+      readRecipeNutrition.mockResolvedValue(answer);
+
+      await expect(caller().nutrition({ id: recipeId })).resolves.toEqual(answer);
+      expect(readRecipeNutrition).toHaveBeenCalledWith(recipe, {
+        householdUserIds: ctx.userIds,
+      });
+    });
+
+    it("is NOT_FOUND for a recipe that is missing or the reader may not view", async () => {
+      getRecipeFull.mockResolvedValue(null);
+      await expect(caller().nutrition({ id: recipeId })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+
+      getRecipeFull.mockResolvedValue(createValidFullRecipe({ id: recipeId, userId: "other" }));
+      canAccessResource.mockResolvedValue(false);
+      await expect(caller().nutrition({ id: recipeId })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+    });
+  });
+
+  describe("create", () => {
+    const recipeId = "77777777-7777-4777-8777-777777777777";
+    const input = {
+      id: recipeId,
+      name: "New Recipe",
+      tags: [],
+      recipeIngredients: [],
+      steps: [],
+      systemUsed: "metric" as const,
+    };
+
+    function createCaller() {
+      return recipesRouter.createCaller({ ...ctx, connectionId: null, operationId: null });
+    }
+
+    // The announcement runs after the answer: let it settle before asserting on it.
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    it("answers the id once stored and announces the recipe", async () => {
+      const mockDashboard = createMockRecipeDashboard({ id: recipeId, name: "New Recipe" });
+
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
       dashboardRecipe.mockResolvedValue(mockDashboard);
 
-      const testRouter = t.router({
-        create: t.procedure
-          .input((v: any) => v)
-          .mutation(async ({ input }) => {
-            const recipeId = "test-uuid";
-
-            // Simulate async behavior
-            const createdId = await createRecipeWithRefs(recipeId, ctx.user.id, input);
-
-            if (createdId) {
-              const dto = await dashboardRecipe(createdId);
-
-              if (dto) {
-                void recipes.publish(
-                  "created",
-                  { recipe: dto },
-                  { householdKey: ctx.householdKey }
-                );
-              }
-            }
-
-            return recipeId;
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.create({
-        name: "New Recipe",
-        tags: [],
-        recipeIngredients: [],
-        steps: [],
-      });
-
-      expect(result).toBe("test-uuid");
-      expect(createRecipeWithRefs).toHaveBeenCalled();
+      expect(await createCaller().create(input)).toBe(recipeId);
+      await settle();
       expect(recipes.publish).toHaveBeenCalledWith(
         "created",
-        {
-          recipe: mockDashboard,
-        },
-        { householdKey: ctx.householdKey }
+        { recipe: mockDashboard },
+        expect.anything()
+      );
+    });
+
+    it("answers a replayed create whose id is already stored", async () => {
+      createRecipeWithRefs.mockResolvedValue({ status: "existing", recipeId });
+      dashboardRecipe.mockResolvedValue(null);
+
+      expect(await createCaller().create(input)).toBe(recipeId);
+    });
+
+    it("only logs a failure after the recipe is stored", async () => {
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
+      dashboardRecipe.mockRejectedValue(new Error("Valkey down"));
+
+      expect(await createCaller().create(input)).toBe(recipeId);
+      await settle();
+      expect(recipes.publish).not.toHaveBeenCalledWith(
+        "failed",
+        expect.anything(),
+        expect.anything()
       );
     });
   });
@@ -715,6 +763,49 @@ describe("recipes procedures", () => {
     });
   });
 
+  describe("edit from the app", () => {
+    const id = "55555555-5555-4555-8555-555555555555";
+
+    function createCaller() {
+      return recipesRouter.createCaller({ ...ctx, connectionId: null, operationId: null });
+    }
+
+    it("rejects a refused edit, so the client rolls back and Replay parks it", async () => {
+      getRecipeOwnerId.mockResolvedValue("other-user-id");
+      canAccessResource.mockResolvedValue(false);
+
+      await expect(
+        createCaller().update({ id, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(recipes.publish).not.toHaveBeenCalledWith(
+        "failed",
+        expect.anything(),
+        expect.anything()
+      );
+    });
+
+    it("rejects an edit the database failed to store", async () => {
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockRejectedValue(new Error("connection lost"));
+
+      await expect(
+        createCaller().update({ id, data: { name: "x" }, version: 1 })
+      ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+    });
+
+    it("answers a stored edit as stored when reading it back fails", async () => {
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false, value: 2 });
+      getRecipeFull.mockRejectedValue(new Error("read failed"));
+
+      await expect(createCaller().update({ id, data: { name: "x" }, version: 1 })).resolves.toEqual(
+        { stale: false, version: 2 }
+      );
+    });
+  });
+
   describe("Dish Colour store paths", () => {
     const recipeImage = "/recipes/44444444-4444-4444-8444-444444444444/photo.jpg";
 
@@ -764,6 +855,43 @@ describe("recipes procedures", () => {
           dishColor: EXTRACTED_DISH_COLOR,
         }),
         1
+      );
+    });
+
+    it("answers an edit once it is stored, so the next queued edit finds its version", async () => {
+      const stored = Promise.withResolvers<{ stale: false }>();
+      let answered = false;
+
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      updateRecipeWithRefs.mockReturnValue(stored.promise);
+      getRecipeFull.mockResolvedValue(null);
+
+      const answer = createCaller()
+        .update({ id: "55555555-5555-4555-8555-555555555555", data: { name: "x" }, version: 1 })
+        .then(() => (answered = true));
+
+      await vi.waitFor(() => expect(updateRecipeWithRefs).toHaveBeenCalled());
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(answered).toBe(false);
+      stored.resolve({ stale: false });
+      await answer;
+    });
+
+    it("answers with the version it stored, or that it refused a stale one", async () => {
+      const id = "55555555-5555-4555-8555-555555555555";
+
+      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
+      canAccessResource.mockResolvedValue(true);
+      getRecipeFull.mockResolvedValue(null);
+      updateRecipeWithRefs.mockResolvedValueOnce({ stale: false, value: 6 });
+      updateRecipeWithRefs.mockResolvedValueOnce({ stale: true });
+
+      await expect(createCaller().update({ id, data: { name: "x" }, version: 5 })).resolves.toEqual(
+        { stale: false, version: 6 }
+      );
+      await expect(createCaller().update({ id, data: { name: "x" }, version: 5 })).resolves.toEqual(
+        { stale: true, version: null }
       );
     });
 

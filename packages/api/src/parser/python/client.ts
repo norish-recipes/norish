@@ -3,6 +3,7 @@ import {
   INTERNAL_PARSER_API_URL,
   SERVER_CONFIG,
 } from "@norish/config/env-config-server";
+import { withEmbeddedParser } from "@norish/shared-server/embedded-parser";
 import { parserLogger as log, redactUrl } from "@norish/shared-server/logger";
 import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 
@@ -34,14 +35,16 @@ export async function callRecipeScrapersParser(
     "Calling recipe-scrapers parser API"
   );
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
-    signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
-  });
+  const { response, body } = await withEmbeddedParser(async () => {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal: AbortSignal.timeout(SERVER_CONFIG.PARSER_API_TIMEOUT_MS),
+    });
 
-  const body = await response.text().catch(() => "");
+    return { response, body: await response.text().catch(() => "") };
+  });
 
   if (!response.ok) {
     log.error(

@@ -17,45 +17,29 @@ Save the file below as `docker-compose.yml` and run:
 docker compose up -d
 ```
 
-Then open [http://localhost:3000](http://localhost:3000). See [First run](#first-run)
-for account setup.
+Open [http://localhost:3000](http://localhost:3000) and [create your account](#first-run).
 
 <QuickStartCompose />
 
 :::info Generating the secrets
-The compose above has a random `MASTER_KEY` and `OBSCURA_CDP_TOKEN`, generated
-in your browser when you loaded this page. To make your own, run:
+The example generates a `MASTER_KEY` and `OBSCURA_CDP_TOKEN` in your browser. To generate your own, run
 
 ```bash
 openssl rand -base64 32 # MASTER_KEY
 openssl rand -hex 32    # OBSCURA_CDP_TOKEN, the same value on both services
 ```
 
-Keep them secret. Encryption keys are derived from `MASTER_KEY`, so
-changing it makes previously encrypted data unreadable.
+Keep both values secret. If you change `MASTER_KEY`, Norish can no longer read the secrets it encrypted with the old key.
 :::
 
 :::tip Production template
-The repository has a longer, commented template at
-[`docker-compose.example.yml`](https://github.com/norish-recipes/Norish/blob/main/docker/docker-compose.example.yml).
+See
+[`docker-compose.example.yml`](https://github.com/norish-recipes/Norish/blob/main/docker/docker-compose.example.yml) for production settings.
 :::
-
-## What's in the stack
-
-| Service   | What it does                                   |
-| --------- | ---------------------------------------------- |
-| `norish`  | The Norish app server.                         |
-| `db`      | PostgreSQL database.                           |
-| `valkey`  | Real-time events and background jobs.          |
-| `obscura` | Headless browser that loads pages for imports. |
 
 ## First run
 
-The first user to sign in becomes the server owner and admin. Registration then
-turns off, and server settings live under **Settings => Admin**.
-
-Email and password sign-in works out of the box. You can add OIDC, GitHub or
-Google, see [Authentication](./configuration/authentication.md).
+Sign in with your email and password. The first account owns the server. Norish then closes registration. Manage registration and other sign-in methods in **Settings**, under **Admin**.
 
 ## Next steps
 
