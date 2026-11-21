@@ -101,8 +101,12 @@ export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
  * anything it can fetch, and `videoStreamOf` reads `formats[]` when the
  * top-level `vcodec` is absent. The download keeps its selector - see
  * DOWNLOAD_VIDEO_FORMAT_SELECTOR - because that one really is fetching bytes.
+ *
+ * `--ignore-no-formats-error` because a post can hold no video at all. An
+ * Instagram photo or photo carousel comes back as info with an empty format
+ * list, and without this flag yt-dlp exits 1 on "No video formats found!"
  */
-export const METADATA_PROBE_ARGS = ["--dump-json"] as const;
+export const METADATA_PROBE_ARGS = ["--dump-json", "--ignore-no-formats-error"] as const;
 
 export const TRANSCRIPTION_AUDIO_FORMAT = "mp3";
 export const TRANSCRIPTION_AUDIO_QUALITY = "64K";
