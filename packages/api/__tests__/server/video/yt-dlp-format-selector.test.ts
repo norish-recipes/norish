@@ -53,8 +53,16 @@ describe("the metadata probe", () => {
    * anything was ever downloaded.
    */
   it("names no format, so reading a URL cannot fail on format selection", () => {
-    expect(METADATA_PROBE_ARGS).toEqual(["--dump-json"]);
     expect(METADATA_PROBE_ARGS).not.toContain("-f");
+  });
+
+  /**
+   * An Instagram photo carousel answers with info that has no formats, and yt-dlp exits 1
+   * unless --ignore-no-formats-error is passed.
+   */
+  it("ignores an entry with no formats, so a photo post still answers", () => {
+    expect(METADATA_PROBE_ARGS).toContain("--ignore-no-formats-error");
+    expect(METADATA_PROBE_ARGS).toContain("--dump-json");
   });
 });
 
