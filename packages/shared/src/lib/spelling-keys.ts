@@ -197,6 +197,8 @@ export interface SpellingRules {
   /** The one-word unit spellings, for a number written against its unit. */
   measureWords: ReadonlySet<string>;
   preparation: ReadonlySet<string>;
+  /** Words that qualify the preparation before them: "fine" after "chopped". */
+  qualifiers: ReadonlySet<string>;
   joiners: ReadonlySet<string>;
   /** The words that join foods, by `ingredientAliasFold`, since "&" folds to nothing. */
   joiningWords: ReadonlyMap<string, JoiningWord>;
@@ -299,6 +301,7 @@ export function spellingRules(
     measures: longestFirst(measures),
     measureWords: new Set([...measures.keys()].filter((fold) => !fold.includes(" "))),
     preparation: wordsOf((language) => language.preparation),
+    qualifiers: wordsOf((language) => language.qualifiers),
     joiners: wordsOf((language) => language.joiners),
     joiningWords,
     connectors: wordsOf((language) => language.connectors),
@@ -333,7 +336,8 @@ function isGluedQuantity(word: string, rules: SpellingRules): boolean {
  * 4 el bosui", "400g can chickpeas"), a joining word left at the start ("di
  * farina"), the units-map phrases at either end, a
  * container, weight or volume at the start, and the preparation and size
- * words at either end are taken off, whole words only. A phrase inside the name stays, and a
+ * words at either end are taken off, whole words only, with a qualifier
+ * right after a preparation word ("chopped fine"). A phrase inside the name stays, and a
  * text is never stripped to nothing: where it would be, the whole text
  * stands.
  */
@@ -400,8 +404,11 @@ function foodWordRange(words: readonly string[], rules: SpellingRules): [number,
 
     while (end - start > 1) {
       const word = words[end - 1]!;
+      // "chopped fine": the qualifier goes with the preparation before it,
+      // where "fine sugar" keeps it as the kind of sugar.
+      const qualifies = rules.qualifiers.has(word) && rules.preparation.has(words[end - 2]!);
 
-      if (strippable(word) || isNumber(word)) joined = true;
+      if (strippable(word) || isNumber(word) || qualifies) joined = true;
       else if (!(joined && rules.joiners.has(word))) break;
       end -= 1;
       stripped = true;

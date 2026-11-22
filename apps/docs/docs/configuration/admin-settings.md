@@ -25,6 +25,7 @@ Each language has a list. Norish checks all lists when it reads an ingredient.
 | Setting         | Example                                                           |
 | --------------- | ----------------------------------------------------------------- |
 | `preparation`   | Ignore "finely chopped" in "finely chopped onion".                |
+| `qualifiers`    | Ignore "fine" in "onion, chopped fine", but not in "fine salt".   |
 | `sizes`         | Ignore "large" in "2 large onions".                               |
 | `approximately` | Ignore "about" in "about 200 g flour".                            |
 | `connectors`    | Ignore "of" in "a pinch of nutmeg".                               |
@@ -38,6 +39,12 @@ Each language has a list. Norish checks all lists when it reads an ingredient.
 
 Norish splits a line only when it knows each food. A known name such as
 "mac and cheese" stays together.
+
+A qualifier is only ignored right after a preparation. On its own it often
+names a kind of food, like "fine" in "fine salt".
+
+Where a word changes with the food's gender or number, list every form. Spanish
+lists "fino", "fina", "finos" and "finas" as qualifiers.
 
 ## Job queues
 

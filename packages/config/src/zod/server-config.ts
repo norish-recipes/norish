@@ -214,6 +214,12 @@ export type UnitsConfig = z.infer<typeof UnitsConfigSchema>;
 export const IngredientWordsLanguageSchema = z.object({
   /** What is done to a food, never which food: "chopped", "fijngesneden". */
   preparation: z.array(z.string()).default([]),
+  /**
+   * How a preparation was done, written after it: the "fine" of "chopped
+   * fine". Read only right after a preparation word, since on its own it
+   * names a kind of food: "fine sugar", "coarse salt".
+   */
+  qualifiers: z.array(z.string()).default([]),
   /** The word between two preparations: "peeled and chopped". */
   joiners: z.array(z.string()).default([]),
   /** The words between foods needed together in one name: "zout en peper". */

@@ -35,6 +35,7 @@
       "freshly",
       "lightly"
     ],
+    "qualifiers": ["fine", "coarse", "thin", "thick"],
     "joiners": ["and"],
     "together": ["and", "&", "+"],
     "alternatives": ["or", "and/or", "/"],
@@ -338,6 +339,7 @@
       "finement",
       "grossièrement"
     ],
+    "qualifiers": ["fin", "fine", "fins", "fines"],
     "joiners": ["et"],
     "together": ["et", "&", "+"],
     "alternatives": ["ou", "et/ou", "/"],
@@ -414,6 +416,7 @@
       "deshuesada",
       "finamente"
     ],
+    "qualifiers": ["fino", "fina", "finos", "finas", "grueso", "gruesa", "gruesos", "gruesas"],
     "joiners": ["y"],
     "together": ["y", "&", "+"],
     "alternatives": ["o", "u", "y/o", "/"],
@@ -489,6 +492,7 @@
       "snocciolate",
       "finemente"
     ],
+    "qualifiers": ["fine", "fini", "fino", "fina", "grosso", "grossa", "grossi", "grosse"],
     "joiners": ["e"],
     "together": ["e", "ed", "&", "+"],
     "alternatives": ["o", "oppure", "e/o", "/"],
@@ -568,6 +572,7 @@
       "batida",
       "finamente"
     ],
+    "qualifiers": ["fino", "fina", "finos", "finas", "grosso", "grossa", "grossos", "grossas"],
     "joiners": ["e"],
     "together": ["e", "&", "+"],
     "alternatives": ["ou", "e/ou", "/"],
@@ -1038,6 +1043,7 @@
       "فاترة",
       "جيدا"
     ],
+    "qualifiers": ["ناعم", "ناعمة", "ناعما", "خشن", "خشنة", "خشنا"],
     "joiners": ["و"],
     "together": ["و"],
     "alternatives": ["أو", "او"],

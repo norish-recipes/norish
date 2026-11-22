@@ -85,4 +85,30 @@ export const SPELLING_CASES: ReadonlyArray<readonly [string, string, boolean]> =
   ["ماء", "ماء دافئ", true],
   // One onion (بصلة) is a spelling of onions (بصل).
   ["بصل", "بصلة صغيرة مفرومة", true],
+  // "Fine" after a preparation is how it was done: "finely chopped" goes...
+  ["بصل", "بصلة صغيرة مفرومة ناعمة", true],
+  // ...in the masculine form, after a masculine food (garlic)...
+  ["ثوم", "ثوم مفروم ناعم", true],
+  // ...as the adverb, whose diacritic folds away...
+  ["ثوم", "ثوم مفروم ناعماً", true],
+  // ...and "coarsely" in both genders.
+  ["جوز", "جوز مفروم خشن", true],
+  ["بصل", "بصلة مفرومة خشنة", true],
+  // It names a kind of food where no preparation comes before it.
+  ["سكر", "سكر ناعم", false],
+  ["برغل", "برغل ناعم", false],
+  ["ملح", "ملح خشن", false],
+  // The same qualifiers after a preparation in other languages ("chopped fine",
+  // "sliced thin"), and the same words naming a kind of food on their own.
+  ["onion", "onion, chopped fine", true],
+  ["carrot", "carrot, sliced thin", true],
+  ["salt", "coarse salt", false],
+  ["oignon", "oignon émincé fin", true],
+  ["sel", "sel fin", false],
+  ["zanahoria", "zanahoria rallada fina", true],
+  ["sal", "sal gruesa", false],
+  ["carota", "carota grattugiata fine", true],
+  ["sale", "sale grosso", false],
+  ["cenoura", "cenoura ralada fina", true],
+  ["sal", "sal grosso", false],
 ];
