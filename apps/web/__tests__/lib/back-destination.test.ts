@@ -20,6 +20,20 @@ describe("safeOrigin", () => {
     expect(safeOrigin("/")).toBe("/");
   });
 
+  it("validates paths when URL.parse is unavailable", () => {
+    const parse = Object.getOwnPropertyDescriptor(URL, "parse");
+    Object.defineProperty(URL, "parse", { value: undefined, configurable: true });
+    try {
+      expect(safeOrigin("/cookbooks/abc")).toBe("/cookbooks/abc");
+      expect(safeOrigin("//evil.example")).toBeNull();
+      expect(safeOrigin("/\\evil.example")).toBeNull();
+      expect(safeOrigin("/\t/evil.example")).toBeNull();
+    } finally {
+      if (parse) Object.defineProperty(URL, "parse", parse);
+      else Reflect.deleteProperty(URL, "parse");
+    }
+  });
+
   it("refuses anything that leaves the site", () => {
     // A back link is a way back, never a way out.
     expect(safeOrigin("https://evil.example")).toBeNull();
