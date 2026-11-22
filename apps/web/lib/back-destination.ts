@@ -17,7 +17,11 @@ export function safeOrigin(value: string | null | undefined): string | null {
   // Resolved the way a browser would: "//evil", "/\\evil" and "/\t/evil" all leave the site.
   if (!value?.startsWith("/")) return null;
 
-  return URL.parse(value, HERE)?.origin === HERE ? value : null;
+  try {
+    return new URL(value, HERE).origin === HERE ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The address of `href`, remembering that the reader is standing on `origin`. */
