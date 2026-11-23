@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { apiKeyPrefix, orderedSiteAuthTokens, shareLinkActions, siteAuthTokenForm } from "..";
+import {
+  apiKeyName,
+  apiKeyPrefix,
+  orderedSiteAuthTokens,
+  shareLinkActions,
+  siteAuthTokenForm,
+} from "..";
 
 describe("connection rules", () => {
   it("offers a link what its status allows, and Delete always", () => {
@@ -13,6 +19,12 @@ describe("connection rules", () => {
     expect(apiKeyPrefix("abc123")).toBe("abc123...");
     expect(apiKeyPrefix(null)).toBe("***...");
     expect(apiKeyPrefix("")).toBe("***...");
+  });
+
+  it("sends a key's name trimmed, and none for a blank one so the server names it", () => {
+    expect(apiKeyName("  Shortcut ")).toBe("Shortcut");
+    expect(apiKeyName("   ")).toBeUndefined();
+    expect(apiKeyName("")).toBeUndefined();
   });
 
   it("orders tokens by domain, account, then name", () => {

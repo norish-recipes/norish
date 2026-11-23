@@ -60,6 +60,7 @@ export type { ReadStatus } from "./read-status";
 export type { ShareLinkAction } from "./connection-rules";
 export {
   API_KEY_NAME_MAX_LENGTH,
+  apiKeyName,
   apiKeyPrefix,
   orderedSiteAuthTokens,
   shareLinkActions,

@@ -17,6 +17,9 @@ export const apiKeyPrefix = (start: string | null | undefined) => `${start || "*
 /** The longest name a key may have: Better Auth's `maximumNameLength`, which refuses a longer one. */
 export const API_KEY_NAME_MAX_LENGTH = 32;
 
+/** The name a new key is sent with: trimmed, and none when blank, so the server gives its default. */
+export const apiKeyName = (typed: string) => typed.trim() || undefined;
+
 /** Site Auth Tokens in order of domain, account, then name, so a site's accounts read as the sets they are. */
 export const orderedSiteAuthTokens = <
   T extends { domain: string; account?: string | null; name: string },

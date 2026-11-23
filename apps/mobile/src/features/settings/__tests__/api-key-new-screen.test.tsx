@@ -50,6 +50,7 @@ vi.mock("@norish/shared-react/offline/react", () => ({
 }));
 vi.mock("@norish/shared-react/reader", () => ({
   API_KEY_NAME_MAX_LENGTH: 32,
+  apiKeyName: (typed: string) => typed.trim() || undefined,
   useApiKeyMutations: () => ({
     createApiKey: () => new Promise((resolve) => (state.settle = resolve)),
     forgetCreatedKey: state.forget,

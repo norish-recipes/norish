@@ -17,6 +17,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import {
   API_KEY_NAME_MAX_LENGTH,
+  apiKeyName,
   apiKeyPrefix,
   useApiKeyMutations,
   useProfileQuery,
@@ -35,7 +36,7 @@ export default function ApiKeyCard() {
   const [newKeyName, setNewKeyName] = useState("");
   const handleGenerateKey = async () => {
     await whileGeneratingKey(() =>
-      createApiKey(newKeyName || undefined).then((key) => {
+      createApiKey(apiKeyName(newKeyName)).then((key) => {
         if (!key) return;
         setGeneratedKey(key);
         setShowTokenModal(true);

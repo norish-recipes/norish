@@ -11,7 +11,11 @@ import { TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { API_KEY_NAME_MAX_LENGTH, useApiKeyMutations } from "@norish/shared-react/reader";
+import {
+  API_KEY_NAME_MAX_LENGTH,
+  apiKeyName,
+  useApiKeyMutations,
+} from "@norish/shared-react/reader";
 
 import { OfflineCapsule } from "../components/offline-capsule";
 import { settingsWrite } from "../utils/settings-write";
@@ -37,7 +41,7 @@ export function ApiKeyNewScreen() {
 
   // A repeat press shares the held create's outcome, so the sheet stays locked until it settles.
   const sendCreate = settingsWrite(
-    () => createApiKey(name.trim() || undefined),
+    () => createApiKey(apiKeyName(name)),
     "api-key-create",
     "settings.user.apiKeys.createNoAnswer"
   );

@@ -22,6 +22,7 @@ vi.mock("@/components/settings/new-feature-chip", () => ({ default: () => null }
 
 vi.mock("@norish/shared-react/reader", () => ({
   API_KEY_NAME_MAX_LENGTH: 32,
+  apiKeyName: (typed: string) => typed.trim() || undefined,
   apiKeyPrefix: (start: string) => start,
   useApiKeyMutations: () => mockKeys,
   useProfileQuery: () => ({ apiKeys: [] }),
