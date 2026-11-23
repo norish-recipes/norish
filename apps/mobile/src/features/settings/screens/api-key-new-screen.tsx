@@ -65,6 +65,7 @@ export function ApiKeyNewScreen() {
         title={text("settings.user.apiKeys.generatedModal.title")}
       >
         <SheetBody contentClassName="gap-4">
+          <OfflineCapsule />
           <Text className="text-warning-ink text-base">
             {text("settings.user.apiKeys.generatedModal.warning")}
           </Text>
