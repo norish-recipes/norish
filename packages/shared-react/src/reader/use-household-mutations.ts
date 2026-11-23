@@ -55,7 +55,9 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
   // The joined household arrives through the subscription.
-  const { mutate: mutateJoin, isPending: isJoining } = useMutation(trpc.households.join.mutationOptions({ onError }));
+  const { mutate: mutateJoin, isPending: isJoining } = useMutation(
+    trpc.households.join.mutationOptions({ onError })
+  );
   const { mutate: mutateLeave, isPending: isLeaving } = useMutation(
     trpc.households.leave.mutationOptions({
       onSuccess: () => {
