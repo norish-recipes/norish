@@ -11,6 +11,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { siteTokenForm, useSiteAuthTokenMutations } from "@norish/shared-react/reader";
 
 import { ChoiceRow } from "../components/choice-row";
+import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsGroup } from "../components/settings-group";
 import { settingsWrite } from "../utils/settings-write";
 
@@ -77,6 +78,7 @@ export function TokenNewScreen() {
       title={text(`${T}.addButton`)}
     >
       <SheetBody contentClassName="gap-4">
+        <OfflineCapsule />
         <View>
           {field(text(`${T}.domain`), "token-domain", domain, setDomain, {
             placeholder: text(`${T}.domainPlaceholder`),

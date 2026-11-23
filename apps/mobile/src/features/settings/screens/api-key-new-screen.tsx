@@ -13,6 +13,7 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useApiKeyMutations } from "@norish/shared-react/reader";
 
+import { OfflineCapsule } from "../components/offline-capsule";
 import { settingsWrite } from "../utils/settings-write";
 
 const T = "settings.user.apiKeys";
@@ -100,6 +101,7 @@ export function ApiKeyNewScreen() {
       title={text(`${T}.createKey`)}
     >
       <SheetBody contentClassName="gap-4">
+        <OfflineCapsule />
         <View>
           <LabelWithHint label={text(`${T}.keyNameLabel`)} />
           <TextField>
