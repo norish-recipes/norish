@@ -9,6 +9,9 @@ appId: dev.norish.app
 - tapOn:
     id: account-avatar
 - tapOn: All settings
+- scrollUntilVisible:
+    element:
+      id: settings-sign-out
 - tapOn:
     id: settings-sign-out
 - extendedWaitUntil:
