@@ -11,9 +11,9 @@ import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { usePlatform } from "@norish/shared-react/platform";
+import { passwordChecks } from "@norish/shared/lib/auth/password";
 
 import { OfflineCapsule } from "../components/offline-capsule";
-import { passwordChecks } from "../utils/profile-rules";
 import { refusalOf } from "../utils/refusal-of";
 import { settingsWrite } from "../utils/settings-write";
 

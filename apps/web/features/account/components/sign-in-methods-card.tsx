@@ -14,7 +14,10 @@ import type { SignInMethodError } from "@norish/shared/contracts/dto/auth";
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
 import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/reader";
 import {
+  addableProviders,
+  hasPassword,
   keepsOfferedSignInMethod,
+  showsSignInMethods,
   SIGN_IN_METHODS,
   signInMethodError,
 } from "@norish/shared/contracts/dto/auth";
@@ -85,18 +88,9 @@ export default function SignInMethodsCard() {
     methods.get(providerId) ?? { ...SIGN_IN_METHODS.oidc, name: providerId };
   const nameOf = (providerId: string) =>
     providerId === "credential" ? t("password") : methodOf(providerId).name;
-  const addable = offered.filter(
-    (provider) =>
-      provider.type === "oauth" &&
-      !signInMethods.some((signInMethod) => signInMethod.providerId === provider.id)
-  );
+  const addable = addableProviders(offered, signInMethods);
 
-  const hasPassword =
-    offeredIds.has("credential") &&
-    signInMethods.some((signInMethod) => signInMethod.providerId === "credential");
-
-  // With one method on the server there is nothing to add or remove, only a password to change.
-  if (offered.length < 2 && !hasPassword) return null;
+  if (!showsSignInMethods(offered.length, hasPassword(signInMethods, offeredIds))) return null;
 
   return (
     <SettingsCard

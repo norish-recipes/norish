@@ -9,6 +9,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { authClient } from "@norish/shared/lib/auth/client";
+import { passwordChecks } from "@norish/shared/lib/auth/password";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -37,11 +38,12 @@ function ChangePasswordForm({ close }: { close: () => void }) {
   const [confirmation, setConfirmation] = useState("");
   const [revokeOtherSessions, setRevokeOtherSessions] = useState(true);
   const [wrongPassword, setWrongPassword] = useState(false);
-  const tooShort = newPassword.length > 0 && newPassword.length < 8;
-  const tooLong = newPassword.length > 128;
-  const mismatch = confirmation.length > 0 && confirmation !== newPassword;
-  const isValid =
-    currentPassword && newPassword && !tooShort && !tooLong && confirmation === newPassword;
+  const {
+    tooShort,
+    tooLong,
+    mismatch,
+    valid: isValid,
+  } = passwordChecks({ current: currentPassword, next: newPassword, confirmation });
 
   const change = useMutation({
     mutationFn: async () => {

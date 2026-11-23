@@ -9,15 +9,16 @@ import type { SignInMethodError } from "@norish/shared/contracts/dto/auth";
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
 import { usePlatform } from "@norish/shared-react/platform";
 import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/reader";
-import { SIGN_IN_METHODS, signInMethodError } from "@norish/shared/contracts/dto/auth";
-
-import type { Refusal } from "../utils/refusal-of";
 import {
   addableProviders,
-  canUnlink,
   hasPassword,
+  keepsOfferedSignInMethod,
   showsSignInMethods,
-} from "../utils/profile-rules";
+  SIGN_IN_METHODS,
+  signInMethodError,
+} from "@norish/shared/contracts/dto/auth";
+
+import type { Refusal } from "../utils/refusal-of";
 import { refusalOf } from "../utils/refusal-of";
 import { settingsWrite } from "../utils/settings-write";
 import { SettingsGroup } from "./settings-group";
@@ -101,7 +102,7 @@ export function SignInMethods() {
               key={account.id}
               accessory={isPassword && stillOffered ? "chevron" : "none"}
               actions={
-                canUnlink(signInMethods, account.id, offeredIds)
+                keepsOfferedSignInMethod(signInMethods, account.id, offeredIds)
                   ? [
                       {
                         kind: "unlink",

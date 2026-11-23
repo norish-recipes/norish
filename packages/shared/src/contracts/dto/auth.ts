@@ -32,14 +32,35 @@ export const signInMethodError = (
   fallback: SignInMethodError
 ): SignInMethodError => SIGN_IN_METHOD_ERRORS[code ?? ""] ?? fallback;
 
+type SignInAccount = { id: string; providerId: string };
+
 /** Whether the accounts left after removing one still hold a method the server offers. */
 export function keepsOfferedSignInMethod(
-  accounts: readonly { id: string; providerId: string }[],
+  accounts: readonly SignInAccount[],
   removedId: string | undefined,
   offered: ReadonlySet<string>
 ): boolean {
   return accounts.some((account) => account.id !== removedId && offered.has(account.providerId));
 }
+
+/** Whether the password can be changed: the server offers passwords and the account has one. */
+export const hasPassword = (accounts: readonly SignInAccount[], offered: ReadonlySet<string>) =>
+  offered.has(SIGN_IN_METHODS.credential.id) &&
+  accounts.some((account) => account.providerId === SIGN_IN_METHODS.credential.id);
+
+/** With one method on the server there is nothing to add or remove, only a password to change. */
+export const showsSignInMethods = (offeredCount: number, passwordOffered: boolean) =>
+  offeredCount > 1 || passwordOffered;
+
+/** The OAuth providers the server offers that the account has not linked yet. */
+export const addableProviders = <Provider extends ProviderInfo>(
+  offered: readonly Provider[],
+  accounts: readonly SignInAccount[]
+) =>
+  offered.filter(
+    (provider) =>
+      provider.type === "oauth" && !accounts.some((account) => account.providerId === provider.id)
+  );
 
 export interface AuthProvidersResponse {
   providers: ProviderInfo[];
