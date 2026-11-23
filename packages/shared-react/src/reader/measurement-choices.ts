@@ -6,7 +6,7 @@ import { measurementSystemTarget } from "@norish/shared/lib/user-preferences";
 export const measurementChoices = (aiEnabled: boolean): readonly MeasurementSystemChoice[] =>
   aiEnabled
     ? MEASUREMENT_SYSTEM_CHOICES
-    : MEASUREMENT_SYSTEM_CHOICES.filter((choice) => !choice.endsWith("WithAI"));
+    : MEASUREMENT_SYSTEM_CHOICES.filter((choice) => !measurementSystemTarget(choice)?.withAI);
 
 /** A choice of AI made before it was switched off reads as the same system without. */
 export const shownMeasurement = (
