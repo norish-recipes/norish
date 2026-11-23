@@ -76,6 +76,12 @@ class NativeMenuView: ExpoView, UIContextMenuInteractionDelegate {
   ) -> UIContextMenuConfiguration? {
     guard !items.isEmpty else { return nil }
 
+    // UIKit snapshots this view for the lifted preview after this returns: undo the press dim first.
+    for subview in subviews where subview !== button {
+      subview.layer.removeAllAnimations()
+      subview.alpha = 1
+    }
+
     return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
       self?.makeMenu()
     }
