@@ -5,9 +5,9 @@ import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { Switch } from "@/components/switch";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
+import { useText } from "@/lib/i18n/use-text";
 import { useNavigation, useRouter } from "expo-router";
 import { TextField } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { usePlatform } from "@norish/shared-react/platform";
@@ -20,7 +20,7 @@ import { settingsWrite } from "../utils/settings-write";
 /** The change password sheet, mounted per opening so a closed sheet keeps no password; it stays
  * open while the change is under way. */
 export function PasswordScreen() {
-  const intl = useIntl();
+  const text = useText();
   const router = useRouter();
   const navigation = useNavigation();
   const authClient = useAuthClient();
@@ -33,7 +33,6 @@ export function PasswordScreen() {
   const [wrongPassword, setWrongPassword] = useState(false);
   const [sending, setSending] = useState(false);
   const checks = passwordChecks({ current, next, confirmation });
-  const t = (id: string) => intl.formatMessage({ id: `settings.user.signInMethods.${id}` });
   const field = (label: string, testID: string, value: string, set: (value: string) => void) => (
     <TextField>
       <SheetInput
@@ -74,62 +73,79 @@ export function PasswordScreen() {
     setSending(false);
     if (refusal === undefined || !navigation.isFocused()) return;
     if (!refusal) {
-      toast.show({ severity: "success", title: t("passwordChanged") });
+      toast.show({
+        severity: "success",
+        title: text("settings.user.signInMethods.passwordChanged"),
+      });
       router.back();
     } else if (refusal.code === "INVALID_PASSWORD") setWrongPassword(true);
-    else toast.show({ severity: "danger", title: t("errors.changeFailed") });
+    else
+      toast.show({
+        severity: "danger",
+        title: text("settings.user.signInMethods.errors.changeFailed"),
+      });
   };
 
   return (
     <Sheet
       closable={!sending}
       confirm={{
-        label: t("changePassword"),
+        label: text("settings.user.signInMethods.changePassword"),
         symbol: "key",
         disabled: !checks.valid || isOffline || sending,
         onPress: () => void change(),
       }}
       name="password"
-      title={t("changePassword")}
+      title={text("settings.user.signInMethods.changePassword")}
     >
       <SheetBody contentClassName="gap-4">
         <OfflineCapsule />
         <View>
-          <LabelWithHint label={t("currentPassword")} />
-          {field(t("currentPassword"), "password-current", current, (value) => {
-            setCurrent(value);
-            setWrongPassword(false);
-          })}
-          {wrongPassword ? error(t("errors.wrongPassword")) : null}
+          <LabelWithHint label={text("settings.user.signInMethods.currentPassword")} />
+          {field(
+            text("settings.user.signInMethods.currentPassword"),
+            "password-current",
+            current,
+            (value) => {
+              setCurrent(value);
+              setWrongPassword(false);
+            }
+          )}
+          {wrongPassword ? error(text("settings.user.signInMethods.errors.wrongPassword")) : null}
         </View>
         <View>
           <LabelWithHint
-            hint={intl.formatMessage({ id: "auth.signup.passwordDescription" })}
-            label={t("newPassword")}
+            hint={text("auth.signup.passwordDescription")}
+            label={text("settings.user.signInMethods.newPassword")}
             testID="password-hint"
           />
-          {field(t("newPassword"), "password-new", next, setNext)}
+          {field(text("settings.user.signInMethods.newPassword"), "password-new", next, setNext)}
           {checks.tooShort || checks.tooLong
             ? error(
-                intl.formatMessage({
-                  id: checks.tooLong
+                text(
+                  checks.tooLong
                     ? "auth.signup.errors.passwordTooLong"
-                    : "auth.signup.errors.passwordTooShort",
-                })
+                    : "auth.signup.errors.passwordTooShort"
+                )
               )
             : null}
         </View>
         <View>
-          <LabelWithHint label={t("confirmPassword")} />
-          {field(t("confirmPassword"), "password-confirm", confirmation, setConfirmation)}
-          {checks.mismatch
-            ? error(intl.formatMessage({ id: "auth.signup.errors.passwordMismatch" }))
-            : null}
+          <LabelWithHint label={text("settings.user.signInMethods.confirmPassword")} />
+          {field(
+            text("settings.user.signInMethods.confirmPassword"),
+            "password-confirm",
+            confirmation,
+            setConfirmation
+          )}
+          {checks.mismatch ? error(text("auth.signup.errors.passwordMismatch")) : null}
         </View>
         <View className="flex-row items-center justify-between px-2">
-          <Text className="text-foreground text-base">{t("signOutOthers")}</Text>
+          <Text className="text-foreground text-base">
+            {text("settings.user.signInMethods.signOutOthers")}
+          </Text>
           <Switch
-            accessibilityLabel={t("signOutOthers")}
+            accessibilityLabel={text("settings.user.signInMethods.signOutOthers")}
             isSelected={revokeOthers}
             testID="password-revoke-others"
             onSelectedChange={setRevokeOthers}

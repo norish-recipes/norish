@@ -8,7 +8,6 @@ import { hostOf } from "@/lib/network/host-of";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import * as Application from "expo-application";
 import { useRouter } from "expo-router";
-import { useIntl } from "react-intl";
 
 import { useServerVersionQuery } from "@norish/shared-react/config";
 import { useAllergiesQuery, useHousehold, useReader } from "@norish/shared-react/reader";
@@ -27,7 +26,6 @@ const SUPPORT_URL = "https://github.com/norish-recipes/norish/issues";
 
 /** Settings, pushed from the avatar menu: the account's rows, Connections, the App and Sign out. */
 export function SettingsScreen() {
-  const intl = useIntl();
   const router = useRouter();
   const { user } = useReader();
   const { allergies } = useAllergiesQuery();
@@ -43,18 +41,16 @@ export function SettingsScreen() {
   const serverAddress = use(ServerAddressContext);
   const { locale, options } = useMobileLocaleSettings();
   const signOut = useConfirmedSignOut();
-  const t = useText();
+  const text = useText();
   const open = (path: SettingsPath) => () => router.push(`/settings/${path}`);
   const version = versionLine(
     Application.nativeApplicationVersion,
     Application.nativeBuildVersion,
-    serverVersion
-      ? intl.formatMessage({ id: "settings.mobile.versionServer" }, { server: serverVersion })
-      : null
+    serverVersion ? text("settings.mobile.versionServer", { server: serverVersion }) : null
   );
 
   return (
-    <SettingsPage testID="settings-screen" title={t("navbar.userMenu.settings.title")}>
+    <SettingsPage testID="settings-screen" title={text("navbar.userMenu.settings.title")}>
       <SettingsGroup className="pt-1">
         <ProfileCard
           email={user?.email ?? ""}
@@ -68,7 +64,7 @@ export function SettingsScreen() {
           accessory="chevron"
           icon="options-outline"
           testID="settings-preferences"
-          title={t("settings.user.preferences.title")}
+          title={text("settings.user.preferences.title")}
           value={options.find((option) => option.code === locale)?.name}
           onPress={open("preferences")}
         />
@@ -76,53 +72,53 @@ export function SettingsScreen() {
           accessory="chevron"
           icon="warning-outline"
           testID="settings-allergies"
-          title={t("settings.user.allergies.title")}
+          title={text("settings.user.allergies.title")}
           value={allergies.join(", ")}
           onPress={open("allergies")}
         />
       </SettingsGroup>
-      <SettingsGroup title={t("settings.tabs.household")}>
+      <SettingsGroup title={text("settings.tabs.household")}>
         <SettingsRow
           accessory="chevron"
           icon="people-outline"
           testID="settings-household"
-          title={t("settings.tabs.household")}
+          title={text("settings.tabs.household")}
           value={
             household?.name ??
-            (householdRead === "empty" ? t("settings.mobile.noHousehold") : undefined)
+            (householdRead === "empty" ? text("settings.mobile.noHousehold") : undefined)
           }
           onPress={open("household")}
         />
       </SettingsGroup>
-      <SettingsGroup title={t("settings.mobile.connections")}>
+      <SettingsGroup title={text("settings.mobile.connections")}>
         <SettingsRow
           accessory="chevron"
           icon="key-outline"
           testID="settings-tokens"
-          title={t("settings.user.siteAuthTokens.title")}
+          title={text("settings.user.siteAuthTokens.title")}
           onPress={open("tokens")}
         />
         <SettingsRow
           accessory="chevron"
           icon="terminal-outline"
           testID="settings-api-keys"
-          title={t("settings.user.apiKeys.title")}
+          title={text("settings.user.apiKeys.title")}
           onPress={open("api-keys")}
         />
         <SettingsRow
           accessory="chevron"
           icon="link-outline"
           testID="settings-share-links"
-          title={t("settings.user.shareLinks.title")}
+          title={text("settings.user.shareLinks.title")}
           onPress={open("share-links")}
         />
       </SettingsGroup>
-      <SettingsGroup title={t("settings.mobile.app")}>
+      <SettingsGroup title={text("settings.mobile.app")}>
         <SettingsRow
           accessory="chevron"
           icon="server-outline"
           testID="settings-server"
-          title={t("settings.mobile.server")}
+          title={text("settings.mobile.server")}
           value={serverAddress ? hostOf(serverAddress) : undefined}
           onPress={changeServerAddress}
         />
@@ -130,13 +126,13 @@ export function SettingsScreen() {
           accessory="external"
           icon="help-buoy-outline"
           testID="settings-support"
-          title={t("settings.mobile.support")}
+          title={text("settings.mobile.support")}
           onPress={() => void Linking.openURL(SUPPORT_URL)}
         />
         <SettingsRow
           icon="information-circle-outline"
           testID="settings-version"
-          title={t("settings.mobile.version")}
+          title={text("settings.mobile.version")}
           wholeValue
           value={version}
         />
@@ -147,7 +143,7 @@ export function SettingsScreen() {
           danger
           icon="log-out-outline"
           testID="settings-sign-out"
-          title={t("navbar.userMenu.logout")}
+          title={text("navbar.userMenu.logout")}
           onPress={() => void signOut()}
         />
       </SettingsGroup>

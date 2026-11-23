@@ -5,11 +5,11 @@ import { LabelWithHint } from "@/components/hint-button";
 import { SheetInput } from "@/components/sheet-input";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
+import { useText } from "@/lib/i18n/use-text";
 import { useServerImage } from "@/lib/network/server-url";
 import { isOfflineNow } from "@/lib/offline/offline-now";
 import { File } from "expo-file-system";
 import { Button, TextField } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
@@ -30,14 +30,12 @@ const PICKER: ImagePicker.ImagePickerOptions = {
 
 /** The Reader's photo, name and email: a photo or name change waits for Save, Remove acts at once. */
 export function ProfileForm() {
-  const intl = useIntl();
+  const text = useText();
   const { isOffline } = useConnectivity();
   const { user } = useProfileQuery();
   const { updateName, uploadAvatar, deleteAvatar } = useProfileMutations();
   const toImage = useServerImage();
-  const openPhotoSources = usePhotoSourceSheet(
-    intl.formatMessage({ id: "settings.mobile.changePhoto" })
-  );
+  const openPhotoSources = usePhotoSourceSheet(text("settings.mobile.changePhoto"));
   const [photo, setPhoto] = useState<File | null>(null);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -77,7 +75,7 @@ export function ProfileForm() {
     <>
       <View className="items-center gap-3 pt-3">
         <Pressable
-          accessibilityLabel={intl.formatMessage({ id: "settings.mobile.changePhoto" })}
+          accessibilityLabel={text("settings.mobile.changePhoto")}
           accessibilityRole="button"
           className={blocked ? "opacity-40" : ""}
           disabled={isOffline || deleting}
@@ -105,23 +103,23 @@ export function ProfileForm() {
             onPress={() => void discardOrDeletePhoto()}
           >
             <Text className="text-danger text-[15px] font-medium">
-              {intl.formatMessage({ id: "settings.user.profile.deleteAvatar" })}
+              {text("settings.user.profile.deleteAvatar")}
             </Text>
           </Pressable>
         ) : null}
       </View>
       <View className="pt-5">
         <LabelWithHint
-          hint={intl.formatMessage({ id: "settings.mobile.avatarHint" })}
-          label={intl.formatMessage({ id: "settings.user.profile.nameLabel" })}
+          hint={text("settings.mobile.avatarHint")}
+          label={text("settings.user.profile.nameLabel")}
           testID="profile-name-hint"
         />
         <TextField>
           <SheetInput
-            accessibilityLabel={intl.formatMessage({ id: "settings.user.profile.nameLabel" })}
+            accessibilityLabel={text("settings.user.profile.nameLabel")}
             autoCapitalize="words"
             editable={!isOffline}
-            placeholder={intl.formatMessage({ id: "settings.user.profile.namePlaceholder" })}
+            placeholder={text("settings.user.profile.namePlaceholder")}
             returnKeyType="done"
             testID="profile-name"
             value={name.shown}
@@ -134,7 +132,7 @@ export function ProfileForm() {
       <SettingsGroup>
         <SettingsRow
           testID="profile-email"
-          title={intl.formatMessage({ id: "settings.user.profile.emailLabel" })}
+          title={text("settings.user.profile.emailLabel")}
           value={user?.email}
         />
       </SettingsGroup>
@@ -145,7 +143,7 @@ export function ProfileForm() {
         onPress={() => void save()}
       >
         <Button.Label className="text-base font-semibold">
-          {intl.formatMessage({ id: "common.actions.save" })}
+          {text("common.actions.save")}
         </Button.Label>
       </Button>
     </>

@@ -6,7 +6,6 @@ import { useText } from "@/lib/i18n/use-text";
 import { isOfflineNow } from "@/lib/offline/offline-now";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, Skeleton, useThemeColor } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import { useTagsQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
@@ -30,7 +29,6 @@ const ENDS_NAME = /[\s,]$/;
 
 /** The Reader's allergies as warning chips with a field to add more; Save sends them. */
 export function AllergiesForm() {
-  const intl = useIntl();
   const { isOffline } = useConnectivity();
   const { allergies: saved, ...read } = useAllergiesQuery();
   const { setAllergies } = useAllergiesMutation();
@@ -91,10 +89,7 @@ export function AllergiesForm() {
             >
               <Text className="text-warning-foreground text-[15px] font-semibold">{name}</Text>
               <Pressable
-                accessibilityLabel={intl.formatMessage(
-                  { id: "recipes.editor.removeNamed" },
-                  { name }
-                )}
+                accessibilityLabel={text("recipes.editor.removeNamed", { name })}
                 accessibilityRole="button"
                 className="size-[30px] items-center justify-center"
                 onPress={() => allergies.setDraft(withoutAllergy(shown, name))}

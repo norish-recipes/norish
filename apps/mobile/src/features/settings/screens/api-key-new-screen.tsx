@@ -8,7 +8,7 @@ import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useText } from "@/lib/i18n/use-text";
 import { useNavigation, useRouter } from "expo-router";
 import { TextField } from "heroui-native";
-import { useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import {
@@ -24,7 +24,6 @@ import { settingsWrite } from "../utils/settings-write";
  * reader saved it the sheet cannot be closed, and closing it drops the key for good. */
 export function ApiKeyNewScreen() {
   const text = useText();
-  const intl = useIntl();
   const router = useRouter();
   const navigation = useNavigation();
   const copyToClipboard = useCopyToClipboard();
@@ -98,10 +97,10 @@ export function ApiKeyNewScreen() {
             }
           />
           <Text className="text-muted text-sm">
-            {intl.formatMessage(
-              { id: "settings.user.apiKeys.generatedModal.hint" },
-              { code: (chunks) => <Text className="font-mono">{chunks}</Text> }
-            )}
+            <FormattedMessage
+              id="settings.user.apiKeys.generatedModal.hint"
+              values={{ code: (chunks) => <Text className="font-mono">{chunks}</Text> }}
+            />
           </Text>
         </SheetBody>
       </Sheet>

@@ -1,5 +1,5 @@
 import React from "react";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import { DangerZone } from "../components/danger-zone";
 import { ProfileForm } from "../components/profile-form";
@@ -8,13 +8,10 @@ import { SignInMethods } from "../components/sign-in-methods";
 
 /** Profile: photo, name and email with Save, the sign-in methods, and Delete account. */
 export function ProfileScreen() {
-  const intl = useIntl();
+  const text = useText();
 
   return (
-    <SettingsPage
-      testID="settings-profile-screen"
-      title={intl.formatMessage({ id: "settings.user.profile.title" })}
-    >
+    <SettingsPage testID="settings-profile-screen" title={text("settings.user.profile.title")}>
       <ProfileForm />
       <SignInMethods />
       <DangerZone />

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ProviderIcon } from "@/components/provider-icon";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
+import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -30,6 +31,7 @@ import { SettingsRow } from "./settings-row";
  * session, and the password sheet. Nothing here is Queued: every call needs the server. */
 export function SignInMethods() {
   const intl = useIntl();
+  const text = useText();
   const router = useRouter();
   const authClient = useAuthClient();
   const { toast } = usePlatform();
@@ -38,8 +40,6 @@ export function SignInMethods() {
   const { providers: offered } = useAuthProvidersQuery();
   const { signInMethods, refetch, ...read } = useSignInMethodsQuery();
   const [busy, setBusy] = useState(false);
-  const t = (id: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id: `settings.user.signInMethods.${id}` }, values);
 
   const offeredIds = new Set(offered.map((provider) => provider.id));
   const passwordOffered = hasPassword(signInMethods, offeredIds);
@@ -72,7 +72,9 @@ export function SignInMethods() {
     if (refusal) {
       toast.show({
         severity: "danger",
-        title: t(`errors.${signInMethodError(refusal.code, fallback)}`),
+        title: text(
+          `settings.user.signInMethods.errors.${signInMethodError(refusal.code, fallback)}`
+        ),
       });
     }
 
@@ -96,12 +98,12 @@ export function SignInMethods() {
 
   return (
     <ReadBody empty={null} name="sign-in-methods" state={state} onRetry={refetch}>
-      <SettingsGroup testID="sign-in-methods" title={t("title")}>
+      <SettingsGroup testID="sign-in-methods" title={text("settings.user.signInMethods.title")}>
         {signInMethods.map((account) => {
           const method = methodOf(account.providerId);
           const isPassword = account.providerId === SIGN_IN_METHODS.credential.id;
           const stillOffered = offeredIds.has(account.providerId);
-          const name = isPassword ? t("password") : method.name;
+          const name = isPassword ? text("settings.user.signInMethods.password") : method.name;
 
           return (
             <SettingsRow
@@ -112,7 +114,7 @@ export function SignInMethods() {
                   ? [
                       {
                         kind: "unlink",
-                        label: t("remove"),
+                        label: text("settings.user.signInMethods.remove"),
                         onPress: settingsWrite(() => void unlink(account.id)),
                       },
                     ]
@@ -121,10 +123,10 @@ export function SignInMethods() {
               icon={<ProviderIcon color={foreground} icon={method.icon} size={17} />}
               subtitle={
                 !stillOffered
-                  ? t("unavailable")
+                  ? text("settings.user.signInMethods.unavailable")
                   : isPassword
                     ? user?.email
-                    : t("added", {
+                    : text("settings.user.signInMethods.added", {
                         date: intl.formatDate(account.createdAt, {
                           year: "numeric",
                           month: "short",
@@ -143,14 +145,14 @@ export function SignInMethods() {
         })}
       </SettingsGroup>
       {addable.length > 0 ? (
-        <SettingsGroup title={t("addAnother")}>
+        <SettingsGroup title={text("settings.user.signInMethods.addAnother")}>
           {addable.map((provider) => (
             <SettingsRow
               key={provider.id}
               accessory="external"
               icon={<ProviderIcon color={foreground} icon={provider.icon} size={17} />}
               testID={`sign-in-link-${provider.id}`}
-              title={t("addProvider", { provider: provider.name })}
+              title={text("settings.user.signInMethods.addProvider", { provider: provider.name })}
               write
               onPress={busy ? undefined : settingsWrite(() => void link(provider.id))}
             />

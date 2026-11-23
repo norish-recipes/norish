@@ -1,6 +1,6 @@
 import React from "react";
 import { useConfirm } from "@/hooks/use-confirm";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import { useDeleteAccountMutation } from "@norish/shared-react/reader";
 
@@ -12,27 +12,28 @@ const DELETE_PARAGRAPHS = ["permanentWarning", "dataWarning", "recipesNote", "ad
 
 /** Delete account behind a destructive confirm; the app returns to sign-in once it is gone. */
 export function DangerZone() {
-  const intl = useIntl();
+  const text = useText();
   const confirm = useConfirm();
   const { deleteAccount } = useDeleteAccountMutation();
-  const t = (id: string) => intl.formatMessage({ id: `settings.user.dangerZone.${id}` });
 
   const confirmDelete = () =>
     confirm({
-      title: t("deleteModal.title"),
-      message: DELETE_PARAGRAPHS.map((id) => t(`deleteModal.${id}`)).join("\n\n"),
+      title: text("settings.user.dangerZone.deleteModal.title"),
+      message: DELETE_PARAGRAPHS.map((id) =>
+        text(`settings.user.dangerZone.deleteModal.${id}`)
+      ).join("\n\n"),
       confirmLabelId: "settings.user.dangerZone.deleteModal.confirmButton",
       onConfirm: settingsWrite(deleteAccount),
     });
 
   return (
-    <SettingsGroup className="pt-[30px]" title={t("title")}>
+    <SettingsGroup className="pt-[30px]" title={text("settings.user.dangerZone.title")}>
       <SettingsRow
         centred
         danger
         icon="trash-outline"
         testID="profile-delete-account"
-        title={t("deleteButton")}
+        title={text("settings.user.dangerZone.deleteButton")}
         write
         onPress={confirmDelete}
       />

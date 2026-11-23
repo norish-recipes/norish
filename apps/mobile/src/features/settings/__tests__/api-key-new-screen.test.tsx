@@ -40,6 +40,7 @@ vi.mock("heroui-native", () => ({
 }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+  FormattedMessage: ({ id }: { id: string }) => id,
 }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ back: state.back }),
