@@ -108,20 +108,51 @@ describe("the Account's writes", () => {
     it("keeps the cached preferences when a rename answers with the user", async () => {
       const result = render(() => useProfileMutations());
 
-      act(() => void result.current.updateName("Grace"));
+      let saved: Promise<boolean> = Promise.resolve(false);
+
+      act(() => {
+        saved = result.current.updateName("Grace");
+      });
       expect((await sentCall("user.updateName")).input).toEqual({ name: "Grace", version: 3 });
       await answerCall("user.updateName", {
         success: true,
         user: { id: "u1", email: "u1@example.com", name: "Grace", image: null, version: 4 },
       });
 
+      expect(await saved).toBe(true);
       expect(profile()?.user).toEqual({ ...PROFILE.user, name: "Grace", version: 4 });
+    });
+
+    it("rereads the profile when a save was made from an out-of-date version, and says it did not go through", async () => {
+      const result = render(() => useProfileMutations());
+      let saved: Promise<boolean> = Promise.resolve(true);
+
+      act(() => {
+        saved = result.current.updateName("Grace");
+      });
+      await answerCall("user.updateName", { success: true, stale: true });
+
+      expect(await saved).toBe(false);
+      expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
+    });
+
+    it("keeps a stale Avatar upload as not gone through", async () => {
+      const result = render(() => useProfileMutations());
+      let upload: Promise<boolean> = Promise.resolve(true);
+
+      act(() => {
+        upload = result.current.uploadAvatar(new File(["x"], "a.png", { type: "image/png" }));
+      });
+      await answerCall("user.uploadAvatar", { success: true, stale: true });
+
+      expect(await upload).toBe(false);
+      expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
     });
 
     it("refuses an empty name without sending it", async () => {
       const result = render(() => useProfileMutations());
 
-      await act(() => result.current.updateName("   "));
+      await act(async () => expect(await result.current.updateName("   ")).toBe(false));
 
       expect(trpcCalls["user.updateName"]).toBeUndefined();
       expect(adapter.toast.show).toHaveBeenCalledWith({

@@ -23,16 +23,27 @@ function useFailedWrite() {
   };
 }
 
+type ProfileAnswer = WriteResult & { stale?: boolean };
+
+/** A stale answer came from an out-of-date version: the server ignored it. */
+const tookIt = (write: Promise<ProfileAnswer>): Promise<boolean> =>
+  write.then(
+    (answer) => answer.success && !answer.stale,
+    () => false
+  );
+
 /** The Reader's name and Avatar; each answers with the user as it now is. */
 export function useProfileMutations() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
-  const { version, mergeUser } = useProfileCache();
+  const { version, mergeUser, invalidate } = useProfileCache();
   const failed = useFailedWrite();
 
+  // A stale write rereads the profile, so a retry sends the current version.
   const settle = (context: string) => ({
-    onSuccess: (answer: WriteResult & { user?: Parameters<typeof mergeUser>[0] }) => {
-      if (answer.success && answer.user) mergeUser(answer.user);
+    onSuccess: (answer: ProfileAnswer & { user?: Parameters<typeof mergeUser>[0] }) => {
+      if (answer.stale) invalidate();
+      else if (answer.success && answer.user) mergeUser(answer.user);
       else if (!answer.success) showRefusal(showError, answer, context);
     },
     onError: failed(context),
@@ -50,24 +61,24 @@ export function useProfileMutations() {
   );
 
   return {
-    /** Resolves once settled, so the save goes on to the Avatar; an empty name is refused here. */
-    updateName: async (name: string): Promise<void> => {
+    /** Resolves whether the name went through; an empty name is refused here. */
+    updateName: async (name: string): Promise<boolean> => {
       if (!name.trim()) {
         toast.show({
           severity: "danger",
           title: toast.translate("common.errors.nameCannotBeEmpty"),
         });
 
-        return;
+        return false;
       }
 
-      await settled(mutateName({ name, version: version() }));
+      return tookIt(mutateName({ name, version: version() }));
     },
     /** Resolves whether the upload went through; the reader is shown why not. */
     uploadAvatar: (file: Blob): Promise<boolean> =>
-      accepted(mutateUpload(uploadForm({ file, version: version() }))),
+      tookIt(mutateUpload(uploadForm({ file, version: version() }))),
     /** Resolves whether the delete went through; the reader is shown why not. */
-    deleteAvatar: (): Promise<boolean> => accepted(mutateDelete({ version: version() })),
+    deleteAvatar: (): Promise<boolean> => tookIt(mutateDelete({ version: version() })),
     isDeletingAvatar,
   };
 }
