@@ -30,4 +30,19 @@ describe("everySecondUntil", () => {
     stop();
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it("starts no timer for a code that has already expired, and one again once regenerated", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(10_000);
+
+    everySecondUntil(5_000)(() => undefined);
+    everySecondUntil(10_000)(() => undefined);
+    expect(vi.getTimerCount()).toBe(0);
+
+    const stop = everySecondUntil(70_000)(() => undefined);
+
+    expect(vi.getTimerCount()).toBe(1);
+    stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
