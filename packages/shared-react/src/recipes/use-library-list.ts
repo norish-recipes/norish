@@ -4,8 +4,9 @@ import type { LibraryMatchDTO } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
+import type { HiddenItemVisibility } from "../reader";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { useActiveAllergies } from "../reader";
+import { useActiveAllergies, useHiddenItemVisibility } from "../reader";
 import { useLibraryFilters } from "./library-filters-store";
 import { useCookbookRecipesQuery } from "./use-cookbook-recipes-query";
 import { useFavoritesMutation } from "./use-favorites-mutation";
@@ -13,10 +14,22 @@ import { useFavoritesQuery } from "./use-favorites-query";
 import { useLibraryQuery } from "./use-library-query";
 import { useRecipesMutations } from "./use-recipes-mutations";
 
+/** A hidden favourites or rating filter is dropped, so it can't narrow a list that never offers it. */
+export const withoutHiddenFilters = <
+  T extends Pick<CanonicalRecipeFilters, "showFavoritesOnly" | "minRating">,
+>(
+  filters: T,
+  { showFavorites, showRatings }: Pick<HiddenItemVisibility, "showFavorites" | "showRatings">
+): T => ({
+  ...filters,
+  showFavoritesOnly: showFavorites ? filters.showFavoritesOnly : false,
+  minRating: showRatings ? filters.minRating : null,
+});
+
 /** The Library's filters, as a list query takes them, and whether the stored ones are applied. */
 export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
   const stored = useLibraryFilters((state) => state.filters);
-  const filters = override ?? stored;
+  const filters = withoutHiddenFilters(override ?? stored, useHiddenItemVisibility());
   const isHydrated = useLibraryFilters((state) => state.hydrated);
 
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };
