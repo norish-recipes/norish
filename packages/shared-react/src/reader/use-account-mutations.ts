@@ -64,7 +64,7 @@ export function useProfileMutations() {
       await settled(mutateName({ name, version: version() }));
     },
     /** Resolves whether the upload went through; the reader is shown why not. */
-    uploadAvatar: (file: File): Promise<boolean> =>
+    uploadAvatar: (file: Blob): Promise<boolean> =>
       accepted(mutateUpload(uploadForm({ file, version: version() }))),
     /** Resolves whether the delete went through; the reader is shown why not. */
     deleteAvatar: (): Promise<boolean> => accepted(mutateDelete({ version: version() })),
