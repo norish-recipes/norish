@@ -43,6 +43,12 @@ export default function ApiKeyCard() {
       })
     );
   };
+  // Every way the dialog closes drops the key, so a later Create cannot replace one never saved.
+  const dismissKey = () => {
+    setGeneratedKey(null);
+    forgetCreatedKey();
+    setShowTokenModal(false);
+  };
   const handleCopyKey = () => {
     if (generatedKey) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -155,54 +161,47 @@ export default function ApiKeyCard() {
         className="z-[1099]"
         isDismissable={false}
         isOpen={showTokenModal}
-        onOpenChange={setShowTokenModal}
+        onOpenChange={(open) => {
+          if (!open) dismissKey();
+        }}
       >
         <Modal.Container className="z-[1100]">
           <Modal.Dialog>
-            {({ close: onClose }) => (
-              <>
-                <Modal.Header>{t("generatedModal.title")}</Modal.Header>
-                <Modal.Body>
-                  <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
-                  <div className="flex gap-2">
-                    <Input
-                      variant="secondary"
-                      readOnly
-                      className="font-mono text-xs"
-                      value={generatedKey || ""}
-                    />
-                    <IconActionButton
-                      action="duplicate"
-                      icon={ClipboardDocumentIcon}
-                      label={t("generatedModal.copyButton")}
-                      variant="primary"
-                      onPress={handleCopyKey}
-                    />
-                  </div>
-                  <p className="text-muted mt-2 text-xs">
-                    {t.rich("generatedModal.hint", {
-                      code: (chunks) => (
-                        <code className="bg-surface-secondary rounded px-1">{chunks}</code>
-                      ),
-                    })}
-                  </p>
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton
-                      action="done"
-                      onPress={() => {
-                        setGeneratedKey(null);
-                        forgetCreatedKey();
-                        onClose();
-                      }}
-                    >
-                      {t("generatedModal.confirmButton")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
+            <>
+              <Modal.Header>{t("generatedModal.title")}</Modal.Header>
+              <Modal.Body>
+                <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
+                <div className="flex gap-2">
+                  <Input
+                    variant="secondary"
+                    readOnly
+                    className="font-mono text-xs"
+                    value={generatedKey || ""}
+                  />
+                  <IconActionButton
+                    action="duplicate"
+                    icon={ClipboardDocumentIcon}
+                    label={t("generatedModal.copyButton")}
+                    variant="primary"
+                    onPress={handleCopyKey}
+                  />
+                </div>
+                <p className="text-muted mt-2 text-xs">
+                  {t.rich("generatedModal.hint", {
+                    code: (chunks) => (
+                      <code className="bg-surface-secondary rounded px-1">{chunks}</code>
+                    ),
+                  })}
+                </p>
+              </Modal.Body>
+              <Modal.Footer>
+                <ActionButtonGroup>
+                  <ActionButton action="done" onPress={dismissKey}>
+                    {t("generatedModal.confirmButton")}
+                  </ActionButton>
+                </ActionButtonGroup>
+              </Modal.Footer>
+            </>
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
