@@ -10,6 +10,8 @@ import type {
   RecipeShareSummaryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
 
+import type { ReadStatus } from "../reader/read-status";
+import { readStatus } from "../reader/read-status";
 import { useTRPC } from "../trpc";
 
 type RecipeSharesQueryResult = {
@@ -23,12 +25,8 @@ type RecipeSharesQueryResult = {
   invalidate: () => void;
 };
 
-type ShareInventoryQueryResult<TShare> = {
+type ShareInventoryQueryResult<TShare> = ReadStatus & {
   shares: TShare[];
-  /** Whether the read ever succeeded, so a failed load is not an empty list. */
-  answered: boolean;
-  isLoading: boolean;
-  error: unknown;
   queryKey: QueryKey;
   invalidate: () => void;
 };
@@ -80,9 +78,7 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
 
   return {
     shares: query.data ?? [],
-    answered: query.data !== undefined,
-    isLoading: query.isLoading,
-    error: query.error,
+    ...readStatus(query),
     queryKey,
     invalidate,
   };
@@ -100,9 +96,7 @@ export function useAdminRecipeSharesQuery(): AdminRecipeSharesQueryResult {
 
   return {
     shares: query.data ?? [],
-    answered: query.data !== undefined,
-    isLoading: query.isLoading,
-    error: query.error,
+    ...readStatus(query),
     queryKey,
     invalidate,
   };

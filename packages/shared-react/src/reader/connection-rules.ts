@@ -1,10 +1,10 @@
 import type { RecipeShareSummaryDto } from "@norish/shared/contracts/dto/recipe-shares";
 import { TokenDomainSchema } from "@norish/shared/contracts/zod/site-auth-tokens";
 
+export type ShareLinkAction = "revoke" | "reactivate" | "delete";
+
 /** What a share link may be turned into: revoke or reactivate by its status, delete always. */
-export const shareLinkActions = (
-  status: RecipeShareSummaryDto["status"]
-): ("revoke" | "reactivate" | "delete")[] =>
+export const shareLinkActions = (status: RecipeShareSummaryDto["status"]): ShareLinkAction[] =>
   status === "active"
     ? ["revoke", "delete"]
     : status === "revoked"

@@ -8,17 +8,14 @@ import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { AppRouter } from "@norish/trpc/client";
 
+import type { ReadStatus } from "./read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
+import { readStatus } from "./read-status";
 
-type Profile = {
+type Profile = ReadStatus & {
   user: User | null;
   apiKeys: ApiKeyMetadataDto[];
-  /** Whether the profile was ever read, so a failed load is not an empty list of keys. */
-  answered: boolean;
-  isLoading: boolean;
-  error: unknown;
-  refetch: () => void;
 };
 
 const NO_KEYS: ApiKeyMetadataDto[] = [];
@@ -26,15 +23,12 @@ const NO_KEYS: ApiKeyMetadataDto[] = [];
 /** The Reader's profile (`user.get`) and their API keys. */
 export function useProfileQuery(): Profile {
   const trpc = useTRPC();
-  const { data, error, isLoading, refetch } = useQuery(trpc.user.get.queryOptions());
+  const query = useQuery(trpc.user.get.queryOptions());
 
   return {
-    user: data?.user ?? null,
-    apiKeys: data?.apiKeys ?? NO_KEYS,
-    answered: data !== undefined,
-    isLoading,
-    error,
-    refetch: () => void refetch(),
+    user: query.data?.user ?? null,
+    apiKeys: query.data?.apiKeys ?? NO_KEYS,
+    ...readStatus(query),
   };
 }
 

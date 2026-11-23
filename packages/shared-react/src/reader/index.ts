@@ -56,6 +56,8 @@ export {
   useSiteAuthTokensQuery,
   useSiteAuthTokensRead,
 } from "./use-site-auth-tokens";
+export type { ReadStatus } from "./read-status";
+export type { ShareLinkAction } from "./connection-rules";
 export {
   API_KEY_NAME_MAX_LENGTH,
   apiKeyPrefix,
