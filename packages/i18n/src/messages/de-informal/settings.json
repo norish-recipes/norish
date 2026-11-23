@@ -76,7 +76,8 @@
         "warning": "Speichere diesen Schlüssel jetzt! Du kannst ihn später nicht mehr sehen. Wir speichern nur einen Hash und können diesen Schlüssel nicht wiederherstellen.",
         "hint": "Nutze diesen Schlüssel im <code>x-api-key</code>-Header bei API-Anfragen.",
         "confirmButton": "Ich habe es gespeichert",
-        "copyButton": "Schlüssel kopieren"
+        "copyButton": "Schlüssel kopieren",
+        "copied": "Schlüssel kopiert"
       },
       "deleteModal": {
         "title": "API-Schlüssel löschen",

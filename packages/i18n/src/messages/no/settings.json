@@ -76,7 +76,8 @@
         "warning": "Lagre denne nøkkelen nå! Du vil ikke kunne se den igjen. Vi lagrer bare en hash og kan ikke gjenopprette denne nøkkelen.",
         "hint": "Bruk denne nøkkelen i <code>x-api-key</code>-headeren når du sender API-forespørsler.",
         "confirmButton": "Jeg har lagret den",
-        "copyButton": "Kopier nøkkel"
+        "copyButton": "Kopier nøkkel",
+        "copied": "Nøkkel kopiert"
       },
       "deleteModal": {
         "title": "Slett API-nøkkel",

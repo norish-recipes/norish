@@ -76,7 +76,8 @@
         "warning": "¡Guarda esta clave ahora! No podrás verla de nuevo. Solo almacenamos un hash y no podemos recuperar la clave.",
         "hint": "Usa esta clave en la cabecera <code>x-api-key</code> al hacer peticiones a la API.",
         "confirmButton": "La he guardado",
-        "copyButton": "Copiar clave"
+        "copyButton": "Copiar clave",
+        "copied": "Clave copiada"
       },
       "deleteModal": {
         "title": "Eliminar clave API",

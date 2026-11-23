@@ -76,7 +76,8 @@
         "warning": "Save this key now! You won't be able to see it again. We store only a hash and cannot recover this key.",
         "hint": "Use this key in the <code>x-api-key</code> header when making API requests.",
         "confirmButton": "I've saved it",
-        "copyButton": "Copy key"
+        "copyButton": "Copy key",
+        "copied": "Key copied"
       },
       "deleteModal": {
         "title": "Delete API key",

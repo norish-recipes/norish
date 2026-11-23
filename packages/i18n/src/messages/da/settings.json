@@ -76,7 +76,8 @@
         "warning": "Gem denne nøgle nu! Du vil ikke kunne se den igen. Vi gemmer kun en hash og kan ikke gendanne denne nøgle.",
         "hint": "Brug denne nøgle i <code>x-api-key</code>-headeren, når du laver API-anmodninger.",
         "confirmButton": "Jeg har gemt den",
-        "copyButton": "Kopier nøgle"
+        "copyButton": "Kopier nøgle",
+        "copied": "Nøgle kopieret"
       },
       "deleteModal": {
         "title": "Slet API-nøgle",

@@ -76,7 +76,8 @@
         "warning": "Tallenna tämä avain nyt! Et näe sitä enää uudelleen. Tallennamme vain tiivisteen emmekä voi palauttaa tätä avainta.",
         "hint": "Käytä tätä avainta <code>x-api-key</code>-otsakkeessa API-pyyntöjä tehdessäsi.",
         "confirmButton": "Olen tallentanut sen",
-        "copyButton": "Kopioi avain"
+        "copyButton": "Kopioi avain",
+        "copied": "Avain kopioitu"
       },
       "deleteModal": {
         "title": "Poista API-avain",

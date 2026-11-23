@@ -76,7 +76,8 @@
         "warning": "Enregistrez cette clé maintenant ! Vous ne pourrez plus la revoir. Nous n’en stockons qu’un hachage et ne pouvons pas la récupérer.",
         "hint": "Utilisez cette clé dans l’en-tête <code>x-api-key</code> lors de vos requêtes API.",
         "confirmButton": "Je l’ai sauvegardée",
-        "copyButton": "Copier la clé"
+        "copyButton": "Copier la clé",
+        "copied": "Clé copiée"
       },
       "deleteModal": {
         "title": "Supprimer la clé API",

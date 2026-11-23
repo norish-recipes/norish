@@ -76,7 +76,8 @@
         "warning": "Zapisz ten klucz teraz! Nie będzie można go później ponownie wyświetlić. Przechowujemy tylko jego hash i nie możemy go odzyskać.",
         "hint": "Użyj tego klucza w nagłówku <code>x-api-key</code> podczas wykonywania zapytań do API.",
         "confirmButton": "Zapisałem(-am)",
-        "copyButton": "Kopiuj klucz"
+        "copyButton": "Kopiuj klucz",
+        "copied": "Klucz skopiowany"
       },
       "deleteModal": {
         "title": "Usuń klucz API",

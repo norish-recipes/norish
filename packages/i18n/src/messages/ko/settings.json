@@ -76,7 +76,8 @@
         "warning": "지금 이 키를 저장하세요! 다시는 볼 수 없습니다. 해시만 저장하며 이 키를 복구할 수 없습니다.",
         "hint": "API 요청 시 <code>x-api-key</code> 헤더에 이 키를 사용하세요.",
         "confirmButton": "저장했어요",
-        "copyButton": "키 복사"
+        "copyButton": "키 복사",
+        "copied": "키를 복사했습니다"
       },
       "deleteModal": {
         "title": "API 키 삭제",

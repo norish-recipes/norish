@@ -10,6 +10,7 @@ export function SettingsStack() {
       <Stack.Screen name="index" />
       <Stack.Screen name="password" options={FIT_SHEET_OPTIONS} />
       <Stack.Screen name="token-new" options={FIT_SHEET_OPTIONS} />
+      <Stack.Screen name="api-key-new" options={FIT_SHEET_OPTIONS} />
     </Stack>
   );
 }

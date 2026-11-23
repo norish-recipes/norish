@@ -76,7 +76,8 @@
         "warning": "Spara nyckeln nu! Du kan inte se den igen. Vi lagrar bara ett hashvärde och kan inte återskapa nyckeln.",
         "hint": "Använd nyckeln i HTTP-headern <code>x-api-key</code> vid API-anrop.",
         "confirmButton": "Jag har sparat den",
-        "copyButton": "Kopiera nyckel"
+        "copyButton": "Kopiera nyckel",
+        "copied": "Nyckel kopierad"
       },
       "deleteModal": {
         "title": "Ta bort API-nyckel",
