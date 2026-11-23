@@ -33,15 +33,20 @@ export function ProfileForm() {
   const intl = useIntl();
   const { isOffline } = useConnectivity();
   const { user } = useProfileQuery();
-  const { updateName, uploadAvatar, deleteAvatar, isDeletingAvatar } = useProfileMutations();
+  const { updateName, uploadAvatar, deleteAvatar } = useProfileMutations();
   const toImage = useServerImage();
   const openPhotoSources = usePhotoSourceSheet(
     intl.formatMessage({ id: "settings.mobile.changePhoto" })
   );
   const [photo, setPhoto] = useState<File | null>(null);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const savedName = user?.name ?? "";
-  const name = useDraft(NAME_DRAFT, savedName, { editing, offline: isOffline });
+  const name = useDraft(NAME_DRAFT, savedName, {
+    editing,
+    offline: isOffline,
+    key: "profile-save",
+  });
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
   const blocked = writeBlocked(true, isOffline);
 
@@ -51,17 +56,21 @@ export function ProfileForm() {
         draft: name.draft,
         savedName,
         photo,
-        updateName,
-        uploadAvatar,
+        updateName: name.request(updateName),
+        uploadAvatar: name.request(uploadAvatar),
         setDraft: name.setDraft,
         setPhoto,
         offline: isOfflineNow,
       })
     );
-  // A staged photo is only dropped; a saved one is deleted on the server.
-  const discardOrDeletePhoto = () => {
-    if (photo) setPhoto(null);
-    else settingsWrite(() => void deleteAvatar())();
+  // A staged photo is only dropped; a saved one is deleted on the server, and a new photo or Save
+  // waits for it, as either would send the version the delete moves on.
+  const sendDelete = settingsWrite(deleteAvatar, "profile-photo-delete");
+  const discardOrDeletePhoto = async () => {
+    if (photo) return setPhoto(null);
+    setDeleting(true);
+    await sendDelete();
+    setDeleting(false);
   };
 
   return (
@@ -71,7 +80,7 @@ export function ProfileForm() {
           accessibilityLabel={intl.formatMessage({ id: "settings.mobile.changePhoto" })}
           accessibilityRole="button"
           className={blocked ? "opacity-40" : ""}
-          disabled={isOffline}
+          disabled={isOffline || deleting}
           testID="profile-avatar"
           onPress={() =>
             openPhotoSources(PICKER, ([asset]) => {
@@ -90,10 +99,10 @@ export function ProfileForm() {
           <Pressable
             accessibilityRole="button"
             className={blocked ? "opacity-40" : ""}
-            disabled={isOffline || isDeletingAvatar || name.saving}
+            disabled={isOffline || deleting || name.saving}
             hitSlop={8}
             testID="profile-avatar-remove"
-            onPress={discardOrDeletePhoto}
+            onPress={() => void discardOrDeletePhoto()}
           >
             <Text className="text-danger text-[15px] font-medium">
               {intl.formatMessage({ id: "settings.user.profile.deleteAvatar" })}
@@ -131,7 +140,7 @@ export function ProfileForm() {
       </SettingsGroup>
       <Button
         className="mt-4 h-[50px] rounded-full"
-        isDisabled={!name.canSave(photo !== null)}
+        isDisabled={!name.canSave(photo !== null) || deleting}
         testID="profile-save"
         onPress={() => void save()}
       >

@@ -2,12 +2,14 @@ import { useState } from "react";
 
 import type { DraftWrite } from "../utils/draft-rules";
 import { canSave, keptDraft, shownDraft } from "../utils/draft-rules";
+import { settingsWrite } from "../utils/settings-write";
 
-/** A form's draft over `saved` with Save's state; `editing` holds a draft that sends nothing. */
+/** A form's draft over `saved` with Save's state; `editing` holds a draft that sends nothing. Its
+ * requests are Settings writes held under `key`, so an unanswered one frees Save. */
 export function useDraft<T>(
   write: DraftWrite<T>,
   saved: T,
-  { editing = false, offline }: { editing?: boolean; offline: boolean }
+  { editing = false, offline, key }: { editing?: boolean; offline: boolean; key: string }
 ) {
   const [draft, setDraft] = useState<T | null>(null);
   const [saving, setSaving] = useState(false);
@@ -28,5 +30,10 @@ export function useDraft<T>(
       await send();
       setSaving(false);
     },
+    /** `send` as the form's request: resolves whether it went through in time. */
+    request:
+      <V>(send: (value: V) => Promise<boolean>) =>
+      async (value: V) =>
+        (await settingsWrite(send, key)(value)) === true,
   };
 }
