@@ -23,8 +23,14 @@ import { useActionTone } from "./use-action-tone";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
+const ACCESSORY_ICONS = {
+  chevron: "chevron-forward",
+  expand: "chevron-expand",
+  external: "arrow-up",
+} as const satisfies Record<string, IconName>;
+
 /** One settings list row: an optional icon tile, a title (and subtitle), a muted value and a
- * chevron or external arrow. `actions` become swipe circles (34 pt, 11 pt labels) and a long-press
+ * chevron, menu chevron or external arrow. `actions` become swipe circles (34 pt, 11 pt labels) and a long-press
  * glass menu; both are off while Offline, and so is a `write` row's own press. */
 export function SettingsRow({
   icon,
@@ -48,7 +54,7 @@ export function SettingsRow({
   title: string;
   subtitle?: string;
   value?: string;
-  accessory?: "chevron" | "external" | "none";
+  accessory?: "chevron" | "expand" | "external" | "none";
   /** Replaces the icon tile, such as an avatar or a thumbnail. */
   leading?: ReactNode;
   trailing?: ReactNode;
@@ -124,7 +130,7 @@ export function SettingsRow({
       {accessory === "none" ? null : (
         <Ionicons
           color={muted}
-          name={accessory === "chevron" ? "chevron-forward" : "arrow-up"}
+          name={ACCESSORY_ICONS[accessory]}
           size={16}
           style={accessory === "external" ? { transform: [{ rotate: "45deg" }] } : undefined}
         />

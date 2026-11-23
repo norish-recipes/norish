@@ -25,6 +25,9 @@ public class NativeMenuModule: Module {
       Prop("label") { (view: NativeMenuView, label: String) in
         view.button.accessibilityLabel = label
       }
+      Prop("value") { (view: NativeMenuView, value: String?) in
+        view.button.accessibilityValue = value
+      }
       Prop("identifier") { (view: NativeMenuView, identifier: String) in
         view.button.accessibilityIdentifier = identifier
       }

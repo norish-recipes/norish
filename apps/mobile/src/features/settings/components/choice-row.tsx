@@ -1,7 +1,5 @@
 import React from "react";
-import { NativeMenu } from "@/components/native-menu";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useThemeColor } from "heroui-native";
+import { ChoiceMenu } from "@/components/choice-menu";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
@@ -27,32 +25,28 @@ export function ChoiceRow<T extends string>({
   onChange: (choice: T) => void;
 }) {
   const { isOffline } = useConnectivity();
-  const [muted] = useThemeColor(["muted"] as const);
-  const shown = optionLabel(value);
   const row = (
     <SettingsRow
       write
-      subtitle={shown}
+      accessory="expand"
+      subtitle={optionLabel(value)}
       testID={`${testID}-row`}
       title={title}
-      trailing={<Ionicons color={muted} name="chevron-expand" size={16} />}
     />
   );
 
   if (isOffline || saving) return row;
 
   return (
-    <NativeMenu
-      items={options.map((option) => ({
-        key: option,
-        label: optionLabel(option),
-        systemImage: option === value ? "checkmark" : undefined,
-        onPress: () => option !== value && onChange(option),
-      }))}
-      label={`${title}, ${shown}`}
+    <ChoiceMenu
+      label={title}
+      optionLabel={optionLabel}
+      options={options}
       testID={testID}
+      value={value}
+      onChange={onChange}
     >
       {row}
-    </NativeMenu>
+    </ChoiceMenu>
   );
 }

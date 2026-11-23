@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Share, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
-import { NativeMenu } from "@/components/native-menu";
+import { ChoiceMenu } from "@/components/choice-menu";
 import { Pill } from "@/components/pill";
 import { PillButton } from "@/components/pill-button";
 import { SectionLabel } from "@/components/section-label";
@@ -144,20 +144,18 @@ function ShareBody({
   return (
     <SheetScrollView contentClassName="gap-4">
       <Card>
-        <NativeMenu
-          items={EXPIRIES.map((expiry) => ({
-            key: expiry,
-            label: t(`expiryOptions.${expiry}`),
-            systemImage: expiry === expiresIn ? "checkmark" : undefined,
-            onPress: () => setExpiresIn(expiry),
-          }))}
+        <ChoiceMenu
           label={t("expiresAfter")}
+          optionLabel={(expiry) => t(`expiryOptions.${expiry}`)}
+          options={EXPIRIES}
           testID="recipe-share-expiry"
+          value={expiresIn}
+          onChange={setExpiresIn}
         >
           <CardRow first label={t("expiresAfter")} value={t(`expiryOptions.${expiresIn}`)}>
             <Ionicons color={muted} name="chevron-expand" size={16} />
           </CardRow>
-        </NativeMenu>
+        </ChoiceMenu>
       </Card>
 
       {rows.length > 0 || isLoading ? <SectionLabel>{t("currentLinks")}</SectionLabel> : null}

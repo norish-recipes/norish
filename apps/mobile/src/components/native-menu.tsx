@@ -27,6 +27,7 @@ const NativeMenuView = requireNativeView<
   ViewProps & {
     items: NativeItem[];
     label: string;
+    value?: string;
     identifier: string;
     longPress: boolean;
     onSelect: (event: { nativeEvent: { id: string } }) => void;
@@ -34,17 +35,19 @@ const NativeMenuView = requireNativeView<
   }
 >("NativeMenu");
 
-/** iOS's menu on a UIKit button over `children`, so it scrolls with them; `testID` names the button.
- * With `onPress` it opens on a long press (lifting `children`) and a tap is `onPress`. */
+/** iOS's menu on a UIKit button over `children`, so it scrolls with them; `testID` names the button,
+ * `label` and `value` speak for it. With `onPress` it opens on a long press and a tap is `onPress`. */
 export function NativeMenu({
   items,
   label,
+  value,
   testID,
   onPress,
   children,
 }: {
   items: MenuItem[];
   label: string;
+  value?: string;
   testID: string;
   onPress?: () => void;
   children: ReactNode;
@@ -63,6 +66,7 @@ export function NativeMenu({
       longPress={onPress !== undefined}
       onPress={() => onPress?.()}
       // By key: an open menu still shows the items it opened with, which may since have moved.
+      value={value}
       onSelect={({ nativeEvent }) => items.find((item) => item.key === nativeEvent.id)?.onPress()}
     >
       {/* The button speaks for the menu; what it draws stays out of the accessibility tree. */}
