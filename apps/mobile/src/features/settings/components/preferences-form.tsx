@@ -24,8 +24,8 @@ import {
   getMeasurementSystemPreference,
 } from "@norish/shared/lib/user-preferences";
 
-import { useSettingsWrite } from "../hooks/use-settings-write";
 import { toggledHiddenItems } from "../utils/preferences-rules";
+import { settingsWrite } from "../utils/settings-write";
 import { ChoiceRow } from "./choice-row";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -42,7 +42,6 @@ export function PreferencesForm() {
   const [unitStyle, setUnitStyle] = useDevicePreference("unitStyle");
   const [hidden, setHidden] = useDevicePreference("hiddenItems");
   const text = useText();
-  const write = useSettingsWrite();
   const offered = offeredHiddenItems(globalEnabled);
 
   return (
@@ -55,7 +54,7 @@ export function PreferencesForm() {
           testID="preferences-language"
           title={text("settings.user.preferences.language.title")}
           value={locale}
-          onChange={write((code: string) => setLocale(code))}
+          onChange={settingsWrite((code: string) => setLocale(code))}
         />
         <ChoiceRow
           optionLabel={(choice) =>
@@ -66,7 +65,7 @@ export function PreferencesForm() {
           testID="preferences-after-planning"
           title={text("settings.user.preferences.afterPlanning.title")}
           value={getAfterPlanningPreference(user)}
-          onChange={write((afterPlanning) => void updatePreferences({ afterPlanning }))}
+          onChange={settingsWrite((afterPlanning) => void updatePreferences({ afterPlanning }))}
         />
         <ChoiceRow
           optionLabel={(choice) => text(`settings.user.preferences.measurements.options.${choice}`)}
@@ -75,7 +74,9 @@ export function PreferencesForm() {
           testID="preferences-measurements"
           title={text("settings.user.preferences.measurements.title")}
           value={shownMeasurement(getMeasurementSystemPreference(user), isAIEnabled)}
-          onChange={write((measurementSystem) => void updatePreferences({ measurementSystem }))}
+          onChange={settingsWrite(
+            (measurementSystem) => void updatePreferences({ measurementSystem })
+          )}
         />
       </SettingsGroup>
       <SettingsGroup title={text("settings.mobile.phonesGroup")}>
@@ -85,7 +86,7 @@ export function PreferencesForm() {
           testID="preferences-today"
           title={text("settings.user.preferences.todaySection.title")}
           value={today}
-          onChange={write(setToday)}
+          onChange={settingsWrite(setToday)}
         />
         <ChoiceRow
           optionLabel={(choice) =>
@@ -95,7 +96,7 @@ export function PreferencesForm() {
           testID="preferences-page-color"
           title={text("settings.user.preferences.recipePageColor.title")}
           value={pageColor}
-          onChange={write(setPageColor)}
+          onChange={settingsWrite(setPageColor)}
         />
         <ChoiceRow
           optionLabel={(choice) => text(`settings.user.preferences.unitStyle.options.${choice}`)}
@@ -103,7 +104,7 @@ export function PreferencesForm() {
           testID="preferences-units"
           title={text("settings.user.preferences.unitStyle.title")}
           value={unitStyle}
-          onChange={write(setUnitStyle)}
+          onChange={settingsWrite(setUnitStyle)}
         />
       </SettingsGroup>
       <SettingsGroup title={text("settings.user.preferences.hidden.title")}>
@@ -114,7 +115,9 @@ export function PreferencesForm() {
             testID={`preferences-hidden-${item}`}
             title={text(`settings.user.preferences.hidden.options.${item}`)}
             trailing={hidden.includes(item) ? <Checkmark /> : null}
-            onPress={write(() => setHidden((stored) => toggledHiddenItems(stored, offered, item)))}
+            onPress={settingsWrite(() =>
+              setHidden((stored) => toggledHiddenItems(stored, offered, item))
+            )}
           />
         ))}
       </SettingsGroup>

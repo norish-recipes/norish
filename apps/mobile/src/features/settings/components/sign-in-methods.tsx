@@ -12,7 +12,6 @@ import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/rea
 import { SIGN_IN_METHODS, signInMethodError } from "@norish/shared/contracts/dto/auth";
 
 import type { Refusal } from "../utils/refusal-of";
-import { useSettingsWrite } from "../hooks/use-settings-write";
 import {
   addableProviders,
   canUnlink,
@@ -20,6 +19,7 @@ import {
   showsSignInMethods,
 } from "../utils/profile-rules";
 import { refusalOf } from "../utils/refusal-of";
+import { settingsWrite } from "../utils/settings-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -35,7 +35,6 @@ export function SignInMethods() {
   const { providers: offered } = useAuthProvidersQuery();
   const { signInMethods, refetch } = useSignInMethodsQuery();
   const [busy, setBusy] = useState(false);
-  const write = useSettingsWrite();
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.user.signInMethods.${id}` }, values);
 
@@ -107,7 +106,7 @@ export function SignInMethods() {
                       {
                         kind: "unlink",
                         label: t("remove"),
-                        onPress: write(() => void unlink(account.id)),
+                        onPress: settingsWrite(() => void unlink(account.id)),
                       },
                     ]
                   : []
@@ -146,7 +145,7 @@ export function SignInMethods() {
               testID={`sign-in-link-${provider.id}`}
               title={t("addProvider", { provider: provider.name })}
               write
-              onPress={busy ? undefined : write(() => void link(provider.id))}
+              onPress={busy ? undefined : settingsWrite(() => void link(provider.id))}
             />
           ))}
         </SettingsGroup>

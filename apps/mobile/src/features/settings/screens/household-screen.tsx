@@ -17,8 +17,8 @@ import { NoHouseholdForms } from "../components/no-household-forms";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { useSettingsWrite } from "../hooks/use-settings-write";
 import { pageState } from "../utils/household-rules";
+import { settingsWrite } from "../utils/settings-write";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
  * kicked or leaving empties the cached household, which lands here as the no-household state. */
@@ -28,7 +28,6 @@ export function HouseholdScreen() {
   const { household, currentUserId, isAdmin, isLoading, error } = useHousehold();
   const { invalidate } = useHouseholdCacheHelpers();
   const { leaveHousehold } = useHouseholdMutations();
-  const write = useSettingsWrite();
   // currentUserId comes with every answer, so it marks a read that succeeded.
   const page = pageState({ household, answered: currentUserId !== undefined, isLoading, error });
   const admin = adminViewOf(household, currentUserId);
@@ -44,7 +43,7 @@ export function HouseholdScreen() {
       title: text("settings.household.info.leaveModal.title"),
       message: `${text("settings.household.info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
-      onConfirm: write(() => leaveHousehold(household.id), "leave"),
+      onConfirm: settingsWrite(() => leaveHousehold(household.id), "leave"),
     });
   };
 

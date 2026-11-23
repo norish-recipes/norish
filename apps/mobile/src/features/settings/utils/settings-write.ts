@@ -1,3 +1,5 @@
+import { isOfflineNow } from "@/lib/offline/offline-now";
+
 /** A Settings write that checks Offline as it runs: a confirm accepted after the connection
  * dropped must not fire, as no Settings write enters the Outbox. Hands back the write's result. */
 export const guardWrite =
@@ -22,3 +24,18 @@ export const guardRepeat =
       inFlight.delete(key);
     }
   };
+
+/** Wraps a Settings write so it re-reads Offline when it runs; every Settings write goes through it.
+ * With a `key`, a repeat of that write is dropped while it is in flight. */
+export function settingsWrite<A extends unknown[], R>(
+  send: (...args: A) => R
+): (...args: A) => R | undefined;
+export function settingsWrite<A extends unknown[], R>(
+  send: (...args: A) => R,
+  key: string
+): (...args: A) => Promise<Awaited<R> | undefined>;
+export function settingsWrite<A extends unknown[], R>(send: (...args: A) => R, key?: string) {
+  return key === undefined
+    ? guardWrite(isOfflineNow, send)
+    : guardRepeat(key, guardWrite(isOfflineNow, send));
+}

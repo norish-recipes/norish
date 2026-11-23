@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
+import { isOfflineNow } from "@/lib/offline/offline-now";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -12,7 +13,6 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useAllergiesMutation, useAllergiesQuery } from "@norish/shared-react/reader";
 
 import { useDraft } from "../hooks/use-draft";
-import { useOfflineNow } from "../hooks/use-settings-write";
 import {
   ALLERGY_DRAFT,
   allergySuggestions,
@@ -36,7 +36,6 @@ export function AllergiesForm() {
   const [muted] = useThemeColor(["muted"] as const);
   const warningInk = useTokenColor("warning-foreground");
   const allergies = useDraft(ALLERGY_DRAFT, saved, { offline: isOffline });
-  const offline = useOfflineNow();
   const [typed, setTyped] = useState("");
   const text = useText();
   const shown = allergies.shown;
@@ -55,7 +54,7 @@ export function AllergiesForm() {
         saved,
         send: setAllergies,
         setDraft: allergies.setDraft,
-        offline,
+        offline: isOfflineNow,
       })
     );
 

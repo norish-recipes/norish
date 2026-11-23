@@ -12,7 +12,7 @@ import {
   useHouseholdMutations,
 } from "@norish/shared-react/reader";
 
-import { useSettingsWrite } from "../hooks/use-settings-write";
+import { settingsWrite } from "../utils/settings-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -21,7 +21,6 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   const text = useText();
   const copyToClipboard = useCopyToClipboard();
   const { regenerateJoinCode } = useHouseholdMutations();
-  const write = useSettingsWrite();
   const expiresAt =
     household.joinCode && household.joinCodeExpiresAt
       ? new Date(household.joinCodeExpiresAt).getTime()
@@ -33,7 +32,7 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   );
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
-  const regenerate = write(() => regenerateJoinCode(household.id), "regenerate");
+  const regenerate = settingsWrite(() => regenerateJoinCode(household.id), "regenerate");
   const copy = () =>
     code
       ? copyToClipboard(code, {

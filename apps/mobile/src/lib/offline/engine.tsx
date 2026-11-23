@@ -22,6 +22,7 @@ import { getInitialCalendarRange } from "@norish/shared/lib/helpers";
 
 import { appGroupInbox } from "./app-group-inbox";
 import { createMmkvStorage } from "./mmkv-storage";
+import { ConnectivityMirror } from "./offline-now";
 import { withSavedShares } from "./share-inbox";
 import { uploadFiles } from "./upload-files";
 
@@ -93,6 +94,7 @@ export function ConnectivityProvider({ children }: { children: React.ReactNode }
       subscribeHints={subscribeDeviceHints}
       wsStatus={wsStatus}
     >
+      <ConnectivityMirror />
       {children}
     </SharedConnectivityProvider>
   );

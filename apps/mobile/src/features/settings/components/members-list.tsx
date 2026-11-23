@@ -6,7 +6,7 @@ import { useText } from "@/lib/i18n/use-text";
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 import { allowedMemberActions, useHouseholdMutations } from "@norish/shared-react/reader";
 
-import { useSettingsWrite } from "../hooks/use-settings-write";
+import { settingsWrite } from "../utils/settings-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -43,7 +43,6 @@ export function MembersList({
 }) {
   const text = useText();
   const confirm = useConfirm();
-  const write = useSettingsWrite();
   const { kickUser, transferAdmin } = useHouseholdMutations();
   const send = {
     kick: (userId: string) => kickUser(household.id, userId),
@@ -72,7 +71,7 @@ export function MembersList({
                 message: `${text(look.message, { name })}\n\n${text(look.warning)}`,
                 confirmLabelId: look.confirm,
                 destructive: look.destructive,
-                onConfirm: write(() => send[action](user.id), `${action}:${user.id}`),
+                onConfirm: settingsWrite(() => send[action](user.id), `${action}:${user.id}`),
               }),
           };
         });

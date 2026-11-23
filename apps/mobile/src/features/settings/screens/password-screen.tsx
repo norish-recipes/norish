@@ -12,9 +12,9 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { usePlatform } from "@norish/shared-react/platform";
 
-import { useSettingsWrite } from "../hooks/use-settings-write";
 import { passwordChecks } from "../utils/profile-rules";
 import { refusalOf } from "../utils/refusal-of";
+import { settingsWrite } from "../utils/settings-write";
 
 /** The change password sheet, mounted per opening so a closed sheet keeps no password. */
 export function PasswordScreen() {
@@ -23,7 +23,6 @@ export function PasswordScreen() {
   const authClient = useAuthClient();
   const { toast } = usePlatform();
   const { isOffline } = useConnectivity();
-  const write = useSettingsWrite();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -71,7 +70,7 @@ export function PasswordScreen() {
         label: t("changePassword"),
         symbol: "key",
         disabled: !checks.valid || isOffline,
-        onPress: write(change),
+        onPress: settingsWrite(change),
       }}
       name="password"
       title={t("changePassword")}

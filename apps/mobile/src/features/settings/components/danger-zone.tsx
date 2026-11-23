@@ -4,7 +4,7 @@ import { useIntl } from "react-intl";
 
 import { useDeleteAccountMutation } from "@norish/shared-react/reader";
 
-import { useSettingsWrite } from "../hooks/use-settings-write";
+import { settingsWrite } from "../utils/settings-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -15,7 +15,6 @@ export function DangerZone() {
   const intl = useIntl();
   const confirm = useConfirm();
   const { deleteAccount } = useDeleteAccountMutation();
-  const write = useSettingsWrite();
   const t = (id: string) => intl.formatMessage({ id: `settings.user.dangerZone.${id}` });
 
   const confirmDelete = () =>
@@ -23,7 +22,7 @@ export function DangerZone() {
       title: t("deleteModal.title"),
       message: DELETE_PARAGRAPHS.map((id) => t(`deleteModal.${id}`)).join("\n\n"),
       confirmLabelId: "settings.user.dangerZone.deleteModal.confirmButton",
-      onConfirm: write(deleteAccount),
+      onConfirm: settingsWrite(deleteAccount),
     });
 
   return (

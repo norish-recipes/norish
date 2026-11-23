@@ -8,8 +8,8 @@ import { Button, TextField } from "heroui-native";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { isJoinCode, joinCodeDigits, useHouseholdMutations } from "@norish/shared-react/reader";
 
-import { useSettingsWrite } from "../hooks/use-settings-write";
 import { canCreate } from "../utils/household-rules";
+import { settingsWrite } from "../utils/settings-write";
 
 /** One create-or-join form: a labelled field with its description behind a hint, and a button. */
 function EntryForm({
@@ -74,7 +74,6 @@ function EntryForm({
 export function NoHouseholdForms() {
   const text = useText();
   const { createHousehold, joinHousehold, pending } = useHouseholdMutations();
-  const write = useSettingsWrite();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
 
@@ -90,7 +89,7 @@ export function NoHouseholdForms() {
         placeholder={text("settings.household.create.namePlaceholder")}
         value={name}
         onChange={setName}
-        onSubmit={write(() => {
+        onSubmit={settingsWrite(() => {
           const sent = createHousehold(name);
 
           setName("");
@@ -109,7 +108,7 @@ export function NoHouseholdForms() {
         placeholder={text("settings.household.join.codePlaceholder")}
         value={code}
         onChange={(value) => setCode(joinCodeDigits(value))}
-        onSubmit={write(() => {
+        onSubmit={settingsWrite(() => {
           const sent = joinHousehold(code);
 
           setCode("");

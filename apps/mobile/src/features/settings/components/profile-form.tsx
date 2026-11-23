@@ -6,6 +6,7 @@ import { SheetInput } from "@/components/sheet-input";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
 import { useServerImage } from "@/lib/network/server-url";
+import { isOfflineNow } from "@/lib/offline/offline-now";
 import { File } from "expo-file-system";
 import { Button, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -14,9 +15,9 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
 import { useDraft } from "../hooks/use-draft";
-import { useOfflineNow, useSettingsWrite } from "../hooks/use-settings-write";
 import { NAME_DRAFT, saveProfile } from "../utils/profile-rules";
 import { writeBlocked } from "../utils/row-actions";
+import { settingsWrite } from "../utils/settings-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -43,8 +44,6 @@ export function ProfileForm() {
   const name = useDraft(NAME_DRAFT, savedName, { editing, offline: isOffline });
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
   const blocked = writeBlocked(true, isOffline);
-  const offline = useOfflineNow();
-  const write = useSettingsWrite();
 
   const save = () =>
     name.save(() =>
@@ -56,13 +55,13 @@ export function ProfileForm() {
         uploadAvatar,
         setDraft: name.setDraft,
         setPhoto,
-        offline,
+        offline: isOfflineNow,
       })
     );
   // A staged photo is only dropped; a saved one is deleted on the server.
   const discardOrDeletePhoto = () => {
     if (photo) setPhoto(null);
-    else write(() => void deleteAvatar())();
+    else settingsWrite(() => void deleteAvatar())();
   };
 
   return (
