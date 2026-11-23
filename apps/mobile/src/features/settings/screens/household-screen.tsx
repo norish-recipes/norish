@@ -10,6 +10,7 @@ import { NoHouseholdForms } from "../components/no-household-forms";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
+import { useSettingsWrite } from "../hooks/use-settings-write";
 import { adminViewOf, householdState, leaveWarns } from "../utils/household-rules";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
@@ -19,6 +20,7 @@ export function HouseholdScreen() {
   const confirm = useConfirm();
   const { household, currentUserId, isAdmin, isLoading } = useHousehold();
   const { leaveHousehold } = useHouseholdMutations();
+  const write = useSettingsWrite();
   const state = householdState(household, isAdmin);
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.household.${id}` }, values);
@@ -35,7 +37,7 @@ export function HouseholdScreen() {
       title: t("info.leaveModal.title"),
       message: `${t("info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
-      onConfirm: () => leaveHousehold(household.id),
+      onConfirm: write(() => leaveHousehold(household.id)),
     });
   };
 

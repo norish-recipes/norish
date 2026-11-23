@@ -7,6 +7,7 @@ import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/hou
 import { usePlatform } from "@norish/shared-react/platform";
 import { useHouseholdMutations } from "@norish/shared-react/reader";
 
+import { useSettingsWrite } from "../hooks/use-settings-write";
 import { joinCodeStatus } from "../utils/household-rules";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -24,13 +25,14 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   const intl = useIntl();
   const { toast } = usePlatform();
   const { regenerateJoinCode } = useHouseholdMutations();
+  const write = useSettingsWrite();
   const ticking = Boolean(household.joinCode && household.joinCodeExpiresAt);
   const now = useSyncExternalStore(ticking ? everySecond : noTick, nowToTheSecond, nowToTheSecond);
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
   const t = (id: string, values?: Record<string, number>) =>
     intl.formatMessage({ id: `settings.household.joinCode.${id}` }, values);
-  const regenerate = () => regenerateJoinCode(household.id);
+  const regenerate = write(() => regenerateJoinCode(household.id));
   const copy = async () => {
     if (!code) return;
     try {

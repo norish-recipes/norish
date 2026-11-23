@@ -6,6 +6,7 @@ import { useIntl } from "react-intl";
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 import { useHouseholdMutations } from "@norish/shared-react/reader";
 
+import { useSettingsWrite } from "../hooks/use-settings-write";
 import { memberActions } from "../utils/household-rules";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -24,6 +25,7 @@ export function MembersList({
   const intl = useIntl();
   const confirm = useConfirm();
   const { kickUser, transferAdmin } = useHouseholdMutations();
+  const write = useSettingsWrite();
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.household.${id}` }, values);
 
@@ -43,7 +45,7 @@ export function MembersList({
                     title: t("members.kickModal.title"),
                     message: `${t("members.kickModal.confirmMessage", { name })}\n\n${t("members.kickModal.warning")}`,
                     confirmLabelId: "settings.household.members.kickModal.confirmButton",
-                    onConfirm: () => kickUser(household.id, user.id),
+                    onConfirm: write(() => kickUser(household.id, user.id)),
                   }),
               }
             : {
@@ -54,7 +56,7 @@ export function MembersList({
                     title: t("members.transferModal.title"),
                     message: `${t("members.transferModal.confirmMessage", { name })}\n\n${t("members.transferModal.warning")}`,
                     confirmLabelId: "settings.household.members.transferModal.confirmButton",
-                    onConfirm: () => transferAdmin(household.id, user.id),
+                    onConfirm: write(() => transferAdmin(household.id, user.id)),
                   }),
               }
         );

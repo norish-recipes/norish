@@ -18,6 +18,7 @@ import {
   hasPassword,
   showsSignInMethods,
 } from "../utils/profile-rules";
+import { useSettingsWrite } from "../hooks/use-settings-write";
 import { refusalOf } from "../utils/refusal-of";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -34,6 +35,7 @@ export function SignInMethods() {
   const { providers: offered } = useAuthProvidersQuery();
   const { signInMethods, refetch } = useSignInMethodsQuery();
   const [busy, setBusy] = useState(false);
+  const write = useSettingsWrite();
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.user.signInMethods.${id}` }, values);
 
@@ -101,7 +103,7 @@ export function SignInMethods() {
               accessory={isPassword && stillOffered ? "chevron" : "none"}
               actions={
                 canUnlink(signInMethods, account.id, offeredIds)
-                  ? [{ kind: "unlink", label: t("remove"), onPress: () => void unlink(account.id) }]
+                  ? [{ kind: "unlink", label: t("remove"), onPress: write(() => void unlink(account.id)) }]
                   : []
               }
               icon={<ProviderIcon color={foreground} icon={method.icon} size={17} />}
@@ -138,7 +140,7 @@ export function SignInMethods() {
               testID={`sign-in-link-${provider.id}`}
               title={t("addProvider", { provider: provider.name })}
               write
-              onPress={busy ? undefined : () => void link(provider.id)}
+              onPress={busy ? undefined : write(() => void link(provider.id))}
             />
           ))}
         </SettingsGroup>

@@ -8,6 +8,7 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { isJoinCode, useHouseholdMutations } from "@norish/shared-react/reader";
 
+import { useSettingsWrite } from "../hooks/use-settings-write";
 import { canCreate } from "../utils/household-rules";
 
 /** One create-or-join form: a labelled field with its description behind a hint, and a button. */
@@ -66,6 +67,7 @@ function EntryForm({
 export function NoHouseholdForms() {
   const intl = useIntl();
   const { createHousehold, joinHousehold } = useHouseholdMutations();
+  const write = useSettingsWrite();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const t = (id: string) => intl.formatMessage({ id: `settings.household.${id}` });
@@ -80,10 +82,10 @@ export function NoHouseholdForms() {
         placeholder={t("create.namePlaceholder")}
         value={name}
         onChange={setName}
-        onSubmit={() => {
+        onSubmit={write(() => {
           createHousehold(name);
           setName("");
-        }}
+        })}
       />
       <EntryForm
         autoCapitalize="none"
@@ -95,10 +97,10 @@ export function NoHouseholdForms() {
         placeholder={t("join.codePlaceholder")}
         value={code}
         onChange={(value) => setCode(value.replace(/\D/g, ""))}
-        onSubmit={() => {
+        onSubmit={write(() => {
           joinHousehold(code);
           setCode("");
-        }}
+        })}
       />
     </>
   );
