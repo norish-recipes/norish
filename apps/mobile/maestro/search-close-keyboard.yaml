@@ -1,0 +1,61 @@
+# The × beside the field with the keyboard up only lowers the keyboard: Search, the text, the scope
+# chips and the × stay. The × with the keyboard down leaves Search.
+appId: dev.norish.app
+---
+- runFlow:
+    file: subflows/start.yaml
+    env:
+      RECIPES: '[{"name": "Lentil Soup", "key": "soup"}]'
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 20000
+- tapOn: Search
+- extendedWaitUntil:
+    visible:
+      id: search-screen
+    timeout: 10000
+- inputText: lentil
+- extendedWaitUntil:
+    visible:
+      id: search-for-row
+    timeout: 10000
+# The scope settles in once the field has extended, before anything was confirmed.
+- extendedWaitUntil:
+    visible:
+      id: search-scope-title
+    timeout: 10000
+- tapOn: Close
+# Still on Search, with the typing page, the scope and the text in the field.
+- extendedWaitUntil:
+    visible:
+      id: search-for-row
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: search-scope-title
+    timeout: 10000
+- assertVisible:
+    text: lentil
+- assertNotVisible:
+    id: recipe-card-${output.soup}
+- assertVisible: Close
+# Tapping the field brings the keyboard back and typing carries on.
+- tapOn:
+    text: lentil
+- inputText: s
+- assertVisible:
+    text: lentils
+# The × with the keyboard up again only lowers it; the × with it down leaves Search for Recipes.
+- tapOn: Close
+- extendedWaitUntil:
+    visible:
+      id: search-for-row
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn: Close
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-${output.soup}
+    timeout: 10000

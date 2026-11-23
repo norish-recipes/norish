@@ -60,11 +60,9 @@ export function useSearchField() {
     onChangeText: ({ nativeEvent }: NativeText) => send({ type: "typed", text: nativeEvent.text }),
     onSearchButtonPress: ({ nativeEvent }: NativeText) =>
       send({ type: "submitted", text: nativeEvent.text }),
-    onCancelButtonPress: () => {
-      send({ type: "cancelled" });
-      barRef.current?.blur();
-    },
-    // The search tab's × closes the field and leaves the tab, wiping the text first.
+    // The search tab's × lowers the keyboard natively and keeps the field editing; a blur would end that.
+    onCancelButtonPress: () => send({ type: "cancelled" }),
+    // Android's close button empties the field; on iOS the search tab's × is the Cancel above.
     onClose: () => send({ type: "cancelled" }),
     // The "Search for" row confirms the text as the search key does.
     confirm: () => {

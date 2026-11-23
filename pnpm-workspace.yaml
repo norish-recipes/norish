@@ -105,3 +105,8 @@ auditConfig:
     # @next/eslint-plugin-next reaches it (fast-glob > micromatch), with the
     # repo's own glob patterns; nothing that ships or runs a request loads it.
     - GHSA-vfj7-8cjw-p6xm
+
+patchedDependencies:
+  # Mobile Search: the search tab's x lowers the keyboard and stays on Search, instead of returning to the
+  # previous tab (UIKit's cancel). Re-make it with `pnpm patch` on a version bump, or drop it once react-native-screens offers this.
+  react-native-screens@4.30.1: patches/react-native-screens@4.30.1.patch

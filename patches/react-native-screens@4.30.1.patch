@@ -1,0 +1,178 @@
+diff --git a/ios/RNSSearchBar.h b/ios/RNSSearchBar.h
+index 32efddb55b0522aee21df09351c53957680d2abf..6912927cdb24d52bb377c004f06a7b051050f0b2 100644
+--- a/ios/RNSSearchBar.h
++++ b/ios/RNSSearchBar.h
+@@ -25,6 +25,14 @@
+ 
+ @property (nonatomic, retain) UISearchController *controller;
+ 
++/// The search bar whose editing ended in this run loop turn, if any. UIKit ends the editing before it
++/// asks to leave the search tab on its x, which is how the tab bar controller tells that x apart.
+++ (nullable RNSSearchBar *)searchBarThatJustEndedEditing;
++
++/// The search tab stays on its x: the search comes back after the cancel, with its text and its x,
++/// without the keyboard.
++- (void)keepSearchOverCancel;
++
+ #if RNS_IPHONE_OS_VERSION_AVAILABLE(16_0) && !TARGET_OS_TV
+ - (UINavigationItemSearchBarPlacement)placementAsUINavigationItemSearchBarPlacement API_AVAILABLE(ios(16.0))
+     API_UNAVAILABLE(tvos, watchos);
+diff --git a/ios/RNSSearchBar.mm b/ios/RNSSearchBar.mm
+index 2345734e9142c5f2ace02ba4f1e6463e53783e29..406cc4f9d1efd2486d10d55398f31475bc0810b7 100644
+--- a/ios/RNSSearchBar.mm
++++ b/ios/RNSSearchBar.mm
+@@ -14,6 +14,9 @@
+ 
+ namespace react = facebook::react;
+ 
++@interface RNSSearchBar () <UISearchControllerDelegate>
++@end
++
+ @implementation RNSSearchBar {
+   UISearchController *_controller;
+   UIColor *_textColor;
+@@ -22,10 +25,29 @@ @implementation RNSSearchBar {
+   // default behavior after setting explicit value for the prop.
+   BOOL _isObscureBackgroundSet;
+   BOOL _isHideNavigationBarSet;
++
++  // The search tab stays on its x: the text to put back once the cancel has dismissed the search.
++  NSString *_textKeptOverCancel;
++  // Reselecting the search tab focuses the field a moment later, around the search presenting again:
++  // refuse that one focus.
++  BOOL _refusesFocus;
+ }
+ 
+ @synthesize controller = _controller;
+ 
++static __weak RNSSearchBar *sSearchBarThatJustEndedEditing = nil;
++
+++ (RNSSearchBar *)searchBarThatJustEndedEditing
++{
++  return sSearchBarThatJustEndedEditing;
++}
++
++- (void)keepSearchOverCancel
++{
++  _textKeptOverCancel = [_controller.searchBar.text copy];
++  _refusesFocus = YES;
++}
++
+ - (instancetype)init
+ {
+   if (self = [super init]) {
+@@ -46,6 +68,7 @@ - (void)initCommonProps
+ #endif
+ 
+   _controller.searchBar.delegate = self;
++  _controller.delegate = self;
+ 
+   _isObscureBackgroundSet = NO;
+   _isHideNavigationBarSet = NO;
+@@ -248,6 +271,24 @@ - (UINavigationItemSearchBarPlacement)placementAsUINavigationItemSearchBarPlacem
+ 
+ #pragma mark delegate methods
+ 
++- (void)didDismissSearchController:(UISearchController *)searchController
++{
++  if (_textKeptOverCancel == nil) {
++    return;
++  }
++  // The x shows while the search is presented: present it again. Presenting does not focus the field.
++  _controller.searchBar.text = _textKeptOverCancel;
++  _textKeptOverCancel = nil;
++  _controller.active = YES;
++}
++
++- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar
++{
++  BOOL refuses = _refusesFocus;
++  _refusesFocus = NO;
++  return !refuses;
++}
++
+ - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar
+ {
+ #if !TARGET_OS_TV
+@@ -265,6 +306,10 @@ - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar
+ 
+ - (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar
+ {
++  sSearchBarThatJustEndedEditing = self;
++  dispatch_async(dispatch_get_main_queue(), ^{
++    sSearchBarThatJustEndedEditing = nil;
++  });
+   [self emitOnBlurEvent];
+   [self hideCancelButton];
+ }
+@@ -282,7 +327,9 @@ - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
+ #if !TARGET_OS_TV
+ - (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar
+ {
+-  _controller.searchBar.text = @"";
++  if (_textKeptOverCancel == nil) {
++    _controller.searchBar.text = @"";
++  }
+   [self resignFirstResponder];
+   [self hideCancelButton];
+ 
+diff --git a/ios/tabs/host/RNSTabBarController.mm b/ios/tabs/host/RNSTabBarController.mm
+index 4e0e1118e1aca72354dbb92d6b1bef43c3605510..bbf517d949d4ac59e3b0b6813b234ed62936030c 100644
+--- a/ios/tabs/host/RNSTabBarController.mm
++++ b/ios/tabs/host/RNSTabBarController.mm
+@@ -9,6 +9,7 @@
+ #import "RNSLog.h"
+ #import "RNSParentContainerItemRegistry.h"
+ #import "RNSScreenWindowTraits.h"
++#import "RNSSearchBar.h"
+ #import "RNSTabsHostComponentView.h"
+ #import "RNSTabsNavigationStateObserverRegistry.h"
+ 
+@@ -268,6 +269,27 @@ - (void)setSelectedViewController:(__kindof UIViewController *)selectedViewContr
+ }
+ 
+ #if RNS_UITAB_API_SDK_AVAILABLE
++/// The x's cancel collapses the search tab's field; selecting the tab again brings it back. Out to `other`
++/// and back, unseen by JS and without animation.
++- (void)reselectSearchTabVia:(UITab *)other API_AVAILABLE(ios(18.0))
++{
++  UITab *searchTab = self.selectedTab;
++  dispatch_async(dispatch_get_main_queue(), ^{
++    if (self.selectedTab != searchTab) {
++      return;
++    }
++    self->_isApplyingProgrammaticTabSelection = YES;
++    self->_isHandlingExplicitSelectionUpdate = YES;
++    [UIView performWithoutAnimation:^{
++      [super setSelectedTab:other];
++      [super setSelectedTab:searchTab];
++      [self.view layoutIfNeeded];
++    }];
++    self->_isHandlingExplicitSelectionUpdate = NO;
++    self->_isApplyingProgrammaticTabSelection = NO;
++  });
++}
++
+ - (void)setSelectedTab:(UITab *)selectedTab API_AVAILABLE(ios(18.0))
+ {
+   [super setSelectedTab:selectedTab];
+@@ -462,6 +484,19 @@ - (BOOL)shouldPreventNativeTabSelection:(nonnull UIViewController *)nextViewCont
+ /// `tabBarController:shouldSelectViewController:` and the `UITab` `tabBarController:shouldSelectTab:`.
+ - (BOOL)interceptUserSelectionOfViewController:(nonnull UIViewController *)viewController
+ {
++#if RNS_UITAB_API_SDK_AVAILABLE && RNS_IPHONE_OS_VERSION_AVAILABLE(26_0) && !TARGET_OS_TV && !TARGET_OS_VISION
++  if (@available(iOS 26.0, *)) {
++    // The search tab's x with the keyboard up leaves the tab: stay, with the keyboard down. With the
++    // keyboard already down, no editing ends first, and the x leaves as UIKit has it.
++    RNSSearchBar *searchBar = RNSSearchBar.searchBarThatJustEndedEditing;
++    if (RNS_UITAB_API_ENABLED && searchBar != nil && [self.selectedTab isKindOfClass:UISearchTab.class] &&
++        viewController.tab != nil && viewController.tab != self.selectedTab) {
++      [searchBar keepSearchOverCancel];
++      [self reselectSearchTabVia:viewController.tab];
++      return YES;
++    }
++  }
++#endif
+   BOOL repeatedSelection = viewController == self.selectedViewController;
+ #if RNS_UITAB_API_SDK_AVAILABLE
+   if (RNS_UITAB_API_ENABLED) {
