@@ -5,10 +5,9 @@ import { useIntl } from "react-intl";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import { usePlatform } from "@norish/shared-react/platform";
-import { useHouseholdMutations } from "@norish/shared-react/reader";
+import { joinCodeStatus, useHouseholdMutations } from "@norish/shared-react/reader";
 
 import { useSettingsWrite } from "../hooks/use-settings-write";
-import { joinCodeStatus } from "../utils/household-rules";
 import { everySecondUntil, noTick, nowToTheSecond } from "../utils/join-code-clock";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";

@@ -4,10 +4,9 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { useIntl } from "react-intl";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
-import { useHouseholdMutations } from "@norish/shared-react/reader";
+import { allowedMemberActions, useHouseholdMutations } from "@norish/shared-react/reader";
 
 import { useSettingsWrite } from "../hooks/use-settings-write";
-import { memberActions } from "../utils/household-rules";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -34,7 +33,11 @@ export function MembersList({
       {household.users.map((user) => {
         const isSelf = user.id === currentUserId;
         const name = user.name || t("members.unknown");
-        const kinds = memberActions(isAdmin, isSelf, user.isAdmin === true);
+        const kinds = allowedMemberActions({
+          viewerIsAdmin: isAdmin,
+          isSelf,
+          memberIsAdmin: user.isAdmin === true,
+        });
         const actions = kinds.map((kind) =>
           kind === "kick"
             ? {
@@ -49,7 +52,7 @@ export function MembersList({
                   }),
               }
             : {
-                kind,
+                kind: "admin" as const,
                 label: t("members.makeAdminButton"),
                 onPress: () =>
                   confirm({
@@ -57,7 +60,9 @@ export function MembersList({
                     message: `${t("members.transferModal.confirmMessage", { name })}\n\n${t("members.transferModal.warning")}`,
                     confirmLabelId: "settings.household.members.transferModal.confirmButton",
                     destructive: false,
-                    onConfirm: write(() => !pending.transfer && transferAdmin(household.id, user.id)),
+                    onConfirm: write(
+                      () => !pending.transfer && transferAdmin(household.id, user.id)
+                    ),
                   }),
               }
         );

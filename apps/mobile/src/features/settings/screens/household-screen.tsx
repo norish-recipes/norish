@@ -4,6 +4,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { useIntl } from "react-intl";
 
 import {
+  leaveWarns,
   useHousehold,
   useHouseholdCacheHelpers,
   useHouseholdMutations,
@@ -16,7 +17,7 @@ import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
 import { useSettingsWrite } from "../hooks/use-settings-write";
-import { adminViewOf, householdState, leaveWarns, pageState } from "../utils/household-rules";
+import { adminViewOf, householdState, pageState } from "../utils/household-rules";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
  * kicked or leaving empties the cached household, which lands here as the no-household state. */
@@ -36,7 +37,7 @@ export function HouseholdScreen() {
   const confirmLeave = () => {
     if (!household) return;
 
-    const warning = leaveWarns(isAdmin, household.users.length)
+    const warning = leaveWarns({ isAdmin, otherMemberCount: household.users.length - 1 })
       ? `\n\n${t("info.leaveModal.adminWarning")}`
       : "";
 

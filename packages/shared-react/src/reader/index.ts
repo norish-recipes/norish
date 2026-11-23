@@ -6,7 +6,13 @@ export {
   type HiddenItemVisibility,
 } from "./hidden-items";
 export { measurementChoices, shownMeasurement } from "./measurement-choices";
-export { isJoinCode } from "./household-rules";
+export {
+  allowedMemberActions,
+  isJoinCode,
+  joinCodeStatus,
+  leaveWarns,
+  type MemberAction,
+} from "./household-rules";
 export { ownerAllows } from "./owner-access";
 export { useToday } from "./use-today";
 export { useHiddenItemVisibility } from "./use-hidden-item-visibility";

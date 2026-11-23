@@ -9,7 +9,7 @@ import { HomeIcon } from "@heroicons/react/24/outline";
 import { Chip, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
+import { leaveWarns, useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 export default function HouseholdInfoCard() {
   const t = useTranslations("settings.household.info");
@@ -64,7 +64,7 @@ export default function HouseholdInfoCard() {
         onOpenChange={setShowLeaveModal}
       >
         <p>{t("leaveModal.confirmMessage", { name: household.name })}</p>
-        {isAdmin && otherMembers.length > 0 && (
+        {leaveWarns({ isAdmin, otherMemberCount: otherMembers.length }) && (
           <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
         )}
       </ConfirmModal>

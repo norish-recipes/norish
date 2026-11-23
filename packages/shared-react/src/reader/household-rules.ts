@@ -1,4 +1,50 @@
+import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import { JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
 /** A join code is exactly six digits; the server strips anything else, so Join waits for these. */
 export const isJoinCode = (code: string) => JoinCodeSchema.safeParse(code).success;
+
+export type MemberAction = "kick" | "transferAdmin";
+
+/** What the viewer may do to a member: only an admin, never to themselves; handing admin over
+ * only to a member who is not one already. */
+export function allowedMemberActions({
+  viewerIsAdmin,
+  isSelf,
+  memberIsAdmin,
+}: {
+  viewerIsAdmin: boolean;
+  isSelf: boolean;
+  memberIsAdmin: boolean;
+}): MemberAction[] {
+  if (!viewerIsAdmin || isSelf) return [];
+
+  return memberIsAdmin ? ["kick"] : ["kick", "transferAdmin"];
+}
+
+/** The code's countdown: `none`, `expired`, or the whole minutes and seconds left at `now`. */
+export function joinCodeStatus(
+  code: Pick<HouseholdAdminSettingsDto, "joinCode" | "joinCodeExpiresAt">,
+  now: number
+) {
+  if (!code.joinCode || !code.joinCodeExpiresAt) return { kind: "none" } as const;
+
+  const left = new Date(code.joinCodeExpiresAt).getTime() - now;
+
+  if (left <= 0) return { kind: "expired" } as const;
+
+  return {
+    kind: "active",
+    minutes: Math.floor(left / 60000),
+    seconds: Math.floor((left % 60000) / 1000),
+  } as const;
+}
+
+/** An admin who leaves while other members remain is warned to hand admin over first. */
+export const leaveWarns = ({
+  isAdmin,
+  otherMemberCount,
+}: {
+  isAdmin: boolean;
+  otherMemberCount: number;
+}) => isAdmin && otherMemberCount > 0;
