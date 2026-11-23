@@ -17,6 +17,7 @@ import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import {
+  adminViewOf,
   everySecondUntil,
   joinCodeStatus,
   noTick,
@@ -28,18 +29,17 @@ import {
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
   const tErrors = useTranslations("common.errors");
-  const { household, isAdmin } = useHousehold();
+  const { household: cached, currentUserId } = useHousehold();
   const { regenerateJoinCode } = useHouseholdMutations();
-  const joinCodeExpiresAt =
-    household && "joinCode" in household && household.joinCode ? household.joinCodeExpiresAt : null;
+  const household = adminViewOf(cached, currentUserId);
+  const joinCodeExpiresAt = household?.joinCode ? household.joinCodeExpiresAt : null;
   // The clock the countdown reads, to the second, ticking while a code counts down.
   const now = useSyncExternalStore(
     joinCodeExpiresAt ? everySecondUntil(new Date(joinCodeExpiresAt).getTime()) : noTick,
     nowToTheSecond,
     nowToTheSecond
   );
-  // Only an admin's household carries `joinCode`, so `in` narrows to the admin DTO.
-  if (!household || !isAdmin || !("joinCode" in household)) return null;
+  if (!household) return null;
 
   const status = joinCodeStatus(household, now);
   const handleCopyJoinCode = async () => {

@@ -4,6 +4,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { useText } from "@/lib/i18n/use-text";
 
 import {
+  adminViewOf,
   leaveWarns,
   useHousehold,
   useHouseholdCacheHelpers,
@@ -17,7 +18,7 @@ import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
 import { useSettingsWrite } from "../hooks/use-settings-write";
-import { adminViewOf, pageState } from "../utils/household-rules";
+import { pageState } from "../utils/household-rules";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
  * kicked or leaving empties the cached household, which lands here as the no-household state. */
@@ -30,7 +31,7 @@ export function HouseholdScreen() {
   const write = useSettingsWrite();
   // currentUserId comes with every answer, so it marks a read that succeeded.
   const page = pageState({ household, answered: currentUserId !== undefined, isLoading, error });
-  const admin = household ? adminViewOf(household) : null;
+  const admin = adminViewOf(household, currentUserId);
 
   const confirmLeave = () => {
     if (!household) return;

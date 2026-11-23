@@ -20,9 +20,5 @@ export const pageState = ({
 }): "household" | "loading" | "failed" | "none" =>
   household ? "household" : answered ? "none" : isLoading ? "loading" : error ? "failed" : "none";
 
-/** Only an admin's household carries `joinCode`, so that is where the code card and Regenerate show. */
-export const adminViewOf = (household: Household): HouseholdAdminSettingsDto | null =>
-  "joinCode" in household ? household : null;
-
 /** Create needs text; the mutation throws on an empty name. */
 export const canCreate = (name: string) => name.trim().length > 0;

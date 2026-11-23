@@ -1,4 +1,7 @@
-import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
+import type {
+  HouseholdAdminSettingsDto,
+  HouseholdSettingsDto,
+} from "@norish/shared/contracts/dto/household";
 import { JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
 /** A join code is exactly six digits; the server strips anything else, so Join waits for these. */
@@ -6,6 +9,18 @@ export const isJoinCode = (code: string) => JoinCodeSchema.safeParse(code).succe
 
 /** What the code field keeps of typed or pasted text: its digits, then the first six. */
 export const joinCodeDigits = (value: string) => value.replace(/\D/g, "").slice(0, 6);
+
+/** The admin's view, with the code card and Regenerate: the household must carry `joinCode` and
+ * the viewer be its admin now, since a realtime handover keeps the cached code fields. */
+export const adminViewOf = (
+  household: HouseholdSettingsDto | HouseholdAdminSettingsDto | null,
+  viewerId: string | undefined
+): HouseholdAdminSettingsDto | null =>
+  household &&
+  "joinCode" in household &&
+  household.users.some((user) => user.id === viewerId && user.isAdmin)
+    ? household
+    : null;
 
 export type MemberAction = "kick" | "transferAdmin";
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  adminViewOf,
   allowedMemberActions,
   isJoinCode,
   joinCodeDigits,
@@ -23,6 +24,27 @@ describe("household rules", () => {
     expect(joinCodeDigits("123 456")).toBe("123456");
     expect(joinCodeDigits("1234567")).toBe("123456");
     expect(isJoinCode(joinCodeDigits(" 12 34 56 "))).toBe(true);
+  });
+
+  it("shows the join code only to the viewer who is admin now", () => {
+    const user = (id: string, isAdmin: boolean) => ({ id, name: id, isAdmin, version: 1 });
+    const admin = (viewerIsAdmin: boolean) => ({
+      id: "h",
+      name: "Home",
+      version: 1,
+      allergies: [],
+      users: [user("me", viewerIsAdmin), user("other", !viewerIsAdmin)],
+      joinCode: "123456",
+      joinCodeExpiresAt: null,
+    });
+
+    expect(adminViewOf(admin(true), "me")).not.toBeNull();
+    // Admin moved to another member from elsewhere; the cached code fields stay behind.
+    expect(adminViewOf(admin(false), "me")).toBeNull();
+    expect(adminViewOf(admin(true), undefined)).toBeNull();
+    const { joinCode: _code, joinCodeExpiresAt: _at, ...member } = admin(true);
+
+    expect(adminViewOf(member, "me")).toBeNull();
   });
 
   it("gives only an admin Kick and Make admin, on others", () => {
