@@ -9,7 +9,14 @@ import {
 
 import { useSiteAuthTokenMutations, useSiteAuthTokensRead } from "..";
 import { readUnderWay } from "../../offline/testing";
-import { answerCall, failRead, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
+import {
+  answerCall,
+  failRead,
+  keyOf,
+  resetTRPCFake,
+  sentCall,
+  serveTRPC,
+} from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -56,6 +63,28 @@ describe("useSiteAuthTokenMutations", () => {
 
     expect(queryClient.getQueryData(TOKENS_KEY)).toBeUndefined();
     expect(invalidate).toHaveBeenCalledWith({ queryKey: TOKENS_KEY });
+  });
+
+  it("show the added token from a read begun after the add, when the first read was under way", async () => {
+    const reads: ((tokens: unknown) => void)[] = [];
+
+    serveTRPC((path) =>
+      path === "siteAuthTokens.list"
+        ? new Promise((resolve) => reads.push(resolve))
+        : Promise.resolve(token)
+    );
+    const result = render(() => ({
+      read: useSiteAuthTokensRead(),
+      write: useSiteAuthTokenMutations(),
+    }));
+
+    await waitFor(() => expect(reads).toHaveLength(1));
+    await act(() => result.current.write.createToken({ ...token, value: "secret" }));
+    await act(async () => reads[0]?.([]));
+    await waitFor(() => expect(reads).toHaveLength(2));
+    await act(async () => reads[1]?.([token]));
+
+    await waitFor(() => expect(result.current.read.tokens).toEqual([token]));
   });
 
   it("drop a removed token, sending its version", async () => {

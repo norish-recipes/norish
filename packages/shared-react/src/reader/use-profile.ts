@@ -11,7 +11,7 @@ import type { AppRouter } from "@norish/trpc/client";
 import type { ReadStatus } from "./read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
-import { readStatus } from "./read-status";
+import { readStatus, rereadAfterWrite } from "./read-status";
 
 type Profile = ReadStatus & {
   user: User | null;
@@ -69,7 +69,7 @@ export function useProfileCache(): ProfileCache {
         ...data,
         user: { ...data.user, preferences: { ...data.user.preferences, ...patch } },
       })),
-    invalidate: () => queryClient.invalidateQueries({ queryKey }),
+    invalidate: () => rereadAfterWrite(queryClient, queryKey),
   };
 }
 

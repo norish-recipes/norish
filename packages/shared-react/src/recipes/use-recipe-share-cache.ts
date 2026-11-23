@@ -3,8 +3,10 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { rereadAfterWrite } from "../reader/read-status";
 import { useTRPC } from "../trpc";
 
+/** Each reread starts after the write: a first read under way predates it (`rereadAfterWrite`). */
 type RecipeShareCacheHelpers = {
   /** Null rereads every recipe's list, for an action whose recipe the caller does not know. */
   invalidateRecipeShares: (recipeId: string | null) => void;
@@ -20,34 +22,27 @@ export function useRecipeShareCacheHelpers(): RecipeShareCacheHelpers {
 
   const invalidateRecipeShares = useCallback(
     (recipeId: string | null) => {
-      queryClient.invalidateQueries({
-        queryKey: recipeId
-          ? trpc.recipes.shareList.queryKey({ recipeId })
-          : trpc.recipes.shareList.pathKey(),
-      });
+      void rereadAfterWrite(
+        queryClient,
+        recipeId ? trpc.recipes.shareList.queryKey({ recipeId }) : trpc.recipes.shareList.pathKey()
+      );
     },
     [queryClient, trpc]
   );
 
   const invalidateRecipeShare = useCallback(
     (shareId: string) => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.recipes.shareGet.queryKey({ id: shareId }),
-      });
+      void rereadAfterWrite(queryClient, trpc.recipes.shareGet.queryKey({ id: shareId }));
     },
     [queryClient, trpc]
   );
 
   const invalidateMyRecipeShares = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: trpc.recipes.shareListMine.queryKey(),
-    });
+    void rereadAfterWrite(queryClient, trpc.recipes.shareListMine.queryKey());
   }, [queryClient, trpc]);
 
   const invalidateAdminRecipeShares = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: trpc.recipes.shareListAdmin.queryKey(),
-    });
+    void rereadAfterWrite(queryClient, trpc.recipes.shareListAdmin.queryKey());
   }, [queryClient, trpc]);
 
   const removeRecipeShare = useCallback(

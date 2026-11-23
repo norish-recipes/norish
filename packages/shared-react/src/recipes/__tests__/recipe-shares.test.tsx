@@ -1,5 +1,5 @@
 import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
@@ -286,6 +286,25 @@ describe("recipe share hooks", () => {
     });
   });
 
+  it("lists a share made while the recipe's first share read was under way, from a read begun after it", async () => {
+    const queryClient = createTestQueryClient();
+    const listKey = trpc.recipes.shareList.queryKey({ recipeId: "recipe-1" });
+    const reads: ((shares: unknown) => void)[] = [];
+    const unsubscribe = new QueryObserver(queryClient, {
+      queryKey: listKey,
+      queryFn: () => new Promise((resolve) => reads.push(resolve)),
+    }).subscribe(() => {});
+    const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    await vi.waitFor(() => expect(reads).toHaveLength(1));
+    await act(() => result.current.createShare());
+    await act(async () => reads[0]?.([]));
+    await vi.waitFor(() => expect(reads).toHaveLength(2));
+    unsubscribe();
+  });
+
   it("tells the reader a refused share and answers null", async () => {
     refuseCreate.current = true;
     const platform = fakePlatformAdapter();
@@ -300,7 +319,7 @@ describe("recipe share hooks", () => {
     expect(platform.toast.show).not.toHaveBeenCalled();
   });
 
-  it("invalidates recipe share queries when share lifecycle events arrive", () => {
+  it("invalidates recipe share queries when share lifecycle events arrive", async () => {
     const queryClient = new QueryClient();
     const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
     const removeQueries = vi.spyOn(queryClient, "removeQueries");
@@ -337,11 +356,14 @@ describe("recipe share hooks", () => {
       })
     );
 
-    expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: [["recipes", "shareList"], { input: { recipeId: "recipe-1" }, type: "query" }],
-    });
-    expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: [["recipes", "shareGet"], { input: { id: "share-1" }, type: "query" }],
+    // Each reread waits for a cancel first, so it lands a tick later.
+    await vi.waitFor(() => {
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [["recipes", "shareList"], { input: { recipeId: "recipe-1" }, type: "query" }],
+      });
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [["recipes", "shareGet"], { input: { id: "share-1" }, type: "query" }],
+      });
     });
 
     options.onData?.(

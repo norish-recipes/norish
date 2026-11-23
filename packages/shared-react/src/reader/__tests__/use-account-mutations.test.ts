@@ -25,6 +25,7 @@ import {
   keyOf,
   resetTRPCFake,
   sentCall,
+  serveTRPC,
   trpcCalls,
 } from "../../trpc/testing";
 
@@ -291,6 +292,29 @@ describe("the Account's writes", () => {
 
       await expect(created).resolves.toBe("sk-secret");
       expect(profile()?.apiKeys.map((key) => key.id)).toEqual(["k1", "k2"]);
+    });
+
+    it("list a key made while the first profile read was under way, from a read begun after it", async () => {
+      queryClient.removeQueries({ queryKey: USER_KEY });
+      const metadata = { ...PROFILE.apiKeys[0]!, id: "k2", name: "Two" };
+      const reads: ((profile: unknown) => void)[] = [];
+
+      serveTRPC((path) =>
+        path === "user.get"
+          ? new Promise((resolve) => reads.push(resolve))
+          : Promise.resolve({ success: true, key: "sk-secret", metadata })
+      );
+      const result = render(() => ({ read: useProfileQuery(), write: useApiKeyMutations() }));
+
+      await waitFor(() => expect(reads).toHaveLength(1));
+      await act(() => result.current.write.createApiKey("Two"));
+      await act(async () => reads[0]?.(PROFILE));
+      await waitFor(() => expect(reads).toHaveLength(2));
+      await act(async () => reads[1]?.({ ...PROFILE, apiKeys: [...PROFILE.apiKeys, metadata] }));
+
+      await waitFor(() =>
+        expect(result.current.read.apiKeys.map((key) => key.id)).toEqual(["k1", "k2"])
+      );
     });
 
     it("keep no copy of the secret once the key is forgotten", async () => {

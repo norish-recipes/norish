@@ -6,7 +6,7 @@ import { settled, wentThrough } from "../offline/settled";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
-import { readStatus } from "./read-status";
+import { readStatus, rereadAfterWrite } from "./read-status";
 import { useStaleRefusal } from "./stale-write";
 
 /** The tokens and how their read went. */
@@ -34,7 +34,7 @@ export function useSiteAuthTokenMutations() {
       // A list never read is reread, not seeded with this one token as if it were the whole list.
       onSuccess: (token) =>
         queryClient.getQueryData(queryKey) === undefined
-          ? void queryClient.invalidateQueries({ queryKey })
+          ? void rereadAfterWrite(queryClient, queryKey)
           : writeOverRead(queryClient, queryKey, (prev) => prev && [...prev, token]),
       onError: (error) => showError(error, "site-auth-tokens:create"),
     })
