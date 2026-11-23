@@ -89,6 +89,7 @@ function shareListKey({ recipeId }: { recipeId: string }) {
 const trpc = {
   recipes: {
     shareList: {
+      pathKey: () => [["recipes", "shareList"]],
       queryKey: shareListKey,
       queryOptions: (input: { recipeId: string }) => ({
         queryKey: shareListKey(input),
@@ -224,6 +225,26 @@ describe("recipe share hooks", () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: trpc.recipes.shareListMine.queryKey(),
     });
+  });
+
+  it("rereads every held recipe's share list when an inventory action failed or was stale", async () => {
+    const queryClient = createTestQueryClient();
+    const listKey = trpc.recipes.shareList.queryKey({ recipeId: "recipe-1" });
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const reread = async (action: () => Promise<boolean>) => {
+      queryClient.setQueryData(listKey, [createMockShare()]);
+      await act(action);
+
+      return queryClient.getQueryState(listKey)?.isInvalidated;
+    };
+
+    failShareWrites.current = true;
+    expect(await reread(() => result.current.revokeShare("s1", 1))).toBe(true);
+    failShareWrites.current = false;
+    staleShareWrites.current = true;
+    expect(await reread(() => result.current.deleteShare("s1", 1))).toBe(true);
   });
 
   it("refuses a stale share action as changed elsewhere and keeps the share", async () => {

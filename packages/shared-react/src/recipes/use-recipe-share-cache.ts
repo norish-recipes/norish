@@ -6,7 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "../trpc";
 
 type RecipeShareCacheHelpers = {
-  invalidateRecipeShares: (recipeId: string) => void;
+  /** Null rereads every recipe's list, for an action whose recipe the caller does not know. */
+  invalidateRecipeShares: (recipeId: string | null) => void;
   invalidateMyRecipeShares: () => void;
   invalidateAdminRecipeShares: () => void;
   invalidateRecipeShare: (shareId: string) => void;
@@ -18,9 +19,11 @@ export function useRecipeShareCacheHelpers(): RecipeShareCacheHelpers {
   const queryClient = useQueryClient();
 
   const invalidateRecipeShares = useCallback(
-    (recipeId: string) => {
+    (recipeId: string | null) => {
       queryClient.invalidateQueries({
-        queryKey: trpc.recipes.shareList.queryKey({ recipeId }),
+        queryKey: recipeId
+          ? trpc.recipes.shareList.queryKey({ recipeId })
+          : trpc.recipes.shareList.pathKey(),
       });
     },
     [queryClient, trpc]

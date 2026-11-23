@@ -53,7 +53,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   };
   // A failed action rereads the lists: a share whose recipe was deleted elsewhere answers NOT_FOUND.
   const failed = (context: string) => (error: unknown) => {
-    if (recipeId) invalidateRecipeShares(recipeId);
+    invalidateRecipeShares(recipeId);
     invalidateMyRecipeShares();
     invalidateAdminRecipeShares();
     showError(error, context);
@@ -113,10 +113,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   const deleteMutation = useMutation(
     trpc.recipes.shareDelete.mutationOptions({
       onSuccess: ({ stale }, variables) => {
-        if (recipeId) {
-          invalidateRecipeShares(recipeId);
-        }
-
+        invalidateRecipeShares(recipeId);
         invalidateMyRecipeShares();
         invalidateAdminRecipeShares();
         if (stale) refuseStale("recipe-share-panel:delete");
