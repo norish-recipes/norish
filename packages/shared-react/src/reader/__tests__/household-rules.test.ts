@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { allowedMemberActions, isJoinCode, joinCodeStatus, leaveWarns } from "../household-rules";
+import {
+  allowedMemberActions,
+  isJoinCode,
+  joinCodeDigits,
+  joinCodeStatus,
+  leaveWarns,
+} from "../household-rules";
 
 describe("household rules", () => {
   it("takes exactly six digits as a join code", () => {
@@ -10,6 +16,13 @@ describe("household rules", () => {
     expect(isJoinCode("1234567")).toBe(false);
     expect(isJoinCode("123456 extra")).toBe(false);
     expect(isJoinCode("abcdef")).toBe(false);
+  });
+
+  it("keeps a pasted code's six digits, separators dropped first", () => {
+    expect(joinCodeDigits("123-456")).toBe("123456");
+    expect(joinCodeDigits("123 456")).toBe("123456");
+    expect(joinCodeDigits("1234567")).toBe("123456");
+    expect(isJoinCode(joinCodeDigits(" 12 34 56 "))).toBe(true);
   });
 
   it("gives only an admin Kick and Make admin, on others", () => {

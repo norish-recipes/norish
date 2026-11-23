@@ -6,7 +6,7 @@ import { useText } from "@/lib/i18n/use-text";
 import { Button, TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { isJoinCode, useHouseholdMutations } from "@norish/shared-react/reader";
+import { isJoinCode, joinCodeDigits, useHouseholdMutations } from "@norish/shared-react/reader";
 
 import { useSettingsWrite } from "../hooks/use-settings-write";
 import { canCreate } from "../utils/household-rules";
@@ -34,7 +34,6 @@ function EntryForm({
   enabled: boolean;
   autoCapitalize: "words" | "none";
   keyboardType?: "number-pad";
-  maxLength?: number;
   placeholder: string;
 }) {
   const text = useText();
@@ -104,10 +103,9 @@ export function NoHouseholdForms() {
         id="join"
         keyboardType="number-pad"
         labelId="settings.household.join.codeLabel"
-        maxLength={6}
         placeholder={text("settings.household.join.codePlaceholder")}
         value={code}
-        onChange={(value) => setCode(value.replace(/\D/g, ""))}
+        onChange={(value) => setCode(joinCodeDigits(value))}
         onSubmit={write(() => {
           joinHousehold(code);
           setCode("");

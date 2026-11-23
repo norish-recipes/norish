@@ -4,6 +4,9 @@ import { JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 /** A join code is exactly six digits; the server strips anything else, so Join waits for these. */
 export const isJoinCode = (code: string) => JoinCodeSchema.safeParse(code).success;
 
+/** What the code field keeps of typed or pasted text: its digits, then the first six. */
+export const joinCodeDigits = (value: string) => value.replace(/\D/g, "").slice(0, 6);
+
 export type MemberAction = "kick" | "transferAdmin";
 
 /** What the viewer may do to a member: only an admin, never to themselves; handing admin over

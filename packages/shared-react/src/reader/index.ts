@@ -9,6 +9,7 @@ export { measurementChoices, shownMeasurement } from "./measurement-choices";
 export {
   allowedMemberActions,
   isJoinCode,
+  joinCodeDigits,
   joinCodeStatus,
   leaveWarns,
   type MemberAction,
