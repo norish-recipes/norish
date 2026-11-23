@@ -176,11 +176,17 @@ describe("the Account's writes", () => {
       act(() => void result.current.updatePreferences({ afterPlanning: "calendar" }));
       await sentCall("user.updatePreferences");
       // A sibling write landed meanwhile and installed v6 and a new language.
-      queryClient.setQueryData<UserSettingsDto>(USER_KEY, (held) =>
-        held && {
-          ...held,
-          user: { ...held.user, version: 6, preferences: { ...held.user.preferences, locale: "fr" } },
-        }
+      queryClient.setQueryData<UserSettingsDto>(
+        USER_KEY,
+        (held) =>
+          held && {
+            ...held,
+            user: {
+              ...held.user,
+              version: 6,
+              preferences: { ...held.user.preferences, locale: "fr" },
+            },
+          }
       );
       await failCall("user.updatePreferences");
 

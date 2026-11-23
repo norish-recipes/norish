@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
-import { act, render } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   LocaleSaveScope,
   MobileIntlProvider,
   useMobileLocaleSettings,
 } from "@/lib/i18n/mobile-i18n-context";
+import { act, render } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Each save waits for the test to say whether the server took it.
 const saves = vi.hoisted(() => [] as { locale?: string; settle: (took: boolean) => void }[]);
