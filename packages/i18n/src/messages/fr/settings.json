@@ -83,7 +83,8 @@
         "title": "Supprimer la clé API",
         "message": "Êtes-vous sûr de vouloir supprimer cette clé API ? Toute application l’utilisant perdra immédiatement l’accès. Cette action est irréversible.",
         "confirmButton": "Supprimer la clé"
-      }
+      },
+      "createNoAnswer": "Le serveur n'a pas répondu. La clé a peut-être été créée : vérifiez vos clés."
     },
     "archiveImport": {
       "title": "Importer une archive de recettes",

@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Toiminto epäonnistui",
     "nameCannotBeEmpty": "Nimi ei voi olla tyhjä",
-    "technicalDetails": "Jokin meni pieleen. Tekniset tiedot löytyvät selaimen konsolista."
+    "technicalDetails": "Jokin meni pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
+    "noAnswer": "Palvelin ei vastannut. Yritä uudelleen."
   },
   "slots": {
     "breakfast": "Aamiainen",

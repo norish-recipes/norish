@@ -83,7 +83,8 @@
         "title": "API-Schlüssel löschen",
         "message": "Bist du sicher, dass du diesen API-Schlüssel löschen möchtest? Alle Anwendungen, die ihn nutzen, verlieren sofort den Zugriff. Das kann nicht rückgängig gemacht werden.",
         "confirmButton": "Schlüssel löschen"
-      }
+      },
+      "createNoAnswer": "Der Server hat nicht geantwortet. Der Schlüssel wurde möglicherweise erstellt: Prüf deine Schlüssel."
     },
     "archiveImport": {
       "title": "Rezeptarchiv importieren",

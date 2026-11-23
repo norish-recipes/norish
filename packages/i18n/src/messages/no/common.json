@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Handlingen mislyktes",
     "nameCannotBeEmpty": "Navn kan ikke være tomt",
-    "technicalDetails": "Noe gikk galt. Sjekk nettleserkonsollen for tekniske detaljer."
+    "technicalDetails": "Noe gikk galt. Sjekk nettleserkonsollen for tekniske detaljer.",
+    "noAnswer": "Serveren svarte ikke. Prøv igjen."
   },
   "slots": {
     "breakfast": "Frokost",

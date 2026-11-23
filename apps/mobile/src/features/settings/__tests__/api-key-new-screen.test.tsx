@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
   settle: (_key: string | null) => {},
@@ -57,12 +57,14 @@ vi.mock("@norish/shared-react/reader", () => ({
 }));
 
 const { ApiKeyNewScreen } = await import("../screens/api-key-new-screen");
+const { listenForNoAnswer, SETTINGS_WRITE_TIMEOUT_MS } = await import("../utils/settings-write");
 
 const close = () => screen.getByTestId("header-close") as HTMLButtonElement;
 const swipeable = () => state.setOptions.mock.lastCall?.[0].gestureEnabled;
 
 describe("the create key sheet", () => {
   beforeEach(() => vi.clearAllMocks());
+  afterEach(() => vi.useRealTimers());
 
   it("cannot be dismissed from Create until the key is saved, then forgets the key", async () => {
     render(<ApiKeyNewScreen />);
@@ -90,5 +92,21 @@ describe("the create key sheet", () => {
 
     expect(swipeable()).toBe(true);
     expect(close().disabled).toBe(false);
+  });
+
+  it("unlocks when the create goes unanswered, and says the key may exist", async () => {
+    vi.useFakeTimers();
+    const told = vi.fn();
+    const stopListening = listenForNoAnswer(told);
+
+    render(<ApiKeyNewScreen />);
+    act(() => fireEvent.click(screen.getByTestId("header-confirm")));
+    expect(close().disabled).toBe(true);
+
+    await act(() => vi.advanceTimersByTimeAsync(SETTINGS_WRITE_TIMEOUT_MS));
+    expect(told).toHaveBeenCalledExactlyOnceWith("settings.user.apiKeys.createNoAnswer");
+    expect(swipeable()).toBe(true);
+    expect(close().disabled).toBe(false);
+    stopListening();
   });
 });

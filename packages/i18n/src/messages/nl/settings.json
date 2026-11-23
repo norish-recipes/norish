@@ -83,7 +83,8 @@
         "title": "API-sleutel verwijderen",
         "message": "Weet je zeker dat je deze API-sleutel wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
         "confirmButton": "Sleutel verwijderen"
-      }
+      },
+      "createNoAnswer": "De server gaf geen antwoord. De sleutel is mogelijk gemaakt: controleer je sleutels."
     },
     "archiveImport": {
       "title": "Archief importeren",

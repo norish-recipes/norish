@@ -83,7 +83,8 @@
         "title": "Usuń klucz API",
         "message": "Czy na pewno chcesz usunąć ten klucz API? Wszystkie aplikacje, które go używają, natychmiast utracą dostęp. Tej operacji nie można cofnąć.",
         "confirmButton": "Usuń klucz"
-      }
+      },
+      "createNoAnswer": "Serwer nie odpowiedział. Klucz mógł zostać utworzony: sprawdź swoje klucze."
     },
     "archiveImport": {
       "title": "Import archiwum przepisów",

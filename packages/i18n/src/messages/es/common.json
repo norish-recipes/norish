@@ -212,7 +212,8 @@
   "errors": {
     "operationFailed": "La operación ha fallado",
     "nameCannotBeEmpty": "El nombre no puede estar vacío",
-    "technicalDetails": "Algo ha salido mal. Comprueba la consola del navegador para obtener detalles técnicos."
+    "technicalDetails": "Algo ha salido mal. Comprueba la consola del navegador para obtener detalles técnicos.",
+    "noAnswer": "El servidor no respondió. Inténtalo de nuevo."
   },
   "timer": {
     "done": "Listo",

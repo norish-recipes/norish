@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "작업에 실패했습니다",
     "nameCannotBeEmpty": "이름은 비워 둘 수 없습니다",
-    "technicalDetails": "문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요."
+    "technicalDetails": "문제가 발생했습니다. 기술적인 세부사항은 브라우저 콘솔을 확인하세요.",
+    "noAnswer": "서버가 응답하지 않았습니다. 다시 시도하세요."
   },
   "slots": {
     "breakfast": "아침",

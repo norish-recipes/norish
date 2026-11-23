@@ -83,7 +83,8 @@
         "title": "Delete API key",
         "message": "Are you sure you want to delete this API key? Any applications using it will immediately lose access. This cannot be undone.",
         "confirmButton": "Delete key"
-      }
+      },
+      "createNoAnswer": "The server didn't answer. The key may have been made: check your keys."
     },
     "archiveImport": {
       "title": "Import recipe archive",

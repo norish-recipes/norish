@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "L'opération a échoué",
     "nameCannotBeEmpty": "Le nom ne peut pas être vide",
-    "technicalDetails": "Une erreur s'est produite. Consultez la console du navigateur pour les détails techniques."
+    "technicalDetails": "Une erreur s'est produite. Consultez la console du navigateur pour les détails techniques.",
+    "noAnswer": "Le serveur n'a pas répondu. Réessayez."
   },
   "slots": {
     "breakfast": "Petit déjeuner",

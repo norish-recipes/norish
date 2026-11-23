@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Åtgärden misslyckades",
     "nameCannotBeEmpty": "Namnet får inte vara tomt",
-    "technicalDetails": "Något gick fel. Teknisk information finns i webbläsarens konsol."
+    "technicalDetails": "Något gick fel. Teknisk information finns i webbläsarens konsol.",
+    "noAnswer": "Servern svarade inte. Försök igen."
   },
   "slots": {
     "breakfast": "Frukost",

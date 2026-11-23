@@ -83,7 +83,8 @@
         "title": "Eliminar clave API",
         "message": "¿Seguro que quieres eliminar esta clave API? Cualquier aplicación que la use perderá acceso inmediatamente. Esta acción no se puede deshacer.",
         "confirmButton": "Eliminar clave"
-      }
+      },
+      "createNoAnswer": "El servidor no respondió. Es posible que la clave se haya creado: revisa tus claves."
     },
     "archiveImport": {
       "title": "Importar archivo de recetas",

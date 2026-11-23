@@ -35,9 +35,15 @@ export function ApiKeyNewScreen() {
     navigation.setOptions({ gestureEnabled: !locked });
   }, [navigation, locked]);
 
+  // A repeat press shares the held create's outcome, so the sheet stays locked until it settles.
+  const sendCreate = settingsWrite(
+    () => createApiKey(name.trim() || undefined),
+    "api-key-create",
+    "settings.user.apiKeys.createNoAnswer"
+  );
   const create = async () => {
     setSending(true);
-    setCreated(await createApiKey(name.trim() || undefined));
+    setCreated((await sendCreate()) ?? null);
     setSending(false);
   };
 
@@ -99,7 +105,7 @@ export function ApiKeyNewScreen() {
         label: text("settings.user.apiKeys.createKey"),
         symbol: "plus",
         disabled: isOffline,
-        onPress: settingsWrite(create, "api-key-create"),
+        onPress: () => void create(),
       }}
       name="api-key-new"
       title={text("settings.user.apiKeys.createKey")}

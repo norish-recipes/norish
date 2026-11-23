@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Operazione non riuscita",
     "nameCannotBeEmpty": "Il nome non può essere vuoto",
-    "technicalDetails": "Qualcosa è andato storto. Controlla la console del browser per i dettagli tecnici."
+    "technicalDetails": "Qualcosa è andato storto. Controlla la console del browser per i dettagli tecnici.",
+    "noAnswer": "Il server non ha risposto. Riprova."
   },
   "slots": {
     "breakfast": "Colazione",

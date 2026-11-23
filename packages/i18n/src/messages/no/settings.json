@@ -83,7 +83,8 @@
         "title": "Slett API-nøkkel",
         "message": "Er du sikker på at du vil slette denne API-nøkkelen? Alle applikasjoner som bruker den, mister umiddelbart tilgang. Dette kan ikke angres.",
         "confirmButton": "Slett nøkkel"
-      }
+      },
+      "createNoAnswer": "Serveren svarte ikke. Nøkkelen kan ha blitt opprettet: sjekk nøklene dine."
     },
     "archiveImport": {
       "title": "Importer oppskriftarkiv",

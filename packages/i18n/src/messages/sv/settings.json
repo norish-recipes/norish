@@ -83,7 +83,8 @@
         "title": "Ta bort API-nyckel",
         "message": "Vill du ta bort den här API-nyckeln? Alla appar som använder den förlorar omedelbart åtkomsten. Det går inte att ångra.",
         "confirmButton": "Ta bort nyckel"
-      }
+      },
+      "createNoAnswer": "Servern svarade inte. Nyckeln kan ha skapats: kontrollera dina nycklar."
     },
     "archiveImport": {
       "title": "Importera receptarkiv",

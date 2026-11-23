@@ -83,7 +83,8 @@
         "title": "Slet API-nøgle",
         "message": "Er du sikker på, at du vil slette denne API-nøgle? Alle applikationer, der bruger den, mister straks adgang. Dette kan ikke fortrydes.",
         "confirmButton": "Slet nøgle"
-      }
+      },
+      "createNoAnswer": "Serveren svarede ikke. Nøglen er måske oprettet: tjek dine nøgler."
     },
     "archiveImport": {
       "title": "Importer opskriftarkiv",

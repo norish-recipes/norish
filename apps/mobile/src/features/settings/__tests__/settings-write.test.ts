@@ -1,6 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { guardRepeat, guardWrite } from "../utils/settings-write";
+import {
+  guardRepeat,
+  guardWrite,
+  listenForNoAnswer,
+  SETTINGS_WRITE_TIMEOUT_MS,
+} from "../utils/settings-write";
 
 describe("guardWrite", () => {
   it("asks for Offline when the write runs, not when it was made", () => {
@@ -39,7 +44,7 @@ const deferred = () => {
 };
 
 describe("guardRepeat", () => {
-  it("drops a repeat made in the same tick, and hands back undefined for it", async () => {
+  it("sends a repeat made while one is in flight never, and hands it the held outcome", async () => {
     const first = deferred();
     const send = vi.fn(() => first.promise);
     const write = guardRepeat("regenerate", send);
@@ -48,8 +53,8 @@ describe("guardRepeat", () => {
     const repeat = write();
 
     expect(send).toHaveBeenCalledTimes(1);
-    await expect(repeat).resolves.toBeUndefined();
     first.resolve(true);
+    await expect(repeat).resolves.toBe(true);
     await expect(sent).resolves.toBe(true);
     await write();
     expect(send).toHaveBeenCalledTimes(2);
@@ -97,5 +102,45 @@ describe("guardRepeat", () => {
     ).resolves.toBeUndefined();
     await guardRepeat("leave", send)();
     expect(send).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("an unanswered write", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("is released after the timeout as not gone through, told, and frees its key", async () => {
+    vi.useFakeTimers();
+    const told = vi.fn();
+    const stopListening = listenForNoAnswer(told);
+    const requests: ReturnType<typeof deferred>[] = [];
+    const send = vi.fn(() => {
+      const request = deferred();
+
+      requests.push(request);
+
+      return request.promise;
+    });
+    const write = guardRepeat("create", send, "createNoAnswer");
+
+    const sent = write();
+
+    await vi.advanceTimersByTimeAsync(SETTINGS_WRITE_TIMEOUT_MS - 1);
+    expect(told).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(sent).resolves.toBeUndefined();
+    expect(told).toHaveBeenCalledExactlyOnceWith("createNoAnswer");
+
+    const retry = write();
+
+    expect(send).toHaveBeenCalledTimes(2);
+    // The first's late answer leaves the retry holding the key.
+    requests[0]?.resolve(true);
+    await vi.advanceTimersByTimeAsync(0);
+    void write();
+    expect(send).toHaveBeenCalledTimes(2);
+    requests[1]?.resolve(false);
+    await expect(retry).resolves.toBe(false);
+    expect(told).toHaveBeenCalledOnce();
+    stopListening();
   });
 });

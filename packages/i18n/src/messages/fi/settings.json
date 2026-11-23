@@ -83,7 +83,8 @@
         "title": "Poista API-avain",
         "message": "Haluatko varmasti poistaa tämän API-avaimen? Kaikki sitä käyttävät sovellukset menettävät pääsyn välittömästi. Tätä ei voi kumota.",
         "confirmButton": "Poista avain"
-      }
+      },
+      "createNoAnswer": "Palvelin ei vastannut. Avain on ehkä luotu: tarkista avaimesi."
     },
     "archiveImport": {
       "title": "Tuo reseptiarkisto",

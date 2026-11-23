@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Falha na operação",
     "nameCannotBeEmpty": "O nome não pode ficar em branco",
-    "technicalDetails": "Algo deu errado. Verifique o console do navegador para detalhes técnicos."
+    "technicalDetails": "Algo deu errado. Verifique o console do navegador para detalhes técnicos.",
+    "noAnswer": "O servidor não respondeu. Tente novamente."
   },
   "slots": {
     "breakfast": "Café da manhã",

@@ -83,7 +83,8 @@
         "title": "Elimina chiave API",
         "message": "Sei sicuro di voler eliminare questa chiave API? Tutte le applicazioni che la utilizzano perderanno immediatamente l'accesso. Questa azione non può essere annullata.",
         "confirmButton": "Elimina chiave"
-      }
+      },
+      "createNoAnswer": "Il server non ha risposto. La chiave potrebbe essere stata creata: controlla le tue chiavi."
     },
     "archiveImport": {
       "title": "Importa archivio ricette",

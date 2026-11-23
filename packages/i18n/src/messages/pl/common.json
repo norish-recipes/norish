@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Operacja nie powiodła się",
     "nameCannotBeEmpty": "Nazwa nie może być pusta",
-    "technicalDetails": "Coś poszło nie tak. Sprawdź konsolę przeglądarki."
+    "technicalDetails": "Coś poszło nie tak. Sprawdź konsolę przeglądarki.",
+    "noAnswer": "Serwer nie odpowiedział. Spróbuj ponownie."
   },
   "slots": {
     "breakfast": "Śniadanie",

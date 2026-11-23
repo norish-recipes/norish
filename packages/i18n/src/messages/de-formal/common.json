@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Vorgang fehlgeschlagen",
     "nameCannotBeEmpty": "Name darf nicht leer sein",
-    "technicalDetails": "Etwas ist schiefgelaufen. Sehen Sie in der Browser-Konsole nach technischen Details."
+    "technicalDetails": "Etwas ist schiefgelaufen. Sehen Sie in der Browser-Konsole nach technischen Details.",
+    "noAnswer": "Der Server hat nicht geantwortet. Bitte versuchen Sie es erneut."
   },
   "slots": {
     "breakfast": "Frühstück",

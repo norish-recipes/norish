@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Operation failed",
     "nameCannotBeEmpty": "Name cannot be empty",
-    "technicalDetails": "Something went wrong. Check the browser console for technical details."
+    "technicalDetails": "Something went wrong. Check the browser console for technical details.",
+    "noAnswer": "The server didn't answer. Try again."
   },
   "slots": {
     "breakfast": "Breakfast",

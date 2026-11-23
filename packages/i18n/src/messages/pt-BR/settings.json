@@ -83,7 +83,8 @@
         "title": "Excluir chave de API",
         "message": "Tem certeza de que deseja excluir esta chave de API? Qualquer aplicativo que a utilize perderá o acesso imediatamente. Isso não pode ser desfeito.",
         "confirmButton": "Excluir chave"
-      }
+      },
+      "createNoAnswer": "O servidor não respondeu. A chave pode ter sido criada: verifique suas chaves."
     },
     "archiveImport": {
       "title": "Importar arquivo de receitas",
