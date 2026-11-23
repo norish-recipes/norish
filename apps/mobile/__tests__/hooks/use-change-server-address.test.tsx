@@ -58,6 +58,35 @@ describe("changeServerAddress while signed in", () => {
     expect(takeServerChangeAfterSignOut()).toBe(false);
   });
 
+  it("keeps the change when Server is tapped again during the Sign-out", async () => {
+    let finish = (_left: boolean) => {};
+    const first = new Promise<boolean>((resolve) => (finish = resolve));
+    // As the real guard: a second Sign-out announces itself, then is refused while one runs.
+    signOut = vi
+      .fn<(onLeaving?: () => void) => Promise<boolean>>()
+      .mockImplementationOnce(async (onLeaving) => {
+        onLeaving?.();
+
+        return first;
+      })
+      .mockImplementation(async (onLeaving) => {
+        onLeaving?.();
+
+        return false;
+      });
+    const shell = renderHook(() => useSignOutBeforeServerChange());
+
+    changeServerAddress();
+    changeServerAddress();
+    await act(async () => {
+      finish(true);
+      await first;
+    });
+    shell.unmount();
+
+    expect(takeServerChangeAfterSignOut()).toBe(true);
+  });
+
   it("drops the change when the unsynced-changes read rejects", async () => {
     expect(await chipThenSignedOut(Promise.reject(new Error("outbox unreadable")))).toBe(false);
   });
