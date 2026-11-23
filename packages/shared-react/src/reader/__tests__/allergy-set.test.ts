@@ -13,4 +13,10 @@ describe("changesAllergies", () => {
     expect(changesAllergies(["milk"], ["nuts", "milk"])).toBe(true);
     expect(changesAllergies([], ["nuts"])).toBe(true);
   });
+
+  it("takes saved names as stored, never cleaning them again", () => {
+    expect(changesAllergies([], ["<milk>"])).toBe(true);
+    expect(changesAllergies(["<milk>"], ["<milk>"])).toBe(false);
+    expect(changesAllergies(["&lt;milk&gt;"], ["<milk>"])).toBe(false);
+  });
 });
