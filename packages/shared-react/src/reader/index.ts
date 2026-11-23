@@ -44,11 +44,11 @@ export {
   useRecipePermissions,
 } from "./use-permissions";
 export {
-  useApiKeyMutations,
   useDeleteAccountMutation,
   usePreferencesMutation,
   useProfileMutations,
 } from "./use-account-mutations";
+export { useApiKeyMutations } from "./use-api-key-mutations";
 export { useAllergiesMutation, useAllergiesQuery } from "./use-allergies";
 export { useProfileQuery, useSignInMethodsQuery } from "./use-profile";
 export {
