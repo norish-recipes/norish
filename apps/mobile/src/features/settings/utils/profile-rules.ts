@@ -4,20 +4,34 @@ import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/aut
 
 type Account = { id: string; providerId: string };
 
+/** The name field shows the draft until its save takes it, else the saved name, wherever that came from. */
+export const shownName = (draft: string | null, savedName: string) => draft ?? savedName;
+
+/** What Save sends for the name: the trimmed draft, as the server stores it, or null when that is the saved name. */
+export function nameToSend(draft: string | null, savedName: string) {
+  const name = draft?.trim() ?? savedName;
+
+  return name === savedName ? null : name;
+}
+
+/** A staged name or photo goes once the save took it; one changed while saving stays. */
+export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
+  tookIt && current === sent ? null : current;
+
 /** Save is on only with something to save, and never while saving or Offline. */
 export const canSaveProfile = ({
-  name,
+  draft,
   savedName,
   hasNewPhoto,
   saving,
   offline,
 }: {
-  name: string;
+  draft: string | null;
   savedName: string;
   hasNewPhoto: boolean;
   saving: boolean;
   offline: boolean;
-}) => !saving && !offline && (name !== savedName || hasNewPhoto);
+}) => !saving && !offline && (nameToSend(draft, savedName) !== null || hasNewPhoto);
 
 /** Whether the password sheet is offered: the server offers passwords and the account has one. */
 export const hasPassword = (accounts: readonly Account[], offered: ReadonlySet<string>) =>

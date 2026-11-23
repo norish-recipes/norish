@@ -13,7 +13,7 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
-import { canSaveProfile } from "../utils/profile-rules";
+import { afterSave, canSaveProfile, nameToSend, shownName } from "../utils/profile-rules";
 import { writeBlocked } from "../utils/row-actions";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -39,19 +39,10 @@ export function ProfileForm() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const savedName = user?.name ?? "";
-  const [syncedName, setSyncedName] = useState(savedName);
-
-  // The typed name stays through a refused save and goes once the saved name changes.
-  if (savedName !== syncedName) {
-    setSyncedName(savedName);
-    setDraft(null);
-  }
-
-  const name = draft ?? savedName;
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
   const blocked = writeBlocked(true, isOffline);
   const canSave = canSaveProfile({
-    name,
+    draft,
     savedName,
     hasNewPhoto: photo !== null,
     saving,
@@ -59,10 +50,21 @@ export function ProfileForm() {
   });
 
   const save = async () => {
-    setSaving(true);
+    const sentDraft = draft;
+    const sentPhoto = photo;
+    const name = nameToSend(draft, savedName);
 
-    if (name !== savedName) await updateName(name);
-    if (photo && (await uploadAvatar(photo))) setPhoto(null);
+    setSaving(true);
+    if (name !== null) {
+      const tookIt = await updateName(name);
+
+      setDraft((current) => afterSave(current, sentDraft, tookIt));
+    }
+    if (sentPhoto) {
+      const tookIt = await uploadAvatar(sentPhoto);
+
+      setPhoto((current) => afterSave(current, sentPhoto, tookIt));
+    }
     setSaving(false);
   };
   // A staged photo is only dropped; a saved one is deleted on the server.
@@ -122,7 +124,7 @@ export function ProfileForm() {
             placeholder={intl.formatMessage({ id: "settings.user.profile.namePlaceholder" })}
             returnKeyType="done"
             testID="profile-name"
-            value={name}
+            value={shownName(draft, savedName)}
             onChangeText={setDraft}
           />
         </TextField>
