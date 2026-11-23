@@ -1,5 +1,5 @@
 import React, { use } from "react";
-import { Linking, View } from "react-native";
+import { Linking } from "react-native";
 import { changeServerAddress } from "@/hooks/use-change-server-address";
 import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { APP_VERSION } from "@/lib/app-version";
@@ -45,14 +45,14 @@ export function SettingsScreen() {
 
   return (
     <SettingsPage testID="settings-screen" title={t("navbar.userMenu.settings.title")}>
-      <View className="bg-surface mt-1 overflow-hidden rounded-[22px]">
+      <SettingsGroup className="pt-1">
         <ProfileCard
           email={user?.email ?? ""}
           image={user?.image ?? null}
           name={user?.name ?? ""}
           onPress={open("profile")}
         />
-      </View>
+      </SettingsGroup>
       <SettingsGroup>
         <SettingsRow
           accessory="chevron"
@@ -124,10 +124,11 @@ export function SettingsScreen() {
           icon="information-circle-outline"
           testID="settings-version"
           title={t("settings.mobile.version")}
+          wholeValue
           value={intl.formatMessage({ id: version.id }, version.values)}
         />
       </SettingsGroup>
-      <View className="bg-surface mt-[30px] overflow-hidden rounded-[22px]">
+      <SettingsGroup className="pt-[30px]">
         <SettingsRow
           centred
           danger
@@ -136,7 +137,7 @@ export function SettingsScreen() {
           title={t("navbar.userMenu.logout")}
           onPress={() => void signOut()}
         />
-      </View>
+      </SettingsGroup>
     </SettingsPage>
   );
 }

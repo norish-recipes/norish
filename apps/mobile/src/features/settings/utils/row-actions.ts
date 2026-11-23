@@ -34,5 +34,5 @@ export const swipeActions = (actions: SettingsRowAction[]) =>
 export const menuActions = (actions: SettingsRowAction[], offline: boolean) =>
   offline ? [] : actions;
 
-/** Whether a swipe circle or a Save runs: never while Offline. */
-export const actionsEnabled = (offline: boolean) => !offline;
+/** Whether a row's own press is held back: only a press that is a write, and only while Offline. */
+export const writeBlocked = (write: boolean, offline: boolean) => write && offline;

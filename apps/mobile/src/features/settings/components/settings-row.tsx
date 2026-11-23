@@ -1,4 +1,3 @@
-import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { ComponentProps, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
@@ -11,89 +10,22 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { NativeMenu } from "@/components/native-menu";
-import { PressableScale } from "@/components/pressable-scale";
-import { useTokenColor } from "@/hooks/use-token-color";
 import { closeOpenRow, useOpenRow } from "@/lib/open-row";
-import VectorIcon from "@expo/vector-icons/Ionicons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
-import type { ActionTone, SettingsRowAction } from "../utils/row-actions";
-import { actionLook, actionsEnabled, menuActions, swipeActions } from "../utils/row-actions";
+import type { SettingsRowAction } from "../utils/row-actions";
+import { actionLook, menuActions, swipeActions, writeBlocked } from "../utils/row-actions";
+import { SwipeActionsPanel } from "./swipe-actions-panel";
+import { useActionTone } from "./use-action-tone";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
-// A swipe circle is 34 pt under a 11 pt label, in a 52 pt slot.
-const SLOT = 52;
-const CIRCLE = 34;
-const CIRCLE_GROUND: Record<ActionTone, string> = {
-  danger: "bg-danger",
-  shop: "bg-shop",
-  accent: "bg-accent",
-  plain: "bg-default",
-};
-const HEX = /^#[0-9a-f]{6}$/i;
-
-function SwipePanel({
-  actions,
-  enabled,
-  methods,
-}: {
-  actions: SettingsRowAction[];
-  enabled: boolean;
-  methods: SwipeableMethods;
-}) {
-  const [danger, accent] = useThemeColor(["danger-foreground", "accent-foreground"] as const);
-  const shopInk = useTokenColor("shop-foreground");
-  const ink = (tone: ActionTone) =>
-    tone === "accent" ? accent : tone === "shop" && shopInk ? shopInk : danger;
-
-  return (
-    <View
-      className="flex-row items-center justify-end pl-1"
-      style={{ width: SLOT * actions.length + 4, opacity: enabled ? 1 : 0.4 }}
-    >
-      {actions.map((action) => {
-        const look = actionLook(action.kind);
-
-        return (
-          <PressableScale
-            key={action.kind}
-            accessibilityLabel={action.label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !enabled }}
-            className="w-[52px] items-center gap-[3px]"
-            disabled={!enabled}
-            testID={`settings-action-${action.kind}`}
-            onPress={() => {
-              methods.close();
-              action.onPress();
-            }}
-          >
-            <View
-              className={`items-center justify-center rounded-full ${CIRCLE_GROUND[look.tone]}`}
-              style={{ width: CIRCLE, height: CIRCLE }}
-            >
-              <VectorIcon color={ink(look.tone)} name={look.icon} size={16} />
-            </View>
-            <Text
-              className="text-muted w-full text-center text-[11px] font-medium"
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              {action.label}
-            </Text>
-          </PressableScale>
-        );
-      })}
-    </View>
-  );
-}
-
 /** One settings list row: an optional icon tile, a title (and subtitle), a muted value and a
  * chevron or external arrow. `actions` become swipe circles (34 pt, 11 pt labels) and a long-press
- * glass menu; both are off while Offline. */
+ * glass menu; both are off while Offline, and so is a `write` row's own press. */
 export function SettingsRow({
   icon,
   title,
@@ -106,6 +38,8 @@ export function SettingsRow({
   menuLabel,
   danger = false,
   centred = false,
+  write = false,
+  wholeValue = false,
   testID,
   onPress,
 }: {
@@ -122,6 +56,10 @@ export function SettingsRow({
   menuLabel?: string;
   danger?: boolean;
   centred?: boolean;
+  /** The press is a write: Offline the row dims and ignores it. Navigation rows stay live. */
+  write?: boolean;
+  /** The value shrinks nothing, instead of ellipsizing, such as a version. */
+  wholeValue?: boolean;
   testID: string;
   onPress?: () => void;
 }) {
@@ -130,24 +68,12 @@ export function SettingsRow({
   const openRow = useOpenRow(rowRef);
   const width = useSharedValue(0);
   const translation = useSharedValue(0);
-  const [foreground, muted, dangerInk, accent, shop] = useThemeColor([
-    "foreground",
-    "muted",
-    "danger",
-    "accent",
-    "warning",
-  ] as const);
-  const shopColour = useTokenColor("shop");
+  const [foreground, muted, dangerInk] = useThemeColor(["foreground", "muted", "danger"] as const);
+  const toneOf = useActionTone();
+  const blocked = writeBlocked(write, isOffline);
   const swipes = swipeActions(actions);
   const menu = menuActions(actions, isOffline);
   const inkClass = danger ? "text-danger" : "text-foreground";
-  const hex = (colour: string | undefined) => (colour && HEX.test(colour) ? colour : undefined);
-  const tints: Record<ActionTone, string | undefined> = {
-    danger: hex(dangerInk),
-    shop: hex(shopColour) ?? hex(shop),
-    accent: hex(accent),
-    plain: hex(foreground),
-  };
   const slide = useAnimatedStyle(() => ({
     width: width.get() > 0 ? width.get() + translation.get() : undefined,
     transform: [{ translateX: -translation.get() }],
@@ -155,15 +81,16 @@ export function SettingsRow({
 
   const body = (
     <View
-      className={`min-h-[50px] flex-row items-center gap-3 px-4 ${centred ? "justify-center" : ""} ${subtitle ? "min-h-16 py-2" : ""}`}
+      className={`min-h-[50px] flex-row items-center gap-3 px-4 ${centred ? "justify-center" : ""} ${subtitle ? "min-h-16 py-2" : ""} ${blocked ? "opacity-40" : ""}`}
+      pointerEvents={blocked ? "none" : "auto"}
     >
       {leading ??
         (icon ? (
           centred ? (
-            <VectorIcon color={danger ? dangerInk : foreground} name={icon} size={20} />
+            <Ionicons color={danger ? dangerInk : foreground} name={icon} size={20} />
           ) : (
             <View className="bg-default size-[30px] items-center justify-center rounded-[9px]">
-              <VectorIcon color={danger ? dangerInk : foreground} name={icon} size={17} />
+              <Ionicons color={danger ? dangerInk : foreground} name={icon} size={17} />
             </View>
           )
         ) : null)}
@@ -178,13 +105,16 @@ export function SettingsRow({
         ) : null}
       </View>
       {value ? (
-        <Text className="text-muted max-w-[55%] text-base" numberOfLines={1}>
+        <Text
+          className={`text-muted text-base ${wholeValue ? "shrink-0" : "max-w-[55%]"}`}
+          numberOfLines={1}
+        >
           {value}
         </Text>
       ) : null}
       {trailing}
       {accessory === "none" ? null : (
-        <VectorIcon
+        <Ionicons
           color={muted}
           name={accessory === "chevron" ? "chevron-forward" : "arrow-up"}
           size={16}
@@ -194,19 +124,20 @@ export function SettingsRow({
     </View>
   );
 
-  // A long-press menu takes the taps too, so the press goes through it.
+  // A long-press menu takes the taps too, so the press goes through it; no items, no menu.
   const pressable =
-    actions.length > 0 ? (
+    menu.length > 0 ? (
       <NativeMenu
         items={menu.map((action) => {
           const look = actionLook(action.kind);
+          const tone = toneOf(look.tone);
 
           return {
             key: action.kind,
             label: action.label,
             systemImage: look.symbol,
-            destructive: look.tone === "danger",
-            tint: tints[look.tone],
+            destructive: tone.destructive,
+            tint: tone.tint,
             onPress: action.onPress,
           };
         })}
@@ -219,7 +150,9 @@ export function SettingsRow({
     ) : onPress ? (
       <Pressable
         accessibilityRole="button"
+        accessibilityState={{ disabled: blocked }}
         className="active:bg-default"
+        disabled={blocked}
         testID={testID}
         onPress={onPress}
       >
@@ -241,12 +174,12 @@ export function SettingsRow({
     >
       <ReanimatedSwipeable
         ref={rowRef}
-        enabled={actionsEnabled(isOffline)}
+        enabled={!isOffline}
         overshootRight={false}
         renderRightActions={(_progress, swipeTranslation, methods) => (
           <>
             <TranslationSync from={swipeTranslation} to={translation} />
-            <SwipePanel actions={swipes} enabled={actionsEnabled(isOffline)} methods={methods} />
+            <SwipeActionsPanel actions={swipes} enabled={!isOffline} methods={methods} />
           </>
         )}
         rightThreshold={40}
