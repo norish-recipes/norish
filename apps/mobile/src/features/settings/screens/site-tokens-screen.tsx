@@ -62,7 +62,6 @@ export function SiteTokensScreen() {
                     }),
                 },
               ]}
-              icon="shield-checkmark-outline"
               menuLabel={token.domain}
               subtitle={`${token.account ?? text(`${T}.accountShared`)} · ${token.name}`}
               testID={`token-${token.id}`}

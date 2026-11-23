@@ -160,6 +160,7 @@
     "expiresAfter": "Истекает через",
     "expiresOn": "Истекает {date}",
     "expiredOn": "Истекла {date}",
+    "revokedOn": "Отозвана {date}",
     "lastOpenedOn": "Последнее открытие {date}",
     "neverExpires": "Не истекает",
     "linkCreated": "Создана {date}"

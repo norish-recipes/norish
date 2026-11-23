@@ -160,6 +160,7 @@
     "expiresAfter": "Діє протягом",
     "expiresOn": "Діє до {date}",
     "expiredOn": "Закінчилося {date}",
+    "revokedOn": "Відкликано {date}",
     "lastOpenedOn": "Востаннє відкрито {date}",
     "neverExpires": "Не закінчується",
     "linkCreated": "Створено {date}"

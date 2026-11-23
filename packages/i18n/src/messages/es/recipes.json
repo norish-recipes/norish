@@ -160,6 +160,7 @@
     "expiresAfter": "Expira después de",
     "expiresOn": "Expira el {date}",
     "expiredOn": "Expiró el {date}",
+    "revokedOn": "Revocado el {date}",
     "lastOpenedOn": "Último acceso {date}",
     "neverExpires": "No expira nunca",
     "linkCreated": "Creado el {date}"

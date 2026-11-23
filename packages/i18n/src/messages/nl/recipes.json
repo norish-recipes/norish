@@ -160,6 +160,7 @@
     "expiresAfter": "Verloopt na",
     "expiresOn": "Verloopt {date}",
     "expiredOn": "Verlopen {date}",
+    "revokedOn": "Ingetrokken {date}",
     "lastOpenedOn": "Laatst geopend {date}",
     "neverExpires": "Verloopt nooit",
     "linkCreated": "Gemaakt {date}"

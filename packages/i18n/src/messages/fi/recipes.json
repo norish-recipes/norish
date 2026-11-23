@@ -160,6 +160,7 @@
     "expiresAfter": "Vanhenee kuluttua",
     "expiresOn": "Vanhenee {date}",
     "expiredOn": "Vanheni {date}",
+    "revokedOn": "Mitätöity {date}",
     "lastOpenedOn": "Viimeksi avattu {date}",
     "neverExpires": "Ei vanhene koskaan",
     "linkCreated": "Luotu {date}"

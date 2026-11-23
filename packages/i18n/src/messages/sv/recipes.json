@@ -160,6 +160,7 @@
     "expiresAfter": "Upphör efter",
     "expiresOn": "Upphör {date}",
     "expiredOn": "Upphörde {date}",
+    "revokedOn": "Återkallad {date}",
     "lastOpenedOn": "Senast öppnad {date}",
     "neverExpires": "Upphör aldrig",
     "linkCreated": "Skapad {date}"

@@ -160,6 +160,7 @@
     "expiresAfter": "만료 시점",
     "expiresOn": "{date} 만료",
     "expiredOn": "{date} 만료됨",
+    "revokedOn": "{date} 취소됨",
     "lastOpenedOn": "마지막 열람 {date}",
     "neverExpires": "만료되지 않음",
     "linkCreated": "{date} 생성"

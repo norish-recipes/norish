@@ -73,7 +73,6 @@ export function ApiKeysScreen() {
                       }),
                   },
                 ]}
-                icon="key-outline"
                 menuLabel={name}
                 subtitle={`${apiKeyPrefix(key.start)} · ${intl.formatDate(new Date(key.createdAt), { dateStyle: "medium" })}`}
                 testID={`api-key-${key.id}`}

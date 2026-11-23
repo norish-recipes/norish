@@ -160,6 +160,7 @@
     "expiresAfter": "ينتهي بعد",
     "expiresOn": "ينتهي {date}",
     "expiredOn": "انتهى {date}",
+    "revokedOn": "أُلغي {date}",
     "lastOpenedOn": "آخر فتح {date}",
     "neverExpires": "لا ينتهي أبدًا",
     "linkCreated": "أُنشئ {date}"

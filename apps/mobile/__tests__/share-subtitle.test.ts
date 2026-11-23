@@ -1,4 +1,4 @@
-import { shareSubtitle } from "@/lib/share-subtitle";
+import { shareEnding, shareSubtitle } from "@/lib/share-subtitle";
 import { describe, expect, it } from "vitest";
 
 const t = (id: string, values?: Record<string, string>) =>
@@ -41,5 +41,21 @@ describe("shareSubtitle", () => {
         format
       )
     ).toBe("lastOpenedOn 11-06");
+  });
+});
+
+describe("shareEnding", () => {
+  const link = { expiresAt: new Date("2026-12-14"), lastAccessedAt: new Date("2026-11-06") };
+
+  it("names only the date a link ends, ended or was revoked on", () => {
+    expect(shareEnding({ ...link, status: "active", revokedAt: null }, t, format)).toBe(
+      "expiresOn 12-14"
+    );
+    expect(shareEnding({ ...link, status: "expired", revokedAt: null }, t, format)).toBe(
+      "expiredOn 12-14"
+    );
+    expect(
+      shareEnding({ ...link, status: "revoked", revokedAt: new Date("2026-10-20") }, t, format)
+    ).toBe("revokedOn 10-20");
   });
 });

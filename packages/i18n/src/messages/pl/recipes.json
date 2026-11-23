@@ -160,6 +160,7 @@
     "expiresAfter": "Wygasa po",
     "expiresOn": "Wygasa {date}",
     "expiredOn": "Wygasł {date}",
+    "revokedOn": "Odwołany {date}",
     "lastOpenedOn": "Ostatnio otwarto {date}",
     "neverExpires": "Nigdy nie wygasa",
     "linkCreated": "Utworzono {date}"

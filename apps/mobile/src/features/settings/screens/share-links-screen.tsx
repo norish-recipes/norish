@@ -1,7 +1,7 @@
 import React from "react";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useText } from "@/lib/i18n/use-text";
-import { shareSubtitle } from "@/lib/share-subtitle";
+import { shareEnding } from "@/lib/share-subtitle";
 import { useIntl } from "react-intl";
 
 import { shareLinkActions } from "@norish/shared-react/reader";
@@ -25,7 +25,7 @@ export function ShareLinksScreen() {
   const { shares, answered, isLoading, error, invalidate } = useMyRecipeSharesQuery();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(null);
   const state = listState({ count: shares.length, answered, isLoading, error });
-  const date = (value: Date) => intl.formatDate(value, { month: "short", day: "numeric" });
+  const date = (value: Date) => intl.formatDate(value, { dateStyle: "medium" });
   const send = { revoke: revokeShare, reactivate: reactivateShare, delete: deleteShare };
 
   return (
@@ -58,7 +58,7 @@ export function ShareLinksScreen() {
               }))}
               icon="link-outline"
               menuLabel={share.recipeName}
-              subtitle={shareSubtitle(
+              subtitle={shareEnding(
                 share,
                 (id, values) => text(`recipes.sharePanel.${id}`, values),
                 date

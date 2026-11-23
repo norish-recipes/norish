@@ -160,6 +160,7 @@
     "expiresAfter": "Utløper etter",
     "expiresOn": "Utløper {date}",
     "expiredOn": "Utløp {date}",
+    "revokedOn": "Tilbakekalt {date}",
     "lastOpenedOn": "Sist åpnet {date}",
     "neverExpires": "Utløper aldri",
     "linkCreated": "Opprettet {date}"
