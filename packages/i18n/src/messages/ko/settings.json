@@ -1345,8 +1345,7 @@
     "server": "서버",
     "support": "지원",
     "version": "버전",
-    "versionApp": "{app} ({build})",
-    "versionWithServer": "{app} ({build}) · 서버 {server}",
+    "versionServer": "서버 {server}",
     "offlineReason": "오프라인 · 변경 사항 일시 중지",
     "noHousehold": "없음"
   }

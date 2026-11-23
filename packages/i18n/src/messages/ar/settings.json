@@ -1345,8 +1345,7 @@
     "server": "الخادم",
     "support": "الدعم",
     "version": "الإصدار",
-    "versionApp": "{app} ({build})",
-    "versionWithServer": "{app} ({build}) · الخادم {server}",
+    "versionServer": "الخادم {server}",
     "offlineReason": "غير متصل · التغييرات متوقفة",
     "noHousehold": "لا شيء"
   }

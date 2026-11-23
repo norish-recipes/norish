@@ -37,11 +37,14 @@ describe("settings row actions", () => {
 });
 
 describe("versionLine", () => {
-  it("names the server only when it answered", () => {
-    expect(versionLine("1.0", "12", "0.28.0").id).toBe("settings.mobile.versionWithServer");
-    expect(versionLine("1.0", "12", undefined)).toEqual({
-      id: "settings.mobile.versionApp",
-      values: { app: "1.0", build: "12" },
-    });
+  it("joins the app version, build and server", () => {
+    expect(versionLine("1.0", "12", "Server 0.28.0")).toBe("1.0 (12) · Server 0.28.0");
+  });
+
+  it("leaves out a part that is missing instead of inventing it", () => {
+    expect(versionLine("1.0", null, "Server 0.28.0")).toBe("1.0 · Server 0.28.0");
+    expect(versionLine("1.0", "12", null)).toBe("1.0 (12)");
+    expect(versionLine("1.0", null, null)).toBe("1.0");
+    expect(versionLine(null, null, "Server 0.28.0")).toBe("Server 0.28.0");
   });
 });

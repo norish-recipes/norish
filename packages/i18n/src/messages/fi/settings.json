@@ -1345,8 +1345,7 @@
     "server": "Palvelin",
     "support": "Tuki",
     "version": "Versio",
-    "versionApp": "{app} ({build})",
-    "versionWithServer": "{app} ({build}) · Palvelin {server}",
+    "versionServer": "Palvelin {server}",
     "offlineReason": "Offline · muutokset ovat tauolla",
     "noHousehold": "Ei mitään"
   }

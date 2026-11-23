@@ -1345,8 +1345,7 @@
     "server": "Server",
     "support": "Supporto",
     "version": "Versione",
-    "versionApp": "{app} ({build})",
-    "versionWithServer": "{app} ({build}) · Server {server}",
+    "versionServer": "Server {server}",
     "offlineReason": "Offline · modifiche in pausa",
     "noHousehold": "Nessuna"
   }

@@ -2,11 +2,10 @@ import React, { use } from "react";
 import { Linking } from "react-native";
 import { changeServerAddress } from "@/hooks/use-change-server-address";
 import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
-import { APP_VERSION } from "@/lib/app-version";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { hostOf } from "@/lib/network/host-of";
 import { ServerAddressContext } from "@/lib/network/server-address";
-import Constants from "expo-constants";
+import * as Application from "expo-application";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -38,9 +37,11 @@ export function SettingsScreen() {
   const t = (id: string) => intl.formatMessage({ id });
   const open = (path: SettingsPath) => () => router.push(`/settings/${path}`);
   const version = versionLine(
-    APP_VERSION,
-    Constants.expoConfig?.ios?.buildNumber ?? "0",
+    Application.nativeApplicationVersion,
+    Application.nativeBuildVersion,
     serverVersion
+      ? intl.formatMessage({ id: "settings.mobile.versionServer" }, { server: serverVersion })
+      : null
   );
 
   return (
@@ -125,7 +126,7 @@ export function SettingsScreen() {
           testID="settings-version"
           title={t("settings.mobile.version")}
           wholeValue
-          value={intl.formatMessage({ id: version.id }, version.values)}
+          value={version}
         />
       </SettingsGroup>
       <SettingsGroup className="pt-[30px]">

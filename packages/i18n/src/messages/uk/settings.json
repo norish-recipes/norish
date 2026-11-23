@@ -1345,8 +1345,7 @@
     "server": "Сервер",
     "support": "Підтримка",
     "version": "Версія",
-    "versionApp": "{app} ({build})",
-    "versionWithServer": "{app} ({build}) · Сервер {server}",
+    "versionServer": "Сервер {server}",
     "offlineReason": "Офлайн · зміни призупинено",
     "noHousehold": "Немає"
   }
