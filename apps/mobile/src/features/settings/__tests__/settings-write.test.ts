@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { guardWrite } from "../utils/settings-write";
+import { guardRepeat, guardWrite } from "../utils/settings-write";
 
 describe("guardWrite", () => {
   it("asks for Offline when the write runs, not when it was made", () => {
@@ -24,5 +24,78 @@ describe("guardWrite", () => {
     expect(write("metric")).toBeInstanceOf(Promise);
     expect(send).toHaveBeenCalledExactlyOnceWith("metric");
     expect(guardWrite(() => true, send)("metric")).toBeUndefined();
+  });
+});
+
+const deferred = () => {
+  let resolve: (sent: boolean) => void = () => {};
+  let reject: (error: Error) => void = () => {};
+  const promise = new Promise<boolean>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+};
+
+describe("guardRepeat", () => {
+  it("drops a repeat made in the same tick, and hands back undefined for it", async () => {
+    const first = deferred();
+    const send = vi.fn(() => first.promise);
+    const write = guardRepeat("regenerate", send);
+
+    const sent = write();
+    const repeat = write();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    await expect(repeat).resolves.toBeUndefined();
+    first.resolve(true);
+    await expect(sent).resolves.toBe(true);
+    await write();
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it("keys kicks per member, and a failed kick's retry goes while another kick is in flight", async () => {
+    const requests: ReturnType<typeof deferred>[] = [];
+    const kick = (userId: string) =>
+      guardRepeat(`kick:${userId}`, () => {
+        const request = deferred();
+
+        requests.push(request);
+
+        return request.promise;
+      })();
+
+    const a = kick("a");
+
+    void kick("b");
+    expect(requests).toHaveLength(2);
+    requests[0]?.reject(new Error("failed"));
+    await expect(a).rejects.toThrow("failed");
+
+    void kick("a");
+    void kick("b");
+    expect(requests).toHaveLength(3);
+    requests[1]?.resolve(true);
+    requests[2]?.resolve(false);
+  });
+
+  it("frees the key after a failure, a thrown error and an Offline refusal", async () => {
+    const send = vi.fn(() => Promise.resolve(false));
+
+    await expect(guardRepeat("leave", send)()).resolves.toBe(false);
+    await expect(
+      guardRepeat("leave", () => {
+        throw new Error("thrown");
+      })()
+    ).rejects.toThrow("thrown");
+    await expect(
+      guardRepeat(
+        "leave",
+        guardWrite(() => true, send)
+      )()
+    ).resolves.toBeUndefined();
+    await guardRepeat("leave", send)();
+    expect(send).toHaveBeenCalledTimes(2);
   });
 });

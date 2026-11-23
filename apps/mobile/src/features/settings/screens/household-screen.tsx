@@ -44,7 +44,7 @@ export function HouseholdScreen() {
       title: text("settings.household.info.leaveModal.title"),
       message: `${text("settings.household.info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
-      onConfirm: write(() => leaveHousehold(household.id)),
+      onConfirm: write(() => leaveHousehold(household.id), "leave"),
     });
   };
 

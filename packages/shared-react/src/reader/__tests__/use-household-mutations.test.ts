@@ -74,7 +74,7 @@ describe("useHouseholdMutations", () => {
       const result = render(household());
 
       expect(result.current.pending.kick).toBe(false);
-      await act(async () => result.current.kickUser("h1", "a"));
+      await act(async () => void result.current.kickUser("h1", "a"));
       await waitFor(() => expect(result.current.pending.kick).toBe(true));
       expect(result.current.pending.leave).toBe(false);
       await settle("kick", 0, "resolve", {});
@@ -83,21 +83,18 @@ describe("useHouseholdMutations", () => {
   });
 
   describe("a second call while the first is in flight", () => {
-    it("is dropped before React re-renders, and a failure lets the next one go", async () => {
+    it("is sent too, and each call resolves whether its request went through", async () => {
       const result = render(household());
+      const sent: Promise<boolean>[] = [];
 
       await act(async () => {
-        result.current.regenerateJoinCode("h1");
-        result.current.regenerateJoinCode("h1");
-        result.current.kickUser("h1", "a");
-        result.current.kickUser("h1", "a");
+        sent.push(result.current.kickUser("h1", "a"), result.current.kickUser("h1", "b"));
       });
-      expect(trpcCalls["households.regenerateCode"]).toHaveLength(1);
-      expect(trpcCalls["households.kick"]).toHaveLength(1);
-
-      await settle("regenerateCode", 0, "reject");
-      await act(async () => result.current.regenerateJoinCode("h1"));
-      expect(trpcCalls["households.regenerateCode"]).toHaveLength(2);
+      await settle("kick", 0, "reject");
+      await settle("kick", 1, "resolve", {});
+      await act(async () => void result.current.kickUser("h1", "a"));
+      expect(trpcCalls["households.kick"]).toHaveLength(3);
+      await expect(Promise.all(sent)).resolves.toEqual([false, true]);
     });
   });
 
@@ -115,7 +112,7 @@ describe("useHouseholdMutations", () => {
     it("caches the new household with the Reader as admin", async () => {
       const result = render(createMockHouseholdData(null, "current-user"));
 
-      await act(async () => result.current.createHousehold("  Home  "));
+      await act(async () => void result.current.createHousehold("  Home  "));
       expect(trpcCalls["households.create"]?.[0]?.input).toEqual({ name: "Home" });
       await settle("create", 0, "resolve", { id: "h9" });
 
@@ -129,7 +126,7 @@ describe("useHouseholdMutations", () => {
     it("refetches the household when it fails", async () => {
       const result = render(createMockHouseholdData(null, "current-user"));
 
-      await act(async () => result.current.createHousehold("Home"));
+      await act(async () => void result.current.createHousehold("Home"));
       await settle("create", 0, "reject");
 
       await waitFor(() => expect(isInvalidated()).toBe(true));
@@ -146,7 +143,7 @@ describe("useHouseholdMutations", () => {
     it("refetches the household when it fails", async () => {
       const result = render(createMockHouseholdData(null, "current-user"));
 
-      await act(async () => result.current.joinHousehold(" 123456 "));
+      await act(async () => void result.current.joinHousehold(" 123456 "));
       expect(trpcCalls["households.join"]?.[0]?.input).toEqual({ code: "123456" });
       await settle("join", 0, "reject");
 
@@ -158,7 +155,7 @@ describe("useHouseholdMutations", () => {
     it("sends the membership version and clears the household", async () => {
       const result = render(household());
 
-      await act(async () => result.current.leaveHousehold("h1"));
+      await act(async () => void result.current.leaveHousehold("h1"));
       expect(trpcCalls["households.leave"]?.[0]?.input).toEqual({ householdId: "h1", version: 4 });
       await settle("leave", 0, "resolve", { success: true });
 
@@ -201,7 +198,7 @@ describe("useHouseholdMutations", () => {
     it("sends the household version and refetches when it fails", async () => {
       const result = render(household());
 
-      await act(async () => result.current.regenerateJoinCode("h1"));
+      await act(async () => void result.current.regenerateJoinCode("h1"));
       expect(trpcCalls["households.regenerateCode"]?.[0]?.input).toEqual({
         householdId: "h1",
         version: 6,
@@ -216,7 +213,7 @@ describe("useHouseholdMutations", () => {
     it("makes the new admin the only admin", async () => {
       const result = render(household());
 
-      await act(async () => result.current.transferAdmin("h1", "a"));
+      await act(async () => void result.current.transferAdmin("h1", "a"));
       expect(trpcCalls["households.transferAdmin"]?.[0]?.input).toEqual({
         householdId: "h1",
         newAdminId: "a",
@@ -234,7 +231,7 @@ describe("useHouseholdMutations", () => {
     it("raises no success toast on the answer alone, which precedes the transfer", async () => {
       const result = render(household());
 
-      await act(async () => result.current.transferAdmin("h1", "a"));
+      await act(async () => void result.current.transferAdmin("h1", "a"));
       await settle("transferAdmin", 0, "resolve", { success: true });
 
       expect(adapter.toast.show).not.toHaveBeenCalled();

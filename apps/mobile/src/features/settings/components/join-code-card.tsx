@@ -33,7 +33,7 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   );
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
-  const regenerate = write(() => regenerateJoinCode(household.id));
+  const regenerate = write(() => regenerateJoinCode(household.id), "regenerate");
   const copy = () =>
     code
       ? copyToClipboard(code, {

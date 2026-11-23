@@ -72,7 +72,7 @@ export function MembersList({
                 message: `${text(look.message, { name })}\n\n${text(look.warning)}`,
                 confirmLabelId: look.confirm,
                 destructive: look.destructive,
-                onConfirm: write(() => send[action](user.id)),
+                onConfirm: write(() => send[action](user.id), `${action}:${user.id}`),
               }),
           };
         });

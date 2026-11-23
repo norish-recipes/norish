@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
@@ -9,18 +8,17 @@ import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
 import { useReader } from "./use-reader";
 
+/** Each action resolves whether its request went through: false when it failed. */
 type HouseholdMutationsResult = {
-  createHousehold: (name: string) => void;
-  joinHousehold: (code: string) => void;
-  leaveHousehold: (householdId: string) => void;
-  kickUser: (householdId: string, userId: string) => void;
-  regenerateJoinCode: (householdId: string) => void;
-  transferAdmin: (householdId: string, newAdminId: string) => void;
-  /** Whether each action's request is in flight; a call while it is is dropped. */
-  pending: Record<Action, boolean>;
+  createHousehold: (name: string) => Promise<boolean>;
+  joinHousehold: (code: string) => Promise<boolean>;
+  leaveHousehold: (householdId: string) => Promise<boolean>;
+  kickUser: (householdId: string, userId: string) => Promise<boolean>;
+  regenerateJoinCode: (householdId: string) => Promise<boolean>;
+  transferAdmin: (householdId: string, newAdminId: string) => Promise<boolean>;
+  /** Whether each action's request is in flight, for a caller that must not send it twice. */
+  pending: Record<"create" | "join" | "leave" | "kick" | "regenerate" | "transfer", boolean>;
 };
-
-type Action = "create" | "join" | "leave" | "kick" | "regenerate" | "transfer";
 
 export function useHouseholdMutations(): HouseholdMutationsResult {
   const trpc = useTRPC();
@@ -35,16 +33,13 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       ? (household.users.find((user) => user.id === userId)?.version ?? 1)
       : 1;
   const onError = () => invalidate();
-  // Claimed synchronously, so a repeat before React re-renders is dropped; settling frees it.
-  const inFlight = useRef(new Set<string>());
-  const claim = (action: string) => {
-    if (inFlight.current.has(action)) return null;
-    inFlight.current.add(action);
+  const sent = (request: Promise<unknown>) =>
+    request.then(
+      () => true,
+      () => false
+    );
 
-    return { onSettled: () => inFlight.current.delete(action) };
-  };
-
-  const { mutate: mutateCreate, isPending: isCreating } = useMutation(
+  const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
     trpc.households.create.mutationOptions({
       onSuccess: ({ id }, { name }) => {
         if (!currentUserId) return;
@@ -66,10 +61,10 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
   // The joined household arrives through the subscription.
-  const { mutate: mutateJoin, isPending: isJoining } = useMutation(
+  const { mutateAsync: mutateJoin, isPending: isJoining } = useMutation(
     trpc.households.join.mutationOptions({ onError })
   );
-  const { mutate: mutateLeave, isPending: isLeaving } = useMutation(
+  const { mutateAsync: mutateLeave, isPending: isLeaving } = useMutation(
     trpc.households.leave.mutationOptions({
       onSuccess: () => {
         setHouseholdData((prev) => ({
@@ -80,7 +75,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       onError,
     })
   );
-  const { mutate: mutateKick, isPending: isKicking } = useMutation(
+  const { mutateAsync: mutateKick, isPending: isKicking } = useMutation(
     trpc.households.kick.mutationOptions({
       onSuccess: (_data, { userId }) => {
         setHouseholdData((prev) => {
@@ -99,10 +94,10 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
   // The new join code arrives through the subscription.
-  const { mutate: mutateRegenerateCode, isPending: isRegenerating } = useMutation(
+  const { mutateAsync: mutateRegenerateCode, isPending: isRegenerating } = useMutation(
     trpc.households.regenerateCode.mutationOptions({ onError })
   );
-  const { mutate: mutateTransferAdmin, isPending: isTransferring } = useMutation(
+  const { mutateAsync: mutateTransferAdmin, isPending: isTransferring } = useMutation(
     trpc.households.transferAdmin.mutationOptions({
       onSuccess: (_data, { newAdminId }) => {
         setHouseholdData((prev) => {
@@ -124,7 +119,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
 
-  const createHousehold = (name: string): void => {
+  const createHousehold = (name: string): Promise<boolean> => {
     if (!name.trim()) {
       throw new Error("Household name cannot be empty");
     }
@@ -133,12 +128,10 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    const settle = claim("create");
-
-    if (settle) mutateCreate({ name: name.trim() }, settle);
+    return sent(mutateCreate({ name: name.trim() }));
   };
 
-  const joinHousehold = (code: string): void => {
+  const joinHousehold = (code: string): Promise<boolean> => {
     if (!code.trim()) {
       throw new Error("Join code cannot be empty");
     }
@@ -147,43 +140,25 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    const settle = claim("join");
-
-    if (settle) mutateJoin({ code: code.trim() }, settle);
+    return sent(mutateJoin({ code: code.trim() }));
   };
 
-  const leaveHousehold = (householdId: string): void => {
-    const settle = claim("leave");
-
-    if (settle) {
-      mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) }, settle);
-    }
+  const leaveHousehold = (householdId: string): Promise<boolean> => {
+    return sent(mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) }));
   };
 
-  const kickUser = (householdId: string, userId: string): void => {
-    const settle = claim(`kick:${userId}`);
-
-    if (settle)
-      mutateKick({ householdId, userId, version: memberVersion(householdId, userId) }, settle);
+  const kickUser = (householdId: string, userId: string): Promise<boolean> => {
+    return sent(mutateKick({ householdId, userId, version: memberVersion(householdId, userId) }));
   };
 
-  const regenerateJoinCode = (householdId: string): void => {
-    const settle = claim("regenerate");
-
-    if (settle) {
-      mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) }, settle);
-    }
+  const regenerateJoinCode = (householdId: string): Promise<boolean> => {
+    return sent(mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) }));
   };
 
-  const transferAdmin = (householdId: string, newAdminId: string): void => {
-    const settle = claim("transfer");
-
-    if (settle) {
-      mutateTransferAdmin(
-        { householdId, newAdminId, version: getHouseholdVersion(householdId) },
-        settle
-      );
-    }
+  const transferAdmin = (householdId: string, newAdminId: string): Promise<boolean> => {
+    return sent(
+      mutateTransferAdmin({ householdId, newAdminId, version: getHouseholdVersion(householdId) })
+    );
   };
 
   return {

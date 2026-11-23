@@ -91,9 +91,12 @@ export function NoHouseholdForms() {
         value={name}
         onChange={setName}
         onSubmit={write(() => {
-          createHousehold(name);
+          const sent = createHousehold(name);
+
           setName("");
-        })}
+
+          return sent;
+        }, "create")}
       />
       <EntryForm
         autoCapitalize="none"
@@ -107,9 +110,12 @@ export function NoHouseholdForms() {
         value={code}
         onChange={(value) => setCode(joinCodeDigits(value))}
         onSubmit={write(() => {
-          joinHousehold(code);
+          const sent = joinHousehold(code);
+
           setCode("");
-        })}
+
+          return sent;
+        }, "join")}
       />
     </>
   );
