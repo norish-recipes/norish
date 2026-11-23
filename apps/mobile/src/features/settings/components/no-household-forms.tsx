@@ -6,9 +6,9 @@ import { Button, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useHouseholdMutations } from "@norish/shared-react/reader";
+import { isJoinCode, useHouseholdMutations } from "@norish/shared-react/reader";
 
-import { canCreate, canJoin } from "../utils/household-rules";
+import { canCreate } from "../utils/household-rules";
 
 /** One create-or-join form: a labelled field with its description behind a hint, and a button. */
 function EntryForm({
@@ -28,6 +28,7 @@ function EntryForm({
   enabled: boolean;
   autoCapitalize: "words" | "none";
   keyboardType?: "number-pad";
+  maxLength?: number;
   placeholder: string;
 }) {
   const intl = useIntl();
@@ -86,12 +87,14 @@ export function NoHouseholdForms() {
       />
       <EntryForm
         autoCapitalize="none"
-        enabled={canJoin(code)}
+        enabled={isJoinCode(code)}
         field="codeLabel"
         id="join"
+        keyboardType="number-pad"
+        maxLength={6}
         placeholder={t("join.codePlaceholder")}
         value={code}
-        onChange={setCode}
+        onChange={(value) => setCode(value.replace(/\D/g, ""))}
         onSubmit={() => {
           joinHousehold(code);
           setCode("");

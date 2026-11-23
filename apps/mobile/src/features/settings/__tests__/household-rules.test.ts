@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   adminViewOf,
   canCreate,
-  canJoin,
   householdState,
   joinCodeStatus,
   leaveWarns,
@@ -53,10 +52,8 @@ describe("household rules", () => {
     expect(leaveWarns(false, 3)).toBe(false);
   });
 
-  it("needs text to create or join", () => {
+  it("needs a name to create", () => {
     expect(canCreate("  ")).toBe(false);
     expect(canCreate("Home")).toBe(true);
-    expect(canJoin("")).toBe(false);
-    expect(canJoin("12345678")).toBe(true);
   });
 });

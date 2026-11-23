@@ -45,6 +45,5 @@ export function joinCodeStatus(code: JoinCode, now: number) {
 /** An admin who leaves while others remain is warned to hand admin over first, as web does. */
 export const leaveWarns = (isAdmin: boolean, memberCount: number) => isAdmin && memberCount > 1;
 
-/** Create and Join need text; the mutations throw on an empty one. */
+/** Create needs text; the mutation throws on an empty name. */
 export const canCreate = (name: string) => name.trim().length > 0;
-export const canJoin = (code: string) => code.trim().length > 0;
