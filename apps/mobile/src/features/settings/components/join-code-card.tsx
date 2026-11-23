@@ -9,16 +9,9 @@ import { useHouseholdMutations } from "@norish/shared-react/reader";
 
 import { useSettingsWrite } from "../hooks/use-settings-write";
 import { joinCodeStatus } from "../utils/household-rules";
+import { everySecondUntil, noTick, nowToTheSecond } from "../utils/join-code-clock";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
-
-const noTick = () => () => undefined;
-const nowToTheSecond = () => Math.floor(Date.now() / 1000) * 1000;
-const everySecond = (onTick: () => void) => {
-  const interval = setInterval(onTick, 1000);
-
-  return () => clearInterval(interval);
-};
 
 /** The admin's join code with its countdown, Copy, Share and Regenerate (Generate when none or expired). */
 export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsDto }) {
@@ -26,8 +19,15 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   const { toast } = usePlatform();
   const { regenerateJoinCode, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
-  const ticking = Boolean(household.joinCode && household.joinCodeExpiresAt);
-  const now = useSyncExternalStore(ticking ? everySecond : noTick, nowToTheSecond, nowToTheSecond);
+  const expiresAt =
+    household.joinCode && household.joinCodeExpiresAt
+      ? new Date(household.joinCodeExpiresAt).getTime()
+      : null;
+  const now = useSyncExternalStore(
+    expiresAt === null ? noTick : everySecondUntil(expiresAt),
+    nowToTheSecond,
+    nowToTheSecond
+  );
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
   const t = (id: string, values?: Record<string, number>) =>
