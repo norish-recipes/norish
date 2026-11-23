@@ -1,11 +1,6 @@
 import React from "react";
-import { SettingsPlaceholderScreen } from "@/features/settings/screens/settings-placeholder-screen";
+import { HouseholdScreen } from "@/features/settings/screens/household-screen";
 
 export default function HouseholdRoute() {
-  return (
-    <SettingsPlaceholderScreen
-      testID="settings-household-screen"
-      titleId="settings.tabs.household"
-    />
-  );
+  return <HouseholdScreen />;
 }
