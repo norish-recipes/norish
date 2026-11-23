@@ -34,9 +34,8 @@ const NativeMenuView = requireNativeView<
   }
 >("NativeMenu");
 
-/** iOS's menu, opened by a tap on `children`: a UIKit button lies over them, so unlike a SwiftUI
- * menu it stays a plain view that scrolls with its content. `testID` names the button. With
- * `onPress` the menu opens on a long press instead (lifting `children`), and a tap is `onPress`. */
+/** iOS's menu on a UIKit button over `children`, so it scrolls with them; `testID` names the button.
+ * With `onPress` it opens on a long press (lifting `children`) and a tap is `onPress`. */
 export function NativeMenu({
   items,
   label,
