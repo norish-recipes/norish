@@ -1349,6 +1349,8 @@
     "offlineReason": "Frakoblet · endringer er satt på pause",
     "noHousehold": "Ingen",
     "avatarHint": "Trykk på bildet ditt for å endre det",
-    "changePhoto": "Endre bilde"
+    "changePhoto": "Endre bilde",
+    "accountGroup": "Din konto",
+    "phonesGroup": "På telefoner"
   }
 }

@@ -1349,6 +1349,8 @@
     "offlineReason": "غير متصل · التغييرات متوقفة",
     "noHousehold": "لا شيء",
     "avatarHint": "اضغط على صورتك لتغييرها",
-    "changePhoto": "تغيير الصورة"
+    "changePhoto": "تغيير الصورة",
+    "accountGroup": "حسابك",
+    "phonesGroup": "على الهاتف"
   }
 }

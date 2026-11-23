@@ -1349,6 +1349,8 @@
     "offlineReason": "Офлайн · промените са спрени",
     "noHousehold": "Няма",
     "avatarHint": "Докоснете снимката си, за да я промените",
-    "changePhoto": "Промяна на снимката"
+    "changePhoto": "Промяна на снимката",
+    "accountGroup": "Вашият акаунт",
+    "phonesGroup": "На телефони"
   }
 }

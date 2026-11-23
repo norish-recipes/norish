@@ -1349,6 +1349,8 @@
     "offlineReason": "Offline · ændringer er sat på pause",
     "noHousehold": "Ingen",
     "avatarHint": "Tryk på dit billede for at ændre det",
-    "changePhoto": "Skift billede"
+    "changePhoto": "Skift billede",
+    "accountGroup": "Din konto",
+    "phonesGroup": "På telefoner"
   }
 }

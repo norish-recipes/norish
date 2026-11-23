@@ -1349,6 +1349,8 @@
     "offlineReason": "Offline · muutokset ovat tauolla",
     "noHousehold": "Ei mitään",
     "avatarHint": "Vaihda kuva napauttamalla sitä",
-    "changePhoto": "Vaihda kuva"
+    "changePhoto": "Vaihda kuva",
+    "accountGroup": "Tilisi",
+    "phonesGroup": "Puhelimissa"
   }
 }

@@ -1349,6 +1349,8 @@
     "offlineReason": "오프라인 · 변경 사항 일시 중지",
     "noHousehold": "없음",
     "avatarHint": "사진을 탭하여 변경하세요",
-    "changePhoto": "사진 변경"
+    "changePhoto": "사진 변경",
+    "accountGroup": "내 계정",
+    "phonesGroup": "휴대폰에서"
   }
 }

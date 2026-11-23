@@ -1349,6 +1349,8 @@
     "offlineReason": "Sin conexión · cambios en pausa",
     "noHousehold": "Ninguno",
     "avatarHint": "Toca tu foto para cambiarla",
-    "changePhoto": "Cambiar foto"
+    "changePhoto": "Cambiar foto",
+    "accountGroup": "Tu cuenta",
+    "phonesGroup": "En teléfonos"
   }
 }

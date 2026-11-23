@@ -1349,6 +1349,8 @@
     "offlineReason": "Offline · zmiany są wstrzymane",
     "noHousehold": "Brak",
     "avatarHint": "Dotknij zdjęcia, aby je zmienić",
-    "changePhoto": "Zmień zdjęcie"
+    "changePhoto": "Zmień zdjęcie",
+    "accountGroup": "Twoje konto",
+    "phonesGroup": "Na telefonach"
   }
 }

@@ -1349,6 +1349,8 @@
     "offlineReason": "Offline · changes are paused",
     "noHousehold": "None",
     "avatarHint": "Tap your photo to change it",
-    "changePhoto": "Change photo"
+    "changePhoto": "Change photo",
+    "accountGroup": "Your account",
+    "phonesGroup": "On phones"
   }
 }

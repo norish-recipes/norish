@@ -1349,6 +1349,8 @@
     "offlineReason": "Офлайн · зміни призупинено",
     "noHousehold": "Немає",
     "avatarHint": "Торкніться фото, щоб змінити його",
-    "changePhoto": "Змінити фото"
+    "changePhoto": "Змінити фото",
+    "accountGroup": "Ваш обліковий запис",
+    "phonesGroup": "На телефонах"
   }
 }

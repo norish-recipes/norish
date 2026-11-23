@@ -1349,6 +1349,8 @@
     "offlineReason": "Офлайн · изменения приостановлены",
     "noHousehold": "Нет",
     "avatarHint": "Нажмите на фото, чтобы изменить его",
-    "changePhoto": "Изменить фото"
+    "changePhoto": "Изменить фото",
+    "accountGroup": "Ваш аккаунт",
+    "phonesGroup": "На телефонах"
   }
 }

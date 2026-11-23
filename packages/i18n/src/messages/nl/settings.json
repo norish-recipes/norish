@@ -1349,6 +1349,8 @@
     "offlineReason": "Offline · wijzigingen staan stil",
     "noHousehold": "Geen",
     "avatarHint": "Tik op je foto om die te wijzigen",
-    "changePhoto": "Foto wijzigen"
+    "changePhoto": "Foto wijzigen",
+    "accountGroup": "Je account",
+    "phonesGroup": "Op telefoons"
   }
 }
