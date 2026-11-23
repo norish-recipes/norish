@@ -86,7 +86,7 @@ describe("the suggestions", () => {
 
 describe("saving the allergies", () => {
   const sent = ["milk"];
-  const run = async (answer: boolean, current: string[] | null = sent) => {
+  const run = async (answer: boolean, current: string[] | null = sent, offline = false) => {
     const setAllergies = vi.fn().mockResolvedValue(answer);
     let draft = current;
 
@@ -95,6 +95,7 @@ describe("saving the allergies", () => {
       saved: ["nuts"],
       send: setAllergies,
       setDraft: (update) => void (draft = update(draft)),
+      offline: () => offline,
     });
 
     return { setAllergies, draft };
@@ -105,6 +106,13 @@ describe("saving the allergies", () => {
 
     expect(setAllergies).toHaveBeenCalledExactlyOnceWith(["milk"]);
     expect(draft).toBeNull();
+  });
+
+  it("sends nothing and keeps the draft when Offline as Save runs", async () => {
+    const { setAllergies, draft } = await run(true, sent, true);
+
+    expect(setAllergies).not.toHaveBeenCalled();
+    expect(draft).toEqual(["milk"]);
   });
 
   it("keeps the draft when the write was refused or stale", async () => {
@@ -123,6 +131,7 @@ describe("saving the allergies", () => {
       saved: ["nuts"],
       send: setAllergies,
       setDraft: vi.fn(),
+      offline: () => false,
     });
 
     expect(setAllergies).not.toHaveBeenCalled();

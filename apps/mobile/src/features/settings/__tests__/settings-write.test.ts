@@ -16,4 +16,13 @@ describe("guardWrite", () => {
     write();
     expect(send).toHaveBeenCalledTimes(1);
   });
+
+  it("passes the press's arguments through and hands back what the write returns", () => {
+    const send = vi.fn((choice: string) => Promise.resolve(choice));
+    const write = guardWrite(() => false, send);
+
+    expect(write("metric")).toBeInstanceOf(Promise);
+    expect(send).toHaveBeenCalledExactlyOnceWith("metric");
+    expect(guardWrite(() => true, send)("metric")).toBeUndefined();
+  });
 });

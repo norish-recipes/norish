@@ -13,7 +13,8 @@ export const NAME_DRAFT: DraftWrite<string> = {
   changes: (sent, saved) => sent !== saved,
 };
 
-/** Saves the name, then the photo; one that does not go through stays staged and stops the rest. */
+/** Saves the name, then the photo, each only if online as it goes; one that does not go through
+ * stays staged and stops the rest. */
 export async function saveProfile<Photo>({
   draft,
   savedName,
@@ -22,6 +23,7 @@ export async function saveProfile<Photo>({
   uploadAvatar,
   setDraft,
   setPhoto,
+  offline,
 }: {
   draft: string | null;
   savedName: string;
@@ -30,10 +32,11 @@ export async function saveProfile<Photo>({
   uploadAvatar: (photo: Photo) => Promise<boolean>;
   setDraft: Update<string>;
   setPhoto: Update<Photo>;
+  offline: () => boolean;
 }) {
-  const send = { draft, saved: savedName, send: updateName, setDraft };
+  const send = { draft, saved: savedName, send: updateName, setDraft, offline };
 
-  if (!(await saveDraft(NAME_DRAFT, send)) || !photo) return;
+  if (!(await saveDraft(NAME_DRAFT, send)) || !photo || offline()) return;
 
   const tookIt = await uploadAvatar(photo);
 

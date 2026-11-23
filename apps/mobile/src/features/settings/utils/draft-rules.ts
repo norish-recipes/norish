@@ -32,7 +32,8 @@ export const canSave = <T>(
 export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
   tookIt && current === sent ? null : current;
 
-/** Sends an edited draft and drops it once taken; resolves whether a save may go on past it. */
+/** Sends an edited draft, unless Offline as it runs, and drops it once taken; resolves whether a
+ * save may go on past it. */
 export async function saveDraft<T>(
   write: DraftWrite<T>,
   {
@@ -40,8 +41,16 @@ export async function saveDraft<T>(
     saved,
     send,
     setDraft,
-  }: { draft: T | null; saved: T; send: (value: T) => Promise<boolean>; setDraft: Update<T> }
+    offline,
+  }: {
+    draft: T | null;
+    saved: T;
+    send: (value: T) => Promise<boolean>;
+    setDraft: Update<T>;
+    offline: () => boolean;
+  }
 ) {
+  if (offline()) return false;
   if (draft === null || !isEdited(write, draft, saved)) return true;
 
   const tookIt = await send(write.sent(draft));

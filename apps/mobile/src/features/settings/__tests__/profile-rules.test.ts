@@ -69,6 +69,7 @@ describe("the save", () => {
   /** The form's staged name and photo, written through as the component's setters do. */
   function form(draft: string | null, photo: Photo | null) {
     const staged = { draft, photo };
+    const connection = { offline: false };
     const updateName = vi.fn<(name: string) => Promise<boolean>>();
     const uploadAvatar = vi.fn<(photo: Photo) => Promise<boolean>>();
     const save = () =>
@@ -80,9 +81,10 @@ describe("the save", () => {
         uploadAvatar,
         setDraft: (update) => (staged.draft = update(staged.draft)),
         setPhoto: (update) => (staged.photo = update(staged.photo)),
+        offline: () => connection.offline,
       });
 
-    return { staged, updateName, uploadAvatar, save };
+    return { staged, connection, updateName, uploadAvatar, save };
   }
 
   it("sends the trimmed name, then the photo, and drops both once taken", async () => {
@@ -96,6 +98,30 @@ describe("the save", () => {
     expect(uploadAvatar).toHaveBeenCalledExactlyOnceWith(sent);
     expect(vi.mocked(updateName)).toHaveBeenCalledBefore(vi.mocked(uploadAvatar));
     expect(staged).toEqual({ draft: null, photo: null });
+  });
+
+  it("sends nothing when Offline as Save runs", async () => {
+    const { staged, connection, updateName, uploadAvatar, save } = form("Eve", sent);
+
+    connection.offline = true;
+    await save();
+
+    expect(updateName).not.toHaveBeenCalled();
+    expect(uploadAvatar).not.toHaveBeenCalled();
+    expect(staged).toEqual({ draft: "Eve", photo: sent });
+  });
+
+  it("keeps the photo staged when Offline begins after the name went through", async () => {
+    const { staged, connection, updateName, uploadAvatar, save } = form("Eve", sent);
+
+    updateName.mockImplementation(async () => {
+      connection.offline = true;
+      return true;
+    });
+    await save();
+
+    expect(uploadAvatar).not.toHaveBeenCalled();
+    expect(staged).toEqual({ draft: null, photo: sent });
   });
 
   it("stops at a name that was refused or stale, leaving the name and the photo staged", async () => {
