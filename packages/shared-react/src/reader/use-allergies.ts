@@ -3,8 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { writeOverRead } from "../offline/write-over-read";
-import { showRefusal, usePlatform } from "../platform";
+import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
+import { tookIt, useStaleRefusal } from "./stale-write";
 import { useProfileCache } from "./use-profile";
 
 const NONE: string[] = [];
@@ -24,7 +25,8 @@ export function useAllergiesQuery(): string[] {
 export function useAllergiesMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { showError, toast } = usePlatform();
+  const { showError } = usePlatform();
+  const refuseStale = useStaleRefusal();
   const { mergeUser, version: profileVersion } = useProfileCache();
   const queryKey = trpc.user.getAllergies.queryKey();
   const heldVersion = () => queryClient.getQueryData(queryKey)?.version ?? 0;
@@ -35,13 +37,7 @@ export function useAllergiesMutation() {
     trpc.user.setAllergies.mutationOptions({
       onSuccess: (answer) => {
         if (!answer.success) return;
-        if (answer.stale) {
-          showRefusal(
-            showError,
-            { error: toast.translate("common.changedElsewhere.title") },
-            "user-settings:update-allergies"
-          );
-        }
+        if (answer.stale) refuseStale("user-settings:update-allergies");
         const version = answer.version ?? heldVersion();
 
         writeOverRead(queryClient, queryKey, () => ({
@@ -57,10 +53,7 @@ export function useAllergiesMutation() {
   return {
     /** Resolves whether the server took them; a stale write is refused as changed elsewhere. */
     setAllergies: (allergies: string[]): Promise<boolean> =>
-      mutateAsync({ allergies, version: currentVersion() }).then(
-        (answer) => answer.success && !answer.stale,
-        () => false
-      ),
+      tookIt(mutateAsync({ allergies, version: currentVersion() })),
     isUpdatingAllergies: isPending,
   };
 }

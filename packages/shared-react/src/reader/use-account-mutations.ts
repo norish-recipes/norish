@@ -10,6 +10,7 @@ import { accepted, answered, settled } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { dropAndLeave, runSessionEnd } from "./session-end";
+import { tookIt, useStaleRefusal } from "./stale-write";
 import { useProfileCache } from "./use-profile";
 
 /** A failed write's `onError`: reread the profile and tell the reader. */
@@ -25,29 +26,19 @@ function useFailedWrite() {
 
 type ProfileAnswer = WriteResult & { stale?: boolean };
 
-/** A stale answer came from an out-of-date version: the server ignored it. */
-const tookIt = (write: Promise<ProfileAnswer>): Promise<boolean> =>
-  write.then(
-    (answer) => answer.success && !answer.stale,
-    () => false
-  );
-
 /** The Reader's name and Avatar; each answers with the user as it now is. */
 export function useProfileMutations() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
   const { version, mergeUser, invalidate } = useProfileCache();
   const failed = useFailedWrite();
+  const refuseStale = useStaleRefusal();
 
   // A stale write is refused as changed elsewhere and resolves once the profile is reread.
   const settle = (context: string) => ({
     onSuccess: (answer: ProfileAnswer & { user?: Parameters<typeof mergeUser>[0] }) => {
       if (answer.stale) {
-        showRefusal(
-          showError,
-          { error: toast.translate("common.changedElsewhere.title") },
-          context
-        );
+        refuseStale(context);
 
         return invalidate();
       }
@@ -94,9 +85,16 @@ export function useProfileMutations() {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
-  const { held, version, restore, mergeUser, mergePreferences: merge, invalidate } =
-    useProfileCache();
+  const {
+    held,
+    version,
+    restore,
+    mergeUser,
+    mergePreferences: merge,
+    invalidate,
+  } = useProfileCache();
   const failed = useFailedWrite();
+  const refuseStale = useStaleRefusal();
   // Counts the language save too, which is its own mutation sending the same held version.
   const saving = useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
 
@@ -116,6 +114,8 @@ export function usePreferencesMutation() {
 
           return;
         }
+        // A stale answer carries the stored choices and version, which replace the optimistic copy.
+        if (answer.stale) refuseStale("user-settings:update-preferences");
         if (answer.version) mergeUser({ version: answer.version });
         merge(answer.preferences ?? {});
       },

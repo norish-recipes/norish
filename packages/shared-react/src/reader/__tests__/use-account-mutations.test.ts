@@ -94,6 +94,25 @@ describe("the Account's writes", () => {
       expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
     });
 
+    it("take what the server holds on a stale answer and say it changed elsewhere", async () => {
+      const result = render(() => usePreferencesMutation());
+
+      act(() => void result.current.updatePreferences({ afterPlanning: "calendar" }));
+      await answerCall("user.updatePreferences", {
+        success: true,
+        stale: true,
+        preferences: { locale: "en", afterPlanning: "stay" },
+        version: 6,
+      });
+
+      await waitFor(() => expect(profile()?.user.version).toBe(6));
+      expect(profile()?.user.preferences).toMatchObject({ afterPlanning: "stay" });
+      expect(adapter.showError).toHaveBeenCalledExactlyOnceWith(
+        "common.changedElsewhere.title",
+        expect.any(String)
+      );
+    });
+
     it("roll back and say so when the write fails", async () => {
       const result = render(() => usePreferencesMutation());
 
