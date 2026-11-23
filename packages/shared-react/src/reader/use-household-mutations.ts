@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
@@ -15,9 +16,11 @@ type HouseholdMutationsResult = {
   kickUser: (householdId: string, userId: string) => void;
   regenerateJoinCode: (householdId: string) => void;
   transferAdmin: (householdId: string, newAdminId: string) => void;
-  /** Whether each action's request is in flight, for a caller that must not send it twice. */
-  pending: Record<"create" | "join" | "leave" | "kick" | "regenerate" | "transfer", boolean>;
+  /** Whether each action's request is in flight; a call while it is is dropped. */
+  pending: Record<Action, boolean>;
 };
+
+type Action = "create" | "join" | "leave" | "kick" | "regenerate" | "transfer";
 
 export function useHouseholdMutations(): HouseholdMutationsResult {
   const trpc = useTRPC();
@@ -32,6 +35,14 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       ? (household.users.find((user) => user.id === userId)?.version ?? 1)
       : 1;
   const onError = () => invalidate();
+  // Claimed synchronously, so a repeat before React re-renders is dropped; settling frees it.
+  const inFlight = useRef(new Set<string>());
+  const claim = (action: string) => {
+    if (inFlight.current.has(action)) return null;
+    inFlight.current.add(action);
+
+    return { onSettled: () => inFlight.current.delete(action) };
+  };
 
   const { mutate: mutateCreate, isPending: isCreating } = useMutation(
     trpc.households.create.mutationOptions({
@@ -122,7 +133,9 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    mutateCreate({ name: name.trim() });
+    const settle = claim("create");
+
+    if (settle) mutateCreate({ name: name.trim() }, settle);
   };
 
   const joinHousehold = (code: string): void => {
@@ -134,23 +147,43 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    mutateJoin({ code: code.trim() });
+    const settle = claim("join");
+
+    if (settle) mutateJoin({ code: code.trim() }, settle);
   };
 
   const leaveHousehold = (householdId: string): void => {
-    mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) });
+    const settle = claim("leave");
+
+    if (settle) {
+      mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) }, settle);
+    }
   };
 
   const kickUser = (householdId: string, userId: string): void => {
-    mutateKick({ householdId, userId, version: memberVersion(householdId, userId) });
+    const settle = claim(`kick:${userId}`);
+
+    if (settle)
+      mutateKick({ householdId, userId, version: memberVersion(householdId, userId) }, settle);
   };
 
   const regenerateJoinCode = (householdId: string): void => {
-    mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) });
+    const settle = claim("regenerate");
+
+    if (settle) {
+      mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) }, settle);
+    }
   };
 
   const transferAdmin = (householdId: string, newAdminId: string): void => {
-    mutateTransferAdmin({ householdId, newAdminId, version: getHouseholdVersion(householdId) });
+    const settle = claim("transfer");
+
+    if (settle) {
+      mutateTransferAdmin(
+        { householdId, newAdminId, version: getHouseholdVersion(householdId) },
+        settle
+      );
+    }
   };
 
   return {

@@ -44,10 +44,10 @@ export function MembersList({
   const text = useText();
   const confirm = useConfirm();
   const write = useSettingsWrite();
-  const { kickUser, transferAdmin, pending } = useHouseholdMutations();
+  const { kickUser, transferAdmin } = useHouseholdMutations();
   const send = {
-    kick: (userId: string) => !pending.kick && kickUser(household.id, userId),
-    transferAdmin: (userId: string) => !pending.transfer && transferAdmin(household.id, userId),
+    kick: (userId: string) => kickUser(household.id, userId),
+    transferAdmin: (userId: string) => transferAdmin(household.id, userId),
   };
   const looks = { kick: KICK, transferAdmin: MAKE_ADMIN };
 

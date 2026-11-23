@@ -20,7 +20,7 @@ import { SettingsRow } from "./settings-row";
 export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsDto }) {
   const text = useText();
   const copyToClipboard = useCopyToClipboard();
-  const { regenerateJoinCode, pending } = useHouseholdMutations();
+  const { regenerateJoinCode } = useHouseholdMutations();
   const write = useSettingsWrite();
   const expiresAt =
     household.joinCode && household.joinCodeExpiresAt
@@ -33,7 +33,7 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   );
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
-  const regenerate = write(() => !pending.regenerate && regenerateJoinCode(household.id));
+  const regenerate = write(() => regenerateJoinCode(household.id));
   const copy = () =>
     code
       ? copyToClipboard(code, {

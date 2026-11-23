@@ -27,7 +27,7 @@ export function HouseholdScreen() {
   const confirm = useConfirm();
   const { household, currentUserId, isAdmin, isLoading, error } = useHousehold();
   const { invalidate } = useHouseholdCacheHelpers();
-  const { leaveHousehold, pending } = useHouseholdMutations();
+  const { leaveHousehold } = useHouseholdMutations();
   const write = useSettingsWrite();
   // currentUserId comes with every answer, so it marks a read that succeeded.
   const page = pageState({ household, answered: currentUserId !== undefined, isLoading, error });
@@ -44,7 +44,7 @@ export function HouseholdScreen() {
       title: text("settings.household.info.leaveModal.title"),
       message: `${text("settings.household.info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
-      onConfirm: write(() => !pending.leave && leaveHousehold(household.id)),
+      onConfirm: write(() => leaveHousehold(household.id)),
     });
   };
 

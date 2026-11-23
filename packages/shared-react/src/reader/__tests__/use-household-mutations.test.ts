@@ -82,6 +82,25 @@ describe("useHouseholdMutations", () => {
     });
   });
 
+  describe("a second call while the first is in flight", () => {
+    it("is dropped before React re-renders, and a failure lets the next one go", async () => {
+      const result = render(household());
+
+      await act(async () => {
+        result.current.regenerateJoinCode("h1");
+        result.current.regenerateJoinCode("h1");
+        result.current.kickUser("h1", "a");
+        result.current.kickUser("h1", "a");
+      });
+      expect(trpcCalls["households.regenerateCode"]).toHaveLength(1);
+      expect(trpcCalls["households.kick"]).toHaveLength(1);
+
+      await settle("regenerateCode", 0, "reject");
+      await act(async () => result.current.regenerateJoinCode("h1"));
+      expect(trpcCalls["households.regenerateCode"]).toHaveLength(2);
+    });
+  });
+
   describe("createHousehold", () => {
     it("rejects an empty name or a missing Reader", () => {
       const result = render(createMockHouseholdData(null, "current-user"));
