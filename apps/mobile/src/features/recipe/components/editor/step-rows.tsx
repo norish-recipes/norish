@@ -3,7 +3,7 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { DragList } from "@/components/drag-list/drag-list";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import type {
   LineMoves,
@@ -56,7 +56,6 @@ export function StepRows({
   lineMoves: LineMoves | null;
   onChange: (steps: Step[]) => void;
 }) {
-  const intl = useIntl();
   const [rows, setRows] = useState<StepRowValue[]>(() => seedStepRows(steps));
   // The rows as last changed, which a render may not show yet when an upload ends.
   const latestRowsRef = useRef(rows);
@@ -64,7 +63,7 @@ export function StepRows({
   // Rows set while rendering (seeded, references taken back), for the ref once committed.
   const [adopted, setAdopted] = useState<StepRowValue[] | null>(null);
   const trailingRow = useTrailingRow(rows, hasStepContent);
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
 
   if (steps.length !== seededLength) {
     setSeededLength(steps.length);

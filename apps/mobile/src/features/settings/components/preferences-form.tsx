@@ -1,7 +1,7 @@
 import React from "react";
 import { Checkmark } from "@/components/checkmark";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import {
@@ -31,7 +31,6 @@ import { SettingsRow } from "./settings-row";
 
 /** Preferences: the choices that follow the account, those of the phone Device Kind, and its Hidden Items. */
 export function PreferencesForm() {
-  const intl = useIntl();
   const { user } = useProfileQuery();
   const { updatePreferences, isUpdatingPreferences } = usePreferencesMutation();
   const { globalEnabled } = useTimersEnabledQuery();
@@ -41,7 +40,7 @@ export function PreferencesForm() {
   const [pageColor, setPageColor] = useDevicePreference("recipePageColor");
   const [unitStyle, setUnitStyle] = useDevicePreference("unitStyle");
   const [hidden, setHidden] = useDevicePreference("hiddenItems");
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const offered = offeredHiddenItems(globalEnabled);
 
   return (

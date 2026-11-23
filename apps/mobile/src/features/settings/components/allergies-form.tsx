@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -21,6 +22,9 @@ import { saveDraft } from "../utils/draft-rules";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
+/** A space or comma typed after a name adds it. */
+const ENDS_NAME = /[\s,]$/;
+
 /** The Reader's allergies as warning chips with a field to add more; Save sends them. */
 export function AllergiesForm() {
   const intl = useIntl();
@@ -32,7 +36,7 @@ export function AllergiesForm() {
   const warningInk = useTokenColor("warning-foreground");
   const allergies = useDraft(ALLERGY_DRAFT, saved, { offline: isOffline });
   const [typed, setTyped] = useState("");
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const shown = allergies.shown;
   const suggestions = allergySuggestions(known, typed, shown);
 
@@ -95,7 +99,7 @@ export function AllergiesForm() {
             submitBehavior="submit"
             testID="allergies-input"
             value={typed}
-            onChangeText={(value) => (/[\s,]$/.test(value) ? add(value) : setTyped(value))}
+            onChangeText={(value) => (ENDS_NAME.test(value) ? add(value) : setTyped(value))}
             onSubmitEditing={() => add(typed)}
           />
         </View>

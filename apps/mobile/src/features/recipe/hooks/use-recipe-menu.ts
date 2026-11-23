@@ -4,10 +4,10 @@ import type {
   NativeStackHeaderItemMenuSubmenu,
 } from "expo-router/native-stack";
 import { useCardActions } from "@/hooks/use-card-actions";
+import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import {
@@ -38,7 +38,6 @@ const AI_ACTIONS = [
 
 /** The header's two items: the favourite heart and the actions menu; the heart is a Hidden Item. */
 export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
-  const intl = useIntl();
   const router = useRouter();
   const [danger] = useThemeColor(["danger"] as const);
   const recipe = useLoadedPageRecipe();
@@ -52,7 +51,7 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
   const { showFavorites } = useHiddenItemVisibility();
   const { allergies } = useActiveAllergies();
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
-  const label = (id: string) => intl.formatMessage({ id });
+  const label = useText();
   const favourite = isFavorite(recipe.id);
   const canEdit = ownerAllows(recipe.userId, canEditRecipe);
 

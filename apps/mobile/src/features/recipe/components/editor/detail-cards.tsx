@@ -4,6 +4,7 @@ import { Alert, Pressable, Text, View } from "react-native";
 import { HintButton } from "@/components/hint-button";
 import { ServingsStepper } from "@/components/servings-stepper";
 import { ToggleChip } from "@/components/toggle-chip";
+import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -85,10 +86,9 @@ export function TagsAndCategoriesCard({
   onToggleCategory: (category: RecipeCategory) => void;
   onAddCategory: (typed: string) => void;
 }) {
-  const intl = useIntl();
   const { tags: known } = useTagsQuery();
   const [draft, setDraft] = useState("");
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const has = (tag: string) => form.tags.some((t) => t.toLowerCase() === tag.toLowerCase());
   const addTag = (typed: string) => {
     const tag = typed.trim();
@@ -227,8 +227,7 @@ export function ServingsAndTimeCard({
   set: Set;
   error?: string;
 }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const minutes = text("recipes.editor.minutes");
   const time = (field: "prepMinutes" | "cookMinutes" | "totalMinutes", id: string) => (
     <NumberBox
@@ -262,8 +261,7 @@ export function ServingsAndTimeCard({
 }
 
 export function NutritionCard({ form, set }: { form: RecipeFormState; set: Set }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const box = (
     field: "calories" | "protein" | "carbs" | "fat",
     unit: string,

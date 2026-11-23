@@ -5,6 +5,7 @@ import { Alert, Text, View } from "react-native";
 import { DragScrollView } from "@/components/drag-list/drag-list";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { FocusedFieldContext, useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
+import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -93,7 +94,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   // A photo still uploading is not in the form yet, and a second tap would save twice.
   const [saving, setSaving] = useState(false);
   const busy = saving || uploads.isUploading;
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const error = (field: "name" | "ingredients" | "steps" | "servings") => {
     const key = editor.errors[field];
 

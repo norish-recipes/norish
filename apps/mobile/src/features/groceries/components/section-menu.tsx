@@ -2,8 +2,8 @@ import React from "react";
 import { View } from "react-native";
 import { NativeMenu } from "@/components/native-menu";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useIntl } from "react-intl";
 
 export type SectionActions = {
   markAllDone?: () => void;
@@ -21,9 +21,8 @@ export function SectionMenu({
   label: string;
   testID: string;
 }) {
-  const intl = useIntl();
   const color = useTokenColor("foreground");
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
 
   return (
     <NativeMenu

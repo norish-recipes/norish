@@ -3,6 +3,7 @@ import { Linking } from "react-native";
 import { changeServerAddress } from "@/hooks/use-change-server-address";
 import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
+import { useText } from "@/lib/i18n/use-text";
 import { hostOf } from "@/lib/network/host-of";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import * as Application from "expo-application";
@@ -34,7 +35,7 @@ export function SettingsScreen() {
   const serverAddress = use(ServerAddressContext);
   const { locale, options } = useMobileLocaleSettings();
   const signOut = useConfirmedSignOut();
-  const t = (id: string) => intl.formatMessage({ id });
+  const t = useText();
   const open = (path: SettingsPath) => () => router.push(`/settings/${path}`);
   const version = versionLine(
     Application.nativeApplicationVersion,

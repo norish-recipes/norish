@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { HintButton } from "@/components/hint-button";
+import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
@@ -28,7 +29,7 @@ export function ProvenanceCard({
   const { cuisines } = useCuisinesQuery();
   const [muted] = useThemeColor(["muted"] as const);
   const router = useRouter();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const patch = (next: Partial<ProvenanceFormValue>) => onChange({ ...value, ...next });
   const pickCountry = () => {
     const countries = listCountryOptions(intl.locale);
@@ -136,8 +137,7 @@ export function SourceCard({
   onUrlChange: (url: string) => void;
   onSystemChange: (system: MeasurementSystem) => void;
 }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
 
   return (
     <SectionCard title={text("recipes.editor.source")}>

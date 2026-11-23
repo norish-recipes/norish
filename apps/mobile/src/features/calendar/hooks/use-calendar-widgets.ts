@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import { startCalendarWidgets, syncCalendarWidgets } from "@/lib/calendar-widgets";
 import { WIDGET_DATA_DAYS } from "@/lib/calendar-widgets-state";
+import { useText } from "@/lib/i18n/use-text";
 import { useIntl } from "react-intl";
 
 import { useCalendarQuery, useCalendarRangeRead } from "@norish/shared-react/calendar";
@@ -20,7 +21,7 @@ export function useCalendarWidgets() {
   const { calendarData } = useCalendarQuery(range);
   // Not the query's `isRead`: seeded from other ranges, that holds days no read of this one confirmed.
   const read = useCalendarRangeRead(range);
-  const message = (id: string) => intl.formatMessage({ id });
+  const message = useText();
   const strings = {
     nothingPlanned: message("calendar.widgets.nothingPlanned"),
     signIn: message("calendar.widgets.signIn"),

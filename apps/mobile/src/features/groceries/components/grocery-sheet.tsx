@@ -5,7 +5,7 @@ import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import type { AisleDto, StoreDto } from "@norish/shared/contracts";
 import type { RecurrencePattern } from "@norish/shared/contracts/recurrence";
@@ -71,14 +71,13 @@ export function GrocerySheet({
   /** The form view's header: its confirm, Save, and any other actions. */
   actions: SheetActions;
 }) {
-  const intl = useIntl();
   const recurrence = useRecurrenceLabel();
   const [step, setStep] = useState<Step>("form");
   const afterKeyboard = useAfterKeyboard();
   // The form's field holds the keyboard; a step shows once it is down.
   const setView = (next: Step) => afterKeyboard(() => setStep(next));
   const [draft, setDraft] = useState<RecurrencePattern | null>(null);
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const store = stores.find((candidate) => candidate.id === storeId) ?? null;
   const scheme = useResolvedColorScheme();
   const dot = (color: string) => storeColorIn(scheme, color);

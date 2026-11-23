@@ -7,6 +7,7 @@ import { EmptyCard } from "@/components/empty-card";
 import { Sheet, SHEET_SCROLL_END, SheetBody } from "@/components/sheet";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { edgeAt } from "@/lib/card-edges";
+import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -62,7 +63,7 @@ function ShopCheckLine({
 export function ManageStoresScreen() {
   const intl = useIntl();
   const cancel = useCancelButton();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const { stores, isRead } = useStoresQuery();
   const { groceries } = useGroceriesQuery();
   const { deleteStore, reorderStores } = useStoresMutations();
