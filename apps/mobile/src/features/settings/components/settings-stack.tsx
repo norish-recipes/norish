@@ -9,6 +9,7 @@ export function SettingsStack() {
     <Stack screenOptions={{ ...EDITOR_OPTIONS, headerTitleStyle: HEADER_TITLE_STYLE }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="password" options={FIT_SHEET_OPTIONS} />
+      <Stack.Screen name="token-new" options={FIT_SHEET_OPTIONS} />
     </Stack>
   );
 }
