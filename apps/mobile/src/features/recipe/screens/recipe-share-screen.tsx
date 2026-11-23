@@ -10,6 +10,7 @@ import { SliceHairline } from "@/components/slice-row";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useServerUrl } from "@/lib/network/server-url";
+import { shareSubtitle } from "@/lib/share-subtitle";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { Skeleton } from "heroui-native";
@@ -23,7 +24,6 @@ import {
 } from "@norish/shared-react/recipes";
 
 import { RecipeSheetGate } from "../components/recipe-sheet-gate";
-import { shareSubtitle } from "../utils/share-row";
 
 type Expiry = NonNullable<CreateRecipeShareInputDto["expiresIn"]>;
 

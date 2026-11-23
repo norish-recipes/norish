@@ -1,6 +1,5 @@
+import { shareSubtitle } from "@/lib/share-subtitle";
 import { describe, expect, it } from "vitest";
-
-import { shareSubtitle } from "../utils/share-row";
 
 const t = (id: string, values?: Record<string, string>) =>
   `${id}${values ? ` ${values.date}` : ""}`;
