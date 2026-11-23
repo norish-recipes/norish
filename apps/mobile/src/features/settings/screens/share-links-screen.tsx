@@ -4,9 +4,12 @@ import { useText } from "@/lib/i18n/use-text";
 import { shareEnding } from "@/lib/share-subtitle";
 import { useIntl } from "react-intl";
 
-import type { ShareLinkAction } from "@norish/shared-react/reader";
-import { shareLinkActions } from "@norish/shared-react/reader";
-import { useMyRecipeSharesQuery, useRecipeShareMutations } from "@norish/shared-react/recipes";
+import type { ShareLinkAction } from "@norish/shared-react/recipes";
+import {
+  shareLinkActions,
+  useMyRecipeSharesQuery,
+  useRecipeShareMutations,
+} from "@norish/shared-react/recipes";
 
 import { ConnectionList } from "../components/connection-list";
 import { SettingsGroup } from "../components/settings-group";

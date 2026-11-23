@@ -5,9 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { settled, wentThrough } from "../offline/settled";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
+import { useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
-import { readStatus, rereadAfterWrite } from "./read-status";
-import { useStaleRefusal } from "./stale-write";
+import { readStatus, rereadAfterWrite } from "../trpc/read-status";
 
 /** The tokens and how their read went. */
 export function useSiteAuthTokensRead() {

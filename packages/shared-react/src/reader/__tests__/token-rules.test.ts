@@ -1,20 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  apiKeyName,
-  apiKeyPrefix,
-  orderedSiteAuthTokens,
-  shareLinkActions,
-  siteAuthTokenForm,
-} from "..";
+import { apiKeyName, apiKeyPrefix, orderedSiteAuthTokens, siteAuthTokenForm } from "..";
 
-describe("connection rules", () => {
-  it("offers a link what its status allows, and Delete always", () => {
-    expect(shareLinkActions("active")).toEqual(["revoke", "delete"]);
-    expect(shareLinkActions("revoked")).toEqual(["reactivate", "delete"]);
-    expect(shareLinkActions("expired")).toEqual(["delete"]);
-  });
-
+describe("token rules", () => {
   it("shows a key by its kept start, or stars when it kept none", () => {
     expect(apiKeyPrefix("abc123")).toBe("abc123...");
     expect(apiKeyPrefix(null)).toBe("***...");

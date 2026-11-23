@@ -10,7 +10,7 @@ import type {
 
 import { answered } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
-import { useStaleRefusal } from "../reader/stale-write";
+import { useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 

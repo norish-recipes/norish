@@ -3,8 +3,8 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { rereadAfterWrite } from "../reader/read-status";
 import { useTRPC } from "../trpc";
+import { rereadAfterWrite } from "../trpc/read-status";
 
 /** Each reread starts after the write: a first read under way predates it (`rereadAfterWrite`). */
 type RecipeShareCacheHelpers = {

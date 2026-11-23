@@ -8,10 +8,10 @@ import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { AppRouter } from "@norish/trpc/client";
 
-import type { ReadStatus } from "./read-status";
+import type { ReadStatus } from "../trpc/read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
-import { readStatus, rereadAfterWrite } from "./read-status";
+import { readStatus, rereadAfterWrite } from "../trpc/read-status";
 
 type Profile = ReadStatus & {
   user: User | null;

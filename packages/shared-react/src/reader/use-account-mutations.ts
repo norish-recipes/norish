@@ -8,9 +8,9 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 import type { WriteResult } from "../offline/settled";
 import { accepted, answered, wentThrough } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
+import { tookIt, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { dropAndLeave, runSessionEnd } from "./session-end";
-import { tookIt, useStaleRefusal } from "./stale-write";
 import { useProfileCache } from "./use-profile";
 
 /** A failed write's `onError`: reread the profile and tell the reader. */

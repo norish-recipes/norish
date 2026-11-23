@@ -10,9 +10,9 @@ import type {
   RecipeShareSummaryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
 
-import type { ReadStatus } from "../reader/read-status";
-import { readStatus } from "../reader/read-status";
+import type { ReadStatus } from "../trpc/read-status";
 import { useTRPC } from "../trpc";
+import { readStatus } from "../trpc/read-status";
 
 type RecipeSharesQueryResult = {
   shares: RecipeShareSummaryDto[];

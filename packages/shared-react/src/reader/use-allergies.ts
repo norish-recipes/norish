@@ -2,12 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { ReadStatus } from "./read-status";
+import type { ReadStatus } from "../trpc/read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
+import { tookIt, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
-import { readStatus } from "./read-status";
-import { tookIt, useStaleRefusal } from "./stale-write";
+import { readStatus } from "../trpc/read-status";
 import { useProfileCache } from "./use-profile";
 
 const NONE: string[] = [];

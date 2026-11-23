@@ -16,8 +16,7 @@ import type {
   AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { shareLinkActions } from "@norish/shared-react/reader";
-import { useRecipeShareMutations } from "@norish/shared-react/recipes";
+import { shareLinkActions, useRecipeShareMutations } from "@norish/shared-react/recipes";
 
 type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
 type ConfirmAction = {

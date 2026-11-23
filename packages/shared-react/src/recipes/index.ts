@@ -46,6 +46,8 @@ export {
   useRecipeListSubscription,
   useRecipeOutcomesSubscription,
 } from "./use-recipes-subscription";
+export type { ShareLinkAction } from "./share-link-rules";
+export { shareLinkActions } from "./share-link-rules";
 export { useRecipeShareMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareSubscription } from "./use-recipe-share-subscription";
 export {
