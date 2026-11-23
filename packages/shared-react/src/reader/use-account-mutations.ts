@@ -6,7 +6,7 @@ import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { WriteResult } from "../offline/settled";
-import { accepted, answered } from "../offline/settled";
+import { accepted, answered, wentThrough } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { dropAndLeave, runSessionEnd } from "./session-end";
@@ -150,14 +150,14 @@ export function useApiKeyMutations() {
       onError: failed("user-settings:create-api-key"),
     })
   );
-  const { mutate: mutateDelete } = useMutation(
+  const { mutateAsync: mutateDelete } = useMutation(
     trpc.user.apiKeys.delete.mutationOptions({
       onSuccess: (_answer, { keyId }) =>
         write((data) => ({ ...data, apiKeys: data.apiKeys.filter((key) => key.id !== keyId) })),
       onError: failed("user-settings:delete-api-key"),
     })
   );
-  const { mutate: mutateToggle } = useMutation(
+  const { mutateAsync: mutateToggle } = useMutation(
     trpc.user.apiKeys.toggle.mutationOptions({
       onSuccess: (_answer, { keyId, enabled }) =>
         write((data) => ({
@@ -174,8 +174,11 @@ export function useApiKeyMutations() {
       (await answered(mutateCreate({ name })))?.key ?? null,
     /** Drops the created key from the mutation's result, once the reader has saved it. */
     forgetCreatedKey: () => resetCreate(),
-    deleteApiKey: (keyId: string) => mutateDelete({ keyId }),
-    toggleApiKey: (keyId: string, enabled: boolean) => mutateToggle({ keyId, enabled }),
+    /** Resolves whether the delete went through; a failure is shown. */
+    deleteApiKey: (keyId: string): Promise<boolean> => wentThrough(mutateDelete({ keyId })),
+    /** Resolves whether the toggle went through; a failure is shown. */
+    toggleApiKey: (keyId: string, enabled: boolean): Promise<boolean> =>
+      wentThrough(mutateToggle({ keyId, enabled })),
   };
 }
 

@@ -64,6 +64,7 @@ vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
 
 const sentShareWrites: [string, unknown][] = [];
 const refuseCreate = { current: false };
+const failShareWrites = { current: false };
 
 /** A share write that answers with the share, as the server does. */
 function shareWrite(name: string) {
@@ -72,6 +73,7 @@ function shareWrite(name: string) {
       ...options,
       mutationFn: async (input: { id: string }) => {
         sentShareWrites.push([name, input]);
+        if (failShareWrites.current) throw new Error("offline");
 
         return { id: input.id, recipeId: "recipe-1" };
       },
@@ -138,6 +140,7 @@ afterEach(() => {
   useSubscriptionMock.mockReset();
   sentShareWrites.length = 0;
   refuseCreate.current = false;
+  failShareWrites.current = false;
 });
 
 describe("recipe share hooks", () => {
@@ -167,9 +170,9 @@ describe("recipe share hooks", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    act(() => result.current.revokeShare(share.id, share.version));
-    act(() => result.current.reactivateShare(share.id, share.version));
-    act(() => result.current.deleteShare(share.id, share.version));
+    act(() => void result.current.revokeShare(share.id, share.version));
+    act(() => void result.current.reactivateShare(share.id, share.version));
+    act(() => void result.current.deleteShare(share.id, share.version));
 
     await vi.waitFor(() => expect(sentShareWrites).toHaveLength(3));
     expect(sentShareWrites).toEqual([
@@ -184,6 +187,26 @@ describe("recipe share hooks", () => {
         )
       ).toHaveLength(3)
     );
+  });
+
+  it("resolves each share action once its request settled, and tells the reader one failed", async () => {
+    failShareWrites.current = true;
+    const platform = fakePlatformAdapter();
+    const share = createMockShare({ recipeId: "recipe-1" });
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(createTestQueryClient(), platform),
+    });
+
+    const sent = await act(() =>
+      Promise.all([
+        result.current.revokeShare(share.id, share.version),
+        result.current.reactivateShare(share.id, share.version),
+        result.current.deleteShare(share.id, share.version),
+      ])
+    );
+
+    expect(sent).toEqual([false, false, false]);
+    expect(platform.showError).toHaveBeenCalledTimes(3);
   });
 
   it("creates a share, toasts it and answers the share", async () => {

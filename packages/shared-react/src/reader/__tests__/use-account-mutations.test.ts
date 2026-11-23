@@ -339,6 +339,29 @@ describe("the Account's writes", () => {
 
       expect(profile()?.apiKeys).toEqual([{ ...PROFILE.apiKeys[0], id: "k2", enabled: false }]);
     });
+
+    it("resolve a delete and a toggle once the server answered, false when they failed", async () => {
+      const result = render(() => useApiKeyMutations());
+      let deleted: Promise<boolean> | undefined;
+      let toggled: Promise<boolean> | undefined;
+
+      act(() => {
+        deleted = result.current.deleteApiKey("k1");
+        toggled = result.current.toggleApiKey("k1", false);
+      });
+      let settled = false;
+
+      void Promise.all([deleted, toggled]).then(() => (settled = true));
+      await sentCall("user.apiKeys.toggle");
+      expect(settled).toBe(false);
+
+      await answerCall("user.apiKeys.delete", { success: true });
+      await failCall("user.apiKeys.toggle");
+
+      await expect(deleted).resolves.toBe(true);
+      await expect(toggled).resolves.toBe(false);
+      expect(adapter.showError).toHaveBeenCalledOnce();
+    });
   });
 
   describe("deleting the Account", () => {

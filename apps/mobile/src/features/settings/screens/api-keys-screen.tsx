@@ -56,7 +56,10 @@ export function ApiKeysScreen() {
                   {
                     kind: key.enabled ? "disable" : "enable",
                     label: text(key.enabled ? `${T}.disableKey` : `${T}.enableKey`),
-                    onPress: settingsWrite(() => toggleApiKey(key.id, !key.enabled)),
+                    onPress: settingsWrite(
+                      () => toggleApiKey(key.id, !key.enabled),
+                      `toggle:${key.id}`
+                    ),
                   },
                   {
                     kind: "delete",
