@@ -85,14 +85,7 @@ export function useProfileMutations() {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
-  const {
-    held,
-    version,
-    restore,
-    mergeUser,
-    mergePreferences: merge,
-    invalidate,
-  } = useProfileCache();
+  const { held, version, mergeUser, mergePreferences: merge, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
   // Counts the language save too, which is its own mutation sending the same held version.
@@ -100,8 +93,12 @@ export function usePreferencesMutation() {
 
   const { mutateAsync } = useMutation(
     trpc.user.updatePreferences.mutationOptions({
+      // A rollback puts back only the fields this write changed, never a sibling's or the version.
       onMutate: ({ preferences }) => {
-        const previous = held();
+        const shown: Partial<UserPreferencesDto> = held()?.user.preferences ?? {};
+        const previous = Object.fromEntries(
+          Object.keys(preferences).map((key) => [key, shown[key as keyof UserPreferencesDto]])
+        );
 
         merge(preferences);
 
@@ -109,7 +106,7 @@ export function usePreferencesMutation() {
       },
       onSuccess: (answer, _input, context) => {
         if (!answer.success) {
-          restore(context.previous);
+          merge(context.previous);
           void invalidate();
 
           return;
@@ -120,7 +117,7 @@ export function usePreferencesMutation() {
         merge(answer.preferences ?? {});
       },
       onError: (error, _input, context) => {
-        restore(context?.previous);
+        if (context) merge(context.previous);
         failed("user-settings:update-preferences")(error);
       },
     })

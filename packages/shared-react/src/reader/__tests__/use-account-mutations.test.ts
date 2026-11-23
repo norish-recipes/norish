@@ -125,6 +125,41 @@ describe("the Account's writes", () => {
     });
   });
 
+  describe("the current version", () => {
+    it("is the newest either cache learned, for every versioned write", async () => {
+      queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: [], version: 6 });
+      const result = render(() => ({
+        preferences: usePreferencesMutation(),
+        profile: useProfileMutations(),
+      }));
+
+      act(() => void result.current.preferences.updatePreferences({ afterPlanning: "calendar" }));
+      expect((await sentCall("user.updatePreferences")).input.version).toBe(6);
+      act(() => void result.current.profile.updateName("Grace"));
+      expect((await sentCall("user.updateName")).input.version).toBe(6);
+      act(() => void result.current.profile.deleteAvatar());
+      expect((await sentCall("user.deleteAvatar")).input.version).toBe(6);
+    });
+
+    it("stays when a failed write rolls back, which puts back only the fields it changed", async () => {
+      const result = render(() => usePreferencesMutation());
+
+      act(() => void result.current.updatePreferences({ afterPlanning: "calendar" }));
+      await sentCall("user.updatePreferences");
+      // A sibling write landed meanwhile and installed v6 and a new language.
+      queryClient.setQueryData<UserSettingsDto>(USER_KEY, (held) =>
+        held && {
+          ...held,
+          user: { ...held.user, version: 6, preferences: { ...held.user.preferences, locale: "fr" } },
+        }
+      );
+      await failCall("user.updatePreferences");
+
+      expect(profile()?.user.version).toBe(6);
+      expect(profile()?.user.preferences).toEqual({ locale: "fr", afterPlanning: "stay" });
+    });
+  });
+
   describe("the profile", () => {
     it("keeps the cached preferences when a rename answers with the user", async () => {
       const result = render(() => useProfileMutations());

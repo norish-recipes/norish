@@ -28,12 +28,10 @@ type HeldProfile = inferRouterOutputs<AppRouter>["user"]["get"];
 
 type ProfileCache = {
   held: () => HeldProfile | undefined;
-  /** The held user's version, for a write to send. */
+  /** The user's version a write sends: the newest the profile or the allergies have learned. */
   version: () => number;
   /** Writes `update(held)` over any read under way. */
   write: (update: (held: HeldProfile) => HeldProfile) => void;
-  /** Puts back what `held` returned before an optimistic write. */
-  restore: (previous: HeldProfile | undefined) => void;
   mergeUser: (patch: Partial<User>) => void;
   mergePreferences: (patch: Partial<UserPreferencesDto>) => void;
   /** Rereads the profile; resolves once the reread has landed. */
@@ -45,6 +43,7 @@ export function useProfileCache(): ProfileCache {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const queryKey = trpc.user.get.queryKey();
+  const allergiesKey = trpc.user.getAllergies.queryKey();
 
   const held = () => queryClient.getQueryData(queryKey);
   const write = (update: (held: HeldProfile) => HeldProfile) =>
@@ -52,9 +51,9 @@ export function useProfileCache(): ProfileCache {
 
   return {
     held,
-    version: () => held()?.user.version ?? 1,
+    version: () =>
+      Math.max(held()?.user.version ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0),
     write,
-    restore: (previous) => queryClient.setQueryData(queryKey, previous),
     mergeUser: (patch) => write((data) => ({ ...data, user: { ...data.user, ...patch } })),
     mergePreferences: (patch) =>
       write((data) => ({

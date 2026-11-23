@@ -27,22 +27,19 @@ export function useAllergiesMutation() {
   const queryClient = useQueryClient();
   const { showError } = usePlatform();
   const refuseStale = useStaleRefusal();
-  const { mergeUser, version: profileVersion } = useProfileCache();
+  const { mergeUser, version } = useProfileCache();
   const queryKey = trpc.user.getAllergies.queryKey();
-  const heldVersion = () => queryClient.getQueryData(queryKey)?.version ?? 0;
-  // Both caches hold the one user version; an account write bumps only the profile's copy.
-  const currentVersion = () => Math.max(heldVersion(), profileVersion());
 
   const { mutateAsync, isPending } = useMutation(
     trpc.user.setAllergies.mutationOptions({
       onSuccess: (answer) => {
         if (!answer.success) return;
         if (answer.stale) refuseStale("user-settings:update-allergies");
-        const version = answer.version ?? heldVersion();
+        const learned = answer.version ?? version();
 
         writeOverRead(queryClient, queryKey, () => ({
           allergies: answer.allergies ?? [],
-          version,
+          version: learned,
         }));
         if (answer.version) mergeUser({ version: answer.version });
       },
@@ -53,7 +50,7 @@ export function useAllergiesMutation() {
   return {
     /** Resolves whether the server took them; a stale write is refused as changed elsewhere. */
     setAllergies: (allergies: string[]): Promise<boolean> =>
-      tookIt(mutateAsync({ allergies, version: currentVersion() })),
+      tookIt(mutateAsync({ allergies, version: version() })),
     isUpdatingAllergies: isPending,
   };
 }
