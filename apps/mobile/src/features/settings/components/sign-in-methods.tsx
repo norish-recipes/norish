@@ -19,8 +19,10 @@ import {
 } from "@norish/shared/contracts/dto/auth";
 
 import type { Refusal } from "../utils/refusal-of";
+import { readState } from "../utils/read-state";
 import { refusalOf } from "../utils/refusal-of";
 import { settingsWrite } from "../utils/settings-write";
+import { ReadBody } from "./read-body";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -34,15 +36,19 @@ export function SignInMethods() {
   const [foreground] = useThemeColor(["foreground"] as const);
   const { user } = useProfileQuery();
   const { providers: offered } = useAuthProvidersQuery();
-  const { signInMethods, refetch } = useSignInMethodsQuery();
+  const { signInMethods, refetch, ...read } = useSignInMethodsQuery();
   const [busy, setBusy] = useState(false);
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.user.signInMethods.${id}` }, values);
 
   const offeredIds = new Set(offered.map((provider) => provider.id));
   const passwordOffered = hasPassword(signInMethods, offeredIds);
+  const state = readState({ ...read, held: read.answered });
 
-  if (!showsSignInMethods(offered.length, passwordOffered)) return null;
+  // Until the methods are read, only a server that could never show the list hides it.
+  if (!showsSignInMethods(offered.length, offeredIds.has(SIGN_IN_METHODS.credential.id)))
+    return null;
+  if (state === "held" && !showsSignInMethods(offered.length, passwordOffered)) return null;
 
   // A method the server no longer offers keeps its usual name and icon.
   const methods = new Map(
@@ -89,7 +95,7 @@ export function SignInMethods() {
     callAuthClient((client) => client.unlinkAccount({ accountId }), "removeFailed");
 
   return (
-    <>
+    <ReadBody empty={null} name="sign-in-methods" state={state} onRetry={refetch}>
       <SettingsGroup testID="sign-in-methods" title={t("title")}>
         {signInMethods.map((account) => {
           const method = methodOf(account.providerId);
@@ -151,6 +157,6 @@ export function SignInMethods() {
           ))}
         </SettingsGroup>
       ) : null}
-    </>
+    </ReadBody>
   );
 }

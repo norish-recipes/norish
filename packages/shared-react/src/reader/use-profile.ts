@@ -73,10 +73,10 @@ export function useProfileCache(): ProfileCache {
   };
 }
 
-/** The ways the Reader signs in, and a reread for after one is removed. */
+/** The ways the Reader signs in, how the read went, and a reread that resolves once it landed. */
 export function useSignInMethodsQuery() {
   const trpc = useTRPC();
-  const { data, refetch } = useQuery(trpc.user.signInMethods.queryOptions());
+  const query = useQuery(trpc.user.signInMethods.queryOptions());
 
-  return { signInMethods: data ?? [], refetch };
+  return { signInMethods: query.data ?? [], ...readStatus(query), refetch: query.refetch };
 }

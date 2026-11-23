@@ -10,10 +10,10 @@ import {
   useHouseholdMutations,
 } from "@norish/shared-react/reader";
 
-import { FailedLoad } from "../components/failed-load";
 import { JoinCodeCard } from "../components/join-code-card";
 import { MembersList } from "../components/members-list";
 import { NoHouseholdForms } from "../components/no-household-forms";
+import { ReadBody } from "../components/read-body";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
@@ -54,39 +54,37 @@ export function HouseholdScreen() {
 
   return (
     <SettingsPage testID="settings-household-screen" title={text("settings.tabs.household")}>
-      {page === "held" && household ? (
-        <>
-          <SettingsGroup className="pt-1">
-            <SettingsRow
-              icon="home-outline"
-              testID="household-name"
-              title={household.name}
-              value={
-                isAdmin
-                  ? text("settings.household.info.admin")
-                  : text("settings.household.info.member")
-              }
-            />
-          </SettingsGroup>
-          <MembersList currentUserId={currentUserId} household={household} isAdmin={isAdmin} />
-          {admin ? <JoinCodeCard household={admin} /> : null}
-          <SettingsGroup className="pt-[30px]">
-            <SettingsRow
-              centred
-              danger
-              write
-              icon="log-out-outline"
-              testID="household-leave"
-              title={text("settings.household.info.leaveButton")}
-              onPress={confirmLeave}
-            />
-          </SettingsGroup>
-        </>
-      ) : page === "failed" ? (
-        <FailedLoad name="household" onRetry={invalidate} />
-      ) : page === "empty" ? (
-        <NoHouseholdForms />
-      ) : null}
+      <ReadBody empty={<NoHouseholdForms />} name="household" state={page} onRetry={invalidate}>
+        {household ? (
+          <>
+            <SettingsGroup className="pt-1">
+              <SettingsRow
+                icon="home-outline"
+                testID="household-name"
+                title={household.name}
+                value={
+                  isAdmin
+                    ? text("settings.household.info.admin")
+                    : text("settings.household.info.member")
+                }
+              />
+            </SettingsGroup>
+            <MembersList currentUserId={currentUserId} household={household} isAdmin={isAdmin} />
+            {admin ? <JoinCodeCard household={admin} /> : null}
+            <SettingsGroup className="pt-[30px]">
+              <SettingsRow
+                centred
+                danger
+                write
+                icon="log-out-outline"
+                testID="household-leave"
+                title={text("settings.household.info.leaveButton")}
+                onPress={confirmLeave}
+              />
+            </SettingsGroup>
+          </>
+        ) : null}
+      </ReadBody>
     </SettingsPage>
   );
 }
