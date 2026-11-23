@@ -1,15 +1,11 @@
 import type { ReactNode } from "react";
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
 import { LibraryFiltersProvider, useLibraryFilters } from "../library-filters-store";
 import { nextSortOrder, useFiltersDraft } from "../use-filters-draft";
-
-vi.mock("../../reader", () => ({
-  useHiddenItemVisibility: () => ({ showRatings: false, showFavorites: true }),
-}));
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <LibraryFiltersProvider initial={DEFAULT_PERSISTED_RECIPE_FILTERS}>
@@ -54,14 +50,22 @@ describe("useFiltersDraft", () => {
     expect(result.current.edit.draft.maxCookingTime).toBeNull();
   });
 
-  it("drops a rating filter the reader has hidden", () => {
-    const { result } = render();
+  it("keeps a stored rating filter the reader has hidden, so showing it again restores it", () => {
+    const { result } = renderHook(
+      () => ({ edit: useFiltersDraft(), applied: useLibraryFilters((s) => s.filters) }),
+      {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <LibraryFiltersProvider initial={{ ...DEFAULT_PERSISTED_RECIPE_FILTERS, minRating: 4 }}>
+            {children}
+          </LibraryFiltersProvider>
+        ),
+      }
+    );
 
-    act(() => result.current.edit.update({ minRating: 4, showFavoritesOnly: true }));
+    act(() => result.current.edit.toggleTag("vegan"));
     act(() => result.current.edit.apply());
 
-    expect(result.current.applied.minRating).toBeNull();
-    expect(result.current.applied.showFavoritesOnly).toBe(true);
+    expect(result.current.applied).toMatchObject({ minRating: 4, searchTags: ["vegan"] });
   });
 
   it("resets the applied filters and the draft, keeping the lens", () => {

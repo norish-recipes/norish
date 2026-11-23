@@ -6,9 +6,7 @@ import type { RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
-import { useHiddenItemVisibility } from "../reader";
 import { useLibraryFilters } from "./library-filters-store";
-import { withoutHiddenFilters } from "./use-library-list";
 
 /** The cooking-time limits a filter offers, with the `common.filters` key of each label. */
 export const COOKING_TIME_OPTIONS = [
@@ -50,7 +48,6 @@ export function useFiltersDraft() {
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
-  const visibility = useHiddenItemVisibility();
   const [draft, setDraft] = useState(() => draftOf(filters));
 
   const update = (patch: Partial<FiltersDraft>) =>
@@ -74,6 +71,7 @@ export function useFiltersDraft() {
       clearFilters();
       setDraft(draftOf(DEFAULT_RECIPE_FILTERS));
     },
-    apply: () => setFilters(withoutHiddenFilters(draft, visibility)),
+    // A filter the reader hides is kept as stored: hiding suppresses it where it is read.
+    apply: () => setFilters(draft),
   };
 }

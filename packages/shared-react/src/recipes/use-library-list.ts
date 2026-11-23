@@ -14,22 +14,38 @@ import { useFavoritesQuery } from "./use-favorites-query";
 import { useLibraryQuery } from "./use-library-query";
 import { useRecipesMutations } from "./use-recipes-mutations";
 
-/** A hidden favourites or rating filter is dropped, so it can't narrow a list that never offers it. */
-export const withoutHiddenFilters = <
+/** `filters` as they apply: less a favourites or rating filter the reader hides, which stays stored
+ * and applies again once shown; the same object while none is hidden. */
+export function withoutHiddenFilters<
   T extends Pick<CanonicalRecipeFilters, "showFavoritesOnly" | "minRating">,
 >(
   filters: T,
   { showFavorites, showRatings }: Pick<HiddenItemVisibility, "showFavorites" | "showRatings">
-): T => ({
-  ...filters,
-  showFavoritesOnly: showFavorites ? filters.showFavoritesOnly : false,
-  minRating: showRatings ? filters.minRating : null,
-});
+): T {
+  const hidesFavorites = !showFavorites && filters.showFavoritesOnly;
+  const hidesRating = !showRatings && filters.minRating !== null;
+
+  if (!hidesFavorites && !hidesRating) return filters;
+
+  return {
+    ...filters,
+    showFavoritesOnly: hidesFavorites ? false : filters.showFavoritesOnly,
+    minRating: hidesRating ? null : filters.minRating,
+  };
+}
+
+/** The reader's applied Library filters: what every list, badge and empty state reads. */
+export function useAppliedLibraryFilters() {
+  const stored = useLibraryFilters((state) => state.filters);
+
+  return withoutHiddenFilters(stored, useHiddenItemVisibility());
+}
 
 /** The Library's filters, as a list query takes them, and whether the stored ones are applied. */
 export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
-  const stored = useLibraryFilters((state) => state.filters);
-  const filters = withoutHiddenFilters(override ?? stored, useHiddenItemVisibility());
+  const applied = useAppliedLibraryFilters();
+  const visibility = useHiddenItemVisibility();
+  const filters = override ? withoutHiddenFilters(override, visibility) : applied;
   const isHydrated = useLibraryFilters((state) => state.hydrated);
 
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };

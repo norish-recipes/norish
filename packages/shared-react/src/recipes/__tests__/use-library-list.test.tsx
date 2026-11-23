@@ -3,10 +3,13 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import {
+  DEFAULT_PERSISTED_RECIPE_FILTERS,
+  hasAppliedRecipeFilters,
+} from "@norish/shared/contracts/filter-contract";
 
 import { LibraryFiltersProvider, useLibraryFiltersStoreApi } from "../library-filters-store";
-import { useLibraryList } from "../use-library-list";
+import { useAppliedLibraryFilters, useLibraryList } from "../use-library-list";
 import { useLibraryQuery } from "../use-library-query";
 
 /** The list and its filters store, made from the cookie's filters (`undefined`: no cookie). */
@@ -135,5 +138,23 @@ describe("a filter on a Hidden Item", () => {
       expect.objectContaining({ minRating: undefined, favoritesOnly: false }),
       expect.anything()
     );
+  });
+
+  it("is no applied filter while hidden, and applies again once shown", () => {
+    const { result, rerender } = renderHook(() => useAppliedLibraryFilters(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <LibraryFiltersProvider initial={{ ...DEFAULT_PERSISTED_RECIPE_FILTERS, minRating: 4 }}>
+          {children}
+        </LibraryFiltersProvider>
+      ),
+    });
+
+    Object.assign(visibility, { showRatings: false });
+    rerender();
+    expect(hasAppliedRecipeFilters(result.current)).toBe(false);
+
+    Object.assign(visibility, { showRatings: true });
+    rerender();
+    expect(result.current.minRating).toBe(4);
   });
 });

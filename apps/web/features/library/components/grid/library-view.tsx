@@ -6,6 +6,7 @@ import type { LibraryGridItem, SelectedRecipe } from "@norish/shared-react/recip
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import {
   libraryGridItems,
+  useAppliedLibraryFilters,
   useCookbooksMutations,
   useLibraryCards,
   useLibraryFilters,
@@ -36,7 +37,7 @@ import RecipeCard from "./recipe-card";
  * recipe count.
  */
 export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
-  const filters = useLibraryFilters((state) => state.filters);
+  const filters = useAppliedLibraryFilters();
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
   const { isFavorite, toggleFavorite, deleteRecipes, allergies } = useLibraryCards(
     useRecipeMutationErrorToast()

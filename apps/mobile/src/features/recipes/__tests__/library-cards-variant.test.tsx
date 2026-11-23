@@ -11,6 +11,7 @@ vi.mock("@norish/shared-react/reader", () => ({ useDevicePreference: () => ["gri
 vi.mock("@norish/shared-react/recipes", () => ({
   useLibraryCards: () => ({ isFavorite: () => false, allergies: [] }),
   useLibraryFilters: () => ({}),
+  useAppliedLibraryFilters: () => ({}),
 }));
 vi.mock("@norish/shared/contracts/filter-contract", () => ({
   hasAppliedRecipeFilters: () => false,

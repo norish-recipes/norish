@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { hiddenItemVisibility } from "@norish/shared-react/reader";
+import { withoutHiddenFilters } from "@norish/shared-react/recipes";
 import {
   DEFAULT_RECIPE_FILTERS,
   hasAppliedRecipeFilters,
@@ -12,7 +13,6 @@ import {
   chipLabel,
   filterChips,
   quickFilters,
-  visibleFilters,
   withoutChip,
 } from "../utils/search-chips";
 
@@ -132,9 +132,9 @@ describe("a chip's icon", () => {
 describe("filters the reader hid", () => {
   it("drops a kept favourites or rating filter once its item is hidden", () => {
     expect(
-      visibleFilters(applied, { ...everything, showFavorites: false, showRatings: false })
+      withoutHiddenFilters(applied, { ...everything, showFavorites: false, showRatings: false })
     ).toEqual({ ...applied, showFavoritesOnly: false, minRating: null });
-    expect(visibleFilters(applied, { ...everything, showRatings: false })).toEqual({
+    expect(withoutHiddenFilters(applied, { ...everything, showRatings: false })).toEqual({
       ...applied,
       minRating: null,
     });
@@ -143,10 +143,10 @@ describe("filters the reader hid", () => {
   it("leaves everything else, and does nothing while the items show", () => {
     const vegan = { ...DEFAULT_RECIPE_FILTERS, searchTags: ["vegan"] };
 
-    expect(visibleFilters(applied, everything)).toBe(applied);
-    expect(visibleFilters(vegan, { ...everything, showFavorites: false, showRatings: false })).toBe(
-      vegan
-    );
+    expect(withoutHiddenFilters(applied, everything)).toBe(applied);
+    expect(
+      withoutHiddenFilters(vegan, { ...everything, showFavorites: false, showRatings: false })
+    ).toBe(vegan);
   });
 });
 
@@ -154,7 +154,7 @@ describe("the filters Search reads", () => {
   const hidden = { ...everything, showFavorites: false, showRatings: false };
 
   it("leaves out a hidden kept filter, so it neither shows nor filters", () => {
-    const seen = visibleFilters(applied, hidden);
+    const seen = withoutHiddenFilters(applied, hidden);
 
     expect(seen).toMatchObject({
       showFavoritesOnly: false,
@@ -171,12 +171,12 @@ describe("the filters Search reads", () => {
       "pantry",
     ]);
     expect(
-      filterChips(visibleFilters({ ...DEFAULT_RECIPE_FILTERS, minRating: 4 }, hidden))
+      filterChips(withoutHiddenFilters({ ...DEFAULT_RECIPE_FILTERS, minRating: 4 }, hidden))
     ).toEqual([]);
   });
 
   it("is the filters themselves while the items show", () => {
-    expect(visibleFilters(applied, everything)).toBe(applied);
+    expect(withoutHiddenFilters(applied, everything)).toBe(applied);
   });
 });
 

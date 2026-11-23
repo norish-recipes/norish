@@ -23,10 +23,12 @@ export { useLibraryQuery } from "./use-library-query";
 export { useLibraryDiscover } from "./use-library-discover";
 export { useLibrarySuggestions } from "./use-library-suggestions";
 export {
+  useAppliedLibraryFilters,
   useCookbookList,
   useLibraryCards,
   useLibraryList,
   useLibraryQueryFilters,
+  withoutHiddenFilters,
 } from "./use-library-list";
 export { usePendingRecipesQuery, useRereadPendingRecipes } from "./use-pending-recipes-query";
 export { useRandomRecipe } from "./use-random-recipe";
