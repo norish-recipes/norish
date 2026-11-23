@@ -49,6 +49,7 @@ vi.mock("@norish/shared-react/offline/react", () => ({
   useConnectivity: () => ({ isOffline: false }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({
+  API_KEY_NAME_MAX_LENGTH: 32,
   useApiKeyMutations: () => ({
     createApiKey: () => new Promise((resolve) => (state.settle = resolve)),
     forgetCreatedKey: state.forget,
