@@ -111,6 +111,61 @@ describe("useAutoConversion", () => {
     expect(page().conversion).toMatchObject({ target: "us", withAI: false });
   });
 
+  it("follows the choice through Off, so a later choice converts a recipe switched by hand", () => {
+    mocks.measurementSystem = "metric";
+
+    const { page, rerender, queryClient } = renderOn(() => useAutoConversion());
+
+    mocks.measurementSystem = "off";
+    rerender();
+    // The reader switches the recipe to US by hand while Measurements is Off.
+    act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], "us")));
+    mocks.measurementSystem = "metric";
+    rerender();
+
+    expect(page().conversion).toMatchObject({ target: "metric", withAI: false });
+  });
+
+  it("acts only on a choice the server confirmed, never on one a failed save rolls back", async () => {
+    mocks.measurementSystem = "metric";
+
+    const { page, rerender, queryClient } = renderOn(() => useAutoConversion());
+    const save = () => {
+      let settle: (ok: boolean) => void = () => {};
+      const answer = new Promise((resolve, reject) => (settle = (ok) => (ok ? resolve : reject)()));
+      const done = queryClient
+        .getMutationCache()
+        .build(queryClient, {
+          mutationKey: [["user", "updatePreferences"]],
+          mutationFn: () => answer,
+        })
+        .execute(undefined)
+        .catch(() => {});
+
+      return (ok: boolean) => act(async () => (settle(ok), await done));
+    };
+
+    let settle = save();
+
+    mocks.measurementSystem = "us";
+    rerender();
+    expect(page().conversion).toBeNull();
+
+    await settle(false);
+    mocks.measurementSystem = "metric";
+    rerender();
+    expect(page().conversion).toBeNull();
+
+    settle = save();
+    mocks.measurementSystem = "us";
+    rerender();
+    expect(page().conversion).toBeNull();
+
+    await settle(true);
+    rerender();
+    expect(page().conversion).toMatchObject({ target: "us", withAI: false });
+  });
+
   it("waits for the server's copy, since the saved one may be behind", async () => {
     mocks.measurementSystem = "us";
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useIsMutating } from "@tanstack/react-query";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import {
@@ -13,6 +14,7 @@ import {
   useProfileQuery,
   useRecipePermissions,
 } from "../reader";
+import { useTRPC } from "../trpc";
 import { useRecipePageStore } from "./recipe-page-store";
 import { useLoadedPageRecipe, useRecipeConversion } from "./use-recipe-page";
 import { useRecipeQuery } from "./use-recipe-query";
@@ -89,8 +91,11 @@ export function useSystemConversion(): SystemConversion {
 }
 
 /** Converts once per opened recipe and choice for a reader whose Preferences name a system and who
- * may, once the server's copy is in (a cached one may be stale); with AI writes only a missing copy. */
+ * may, once the server's copy is in (a cached one may be stale); with AI writes only a missing copy.
+ * A choice counts once the server confirmed it, Off included, so a pick by hand after it stands. */
 export function useAutoConversion() {
+  const trpc = useTRPC();
+  const saving = useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);
   const { convertingTo, startConversion } = useRecipeConversion();
@@ -101,12 +106,16 @@ export function useAutoConversion() {
   const doneForRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!recipe || isLoading || isFetching || convertingTo || saving) return;
     const target = measurementSystemTarget(choice);
-
-    if (!recipe || !target || isLoading || isFetching || convertingTo) return;
     const doneFor = `${recipe.id}:${choice}`;
 
     if (doneForRef.current === doneFor) return;
+    if (!target) {
+      doneForRef.current = doneFor;
+
+      return;
+    }
     if (recipe.recipeIngredients.length === 0) return;
     if (!ownerAllows(recipe.userId, canEditRecipe)) return;
 
@@ -119,6 +128,7 @@ export function useAutoConversion() {
   }, [
     recipe,
     choice,
+    saving,
     isLoading,
     isFetching,
     convertingTo,
