@@ -28,7 +28,8 @@ export function HouseholdScreen() {
   const { invalidate } = useHouseholdCacheHelpers();
   const { leaveHousehold, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
-  const page = pageState({ household, isLoading, error });
+  // currentUserId comes with every answer, so it marks a read that succeeded.
+  const page = pageState({ household, answered: currentUserId !== undefined, isLoading, error });
   const admin = household ? adminViewOf(household) : null;
 
   const confirmLeave = () => {
