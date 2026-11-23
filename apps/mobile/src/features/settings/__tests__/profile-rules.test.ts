@@ -1,14 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   addableProviders,
-  afterSave,
   canSaveProfile,
   canUnlink,
   hasPassword,
   keptDraft,
   nameToSend,
   passwordChecks,
+  saveProfile,
   shownName,
   showsSignInMethods,
 } from "../utils/profile-rules";
@@ -60,26 +60,100 @@ describe("a draft that would send nothing", () => {
   });
 });
 
-describe("after a save", () => {
-  it("drops what the save took", () => {
-    expect(afterSave("Eve", "Eve", true)).toBeNull();
+describe("the save", () => {
+  type Photo = { uri: string };
+  const sent: Photo = { uri: "a" };
+
+  /** The form's staged name and photo, written through as the component's setters do. */
+  function form(draft: string | null, photo: Photo | null) {
+    const staged = { draft, photo };
+    const updateName = vi.fn<(name: string) => Promise<boolean>>();
+    const uploadAvatar = vi.fn<(photo: Photo) => Promise<boolean>>();
+    const save = () =>
+      saveProfile({
+        draft,
+        savedName: "Ada",
+        photo,
+        updateName,
+        uploadAvatar,
+        setDraft: (update) => (staged.draft = update(staged.draft)),
+        setPhoto: (update) => (staged.photo = update(staged.photo)),
+      });
+
+    return { staged, updateName, uploadAvatar, save };
+  }
+
+  it("sends the trimmed name, then the photo, and drops both once taken", async () => {
+    const { staged, updateName, uploadAvatar, save } = form(" Eve ", sent);
+
+    updateName.mockResolvedValue(true);
+    uploadAvatar.mockResolvedValue(true);
+    await save();
+
+    expect(updateName).toHaveBeenCalledExactlyOnceWith("Eve");
+    expect(uploadAvatar).toHaveBeenCalledExactlyOnceWith(sent);
+    expect(vi.mocked(updateName)).toHaveBeenCalledBefore(vi.mocked(uploadAvatar));
+    expect(staged).toEqual({ draft: null, photo: null });
   });
 
-  it("keeps the draft when the save failed, was refused or was stale", () => {
-    expect(afterSave("Eve", "Eve", false)).toBe("Eve");
+  it("stops at a name that was refused or stale, leaving the name and the photo staged", async () => {
+    const { staged, updateName, uploadAvatar, save } = form("Eve", sent);
+
+    updateName.mockResolvedValue(false);
+    await save();
+
+    expect(uploadAvatar).not.toHaveBeenCalled();
+    expect(staged).toEqual({ draft: "Eve", photo: sent });
   });
 
-  it("keeps text typed while the save was in flight", () => {
-    expect(afterSave("Eve Smith", "Eve", true)).toBe("Eve Smith");
-    expect(afterSave("Eve Smith", "Eve", false)).toBe("Eve Smith");
+  it("keeps the photo staged when its upload fails after the name went through", async () => {
+    const { staged, updateName, uploadAvatar, save } = form("Eve", sent);
+
+    updateName.mockResolvedValue(true);
+    uploadAvatar.mockResolvedValue(false);
+    await save();
+
+    expect(staged).toEqual({ draft: null, photo: sent });
   });
 
-  it("keeps a photo staged while the save was in flight", () => {
-    const sent = { uri: "a" };
-    const later = { uri: "b" };
+  it("sends only the photo when the name is unchanged", async () => {
+    const { staged, updateName, uploadAvatar, save } = form("Ada ", sent);
 
-    expect(afterSave(sent, sent, true)).toBeNull();
-    expect(afterSave(later, sent, true)).toBe(later);
+    uploadAvatar.mockResolvedValue(true);
+    await save();
+
+    expect(updateName).not.toHaveBeenCalled();
+    expect(staged).toEqual({ draft: "Ada ", photo: null });
+  });
+
+  it("sends only the name when no photo waits", async () => {
+    const { staged, updateName, uploadAvatar, save } = form("Eve", null);
+
+    updateName.mockResolvedValue(true);
+    await save();
+
+    expect(uploadAvatar).not.toHaveBeenCalled();
+    expect(staged).toEqual({ draft: null, photo: null });
+  });
+
+  it("keeps text typed and a photo picked while the save was in flight", async () => {
+    const later: Photo = { uri: "b" };
+    const { staged, updateName, uploadAvatar, save } = form("Eve", sent);
+    const name = Promise.withResolvers<boolean>();
+    const upload = Promise.withResolvers<boolean>();
+
+    updateName.mockReturnValue(name.promise);
+    uploadAvatar.mockReturnValue(upload.promise);
+    const saved = save();
+
+    staged.draft = "Eve Smith";
+    name.resolve(true);
+    await vi.waitFor(() => expect(uploadAvatar).toHaveBeenCalled());
+    staged.photo = later;
+    upload.resolve(true);
+    await saved;
+
+    expect(staged).toEqual({ draft: "Eve Smith", photo: later });
   });
 });
 

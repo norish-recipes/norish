@@ -13,13 +13,7 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
-import {
-  afterSave,
-  canSaveProfile,
-  keptDraft,
-  nameToSend,
-  shownName,
-} from "../utils/profile-rules";
+import { canSaveProfile, keptDraft, saveProfile, shownName } from "../utils/profile-rules";
 import { writeBlocked } from "../utils/row-actions";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -61,21 +55,8 @@ export function ProfileForm() {
   });
 
   const save = async () => {
-    const sentDraft = draft;
-    const sentPhoto = photo;
-    const name = nameToSend(draft, savedName);
-
     setSaving(true);
-    if (name !== null) {
-      const tookIt = await updateName(name);
-
-      setDraft((current) => afterSave(current, sentDraft, tookIt));
-    }
-    if (sentPhoto) {
-      const tookIt = await uploadAvatar(sentPhoto);
-
-      setPhoto((current) => afterSave(current, sentPhoto, tookIt));
-    }
+    await saveProfile({ draft, savedName, photo, updateName, uploadAvatar, setDraft, setPhoto });
     setSaving(false);
   };
   // A staged photo is only dropped; a saved one is deleted on the server.

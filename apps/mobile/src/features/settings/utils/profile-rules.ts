@@ -28,8 +28,43 @@ export const keptDraft = ({
 }) => (editing || saving || nameToSend(draft, savedName) !== null ? draft : null);
 
 /** A staged name or photo goes once the save took it; one changed while saving stays. */
-export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
+const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
   tookIt && current === sent ? null : current;
+
+type Update<T> = (update: (current: T | null) => T | null) => void;
+
+/** Saves the name, then the photo; one that does not go through stays staged and stops the rest. */
+export async function saveProfile<Photo>({
+  draft,
+  savedName,
+  photo,
+  updateName,
+  uploadAvatar,
+  setDraft,
+  setPhoto,
+}: {
+  draft: string | null;
+  savedName: string;
+  photo: Photo | null;
+  updateName: (name: string) => Promise<boolean>;
+  uploadAvatar: (photo: Photo) => Promise<boolean>;
+  setDraft: Update<string>;
+  setPhoto: Update<Photo>;
+}) {
+  const name = nameToSend(draft, savedName);
+
+  if (name !== null) {
+    const tookIt = await updateName(name);
+
+    setDraft((current) => afterSave(current, draft, tookIt));
+    if (!tookIt) return;
+  }
+  if (photo) {
+    const tookIt = await uploadAvatar(photo);
+
+    setPhoto((current) => afterSave(current, photo, tookIt));
+  }
+}
 
 /** Save is on only with something to save, and never while saving or Offline. */
 export const canSaveProfile = ({
