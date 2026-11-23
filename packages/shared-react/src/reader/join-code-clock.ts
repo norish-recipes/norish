@@ -1,4 +1,4 @@
-/** The countdown's clock, to the second: Reading it never ticks by itself. */
+/** The countdown's clock, read to the second. */
 export const nowToTheSecond = () => Math.floor(Date.now() / 1000) * 1000;
 
 export const noTick = () => () => undefined;

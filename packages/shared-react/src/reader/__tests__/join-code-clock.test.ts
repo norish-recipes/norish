@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { everySecondUntil } from "../utils/join-code-clock";
+import { everySecondUntil } from "../join-code-clock";
 
 describe("everySecondUntil", () => {
   afterEach(() => vi.useRealTimers());

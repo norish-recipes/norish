@@ -16,16 +16,14 @@ import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicon
 import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { joinCodeStatus, useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
-
-const noSubscription = () => () => {};
-const nowToTheSecond = () => Math.floor(Date.now() / 1000) * 1000;
-
-function subscribeToSeconds(onTick: () => void) {
-  const interval = setInterval(onTick, 1000);
-
-  return () => clearInterval(interval);
-}
+import {
+  everySecondUntil,
+  joinCodeStatus,
+  noTick,
+  nowToTheSecond,
+  useHousehold,
+  useHouseholdMutations,
+} from "@norish/shared-react/reader";
 
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
@@ -36,7 +34,7 @@ export default function JoinCodeCard() {
     household && "joinCode" in household && household.joinCode ? household.joinCodeExpiresAt : null;
   // The clock the countdown reads, to the second, ticking while a code counts down.
   const now = useSyncExternalStore(
-    joinCodeExpiresAt ? subscribeToSeconds : noSubscription,
+    joinCodeExpiresAt ? everySecondUntil(new Date(joinCodeExpiresAt).getTime()) : noTick,
     nowToTheSecond,
     nowToTheSecond
   );
