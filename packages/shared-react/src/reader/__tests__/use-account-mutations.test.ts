@@ -130,7 +130,7 @@ describe("the Account's writes", () => {
       ["an Avatar upload", "user.uploadAvatar"],
       ["an Avatar delete", "user.deleteAvatar"],
     ] as const)(
-      "answers a stale %s as not gone through once the profile is reread",
+      "refuses a stale %s as changed elsewhere and answers once the profile is reread",
       async (_write, path) => {
         const result = render(() => ({ query: useProfileQuery(), writes: useProfileMutations() }));
         const file = new File(["x"], "a.png", { type: "image/png" });
@@ -145,6 +145,10 @@ describe("the Account's writes", () => {
         await answerCall(path, { success: true, stale: true });
 
         expect(outcome).toBeUndefined();
+        expect(adapter.showError).toHaveBeenCalledExactlyOnceWith(
+          "common.changedElsewhere.title",
+          expect.any(String)
+        );
 
         await act(async () =>
           answerRead("user.get", { ...PROFILE, user: { ...PROFILE.user, version: 5 } })

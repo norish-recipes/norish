@@ -39,10 +39,18 @@ export function useProfileMutations() {
   const { version, mergeUser, invalidate } = useProfileCache();
   const failed = useFailedWrite();
 
-  // A stale write resolves only once the profile is reread, so the next write sends the current version.
+  // A stale write is refused as changed elsewhere and resolves once the profile is reread.
   const settle = (context: string) => ({
     onSuccess: (answer: ProfileAnswer & { user?: Parameters<typeof mergeUser>[0] }) => {
-      if (answer.stale) return invalidate();
+      if (answer.stale) {
+        showRefusal(
+          showError,
+          { error: toast.translate("common.changedElsewhere.title") },
+          context
+        );
+
+        return invalidate();
+      }
       if (answer.success && answer.user) mergeUser(answer.user);
       else if (!answer.success) showRefusal(showError, answer, context);
     },
