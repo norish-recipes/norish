@@ -1,10 +1,8 @@
 import type { ProviderInfo } from "@norish/shared/contracts";
-import { keepsOfferedSignInMethod, LAST_SIGN_IN_METHOD } from "@norish/shared/contracts/dto/auth";
+import { keepsOfferedSignInMethod, SIGN_IN_METHODS } from "@norish/shared/contracts/dto/auth";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/auth/password";
 
 type Account = { id: string; providerId: string };
-
-export const PASSWORD_MIN = 8;
-export const PASSWORD_MAX = 128;
 
 /** Save is on only with something to save, and never while saving or Offline. */
 export const canSaveProfile = ({
@@ -23,7 +21,8 @@ export const canSaveProfile = ({
 
 /** Whether the password sheet is offered: the server offers passwords and the account has one. */
 export const hasPassword = (accounts: readonly Account[], offered: ReadonlySet<string>) =>
-  offered.has("credential") && accounts.some((account) => account.providerId === "credential");
+  offered.has(SIGN_IN_METHODS.credential.id) &&
+  accounts.some((account) => account.providerId === SIGN_IN_METHODS.credential.id);
 
 /** With one method on the server there is nothing to add or remove, only a password to change. */
 export const showsSignInMethods = (offeredCount: number, passwordOffered: boolean) =>
@@ -43,16 +42,6 @@ export const addableProviders = (offered: readonly ProviderInfo[], accounts: rea
       provider.type === "oauth" && !accounts.some((account) => account.providerId === provider.id)
   );
 
-const ERROR_KEYS: Record<string, string> = {
-  account_already_linked_to_different_user: "usedByAnotherAccount",
-  [LAST_SIGN_IN_METHOD]: "lastMethod",
-  SESSION_NOT_FRESH: "signInAgain",
-};
-
-/** The `settings.user.signInMethods.errors` key a refused link or unlink says; else `fallback`. */
-export const signInMethodErrorKey = (code: string | undefined, fallback: string) =>
-  `settings.user.signInMethods.errors.${ERROR_KEYS[code ?? ""] ?? fallback}`;
-
 /** What is wrong with a new password, and whether the form can go. */
 export function passwordChecks({
   current,
@@ -63,25 +52,10 @@ export function passwordChecks({
   next: string;
   confirmation: string;
 }) {
-  const tooShort = next.length > 0 && next.length < PASSWORD_MIN;
-  const tooLong = next.length > PASSWORD_MAX;
+  const tooShort = next.length > 0 && next.length < MIN_PASSWORD_LENGTH;
+  const tooLong = next.length > MAX_PASSWORD_LENGTH;
   const mismatch = confirmation.length > 0 && confirmation !== next;
   const valid = current !== "" && next !== "" && !tooShort && !tooLong && confirmation === next;
 
   return { tooShort, tooLong, mismatch, valid };
 }
-
-/** Web's admin note applies to an admin whose household has other members; it shows while unknown. */
-export const showsAdminNote = (
-  household: { users: readonly unknown[] } | null,
-  isAdmin: boolean,
-  loading: boolean
-) => loading || (isAdmin && (household?.users.length ?? 0) > 1);
-
-/** The message ids of the delete confirm's paragraphs, in order. */
-export const deleteMessageIds = (adminNote: boolean) => [
-  "settings.user.dangerZone.deleteModal.permanentWarning",
-  "settings.user.dangerZone.deleteModal.dataWarning",
-  "settings.user.dangerZone.deleteModal.recipesNote",
-  ...(adminNote ? ["settings.user.dangerZone.deleteModal.adminNote"] : []),
-];

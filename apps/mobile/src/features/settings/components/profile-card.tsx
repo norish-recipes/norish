@@ -1,9 +1,9 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { UserAvatar } from "@/components/user-avatar";
 import { useServerImage } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Image } from "expo-image";
-import { Avatar, useThemeColor } from "heroui-native";
+import { useThemeColor } from "heroui-native";
 
 /** The Reader's avatar, name and email as the Profile row at the top of Settings. */
 export function ProfileCard({
@@ -27,25 +27,12 @@ export function ProfileCard({
       testID="settings-profile"
       onPress={onPress}
     >
-      <Avatar alt={name} className="size-[52px]">
-        {image ? (
-          <Avatar.Image asChild source={toImage(image)}>
-            <Image
-              cachePolicy="memory-disk"
-              contentFit="cover"
-              style={{ width: "100%", height: "100%" }}
-            />
-          </Avatar.Image>
-        ) : null}
-        <Avatar.Fallback
-          classNames={{
-            container: "bg-avatar",
-            text: "text-foreground text-[22px] font-semibold",
-          }}
-        >
-          {name.slice(0, 1).toUpperCase()}
-        </Avatar.Fallback>
-      </Avatar>
+      <UserAvatar
+        className="size-[52px]"
+        initialClassName="text-[22px]"
+        name={name}
+        source={image ? toImage(image) : null}
+      />
       <View className="min-w-0 flex-1 gap-0.5">
         <Text className="text-foreground text-lg font-semibold" numberOfLines={1}>
           {name}

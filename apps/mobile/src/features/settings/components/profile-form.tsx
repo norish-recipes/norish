@@ -3,17 +3,18 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { SheetInput } from "@/components/sheet-input";
+import { UserAvatar } from "@/components/user-avatar";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
 import { useServerImage } from "@/lib/network/server-url";
 import { File } from "expo-file-system";
-import { Image } from "expo-image";
-import { Avatar, Button, TextField } from "heroui-native";
+import { Button, TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
 import { canSaveProfile } from "../utils/profile-rules";
+import { writeBlocked } from "../utils/row-actions";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -38,8 +39,17 @@ export function ProfileForm() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const savedName = user?.name ?? "";
+  const [syncedName, setSyncedName] = useState(savedName);
+
+  // The typed name stays through a refused save and goes once the saved name changes.
+  if (savedName !== syncedName) {
+    setSyncedName(savedName);
+    setDraft(null);
+  }
+
   const name = draft ?? savedName;
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
+  const blocked = writeBlocked(true, isOffline);
   const canSave = canSaveProfile({
     name,
     savedName,
@@ -53,10 +63,10 @@ export function ProfileForm() {
 
     if (name !== savedName) await updateName(name);
     if (photo && (await uploadAvatar(photo))) setPhoto(null);
-    setDraft(null);
     setSaving(false);
   };
-  const removePhoto = () => {
+  // A staged photo is only dropped; a saved one is deleted on the server.
+  const discardOrDeletePhoto = () => {
     if (photo) setPhoto(null);
     else void deleteAvatar();
   };
@@ -67,35 +77,30 @@ export function ProfileForm() {
         <Pressable
           accessibilityLabel={intl.formatMessage({ id: "settings.mobile.changePhoto" })}
           accessibilityRole="button"
+          className={blocked ? "opacity-40" : ""}
           disabled={isOffline}
-          style={{ opacity: isOffline ? 0.4 : 1 }}
           testID="profile-avatar"
-          onPress={() => openPhotoSources(PICKER, ([asset]) => setPhoto(new File(asset!.uri)))}
+          onPress={() =>
+            openPhotoSources(PICKER, ([asset]) => {
+              if (asset) setPhoto(new File(asset.uri));
+            })
+          }
         >
-          <Avatar alt={savedName} className="size-24">
-            {image ? (
-              <Avatar.Image asChild source={image}>
-                <Image contentFit="cover" style={{ width: "100%", height: "100%" }} />
-              </Avatar.Image>
-            ) : null}
-            <Avatar.Fallback
-              classNames={{
-                container: "bg-avatar",
-                text: "text-foreground text-[36px] font-semibold",
-              }}
-            >
-              {savedName.slice(0, 1).toUpperCase()}
-            </Avatar.Fallback>
-          </Avatar>
+          <UserAvatar
+            className="size-24"
+            initialClassName="text-[36px]"
+            name={savedName}
+            source={image}
+          />
         </Pressable>
         {image ? (
           <Pressable
             accessibilityRole="button"
-            disabled={isOffline || isDeletingAvatar}
+            className={blocked ? "opacity-40" : ""}
+            disabled={isOffline || isDeletingAvatar || saving}
             hitSlop={8}
-            style={{ opacity: isOffline ? 0.4 : 1 }}
             testID="profile-avatar-remove"
-            onPress={removePhoto}
+            onPress={discardOrDeletePhoto}
           >
             <Text className="text-danger text-[15px] font-medium">
               {intl.formatMessage({ id: "settings.user.profile.deleteAvatar" })}

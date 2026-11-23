@@ -4,12 +4,9 @@ import {
   addableProviders,
   canSaveProfile,
   canUnlink,
-  deleteMessageIds,
   hasPassword,
   passwordChecks,
-  showsAdminNote,
   showsSignInMethods,
-  signInMethodErrorKey,
 } from "../utils/profile-rules";
 
 const pw = { id: "a1", providerId: "credential" };
@@ -60,17 +57,6 @@ describe("sign-in methods", () => {
 
     expect(addableProviders(providers, [pw, sso]).map((p) => p.id)).toEqual(["github"]);
   });
-
-  it("names a refused link or unlink by its code", () => {
-    const key = (code?: string) => signInMethodErrorKey(code, "removeFailed");
-
-    expect(key("LAST_SIGN_IN_METHOD")).toBe("settings.user.signInMethods.errors.lastMethod");
-    expect(key("SESSION_NOT_FRESH")).toBe("settings.user.signInMethods.errors.signInAgain");
-    expect(key("account_already_linked_to_different_user")).toBe(
-      "settings.user.signInMethods.errors.usedByAnotherAccount"
-    );
-    expect(key()).toBe("settings.user.signInMethods.errors.removeFailed");
-  });
 });
 
 describe("the new password", () => {
@@ -94,22 +80,5 @@ describe("the new password", () => {
 
   it("needs the current password", () => {
     expect(passwordChecks({ ...form, current: "" }).valid).toBe(false);
-  });
-});
-
-describe("deleting the account", () => {
-  it("adds the admin note for an admin with other members, or while unknown", () => {
-    const shared = { users: [{}, {}] };
-
-    expect(showsAdminNote(shared, true, false)).toBe(true);
-    expect(showsAdminNote(null, false, true)).toBe(true);
-    expect(showsAdminNote(shared, false, false)).toBe(false);
-    expect(showsAdminNote({ users: [{}] }, true, false)).toBe(false);
-    expect(showsAdminNote(null, false, false)).toBe(false);
-  });
-
-  it("puts the admin note last, only when it applies", () => {
-    expect(deleteMessageIds(true).at(-1)).toBe("settings.user.dangerZone.deleteModal.adminNote");
-    expect(deleteMessageIds(false)).toHaveLength(3);
   });
 });

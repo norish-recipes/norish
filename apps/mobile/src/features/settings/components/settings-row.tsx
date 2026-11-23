@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
 import React, { useRef } from "react";
@@ -43,7 +43,8 @@ export function SettingsRow({
   testID,
   onPress,
 }: {
-  icon?: IconName;
+  /** An Ionicons name, or a node drawn inside the same tile, such as a provider icon. */
+  icon?: IconName | ReactElement;
   title: string;
   subtitle?: string;
   value?: string;
@@ -79,6 +80,13 @@ export function SettingsRow({
     transform: [{ translateX: -translation.get() }],
   }));
 
+  const glyph = (size: number) =>
+    typeof icon === "string" ? (
+      <Ionicons color={danger ? dangerInk : foreground} name={icon} size={size} />
+    ) : (
+      icon
+    );
+
   const body = (
     <View
       className={`min-h-[50px] flex-row items-center gap-3 px-4 ${centred ? "justify-center" : ""} ${subtitle ? "min-h-16 py-2" : ""} ${blocked ? "opacity-40" : ""}`}
@@ -87,10 +95,10 @@ export function SettingsRow({
       {leading ??
         (icon ? (
           centred ? (
-            <Ionicons color={danger ? dangerInk : foreground} name={icon} size={20} />
+            glyph(20)
           ) : (
             <View className="bg-default size-[30px] items-center justify-center rounded-[9px]">
-              <Ionicons color={danger ? dangerInk : foreground} name={icon} size={17} />
+              {glyph(17)}
             </View>
           )
         ) : null)}

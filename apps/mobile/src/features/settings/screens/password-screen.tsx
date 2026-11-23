@@ -13,6 +13,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { usePlatform } from "@norish/shared-react/platform";
 
 import { passwordChecks } from "../utils/profile-rules";
+import { refusalOf } from "../utils/refusal-of";
 
 /** The change password sheet, mounted per opening so a closed sheet keeps no password. */
 export function PasswordScreen() {
@@ -47,13 +48,13 @@ export function PasswordScreen() {
   const change = async () => {
     if (!authClient) return;
 
-    const { error: refusal } = await authClient
-      .changePassword({
+    const refusal = await refusalOf(
+      authClient.changePassword({
         currentPassword: current,
         newPassword: next,
         revokeOtherSessions: revokeOthers,
       })
-      .catch((): { error: { code?: string } | null } => ({ error: {} }));
+    );
 
     if (!refusal) {
       toast.show({ severity: "success", title: t("passwordChanged") });

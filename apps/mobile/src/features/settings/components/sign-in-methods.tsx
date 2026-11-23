@@ -1,27 +1,26 @@
 import React, { useState } from "react";
-import { View } from "react-native";
 import { ProviderIcon } from "@/components/provider-icon";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { SignInMethodError } from "@norish/shared/contracts/dto/auth";
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
 import { usePlatform } from "@norish/shared-react/platform";
 import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/reader";
-import { SIGN_IN_METHODS } from "@norish/shared/contracts/dto/auth";
+import { SIGN_IN_METHODS, signInMethodError } from "@norish/shared/contracts/dto/auth";
 
+import type { Refusal } from "../utils/refusal-of";
 import {
   addableProviders,
   canUnlink,
   hasPassword,
   showsSignInMethods,
-  signInMethodErrorKey,
 } from "../utils/profile-rules";
+import { refusalOf } from "../utils/refusal-of";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
-
-type Refusal = { code?: string } | null;
 
 /** The account's sign-in methods: unlink by swipe or long-press, link through the system auth
  * session, and the password sheet. Nothing here is Queued: every call needs the server. */
@@ -51,21 +50,21 @@ export function SignInMethods() {
     methods.get(providerId) ?? { ...SIGN_IN_METHODS.oidc, name: providerId };
   const addable = addableProviders(offered, signInMethods);
 
-  // Better Auth answers `{ error }` rather than throwing; a thrown call reads as a failure too.
-  const run = async (
-    call: () => Promise<{ error: Refusal }>,
-    fallback: "addFailed" | "removeFailed"
+  // Runs one auth-client call, toasting its refusal and rereading the list after it.
+  const callAuthClient = async (
+    call: (client: NonNullable<typeof authClient>) => Promise<{ error: Refusal }>,
+    fallback: SignInMethodError
   ) => {
     if (!authClient || busy) return;
 
     setBusy(true);
 
-    const { error } = await call().catch((): { error: Refusal } => ({ error: {} }));
+    const refusal = await refusalOf(call(authClient));
 
-    if (error) {
+    if (refusal) {
       toast.show({
         severity: "danger",
-        title: intl.formatMessage({ id: signInMethodErrorKey(error.code, fallback) }),
+        title: t(`errors.${signInMethodError(refusal.code, fallback)}`),
       });
     }
 
@@ -74,10 +73,10 @@ export function SignInMethods() {
   };
 
   const link = (providerId: string) =>
-    run(
-      () =>
+    callAuthClient(
+      (client) =>
         // The Expo client opens the system auth session itself, as the sign-in does.
-        authClient!.linkSocial({
+        client.linkSocial({
           provider: providerId,
           callbackURL: "/settings/profile",
           errorCallbackURL: "/settings/profile",
@@ -85,14 +84,14 @@ export function SignInMethods() {
       "addFailed"
     );
   const unlink = (accountId: string) =>
-    run(() => authClient!.unlinkAccount({ accountId }), "removeFailed");
+    callAuthClient((client) => client.unlinkAccount({ accountId }), "removeFailed");
 
   return (
     <>
       <SettingsGroup testID="sign-in-methods" title={t("title")}>
         {signInMethods.map((account) => {
           const method = methodOf(account.providerId);
-          const isPassword = account.providerId === "credential";
+          const isPassword = account.providerId === SIGN_IN_METHODS.credential.id;
           const stillOffered = offeredIds.has(account.providerId);
           const name = isPassword ? t("password") : method.name;
 
@@ -105,7 +104,7 @@ export function SignInMethods() {
                   ? [{ kind: "unlink", label: t("remove"), onPress: () => void unlink(account.id) }]
                   : []
               }
-              leading={<MethodTile color={foreground} icon={method.icon} />}
+              icon={<ProviderIcon color={foreground} icon={method.icon} size={17} />}
               subtitle={
                 !stillOffered
                   ? t("unavailable")
@@ -135,7 +134,7 @@ export function SignInMethods() {
             <SettingsRow
               key={provider.id}
               accessory="external"
-              leading={<MethodTile color={foreground} icon={provider.icon} />}
+              icon={<ProviderIcon color={foreground} icon={provider.icon} size={17} />}
               testID={`sign-in-link-${provider.id}`}
               title={t("addProvider", { provider: provider.name })}
               write
@@ -145,13 +144,5 @@ export function SignInMethods() {
         </SettingsGroup>
       ) : null}
     </>
-  );
-}
-
-function MethodTile({ icon, color }: { icon: string; color: string }) {
-  return (
-    <View className="bg-default size-[30px] items-center justify-center rounded-[9px]">
-      <ProviderIcon color={color} icon={icon} size={17} />
-    </View>
   );
 }

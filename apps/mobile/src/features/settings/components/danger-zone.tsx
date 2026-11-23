@@ -1,33 +1,28 @@
 import React from "react";
-import { Alert } from "react-native";
-import { useCancelButton } from "@/hooks/use-cancel-button";
+import { useConfirm } from "@/hooks/use-confirm";
 import { useIntl } from "react-intl";
 
-import { useDeleteAccountMutation, useHousehold } from "@norish/shared-react/reader";
+import { useDeleteAccountMutation } from "@norish/shared-react/reader";
 
-import { deleteMessageIds, showsAdminNote } from "../utils/profile-rules";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
+
+const DELETE_PARAGRAPHS = ["permanentWarning", "dataWarning", "recipesNote", "adminNote"];
 
 /** Delete account behind a destructive confirm; the app returns to sign-in once it is gone. */
 export function DangerZone() {
   const intl = useIntl();
-  const cancel = useCancelButton();
+  const confirm = useConfirm();
   const { deleteAccount } = useDeleteAccountMutation();
-  const { household, isAdmin, isLoading } = useHousehold();
   const t = (id: string) => intl.formatMessage({ id: `settings.user.dangerZone.${id}` });
 
-  const confirm = () =>
-    Alert.alert(
-      t("deleteModal.title"),
-      deleteMessageIds(showsAdminNote(household, isAdmin, isLoading))
-        .map((id) => intl.formatMessage({ id }))
-        .join("\n\n"),
-      [
-        cancel,
-        { text: t("deleteModal.confirmButton"), style: "destructive", onPress: deleteAccount },
-      ]
-    );
+  const confirmDelete = () =>
+    confirm({
+      title: t("deleteModal.title"),
+      message: DELETE_PARAGRAPHS.map((id) => t(`deleteModal.${id}`)).join("\n\n"),
+      confirmLabelId: "settings.user.dangerZone.deleteModal.confirmButton",
+      onConfirm: deleteAccount,
+    });
 
   return (
     <SettingsGroup className="pt-[30px]" title={t("title")}>
@@ -38,7 +33,7 @@ export function DangerZone() {
         testID="profile-delete-account"
         title={t("deleteButton")}
         write
-        onPress={confirm}
+        onPress={confirmDelete}
       />
     </SettingsGroup>
   );
