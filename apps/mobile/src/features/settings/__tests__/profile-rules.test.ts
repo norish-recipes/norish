@@ -6,6 +6,7 @@ import {
   canSaveProfile,
   canUnlink,
   hasPassword,
+  keptDraft,
   nameToSend,
   passwordChecks,
   shownName,
@@ -36,6 +37,26 @@ describe("the name field", () => {
 
   it("sends a draft that now differs because another device renamed", () => {
     expect(nameToSend("Ada", "Grace")).toBe("Ada");
+  });
+});
+
+describe("a draft that would send nothing", () => {
+  const field = { savedName: "Ada", editing: false, saving: false };
+
+  it("is dropped once the field is left, so a later rename shows", () => {
+    expect(keptDraft({ ...field, draft: "Ada " })).toBeNull();
+    expect(keptDraft({ ...field, draft: "Grace", savedName: "Grace" })).toBeNull();
+  });
+
+  it("stays while the reader is typing and while a save is in flight", () => {
+    expect(keptDraft({ ...field, draft: "Ada ", editing: true })).toBe("Ada ");
+    expect(keptDraft({ ...field, draft: "Ada ", saving: true })).toBe("Ada ");
+  });
+
+  it("stays when it would send something, an empty name included", () => {
+    expect(keptDraft({ ...field, draft: "Eve" })).toBe("Eve");
+    expect(keptDraft({ ...field, draft: "" })).toBe("");
+    expect(keptDraft({ ...field, draft: null })).toBeNull();
   });
 });
 

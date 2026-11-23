@@ -13,7 +13,13 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
-import { afterSave, canSaveProfile, nameToSend, shownName } from "../utils/profile-rules";
+import {
+  afterSave,
+  canSaveProfile,
+  keptDraft,
+  nameToSend,
+  shownName,
+} from "../utils/profile-rules";
 import { writeBlocked } from "../utils/row-actions";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -38,7 +44,12 @@ export function ProfileForm() {
   const [draft, setDraft] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const savedName = user?.name ?? "";
+  const kept = keptDraft({ draft, savedName, editing, saving });
+
+  // Dropped while rendering: a draft left in the field would hide, and a save undo, a later rename.
+  if (kept !== draft) setDraft(kept);
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
   const blocked = writeBlocked(true, isOffline);
   const canSave = canSaveProfile({
@@ -125,7 +136,9 @@ export function ProfileForm() {
             returnKeyType="done"
             testID="profile-name"
             value={shownName(draft, savedName)}
+            onBlur={() => setEditing(false)}
             onChangeText={setDraft}
+            onFocus={() => setEditing(true)}
           />
         </TextField>
       </View>

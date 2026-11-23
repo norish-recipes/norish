@@ -14,6 +14,19 @@ export function nameToSend(draft: string | null, savedName: string) {
   return name === savedName ? null : name;
 }
 
+/** A draft that would send nothing is dropped once the field is left, but never mid-typing or mid-save. */
+export const keptDraft = ({
+  draft,
+  savedName,
+  editing,
+  saving,
+}: {
+  draft: string | null;
+  savedName: string;
+  editing: boolean;
+  saving: boolean;
+}) => (editing || saving || nameToSend(draft, savedName) !== null ? draft : null);
+
 /** A staged name or photo goes once the save took it; one changed while saving stays. */
 export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
   tookIt && current === sent ? null : current;
