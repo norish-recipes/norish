@@ -1,11 +1,1 @@
-import React from "react";
-import { SettingsPlaceholderScreen } from "@/features/settings/screens/settings-placeholder-screen";
-
-export default function PreferencesRoute() {
-  return (
-    <SettingsPlaceholderScreen
-      testID="settings-preferences-screen"
-      titleId="settings.user.preferences.title"
-    />
-  );
-}
+export { PreferencesScreen as default } from "@/features/settings/screens/preferences-screen";
