@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { useText } from "@/lib/i18n/use-text";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
@@ -18,10 +18,11 @@ import { settingsWrite } from "../utils/settings-write";
 const TYPES = ["header", "cookie"] as const;
 
 /** The add token sheet, mounted per opening so a closed sheet keeps no token value. A token that
- * is not added stays typed. */
+ * is not added stays typed; the sheet stays open while it is being added. */
 export function TokenNewScreen() {
   const text = useText();
   const router = useRouter();
+  const navigation = useNavigation();
   const { isOffline } = useConnectivity();
   const { createToken } = useSiteAuthTokenMutations();
   const [domain, setDomain] = useState("");
@@ -29,6 +30,7 @@ export function TokenNewScreen() {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState<(typeof TYPES)[number]>("header");
+  const [sending, setSending] = useState(false);
   const form = siteAuthTokenForm({ domain, name, value });
 
   const field = ({
@@ -69,17 +71,30 @@ export function TokenNewScreen() {
     </View>
   );
 
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: !sending });
+  }, [navigation, sending]);
+
+  const sendCreate = settingsWrite(
+    () => createToken({ domain, account, name, value, type }),
+    "token-create"
+  );
   const add = async () => {
-    if (await createToken({ domain, account, name, value, type })) router.back();
+    setSending(true);
+    const added = await sendCreate();
+
+    setSending(false);
+    if (added && navigation.isFocused()) router.back();
   };
 
   return (
     <Sheet
+      closable={!sending}
       confirm={{
         label: text("settings.user.siteAuthTokens.addButton"),
         symbol: "plus",
-        disabled: !form.valid || isOffline,
-        onPress: settingsWrite(add, "token-create"),
+        disabled: !form.valid || isOffline || sending,
+        onPress: () => void add(),
       }}
       name="token-new"
       title={text("settings.user.siteAuthTokens.addButton")}

@@ -25,23 +25,37 @@ export const listenForNoAnswer = (tell: (messageId: string) => void) => {
 
 const inFlight = new Map<string, Promise<unknown>>();
 
-/** Holds the write `key` names while it is in flight: a repeat shares its outcome instead of
- * sending again. One unanswered for the timeout is released, told with `noAnswer`, and resolves undefined. */
+/** Holds the write `key` names while in flight: a repeat shares its outcome. One unanswered for the
+ * timeout is released, told with `noAnswer`, resolves undefined, and hands a later answer to `late`. */
 export const guardRepeat =
-  <A extends unknown[], R>(key: string, write: (...args: A) => R, noAnswer = NO_ANSWER) =>
+  <A extends unknown[], R>(
+    key: string,
+    write: (...args: A) => R,
+    noAnswer = NO_ANSWER,
+    late?: (answer: Awaited<R>) => void
+  ) =>
   (...args: A): Promise<Awaited<R> | undefined> => {
     const held = inFlight.get(key);
 
     if (held) return held as Promise<Awaited<R> | undefined>;
 
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let isReleased = false;
     const released = new Promise<undefined>((resolve) => {
       timer = setTimeout(() => {
+        isReleased = true;
         tellNoAnswer(noAnswer);
         resolve(undefined);
       }, SETTINGS_WRITE_TIMEOUT_MS);
     });
-    const outcome = Promise.race([(async () => write(...args))(), released]).finally(() => {
+    const request = (async () => write(...args))();
+
+    // A race of one types the answer as awaited.
+    void Promise.race([request]).then(
+      (answer) => isReleased && late?.(answer),
+      () => {}
+    );
+    const outcome = Promise.race([request, released]).finally(() => {
       clearTimeout(timer);
       if (inFlight.get(key) === outcome) inFlight.delete(key);
     });
@@ -51,22 +65,24 @@ export const guardRepeat =
     return outcome;
   };
 
-/** Wraps a Settings write so it re-reads Offline when it runs; every Settings write goes through it.
- * With a `key`, it is held as `guardRepeat` says, told with `noAnswer` if it goes unanswered. */
+/** Wraps a Settings write, the request only, so it re-reads Offline when it runs; every Settings
+ * write goes through it. With a `key`, it is held as `guardRepeat` says. */
 export function settingsWrite<A extends unknown[], R>(
   send: (...args: A) => R
 ): (...args: A) => R | undefined;
 export function settingsWrite<A extends unknown[], R>(
   send: (...args: A) => R,
   key: string,
-  noAnswer?: string
+  noAnswer?: string,
+  late?: (answer: Awaited<R> | undefined) => void
 ): (...args: A) => Promise<Awaited<R> | undefined>;
 export function settingsWrite<A extends unknown[], R>(
   send: (...args: A) => R,
   key?: string,
-  noAnswer?: string
+  noAnswer?: string,
+  late?: (answer: Awaited<R> | undefined) => void
 ) {
   return key === undefined
     ? guardWrite(isOfflineNow, send)
-    : guardRepeat(key, guardWrite(isOfflineNow, send), noAnswer);
+    : guardRepeat(key, guardWrite(isOfflineNow, send), noAnswer, late);
 }

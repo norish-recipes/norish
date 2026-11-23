@@ -39,16 +39,21 @@ export function ApiKeyNewScreen() {
     navigation.setOptions({ gestureEnabled: !locked });
   }, [navigation, locked]);
 
-  // A repeat press shares the held create's outcome, so the sheet stays locked until it settles.
+  // A repeat press shares the held create's outcome; a key answered after the release is dropped,
+  // as the reader was told to check the list.
   const sendCreate = settingsWrite(
     () => createApiKey(apiKeyName(name)),
     "api-key-create",
-    "settings.user.apiKeys.createNoAnswer"
+    "settings.user.apiKeys.createNoAnswer",
+    (late) => late && forgetCreatedKey()
   );
   const create = async () => {
     setSending(true);
-    setCreated((await sendCreate()) ?? null);
+    const key = await sendCreate();
+
     setSending(false);
+    if (key && navigation.isFocused()) setCreated(key);
+    else if (key) forgetCreatedKey();
   };
 
   const saved = () => {

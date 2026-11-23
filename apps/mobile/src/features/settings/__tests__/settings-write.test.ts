@@ -120,7 +120,8 @@ describe("an unanswered write", () => {
 
       return request.promise;
     });
-    const write = guardRepeat("create", send, "createNoAnswer");
+    const late = vi.fn();
+    const write = guardRepeat("create", send, "createNoAnswer", late);
 
     const sent = write();
 
@@ -136,10 +137,12 @@ describe("an unanswered write", () => {
     // The first's late answer leaves the retry holding the key.
     requests[0]?.resolve(true);
     await vi.advanceTimersByTimeAsync(0);
+    expect(late).toHaveBeenCalledExactlyOnceWith(true);
     void write();
     expect(send).toHaveBeenCalledTimes(2);
     requests[1]?.resolve(false);
     await expect(retry).resolves.toBe(false);
+    expect(late).toHaveBeenCalledOnce();
     expect(told).toHaveBeenCalledOnce();
     stopListening();
   });

@@ -43,7 +43,7 @@ vi.mock("react-intl", () => ({
 }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ back: state.back }),
-  useNavigation: () => ({ setOptions: state.setOptions }),
+  useNavigation: () => ({ setOptions: state.setOptions, isFocused: () => true }),
 }));
 vi.mock("@norish/shared-react/offline/react", () => ({
   useConnectivity: () => ({ isOffline: false }),
@@ -95,7 +95,7 @@ describe("the create key sheet", () => {
     expect(close().disabled).toBe(false);
   });
 
-  it("unlocks when the create goes unanswered, and says the key may exist", async () => {
+  it("unlocks when the create goes unanswered, says the key may exist, and drops a late key", async () => {
     vi.useFakeTimers();
     const told = vi.fn();
     const stopListening = listenForNoAnswer(told);
@@ -108,6 +108,11 @@ describe("the create key sheet", () => {
     expect(told).toHaveBeenCalledExactlyOnceWith("settings.user.apiKeys.createNoAnswer");
     expect(swipeable()).toBe(true);
     expect(close().disabled).toBe(false);
+
+    await act(async () => state.settle("sk-late"));
+    expect(screen.queryByTestId("api-key-value")).toBeNull();
+    expect(state.back).not.toHaveBeenCalled();
+    expect(state.forget).toHaveBeenCalledOnce();
     stopListening();
   });
 });
