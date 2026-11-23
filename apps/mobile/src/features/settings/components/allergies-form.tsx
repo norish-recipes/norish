@@ -10,15 +10,14 @@ import { useTagsQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useAllergiesMutation, useAllergiesQuery } from "@norish/shared-react/reader";
 
+import { useDraft } from "../hooks/use-draft";
 import {
+  ALLERGY_DRAFT,
   allergySuggestions,
-  canSaveAllergies,
-  keptAllergyDraft,
-  saveAllergies,
-  shownAllergies,
   withAllergy,
   withoutAllergy,
 } from "../utils/allergy-rules";
+import { saveDraft } from "../utils/draft-rules";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -31,29 +30,27 @@ export function AllergiesForm() {
   const { tags: known } = useTagsQuery();
   const [muted] = useThemeColor(["muted"] as const);
   const warningInk = useTokenColor("warning-foreground");
-  const [draft, setDraft] = useState<string[] | null>(null);
+  const allergies = useDraft(ALLERGY_DRAFT, saved, { offline: isOffline });
   const [typed, setTyped] = useState("");
-  const [saving, setSaving] = useState(false);
   const text = (id: string) => intl.formatMessage({ id });
-  const kept = keptAllergyDraft({ draft, saved, saving });
-
-  // Dropped while rendering: a draft that sends nothing would hide, and a save undo, another device's change.
-  if (kept !== draft) setDraft(kept);
-  const shown = shownAllergies(draft, saved);
+  const shown = allergies.shown;
   const suggestions = allergySuggestions(known, typed, shown);
-  const canSave = canSaveAllergies({ draft, saved, saving, offline: isOffline });
 
   const add = (name: string) => {
     const next = withAllergy(shown, name);
 
     setTyped("");
-    if (next) setDraft(next);
+    if (next) allergies.setDraft(next);
   };
-  const save = async () => {
-    setSaving(true);
-    await saveAllergies({ draft, saved, setAllergies, setDraft });
-    setSaving(false);
-  };
+  const save = () =>
+    allergies.save(() =>
+      saveDraft(ALLERGY_DRAFT, {
+        draft: allergies.draft,
+        saved,
+        send: setAllergies,
+        setDraft: allergies.setDraft,
+      })
+    );
 
   return (
     <>
@@ -81,7 +78,7 @@ export function AllergiesForm() {
                 )}
                 accessibilityRole="button"
                 className="size-[30px] items-center justify-center"
-                onPress={() => setDraft(withoutAllergy(shown, name))}
+                onPress={() => allergies.setDraft(withoutAllergy(shown, name))}
               >
                 <Ionicons color={warningInk} name="close" size={14} />
               </Pressable>
@@ -118,7 +115,7 @@ export function AllergiesForm() {
       ) : null}
       <Button
         className="mt-4 h-[50px] rounded-full"
-        isDisabled={!canSave}
+        isDisabled={!allergies.canSave()}
         testID="allergies-save"
         onPress={() => void save()}
       >

@@ -1,62 +1,64 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { DraftState } from "../utils/draft-rules";
+import { canSave, isEdited, keptDraft, shownDraft } from "../utils/draft-rules";
 import {
   addableProviders,
-  canSaveProfile,
   canUnlink,
   hasPassword,
-  keptDraft,
-  nameToSend,
+  NAME_DRAFT,
   passwordChecks,
   saveProfile,
-  shownName,
   showsSignInMethods,
 } from "../utils/profile-rules";
 
 const pw = { id: "a1", providerId: "credential" };
 const sso = { id: "a2", providerId: "oidc" };
-const base = { draft: null, savedName: "Ada", hasNewPhoto: false, saving: false, offline: false };
+const base: DraftState<string> = { draft: null, saved: "Ada", saving: false, offline: false };
+const sent = (draft: string | null, saved: string) =>
+  isEdited(NAME_DRAFT, draft, saved) && draft !== null ? NAME_DRAFT.sent(draft) : null;
 
 describe("the name field", () => {
   it("shows the saved name until something is typed, and the draft after", () => {
-    expect(shownName(null, "Ada")).toBe("Ada");
-    expect(shownName("Eve", "Ada")).toBe("Eve");
+    expect(shownDraft(null, "Ada")).toBe("Ada");
+    expect(shownDraft("Eve", "Ada")).toBe("Eve");
   });
 
   it("shows a name from another device when nothing is typed, and keeps a draft over it", () => {
-    expect(shownName(null, "Grace")).toBe("Grace");
-    expect(shownName("Eve", "Grace")).toBe("Eve");
+    expect(shownDraft(null, "Grace")).toBe("Grace");
+    expect(shownDraft("Eve", "Grace")).toBe("Eve");
   });
 
   it("sends the trimmed draft, and nothing when trimming leaves the saved name", () => {
-    expect(nameToSend(null, "Ada")).toBeNull();
-    expect(nameToSend(" Eve ", "Ada")).toBe("Eve");
-    expect(nameToSend("Ada ", "Ada")).toBeNull();
-    expect(nameToSend("   ", "Ada")).toBe("");
+    expect(sent(null, "Ada")).toBeNull();
+    expect(sent(" Eve ", "Ada")).toBe("Eve");
+    expect(sent("Ada ", "Ada")).toBeNull();
+    expect(sent("   ", "Ada")).toBe("");
   });
 
   it("sends a draft that now differs because another device renamed", () => {
-    expect(nameToSend("Ada", "Grace")).toBe("Ada");
+    expect(sent("Ada", "Grace")).toBe("Ada");
   });
 });
 
 describe("a draft that would send nothing", () => {
-  const field = { savedName: "Ada", editing: false, saving: false };
+  const kept = (draft: string | null, { saved = "Ada", editing = false, saving = false } = {}) =>
+    keptDraft(NAME_DRAFT, draft, saved, editing || saving);
 
   it("is dropped once the field is left, so a later rename shows", () => {
-    expect(keptDraft({ ...field, draft: "Ada " })).toBeNull();
-    expect(keptDraft({ ...field, draft: "Grace", savedName: "Grace" })).toBeNull();
+    expect(kept("Ada ")).toBeNull();
+    expect(kept("Grace", { saved: "Grace" })).toBeNull();
   });
 
   it("stays while the reader is typing and while a save is in flight", () => {
-    expect(keptDraft({ ...field, draft: "Ada ", editing: true })).toBe("Ada ");
-    expect(keptDraft({ ...field, draft: "Ada ", saving: true })).toBe("Ada ");
+    expect(kept("Ada ", { editing: true })).toBe("Ada ");
+    expect(kept("Ada ", { saving: true })).toBe("Ada ");
   });
 
   it("stays when it would send something, an empty name included", () => {
-    expect(keptDraft({ ...field, draft: "Eve" })).toBe("Eve");
-    expect(keptDraft({ ...field, draft: "" })).toBe("");
-    expect(keptDraft({ ...field, draft: null })).toBeNull();
+    expect(kept("Eve")).toBe("Eve");
+    expect(kept("")).toBe("");
+    expect(kept(null)).toBeNull();
   });
 });
 
@@ -158,25 +160,28 @@ describe("the save", () => {
 });
 
 describe("saving the profile", () => {
+  const can = (state: Partial<DraftState<string>>, photo = false) =>
+    canSave(NAME_DRAFT, { ...base, ...state }, photo);
+
   it("needs a changed name or a new photo", () => {
-    expect(canSaveProfile(base)).toBe(false);
-    expect(canSaveProfile({ ...base, draft: "Eve" })).toBe(true);
-    expect(canSaveProfile({ ...base, hasNewPhoto: true })).toBe(true);
-    expect(canSaveProfile({ ...base, draft: "Eve", hasNewPhoto: true })).toBe(true);
+    expect(can({})).toBe(false);
+    expect(can({ draft: "Eve" })).toBe(true);
+    expect(can({}, true)).toBe(true);
+    expect(can({ draft: "Eve" }, true)).toBe(true);
   });
 
   it("is off for an edit that only adds whitespace, unless a photo waits", () => {
-    expect(canSaveProfile({ ...base, draft: "Ada  " })).toBe(false);
-    expect(canSaveProfile({ ...base, draft: "Ada  ", hasNewPhoto: true })).toBe(true);
+    expect(can({ draft: "Ada  " })).toBe(false);
+    expect(can({ draft: "Ada  " }, true)).toBe(true);
   });
 
   it("stays on for an empty name, which the save refuses and says why", () => {
-    expect(canSaveProfile({ ...base, draft: "" })).toBe(true);
+    expect(can({ draft: "" })).toBe(true);
   });
 
   it("is off while saving and while Offline", () => {
-    expect(canSaveProfile({ ...base, draft: "Eve", saving: true })).toBe(false);
-    expect(canSaveProfile({ ...base, draft: "Eve", offline: true })).toBe(false);
+    expect(can({ draft: "Eve", saving: true })).toBe(false);
+    expect(can({ draft: "Eve", offline: true })).toBe(false);
   });
 });
 

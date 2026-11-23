@@ -1,23 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  allergiesToSend,
+  ALLERGY_DRAFT,
   allergySuggestions,
-  canSaveAllergies,
-  keptAllergyDraft,
-  saveAllergies,
-  shownAllergies,
   withAllergy,
   withoutAllergy,
 } from "../utils/allergy-rules";
+import { canSave, isEdited, keptDraft, saveDraft, shownDraft } from "../utils/draft-rules";
 
 const base = { draft: null, saved: ["nuts"], saving: false, offline: false };
+const edited = (draft: string[] | null, saved: string[]) => isEdited(ALLERGY_DRAFT, draft, saved);
 
 describe("the allergy chips", () => {
   it("show the saved allergies until one is edited, a draft after, and another device's change when nothing is edited", () => {
-    expect(shownAllergies(null, ["nuts"])).toEqual(["nuts"]);
-    expect(shownAllergies(["nuts", "milk"], ["nuts"])).toEqual(["nuts", "milk"]);
-    expect(shownAllergies(null, ["gluten"])).toEqual(["gluten"]);
+    expect(shownDraft(null, ["nuts"])).toEqual(["nuts"]);
+    expect(shownDraft(["nuts", "milk"], ["nuts"])).toEqual(["nuts", "milk"]);
+    expect(shownDraft(null, ["gluten"])).toEqual(["gluten"]);
   });
 
   it("add a trimmed name, and ignore a blank or repeated one in any case", () => {
@@ -31,46 +29,44 @@ describe("the allergy chips", () => {
   });
 });
 
-describe("what Save sends", () => {
-  it("is nothing for an untouched draft or the saved set in another order", () => {
-    expect(allergiesToSend(null, ["nuts"])).toBeNull();
-    expect(allergiesToSend(["milk", "nuts"], ["nuts", "milk"])).toBeNull();
+describe("whether Save sends the draft", () => {
+  it("is no for an untouched draft or the saved set in another order", () => {
+    expect(edited(null, ["nuts"])).toBe(false);
+    expect(edited(["milk", "nuts"], ["nuts", "milk"])).toBe(false);
   });
 
-  it("is nothing for a case-only or repeated edit, which the server stores as the same tags", () => {
-    expect(allergiesToSend(["Nuts"], ["nuts"])).toBeNull();
-    expect(allergiesToSend(["nuts", "NUTS"], ["nuts"])).toBeNull();
+  it("is no for a case-only or repeated edit, which the server stores as the same tags", () => {
+    expect(edited(["Nuts"], ["nuts"])).toBe(false);
+    expect(edited(["nuts", "NUTS"], ["nuts"])).toBe(false);
   });
 
-  it("is the draft when it differs, including an emptied list", () => {
-    expect(allergiesToSend(["nuts", "milk"], ["nuts"])).toEqual(["nuts", "milk"]);
-    expect(allergiesToSend([], ["nuts"])).toEqual([]);
+  it("is yes when it differs, including an emptied list", () => {
+    expect(edited(["nuts", "milk"], ["nuts"])).toBe(true);
+    expect(edited([], ["nuts"])).toBe(true);
   });
 
-  it("is the draft when another device saved what the draft started from", () => {
-    expect(allergiesToSend(["nuts"], ["gluten"])).toEqual(["nuts"]);
+  it("is yes when another device saved what the draft started from", () => {
+    expect(edited(["nuts"], ["gluten"])).toBe(true);
   });
 });
 
 describe("a draft that sends nothing", () => {
   it("is dropped, so it cannot undo another device's change", () => {
-    const saving = false;
-
-    expect(keptAllergyDraft({ draft: ["nuts"], saved: ["nuts"], saving })).toBeNull();
-    expect(keptAllergyDraft({ draft: ["milk"], saved: ["nuts"], saving })).toEqual(["milk"]);
+    expect(keptDraft(ALLERGY_DRAFT, ["nuts"], ["nuts"], false)).toBeNull();
+    expect(keptDraft(ALLERGY_DRAFT, ["milk"], ["nuts"], false)).toEqual(["milk"]);
   });
 
   it("is held while its save is on its way", () => {
-    expect(keptAllergyDraft({ draft: ["nuts"], saved: ["nuts"], saving: true })).toEqual(["nuts"]);
+    expect(keptDraft(ALLERGY_DRAFT, ["nuts"], ["nuts"], true)).toEqual(["nuts"]);
   });
 });
 
 describe("Save", () => {
   it("is on only with something to send, and never while saving or Offline", () => {
-    expect(canSaveAllergies(base)).toBe(false);
-    expect(canSaveAllergies({ ...base, draft: ["milk"] })).toBe(true);
-    expect(canSaveAllergies({ ...base, draft: ["milk"], saving: true })).toBe(false);
-    expect(canSaveAllergies({ ...base, draft: ["milk"], offline: true })).toBe(false);
+    expect(canSave(ALLERGY_DRAFT, base)).toBe(false);
+    expect(canSave(ALLERGY_DRAFT, { ...base, draft: ["milk"] })).toBe(true);
+    expect(canSave(ALLERGY_DRAFT, { ...base, draft: ["milk"], saving: true })).toBe(false);
+    expect(canSave(ALLERGY_DRAFT, { ...base, draft: ["milk"], offline: true })).toBe(false);
   });
 });
 
@@ -88,16 +84,16 @@ describe("the suggestions", () => {
   });
 });
 
-describe("saveAllergies", () => {
+describe("saving the allergies", () => {
   const sent = ["milk"];
   const run = async (answer: boolean, current: string[] | null = sent) => {
     const setAllergies = vi.fn().mockResolvedValue(answer);
     let draft = current;
 
-    await saveAllergies({
+    await saveDraft(ALLERGY_DRAFT, {
       draft: sent,
       saved: ["nuts"],
-      setAllergies,
+      send: setAllergies,
       setDraft: (update) => void (draft = update(draft)),
     });
 
@@ -122,7 +118,12 @@ describe("saveAllergies", () => {
   it("sends nothing for a draft that matches what is saved", async () => {
     const setAllergies = vi.fn();
 
-    await saveAllergies({ draft: ["nuts"], saved: ["nuts"], setAllergies, setDraft: vi.fn() });
+    await saveDraft(ALLERGY_DRAFT, {
+      draft: ["nuts"],
+      saved: ["nuts"],
+      send: setAllergies,
+      setDraft: vi.fn(),
+    });
 
     expect(setAllergies).not.toHaveBeenCalled();
   });

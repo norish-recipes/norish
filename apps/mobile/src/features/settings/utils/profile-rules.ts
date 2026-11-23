@@ -2,36 +2,16 @@ import type { ProviderInfo } from "@norish/shared/contracts";
 import { keepsOfferedSignInMethod, SIGN_IN_METHODS } from "@norish/shared/contracts/dto/auth";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@norish/shared/lib/auth/password";
 
+import type { DraftWrite, Update } from "./draft-rules";
+import { afterSave, saveDraft } from "./draft-rules";
+
 type Account = { id: string; providerId: string };
 
-/** The name field shows the draft until its save takes it, else the saved name, wherever that came from. */
-export const shownName = (draft: string | null, savedName: string) => draft ?? savedName;
-
-/** What Save sends for the name: the trimmed draft, as the server stores it, or null when that is the saved name. */
-export function nameToSend(draft: string | null, savedName: string) {
-  const name = draft?.trim() ?? savedName;
-
-  return name === savedName ? null : name;
-}
-
-/** A draft that would send nothing is dropped once the field is left, but never mid-typing or mid-save. */
-export const keptDraft = ({
-  draft,
-  savedName,
-  editing,
-  saving,
-}: {
-  draft: string | null;
-  savedName: string;
-  editing: boolean;
-  saving: boolean;
-}) => (editing || saving || nameToSend(draft, savedName) !== null ? draft : null);
-
-/** A staged name or photo goes once the save took it; one changed while saving stays. */
-export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
-  tookIt && current === sent ? null : current;
-
-export type Update<T> = (update: (current: T | null) => T | null) => void;
+/** The name: the trimmed draft, as the server stores it, sends only when it is not the saved name. */
+export const NAME_DRAFT: DraftWrite<string> = {
+  sent: (draft) => draft.trim(),
+  changes: (sent, saved) => sent !== saved,
+};
 
 /** Saves the name, then the photo; one that does not go through stays staged and stops the rest. */
 export async function saveProfile<Photo>({
@@ -51,35 +31,14 @@ export async function saveProfile<Photo>({
   setDraft: Update<string>;
   setPhoto: Update<Photo>;
 }) {
-  const name = nameToSend(draft, savedName);
+  const send = { draft, saved: savedName, send: updateName, setDraft };
 
-  if (name !== null) {
-    const tookIt = await updateName(name);
+  if (!(await saveDraft(NAME_DRAFT, send)) || !photo) return;
 
-    setDraft((current) => afterSave(current, draft, tookIt));
-    if (!tookIt) return;
-  }
-  if (photo) {
-    const tookIt = await uploadAvatar(photo);
+  const tookIt = await uploadAvatar(photo);
 
-    setPhoto((current) => afterSave(current, photo, tookIt));
-  }
+  setPhoto((current) => afterSave(current, photo, tookIt));
 }
-
-/** Save is on only with something to save, and never while saving or Offline. */
-export const canSaveProfile = ({
-  draft,
-  savedName,
-  hasNewPhoto,
-  saving,
-  offline,
-}: {
-  draft: string | null;
-  savedName: string;
-  hasNewPhoto: boolean;
-  saving: boolean;
-  offline: boolean;
-}) => !saving && !offline && (nameToSend(draft, savedName) !== null || hasNewPhoto);
 
 /** Whether the password sheet is offered: the server offers passwords and the account has one. */
 export const hasPassword = (accounts: readonly Account[], offered: ReadonlySet<string>) =>

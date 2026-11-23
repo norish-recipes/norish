@@ -13,7 +13,8 @@ import { useIntl } from "react-intl";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
 
-import { canSaveProfile, keptDraft, saveProfile, shownName } from "../utils/profile-rules";
+import { useDraft } from "../hooks/use-draft";
+import { NAME_DRAFT, saveProfile } from "../utils/profile-rules";
 import { writeBlocked } from "../utils/row-actions";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -35,30 +36,25 @@ export function ProfileForm() {
   const openPhotoSources = usePhotoSourceSheet(
     intl.formatMessage({ id: "settings.mobile.changePhoto" })
   );
-  const [draft, setDraft] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
-  const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const savedName = user?.name ?? "";
-  const kept = keptDraft({ draft, savedName, editing, saving });
-
-  // Dropped while rendering: a draft left in the field would hide, and a save undo, a later rename.
-  if (kept !== draft) setDraft(kept);
+  const name = useDraft(NAME_DRAFT, savedName, { editing, offline: isOffline });
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
   const blocked = writeBlocked(true, isOffline);
-  const canSave = canSaveProfile({
-    draft,
-    savedName,
-    hasNewPhoto: photo !== null,
-    saving,
-    offline: isOffline,
-  });
 
-  const save = async () => {
-    setSaving(true);
-    await saveProfile({ draft, savedName, photo, updateName, uploadAvatar, setDraft, setPhoto });
-    setSaving(false);
-  };
+  const save = () =>
+    name.save(() =>
+      saveProfile({
+        draft: name.draft,
+        savedName,
+        photo,
+        updateName,
+        uploadAvatar,
+        setDraft: name.setDraft,
+        setPhoto,
+      })
+    );
   // A staged photo is only dropped; a saved one is deleted on the server.
   const discardOrDeletePhoto = () => {
     if (photo) setPhoto(null);
@@ -91,7 +87,7 @@ export function ProfileForm() {
           <Pressable
             accessibilityRole="button"
             className={blocked ? "opacity-40" : ""}
-            disabled={isOffline || isDeletingAvatar || saving}
+            disabled={isOffline || isDeletingAvatar || name.saving}
             hitSlop={8}
             testID="profile-avatar-remove"
             onPress={discardOrDeletePhoto}
@@ -116,9 +112,9 @@ export function ProfileForm() {
             placeholder={intl.formatMessage({ id: "settings.user.profile.namePlaceholder" })}
             returnKeyType="done"
             testID="profile-name"
-            value={shownName(draft, savedName)}
+            value={name.shown}
             onBlur={() => setEditing(false)}
-            onChangeText={setDraft}
+            onChangeText={name.setDraft}
             onFocus={() => setEditing(true)}
           />
         </TextField>
@@ -132,7 +128,7 @@ export function ProfileForm() {
       </SettingsGroup>
       <Button
         className="mt-4 h-[50px] rounded-full"
-        isDisabled={!canSave}
+        isDisabled={!name.canSave(photo !== null)}
         testID="profile-save"
         onPress={() => void save()}
       >
