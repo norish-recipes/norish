@@ -18,4 +18,5 @@ export {
 export { useTimersEnabledQuery } from "./use-timers-enabled-query";
 export { useUnitsQuery } from "./use-units-query";
 export { useUploadLimitsQuery } from "./use-upload-limits-query";
+export { useServerVersionQuery } from "./use-server-version-query";
 export { useVersionQuery } from "./use-version-query";
