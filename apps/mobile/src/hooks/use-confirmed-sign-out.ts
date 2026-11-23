@@ -1,6 +1,7 @@
 import { Alert } from "react-native";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { getAuthTransportSnapshot } from "@/lib/auth/auth-session-sync";
+import { confirmsDiscard } from "@/lib/discard-confirm";
 import { offlineEngine } from "@/lib/offline/engine";
 import { useIntl } from "react-intl";
 
@@ -31,7 +32,7 @@ export function useConfirmedSignOut(): (onLeaving?: () => void) => Promise<boole
 
     const unsynced = await offlineEngine.unsyncedChanges();
 
-    if (unsynced === 0) return leave(false);
+    if (!confirmsDiscard(unsynced)) return leave(false);
 
     return new Promise<boolean>((resolve) =>
       Alert.alert(
