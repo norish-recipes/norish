@@ -10,7 +10,7 @@ import { ConnectionList } from "../components/connection-list";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { useDeleteAction } from "../components/use-delete-action";
+import { useDeleteAction } from "../hooks/use-confirmed-write";
 import { settingsWrite } from "../utils/settings-write";
 
 const API_DOCS_URL = "https://docs.norish.dev/reference/api";

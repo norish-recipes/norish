@@ -1,12 +1,11 @@
 import React from "react";
 import { UserAvatar } from "@/components/user-avatar";
-import { useConfirm } from "@/hooks/use-confirm";
 import { useText } from "@/lib/i18n/use-text";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 import { allowedMemberActions, useHouseholdMutations } from "@norish/shared-react/reader";
 
-import { settingsWrite } from "../utils/settings-write";
+import { useConfirmedWrite } from "../hooks/use-confirmed-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -42,7 +41,7 @@ export function MembersList({
   isAdmin: boolean;
 }) {
   const text = useText();
-  const confirm = useConfirm();
+  const confirmedWrite = useConfirmedWrite();
   const { kickUser, transferAdmin } = useHouseholdMutations();
   const send = {
     kick: (userId: string) => kickUser(household.id, userId),
@@ -65,14 +64,14 @@ export function MembersList({
           return {
             kind: look.kind,
             label: text(look.button),
-            onPress: () =>
-              confirm({
-                title: text(look.title),
-                message: `${text(look.message, { name })}\n\n${text(look.warning)}`,
-                confirmLabelId: look.confirm,
-                destructive: look.destructive,
-                onConfirm: settingsWrite(() => send[action](user.id), `${action}:${user.id}`),
-              }),
+            onPress: confirmedWrite({
+              title: text(look.title),
+              message: `${text(look.message, { name })}\n\n${text(look.warning)}`,
+              confirmLabelId: look.confirm,
+              destructive: look.destructive,
+              send: () => send[action](user.id),
+              key: `${action}:${user.id}`,
+            }),
           };
         });
 

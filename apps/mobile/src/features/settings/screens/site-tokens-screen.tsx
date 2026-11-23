@@ -12,7 +12,7 @@ import { ConnectionList } from "../components/connection-list";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { useDeleteAction } from "../components/use-delete-action";
+import { useDeleteAction } from "../hooks/use-confirmed-write";
 
 /** Site tokens: the Reader's header and cookie tokens by domain, Add in a sheet, Delete behind a confirm. */
 export function SiteTokensScreen() {

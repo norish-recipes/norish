@@ -1,5 +1,4 @@
 import React from "react";
-import { useConfirm } from "@/hooks/use-confirm";
 import { useText } from "@/lib/i18n/use-text";
 import { shareEnding } from "@/lib/share-subtitle";
 import { useIntl } from "react-intl";
@@ -15,14 +14,14 @@ import { ConnectionList } from "../components/connection-list";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { settingsWrite } from "../utils/settings-write";
+import { useConfirmedWrite } from "../hooks/use-confirmed-write";
 
 /** Share links: the Reader's public recipe links with their status; Revoke, Reactivate and Delete
  * each behind a confirm. A link's URL is shown once, when it is made, so there is no Copy here. */
 export function ShareLinksScreen() {
   const text = useText();
   const intl = useIntl();
-  const confirm = useConfirm();
+  const confirmedWrite = useConfirmedWrite();
   const read = useMyRecipeSharesQuery();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(null);
   const date = (value: Date) => intl.formatDate(value, { dateStyle: "medium" });
@@ -54,17 +53,14 @@ export function ShareLinksScreen() {
                 return {
                   kind: action,
                   label: text(`${modal}.confirm`),
-                  onPress: () =>
-                    confirm({
-                      title: text(`${modal}.title`),
-                      message: text(`${modal}.message`, { recipeName: share.recipeName }),
-                      confirmLabelId: `${modal}.confirm`,
-                      destructive: action === "delete",
-                      onConfirm: settingsWrite(
-                        () => sendAction[action](share.id, share.version),
-                        `${action}:${share.id}`
-                      ),
-                    }),
+                  onPress: confirmedWrite({
+                    title: text(`${modal}.title`),
+                    message: text(`${modal}.message`, { recipeName: share.recipeName }),
+                    confirmLabelId: `${modal}.confirm`,
+                    destructive: action === "delete",
+                    send: () => sendAction[action](share.id, share.version),
+                    key: `${action}:${share.id}`,
+                  }),
                 };
               })}
               icon="link-outline"
