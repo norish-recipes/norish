@@ -10,7 +10,7 @@ The mobile Settings screen is a 25-line placeholder. A reader on the phone canno
 
 ## Solution
 
-Settings becomes a pushed page opened from the avatar menu's "All settings", with Profile, Household, Connections and App sections and Sign out. Each section mirrors the web settings cards (`apps/web/features/account`, `apps/web/features/household`, `apps/web/components/settings/share-links-table-card.tsx`) on the same shared-react hooks, drawn as iOS grouped lists. The landing site gains a generic privacy page the App section links to.
+Settings becomes a pushed page opened from the avatar menu's "All settings", with Profile, Household, Connections and App sections and Sign out. Each section mirrors the web settings cards (`apps/web/features/account`, `apps/web/features/household`, `apps/web/components/settings/share-links-table-card.tsx`) on the same shared-react hooks, drawn as iOS grouped lists.
 
 ## User Stories
 
@@ -25,15 +25,15 @@ Settings becomes a pushed page opened from the avatar menu's "All settings", wit
 9. As a reader with no household, I want to create or join one, so that I can start sharing.
 10. As a reader, I want to add and delete site tokens, add, disable, enable and delete API keys, and see a new API key once to copy it, so that imports and integrations keep working.
 11. As a reader, I want to copy, revoke, reactivate and delete my recipe share links, so that I control what is public.
-12. As a reader, I want to change server, open the privacy policy and support, and see the app and server versions, so that I can report a bug with both.
+12. As a reader, I want to change server, open support, and see the app and server versions, so that I can report a bug with both.
 13. As a reader, I want sign out and change server to warn me only when unsynced changes would be lost, so that a plain sign-out is one tap.
 14. As an Offline reader, I want Settings readable but its changes disabled with the reason shown, so that I never think a change was saved.
 
 ## Implementation Decisions
 
 - **Entry.** The `(tabs)/settings.tsx` tab goes; Settings is a pushed route opened by the avatar menu's existing "All settings" (`apps/mobile/src/components/account-menu.tsx`), with a back button and a small centred nav title like every sub-page.
-- **Root sections.** Profile card (name, email, avatar; rows Profile, Preferences, Allergies) · Household · Connections (Site tokens, API keys, Share links) · App (Server, Privacy policy, Support, Version) · Sign out.
-- **App rows.** Server opens the existing server-address flow (`update-server.tsx` / Connect). Privacy policy opens `https://norish.dev/privacy` and Support the GitHub issues page, both in the browser. Version shows the app version and build and the server's version (`config` health `version`), e.g. "1.0 (12) · Server 0.28.0".
+- **Root sections.** Profile card (name, email, avatar; rows Profile, Preferences, Allergies) · Household · Connections (Site tokens, API keys, Share links) · App (Server, Support, Version) · Sign out.
+- **App rows.** Server opens the existing server-address flow (`update-server.tsx` / Connect). Support opens the GitHub issues page in the browser. Version shows the app version and build and the server's version (`config` health `version`), e.g. "1.0 (12) · Server 0.28.0".
 - **Sign out and change server** confirm only when the Outbox holds unsynced changes, with the existing "Discard unsynced changes?" alert; otherwise they act at once. Change server signs out, then opens the server address pre-filled.
 - **Lists.** Rows have small swipe actions (34 pt circles, 11 pt labels, row content shrinks with an ellipsis) and a long-press menu (lifted row, glass menu with icons, plain scrim). No ⋯ buttons. Delete and Kick red, Revoke and Disable yellow (`--shop`), Reactivate, Enable and Make admin green. One shared settings-row component covers every list; long-press goes through the `native-menu` module.
 - **Forms.** Profile and Allergies have Save buttons. Helper text sits behind an (i) hint button (`hint-button.tsx`), never under a field. Sheets follow the Panels kit (glass, no solid footer).
@@ -42,7 +42,6 @@ Settings becomes a pushed page opened from the avatar menu's "All settings", wit
 - **Sign-in methods.** Link opens the same system auth session the app's OIDC sign-in uses; unlink by swipe or long-press. The last method cannot be removed (as web).
 - **Delete account** mirrors web's danger zone, including its note for household admins, behind a destructive confirm.
 - **Offline.** Settings shows cached data; every save, swipe action and menu action is disabled, and the glass "Offline" capsule says why. Settings writes never enter the Outbox.
-- **Privacy page.** `norish.dev/privacy` on the landing site: the app and the site collect nothing; your data lives on the server you connect to, under that server's operator.
 
 ## Testing Decisions
 
@@ -53,7 +52,7 @@ Settings becomes a pushed page opened from the avatar menu's "All settings", wit
 ## Out of Scope
 
 - Admin settings, ingredient management, archive import and export.
-- Everything calendar: CalDAV and Apple Calendar Sync on mobile get their own spec (`.scratch/calendar-sync/notes.md`).
-- TestFlight submission, App Review, a reviewer server, the public demo instance.
+- Everything calendar: CalDAV and Apple Calendar Sync on mobile get their own spec.
+- A privacy policy page, TestFlight submission, App Review, a reviewer server, the public demo instance.
 - Web settings layout changes.
 - iPad and foldable layouts.
