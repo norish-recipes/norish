@@ -51,7 +51,11 @@ export {
 } from "./use-account-mutations";
 export { useAllergiesMutation, useAllergiesQuery } from "./use-allergies";
 export { useProfileQuery, useSignInMethodsQuery } from "./use-profile";
-export { useSiteAuthTokenMutations, useSiteAuthTokensQuery } from "./use-site-auth-tokens";
+export {
+  useSiteAuthTokenMutations,
+  useSiteAuthTokensQuery,
+  useSiteAuthTokensRead,
+} from "./use-site-auth-tokens";
 export {
   apiKeyPrefix,
   orderedSiteTokens,

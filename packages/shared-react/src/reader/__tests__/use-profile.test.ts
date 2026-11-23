@@ -1,11 +1,11 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { UserSettingsDto } from "@norish/trpc";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 import { useProfileMutations, useProfileQuery } from "..";
-import { answerRead, keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
+import { answerRead, failRead, keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -37,7 +37,7 @@ describe("the Reader's profile", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    expect(result.current).toEqual({ user: null, apiKeys: [] });
+    expect(result.current).toMatchObject({ user: null, apiKeys: [], answered: false });
   });
 
   it("reads the cached user and API keys", () => {
@@ -46,7 +46,18 @@ describe("the Reader's profile", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    expect(result.current).toEqual(PROFILE);
+    expect(result.current).toMatchObject({ ...PROFILE, answered: true });
+  });
+
+  it("reports a failed first read, not an empty list of keys", async () => {
+    const { result } = renderHook(() => useProfileQuery(), {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    await act(async () => failRead("user.get"));
+
+    expect(result.current.answered).toBe(false);
+    await waitFor(() => expect(result.current.error).toBeTruthy());
   });
 
   it("keeps a write over a read that began before it", async () => {

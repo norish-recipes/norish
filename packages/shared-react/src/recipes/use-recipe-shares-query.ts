@@ -25,6 +25,8 @@ type RecipeSharesQueryResult = {
 
 type ShareInventoryQueryResult<TShare> = {
   shares: TShare[];
+  /** Whether the read ever succeeded, so a failed load is not an empty list. */
+  answered: boolean;
   isLoading: boolean;
   error: unknown;
   queryKey: QueryKey;
@@ -78,6 +80,7 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
 
   return {
     shares: query.data ?? [],
+    answered: query.data !== undefined,
     isLoading: query.isLoading,
     error: query.error,
     queryKey,
@@ -97,6 +100,7 @@ export function useAdminRecipeSharesQuery(): AdminRecipeSharesQueryResult {
 
   return {
     shares: query.data ?? [],
+    answered: query.data !== undefined,
     isLoading: query.isLoading,
     error: query.error,
     queryKey,

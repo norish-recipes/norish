@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -7,9 +7,9 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { useSiteAuthTokenMutations } from "..";
+import { useSiteAuthTokenMutations, useSiteAuthTokensRead } from "..";
 import { readUnderWay } from "../../offline/testing";
-import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
+import { answerCall, failRead, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -75,5 +75,25 @@ describe("useSiteAuthTokenMutations", () => {
     await answerCall("siteAuthTokens.remove", { success: true, stale: false });
     await act(land);
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([added]);
+  });
+});
+
+describe("useSiteAuthTokensRead", () => {
+  it("tells a failed first read from an empty list, and keeps a cached list through a failed refetch", async () => {
+    resetTRPCFake();
+    const queryClient = createTestQueryClient();
+    const { result } = renderHook(() => useSiteAuthTokensRead(), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    await act(async () => failRead("siteAuthTokens.list"));
+    await waitFor(() => expect(result.current.error).toBeTruthy());
+    expect(result.current).toMatchObject({ tokens: [], answered: false });
+
+    act(() => queryClient.setQueryData(TOKENS_KEY, [{ id: "t1" }]));
+    result.current.refetch();
+    await act(async () => failRead("siteAuthTokens.list"));
+    await waitFor(() => expect(result.current.error).toBeTruthy());
+    expect(result.current).toMatchObject({ tokens: [{ id: "t1" }], answered: true });
   });
 });

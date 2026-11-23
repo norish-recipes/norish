@@ -7,12 +7,23 @@ import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 
+/** The tokens and how the read went: `answered` is whether it ever succeeded, so a failed load is not an empty list. */
+export function useSiteAuthTokensRead() {
+  const trpc = useTRPC();
+  const { data, error, isLoading, refetch } = useQuery(trpc.siteAuthTokens.list.queryOptions());
+
+  return {
+    tokens: data ?? [],
+    answered: data !== undefined,
+    isLoading,
+    error,
+    refetch: () => void refetch(),
+  };
+}
+
 /** The tokens the Reader's imports send to sites that need a sign-in. */
 export function useSiteAuthTokensQuery() {
-  const trpc = useTRPC();
-  const { data } = useQuery(trpc.siteAuthTokens.list.queryOptions());
-
-  return data ?? [];
+  return useSiteAuthTokensRead().tokens;
 }
 
 export function useSiteAuthTokenMutations() {
