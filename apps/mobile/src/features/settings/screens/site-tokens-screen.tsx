@@ -3,7 +3,7 @@ import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
 
 import {
-  orderedSiteTokens,
+  orderedSiteAuthTokens,
   useSiteAuthTokenMutations,
   useSiteAuthTokensRead,
 } from "@norish/shared-react/reader";
@@ -44,7 +44,7 @@ export function SiteTokensScreen() {
         read={read}
       >
         <SettingsGroup>
-          {orderedSiteTokens(tokens).map((token) => (
+          {orderedSiteAuthTokens(tokens).map((token) => (
             <SettingsRow
               key={token.id}
               actions={[

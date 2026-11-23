@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { apiKeyPrefix, orderedSiteTokens, shareLinkActions, siteTokenForm } from "..";
+import { apiKeyPrefix, orderedSiteAuthTokens, shareLinkActions, siteAuthTokenForm } from "..";
 
 describe("connection rules", () => {
   it("offers a link what its status allows, and Delete always", () => {
@@ -21,7 +21,7 @@ describe("connection rules", () => {
       account,
       name,
     });
-    const ordered = orderedSiteTokens([
+    const ordered = orderedSiteAuthTokens([
       token("b.com", null, "x"),
       token("a.com", "zed", "x"),
       token("a.com", "amy", "y"),
@@ -37,15 +37,15 @@ describe("connection rules", () => {
   });
 
   it("flags a bare domain and needs domain, name and value to add", () => {
-    expect(siteTokenForm({ domain: "instagram", name: "n", value: "v" })).toEqual({
+    expect(siteAuthTokenForm({ domain: "instagram", name: "n", value: "v" })).toEqual({
       domainBare: true,
       valid: false,
     });
-    expect(siteTokenForm({ domain: "", name: "n", value: "v" })).toEqual({
+    expect(siteAuthTokenForm({ domain: "", name: "n", value: "v" })).toEqual({
       domainBare: false,
       valid: false,
     });
-    expect(siteTokenForm({ domain: "instagram.com", name: " ", value: "v" }).valid).toBe(false);
-    expect(siteTokenForm({ domain: "instagram.com", name: "n", value: "v" }).valid).toBe(true);
+    expect(siteAuthTokenForm({ domain: "instagram.com", name: " ", value: "v" }).valid).toBe(false);
+    expect(siteAuthTokenForm({ domain: "instagram.com", name: "n", value: "v" }).valid).toBe(true);
   });
 });

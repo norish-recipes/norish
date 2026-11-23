@@ -14,8 +14,8 @@ import { Chip, FieldError, Input, Label, ListBox, Select, Table, TextField } fro
 import { useFormatter, useTranslations } from "next-intl";
 
 import {
-  orderedSiteTokens,
-  siteTokenForm,
+  orderedSiteAuthTokens,
+  siteAuthTokenForm,
   useSiteAuthTokenMutations,
   useSiteAuthTokensQuery,
 } from "@norish/shared-react/reader";
@@ -48,8 +48,12 @@ export default function SiteAuthTokensCard() {
     setShowDeleteModal(false);
     setTokenToDelete(null);
   };
-  const { domainBare: isDomainBare, valid: isFormValid } = siteTokenForm({ domain, name, value });
-  const orderedTokens = orderedSiteTokens(tokens);
+  const { domainBare: isDomainBare, valid: isFormValid } = siteAuthTokenForm({
+    domain,
+    name,
+    value,
+  });
+  const orderedTokens = orderedSiteAuthTokens(tokens);
 
   return (
     <>

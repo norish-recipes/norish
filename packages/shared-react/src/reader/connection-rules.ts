@@ -17,8 +17,8 @@ export const apiKeyPrefix = (start: string | null | undefined) => `${start || "*
 /** The longest name a key may have: Better Auth's `maximumNameLength`, which refuses a longer one. */
 export const API_KEY_NAME_MAX_LENGTH = 32;
 
-/** Site tokens in order of domain, account, then name, so a site's accounts read as the sets they are. */
-export const orderedSiteTokens = <
+/** Site Auth Tokens in order of domain, account, then name, so a site's accounts read as the sets they are. */
+export const orderedSiteAuthTokens = <
   T extends { domain: string; account?: string | null; name: string },
 >(
   tokens: T[]
@@ -30,8 +30,8 @@ export const orderedSiteTokens = <
       a.name.localeCompare(b.name)
   );
 
-/** A new token's form: a bare domain is flagged (it must be a full domain), and Add needs all three fields. */
-export function siteTokenForm({
+/** A new Site Auth Token's form: a bare domain is flagged (it must be a full domain), and Add needs all three fields. */
+export function siteAuthTokenForm({
   domain,
   name,
   value,

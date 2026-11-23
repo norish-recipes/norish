@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 import { TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { siteTokenForm, useSiteAuthTokenMutations } from "@norish/shared-react/reader";
+import { siteAuthTokenForm, useSiteAuthTokenMutations } from "@norish/shared-react/reader";
 
 import { ChoiceRow } from "../components/choice-row";
 import { OfflineCapsule } from "../components/offline-capsule";
@@ -29,7 +29,7 @@ export function TokenNewScreen() {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState<(typeof TYPES)[number]>("header");
-  const form = siteTokenForm({ domain, name, value });
+  const form = siteAuthTokenForm({ domain, name, value });
 
   const field = ({
     label,

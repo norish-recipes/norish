@@ -61,7 +61,7 @@ export type { ShareLinkAction } from "./connection-rules";
 export {
   API_KEY_NAME_MAX_LENGTH,
   apiKeyPrefix,
-  orderedSiteTokens,
+  orderedSiteAuthTokens,
   shareLinkActions,
-  siteTokenForm,
+  siteAuthTokenForm,
 } from "./connection-rules";
