@@ -15,7 +15,7 @@ import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline"
 import { Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useApiKeyMutations, useProfileQuery } from "@norish/shared-react/reader";
+import { apiKeyPrefix, useApiKeyMutations, useProfileQuery } from "@norish/shared-react/reader";
 
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
@@ -101,7 +101,7 @@ export default function ApiKeyCard() {
                         <Table.Cell>{key.name || t("unnamed")}</Table.Cell>
                         <Table.Cell>
                           <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
-                            {key.start || "***"}...
+                            {apiKeyPrefix(key.start)}
                           </code>
                         </Table.Cell>
                         <Table.Cell>{format.dateTime(new Date(key.createdAt))}</Table.Cell>

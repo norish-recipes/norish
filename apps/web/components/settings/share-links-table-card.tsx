@@ -16,6 +16,7 @@ import type {
   AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
+import { shareLinkActions } from "@norish/shared-react/reader";
 import { useRecipeShareMutations } from "@norish/shared-react/recipes";
 
 type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
@@ -120,7 +121,7 @@ export default function ShareLinksTableCard({
       case "actions":
         return (
           <div className="flex gap-1">
-            {share.status === "active" ? (
+            {shareLinkActions(share.status).includes("revoke") ? (
               <IconActionButton
                 action="edit"
                 icon={PauseIcon}
@@ -134,7 +135,7 @@ export default function ShareLinksTableCard({
                 }
               />
             ) : null}
-            {share.status === "revoked" ? (
+            {shareLinkActions(share.status).includes("reactivate") ? (
               <IconActionButton
                 action="edit"
                 icon={PlayIcon}
