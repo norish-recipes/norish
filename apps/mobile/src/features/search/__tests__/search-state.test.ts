@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { noResultsVariant, searchView, showsResults } from "../utils/search-state";
+import { noResultsVariant, searchView, showsResults, showsScope } from "../utils/search-state";
 
 const base = {
   text: "",
@@ -118,5 +118,18 @@ describe("no-results variant", () => {
   it("offers Search all fields for a narrowed scope without chips, else nothing", () => {
     expect(noResultsVariant(false, true)).toBe("search-all-fields");
     expect(noResultsVariant(false, false)).toBe("plain");
+  });
+});
+
+describe("the Search Scope row", () => {
+  it("shows while the field is focused, with or without text", () => {
+    expect(showsScope(true, "")).toBe(true);
+    expect(showsScope(true, "kip")).toBe(true);
+  });
+
+  it("stays for text with the keyboard down, and is gone on the rested page", () => {
+    expect(showsScope(false, "kip")).toBe(true);
+    expect(showsScope(false, "")).toBe(false);
+    expect(showsScope(false, "  ")).toBe(false);
   });
 });

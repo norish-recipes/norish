@@ -1,6 +1,7 @@
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import type { ReactNode } from "react";
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
 import { HighlightedText } from "@/components/highlighted-text";
@@ -18,6 +19,7 @@ import { recipeCardFacts } from "@norish/shared-react/recipes";
 
 import type { NarrowRow } from "../utils/search-suggestions";
 import { narrowRowKey, RECIPE_SUGGESTIONS } from "../utils/search-suggestions";
+import { SearchScroll } from "./search-scroll";
 
 const TYPE_LABELS = {
   ingredient: "recipes.search.typeIngredient",
@@ -147,6 +149,7 @@ export function TypingSuggestions({
   recipes,
   narrowRows,
   searchWords,
+  scroll,
   onConfirm,
   onNarrow,
 }: {
@@ -156,6 +159,7 @@ export function TypingSuggestions({
   narrowRows: NarrowRow[];
   /** The text the suggestions were asked for, which the hits are highlighted by. */
   searchWords: string;
+  scroll: TabScroll;
   onConfirm: () => void;
   onNarrow: (row: NarrowRow) => void;
 }) {
@@ -166,10 +170,9 @@ export function TypingSuggestions({
   useIngredientIcons(narrowRows.flatMap((row) => (row.kind === "ingredient" ? [row.id] : [])));
 
   return (
-    <ScrollView
+    <SearchScroll
       contentContainerClassName="gap-4.5 px-5 pt-5 pb-96"
-      contentInsetAdjustmentBehavior="automatic"
-      keyboardShouldPersistTaps="handled"
+      scroll={scroll}
       testID="search-typing"
     >
       <Card surface>
@@ -216,6 +219,6 @@ export function TypingSuggestions({
           </Card>
         </IngredientIconSlots>
       </SuggestionSection>
-    </ScrollView>
+    </SearchScroll>
   );
 }

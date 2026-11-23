@@ -3,7 +3,8 @@ import { Keyboard } from "react-native";
 
 /** The keyboard's height while it is up, else 0. */
 export function useKeyboardHeight() {
-  const [height, setHeight] = useState(0);
+  // A row that mounts after the keyboard came up missed its show event: ask where it is now.
+  const [height, setHeight] = useState(() => Keyboard.metrics()?.height ?? 0);
 
   useEffect(() => {
     const show = Keyboard.addListener("keyboardWillShow", (event) =>
