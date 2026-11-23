@@ -18,7 +18,7 @@ function useFailedWrite() {
   const { invalidate } = useProfileCache();
 
   return (context: string) => (error: unknown) => {
-    invalidate();
+    void invalidate();
     showError(error, context);
   };
 }
@@ -39,11 +39,11 @@ export function useProfileMutations() {
   const { version, mergeUser, invalidate } = useProfileCache();
   const failed = useFailedWrite();
 
-  // A stale write rereads the profile, so a retry sends the current version.
+  // A stale write resolves only once the profile is reread, so the next write sends the current version.
   const settle = (context: string) => ({
     onSuccess: (answer: ProfileAnswer & { user?: Parameters<typeof mergeUser>[0] }) => {
-      if (answer.stale) invalidate();
-      else if (answer.success && answer.user) mergeUser(answer.user);
+      if (answer.stale) return invalidate();
+      if (answer.success && answer.user) mergeUser(answer.user);
       else if (!answer.success) showRefusal(showError, answer, context);
     },
     onError: failed(context),
@@ -107,7 +107,7 @@ export function usePreferencesMutation() {
       onSuccess: (answer, _input, context) => {
         if (!answer.success) {
           restore(context.previous);
-          invalidate();
+          void invalidate();
 
           return;
         }

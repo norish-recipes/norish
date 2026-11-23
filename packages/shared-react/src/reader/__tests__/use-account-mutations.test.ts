@@ -14,11 +14,13 @@ import {
   useDeleteAccountMutation,
   usePreferencesMutation,
   useProfileMutations,
+  useProfileQuery,
   useSessionExpiry,
   useSignOut,
 } from "..";
 import {
   answerCall,
+  answerRead,
   failCall,
   keyOf,
   resetTRPCFake,
@@ -123,31 +125,35 @@ describe("the Account's writes", () => {
       expect(profile()?.user).toEqual({ ...PROFILE.user, name: "Grace", version: 4 });
     });
 
-    it("rereads the profile when a save was made from an out-of-date version, and says it did not go through", async () => {
-      const result = render(() => useProfileMutations());
-      let saved: Promise<boolean> = Promise.resolve(true);
+    it.each([
+      ["a rename", "user.updateName"],
+      ["an Avatar upload", "user.uploadAvatar"],
+      ["an Avatar delete", "user.deleteAvatar"],
+    ] as const)(
+      "answers a stale %s as not gone through once the profile is reread",
+      async (_write, path) => {
+        const result = render(() => ({ query: useProfileQuery(), writes: useProfileMutations() }));
+        const file = new File(["x"], "a.png", { type: "image/png" });
+        const run = {
+          "user.updateName": () => result.current.writes.updateName("Grace"),
+          "user.uploadAvatar": () => result.current.writes.uploadAvatar(file),
+          "user.deleteAvatar": () => result.current.writes.deleteAvatar(),
+        }[path];
+        let outcome: boolean | undefined;
 
-      act(() => {
-        saved = result.current.updateName("Grace");
-      });
-      await answerCall("user.updateName", { success: true, stale: true });
+        act(() => void run().then((tookIt) => (outcome = tookIt)));
+        await answerCall(path, { success: true, stale: true });
 
-      expect(await saved).toBe(false);
-      expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
-    });
+        expect(outcome).toBeUndefined();
 
-    it("keeps a stale Avatar upload as not gone through", async () => {
-      const result = render(() => useProfileMutations());
-      let upload: Promise<boolean> = Promise.resolve(true);
+        await act(async () =>
+          answerRead("user.get", { ...PROFILE, user: { ...PROFILE.user, version: 5 } })
+        );
 
-      act(() => {
-        upload = result.current.uploadAvatar(new File(["x"], "a.png", { type: "image/png" }));
-      });
-      await answerCall("user.uploadAvatar", { success: true, stale: true });
-
-      expect(await upload).toBe(false);
-      expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
-    });
+        await waitFor(() => expect(outcome).toBe(false));
+        expect(profile()?.user.version).toBe(5);
+      }
+    );
 
     it("refuses an empty name without sending it", async () => {
       const result = render(() => useProfileMutations());

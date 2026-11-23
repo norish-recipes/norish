@@ -34,7 +34,8 @@ type ProfileCache = {
   /** Puts back what `held` returned before an optimistic write. */
   restore: (previous: HeldProfile | undefined) => void;
   mergeUser: (patch: Partial<User>) => void;
-  invalidate: () => void;
+  /** Rereads the profile; resolves once the reread has landed. */
+  invalidate: () => Promise<void>;
 };
 
 /** The cached profile's writes, for the Account's mutations. */
@@ -53,7 +54,7 @@ export function useProfileCache(): ProfileCache {
     write,
     restore: (previous) => queryClient.setQueryData(queryKey, previous),
     mergeUser: (patch) => write((data) => ({ ...data, user: { ...data.user, ...patch } })),
-    invalidate: () => void queryClient.invalidateQueries({ queryKey }),
+    invalidate: () => queryClient.invalidateQueries({ queryKey }),
   };
 }
 
