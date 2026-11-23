@@ -1338,5 +1338,16 @@
       "signedOut": "Ваш сеанс завершився. Увійдіть знову, щоб експортувати.",
       "notAllowed": "У вас немає дозволу на цей експорт."
     }
+  },
+  "mobile": {
+    "connections": "Підключення",
+    "app": "Застосунок",
+    "server": "Сервер",
+    "support": "Підтримка",
+    "version": "Версія",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Сервер {server}",
+    "offlineReason": "Офлайн · зміни призупинено",
+    "noHousehold": "Немає"
   }
 }

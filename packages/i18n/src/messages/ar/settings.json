@@ -1338,5 +1338,16 @@
       "signedOut": "انتهت جلستك. سجّل الدخول مجددًا للتصدير.",
       "notAllowed": "ليست لديك صلاحية لتصدير هذا."
     }
+  },
+  "mobile": {
+    "connections": "الاتصالات",
+    "app": "التطبيق",
+    "server": "الخادم",
+    "support": "الدعم",
+    "version": "الإصدار",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · الخادم {server}",
+    "offlineReason": "غير متصل · التغييرات متوقفة",
+    "noHousehold": "لا شيء"
   }
 }

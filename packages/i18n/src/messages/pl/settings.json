@@ -1338,5 +1338,16 @@
       "signedOut": "Twoja sesja wygasła. Zaloguj się ponownie, aby eksportować.",
       "notAllowed": "Nie masz uprawnień, aby to eksportować."
     }
+  },
+  "mobile": {
+    "connections": "Połączenia",
+    "app": "Aplikacja",
+    "server": "Serwer",
+    "support": "Pomoc",
+    "version": "Wersja",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Serwer {server}",
+    "offlineReason": "Offline · zmiany są wstrzymane",
+    "noHousehold": "Brak"
   }
 }

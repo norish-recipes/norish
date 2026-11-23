@@ -1338,5 +1338,16 @@
       "signedOut": "Сесията ви изтече. Влезте отново, за да експортирате.",
       "notAllowed": "Нямате права да експортирате това."
     }
+  },
+  "mobile": {
+    "connections": "Връзки",
+    "app": "Приложение",
+    "server": "Сървър",
+    "support": "Поддръжка",
+    "version": "Версия",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Сървър {server}",
+    "offlineReason": "Офлайн · промените са спрени",
+    "noHousehold": "Няма"
   }
 }

@@ -1338,5 +1338,16 @@
       "signedOut": "Ваш сеанс истёк. Войдите снова, чтобы экспортировать.",
       "notAllowed": "У вас нет прав на экспорт этого."
     }
+  },
+  "mobile": {
+    "connections": "Подключения",
+    "app": "Приложение",
+    "server": "Сервер",
+    "support": "Поддержка",
+    "version": "Версия",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Сервер {server}",
+    "offlineReason": "Офлайн · изменения приостановлены",
+    "noHousehold": "Нет"
   }
 }

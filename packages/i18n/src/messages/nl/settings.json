@@ -1338,5 +1338,16 @@
       "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren.",
       "notAllowed": "Je hebt geen rechten om dit te exporteren."
     }
+  },
+  "mobile": {
+    "connections": "Verbindingen",
+    "app": "App",
+    "server": "Server",
+    "support": "Ondersteuning",
+    "version": "Versie",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Server {server}",
+    "offlineReason": "Offline · wijzigingen staan stil",
+    "noHousehold": "Geen"
   }
 }

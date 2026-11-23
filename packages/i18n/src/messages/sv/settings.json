@@ -1338,5 +1338,16 @@
       "signedOut": "Din session har gått ut. Logga in igen för att exportera.",
       "notAllowed": "Du har inte behörighet att exportera detta."
     }
+  },
+  "mobile": {
+    "connections": "Anslutningar",
+    "app": "App",
+    "server": "Server",
+    "support": "Support",
+    "version": "Version",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Server {server}",
+    "offlineReason": "Offline · ändringar är pausade",
+    "noHousehold": "Ingen"
   }
 }

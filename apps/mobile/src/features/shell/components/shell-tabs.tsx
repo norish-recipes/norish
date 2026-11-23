@@ -114,12 +114,6 @@ export function ShellTabs() {
           {intl.formatMessage({ id: "navbar.nav.calendar" })}
         </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings" testID="tab-settings">
-        <NativeTabs.Trigger.Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <NativeTabs.Trigger.Label>
-          {intl.formatMessage({ id: "navbar.userMenu.settings.title" })}
-        </NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(search)" role="search" testID="tab-search">
         <NativeTabs.Trigger.Label>
           {intl.formatMessage({ id: "common.actions.search" })}

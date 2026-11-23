@@ -278,6 +278,7 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
     >
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="settings" />
         <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
         <Stack.Screen name="editor-choice" options={SEARCH_SHEET_OPTIONS} />
         {FIT_SHEETS.map((name) => (

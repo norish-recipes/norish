@@ -31,7 +31,6 @@ describe("accessoryPlan", () => {
     expect(holds("/", true)).toEqual({ add: "add-recipe", capsule: true });
     expect(holds("/groceries/stores", true)).toEqual({ add: "add-grocery", capsule: true });
     expect(holds("/calendar", true)).toEqual({ add: "plan-recipe-accessory", capsule: true });
-    expect(holds("/settings", true)).toEqual({ add: "add-recipe", capsule: true });
   });
 
   it("reads Add to pantry, into the Pantry's add sheet, while the page shows the Pantry", () => {
@@ -191,7 +190,6 @@ describe("shellTab", () => {
     expect(shellTab("/cookbook/c1")).toBe("recipes");
     expect(shellTab("/groceries/food")).toBe("groceries");
     expect(shellTab("/calendar/item")).toBe("calendar");
-    expect(shellTab("/settings")).toBe("settings");
   });
 
   it("names Search for every page in its stack, whose paths carry no tab", () => {

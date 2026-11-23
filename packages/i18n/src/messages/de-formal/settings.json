@@ -1338,5 +1338,16 @@
       "signedOut": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um zu exportieren.",
       "notAllowed": "Sie haben keine Berechtigung, dies zu exportieren."
     }
+  },
+  "mobile": {
+    "connections": "Verbindungen",
+    "app": "App",
+    "server": "Server",
+    "support": "Support",
+    "version": "Version",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Server {server}",
+    "offlineReason": "Offline · Änderungen sind pausiert",
+    "noHousehold": "Keiner"
   }
 }

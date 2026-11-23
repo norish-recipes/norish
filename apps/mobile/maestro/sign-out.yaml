@@ -7,9 +7,10 @@ appId: dev.norish.app
     env:
       NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
 - tapOn:
-    id: tab-settings
+    id: account-avatar
+- tapOn: All settings
 - tapOn:
-    id: smoke-sign-out
+    id: settings-sign-out
 - extendedWaitUntil:
     visible:
       id: login-email

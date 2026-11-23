@@ -1338,5 +1338,16 @@
       "signedOut": "Sua sessão expirou. Entre novamente para exportar.",
       "notAllowed": "Você não tem permissão para exportar isso."
     }
+  },
+  "mobile": {
+    "connections": "Conexões",
+    "app": "App",
+    "server": "Servidor",
+    "support": "Suporte",
+    "version": "Versão",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Servidor {server}",
+    "offlineReason": "Offline · alterações pausadas",
+    "noHousehold": "Nenhuma"
   }
 }

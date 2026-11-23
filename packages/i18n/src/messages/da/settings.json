@@ -1338,5 +1338,16 @@
       "signedOut": "Din session er udløbet. Log ind igen for at eksportere.",
       "notAllowed": "Du har ikke tilladelse til at eksportere dette."
     }
+  },
+  "mobile": {
+    "connections": "Forbindelser",
+    "app": "App",
+    "server": "Server",
+    "support": "Support",
+    "version": "Version",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Server {server}",
+    "offlineReason": "Offline · ændringer er sat på pause",
+    "noHousehold": "Ingen"
   }
 }

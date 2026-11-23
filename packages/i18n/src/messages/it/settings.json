@@ -1338,5 +1338,16 @@
       "signedOut": "La tua sessione è scaduta. Accedi di nuovo per esportare.",
       "notAllowed": "Non hai il permesso di esportare questo contenuto."
     }
+  },
+  "mobile": {
+    "connections": "Connessioni",
+    "app": "App",
+    "server": "Server",
+    "support": "Supporto",
+    "version": "Versione",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Server {server}",
+    "offlineReason": "Offline · modifiche in pausa",
+    "noHousehold": "Nessuna"
   }
 }

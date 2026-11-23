@@ -1338,5 +1338,16 @@
       "signedOut": "Økten din er utløpt. Logg inn igjen for å eksportere.",
       "notAllowed": "Du har ikke tillatelse til å eksportere dette."
     }
+  },
+  "mobile": {
+    "connections": "Tilkoblinger",
+    "app": "App",
+    "server": "Server",
+    "support": "Støtte",
+    "version": "Versjon",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Server {server}",
+    "offlineReason": "Frakoblet · endringer er satt på pause",
+    "noHousehold": "Ingen"
   }
 }

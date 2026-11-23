@@ -1338,5 +1338,16 @@
       "signedOut": "Tu sesión ha caducado. Inicia sesión de nuevo para exportar.",
       "notAllowed": "No tienes permiso para exportar esto."
     }
+  },
+  "mobile": {
+    "connections": "Conexiones",
+    "app": "App",
+    "server": "Servidor",
+    "support": "Soporte",
+    "version": "Versión",
+    "versionApp": "{app} ({build})",
+    "versionWithServer": "{app} ({build}) · Servidor {server}",
+    "offlineReason": "Sin conexión · cambios en pausa",
+    "noHousehold": "Ninguno"
   }
 }
