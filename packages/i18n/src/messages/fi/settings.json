@@ -1347,6 +1347,8 @@
     "version": "Versio",
     "versionServer": "Palvelin {server}",
     "offlineReason": "Offline · muutokset ovat tauolla",
-    "noHousehold": "Ei mitään"
+    "noHousehold": "Ei mitään",
+    "avatarHint": "Vaihda kuva napauttamalla sitä",
+    "changePhoto": "Vaihda kuva"
   }
 }

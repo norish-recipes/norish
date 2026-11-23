@@ -1347,6 +1347,8 @@
     "version": "Versie",
     "versionServer": "Server {server}",
     "offlineReason": "Offline · wijzigingen staan stil",
-    "noHousehold": "Geen"
+    "noHousehold": "Geen",
+    "avatarHint": "Tik op je foto om die te wijzigen",
+    "changePhoto": "Foto wijzigen"
   }
 }

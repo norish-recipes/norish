@@ -1347,6 +1347,8 @@
     "version": "Version",
     "versionServer": "Server {server}",
     "offlineReason": "Offline · ändringar är pausade",
-    "noHousehold": "Ingen"
+    "noHousehold": "Ingen",
+    "avatarHint": "Tryck på ditt foto för att ändra det",
+    "changePhoto": "Ändra foto"
   }
 }

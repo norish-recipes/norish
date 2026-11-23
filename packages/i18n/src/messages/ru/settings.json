@@ -1347,6 +1347,8 @@
     "version": "Версия",
     "versionServer": "Сервер {server}",
     "offlineReason": "Офлайн · изменения приостановлены",
-    "noHousehold": "Нет"
+    "noHousehold": "Нет",
+    "avatarHint": "Нажмите на фото, чтобы изменить его",
+    "changePhoto": "Изменить фото"
   }
 }

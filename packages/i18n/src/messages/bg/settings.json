@@ -1347,6 +1347,8 @@
     "version": "Версия",
     "versionServer": "Сървър {server}",
     "offlineReason": "Офлайн · промените са спрени",
-    "noHousehold": "Няма"
+    "noHousehold": "Няма",
+    "avatarHint": "Докоснете снимката си, за да я промените",
+    "changePhoto": "Промяна на снимката"
   }
 }

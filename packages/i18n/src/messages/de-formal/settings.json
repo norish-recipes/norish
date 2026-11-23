@@ -1347,6 +1347,8 @@
     "version": "Version",
     "versionServer": "Server {server}",
     "offlineReason": "Offline · Änderungen sind pausiert",
-    "noHousehold": "Keiner"
+    "noHousehold": "Keiner",
+    "avatarHint": "Tippen Sie auf Ihr Foto, um es zu ändern",
+    "changePhoto": "Foto ändern"
   }
 }

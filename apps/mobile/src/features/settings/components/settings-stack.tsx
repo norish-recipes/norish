@@ -1,5 +1,5 @@
 import React from "react";
-import { EDITOR_OPTIONS } from "@/components/sheet-options";
+import { EDITOR_OPTIONS, FIT_SHEET_OPTIONS } from "@/components/sheet-options";
 import { HEADER_TITLE_STYLE } from "@/lib/header-title";
 import { Stack } from "expo-router";
 
@@ -8,6 +8,7 @@ export function SettingsStack() {
   return (
     <Stack screenOptions={{ ...EDITOR_OPTIONS, headerTitleStyle: HEADER_TITLE_STYLE }}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="password" options={FIT_SHEET_OPTIONS} />
     </Stack>
   );
 }

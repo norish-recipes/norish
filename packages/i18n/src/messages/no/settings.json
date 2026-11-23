@@ -1347,6 +1347,8 @@
     "version": "Versjon",
     "versionServer": "Server {server}",
     "offlineReason": "Frakoblet · endringer er satt på pause",
-    "noHousehold": "Ingen"
+    "noHousehold": "Ingen",
+    "avatarHint": "Trykk på bildet ditt for å endre det",
+    "changePhoto": "Endre bilde"
   }
 }
