@@ -1,7 +1,7 @@
 import React from "react";
 import { UserAvatar } from "@/components/user-avatar";
 import { useConfirm } from "@/hooks/use-confirm";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 import { allowedMemberActions, useHouseholdMutations } from "@norish/shared-react/reader";
@@ -9,6 +9,26 @@ import { allowedMemberActions, useHouseholdMutations } from "@norish/shared-reac
 import { useSettingsWrite } from "../hooks/use-settings-write";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
+
+const KICK = {
+  kind: "kick",
+  button: "settings.household.members.kickButton",
+  title: "settings.household.members.kickModal.title",
+  message: "settings.household.members.kickModal.confirmMessage",
+  warning: "settings.household.members.kickModal.warning",
+  confirm: "settings.household.members.kickModal.confirmButton",
+  destructive: true,
+} as const;
+
+const MAKE_ADMIN = {
+  kind: "admin",
+  button: "settings.household.members.makeAdminButton",
+  title: "settings.household.members.transferModal.title",
+  message: "settings.household.members.transferModal.confirmMessage",
+  warning: "settings.household.members.transferModal.warning",
+  confirm: "settings.household.members.transferModal.confirmButton",
+  destructive: false,
+} as const;
 
 /** The household's members with their role; an admin swipes or long-presses another member for
  * Kick and Make admin, each behind a confirm. */
@@ -21,51 +41,41 @@ export function MembersList({
   currentUserId: string | undefined;
   isAdmin: boolean;
 }) {
-  const intl = useIntl();
+  const text = useText();
   const confirm = useConfirm();
-  const { kickUser, transferAdmin, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
-  const t = (id: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id: `settings.household.${id}` }, values);
+  const { kickUser, transferAdmin, pending } = useHouseholdMutations();
+  const send = {
+    kick: (userId: string) => !pending.kick && kickUser(household.id, userId),
+    transferAdmin: (userId: string) => !pending.transfer && transferAdmin(household.id, userId),
+  };
+  const looks = { kick: KICK, transferAdmin: MAKE_ADMIN };
 
   return (
-    <SettingsGroup title={t("members.title")}>
+    <SettingsGroup title={text("settings.household.members.title")}>
       {household.users.map((user) => {
         const isSelf = user.id === currentUserId;
-        const name = user.name || t("members.unknown");
-        const kinds = allowedMemberActions({
+        const name = user.name || text("settings.household.members.unknown");
+        const actions = allowedMemberActions({
           viewerIsAdmin: isAdmin,
           isSelf,
           memberIsAdmin: user.isAdmin === true,
+        }).map((action) => {
+          const look = looks[action];
+
+          return {
+            kind: look.kind,
+            label: text(look.button),
+            onPress: () =>
+              confirm({
+                title: text(look.title),
+                message: `${text(look.message, { name })}\n\n${text(look.warning)}`,
+                confirmLabelId: look.confirm,
+                destructive: look.destructive,
+                onConfirm: write(() => send[action](user.id)),
+              }),
+          };
         });
-        const actions = kinds.map((kind) =>
-          kind === "kick"
-            ? {
-                kind,
-                label: t("members.kickButton"),
-                onPress: () =>
-                  confirm({
-                    title: t("members.kickModal.title"),
-                    message: `${t("members.kickModal.confirmMessage", { name })}\n\n${t("members.kickModal.warning")}`,
-                    confirmLabelId: "settings.household.members.kickModal.confirmButton",
-                    onConfirm: write(() => !pending.kick && kickUser(household.id, user.id)),
-                  }),
-              }
-            : {
-                kind: "admin" as const,
-                label: t("members.makeAdminButton"),
-                onPress: () =>
-                  confirm({
-                    title: t("members.transferModal.title"),
-                    message: `${t("members.transferModal.confirmMessage", { name })}\n\n${t("members.transferModal.warning")}`,
-                    confirmLabelId: "settings.household.members.transferModal.confirmButton",
-                    destructive: false,
-                    onConfirm: write(
-                      () => !pending.transfer && transferAdmin(household.id, user.id)
-                    ),
-                  }),
-              }
-        );
 
         return (
           <SettingsRow
@@ -80,10 +90,12 @@ export function MembersList({
               />
             }
             menuLabel={name}
-            subtitle={isSelf ? t("members.you") : undefined}
+            subtitle={isSelf ? text("settings.household.members.you") : undefined}
             testID={`household-member-${user.id}`}
             title={name}
-            value={user.isAdmin ? t("info.admin") : t("info.member")}
+            value={text(
+              user.isAdmin ? "settings.household.info.admin" : "settings.household.info.member"
+            )}
           />
         );
       })}
