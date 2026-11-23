@@ -47,6 +47,17 @@ describe("useSiteAuthTokenMutations", () => {
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([token]);
   });
 
+  it("reread, never seed, a list that was never read when a token is added", async () => {
+    const result = render(() => useSiteAuthTokenMutations());
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    act(() => void result.current.createToken({ ...token, value: "secret" }));
+    await answerCall("siteAuthTokens.create", token);
+
+    expect(queryClient.getQueryData(TOKENS_KEY)).toBeUndefined();
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: TOKENS_KEY });
+  });
+
   it("drop a removed token, sending its version", async () => {
     queryClient.setQueryData(TOKENS_KEY, [token]);
     const result = render(() => useSiteAuthTokenMutations());

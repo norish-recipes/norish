@@ -36,8 +36,11 @@ export function useSiteAuthTokenMutations() {
 
   const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
     trpc.siteAuthTokens.create.mutationOptions({
+      // A list never read is reread, not seeded with this one token as if it were the whole list.
       onSuccess: (token) =>
-        writeOverRead(queryClient, queryKey, (prev) => (prev ? [...prev, token] : [token])),
+        queryClient.getQueryData(queryKey) === undefined
+          ? void queryClient.invalidateQueries({ queryKey })
+          : writeOverRead(queryClient, queryKey, (prev) => prev && [...prev, token]),
       onError: (error) => showError(error, "site-auth-tokens:create"),
     })
   );
