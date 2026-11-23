@@ -4,6 +4,9 @@ import type {
 } from "@norish/shared/contracts/dto/household";
 import { JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
+/** Create needs a name with text; the mutation throws on an empty one. */
+export const isHouseholdName = (name: string) => name.trim().length > 0;
+
 /** A join code is exactly six digits; the server strips anything else, so Join waits for these. */
 export const isJoinCode = (code: string) => JoinCodeSchema.safeParse(code).success;
 

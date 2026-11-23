@@ -6,9 +6,13 @@ import { useText } from "@/lib/i18n/use-text";
 import { Button, TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { isJoinCode, joinCodeDigits, useHouseholdMutations } from "@norish/shared-react/reader";
+import {
+  isHouseholdName,
+  isJoinCode,
+  joinCodeDigits,
+  useHouseholdMutations,
+} from "@norish/shared-react/reader";
 
-import { canCreate } from "../utils/household-rules";
 import { settingsWrite } from "../utils/settings-write";
 
 /** One create-or-join form: a labelled field with its description behind a hint, and a button. */
@@ -84,7 +88,7 @@ export function NoHouseholdForms() {
     <>
       <EntryForm
         autoCapitalize="words"
-        enabled={canCreate(name) && !pending.create}
+        enabled={isHouseholdName(name) && !pending.create}
         buttonId="settings.household.create.submitButton"
         descriptionId="settings.household.create.description"
         id="create"

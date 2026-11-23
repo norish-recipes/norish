@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   adminViewOf,
   allowedMemberActions,
+  isHouseholdName,
   isJoinCode,
   joinCodeDigits,
   joinCodeStatus,
@@ -10,6 +11,11 @@ import {
 } from "../household-rules";
 
 describe("household rules", () => {
+  it("needs a name to create", () => {
+    expect(isHouseholdName("  ")).toBe(false);
+    expect(isHouseholdName("Home")).toBe(true);
+  });
+
   it("takes exactly six digits as a join code", () => {
     expect(isJoinCode("123456")).toBe(true);
     expect(isJoinCode("")).toBe(false);

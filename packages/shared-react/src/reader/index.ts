@@ -9,6 +9,7 @@ export { measurementChoices, shownMeasurement } from "./measurement-choices";
 export {
   adminViewOf,
   allowedMemberActions,
+  isHouseholdName,
   isJoinCode,
   joinCodeDigits,
   joinCodeStatus,
