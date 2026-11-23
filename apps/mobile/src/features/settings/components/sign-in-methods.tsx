@@ -12,13 +12,13 @@ import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/rea
 import { SIGN_IN_METHODS, signInMethodError } from "@norish/shared/contracts/dto/auth";
 
 import type { Refusal } from "../utils/refusal-of";
+import { useSettingsWrite } from "../hooks/use-settings-write";
 import {
   addableProviders,
   canUnlink,
   hasPassword,
   showsSignInMethods,
 } from "../utils/profile-rules";
-import { useSettingsWrite } from "../hooks/use-settings-write";
 import { refusalOf } from "../utils/refusal-of";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
@@ -103,7 +103,13 @@ export function SignInMethods() {
               accessory={isPassword && stillOffered ? "chevron" : "none"}
               actions={
                 canUnlink(signInMethods, account.id, offeredIds)
-                  ? [{ kind: "unlink", label: t("remove"), onPress: write(() => void unlink(account.id)) }]
+                  ? [
+                      {
+                        kind: "unlink",
+                        label: t("remove"),
+                        onPress: write(() => void unlink(account.id)),
+                      },
+                    ]
                   : []
               }
               icon={<ProviderIcon color={foreground} icon={method.icon} size={17} />}
