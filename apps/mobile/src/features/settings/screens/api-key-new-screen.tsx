@@ -11,7 +11,7 @@ import { TextField } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
-import { useApiKeyMutations } from "@norish/shared-react/reader";
+import { API_KEY_NAME_MAX_LENGTH, useApiKeyMutations } from "@norish/shared-react/reader";
 
 import { OfflineCapsule } from "../components/offline-capsule";
 import { settingsWrite } from "../utils/settings-write";
@@ -108,6 +108,7 @@ export function ApiKeyNewScreen() {
             <SheetInput
               accessibilityLabel={text(`${T}.keyNameLabel`)}
               editable={!isOffline}
+              maxLength={API_KEY_NAME_MAX_LENGTH}
               placeholder={text(`${T}.keyNamePlaceholder`)}
               returnKeyType="done"
               testID="api-key-name"

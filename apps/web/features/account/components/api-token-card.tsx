@@ -15,7 +15,12 @@ import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline"
 import { Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { apiKeyPrefix, useApiKeyMutations, useProfileQuery } from "@norish/shared-react/reader";
+import {
+  API_KEY_NAME_MAX_LENGTH,
+  apiKeyPrefix,
+  useApiKeyMutations,
+  useProfileQuery,
+} from "@norish/shared-react/reader";
 
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
@@ -69,7 +74,11 @@ export default function ApiKeyCard() {
         </a>
 
         <div className="flex flex-col gap-3">
-          <TextField value={newKeyName} onChange={setNewKeyName}>
+          <TextField
+            maxLength={API_KEY_NAME_MAX_LENGTH}
+            value={newKeyName}
+            onChange={setNewKeyName}
+          >
             <Label>{t("keyNameLabel")}</Label>
             <Input variant="secondary" placeholder={t("keyNamePlaceholder")} />
           </TextField>

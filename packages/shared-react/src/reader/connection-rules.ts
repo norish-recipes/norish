@@ -14,6 +14,9 @@ export const shareLinkActions = (
 /** An API key as listed: the first characters it kept, which are all anyone can see of it. */
 export const apiKeyPrefix = (start: string | null | undefined) => `${start || "***"}...`;
 
+/** The longest name a key may have: Better Auth's `maximumNameLength`, which refuses a longer one. */
+export const API_KEY_NAME_MAX_LENGTH = 32;
+
 /** Site tokens in order of domain, account, then name, so a site's accounts read as the sets they are. */
 export const orderedSiteTokens = <
   T extends { domain: string; account?: string | null; name: string },
