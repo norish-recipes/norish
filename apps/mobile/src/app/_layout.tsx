@@ -29,7 +29,7 @@ import { AuthProviders } from "@/lib/auth/auth-providers";
 import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { resolveSessionView } from "@/lib/boot/session-view";
-import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
+import { LocaleSaveScope, MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
 import { timedTo } from "@/lib/motion/timed";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { ConnectivityProvider, OfflineController, offlineEngine } from "@/lib/offline/engine";
@@ -234,8 +234,10 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <OfflineController sessionUserId={user?.id ?? null}>
-      <AuthenticatedEffects />
-      {children}
+      <LocaleSaveScope>
+        <AuthenticatedEffects />
+        {children}
+      </LocaleSaveScope>
     </OfflineController>
   );
 }

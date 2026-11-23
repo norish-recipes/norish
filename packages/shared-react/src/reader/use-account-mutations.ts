@@ -1,12 +1,12 @@
 "use client";
 
-import { useIsMutating, useMutation } from "@tanstack/react-query";
+import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { WriteResult } from "../offline/settled";
-import { accepted, answered, settled } from "../offline/settled";
+import { accepted, answered } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { dropAndLeave, runSessionEnd } from "./session-end";
@@ -85,11 +85,12 @@ export function useProfileMutations() {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { held, version, mergeUser, mergePreferences: merge, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
-  // Counts the language save too, which is its own mutation sending the same held version.
-  const saving = useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
+  const mutationKey = trpc.user.updatePreferences.mutationKey();
+  const saving = useIsMutating({ mutationKey }) > 0;
 
   const { mutateAsync } = useMutation(
     trpc.user.updatePreferences.mutationOptions({
@@ -124,9 +125,12 @@ export function usePreferencesMutation() {
   );
 
   return {
-    /** Resolves once settled, whatever the outcome, so a language change refreshes after it. */
-    updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<void> =>
-      settled(mutateAsync({ preferences, version: version() })),
+    /** Resolves whether the server took them; refused unsent while another save is in flight,
+     * which would send the same version. */
+    updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<boolean> =>
+      queryClient.isMutating({ mutationKey }) > 0
+        ? Promise.resolve(false)
+        : tookIt(mutateAsync({ preferences, version: version() })),
     isUpdatingPreferences: saving,
   };
 }

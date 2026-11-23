@@ -40,6 +40,5 @@ export {
   useProfileMutations,
 } from "./use-account-mutations";
 export { useAllergiesMutation, useAllergiesQuery } from "./use-allergies";
-export { useLocaleSave } from "./use-locale-save";
 export { useProfileQuery, useSignInMethodsQuery } from "./use-profile";
 export { useSiteAuthTokenMutations, useSiteAuthTokensQuery } from "./use-site-auth-tokens";

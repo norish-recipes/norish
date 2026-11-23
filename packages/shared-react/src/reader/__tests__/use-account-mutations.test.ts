@@ -113,6 +113,35 @@ describe("the Account's writes", () => {
       );
     });
 
+    it("resolve whether the server took them, a stale answer refused", async () => {
+      const result = render(() => usePreferencesMutation());
+      let took: boolean | undefined;
+
+      act(() => void result.current.updatePreferences({ locale: "nl" }).then((t) => (took = t)));
+      await answerCall("user.updatePreferences", {
+        success: true,
+        stale: true,
+        preferences: { locale: "en" },
+        version: 6,
+      });
+
+      await waitFor(() => expect(took).toBe(false));
+    });
+
+    it("refuse a second save while one is in flight, which would send the same version", async () => {
+      const result = render(() => usePreferencesMutation());
+      let second: boolean | undefined;
+
+      act(() => {
+        void result.current.updatePreferences({ locale: "nl" });
+        void result.current.updatePreferences({ locale: "de" }).then((t) => (second = t));
+      });
+
+      await waitFor(() => expect(second).toBe(false));
+      expect(trpcCalls["user.updatePreferences"]).toHaveLength(1);
+      expect(profile()?.user.preferences?.locale).toBe("nl");
+    });
+
     it("roll back and say so when the write fails", async () => {
       const result = render(() => usePreferencesMutation());
 
