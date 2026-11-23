@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { everySecondUntil } from "../join-code-clock";
+import { joinCodeStatus } from "../household-rules";
+import { everySecondUntil, nowToTheSecond } from "../join-code-clock";
 
 describe("everySecondUntil", () => {
   afterEach(() => vi.useRealTimers());
@@ -43,6 +44,23 @@ describe("everySecondUntil", () => {
 
     expect(vi.getTimerCount()).toBe(1);
     stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("runs a timer for a code the second-rounded clock still shows live", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(5_500);
+
+    const code = { joinCode: "123456", joinCodeExpiresAt: new Date(5_400) };
+    const onTick = vi.fn();
+
+    expect(joinCodeStatus(code, nowToTheSecond()).kind).toBe("active");
+    everySecondUntil(5_400)(onTick);
+    expect(vi.getTimerCount()).toBe(1);
+
+    vi.advanceTimersByTime(1000);
+    expect(onTick).toHaveBeenCalledTimes(1);
+    expect(joinCodeStatus(code, nowToTheSecond()).kind).toBe("expired");
     expect(vi.getTimerCount()).toBe(0);
   });
 });
