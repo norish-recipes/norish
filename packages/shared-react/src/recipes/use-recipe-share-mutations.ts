@@ -10,7 +10,7 @@ import type {
 
 import { answered } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
-import { useStaleRefusal } from "../platform/stale-write";
+import { useStaleRefusal, wentThroughFresh } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
@@ -58,12 +58,6 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     invalidateAdminRecipeShares();
     showError(error, context);
   };
-  // Whether a share action went through: a stale answer, refused above, did not.
-  const tookIt = (write: Promise<{ stale: boolean }>) =>
-    write.then(
-      ({ stale }) => !stale,
-      () => false
-    );
 
   const createMutation = useMutation(
     trpc.recipes.shareCreate.mutationOptions({
@@ -135,9 +129,9 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     updateShare: (input) => {
       mutateUpdate(input);
     },
-    revokeShare: (id, version) => tookIt(mutateRevoke({ id, version })),
-    reactivateShare: (id, version) => tookIt(mutateReactivate({ id, version })),
-    deleteShare: (id, version) => tookIt(mutateDelete({ id, version })),
+    revokeShare: (id, version) => wentThroughFresh(mutateRevoke({ id, version })),
+    reactivateShare: (id, version) => wentThroughFresh(mutateReactivate({ id, version })),
+    deleteShare: (id, version) => wentThroughFresh(mutateDelete({ id, version })),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isRevoking: revokeMutation.isPending,

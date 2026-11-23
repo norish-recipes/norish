@@ -29,8 +29,8 @@ export const canSave = <T>(
 ) => !saving && !offline && (isEdited(write, draft, saved) || staged);
 
 /** A staged value goes once the save took it; one changed while saving stays. */
-export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
-  tookIt && current === sent ? null : current;
+export const afterSave = <T>(current: T | null, sent: T | null, wentThrough: boolean) =>
+  wentThrough && current === sent ? null : current;
 
 /** Sends an edited draft, unless Offline as it runs, and drops it once taken; resolves whether a
  * save may go on past it. */
@@ -53,9 +53,9 @@ export async function saveDraft<T>(
   if (offline()) return false;
   if (draft === null || !isEdited(write, draft, saved)) return true;
 
-  const tookIt = await send(write.sent(draft));
+  const wentThrough = await send(write.sent(draft));
 
-  setDraft((current) => afterSave(current, draft, tookIt));
+  setDraft((current) => afterSave(current, draft, wentThrough));
 
-  return tookIt;
+  return wentThrough;
 }

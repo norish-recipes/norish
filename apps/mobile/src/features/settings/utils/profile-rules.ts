@@ -32,7 +32,7 @@ export async function saveProfile<Photo>({
 
   if (!(await saveDraft(NAME_DRAFT, send)) || !photo || offline()) return;
 
-  const tookIt = await uploadAvatar(photo);
+  const wentThrough = await uploadAvatar(photo);
 
-  setPhoto((current) => afterSave(current, photo, tookIt));
+  setPhoto((current) => afterSave(current, photo, wentThrough));
 }

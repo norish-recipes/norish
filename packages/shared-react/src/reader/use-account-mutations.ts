@@ -8,7 +8,7 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 import type { WriteResult } from "../offline/settled";
 import { accepted, answered, wentThrough } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
-import { tookIt, useStaleRefusal } from "../platform/stale-write";
+import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { dropAndLeave, runSessionEnd } from "./session-end";
 import { useProfileCache } from "./use-profile";
@@ -71,13 +71,13 @@ export function useProfileMutations() {
         return false;
       }
 
-      return tookIt(mutateName({ name, version: version() }));
+      return acceptedFresh(mutateName({ name, version: version() }));
     },
     /** Resolves whether the upload went through; the reader is shown why not. */
     uploadAvatar: (file: Blob): Promise<boolean> =>
-      tookIt(mutateUpload(uploadForm({ file, version: version() }))),
+      acceptedFresh(mutateUpload(uploadForm({ file, version: version() }))),
     /** Resolves whether the delete went through; the reader is shown why not. */
-    deleteAvatar: (): Promise<boolean> => tookIt(mutateDelete({ version: version() })),
+    deleteAvatar: (): Promise<boolean> => acceptedFresh(mutateDelete({ version: version() })),
     isDeletingAvatar,
   };
 }
@@ -130,7 +130,7 @@ export function usePreferencesMutation() {
     updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<boolean> =>
       queryClient.isMutating({ mutationKey }) > 0
         ? Promise.resolve(false)
-        : tookIt(mutateAsync({ preferences, version: version() })),
+        : acceptedFresh(mutateAsync({ preferences, version: version() })),
     isUpdatingPreferences: saving,
   };
 }

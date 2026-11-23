@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
+import { wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
@@ -39,11 +40,6 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     void invalidate();
     showError(error, `household:${action}`);
   };
-  const sent = (request: Promise<unknown>) =>
-    request.then(
-      () => true,
-      () => false
-    );
 
   const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
     trpc.households.create.mutationOptions({
@@ -134,7 +130,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    return sent(mutateCreate({ name: name.trim() }));
+    return wentThrough(mutateCreate({ name: name.trim() }));
   };
 
   const joinHousehold = (code: string): Promise<boolean> => {
@@ -146,23 +142,29 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    return sent(mutateJoin({ code: code.trim() }));
+    return wentThrough(mutateJoin({ code: code.trim() }));
   };
 
   const leaveHousehold = (householdId: string): Promise<boolean> => {
-    return sent(mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) }));
+    return wentThrough(
+      mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) })
+    );
   };
 
   const kickUser = (householdId: string, userId: string): Promise<boolean> => {
-    return sent(mutateKick({ householdId, userId, version: memberVersion(householdId, userId) }));
+    return wentThrough(
+      mutateKick({ householdId, userId, version: memberVersion(householdId, userId) })
+    );
   };
 
   const regenerateJoinCode = (householdId: string): Promise<boolean> => {
-    return sent(mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) }));
+    return wentThrough(
+      mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) })
+    );
   };
 
   const transferAdmin = (householdId: string, newAdminId: string): Promise<boolean> => {
-    return sent(
+    return wentThrough(
       mutateTransferAdmin({ householdId, newAdminId, version: getHouseholdVersion(householdId) })
     );
   };

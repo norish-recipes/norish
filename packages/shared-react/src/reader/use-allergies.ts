@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReadStatus } from "../trpc/read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
-import { tookIt, useStaleRefusal } from "../platform/stale-write";
+import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { readStatus } from "../trpc/read-status";
 import { useProfileCache } from "./use-profile";
@@ -55,7 +55,7 @@ export function useAllergiesMutation() {
     setAllergies: (allergies: string[]): Promise<boolean> =>
       queryClient.getQueryData(queryKey) === undefined
         ? Promise.resolve(false)
-        : tookIt(mutateAsync({ allergies, version: version() })),
+        : acceptedFresh(mutateAsync({ allergies, version: version() })),
     isUpdatingAllergies: isPending,
   };
 }

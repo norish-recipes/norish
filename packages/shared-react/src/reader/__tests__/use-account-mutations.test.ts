@@ -231,7 +231,7 @@ describe("the Account's writes", () => {
         }[path];
         let outcome: boolean | undefined;
 
-        act(() => void run().then((tookIt) => (outcome = tookIt)));
+        act(() => void run().then((answer) => (outcome = answer)));
         await answerCall(path, { success: true, stale: true });
 
         expect(outcome).toBeUndefined();
