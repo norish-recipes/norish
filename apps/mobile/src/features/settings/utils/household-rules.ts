@@ -12,6 +12,18 @@ type JoinCode = Pick<HouseholdAdminSettingsDto, "joinCode" | "joinCodeExpiresAt"
 export const householdState = (household: Household | null, isAdmin: boolean) =>
   !household ? "none" : isAdmin ? "admin" : "member";
 
+/** What the page draws: a failed load with nothing held is its own state, never the forms. */
+export const pageState = ({
+  household,
+  isLoading,
+  error,
+}: {
+  household: Household | null;
+  isLoading: boolean;
+  error: unknown;
+}): "household" | "loading" | "failed" | "none" =>
+  household ? "household" : isLoading ? "loading" : error ? "failed" : "none";
+
 /** What the viewer may do to a member: only an admin, never to themselves; Make admin only for a non-admin. */
 export function memberActions(
   viewerIsAdmin: boolean,

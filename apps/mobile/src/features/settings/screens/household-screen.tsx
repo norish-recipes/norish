@@ -1,8 +1,13 @@
 import React from "react";
+import { NoResultsCard } from "@/components/no-results-card";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useIntl } from "react-intl";
 
-import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
+import {
+  useHousehold,
+  useHouseholdCacheHelpers,
+  useHouseholdMutations,
+} from "@norish/shared-react/reader";
 
 import { JoinCodeCard } from "../components/join-code-card";
 import { MembersList } from "../components/members-list";
@@ -11,17 +16,19 @@ import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
 import { useSettingsWrite } from "../hooks/use-settings-write";
-import { adminViewOf, householdState, leaveWarns } from "../utils/household-rules";
+import { adminViewOf, householdState, leaveWarns, pageState } from "../utils/household-rules";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
  * kicked or leaving empties the cached household, which lands here as the no-household state. */
 export function HouseholdScreen() {
   const intl = useIntl();
   const confirm = useConfirm();
-  const { household, currentUserId, isAdmin, isLoading } = useHousehold();
+  const { household, currentUserId, isAdmin, isLoading, error } = useHousehold();
+  const { invalidate } = useHouseholdCacheHelpers();
   const { leaveHousehold } = useHouseholdMutations();
   const write = useSettingsWrite();
   const state = householdState(household, isAdmin);
+  const page = pageState({ household, isLoading, error });
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.household.${id}` }, values);
   const admin = household && isAdmin ? adminViewOf(household) : null;
@@ -46,7 +53,7 @@ export function HouseholdScreen() {
       testID="settings-household-screen"
       title={intl.formatMessage({ id: "settings.tabs.household" })}
     >
-      {household ? (
+      {page === "household" && household ? (
         <>
           <SettingsGroup className="pt-1">
             <SettingsRow
@@ -70,9 +77,23 @@ export function HouseholdScreen() {
             />
           </SettingsGroup>
         </>
-      ) : isLoading ? null : (
+      ) : page === "failed" ? (
+        <NoResultsCard
+          action={{
+            label: intl.formatMessage({ id: "common.actions.retry" }),
+            icon: "refresh-outline",
+            testID: "household-retry",
+            onPress: invalidate,
+          }}
+          className="bg-surface mt-4"
+          icon="alert-circle-outline"
+          testID="household-failed"
+          title={intl.formatMessage({ id: "common.errorPage.title" })}
+          tone="neutral"
+        />
+      ) : page === "none" ? (
         <NoHouseholdForms />
-      )}
+      ) : null}
     </SettingsPage>
   );
 }
