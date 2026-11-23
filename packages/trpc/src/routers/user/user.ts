@@ -119,15 +119,18 @@ const updatePreferences = authedProcedure
         "Ignoring stale user preferences mutation"
       );
 
-      // The stored person-level choices, so the client drops its
-      // optimistic copy; never the device blocks, which a toggle owns.
-      const { locale, afterPlanning, measurementSystem } = await getUserPreferences(ctx.user.id);
+      // The stored person-level choices and version, so the client drops its optimistic copy and a
+      // retry is current; never the device blocks, which a toggle owns.
+      const [{ locale, afterPlanning, measurementSystem }, storedUser] = await Promise.all([
+        getUserPreferences(ctx.user.id),
+        getUserById(ctx.user.id),
+      ]);
 
       return {
         success: true,
         stale: true,
         preferences: { locale, afterPlanning, measurementSystem },
-        version: input.version,
+        version: storedUser?.version ?? input.version,
       };
     }
 

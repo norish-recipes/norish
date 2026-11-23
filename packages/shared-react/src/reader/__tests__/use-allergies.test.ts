@@ -47,6 +47,19 @@ describe("useAllergiesMutation", () => {
     });
   });
 
+  it("sends the profile's newer version after an account write bumped it", async () => {
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: ["nuts"], version: 3 });
+    queryClient.setQueryData(keyOf("user.get"), { user: { version: 5 }, apiKeys: [] });
+    const result = render(() => useAllergiesMutation());
+
+    act(() => void result.current.setAllergies(["milk"]));
+
+    expect((await sentCall("user.setAllergies")).input).toEqual({
+      allergies: ["milk"],
+      version: 5,
+    });
+  });
+
   it("keeps a read begun before the answer from landing over it", async () => {
     const held = { allergies: ["nuts"], version: 3 };
 

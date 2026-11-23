@@ -116,7 +116,7 @@ describe("user preference procedures", () => {
       expect(result).toEqual({ success: true, preferences: { locale: "nl" }, version: 4 });
     });
 
-    it("answers a stale version with the stored language, never a device block", async () => {
+    it("answers a stale version with the stored language and version, never a device block", async () => {
       mockDb.updateUserPreferences.mockResolvedValue({ stale: true });
 
       const result = await createCaller().updatePreferences({
@@ -128,7 +128,7 @@ describe("user preference procedures", () => {
         success: true,
         stale: true,
         preferences: { locale: "en" },
-        version: 2,
+        version: 4,
       });
     });
   });
