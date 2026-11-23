@@ -114,7 +114,6 @@ vi.mock("../../trpc", () => ({
       },
     },
     user: {
-      getAllergies: { queryKey: () => [["user", "getAllergies"], { type: "query" }] },
       get: {
         queryKey: () => [["user", "get"], { type: "query" }],
         // The Reader's profile never answers: the session's Reader stands.
@@ -337,23 +336,6 @@ describe("useHouseholdSubscription", () => {
         "Very long backend stack trace that should not be shown in toast",
         "household-subscription:onFailed"
       );
-    });
-  });
-
-  describe("onAllergiesUpdated handler", () => {
-    it("rereads the Reader's own allergies, which a change on another device may have set", () => {
-      queryClient.setQueryData(
-        householdQueryKey,
-        createMockHouseholdData(createMockHouseholdSettings({ id: "h1" }), "user-1")
-      );
-      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
-
-      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
-      act(() => subscriptionCallbacks.onAllergiesUpdated?.(trackedEvent({ allergies: ["nuts"] })));
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: [["user", "getAllergies"], { type: "query" }],
-      });
     });
   });
 

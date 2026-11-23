@@ -30,7 +30,6 @@ export function useHouseholdSubscription() {
     liveQueryKeys: [
       trpc.households.get.queryKey(),
       trpc.user.get.queryKey(),
-      trpc.user.getAllergies.queryKey(),
       trpc.recipes.get.pathKey(),
     ],
   };
@@ -205,8 +204,6 @@ export function useHouseholdSubscription() {
   useRealtimeSubscription<Payload<"allergiesUpdated">>(trpc.households.onAllergiesUpdated, {
     ...live,
     onEvent: (payload) => {
-      // The event names no member, and the Reader's own list may be the one that changed.
-      void queryClient.invalidateQueries({ queryKey: trpc.user.getAllergies.queryKey() });
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
 
