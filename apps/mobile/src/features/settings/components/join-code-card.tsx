@@ -1,7 +1,7 @@
 import React, { useSyncExternalStore } from "react";
 import { Share, Text, View } from "react-native";
+import { useText } from "@/lib/i18n/use-text";
 import * as Clipboard from "expo-clipboard";
-import { useIntl } from "react-intl";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import { usePlatform } from "@norish/shared-react/platform";
@@ -19,7 +19,7 @@ import { SettingsRow } from "./settings-row";
 
 /** The admin's join code with its countdown, Copy, Share and Regenerate (Generate when none or expired). */
 export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsDto }) {
-  const intl = useIntl();
+  const text = useText();
   const { toast } = usePlatform();
   const { regenerateJoinCode, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
@@ -34,21 +34,19 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   );
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
-  const t = (id: string, values?: Record<string, number>) =>
-    intl.formatMessage({ id: `settings.household.joinCode.${id}` }, values);
   const regenerate = write(() => !pending.regenerate && regenerateJoinCode(household.id));
   const copy = async () => {
     if (!code) return;
     try {
       await Clipboard.setStringAsync(code);
-      toast.show({ severity: "success", title: t("copySuccess") });
+      toast.show({ severity: "success", title: text("settings.household.joinCode.copySuccess") });
     } catch {
-      toast.show({ severity: "danger", title: t("copyFailed") });
+      toast.show({ severity: "danger", title: text("settings.household.joinCode.copyFailed") });
     }
   };
 
   return (
-    <SettingsGroup title={t("title")}>
+    <SettingsGroup title={text("settings.household.joinCode.title")}>
       {code ? (
         <>
           <View className="items-center gap-1 px-4 py-4" testID="household-join-code">
@@ -56,29 +54,32 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
               {code}
             </Text>
             <Text className="text-muted text-sm">
-              {t("expiresIn")}{" "}
+              {text("settings.household.joinCode.expiresIn")}{" "}
               {status.kind === "active"
-                ? t("countdown", { minutes: status.minutes, seconds: status.seconds })
+                ? text("settings.household.joinCode.countdown", {
+                    minutes: status.minutes,
+                    seconds: status.seconds,
+                  })
                 : ""}
             </Text>
           </View>
           <SettingsRow
             icon="copy-outline"
             testID="household-copy-code"
-            title={t("copyButton")}
+            title={text("settings.household.joinCode.copyButton")}
             onPress={() => void copy()}
           />
           <SettingsRow
             icon="share-outline"
             testID="household-share-code"
-            title={intl.formatMessage({ id: "recipes.actions.share" })}
+            title={text("recipes.actions.share")}
             onPress={() => void Share.share({ message: code })}
           />
           <SettingsRow
             write
             icon="refresh-outline"
             testID="household-regenerate-code"
-            title={t("regenerateButton")}
+            title={text("settings.household.joinCode.regenerateButton")}
             onPress={regenerate}
           />
         </>
@@ -86,9 +87,13 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
         <SettingsRow
           write
           icon="refresh-outline"
-          subtitle={status.kind === "expired" ? t("expired") : t("noCodeDescription")}
+          subtitle={
+            status.kind === "expired"
+              ? text("settings.household.joinCode.expired")
+              : text("settings.household.joinCode.noCodeDescription")
+          }
           testID="household-generate-code"
-          title={t("generateButton")}
+          title={text("settings.household.joinCode.generateButton")}
           onPress={regenerate}
         />
       )}

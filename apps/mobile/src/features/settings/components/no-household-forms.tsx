@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
 import { SheetInput } from "@/components/sheet-input";
+import { useText } from "@/lib/i18n/use-text";
 import { Button, TextField } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { isJoinCode, useHouseholdMutations } from "@norish/shared-react/reader";
@@ -14,15 +14,20 @@ import { canCreate } from "../utils/household-rules";
 /** One create-or-join form: a labelled field with its description behind a hint, and a button. */
 function EntryForm({
   id,
-  field,
+  labelId,
+  descriptionId,
+  buttonId,
   value,
   onChange,
   onSubmit,
   enabled,
   ...input
 }: {
+  /** Names the form's test ids. */
   id: "create" | "join";
-  field: "nameLabel" | "codeLabel";
+  labelId: string;
+  descriptionId: string;
+  buttonId: string;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -32,16 +37,19 @@ function EntryForm({
   maxLength?: number;
   placeholder: string;
 }) {
-  const intl = useIntl();
+  const text = useText();
   const { isOffline } = useConnectivity();
-  const t = (key: string) => intl.formatMessage({ id: `settings.household.${id}.${key}` });
 
   return (
     <View className="pt-5">
-      <LabelWithHint hint={t("description")} label={t(field)} testID={`household-${id}-hint`} />
+      <LabelWithHint
+        hint={text(descriptionId)}
+        label={text(labelId)}
+        testID={`household-${id}-hint`}
+      />
       <TextField>
         <SheetInput
-          accessibilityLabel={t(field)}
+          accessibilityLabel={text(labelId)}
           editable={!isOffline}
           returnKeyType="done"
           testID={`household-${id}-field`}
@@ -57,7 +65,7 @@ function EntryForm({
         testID={`household-${id}-submit`}
         onPress={onSubmit}
       >
-        <Button.Label className="text-base font-semibold">{t("submitButton")}</Button.Label>
+        <Button.Label className="text-base font-semibold">{text(buttonId)}</Button.Label>
       </Button>
     </View>
   );
@@ -65,21 +73,22 @@ function EntryForm({
 
 /** No household: create one by name, or join one with a code. */
 export function NoHouseholdForms() {
-  const intl = useIntl();
+  const text = useText();
   const { createHousehold, joinHousehold, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const t = (id: string) => intl.formatMessage({ id: `settings.household.${id}` });
 
   return (
     <>
       <EntryForm
         autoCapitalize="words"
         enabled={canCreate(name) && !pending.create}
-        field="nameLabel"
+        buttonId="settings.household.create.submitButton"
+        descriptionId="settings.household.create.description"
         id="create"
-        placeholder={t("create.namePlaceholder")}
+        labelId="settings.household.create.nameLabel"
+        placeholder={text("settings.household.create.namePlaceholder")}
         value={name}
         onChange={setName}
         onSubmit={write(() => {
@@ -90,11 +99,13 @@ export function NoHouseholdForms() {
       <EntryForm
         autoCapitalize="none"
         enabled={isJoinCode(code) && !pending.join}
-        field="codeLabel"
+        buttonId="settings.household.join.submitButton"
+        descriptionId="settings.household.join.description"
         id="join"
         keyboardType="number-pad"
+        labelId="settings.household.join.codeLabel"
         maxLength={6}
-        placeholder={t("join.codePlaceholder")}
+        placeholder={text("settings.household.join.codePlaceholder")}
         value={code}
         onChange={(value) => setCode(value.replace(/\D/g, ""))}
         onSubmit={write(() => {

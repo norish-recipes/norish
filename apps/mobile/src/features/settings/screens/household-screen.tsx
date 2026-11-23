@@ -1,7 +1,7 @@
 import React from "react";
 import { NoResultsCard } from "@/components/no-results-card";
 import { useConfirm } from "@/hooks/use-confirm";
-import { useIntl } from "react-intl";
+import { useText } from "@/lib/i18n/use-text";
 
 import {
   leaveWarns,
@@ -22,7 +22,7 @@ import { adminViewOf, householdState, pageState } from "../utils/household-rules
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
  * kicked or leaving empties the cached household, which lands here as the no-household state. */
 export function HouseholdScreen() {
-  const intl = useIntl();
+  const text = useText();
   const confirm = useConfirm();
   const { household, currentUserId, isAdmin, isLoading, error } = useHousehold();
   const { invalidate } = useHouseholdCacheHelpers();
@@ -30,30 +30,25 @@ export function HouseholdScreen() {
   const write = useSettingsWrite();
   const state = householdState(household, isAdmin);
   const page = pageState({ household, isLoading, error });
-  const t = (id: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id: `settings.household.${id}` }, values);
   const admin = household && isAdmin ? adminViewOf(household) : null;
 
   const confirmLeave = () => {
     if (!household) return;
 
     const warning = leaveWarns({ isAdmin, otherMemberCount: household.users.length - 1 })
-      ? `\n\n${t("info.leaveModal.adminWarning")}`
+      ? `\n\n${text("settings.household.info.leaveModal.adminWarning")}`
       : "";
 
     confirm({
-      title: t("info.leaveModal.title"),
-      message: `${t("info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
+      title: text("settings.household.info.leaveModal.title"),
+      message: `${text("settings.household.info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
       onConfirm: write(() => !pending.leave && leaveHousehold(household.id)),
     });
   };
 
   return (
-    <SettingsPage
-      testID="settings-household-screen"
-      title={intl.formatMessage({ id: "settings.tabs.household" })}
-    >
+    <SettingsPage testID="settings-household-screen" title={text("settings.tabs.household")}>
       {page === "household" && household ? (
         <>
           <SettingsGroup className="pt-1">
@@ -61,7 +56,11 @@ export function HouseholdScreen() {
               icon="home-outline"
               testID="household-name"
               title={household.name}
-              value={state === "admin" ? t("info.admin") : t("info.member")}
+              value={
+                state === "admin"
+                  ? text("settings.household.info.admin")
+                  : text("settings.household.info.member")
+              }
             />
           </SettingsGroup>
           <MembersList currentUserId={currentUserId} household={household} isAdmin={isAdmin} />
@@ -73,7 +72,7 @@ export function HouseholdScreen() {
               write
               icon="log-out-outline"
               testID="household-leave"
-              title={t("info.leaveButton")}
+              title={text("settings.household.info.leaveButton")}
               onPress={confirmLeave}
             />
           </SettingsGroup>
@@ -81,7 +80,7 @@ export function HouseholdScreen() {
       ) : page === "failed" ? (
         <NoResultsCard
           action={{
-            label: intl.formatMessage({ id: "common.actions.retry" }),
+            label: text("common.actions.retry"),
             icon: "refresh-outline",
             testID: "household-retry",
             onPress: invalidate,
@@ -89,7 +88,7 @@ export function HouseholdScreen() {
           className="bg-surface mt-4"
           icon="alert-circle-outline"
           testID="household-failed"
-          title={intl.formatMessage({ id: "common.errorPage.title" })}
+          title={text("common.errorPage.title")}
           tone="neutral"
         />
       ) : page === "none" ? (
