@@ -5,13 +5,15 @@ import { useIntl } from "react-intl";
 type Confirm = {
   title: string;
   message: string;
-  /** The destructive button's label id; Delete unless the action is another. */
+  /** The confirm button's label id; Delete unless the action is another. */
   confirmLabelId?: string;
+  /** False asks a plain question: the confirm button is not styled destructive. */
+  destructive?: boolean;
   onConfirm: () => void;
   onCancel?: () => void;
 };
 
-/** The native alert: destructive button on the right, as the boards draw it. */
+/** The native alert: the destructive button on the right, as the boards draw it. */
 export function useConfirm() {
   const intl = useIntl();
   const cancel = useCancelButton();
@@ -20,6 +22,7 @@ export function useConfirm() {
     title,
     message,
     confirmLabelId = "common.actions.delete",
+    destructive = true,
     onConfirm,
     onCancel,
   }: Confirm) =>
@@ -27,7 +30,7 @@ export function useConfirm() {
       { ...cancel, onPress: onCancel },
       {
         text: intl.formatMessage({ id: confirmLabelId }),
-        style: "destructive",
+        style: destructive ? "destructive" : "default",
         onPress: onConfirm,
       },
     ]);

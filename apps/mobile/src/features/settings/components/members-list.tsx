@@ -56,6 +56,7 @@ export function MembersList({
                     title: t("members.transferModal.title"),
                     message: `${t("members.transferModal.confirmMessage", { name })}\n\n${t("members.transferModal.warning")}`,
                     confirmLabelId: "settings.household.members.transferModal.confirmButton",
+                    destructive: false,
                     onConfirm: write(() => !pending.transfer && transferAdmin(household.id, user.id)),
                   }),
               }
