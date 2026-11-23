@@ -6,10 +6,12 @@ import { useRouter } from "expo-router";
 
 export function ModalHeader({
   back = false,
+  closable = true,
   onClose,
   confirm,
 }: {
   back?: boolean;
+  closable?: boolean;
   onClose?: () => void;
   confirm?: HeaderConfirm;
 }) {
@@ -19,6 +21,7 @@ export function ModalHeader({
     <>
       <button
         data-testid={back ? "header-back" : "header-close"}
+        disabled={!closable}
         type="button"
         onClick={onClose ?? (() => router.back())}
       />

@@ -293,6 +293,23 @@ describe("the Account's writes", () => {
       expect(profile()?.apiKeys.map((key) => key.id)).toEqual(["k1", "k2"]);
     });
 
+    it("keep no copy of the secret once the key is forgotten", async () => {
+      const result = render(() => useApiKeyMutations());
+      const metadata = { ...PROFILE.apiKeys[0]!, id: "k2", name: "Two" };
+      const held = () =>
+        queryClient
+          .getMutationCache()
+          .getAll()
+          .some((mutation) => JSON.stringify(mutation.state.data ?? null).includes("sk-secret"));
+
+      act(() => void result.current.createApiKey("Two"));
+      await answerCall("user.apiKeys.create", { success: true, key: "sk-secret", metadata });
+      expect(held()).toBe(true);
+
+      act(() => result.current.forgetCreatedKey());
+      await waitFor(() => expect(held()).toBe(false));
+    });
+
     it("resolve no key when the create failed, which the reader is shown", async () => {
       const result = render(() => useApiKeyMutations());
       let created: Promise<string | null> = Promise.resolve("");

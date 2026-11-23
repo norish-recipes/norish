@@ -141,8 +141,10 @@ export function useApiKeyMutations() {
   const { write } = useProfileCache();
   const failed = useFailedWrite();
 
-  const { mutateAsync: mutateCreate } = useMutation(
+  const { mutateAsync: mutateCreate, reset: resetCreate } = useMutation(
     trpc.user.apiKeys.create.mutationOptions({
+      // The answer holds the plaintext key: dropped from the cache once no observer holds it.
+      gcTime: 0,
       onSuccess: ({ metadata }) =>
         write((data) => ({ ...data, apiKeys: [...data.apiKeys, metadata] })),
       onError: failed("user-settings:create-api-key"),
@@ -170,6 +172,8 @@ export function useApiKeyMutations() {
     /** Resolves with the new key, shown only this once, or null when the create failed. */
     createApiKey: async (name?: string): Promise<string | null> =>
       (await answered(mutateCreate({ name })))?.key ?? null,
+    /** Drops the created key from the mutation's result, once the reader has saved it. */
+    forgetCreatedKey: () => resetCreate(),
     deleteApiKey: (keyId: string) => mutateDelete({ keyId }),
     toggleApiKey: (keyId: string, enabled: boolean) => mutateToggle({ keyId, enabled }),
   };

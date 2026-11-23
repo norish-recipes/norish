@@ -21,7 +21,7 @@ export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
   const format = useFormatter();
   const { apiKeys } = useProfileQuery();
-  const { createApiKey, deleteApiKey, toggleApiKey } = useApiKeyMutations();
+  const { createApiKey, forgetCreatedKey, deleteApiKey, toggleApiKey } = useApiKeyMutations();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [generatingKey, whileGeneratingKey] = usePending();
@@ -184,6 +184,7 @@ export default function ApiKeyCard() {
                       action="done"
                       onPress={() => {
                         setGeneratedKey(null);
+                        forgetCreatedKey();
                         onClose();
                       }}
                     >

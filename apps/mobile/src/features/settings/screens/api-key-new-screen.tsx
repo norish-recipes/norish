@@ -17,8 +17,8 @@ import { settingsWrite } from "../utils/settings-write";
 
 const T = "settings.user.apiKeys";
 
-/** The create key sheet. Once made, the key is shown here only, with Copy; the sheet cannot be
- * swiped away, and closing it drops the key from state for good. */
+/** The create key sheet. Once made, the key is shown here only, with Copy; from Create until the
+ * reader saved it the sheet cannot be closed, and closing it drops the key for good. */
 export function ApiKeyNewScreen() {
   const text = useText();
   const intl = useIntl();
@@ -26,18 +26,25 @@ export function ApiKeyNewScreen() {
   const navigation = useNavigation();
   const copyToClipboard = useCopyToClipboard();
   const { isOffline } = useConnectivity();
-  const { createApiKey } = useApiKeyMutations();
+  const { createApiKey, forgetCreatedKey } = useApiKeyMutations();
   const [name, setName] = useState("");
+  const [sending, setSending] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
+  const locked = sending || created !== null;
 
   useEffect(() => {
-    navigation.setOptions({ gestureEnabled: created === null });
-  }, [navigation, created]);
+    navigation.setOptions({ gestureEnabled: !locked });
+  }, [navigation, locked]);
 
   const create = async () => {
-    const key = await createApiKey(name.trim() || undefined);
+    setSending(true);
+    setCreated(await createApiKey(name.trim() || undefined));
+    setSending(false);
+  };
 
-    if (key) setCreated(key);
+  const saved = () => {
+    forgetCreatedKey();
+    router.back();
   };
 
   if (created !== null) {
@@ -46,11 +53,11 @@ export function ApiKeyNewScreen() {
         confirm={{
           label: text(`${T}.generatedModal.confirmButton`),
           symbol: "checkmark",
-          onPress: () => router.back(),
+          onPress: saved,
         }}
+        closable={false}
         name="api-key-created"
         title={text(`${T}.generatedModal.title`)}
-        onClose={() => router.back()}
       >
         <SheetBody contentClassName="gap-4">
           <Text className="text-warning-ink text-base">{text(`${T}.generatedModal.warning`)}</Text>
@@ -82,6 +89,7 @@ export function ApiKeyNewScreen() {
 
   return (
     <Sheet
+      closable={!locked}
       confirm={{
         label: text(`${T}.createKey`),
         symbol: "plus",

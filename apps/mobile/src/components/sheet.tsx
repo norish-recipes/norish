@@ -168,6 +168,7 @@ export function Sheet({
   title,
   subtitle,
   back = false,
+  closable = true,
   onClose,
   confirm,
   secondary,
@@ -180,6 +181,8 @@ export function Sheet({
   subtitle?: string;
   /** A step inside a sheet: the header's left item is a Back chevron. */
   back?: boolean;
+  /** False disables the left item, for a sheet that must stay open. */
+  closable?: boolean;
   /** What the left item does; going back by default. */
   onClose?: () => void;
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
@@ -200,6 +203,7 @@ export function Sheet({
       >
         <ModalHeader
           back={back}
+          closable={closable}
           confirm={confirm}
           secondary={secondary}
           subtitle={subtitle}
