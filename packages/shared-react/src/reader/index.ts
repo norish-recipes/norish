@@ -1,9 +1,11 @@
 export {
   HIDDEN_ITEMS,
   hiddenItemVisibility,
+  offeredHiddenItems,
   partitionHiddenItems,
   type HiddenItemVisibility,
 } from "./hidden-items";
+export { measurementChoices, shownMeasurement } from "./measurement-choices";
 export { ownerAllows } from "./owner-access";
 export { useToday } from "./use-today";
 export { useHiddenItemVisibility } from "./use-hidden-item-visibility";

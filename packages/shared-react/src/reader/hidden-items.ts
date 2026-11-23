@@ -14,6 +14,10 @@ export const HIDDEN_ITEMS = [
 
 type HiddenItem = (typeof HIDDEN_ITEMS)[number];
 
+/** Timers can be switched off for the whole deployment, which leaves nothing to offer. */
+export const offeredHiddenItems = (timersEnabled: boolean): readonly HiddenItem[] =>
+  timersEnabled ? HIDDEN_ITEMS : HIDDEN_ITEMS.filter((item) => item !== "timers");
+
 /** `selected` is what a control ticks, in contract order; `carried` is a stored name it can't offer
  * (newer or gated off), written back as `[...chosen, ...carried]` so it is never dropped. */
 export function partitionHiddenItems(

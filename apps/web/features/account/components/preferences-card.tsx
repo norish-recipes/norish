@@ -10,8 +10,10 @@ import { useTranslations } from "next-intl";
 
 import { useLocaleConfigQuery, useTimersEnabledQuery } from "@norish/shared-react/config";
 import {
-  HIDDEN_ITEMS,
+  measurementChoices,
+  offeredHiddenItems,
   partitionHiddenItems,
+  shownMeasurement,
   useDeviceKind,
   useDevicePreference,
   usePermissions,
@@ -23,15 +25,11 @@ import {
   TODAY_SECTION_VISIBILITIES,
   UNIT_STYLES,
 } from "@norish/shared/contracts/zod/device-preferences";
-import {
-  AFTER_PLANNING_CHOICES,
-  MEASUREMENT_SYSTEM_CHOICES,
-} from "@norish/shared/contracts/zod/user";
+import { AFTER_PLANNING_CHOICES } from "@norish/shared/contracts/zod/user";
 import {
   getAfterPlanningPreference,
   getLocalePreference,
   getMeasurementSystemPreference,
-  measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
 
 export default function PreferencesCard() {
@@ -56,17 +54,7 @@ export default function PreferencesCard() {
     ? currentLocale
     : undefined;
 
-  // Timers are a capability an administrator can switch off for the whole
-  // deployment; when they have, there is nothing to offer the reader.
-  const offeredHidden = globalEnabled
-    ? HIDDEN_ITEMS
-    : HIDDEN_ITEMS.filter((item) => item !== "timers");
-
-  // Converting with AI is on offer only where an administrator has AI on; a
-  // choice of it made before reads as the same system without.
-  const measurementChoices = isAIEnabled
-    ? MEASUREMENT_SYSTEM_CHOICES
-    : MEASUREMENT_SYSTEM_CHOICES.filter((choice) => !choice.endsWith("WithAI"));
+  const offeredHidden = offeredHiddenItems(globalEnabled);
   const measurementSystem = getMeasurementSystemPreference(user);
 
   const { selected: selectedHidden, carried } = partitionHiddenItems(hiddenItems, offeredHidden);
@@ -140,12 +128,8 @@ export default function PreferencesCard() {
           isDisabled={isSaving}
           label={t("measurements.title")}
           optionLabel={(option) => t(`measurements.options.${option}`)}
-          options={measurementChoices}
-          value={
-            isAIEnabled
-              ? measurementSystem
-              : (measurementSystemTarget(measurementSystem)?.system ?? "off")
-          }
+          options={measurementChoices(isAIEnabled)}
+          value={shownMeasurement(measurementSystem, isAIEnabled)}
           onChange={(choice) => void updatePreferences({ measurementSystem: choice })}
         />
       </SettingRow>

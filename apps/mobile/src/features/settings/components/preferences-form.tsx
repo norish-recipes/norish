@@ -5,6 +5,9 @@ import { useIntl } from "react-intl";
 
 import { useTimersEnabledQuery } from "@norish/shared-react/config";
 import {
+  measurementChoices,
+  offeredHiddenItems,
+  shownMeasurement,
   useDevicePreference,
   usePermissions,
   usePreferencesMutation,
@@ -21,12 +24,7 @@ import {
   getMeasurementSystemPreference,
 } from "@norish/shared/lib/user-preferences";
 
-import {
-  measurementChoices,
-  offeredHiddenItems,
-  shownMeasurement,
-  toggledHiddenItems,
-} from "../utils/preferences-rules";
+import { toggledHiddenItems } from "../utils/preferences-rules";
 import { ChoiceRow } from "./choice-row";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
