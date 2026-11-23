@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -9,7 +9,7 @@ import {
 
 import { useAllergiesMutation } from "..";
 import { readUnderWay } from "../../offline/testing";
-import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
+import { answerCall, failCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -30,7 +30,7 @@ describe("useAllergiesMutation", () => {
     queryClient.setQueryData(ALLERGIES_KEY, { allergies: ["nuts"], version: 3 });
     const result = render(() => useAllergiesMutation());
 
-    act(() => result.current.setAllergies(["nuts", "gluten"]));
+    act(() => void result.current.setAllergies(["nuts", "gluten"]));
     expect((await sentCall("user.setAllergies")).input).toEqual({
       allergies: ["nuts", "gluten"],
       version: 3,
@@ -54,10 +54,56 @@ describe("useAllergiesMutation", () => {
     const land = readUnderWay(queryClient, ALLERGIES_KEY, held);
     const result = render(() => useAllergiesMutation());
 
-    act(() => result.current.setAllergies(["nuts", "gluten"]));
+    act(() => void result.current.setAllergies(["nuts", "gluten"]));
     await answerCall("user.setAllergies", { success: true, allergies: ["gluten"], version: 4 });
     await act(land);
 
     expect(queryClient.getQueryData(ALLERGIES_KEY)).toEqual({ allergies: ["gluten"], version: 4 });
+  });
+
+  it("resolves that a write the server took went through", async () => {
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: [], version: 3 });
+    const result = render(() => useAllergiesMutation());
+    let outcome: boolean | undefined;
+
+    act(() => void result.current.setAllergies(["nuts"]).then((took) => (outcome = took)));
+    await answerCall("user.setAllergies", { success: true, allergies: ["nuts"], version: 4 });
+
+    await waitFor(() => expect(outcome).toBe(true));
+  });
+
+  it("refuses a stale write as changed elsewhere and caches what the server holds", async () => {
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: [], version: 3 });
+    const adapter = fakePlatformAdapter();
+    const result = renderHook(() => useAllergiesMutation(), {
+      wrapper: createTestWrapper(queryClient, adapter),
+    }).result;
+    let outcome: boolean | undefined;
+
+    act(() => void result.current.setAllergies(["nuts"]).then((took) => (outcome = took)));
+    await answerCall("user.setAllergies", {
+      success: true,
+      stale: true,
+      allergies: ["gluten"],
+      version: 5,
+    });
+
+    await waitFor(() => expect(outcome).toBe(false));
+    expect(adapter.showError).toHaveBeenCalledExactlyOnceWith(
+      "common.changedElsewhere.title",
+      expect.any(String)
+    );
+    expect(queryClient.getQueryData(ALLERGIES_KEY)).toEqual({ allergies: ["gluten"], version: 5 });
+  });
+
+  it("resolves false when the write fails", async () => {
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: [], version: 3 });
+    const result = render(() => useAllergiesMutation());
+    let outcome: boolean | undefined;
+
+    act(() => void result.current.setAllergies(["nuts"]).then((took) => (outcome = took)));
+    await failCall("user.setAllergies");
+
+    await waitFor(() => expect(outcome).toBe(false));
   });
 });
