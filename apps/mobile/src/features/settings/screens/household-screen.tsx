@@ -17,7 +17,7 @@ import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
 import { useSettingsWrite } from "../hooks/use-settings-write";
-import { adminViewOf, householdState, pageState } from "../utils/household-rules";
+import { adminViewOf, pageState } from "../utils/household-rules";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
  * kicked or leaving empties the cached household, which lands here as the no-household state. */
@@ -28,9 +28,8 @@ export function HouseholdScreen() {
   const { invalidate } = useHouseholdCacheHelpers();
   const { leaveHousehold, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
-  const state = householdState(household, isAdmin);
   const page = pageState({ household, isLoading, error });
-  const admin = household && isAdmin ? adminViewOf(household) : null;
+  const admin = household ? adminViewOf(household) : null;
 
   const confirmLeave = () => {
     if (!household) return;
@@ -57,7 +56,7 @@ export function HouseholdScreen() {
               testID="household-name"
               title={household.name}
               value={
-                state === "admin"
+                isAdmin
                   ? text("settings.household.info.admin")
                   : text("settings.household.info.member")
               }

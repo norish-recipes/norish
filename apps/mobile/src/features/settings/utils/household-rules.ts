@@ -5,10 +5,6 @@ import type {
 
 type Household = HouseholdSettingsDto | HouseholdAdminSettingsDto;
 
-/** The page's state: no household (create or join), a member's view, or the admin's. */
-export const householdState = (household: Household | null, isAdmin: boolean) =>
-  !household ? "none" : isAdmin ? "admin" : "member";
-
 /** What the page draws: a failed load with nothing held is its own state, never the forms. */
 export const pageState = ({
   household,
