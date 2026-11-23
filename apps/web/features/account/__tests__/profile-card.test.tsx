@@ -111,6 +111,23 @@ describe("ProfileCard", () => {
     expect(mockAccount.updateName).not.toHaveBeenCalled();
   });
 
+  it("keeps the photo staged when the name does not go through", async () => {
+    mockAccount.updateName.mockClear().mockResolvedValueOnce(false);
+    mockAccount.uploadAvatar.mockClear();
+    const { container } = render(<ProfileCard />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    fireEvent.change(screen.getByDisplayValue("Alice"), { target: { value: "Alicia" } });
+    fireEvent.change(fileInput, {
+      target: { files: [new File(["avatar"], "avatar.png", { type: "image/png" })] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "save" }));
+
+    await waitFor(() => expect(mockAccount.updateName).toHaveBeenCalledWith("Alicia"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "save" })).toBeEnabled());
+    expect(mockAccount.uploadAvatar).not.toHaveBeenCalled();
+  });
+
   it("uses plain avatar URL without cache-busting query params", () => {
     mockUser = {
       name: "Alice",
