@@ -69,6 +69,19 @@ describe("useHouseholdMutations", () => {
     adapter = fakePlatformAdapter("phone", READER);
   });
 
+  describe("pending", () => {
+    it("is true for an action while its request is in flight", async () => {
+      const result = render(household());
+
+      expect(result.current.pending.kick).toBe(false);
+      await act(async () => result.current.kickUser("h1", "a"));
+      await waitFor(() => expect(result.current.pending.kick).toBe(true));
+      expect(result.current.pending.leave).toBe(false);
+      await settle("kick", 0, "resolve", {});
+      await waitFor(() => expect(result.current.pending.kick).toBe(false));
+    });
+  });
+
   describe("createHousehold", () => {
     it("rejects an empty name or a missing Reader", () => {
       const result = render(createMockHouseholdData(null, "current-user"));

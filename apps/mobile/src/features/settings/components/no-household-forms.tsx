@@ -66,7 +66,7 @@ function EntryForm({
 /** No household: create one by name, or join one with a code. */
 export function NoHouseholdForms() {
   const intl = useIntl();
-  const { createHousehold, joinHousehold } = useHouseholdMutations();
+  const { createHousehold, joinHousehold, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -76,7 +76,7 @@ export function NoHouseholdForms() {
     <>
       <EntryForm
         autoCapitalize="words"
-        enabled={canCreate(name)}
+        enabled={canCreate(name) && !pending.create}
         field="nameLabel"
         id="create"
         placeholder={t("create.namePlaceholder")}
@@ -89,7 +89,7 @@ export function NoHouseholdForms() {
       />
       <EntryForm
         autoCapitalize="none"
-        enabled={isJoinCode(code)}
+        enabled={isJoinCode(code) && !pending.join}
         field="codeLabel"
         id="join"
         keyboardType="number-pad"

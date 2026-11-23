@@ -15,6 +15,8 @@ type HouseholdMutationsResult = {
   kickUser: (householdId: string, userId: string) => void;
   regenerateJoinCode: (householdId: string) => void;
   transferAdmin: (householdId: string, newAdminId: string) => void;
+  /** Whether each action's request is in flight, for a caller that must not send it twice. */
+  pending: Record<"create" | "join" | "leave" | "kick" | "regenerate" | "transfer", boolean>;
 };
 
 export function useHouseholdMutations(): HouseholdMutationsResult {
@@ -31,7 +33,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       : 1;
   const onError = () => invalidate();
 
-  const { mutate: mutateCreate } = useMutation(
+  const { mutate: mutateCreate, isPending: isCreating } = useMutation(
     trpc.households.create.mutationOptions({
       onSuccess: ({ id }, { name }) => {
         if (!currentUserId) return;
@@ -53,8 +55,8 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
   // The joined household arrives through the subscription.
-  const { mutate: mutateJoin } = useMutation(trpc.households.join.mutationOptions({ onError }));
-  const { mutate: mutateLeave } = useMutation(
+  const { mutate: mutateJoin, isPending: isJoining } = useMutation(trpc.households.join.mutationOptions({ onError }));
+  const { mutate: mutateLeave, isPending: isLeaving } = useMutation(
     trpc.households.leave.mutationOptions({
       onSuccess: () => {
         setHouseholdData((prev) => ({
@@ -65,7 +67,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       onError,
     })
   );
-  const { mutate: mutateKick } = useMutation(
+  const { mutate: mutateKick, isPending: isKicking } = useMutation(
     trpc.households.kick.mutationOptions({
       onSuccess: (_data, { userId }) => {
         setHouseholdData((prev) => {
@@ -84,10 +86,10 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
   // The new join code arrives through the subscription.
-  const { mutate: mutateRegenerateCode } = useMutation(
+  const { mutate: mutateRegenerateCode, isPending: isRegenerating } = useMutation(
     trpc.households.regenerateCode.mutationOptions({ onError })
   );
-  const { mutate: mutateTransferAdmin } = useMutation(
+  const { mutate: mutateTransferAdmin, isPending: isTransferring } = useMutation(
     trpc.households.transferAdmin.mutationOptions({
       onSuccess: (_data, { newAdminId }) => {
         setHouseholdData((prev) => {
@@ -156,5 +158,13 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     kickUser,
     regenerateJoinCode,
     transferAdmin,
+    pending: {
+      create: isCreating,
+      join: isJoining,
+      leave: isLeaving,
+      kick: isKicking,
+      regenerate: isRegenerating,
+      transfer: isTransferring,
+    },
   };
 }

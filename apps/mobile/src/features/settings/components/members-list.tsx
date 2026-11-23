@@ -24,7 +24,7 @@ export function MembersList({
 }) {
   const intl = useIntl();
   const confirm = useConfirm();
-  const { kickUser, transferAdmin } = useHouseholdMutations();
+  const { kickUser, transferAdmin, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
   const t = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: `settings.household.${id}` }, values);
@@ -45,7 +45,7 @@ export function MembersList({
                     title: t("members.kickModal.title"),
                     message: `${t("members.kickModal.confirmMessage", { name })}\n\n${t("members.kickModal.warning")}`,
                     confirmLabelId: "settings.household.members.kickModal.confirmButton",
-                    onConfirm: write(() => kickUser(household.id, user.id)),
+                    onConfirm: write(() => !pending.kick && kickUser(household.id, user.id)),
                   }),
               }
             : {
@@ -56,7 +56,7 @@ export function MembersList({
                     title: t("members.transferModal.title"),
                     message: `${t("members.transferModal.confirmMessage", { name })}\n\n${t("members.transferModal.warning")}`,
                     confirmLabelId: "settings.household.members.transferModal.confirmButton",
-                    onConfirm: write(() => transferAdmin(household.id, user.id)),
+                    onConfirm: write(() => !pending.transfer && transferAdmin(household.id, user.id)),
                   }),
               }
         );

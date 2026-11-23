@@ -25,7 +25,7 @@ export function HouseholdScreen() {
   const confirm = useConfirm();
   const { household, currentUserId, isAdmin, isLoading, error } = useHousehold();
   const { invalidate } = useHouseholdCacheHelpers();
-  const { leaveHousehold } = useHouseholdMutations();
+  const { leaveHousehold, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
   const state = householdState(household, isAdmin);
   const page = pageState({ household, isLoading, error });
@@ -44,7 +44,7 @@ export function HouseholdScreen() {
       title: t("info.leaveModal.title"),
       message: `${t("info.leaveModal.confirmMessage", { name: household.name })}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
-      onConfirm: write(() => leaveHousehold(household.id)),
+      onConfirm: write(() => !pending.leave && leaveHousehold(household.id)),
     });
   };
 

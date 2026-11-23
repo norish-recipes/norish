@@ -24,7 +24,7 @@ const everySecond = (onTick: () => void) => {
 export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsDto }) {
   const intl = useIntl();
   const { toast } = usePlatform();
-  const { regenerateJoinCode } = useHouseholdMutations();
+  const { regenerateJoinCode, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
   const ticking = Boolean(household.joinCode && household.joinCodeExpiresAt);
   const now = useSyncExternalStore(ticking ? everySecond : noTick, nowToTheSecond, nowToTheSecond);
@@ -32,7 +32,7 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   const code = status.kind === "active" ? household.joinCode : null;
   const t = (id: string, values?: Record<string, number>) =>
     intl.formatMessage({ id: `settings.household.joinCode.${id}` }, values);
-  const regenerate = write(() => regenerateJoinCode(household.id));
+  const regenerate = write(() => !pending.regenerate && regenerateJoinCode(household.id));
   const copy = async () => {
     if (!code) return;
     try {
