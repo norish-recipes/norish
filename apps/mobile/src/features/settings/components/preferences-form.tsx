@@ -52,6 +52,7 @@ export function PreferencesForm() {
         <ChoiceRow
           optionLabel={(code) => options.find((option) => option.code === code)?.name ?? code}
           options={options.map((option) => option.code)}
+          saving={isUpdatingPreferences}
           testID="preferences-language"
           title={text("settings.user.preferences.language.title")}
           value={locale}

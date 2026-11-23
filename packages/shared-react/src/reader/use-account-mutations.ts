@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useIsMutating, useMutation } from "@tanstack/react-query";
 
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import { uploadForm } from "@norish/shared/lib/upload-form";
@@ -94,16 +94,13 @@ export function useProfileMutations() {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
-  const { held, version, write, restore, mergeUser, invalidate } = useProfileCache();
+  const { held, version, restore, mergeUser, mergePreferences: merge, invalidate } =
+    useProfileCache();
   const failed = useFailedWrite();
+  // Counts the language save too, which is its own mutation sending the same held version.
+  const saving = useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
 
-  const merge = (patch: Partial<UserPreferencesDto>) =>
-    write((data) => ({
-      ...data,
-      user: { ...data.user, preferences: { ...data.user.preferences, ...patch } },
-    }));
-
-  const { mutateAsync, isPending } = useMutation(
+  const { mutateAsync } = useMutation(
     trpc.user.updatePreferences.mutationOptions({
       onMutate: ({ preferences }) => {
         const previous = held();
@@ -133,7 +130,7 @@ export function usePreferencesMutation() {
     /** Resolves once settled, whatever the outcome, so a language change refreshes after it. */
     updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<void> =>
       settled(mutateAsync({ preferences, version: version() })),
-    isUpdatingPreferences: isPending,
+    isUpdatingPreferences: saving,
   };
 }
 

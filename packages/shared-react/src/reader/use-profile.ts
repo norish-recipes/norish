@@ -4,6 +4,7 @@ import type { inferRouterOutputs } from "@trpc/server";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { User } from "@norish/shared/contracts";
+import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { AppRouter } from "@norish/trpc/client";
 
@@ -34,6 +35,7 @@ type ProfileCache = {
   /** Puts back what `held` returned before an optimistic write. */
   restore: (previous: HeldProfile | undefined) => void;
   mergeUser: (patch: Partial<User>) => void;
+  mergePreferences: (patch: Partial<UserPreferencesDto>) => void;
   /** Rereads the profile; resolves once the reread has landed. */
   invalidate: () => Promise<void>;
 };
@@ -54,6 +56,11 @@ export function useProfileCache(): ProfileCache {
     write,
     restore: (previous) => queryClient.setQueryData(queryKey, previous),
     mergeUser: (patch) => write((data) => ({ ...data, user: { ...data.user, ...patch } })),
+    mergePreferences: (patch) =>
+      write((data) => ({
+        ...data,
+        user: { ...data.user, preferences: { ...data.user.preferences, ...patch } },
+      })),
     invalidate: () => queryClient.invalidateQueries({ queryKey }),
   };
 }
