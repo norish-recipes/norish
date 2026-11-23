@@ -29,7 +29,7 @@ export function SettingsScreen() {
   const intl = useIntl();
   const router = useRouter();
   const { user } = useReader();
-  const allergies = useAllergiesQuery();
+  const { allergies } = useAllergiesQuery();
   const { household } = useHousehold();
   const serverVersion = useServerVersionQuery();
   const serverAddress = use(ServerAddressContext);

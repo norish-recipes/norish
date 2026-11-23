@@ -16,7 +16,7 @@ import {
 export default function AllergiesCard() {
   const t = useTranslations("settings.user.allergies");
   const tActions = useTranslations("common.actions");
-  const allergies = useAllergiesQuery();
+  const { allergies, answered } = useAllergiesQuery();
   const { setAllergies, isUpdatingAllergies } = useAllergiesMutation();
   const [localAllergies, setLocalAllergies] = useState<string[]>(allergies);
   const [syncedAllergies, setSyncedAllergies] = useState(allergies);
@@ -37,7 +37,7 @@ export default function AllergiesCard() {
       <ActionButtonGroup>
         <ActionButton
           action="save"
-          isDisabled={!hasChanges}
+          isDisabled={!hasChanges || !answered}
           isPending={isUpdatingAllergies}
           onPress={() => setAllergies(localAllergies)}
         >

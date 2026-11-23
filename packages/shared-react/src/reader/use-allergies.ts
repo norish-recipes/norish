@@ -2,23 +2,25 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { ReadStatus } from "./read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
+import { readStatus } from "./read-status";
 import { tookIt, useStaleRefusal } from "./stale-write";
 import { useProfileCache } from "./use-profile";
 
 const NONE: string[] = [];
 
-/** The Reader's own allergies, as they set them (not the household's). */
-export function useAllergiesQuery(): string[] {
+/** The Reader's own allergies, as they set them (not the household's), and how their read went. */
+export function useAllergiesQuery(): ReadStatus & { allergies: string[] } {
   const trpc = useTRPC();
-  const { data } = useQuery({
+  const query = useQuery({
     ...trpc.user.getAllergies.queryOptions(),
     select: (allergies) => allergies.allergies,
   });
 
-  return data ?? NONE;
+  return { allergies: query.data ?? NONE, ...readStatus(query) };
 }
 
 /** Sets the Reader's allergies; the household hears of it through its subscription. */
@@ -48,9 +50,12 @@ export function useAllergiesMutation() {
   );
 
   return {
-    /** Resolves whether the server took them; a stale write is refused as changed elsewhere. */
+    /** Resolves whether the server took them; a stale write is refused as changed elsewhere. Nothing
+     * goes before the list has been read, as the write replaces every stored allergy. */
     setAllergies: (allergies: string[]): Promise<boolean> =>
-      tookIt(mutateAsync({ allergies, version: version() })),
+      queryClient.getQueryData(queryKey) === undefined
+        ? Promise.resolve(false)
+        : tookIt(mutateAsync({ allergies, version: version() })),
     isUpdatingAllergies: isPending,
   };
 }

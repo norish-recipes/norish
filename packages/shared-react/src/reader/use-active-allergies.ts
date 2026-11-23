@@ -20,7 +20,7 @@ export function useActiveAllergies(): ActiveAllergies {
     ...trpc.households.get.queryOptions(),
     select: (data) => data.household?.allergies,
   });
-  const own = useAllergiesQuery();
+  const own = useAllergiesQuery().allergies;
 
   const allergies = household && household.length > 0 ? household : own;
   const allergySet = allergenSet(allergies);

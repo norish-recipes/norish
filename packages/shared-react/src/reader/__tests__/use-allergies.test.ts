@@ -9,7 +9,14 @@ import {
 
 import { useAllergiesMutation } from "..";
 import { readUnderWay } from "../../offline/testing";
-import { answerCall, failCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
+import {
+  answerCall,
+  failCall,
+  keyOf,
+  resetTRPCFake,
+  sentCall,
+  trpcCalls,
+} from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -107,6 +114,17 @@ describe("useAllergiesMutation", () => {
       expect.any(String)
     );
     expect(queryClient.getQueryData(ALLERGIES_KEY)).toEqual({ allergies: ["gluten"], version: 5 });
+  });
+
+  it("sends nothing before the allergies have been read, so the stored ones are never replaced", async () => {
+    queryClient.setQueryData(keyOf("user.get"), { user: { version: 5 }, apiKeys: [] });
+    const result = render(() => useAllergiesMutation());
+    let outcome: boolean | undefined;
+
+    act(() => void result.current.setAllergies(["milk"]).then((took) => (outcome = took)));
+
+    await waitFor(() => expect(outcome).toBe(false));
+    expect(trpcCalls["user.setAllergies"] ?? []).toHaveLength(0);
   });
 
   it("resolves false when the write fails", async () => {

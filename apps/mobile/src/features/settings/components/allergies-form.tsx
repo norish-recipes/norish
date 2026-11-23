@@ -5,7 +5,7 @@ import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
 import { isOfflineNow } from "@/lib/offline/offline-now";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, useThemeColor } from "heroui-native";
+import { Button, Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useTagsQuery } from "@norish/shared-react/config";
@@ -20,6 +20,8 @@ import {
   withoutAllergy,
 } from "../utils/allergy-rules";
 import { saveDraft } from "../utils/draft-rules";
+import { readState } from "../utils/read-state";
+import { FailedLoad } from "./failed-load";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -30,7 +32,7 @@ const ENDS_NAME = /[\s,]$/;
 export function AllergiesForm() {
   const intl = useIntl();
   const { isOffline } = useConnectivity();
-  const saved = useAllergiesQuery();
+  const { allergies: saved, ...read } = useAllergiesQuery();
   const { setAllergies } = useAllergiesMutation();
   const { tags: known } = useTagsQuery();
   const [muted] = useThemeColor(["muted"] as const);
@@ -56,6 +58,17 @@ export function AllergiesForm() {
         setDraft: allergies.setDraft,
         offline: isOfflineNow,
       })
+    );
+
+  // Until the list is read there is nothing to edit: a Save would replace the stored allergies.
+  const page = readState({ ...read, held: read.answered });
+
+  if (page === "failed") return <FailedLoad name="allergies" onRetry={read.refetch} />;
+  if (page === "loading")
+    return (
+      <View className="pt-4" testID="allergies-loading">
+        <Skeleton className="h-[56px] rounded-[22px]" />
+      </View>
     );
 
   return (
