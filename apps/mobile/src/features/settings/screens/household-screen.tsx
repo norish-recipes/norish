@@ -1,5 +1,4 @@
 import React from "react";
-import { NoResultsCard } from "@/components/no-results-card";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useText } from "@/lib/i18n/use-text";
 
@@ -11,13 +10,14 @@ import {
   useHouseholdMutations,
 } from "@norish/shared-react/reader";
 
+import { FailedLoad } from "../components/failed-load";
 import { JoinCodeCard } from "../components/join-code-card";
 import { MembersList } from "../components/members-list";
 import { NoHouseholdForms } from "../components/no-household-forms";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { pageState } from "../utils/household-rules";
+import { readState } from "../utils/read-state";
 import { settingsWrite } from "../utils/settings-write";
 
 /** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
@@ -29,7 +29,12 @@ export function HouseholdScreen() {
   const { invalidate } = useHouseholdCacheHelpers();
   const { leaveHousehold } = useHouseholdMutations();
   // currentUserId comes with every answer, so it marks a read that succeeded.
-  const page = pageState({ household, answered: currentUserId !== undefined, isLoading, error });
+  const page = readState({
+    held: household !== null,
+    answered: currentUserId !== undefined,
+    isLoading,
+    error,
+  });
   const admin = adminViewOf(household, currentUserId);
 
   const confirmLeave = () => {
@@ -49,7 +54,7 @@ export function HouseholdScreen() {
 
   return (
     <SettingsPage testID="settings-household-screen" title={text("settings.tabs.household")}>
-      {page === "household" && household ? (
+      {page === "held" && household ? (
         <>
           <SettingsGroup className="pt-1">
             <SettingsRow
@@ -78,20 +83,8 @@ export function HouseholdScreen() {
           </SettingsGroup>
         </>
       ) : page === "failed" ? (
-        <NoResultsCard
-          action={{
-            label: text("common.actions.retry"),
-            icon: "refresh-outline",
-            testID: "household-retry",
-            onPress: invalidate,
-          }}
-          className="bg-surface mt-4"
-          icon="alert-circle-outline"
-          testID="household-failed"
-          title={text("common.errorPage.title")}
-          tone="neutral"
-        />
-      ) : page === "none" ? (
+        <FailedLoad name="household" onRetry={invalidate} />
+      ) : page === "empty" ? (
         <NoHouseholdForms />
       ) : null}
     </SettingsPage>

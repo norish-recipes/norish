@@ -16,8 +16,6 @@ import { API_KEY_NAME_MAX_LENGTH, useApiKeyMutations } from "@norish/shared-reac
 import { OfflineCapsule } from "../components/offline-capsule";
 import { settingsWrite } from "../utils/settings-write";
 
-const T = "settings.user.apiKeys";
-
 /** The create key sheet. Once made, the key is shown here only, with Copy; from Create until the
  * reader saved it the sheet cannot be closed, and closing it drops the key for good. */
 export function ApiKeyNewScreen() {
@@ -52,16 +50,18 @@ export function ApiKeyNewScreen() {
     return (
       <Sheet
         confirm={{
-          label: text(`${T}.generatedModal.confirmButton`),
+          label: text("settings.user.apiKeys.generatedModal.confirmButton"),
           symbol: "checkmark",
           onPress: saved,
         }}
         closable={false}
         name="api-key-created"
-        title={text(`${T}.generatedModal.title`)}
+        title={text("settings.user.apiKeys.generatedModal.title")}
       >
         <SheetBody contentClassName="gap-4">
-          <Text className="text-warning-ink text-base">{text(`${T}.generatedModal.warning`)}</Text>
+          <Text className="text-warning-ink text-base">
+            {text("settings.user.apiKeys.generatedModal.warning")}
+          </Text>
           <View className="bg-sand border-stroke rounded-[22px] border-[0.5px] px-4 py-3.5">
             <Text
               selectable
@@ -73,13 +73,17 @@ export function ApiKeyNewScreen() {
           </View>
           <PillButton
             icon="copy-outline"
-            label={text(`${T}.generatedModal.copyButton`)}
+            label={text("settings.user.apiKeys.generatedModal.copyButton")}
             testID="api-key-copy"
-            onPress={() => void copyToClipboard(created, { copied: `${T}.generatedModal.copied` })}
+            onPress={() =>
+              void copyToClipboard(created, {
+                copied: "settings.user.apiKeys.generatedModal.copied",
+              })
+            }
           />
           <Text className="text-muted text-sm">
             {intl.formatMessage(
-              { id: `${T}.generatedModal.hint` },
+              { id: "settings.user.apiKeys.generatedModal.hint" },
               { code: (chunks) => <Text className="font-mono">{chunks}</Text> }
             )}
           </Text>
@@ -92,24 +96,24 @@ export function ApiKeyNewScreen() {
     <Sheet
       closable={!locked}
       confirm={{
-        label: text(`${T}.createKey`),
+        label: text("settings.user.apiKeys.createKey"),
         symbol: "plus",
         disabled: isOffline,
         onPress: settingsWrite(create, "api-key-create"),
       }}
       name="api-key-new"
-      title={text(`${T}.createKey`)}
+      title={text("settings.user.apiKeys.createKey")}
     >
       <SheetBody contentClassName="gap-4">
         <OfflineCapsule />
         <View>
-          <LabelWithHint label={text(`${T}.keyNameLabel`)} />
+          <LabelWithHint label={text("settings.user.apiKeys.keyNameLabel")} />
           <TextField>
             <SheetInput
-              accessibilityLabel={text(`${T}.keyNameLabel`)}
+              accessibilityLabel={text("settings.user.apiKeys.keyNameLabel")}
               editable={!isOffline}
               maxLength={API_KEY_NAME_MAX_LENGTH}
-              placeholder={text(`${T}.keyNamePlaceholder`)}
+              placeholder={text("settings.user.apiKeys.keyNamePlaceholder")}
               returnKeyType="done"
               testID="api-key-name"
               value={name}

@@ -4,6 +4,7 @@ import { useText } from "@/lib/i18n/use-text";
 import { shareEnding } from "@/lib/share-subtitle";
 import { useIntl } from "react-intl";
 
+import type { ShareLinkAction } from "@norish/shared-react/reader";
 import { shareLinkActions } from "@norish/shared-react/reader";
 import { useMyRecipeSharesQuery, useRecipeShareMutations } from "@norish/shared-react/recipes";
 
@@ -11,10 +12,7 @@ import { ConnectionList } from "../components/connection-list";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { listState } from "../utils/list-state";
 import { settingsWrite } from "../utils/settings-write";
-
-const T = "settings.user.shareLinks";
 
 /** Share links: the Reader's public recipe links with their status; Revoke, Reactivate and Delete
  * each behind a confirm. A link's URL is shown once, when it is made, so there is no Copy here. */
@@ -22,40 +20,50 @@ export function ShareLinksScreen() {
   const text = useText();
   const intl = useIntl();
   const confirm = useConfirm();
-  const { shares, answered, isLoading, error, invalidate } = useMyRecipeSharesQuery();
+  const read = useMyRecipeSharesQuery();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(null);
-  const state = listState({ count: shares.length, answered, isLoading, error });
   const date = (value: Date) => intl.formatDate(value, { dateStyle: "medium" });
-  const send = { revoke: revokeShare, reactivate: reactivateShare, delete: deleteShare };
+  const sendAction: Record<ShareLinkAction, (id: string, version: number) => Promise<boolean>> = {
+    revoke: revokeShare,
+    reactivate: reactivateShare,
+    delete: deleteShare,
+  };
 
   return (
-    <SettingsPage testID="settings-share-links-screen" title={text(`${T}.title`)}>
+    <SettingsPage
+      testID="settings-share-links-screen"
+      title={text("settings.user.shareLinks.title")}
+    >
       <ConnectionList
+        count={read.shares.length}
         emptyIcon="link-outline"
-        emptyTitle={text(`${T}.empty`)}
+        emptyTitle={text("settings.user.shareLinks.empty")}
         name="share-links"
-        state={state}
-        onRetry={invalidate}
+        read={read}
       >
         <SettingsGroup className="pt-1">
-          {shares.map((share) => (
+          {read.shares.map((share) => (
             <SettingsRow
               key={share.id}
-              actions={shareLinkActions(share.status).map((action) => ({
-                kind: action,
-                label: text(`${T}.${action}Modal.confirm`),
-                onPress: () =>
-                  confirm({
-                    title: text(`${T}.${action}Modal.title`),
-                    message: text(`${T}.${action}Modal.message`, { recipeName: share.recipeName }),
-                    confirmLabelId: `${T}.${action}Modal.confirm`,
-                    destructive: action === "delete",
-                    onConfirm: settingsWrite(
-                      () => send[action](share.id, share.version),
-                      `${action}:${share.id}`
-                    ),
-                  }),
-              }))}
+              actions={shareLinkActions(share.status).map((action) => {
+                const modal = `settings.user.shareLinks.${action}Modal`;
+
+                return {
+                  kind: action,
+                  label: text(`${modal}.confirm`),
+                  onPress: () =>
+                    confirm({
+                      title: text(`${modal}.title`),
+                      message: text(`${modal}.message`, { recipeName: share.recipeName }),
+                      confirmLabelId: `${modal}.confirm`,
+                      destructive: action === "delete",
+                      onConfirm: settingsWrite(
+                        () => sendAction[action](share.id, share.version),
+                        `${action}:${share.id}`
+                      ),
+                    }),
+                };
+              })}
               icon="link-outline"
               menuLabel={share.recipeName}
               subtitle={shareEnding(

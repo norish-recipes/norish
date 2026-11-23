@@ -15,7 +15,6 @@ import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsGroup } from "../components/settings-group";
 import { settingsWrite } from "../utils/settings-write";
 
-const T = "settings.user.siteAuthTokens";
 const TYPES = ["header", "cookie"] as const;
 
 /** The add token sheet, mounted per opening so a closed sheet keeps no token value. A token that
@@ -32,31 +31,39 @@ export function TokenNewScreen() {
   const [type, setType] = useState<(typeof TYPES)[number]>("header");
   const form = siteTokenForm({ domain, name, value });
 
-  const field = (
-    label: string,
-    testID: string,
-    text_: string,
-    set: (value: string) => void,
-    props: { hint?: string; placeholder: string; secure?: boolean; url?: boolean }
-  ) => (
+  const field = ({
+    label,
+    testID,
+    value: typed,
+    onChange,
+    hint,
+    placeholder,
+    secure = false,
+    url = false,
+  }: {
+    label: string;
+    testID: string;
+    value: string;
+    onChange: (typed: string) => void;
+    hint?: string;
+    placeholder: string;
+    secure?: boolean;
+    url?: boolean;
+  }) => (
     <View>
-      <LabelWithHint
-        hint={props.hint}
-        label={label}
-        testID={props.hint ? `${testID}-hint` : undefined}
-      />
+      <LabelWithHint hint={hint} label={label} testID={hint ? `${testID}-hint` : undefined} />
       <TextField>
         <SheetInput
           accessibilityLabel={label}
           autoCapitalize="none"
           autoCorrect={false}
           editable={!isOffline}
-          keyboardType={props.url ? "url" : "default"}
-          placeholder={props.placeholder}
-          secureTextEntry={props.secure}
+          keyboardType={url ? "url" : "default"}
+          placeholder={placeholder}
+          secureTextEntry={secure}
           testID={testID}
-          value={text_}
-          onChangeText={set}
+          value={typed}
+          onChangeText={onChange}
         />
       </TextField>
     </View>
@@ -69,46 +76,66 @@ export function TokenNewScreen() {
   return (
     <Sheet
       confirm={{
-        label: text(`${T}.addButton`),
+        label: text("settings.user.siteAuthTokens.addButton"),
         symbol: "plus",
         disabled: !form.valid || isOffline,
         onPress: settingsWrite(add, "token-create"),
       }}
       name="token-new"
-      title={text(`${T}.addButton`)}
+      title={text("settings.user.siteAuthTokens.addButton")}
     >
       <SheetBody contentClassName="gap-4">
         <OfflineCapsule />
         <View>
-          {field(text(`${T}.domain`), "token-domain", domain, setDomain, {
-            placeholder: text(`${T}.domainPlaceholder`),
+          {field({
+            label: text("settings.user.siteAuthTokens.domain"),
+            testID: "token-domain",
+            value: domain,
+            onChange: setDomain,
+            placeholder: text("settings.user.siteAuthTokens.domainPlaceholder"),
             url: true,
           })}
           {form.domainBare ? (
             <Text className="text-danger px-2 pt-1.5 text-[13px]">
-              {text(`${T}.domainNotFull`)}
+              {text("settings.user.siteAuthTokens.domainNotFull")}
             </Text>
           ) : null}
         </View>
-        {field(text(`${T}.account`), "token-account", account, setAccount, {
-          hint: text(`${T}.accountsDescription`),
-          placeholder: text(`${T}.accountPlaceholder`),
+        {field({
+          label: text("settings.user.siteAuthTokens.account"),
+          testID: "token-account",
+          value: account,
+          onChange: setAccount,
+          hint: text("settings.user.siteAuthTokens.accountsDescription"),
+          placeholder: text("settings.user.siteAuthTokens.accountPlaceholder"),
         })}
-        {field(text(`${T}.name`), "token-name", name, setName, {
-          placeholder: text(`${T}.namePlaceholder`),
+        {field({
+          label: text("settings.user.siteAuthTokens.name"),
+          testID: "token-name",
+          value: name,
+          onChange: setName,
+          placeholder: text("settings.user.siteAuthTokens.namePlaceholder"),
         })}
-        {field(text(`${T}.value`), "token-value", value, setValue, {
-          placeholder: text(`${T}.valuePlaceholder`),
+        {field({
+          label: text("settings.user.siteAuthTokens.value"),
+          testID: "token-value",
+          value,
+          onChange: setValue,
+          placeholder: text("settings.user.siteAuthTokens.valuePlaceholder"),
           secure: true,
         })}
         <SettingsGroup className="pt-0">
           <ChoiceRow
             optionLabel={(option) =>
-              text(option === "header" ? `${T}.typeHeader` : `${T}.typeCookie`)
+              text(
+                option === "header"
+                  ? "settings.user.siteAuthTokens.typeHeader"
+                  : "settings.user.siteAuthTokens.typeCookie"
+              )
             }
             options={TYPES}
             testID="token-type"
-            title={text(`${T}.type`)}
+            title={text("settings.user.siteAuthTokens.type")}
             value={type}
             onChange={setType}
           />
