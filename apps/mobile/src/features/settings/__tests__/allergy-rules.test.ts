@@ -37,6 +37,11 @@ describe("what Save sends", () => {
     expect(allergiesToSend(["milk", "nuts"], ["nuts", "milk"])).toBeNull();
   });
 
+  it("is nothing for a case-only or repeated edit, which the server stores as the same tags", () => {
+    expect(allergiesToSend(["Nuts"], ["nuts"])).toBeNull();
+    expect(allergiesToSend(["nuts", "NUTS"], ["nuts"])).toBeNull();
+  });
+
   it("is the draft when it differs, including an emptied list", () => {
     expect(allergiesToSend(["nuts", "milk"], ["nuts"])).toEqual(["nuts", "milk"]);
     expect(allergiesToSend([], ["nuts"])).toEqual([]);

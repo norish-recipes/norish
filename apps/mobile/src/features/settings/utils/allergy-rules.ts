@@ -1,18 +1,19 @@
+import { changesAllergies } from "@norish/shared-react/reader";
+
 import type { Update } from "./profile-rules";
 import { afterSave } from "./profile-rules";
 
 const SUGGESTION_LIMIT = 8;
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
-const sorted = (names: readonly string[]) => names.slice().sort();
 
 /** The chips show the draft until its save takes it, else the saved allergies, wherever they came from. */
 export const shownAllergies = (draft: string[] | null, saved: string[]) => draft ?? saved;
 
-/** What Save sends: the draft, or null when it holds the saved allergies (in any order). */
+/** What Save sends: the draft, or null when the server would store the same allergies. */
 export function allergiesToSend(draft: string[] | null, saved: string[]) {
   if (draft === null) return null;
 
-  return JSON.stringify(sorted(draft)) === JSON.stringify(sorted(saved)) ? null : draft;
+  return changesAllergies(draft, saved) ? draft : null;
 }
 
 /** A draft that would send nothing is dropped, so it can never undo what another device saved. */

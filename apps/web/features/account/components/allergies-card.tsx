@@ -7,7 +7,11 @@ import TagInput from "@/components/shared/tag-input";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
-import { useAllergiesMutation, useAllergiesQuery } from "@norish/shared-react/reader";
+import {
+  changesAllergies,
+  useAllergiesMutation,
+  useAllergiesQuery,
+} from "@norish/shared-react/reader";
 
 export default function AllergiesCard() {
   const t = useTranslations("settings.user.allergies");
@@ -21,8 +25,8 @@ export default function AllergiesCard() {
     setSyncedAllergies(allergies);
     setLocalAllergies(allergies);
   }
-  const hasChanges =
-    JSON.stringify(localAllergies.slice().sort()) !== JSON.stringify(allergies.slice().sort());
+  const hasChanges = changesAllergies(localAllergies, allergies);
+
   return (
     <SettingsCard description={t("description")} icon={ExclamationTriangleIcon} title={t("title")}>
       <TagInput
