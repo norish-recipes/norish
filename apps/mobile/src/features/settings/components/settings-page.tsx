@@ -27,7 +27,9 @@ export function SettingsPage({
       <ScrollView
         className="bg-background flex-1"
         contentContainerClassName="px-5 pb-16"
+        automaticallyAdjustKeyboardInsets
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         testID={testID}
       >

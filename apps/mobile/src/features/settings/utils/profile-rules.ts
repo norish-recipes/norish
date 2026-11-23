@@ -28,10 +28,10 @@ export const keptDraft = ({
 }) => (editing || saving || nameToSend(draft, savedName) !== null ? draft : null);
 
 /** A staged name or photo goes once the save took it; one changed while saving stays. */
-const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
+export const afterSave = <T>(current: T | null, sent: T | null, tookIt: boolean) =>
   tookIt && current === sent ? null : current;
 
-type Update<T> = (update: (current: T | null) => T | null) => void;
+export type Update<T> = (update: (current: T | null) => T | null) => void;
 
 /** Saves the name, then the photo; one that does not go through stays staged and stops the rest. */
 export async function saveProfile<Photo>({
