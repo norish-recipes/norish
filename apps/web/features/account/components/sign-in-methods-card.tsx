@@ -10,27 +10,18 @@ import { Button, toast } from "@heroui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 
+import type { SignInMethodError } from "@norish/shared/contracts/dto/auth";
 import { useAuthProvidersQuery } from "@norish/shared-react/config";
 import { useProfileQuery, useSignInMethodsQuery } from "@norish/shared-react/reader";
 import {
   keepsOfferedSignInMethod,
-  LAST_SIGN_IN_METHOD,
   SIGN_IN_METHODS,
+  signInMethodError,
 } from "@norish/shared/contracts/dto/auth";
 import { authClient } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 
 import { ChangePasswordModal } from "./change-password-modal";
-
-type ErrorMessage =
-  "usedByAnotherAccount" | "lastMethod" | "signInAgain" | "addFailed" | "removeFailed";
-
-// What a refused add or remove says, by Better Auth's error code; anything else is generic.
-const ERROR_MESSAGES: Record<string, ErrorMessage> = {
-  account_already_linked_to_different_user: "usedByAnotherAccount",
-  [LAST_SIGN_IN_METHOD]: "lastMethod",
-  SESSION_NOT_FRESH: "signInAgain",
-};
 
 // Better Auth's client answers `{ data, error }` rather than throwing.
 async function orThrow(request: Promise<{ error: unknown }>): Promise<void> {
@@ -50,8 +41,8 @@ export default function SignInMethodsCard() {
   const { providers: offered } = useAuthProvidersQuery();
   const { signInMethods, refetch } = useSignInMethodsQuery();
 
-  const showError = (code: string | undefined, fallback: ErrorMessage) =>
-    toast(t(`errors.${ERROR_MESSAGES[code ?? ""] ?? fallback}`), { variant: "danger" });
+  const showError = (code: string | undefined, fallback: SignInMethodError) =>
+    toast(t(`errors.${signInMethodError(code, fallback)}`), { variant: "danger" });
 
   // A refused add comes back from the provider as `?error=`; a cancelled one changes nothing.
   const linkError = searchParams.get("error");
