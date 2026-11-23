@@ -7,16 +7,15 @@ import { PillButton } from "@/components/pill-button";
 import { SectionLabel } from "@/components/section-label";
 import { SheetScrollView } from "@/components/sheet";
 import { SliceHairline } from "@/components/slice-row";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useServerUrl } from "@/lib/network/server-url";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams } from "expo-router";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
-import { usePlatform } from "@norish/shared-react/platform";
 import {
   useLoadedPageRecipe,
   useRecipeShareMutations,
@@ -53,16 +52,13 @@ function ShareRow({
   first: boolean;
 }) {
   const intl = useIntl();
-  const { toast } = usePlatform();
+  const copyToClipboard = useCopyToClipboard();
   const recipe = useLoadedPageRecipe();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(recipe.id);
   const t = useShareT();
   const date = (value: Date) => intl.formatDate(value, { month: "short", day: "numeric" });
-  const copy = async () => {
-    if (!url) return;
-    await Clipboard.setStringAsync(url);
-    toast.show({ severity: "success", title: t("copySuccess") });
-  };
+  const copy = () =>
+    url ? copyToClipboard(url, { copied: "recipes.sharePanel.copySuccess" }) : undefined;
 
   return (
     <View className="gap-2.5 px-4 py-3" testID={`recipe-share-${share.id}`}>

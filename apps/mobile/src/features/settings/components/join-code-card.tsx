@@ -1,10 +1,9 @@
 import React, { useSyncExternalStore } from "react";
 import { Share, Text, View } from "react-native";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useText } from "@/lib/i18n/use-text";
-import * as Clipboard from "expo-clipboard";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
-import { usePlatform } from "@norish/shared-react/platform";
 import {
   everySecondUntil,
   joinCodeStatus,
@@ -20,7 +19,7 @@ import { SettingsRow } from "./settings-row";
 /** The admin's join code with its countdown, Copy, Share and Regenerate (Generate when none or expired). */
 export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsDto }) {
   const text = useText();
-  const { toast } = usePlatform();
+  const copyToClipboard = useCopyToClipboard();
   const { regenerateJoinCode, pending } = useHouseholdMutations();
   const write = useSettingsWrite();
   const expiresAt =
@@ -35,15 +34,13 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
   const status = joinCodeStatus(household, now);
   const code = status.kind === "active" ? household.joinCode : null;
   const regenerate = write(() => !pending.regenerate && regenerateJoinCode(household.id));
-  const copy = async () => {
-    if (!code) return;
-    try {
-      await Clipboard.setStringAsync(code);
-      toast.show({ severity: "success", title: text("settings.household.joinCode.copySuccess") });
-    } catch {
-      toast.show({ severity: "danger", title: text("settings.household.joinCode.copyFailed") });
-    }
-  };
+  const copy = () =>
+    code
+      ? copyToClipboard(code, {
+          copied: "settings.household.joinCode.copySuccess",
+          failed: "settings.household.joinCode.copyFailed",
+        })
+      : undefined;
 
   return (
     <SettingsGroup title={text("settings.household.joinCode.title")}>
