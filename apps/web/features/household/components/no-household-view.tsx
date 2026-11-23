@@ -17,13 +17,11 @@ export default function NoHouseholdView() {
   const [joinCode, setJoinCode] = useState("");
   const handleCreateHousehold = (e: SubmitEvent) => {
     e.preventDefault();
-    createHousehold(householdName);
-    setHouseholdName("");
+    void createHousehold(householdName).then((went) => went && setHouseholdName(""));
   };
   const handleJoinHousehold = (e: SubmitEvent) => {
     e.preventDefault();
-    joinHousehold(joinCode);
-    setJoinCode("");
+    void joinHousehold(joinCode).then((went) => went && setJoinCode(""));
   };
   return (
     <div className="flex w-full flex-col gap-6">

@@ -76,6 +76,9 @@ export function NoHouseholdForms() {
   const { createHousehold, joinHousehold, pending } = useHouseholdMutations();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  // A field clears only once its request went through, so a refused code can be corrected.
+  const sendCreate = settingsWrite(() => createHousehold(name), "create");
+  const sendJoin = settingsWrite(() => joinHousehold(code), "join");
 
   return (
     <>
@@ -89,13 +92,7 @@ export function NoHouseholdForms() {
         placeholder={text("settings.household.create.namePlaceholder")}
         value={name}
         onChange={setName}
-        onSubmit={settingsWrite(() => {
-          const sent = createHousehold(name);
-
-          setName("");
-
-          return sent;
-        }, "create")}
+        onSubmit={() => void sendCreate().then((went) => went && setName(""))}
       />
       <EntryForm
         autoCapitalize="none"
@@ -108,13 +105,7 @@ export function NoHouseholdForms() {
         placeholder={text("settings.household.join.codePlaceholder")}
         value={code}
         onChange={(value) => setCode(joinCodeDigits(value))}
-        onSubmit={settingsWrite(() => {
-          const sent = joinHousehold(code);
-
-          setCode("");
-
-          return sent;
-        }, "join")}
+        onSubmit={() => void sendJoin().then((went) => went && setCode(""))}
       />
     </>
   );

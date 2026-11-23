@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
+import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
 import { useReader } from "./use-reader";
@@ -25,6 +26,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
   const { household, currentUserId } = useHousehold();
   const { setHouseholdData, invalidate } = useHouseholdCacheHelpers();
   const userName = useReader().user?.name ?? null;
+  const { showError } = usePlatform();
 
   const getHouseholdVersion = (householdId: string): number =>
     household?.id === householdId ? household.version : 1;
@@ -32,7 +34,11 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     household?.id === householdId
       ? (household.users.find((user) => user.id === userId)?.version ?? 1)
       : 1;
-  const onError = () => invalidate();
+  // A failed action rereads the household and tells the reader why, with the server's reason.
+  const onError = (action: string) => (error: unknown) => {
+    void invalidate();
+    showError(error, `household:${action}`);
+  };
   const sent = (request: Promise<unknown>) =>
     request.then(
       () => true,
@@ -57,12 +63,12 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           currentUserId: prev?.currentUserId ?? currentUserId,
         }));
       },
-      onError,
+      onError: onError("create"),
     })
   );
   // The joined household arrives through the subscription.
   const { mutateAsync: mutateJoin, isPending: isJoining } = useMutation(
-    trpc.households.join.mutationOptions({ onError })
+    trpc.households.join.mutationOptions({ onError: onError("join") })
   );
   const { mutateAsync: mutateLeave, isPending: isLeaving } = useMutation(
     trpc.households.leave.mutationOptions({
@@ -72,7 +78,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           currentUserId: prev?.currentUserId ?? currentUserId ?? "",
         }));
       },
-      onError,
+      onError: onError("leave"),
     })
   );
   const { mutateAsync: mutateKick, isPending: isKicking } = useMutation(
@@ -90,12 +96,12 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           };
         });
       },
-      onError,
+      onError: onError("kick"),
     })
   );
   // The new join code arrives through the subscription.
   const { mutateAsync: mutateRegenerateCode, isPending: isRegenerating } = useMutation(
-    trpc.households.regenerateCode.mutationOptions({ onError })
+    trpc.households.regenerateCode.mutationOptions({ onError: onError("regenerate") })
   );
   const { mutateAsync: mutateTransferAdmin, isPending: isTransferring } = useMutation(
     trpc.households.transferAdmin.mutationOptions({
@@ -115,7 +121,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           return { ...prev, household: updated };
         });
       },
-      onError,
+      onError: onError("transfer"),
     })
   );
 

@@ -149,6 +149,20 @@ describe("useHouseholdMutations", () => {
 
       await waitFor(() => expect(isInvalidated()).toBe(true));
     });
+
+    it("tells the reader why a join failed", async () => {
+      const result = render(createMockHouseholdData(null, "current-user"));
+
+      await act(async () => void result.current.joinHousehold("123456"));
+      await settle("join", 0, "reject");
+
+      await waitFor(() =>
+        expect(adapter.showError).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({ message: "failed" }),
+          "household:join"
+        )
+      );
+    });
   });
 
   describe("leaveHousehold", () => {
