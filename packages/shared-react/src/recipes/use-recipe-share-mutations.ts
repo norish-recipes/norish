@@ -8,8 +8,9 @@ import type {
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts";
 
-import { answered, wentThrough } from "../offline/settled";
+import { answered } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
+import { useStaleRefusal } from "../reader/stale-write";
 import { useTRPC } from "../trpc";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
@@ -32,6 +33,7 @@ type RecipeShareMutationsResult = {
 export function useRecipeShareMutations(recipeId: string | null): RecipeShareMutationsResult {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
+  const refuseStale = useStaleRefusal();
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
@@ -49,6 +51,19 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     invalidateAdminRecipeShares();
     invalidateRecipeShare(shareId);
   };
+  // A failed action rereads the lists: a share whose recipe was deleted elsewhere answers NOT_FOUND.
+  const failed = (context: string) => (error: unknown) => {
+    if (recipeId) invalidateRecipeShares(recipeId);
+    invalidateMyRecipeShares();
+    invalidateAdminRecipeShares();
+    showError(error, context);
+  };
+  // Whether a share action went through: a stale answer, refused above, did not.
+  const tookIt = (write: Promise<{ stale: boolean }>) =>
+    write.then(
+      ({ stale }) => !stale,
+      () => false
+    );
 
   const createMutation = useMutation(
     trpc.recipes.shareCreate.mutationOptions({
@@ -76,9 +91,10 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   const revokeMutation = useMutation(
     trpc.recipes.shareRevoke.mutationOptions({
       onSuccess: (data) => {
+        if (data.stale) refuseStale("recipe-share-panel:revoke");
         invalidateShareCollections(data.id, data.recipeId);
       },
-      onError: (error) => showError(error, "recipe-share-panel:revoke"),
+      onError: failed("recipe-share-panel:revoke"),
     })
   );
   const { mutateAsync: mutateRevoke } = revokeMutation;
@@ -86,25 +102,27 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   const reactivateMutation = useMutation(
     trpc.recipes.shareReactivate.mutationOptions({
       onSuccess: (data) => {
+        if (data.stale) refuseStale("recipe-share-panel:reactivate");
         invalidateShareCollections(data.id, data.recipeId);
       },
-      onError: (error) => showError(error, "recipe-share-panel:reactivate"),
+      onError: failed("recipe-share-panel:reactivate"),
     })
   );
   const { mutateAsync: mutateReactivate } = reactivateMutation;
 
   const deleteMutation = useMutation(
     trpc.recipes.shareDelete.mutationOptions({
-      onSuccess: (_data, variables) => {
+      onSuccess: ({ stale }, variables) => {
         if (recipeId) {
           invalidateRecipeShares(recipeId);
         }
 
         invalidateMyRecipeShares();
         invalidateAdminRecipeShares();
-        removeRecipeShare(variables.id);
+        if (stale) refuseStale("recipe-share-panel:delete");
+        else removeRecipeShare(variables.id);
       },
-      onError: (error) => showError(error, "recipe-share-panel:delete"),
+      onError: failed("recipe-share-panel:delete"),
     })
   );
   const { mutateAsync: mutateDelete } = deleteMutation;
@@ -120,9 +138,9 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     updateShare: (input) => {
       mutateUpdate(input);
     },
-    revokeShare: (id, version) => wentThrough(mutateRevoke({ id, version })),
-    reactivateShare: (id, version) => wentThrough(mutateReactivate({ id, version })),
-    deleteShare: (id, version) => wentThrough(mutateDelete({ id, version })),
+    revokeShare: (id, version) => tookIt(mutateRevoke({ id, version })),
+    reactivateShare: (id, version) => tookIt(mutateReactivate({ id, version })),
+    deleteShare: (id, version) => tookIt(mutateDelete({ id, version })),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isRevoking: revokeMutation.isPending,

@@ -58,6 +58,24 @@ describe("useSiteAuthTokenMutations", () => {
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([]);
   });
 
+  it("keep a token edited elsewhere, reread the list and say so when the delete was stale", async () => {
+    const adapter = fakePlatformAdapter();
+    queryClient.setQueryData(TOKENS_KEY, [token]);
+    const result = renderHook(() => useSiteAuthTokenMutations(), {
+      wrapper: createTestWrapper(queryClient, adapter),
+    }).result;
+
+    act(() => void result.current.removeToken("t1"));
+    await answerCall("siteAuthTokens.remove", { success: true, stale: true });
+
+    expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([token]);
+    expect(queryClient.getQueryState(TOKENS_KEY)?.isInvalidated).toBe(true);
+    expect(adapter.showError).toHaveBeenCalledExactlyOnceWith(
+      "common.changedElsewhere.title",
+      expect.any(String)
+    );
+  });
+
   it("keep a read begun before an add or a removal from landing over it", async () => {
     queryClient.setQueryData(TOKENS_KEY, [token]);
     const result = render(() => useSiteAuthTokenMutations());

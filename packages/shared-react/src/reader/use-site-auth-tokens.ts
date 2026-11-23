@@ -6,6 +6,7 @@ import { settled, wentThrough } from "../offline/settled";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
+import { useStaleRefusal } from "./stale-write";
 
 /** The tokens and how the read went: `answered` is whether it ever succeeded, so a failed load is not an empty list. */
 export function useSiteAuthTokensRead() {
@@ -30,6 +31,7 @@ export function useSiteAuthTokenMutations() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { showError } = usePlatform();
+  const refuseStale = useStaleRefusal();
   const queryKey = trpc.siteAuthTokens.list.queryKey();
 
   const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
@@ -41,8 +43,16 @@ export function useSiteAuthTokenMutations() {
   );
   const { mutateAsync: mutateRemove, isPending: isRemoving } = useMutation(
     trpc.siteAuthTokens.remove.mutationOptions({
-      onSuccess: (_answer, { id }) =>
-        writeOverRead(queryClient, queryKey, (prev) => prev?.filter((token) => token.id !== id)),
+      onSuccess: ({ stale }, { id }) => {
+        if (!stale)
+          return writeOverRead(queryClient, queryKey, (prev) =>
+            prev?.filter((token) => token.id !== id)
+          );
+        // Edited elsewhere since it was read: the token stays, as the server now holds it.
+        refuseStale("site-auth-tokens:delete");
+
+        return queryClient.invalidateQueries({ queryKey });
+      },
       onError: (error) => showError(error, "site-auth-tokens:delete"),
     })
   );

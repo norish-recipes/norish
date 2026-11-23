@@ -65,6 +65,7 @@ vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
 const sentShareWrites: [string, unknown][] = [];
 const refuseCreate = { current: false };
 const failShareWrites = { current: false };
+const staleShareWrites = { current: false };
 
 /** A share write that answers with the share, as the server does. */
 function shareWrite(name: string) {
@@ -75,7 +76,7 @@ function shareWrite(name: string) {
         sentShareWrites.push([name, input]);
         if (failShareWrites.current) throw new Error("offline");
 
-        return { id: input.id, recipeId: "recipe-1" };
+        return { id: input.id, recipeId: "recipe-1", stale: staleShareWrites.current };
       },
     }),
   };
@@ -141,6 +142,7 @@ afterEach(() => {
   sentShareWrites.length = 0;
   refuseCreate.current = false;
   failShareWrites.current = false;
+  staleShareWrites.current = false;
 });
 
 describe("recipe share hooks", () => {
@@ -207,6 +209,42 @@ describe("recipe share hooks", () => {
 
     expect(sent).toEqual([false, false, false]);
     expect(platform.showError).toHaveBeenCalledTimes(3);
+  });
+
+  it("rereads the list when a share action failed, as when its recipe was deleted elsewhere", async () => {
+    failShareWrites.current = true;
+    const queryClient = createTestQueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    await act(() => result.current.revokeShare("share-gone", 1));
+
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: trpc.recipes.shareListMine.queryKey(),
+    });
+  });
+
+  it("refuses a stale share action as changed elsewhere and keeps the share", async () => {
+    staleShareWrites.current = true;
+    const platform = fakePlatformAdapter();
+    const queryClient = createTestQueryClient();
+    const removeQueries = vi.spyOn(queryClient, "removeQueries");
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(queryClient, platform),
+    });
+
+    const sent = await act(() =>
+      Promise.all([result.current.revokeShare("s1", 1), result.current.deleteShare("s1", 1)])
+    );
+
+    expect(sent).toEqual([false, false]);
+    expect(removeQueries).not.toHaveBeenCalled();
+    expect(platform.showError).toHaveBeenCalledWith(
+      "common.changedElsewhere.title",
+      expect.any(String)
+    );
   });
 
   it("creates a share, toasts it and answers the share", async () => {
