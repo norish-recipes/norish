@@ -170,33 +170,46 @@ export function SettingsRow({
       <View testID={testID}>{body}</View>
     );
 
-  if (swipes.length === 0) return pressable;
+  // The hairline above the row, which SettingsGroup clips on its first row.
+  const hairline = <View className="bg-line ml-[58px] h-px" />;
+
+  if (swipes.length === 0) {
+    return (
+      <>
+        {hairline}
+        {pressable}
+      </>
+    );
+  }
 
   return (
-    <View
-      onLayout={(event) => width.set(event.nativeEvent.layout.width)}
-      onTouchStart={(event) => {
-        event.stopPropagation();
-        closeOpenRow(openRow.row);
-      }}
-    >
-      <ReanimatedSwipeable
-        ref={rowRef}
-        enabled={!isOffline}
-        overshootRight={false}
-        renderRightActions={(_progress, swipeTranslation, methods) => (
-          <>
-            <TranslationSync from={swipeTranslation} to={translation} />
-            <SwipeActionsPanel actions={swipes} enabled={!isOffline} methods={methods} />
-          </>
-        )}
-        rightThreshold={40}
-        onSwipeableClose={openRow.closed}
-        onSwipeableWillOpen={openRow.opened}
+    <>
+      {hairline}
+      <View
+        onLayout={(event) => width.set(event.nativeEvent.layout.width)}
+        onTouchStart={(event) => {
+          event.stopPropagation();
+          closeOpenRow(openRow.row);
+        }}
       >
-        <Animated.View style={slide}>{pressable}</Animated.View>
-      </ReanimatedSwipeable>
-    </View>
+        <ReanimatedSwipeable
+          ref={rowRef}
+          enabled={!isOffline}
+          overshootRight={false}
+          renderRightActions={(_progress, swipeTranslation, methods) => (
+            <>
+              <TranslationSync from={swipeTranslation} to={translation} />
+              <SwipeActionsPanel actions={swipes} enabled={!isOffline} methods={methods} />
+            </>
+          )}
+          rightThreshold={40}
+          onSwipeableClose={openRow.closed}
+          onSwipeableWillOpen={openRow.opened}
+        >
+          <Animated.View style={slide}>{pressable}</Animated.View>
+        </ReanimatedSwipeable>
+      </View>
+    </>
   );
 }
 
