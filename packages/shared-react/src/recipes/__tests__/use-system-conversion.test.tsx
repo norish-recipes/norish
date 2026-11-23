@@ -98,6 +98,19 @@ describe("useAutoConversion", () => {
     expect(page().conversion).toBe(pressed);
   });
 
+  it("applies a Measurements choice changed while the recipe is open", () => {
+    mocks.measurementSystem = "metric";
+
+    const { page, rerender } = renderOn(() => useAutoConversion());
+
+    expect(page().conversion).toBeNull();
+
+    mocks.measurementSystem = "us";
+    rerender();
+
+    expect(page().conversion).toMatchObject({ target: "us", withAI: false });
+  });
+
   it("waits for the server's copy, since the saved one may be behind", async () => {
     mocks.measurementSystem = "us";
 

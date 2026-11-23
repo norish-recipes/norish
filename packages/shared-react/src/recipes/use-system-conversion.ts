@@ -88,8 +88,8 @@ export function useSystemConversion(): SystemConversion {
   };
 }
 
-/** Converts once per opened recipe for a reader whose Preferences name a system and who may, once
- * the server's copy is in (a cached one may be stale); with AI it writes only a missing copy. */
+/** Converts once per opened recipe and choice for a reader whose Preferences name a system and who
+ * may, once the server's copy is in (a cached one may be stale); with AI writes only a missing copy. */
 export function useAutoConversion() {
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);
@@ -104,11 +104,13 @@ export function useAutoConversion() {
     const target = measurementSystemTarget(choice);
 
     if (!recipe || !target || isLoading || isFetching || convertingTo) return;
-    if (doneForRef.current === recipe.id) return;
+    const doneFor = `${recipe.id}:${choice}`;
+
+    if (doneForRef.current === doneFor) return;
     if (recipe.recipeIngredients.length === 0) return;
     if (!ownerAllows(recipe.userId, canEditRecipe)) return;
 
-    doneForRef.current = recipe.id;
+    doneForRef.current = doneFor;
     if (recipe.systemUsed === target.system) return;
 
     const hasCopy = recipe.recipeIngredients.some((line) => line.systemUsed === target.system);
