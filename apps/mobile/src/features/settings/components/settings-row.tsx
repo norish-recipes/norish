@@ -157,6 +157,8 @@ export function SettingsRow({
         })}
         label={menuLabel ?? title}
         testID={testID}
+        // The menu hides what the row draws, so VoiceOver hears the rest of it as the value.
+        value={[subtitle, value].filter(Boolean).join(", ") || undefined}
         onPress={() => onPress?.()}
       >
         {body}
