@@ -26,6 +26,7 @@
 import { TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
+import { ONE_TIME_SECRET_PATHS } from "@norish/shared/lib/one-time-secrets";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 import { middleware } from "./trpc";
@@ -56,12 +57,6 @@ export const IDEMPOTENCY_CLAIM_TTL_SECONDS = 5 * 60;
  */
 type IdempotencyRecord =
   { done: false } | { done: true; response: unknown } | { done: true; secretReturned: true };
-
-/** Mutations whose response is a secret shown once: an API key, a share link's URL. */
-export const ONE_TIME_SECRET_PATHS: ReadonlySet<string> = new Set([
-  "user.apiKeys.create",
-  "recipes.shareCreate",
-]);
 
 /** Placeholder stored (via superjson, like every record) while the owner executes. */
 const PENDING_RECORD = superjson.stringify({ done: false } satisfies IdempotencyRecord);
