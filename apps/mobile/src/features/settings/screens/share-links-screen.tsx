@@ -1,13 +1,17 @@
 import React from "react";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useText } from "@/lib/i18n/use-text";
+import { useServerUrl } from "@/lib/network/server-url";
 import { shareEnding } from "@/lib/share-subtitle";
 import { useIntl } from "react-intl";
 
 import type { ShareLinkAction } from "@norish/shared-react/recipes";
+import { usePlatform } from "@norish/shared-react/platform";
 import {
   shareLinkActions,
   useMyRecipeSharesQuery,
   useRecipeShareMutations,
+  useShareLink,
 } from "@norish/shared-react/recipes";
 
 import { ConnectionList } from "../components/connection-list";
@@ -16,8 +20,8 @@ import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
 import { useConfirmedWrite } from "../hooks/use-confirmed-write";
 
-/** Share links: the Reader's public recipe links with their status; Revoke, Reactivate and Delete
- * each behind a confirm. A link's URL is shown once, when it is made, so there is no Copy here. */
+/** Share links: the Reader's public recipe links with their status; Copy link where the server
+ * kept it, and Revoke, Reactivate and Delete each behind a confirm. */
 export function ShareLinksScreen() {
   const text = useText();
   const intl = useIntl();
@@ -25,7 +29,25 @@ export function ShareLinksScreen() {
   const read = useMyRecipeSharesQuery();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(null);
   const date = (value: Date) => intl.formatDate(value, { dateStyle: "medium" });
-  const sendAction: Record<ShareLinkAction, (id: string, version: number) => Promise<boolean>> = {
+  const readShareLink = useShareLink();
+  const toUrl = useServerUrl();
+  const copyToClipboard = useCopyToClipboard();
+  const { toast } = usePlatform();
+  // The link is read at the press and lives only until the clipboard has it.
+  const copyLink = async (shareId: string) => {
+    const path = await readShareLink(shareId).catch(() => null);
+
+    if (path === null) {
+      toast.show({ severity: "danger", title: text("common.errors.operationFailed") });
+
+      return;
+    }
+    await copyToClipboard(toUrl(path), { copied: "recipes.sharePanel.copySuccess" });
+  };
+  const sendAction: Record<
+    Exclude<ShareLinkAction, "copy">,
+    (id: string, version: number) => Promise<boolean>
+  > = {
     revoke: revokeShare,
     reactivate: reactivateShare,
     delete: deleteShare,
@@ -47,7 +69,14 @@ export function ShareLinksScreen() {
           {read.shares.map((share) => (
             <SettingsRow
               key={share.id}
-              actions={shareLinkActions(share.status).map((action) => {
+              actions={shareLinkActions(share).map((action) => {
+                if (action === "copy") {
+                  return {
+                    kind: action,
+                    label: text("recipes.sharePanel.copyLink"),
+                    onPress: () => void copyLink(share.id),
+                  };
+                }
                 const modal = `settings.user.shareLinks.${action}Modal`;
 
                 return {
