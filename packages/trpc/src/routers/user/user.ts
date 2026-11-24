@@ -13,6 +13,7 @@ import {
   getUserAllergies,
   getUserById,
   getUserPreferences,
+  getUserProfile,
   setUserDevicePreferences,
   updateUserAllergies,
   updateUserAvatar,
@@ -64,6 +65,16 @@ function emitMemberProfileUpdated(
   );
 }
 
+async function getAccountProfile(userId: string) {
+  const profile = await getUserProfile(userId);
+
+  if (!profile) return null;
+
+  const { phone: _phone, desktop: _desktop, ...preferences } = profile.preferences ?? {};
+
+  return { ...profile, preferences };
+}
+
 /**
  * Get current user settings (user profile + API keys). The Device Preferences
  * are left to getDevicePreferences, so the client holds one copy.
@@ -71,24 +82,17 @@ function emitMemberProfileUpdated(
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting user settings");
 
-  const freshUser = await getUserById(ctx.user.id);
+  const freshUser = await getAccountProfile(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
-  const {
-    phone: _phone,
-    desktop: _desktop,
-    ...preferences
-  } = await getUserPreferences(ctx.user.id);
-
-  // completed DB reads
 
   return {
     user: {
       id: ctx.user.id,
       email: freshUser?.email ?? ctx.user.email,
       name: freshUser?.name ?? ctx.user.name,
-      image: freshUser?.image ?? ctx.user.image,
+      image: freshUser ? freshUser.image : ctx.user.image,
       version: freshUser?.version ?? 1,
-      preferences,
+      preferences: freshUser?.preferences ?? {},
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,
@@ -119,12 +123,8 @@ const updatePreferences = authedProcedure
         "Ignoring stale user preferences mutation"
       );
 
-      // The stored person-level choices and version, so the client drops its optimistic copy and a
-      // retry is current; never the device blocks, which a toggle owns.
-      const [{ locale, afterPlanning, measurementSystem }, storedUser] = await Promise.all([
-        getUserPreferences(ctx.user.id),
-        getUserById(ctx.user.id),
-      ]);
+      const storedUser = await getUserProfile(ctx.user.id);
+      const { locale, afterPlanning, measurementSystem } = storedUser?.preferences ?? {};
 
       return {
         success: true,
@@ -134,12 +134,10 @@ const updatePreferences = authedProcedure
       };
     }
 
-    const updatedUser = await getUserById(ctx.user.id);
-
     return {
       success: true,
       preferences: input.preferences,
-      version: updatedUser?.version ?? input.version,
+      version: result.value,
     };
   });
 
@@ -191,7 +189,7 @@ const updateName = authedProcedure
       return { success: true, stale: true };
     }
 
-    const updatedUser = await getUserById(ctx.user.id);
+    const updatedUser = await getAccountProfile(ctx.user.id);
 
     if (!updatedUser) {
       return { success: false, error: "User not found" };
@@ -274,7 +272,7 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
     predecessorFilename ? [filename, predecessorFilename] : [filename]
   );
 
-  const updatedUser = await getUserById(ctx.user.id);
+  const updatedUser = await getAccountProfile(ctx.user.id);
 
   if (!updatedUser) {
     return { success: false, error: "User not found" };
@@ -312,7 +310,7 @@ const deleteAvatar = authedProcedure
     // Delete keeps nothing — no payload should render a removed picture
     await sweepUserAvatars(ctx.user.id);
 
-    const updatedUser = await getUserById(ctx.user.id);
+    const updatedUser = await getAccountProfile(ctx.user.id);
 
     if (!updatedUser) {
       return { success: false, error: "User not found" };

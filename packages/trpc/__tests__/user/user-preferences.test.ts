@@ -8,6 +8,7 @@ import type { Context } from "../../src/context";
 
 const mockDb = vi.hoisted(() => ({
   getUserById: vi.fn(),
+  getUserProfile: vi.fn(),
   getUserPreferences: vi.fn(),
   updateUserPreferences: vi.fn(),
   setUserDevicePreferences: vi.fn(),
@@ -16,6 +17,7 @@ const mockDb = vi.hoisted(() => ({
 vi.mock("@norish/db", () => ({
   getApiKeysForUser: vi.fn(async () => []),
   getUserById: mockDb.getUserById,
+  getUserProfile: mockDb.getUserProfile,
   getUserPreferences: mockDb.getUserPreferences,
   updateUserPreferences: mockDb.updateUserPreferences,
   setUserDevicePreferences: mockDb.setUserDevicePreferences,
@@ -76,7 +78,12 @@ describe("user preference procedures", () => {
       phone: { groceryViewMode: "recipe" },
     });
     mockDb.getUserById.mockResolvedValue({ id: "user-1", version: 4 });
-    mockDb.updateUserPreferences.mockResolvedValue({ stale: false });
+    mockDb.getUserProfile.mockResolvedValue({
+      id: "user-1",
+      version: 4,
+      preferences: { locale: "en" },
+    });
+    mockDb.updateUserPreferences.mockResolvedValue({ stale: false, value: 4 });
     mockDb.setUserDevicePreferences.mockResolvedValue(undefined);
   });
 
@@ -86,6 +93,25 @@ describe("user preference procedures", () => {
 
       expect(result.user.preferences).toEqual({ locale: "en" });
     });
+  });
+
+  it("uses the preferences read with the profile version", async () => {
+    mockDb.getUserPreferences.mockResolvedValue({ locale: "fr" });
+
+    const result = await createCaller().get();
+
+    expect(result.user).toMatchObject({ version: 4, preferences: { locale: "en" } });
+  });
+
+  it("labels a saved preference with the version it committed", async () => {
+    mockDb.getUserById.mockResolvedValue({ id: "user-1", version: 5 });
+
+    const result = await createCaller().updatePreferences({
+      version: 3,
+      preferences: { locale: "nl" },
+    });
+
+    expect(result).toEqual({ success: true, preferences: { locale: "nl" }, version: 4 });
   });
 
   describe("getDevicePreferences", () => {
@@ -118,6 +144,7 @@ describe("user preference procedures", () => {
 
     it("answers a stale version with the stored language and version, never a device block", async () => {
       mockDb.updateUserPreferences.mockResolvedValue({ stale: true });
+      mockDb.getUserPreferences.mockResolvedValue({ locale: "fr" });
 
       const result = await createCaller().updatePreferences({
         version: 2,

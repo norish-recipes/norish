@@ -163,23 +163,17 @@ export async function getAdapterUserByEmail(email: string): Promise<AdapterUser 
   };
 }
 
-export async function getUserById(userId: string): Promise<VersionedUser | null> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: {
-      id: true,
-      email: true,
-      name: true,
-      image: true,
-      emailVerified: true,
-      version: true,
-    },
-  });
+const profileColumns = {
+  id: true,
+  email: true,
+  name: true,
+  image: true,
+  version: true,
+} as const;
 
-  if (!user) {
-    return null;
-  }
-
+function readProfile(
+  user: Pick<typeof users.$inferSelect, keyof typeof profileColumns>
+): VersionedUser {
   return {
     id: user.id,
     email: decrypt(user.email),
@@ -187,6 +181,24 @@ export async function getUserById(userId: string): Promise<VersionedUser | null>
     image: user.image ? decrypt(user.image) : null,
     version: user.version,
   };
+}
+
+export async function getUserById(userId: string): Promise<VersionedUser | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: profileColumns,
+  });
+
+  return user ? readProfile(user) : null;
+}
+
+export async function getUserProfile(userId: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { ...profileColumns, preferences: true },
+  });
+
+  return user ? { ...readProfile(user), preferences: parsePreferences(user.preferences) } : null;
 }
 
 /**
@@ -557,6 +569,12 @@ export async function countUsers(): Promise<number> {
   return result.length;
 }
 
+function parsePreferences(preferences: unknown): UserPreferencesDto {
+  const parsed = UserPreferencesSchema.safeParse(preferences ?? {});
+
+  return parsed.success ? parsed.data : {};
+}
+
 /**
  * The user's preferences document, each choice parsed on its own so one this
  * version does not know reads as absent. If the column is missing
@@ -568,9 +586,8 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
       where: eq(users.id, userId),
       columns: { preferences: true },
     });
-    const parsed = UserPreferencesSchema.safeParse(user?.preferences ?? {});
 
-    return parsed.success ? parsed.data : {};
+    return parsePreferences(user?.preferences);
   } catch (error) {
     // Migration/column may be missing: warn and return empty preferences
     try {
@@ -626,7 +643,7 @@ export async function updateUserPreferences(
   userId: string,
   updates: Record<string, unknown>,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<number>> {
   const updatesJson = JSON.stringify(updates ?? {});
   const whereConditions = [eq(users.id, userId)];
 
@@ -635,20 +652,16 @@ export async function updateUserPreferences(
   }
 
   try {
-    const updated = await db
+    const [updated] = await db
       .update(users)
       .set({
         preferences: sql`coalesce(${users.preferences}, '{}'::jsonb) || ${updatesJson}::jsonb`,
         version: sql`${users.version} + 1`,
       })
       .where(and(...whereConditions))
-      .returning({ id: users.id });
+      .returning({ version: users.version });
 
-    if (updated.length === 0 && version) {
-      return staleOutcome();
-    }
-
-    return appliedOutcome(undefined);
+    return updated ? appliedOutcome(updated.version) : staleOutcome();
   } catch (error) {
     // Migration/column may be missing: warn and rethrow
     try {

@@ -5,30 +5,26 @@ import { tags, userAllergies, users } from "@norish/db/schema";
 
 import { getOrCreateManyTagsTx } from "./tags";
 
-export async function getUserAllergies(
+async function readUserAllergies(
+  connection: Pick<typeof db, "select">,
   userId: string
 ): Promise<{ allergies: string[]; version: number }> {
-  const [userRow, rows] = await Promise.all([
-    db
-      .select({ version: users.version })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1)
-      .then((result) => result[0] ?? null),
-    db
-      .select({ name: tags.name, version: userAllergies.version })
-      .from(userAllergies)
-      .innerJoin(tags, eq(userAllergies.tagId, tags.id))
-      .where(eq(userAllergies.userId, userId))
-      .orderBy(sql`lower(${tags.name})`),
-  ]);
-
-  const allergyVersion = rows.reduce((max, row) => Math.max(max, row.version), 0);
+  const rows = await connection
+    .select({ name: tags.name, version: users.version, allergyVersion: userAllergies.version })
+    .from(users)
+    .leftJoin(userAllergies, eq(userAllergies.userId, users.id))
+    .leftJoin(tags, eq(userAllergies.tagId, tags.id))
+    .where(eq(users.id, userId))
+    .orderBy(sql`lower(${tags.name})`);
 
   return {
-    allergies: rows.map((row) => row.name),
-    version: Math.max(userRow?.version ?? 0, allergyVersion),
+    allergies: rows.flatMap(({ name }) => (name === null ? [] : [name])),
+    version: rows.reduce((max, row) => Math.max(max, row.version, row.allergyVersion ?? 0), 0),
   };
+}
+
+export function getUserAllergies(userId: string) {
+  return readUserAllergies(db, userId);
 }
 
 export async function getAllergiesForUsers(
@@ -57,19 +53,7 @@ export async function updateUserAllergies(
     const nextVersion = currentVersion === 0 ? 2 : currentVersion + 1;
 
     if (currentVersion === 0) {
-      const [userRow, existingAllergy] = await Promise.all([
-        tx.select({ version: users.version }).from(users).where(eq(users.id, userId)).limit(1),
-        tx
-          .select({ version: userAllergies.version })
-          .from(userAllergies)
-          .where(eq(userAllergies.userId, userId))
-          .limit(1),
-      ]);
-
-      const authoritativeVersion = Math.max(
-        userRow[0]?.version ?? 0,
-        existingAllergy[0]?.version ?? 0
-      );
+      const { version: authoritativeVersion } = await readUserAllergies(tx, userId);
 
       if (authoritativeVersion !== 1) {
         return { applied: false, version: authoritativeVersion, stale: true };
@@ -85,18 +69,7 @@ export async function updateUserAllergies(
       .returning({ version: users.version });
 
     if (!updatedUser) {
-      const [userRow, existingAllergies] = await Promise.all([
-        tx.select({ version: users.version }).from(users).where(eq(users.id, userId)).limit(1),
-        tx
-          .select({ version: userAllergies.version })
-          .from(userAllergies)
-          .where(eq(userAllergies.userId, userId)),
-      ]);
-
-      const authoritativeVersion = Math.max(
-        userRow[0]?.version ?? 0,
-        ...existingAllergies.map((row) => row.version)
-      );
+      const { version: authoritativeVersion } = await readUserAllergies(tx, userId);
 
       return { applied: false, version: authoritativeVersion, stale: true };
     }

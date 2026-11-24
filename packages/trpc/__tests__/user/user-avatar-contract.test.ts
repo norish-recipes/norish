@@ -26,6 +26,7 @@ const mockFs = vi.hoisted(() => ({
 vi.mock("@norish/db", () => ({
   getApiKeysForUser: vi.fn(),
   getUserById: mockDb.getUserById,
+  getUserProfile: mockDb.getUserById,
   getUserPreferences: vi.fn(),
   updateUserPreferences: vi.fn(),
   updateUserName: vi.fn(),
