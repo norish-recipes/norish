@@ -7,10 +7,11 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { useAllergiesMutation } from "..";
+import { useAllergiesMutation, useAllergiesQuery } from "..";
 import { readUnderWay } from "../../offline/testing";
 import {
   answerCall,
+  answerRead,
   failCall,
   keyOf,
   resetTRPCFake,
@@ -54,16 +55,35 @@ describe("useAllergiesMutation", () => {
     });
   });
 
-  it("sends the profile's newer version after an account write bumped it", async () => {
+  it("sends the version its own list was read at, never one the profile learned", async () => {
     queryClient.setQueryData(ALLERGIES_KEY, { allergies: ["nuts"], version: 3 });
-    queryClient.setQueryData(keyOf("user.get"), { user: { version: 5 }, apiKeys: [] });
+    queryClient.setQueryData(keyOf("user.get"), { user: { version: 4 }, apiKeys: [] });
     const result = render(() => useAllergiesMutation());
 
     act(() => void result.current.setAllergies(["milk"]));
 
     expect((await sentCall("user.setAllergies")).input).toEqual({
       allergies: ["milk"],
-      version: 5,
+      version: 3,
+    });
+  });
+
+  it("rereads the list when the profile learns a newer version, and saves at the reread's", async () => {
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: ["nuts"], version: 3 });
+    const result = render(() => ({ read: useAllergiesQuery(), write: useAllergiesMutation() }));
+
+    answerRead("user.getAllergies", { allergies: ["nuts"], version: 3 });
+    act(() => queryClient.setQueryData(keyOf("user.get"), { user: { version: 4 }, apiKeys: [] }));
+    await waitFor(() => expect(queryClient.isFetching({ queryKey: ALLERGIES_KEY })).toBe(1));
+    await act(async () =>
+      answerRead("user.getAllergies", { allergies: ["nuts", "soy"], version: 4 })
+    );
+    await waitFor(() => expect(result.current.read.allergies).toEqual(["nuts", "soy"]));
+
+    act(() => void result.current.write.setAllergies(["milk"]));
+    expect((await sentCall("user.setAllergies")).input).toEqual({
+      allergies: ["milk"],
+      version: 4,
     });
   });
 
