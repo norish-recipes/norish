@@ -16,18 +16,17 @@ export type RecipePageState = {
   servings: number | null;
   /** The conversion on its way, until the recipe shows it. */
   conversion: RecipeConversion | null;
-  pendingManualConversions: number;
-  confirmedManualConversions: number;
+  /** The conversion picked by hand, until the server's recipe settles it. */
+  manualConversion: RecipeConversion | null;
   /** The screen wake lock: off, asked for by the reader, or held once the browser grants it. */
   wakeLock: "off" | "asked" | "held";
   setServings: (servings: number) => void;
-  startConversion: (conversion: RecipeConversion) => void;
+  startConversion: (conversion: RecipeConversion, manual?: boolean) => void;
   /** Ends that conversion; a later one stays. */
   endConversion: (conversion: RecipeConversion) => void;
   /** A conversion that was rolled back drops the reader's servings with it. */
   conversionFailed: () => void;
-  startManualConversion: () => void;
-  finishManualConversion: (confirmed: boolean) => void;
+  endManualConversion: () => void;
   setWakeLock: (wakeLock: RecipePageState["wakeLock"]) => void;
 };
 
@@ -36,21 +35,15 @@ export function createRecipePageStore(recipeId: string) {
     recipeId,
     servings: null,
     conversion: null,
-    pendingManualConversions: 0,
-    confirmedManualConversions: 0,
+    manualConversion: null,
     wakeLock: "off",
     setServings: (servings) => set({ servings }),
-    startConversion: (conversion) => set({ conversion }),
+    startConversion: (conversion, manual = false) =>
+      set(manual ? { conversion, manualConversion: conversion } : { conversion }),
     endConversion: (conversion) =>
       set((state) => (state.conversion === conversion ? { conversion: null } : state)),
-    conversionFailed: () => set({ conversion: null, servings: null }),
-    startManualConversion: () =>
-      set((state) => ({ pendingManualConversions: state.pendingManualConversions + 1 })),
-    finishManualConversion: (confirmed) =>
-      set((state) => ({
-        pendingManualConversions: state.pendingManualConversions - 1,
-        confirmedManualConversions: state.confirmedManualConversions + Number(confirmed),
-      })),
+    conversionFailed: () => set({ conversion: null, manualConversion: null, servings: null }),
+    endManualConversion: () => set({ manualConversion: null }),
     setWakeLock: (wakeLock) => set({ wakeLock }),
   }));
 }

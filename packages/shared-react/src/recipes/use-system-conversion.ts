@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import {
   getMeasurementSystemPreference,
   measurementSystemTarget,
@@ -14,7 +16,9 @@ import {
   useProfileQuery,
   useRecipePermissions,
 } from "../reader";
-import { useRecipePageStore } from "./recipe-page-store";
+import { useRealtimeSubscription } from "../realtime";
+import { useTRPC } from "../trpc";
+import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
 import { useLoadedPageRecipe, useRecipeConversion } from "./use-recipe-page";
 import { useRecipeQuery } from "./use-recipe-query";
 
@@ -101,20 +105,34 @@ export function useAutoConversion() {
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);
   const doneForRef = useRef<string | null>(null);
-  const appliedManualRef = useRef(0);
-  const pendingManual = useRecipePageStore((state) => state.pendingManualConversions);
-  const confirmedManual = useRecipePageStore((state) => state.confirmedManualConversions);
+  const store = useRecipePageStoreApi();
+  const manual = useRecipePageStore((state) => state.manualConversion);
+  const trpc = useTRPC();
+
+  // A failed conversion is announced, not answered: it ends the one on its way.
+  useRealtimeSubscription<PayloadOf<RecipesRealtime, "failed">>(trpc.recipes.onFailed, {
+    onEvent: ({ recipeId: failed }) => {
+      const page = store.getState();
+
+      if (failed === recipeId && (page.conversion || page.manualConversion))
+        page.conversionFailed();
+    },
+  });
 
   useEffect(() => {
-    if (convertingTo || pendingManual || !recipe || isLoading || isFetching || saving) return;
+    if (convertingTo || !recipe || isLoading || isFetching || saving) return;
     const target = measurementSystemTarget(choice);
     const doneFor = `${recipe.id}:${choice}`;
 
-    if (appliedManualRef.current !== confirmedManual) {
-      appliedManualRef.current = confirmedManual;
-      doneForRef.current = doneFor;
+    // A pick by hand stands once the server's recipe, newer than it, shows it.
+    if (manual) {
+      if (recipe.version <= manual.version) return;
+      store.getState().endManualConversion();
+      if (recipe.systemUsed === manual.target) {
+        doneForRef.current = doneFor;
 
-      return;
+        return;
+      }
     }
     if (doneForRef.current === doneFor) return;
     if (!target) {
@@ -138,8 +156,8 @@ export function useAutoConversion() {
     isLoading,
     isFetching,
     convertingTo,
-    pendingManual,
-    confirmedManual,
+    manual,
+    store,
     canEditRecipe,
     isAIEnabled,
     startConversion,

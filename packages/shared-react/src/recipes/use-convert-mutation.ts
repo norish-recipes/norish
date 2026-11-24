@@ -14,14 +14,8 @@ type ConvertMutationContext = {
   didSwitchLocally: boolean;
 };
 
-type ConversionOutcome = "confirmed" | "queued" | "failed";
-
 type ConvertMutationResult = {
-  convertMeasurements: (
-    targetSystem: MeasurementSystem,
-    version: number,
-    withAI?: boolean
-  ) => Promise<ConversionOutcome>;
+  convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI?: boolean) => void;
   error: unknown;
   reset: () => void;
   isConverting: boolean;
@@ -49,20 +43,6 @@ export function useConvertMutation(
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const detailQueryKey = trpc.recipes.get.queryKey({ id: recipeId });
-
-  const rollback = (context: ConvertMutationContext | undefined) => {
-    const previous = context?.didSwitchLocally ? context.previousRecipe : null;
-
-    // Only its own switch is undone; a newer recipe is left for the reread.
-    if (previous)
-      queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, (current) =>
-        current?.version === previous.version
-          ? { ...current, systemUsed: previous.systemUsed }
-          : current
-      );
-
-    void queryClient.invalidateQueries({ queryKey: context?.detailQueryKey ?? detailQueryKey });
-  };
 
   const mutation = useMutation(
     trpc.recipes.convertMeasurements.mutationOptions({
@@ -95,25 +75,32 @@ export function useConvertMutation(
           didSwitchLocally,
         } satisfies ConvertMutationContext;
       },
-      onSuccess: (answer, _variables, context) => {
-        if (!answer.success || answer.stale) rollback(context);
-      },
       onError: (error, _variables, context) => {
-        if (shouldPreserveOptimisticUpdate(error)) return;
+        if (shouldPreserveOptimisticUpdate(error)) {
+          return;
+        }
 
-        rollback(context);
+        const previous = context?.didSwitchLocally ? context.previousRecipe : null;
+
+        // Only its own switch is undone; a newer recipe is left for the reread.
+        if (previous)
+          queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, (current) =>
+            current?.version === previous.version
+              ? { ...current, systemUsed: previous.systemUsed }
+              : current
+          );
+
+        queryClient.invalidateQueries({ queryKey: context?.detailQueryKey ?? detailQueryKey });
         callbacks.onError?.(error);
       },
     })
   );
-  const { mutateAsync } = mutation;
+  const { mutate: mutateMutation } = mutation;
 
   return {
-    convertMeasurements: (targetSystem, version, withAI = false) =>
-      mutateAsync({ recipeId, targetSystem, version, withAI }).then(
-        (answer) => (answer.success && !answer.stale ? "confirmed" : "failed"),
-        (error: unknown) => (shouldPreserveOptimisticUpdate(error) ? "queued" : "failed")
-      ),
+    convertMeasurements: (targetSystem, version, withAI = false) => {
+      mutateMutation({ recipeId, targetSystem, version, withAI });
+    },
     error: mutation.error,
     reset: mutation.reset,
     isConverting: mutation.isPending,

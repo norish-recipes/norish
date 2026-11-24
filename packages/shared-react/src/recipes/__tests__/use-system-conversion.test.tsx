@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MEASUREMENT_SYSTEM_CHOICES } from "@norish/shared/contracts/zod/user";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
+import { emitTrackedEvent } from "../../../__tests__/realtime/tracked-event";
 import {
   answerCall,
   answerRead,
@@ -26,6 +27,14 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
+// The page's one subscription: the failed recipe events.
+const useSubscriptionMock = vi.hoisted(() => vi.fn((_options: unknown) => ({ reset: () => {} })));
+
+vi.mock("@trpc/tanstack-react-query", async () => ({
+  ...(await vi.importActual<object>("@trpc/tanstack-react-query")),
+  useSubscription: useSubscriptionMock,
+}));
+
 vi.mock("../../reader", async () => ({
   usePreferencesSaving: (await import("../../reader/use-account-mutations")).usePreferencesSaving,
   ownerAllows: (_owner: string, can: (id: string) => boolean) => can(_owner),
@@ -40,10 +49,14 @@ vi.mock("../../reader", async () => ({
 
 const RECIPE_KEY = keyOf("recipes.get", { id: "r1" });
 
-const metricRecipe = (copies: ("metric" | "us")[] = ["metric"], systemUsed = "metric") => ({
+const metricRecipe = (
+  copies: ("metric" | "us")[] = ["metric"],
+  systemUsed = "metric",
+  version = 1
+) => ({
   id: "r1",
   userId: "owner",
-  version: 1,
+  version,
   systemUsed,
   recipeIngredients: copies.map((copy) => ({ systemUsed: copy })),
   steps: [],
@@ -52,7 +65,7 @@ const metricRecipe = (copies: ("metric" | "us")[] = ["metric"], systemUsed = "me
 /** The hook on a page showing `recipe`; `page().conversion` is the convert it pressed. */
 function renderOn<T>(hook: () => T, recipe: object = metricRecipe()) {
   const queryClient = createTestQueryClient();
-  let state: { conversion: unknown } | undefined;
+  let state: { conversion: unknown; manualConversion: unknown } | undefined;
 
   queryClient.setQueryDefaults([], { staleTime: Infinity });
   queryClient.setQueryData(RECIPE_KEY, recipe);
@@ -186,14 +199,17 @@ describe("useAutoConversion", () => {
         auto: useAutoConversion(),
         pick: useSystemConversion(),
       }));
+      // Each conversion the server applies announces the recipe at its next version.
       const byHand = async (system: string, index: number) => {
         const option = result.current.pick.options.find(
           (choice) => choice.system === system && !choice.withAI
         );
 
         act(() => result.current.pick.convertTo(option!));
-        act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], system)));
         await answerCall("recipes.convertMeasurements", { success: true }, index);
+        act(() =>
+          queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], system, index + 2))
+        );
       };
       const settle = preferenceSave(queryClient);
 
@@ -224,22 +240,28 @@ describe("useAutoConversion", () => {
       mocks.measurementSystem = "us";
       rerender();
       act(() => result.current.convertTo(result.current.options[1]!));
-      if (outcome === "transport") await failCall("recipes.convertMeasurements");
-      else
-        await answerCall("recipes.convertMeasurements", {
-          success: outcome === "stale",
-          stale: outcome === "stale",
-        });
+      if (outcome === "transport") {
+        await failCall("recipes.convertMeasurements");
+        // The failed send rereads the recipe, so the automatic conversion waits for the reread.
+        await act(async () => answerRead("recipes.get", metricRecipe()));
+      } else {
+        await answerCall("recipes.convertMeasurements", { success: true });
+        // Refused, the server announces the failure; stale, someone else's edit moved the recipe on.
+        if (outcome === "refused")
+          emitTrackedEvent(useSubscriptionMock, { recipeId: "r1", reason: "Conversion failed" });
+        else act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric"], "metric", 2)));
+      }
       await settle(true);
-      // The failed conversion invalidated the recipe, so the automatic one waits for its reread.
-      await act(async () => answerRead("recipes.get", metricRecipe()));
       rerender();
 
-      await vi.waitFor(() => expect(page().conversion).toMatchObject({ target: "us" }));
+      expect((await sentCall("recipes.convertMeasurements", 1)).input).toMatchObject({
+        targetSystem: "us",
+      });
+      expect(page().conversion).toMatchObject({ target: "us" });
     }
   );
 
-  it("waits for a manual switch that already shows optimistically to be confirmed", async () => {
+  it("waits for the server to confirm a manual switch that already shows optimistically", async () => {
     mocks.measurementSystem = "metric";
     const { page, rerender, queryClient, result } = renderOn(
       () => {
@@ -258,12 +280,18 @@ describe("useAutoConversion", () => {
       expect(result.current).toMatchObject({ currentSystem: "us", isConverting: false })
     );
     await settle(true);
+    rerender();
 
     expect(page().conversion).toBeNull();
-    await failCall("recipes.convertMeasurements");
-    await act(async () => answerRead("recipes.get", metricRecipe(["metric", "us"])));
-    await sentCall("recipes.convertMeasurements", 1);
-    await vi.waitFor(() => expect(result.current.currentSystem).toBe("us"));
+    expect(page().manualConversion).toMatchObject({ target: "us" });
+
+    // The server's recipe, at the next version, shows the pick: it stands.
+    act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], "us", 2)));
+    rerender();
+
+    expect(page().manualConversion).toBeNull();
+    expect(page().conversion).toBeNull();
+    expect(result.current.currentSystem).toBe("us");
   });
 
   it("waits for the server's copy, since the saved one may be behind", async () => {

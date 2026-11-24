@@ -639,7 +639,7 @@ const convertMeasurements = authedProcedure
       );
     };
 
-    return (withAI ? checkAIEnabled() : Promise.resolve(true))
+    (withAI ? checkAIEnabled() : Promise.resolve(true))
       .then((aiEnabled) => {
         if (!aiEnabled) {
           throw new TRPCError({
@@ -702,12 +702,12 @@ const convertMeasurements = authedProcedure
               "Ignoring stale recipe conversion"
             );
 
-            return { success: true, stale: true };
+            return;
           }
 
           await publishConverted();
 
-          return { success: true };
+          return;
         }
 
         // Every conversion starts from the original, never from a copy of it.
@@ -767,18 +767,18 @@ const convertMeasurements = authedProcedure
         );
         const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-        if (result.stale) return { success: true, stale: true };
+        if (result.stale) {
+          log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale recipe conversion");
+
+          return;
+        }
 
         log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
         await publishConverted();
-
-        return { success: true };
       })
-      .catch((error: unknown) => {
-        handleRecipeError(ctx, error, "convert recipe measurements", { recipeId });
+      .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
 
-        throw error;
-      });
+    return { success: true };
   });
 
 const autocomplete = authedProcedure

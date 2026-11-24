@@ -69,19 +69,20 @@ type RecipeConversionResult = {
 
 export function useRecipeConversion(): RecipeConversionResult {
   const store = useRecipePageStoreApi();
+  const callbacks = { onError: () => store.getState().conversionFailed() };
   const recipeId = useRecipePageStore((state) => state.recipeId);
-  const { convertMeasurements } = useConvertMutation(recipeId);
+  const { convertMeasurements } = useConvertMutation(recipeId, callbacks);
   const conversion = useRecipePageStore((state) => state.conversion);
   const endConversion = useRecipePageStore((state) => state.endConversion);
   const recipe = usePageRecipe();
 
-  // Over once the recipe shows the target; with AI the copy showing is written
-  // again, so it waits for the recipe to change.
+  // Over once the recipe shows the target (with AI, a copy written again) or moved past the version
+  // it was asked on, which the server refuses as stale.
   const isOver =
     !!recipe &&
     !!conversion &&
-    recipe.systemUsed === conversion.target &&
-    (!conversion.withAI || recipe.version !== conversion.version);
+    (recipe.version > conversion.version ||
+      (recipe.systemUsed === conversion.target && !conversion.withAI));
 
   // Cleared once over, so a later change of the recipe's system doesn't revive it.
   useEffect(() => {
@@ -93,13 +94,8 @@ export function useRecipeConversion(): RecipeConversionResult {
     startConversion: (target, withAI = false, manual = false) => {
       if (!recipe) return;
 
-      store.getState().startConversion({ target, withAI, version: recipe.version });
-      if (manual) store.getState().startManualConversion();
-
-      void convertMeasurements(target, recipe.version, withAI).then((outcome) => {
-        if (outcome === "failed") store.getState().conversionFailed();
-        if (manual) store.getState().finishManualConversion(outcome === "confirmed");
-      });
+      store.getState().startConversion({ target, withAI, version: recipe.version }, manual);
+      convertMeasurements(target, recipe.version, withAI);
     },
   };
 }
