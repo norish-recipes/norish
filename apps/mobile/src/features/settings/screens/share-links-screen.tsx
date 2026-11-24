@@ -31,18 +31,20 @@ export function ShareLinksScreen() {
   const readShareLink = useShareLink();
   const toUrl = useServerUrl();
   const copyToClipboard = useCopyToClipboard();
-  // The link is read at the press and lives only until the clipboard has it. No link means the
-  // share stopped working since the list loaded, so the list is read again.
+  // The link is read at the press and lives only until the clipboard has it. No link, or a share
+  // gone since the list loaded, rereads the list.
   const copyLink = (shareId: string) =>
     copyToClipboard(
-      readShareLink(shareId).then((path) => {
-        if (path === null) {
-          read.invalidate();
-          throw new Error("No share link");
-        }
+      readShareLink(shareId)
+        .then((path) => {
+          if (path === null) throw new Error("No share link");
 
-        return toUrl(path);
-      }),
+          return toUrl(path);
+        })
+        .catch((error: unknown) => {
+          read.invalidate();
+          throw error;
+        }),
       { copied: "recipes.sharePanel.copySuccess" }
     );
   const sendAction: Record<
