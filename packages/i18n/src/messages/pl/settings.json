@@ -1348,7 +1348,7 @@
     "support": "Pomoc",
     "changeServer": {
       "title": "Zmienić serwer?",
-      "description": "Zostaniesz wylogowany z tego serwera.",
+      "description": "Nastąpi wylogowanie z tego serwera.",
       "action": "Zmień serwer"
     },
     "versionServer": "Serwer {server}",

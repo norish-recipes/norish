@@ -58,7 +58,7 @@ export function useConfirmedSignOut(): (
           { ...cancel, onPress: () => resolve(false) },
           {
             text: intl.formatMessage({
-              id: discard ? "navbar.userMenu.logout" : "settings.mobile.changeServer.action",
+              id: serverChange ? "settings.mobile.changeServer.action" : "navbar.userMenu.logout",
             }),
             style: "destructive",
             onPress: () => void leave(discard).then(resolve),

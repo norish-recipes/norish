@@ -1348,7 +1348,7 @@
     "support": "Assistance",
     "changeServer": {
       "title": "Changer de serveur ?",
-      "description": "Vous serez déconnecté de ce serveur.",
+      "description": "Votre session sur ce serveur sera fermée.",
       "action": "Changer de serveur"
     },
     "versionServer": "Serveur {server}",

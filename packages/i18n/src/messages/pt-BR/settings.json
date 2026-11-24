@@ -1347,9 +1347,9 @@
     "server": "Servidor",
     "support": "Suporte",
     "changeServer": {
-      "title": "Trocar de servidor?",
-      "description": "Você será desconectado deste servidor.",
-      "action": "Trocar de servidor"
+      "title": "Alterar servidor?",
+      "description": "Você sairá deste servidor.",
+      "action": "Alterar servidor"
     },
     "versionServer": "Servidor {server}",
     "offlineReason": "Offline · alterações pausadas",
