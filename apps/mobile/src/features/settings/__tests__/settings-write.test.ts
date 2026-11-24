@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  DROPPED,
   guardRepeat,
   guardWrite,
   listenForNoAnswer,
@@ -44,7 +45,7 @@ const deferred = () => {
 };
 
 describe("guardRepeat", () => {
-  it("sends a repeat made while one is in flight never, and hands it the held outcome", async () => {
+  it("drops a repeat made while one is in flight, never sharing the held outcome", async () => {
     const first = deferred();
     const send = vi.fn(() => first.promise);
     const write = guardRepeat("regenerate", send);
@@ -53,8 +54,8 @@ describe("guardRepeat", () => {
     const repeat = write();
 
     expect(send).toHaveBeenCalledTimes(1);
+    await expect(repeat).resolves.toBe(DROPPED);
     first.resolve(true);
-    await expect(repeat).resolves.toBe(true);
     await expect(sent).resolves.toBe(true);
     await write();
     expect(send).toHaveBeenCalledTimes(2);

@@ -36,8 +36,8 @@ export function ApiKeyNewScreen() {
     navigation.setOptions({ gestureEnabled: !locked });
   }, [navigation, locked]);
 
-  // A repeat press shares the held create's outcome; a key answered after the release is dropped,
-  // as the reader was told to check the list.
+  // A repeat press is dropped; a key answered after the release is dropped too, as the reader was
+  // told to check the list.
   const sendCreate = settingsWrite(
     () => createApiKey(apiKeyName(name)),
     "api-key-create",
@@ -49,8 +49,9 @@ export function ApiKeyNewScreen() {
     const key = await sendCreate();
 
     setSending(false);
-    if (key && navigation.isFocused()) setCreated(key);
-    else if (key) forgetCreatedKey();
+    if (typeof key !== "string") return;
+    if (navigation.isFocused()) setCreated(key);
+    else forgetCreatedKey();
   };
 
   const saved = () => {

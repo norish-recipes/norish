@@ -13,7 +13,7 @@ import { passwordChecks } from "@norish/shared/lib/auth/password";
 import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { refusalOf } from "../utils/refusal-of";
-import { settingsWrite } from "../utils/settings-write";
+import { DROPPED, settingsWrite } from "../utils/settings-write";
 
 /** The change password sheet, mounted per opening so a closed sheet keeps no password; it stays
  * open while the change is under way. */
@@ -54,7 +54,7 @@ export function PasswordScreen() {
     const refusal = await sendChange();
 
     setSending(false);
-    if (refusal === undefined || !navigation.isFocused()) return;
+    if (refusal === undefined || refusal === DROPPED || !navigation.isFocused()) return;
     if (!refusal) {
       toast.show({
         severity: "success",

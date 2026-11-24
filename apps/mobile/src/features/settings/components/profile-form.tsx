@@ -37,11 +37,7 @@ export function ProfileForm() {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const savedName = user?.name ?? "";
-  const name = useDraft(NAME_DRAFT, savedName, {
-    editing,
-    offline: isOffline,
-    key: "profile-save",
-  });
+  const name = useDraft(NAME_DRAFT, savedName, { editing, offline: isOffline });
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
 
   const save = () =>
@@ -50,8 +46,8 @@ export function ProfileForm() {
         draft: name.draft,
         savedName,
         photo,
-        updateName: name.request(updateName),
-        uploadAvatar: name.request(uploadAvatar),
+        updateName: name.request(updateName, "profile-name"),
+        uploadAvatar: name.request(uploadAvatar, "profile-photo-upload"),
         setDraft: name.setDraft,
         setPhoto,
         offline: isOfflineNow,

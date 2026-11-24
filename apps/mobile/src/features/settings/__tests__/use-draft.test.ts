@@ -21,12 +21,12 @@ describe("a draft's save", () => {
     vi.useFakeTimers();
     const stopListening = listenForNoAnswer(vi.fn());
     const send = vi.fn(() => new Promise<boolean>(() => {}));
-    const { result } = renderHook(() => useDraft(NAME, "Ann", { offline: false, key: "name" }));
+    const { result } = renderHook(() => useDraft(NAME, "Ann", { offline: false }));
 
     act(() => result.current.setDraft("Bea"));
     act(() => {
-      void result.current.save(() => result.current.request(send)("Bea"));
-      void result.current.request(send)("Bea");
+      void result.current.save(() => result.current.request(send, "name")("Bea"));
+      void result.current.request(send, "name")("Bea");
     });
     expect(send).toHaveBeenCalledOnce();
     expect(result.current.canSave()).toBe(false);

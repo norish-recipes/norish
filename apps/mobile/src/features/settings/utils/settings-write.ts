@@ -23,10 +23,13 @@ export const listenForNoAnswer = (tell: (messageId: string) => void) => {
   };
 };
 
-const inFlight = new Map<string, Promise<unknown>>();
+/** A call dropped as a repeat of the write in flight under its key: neither success nor failure. */
+export const DROPPED = Symbol("dropped");
 
-/** Holds the write `key` names while in flight: a repeat shares its outcome. One unanswered for the
- * timeout is released, told with `noAnswer`, resolves undefined, and hands a later answer to `late`. */
+const inFlight = new Map<string, object>();
+
+/** Holds the write `key` names while in flight: a repeat is dropped, never sent. One unanswered for
+ * the timeout is released, told with `noAnswer`, resolves undefined, and hands a later answer to `late`. */
 export const guardRepeat =
   <A extends unknown[], R>(
     key: string,
@@ -34,10 +37,8 @@ export const guardRepeat =
     noAnswer = NO_ANSWER,
     late?: (answer: Awaited<R>) => void
   ) =>
-  (...args: A): Promise<Awaited<R> | undefined> => {
-    const held = inFlight.get(key);
-
-    if (held) return held as Promise<Awaited<R> | undefined>;
+  (...args: A): Promise<Awaited<R> | undefined | typeof DROPPED> => {
+    if (inFlight.has(key)) return Promise.resolve(DROPPED);
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     let isReleased = false;
@@ -55,14 +56,14 @@ export const guardRepeat =
       (answer) => isReleased && late?.(answer),
       () => {}
     );
-    const outcome = Promise.race([request, released]).finally(() => {
+    const held = {};
+
+    inFlight.set(key, held);
+
+    return Promise.race([request, released]).finally(() => {
       clearTimeout(timer);
-      if (inFlight.get(key) === outcome) inFlight.delete(key);
+      if (inFlight.get(key) === held) inFlight.delete(key);
     });
-
-    inFlight.set(key, outcome);
-
-    return outcome;
   };
 
 /** Wraps a Settings write, the request only, so it re-reads Offline when it runs; every Settings
@@ -75,7 +76,7 @@ export function settingsWrite<A extends unknown[], R>(
   key: string,
   noAnswer?: string,
   late?: (answer: Awaited<R> | undefined) => void
-): (...args: A) => Promise<Awaited<R> | undefined>;
+): (...args: A) => Promise<Awaited<R> | undefined | typeof DROPPED>;
 export function settingsWrite<A extends unknown[], R>(
   send: (...args: A) => R,
   key?: string,

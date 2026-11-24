@@ -36,7 +36,7 @@ export function AllergiesForm() {
   const { tags: known } = useTagsQuery();
   const [muted] = useThemeColor(["muted"] as const);
   const warningInk = useTokenColor("warning-foreground");
-  const allergies = useDraft(ALLERGY_DRAFT, saved, { offline: isOffline, key: "allergies-save" });
+  const allergies = useDraft(ALLERGY_DRAFT, saved, { offline: isOffline });
   const [typed, setTyped] = useState("");
   const text = useText();
   const shown = allergies.shown;
@@ -53,7 +53,7 @@ export function AllergiesForm() {
       saveDraft(ALLERGY_DRAFT, {
         draft: allergies.draft,
         saved,
-        send: allergies.request(setAllergies),
+        send: allergies.request(setAllergies, "allergies"),
         setDraft: allergies.setDraft,
         offline: isOfflineNow,
       })

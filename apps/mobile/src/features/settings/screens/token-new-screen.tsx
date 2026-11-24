@@ -43,7 +43,7 @@ export function TokenNewScreen() {
     const added = await sendCreate();
 
     setSending(false);
-    if (added && navigation.isFocused()) router.back();
+    if (added === true && navigation.isFocused()) router.back();
   };
 
   return (
