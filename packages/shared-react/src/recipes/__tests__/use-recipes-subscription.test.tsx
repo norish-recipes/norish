@@ -279,6 +279,33 @@ describe("the recipe list events and recipe outcomes", () => {
     expect(invalidateQueries).not.toHaveBeenCalled();
   });
 
+  it.each(["onUpdated", "onConverted"])(
+    "never writes a delayed %s recipe over a newer cached one",
+    (name) => {
+      const newer = fullRecipe({ name: "Newer", version: 3 });
+
+      queryClient.setQueryData(detailKey("recipe-1"), newer);
+      queryClient.setQueryData(LIST_KEY, {
+        pages: [
+          { recipes: [dashboardRecipe({ name: "Newer", version: 3 })], total: 1, nextCursor: null },
+        ],
+        pageParams: [0],
+      });
+
+      emit(name, {
+        recipe: fullRecipe({ name: "Older", version: 2 }),
+        conversion: { target: "us", withAI: false, version: 1 },
+        stale: false,
+      });
+
+      expect(queryClient.getQueryData(detailKey("recipe-1"))).toEqual(newer);
+      expect(
+        (queryClient.getQueryData(LIST_KEY) as { pages: { recipes: RecipeDashboardDTO[] }[] })
+          .pages[0]?.recipes
+      ).toEqual([expect.objectContaining({ name: "Newer", version: 3 })]);
+    }
+  );
+
   it("shows a photo another member added, once however often it is announced", () => {
     const photo = { id: "image-1", image: "/recipes/recipe-1/a.jpg", order: 0, version: 1 };
     const withPhoto = fullRecipe({ images: [photo] } as Partial<FullRecipeDTO>);

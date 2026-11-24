@@ -6,6 +6,7 @@ import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes"
 import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useRecipeQuery } from "./use-recipe-query";
+import { replacesCached } from "./use-recipes-cache";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
@@ -29,23 +30,19 @@ export function useRecipeSubscription(
   useKeepsCurrent(recipeId ? [queryKey] : []);
 
   const common = { enabled: !!recipeId, liveQueryKeys: [queryKey] };
+  const write = (recipe: Payload<"updated">["recipe"]) => {
+    if (recipe.id === recipeId)
+      setRecipeData((cached) => (replacesCached(recipe, cached) ? recipe : cached));
+  };
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
     ...common,
-    onEvent: (payload) => {
-      if (payload.recipe.id !== recipeId) return;
-
-      setRecipeData(() => payload.recipe);
-    },
+    onEvent: ({ recipe }) => write(recipe),
   });
 
   useRealtimeSubscription<Payload<"converted">>(trpc.recipes.onConverted, {
     ...common,
-    onEvent: (payload) => {
-      if (payload.recipe.id !== recipeId) return;
-
-      setRecipeData(() => payload.recipe);
-    },
+    onEvent: ({ recipe }) => write(recipe),
   });
 
   useRealtimeSubscription<Payload<"deleted">>(trpc.recipes.onDeleted, {

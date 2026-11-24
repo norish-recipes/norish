@@ -18,7 +18,11 @@ import { usePlatform } from "../platform/platform";
 import { rereadInWindow, useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { useRecipeSelection } from "./selection-store";
-import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
+import {
+  removeRecipesFromLists,
+  replacesCached,
+  useRecipesCacheHelpers,
+} from "./use-recipes-cache";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
@@ -208,7 +212,9 @@ export function useRecipeListSubscription() {
         pages: prev.pages.map((page) => ({
           ...page,
           recipes: page.recipes.map((r) =>
-            r.id === updatedRecipe.id ? patchDashboardRecipeFromFull(r, updatedRecipe) : r
+            r.id === updatedRecipe.id && replacesCached(updatedRecipe, r)
+              ? patchDashboardRecipeFromFull(r, updatedRecipe)
+              : r
           ),
         })),
       };
@@ -228,7 +234,10 @@ export function useRecipeListSubscription() {
     ...live,
     onEvent: ({ recipe, source, kind }) => {
       updateRecipeInList(recipe);
-      queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
+      queryClient.setQueryData<FullRecipeDTO | null>(
+        trpc.recipes.get.queryKey({ id: recipe.id }),
+        (cached) => (replacesCached(recipe, cached) ? recipe : cached)
+      );
 
       // An enrichment adds no household Category; some change what Discover lists.
       if (source !== "enrichment") rereadFacets();
