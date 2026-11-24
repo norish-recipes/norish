@@ -8,6 +8,8 @@ import { households } from "../mocks/realtime/households";
 
 const mockDb = vi.hoisted(() => ({
   getUserById: vi.fn(),
+  getUserProfile: vi.fn(),
+  updateUserName: vi.fn(),
   updateUserAvatar: vi.fn(),
   clearUserAvatar: vi.fn(),
 }));
@@ -26,10 +28,10 @@ const mockFs = vi.hoisted(() => ({
 vi.mock("@norish/db", () => ({
   getApiKeysForUser: vi.fn(),
   getUserById: mockDb.getUserById,
-  getUserProfile: mockDb.getUserById,
+  getUserProfile: mockDb.getUserProfile,
   getUserPreferences: vi.fn(),
   updateUserPreferences: vi.fn(),
-  updateUserName: vi.fn(),
+  updateUserName: mockDb.updateUserName,
   updateUserAvatar: mockDb.updateUserAvatar,
   deleteUser: vi.fn(),
   clearUserAvatar: mockDb.clearUserAvatar,
@@ -259,4 +261,32 @@ describe("avatar caching contract (ADR-0021)", () => {
       expect(households.publish).not.toHaveBeenCalled();
     });
   });
+
+  // A reply's preferences would be written over a preference save still in flight.
+  it.each(["updateName", "uploadAvatar", "deleteAvatar"] as const)(
+    "%s answers the user without preferences",
+    async (write) => {
+      const user = {
+        id: "user-1",
+        email: "user@example.com",
+        name: "One",
+        image: null,
+        version: 4,
+      };
+
+      mockDb.getUserById.mockResolvedValue(user);
+      mockDb.getUserProfile.mockResolvedValue({ ...user, preferences: { locale: "en" } });
+      mockDb.updateUserName.mockResolvedValue({ stale: false });
+      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.clearUserAvatar.mockResolvedValue({ stale: false });
+      const caller = createCaller();
+      const result = await {
+        updateName: () => caller.updateName({ name: "One", version: 3 }),
+        uploadAvatar: () => caller.uploadAvatar(buildUploadInput()),
+        deleteAvatar: () => caller.deleteAvatar({ version: 3 }),
+      }[write]();
+
+      expect(result).toEqual({ success: true, user });
+    }
+  );
 });
