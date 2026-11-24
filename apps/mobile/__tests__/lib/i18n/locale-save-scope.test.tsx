@@ -26,6 +26,7 @@ const cache = vi.hoisted(() => {
 });
 type Outcome = "took" | "refused" | "failed" | { stale: string | undefined };
 const saves = vi.hoisted(() => [] as { locale?: string; settle: (outcome: Outcome) => void }[]);
+const config = vi.hoisted(() => ({ defaultLocale: "en" }));
 const stored = vi.hoisted(() => new Map<string, string>());
 
 vi.mock("react-native", () => ({ Platform: { OS: "ios" }, Settings: { get: () => ["en"] } }));
@@ -33,11 +34,16 @@ vi.mock("@/lib/storage/mmkv", () => ({
   storage: {
     getString: (key: string) => stored.get(key),
     set: (key: string, value: string) => void stored.set(key, value),
+    remove: (key: string) => stored.delete(key),
   },
 }));
 vi.mock("@norish/i18n/messages", () => ({ loadLocaleMessages: async () => ({}) }));
 vi.mock("@norish/shared-react/config", () => ({
-  useLocaleConfigQuery: () => ({ enabledLocales: [], defaultLocale: "en", isLoading: false }),
+  useLocaleConfigQuery: () => ({
+    enabledLocales: [],
+    defaultLocale: config.defaultLocale,
+    isLoading: false,
+  }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({
   useSavedLocale: () => useSyncExternalStore(cache.subscribe, () => cache.state.locale),
@@ -88,7 +94,18 @@ describe("the shown language", () => {
   beforeEach(() => {
     saves.length = 0;
     stored.clear();
+    config.defaultLocale = "en";
     cache.state.locale = undefined;
+  });
+
+  it("follows a new server default across launches when no language was chosen", () => {
+    config.defaultLocale = "fr";
+    renderScope().unmount();
+    config.defaultLocale = "nl";
+    renderScope();
+
+    expect(shown.locale).toBe("nl");
+    expect(ownLanguage()).toBeUndefined();
   });
 
   it("is the saved one, applied from the server or picked here and shown at once", () => {
@@ -134,6 +151,15 @@ describe("the shown language", () => {
 
     expect(shown.locale).toBe("fr");
     expect(ownLanguage()).toBe("fr");
+  });
+
+  it("does not leave a failed first choice in storage for the next launch", async () => {
+    renderScope();
+    choose("fr");
+    await settle("failed");
+
+    expect(shown.locale).toBe("en");
+    expect(ownLanguage()).toBeUndefined();
   });
 
   it("ignores a second choice while a save is in flight", () => {

@@ -28,6 +28,10 @@ export function loadLocalePreference(): string | null {
   }
 }
 
+export function clearLocalePreference(): void {
+  storage.remove(LOCALE_PREFERENCE_KEY);
+}
+
 export function saveLocalePreference(locale: string): void {
   const safeLocale = getValidLocale(locale);
 

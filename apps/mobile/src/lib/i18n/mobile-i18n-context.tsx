@@ -2,13 +2,14 @@ import React, { createContext, use, useEffect, useState } from "react";
 import { Platform, Settings } from "react-native";
 import { deviceLanguage, matchDeviceLocale, resolveLocaleSelection } from "@/lib/i18n/locale-state";
 import {
+  clearLocalePreference,
   loadLocalePreference,
   saveLocalePreference,
 } from "@/lib/preferences/locale-preference-store";
 import { IntlProvider } from "react-intl";
 
 import type { EnabledLocale } from "@norish/shared-react/config";
-import { DEFAULT_LOCALE } from "@norish/i18n/config";
+import { DEFAULT_LOCALE, isValidLocale } from "@norish/i18n/config";
 import { getBundledLocales } from "@norish/i18n/locales";
 import { loadLocaleMessages } from "@norish/i18n/messages";
 import enAuthMessages from "@norish/i18n/messages/en/auth.json";
@@ -168,10 +169,14 @@ export function MobileIntlProvider({
     effectiveDefaultLocale
   );
 
-  // Kept for the next launch; the device's own state stays, so a failed first save goes back to it.
   useEffect(() => {
-    if (signedIn) saveLocalePreference(activeLocale);
-  }, [signedIn, activeLocale]);
+    if (!signedIn) return;
+
+    const choice = savedLocale ?? preferredLocale;
+
+    if (isValidLocale(choice)) saveLocalePreference(choice);
+    else clearLocalePreference();
+  }, [signedIn, savedLocale, preferredLocale]);
 
   const { messages, isLoading: isMessagesLoading } = useLocaleMessages(activeLocale);
 
