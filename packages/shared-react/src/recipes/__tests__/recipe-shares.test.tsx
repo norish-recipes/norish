@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -284,6 +284,24 @@ describe("recipe share hooks", () => {
       severity: "success",
       title: "recipes.sharePanel.createSuccess",
     });
+  });
+
+  it("keeps no copy of the new link once the hook is gone", async () => {
+    const queryClient = createTestQueryClient();
+    const { result, unmount } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const held = () =>
+      queryClient
+        .getMutationCache()
+        .getAll()
+        .some((mutation) => JSON.stringify(mutation.state.data ?? null).includes("token-1"));
+
+    await act(() => result.current.createShare("1week"));
+    expect(held()).toBe(true);
+
+    unmount();
+    await waitFor(() => expect(held()).toBe(false));
   });
 
   it("lists a share made while the recipe's first share read was under way, from a read begun after it", async () => {

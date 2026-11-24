@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import { answered, wentThrough } from "../offline/settled";
 import { useTRPC } from "../trpc";
+import { SECRET_ANSWER } from "../trpc/one-time-secret";
 import { useFailedWrite } from "./use-account-mutations";
 import { useProfileCache } from "./use-profile";
 
@@ -15,8 +16,7 @@ export function useApiKeyMutations() {
 
   const { mutateAsync: mutateCreate, reset: resetCreate } = useMutation(
     trpc.user.apiKeys.create.mutationOptions({
-      // The answer holds the plaintext key: dropped from the cache once no observer holds it.
-      gcTime: 0,
+      ...SECRET_ANSWER,
       onSuccess: ({ metadata }) =>
         write((data) => ({ ...data, apiKeys: [...data.apiKeys, metadata] })),
       onError: failed("user-settings:create-api-key"),

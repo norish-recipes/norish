@@ -12,6 +12,7 @@ import { answered } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
 import { useStaleRefusal, wentThroughFresh } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
+import { SECRET_ANSWER } from "../trpc/one-time-secret";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
 type RecipeShareMutationsResult = {
@@ -61,6 +62,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
 
   const createMutation = useMutation(
     trpc.recipes.shareCreate.mutationOptions({
+      ...SECRET_ANSWER,
       onSuccess: (data) => {
         invalidateShareCollections(data.id, data.recipeId);
         toast.show({
