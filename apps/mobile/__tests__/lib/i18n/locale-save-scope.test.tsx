@@ -1,13 +1,32 @@
 // @vitest-environment jsdom
+import { useSyncExternalStore } from "react";
 import { LocaleSaveScope } from "@/lib/i18n/locale-save-scope";
 import { MobileIntlProvider, useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Each save waits for the test to say whether the server took it.
-const saves = vi.hoisted(() => [] as { locale?: string; settle: (took: boolean) => void }[]);
+// The profile cache's saved language, written as the real save does: optimistic, rolled back on a
+// refusal or failure, the server's on a stale answer. Each save waits for the test to settle it.
+const cache = vi.hoisted(() => {
+  const listeners = new Set<() => void>();
+  const state = { locale: undefined as string | undefined };
+
+  return {
+    state,
+    set: (locale: string | undefined) => {
+      state.locale = locale;
+      listeners.forEach((listener) => listener());
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+
+      return () => void listeners.delete(listener);
+    },
+  };
+});
+type Outcome = "took" | "refused" | "failed" | { stale: string | undefined };
+const saves = vi.hoisted(() => [] as { locale?: string; settle: (outcome: Outcome) => void }[]);
 const stored = vi.hoisted(() => new Map<string, string>());
-const pending = () => saves.length > 0;
 
 vi.mock("react-native", () => ({ Platform: { OS: "ios" }, Settings: { get: () => ["en"] } }));
 vi.mock("@/lib/storage/mmkv", () => ({
@@ -21,18 +40,26 @@ vi.mock("@norish/shared-react/config", () => ({
   useLocaleConfigQuery: () => ({ enabledLocales: [], defaultLocale: "en", isLoading: false }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({
+  useSavedLocale: () => useSyncExternalStore(cache.subscribe, () => cache.state.locale),
   usePreferencesMutation: () => ({
-    isUpdatingPreferences: pending(),
-    updatePreferences: ({ locale }: { locale?: string }) =>
-      new Promise<boolean>((resolve) =>
+    isUpdatingPreferences: saves.length > 0,
+    updatePreferences: ({ locale }: { locale?: string }) => {
+      const previous = cache.state.locale;
+
+      cache.set(locale);
+
+      return new Promise<boolean>((resolve) =>
         saves.push({
           locale,
-          settle: (took) => {
+          settle: (outcome) => {
             saves.splice(0, 1);
-            resolve(took);
+            if (outcome === "refused" || outcome === "failed") cache.set(previous);
+            else if (outcome !== "took") cache.set(outcome.stale);
+            resolve(outcome === "took");
           },
         })
-      ),
+      );
+    },
   }),
 }));
 
@@ -53,48 +80,68 @@ const renderScope = () =>
     </MobileIntlProvider>
   );
 
-const choose = (locale: string, options?: { fromServer?: boolean }) =>
-  act(() => shown.setLocale(locale, options));
-const settle = (took: boolean) => act(async () => saves[0]?.settle(took));
+const choose = (locale: string) => act(() => shown.setLocale(locale));
+const settle = (outcome: Outcome) => act(async () => saves[0]?.settle(outcome));
+const ownLanguage = () => JSON.parse(stored.get("preferences.locale") ?? "{}").locale;
 
-describe("LocaleSaveScope", () => {
+describe("the shown language", () => {
   beforeEach(() => {
     saves.length = 0;
     stored.clear();
+    cache.state.locale = undefined;
   });
 
-  it("shows a picked language at once and saves it", () => {
+  it("is the saved one, applied from the server or picked here and shown at once", () => {
+    cache.state.locale = "fr";
     renderScope();
-    choose("nl");
+    expect(shown.locale).toBe("fr");
 
+    choose("nl");
     expect(shown.locale).toBe("nl");
     expect(saves.map((save) => save.locale)).toEqual(["nl"]);
   });
 
-  it("puts back the language shown before a save the server did not take", async () => {
+  it("goes back to the saved one when the server refuses or the write fails", async () => {
+    cache.state.locale = "nl";
     renderScope();
-    choose("nl");
-    await settle(true);
-    choose("de-formal");
-    await settle(false);
 
+    choose("de-formal");
+    await settle("refused");
+    expect(shown.locale).toBe("nl");
+
+    choose("de-formal");
+    await settle("failed");
     expect(shown.locale).toBe("nl");
   });
 
-  it("ignores a second choice while a save is in flight", async () => {
+  it("is the server's on a stale answer, which nothing undoes", async () => {
+    cache.state.locale = "en";
+    renderScope();
+
+    choose("nl");
+    await settle({ stale: "fr" });
+    expect(shown.locale).toBe("fr");
+    expect(ownLanguage()).toBe("fr");
+  });
+
+  it("is the device's own again when a first save fails, kept for the next launch", async () => {
+    stored.set("preferences.locale", JSON.stringify({ locale: "fr" }));
+    renderScope();
+
+    choose("nl");
+    expect(ownLanguage()).toBe("nl");
+    await settle("failed");
+
+    expect(shown.locale).toBe("fr");
+    expect(ownLanguage()).toBe("fr");
+  });
+
+  it("ignores a second choice while a save is in flight", () => {
     renderScope();
     choose("nl");
     choose("de-formal");
 
     expect(shown.locale).toBe("nl");
     expect(saves).toHaveLength(1);
-  });
-
-  it("applies the server's language without saving it", () => {
-    renderScope();
-    choose("fr", { fromServer: true });
-
-    expect(shown.locale).toBe("fr");
-    expect(saves).toHaveLength(0);
   });
 });

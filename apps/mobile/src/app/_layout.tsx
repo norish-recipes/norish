@@ -23,7 +23,6 @@ import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
-import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { useSheetExit } from "@/lib/after-sheet";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
@@ -243,10 +242,9 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Effects every signed-in tab leans on: the Reader's locale and the realtime subscriptions. */
+/** Effects every signed-in tab leans on: the realtime subscriptions. */
 function AuthenticatedEffects() {
   useSignOutBeforeServerChange();
-  useUserLocaleSync();
   useHouseholdSubscription();
   usePermissionsSubscription();
   useConfigSubscription();

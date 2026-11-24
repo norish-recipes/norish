@@ -7,6 +7,7 @@ import type { User } from "@norish/shared/contracts";
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { ApiKeyMetadataDto } from "@norish/trpc";
 import type { AppRouter } from "@norish/trpc/client";
+import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 import type { ReadStatus } from "../trpc/read-status";
 import { writeOverRead } from "../offline/write-over-read";
@@ -30,6 +31,18 @@ export function useProfileQuery(): Profile {
     apiKeys: query.data?.apiKeys ?? NO_KEYS,
     ...readStatus(query),
   };
+}
+
+/** The Reader's saved language as the cached profile holds it, optimistic while a save is in
+ * flight; it reads nothing itself, so it works above the platform adapter. */
+export function useSavedLocale(): string | null | undefined {
+  const trpc = useTRPC();
+
+  return useQuery({
+    ...trpc.user.get.queryOptions(),
+    enabled: false,
+    select: (data) => getLocalePreference(data.user),
+  }).data;
 }
 
 /** The profile as `user.get` answers it, which the cache holds. */

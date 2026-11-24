@@ -52,7 +52,7 @@ export {
 } from "./use-account-mutations";
 export { useApiKeyMutations } from "./use-api-key-mutations";
 export { useAllergiesMutation, useAllergiesQuery } from "./use-allergies";
-export { useProfileQuery, useSignInMethodsQuery } from "./use-profile";
+export { useProfileQuery, useSavedLocale, useSignInMethodsQuery } from "./use-profile";
 export {
   useSiteAuthTokenMutations,
   useSiteAuthTokensQuery,
