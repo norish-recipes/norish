@@ -155,7 +155,7 @@ export function usePreferencesMutation() {
         mergePreferences(answer.preferences, answer.version);
       },
       onError: (error, { preferences }, optimistic) => {
-        if (preferences.locale !== undefined && shouldPreserveOptimisticUpdate(error)) return;
+        if (shouldPreserveOptimisticUpdate(error)) return;
 
         rollBack(preferences, optimistic);
         failed("user-settings:update-preferences")(error);

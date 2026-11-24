@@ -121,20 +121,28 @@ describe("the Account's writes", () => {
       }
     );
 
-    it.each([true, false])(
-      "keeps the optimistic language only when the Outbox accepted it (%s)",
-      async (queued) => {
+    it.each([
+      [{ locale: "nl" }, true],
+      [{ locale: "nl" }, false],
+      [{ measurementSystem: "us" }, true],
+      [{ measurementSystem: "us" }, false],
+    ] as const)(
+      "keeps the optimistic %o only when the Outbox accepted it (%s)",
+      async (preferences, queued) => {
         const result = render(() => usePreferencesMutation());
 
-        act(() => void result.current.updatePreferences({ locale: "nl" }));
+        act(() => void result.current.updatePreferences(preferences));
         const call = await sentCall("user.updatePreferences");
         const error = new TypeError("Network request failed");
 
         if (!queued) markOutboxAdmissionFailed(error);
         await act(async () => call.deferred.reject(error));
 
-        expect(profile()?.user.preferences?.locale).toBe(queued ? "nl" : "en");
+        expect(profile()?.user.preferences).toEqual(
+          queued ? { ...PROFILE.user.preferences, ...preferences } : PROFILE.user.preferences
+        );
         expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(!queued);
+        expect(adapter.showError).toHaveBeenCalledTimes(queued ? 0 : 1);
       }
     );
 
