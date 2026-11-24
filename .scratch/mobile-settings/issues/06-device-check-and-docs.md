@@ -57,3 +57,9 @@ Final fix round 2: `4b9e41eb4` (an allergy save sends the version its list was r
 Verification: at `2976db972` all seven gates 0, iOS simulator compile green, web E2E 282 of 282. At `cb87cec20` all seven gates 0, mobile lint at the baseline's 11; web E2E 275 passed, 1 failed, 6 not run: `realtime/realtime.e2e.ts:605` ("a browser back from a network gap gets what it missed through Resume") expected at least 3 and got 2 after 30 s, then passed three times alone. A flake is a bug: sent to a fixer.
 
 Not started in this ticket: the Maestro flows, the device check and the docs. They wait on Mike's ticket 03 decision and on the simulator another session holds.
+
+The realtime flake: not from this branch. Offline, each failed socket attempt doubled a random wait capped at 30 s, so the socket could reopen almost 30 s after the network returned, which is the test's whole allowance. `27c789592` keeps the retry at the first step's delay while the browser reports itself offline (web only; React Native has no `navigator.onLine`). The test failure itself was never reproduced; the delay was (0.1-16 s over 40 cycles before, under 0.93 s after). Mike's to keep or revert.
+
+Closing verification at `27c789592`: all seven gates 0, mobile lint at the baseline's 11, web E2E 282 of 282. iOS simulator compile last green at `2976db972` (no Swift change since).
+
+The run stops here on Mike's decisions (ticket 03's scope, the Outbox exclusion, the silent refused link, Copy link, the stored one-time secrets) and on the simulator another session holds. This ticket's own boxes are all still open.
