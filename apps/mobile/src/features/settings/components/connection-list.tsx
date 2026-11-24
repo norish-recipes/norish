@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import React from "react";
+import React, { useEffect, useEffectEvent } from "react";
 import { NoResultsCard } from "@/components/no-results-card";
 
 import type { ReadStatus } from "@norish/shared-react/reader";
@@ -8,7 +8,8 @@ import { readState } from "../utils/read-state";
 import { ReadBody } from "./read-body";
 
 /** The body of a connections page: its rows, or the loading skeleton, a failed load with Retry, or
- * the empty card, by how `read` went and how many rows it holds. */
+ * the empty card, by how `read` went and how many rows it holds. Opening it rereads a held list,
+ * which no subscription keeps current. */
 export function ConnectionList({
   read,
   count,
@@ -26,6 +27,11 @@ export function ConnectionList({
   children: ReactNode;
 }) {
   const { answered, isLoading, error } = read;
+  const reread = useEffectEvent(() => {
+    if (read.answered) read.refetch();
+  });
+
+  useEffect(() => reread(), []);
 
   return (
     <ReadBody
