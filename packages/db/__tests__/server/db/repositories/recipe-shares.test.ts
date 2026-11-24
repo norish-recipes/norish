@@ -89,6 +89,19 @@ describe("recipe share repository", () => {
     expect(fetched && getRecipeShareUrl(fetched)).toBe(created.url);
   });
 
+  it("has no link once a share is revoked or expired", async () => {
+    const created = await createRecipeShare(testUserId, {
+      recipeId: testRecipeId,
+      expiresIn: "forever",
+    });
+    const fetched = await getRecipeShareById(created.id);
+
+    expect(fetched).not.toBeNull();
+    if (!fetched) return;
+    expect(getRecipeShareUrl({ ...fetched, revokedAt: new Date() })).toBeNull();
+    expect(getRecipeShareUrl({ ...fetched, expiresAt: new Date(Date.now() - 1000) })).toBeNull();
+  });
+
   it("has no link for a share made before tokens were kept", async () => {
     const { share } = await createTestRecipeShare(testUserId, testRecipeId);
     const fetched = await getRecipeShareById(share.id);
