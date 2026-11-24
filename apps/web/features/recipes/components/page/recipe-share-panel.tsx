@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
 import {
@@ -55,6 +55,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   const { shares, isLoading: isLoadingShares } = useRecipeSharesQuery(recipe.id);
   const {
     createShare,
+    forgetCreatedShare,
     isCreating,
     revokeShare,
     reactivateShare,
@@ -65,10 +66,24 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   } = useRecipeShareMutations(recipe.id);
   const [expiresIn, setExpiresIn] = useState<CreateRecipeShareInputDto["expiresIn"]>("forever");
   const [latestCreatedUrl, setLatestCreatedUrl] = useState<string | null>(null);
+  const openNow = useRef(open);
+  useEffect(() => {
+    openNow.current = open;
+  });
+  // The new link lives only while the panel is open; closing it, or an answer after, forgets it.
+  const forgetLink = () => {
+    setLatestCreatedUrl(null);
+    forgetCreatedShare();
+  };
+  const changeOpen = (next: boolean) => {
+    if (!next) forgetLink();
+    onOpenChange(next);
+  };
   const create = async () => {
     const share = await createShare(expiresIn);
 
-    if (share) {
+    if (share && !openNow.current) forgetLink();
+    else if (share) {
       setLatestCreatedUrl(new URL(addBasePath(share.url), window.location.origin).toString());
     }
   };
@@ -86,7 +101,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
     });
   };
   return (
-    <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
+    <Panel open={open} title={t("title")} onOpenChange={changeOpen}>
       <Panel.Body>
         <div className="flex flex-col gap-4">
           <p className="text-muted text-sm">

@@ -19,6 +19,8 @@ type RecipeShareMutationsResult = {
   createShare: (
     expiresIn?: CreateRecipeShareInputDto["expiresIn"]
   ) => Promise<RecipeShareCreatedDto | null>;
+  /** Drops the new link from the mutation's result, once its panel closed. */
+  forgetCreatedShare: () => void;
   updateShare: (input: UpdateRecipeShareInputDto) => void;
   /** Each resolves whether its request went through; a failure is shown. */
   revokeShare: (id: string, version: number) => Promise<boolean>;
@@ -73,7 +75,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
       onError: (error) => showError(error, "recipe-share-panel:create"),
     })
   );
-  const { mutateAsync: mutateCreateAsync } = createMutation;
+  const { mutateAsync: mutateCreateAsync, reset: resetCreate } = createMutation;
 
   const updateMutation = useMutation(
     trpc.recipes.shareUpdate.mutationOptions({
@@ -128,6 +130,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
 
       return answered(mutateCreateAsync({ recipeId, expiresIn }));
     },
+    forgetCreatedShare: () => resetCreate(),
     updateShare: (input) => {
       mutateUpdate(input);
     },

@@ -304,6 +304,24 @@ describe("recipe share hooks", () => {
     await waitFor(() => expect(held()).toBe(false));
   });
 
+  it("keeps no copy of the new link once it is forgotten", async () => {
+    const queryClient = createTestQueryClient();
+    const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const held = () =>
+      queryClient
+        .getMutationCache()
+        .getAll()
+        .some((mutation) => JSON.stringify(mutation.state.data ?? null).includes("token-1"));
+
+    await act(() => result.current.createShare("1week"));
+    expect(held()).toBe(true);
+
+    act(() => result.current.forgetCreatedShare());
+    await waitFor(() => expect(held()).toBe(false));
+  });
+
   it("lists a share made while the recipe's first share read was under way, from a read begun after it", async () => {
     const queryClient = createTestQueryClient();
     const listKey = trpc.recipes.shareList.queryKey({ recipeId: "recipe-1" });
