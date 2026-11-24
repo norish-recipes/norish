@@ -25,3 +25,15 @@ Docs: `apps/docs/docs/mobile.md` and the 0.28.0-beta release notes are corrected
 - Ran: all seven gates 0 (mobile lint 11 warnings); Release build on iPhone 18 Pro; `settings-open`, `settings-server-warning` and `sign-out` passed once each. By hand: footer (light) and the alert looked at.
 - Alert: "Change server?" / "You will be signed out of this server." / Cancel, Change server (destructive).
 - Not seen: the footer in dark, the alert with unsynced changes (covered by the unit test only), the non-English copy on a device.
+
+### Review and exit (2026-11-24)
+
+Review (Opus medium, `6bb3be044`, read only): no behaviour bug. Dispositions, all fixed by the gatekeeper in `16ae258d5`:
+- fix: the Bulgarian line said "unsubscribed" in the formal register; it now says "Ще излезеш от профила си в този сървър."
+- fix: es, fi and pt-BR worded the action differently from the sign-in screen's server chip; fr, it, pl and pt-BR used a masculine-only form. Reworded to match the chip and to be neutral.
+- fix: the hook test only covered the discard alert. Added: nothing unsynced signs out at once; a server change with nothing unsynced warns and keeps the Outbox; the button's label.
+- fix: on a server change with unsynced changes the discard alert's button said "Sign out"; it now says "Change server".
+
+Docs (Terra, `79eaa4cc6`): `mobile.md`'s App sentence; the release notes were still true.
+
+Exit at `16ae258d5`: `format:check`, `i18n:check`, mobile `lint` (11 warnings), mobile `typecheck` and the whole `test:run` 0. Not re-run after the review fixes (strings, a test, one label): `deps:cycles`, `build`, the Maestro flows. Not seen: the footer in dark, the alert with unsynced changes on a device, non-English copy on a device.
