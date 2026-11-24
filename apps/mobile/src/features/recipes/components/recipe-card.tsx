@@ -25,9 +25,9 @@ import type { RecipeMenuAction } from "../utils/card-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import {
   RECIPE_ACTION_DEFINITIONS,
-  RECIPE_SWIPE_LOOKS,
   recipeMenuActions,
   recipeSwipeActions,
+  recipeSwipeLooks,
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
@@ -60,7 +60,7 @@ export const RecipeCard = memo(function RecipeCard({
   const Card = variant === "grid" ? GridCard : RowCard;
   const canDelete = actions.canDelete(recipe);
   const swipeRef = useRef<SwipeActionsHandle>(null);
-  const shopInk = useTokenColor("shop-foreground");
+  const looks = recipeSwipeLooks(useTokenColor("shop-foreground"));
   const handlers: Record<RecipeMenuAction, () => void> = {
     favourite: () => actions.toggleFavourite(recipe),
     groceries: () => actions.addToGroceries(recipe),
@@ -84,9 +84,7 @@ export const RecipeCard = memo(function RecipeCard({
 
     return {
       key,
-      ...RECIPE_SWIPE_LOOKS[key],
-      ink: key === "groceries" ? shopInk : undefined,
-      holdsOpen: key === "delete",
+      ...looks[key],
       label: intl.formatMessage({ id: swipeLabelId ?? labelId }),
       onPress: handlers[key],
       testID: `recipe-swipe-${key}-${recipe.id}`,

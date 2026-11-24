@@ -42,7 +42,7 @@ vi.mock("@/features/recipes/hooks/use-card-action-menu", () => ({
 vi.mock("@/features/recipes/utils/card-actions", () => ({
   RECIPE_ACTION_DEFINITIONS: {},
   recipeMenuActions: () => [],
-  RECIPE_SWIPE_LOOKS: {},
+  recipeSwipeLooks: () => ({}),
   recipeSwipeActions: () => [],
 }));
 vi.mock("@/features/recipes/components/card-menu", () => ({

@@ -3,6 +3,7 @@ import {
   cookbookPageActions,
   recipeMenuActions,
   recipeSwipeActions,
+  recipeSwipeLooks,
 } from "@/features/recipes/utils/card-actions";
 import { describe, expect, it } from "vitest";
 
@@ -10,6 +11,24 @@ describe("recipeSwipeActions", () => {
   it("offers Delete only to a reader who may delete", () => {
     expect(recipeSwipeActions(true)).toEqual(["groceries", "plan", "delete"]);
     expect(recipeSwipeActions(false)).toEqual(["groceries", "plan"]);
+  });
+});
+
+describe("recipeSwipeLooks", () => {
+  it("inks only Groceries with the shop's colour and holds only Delete open, each asking first", () => {
+    const looks = recipeSwipeLooks("#123456");
+
+    expect([looks.groceries.ink, looks.plan.ink, looks.delete.ink]).toEqual([
+      "#123456",
+      undefined,
+      undefined,
+    ]);
+    expect([looks.groceries.holdsOpen, looks.plan.holdsOpen, looks.delete.holdsOpen]).toEqual([
+      undefined,
+      undefined,
+      true,
+    ]);
+    expect(Object.values(looks).every((look) => look.asks)).toBe(true);
   });
 });
 
