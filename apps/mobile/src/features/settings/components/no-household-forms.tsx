@@ -47,7 +47,7 @@ function EntryForm({
         hint={text(descriptionId)}
         label={text(labelId)}
         returnKeyType="done"
-        testID={`household-${id}-field`}
+        testID={`settings-household-${id}-field`}
         value={value}
         onChangeText={onChange}
         onSubmitEditing={() => enabled && onSubmit()}
@@ -57,7 +57,7 @@ function EntryForm({
         className="mt-3"
         isDisabled={isOffline || !enabled}
         label={text(buttonId)}
-        testID={`household-${id}-submit`}
+        testID={`settings-household-${id}-submit`}
         onPress={onSubmit}
       />
     </View>

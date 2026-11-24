@@ -75,7 +75,7 @@ export function ProfileForm() {
           accessibilityRole="button"
           className={isOffline ? "opacity-40" : ""}
           disabled={isOffline || deleting}
-          testID="profile-avatar"
+          testID="settings-profile-avatar"
           onPress={() =>
             openPhotoSources(PICKER, ([asset]) => {
               if (asset) setPhoto(new File(asset.uri));
@@ -95,7 +95,7 @@ export function ProfileForm() {
             className={isOffline ? "opacity-40" : ""}
             disabled={isOffline || deleting || name.saving}
             hitSlop={8}
-            testID="profile-avatar-remove"
+            testID="settings-profile-avatar-remove"
             onPress={() => void discardOrDeletePhoto()}
           >
             <Text className="text-danger text-[15px] font-medium">
@@ -111,7 +111,7 @@ export function ProfileForm() {
           label={text("settings.user.profile.nameLabel")}
           placeholder={text("settings.user.profile.namePlaceholder")}
           returnKeyType="done"
-          testID="profile-name"
+          testID="settings-profile-name"
           value={name.shown}
           onBlur={() => setEditing(false)}
           onChangeText={name.setDraft}
@@ -120,7 +120,7 @@ export function ProfileForm() {
       </View>
       <SettingsGroup>
         <SettingsRow
-          testID="profile-email"
+          testID="settings-profile-email"
           title={text("settings.user.profile.emailLabel")}
           value={user?.email}
         />
@@ -128,7 +128,7 @@ export function ProfileForm() {
       <SubmitButton
         isDisabled={!name.canSave(photo !== null) || deleting}
         label={text("common.actions.save")}
-        testID="profile-save"
+        testID="settings-profile-save"
         onPress={() => void save()}
       />
     </>

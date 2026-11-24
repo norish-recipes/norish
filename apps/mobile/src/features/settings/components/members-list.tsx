@@ -89,7 +89,7 @@ export function MembersList({
             }
             menuLabel={name}
             subtitle={isSelf ? text("settings.household.members.you") : undefined}
-            testID={`household-member-${user.id}`}
+            testID={`settings-household-member-${user.id}`}
             title={name}
             value={text(
               user.isAdmin ? "settings.household.info.admin" : "settings.household.info.member"

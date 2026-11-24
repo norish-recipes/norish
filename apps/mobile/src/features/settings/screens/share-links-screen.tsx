@@ -40,7 +40,7 @@ export function ShareLinksScreen() {
         count={read.shares.length}
         emptyIcon="link-outline"
         emptyTitle={text("settings.user.shareLinks.empty")}
-        name="share-links"
+        name="settings-share-links"
         read={read}
       >
         <SettingsGroup className="pt-1">
@@ -70,7 +70,7 @@ export function ShareLinksScreen() {
                 (id, values) => text(`recipes.sharePanel.${id}`, values),
                 date
               )}
-              testID={`share-link-${share.id}`}
+              testID={`settings-share-links-item-${share.id}`}
               title={share.recipeName}
               value={text(`recipes.sharePanel.status.${share.status}`)}
             />

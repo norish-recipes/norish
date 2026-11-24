@@ -30,7 +30,7 @@ export function ApiKeysScreen() {
         <SettingsRow
           write
           icon="add-outline"
-          testID="api-key-add"
+          testID="settings-api-keys-add"
           title={text("settings.user.apiKeys.createKey")}
           onPress={() => router.push("/settings/api-key-new")}
         />
@@ -39,7 +39,7 @@ export function ApiKeysScreen() {
         count={profile.apiKeys.length}
         emptyIcon="key-outline"
         emptyTitle={text("settings.user.apiKeys.noKeys")}
-        name="api-keys"
+        name="settings-api-keys"
         read={profile}
       >
         <SettingsGroup title={text("settings.user.apiKeys.yourKeys")}>
@@ -70,7 +70,7 @@ export function ApiKeysScreen() {
                 ]}
                 menuLabel={name}
                 subtitle={`${apiKeyPrefix(key.start)} · ${intl.formatDate(new Date(key.createdAt), { dateStyle: "medium" })}`}
-                testID={`api-key-${key.id}`}
+                testID={`settings-api-keys-item-${key.id}`}
                 title={name}
                 value={text(
                   key.enabled ? "settings.user.apiKeys.active" : "settings.user.apiKeys.disabled"
@@ -84,7 +84,7 @@ export function ApiKeysScreen() {
         <SettingsRow
           accessory="external"
           icon="document-text-outline"
-          testID="api-key-docs"
+          testID="settings-api-keys-docs"
           title={text("settings.user.apiKeys.docsLink")}
           onPress={() => void Linking.openURL(API_DOCS_URL)}
         />

@@ -45,7 +45,7 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
     <SettingsGroup title={text("settings.household.joinCode.title")}>
       {code ? (
         <>
-          <View className="items-center gap-1 px-4 py-4" testID="household-join-code">
+          <View className="items-center gap-1 px-4 py-4" testID="settings-household-join-code">
             <Text selectable className="text-foreground font-mono text-[28px] tracking-widest">
               {code}
             </Text>
@@ -61,20 +61,20 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
           </View>
           <SettingsRow
             icon="copy-outline"
-            testID="household-copy-code"
+            testID="settings-household-copy-code"
             title={text("settings.household.joinCode.copyButton")}
             onPress={() => void copy()}
           />
           <SettingsRow
             icon="share-outline"
-            testID="household-share-code"
+            testID="settings-household-share-code"
             title={text("recipes.actions.share")}
             onPress={() => void Share.share({ message: code })}
           />
           <SettingsRow
             write
             icon="refresh-outline"
-            testID="household-regenerate-code"
+            testID="settings-household-regenerate-code"
             title={text("settings.household.joinCode.regenerateButton")}
             onPress={regenerate}
           />
@@ -88,7 +88,7 @@ export function JoinCodeCard({ household }: { household: HouseholdAdminSettingsD
               ? text("settings.household.joinCode.expired")
               : text("settings.household.joinCode.noCodeDescription")
           }
-          testID="household-generate-code"
+          testID="settings-household-generate-code"
           title={text("settings.household.joinCode.generateButton")}
           onPress={regenerate}
         />

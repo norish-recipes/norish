@@ -77,7 +77,7 @@ describe("the create key sheet", () => {
     expect(close().disabled).toBe(true);
 
     await act(async () => state.settle("sk-secret"));
-    expect(screen.getByTestId("api-key-value").textContent).toBe("sk-secret");
+    expect(screen.getByTestId("settings-api-key-new-value").textContent).toBe("sk-secret");
     expect(swipeable()).toBe(false);
     expect(close().disabled).toBe(true);
 
@@ -111,7 +111,7 @@ describe("the create key sheet", () => {
     expect(close().disabled).toBe(false);
 
     await act(async () => state.settle("sk-late"));
-    expect(screen.queryByTestId("api-key-value")).toBeNull();
+    expect(screen.queryByTestId("settings-api-key-new-value")).toBeNull();
     expect(state.back).not.toHaveBeenCalled();
     expect(state.forget).toHaveBeenCalledOnce();
     stopListening();

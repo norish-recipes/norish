@@ -30,7 +30,7 @@ export function DangerZone() {
         centred
         danger
         icon="trash-outline"
-        testID="profile-delete-account"
+        testID="settings-profile-delete-account"
         title={text("settings.user.dangerZone.deleteButton")}
         write
         onPress={confirmDelete}

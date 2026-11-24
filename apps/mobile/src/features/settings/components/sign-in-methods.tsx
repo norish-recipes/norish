@@ -97,8 +97,11 @@ export function SignInMethods() {
     callAuthClient((client) => client.unlinkAccount({ accountId }), "removeFailed");
 
   return (
-    <ReadBody empty={null} name="sign-in-methods" state={state} onRetry={refetch}>
-      <SettingsGroup testID="sign-in-methods" title={text("settings.user.signInMethods.title")}>
+    <ReadBody empty={null} name="settings-profile-sign-in-methods" state={state} onRetry={refetch}>
+      <SettingsGroup
+        testID="settings-profile-sign-in-methods"
+        title={text("settings.user.signInMethods.title")}
+      >
         {signInMethods.map((account) => {
           const method = methodOf(account.providerId);
           const isPassword = account.providerId === SIGN_IN_METHODS.credential.id;
@@ -134,7 +137,7 @@ export function SignInMethods() {
                         }),
                       })
               }
-              testID={`sign-in-method-${account.providerId}`}
+              testID={`settings-profile-sign-in-method-${account.providerId}`}
               title={name}
               write={isPassword}
               onPress={
@@ -151,7 +154,7 @@ export function SignInMethods() {
               key={provider.id}
               accessory="external"
               icon={<ProviderIcon color={foreground} icon={provider.icon} size={17} />}
-              testID={`sign-in-link-${provider.id}`}
+              testID={`settings-profile-sign-in-link-${provider.id}`}
               title={text("settings.user.signInMethods.addProvider", { provider: provider.name })}
               write
               onPress={busy ? undefined : settingsWrite(() => void link(provider.id))}

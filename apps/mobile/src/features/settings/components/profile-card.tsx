@@ -24,7 +24,7 @@ export function ProfileCard({
     <Pressable
       accessibilityRole="button"
       className="active:bg-default min-h-[76px] flex-row items-center gap-3.5 px-4"
-      testID="settings-profile"
+      testID="settings-root-profile"
       onPress={onPress}
     >
       <UserAvatar

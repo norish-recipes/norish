@@ -69,7 +69,7 @@ export function ApiKeyNewScreen() {
           onPress: saved,
         }}
         closable={false}
-        name="api-key-created"
+        name="settings-api-key-new-created"
         title={text("settings.user.apiKeys.generatedModal.title")}
       >
         <SheetBody contentClassName="gap-4">
@@ -81,7 +81,7 @@ export function ApiKeyNewScreen() {
             <Text
               selectable
               className="text-foreground font-mono text-[13px]"
-              testID="api-key-value"
+              testID="settings-api-key-new-value"
             >
               {created}
             </Text>
@@ -89,7 +89,7 @@ export function ApiKeyNewScreen() {
           <PillButton
             icon="copy-outline"
             label={text("settings.user.apiKeys.generatedModal.copyButton")}
-            testID="api-key-copy"
+            testID="settings-api-key-new-copy"
             onPress={() =>
               void copyToClipboard(created, {
                 copied: "settings.user.apiKeys.generatedModal.copied",
@@ -116,7 +116,7 @@ export function ApiKeyNewScreen() {
         disabled: isOffline,
         onPress: () => void create(),
       }}
-      name="api-key-new"
+      name="settings-api-key-new"
       title={text("settings.user.apiKeys.createKey")}
     >
       <SheetBody contentClassName="gap-4">
@@ -130,7 +130,7 @@ export function ApiKeyNewScreen() {
               maxLength={API_KEY_NAME_MAX_LENGTH}
               placeholder={text("settings.user.apiKeys.keyNamePlaceholder")}
               returnKeyType="done"
-              testID="api-key-name"
+              testID="settings-api-key-new-name"
               value={name}
               onChangeText={setName}
             />

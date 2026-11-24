@@ -51,7 +51,7 @@ export function PreferencesForm() {
           optionLabel={(code) => options.find((option) => option.code === code)?.name ?? code}
           options={options.map((option) => option.code)}
           saving={isUpdatingPreferences}
-          testID="preferences-language"
+          testID="settings-preferences-language"
           title={text("settings.user.preferences.language.title")}
           value={locale}
           onChange={settingsWrite((code: string) => setLocale(code))}
@@ -62,7 +62,7 @@ export function PreferencesForm() {
           }
           options={AFTER_PLANNING_CHOICES}
           saving={isUpdatingPreferences}
-          testID="preferences-after-planning"
+          testID="settings-preferences-after-planning"
           title={text("settings.user.preferences.afterPlanning.title")}
           value={getAfterPlanningPreference(user)}
           onChange={settingsWrite((afterPlanning) => void updatePreferences({ afterPlanning }))}
@@ -71,7 +71,7 @@ export function PreferencesForm() {
           optionLabel={(choice) => text(`settings.user.preferences.measurements.options.${choice}`)}
           options={measurementChoices(isAIEnabled)}
           saving={isUpdatingPreferences}
-          testID="preferences-measurements"
+          testID="settings-preferences-measurements"
           title={text("settings.user.preferences.measurements.title")}
           value={shownMeasurement(getMeasurementSystemPreference(user), isAIEnabled)}
           onChange={settingsWrite(
@@ -83,7 +83,7 @@ export function PreferencesForm() {
         <ChoiceRow
           optionLabel={(choice) => text(`settings.user.preferences.todaySection.options.${choice}`)}
           options={TODAY_SECTION_VISIBILITIES}
-          testID="preferences-today"
+          testID="settings-preferences-today"
           title={text("settings.user.preferences.todaySection.title")}
           value={today}
           onChange={settingsWrite(setToday)}
@@ -93,7 +93,7 @@ export function PreferencesForm() {
             text(`settings.user.preferences.recipePageColor.options.${choice}`)
           }
           options={RECIPE_PAGE_COLORS}
-          testID="preferences-page-color"
+          testID="settings-preferences-page-color"
           title={text("settings.user.preferences.recipePageColor.title")}
           value={pageColor}
           onChange={settingsWrite(setPageColor)}
@@ -101,7 +101,7 @@ export function PreferencesForm() {
         <ChoiceRow
           optionLabel={(choice) => text(`settings.user.preferences.unitStyle.options.${choice}`)}
           options={UNIT_STYLES}
-          testID="preferences-units"
+          testID="settings-preferences-units"
           title={text("settings.user.preferences.unitStyle.title")}
           value={unitStyle}
           onChange={settingsWrite(setUnitStyle)}
@@ -112,7 +112,7 @@ export function PreferencesForm() {
           <SettingsRow
             key={item}
             write
-            testID={`preferences-hidden-${item}`}
+            testID={`settings-preferences-hidden-${item}`}
             title={text(`settings.user.preferences.hidden.options.${item}`)}
             trailing={hidden.includes(item) ? <Checkmark /> : null}
             onPress={settingsWrite(() =>

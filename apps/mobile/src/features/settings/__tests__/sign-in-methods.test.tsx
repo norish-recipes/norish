@@ -78,15 +78,15 @@ describe("the sign-in methods", () => {
     state.read = { error: new Error("down") };
     render(<SignInMethods />);
 
-    expect(screen.getByTestId("sign-in-methods-failed")).toBeTruthy();
-    expect(screen.queryByTestId("sign-in-methods")).toBeNull();
+    expect(screen.getByTestId("settings-profile-sign-in-methods-failed")).toBeTruthy();
+    expect(screen.queryByTestId("settings-profile-sign-in-methods")).toBeNull();
   });
 
   it("shows the skeleton while the first read is under way", () => {
     state.read = { isLoading: true };
     render(<SignInMethods />);
 
-    expect(screen.getByTestId("sign-in-methods-loading")).toBeTruthy();
+    expect(screen.getByTestId("settings-profile-sign-in-methods-loading")).toBeTruthy();
   });
 
   it("lists the methods once read", () => {
@@ -96,7 +96,7 @@ describe("the sign-in methods", () => {
     };
     render(<SignInMethods />);
 
-    expect(screen.getByTestId("sign-in-method-credential")).toBeTruthy();
+    expect(screen.getByTestId("settings-profile-sign-in-method-credential")).toBeTruthy();
   });
 
   it("draws nothing on a server that offers one method and no password, read or not", () => {

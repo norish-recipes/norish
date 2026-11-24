@@ -11,9 +11,9 @@ appId: dev.norish.app
 - tapOn: All settings
 - scrollUntilVisible:
     element:
-      id: settings-sign-out
+      id: settings-root-sign-out
 - tapOn:
-    id: settings-sign-out
+    id: settings-root-sign-out
 - extendedWaitUntil:
     visible:
       id: login-email

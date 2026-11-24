@@ -55,7 +55,7 @@ export function TokenNewScreen() {
         disabled: !form.valid || isOffline || sending,
         onPress: () => void add(),
       }}
-      name="token-new"
+      name="settings-token-new"
       title={text("settings.user.siteAuthTokens.addButton")}
     >
       <SheetBody contentClassName="gap-4">
@@ -67,7 +67,7 @@ export function TokenNewScreen() {
           keyboardType="url"
           label={text("settings.user.siteAuthTokens.domain")}
           placeholder={text("settings.user.siteAuthTokens.domainPlaceholder")}
-          testID="token-domain"
+          testID="settings-token-new-domain"
           value={domain}
           onChangeText={setDomain}
         />
@@ -77,7 +77,7 @@ export function TokenNewScreen() {
           hint={text("settings.user.siteAuthTokens.accountsDescription")}
           label={text("settings.user.siteAuthTokens.account")}
           placeholder={text("settings.user.siteAuthTokens.accountPlaceholder")}
-          testID="token-account"
+          testID="settings-token-new-account"
           value={account}
           onChangeText={setAccount}
         />
@@ -86,7 +86,7 @@ export function TokenNewScreen() {
           autoCorrect={false}
           label={text("settings.user.siteAuthTokens.name")}
           placeholder={text("settings.user.siteAuthTokens.namePlaceholder")}
-          testID="token-name"
+          testID="settings-token-new-name"
           value={name}
           onChangeText={setName}
         />
@@ -96,7 +96,7 @@ export function TokenNewScreen() {
           label={text("settings.user.siteAuthTokens.value")}
           placeholder={text("settings.user.siteAuthTokens.valuePlaceholder")}
           secureTextEntry
-          testID="token-value"
+          testID="settings-token-new-value"
           value={value}
           onChangeText={setValue}
         />
@@ -110,7 +110,7 @@ export function TokenNewScreen() {
               )
             }
             options={TYPES}
-            testID="token-type"
+            testID="settings-token-new-type"
             title={text("settings.user.siteAuthTokens.type")}
             value={type}
             onChange={setType}

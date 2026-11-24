@@ -78,7 +78,7 @@ export function PasswordScreen() {
         disabled: !checks.valid || isOffline || sending,
         onPress: () => void change(),
       }}
-      name="password"
+      name="settings-password"
       title={text("settings.user.signInMethods.changePassword")}
     >
       <SheetBody contentClassName="gap-4">
@@ -87,7 +87,7 @@ export function PasswordScreen() {
           error={wrongPassword ? text("settings.user.signInMethods.errors.wrongPassword") : null}
           label={text("settings.user.signInMethods.currentPassword")}
           secureTextEntry
-          testID="password-current"
+          testID="settings-password-current"
           value={current}
           onChangeText={(value) => {
             setCurrent(value);
@@ -107,7 +107,7 @@ export function PasswordScreen() {
           hint={text("auth.signup.passwordDescription")}
           label={text("settings.user.signInMethods.newPassword")}
           secureTextEntry
-          testID="password-new"
+          testID="settings-password-new"
           value={next}
           onChangeText={setNext}
         />
@@ -115,7 +115,7 @@ export function PasswordScreen() {
           error={checks.mismatch ? text("auth.signup.errors.passwordMismatch") : null}
           label={text("settings.user.signInMethods.confirmPassword")}
           secureTextEntry
-          testID="password-confirm"
+          testID="settings-password-confirm"
           value={confirmation}
           onChangeText={setConfirmation}
         />
@@ -126,7 +126,7 @@ export function PasswordScreen() {
           <Switch
             accessibilityLabel={text("settings.user.signInMethods.signOutOthers")}
             isSelected={revokeOthers}
-            testID="password-revoke-others"
+            testID="settings-password-revoke-others"
             onSelectedChange={setRevokeOthers}
           />
         </View>

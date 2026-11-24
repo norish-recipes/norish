@@ -52,13 +52,18 @@ export function HouseholdScreen() {
 
   return (
     <SettingsPage testID="settings-household-screen" title={text("settings.tabs.household")}>
-      <ReadBody empty={<NoHouseholdForms />} name="household" state={page} onRetry={invalidate}>
+      <ReadBody
+        empty={<NoHouseholdForms />}
+        name="settings-household"
+        state={page}
+        onRetry={invalidate}
+      >
         {household ? (
           <>
             <SettingsGroup className="pt-1">
               <SettingsRow
                 icon="home-outline"
-                testID="household-name"
+                testID="settings-household-name"
                 title={household.name}
                 value={
                   isAdmin
@@ -75,7 +80,7 @@ export function HouseholdScreen() {
                 danger
                 write
                 icon="log-out-outline"
-                testID="household-leave"
+                testID="settings-household-leave"
                 title={text("settings.household.info.leaveButton")}
                 onPress={confirmLeave(household)}
               />

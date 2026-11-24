@@ -50,7 +50,7 @@ export function SettingsScreen() {
   );
 
   return (
-    <SettingsPage testID="settings-screen" title={text("navbar.userMenu.settings.title")}>
+    <SettingsPage testID="settings-root-screen" title={text("navbar.userMenu.settings.title")}>
       <SettingsGroup className="pt-1">
         <ProfileCard
           email={user?.email ?? ""}
@@ -63,7 +63,7 @@ export function SettingsScreen() {
         <SettingsRow
           accessory="chevron"
           icon="options-outline"
-          testID="settings-preferences"
+          testID="settings-root-preferences"
           title={text("settings.user.preferences.title")}
           value={options.find((option) => option.code === locale)?.name}
           onPress={open("preferences")}
@@ -71,7 +71,7 @@ export function SettingsScreen() {
         <SettingsRow
           accessory="chevron"
           icon="warning-outline"
-          testID="settings-allergies"
+          testID="settings-root-allergies"
           title={text("settings.user.allergies.title")}
           value={allergies.join(", ")}
           onPress={open("allergies")}
@@ -81,7 +81,7 @@ export function SettingsScreen() {
         <SettingsRow
           accessory="chevron"
           icon="people-outline"
-          testID="settings-household"
+          testID="settings-root-household"
           title={text("settings.tabs.household")}
           value={
             household?.name ??
@@ -94,21 +94,21 @@ export function SettingsScreen() {
         <SettingsRow
           accessory="chevron"
           icon="key-outline"
-          testID="settings-tokens"
+          testID="settings-root-tokens"
           title={text("settings.user.siteAuthTokens.title")}
           onPress={open("tokens")}
         />
         <SettingsRow
           accessory="chevron"
           icon="terminal-outline"
-          testID="settings-api-keys"
+          testID="settings-root-api-keys"
           title={text("settings.user.apiKeys.title")}
           onPress={open("api-keys")}
         />
         <SettingsRow
           accessory="chevron"
           icon="link-outline"
-          testID="settings-share-links"
+          testID="settings-root-share-links"
           title={text("settings.user.shareLinks.title")}
           onPress={open("share-links")}
         />
@@ -117,7 +117,7 @@ export function SettingsScreen() {
         <SettingsRow
           accessory="chevron"
           icon="server-outline"
-          testID="settings-server"
+          testID="settings-root-server"
           title={text("settings.mobile.server")}
           value={serverAddress ? hostOf(serverAddress) : undefined}
           onPress={changeServerAddress}
@@ -125,13 +125,13 @@ export function SettingsScreen() {
         <SettingsRow
           accessory="external"
           icon="help-buoy-outline"
-          testID="settings-support"
+          testID="settings-root-support"
           title={text("settings.mobile.support")}
           onPress={() => void Linking.openURL(SUPPORT_URL)}
         />
         <SettingsRow
           icon="information-circle-outline"
-          testID="settings-version"
+          testID="settings-root-version"
           title={text("settings.mobile.version")}
           wholeValue
           value={version}
@@ -142,7 +142,7 @@ export function SettingsScreen() {
           centred
           danger
           icon="log-out-outline"
-          testID="settings-sign-out"
+          testID="settings-root-sign-out"
           title={text("navbar.userMenu.logout")}
           onPress={() => void signOut()}
         />

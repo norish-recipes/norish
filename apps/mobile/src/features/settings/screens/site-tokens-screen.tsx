@@ -31,7 +31,7 @@ export function SiteTokensScreen() {
         <SettingsRow
           write
           icon="add-outline"
-          testID="token-add"
+          testID="settings-tokens-add"
           title={text("settings.user.siteAuthTokens.addButton")}
           onPress={() => router.push("/settings/token-new")}
         />
@@ -40,7 +40,7 @@ export function SiteTokensScreen() {
         count={tokens.length}
         emptyIcon="shield-checkmark-outline"
         emptyTitle={text("settings.user.siteAuthTokens.noTokens")}
-        name="tokens"
+        name="settings-tokens"
         read={read}
       >
         <SettingsGroup>
@@ -56,7 +56,7 @@ export function SiteTokensScreen() {
               ]}
               menuLabel={token.domain}
               subtitle={`${token.account ?? text("settings.user.siteAuthTokens.accountShared")} · ${token.name}`}
-              testID={`token-${token.id}`}
+              testID={`settings-tokens-item-${token.id}`}
               title={token.domain}
               value={text(
                 token.type === "header"

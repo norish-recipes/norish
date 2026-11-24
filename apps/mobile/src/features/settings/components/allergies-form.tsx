@@ -62,10 +62,10 @@ export function AllergiesForm() {
   // Until the list is read there is nothing to edit: a Save would replace the stored allergies.
   const page = readState({ ...read, held: read.answered });
 
-  if (page === "failed") return <FailedLoad name="allergies" onRetry={read.refetch} />;
+  if (page === "failed") return <FailedLoad name="settings-allergies" onRetry={read.refetch} />;
   if (page === "loading")
     return (
-      <View className="pt-4" testID="allergies-loading">
+      <View className="pt-4" testID="settings-allergies-loading">
         <Skeleton className="h-[56px] rounded-[22px]" />
       </View>
     );
@@ -76,7 +76,7 @@ export function AllergiesForm() {
         <LabelWithHint
           hint={text("settings.user.allergies.description")}
           label={text("settings.user.allergies.title")}
-          testID="allergies-hint"
+          testID="settings-allergies-hint"
         />
         <View
           className={`bg-surface flex-row flex-wrap items-center gap-2 rounded-[22px] p-3 ${isOffline ? "opacity-40" : ""}`}
@@ -86,7 +86,7 @@ export function AllergiesForm() {
             <View
               key={name}
               className="bg-warning h-9 flex-row items-center rounded-full pr-1 pl-3.5"
-              testID={`allergy-${name}`}
+              testID={`settings-allergies-allergy-${name}`}
             >
               <Text className="text-warning-foreground text-[15px] font-semibold">{name}</Text>
               <Pressable
@@ -108,7 +108,7 @@ export function AllergiesForm() {
             placeholderTextColor={muted}
             returnKeyType="done"
             submitBehavior="submit"
-            testID="allergies-input"
+            testID="settings-allergies-input"
             value={typed}
             onChangeText={(value) => (ENDS_NAME.test(value) ? add(value) : setTyped(value))}
             onSubmitEditing={() => add(typed)}
@@ -121,7 +121,7 @@ export function AllergiesForm() {
             <SettingsRow
               key={tag}
               write
-              testID={`allergy-suggestion-${tag}`}
+              testID={`settings-allergies-suggestion-${tag}`}
               title={tag}
               onPress={() => add(tag)}
             />
@@ -131,7 +131,7 @@ export function AllergiesForm() {
       <SubmitButton
         isDisabled={!allergies.canSave()}
         label={text("common.actions.save")}
-        testID="allergies-save"
+        testID="settings-allergies-save"
         onPress={() => void save()}
       />
     </>
