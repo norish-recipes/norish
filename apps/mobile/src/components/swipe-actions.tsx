@@ -36,7 +36,7 @@ import { useThemeColor } from "heroui-native";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
-/** A row's size: `list` and `grid` are the recipe cards', `row` the list's scaled to a 50 pt Settings row. */
+/** A row's size: `list` and `grid` are the recipe cards', `row` the list's scaled to fit a 50 pt row. */
 export type SwipeVariant = "list" | "grid" | "row";
 
 export type SwipeAction = {
@@ -87,9 +87,8 @@ export const leaveMs = (variant: SwipeVariant) =>
 // drag (plus a toss from its velocity) passes `-rightThreshold`, so the tick uses the same value.
 const OPEN_THRESHOLD = 40;
 
-// List circles are 48 pt in a 208 pt panel of three, the card 8 pt short of it; grid circles 44 pt in
-// an 80 pt one, 4 pt short; row circles 30 pt over a 12 pt line, so they and their shadow fit 50 pt.
-// `circleLeft` is a resting circle's left edge from the row's right.
+// Circles: list 48 pt in a 208 pt panel of three, grid 44 pt in an 80 pt one, row 30 pt over a 12 pt
+// line to fit 50 pt. `circleLeft` is a resting circle's left edge from the row's right.
 const LIST_STEP = 208 / 3;
 const ROW_STEP = 60;
 // The room a stretched capsule leaves at the row's left edge.
@@ -107,7 +106,7 @@ const LAYOUTS = {
     icon: 20,
     text: "text-xs",
     captionScale: undefined,
-    fits: false,
+    shrinkToOneLine: false,
   },
   row: {
     width: (count: number) => 8 + ROW_STEP * count,
@@ -122,8 +121,7 @@ const LAYOUTS = {
     text: "text-center text-[10px] leading-3",
     // At most 1.2x under Dynamic Type: 30 + 3 + 14.4 pt still fits a 50 pt row with its shadow.
     captionScale: 1.2,
-    // A caption wider than the slot shrinks rather than ellipsizing.
-    fits: true,
+    shrinkToOneLine: true,
   },
   grid: {
     width: () => 84,
@@ -137,7 +135,7 @@ const LAYOUTS = {
     icon: 19,
     text: "text-xs",
     captionScale: undefined,
-    fits: false,
+    shrinkToOneLine: false,
   },
 };
 
@@ -518,11 +516,11 @@ function ActionButton({
           <Ionicons color={action.ink ?? onColour} name={action.icon} size={layout.icon} />
         </Animated.View>
         <Animated.Text
-          adjustsFontSizeToFit={layout.fits}
+          adjustsFontSizeToFit={layout.shrinkToOneLine}
           className={`text-muted font-medium ${layout.text}`}
           maxFontSizeMultiplier={layout.captionScale}
-          minimumFontScale={layout.fits ? 0.7 : undefined}
-          numberOfLines={layout.fits ? 1 : undefined}
+          minimumFontScale={layout.shrinkToOneLine ? 0.7 : undefined}
+          numberOfLines={layout.shrinkToOneLine ? 1 : undefined}
           style={label}
         >
           {action.caption ?? action.label}
