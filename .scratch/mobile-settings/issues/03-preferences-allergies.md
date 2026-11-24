@@ -141,3 +141,25 @@ Fix round 6 runs on Opus high. This is the last round on this code in this ticke
 - `writeConvertedCopy` checks the version and writes the copy in one transaction. Every conversion that ends, stale ones too, emits `converted` with `{ conversion, stale }`. A pick by hand is settled only by that event. Known limit: if the event is missed, automatic conversion stays off for that page.
 - `replacesCached` (`use-recipes-cache.ts`) keeps a newer cached recipe, both the detail and the list rows, over an event's recipe.
 - The "paste failed" toast on a failed conversion was already shown at `aecca5857` (`handleRecipeError` emits `failed`), so it is left as is.
+
+### Closing review of `27c789592..e66e5f721` (2026-11-24): dispositions
+
+Reviewers: Standards (Haiku), Spec (Opus high), cross-model (Sol high), over ticket 03's rounds 3 to 6, the secrets fix and ticket 07. Logged here, not in ticket 06, because the device agent is writing that file. No finding is rated common. Sound per the reviewers: the secrets marker and `CONFLICT`, the conversion server path and its transaction, the `converted` event's new fields for every subscriber, name and avatar replies, ticket 07's fixes, `no-store` (nothing relied on HTTP caching).
+
+Behaviour, all fix:
+- bug: round 6's profile-write queue (`use-account-mutations.ts:42`, `:204`). A write waiting behind another shows no optimistic value and no saving state, so the row takes more taps and automatic conversion and `LocaleSaveScope` run during the wait; a write that hangs holds every later one; a waiting write outlives sign-out and can go out under the next session.
+- bug: a preference the Outbox queued still starts an automatic conversion of a shared recipe (`use-system-conversion.ts:143`).
+- bug: `useFailedWrite` is silent for every queued write, also where nothing optimistic shows: web's API-key delete and toggle do nothing on screen, and a queued name save leaves the draft with no reason.
+- bug: Copy link on a share deleted elsewhere fails with `NOT_FOUND` and does not reread the list (`share-links-screen.tsx:36`).
+- records stored before the secrets fix still return the plaintext key or link on replay until they expire (`idempotency-middleware.ts:161`): a one-time-secret path never returns a stored response.
+- `recipes.shareCreate`'s answer stays in the mutation cache; the API-key create already sets `gcTime: 0`.
+- `replacesCached` never replaces a cached recipe that has no version.
+
+Structure, all fix, no behaviour change: the four-line comment on `writeConvertedCopy`; the stale branch written twice and the inline `systemUsed` write repeating `setActiveSystemForRecipe` in `recipes.ts`; "reply not newer than the cache", "skipped a version, so reread" and "no cached profile, so reread" each under several names; `profile.held()?.user.version`; `useFailedWrite` beside `invalidateUnlessPreserved`; the one-time-secret procedures listed in two files; `{target, withAI, version}` passed field by field and an unnamed boolean in `startConversion`; `lastSend`, `writeReaderReply`, `getAccountProfile`; the versioned send inside `use-account-mutations.ts`; four language-code checks; three history comments about shares made before links were kept.
+
+Known limits, not fixed (rare):
+- a preference save and an allergy Save in flight together: one is refused as "changed elsewhere" (allergies are outside the chain; so before this range too).
+- two readers asking for the same conversion of the same recipe version settle each other's request.
+- a `converted` event that never reaches a page leaves automatic conversion off there until it is reopened.
+
+Reject: a browser test for a manual conversion settling while a preference changes (the hook tests hold the interleaving; a browser test cannot time it). Reject again: `url` naming a path. The browser suites run on the final code. Docs and release notes come with ticket 06.
