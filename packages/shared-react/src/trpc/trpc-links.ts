@@ -385,7 +385,10 @@ function createWsClient({
         return 0;
       }
 
-      const delayMs = webSocketRetryDelayMs(attemptIndex, retryRandom);
+      // Offline, an attempt fails locally and costs the server nothing: keep the first step's
+      // ceiling so the socket is back within a second of the network, not a long backoff later.
+      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+      const delayMs = webSocketRetryDelayMs(offline ? 0 : attemptIndex, retryRandom);
 
       logger.debug({ attemptIndex, delayMs }, "WebSocket reconnecting");
 
