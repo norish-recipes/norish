@@ -54,8 +54,11 @@ export function SwipeActionsPanel({
               <Ionicons color={tone.ink} name={look.icon} size={16} />
             </View>
             <Text
+              adjustsFontSizeToFit
               className="text-muted w-full text-center text-[11px] font-medium"
               ellipsizeMode="tail"
+              // A label a little wider than the slot, such as Reactivate, shrinks before it clips.
+              minimumFontScale={0.85}
               numberOfLines={1}
             >
               {action.swipeLabel ?? action.label}
