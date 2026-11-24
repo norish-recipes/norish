@@ -78,4 +78,36 @@ describe("useConvertMutation", () => {
     expect(queryClient.getQueryData(key)).toEqual(edited);
     expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
   });
+
+  it("leaves an older recipe an earlier failed edit restored, rather than copy its system onto it", async () => {
+    const queryClient = createTestQueryClient();
+    const key = [["recipes", "get"], { input: { id: "recipe-1" } }];
+    const recipe = {
+      id: "recipe-1",
+      name: "Soup",
+      version: 5,
+      systemUsed: "metric",
+      recipeIngredients: [{ systemUsed: "metric" }, { systemUsed: "us" }],
+      steps: [],
+    };
+    const answer = Promise.withResolvers<never>();
+
+    sendConvert.mockImplementationOnce(() => answer.promise);
+    queryClient.setQueryData(key, recipe);
+    const { result } = renderHook(() => useConvertMutation("recipe-1"), {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    act(() => void result.current.convertMeasurements({ target: "us", withAI: false, version: 5 }));
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryData(key)).toMatchObject({ systemUsed: "us" })
+    );
+    const restored = { ...recipe, name: "Broth", version: 4, systemUsed: "us" };
+
+    act(() => queryClient.setQueryData(key, restored));
+    await act(async () => answer.reject(new Error("Conversion failed")));
+
+    expect(queryClient.getQueryData(key)).toEqual(restored);
+    expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+  });
 });
