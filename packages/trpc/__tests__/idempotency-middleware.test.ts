@@ -390,6 +390,30 @@ describe("runWithIdempotency for a one-time secret", () => {
     expect(calls).toBe(1);
   });
 
+  it("refuses a replay of a response stored before secrets were kept out", async () => {
+    const valkey = createFakeValkey();
+    let calls = 0;
+
+    await valkey.set(
+      "norish:idempotency:user-1:op-key",
+      superjson.stringify({ done: true, response: { key: "nsh_plaintext-secret" } }),
+      "EX",
+      IDEMPOTENCY_TTL_SECONDS
+    );
+
+    await expect(
+      runWithIdempotency(
+        secretParams(async () => {
+          calls++;
+
+          return { ok: true, data: { key: "second" } };
+        }),
+        makeConfig(valkey)
+      )
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(calls).toBe(0);
+  });
+
   it("refuses a duplicate that was waiting on the pending claim", async () => {
     const valkey = createFakeValkey();
     let release!: () => void;

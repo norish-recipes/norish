@@ -177,15 +177,15 @@ export async function runWithIdempotency<TResult>(
     if (stored !== null) {
       const record = superjson.parse<IdempotencyRecord>(stored);
 
-      if (record.done && "secretReturned" in record) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "This was already created; its one-time result is not shown again",
-        });
-      }
-
       if (record.done) {
-        // Completed response — return it without re-executing.
+        // A one-time secret is never answered again, also from a record stored before it was kept out.
+        if (oneTimeSecret || !("response" in record)) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This was already created; its one-time result is not shown again",
+          });
+        }
+
         return toCachedResult(record.response);
       }
     }
