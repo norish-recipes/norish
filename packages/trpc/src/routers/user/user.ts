@@ -65,7 +65,8 @@ function emitMemberProfileUpdated(
   );
 }
 
-async function getAccountProfile(userId: string) {
+/** The profile with its account-wide preferences only; Device Preferences have their own read. */
+async function getProfileWithoutDevicePreferences(userId: string) {
   const profile = await getUserProfile(userId);
 
   if (!profile) return null;
@@ -82,7 +83,7 @@ async function getAccountProfile(userId: string) {
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting user settings");
 
-  const freshUser = await getAccountProfile(ctx.user.id);
+  const freshUser = await getProfileWithoutDevicePreferences(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
 
   return {
