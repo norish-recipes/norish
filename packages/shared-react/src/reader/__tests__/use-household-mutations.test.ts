@@ -7,7 +7,7 @@ import {
   createTestWrapper,
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
-import { useHouseholdMutations } from "@norish/shared-react/reader";
+import { useActiveAllergies, useHouseholdMutations } from "@norish/shared-react/reader";
 
 import { keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 import {
@@ -110,6 +110,7 @@ describe("useHouseholdMutations", () => {
     });
 
     it("caches the new household with the Reader as admin", async () => {
+      queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: [], version: 3 });
       const result = render(createMockHouseholdData(null, "current-user"));
 
       await act(async () => void result.current.createHousehold("  Home  "));
@@ -121,6 +122,22 @@ describe("useHouseholdMutations", () => {
         name: "Home",
         users: [{ id: "current-user", name: "Test User", isAdmin: true }],
       });
+    });
+
+    it("keeps the Reader's allergy warnings on creation before the household reread", async () => {
+      queryClient.setQueryData(KEY, createMockHouseholdData(null, "current-user"));
+      queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: ["milk"], version: 3 });
+      const { result } = renderHook(
+        () => ({ warnings: useActiveAllergies(), writes: useHouseholdMutations() }),
+        { wrapper: createTestWrapper(queryClient, adapter) }
+      );
+
+      expect(result.current.warnings.allergies).toEqual(["milk"]);
+      await act(async () => void result.current.writes.createHousehold("Home"));
+      await settle("create", 0, "resolve", { id: "h9" });
+
+      await waitFor(() => expect(cached()?.household?.id).toBe("h9"));
+      expect(result.current.warnings.allergies).toEqual(["milk"]);
     });
 
     it("refetches the household when it fails", async () => {

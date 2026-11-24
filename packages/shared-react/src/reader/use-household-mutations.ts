@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
@@ -24,6 +24,7 @@ type HouseholdMutationsResult = {
 
 export function useHouseholdMutations(): HouseholdMutationsResult {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { household, currentUserId } = useHousehold();
   const { setHouseholdData, invalidate } = useHouseholdCacheHelpers();
   const userName = useReader().user?.name ?? null;
@@ -46,18 +47,25 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       onSuccess: ({ id }, { name }) => {
         if (!currentUserId) return;
 
+        const ownAllergies = queryClient.getQueryData(trpc.user.getAllergies.queryKey());
+
+        if (!ownAllergies) {
+          invalidate();
+
+          return;
+        }
+
         const created: HouseholdSettingsDto = {
           id,
           name: name ?? "",
           version: 1,
           users: [{ id: currentUserId, name: userName, isAdmin: true, version: 1 }],
-          allergies: [],
+          allergies: ownAllergies.allergies,
         };
 
-        setHouseholdData((prev) => ({
-          household: created,
-          currentUserId: prev?.currentUserId ?? currentUserId,
-        }));
+        setHouseholdData((prev) =>
+          prev?.household ? prev : { household: created, currentUserId }
+        );
       },
       onError: onError("create"),
     })
