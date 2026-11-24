@@ -55,7 +55,7 @@ export function SettingsRow({
   centred?: boolean;
   /** The press is a write: Offline the row dims and ignores it. Navigation rows stay live. */
   write?: boolean;
-  /** The value shrinks nothing, instead of ellipsizing, such as a version. */
+  /** The value wraps instead of ellipsizing, and the title stays whole, such as a version. */
   wholeValue?: boolean;
   testID: string;
   onPress?: () => void;
@@ -90,7 +90,7 @@ export function SettingsRow({
             </View>
           )
         ) : null)}
-      <View className={centred ? "" : "min-w-0 flex-1 gap-0.5"}>
+      <View className={centred ? "" : wholeValue ? "shrink-0 gap-0.5" : "min-w-0 flex-1 gap-0.5"}>
         <Text className={`${inkClass} text-base ${centred ? "font-medium" : ""}`} numberOfLines={1}>
           {title}
         </Text>
@@ -102,8 +102,8 @@ export function SettingsRow({
       </View>
       {value ? (
         <Text
-          className={`text-muted text-base ${wholeValue ? "shrink-0" : "max-w-[55%]"}`}
-          numberOfLines={1}
+          className={`text-muted text-base ${wholeValue ? "flex-1 text-right" : "max-w-[55%]"}`}
+          numberOfLines={wholeValue ? undefined : 1}
         >
           {value}
         </Text>
