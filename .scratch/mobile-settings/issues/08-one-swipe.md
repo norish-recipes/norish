@@ -9,7 +9,7 @@
 - [x] One swipe component serves recipe cards and every Settings list (site tokens, API keys, share links, household members, sign-in methods): the same gesture, look, full swipe, one open row at a time, Reduce Motion handling. Settings' own swipe files are gone.
 - [x] Nothing of a row's actions shows until it is swiped (his build predates `b0a0de0dd`, which hid the circles; check it on the simulator in light and dark).
 - [x] Every state change is a swipe action: Revoke and Reactivate (share links), Disable and Enable (API keys), Kick and Make admin (members), Unlink (sign-in methods), Delete. Copy stays in the long-press menu only.
-- [ ] Order in one place, tested: the red action that removes something (Delete, Kick, Unlink) is always last, as Delete is on a recipe card, and it is the full-swipe action; a confirm still asks before it acts. The long-press menu lists the same order.
+- [x] Order in one place, tested: the red action that removes something (Delete, Kick, Unlink) is always last, as Delete is on a recipe card, and it is the full-swipe action; a full swipe never acts without asking. The long-press menu lists the same order.
 - [x] Offline, a Settings row does not open (as now).
 - [x] Recipe cards behave as before: their Maestro flows that swipe still pass.
 - [x] Gates green.
@@ -47,3 +47,9 @@ Sound per the Spec reviewer: the order and the full-swipe action on every list (
 - reject: the parallel look maps of recipes and Settings (features may not import each other; the reviewer agrees).
 - reject: Settings rows may now overshoot to the right (the same component as the cards, which is what was asked).
 - docs: the Settings swipe text in `mobile.md` and the release notes is checked against the new behaviour by Terra after the fix.
+
+### Fix outcome (2026-11-24)
+
+- Every swipe action says whether it `asks`; a full swipe runs the outermost only if it asks, else it just opens the row (no firm haptic, no capsule), so a full swipe on Unlink opens it and the circle must be tapped (a709b6f9f). Offline closes an open row (3df442d72); the row caption is capped at 1.2x Dynamic Type (ee4650e9f).
+- Refactors: comments and `shrinkToOneLine` (ef19c7dca), circle size from one number in style, no class (fe6194d77), recipe looks in `recipeSwipeLooks(shopInk)` (62733c138), Settings mapping in `row-actions.ts` (fad075409).
+- Release simulator: the six named flows pass once each; an open member row at the largest accessibility size fits circles and captions. Gates green, mobile lint at 11 warnings.
