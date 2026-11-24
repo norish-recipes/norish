@@ -35,3 +35,15 @@ Correction from Mike, same day: the label stays. A Settings row's swipe action i
 - A full swipe on a row with one action (site tokens) runs Delete, which closes the row and asks. Maestro's element swipe is a full swipe, so `settings-token-delete.yaml` now covers Cancel and then confirm. The swipe testIDs are `<row testID>-swipe-<kind>`.
 - Audit: no Settings list row draws a permanent action. Join code, Leave, Add token/key and Link provider are the rows' own taps. The allergy chips' × and the profile's Delete photo are permanent, but they aren't list rows, so they stay as they are.
 - Left unticked: Unlink has no confirm, on mobile or web, so a full swipe unlinks at once. Adding one needs new strings in every locale: Mike to decide. Unlink was not seen on the simulator because the Maestro account has only a password.
+
+### Review (2026-11-24, `ab7684c8f..6b97fa27e`; Standards Haiku, Spec Opus medium): dispositions
+
+Sound per the Spec reviewer: the order and the full-swipe action on every list (table in its report), the audit (no row action is a permanent control), recipe cards unchanged, worklet order, the long-press lift, the recipe flows' selectors.
+- fix, bug: a full swipe on a sign-in method unlinks it with no confirm (`sign-in-methods.tsx:132`); the old Settings swipe had no full swipe. A full swipe runs only an action that asks first; a row whose last action does not ask just opens.
+- fix: the 10 pt caption has no cap on Dynamic Type (`swipe-actions.tsx:118`), so at accessibility sizes it can outgrow a 50 pt row and be clipped.
+- fix: a row already open when the connection drops keeps pressable circles (the write is blocked, the buttons are not).
+- fix: the three-line comment at `swipe-actions.tsx` ~234; a comment naming Settings in the shared component (line 39); `fits` → a name that says it shrinks the caption; the recipe card's per-key branches (`ink`, `holdsOpen` in `recipe-card.tsx`) into `RECIPE_SWIPE_LOOKS`; the row-action to `SwipeAction` mapping out of `settings-row.tsx`'s render into `row-actions.ts`; the test that only echoes a prop.
+- verify: each size variant states its circle size twice (a class and a number); one source if the class need not be static.
+- reject: the parallel look maps of recipes and Settings (features may not import each other; the reviewer agrees).
+- reject: Settings rows may now overshoot to the right (the same component as the cards, which is what was asked).
+- docs: the Settings swipe text in `mobile.md` and the release notes is checked against the new behaviour by Terra after the fix.
