@@ -22,11 +22,12 @@ function isOptimisticPendingRecipeId(recipeId: string): boolean {
   return recipeId.startsWith(OPTIMISTIC_PENDING_RECIPE_PREFIX);
 }
 
-/** Whether an event's recipe may be written over the cached one: never over a newer version. */
+/** Whether an event's recipe may be written over the cached one: never over a newer version. A
+ * cached recipe with no version, persisted before versions, counts as older. */
 export const replacesCached = (
   event: { version: number },
-  cached: { version: number } | null | undefined
-): boolean => !cached || cached.version <= event.version;
+  cached: { version?: number } | null | undefined
+): boolean => (cached?.version ?? -Infinity) <= event.version;
 
 export function removeRecipesFromLists(
   previousData: InfiniteRecipeData | undefined,
