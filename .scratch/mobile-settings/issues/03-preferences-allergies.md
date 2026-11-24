@@ -92,3 +92,11 @@ Sound per the reviewer: the Library seed and client agree on Hidden Items; store
 - fix, bug: creating a household seeds `allergies: []`, which now hides the reader's own allergy warnings until a household read (`use-household-mutations.ts:49`).
 
 Fix round 4 runs on Sol high (a change of model family: Opus has fixed three rounds), reviewed by Opus high.
+
+### Round 4 outcome (2026-11-24)
+
+- The profile and allergy caches reread after dropping an older reply or receiving a write reply before the first read. A failed preference save rolls back only fields that still hold its optimistic value at the same version.
+- Profile and allergy replies read data and version together. Preference saves return the version committed by the update.
+- Mobile stores explicit language choices and keeps an optimistic language when the Outbox accepts it. Older device entries are kept because they carry no record of how the language was selected.
+- Automatic conversion yields only to a manual conversion the server confirms. Household creation keeps the Reader's own allergy warnings until the household is read.
+- E2E runs later with the rest of Mobile Settings.
