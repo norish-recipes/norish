@@ -1,0 +1,48 @@
+# Creates an API key: the created-key sheet shows it once with Copy, and closes on "I've saved it"
+# with the key listed.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- runFlow: subflows/open-settings.yaml
+- scrollUntilVisible:
+    element:
+      id: settings-root-api-keys
+- tapOn:
+    id: settings-root-api-keys
+- tapOn:
+    id: settings-api-keys-add
+- extendedWaitUntil:
+    visible:
+      id: settings-api-key-new-name
+    timeout: 20000
+- tapOn:
+    id: settings-api-key-new-name
+- inputText: Shortcut
+# Done drops the keyboard, so the sheet has come to rest before its header is read.
+- pressKey: Enter
+- waitForAnimationToEnd
+# The header's confirm shares its name with the title, so it is found by its place on the sheet's
+# navigation bar (that bar's id is its title).
+- tapOn:
+    id: ^Create key$
+    point: 90%,50%
+- extendedWaitUntil:
+    visible:
+      id: settings-api-key-new-value
+    timeout: 20000
+- evalScript: ${output.keys = json(http.get(NORISH_PROXY_CONTROL_URL + '/api-keys?is=' + encodeURIComponent('["Shortcut"]')).body).is}
+- copyTextFrom:
+    id: settings-api-key-new-value
+- evalScript: ${output.before = json(http.get(NORISH_PROXY_CONTROL_URL + '/clipboard').body).text}
+- assertTrue: ${output.before !== maestro.copiedText}
+- tapOn:
+    id: settings-api-key-new-copy
+# Copy key put the key shown on the pasteboard.
+- evalScript: ${output.pasted = json(http.get(NORISH_PROXY_CONTROL_URL + '/clipboard?is=' + encodeURIComponent(maestro.copiedText)).body).text}
+- assertTrue: ${output.pasted.length > 20 && output.pasted === maestro.copiedText}
+- tapOn: I've saved it
+- extendedWaitUntil:
+    visible:
+      id: settings-api-keys-item-.*
+      text: .*Shortcut.*
+    timeout: 20000

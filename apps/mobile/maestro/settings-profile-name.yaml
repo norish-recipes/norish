@@ -1,0 +1,28 @@
+# Edits the name in Profile: Save writes it to the server and Settings' card shows it.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- runFlow: subflows/open-settings.yaml
+- tapOn:
+    id: settings-root-profile
+- extendedWaitUntil:
+    visible:
+      id: settings-profile-name
+      text: Maestro
+    timeout: 20000
+- tapOn:
+    id: settings-profile-name
+- eraseText
+- inputText: Maestro Cook
+- hideKeyboard
+- tapOn:
+    id: settings-profile-save
+- evalScript: ${output.name = json(http.get(NORISH_PROXY_CONTROL_URL + '/profile-name?is=' + encodeURIComponent('"Maestro Cook"')).body).is}
+- assertTrue: ${output.name === 'Maestro Cook'}
+- assertVisible:
+    id: settings-profile-name
+    text: Maestro Cook
+- tapOn: Back
+- extendedWaitUntil:
+    visible: .*Maestro Cook.*
+    timeout: 20000

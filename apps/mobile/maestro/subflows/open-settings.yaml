@@ -1,0 +1,10 @@
+# Opens Settings from the avatar menu's All settings. The menu is a SwiftUI Host, which hides the
+# wrapper's account-avatar testID, so it is found by its label: the account's name, Maestro.
+appId: dev.norish.app
+---
+- tapOn: Maestro
+- tapOn: All settings
+- extendedWaitUntil:
+    visible:
+      id: settings-root-screen
+    timeout: 20000

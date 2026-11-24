@@ -1,0 +1,23 @@
+# Opens Settings from the avatar menu on Recipes: the pushed page shows the Account's card and
+# every section, and Back returns to the tab.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- runFlow: subflows/open-settings.yaml
+- assertVisible: .*${NORISH_EMAIL}.*
+- assertVisible:
+    id: settings-root-profile
+- assertVisible:
+    id: settings-root-household
+- assertVisible:
+    id: settings-root-tokens
+- scrollUntilVisible:
+    element:
+      id: settings-root-sign-out
+- assertVisible:
+    id: settings-root-version
+- tapOn: Back
+- extendedWaitUntil:
+    visible:
+      id: recipes-screen
+    timeout: 20000
