@@ -26,3 +26,5 @@ Settled with it: the swipe moves to `src/components/swipe-actions.tsx` and `src/
 ### Mike's decision (2026-11-24), replacing the size chosen above
 
 Rows keep their present heights. The circles are smaller, sized to what the row has room for, without labels under them (the spoken label stays). What must match the recipe cards is the animation and behaviour: the reveal, the stretch, the full swipe, one open row at a time, Reduce Motion. He also believes more row actions than the two he named are drawn always visible: every Settings list is checked for an action shown as a permanent control on a row, and each becomes a swipe action.
+
+Correction from Mike, same day: the label stays. A Settings row's swipe action is styled like a recipe card's (a circle with the icon, the text beneath), only smaller, so circle and label fit the row's present height. No icon-only variant.
