@@ -111,6 +111,10 @@ describe("createOfflineEngine", () => {
         "stores.reorder",
         "calendar.moveItem",
         "user.setDevicePreferences",
+        "user.updatePreferences",
+        "user.updateName",
+        "user.uploadAvatar",
+        "user.deleteAvatar",
         "recipes.update",
         "admin.testAIEndpoint",
       ]) {
@@ -132,6 +136,10 @@ describe("createOfflineEngine", () => {
       "stores.reorder",
       "calendar.moveItem",
       "user.setDevicePreferences",
+      "user.updatePreferences",
+      "user.updateName",
+      "user.uploadAvatar",
+      "user.deleteAvatar",
     ]);
   });
 

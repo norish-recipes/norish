@@ -14,6 +14,7 @@ import {
   useAllergiesMutation,
   useDeleteAccountMutation,
   usePreferencesMutation,
+  usePreferencesSaving,
   useProfileMutations,
   useProfileQuery,
   useSessionExpiry,
@@ -316,6 +317,64 @@ describe("the Account's writes", () => {
 
       expect(profile()).toEqual(PROFILE);
       expect(adapter.showError).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("writes waiting their turn", () => {
+    const file = new File(["x"], "a.png", { type: "image/png" });
+
+    it("show a save waiting behind an Avatar upload, and count it as saving, at once", async () => {
+      const result = render(() => ({
+        profile: useProfileMutations(),
+        preferences: usePreferencesMutation(),
+        saving: usePreferencesSaving(),
+      }));
+
+      act(() => void result.current.profile.uploadAvatar(file));
+      await sentCall("user.uploadAvatar");
+      act(() => void result.current.preferences.updatePreferences({ measurementSystem: "us" }));
+
+      await waitFor(() => expect(profile()?.user.preferences?.measurementSystem).toBe("us"));
+      expect(result.current.saving).toBe(true);
+      expect(trpcCalls["user.updatePreferences"]).toBeUndefined();
+
+      await answerCall("user.uploadAvatar", {
+        success: true,
+        user: { id: "u1", email: "u1@example.com", name: "Ada", image: "a.png", version: 4 },
+      });
+      expect((await sentCall("user.updatePreferences")).input).toEqual({
+        preferences: { measurementSystem: "us" },
+        version: 4,
+      });
+    });
+
+    it("never send a write still waiting when sign-out clears the cache", async () => {
+      const sent: string[] = [];
+      let answerRename: (value: unknown) => void = () => {};
+
+      serveTRPC(async (called) => {
+        sent.push(called);
+        if (called === "user.get") return PROFILE;
+        if (called === "user.updateName") return new Promise((resolve) => (answerRename = resolve));
+
+        return { success: true, preferences: {}, version: 5 };
+      });
+      const result = render(() => ({
+        profile: useProfileMutations(),
+        preferences: usePreferencesMutation(),
+      }));
+
+      act(() => void result.current.profile.updateName("Grace"));
+      await waitFor(() => expect(sent).toEqual(["user.updateName"]));
+      await act(async () => void result.current.preferences.updatePreferences({ locale: "nl" }));
+      act(() => queryClient.clear());
+      await act(async () =>
+        answerRename({ success: true, user: { ...PROFILE.user, name: "Grace", version: 4 } })
+      );
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+
+      expect(sent.filter((path) => path !== "user.get")).toEqual(["user.updateName"]);
+      expect(adapter.showError).not.toHaveBeenCalled();
     });
   });
 

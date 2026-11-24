@@ -47,6 +47,10 @@ const SCOPED_WRITES = [
   "calendar.moveItem",
   "calendar.editItem",
   "user.setDevicePreferences",
+  "user.updatePreferences",
+  "user.updateName",
+  "user.uploadAvatar",
+  "user.deleteAvatar",
 ];
 
 interface OfflineEngineOptions {
