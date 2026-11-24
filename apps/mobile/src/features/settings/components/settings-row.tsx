@@ -143,7 +143,8 @@ export function SettingsRow({
         value={[subtitle, value].filter(Boolean).join(", ") || undefined}
         onPress={() => onPress?.()}
       >
-        {body}
+        {/* Opaque, as the long press lifts a snapshot of it: the whole row, not its glyphs alone. */}
+        <View className="bg-surface">{body}</View>
       </NativeMenu>
     ) : onPress ? (
       <Pressable
