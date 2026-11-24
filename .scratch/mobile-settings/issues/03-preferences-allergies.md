@@ -134,3 +134,10 @@ Holding per the reviewer: a queued preference save keeps its value; the conversi
 - verify: a failed conversion shows the import's "paste failed" toast (`use-recipes-subscription.ts:162`); fixed only if this run introduced it.
 
 Fix round 6 runs on Opus high. This is the last round on this code in this ticket: what a closing review still finds and rates rare is logged as a known limit, not fixed again.
+
+### Round 6 outcome (2026-11-24)
+
+- Versioned profile writes (preferences, name, Avatar) are sent one after another from each cache (`useVersionedSend`), so a second choice waits for the version the first one committed and the last choice wins. If the version can't be read, the write fails unsent and the reader sees the failure. `useFailedWrite` shows no failure for any write the Outbox queued. Name and Avatar replies carry the row their own update returned.
+- `writeConvertedCopy` checks the version and writes the copy in one transaction. Every conversion that ends, stale ones too, emits `converted` with `{ conversion, stale }`. A pick by hand is settled only by that event. Known limit: if the event is missed, automatic conversion stays off for that page.
+- `replacesCached` (`use-recipes-cache.ts`) keeps a newer cached recipe, both the detail and the list rows, over an event's recipe.
+- The "paste failed" toast on a failed conversion was already shown at `aecca5857` (`handleRecipeError` emits `failed`), so it is left as is.
