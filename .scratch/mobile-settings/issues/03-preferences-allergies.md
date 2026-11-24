@@ -113,3 +113,10 @@ Holding per the reviewer: the server reads a version with the data it labels; th
 - reject: `updateUserPreferences` without a version on a missing user answers stale (there is no such caller).
 
 Fix round 5 runs on Opus high after ticket 07's implementer (one writer at a time).
+
+### Round 5 outcome (2026-11-24)
+
+- A versioned write (preferences, name, avatar) sent before the first profile read waits for it and sends its version; the test's fake server refuses a wrong version. Allergies already send only from their own read. Every preference save the Outbox queued keeps its optimistic value without an error.
+- Name and avatar replies carry no preferences again, so they cannot overwrite a preference save still in flight.
+- `recipes.convertMeasurements` answers early again and reports its result by event; the `converted` event keeps the reread recipe. A conversion ends once the recipe moves past the version it was asked on, or on the `failed` event. A manual pick counts as made by hand once the server's newer recipe shows it.
+- A failed conversion undoes only its own switch on the same version; a newer recipe is left alone and reread.
