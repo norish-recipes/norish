@@ -13,7 +13,6 @@ import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reade
 
 import { useDraft } from "../hooks/use-draft";
 import { NAME_DRAFT, saveProfile } from "../utils/profile-rules";
-import { writeBlocked } from "../utils/row-actions";
 import { settingsWrite } from "../utils/settings-write";
 import { SettingsField, SubmitButton } from "./settings-form";
 import { SettingsGroup } from "./settings-group";
@@ -44,7 +43,6 @@ export function ProfileForm() {
     key: "profile-save",
   });
   const image = photo ? { uri: photo.uri } : user?.image ? toImage(user.image) : null;
-  const blocked = writeBlocked(true, isOffline);
 
   const save = () =>
     name.save(() =>
@@ -75,7 +73,7 @@ export function ProfileForm() {
         <Pressable
           accessibilityLabel={text("settings.mobile.changePhoto")}
           accessibilityRole="button"
-          className={blocked ? "opacity-40" : ""}
+          className={isOffline ? "opacity-40" : ""}
           disabled={isOffline || deleting}
           testID="profile-avatar"
           onPress={() =>
@@ -94,7 +92,7 @@ export function ProfileForm() {
         {image ? (
           <Pressable
             accessibilityRole="button"
-            className={blocked ? "opacity-40" : ""}
+            className={isOffline ? "opacity-40" : ""}
             disabled={isOffline || deleting || name.saving}
             hitSlop={8}
             testID="profile-avatar-remove"
