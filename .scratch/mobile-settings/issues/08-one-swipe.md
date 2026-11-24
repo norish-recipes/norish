@@ -6,13 +6,13 @@
 
 **Status:** ready-for-agent
 
-- [ ] One swipe component serves recipe cards and every Settings list (site tokens, API keys, share links, household members, sign-in methods): the same gesture, look, full swipe, one open row at a time, Reduce Motion handling. Settings' own swipe files are gone.
-- [ ] Nothing of a row's actions shows until it is swiped (his build predates `b0a0de0dd`, which hid the circles; check it on the simulator in light and dark).
-- [ ] Every state change is a swipe action: Revoke and Reactivate (share links), Disable and Enable (API keys), Kick and Make admin (members), Unlink (sign-in methods), Delete. Copy stays in the long-press menu only.
+- [x] One swipe component serves recipe cards and every Settings list (site tokens, API keys, share links, household members, sign-in methods): the same gesture, look, full swipe, one open row at a time, Reduce Motion handling. Settings' own swipe files are gone.
+- [x] Nothing of a row's actions shows until it is swiped (his build predates `b0a0de0dd`, which hid the circles; check it on the simulator in light and dark).
+- [x] Every state change is a swipe action: Revoke and Reactivate (share links), Disable and Enable (API keys), Kick and Make admin (members), Unlink (sign-in methods), Delete. Copy stays in the long-press menu only.
 - [ ] Order in one place, tested: the red action that removes something (Delete, Kick, Unlink) is always last, as Delete is on a recipe card, and it is the full-swipe action; a confirm still asks before it acts. The long-press menu lists the same order.
-- [ ] Offline, a Settings row does not open (as now).
-- [ ] Recipe cards behave as before: their Maestro flows that swipe still pass.
-- [ ] Gates green.
+- [x] Offline, a Settings row does not open (as now).
+- [x] Recipe cards behave as before: their Maestro flows that swipe still pass.
+- [x] Gates green.
 
 Supersedes the spec's Lists line "small swipe actions (34 pt circles, 11 pt labels)": the recipe cards' swipe is the design.
 
@@ -28,3 +28,10 @@ Settled with it: the swipe moves to `src/components/swipe-actions.tsx` and `src/
 Rows keep their present heights. The circles are smaller, sized to what the row has room for, without labels under them (the spoken label stays). What must match the recipe cards is the animation and behaviour: the reveal, the stretch, the full swipe, one open row at a time, Reduce Motion. He also believes more row actions than the two he named are drawn always visible: every Settings list is checked for an action shown as a permanent control on a row, and each becomes a swipe action.
 
 Correction from Mike, same day: the label stays. A Settings row's swipe action is styled like a recipe card's (a circle with the icon, the text beneath), only smaller, so circle and label fit the row's present height. No icon-only variant.
+
+### Implemented (2026-11-24, b0959249c, bb46d30c6, f0a773898)
+
+- The `row` variant is the list's look scaled to fit a 50 pt row: 30 pt circles, a 3 pt gap, a 10 pt caption, 60 pt slots. The caption shrinks to fit instead of ellipsizing; Make admin and Delete link keep their short captions ("Admin", "Delete"), and VoiceOver still reads the full label.
+- A full swipe on a row with one action (site tokens) runs Delete, which closes the row and asks. Maestro's element swipe is a full swipe, so `settings-token-delete.yaml` now covers Cancel and then confirm. The swipe testIDs are `<row testID>-swipe-<kind>`.
+- Audit: no Settings list row draws a permanent action. Join code, Leave, Add token/key and Link provider are the rows' own taps. The allergy chips' × and the profile's Delete photo are permanent, but they aren't list rows, so they stay as they are.
+- Left unticked: Unlink has no confirm, on mobile or web, so a full swipe unlinks at once. Adding one needs new strings in every locale: Mike to decide. Unlink was not seen on the simulator because the Maestro account has only a password.
