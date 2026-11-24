@@ -10,7 +10,6 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 import type { WriteResult } from "../offline/settled";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { accepted } from "../offline/settled";
-import { olderThanHeld } from "../offline/version-order";
 import { showQueued, showRefusal, usePlatform } from "../platform";
 import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
@@ -149,7 +148,7 @@ export function usePreferencesMutation() {
   const rollBack = (sent: PreferencePatch, optimistic: OptimisticSave | undefined) => {
     const current = held();
 
-    if (!current || !optimistic || olderThanHeld(optimistic.version, current.user.version)) return;
+    if (!current || !optimistic || current.user.version !== optimistic.version) return;
 
     const shown = current.user.preferences ?? {};
     const previous = optimistic.previous;

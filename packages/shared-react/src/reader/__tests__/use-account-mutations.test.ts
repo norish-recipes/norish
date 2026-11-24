@@ -466,6 +466,21 @@ describe("the Account's writes", () => {
       expect(profile()?.user.preferences).toEqual({ locale: "fr", afterPlanning: "calendar" });
       expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
     });
+
+    it("leaves an older profile alone when rollback was for another version", async () => {
+      const result = render(() => usePreferencesMutation());
+
+      act(() => void result.current.updatePreferences({ afterPlanning: "calendar" }));
+      await sentCall("user.updatePreferences");
+      const older = {
+        ...PROFILE,
+        user: { ...PROFILE.user, version: 2, preferences: { afterPlanning: "calendar" as const } },
+      };
+      queryClient.setQueryData(USER_KEY, older);
+      await failCall("user.updatePreferences");
+
+      expect(profile()).toEqual(older);
+    });
   });
 
   describe("a reply arriving after a newer version", () => {
