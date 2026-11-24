@@ -51,6 +51,8 @@ export type SwipeAction = {
   ink?: string;
   /** The row stays open under the action's confirm, and a full swipe holds it there (a card's Delete). */
   holdsOpen?: boolean;
+  /** It asks before it acts (a confirm or a sheet), so a full swipe may run it. */
+  asks: boolean;
   onPress: () => void;
   testID: string;
 };
@@ -135,7 +137,8 @@ const LAYOUTS = {
   },
 };
 
-type Layout = Omit<(typeof LAYOUTS)[SwipeVariant], "width"> & Reveal;
+/** `commits`: a full swipe runs the outermost action, so its circle stretches and the others fade. */
+type Layout = Omit<(typeof LAYOUTS)[SwipeVariant], "width"> & Reveal & { commits: boolean };
 
 /** The delete's motion on the UI thread: how far the card is `extra` past its swipe, how far its
  * capsule is `gone`, and the most it can stretch (`reach`). */
@@ -190,7 +193,14 @@ export function SwipeActions({
   // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
   const [rightEdge, setRightEdge] = useState(screenWidth);
   const fullAt = fullSwipeAt(openWidth, rightEdge);
-  const layout: Layout = { ...look, width: openWidth, count: actions.length, fullAt };
+  const fullAction = fullSwipeAction(actions);
+  const layout: Layout = {
+    ...look,
+    width: openWidth,
+    count: actions.length,
+    fullAt,
+    commits: fullAction !== undefined,
+  };
   const collapses = leaving && variant === "list";
   // The card sits `openWidth` out while held, so only the rest of its travel is its own.
   const extra = useDerivedValue(() =>
@@ -314,7 +324,7 @@ export function SwipeActions({
             <>
               <SwipeWatch
                 dragging={dragging}
-                fullAt={fullAt}
+                fullAt={fullAction ? fullAt : Infinity}
                 fullSwipe={fullSwipe}
                 translation={translation}
               />
@@ -339,8 +349,6 @@ export function SwipeActions({
           onSwipeableOpen={() => setIsOpen(true)}
           onSwipeableOpenStartDrag={startDrag}
           onSwipeableWillOpen={() => {
-            const fullAction = fullSwipeAction(actions);
-
             if (fullSwipe.get() && fullAction) {
               // A card's delete holds it for its confirm; Reduce Motion deletes from rest.
               if (fullAction.holdsOpen && !reduceMotion) hold();
@@ -455,14 +463,15 @@ function ActionButton({
 }) {
   const reduceMotion = useReducedMotion();
   const outermost = index === layout.count - 1;
+  const stretches = outermost && layout.commits && !reduceMotion;
   // How far the card is over the panel: a deleted card carries on past the swipe.
   const travel = useDerivedValue(() => -translation.get() + motion.extra.get());
   const stretch = useDerivedValue(() =>
-    outermost && !reduceMotion ? capsuleStretch(travel.get(), layout, motion.reach.get()) : 0
+    stretches ? capsuleStretch(travel.get(), layout, motion.reach.get()) : 0
   );
   const slide = useAnimatedStyle(() => {
     // Past the open width the other actions shrink and fade under the outermost's capsule.
-    const drop = reduceMotion || outermost ? 0 : dropAway(travel.get(), layout);
+    const drop = reduceMotion || outermost || !layout.commits ? 0 : dropAway(travel.get(), layout);
 
     return {
       opacity: (1 - drop) * (outermost ? 1 - motion.gone.get() : 1),

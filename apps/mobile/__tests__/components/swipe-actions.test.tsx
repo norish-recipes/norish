@@ -123,6 +123,7 @@ const actions = ["groceries", "plan", "delete"].map((key) => ({
   icon: "trash-outline" as const,
   ground: "bg-danger",
   holdsOpen: key === "delete",
+  asks: true,
   onPress: vi.fn(),
   testID: key,
 }));
@@ -221,6 +222,31 @@ describe("SwipeActions", () => {
 
     expect(remove.onPress).toHaveBeenCalledTimes(2);
     expect(swipe.close).toHaveBeenCalledTimes(2);
+  });
+
+  it("only opens a row on a full swipe whose outermost action does not ask, and plays no full-swipe haptic", () => {
+    const unlink = { ...actions[2]!, holdsOpen: false, asks: false, onPress: vi.fn() };
+    const row = () => (
+      <SwipeActions actions={[unlink]} itemKey="r1" variant="row">
+        {null}
+      </SwipeActions>
+    );
+    const { rerender } = render(row());
+
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
+    swipe.translation.value = -300;
+    rerender(row());
+    act(() => swipe.props!.onSwipeableWillOpen());
+
+    expect(unlink.onPress).not.toHaveBeenCalled();
+    expect(swipe.close).not.toHaveBeenCalled();
+    expect(haptics.mediumImpact).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId("delete"));
+    expect(unlink.onPress).toHaveBeenCalledTimes(1);
   });
 
   it("does not open a row that is not enabled", () => {

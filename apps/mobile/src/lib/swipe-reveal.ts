@@ -63,9 +63,12 @@ export function cardTravel(held: number, slide: number, fullAt: number, slideBy:
   return from + slide * (slideBy - from);
 }
 
-/** The action a full swipe runs: the outermost, the last of `actions`. */
-export function fullSwipeAction<T>(actions: T[]): T | undefined {
-  return actions[actions.length - 1];
+/** The action a full swipe runs: the outermost, the last of `actions`, and only one that asks
+ * first; with none a full swipe just opens the row. */
+export function fullSwipeAction<T extends { asks: boolean }>(actions: T[]): T | undefined {
+  const outermost = actions[actions.length - 1];
+
+  return outermost?.asks ? outermost : undefined;
 }
 
 /** The drag a full swipe needs: the open width plus an overshoot, capped by the travel a card whose

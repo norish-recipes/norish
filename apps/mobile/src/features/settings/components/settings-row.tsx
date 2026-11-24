@@ -76,6 +76,7 @@ export function SettingsRow({
       icon: look.icon,
       ground: tone.ground,
       ink: tone.ink,
+      asks: action.asks,
       onPress: action.onPress,
       testID: `${testID}-swipe-${action.kind}`,
     };

@@ -44,6 +44,7 @@ export function useDeleteAction() {
   }): SettingsRowAction => ({
     kind: "delete",
     label: text("common.actions.delete"),
+    asks: true,
     onPress: confirmedWrite({
       title: text(`${modal}.title`),
       message: text(`${modal}.message`),

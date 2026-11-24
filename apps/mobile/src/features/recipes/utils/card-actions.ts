@@ -9,14 +9,15 @@ export function recipeSwipeActions(canDelete: boolean) {
 
 export type RecipeSwipeAction = ReturnType<typeof recipeSwipeActions>[number];
 
-/** A swipe circle's icon and background; Groceries' icon takes the shop's ink. */
+/** A swipe circle's icon and background; Groceries' icon takes the shop's ink. Each asks first: a
+ * sheet or Delete's confirm. */
 export const RECIPE_SWIPE_LOOKS: Record<
   RecipeSwipeAction,
-  { icon: ComponentProps<typeof Ionicons>["name"]; ground: string }
+  { icon: ComponentProps<typeof Ionicons>["name"]; ground: string; asks: boolean }
 > = {
-  groceries: { icon: "bag-outline", ground: "bg-shop" },
-  plan: { icon: "calendar-clear-outline", ground: "bg-plan" },
-  delete: { icon: "trash-outline", ground: "bg-danger" },
+  groceries: { icon: "bag-outline", ground: "bg-shop", asks: true },
+  plan: { icon: "calendar-clear-outline", ground: "bg-plan", asks: true },
+  delete: { icon: "trash-outline", ground: "bg-danger", asks: true },
 };
 
 /** An SF Symbol, as the native context menu takes it. */

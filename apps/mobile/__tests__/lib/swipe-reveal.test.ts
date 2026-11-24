@@ -97,10 +97,20 @@ const list = (count: number) => 8 + LIST_ACTION * count;
 const GRID = 84;
 
 describe("fullSwipeAction", () => {
+  const asking = (key: string, asks = true) => ({ key, asks });
+
   it("is the outermost action: Delete when offered, else the last one", () => {
-    expect(fullSwipeAction(["groceries", "plan", "delete"])).toBe("delete");
-    expect(fullSwipeAction(["groceries", "plan"])).toBe("plan");
+    const groceries = asking("groceries");
+    const plan = asking("plan");
+    const remove = asking("delete");
+
+    expect(fullSwipeAction([groceries, plan, remove])).toBe(remove);
+    expect(fullSwipeAction([groceries, plan])).toBe(plan);
     expect(fullSwipeAction([])).toBeUndefined();
+  });
+
+  it("is none when the outermost action does not ask first, as a full swipe never acts unasked", () => {
+    expect(fullSwipeAction([asking("disable"), asking("unlink", false)])).toBeUndefined();
   });
 });
 

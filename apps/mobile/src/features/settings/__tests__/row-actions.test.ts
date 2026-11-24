@@ -13,6 +13,7 @@ import { versionLine } from "../utils/version-line";
 const act = (kind: SettingsActionKind): SettingsRowAction => ({
   kind,
   label: kind,
+  asks: kind !== "unlink",
   onPress: () => undefined,
 });
 const tones = (kinds: SettingsActionKind[]) => kinds.map((kind) => actionLook(kind).tone);

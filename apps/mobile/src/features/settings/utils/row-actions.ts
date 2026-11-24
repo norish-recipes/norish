@@ -27,6 +27,8 @@ export type SettingsRowAction = {
   label: string;
   /** A shorter caption for the swipe circle, where `label` would not fit; the menu keeps `label`. */
   swipeLabel?: string;
+  /** It asks before it acts, so a full swipe may run it; Unlink does not. */
+  asks: boolean;
   onPress: () => void;
 };
 
