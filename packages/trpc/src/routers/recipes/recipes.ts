@@ -753,19 +753,19 @@ const convertMeasurements = authedProcedure
           systemUsed: targetSystem,
         }));
 
-        await writeResolved(
+        const result = await writeResolved(
           () =>
             withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id }),
           (resolved) =>
             writeConvertedCopy(
               recipe.id,
               { from: original, to: targetSystem },
+              version,
               steps,
               resolved.recipeIngredients,
               resolved.ingredientResolutions
             )
         );
-        const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
         if (result.stale) {
           log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale recipe conversion");

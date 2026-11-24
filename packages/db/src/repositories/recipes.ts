@@ -1378,19 +1378,33 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
 }
 
 /**
- * Write a recipe's converted copy: the lines and steps it holds in the
- * target system go, these take their place, and the system converted from is
- * recorded as the original if nothing was yet. A conversion with AI writes
- * over an earlier copy this way; the original is never the target.
+ * Write a recipe's converted copy and switch to it, only while the recipe is still at `version`:
+ * the lines and steps it holds in the target system go, these take their place, and the system
+ * converted from is recorded as the original if nothing was yet. A conversion with AI writes over
+ * an earlier copy this way; the original is never the target.
  */
 export async function writeConvertedCopy(
   recipeId: string,
   conversion: { from: MeasurementSystem; to: MeasurementSystem },
+  version: number,
   steps: StepInsertWithImages[],
   ingredients: RecipeIngredientInsertDto[],
   resolutions: IngredientResolutions
-): Promise<{ steps: StepDto[]; ingredients: RecipeIngredientsDto[] }> {
+): Promise<MutationOutcome<void>> {
   return db.transaction(async (tx) => {
+    // The version check takes the row first, so an edit made meanwhile keeps its lines.
+    const [switched] = await tx
+      .update(recipes)
+      .set({
+        systemUsed: conversion.to,
+        version: sql`${recipes.version} + 1`,
+        originalSystem: sql`coalesce(${recipes.originalSystem}, ${conversion.from}::measurement_system)`,
+      })
+      .where(and(eq(recipes.id, recipeId), eq(recipes.version, version)))
+      .returning({ id: recipes.id });
+
+    if (!switched) return staleOutcome();
+
     await tx
       .delete(recipeIngredients)
       .where(
@@ -1402,14 +1416,9 @@ export async function writeConvertedCopy(
     await tx
       .delete(stepsTable)
       .where(and(eq(stepsTable.recipeId, recipeId), eq(stepsTable.systemUsed, conversion.to)));
-    await tx
-      .update(recipes)
-      .set({
-        originalSystem: sql`coalesce(${recipes.originalSystem}, ${conversion.from}::measurement_system)`,
-      })
-      .where(eq(recipes.id, recipeId));
+    await addStepsAndIngredientsTx(tx, steps, ingredients, resolutions);
 
-    return addStepsAndIngredientsTx(tx, steps, ingredients, resolutions);
+    return appliedOutcome(undefined);
   });
 }
 

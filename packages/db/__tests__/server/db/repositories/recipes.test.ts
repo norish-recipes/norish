@@ -9,7 +9,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { deleteRecipesByIds } from "@norish/db/repositories/recipes";
+import { deleteRecipesByIds, writeConvertedCopy } from "@norish/db/repositories/recipes";
 import { recipes as recipesTable } from "@norish/db/schema";
 
 import {
@@ -698,5 +698,66 @@ describe("Recipe Repository - deleteRecipesByIds", () => {
 
     expect(left.map((row) => row.id)).toContain(edited.id);
     expect(left.map((row) => row.id)).not.toContain(unchanged.id);
+  });
+});
+
+describe("Recipe Repository - writeConvertedCopy", () => {
+  let recipeId: string;
+  let version: number;
+  const testBase = new RepositoryTestBase("test_recipes_converted_copy");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    const [, recipe] = await testBase.beforeEachTest();
+    const flour = await createTestIngredient({ name: "Flour" });
+
+    recipeId = recipe.id;
+    version = recipe.version;
+    await createTestRecipeIngredients(recipeId, flour.id, "metric", { amount: "250", unit: "g" });
+    await createTestRecipeIngredients(recipeId, flour.id, "us", { amount: "2", unit: "cup" });
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  const write = (at: number) =>
+    writeConvertedCopy(recipeId, { from: "metric", to: "us" }, at, [], [], new Map());
+
+  it("writes the copy and switches to it at the version it was asked on", async () => {
+    const result = await write(version);
+    const [row] = await getTestDb()
+      .select()
+      .from(recipesTable)
+      .where(eq(recipesTable.id, recipeId));
+
+    expect(result.stale).toBe(false);
+    expect(row).toMatchObject({ systemUsed: "us", version: version + 1, originalSystem: "metric" });
+    expect((await getRecipeIngredients(recipeId)).map((line) => line.systemUsed)).toEqual([
+      "metric",
+    ]);
+  });
+
+  it("leaves a recipe edited since untouched", async () => {
+    await getTestDb()
+      .update(recipesTable)
+      .set({ version: version + 1 })
+      .where(eq(recipesTable.id, recipeId));
+
+    const result = await write(version);
+    const [row] = await getTestDb()
+      .select()
+      .from(recipesTable)
+      .where(eq(recipesTable.id, recipeId));
+
+    expect(result.stale).toBe(true);
+    expect(row).toMatchObject({ systemUsed: "metric", version: version + 1, originalSystem: null });
+    expect((await getRecipeIngredients(recipeId)).map((line) => line.systemUsed).sort()).toEqual([
+      "metric",
+      "us",
+    ]);
   });
 });
