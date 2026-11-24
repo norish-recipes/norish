@@ -75,3 +75,17 @@ Ticket 03 is fixed here; only secret-carrying writes stay out of the Outbox; the
 - Fixed: swipe circles showed through closed rows (`b0a0de0dd`), the Version row's title clipped to "V…" (`7bf7de8a1`), a square behind the 96 pt avatar (`8151de8d3`), long-press lifted only the avatar (`08b9a2f29`), clipped swipe labels "Make a…", "Delete l…", "Reactiv…" (`ef734bf29`, `8867b4462`, `74bb3161e`), the created-key sheet clipped below the key (`0d58ef01b`).
 - Left (not Settings code): at accessibility-large and up the avatar drops out of the Recipes header's "…" overflow, so Settings is unreachable; the join-code placeholder says "8-character code" for a 6-digit code (shared with web, all locales); token, key and share-link lists changed elsewhere stay stale until relaunch.
 - Left (design): the canvas names the key sheet "New API key" with "Create" (app: "Create key" twice); delete-account's native alert cannot colour its lines; allergy chips are solid orange where the canvas tints them.
+
+### Gatekeeper notes on the device part and the docs (2026-11-24)
+
+Device agent (`b0a0de0dd`..`dd3084fd3`), on the iPhone 18 Pro simulator (the leftover runner on the 18 Pro Max was not touched). Dispositions of what it left:
+- fix (closing fixer, `4f4511659`): the join-code placeholder said "8-character code"; a code is six digits.
+- fix (closing fixer, `693556c9a`): the token, key and share-link lists stayed stale until relaunch; they reread when their page opens.
+- left, for Mike: from accessibility-large Dynamic Type up the avatar drops out of the Recipes header, so Settings cannot be reached (header code beside the other session's `account-menu.tsx`); `account-avatar`'s testID does not reach the accessibility tree (same file), so the flows open the menu by its label.
+- left, design judgement for Mike: "Create key" where the canvas says "New API key" and "Create"; solid orange allergy chips where the canvas tints them; the native delete-account alert cannot colour its lines.
+- not seen: the quick-tap dimming (read in the native code only).
+- the docs screenshots show the Maestro account ("Maestro", `maestro@norish.test`, `localhost:59193`, 0.27.0-beta), not a staged "Alex Cook" one.
+
+Docs (Terra, `1d0a6e7e0`): `mobile.md` (still `draft: true` until TestFlight) and the 0.28.0-beta release notes. Root `format:check` 0, docs build 0. The docs workspace's `pnpm format` exits 1 on eight older release-note files this run did not touch (only `0.28.0-beta.md` changed under release notes).
+
+The closing review of tickets 03, 05 and 07 and its fixes are logged at the end of ticket 03.
