@@ -89,9 +89,8 @@ export function useSystemConversion(): SystemConversion {
   };
 }
 
-/** Converts once per opened recipe and choice for a reader whose Preferences name a system and who
- * may, once the server's copy is in (a cached one may be stale); with AI writes only a missing copy.
- * A choice counts once the server confirmed it, Off included, so a pick by hand after it stands. */
+/** Converts once per recipe and confirmed choice (Off included), on the server's copy, with AI only
+ * for a missing copy; a pick by hand counts as acting on the choice confirmed next, so it stands. */
 export function useAutoConversion() {
   const saving = usePreferencesSaving();
   const recipeId = useRecipePageStore((state) => state.recipeId);
@@ -102,12 +101,27 @@ export function useAutoConversion() {
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);
   const doneForRef = useRef<string | null>(null);
+  const startedRef = useRef(false);
+  const byHandRef = useRef(false);
 
   useEffect(() => {
-    if (!recipe || isLoading || isFetching || convertingTo || saving) return;
+    // A conversion this hook did not start was picked by hand.
+    if (convertingTo) {
+      if (!startedRef.current) byHandRef.current = true;
+
+      return;
+    }
+    startedRef.current = false;
+    if (!recipe || isLoading || isFetching || saving) return;
     const target = measurementSystemTarget(choice);
     const doneFor = `${recipe.id}:${choice}`;
 
+    if (byHandRef.current) {
+      byHandRef.current = false;
+      doneForRef.current = doneFor;
+
+      return;
+    }
     if (doneForRef.current === doneFor) return;
     if (!target) {
       doneForRef.current = doneFor;
@@ -122,6 +136,7 @@ export function useAutoConversion() {
 
     const hasCopy = recipe.recipeIngredients.some((line) => line.systemUsed === target.system);
 
+    startedRef.current = true;
     startConversion(target.system, target.withAI && isAIEnabled && !hasCopy);
   }, [
     recipe,

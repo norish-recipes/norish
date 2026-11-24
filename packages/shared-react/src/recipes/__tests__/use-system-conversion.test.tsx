@@ -72,6 +72,22 @@ function renderOn<T>(hook: () => T, recipe: object = metricRecipe()) {
   return { queryClient, page, ...renderHook(hook, { wrapper }) };
 }
 
+/** A Preferences save in flight; the returned function settles it, `ok` or failed. */
+function preferenceSave(queryClient: ReturnType<typeof createTestQueryClient>) {
+  let settle: (ok: boolean) => void = () => {};
+  const answer = new Promise((resolve, reject) => (settle = (ok) => (ok ? resolve : reject)()));
+  const done = queryClient
+    .getMutationCache()
+    .build(queryClient, {
+      mutationKey: [["user", "updatePreferences"]],
+      mutationFn: () => answer,
+    })
+    .execute(undefined)
+    .catch(() => {});
+
+  return (ok: boolean) => act(async () => (settle(ok), await done));
+}
+
 beforeEach(() => {
   resetTRPCFake();
   mocks.measurementSystem = undefined;
@@ -131,20 +147,7 @@ describe("useAutoConversion", () => {
     mocks.measurementSystem = "metric";
 
     const { page, rerender, queryClient } = renderOn(() => useAutoConversion());
-    const save = () => {
-      let settle: (ok: boolean) => void = () => {};
-      const answer = new Promise((resolve, reject) => (settle = (ok) => (ok ? resolve : reject)()));
-      const done = queryClient
-        .getMutationCache()
-        .build(queryClient, {
-          mutationKey: [["user", "updatePreferences"]],
-          mutationFn: () => answer,
-        })
-        .execute(undefined)
-        .catch(() => {});
-
-      return (ok: boolean) => act(async () => (settle(ok), await done));
-    };
+    const save = () => preferenceSave(queryClient);
 
     let settle = save();
 
@@ -166,6 +169,38 @@ describe("useAutoConversion", () => {
     rerender();
     expect(page().conversion).toMatchObject({ target: "us", withAI: false });
   });
+
+  it.each([true, false])(
+    "keeps a recipe converted by hand while a save was in flight (save took: %s)",
+    async (took) => {
+      mocks.measurementSystem = "metric";
+
+      const { page, rerender, queryClient, result } = renderOn(() => ({
+        auto: useAutoConversion(),
+        pick: useSystemConversion(),
+      }));
+      const byHand = (system: string) => {
+        const option = result.current.pick.options.find(
+          (choice) => choice.system === system && !choice.withAI
+        );
+
+        act(() => result.current.pick.convertTo(option!));
+        act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], system)));
+      };
+      const settle = preferenceSave(queryClient);
+
+      mocks.measurementSystem = "us";
+      rerender();
+      byHand("us");
+      byHand("metric");
+      await settle(took);
+      if (!took) mocks.measurementSystem = "metric";
+      rerender();
+
+      expect(page().conversion).toBeNull();
+      expect(result.current.pick.currentSystem).toBe("metric");
+    }
+  );
 
   it("waits for the server's copy, since the saved one may be behind", async () => {
     mocks.measurementSystem = "us";
