@@ -102,6 +102,18 @@ describe("recipe share repository", () => {
     expect(getRecipeShareUrl({ ...fetched, expiresAt: new Date(Date.now() - 1000) })).toBeNull();
   });
 
+  it("has no link when the kept token cannot be decrypted", async () => {
+    const created = await createRecipeShare(testUserId, {
+      recipeId: testRecipeId,
+      expiresIn: "forever",
+    });
+    const fetched = await getRecipeShareById(created.id);
+
+    expect(fetched).not.toBeNull();
+    if (!fetched) return;
+    expect(getRecipeShareUrl({ ...fetched, tokenEnc: "not-a-ciphertext" })).toBeNull();
+  });
+
   it("has no link for a share made before tokens were kept", async () => {
     const { share } = await createTestRecipeShare(testUserId, testRecipeId);
     const fetched = await getRecipeShareById(share.id);

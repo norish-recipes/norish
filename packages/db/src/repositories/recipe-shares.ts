@@ -99,7 +99,12 @@ export async function getRecipeShareById(id: string): Promise<RecipeShareDto | n
 export function getRecipeShareUrl(share: RecipeShareDto): string | null {
   if (share.tokenEnc === null || getRecipeShareStatus(share) !== "active") return null;
 
-  return `/share/${decrypt(share.tokenEnc)}`;
+  try {
+    return `/share/${decrypt(share.tokenEnc)}`;
+  } catch {
+    // An unreadable token (say, a changed key) answers no link and logs nothing.
+    return null;
+  }
 }
 
 export async function getRecipeShareByToken(token: string): Promise<RecipeShareDto | null> {
