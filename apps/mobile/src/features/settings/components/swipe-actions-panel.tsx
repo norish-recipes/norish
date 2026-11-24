@@ -58,7 +58,7 @@ export function SwipeActionsPanel({
               ellipsizeMode="tail"
               numberOfLines={1}
             >
-              {action.label}
+              {action.swipeLabel ?? action.label}
             </Text>
           </PressableScale>
         );

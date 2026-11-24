@@ -22,7 +22,13 @@ const LOOKS: Record<SettingsActionKind, Look> = {
   copy: { tone: "plain", icon: "copy-outline", symbol: "doc.on.doc" },
 };
 
-export type SettingsRowAction = { kind: SettingsActionKind; label: string; onPress: () => void };
+export type SettingsRowAction = {
+  kind: SettingsActionKind;
+  label: string;
+  /** A shorter label for the 52 pt swipe slot, where `label` would not fit; the menu keeps `label`. */
+  swipeLabel?: string;
+  onPress: () => void;
+};
 
 export const actionLook = (kind: SettingsActionKind): Look => LOOKS[kind];
 
