@@ -120,7 +120,7 @@ export default function ShareLinksTableCard({
       case "actions":
         return (
           <div className="flex gap-1">
-            {shareLinkActions(share.status).includes("revoke") ? (
+            {shareLinkActions(share).includes("revoke") ? (
               <IconActionButton
                 action="edit"
                 icon={PauseIcon}
@@ -134,7 +134,7 @@ export default function ShareLinksTableCard({
                 }
               />
             ) : null}
-            {shareLinkActions(share.status).includes("reactivate") ? (
+            {shareLinkActions(share).includes("reactivate") ? (
               <IconActionButton
                 action="edit"
                 icon={PlayIcon}

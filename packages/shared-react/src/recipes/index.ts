@@ -54,6 +54,7 @@ export {
   useMyRecipeSharesQuery,
   useRecipeSharesQuery,
 } from "./use-recipe-shares-query";
+export { useShareLink } from "./use-share-link";
 export { useSharePublicConfigQuery } from "./use-share-public-config-query";
 export { useSharedRecipeQuery } from "./use-shared-recipe-query";
 export { useWorkedOutNutrition } from "./use-worked-out-nutrition";
