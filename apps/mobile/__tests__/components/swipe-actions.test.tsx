@@ -9,6 +9,7 @@ type Props = {
   renderRightActions: (progress: unknown, translation: unknown, methods: unknown) => ReactNode;
   onSwipeableOpenStartDrag: () => void;
   onSwipeableWillOpen: () => void;
+  onSwipeableOpen: () => void;
   children?: ReactNode;
 };
 
@@ -249,14 +250,20 @@ describe("SwipeActions", () => {
     expect(unlink.onPress).toHaveBeenCalledTimes(1);
   });
 
-  it("does not open a row that is not enabled", () => {
-    render(
-      <SwipeActions enabled={false} actions={actions} itemKey="r1" variant="list">
+  it("closes an open row once it is no longer enabled, as when the connection drops", () => {
+    const row = (enabled: boolean) => (
+      <SwipeActions actions={actions} enabled={enabled} itemKey="r1" variant="row">
         {null}
       </SwipeActions>
     );
+    const { rerender } = render(row(true));
 
-    expect(swipe.props!.enabled).toBe(false);
+    act(() => swipe.props!.onSwipeableOpen());
+    rerender(row(true));
+    expect(swipe.close).not.toHaveBeenCalled();
+
+    rerender(row(false));
+    expect(swipe.close).toHaveBeenCalledTimes(1);
   });
 
   it("springs a held card back closed when the confirm is cancelled, and ignores a card never held", () => {

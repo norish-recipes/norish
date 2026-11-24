@@ -157,7 +157,7 @@ const CIRCLE_SHADOW = {
 };
 
 /** A row's swipe-left actions: coloured circles with a neutral label under each; none while not
- * `enabled`. `ref` plays a card's delete; `itemKey` says which item that hid, as a recycled cell draws another. */
+ * `enabled`, which closes an open row. `ref` plays a card's delete; `itemKey` says which item that hid, as a recycled cell draws another. */
 export function SwipeActions({
   ref,
   itemKey,
@@ -240,6 +240,11 @@ export function SwipeActions({
     resetMotion();
     setIsOpen(false);
   }, [itemKey]);
+
+  // A row left open as the swipe is turned off (Offline) closes, so its actions can't be pressed.
+  useEffect(() => {
+    if (!enabled && isOpen) rowRef.current?.close();
+  }, [enabled, isOpen]);
 
   useImperativeHandle(ref, () => ({
     leave: (done) => {
