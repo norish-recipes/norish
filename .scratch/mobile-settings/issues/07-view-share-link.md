@@ -23,3 +23,14 @@ Not in this ticket: web's share-links table (the hook is there for it), and re-i
 - Decided: Copy only on an **active** share with a link (a revoked or expired link opens nothing); `shareLinkActions` now takes the share and lists `copy`, which web's card ignores (no web UI change).
 - Deviation, box 5 unticked: Copy is in the long-press menu only. `swipeActions` drops Copy since ticket 01 checked the canvas (copy is menu-only there); adding it to the swipe is a one-line change if Mike wants the ticket's wording.
 - Docs writer: Settings → Share links on mobile can copy links made from 0.28 on; older links show no Copy (re-issue is not offered).
+
+### Review (2026-11-24, `b5606d8b2..871351a7a`; Standards Haiku, Spec Sol high): dispositions
+
+Sound per the Spec reviewer: who the query answers matches revoke (others get the same not-found as a missing share), the migration keeps existing links, lists and events carry no token, the read stays out of React state, the query cache, the Outbox and the idempotency store, no web UI change.
+- fix, bug: `shareUrl` returns the link of a share revoked or expired after the list loaded (`shares.ts:224`), and Copy reports success for a dead link. The query answers no link unless the share is active; mobile rereads the list.
+- fix: a stored token that cannot be decrypted throws (`recipe-shares.ts:100`), and tRPC logs the crypto error. It answers no link.
+- fix, verify: the link is read by a GET query and the tRPC route sets no `Cache-Control: no-store` (`apps/web/app/api/trpc/[trpc]/route.ts:10`), so a cache could keep it.
+- fix: `copyLink` in `share-links-screen.tsx` repeats the failure toast `useCopyToClipboard` already shows; `shareLinkActions` tests `status === "active"` twice.
+- reject: a copy still in flight at sign-out can finish afterwards (the reader's own link on the reader's own device, two pages apart).
+- reject: web's development `loggerLink` would print the link if web ever called the hook (browser console, development only, no web caller; the same holds for a new API key today).
+- reject: `url` holds a path (`RecipeShareCreatedSchema.url` is named the same); the swallowed read error (the toast is the same either way); the test's mock factory.
