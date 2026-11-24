@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hiddenItemVisibility } from "@norish/shared-react/reader";
-import { withoutHiddenFilters } from "@norish/shared-react/recipes";
+import { hiddenItemVisibility, withoutHiddenFilters } from "@norish/shared-react/reader";
 import {
   DEFAULT_RECIPE_FILTERS,
   hasAppliedRecipeFilters,

@@ -3,6 +3,7 @@ export {
   hiddenItemVisibility,
   offeredHiddenItems,
   partitionHiddenItems,
+  withoutHiddenFilters,
   type HiddenItemVisibility,
 } from "./hidden-items";
 export { measurementChoices, shownMeasurement } from "./measurement-choices";

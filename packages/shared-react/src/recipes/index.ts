@@ -28,7 +28,6 @@ export {
   useLibraryCards,
   useLibraryList,
   useLibraryQueryFilters,
-  withoutHiddenFilters,
 } from "./use-library-list";
 export { usePendingRecipesQuery, useRereadPendingRecipes } from "./use-pending-recipes-query";
 export { useRandomRecipe } from "./use-random-recipe";

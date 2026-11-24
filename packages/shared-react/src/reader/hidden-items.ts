@@ -1,3 +1,5 @@
+import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
+
 /** What a reader can hide. An administrator can turn `timers` off for everyone, hiding the choice;
  * the stored name survives, so turning timers back on restores the reader's choice. */
 export const HIDDEN_ITEMS = [
@@ -58,5 +60,25 @@ export function hiddenItemVisibility(hidden: readonly string[]): HiddenItemVisib
     // Library or its type chips.
     showCookbooks: shows("cookbooks"),
     showIngredientIcons: shows("ingredientIcons"),
+  };
+}
+
+/** `filters` less a favourites or rating filter the reader hides, which stays stored; the same
+ * object while none is hidden. The browser and the server's seed both apply it. */
+export function withoutHiddenFilters<
+  T extends Pick<CanonicalRecipeFilters, "showFavoritesOnly" | "minRating">,
+>(
+  filters: T,
+  { showFavorites, showRatings }: Pick<HiddenItemVisibility, "showFavorites" | "showRatings">
+): T {
+  const hidesFavorites = !showFavorites && filters.showFavoritesOnly;
+  const hidesRating = !showRatings && filters.minRating !== null;
+
+  if (!hidesFavorites && !hidesRating) return filters;
+
+  return {
+    ...filters,
+    showFavoritesOnly: hidesFavorites ? false : filters.showFavoritesOnly,
+    minRating: hidesRating ? null : filters.minRating,
   };
 }
