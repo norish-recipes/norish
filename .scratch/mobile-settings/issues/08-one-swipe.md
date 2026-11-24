@@ -4,7 +4,7 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] One swipe component serves recipe cards and every Settings list (site tokens, API keys, share links, household members, sign-in methods): the same gesture, look, full swipe, one open row at a time, Reduce Motion handling. Settings' own swipe files are gone.
 - [x] Nothing of a row's actions shows until it is swiped (his build predates `b0a0de0dd`, which hid the circles; check it on the simulator in light and dark).
@@ -53,3 +53,5 @@ Sound per the Spec reviewer: the order and the full-swipe action on every list (
 - Every swipe action says whether it `asks`; a full swipe runs the outermost only if it asks, else it just opens the row (no firm haptic, no capsule), so a full swipe on Unlink opens it and the circle must be tapped (a709b6f9f). Offline closes an open row (3df442d72); the row caption is capped at 1.2x Dynamic Type (ee4650e9f).
 - Refactors: comments and `shrinkToOneLine` (ef19c7dca), circle size from one number in style, no class (fe6194d77), recipe looks in `recipeSwipeLooks(shopInk)` (62733c138), Settings mapping in `row-actions.ts` (fad075409).
 - Release simulator: the six named flows pass once each; an open member row at the largest accessibility size fits circles and captions. Gates green, mobile lint at 11 warnings.
+
+Exit gates at `113706388` (Haiku verifier): all seven 0, mobile lint 11. The six swipe flows passed once each on the fixed build (three times each before the fix round). Web is untouched since `d3c0c3125`, where the browser tests passed 282 of 282. `mobile.md` needed no change (it says only "Swipe a row to see its actions").
