@@ -33,11 +33,13 @@ export function ShareLinksScreen() {
   const toUrl = useServerUrl();
   const copyToClipboard = useCopyToClipboard();
   const { toast } = usePlatform();
-  // The link is read at the press and lives only until the clipboard has it.
+  // The link is read at the press and lives only until the clipboard has it. No link means the
+  // share stopped working since the list loaded, so the list is read again.
   const copyLink = async (shareId: string) => {
     const path = await readShareLink(shareId).catch(() => null);
 
     if (path === null) {
+      read.invalidate();
       toast.show({ severity: "danger", title: text("common.errors.operationFailed") });
 
       return;
