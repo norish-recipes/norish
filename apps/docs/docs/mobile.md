@@ -51,8 +51,40 @@ open Norish to refresh the widgets.
 
 For timers and sharing from other apps, see [Find and cook recipes](/recipes/mobile-recipe).
 
-## Language and sign-out
+## Settings
 
-Set the app's language in iPhone settings for use before signing in. Once
-you sign in, Norish uses your account language. To sign out, tap your avatar,
-choose **Sign out** and confirm.
+Tap your avatar and choose **All settings**. Swipe a row to see its actions,
+or touch and hold it to open its menu.
+
+![Settings showing account, household, connections and app options](/img/screenshots/mobile-settings.png)
+
+Tap your profile to change your name or photo, manage sign-in methods, change
+your password, or delete your account. Tap **Save** after changing your name
+or choosing a photo.
+
+![Profile with name, sign-in methods and delete account](/img/screenshots/mobile-settings-profile.png)
+
+Under **Preferences**, choose your language, measurements, phone display
+options and hidden items. Set your allergies under **Allergies** and tap **Save**.
+Set the app language in iPhone settings for use before signing in.
+
+![Preferences for the account and phone](/img/screenshots/mobile-settings-preferences.png)
+
+Under **Household**, see members or leave your household. Admins can remove
+members, make another member admin, and copy, share or regenerate the join code.
+If you have no household, create one or join with a code.
+
+![Household members and join code](/img/screenshots/mobile-settings-household.png)
+
+Under **Connections**, manage site authentication tokens, API keys and recipe
+share links. Copy a new API key when it appears. For an active recipe share link
+created in 0.28 or later, touch and hold its row and choose **Copy link**.
+
+![API keys with Create key and existing keys](/img/screenshots/mobile-settings-api-keys.png)
+
+Under **App**, change the server, open support or see the app and server
+versions. Tap **Sign out** to sign out. If you have unsynced changes, confirm
+before signing out or changing server.
+
+When Offline, you can read saved Settings data, but changes are disabled.
+Sign out and changing server remain available.
