@@ -55,9 +55,7 @@ export const IDEMPOTENCY_CLAIM_TTL_SECONDS = 5 * 60;
  * so an in-flight owner and a completed response are told apart.
  */
 type IdempotencyRecord =
-  | { done: false }
-  | { done: true; response: unknown }
-  | { done: true; secretReturned: true };
+  { done: false } | { done: true; response: unknown } | { done: true; secretReturned: true };
 
 /** Mutations whose response is a secret shown once: an API key, a share link's URL. */
 export const ONE_TIME_SECRET_PATHS: ReadonlySet<string> = new Set([
