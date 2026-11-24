@@ -51,12 +51,15 @@ export function useConvertMutation(
   const detailQueryKey = trpc.recipes.get.queryKey({ id: recipeId });
 
   const rollback = (context: ConvertMutationContext | undefined) => {
-    if (context?.didSwitchLocally) {
-      queryClient.setQueryData<FullRecipeDTO | null>(
-        context.detailQueryKey,
-        context.previousRecipe
+    const previous = context?.didSwitchLocally ? context.previousRecipe : null;
+
+    // Only its own switch is undone; a newer recipe is left for the reread.
+    if (previous)
+      queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, (current) =>
+        current?.version === previous.version
+          ? { ...current, systemUsed: previous.systemUsed }
+          : current
       );
-    }
 
     void queryClient.invalidateQueries({ queryKey: context?.detailQueryKey ?? detailQueryKey });
   };
