@@ -10,7 +10,7 @@
 - [x] A query returns one share's link to whoever may manage that share today (the same check revoke uses), and to no one else. It is a query, so nothing about it is stored for Replay.
 - [x] The share DTO says whether a link can be shown, without carrying the token.
 - [x] shared-react: one hook in the recipes domain that fetches the link on demand; the link is not kept in the query cache after it is copied.
-- [ ] Mobile Settings → Share links: Copy link by swipe and long-press on a share that has one; a share made before has no Copy link action. Disabled Offline like the other actions.
+- [x] Mobile Settings → Share links: Copy link in the long-press menu (not the swipe: ticket 01 keeps Copy out of swipes, as the canvas shows it) on a share that has one; a share made before has no Copy link action. Disabled Offline like the other actions.
 - [x] Tests: the repository round-trip, the permission check on the query (owner, other household member, outsider), the row actions with and without a link.
 - [x] Gates green.
 
