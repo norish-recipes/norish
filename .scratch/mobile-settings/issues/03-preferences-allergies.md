@@ -120,3 +120,17 @@ Fix round 5 runs on Opus high after ticket 07's implementer (one writer at a tim
 - Name and avatar replies carry no preferences again, so they cannot overwrite a preference save still in flight.
 - `recipes.convertMeasurements` answers early again and reports its result by event; the `converted` event keeps the reread recipe. A conversion ends once the recipe moves past the version it was asked on, or on the `failed` event. A manual pick counts as made by hand once the server's newer recipe shows it.
 - A failed conversion undoes only its own switch on the same version; a newer recipe is left alone and reread.
+
+### Review round 6 (2026-11-24): fix range `2f7f99f20..4d1967cde` (Sol high): dispositions
+
+Holding per the reviewer: a queued preference save keeps its value; the conversion call answers early. None of what is left is common (the reviewer rates each uncommon or rare). All fix:
+- fix, bug: when the first profile read fails, a save waiting on it is dropped without a failure (`use-account-mutations.ts:170`, `offline/settled.ts:19`); a second choice made while it waits is dropped too.
+- fix, bug: a name or avatar reply carries the version read after the write (`user.ts:192`), so a language saved elsewhere in between is stamped as seen without a reread. The reply carries the version its own update committed, as the preferences save does.
+- fix, bug: a name or avatar save the Outbox queued shows a failure (`use-account-mutations.ts:51`). One rule for every reader write.
+- fix, bug: an AI conversion writes its copy before the stale check (`recipes.ts:756`), replacing ingredients edited while it ran.
+- fix: a stale conversion returns without an event (`recipes.ts:770`), so a reader who missed the edit keeps a spinner.
+- fix, bug: a manual pick is confirmed by any newer recipe already in the target system (`use-system-conversion.ts:128`), so an unrelated rename can credit a stale rewrite.
+- fix, bug: a delayed conversion event replaces a newer cached recipe (`use-recipe-subscription.ts:47`).
+- verify: a failed conversion shows the import's "paste failed" toast (`use-recipes-subscription.ts:162`); fixed only if this run introduced it.
+
+Fix round 6 runs on Opus high. This is the last round on this code in this ticket: what a closing review still finds and rates rare is logged as a known limit, not fixed again.
