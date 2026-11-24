@@ -1,6 +1,6 @@
 # Mobile Settings
 
-Status: ready-for-agent
+Status: done
 
 Settled in a `/grill-with-docs` session on 2026-11-23. The design is the Settings page of the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz#page-settings, Version 117): base boards `StPage` (tweaks `screen`, `overlay`, `state`) and the St* boards importing it, each light and dark. Vocabulary is CONTEXT.md's: **Reader**, **Avatar**, **Device Kind**, **Device Preference**, **Hidden Item**, **Offline**, **Outbox**. Branch `rc/0.28.0-beta`, Target Version 0.28.0-beta. Goal: the last missing screens before the app goes to internal TestFlight testers (no App Review needed for that).
 

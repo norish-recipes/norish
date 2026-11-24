@@ -4,12 +4,12 @@
 
 **Blocked by:** 02, 03, 04, 05, 07
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Maestro: open Settings from the avatar menu, edit name, swipe-revoke a site token, create and copy an API key, sign out with nothing unsynced.
 - [x] Checked on a device or simulator, light and dark, against the canvas boards.
 - [x] 0.28.0-beta release notes and the apps/docs mobile pages updated (written by Terra via `delegate_task`, per `docs/agents/feature-docs.md`).
-- [ ] Gates green.
+- [x] Gates green.
 
 ## Comments
 
@@ -89,3 +89,7 @@ Device agent (`b0a0de0dd`..`dd3084fd3`), on the iPhone 18 Pro simulator (the lef
 Docs (Terra, `1d0a6e7e0`): `mobile.md` (still `draft: true` until TestFlight) and the 0.28.0-beta release notes. Root `format:check` 0, docs build 0. The docs workspace's `pnpm format` exits 1 on eight older release-note files this run did not touch (only `0.28.0-beta.md` changed under release notes).
 
 The closing review of tickets 03, 05 and 07 and its fixes are logged at the end of ticket 03.
+
+### Closing verification (2026-11-24)
+
+Closing fix 2: `06a5858c2` (a new share link is forgotten when its panel closes), `1e758948c` (no reread of the Settings lists while Offline), `5fd39c3c4` and `86bac24b0` (rollbacks on their own version only), `d3c0c3125`. At `d3c0c3125` (Haiku verifier): all seven gates 0, mobile lint at the baseline's 11, web E2E 282 of 282 with none flaky. On a fresh Release build of `d3c0c3125` on the iPhone 18 Pro simulator the five Settings Maestro flows passed once each. The docs workspace's own `pnpm format` still fails on eight older release-note files this run did not touch.

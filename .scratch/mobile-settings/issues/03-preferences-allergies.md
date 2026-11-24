@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Preferences: account-wide choices (measurements menu and the rest web's card has) and an "On phones" group of Device Preferences (the phone Device Kind), including Hidden items as checkmarks.
 - [x] A change applies everywhere it shows in the app without a restart.
@@ -187,3 +187,7 @@ Known limits, not fixed (each needs a lost reply or a save queued mid-flight, an
 - a plaintext record stored before the secrets fix can be replayed through another procedure with its operation id, by the same account, until it expires (seven days at most).
 
 No further review round on this code in this ticket (decided at round 6).
+
+### Closing verification (2026-11-24)
+
+Closing fix 2: `06a5858c2` (a new share link is forgotten when its panel closes), `1e758948c` (no reread of the Settings lists while Offline), `5fd39c3c4` and `86bac24b0` (rollbacks on their own version only), `d3c0c3125`. At `d3c0c3125` (Haiku verifier): all seven gates 0, mobile lint at the baseline's 11, web E2E 282 of 282 with none flaky. On a fresh Release build of `d3c0c3125` on the iPhone 18 Pro simulator the five Settings Maestro flows passed once each. The docs workspace's own `pnpm format` still fails on eight older release-note files this run did not touch.
