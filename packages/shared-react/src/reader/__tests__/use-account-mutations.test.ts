@@ -404,6 +404,30 @@ describe("the Account's writes", () => {
       }
     );
 
+    it.each([
+      ["a rename", "user.updateName"],
+      ["an Avatar upload", "user.uploadAvatar"],
+      ["an Avatar delete", "user.deleteAvatar"],
+    ] as const)("shows no failure for %s the Outbox queued", async (_write, path) => {
+      const result = render(() => useProfileMutations());
+      const file = new File(["x"], "a.png", { type: "image/png" });
+
+      act(
+        () =>
+          void {
+            "user.updateName": () => result.current.updateName("Grace"),
+            "user.uploadAvatar": () => result.current.uploadAvatar(file),
+            "user.deleteAvatar": () => result.current.deleteAvatar(),
+          }[path]()
+      );
+      const call = await sentCall(path);
+
+      await act(async () => call.deferred.reject(new TypeError("Network request failed")));
+
+      expect(adapter.showError).not.toHaveBeenCalled();
+      expect(profile()).toEqual(PROFILE);
+    });
+
     it("refuses an empty name without sending it", async () => {
       const result = render(() => useProfileMutations());
 

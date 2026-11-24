@@ -16,12 +16,13 @@ import { useTRPC } from "../trpc";
 import { dropAndLeave, runSessionEnd } from "./session-end";
 import { useProfileCache } from "./use-profile";
 
-/** A failed write's `onError`: reread the profile and tell the reader. */
+/** A failed write's `onError`: reread the profile and tell the reader; a write the Outbox queued did not fail. */
 export function useFailedWrite() {
   const { showError } = usePlatform();
   const { invalidate } = useProfileCache();
 
   return (context: string) => (error: unknown) => {
+    if (shouldPreserveOptimisticUpdate(error)) return;
     void invalidate();
     showError(error, context);
   };
