@@ -53,8 +53,7 @@ For timers and sharing from other apps, see [Find and cook recipes](/recipes/mob
 
 ## Settings
 
-Tap your avatar and choose **All settings**. Swipe a row to see its actions,
-or touch and hold it to open its menu.
+Tap your avatar and choose **All settings**. Touch and hold a row to open its actions menu.
 
 ![Settings showing account, household, connections and app options](/img/screenshots/mobile-settings.png)
 
