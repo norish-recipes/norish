@@ -86,7 +86,7 @@ export function useProfileMutations() {
 export function usePreferencesMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { held, version, mergeUser, mergePreferences: merge, invalidate } = useProfileCache();
+  const { held, version, mergePreferences: merge, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
   const mutationKey = trpc.user.updatePreferences.mutationKey();
@@ -114,8 +114,7 @@ export function usePreferencesMutation() {
         }
         // A stale answer carries the stored choices and version, which replace the optimistic copy.
         if (answer.stale) refuseStale("user-settings:update-preferences");
-        if (answer.version) mergeUser({ version: answer.version });
-        merge(answer.preferences ?? {});
+        merge(answer.preferences ?? {}, answer.version);
       },
       onError: (error, _input, context) => {
         if (context) merge(context.previous);

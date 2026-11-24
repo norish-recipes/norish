@@ -101,6 +101,24 @@ describe("useAllergiesMutation", () => {
     expect(queryClient.getQueryData(ALLERGIES_KEY)).toEqual({ allergies: ["gluten"], version: 4 });
   });
 
+  it("drops a reply older than the version both caches learned meanwhile", async () => {
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: ["nuts"], version: 3 });
+    queryClient.setQueryData(keyOf("user.get"), { user: { version: 3 }, apiKeys: [] });
+    const result = render(() => useAllergiesMutation());
+
+    act(() => void result.current.setAllergies(["milk"]));
+    await sentCall("user.setAllergies");
+    queryClient.setQueryData(ALLERGIES_KEY, { allergies: ["milk", "soy"], version: 5 });
+    queryClient.setQueryData(keyOf("user.get"), { user: { version: 5 }, apiKeys: [] });
+    await answerCall("user.setAllergies", { success: true, allergies: ["milk"], version: 4 });
+
+    expect(queryClient.getQueryData(ALLERGIES_KEY)).toEqual({
+      allergies: ["milk", "soy"],
+      version: 5,
+    });
+    expect(queryClient.getQueryData(keyOf("user.get"))).toMatchObject({ user: { version: 5 } });
+  });
+
   it("resolves that a write the server took went through", async () => {
     queryClient.setQueryData(ALLERGIES_KEY, { allergies: [], version: 3 });
     const result = render(() => useAllergiesMutation());

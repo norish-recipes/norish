@@ -9,7 +9,7 @@ import { usePlatform } from "../platform";
 import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { readStatus } from "../trpc/read-status";
-import { useProfileCache } from "./use-profile";
+import { outdated, useProfileCache } from "./use-profile";
 
 const NONE: string[] = [];
 
@@ -48,10 +48,11 @@ export function useAllergiesMutation() {
       onSuccess: (answer) => {
         if (!answer.success) return;
         if (answer.stale) refuseStale("user-settings:update-allergies");
-        writeOverRead(queryClient, queryKey, (held) => ({
-          allergies: answer.allergies ?? [],
-          version: answer.version ?? held?.version ?? 1,
-        }));
+        writeOverRead(queryClient, queryKey, (held) =>
+          outdated(answer.version, held?.version)
+            ? held
+            : { allergies: answer.allergies ?? [], version: answer.version ?? held?.version ?? 1 }
+        );
         if (answer.version) mergeUser({ version: answer.version });
       },
       onError: (error) => showError(error, "user-settings:update-allergies"),

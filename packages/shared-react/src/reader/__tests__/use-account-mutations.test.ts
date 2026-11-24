@@ -194,6 +194,43 @@ describe("the Account's writes", () => {
     });
   });
 
+  describe("a reply arriving after a newer version", () => {
+    const learn = (version: number, locale: string) =>
+      queryClient.setQueryData<UserSettingsDto>(
+        USER_KEY,
+        (held) => held && { ...held, user: { ...held.user, version, preferences: { locale } } }
+      );
+
+    it("never lowers the version or writes its preferences over the newer read", async () => {
+      const result = render(() => usePreferencesMutation());
+
+      act(() => void result.current.updatePreferences({ locale: "nl" }));
+      await sentCall("user.updatePreferences");
+      learn(6, "fr");
+      await answerCall("user.updatePreferences", {
+        success: true,
+        preferences: { locale: "nl" },
+        version: 4,
+      });
+
+      expect(profile()?.user).toMatchObject({ version: 6, preferences: { locale: "fr" } });
+    });
+
+    it("never lowers the version or writes its name over the newer read", async () => {
+      const result = render(() => useProfileMutations());
+
+      act(() => void result.current.updateName("Grace"));
+      await sentCall("user.updateName");
+      learn(6, "fr");
+      await answerCall("user.updateName", {
+        success: true,
+        user: { ...PROFILE.user, name: "Grace", version: 4 },
+      });
+
+      expect(profile()?.user).toMatchObject({ version: 6, name: "Ada" });
+    });
+  });
+
   describe("the profile", () => {
     it("keeps the cached preferences when a rename answers with the user", async () => {
       const result = render(() => useProfileMutations());
