@@ -1,6 +1,6 @@
 # Mobile Settings
 
-Status: done
+Status: in progress (ticket 10)
 
 Settled in a `/grill-with-docs` session on 2026-11-23. The design is the Settings page of the "Norish iOS" canvas (https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz#page-settings, Version 117): base boards `StPage` (tweaks `screen`, `overlay`, `state`) and the St* boards importing it, each light and dark. Vocabulary is CONTEXT.md's: **Reader**, **Avatar**, **Device Kind**, **Device Preference**, **Hidden Item**, **Offline**, **Outbox**. Branch `rc/0.28.0-beta`, Target Version 0.28.0-beta. Goal: the last missing screens before the app goes to internal TestFlight testers (no App Review needed for that).
 
@@ -32,9 +32,9 @@ Settings becomes a pushed page opened from the avatar menu's "All settings", wit
 ## Implementation Decisions
 
 - **Entry.** The `(tabs)/settings.tsx` tab goes; Settings is a pushed route opened by the avatar menu's existing "All settings" (`apps/mobile/src/components/account-menu.tsx`), with a back button and a small centred nav title like every sub-page.
-- **Root sections.** Profile card (name, email, avatar; rows Profile, Preferences, Allergies) · Household · Connections (Site tokens, API keys, Share links) · App (Server, Support, Version) · Sign out.
-- **App rows.** Server opens the existing server-address flow (`update-server.tsx` / Connect). Support opens the GitHub issues page in the browser. Version shows the app version and build and the server's version (`config` health `version`), e.g. "1.0 (12) · Server 0.28.0".
-- **Sign out and change server** confirm only when the Outbox holds unsynced changes, with the existing "Discard unsynced changes?" alert; otherwise they act at once. Change server signs out, then opens the server address pre-filled.
+- **Root sections.** Profile card (name, email, avatar; rows Profile, Preferences, Allergies) · Household · Connections (Site tokens, API keys, Share links) · App (Server, Support) · Sign out · the version line as small grey text. (Changed 2026-11-24, ticket 10: Version was a row in App.)
+- **App rows.** Server opens the existing server-address flow (`update-server.tsx` / Connect). Support opens the GitHub issues page in the browser. The version line under Sign out shows the app version and build and the server's version (`config` health `version`), e.g. "1.0 (12) · Server 0.28.0".
+- **Sign out** confirms only when the Outbox holds unsynced changes, with the existing "Discard unsynced changes?" alert; otherwise it acts at once. **Change server** always asks first, because it signs out: that same alert when there are unsynced changes, otherwise one saying you will be signed out. It then signs out and opens the server address pre-filled. (Changed 2026-11-24, ticket 10: it asked only with unsynced changes.)
 - **Lists.** Rows have a long-press menu (lifted row, glass menu with icons, plain scrim) and no swipe actions. No ⋯ buttons. Delete and Kick red, Revoke and Disable yellow (`--shop`), Reactivate, Enable and Make admin green; the red removing action is last. One shared settings-row component covers every list; long-press goes through the `native-menu` module. (Changed 2026-11-24, tickets 08 and 09: the rows had swipe actions; Mike found them wrong inside a grouped list and kept only the long press.)
 - **Forms.** Profile and Allergies have Save buttons. Helper text sits behind an (i) hint button (`hint-button.tsx`), never under a field. Sheets follow the Panels kit (glass, no solid footer).
 - **Data.** Every read and write uses the shared-react hooks web uses (`@norish/shared-react/reader`: `useProfile`, `useAccountMutations`, `useAllergies`, `useDevicePreference`, `useHousehold`, `useHouseholdMutations`, `useSiteAuthTokens`; share links from the recipes domain). Mobile adds only UI. A missing hook is added to shared-react, never `useTRPC` in the app.
