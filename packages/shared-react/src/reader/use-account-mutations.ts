@@ -33,7 +33,7 @@ type ProfileAnswer = WriteResult & { stale?: boolean };
 export function useProfileMutations() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
-  const { version, mergeUser, invalidate } = useProfileCache();
+  const { sendVersion, mergeUser, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
 
@@ -74,13 +74,14 @@ export function useProfileMutations() {
         return false;
       }
 
-      return acceptedFresh(mutateName({ name, version: version() }));
+      return acceptedFresh(sendVersion().then((version) => mutateName({ name, version })));
     },
     /** Resolves whether the upload went through; the reader is shown why not. */
     uploadAvatar: (file: Blob): Promise<boolean> =>
-      acceptedFresh(mutateUpload(uploadForm({ file, version: version() }))),
+      acceptedFresh(sendVersion().then((version) => mutateUpload(uploadForm({ file, version })))),
     /** Resolves whether the delete went through; the reader is shown why not. */
-    deleteAvatar: (): Promise<boolean> => acceptedFresh(mutateDelete({ version: version() })),
+    deleteAvatar: (): Promise<boolean> =>
+      acceptedFresh(sendVersion().then((version) => mutateDelete({ version }))),
     isDeletingAvatar,
   };
 }
@@ -96,7 +97,7 @@ export function usePreferencesSaving() {
 export function usePreferencesMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { held, version, write, mergePreferences, invalidate } = useProfileCache();
+  const { held, sendVersion, write, mergePreferences, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
   const mutationKey = trpc.user.updatePreferences.mutationKey();
@@ -167,9 +168,13 @@ export function usePreferencesMutation() {
     /** Resolves whether the server took them; refused unsent while another save is in flight,
      * which would send the same version. */
     updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<boolean> =>
-      queryClient.isMutating({ mutationKey }) > 0
-        ? Promise.resolve(false)
-        : acceptedFresh(mutateAsync({ preferences, version: version() })),
+      acceptedFresh(
+        sendVersion().then<{ success: boolean; stale?: boolean }>((version) =>
+          queryClient.isMutating({ mutationKey }) > 0
+            ? { success: false }
+            : mutateAsync({ preferences, version })
+        )
+      ),
     isUpdatingPreferences: saving,
   };
 }

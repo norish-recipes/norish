@@ -51,8 +51,10 @@ type HeldProfile = inferRouterOutputs<AppRouter>["user"]["get"];
 
 type ProfileCache = {
   held: () => HeldProfile | undefined;
-  /** The user's version a write sends: the newest the profile or the allergies have learned. */
+  /** The newest version the profile or the allergies have learned. */
   version: () => number;
+  /** The version a write sends; before the first profile read answers, it waits for that read. */
+  sendVersion: () => Promise<number>;
   /** Writes `update(held)` over any read under way. */
   write: (update: (held: HeldProfile) => HeldProfile) => void;
   mergeUser: (patch: User) => void;
@@ -72,6 +74,11 @@ export function useProfileCache(): ProfileCache {
   const invalidate = () => rereadAfterWrite(queryClient, queryKey);
   const version = () =>
     Math.max(held()?.user.version ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0);
+  const sendVersion = async () => {
+    if (!held()) await queryClient.ensureQueryData(trpc.user.get.queryOptions());
+
+    return version();
+  };
   const write = (update: (held: HeldProfile) => HeldProfile) => {
     if (!held()) {
       void invalidate();
@@ -92,6 +99,7 @@ export function useProfileCache(): ProfileCache {
   return {
     held,
     version,
+    sendVersion,
     write,
     mergeUser: (patch) => writeUser(patch.version, (user) => ({ ...user, ...patch })),
     mergePreferences: (patch, replyVersion) => {

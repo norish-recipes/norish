@@ -146,33 +146,47 @@ describe("the Account's writes", () => {
       }
     );
 
-    it("rereads after a successful save answers before the first profile read", async () => {
-      queryClient.removeQueries({ queryKey: USER_KEY });
-      let firstRead: (value: UserSettingsDto) => void = () => {};
-      const initial = new Promise<UserSettingsDto>((resolve) => (firstRead = resolve));
-      const reread = vi.fn(async () => ({
-        ...PROFILE,
-        user: { ...PROFILE.user, version: 4, preferences: { locale: "nl" } },
-      }));
-      const get = vi.fn().mockReturnValueOnce(initial).mockImplementation(reread);
-      let finishSave: (value: unknown) => void = () => {};
-      const save = new Promise((resolve) => (finishSave = resolve));
+    it.each(["user.updatePreferences", "user.updateName", "user.deleteAvatar"])(
+      "%s sent before the first profile read waits for it and sends the version it learned",
+      async (path) => {
+        queryClient.removeQueries({ queryKey: USER_KEY });
+        let firstRead: (value: UserSettingsDto) => void = () => {};
+        const read = new Promise<UserSettingsDto>((resolve) => (firstRead = resolve));
+        const stored = PROFILE.user.version;
 
-      serveTRPC((path) => (path === "user.get" ? get() : save));
-      const result = render(() => ({
-        read: useProfileQuery(),
-        write: usePreferencesMutation(),
-      }));
+        // As the real server: a write at any version but the stored one is refused as stale.
+        serveTRPC(async (called, input) => {
+          if (called === "user.get") return read;
+          const { version, preferences } = input as { version: number; preferences?: object };
 
-      expect(get).toHaveBeenCalledOnce();
-      act(() => void result.current.write.updatePreferences({ locale: "nl" }));
-      await act(async () =>
-        finishSave({ success: true, preferences: { locale: "nl" }, version: 4 })
-      );
-      await act(async () => firstRead(PROFILE));
+          if (version !== stored)
+            return { success: true, stale: true, preferences: {}, version: stored };
 
-      await waitFor(() => expect(result.current.read.user?.preferences?.locale).toBe("nl"));
-    });
+          return called === "user.updatePreferences"
+            ? { success: true, preferences, version: stored + 1 }
+            : { success: true, user: { ...PROFILE.user, name: "Grace", version: stored + 1 } };
+        });
+        const result = render(() => ({
+          read: useProfileQuery(),
+          preferences: usePreferencesMutation(),
+          profile: useProfileMutations(),
+        }));
+        const write = {
+          "user.updatePreferences": () =>
+            result.current.preferences.updatePreferences({ locale: "nl" }),
+          "user.updateName": () => result.current.profile.updateName("Grace"),
+          "user.deleteAvatar": () => result.current.profile.deleteAvatar(),
+        }[path]!;
+        let took: boolean | undefined;
+
+        act(() => void write().then((answer) => (took = answer)));
+        await act(async () => firstRead(PROFILE));
+
+        await waitFor(() => expect(took).toBe(true));
+        expect(result.current.read.user?.version).toBe(stored + 1);
+        expect(adapter.showError).not.toHaveBeenCalled();
+      }
+    );
 
     it("take what the server holds on a stale answer and say it changed elsewhere", async () => {
       const result = render(() => usePreferencesMutation());
