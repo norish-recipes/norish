@@ -55,3 +55,7 @@ Sound per the Spec reviewer: the order and the full-swipe action on every list (
 - Release simulator: the six named flows pass once each; an open member row at the largest accessibility size fits circles and captions. Gates green, mobile lint at 11 warnings.
 
 Exit gates at `113706388` (Haiku verifier): all seven 0, mobile lint 11. The six swipe flows passed once each on the fixed build (three times each before the fix round). Web is untouched since `d3c0c3125`, where the browser tests passed 282 of 282. `mobile.md` needed no change (it says only "Swipe a row to see its actions").
+
+### Superseded (2026-11-24)
+
+Mike, with the build on his phone: the actions sit inside the row's group instead of outside it as on a recipe card, and there is no commit animation; keep only the long press. Ticket 09 removes the swipe from Settings rows and puts the recipe swipe back where it was.
