@@ -64,14 +64,13 @@ type RecipeConversionResult = {
   /** The system on its way, until the recipe shows it. */
   convertingTo: MeasurementSystem | null;
   /** Convert to `target`; with AI, the copy in it is written again even where one exists. */
-  startConversion: (target: MeasurementSystem, withAI?: boolean) => void;
+  startConversion: (target: MeasurementSystem, withAI?: boolean, manual?: boolean) => void;
 };
 
 export function useRecipeConversion(): RecipeConversionResult {
   const store = useRecipePageStoreApi();
-  const callbacks = { onError: () => store.getState().conversionFailed() };
   const recipeId = useRecipePageStore((state) => state.recipeId);
-  const { convertMeasurements } = useConvertMutation(recipeId, callbacks);
+  const { convertMeasurements } = useConvertMutation(recipeId);
   const conversion = useRecipePageStore((state) => state.conversion);
   const endConversion = useRecipePageStore((state) => state.endConversion);
   const recipe = usePageRecipe();
@@ -91,11 +90,16 @@ export function useRecipeConversion(): RecipeConversionResult {
 
   return {
     convertingTo: conversion && !isOver ? conversion.target : null,
-    startConversion: (target, withAI = false) => {
+    startConversion: (target, withAI = false, manual = false) => {
       if (!recipe) return;
 
       store.getState().startConversion({ target, withAI, version: recipe.version });
-      convertMeasurements(target, recipe.version, withAI);
+      if (manual) store.getState().startManualConversion();
+
+      void convertMeasurements(target, recipe.version, withAI).then((outcome) => {
+        if (outcome === "failed") store.getState().conversionFailed();
+        if (manual) store.getState().finishManualConversion(outcome === "confirmed");
+      });
     },
   };
 }

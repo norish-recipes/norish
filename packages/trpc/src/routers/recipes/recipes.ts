@@ -625,17 +625,21 @@ const convertMeasurements = authedProcedure
       "Converting recipe measurements"
     );
 
-    const publishConverted = async (recipe: FullRecipeDTO) => {
+    const publishConverted = async () => {
+      const recipe = await getRecipeFull(recipeId);
+
+      if (!recipe) return;
+
       const policy = await getRecipePermissionPolicy();
 
       void recipes.publish(
         "converted",
-        { recipe: { ...recipe, systemUsed: targetSystem } },
+        { recipe },
         { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
       );
     };
 
-    (withAI ? checkAIEnabled() : Promise.resolve(true))
+    return (withAI ? checkAIEnabled() : Promise.resolve(true))
       .then((aiEnabled) => {
         if (!aiEnabled) {
           throw new TRPCError({
@@ -698,12 +702,12 @@ const convertMeasurements = authedProcedure
               "Ignoring stale recipe conversion"
             );
 
-            return;
+            return { success: true, stale: true };
           }
 
-          await publishConverted(recipe);
+          await publishConverted();
 
-          return;
+          return { success: true };
         }
 
         // Every conversion starts from the original, never from a copy of it.
@@ -761,18 +765,20 @@ const convertMeasurements = authedProcedure
               resolved.ingredientResolutions
             )
         );
-        await setActiveSystemForRecipe(recipe.id, targetSystem, version);
+        const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-        const updatedRecipe = await getRecipeFull(recipe.id);
+        if (result.stale) return { success: true, stale: true };
 
-        if (updatedRecipe) {
-          log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
-          await publishConverted(updatedRecipe);
-        }
+        log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
+        await publishConverted();
+
+        return { success: true };
       })
-      .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
+      .catch((error: unknown) => {
+        handleRecipeError(ctx, error, "convert recipe measurements", { recipeId });
 
-    return { success: true };
+        throw error;
+      });
   });
 
 const autocomplete = authedProcedure

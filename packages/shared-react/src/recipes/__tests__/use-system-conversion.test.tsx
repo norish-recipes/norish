@@ -6,7 +6,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MEASUREMENT_SYSTEM_CHOICES } from "@norish/shared/contracts/zod/user";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
-import { keyOf, resetTRPCFake } from "../../trpc/testing";
+import {
+  answerCall,
+  answerRead,
+  failCall,
+  keyOf,
+  resetTRPCFake,
+  sentCall,
+} from "../../trpc/testing";
 import { RecipePageProvider, useRecipePageStore } from "../recipe-page-store";
 import { useAutoConversion, useSystemConversion } from "../use-system-conversion";
 
@@ -179,20 +186,21 @@ describe("useAutoConversion", () => {
         auto: useAutoConversion(),
         pick: useSystemConversion(),
       }));
-      const byHand = (system: string) => {
+      const byHand = async (system: string, index: number) => {
         const option = result.current.pick.options.find(
           (choice) => choice.system === system && !choice.withAI
         );
 
         act(() => result.current.pick.convertTo(option!));
         act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], system)));
+        await answerCall("recipes.convertMeasurements", { success: true }, index);
       };
       const settle = preferenceSave(queryClient);
 
       mocks.measurementSystem = "us";
       rerender();
-      byHand("us");
-      byHand("metric");
+      await byHand("us", 0);
+      await byHand("metric", 1);
       await settle(took);
       if (!took) mocks.measurementSystem = "metric";
       rerender();
@@ -201,6 +209,62 @@ describe("useAutoConversion", () => {
       expect(result.current.pick.currentSystem).toBe("metric");
     }
   );
+
+  it.each(["transport", "refused", "stale"])(
+    "applies a confirmed choice after the manual conversion fails (%s)",
+    async (outcome) => {
+      mocks.measurementSystem = "metric";
+      const { page, rerender, queryClient, result } = renderOn(() => {
+        useAutoConversion();
+
+        return useSystemConversion();
+      });
+      const settle = preferenceSave(queryClient);
+
+      mocks.measurementSystem = "us";
+      rerender();
+      act(() => result.current.convertTo(result.current.options[1]!));
+      if (outcome === "transport") await failCall("recipes.convertMeasurements");
+      else
+        await answerCall("recipes.convertMeasurements", {
+          success: outcome === "stale",
+          stale: outcome === "stale",
+        });
+      await settle(true);
+      // The failed conversion invalidated the recipe, so the automatic one waits for its reread.
+      await act(async () => answerRead("recipes.get", metricRecipe()));
+      rerender();
+
+      await vi.waitFor(() => expect(page().conversion).toMatchObject({ target: "us" }));
+    }
+  );
+
+  it("waits for a manual switch that already shows optimistically to be confirmed", async () => {
+    mocks.measurementSystem = "metric";
+    const { page, rerender, queryClient, result } = renderOn(
+      () => {
+        useAutoConversion();
+
+        return useSystemConversion();
+      },
+      metricRecipe(["metric", "us"])
+    );
+    const settle = preferenceSave(queryClient);
+
+    mocks.measurementSystem = "us";
+    rerender();
+    act(() => result.current.convertTo(result.current.options[1]!));
+    await vi.waitFor(() =>
+      expect(result.current).toMatchObject({ currentSystem: "us", isConverting: false })
+    );
+    await settle(true);
+
+    expect(page().conversion).toBeNull();
+    await failCall("recipes.convertMeasurements");
+    await act(async () => answerRead("recipes.get", metricRecipe(["metric", "us"])));
+    await sentCall("recipes.convertMeasurements", 1);
+    await vi.waitFor(() => expect(result.current.currentSystem).toBe("us"));
+  });
 
   it("waits for the server's copy, since the saved one may be behind", async () => {
     mocks.measurementSystem = "us";

@@ -16,6 +16,8 @@ export type RecipePageState = {
   servings: number | null;
   /** The conversion on its way, until the recipe shows it. */
   conversion: RecipeConversion | null;
+  pendingManualConversions: number;
+  confirmedManualConversions: number;
   /** The screen wake lock: off, asked for by the reader, or held once the browser grants it. */
   wakeLock: "off" | "asked" | "held";
   setServings: (servings: number) => void;
@@ -24,6 +26,8 @@ export type RecipePageState = {
   endConversion: (conversion: RecipeConversion) => void;
   /** A conversion that was rolled back drops the reader's servings with it. */
   conversionFailed: () => void;
+  startManualConversion: () => void;
+  finishManualConversion: (confirmed: boolean) => void;
   setWakeLock: (wakeLock: RecipePageState["wakeLock"]) => void;
 };
 
@@ -32,12 +36,21 @@ export function createRecipePageStore(recipeId: string) {
     recipeId,
     servings: null,
     conversion: null,
+    pendingManualConversions: 0,
+    confirmedManualConversions: 0,
     wakeLock: "off",
     setServings: (servings) => set({ servings }),
     startConversion: (conversion) => set({ conversion }),
     endConversion: (conversion) =>
       set((state) => (state.conversion === conversion ? { conversion: null } : state)),
     conversionFailed: () => set({ conversion: null, servings: null }),
+    startManualConversion: () =>
+      set((state) => ({ pendingManualConversions: state.pendingManualConversions + 1 })),
+    finishManualConversion: (confirmed) =>
+      set((state) => ({
+        pendingManualConversions: state.pendingManualConversions - 1,
+        confirmedManualConversions: state.confirmedManualConversions + Number(confirmed),
+      })),
     setWakeLock: (wakeLock) => set({ wakeLock }),
   }));
 }

@@ -84,7 +84,7 @@ export function useSystemConversion(): SystemConversion {
     convertTo: (option) => {
       if (!option.withAI && option.system === currentSystem) return;
 
-      startConversion(option.system, option.withAI);
+      startConversion(option.system, option.withAI, true);
     },
   };
 }
@@ -101,23 +101,17 @@ export function useAutoConversion() {
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);
   const doneForRef = useRef<string | null>(null);
-  const startedRef = useRef(false);
-  const byHandRef = useRef(false);
+  const appliedManualRef = useRef(0);
+  const pendingManual = useRecipePageStore((state) => state.pendingManualConversions);
+  const confirmedManual = useRecipePageStore((state) => state.confirmedManualConversions);
 
   useEffect(() => {
-    // A conversion this hook did not start was picked by hand.
-    if (convertingTo) {
-      if (!startedRef.current) byHandRef.current = true;
-
-      return;
-    }
-    startedRef.current = false;
-    if (!recipe || isLoading || isFetching || saving) return;
+    if (convertingTo || pendingManual || !recipe || isLoading || isFetching || saving) return;
     const target = measurementSystemTarget(choice);
     const doneFor = `${recipe.id}:${choice}`;
 
-    if (byHandRef.current) {
-      byHandRef.current = false;
+    if (appliedManualRef.current !== confirmedManual) {
+      appliedManualRef.current = confirmedManual;
       doneForRef.current = doneFor;
 
       return;
@@ -136,7 +130,6 @@ export function useAutoConversion() {
 
     const hasCopy = recipe.recipeIngredients.some((line) => line.systemUsed === target.system);
 
-    startedRef.current = true;
     startConversion(target.system, target.withAI && isAIEnabled && !hasCopy);
   }, [
     recipe,
@@ -145,6 +138,8 @@ export function useAutoConversion() {
     isLoading,
     isFetching,
     convertingTo,
+    pendingManual,
+    confirmedManual,
     canEditRecipe,
     isAIEnabled,
     startConversion,

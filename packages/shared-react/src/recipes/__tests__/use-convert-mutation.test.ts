@@ -34,8 +34,8 @@ describe("useConvertMutation", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    act(() => result.current.convertMeasurements("us", 1));
-    act(() => result.current.convertMeasurements("metric", 1));
+    act(() => void result.current.convertMeasurements("us", 1));
+    act(() => void result.current.convertMeasurements("metric", 1));
     await act(async () => answers[0]!.reject(new Error("Conversion failed")));
     await act(async () => answers[1]!.reject(new Error("Conversion failed")));
     await act(async () => {
