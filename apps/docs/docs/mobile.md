@@ -81,9 +81,10 @@ created in 0.28 or later, touch and hold its row and choose **Copy link**.
 
 ![API keys with Create key and existing keys](/img/screenshots/mobile-settings-api-keys.png)
 
-Under **App**, change the server, open support or see the app and server
-versions. Tap **Sign out** to sign out. If you have unsynced changes, confirm
-before signing out or changing server.
+Under **App**, change the server or open support. Changing the server signs you
+out and asks for confirmation. Tap **Sign out** to sign out. If you have
+unsynced changes, confirm that you want to discard them before signing out or
+changing server. The app and server versions appear at the bottom of Settings.
 
 When Offline, you can read saved Settings data, but changes are disabled.
 Sign out and changing server remain available.
