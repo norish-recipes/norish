@@ -1031,28 +1031,40 @@ export async function createRecipeWithRefs(
   return result;
 }
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Switches a recipe to `system`, only while it is at `version` when one is given; whether a row
+ * moved. `originalFrom` becomes the original system if none was recorded. */
+async function switchSystemTx(
+  tx: typeof db | Transaction,
+  recipeId: string,
+  system: MeasurementSystem,
+  version?: number,
+  originalFrom?: MeasurementSystem
+): Promise<boolean> {
+  const switched = await tx
+    .update(recipes)
+    .set({
+      systemUsed: system,
+      version: sql`${recipes.version} + 1`,
+      ...(originalFrom && {
+        originalSystem: sql`coalesce(${recipes.originalSystem}, ${originalFrom}::measurement_system)`,
+      }),
+    })
+    .where(and(eq(recipes.id, recipeId), version ? eq(recipes.version, version) : undefined))
+    .returning({ id: recipes.id });
+
+  return switched.length > 0;
+}
+
 export async function setActiveSystemForRecipe(
   recipeId: string,
   system: MeasurementSystem,
   version?: number
 ): Promise<MutationOutcome<void>> {
-  const whereConditions = [eq(recipes.id, recipeId)];
+  const switched = await switchSystemTx(db, recipeId, system, version);
 
-  if (version) {
-    whereConditions.push(eq(recipes.version, version));
-  }
-
-  const updated = await db
-    .update(recipes)
-    .set({ systemUsed: system, version: sql`${recipes.version} + 1` })
-    .where(and(...whereConditions))
-    .returning({ id: recipes.id });
-
-  if (updated.length === 0 && version) {
-    return staleOutcome();
-  }
-
-  return appliedOutcome(undefined);
+  return !switched && version ? staleOutcome() : appliedOutcome(undefined);
 }
 
 export async function updateRecipeCategories(
@@ -1377,12 +1389,8 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   return parsed.data;
 }
 
-/**
- * Write a recipe's converted copy and switch to it, only while the recipe is still at `version`:
- * the lines and steps it holds in the target system go, these take their place, and the system
- * converted from is recorded as the original if nothing was yet. A conversion with AI writes over
- * an earlier copy this way; the original is never the target.
- */
+/** Writes a recipe's converted copy over any in the target system and switches to it, only while
+ * the recipe is at `version`; the system converted from becomes the original if none was. */
 export async function writeConvertedCopy(
   recipeId: string,
   conversion: { from: MeasurementSystem; to: MeasurementSystem },
@@ -1393,17 +1401,8 @@ export async function writeConvertedCopy(
 ): Promise<MutationOutcome<void>> {
   return db.transaction(async (tx) => {
     // The version check takes the row first, so an edit made meanwhile keeps its lines.
-    const [switched] = await tx
-      .update(recipes)
-      .set({
-        systemUsed: conversion.to,
-        version: sql`${recipes.version} + 1`,
-        originalSystem: sql`coalesce(${recipes.originalSystem}, ${conversion.from}::measurement_system)`,
-      })
-      .where(and(eq(recipes.id, recipeId), eq(recipes.version, version)))
-      .returning({ id: recipes.id });
-
-    if (!switched) return staleOutcome();
+    if (!(await switchSystemTx(tx, recipeId, conversion.to, version, conversion.from)))
+      return staleOutcome();
 
     await tx
       .delete(recipeIngredients)
