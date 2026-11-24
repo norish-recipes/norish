@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Maestro: open Settings from the avatar menu, edit name, swipe-revoke a site token, create and copy an API key, sign out with nothing unsynced.
-- [ ] Checked on a device or simulator, light and dark, against the canvas boards.
+- [x] Maestro: open Settings from the avatar menu, edit name, swipe-revoke a site token, create and copy an API key, sign out with nothing unsynced.
+- [x] Checked on a device or simulator, light and dark, against the canvas boards.
 - [ ] 0.28.0-beta release notes and the apps/docs mobile pages updated (written by Terra via `delegate_task`, per `docs/agents/feature-docs.md`).
 - [ ] Gates green.
 
@@ -67,3 +67,11 @@ The run stops here on Mike's decisions (ticket 03's scope, the Outbox exclusion,
 ### Mike's decisions (2026-11-24)
 
 Ticket 03 is fixed here; only secret-carrying writes stay out of the Outbox; the silent refused link is accepted; a share link becomes viewable (ticket 07, which now blocks this one); one-time responses are stored as a marker. Mike says no one else is using the simulator, so this run may take it or stop it. `27c789592` stays unless he says otherwise.
+
+### Device check and Maestro (2026-11-24)
+
+- Ran: Release build on the iPhone 18 Pro simulator; `settings-open`, `settings-profile-name`, `settings-token-delete`, `settings-api-key` (checks the pasteboard through the runner's new `/clipboard`) and `sign-out` each passed 3 of 3 on the final build. The avatar menu is opened by its label: the SwiftUI Host hides `account-avatar` from the accessibility tree.
+- Walked every page and sheet light and dark against `StPage`; screenshots in the session scratchpad. Docs screenshots: `apps/docs/static/img/screenshots/mobile-settings*.png`.
+- Fixed: swipe circles showed through closed rows (`b0a0de0dd`), the Version row's title clipped to "V…" (`7bf7de8a1`), a square behind the 96 pt avatar (`8151de8d3`), long-press lifted only the avatar (`08b9a2f29`), clipped swipe labels "Make a…", "Delete l…", "Reactiv…" (`ef734bf29`, `8867b4462`, `74bb3161e`), the created-key sheet clipped below the key (`0d58ef01b`).
+- Left (not Settings code): at accessibility-large and up the avatar drops out of the Recipes header's "…" overflow, so Settings is unreachable; the join-code placeholder says "8-character code" for a 6-digit code (shared with web, all locales); token, key and share-link lists changed elsewhere stay stale until relaunch.
+- Left (design): the canvas names the key sheet "New API key" with "Create" (app: "Create key" twice); delete-account's native alert cannot colour its lines; allergy chips are solid orange where the canvas tints them.
