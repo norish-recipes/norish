@@ -68,3 +68,5 @@ Asks left with Mike:
 - Copy link: add a way to view a share link. It needs the server to keep the token readable, so it is ticket 07; the share-links box here stays unticked until 07 is done.
 - Stored one-time secrets: store a marker and refuse the replay, and keep `apiKeys.create` and `recipes.shareCreate` out of the Outbox.
 - Outbox: only writes that carry a secret stay out (`offline/uncaptured.ts` already lists the credential inputs). The spec's line is changed to say so.
+
+Outcome of the secrets decisions (2026-11-24): `cdf9563e6` (`user.apiKeys.create` and `recipes.shareCreate` store a marker; a replay or a waiting duplicate gets `CONFLICT` with no secret), `27f6c7823` (both in `uncaptured.ts`), `b4f5a5aab` (format). No client can receive the refusal: only Outbox replay and recipe imports resend an operation id. No server logger writes response bodies; web's dev `loggerLink` runs in the browser and was left. No other Settings procedure carries a credential. Gates all 0 as the fixer reported; reviewed in the closing pass.
