@@ -95,7 +95,7 @@ export async function getRecipeShareById(id: string): Promise<RecipeShareDto | n
   return RecipeShareSelectSchema.parse(row);
 }
 
-/** The share's link while it is active, or null (also when made before tokens were kept). */
+/** The share's link while it is active, or null; a share with no stored token has no link. */
 export function getRecipeShareUrl(share: RecipeShareDto): string | null {
   if (share.tokenEnc === null || getRecipeShareStatus(share) !== "active") return null;
 

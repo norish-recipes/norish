@@ -37,7 +37,6 @@ const RecipeShareManagementBaseSchema = RecipeShareSelectSchema.omit({
 
 export const RecipeShareSummarySchema = RecipeShareManagementBaseSchema.extend({
   status: RecipeShareStatusSchema,
-  // A share made before its token was kept has no link to show.
   hasLink: z.boolean(),
 });
 
