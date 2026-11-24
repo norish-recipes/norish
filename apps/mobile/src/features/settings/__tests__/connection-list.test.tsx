@@ -5,6 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/components/no-results-card", () => ({ NoResultsCard: () => null }));
 vi.mock("../components/read-body", () => ({ ReadBody: () => null }));
 
+const offline = vi.hoisted(() => ({ now: false }));
+
+vi.mock("@/lib/offline/offline-now", () => ({ isOfflineNow: () => offline.now }));
+
 const { ConnectionList } = await import("../components/connection-list");
 
 const list = (read: { answered: boolean; refetch: () => void }) => (
@@ -27,6 +31,16 @@ describe("a connections page", () => {
     rerender(list({ answered: true, refetch }));
 
     expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the cached list Offline, without a reread", () => {
+    offline.now = true;
+    const refetch = vi.fn();
+
+    render(list({ answered: true, refetch }));
+    offline.now = false;
+
+    expect(refetch).not.toHaveBeenCalled();
   });
 
   it("leaves a list never read to its own first read", () => {
