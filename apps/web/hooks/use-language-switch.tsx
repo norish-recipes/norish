@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useLocale } from "@/hooks/use-locale";
 import { GlobeAltIcon } from "@heroicons/react/16/solid";
 
@@ -19,46 +18,18 @@ export function useLanguageSwitch() {
   // Build locale names map from enabled locales
   const localeNames = Object.fromEntries(enabledLocales.map((l) => [l.code, l.name]));
 
-  // Sync current locale index when locale or enabled locales change.
-  // If current locale is not in enabled list, reset to first.
-  const localeIndex =
-    locale && enabledLocaleCodes.length > 0
-      ? Math.max(enabledLocaleCodes.indexOf(locale), 0)
-      : undefined;
-  const [currentLocaleIndex, setCurrentLocaleIndex] = useState(localeIndex ?? 0);
-  // The codes are compared by value: the list may be rebuilt on any render.
-  const enabledKey = enabledLocaleCodes.join(",");
-  const [syncedFrom, setSyncedFrom] = useState({ locale, enabledKey });
-
-  if (locale !== syncedFrom.locale || enabledKey !== syncedFrom.enabledKey) {
-    setSyncedFrom({ locale, enabledKey });
-
-    if (localeIndex !== undefined) {
-      setCurrentLocaleIndex(localeIndex);
-    }
-  }
-
+  // The saved language, optimistic while a save is in flight; one not enabled reads as the first.
+  const currentLocaleIndex = locale ? Math.max(enabledLocaleCodes.indexOf(locale), 0) : 0;
   const currentLocale = enabledLocaleCodes[currentLocaleIndex] ?? locale ?? "en";
 
   const cycleLocale = () => {
-    if (enabledLocaleCodes.length === 0) return;
+    const nextLocale = enabledLocaleCodes[(currentLocaleIndex + 1) % enabledLocaleCodes.length];
 
-    const nextIndex = (currentLocaleIndex + 1) % enabledLocaleCodes.length;
-    const nextLocale = enabledLocaleCodes[nextIndex];
-
-    if (!nextLocale) return;
-
-    setCurrentLocaleIndex(nextIndex);
-    changeLocale(nextLocale);
+    if (nextLocale) void changeLocale(nextLocale);
   };
 
   const selectLocale = (newLocale: Locale) => {
-    const index = enabledLocaleCodes.indexOf(newLocale);
-
-    if (index !== -1) {
-      setCurrentLocaleIndex(index);
-      changeLocale(newLocale);
-    }
+    if (enabledLocaleCodes.includes(newLocale)) void changeLocale(newLocale);
   };
 
   const icon = <GlobeAltIcon className="size-5" />;

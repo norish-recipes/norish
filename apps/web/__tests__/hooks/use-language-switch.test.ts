@@ -31,4 +31,12 @@ describe("useLanguageSwitch", () => {
 
     expect(result.current.currentLocale).toBe("nl");
   });
+
+  it("shows the saved language when a save is refused, never the one it asked for", () => {
+    const { result } = renderHook(() => useLanguageSwitch());
+
+    act(() => result.current.cycleLocale());
+
+    expect(result.current.label).toBe("Nederlands");
+  });
 });
