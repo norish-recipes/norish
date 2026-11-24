@@ -22,6 +22,7 @@ vi.mock("@/components/highlighted-text", () => ({ HighlightedText: () => null })
 vi.mock("@/components/pill", () => ({ Pill: () => null }));
 vi.mock("@/components/press-tap", () => ({ PressTap: ({ children }: Kids) => children }));
 vi.mock("@/lib/haptics", () => ({ lightImpact: () => {} }));
+vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("@/lib/tab-routes", () => ({ recipeRoute: () => "/" }));
 vi.mock("@norish/shared-react/platform", () => ({
   usePlatform: () => ({ navigation: { toRecipe: () => {} } }),
@@ -41,6 +42,7 @@ vi.mock("@/features/recipes/hooks/use-card-action-menu", () => ({
 vi.mock("@/features/recipes/utils/card-actions", () => ({
   RECIPE_ACTION_DEFINITIONS: {},
   recipeMenuActions: () => [],
+  RECIPE_SWIPE_LOOKS: {},
   recipeSwipeActions: () => [],
 }));
 vi.mock("@/features/recipes/components/card-menu", () => ({
@@ -48,7 +50,7 @@ vi.mock("@/features/recipes/components/card-menu", () => ({
 }));
 vi.mock("@/features/recipes/components/favourite-mark", () => ({ FavouriteMark: () => null }));
 vi.mock("@/features/recipes/components/match-text", () => ({ MatchText: () => null }));
-vi.mock("@/features/recipes/components/swipe-actions", () => ({
+vi.mock("@/components/swipe-actions", () => ({
   SwipeActions: ({ children }: Kids) => children,
 }));
 vi.mock("@/features/recipes/components/tag-chips", () => ({ TAG_GAP: 4, TagChips: () => null }));

@@ -1,3 +1,4 @@
+import type { SwipeAction, SwipeActionsHandle } from "@/components/swipe-actions";
 import type { CardActions } from "@/hooks/use-card-actions";
 import type { SearchHit } from "@/lib/recipe-results-props";
 import type { ReactNode } from "react";
@@ -8,6 +9,8 @@ import { CardPhoto } from "@/components/card-photo";
 import { HighlightedText } from "@/components/highlighted-text";
 import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
+import { SwipeActions } from "@/components/swipe-actions";
+import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact } from "@/lib/haptics";
 import { plainText } from "@/lib/plain-text";
 import { recipeRoute } from "@/lib/tab-routes";
@@ -19,17 +22,16 @@ import { usePlatform } from "@norish/shared-react/platform";
 import { recipeCardFacts } from "@norish/shared-react/recipes";
 
 import type { RecipeMenuAction } from "../utils/card-actions";
-import type { SwipeAction, SwipeActionsHandle } from "./swipe-actions";
 import { useCardActionMenu } from "../hooks/use-card-action-menu";
 import {
   RECIPE_ACTION_DEFINITIONS,
+  RECIPE_SWIPE_LOOKS,
   recipeMenuActions,
   recipeSwipeActions,
 } from "../utils/card-actions";
 import { CardMenu } from "./card-menu";
 import { FavouriteMark } from "./favourite-mark";
 import { MatchText } from "./match-text";
-import { SwipeActions } from "./swipe-actions";
 import { TAG_GAP, TagChips } from "./tag-chips";
 
 type Props = {
@@ -58,6 +60,7 @@ export const RecipeCard = memo(function RecipeCard({
   const Card = variant === "grid" ? GridCard : RowCard;
   const canDelete = actions.canDelete(recipe);
   const swipeRef = useRef<SwipeActionsHandle>(null);
+  const shopInk = useTokenColor("shop-foreground");
   const handlers: Record<RecipeMenuAction, () => void> = {
     favourite: () => actions.toggleFavourite(recipe),
     groceries: () => actions.addToGroceries(recipe),
@@ -81,6 +84,9 @@ export const RecipeCard = memo(function RecipeCard({
 
     return {
       key,
+      ...RECIPE_SWIPE_LOOKS[key],
+      ink: key === "groceries" ? shopInk : undefined,
+      holdsOpen: key === "delete",
       label: intl.formatMessage({ id: swipeLabelId ?? labelId }),
       onPress: handlers[key],
       testID: `recipe-swipe-${key}-${recipe.id}`,

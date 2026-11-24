@@ -1,3 +1,4 @@
+import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Link } from "expo-router";
 import type { ComponentProps } from "react";
 
@@ -7,6 +8,16 @@ export function recipeSwipeActions(canDelete: boolean) {
 }
 
 export type RecipeSwipeAction = ReturnType<typeof recipeSwipeActions>[number];
+
+/** A swipe circle's icon and background; Groceries' icon takes the shop's ink. */
+export const RECIPE_SWIPE_LOOKS: Record<
+  RecipeSwipeAction,
+  { icon: ComponentProps<typeof Ionicons>["name"]; ground: string }
+> = {
+  groceries: { icon: "bag-outline", ground: "bg-shop" },
+  plan: { icon: "calendar-clear-outline", ground: "bg-plan" },
+  delete: { icon: "trash-outline", ground: "bg-danger" },
+};
 
 /** An SF Symbol, as the native context menu takes it. */
 export type MenuIcon = ComponentProps<typeof Link.MenuAction>["icon"];

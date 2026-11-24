@@ -10,10 +10,10 @@ import {
   fullSwipeAction,
   fullSwipeAt,
   swipeZone,
-} from "@/features/recipes/utils/swipe-reveal";
+} from "@/lib/swipe-reveal";
 import { describe, expect, it } from "vitest";
 
-import { releaseModule } from "../../../../__tests__/release-module";
+import { releaseModule } from "../release-module";
 
 const reveal = { width: 300, count: 3, step: 100, fullAt: 300 + FULL_SWIPE_OVERSHOOT };
 const offsets = (travel: number, reduceMotion = false) =>
@@ -47,7 +47,7 @@ describe("capsuleStretch", () => {
 
   it("reaches dropAway as the worklets plugin builds it, which captures it when capsuleStretch is defined", () => {
     const built = releaseModule<{ capsuleStretch: typeof capsuleStretch }>(
-      new URL("../utils/swipe-reveal.ts", import.meta.url).pathname
+      new URL("../../src/lib/swipe-reveal.ts", import.meta.url).pathname
     );
 
     expect(built.capsuleStretch(300 + FULL_SWIPE_OVERSHOOT, reveal, 1000)).toBe(264);

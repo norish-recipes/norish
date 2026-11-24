@@ -5,6 +5,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Props = {
+  enabled?: boolean;
   renderRightActions: (progress: unknown, translation: unknown, methods: unknown) => ReactNode;
   onSwipeableOpenStartDrag: () => void;
   onSwipeableWillOpen: () => void;
@@ -28,7 +29,7 @@ vi.mock("react-native", () => ({
   useWindowDimensions: () => ({ width: 402 }),
 }));
 vi.mock("react-native-reanimated", async () => {
-  const mock = await import("../../../../__tests__/mocks/reanimated");
+  const mock = await import("../mocks/reanimated");
 
   return {
     ...mock,
@@ -112,14 +113,16 @@ vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("heroui-native", () => ({ useThemeColor: () => ["white"] }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 
-const { SwipeActions, HIDDEN_MS, RESTORE_MS, leaveMs } =
-  await import("@/features/recipes/components/swipe-actions");
+const { SwipeActions, HIDDEN_MS, RESTORE_MS, leaveMs } = await import("@/components/swipe-actions");
 const { closeOpenRow } = await import("@/lib/open-row");
-type Handle = import("@/features/recipes/components/swipe-actions").SwipeActionsHandle;
+type Handle = import("@/components/swipe-actions").SwipeActionsHandle;
 
 const actions = ["groceries", "plan", "delete"].map((key) => ({
-  key: key as "groceries",
+  key,
   label: key,
+  icon: "trash-outline" as const,
+  ground: "bg-danger",
+  holdsOpen: key === "delete",
   onPress: vi.fn(),
   testID: key,
 }));
@@ -190,6 +193,44 @@ describe("SwipeActions", () => {
 
     expect(plan!.onPress).toHaveBeenCalledTimes(1);
     expect(swipe.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes a row whose outermost action asks without holding it, on a tap or a full swipe", () => {
+    const remove = { ...actions[2]!, holdsOpen: false, onPress: vi.fn() };
+    const row = [actions[0]!, remove];
+    const { rerender } = render(
+      <SwipeActions actions={row} itemKey="r1" variant="list">
+        {null}
+      </SwipeActions>
+    );
+
+    fireEvent.click(screen.getByTestId("delete"));
+    expect(swipe.close).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      swipe.finger!.onTouchesDown();
+      swipe.props!.onSwipeableOpenStartDrag();
+    });
+    swipe.translation.value = -300;
+    rerender(
+      <SwipeActions actions={row} itemKey="r1" variant="list">
+        {null}
+      </SwipeActions>
+    );
+    act(() => swipe.props!.onSwipeableWillOpen());
+
+    expect(remove.onPress).toHaveBeenCalledTimes(2);
+    expect(swipe.close).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not open a row that is not enabled", () => {
+    render(
+      <SwipeActions enabled={false} actions={actions} itemKey="r1" variant="list">
+        {null}
+      </SwipeActions>
+    );
+
+    expect(swipe.props!.enabled).toBe(false);
   });
 
   it("springs a held card back closed when the confirm is cancelled, and ignores a card never held", () => {
