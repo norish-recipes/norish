@@ -70,3 +70,11 @@ Decision asked: keep fixing these here, or revert the library-filter and auto-co
 ### Mike's decision (2026-11-24)
 
 Keep fixing here: all round 3 findings are fixed in this ticket, nothing is reverted into its own ticket. The fix round runs on Opus high (two rounds on lower tiers did not converge).
+
+### Round 3 outcome (2026-11-24)
+
+- Versioned writes: a reply older than the version a cache holds is dropped whole, so neither cache's version ever goes down (`outdated` in `use-profile.ts`, used by every profile and allergy write). The server keeps a stored allergy tag a save sends back; an emptied household list stands over the own list.
+- Language: what shows is the profile cache's saved language, else the device's own; the rollback and `useUserLocaleSync` are gone. Web's navbar label reads the saved language too. `LocaleSaveScope` has its own module.
+- Hidden Item filters: `withoutHiddenFilters` lives in `hidden-items.ts`, and the client and the server seed (`readRecipeQueryFilters`) both apply it.
+- Auto-conversion: acts once per recipe and confirmed choice; a pick by hand counts as acting on the choice confirmed next. `usePreferencesSaving` is the one in-flight check.
+- Not done: the avatar menu's language picker is not disabled while Offline (`account-menu.tsx`, which another session is editing). A pick there while Offline is saved optimistically and can be queued.
