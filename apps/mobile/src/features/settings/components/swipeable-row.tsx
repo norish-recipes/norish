@@ -56,7 +56,10 @@ export function SwipeableRow({
         onSwipeableClose={openRow.closed}
         onSwipeableWillOpen={openRow.opened}
       >
-        <Animated.View style={slide}>{children}</Animated.View>
+        {/* Opaque, so the circles behind it show only as the swipe uncovers them. */}
+        <Animated.View className="bg-surface" style={slide}>
+          {children}
+        </Animated.View>
       </ReanimatedSwipeable>
     </View>
   );
