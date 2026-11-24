@@ -78,3 +78,17 @@ Keep fixing here: all round 3 findings are fixed in this ticket, nothing is reve
 - Hidden Item filters: `withoutHiddenFilters` lives in `hidden-items.ts`, and the client and the server seed (`readRecipeQueryFilters`) both apply it.
 - Auto-conversion: acts once per recipe and confirmed choice; a pick by hand counts as acting on the choice confirmed next. `usePreferencesSaving` is the one in-flight check.
 - Not done: the avatar menu's language picker is not disabled while Offline (`account-menu.tsx`, which another session is editing). A pick there while Offline is saved optimistically and can be queued.
+
+### Review round 4 (2026-11-24): fix range `1c8d71496..8f3aef654` (Sol high): dispositions
+
+Sound per the reviewer: the Library seed and client agree on Hidden Items; stored allergy names survive a resave; web's label no longer advances on a refused second save. Eight new findings, all fix:
+- fix, bug: a rename's late reply is dropped once an allergy save raised the held version, and nothing rereads, so the new name never shows (`use-profile.ts:83`).
+- fix, bug: the server labels an allergy list with a version read in a second query (`user-allergies.ts:11`), so a stale list can carry a newer version and undo a clear.
+- fix, bug: a failed language save restores its whole earlier snapshot over a language saved elsewhere meanwhile (`use-account-mutations.ts:126`).
+- fix, verify: an Offline language pick from the avatar menu rolls back on screen but stays queued in the Outbox. Fixed in the shared save (a queued write keeps its optimistic value); `account-menu.tsx` is the other session's and is not touched. A queued language write itself is fine (Mike: only secrets stay out of the Outbox).
+- fix, bug: a language saved while the first profile read is pending is dropped when the reply arrives first (`use-profile.ts:77`).
+- fix: mobile now stores the fallback language as if the reader chose it (`mobile-i18n-context.tsx:173`).
+- fix, bug: a failed manual conversion still counts as "by hand" and blocks the preference that then succeeds (`use-system-conversion.ts:119`).
+- fix, bug: creating a household seeds `allergies: []`, which now hides the reader's own allergy warnings until a household read (`use-household-mutations.ts:49`).
+
+Fix round 4 runs on Sol high (a change of model family: Opus has fixed three rounds), reviewed by Opus high.
