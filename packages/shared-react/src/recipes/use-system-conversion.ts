@@ -13,6 +13,7 @@ import {
   useHiddenItemVisibility,
   usePermissions,
   usePreferencesSaving,
+  usePreferencesUnconfirmed,
   useProfileQuery,
   useRecipePermissions,
 } from "../reader";
@@ -97,6 +98,7 @@ export function useSystemConversion(): SystemConversion {
  * for a missing copy; a pick by hand the server applied counts as acting on the next choice. */
 export function useAutoConversion() {
   const saving = usePreferencesSaving();
+  const unconfirmed = usePreferencesUnconfirmed();
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);
   const { convertingTo, startConversion } = useRecipeConversion();
@@ -141,7 +143,7 @@ export function useAutoConversion() {
   });
 
   useEffect(() => {
-    if (convertingTo || !recipe || isLoading || isFetching || saving) return;
+    if (convertingTo || !recipe || isLoading || isFetching || saving || unconfirmed) return;
     const target = measurementSystemTarget(choice);
     const doneFor = `${recipe.id}:${choice}`;
 
@@ -172,6 +174,7 @@ export function useAutoConversion() {
     recipe,
     choice,
     saving,
+    unconfirmed,
     isLoading,
     isFetching,
     convertingTo,

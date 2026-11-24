@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   isAIEnabled: false,
   canEdit: true,
   showConversion: true,
+  unconfirmed: false,
 }));
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
@@ -37,6 +38,7 @@ vi.mock("@trpc/tanstack-react-query", async () => ({
 
 vi.mock("../../reader", async () => ({
   usePreferencesSaving: (await import("../../reader/use-account-mutations")).usePreferencesSaving,
+  usePreferencesUnconfirmed: () => mocks.unconfirmed,
   ownerAllows: (_owner: string, can: (id: string) => boolean) => can(_owner),
   useProfileQuery: () => ({
     user: { preferences: { measurementSystem: mocks.measurementSystem } },
@@ -123,6 +125,7 @@ beforeEach(() => {
   mocks.isAIEnabled = false;
   mocks.canEdit = true;
   mocks.showConversion = true;
+  mocks.unconfirmed = false;
 });
 
 describe("useAutoConversion", () => {
@@ -195,6 +198,21 @@ describe("useAutoConversion", () => {
     expect(page().conversion).toBeNull();
 
     await settle(true);
+    rerender();
+    expect(page().conversion).toMatchObject({ target: "us", withAI: false });
+  });
+
+  it("waits while the choice is a save the Outbox queued, until the server confirms it", () => {
+    mocks.measurementSystem = "metric";
+
+    const { page, rerender } = renderOn(() => useAutoConversion());
+
+    mocks.measurementSystem = "us";
+    mocks.unconfirmed = true;
+    rerender();
+    expect(page().conversion).toBeNull();
+
+    mocks.unconfirmed = false;
     rerender();
     expect(page().conversion).toMatchObject({ target: "us", withAI: false });
   });

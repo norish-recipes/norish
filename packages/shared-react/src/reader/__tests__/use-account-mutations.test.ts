@@ -15,6 +15,7 @@ import {
   useDeleteAccountMutation,
   usePreferencesMutation,
   usePreferencesSaving,
+  usePreferencesUnconfirmed,
   useProfileMutations,
   useProfileQuery,
   useSessionExpiry,
@@ -216,6 +217,45 @@ describe("the Account's writes", () => {
         expect(adapter.showError).toHaveBeenCalledOnce();
       }
     );
+
+    it("count a save the Outbox queued as unconfirmed until the server's profile replaces it", async () => {
+      const result = render(() => ({
+        save: usePreferencesMutation(),
+        unconfirmed: usePreferencesUnconfirmed(),
+      }));
+
+      act(() => void result.current.save.updatePreferences({ measurementSystem: "us" }));
+      const call = await sentCall("user.updatePreferences");
+
+      await act(async () => call.deferred.reject(new TypeError("Network request failed")));
+      expect(profile()?.user.preferences?.measurementSystem).toBe("us");
+      await waitFor(() => expect(result.current.unconfirmed).toBe(true));
+
+      // Replayed and reread: the server's profile at its next version.
+      act(() =>
+        queryClient.setQueryData(USER_KEY, {
+          ...PROFILE,
+          user: { ...PROFILE.user, version: 4, preferences: { measurementSystem: "us" } },
+        })
+      );
+      await waitFor(() => expect(result.current.unconfirmed).toBe(false));
+    });
+
+    it("count a queued save confirmed once a reread at its version shows the server's value", async () => {
+      const result = render(() => ({
+        save: usePreferencesMutation(),
+        unconfirmed: usePreferencesUnconfirmed(),
+      }));
+
+      act(() => void result.current.save.updatePreferences({ measurementSystem: "us" }));
+      const call = await sentCall("user.updatePreferences");
+
+      await act(async () => call.deferred.reject(new TypeError("Network request failed")));
+      await waitFor(() => expect(result.current.unconfirmed).toBe(true));
+      act(() => queryClient.setQueryData(USER_KEY, PROFILE));
+
+      await waitFor(() => expect(result.current.unconfirmed).toBe(false));
+    });
 
     it("take what the server holds on a stale answer and say it changed elsewhere", async () => {
       const result = render(() => usePreferencesMutation());

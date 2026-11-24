@@ -2,7 +2,7 @@
 
 import type { MutationFunction, MutationFunctionContext, MutationKey } from "@tanstack/react-query";
 import type { inferRouterInputs } from "@trpc/server";
-import { useIsMutating, useMutation } from "@tanstack/react-query";
+import { useIsMutating, useMutation, useMutationState } from "@tanstack/react-query";
 
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
 import type { AppRouter } from "@norish/trpc/client";
@@ -17,7 +17,7 @@ import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { projectedMutation } from "../trpc/projected-mutation";
 import { dropAndLeave, runSessionEnd } from "./session-end";
-import { useProfileCache } from "./use-profile";
+import { useProfileCache, useProfileQuery } from "./use-profile";
 
 /** A failed write's `onError`: reread the profile and tell the reader; a write the Outbox queued did not fail. */
 export function useFailedWrite() {
@@ -126,11 +126,37 @@ export function useProfileMutations() {
   };
 }
 
+type PreferencePatch = inferRouterInputs<AppRouter>["user"]["updatePreferences"]["preferences"];
+/** A save's optimistic change; `queuedAt` is the profile version the Outbox queued it at. */
+type OptimisticSave = { version: number; previous: PreferencePatch; queuedAt?: number };
+
 /** Whether a Preferences save is in flight; until it settles, its choices are unconfirmed. */
 export function usePreferencesSaving() {
   const trpc = useTRPC();
 
   return useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
+}
+
+/** Whether the shown Preferences hold a save the Outbox queued, which the server has not confirmed:
+ * until a profile at a newer version, or one showing other values, replaces it. */
+export function usePreferencesUnconfirmed(): boolean {
+  const trpc = useTRPC();
+  const { user } = useProfileQuery();
+  const queued = useMutationState({
+    filters: { mutationKey: trpc.user.updatePreferences.mutationKey(), status: "error" },
+    select: (mutation) => ({
+      sent: mutation.state.variables as PreferencePatch | undefined,
+      queuedAt: (mutation.state.context as OptimisticSave | undefined)?.queuedAt,
+    }),
+  });
+  const shown: PreferencePatch = user?.preferences ?? {};
+
+  return queued.some(
+    ({ sent, queuedAt }) =>
+      sent !== undefined &&
+      queuedAt === user?.version &&
+      (Object.keys(sent) as (keyof PreferencePatch)[]).every((key) => shown[key] === sent[key])
+  );
 }
 
 /** The Reader's account-wide Preferences, changed optimistically. */
@@ -142,9 +168,6 @@ export function usePreferencesMutation() {
   const refuseStale = useStaleRefusal();
   const saving = usePreferencesSaving();
   const context = "user-settings:update-preferences";
-
-  type PreferencePatch = inferRouterInputs<AppRouter>["user"]["updatePreferences"]["preferences"];
-  type OptimisticSave = { version: number; previous: PreferencePatch };
 
   const rollBack = (sent: PreferencePatch, optimistic: OptimisticSave | undefined) => {
     const current = held();
@@ -167,6 +190,8 @@ export function usePreferencesMutation() {
   };
 
   const { mutateAsync } = useMutation({
+    // Kept until sign-out, so a queued save stays known as unconfirmed however long it waits.
+    gcTime: Infinity,
     ...versioned(
       trpc.user.updatePreferences.mutationOptions(),
       (preferences: PreferencePatch, version) => ({ preferences, version })
@@ -199,7 +224,11 @@ export function usePreferencesMutation() {
       mergePreferences(answer.preferences, answer.version);
     },
     onError: (error, preferences, optimistic) => {
-      if (shouldPreserveOptimisticUpdate(error)) return;
+      if (shouldPreserveOptimisticUpdate(error)) {
+        if (optimistic) optimistic.queuedAt = held()?.user.version;
+
+        return;
+      }
 
       rollBack(preferences, optimistic);
       failed(context)(error);
