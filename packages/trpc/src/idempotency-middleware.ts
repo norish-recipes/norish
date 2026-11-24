@@ -26,8 +26,8 @@
 import { TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
-import { ONE_TIME_SECRET_PATHS } from "@norish/shared/lib/one-time-secrets";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
+import { ONE_TIME_SECRET_PATHS } from "@norish/shared/lib/one-time-secrets";
 
 import { middleware } from "./trpc";
 
