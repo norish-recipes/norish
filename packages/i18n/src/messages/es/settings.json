@@ -306,7 +306,7 @@
       "title": "Unirse a un hogar",
       "description": "Introduce un código de unión para unirte a un hogar existente.",
       "codeLabel": "Código de unión",
-      "codePlaceholder": "Código de 8 caracteres",
+      "codePlaceholder": "Código de 6 dígitos",
       "submitButton": "Unirse al hogar"
     }
   },

@@ -306,7 +306,7 @@
       "title": "Haushalt beitreten",
       "description": "Gib einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten.",
       "codeLabel": "Beitrittscode",
-      "codePlaceholder": "8-stelliger Code",
+      "codePlaceholder": "6-stelliger Code",
       "submitButton": "Haushalt beitreten"
     }
   },

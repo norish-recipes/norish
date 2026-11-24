@@ -306,7 +306,7 @@
       "title": "Join household",
       "description": "Enter a join code to join an existing household.",
       "codeLabel": "Join code",
-      "codePlaceholder": "8-character code",
+      "codePlaceholder": "6-digit code",
       "submitButton": "Join household"
     }
   },

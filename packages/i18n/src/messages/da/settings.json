@@ -306,7 +306,7 @@
       "title": "Tilmeld husstand",
       "description": "Indtast en tilmeldingskode for at tilmelde dig en eksisterende husstand.",
       "codeLabel": "Tilmeldingskode",
-      "codePlaceholder": "8-tegn kode",
+      "codePlaceholder": "6-cifret kode",
       "submitButton": "Tilmeld husstand"
     }
   },

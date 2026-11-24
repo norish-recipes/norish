@@ -306,7 +306,7 @@
       "title": "Gå med i hushåll",
       "description": "Ange en inbjudningskod för att gå med i ett befintligt hushåll.",
       "codeLabel": "Inbjudningskod",
-      "codePlaceholder": "Kod med 8 tecken",
+      "codePlaceholder": "Kod med 6 siffror",
       "submitButton": "Gå med i hushåll"
     }
   },

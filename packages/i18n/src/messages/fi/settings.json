@@ -306,7 +306,7 @@
       "title": "Liity kotitalouteen",
       "description": "Anna liittymiskoodi liittyäksesi olemassa olevaan kotitalouteen.",
       "codeLabel": "Liittymiskoodi",
-      "codePlaceholder": "8-merkkinen koodi",
+      "codePlaceholder": "6-numeroinen koodi",
       "submitButton": "Liity kotitalouteen"
     }
   },

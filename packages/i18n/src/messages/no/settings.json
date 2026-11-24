@@ -306,7 +306,7 @@
       "title": "Bli med i husstand",
       "description": "Skriv inn en invitasjonskode for å bli med i en eksisterende husstand.",
       "codeLabel": "Invitasjonskode",
-      "codePlaceholder": "8-tegns kode",
+      "codePlaceholder": "6-sifret kode",
       "submitButton": "Bli med i husstand"
     }
   },

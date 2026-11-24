@@ -306,7 +306,7 @@
       "title": "Entrar em uma casa",
       "description": "Insira um código de entrada para participar de uma casa existente.",
       "codeLabel": "Código de entrada",
-      "codePlaceholder": "código de 8 caracteres",
+      "codePlaceholder": "código de 6 dígitos",
       "submitButton": "Entrar na casa"
     }
   },

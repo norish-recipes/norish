@@ -306,7 +306,7 @@
       "title": "Dołącz do gospodarstwa domowego",
       "description": "Wpisz kod dołączenia, aby dołączyć do istniejącego gospodarstwa domowego.",
       "codeLabel": "Kod dołączenia",
-      "codePlaceholder": "8-znakowy kod",
+      "codePlaceholder": "6-cyfrowy kod",
       "submitButton": "Dołącz do gospodarstwa domowego"
     }
   },

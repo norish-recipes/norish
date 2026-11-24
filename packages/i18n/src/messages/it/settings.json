@@ -306,7 +306,7 @@
       "title": "Unisciti a un nucleo familiare",
       "description": "Inserisci un codice di accesso per unirti a un nucleo familiare esistente.",
       "codeLabel": "Codice di accesso",
-      "codePlaceholder": "Codice di 8 caratteri",
+      "codePlaceholder": "Codice di 6 cifre",
       "submitButton": "Unisciti al nucleo familiare"
     }
   },

@@ -306,7 +306,7 @@
       "title": "가구 참여",
       "description": "기존 가구에 참여하려면 참여 코드를 입력하세요.",
       "codeLabel": "참여 코드",
-      "codePlaceholder": "8자리 코드",
+      "codePlaceholder": "6자리 코드",
       "submitButton": "가구 참여"
     }
   },

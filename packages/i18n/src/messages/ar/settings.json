@@ -306,7 +306,7 @@
       "title": "الانضمام إلى منزل",
       "description": "أدخل رمز انضمام للانضمام إلى منزل موجود.",
       "codeLabel": "رمز الانضمام",
-      "codePlaceholder": "رمز من 8 أحرف",
+      "codePlaceholder": "رمز من 6 أرقام",
       "submitButton": "الانضمام إلى المنزل"
     }
   },

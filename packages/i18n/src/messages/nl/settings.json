@@ -306,7 +306,7 @@
       "title": "Huishouden joinen",
       "description": "Voer een join code in om lid te worden van een bestaand huishouden.",
       "codeLabel": "Join code",
-      "codePlaceholder": "8-cijferige code",
+      "codePlaceholder": "6-cijferige code",
       "submitButton": "Join huishouden"
     }
   },

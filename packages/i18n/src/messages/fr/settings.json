@@ -306,7 +306,7 @@
       "title": "Rejoindre un foyer",
       "description": "Entrez un code pour rejoindre un foyer existant.",
       "codeLabel": "Code d’invitation",
-      "codePlaceholder": "Code à 8 caractères",
+      "codePlaceholder": "Code à 6 chiffres",
       "submitButton": "Rejoindre le foyer"
     }
   },
