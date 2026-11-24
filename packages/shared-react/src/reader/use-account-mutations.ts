@@ -1,11 +1,14 @@
 "use client";
 
+import type { inferRouterInputs } from "@trpc/server";
 import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { UserPreferencesDto } from "@norish/shared/contracts/zod/user";
+import type { AppRouter } from "@norish/trpc/client";
 import { uploadForm } from "@norish/shared/lib/upload-form";
 
 import type { WriteResult } from "../offline/settled";
+import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { accepted } from "../offline/settled";
 import { showRefusal, usePlatform } from "../platform";
 import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
@@ -93,38 +96,68 @@ export function usePreferencesSaving() {
 export function usePreferencesMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { held, version, mergePreferences: merge, invalidate } = useProfileCache();
+  const { held, version, write, mergePreferences, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
   const mutationKey = trpc.user.updatePreferences.mutationKey();
   const saving = usePreferencesSaving();
 
+  type PreferencePatch = inferRouterInputs<AppRouter>["user"]["updatePreferences"]["preferences"];
+  type OptimisticSave = { version: number; previous: PreferencePatch };
+
+  const rollBack = (sent: PreferencePatch, optimistic: OptimisticSave | undefined) => {
+    const current = held();
+
+    if (!current || !optimistic || current.user.version !== optimistic.version) return;
+
+    const shown = current.user.preferences ?? {};
+    const previous = optimistic.previous;
+    const undo = Object.fromEntries(
+      (Object.keys(previous) as (keyof PreferencePatch)[])
+        .filter((key) => shown[key] === sent[key])
+        .map((key) => [key, previous[key]])
+    );
+
+    if (Object.keys(undo).length > 0)
+      write((data) => ({
+        ...data,
+        user: { ...data.user, preferences: { ...data.user.preferences, ...undo } },
+      }));
+  };
+
   const { mutateAsync } = useMutation(
     trpc.user.updatePreferences.mutationOptions({
-      // A rollback puts back only the fields this write changed, never a sibling's or the version.
-      onMutate: ({ preferences }) => {
-        const shown: Partial<UserPreferencesDto> = held()?.user.preferences ?? {};
+      onMutate: ({ preferences }): OptimisticSave | undefined => {
+        const current = held();
+
+        if (!current) return;
+
+        const shown: PreferencePatch = current.user.preferences ?? {};
         const previous = Object.fromEntries(
-          Object.keys(preferences).map((key) => [key, shown[key as keyof UserPreferencesDto]])
+          (Object.keys(preferences) as (keyof PreferencePatch)[]).map((key) => [key, shown[key]])
         );
 
-        merge(preferences);
+        write((data) => ({
+          ...data,
+          user: { ...data.user, preferences: { ...data.user.preferences, ...preferences } },
+        }));
 
-        return { previous };
+        return { previous, version: current.user.version };
       },
-      onSuccess: (answer, _input, context) => {
+      onSuccess: (answer, { preferences }, optimistic) => {
         if (!answer.success) {
-          merge(context.previous);
+          rollBack(preferences, optimistic);
           void invalidate();
 
           return;
         }
-        // A stale answer carries the stored choices and version, which replace the optimistic copy.
         if (answer.stale) refuseStale("user-settings:update-preferences");
-        merge(answer.preferences ?? {}, answer.version);
+        mergePreferences(answer.preferences, answer.version);
       },
-      onError: (error, _input, context) => {
-        if (context) merge(context.previous);
+      onError: (error, { preferences }, optimistic) => {
+        if (preferences.locale !== undefined && shouldPreserveOptimisticUpdate(error)) return;
+
+        rollBack(preferences, optimistic);
         failed("user-settings:update-preferences")(error);
       },
     })

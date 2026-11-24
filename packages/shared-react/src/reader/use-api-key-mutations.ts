@@ -10,18 +10,15 @@ import { useProfileCache } from "./use-profile";
 /** The Reader's API keys, kept in the cached profile. */
 export function useApiKeyMutations() {
   const trpc = useTRPC();
-  const { held, write, invalidate } = useProfileCache();
+  const { write } = useProfileCache();
   const failed = useFailedWrite();
 
   const { mutateAsync: mutateCreate, reset: resetCreate } = useMutation(
     trpc.user.apiKeys.create.mutationOptions({
       // The answer holds the plaintext key: dropped from the cache once no observer holds it.
       gcTime: 0,
-      // A profile never read is reread, not left to a first read that predates the key.
       onSuccess: ({ metadata }) =>
-        held() === undefined
-          ? void invalidate()
-          : write((data) => ({ ...data, apiKeys: [...data.apiKeys, metadata] })),
+        write((data) => ({ ...data, apiKeys: [...data.apiKeys, metadata] })),
       onError: failed("user-settings:create-api-key"),
     })
   );

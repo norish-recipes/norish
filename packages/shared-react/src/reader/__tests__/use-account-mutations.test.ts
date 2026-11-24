@@ -7,9 +7,11 @@ import {
   createTestWrapper,
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
+import { markOutboxAdmissionFailed } from "@norish/shared/lib/trpc-errors";
 
 import {
   expireSession,
+  useAllergiesMutation,
   useDeleteAccountMutation,
   usePreferencesMutation,
   useProfileMutations,
@@ -21,9 +23,11 @@ import {
   answerCall,
   answerRead,
   failCall,
+  failRead,
   keyOf,
   resetTRPCFake,
   sentCall,
+  serveTRPC,
   trpcCalls,
 } from "../../trpc/testing";
 
@@ -91,6 +95,75 @@ describe("the Account's writes", () => {
 
       expect(profile()).toEqual(PROFILE);
       expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
+    });
+
+    it.each(["fr", "nl"])(
+      "keeps the newer saved language %s when an older save fails and the reread fails",
+      async (locale) => {
+        const result = render(() => {
+          useProfileQuery();
+
+          return usePreferencesMutation();
+        });
+
+        act(() => void result.current.updatePreferences({ locale: "nl" }));
+        await sentCall("user.updatePreferences");
+        act(() =>
+          queryClient.setQueryData(USER_KEY, {
+            ...PROFILE,
+            user: { ...PROFILE.user, version: 5, preferences: { locale } },
+          })
+        );
+        await failCall("user.updatePreferences");
+        await act(async () => failRead("user.get"));
+
+        expect(profile()?.user).toMatchObject({ version: 5, preferences: { locale } });
+      }
+    );
+
+    it.each([true, false])(
+      "keeps the optimistic language only when the Outbox accepted it (%s)",
+      async (queued) => {
+        const result = render(() => usePreferencesMutation());
+
+        act(() => void result.current.updatePreferences({ locale: "nl" }));
+        const call = await sentCall("user.updatePreferences");
+        const error = new TypeError("Network request failed");
+
+        if (!queued) markOutboxAdmissionFailed(error);
+        await act(async () => call.deferred.reject(error));
+
+        expect(profile()?.user.preferences?.locale).toBe(queued ? "nl" : "en");
+        expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(!queued);
+      }
+    );
+
+    it("rereads after a successful save answers before the first profile read", async () => {
+      queryClient.removeQueries({ queryKey: USER_KEY });
+      let firstRead: (value: UserSettingsDto) => void = () => {};
+      const initial = new Promise<UserSettingsDto>((resolve) => (firstRead = resolve));
+      const reread = vi.fn(async () => ({
+        ...PROFILE,
+        user: { ...PROFILE.user, version: 4, preferences: { locale: "nl" } },
+      }));
+      const get = vi.fn().mockReturnValueOnce(initial).mockImplementation(reread);
+      let finishSave: (value: unknown) => void = () => {};
+      const save = new Promise((resolve) => (finishSave = resolve));
+
+      serveTRPC((path) => (path === "user.get" ? get() : save));
+      const result = render(() => ({
+        read: useProfileQuery(),
+        write: usePreferencesMutation(),
+      }));
+
+      expect(get).toHaveBeenCalledOnce();
+      act(() => void result.current.write.updatePreferences({ locale: "nl" }));
+      await act(async () =>
+        finishSave({ success: true, preferences: { locale: "nl" }, version: 4 })
+      );
+      await act(async () => firstRead(PROFILE));
+
+      await waitFor(() => expect(result.current.read.user?.preferences?.locale).toBe("nl"));
     });
 
     it("take what the server holds on a stale answer and say it changed elsewhere", async () => {
@@ -169,12 +242,12 @@ describe("the Account's writes", () => {
       expect((await sentCall("user.deleteAvatar")).input.version).toBe(6);
     });
 
-    it("stays when a failed write rolls back, which puts back only the fields it changed", async () => {
+    it("keeps a newer profile when rollback cannot identify its optimistic fields", async () => {
       const result = render(() => usePreferencesMutation());
 
       act(() => void result.current.updatePreferences({ afterPlanning: "calendar" }));
       await sentCall("user.updatePreferences");
-      // A sibling write landed meanwhile and installed v6 and a new language.
+      // This newer snapshot may have persisted the same value this save tried to set.
       queryClient.setQueryData<UserSettingsDto>(
         USER_KEY,
         (held) =>
@@ -190,7 +263,8 @@ describe("the Account's writes", () => {
       await failCall("user.updatePreferences");
 
       expect(profile()?.user.version).toBe(6);
-      expect(profile()?.user.preferences).toEqual({ locale: "fr", afterPlanning: "stay" });
+      expect(profile()?.user.preferences).toEqual({ locale: "fr", afterPlanning: "calendar" });
+      expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(true);
     });
   });
 
@@ -214,6 +288,30 @@ describe("the Account's writes", () => {
       });
 
       expect(profile()?.user).toMatchObject({ version: 6, preferences: { locale: "fr" } });
+    });
+
+    it("rereads a dropped rename after another versioned write moves ahead", async () => {
+      const allergiesKey = keyOf("user.getAllergies");
+      const result = render(() => ({
+        read: useProfileQuery(),
+        profile: useProfileMutations(),
+        allergies: useAllergiesMutation(),
+      }));
+
+      act(() => void result.current.profile.updateName("Grace"));
+      await sentCall("user.updateName");
+      queryClient.setQueryData(allergiesKey, { allergies: ["milk"], version: 4 });
+      act(() => void result.current.allergies.setAllergies([]));
+      await answerCall("user.setAllergies", { success: true, allergies: [], version: 5 });
+      await answerCall("user.updateName", {
+        success: true,
+        user: { ...PROFILE.user, name: "Grace", version: 4 },
+      });
+      await act(async () =>
+        answerRead("user.get", { ...PROFILE, user: { ...PROFILE.user, name: "Grace", version: 5 } })
+      );
+
+      await waitFor(() => expect(result.current.read.user?.name).toBe("Grace"));
     });
 
     it("never lowers the version or writes its name over the newer read", async () => {

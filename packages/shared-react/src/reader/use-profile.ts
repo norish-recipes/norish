@@ -13,6 +13,7 @@ import type { ReadStatus } from "../trpc/read-status";
 import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 import { readStatus, rereadAfterWrite } from "../trpc/read-status";
+import { writeReaderReply } from "./write-reader-reply";
 
 type Profile = ReadStatus & {
   user: User | null;
@@ -54,16 +55,11 @@ type ProfileCache = {
   version: () => number;
   /** Writes `update(held)` over any read under way. */
   write: (update: (held: HeldProfile) => HeldProfile) => void;
-  /** Dropped when `patch.version` is older than the held one, as `mergePreferences` with a version. */
-  mergeUser: (patch: Partial<User>) => void;
-  mergePreferences: (patch: Partial<UserPreferencesDto>, version?: number) => void;
+  mergeUser: (patch: User) => void;
+  mergePreferences: (patch: Partial<UserPreferencesDto>, version: number) => void;
   /** Rereads the profile; resolves once the reread has landed. */
   invalidate: () => Promise<void>;
 };
-
-/** Whether an answer at `answer` is older than the `held` version: the newer read has its change. */
-export const outdated = (answer: number | undefined, held: number | undefined) =>
-  answer !== undefined && held !== undefined && answer < held;
 
 /** The cached profile's writes, for the Account's mutations. */
 export function useProfileCache(): ProfileCache {
@@ -73,29 +69,43 @@ export function useProfileCache(): ProfileCache {
   const allergiesKey = trpc.user.getAllergies.queryKey();
 
   const held = () => queryClient.getQueryData(queryKey);
-  const write = (update: (held: HeldProfile) => HeldProfile) =>
+  const invalidate = () => rereadAfterWrite(queryClient, queryKey);
+  const version = () =>
+    Math.max(held()?.user.version ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0);
+  const write = (update: (held: HeldProfile) => HeldProfile) => {
+    if (!held()) {
+      void invalidate();
+
+      return;
+    }
     writeOverRead(queryClient, queryKey, (current) => current && update(current));
+  };
   const writeUser = (
-    version: number | undefined,
+    replyVersion: number,
     update: (user: HeldProfile["user"]) => HeldProfile["user"]
   ) =>
-    write((data) =>
-      outdated(version, data.user.version) ? data : { ...data, user: update(data.user) }
-    );
+    writeReaderReply(queryClient, queryKey, replyVersion, version(), (data) => ({
+      ...data,
+      user: update(data.user),
+    }));
 
   return {
     held,
-    version: () =>
-      Math.max(held()?.user.version ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0),
+    version,
     write,
     mergeUser: (patch) => writeUser(patch.version, (user) => ({ ...user, ...patch })),
-    mergePreferences: (patch, version) =>
-      writeUser(version, (user) => ({
+    mergePreferences: (patch, replyVersion) => {
+      const previousVersion = held()?.user.version;
+      const written = writeUser(replyVersion, (user) => ({
         ...user,
-        version: version ?? user.version,
+        version: replyVersion,
         preferences: { ...user.preferences, ...patch },
-      })),
-    invalidate: () => rereadAfterWrite(queryClient, queryKey),
+      }));
+
+      if (written && previousVersion !== undefined && replyVersion > previousVersion + 1)
+        void invalidate();
+    },
+    invalidate,
   };
 }
 

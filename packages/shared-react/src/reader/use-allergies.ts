@@ -4,12 +4,12 @@ import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ReadStatus } from "../trpc/read-status";
-import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { readStatus } from "../trpc/read-status";
-import { outdated, useProfileCache } from "./use-profile";
+import { useProfileCache } from "./use-profile";
+import { writeReaderReply } from "./write-reader-reply";
 
 const NONE: string[] = [];
 
@@ -40,7 +40,7 @@ export function useAllergiesMutation() {
   const queryClient = useQueryClient();
   const { showError } = usePlatform();
   const refuseStale = useStaleRefusal();
-  const { mergeUser } = useProfileCache();
+  const profile = useProfileCache();
   const queryKey = trpc.user.getAllergies.queryKey();
 
   const { mutateAsync, isPending } = useMutation(
@@ -48,12 +48,11 @@ export function useAllergiesMutation() {
       onSuccess: (answer) => {
         if (!answer.success) return;
         if (answer.stale) refuseStale("user-settings:update-allergies");
-        writeOverRead(queryClient, queryKey, (held) =>
-          outdated(answer.version, held?.version)
-            ? held
-            : { allergies: answer.allergies ?? [], version: answer.version ?? held?.version ?? 1 }
-        );
-        if (answer.version) mergeUser({ version: answer.version });
+        writeReaderReply(queryClient, queryKey, answer.version, profile.version(), () => ({
+          allergies: answer.allergies,
+          version: answer.version,
+        }));
+        if (answer.version > (profile.held()?.user.version ?? 0)) void profile.invalidate();
       },
       onError: (error) => showError(error, "user-settings:update-allergies"),
     })

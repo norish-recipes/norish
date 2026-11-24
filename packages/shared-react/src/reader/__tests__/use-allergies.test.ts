@@ -117,6 +117,7 @@ describe("useAllergiesMutation", () => {
       version: 5,
     });
     expect(queryClient.getQueryData(keyOf("user.get"))).toMatchObject({ user: { version: 5 } });
+    expect(queryClient.getQueryState(ALLERGIES_KEY)?.isInvalidated).toBe(true);
   });
 
   it("resolves that a write the server took went through", async () => {
