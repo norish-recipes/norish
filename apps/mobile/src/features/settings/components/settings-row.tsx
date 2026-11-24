@@ -1,16 +1,7 @@
 import type { ComponentProps, ReactElement, ReactNode } from "react";
-import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
-import type { SharedValue } from "react-native-reanimated";
-import React, { useRef } from "react";
+import React from "react";
 import { Pressable, Text, View } from "react-native";
-import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Animated, {
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
 import { NativeMenu } from "@/components/native-menu";
-import { closeOpenRow, useOpenRow } from "@/lib/open-row";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -18,7 +9,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import type { SettingsRowAction } from "../utils/row-actions";
 import { actionLook, menuActions, swipeActions, writeBlocked } from "../utils/row-actions";
-import { SwipeActionsPanel } from "./swipe-actions-panel";
+import { SwipeableRow } from "./swipeable-row";
 import { useActionTone } from "./use-action-tone";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -29,9 +20,8 @@ const ACCESSORY_ICONS = {
   external: "arrow-up",
 } as const satisfies Record<string, IconName>;
 
-/** One settings list row: an optional icon tile, a title (and subtitle), a muted value and a
- * chevron, menu chevron or external arrow. `actions` become swipe circles (34 pt, 11 pt labels) and a long-press
- * glass menu; both are off while Offline, and so is a `write` row's own press. */
+/** One settings list row: icon tile, title, subtitle, muted value and accessory. `actions` become
+ * swipe circles and a long-press menu; Offline turns both off, and a `write` row's own press. */
 export function SettingsRow({
   icon,
   title,
@@ -71,20 +61,12 @@ export function SettingsRow({
   onPress?: () => void;
 }) {
   const { isOffline } = useConnectivity();
-  const rowRef = useRef<SwipeableMethods>(null);
-  const openRow = useOpenRow(rowRef);
-  const width = useSharedValue(0);
-  const translation = useSharedValue(0);
   const [foreground, muted, dangerInk] = useThemeColor(["foreground", "muted", "danger"] as const);
   const toneOf = useActionTone();
   const blocked = writeBlocked(write, isOffline);
   const swipes = swipeActions(actions);
   const menu = menuActions(actions, isOffline);
   const inkClass = danger ? "text-danger" : "text-foreground";
-  const slide = useAnimatedStyle(() => ({
-    width: width.get() > 0 ? width.get() + translation.get() : undefined,
-    transform: [{ translateX: -translation.get() }],
-  }));
 
   const glyph = (size: number) =>
     typeof icon === "string" ? (
@@ -181,52 +163,16 @@ export function SettingsRow({
   // The hairline above the row, which SettingsGroup clips on its first row.
   const hairline = <View className="bg-line ml-[58px] h-px" />;
 
-  if (swipes.length === 0) {
-    return (
-      <>
-        {hairline}
-        {pressable}
-      </>
-    );
-  }
-
   return (
     <>
       {hairline}
-      <View
-        onLayout={(event) => width.set(event.nativeEvent.layout.width)}
-        onTouchStart={(event) => {
-          event.stopPropagation();
-          closeOpenRow(openRow.row);
-        }}
-      >
-        <ReanimatedSwipeable
-          ref={rowRef}
-          enabled={!isOffline}
-          overshootRight={false}
-          renderRightActions={(_progress, swipeTranslation, methods) => (
-            <>
-              <TranslationSync from={swipeTranslation} to={translation} />
-              <SwipeActionsPanel actions={swipes} enabled={!isOffline} methods={methods} />
-            </>
-          )}
-          rightThreshold={40}
-          onSwipeableClose={openRow.closed}
-          onSwipeableWillOpen={openRow.opened}
-        >
-          <Animated.View style={slide}>{pressable}</Animated.View>
-        </ReanimatedSwipeable>
-      </View>
+      {swipes.length === 0 ? (
+        pressable
+      ) : (
+        <SwipeableRow actions={swipes} enabled={!isOffline}>
+          {pressable}
+        </SwipeableRow>
+      )}
     </>
   );
-}
-
-/** Copies the swipe's translation onto the row's own value, where its content shrinks by it. */
-function TranslationSync({ from, to }: { from: SharedValue<number>; to: SharedValue<number> }) {
-  useAnimatedReaction(
-    () => from.get(),
-    (value) => to.set(value)
-  );
-
-  return null;
 }
