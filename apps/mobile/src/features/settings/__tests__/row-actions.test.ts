@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SettingsActionKind, SettingsRowAction } from "../utils/row-actions";
-import {
-  actionLook,
-  menuActions,
-  orderActions,
-  swipeActions,
-  writeBlocked,
-} from "../utils/row-actions";
+import { actionLook, menuActions, orderActions, writeBlocked } from "../utils/row-actions";
 import { versionLine } from "../utils/version-line";
 
 const act = (kind: SettingsActionKind): SettingsRowAction => ({
@@ -36,10 +30,9 @@ describe("settings row actions", () => {
     expect(kinds(orderActions([act("unlink")]))).toEqual(["unlink"]);
   });
 
-  it("keeps Copy out of the swipe but in the menu, both in the same order", () => {
+  it("lists Copy in the menu, in the same order", () => {
     const actions = [act("delete"), act("copy"), act("disable")];
 
-    expect(swipeActions(actions).map((a) => a.kind)).toEqual(["disable", "delete"]);
     expect(menuActions(actions, false).map((a) => a.kind)).toEqual(["copy", "disable", "delete"]);
   });
 

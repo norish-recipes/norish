@@ -1,5 +1,5 @@
-# Deletes a site token by swipe: the row's Delete asks first, then the server drops the token and
-# the other one stays. Every row draws its own hidden circles, so the swiped one sorts first.
+# Deletes a site token from the row's long-press menu: Delete asks first; cancelling keeps the token,
+# confirming drops it and the other one stays.
 appId: dev.norish.app
 ---
 - runFlow: subflows/reset.yaml
@@ -14,12 +14,15 @@ appId: dev.norish.app
     visible:
       id: settings-tokens-item-${output.token}
     timeout: 20000
-- swipe:
-    from:
-      id: settings-tokens-item-${output.token}
-    direction: LEFT
-- tapOn:
-    id: settings-action-delete
+- longPressOn:
+    id: settings-tokens-item-${output.token}
+- tapOn: Delete
+- tapOn: Cancel
+- assertVisible:
+    id: settings-tokens-item-${output.token}
+- longPressOn:
+    id: settings-tokens-item-${output.token}
+- tapOn: Delete
 # The native confirm's button, after its title of the same name.
 - tapOn:
     text: Delete token

@@ -1,7 +1,7 @@
 import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { ComponentProps } from "react";
 
-/** What a settings row's swipe or long-press action does; each has one colour and icon everywhere. */
+/** What a settings row's long-press action does; each has one colour and icon everywhere. */
 export type SettingsActionKind =
   "delete" | "kick" | "revoke" | "disable" | "enable" | "reactivate" | "admin" | "copy" | "unlink";
 
@@ -25,8 +25,6 @@ const LOOKS: Record<SettingsActionKind, Look> = {
 export type SettingsRowAction = {
   kind: SettingsActionKind;
   label: string;
-  /** A shorter caption for the swipe circle, where `label` would not fit; the menu keeps `label`. */
-  swipeLabel?: string;
   onPress: () => void;
 };
 
@@ -34,18 +32,13 @@ export const actionLook = (kind: SettingsActionKind): Look => LOOKS[kind];
 
 const removes = (action: SettingsRowAction) => LOOKS[action.kind].tone === "danger";
 
-/** The one order of a row's actions: the red one that removes something last, where a full swipe
- * runs it, as Delete is on a recipe card. */
+/** The one order of a row's actions: the red one that removes something last. */
 export const orderActions = (actions: SettingsRowAction[]) => [
   ...actions.filter((action) => !removes(action)),
   ...actions.filter(removes),
 ];
 
-/** The swipe's actions: Copy is for the menu, since a swipe action is a state change. */
-export const swipeActions = (actions: SettingsRowAction[]) =>
-  orderActions(actions).filter((action) => action.kind !== "copy");
-
-/** The long-press menu's actions, in the swipe's order: none while Offline, as no settings write is Queued. */
+/** The long-press menu's actions, in that order: none while Offline, as no settings write is Queued. */
 export const menuActions = (actions: SettingsRowAction[], offline: boolean) =>
   offline ? [] : orderActions(actions);
 

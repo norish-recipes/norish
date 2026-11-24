@@ -85,8 +85,6 @@ export function ShareLinksScreen() {
                 return {
                   kind: action,
                   label: text(`${modal}.confirm`),
-                  // "Delete link" does not fit a swipe circle's slot.
-                  swipeLabel: action === "delete" ? text("common.actions.delete") : undefined,
                   onPress: confirmedWrite({
                     title: text(`${modal}.title`),
                     message: text(`${modal}.message`, { recipeName: share.recipeName }),

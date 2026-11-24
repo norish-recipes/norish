@@ -8,8 +8,7 @@ import { useThemeColor } from "heroui-native";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import type { SettingsRowAction } from "../utils/row-actions";
-import { actionLook, menuActions, swipeActions, writeBlocked } from "../utils/row-actions";
-import { SwipeableRow } from "./swipeable-row";
+import { actionLook, menuActions, writeBlocked } from "../utils/row-actions";
 import { useActionTone } from "./use-action-tone";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -20,8 +19,8 @@ const ACCESSORY_ICONS = {
   external: "arrow-up",
 } as const satisfies Record<string, IconName>;
 
-/** One settings list row: icon tile, title, subtitle, muted value and accessory. `actions` become
- * swipe circles and a long-press menu; Offline turns both off, and a `write` row's own press. */
+/** One settings list row: icon tile, title, subtitle, muted value and accessory. `actions` make
+ * a long-press menu; Offline turns it off, and a `write` row's own press. */
 export function SettingsRow({
   icon,
   title,
@@ -64,7 +63,6 @@ export function SettingsRow({
   const [foreground, muted, dangerInk] = useThemeColor(["foreground", "muted", "danger"] as const);
   const toneOf = useActionTone();
   const blocked = writeBlocked(write, isOffline);
-  const swipes = swipeActions(actions);
   const menu = menuActions(actions, isOffline);
   const inkClass = danger ? "text-danger" : "text-foreground";
 
@@ -167,13 +165,7 @@ export function SettingsRow({
   return (
     <>
       {hairline}
-      {swipes.length === 0 ? (
-        pressable
-      ) : (
-        <SwipeableRow actions={swipes} enabled={!isOffline}>
-          {pressable}
-        </SwipeableRow>
-      )}
+      {pressable}
     </>
   );
 }

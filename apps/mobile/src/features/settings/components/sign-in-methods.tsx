@@ -27,7 +27,7 @@ import { ReadBody } from "./read-body";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
-/** The account's sign-in methods: unlink by swipe or long-press, link through the system auth
+/** The account's sign-in methods: unlink by long-press, link through the system auth
  * session, and the password sheet. Nothing here is Queued: every call needs the server. */
 export function SignInMethods() {
   const intl = useIntl();

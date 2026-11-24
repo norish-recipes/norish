@@ -12,7 +12,6 @@ import { SettingsRow } from "./settings-row";
 const KICK = {
   kind: "kick",
   button: "settings.household.members.kickButton",
-  swipe: undefined,
   title: "settings.household.members.kickModal.title",
   message: "settings.household.members.kickModal.confirmMessage",
   warning: "settings.household.members.kickModal.warning",
@@ -23,8 +22,6 @@ const KICK = {
 const MAKE_ADMIN = {
   kind: "admin",
   button: "settings.household.members.makeAdminButton",
-  // "Make admin" does not fit a swipe circle's slot; the circle says the role it gives.
-  swipe: "settings.household.info.admin",
   title: "settings.household.members.transferModal.title",
   message: "settings.household.members.transferModal.confirmMessage",
   warning: "settings.household.members.transferModal.warning",
@@ -32,7 +29,7 @@ const MAKE_ADMIN = {
   destructive: false,
 } as const;
 
-/** The household's members with their role; an admin swipes or long-presses another member for
+/** The household's members with their role; an admin long-presses another member for
  * Kick and Make admin, each behind a confirm. */
 export function MembersList({
   household,
@@ -67,7 +64,6 @@ export function MembersList({
           return {
             kind: look.kind,
             label: text(look.button),
-            swipeLabel: look.swipe && text(look.swipe),
             onPress: confirmedWrite({
               title: text(look.title),
               message: `${text(look.message, { name })}\n\n${text(look.warning)}`,
