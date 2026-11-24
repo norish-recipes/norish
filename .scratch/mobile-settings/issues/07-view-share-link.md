@@ -34,3 +34,8 @@ Sound per the Spec reviewer: who the query answers matches revoke (others get th
 - reject: a copy still in flight at sign-out can finish afterwards (the reader's own link on the reader's own device, two pages apart).
 - reject: web's development `loggerLink` would print the link if web ever called the hook (browser console, development only, no web caller; the same holds for a new API key today).
 - reject: `url` holds a path (`RecipeShareCreatedSchema.url` is named the same); the swallowed read error (the toast is the same either way); the test's mock factory.
+
+### Fix outcome (2026-11-24)
+
+- `getRecipeShareUrl` answers no link unless the share is active (the list's status rule) or when the kept token won't decrypt (nothing logged); mobile rereads the list on a null link. `copyLink` now fails through `useCopyToClipboard`'s one toast (it takes a promise); `shareLinkActions` is one branch per status.
+- Verify held: Next sends no `Cache-Control` on a dynamic route handler (`build/templates/app-route.js` sets it only for ISR) and iOS `NSURLCache` may keep GETs; the tRPC route's `responseMeta` now answers `no-store` on every response (the service worker is already NetworkOnly for `/api/`, nothing relies on HTTP caching). Route test added. All gates green; mobile lint at 11 warnings.
