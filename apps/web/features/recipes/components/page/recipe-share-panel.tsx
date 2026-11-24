@@ -66,9 +66,10 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   } = useRecipeShareMutations(recipe.id);
   const [expiresIn, setExpiresIn] = useState<CreateRecipeShareInputDto["expiresIn"]>("forever");
   const [latestCreatedUrl, setLatestCreatedUrl] = useState<string | null>(null);
-  const openNow = useRef(open);
+  const openRef = useRef(open);
+
   useEffect(() => {
-    openNow.current = open;
+    openRef.current = open;
   });
   // The new link lives only while the panel is open; closing it, or an answer after, forgets it.
   const forgetLink = () => {
@@ -82,7 +83,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
   const create = async () => {
     const share = await createShare(expiresIn);
 
-    if (share && !openNow.current) forgetLink();
+    if (share && !openRef.current) forgetLink();
     else if (share) {
       setLatestCreatedUrl(new URL(addBasePath(share.url), window.location.origin).toString());
     }
