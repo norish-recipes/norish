@@ -12,6 +12,7 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 import type { WriteResult } from "../offline/settled";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { accepted } from "../offline/settled";
+import { olderThanHeld } from "../offline/version-order";
 import { showQueued, showRefusal, usePlatform } from "../platform";
 import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
@@ -167,7 +168,7 @@ export function usePreferencesUnconfirmed(): boolean {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
-  const { held, write, mergePreferences, invalidate } = useProfileCache();
+  const { held, knownVersion, write, mergePreferences, invalidate } = useProfileCache();
   const failed = useFailedWrite();
   const versioned = useVersionedWrite();
   const refuseStale = useStaleRefusal();
@@ -177,7 +178,7 @@ export function usePreferencesMutation() {
   const rollBack = (sent: PreferencePatch, optimistic: OptimisticSave | undefined) => {
     const current = held();
 
-    if (!current || !optimistic || current.user.version !== optimistic.version) return;
+    if (!current || !optimistic || olderThanHeld(optimistic.version, current.user.version)) return;
 
     const shown = current.user.preferences ?? {};
     const previous = optimistic.previous;
@@ -230,7 +231,7 @@ export function usePreferencesMutation() {
     },
     onError: (error, preferences, optimistic) => {
       if (shouldPreserveOptimisticUpdate(error)) {
-        if (optimistic) optimistic.queuedAt = held()?.user.version;
+        if (optimistic) optimistic.queuedAt = knownVersion();
 
         return;
       }

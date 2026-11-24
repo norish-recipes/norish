@@ -14,15 +14,12 @@ import {
 import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { InfiniteRecipeData } from "./library-cache";
+import { olderThanHeld } from "../offline/version-order";
 import { usePlatform } from "../platform/platform";
 import { rereadInWindow, useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
 import { useRecipeSelection } from "./selection-store";
-import {
-  removeRecipesFromLists,
-  replacesCached,
-  useRecipesCacheHelpers,
-} from "./use-recipes-cache";
+import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
@@ -212,7 +209,7 @@ export function useRecipeListSubscription() {
         pages: prev.pages.map((page) => ({
           ...page,
           recipes: page.recipes.map((r) =>
-            r.id === updatedRecipe.id && replacesCached(updatedRecipe, r)
+            r.id === updatedRecipe.id && !olderThanHeld(updatedRecipe.version, r.version)
               ? patchDashboardRecipeFromFull(r, updatedRecipe)
               : r
           ),
@@ -236,7 +233,7 @@ export function useRecipeListSubscription() {
       updateRecipeInList(recipe);
       queryClient.setQueryData<FullRecipeDTO | null>(
         trpc.recipes.get.queryKey({ id: recipe.id }),
-        (cached) => (replacesCached(recipe, cached) ? recipe : cached)
+        (cached) => (olderThanHeld(recipe.version, cached?.version) ? cached : recipe)
       );
 
       // An enrichment adds no household Category; some change what Discover lists.

@@ -10,10 +10,9 @@ import type { AppRouter } from "@norish/trpc/client";
 import { getLocalePreference } from "@norish/shared/lib/user-preferences";
 
 import type { ReadStatus } from "../trpc/read-status";
-import { writeOverRead } from "../offline/write-over-read";
 import { useTRPC } from "../trpc";
 import { readStatus, rereadAfterWrite } from "../trpc/read-status";
-import { writeReaderReply } from "./write-reader-reply";
+import { writeOrReread } from "./write-or-reread";
 
 type Profile = ReadStatus & {
   user: User | null;
@@ -51,6 +50,8 @@ type HeldProfile = inferRouterOutputs<AppRouter>["user"]["get"];
 
 type ProfileCache = {
   held: () => HeldProfile | undefined;
+  /** The version the cached profile holds; undefined before the first read. */
+  knownVersion: () => number | undefined;
   /** The newest version the profile or the allergies have learned. */
   version: () => number;
   /** The version a write sends; before the first profile read answers, it waits for that read. */
@@ -71,39 +72,35 @@ export function useProfileCache(): ProfileCache {
   const allergiesKey = trpc.user.getAllergies.queryKey();
 
   const held = () => queryClient.getQueryData(queryKey);
+  const knownVersion = () => held()?.user.version;
   const invalidate = () => rereadAfterWrite(queryClient, queryKey);
   const version = () =>
-    Math.max(held()?.user.version ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0);
+    Math.max(knownVersion() ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0);
   const sendVersion = async () => {
     if (!held()) await queryClient.query({ ...trpc.user.get.queryOptions(), staleTime: "static" });
 
     return version();
   };
-  const write = (update: (held: HeldProfile) => HeldProfile) => {
-    if (!held()) {
-      void invalidate();
-
-      return;
-    }
-    writeOverRead(queryClient, queryKey, (current) => current && update(current));
-  };
+  const write = (update: (held: HeldProfile) => HeldProfile) =>
+    void writeOrReread(queryClient, queryKey, update);
   const writeUser = (
     replyVersion: number,
     update: (user: HeldProfile["user"]) => HeldProfile["user"]
   ) =>
-    writeReaderReply(queryClient, queryKey, replyVersion, version(), (data) => ({
-      ...data,
-      user: update(data.user),
-    }));
+    writeOrReread(queryClient, queryKey, (data) => ({ ...data, user: update(data.user) }), {
+      version: replyVersion,
+      known: version(),
+    });
 
   return {
     held,
+    knownVersion,
     version,
     sendVersion,
     write,
     mergeUser: (patch) => writeUser(patch.version, (user) => ({ ...user, ...patch })),
     mergePreferences: (patch, replyVersion) => {
-      const previousVersion = held()?.user.version;
+      const previousVersion = knownVersion();
       const written = writeUser(replyVersion, (user) => ({
         ...user,
         version: replyVersion,

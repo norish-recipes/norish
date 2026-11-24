@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
 
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import { olderThanHeld } from "../offline/version-order";
 import { useTRPC } from "../trpc";
 
 type ConvertMutationContext = {
@@ -85,7 +86,7 @@ export function useConvertMutation(
         // Only its own switch is undone; a newer recipe is left for the reread.
         if (previous)
           queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, (current) =>
-            current?.version === previous.version
+            current && !olderThanHeld(previous.version, current.version)
               ? { ...current, systemUsed: previous.systemUsed }
               : current
           );

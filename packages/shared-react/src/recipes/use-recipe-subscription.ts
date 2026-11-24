@@ -3,10 +3,10 @@
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
+import { olderThanHeld } from "../offline/version-order";
 import { useKeepsCurrent, useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useRecipeQuery } from "./use-recipe-query";
-import { replacesCached } from "./use-recipes-cache";
 
 type Payload<E extends EventName<RecipesRealtime>> = PayloadOf<RecipesRealtime, E>;
 
@@ -32,7 +32,7 @@ export function useRecipeSubscription(
   const common = { enabled: !!recipeId, liveQueryKeys: [queryKey] };
   const write = (recipe: Payload<"updated">["recipe"]) => {
     if (recipe.id === recipeId)
-      setRecipeData((cached) => (replacesCached(recipe, cached) ? recipe : cached));
+      setRecipeData((cached) => (olderThanHeld(recipe.version, cached?.version) ? cached : recipe));
   };
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {
