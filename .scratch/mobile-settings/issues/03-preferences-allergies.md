@@ -100,3 +100,16 @@ Fix round 4 runs on Sol high (a change of model family: Opus has fixed three rou
 - Mobile stores explicit language choices and keeps an optimistic language when the Outbox accepts it. Older device entries are kept because they carry no record of how the language was selected.
 - Automatic conversion yields only to a manual conversion the server confirms. Household creation keeps the Reader's own allergy warnings until the household is read.
 - E2E runs later with the rest of Mobile Settings.
+
+### Review round 5 (2026-11-24): fix range `40742be9d..0ddcd861e` (Opus high): dispositions
+
+Holding per the reviewer: the server reads a version with the data it labels; the language rules (explicit choice only, rollback of its own value only, a queued save keeps its value); only a confirmed manual conversion counts as made by hand; the profile and allergy caches. Left to fix:
+- fix, bug: a preference saved before the first profile read answers is sent at version 1 and refused as stale (`use-profile.ts:74`); round 4's test faked the server's answer. The write waits for the read.
+- fix, bug: a stale conversion reply restores the earlier recipe snapshot over a newer edit (`use-convert-mutation.ts:96`). No snapshot rollback on stale: reread.
+- fix: round 4 made `recipes.convertMeasurements` wait for the whole AI conversion and answer `{success, stale?}` (`recipes.ts:780`), which nothing asked for: an Outbox replay can run the AI conversion again, up to three times. The router goes back to its early answer and the result by event; "made by hand" is read from the confirmed result.
+- fix, bug: only the language keeps its optimistic value when the Outbox queues a save (`use-account-mutations.ts:158`); the other preferences roll back on screen and are applied later.
+- verify: the name and avatar replies now carry `preferences`, which `mergeUser` spreads over the cache; they must not overwrite a pending optimistic preference.
+- reject: `user.get` no longer falls back to the session's image when the stored one is null (a deleted avatar must not come back from the session's copy).
+- reject: `updateUserPreferences` without a version on a missing user answers stale (there is no such caller).
+
+Fix round 5 runs on Opus high after ticket 07's implementer (one writer at a time).
