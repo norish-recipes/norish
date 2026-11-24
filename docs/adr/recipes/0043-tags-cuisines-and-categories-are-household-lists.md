@@ -1,33 +1,25 @@
 # Tags, Cuisines and Categories are household lists
 
-Tags, Cuisines and Categories were shared rows with no owner, unique across the server:
+Shared, ownerless rows for Tags, Cuisines and Categories cause three problems. Nobody can rename or delete an entry. Every household is offered every other household's Tags. One household's casing shows in another's. On top of that, creating an entry by typing it and sweeping it once unused leaves the lists impossible to manage.
 
-- Tags were created by typing them and swept when unused.
-- Categories worked the same way (ADR-0040).
-- Only an administrator could extend Cuisines (ADR-0012).
-
-As a result nobody could rename or delete a Tag, and under the default policy every household was offered every other household's Tags. One household's casing also showed up in another's.
-
-**Each is now a household list.**
+**Each is a household list:**
 
 - Rows carry their household and are unique on the folded name within it.
-- Instance entries sit alongside them: the four built-in Categories, which are fixed, and the administrator's Cuisines.
+- Instance entries sit beside them: the four built-in Categories (fixed for everyone) and the administrator's Cuisines, which every household is offered.
 - A recipe carries only its own household's entries and instance entries.
-- Entries come from the Content page's Add, from an explicit "Create" in the recipe picker, from AI under the permissive strategies, or from imports. AI and imports match against the list first.
+- Entries are added on the Content page, by an explicit "Create" in the recipe picker, and by AI under the permissive strategies. Imports add Tags, and a Norish Recipe Archive also adds its Categories. AI and imports match the list first.
 - An entry stays until a member deletes it.
-- Households may add their own Cuisines.
+- Households may add Cuisines. AI's "extend" strategy adds to the recipe's household, never to the instance list.
 - Filtering across households matches on the folded name.
 
 ## Considered Options
 
-- **Names derived from the recipes carrying them**, with no stored list. That leaves no Add button and no entry kept between uses, and it keeps the creation-by-typing that made lists hard to manage.
-- **One shared row per name, with a household link to it,** to avoid storing "soja" 500 times. The link row costs as much as the name it replaces, and a rename becomes a re-link. The first household's casing would also show in every other household's list.
+- **Names derived from the recipes carrying them**, with no stored list. That leaves no Add button and no entry kept between uses, so creating by typing would remain the only way in.
+- **One shared row per name, with a household link to it,** to avoid storing "soja" 500 times. The link row costs as much as the name it replaces. A rename would become a re-link. The first household's casing would show in every other household's list.
 - **Exact-case spellings.** "BBQ" and "bbq" should be one entry.
 
 ## Consequences
 
-- Supersedes ADR-0012 in part: households extend Cuisines, and AI's "extend" strategy adds to the recipe's household, never to the instance list.
-- Supersedes ADR-0040 in part: Categories now persist until deleted and are created explicitly. They are still offered only to their household.
-- Allergies stop being tag rows. An account keeps them as names, matched against any recipe's Tags.
+- Allergies are not tag rows. An account keeps them as names, matched against any recipe's Tags.
 - Near-duplicates such as "BBQ" and "Barbecue" may coexist. Renaming one onto the other merges them.
-- The upgrade gives every household its own copy of the shared Tag and Category rows its recipes use. Today's Cuisines become instance entries.
+- The upgrade gives every household its own copy of the shared Tag and Category rows its recipes use. The administrator's existing Cuisines become instance entries.

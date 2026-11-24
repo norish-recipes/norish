@@ -74,9 +74,9 @@ export function textNamesFood(
  * (typed, added from a recipe, or put there from the Pantry). Asked by the
  * Pantry page, the Ingredient panel and the add-to-groceries panel alike.
  *
- * It deliberately differs from `pantryIngredientFor` (ADR-0036's 2026-10-05
- * amendment): only the same food counts, never a kind of it, because red
- * onions bought for one recipe restock nobody's onions; and a ticked grocery
+ * It deliberately differs from `pantryIngredientFor` (ADR-0036): only the
+ * same food counts, never a kind of it, because red onions bought for one
+ * recipe restock nobody's onions; and a ticked grocery
  * never counts, because ticking it off was the restock. A grocery nothing
  * has resolved yet (added offline, or a moment ago), or a kept food added
  * offline, is matched on its food key against the food's name or its name in
