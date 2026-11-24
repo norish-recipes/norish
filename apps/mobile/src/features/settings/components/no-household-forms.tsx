@@ -4,6 +4,7 @@ import { useText } from "@/lib/i18n/use-text";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import {
+  HOUSEHOLD_NAME_MAX_LENGTH,
   isHouseholdName,
   isJoinCode,
   joinCodeDigits,
@@ -36,6 +37,7 @@ function EntryForm({
   enabled: boolean;
   autoCapitalize: "words" | "none";
   keyboardType?: "number-pad";
+  maxLength?: number;
   placeholder: string;
 }) {
   const text = useText();
@@ -83,6 +85,7 @@ export function NoHouseholdForms() {
         descriptionId="settings.household.create.description"
         id="create"
         labelId="settings.household.create.nameLabel"
+        maxLength={HOUSEHOLD_NAME_MAX_LENGTH}
         placeholder={text("settings.household.create.namePlaceholder")}
         value={name}
         onChange={setName}

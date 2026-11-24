@@ -8,7 +8,7 @@ import { HomeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHouseholdMutations } from "@norish/shared-react/reader";
+import { HOUSEHOLD_NAME_MAX_LENGTH, useHouseholdMutations } from "@norish/shared-react/reader";
 
 export default function NoHouseholdView() {
   const t = useTranslations("settings.household");
@@ -32,7 +32,12 @@ export default function NoHouseholdView() {
           title={t("create.title")}
         >
           <form className="flex flex-1 flex-col gap-4" onSubmit={handleCreateHousehold}>
-            <TextField isRequired value={householdName} onChange={setHouseholdName}>
+            <TextField
+              isRequired
+              maxLength={HOUSEHOLD_NAME_MAX_LENGTH}
+              value={householdName}
+              onChange={setHouseholdName}
+            >
               <Label>{t("create.nameLabel")}</Label>
               <Input variant="secondary" placeholder={t("create.namePlaceholder")} />
             </TextField>

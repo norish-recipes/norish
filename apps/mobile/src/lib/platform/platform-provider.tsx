@@ -23,7 +23,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import type { ToastSeverity } from "./app-toast";
 import { recipeRoute } from "../tab-routes";
 import { AppToast } from "./app-toast";
-import { mobileToastDescription } from "./toast-description";
+import { errorBody, mobileToastDescription } from "./toast-description";
 
 const log = createClientLogger("mobile-platform");
 
@@ -99,7 +99,7 @@ export function MobilePlatformProvider({
       showToast({
         severity: "danger",
         title: title ?? intl.formatMessage({ id: "common.errors.operationFailed" }),
-        body: error instanceof Error ? error.message : String(error),
+        body: errorBody(error),
       });
     },
     storage: mmkvStorage,
