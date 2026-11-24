@@ -12,6 +12,7 @@ import {
   getRecipeShareById,
   getRecipeShareByToken,
   getRecipeSharesByUserId,
+  getRecipeShareUrl,
   revokeRecipeShare,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
@@ -67,6 +68,34 @@ describe("recipe share repository", () => {
     expect(byToken?.id).toBe(created.id);
     expect(created.status).toBe("active");
     expect(created.expiresAt).not.toBeNull();
+  });
+
+  it("keeps a new share's token encrypted and reads its link back", async () => {
+    const created = await createRecipeShare(testUserId, {
+      recipeId: testRecipeId,
+      expiresIn: "forever",
+    });
+    const token = created.url.replace("/share/", "");
+    const [stored] = await getTestDb()
+      .select()
+      .from(schema.recipeShares)
+      .where(eq(schema.recipeShares.id, created.id));
+    const fetched = await getRecipeShareById(created.id);
+
+    expect(stored?.tokenEnc).toBeTruthy();
+    expect(stored?.tokenEnc).not.toContain(token);
+    expect(created.hasLink).toBe(true);
+    expect(created).not.toHaveProperty("tokenEnc");
+    expect(fetched && getRecipeShareUrl(fetched)).toBe(created.url);
+  });
+
+  it("has no link for a share made before tokens were kept", async () => {
+    const { share } = await createTestRecipeShare(testUserId, testRecipeId);
+    const fetched = await getRecipeShareById(share.id);
+    const [listed] = await getRecipeSharesByUserId(testUserId, testRecipeId);
+
+    expect(fetched && getRecipeShareUrl(fetched)).toBeNull();
+    expect(listed?.hasLink).toBe(false);
   });
 
   it("handles list, get, update, revoke, delete, and global list flows", async () => {

@@ -30,6 +30,7 @@ export function toRecipeShareSummary(share: RecipeShareDto): RecipeShareSummaryD
   return RecipeShareSummarySchema.parse({
     ...share,
     status: getRecipeShareStatus(share),
+    hasLink: share.tokenEnc !== null,
   });
 }
 

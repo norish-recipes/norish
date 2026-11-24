@@ -18,6 +18,7 @@ export const RecipeShareSelectSchema = z.object({
   userId: z.string(),
   recipeId: z.uuid(),
   tokenHash: z.string(),
+  tokenEnc: z.string().nullable(),
   expiresAt: z.date().nullable(),
   revokedAt: z.date().nullable(),
   lastAccessedAt: z.date().nullable(),
@@ -31,10 +32,13 @@ export const RecipeShareLifecycleEventTypeSchema = z.enum(recipeShareLifecycleEv
 
 const RecipeShareManagementBaseSchema = RecipeShareSelectSchema.omit({
   tokenHash: true,
+  tokenEnc: true,
 });
 
 export const RecipeShareSummarySchema = RecipeShareManagementBaseSchema.extend({
   status: RecipeShareStatusSchema,
+  // A share made before its token was kept has no link to show.
+  hasLink: z.boolean(),
 });
 
 export const RecipeShareInventorySchema = RecipeShareSummarySchema.extend({
@@ -82,6 +86,10 @@ export const DeleteRecipeShareInputSchema = z.object({
 
 export const ResolveSharedRecipeInputSchema = z.object({
   token: z.string().trim().min(1),
+});
+
+export const RecipeShareUrlSchema = z.object({
+  url: z.string().startsWith("/share/").nullable(),
 });
 
 export const RecipeShareCreatedSchema = RecipeShareSummarySchema.extend({

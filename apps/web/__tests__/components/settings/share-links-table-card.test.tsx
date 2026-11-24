@@ -72,6 +72,7 @@ describe("ShareLinksTableCard", () => {
         revokedAt: null,
         lastAccessedAt: null,
         status: "active",
+        hasLink: true,
         version: 1,
       },
     ];

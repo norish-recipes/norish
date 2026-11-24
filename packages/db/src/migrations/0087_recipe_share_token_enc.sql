@@ -1,0 +1,1 @@
+ALTER TABLE "recipe_shares" ADD COLUMN "token_enc" text;

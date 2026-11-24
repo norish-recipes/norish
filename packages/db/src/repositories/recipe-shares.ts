@@ -11,7 +11,7 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { hashToken, safeDecrypt } from "@norish/config/crypto";
+import { decrypt, encrypt, hashToken, safeDecrypt } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { users } from "@norish/db/schema/auth";
 import { recipeShares } from "@norish/db/schema/recipe-shares";
@@ -72,6 +72,7 @@ export async function createRecipeShare(
       userId,
       recipeId: validated.recipeId,
       tokenHash: hashToken(token),
+      tokenEnc: encrypt(token),
       expiresAt: resolveRecipeShareExpiresAt(validated.expiresIn),
     })
     .returning();
@@ -92,6 +93,11 @@ export async function getRecipeShareById(id: string): Promise<RecipeShareDto | n
   }
 
   return RecipeShareSelectSchema.parse(row);
+}
+
+/** The share's link, or null when it was made before tokens were kept. */
+export function getRecipeShareUrl(share: RecipeShareDto): string | null {
+  return share.tokenEnc === null ? null : `/share/${decrypt(share.tokenEnc)}`;
 }
 
 export async function getRecipeShareByToken(token: string): Promise<RecipeShareDto | null> {
@@ -296,4 +302,9 @@ export async function getPublicRecipeView(
   return mapRecipeToPublicRecipeView(recipe, shareToken, icons);
 }
 
-export { getRecipeShareStatus, mapRecipeToPublicRecipeView, resolveRecipeShareExpiresAt };
+export {
+  getRecipeShareStatus,
+  mapRecipeToPublicRecipeView,
+  resolveRecipeShareExpiresAt,
+  toRecipeShareSummary,
+};

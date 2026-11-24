@@ -14,9 +14,10 @@ import {
   getRecipeShareInventoryByUserId,
   getRecipeShareInventoryForAdmin,
   getRecipeSharesByUserId,
-  getRecipeShareStatus,
+  getRecipeShareUrl,
   reactivateRecipeShare,
   revokeRecipeShare,
+  toRecipeShareSummary,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
 import {
@@ -42,6 +43,7 @@ import {
   RecipeShareLifecycleEventSchema,
   RecipeShareMutationResultSchema,
   RecipeShareSummarySchema,
+  RecipeShareUrlSchema,
   RevokeRecipeShareInputSchema,
   UpdateRecipeShareInputSchema,
 } from "@norish/shared/contracts/zod/recipe-shares";
@@ -54,13 +56,6 @@ type ShareMutationContext = {
   user: { id: string };
   householdKey: string;
 };
-
-function toSummary(share: RecipeShareDto) {
-  return RecipeShareSummarySchema.parse({
-    ...share,
-    status: getRecipeShareStatus(share),
-  });
-}
 
 function toRecipeShareLifecycleEvent(
   share: Pick<RecipeShareDto, "id" | "recipeId" | "version">,
@@ -151,7 +146,7 @@ const get = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    return toSummary(share);
+    return toRecipeShareSummary(share);
   });
 
 const update = authedProcedure
@@ -165,7 +160,7 @@ const update = authedProcedure
     const result = await updateRecipeShare(input);
 
     if (result.stale || !result.value) {
-      return { ...toSummary(share), stale: true };
+      return { ...toRecipeShareSummary(share), stale: true };
     }
 
     await emitRecipeShareEvent(ctx, result.value, "updated");
@@ -186,7 +181,7 @@ const revoke = authedProcedure
     const result = await revokeRecipeShare(input.id, input.version);
 
     if (result.stale || !result.value) {
-      return { ...toSummary(share), stale: true };
+      return { ...toRecipeShareSummary(share), stale: true };
     }
 
     await emitRecipeShareEvent(ctx, result.value, "revoked");
@@ -207,12 +202,26 @@ const reactivate = authedProcedure
     const result = await reactivateRecipeShare(input.id, input.version);
 
     if (result.stale || !result.value) {
-      return { ...toSummary(share), stale: true };
+      return { ...toRecipeShareSummary(share), stale: true };
     }
 
     await emitRecipeShareEvent(ctx, result.value, "reactivated");
 
     return { ...result.value, stale: false };
+  });
+
+// Who may revoke a share may read its link; anyone else gets NOT_FOUND.
+const url = authedProcedure
+  .input(GetRecipeShareInputSchema)
+  .output(RecipeShareUrlSchema)
+  .query(async ({ ctx, input }) => {
+    const share = await getManageableShareOrThrow(ctx, input.id);
+
+    if (!ctx.isServerAdmin) {
+      await assertRecipeAccess(ctx, share.recipeId, "edit");
+    }
+
+    return { url: getRecipeShareUrl(share) };
   });
 
 const remove = authedProcedure
@@ -284,6 +293,7 @@ export const recipeSharesProcedures = router({
   shareUpdate: update,
   shareRevoke: revoke,
   shareReactivate: reactivate,
+  shareUrl: url,
   shareDelete: remove,
   getShared,
   sharePublicConfig,
