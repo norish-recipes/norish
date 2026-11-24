@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Text, View } from "react-native";
-import { LabelWithHint } from "@/components/hint-button";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { SheetInput } from "@/components/sheet-input";
 import { useText } from "@/lib/i18n/use-text";
 import { useNavigation, useRouter } from "expo-router";
-import { TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { siteAuthTokenForm, useSiteAuthTokenMutations } from "@norish/shared-react/reader";
 
 import { ChoiceRow } from "../components/choice-row";
 import { OfflineCapsule } from "../components/offline-capsule";
+import { SettingsField } from "../components/settings-form";
 import { SettingsGroup } from "../components/settings-group";
 import { settingsWrite } from "../utils/settings-write";
 
@@ -32,44 +29,6 @@ export function TokenNewScreen() {
   const [type, setType] = useState<(typeof TYPES)[number]>("header");
   const [sending, setSending] = useState(false);
   const form = siteAuthTokenForm({ domain, name, value });
-
-  const field = ({
-    label,
-    testID,
-    value: typed,
-    onChange,
-    hint,
-    placeholder,
-    secure = false,
-    url = false,
-  }: {
-    label: string;
-    testID: string;
-    value: string;
-    onChange: (typed: string) => void;
-    hint?: string;
-    placeholder: string;
-    secure?: boolean;
-    url?: boolean;
-  }) => (
-    <View>
-      <LabelWithHint hint={hint} label={label} testID={hint ? `${testID}-hint` : undefined} />
-      <TextField>
-        <SheetInput
-          accessibilityLabel={label}
-          autoCapitalize="none"
-          autoCorrect={false}
-          editable={!isOffline}
-          keyboardType={url ? "url" : "default"}
-          placeholder={placeholder}
-          secureTextEntry={secure}
-          testID={testID}
-          value={typed}
-          onChangeText={onChange}
-        />
-      </TextField>
-    </View>
-  );
 
   useEffect(() => {
     navigation.setOptions({ gestureEnabled: !sending });
@@ -101,44 +60,46 @@ export function TokenNewScreen() {
     >
       <SheetBody contentClassName="gap-4">
         <OfflineCapsule />
-        <View>
-          {field({
-            label: text("settings.user.siteAuthTokens.domain"),
-            testID: "token-domain",
-            value: domain,
-            onChange: setDomain,
-            placeholder: text("settings.user.siteAuthTokens.domainPlaceholder"),
-            url: true,
-          })}
-          {form.domainBare ? (
-            <Text className="text-danger px-2 pt-1.5 text-[13px]">
-              {text("settings.user.siteAuthTokens.domainNotFull")}
-            </Text>
-          ) : null}
-        </View>
-        {field({
-          label: text("settings.user.siteAuthTokens.account"),
-          testID: "token-account",
-          value: account,
-          onChange: setAccount,
-          hint: text("settings.user.siteAuthTokens.accountsDescription"),
-          placeholder: text("settings.user.siteAuthTokens.accountPlaceholder"),
-        })}
-        {field({
-          label: text("settings.user.siteAuthTokens.name"),
-          testID: "token-name",
-          value: name,
-          onChange: setName,
-          placeholder: text("settings.user.siteAuthTokens.namePlaceholder"),
-        })}
-        {field({
-          label: text("settings.user.siteAuthTokens.value"),
-          testID: "token-value",
-          value,
-          onChange: setValue,
-          placeholder: text("settings.user.siteAuthTokens.valuePlaceholder"),
-          secure: true,
-        })}
+        <SettingsField
+          autoCapitalize="none"
+          autoCorrect={false}
+          error={form.domainBare ? text("settings.user.siteAuthTokens.domainNotFull") : null}
+          keyboardType="url"
+          label={text("settings.user.siteAuthTokens.domain")}
+          placeholder={text("settings.user.siteAuthTokens.domainPlaceholder")}
+          testID="token-domain"
+          value={domain}
+          onChangeText={setDomain}
+        />
+        <SettingsField
+          autoCapitalize="none"
+          autoCorrect={false}
+          hint={text("settings.user.siteAuthTokens.accountsDescription")}
+          label={text("settings.user.siteAuthTokens.account")}
+          placeholder={text("settings.user.siteAuthTokens.accountPlaceholder")}
+          testID="token-account"
+          value={account}
+          onChangeText={setAccount}
+        />
+        <SettingsField
+          autoCapitalize="none"
+          autoCorrect={false}
+          label={text("settings.user.siteAuthTokens.name")}
+          placeholder={text("settings.user.siteAuthTokens.namePlaceholder")}
+          testID="token-name"
+          value={name}
+          onChangeText={setName}
+        />
+        <SettingsField
+          autoCapitalize="none"
+          autoCorrect={false}
+          label={text("settings.user.siteAuthTokens.value")}
+          placeholder={text("settings.user.siteAuthTokens.valuePlaceholder")}
+          secureTextEntry
+          testID="token-value"
+          value={value}
+          onChangeText={setValue}
+        />
         <SettingsGroup className="pt-0">
           <ChoiceRow
             optionLabel={(option) =>

@@ -5,7 +5,7 @@ import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
 import { isOfflineNow } from "@/lib/offline/offline-now";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Button, Skeleton, useThemeColor } from "heroui-native";
+import { Skeleton, useThemeColor } from "heroui-native";
 
 import { useTagsQuery } from "@norish/shared-react/config";
 import { useConnectivity } from "@norish/shared-react/offline/react";
@@ -21,6 +21,7 @@ import {
 import { saveDraft } from "../utils/draft-rules";
 import { readState } from "../utils/read-state";
 import { FailedLoad } from "./failed-load";
+import { SubmitButton } from "./settings-form";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -127,16 +128,12 @@ export function AllergiesForm() {
           ))}
         </SettingsGroup>
       ) : null}
-      <Button
-        className="mt-4 h-[50px] rounded-full"
+      <SubmitButton
         isDisabled={!allergies.canSave()}
+        label={text("common.actions.save")}
         testID="allergies-save"
         onPress={() => void save()}
-      >
-        <Button.Label className="text-base font-semibold">
-          {text("common.actions.save")}
-        </Button.Label>
-      </Button>
+      />
     </>
   );
 }

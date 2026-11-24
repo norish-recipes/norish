@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { LabelWithHint } from "@/components/hint-button";
-import { SheetInput } from "@/components/sheet-input";
 import { useText } from "@/lib/i18n/use-text";
-import { Button, TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import {
@@ -14,6 +11,7 @@ import {
 } from "@norish/shared-react/reader";
 
 import { settingsWrite } from "../utils/settings-write";
+import { SettingsField, SubmitButton } from "./settings-form";
 
 /** One create-or-join form: a labelled field with its description behind a hint, and a button. */
 function EntryForm({
@@ -45,31 +43,23 @@ function EntryForm({
 
   return (
     <View className="pt-5">
-      <LabelWithHint
+      <SettingsField
         hint={text(descriptionId)}
         label={text(labelId)}
-        testID={`household-${id}-hint`}
+        returnKeyType="done"
+        testID={`household-${id}-field`}
+        value={value}
+        onChangeText={onChange}
+        onSubmitEditing={() => enabled && onSubmit()}
+        {...input}
       />
-      <TextField>
-        <SheetInput
-          accessibilityLabel={text(labelId)}
-          editable={!isOffline}
-          returnKeyType="done"
-          testID={`household-${id}-field`}
-          value={value}
-          onChangeText={onChange}
-          onSubmitEditing={() => enabled && onSubmit()}
-          {...input}
-        />
-      </TextField>
-      <Button
-        className="mt-3 h-[50px] rounded-full"
+      <SubmitButton
+        className="mt-3"
         isDisabled={isOffline || !enabled}
+        label={text(buttonId)}
         testID={`household-${id}-submit`}
         onPress={onSubmit}
-      >
-        <Button.Label className="text-base font-semibold">{text(buttonId)}</Button.Label>
-      </Button>
+      />
     </View>
   );
 }

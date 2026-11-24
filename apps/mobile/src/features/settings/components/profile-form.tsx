@@ -1,15 +1,12 @@
 import type * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { LabelWithHint } from "@/components/hint-button";
-import { SheetInput } from "@/components/sheet-input";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
 import { useText } from "@/lib/i18n/use-text";
 import { useServerImage } from "@/lib/network/server-url";
 import { isOfflineNow } from "@/lib/offline/offline-now";
 import { File } from "expo-file-system";
-import { Button, TextField } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useProfileMutations, useProfileQuery } from "@norish/shared-react/reader";
@@ -18,6 +15,7 @@ import { useDraft } from "../hooks/use-draft";
 import { NAME_DRAFT, saveProfile } from "../utils/profile-rules";
 import { writeBlocked } from "../utils/row-actions";
 import { settingsWrite } from "../utils/settings-write";
+import { SettingsField, SubmitButton } from "./settings-form";
 import { SettingsGroup } from "./settings-group";
 import { SettingsRow } from "./settings-row";
 
@@ -109,25 +107,18 @@ export function ProfileForm() {
         ) : null}
       </View>
       <View className="pt-5">
-        <LabelWithHint
+        <SettingsField
+          autoCapitalize="words"
           hint={text("settings.mobile.avatarHint")}
           label={text("settings.user.profile.nameLabel")}
-          testID="profile-name-hint"
+          placeholder={text("settings.user.profile.namePlaceholder")}
+          returnKeyType="done"
+          testID="profile-name"
+          value={name.shown}
+          onBlur={() => setEditing(false)}
+          onChangeText={name.setDraft}
+          onFocus={() => setEditing(true)}
         />
-        <TextField>
-          <SheetInput
-            accessibilityLabel={text("settings.user.profile.nameLabel")}
-            autoCapitalize="words"
-            editable={!isOffline}
-            placeholder={text("settings.user.profile.namePlaceholder")}
-            returnKeyType="done"
-            testID="profile-name"
-            value={name.shown}
-            onBlur={() => setEditing(false)}
-            onChangeText={name.setDraft}
-            onFocus={() => setEditing(true)}
-          />
-        </TextField>
       </View>
       <SettingsGroup>
         <SettingsRow
@@ -136,16 +127,12 @@ export function ProfileForm() {
           value={user?.email}
         />
       </SettingsGroup>
-      <Button
-        className="mt-4 h-[50px] rounded-full"
+      <SubmitButton
         isDisabled={!name.canSave(photo !== null) || deleting}
+        label={text("common.actions.save")}
         testID="profile-save"
         onPress={() => void save()}
-      >
-        <Button.Label className="text-base font-semibold">
-          {text("common.actions.save")}
-        </Button.Label>
-      </Button>
+      />
     </>
   );
 }
