@@ -6,7 +6,6 @@ import { shareEnding } from "@/lib/share-subtitle";
 import { useIntl } from "react-intl";
 
 import type { ShareLinkAction } from "@norish/shared-react/recipes";
-import { usePlatform } from "@norish/shared-react/platform";
 import {
   shareLinkActions,
   useMyRecipeSharesQuery,
@@ -32,20 +31,20 @@ export function ShareLinksScreen() {
   const readShareLink = useShareLink();
   const toUrl = useServerUrl();
   const copyToClipboard = useCopyToClipboard();
-  const { toast } = usePlatform();
   // The link is read at the press and lives only until the clipboard has it. No link means the
   // share stopped working since the list loaded, so the list is read again.
-  const copyLink = async (shareId: string) => {
-    const path = await readShareLink(shareId).catch(() => null);
+  const copyLink = (shareId: string) =>
+    copyToClipboard(
+      readShareLink(shareId).then((path) => {
+        if (path === null) {
+          read.invalidate();
+          throw new Error("No share link");
+        }
 
-    if (path === null) {
-      read.invalidate();
-      toast.show({ severity: "danger", title: text("common.errors.operationFailed") });
-
-      return;
-    }
-    await copyToClipboard(toUrl(path), { copied: "recipes.sharePanel.copySuccess" });
-  };
+        return toUrl(path);
+      }),
+      { copied: "recipes.sharePanel.copySuccess" }
+    );
   const sendAction: Record<
     Exclude<ShareLinkAction, "copy">,
     (id: string, version: number) => Promise<boolean>
