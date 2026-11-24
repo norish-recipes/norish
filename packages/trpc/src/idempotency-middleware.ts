@@ -18,6 +18,9 @@
  * Only successful responses are cached: a handler that throws releases its claim
  * so a later replay can re-attempt (a transient failure must not be memoized into
  * a permanent one).
+ *
+ * A procedure whose response is a one-time secret (`ONE_TIME_SECRET_PATHS`) stores
+ * a marker instead of its response, and a repeat is refused rather than answered.
  */
 
 import { TRPCError } from "@trpc/server";
@@ -51,7 +54,16 @@ export const IDEMPOTENCY_CLAIM_TTL_SECONDS = 5 * 60;
  * the handler output. A concurrent duplicate reads this back and branches on `done`,
  * so an in-flight owner and a completed response are told apart.
  */
-type IdempotencyRecord = { done: false } | { done: true; response: unknown };
+type IdempotencyRecord =
+  | { done: false }
+  | { done: true; response: unknown }
+  | { done: true; secretReturned: true };
+
+/** Mutations whose response is a secret shown once: an API key, a share link's URL. */
+export const ONE_TIME_SECRET_PATHS: ReadonlySet<string> = new Set([
+  "user.apiKeys.create",
+  "recipes.shareCreate",
+]);
 
 /** Placeholder stored (via superjson, like every record) while the owner executes. */
 const PENDING_RECORD = superjson.stringify({ done: false } satisfies IdempotencyRecord);
@@ -114,6 +126,7 @@ export async function runWithIdempotency<TResult>(
     isMutation: boolean;
     operationId: string | null | undefined;
     userId: string | null | undefined;
+    oneTimeSecret?: boolean;
     next: () => Promise<TResult>;
     isOk: (result: TResult) => boolean;
     getData: (result: TResult) => unknown;
@@ -121,7 +134,8 @@ export async function runWithIdempotency<TResult>(
   },
   config: IdempotencyConfig = DEFAULT_CONFIG
 ): Promise<TResult> {
-  const { isMutation, operationId, userId, next, isOk, getData, toCachedResult } = params;
+  const { isMutation, operationId, userId, oneTimeSecret, next, isOk, getData, toCachedResult } =
+    params;
 
   // Idempotency only applies to mutations that carry a correlation id.
   if (!isMutation || !operationId) {
@@ -147,7 +161,9 @@ export async function runWithIdempotency<TResult>(
       }
 
       if (isOk(result)) {
-        const record: IdempotencyRecord = { done: true, response: getData(result) };
+        const record: IdempotencyRecord = oneTimeSecret
+          ? { done: true, secretReturned: true }
+          : { done: true, response: getData(result) };
 
         await valkey.set(key, superjson.stringify(record), "EX", config.ttlSeconds);
       } else {
@@ -162,6 +178,13 @@ export async function runWithIdempotency<TResult>(
 
     if (stored !== null) {
       const record = superjson.parse<IdempotencyRecord>(stored);
+
+      if (record.done && "secretReturned" in record) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This was already created; its one-time result is not shown again",
+        });
+      }
 
       if (record.done) {
         // Completed response — return it without re-executing.
@@ -208,11 +231,12 @@ export function cachedMiddlewareResult(data: unknown) {
  * The idempotency middleware, wired for real use. Reads `operationId` and the
  * authenticated user id from context; both are present on `authedProcedure`.
  */
-export const withIdempotency = middleware(async ({ ctx, type, next }) =>
+export const withIdempotency = middleware(async ({ ctx, type, path, next }) =>
   runWithIdempotency({
     isMutation: type === "mutation",
     operationId: ctx.operationId,
     userId: ctx.user?.id,
+    oneTimeSecret: ONE_TIME_SECRET_PATHS.has(path),
     next,
     isOk: (result) => result.ok,
     getData: (result) => (result.ok ? result.data : undefined),
