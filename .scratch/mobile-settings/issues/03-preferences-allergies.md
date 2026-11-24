@@ -171,3 +171,19 @@ Reject: a browser test for a manual conversion settling while a preference chang
 - S4 skipped: since B3, `useFailedWrite` branches on the Queued signal to decide what to tell, so `invalidateUnlessPreserved` would test that signal twice.
 - S3 left apart on purpose: `mergePreferences` rereads only on a skipped version, because a preference reply carries the profile's next state. The allergy save rereads the profile on any newer version, because its reply leaves the profile's version behind.
 - S9: the fallback provider accepted any well-formed code and stored an unoffered one. It now uses the same `isOffered` check as the others. `isValidLocale` stays only in the device-storage effect, which runs before the options load.
+
+### Review of the closing fix (2026-11-24, `c9c3fabd4..3b7b3d7c6`, Sol high): dispositions
+
+Sound per the reviewer: a write waits for the first read; a cache clear drops waiting writes; the first answer of a one-time secret still reaches its caller.
+- fix (rated common): the new share link stays readable in the share hook's mutation state while its observer is mounted (`trpc/one-time-secret.ts:3`; `gcTime: 0` acts only on detach). It is forgotten when its panel closes, as the created API key is.
+- fix, verify: the Settings lists' reread on open also runs Offline (`connection-list.tsx:31`); Offline must keep showing the cached list (spec story 14).
+- fix: the refactor `80f1fbaf4` changed one check (`use-convert-mutation.ts:89`, `!olderThanHeld(...)` where an equality was); a refactor changes no behaviour.
+
+Known limits, not fixed (each needs a lost reply or a save queued mid-flight, and none loses data):
+- a first profile read that hangs holds the profile writes past mobile's 30 s release (the pages that save do not render before that read).
+- a rename whose reply times out after the server committed it: the next preference save is refused once as "changed elsewhere".
+- two language picks in the avatar menu before the first answers: the first answer shows until the second arrives.
+- a preference queued by the Outbox followed by a successful rename is no longer recognised as queued by automatic conversion.
+- a plaintext record stored before the secrets fix can be replayed through another procedure with its operation id, by the same account, until it expires (seven days at most).
+
+No further review round on this code in this ticket (decided at round 6).
