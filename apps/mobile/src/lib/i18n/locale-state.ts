@@ -36,6 +36,10 @@ export function normalizeEnabledLocales(
   return [{ code: fallbackCode, name: getLocaleDisplayName(fallbackCode) }];
 }
 
+/** Whether `code` is one of the languages offered here. */
+export const isOffered = (options: EnabledLocale[], code: string): boolean =>
+  options.some((option) => option.code === code);
+
 export function resolveLocaleSelection(
   requestedLocale: string | null,
   enabledLocales: EnabledLocale[],

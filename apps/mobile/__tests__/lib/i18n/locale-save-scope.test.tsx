@@ -129,6 +129,19 @@ describe("the shown language", () => {
     expect(ownLanguage()).toBeUndefined();
   });
 
+  it("leaves a fallback unstored when given a well-formed language it does not offer", () => {
+    render(
+      <MobileIntlFallbackProvider>
+        <Probe />
+      </MobileIntlFallbackProvider>
+    );
+
+    choose("xx");
+
+    expect(shown.locale).toBe("en");
+    expect(ownLanguage()).toBeUndefined();
+  });
+
   it("is the saved one, applied from the server or picked here and shown at once", () => {
     cache.state.locale = "fr";
     renderScope();

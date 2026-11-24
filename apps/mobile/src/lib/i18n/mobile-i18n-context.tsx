@@ -1,6 +1,11 @@
 import React, { createContext, use, useEffect, useState } from "react";
 import { Platform, Settings } from "react-native";
-import { deviceLanguage, matchDeviceLocale, resolveLocaleSelection } from "@/lib/i18n/locale-state";
+import {
+  deviceLanguage,
+  isOffered,
+  matchDeviceLocale,
+  resolveLocaleSelection,
+} from "@/lib/i18n/locale-state";
 import {
   clearLocalePreference,
   loadLocalePreference,
@@ -157,8 +162,7 @@ export function MobileIntlProvider({
   } = useLocaleConfigQuery();
 
   const localeOptions = resolveLocaleOptions(BUNDLED_LOCALES, configuredLocales);
-  const bundledCodes = new Set(localeOptions.map((locale) => locale.code));
-  const effectiveDefaultLocale = bundledCodes.has(configuredDefaultLocale)
+  const effectiveDefaultLocale = isOffered(localeOptions, configuredDefaultLocale)
     ? configuredDefaultLocale
     : DEFAULT_LOCALE;
 
@@ -186,7 +190,7 @@ export function MobileIntlProvider({
     // The server's enabled locales can still change the language until they load.
     isLoading: isMessagesLoading || isConfigLoading,
     setLocale: (nextLocale) => {
-      if (bundledCodes.has(nextLocale)) setPreferredLocale(nextLocale);
+      if (isOffered(localeOptions, nextLocale)) setPreferredLocale(nextLocale);
     },
   };
 
@@ -212,7 +216,7 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
     options: BUNDLED_LOCALES,
     isLoading,
     setLocale: (nextLocale: string) => {
-      if (!isValidLocale(nextLocale)) return;
+      if (!isOffered(BUNDLED_LOCALES, nextLocale)) return;
 
       setPreferredLocale(nextLocale);
       saveLocalePreference(nextLocale);
