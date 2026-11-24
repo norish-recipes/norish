@@ -185,8 +185,9 @@ export function MobileIntlProvider({
     options: localeOptions,
     // The server's enabled locales can still change the language until they load.
     isLoading: isMessagesLoading || isConfigLoading,
-    setLocale: (nextLocale) =>
-      setPreferredLocale(resolveLocaleSelection(nextLocale, localeOptions, effectiveDefaultLocale)),
+    setLocale: (nextLocale) => {
+      if (bundledCodes.has(nextLocale)) setPreferredLocale(nextLocale);
+    },
   };
 
   return (
@@ -211,10 +212,10 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
     options: BUNDLED_LOCALES,
     isLoading,
     setLocale: (nextLocale: string) => {
-      const nextResolved = resolveLocaleSelection(nextLocale, BUNDLED_LOCALES, DEFAULT_LOCALE);
+      if (!isValidLocale(nextLocale)) return;
 
-      setPreferredLocale(nextResolved);
-      void saveLocalePreference(nextResolved);
+      setPreferredLocale(nextLocale);
+      saveLocalePreference(nextLocale);
     },
   };
 

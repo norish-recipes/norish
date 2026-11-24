@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { useSyncExternalStore } from "react";
 import { LocaleSaveScope } from "@/lib/i18n/locale-save-scope";
-import { MobileIntlProvider, useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
+import {
+  MobileIntlFallbackProvider,
+  MobileIntlProvider,
+  useMobileLocaleSettings,
+} from "@/lib/i18n/mobile-i18n-context";
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -105,6 +109,23 @@ describe("the shown language", () => {
     renderScope();
 
     expect(shown.locale).toBe("nl");
+    expect(ownLanguage()).toBeUndefined();
+  });
+
+  it("leaves a fallback unstored when given an unavailable language", () => {
+    const fallback = render(
+      <MobileIntlFallbackProvider>
+        <Probe />
+      </MobileIntlFallbackProvider>
+    );
+
+    choose("unknown");
+    expect(ownLanguage()).toBeUndefined();
+    fallback.unmount();
+
+    renderScope();
+    choose("unknown");
+    expect(saves).toHaveLength(0);
     expect(ownLanguage()).toBeUndefined();
   });
 

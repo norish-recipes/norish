@@ -1,6 +1,7 @@
 import { storage } from "@/lib/storage/mmkv";
 
-import { getValidLocale, isValidLocale } from "@norish/i18n/config";
+import type { Locale } from "@norish/i18n/config";
+import { isValidLocale } from "@norish/i18n/config";
 
 const LOCALE_PREFERENCE_KEY = "preferences.locale";
 
@@ -32,8 +33,6 @@ export function clearLocalePreference(): void {
   storage.remove(LOCALE_PREFERENCE_KEY);
 }
 
-export function saveLocalePreference(locale: string): void {
-  const safeLocale = getValidLocale(locale);
-
-  storage.set(LOCALE_PREFERENCE_KEY, JSON.stringify({ locale: safeLocale }));
+export function saveLocalePreference(locale: Locale): void {
+  storage.set(LOCALE_PREFERENCE_KEY, JSON.stringify({ locale }));
 }

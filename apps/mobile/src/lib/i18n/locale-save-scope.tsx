@@ -13,7 +13,11 @@ export function LocaleSaveScope({ children }: { children: ReactNode }) {
   const value: MobileLocaleContextValue = {
     ...shown,
     setLocale: (nextLocale) => {
-      if (nextLocale !== shown.locale && !isUpdatingPreferences)
+      if (
+        nextLocale !== shown.locale &&
+        !isUpdatingPreferences &&
+        shown.options.some((option) => option.code === nextLocale)
+      )
         void updatePreferences({ locale: nextLocale });
     },
   };
