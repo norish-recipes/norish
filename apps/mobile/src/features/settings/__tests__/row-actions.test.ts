@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { SettingsActionKind, SettingsRowAction } from "../utils/row-actions";
-import { actionLook, menuActions, swipeActions, writeBlocked } from "../utils/row-actions";
+import {
+  actionLook,
+  menuActions,
+  orderActions,
+  swipeActions,
+  writeBlocked,
+} from "../utils/row-actions";
 import { versionLine } from "../utils/version-line";
 
 const act = (kind: SettingsActionKind): SettingsRowAction => ({
@@ -18,11 +24,23 @@ describe("settings row actions", () => {
     expect(tones(["enable", "reactivate", "admin"])).toEqual(["accent", "accent", "accent"]);
   });
 
-  it("keeps Copy out of the swipe panel but in the menu", () => {
-    const actions = [act("copy"), act("revoke"), act("delete")];
+  it("puts the red action that removes something last, keeping the others' order", () => {
+    const kinds = (actions: SettingsRowAction[]) => actions.map((a) => a.kind);
 
-    expect(swipeActions(actions).map((a) => a.kind)).toEqual(["revoke", "delete"]);
-    expect(menuActions(actions, false)).toHaveLength(3);
+    expect(kinds(orderActions([act("kick"), act("admin")]))).toEqual(["admin", "kick"]);
+    expect(kinds(orderActions([act("delete"), act("copy"), act("revoke")]))).toEqual([
+      "copy",
+      "revoke",
+      "delete",
+    ]);
+    expect(kinds(orderActions([act("unlink")]))).toEqual(["unlink"]);
+  });
+
+  it("keeps Copy out of the swipe but in the menu, both in the same order", () => {
+    const actions = [act("delete"), act("copy"), act("disable")];
+
+    expect(swipeActions(actions).map((a) => a.kind)).toEqual(["disable", "delete"]);
+    expect(menuActions(actions, false).map((a) => a.kind)).toEqual(["copy", "disable", "delete"]);
   });
 
   it("offers no menu while Offline", () => {

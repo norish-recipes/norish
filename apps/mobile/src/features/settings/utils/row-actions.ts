@@ -25,20 +25,29 @@ const LOOKS: Record<SettingsActionKind, Look> = {
 export type SettingsRowAction = {
   kind: SettingsActionKind;
   label: string;
-  /** A shorter label for the 52 pt swipe slot, where `label` would not fit; the menu keeps `label`. */
+  /** A shorter caption for the swipe circle, where `label` would not fit; the menu keeps `label`. */
   swipeLabel?: string;
   onPress: () => void;
 };
 
 export const actionLook = (kind: SettingsActionKind): Look => LOOKS[kind];
 
-/** The swipe panel's actions: Copy is for the menu, since a swipe circle is a state change. */
-export const swipeActions = (actions: SettingsRowAction[]) =>
-  actions.filter((action) => action.kind !== "copy");
+const removes = (action: SettingsRowAction) => LOOKS[action.kind].tone === "danger";
 
-/** The long-press menu's actions: none while Offline, as no settings write is Queued. */
+/** The one order of a row's actions: the red one that removes something last, where a full swipe
+ * runs it, as Delete is on a recipe card. */
+export const orderActions = (actions: SettingsRowAction[]) => [
+  ...actions.filter((action) => !removes(action)),
+  ...actions.filter(removes),
+];
+
+/** The swipe's actions: Copy is for the menu, since a swipe action is a state change. */
+export const swipeActions = (actions: SettingsRowAction[]) =>
+  orderActions(actions).filter((action) => action.kind !== "copy");
+
+/** The long-press menu's actions, in the swipe's order: none while Offline, as no settings write is Queued. */
 export const menuActions = (actions: SettingsRowAction[], offline: boolean) =>
-  offline ? [] : actions;
+  offline ? [] : orderActions(actions);
 
 /** Whether a row's own press is held back: only a press that is a write, and only while Offline. */
 export const writeBlocked = (write: boolean, offline: boolean) => write && offline;
