@@ -1,5 +1,5 @@
 import React, { use } from "react";
-import { Linking } from "react-native";
+import { Linking, Text } from "react-native";
 import { changeServerAddress } from "@/hooks/use-change-server-address";
 import { useConfirmedSignOut } from "@/hooks/use-confirmed-sign-out";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
@@ -129,13 +129,6 @@ export function SettingsScreen() {
           title={text("settings.mobile.support")}
           onPress={() => void Linking.openURL(SUPPORT_URL)}
         />
-        <SettingsRow
-          icon="information-circle-outline"
-          testID="settings-root-version"
-          title={text("settings.mobile.version")}
-          wholeValue
-          value={version}
-        />
       </SettingsGroup>
       <SettingsGroup className="pt-[30px]">
         <SettingsRow
@@ -147,6 +140,9 @@ export function SettingsScreen() {
           onPress={() => void signOut()}
         />
       </SettingsGroup>
+      <Text className="text-muted pt-4 text-center text-[13px]" testID="settings-root-version">
+        {version}
+      </Text>
     </SettingsPage>
   );
 }

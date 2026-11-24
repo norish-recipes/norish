@@ -1346,7 +1346,11 @@
     "app": "App",
     "server": "Server",
     "support": "Støtte",
-    "version": "Versjon",
+    "changeServer": {
+      "title": "Bytte server?",
+      "description": "Du blir logget ut av denne serveren.",
+      "action": "Bytt server"
+    },
     "versionServer": "Server {server}",
     "offlineReason": "Frakoblet · endringer er satt på pause",
     "noHousehold": "Ingen",

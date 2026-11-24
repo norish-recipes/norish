@@ -1346,7 +1346,11 @@
     "app": "App",
     "server": "Servidor",
     "support": "Suporte",
-    "version": "Versão",
+    "changeServer": {
+      "title": "Trocar de servidor?",
+      "description": "Você será desconectado deste servidor.",
+      "action": "Trocar de servidor"
+    },
     "versionServer": "Servidor {server}",
     "offlineReason": "Offline · alterações pausadas",
     "noHousehold": "Nenhuma",

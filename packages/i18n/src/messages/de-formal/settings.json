@@ -1346,7 +1346,11 @@
     "app": "App",
     "server": "Server",
     "support": "Support",
-    "version": "Version",
+    "changeServer": {
+      "title": "Server wechseln?",
+      "description": "Sie werden von diesem Server abgemeldet.",
+      "action": "Server wechseln"
+    },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · Änderungen sind pausiert",
     "noHousehold": "Keiner",

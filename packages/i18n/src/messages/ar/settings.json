@@ -1346,7 +1346,11 @@
     "app": "التطبيق",
     "server": "الخادم",
     "support": "الدعم",
-    "version": "الإصدار",
+    "changeServer": {
+      "title": "تغيير الخادم؟",
+      "description": "سيتم تسجيل خروجك من هذا الخادم.",
+      "action": "تغيير الخادم"
+    },
     "versionServer": "الخادم {server}",
     "offlineReason": "غير متصل · التغييرات متوقفة",
     "noHousehold": "لا شيء",

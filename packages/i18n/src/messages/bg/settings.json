@@ -1346,7 +1346,11 @@
     "app": "Приложение",
     "server": "Сървър",
     "support": "Поддръжка",
-    "version": "Версия",
+    "changeServer": {
+      "title": "Смяна на сървъра?",
+      "description": "Ще бъдете отписани от този сървър.",
+      "action": "Смени сървъра"
+    },
     "versionServer": "Сървър {server}",
     "offlineReason": "Офлайн · промените са спрени",
     "noHousehold": "Няма",

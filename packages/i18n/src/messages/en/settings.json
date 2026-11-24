@@ -1346,7 +1346,11 @@
     "app": "App",
     "server": "Server",
     "support": "Support",
-    "version": "Version",
+    "changeServer": {
+      "title": "Change server?",
+      "description": "You will be signed out of this server.",
+      "action": "Change server"
+    },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · changes are paused",
     "noHousehold": "None",

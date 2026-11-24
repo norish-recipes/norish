@@ -1346,7 +1346,11 @@
     "app": "App",
     "server": "Server",
     "support": "Ondersteuning",
-    "version": "Versie",
+    "changeServer": {
+      "title": "Server wijzigen?",
+      "description": "Je wordt uitgelogd van deze server.",
+      "action": "Server wijzigen"
+    },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · wijzigingen staan stil",
     "noHousehold": "Geen",

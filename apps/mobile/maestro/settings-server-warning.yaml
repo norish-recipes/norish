@@ -1,0 +1,18 @@
+# Tapping Server in Settings while signed in warns that it signs out; Cancel keeps Settings as it was.
+appId: dev.norish.app
+---
+- runFlow: subflows/start.yaml
+- runFlow: subflows/open-settings.yaml
+- scrollUntilVisible:
+    element:
+      id: settings-root-server
+- tapOn:
+    id: settings-root-server
+- assertVisible: Change server?
+- assertNotVisible: Discard unsynced changes?
+- tapOn: Cancel
+- assertNotVisible: Change server?
+- assertVisible:
+    id: settings-root-screen
+- assertVisible:
+    id: settings-root-sign-out

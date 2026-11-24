@@ -1346,7 +1346,11 @@
     "app": "Sovellus",
     "server": "Palvelin",
     "support": "Tuki",
-    "version": "Versio",
+    "changeServer": {
+      "title": "Vaihdetaanko palvelin?",
+      "description": "Sinut kirjataan ulos tältä palvelimelta.",
+      "action": "Vaihda palvelin"
+    },
     "versionServer": "Palvelin {server}",
     "offlineReason": "Offline · muutokset ovat tauolla",
     "noHousehold": "Ei mitään",

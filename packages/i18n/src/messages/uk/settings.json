@@ -1346,7 +1346,11 @@
     "app": "Застосунок",
     "server": "Сервер",
     "support": "Підтримка",
-    "version": "Версія",
+    "changeServer": {
+      "title": "Змінити сервер?",
+      "description": "Ви вийдете з облікового запису на цьому сервері.",
+      "action": "Змінити сервер"
+    },
     "versionServer": "Сервер {server}",
     "offlineReason": "Офлайн · зміни призупинено",
     "noHousehold": "Немає",

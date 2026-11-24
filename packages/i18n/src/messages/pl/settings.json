@@ -1346,7 +1346,11 @@
     "app": "Aplikacja",
     "server": "Serwer",
     "support": "Pomoc",
-    "version": "Wersja",
+    "changeServer": {
+      "title": "Zmienić serwer?",
+      "description": "Zostaniesz wylogowany z tego serwera.",
+      "action": "Zmień serwer"
+    },
     "versionServer": "Serwer {server}",
     "offlineReason": "Offline · zmiany są wstrzymane",
     "noHousehold": "Brak",

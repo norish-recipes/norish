@@ -1346,7 +1346,11 @@
     "app": "App",
     "server": "Server",
     "support": "Support",
-    "version": "Version",
+    "changeServer": {
+      "title": "Skift server?",
+      "description": "Du bliver logget ud af denne server.",
+      "action": "Skift server"
+    },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · ændringer er sat på pause",
     "noHousehold": "Ingen",

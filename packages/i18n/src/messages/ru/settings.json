@@ -1346,7 +1346,11 @@
     "app": "Приложение",
     "server": "Сервер",
     "support": "Поддержка",
-    "version": "Версия",
+    "changeServer": {
+      "title": "Сменить сервер?",
+      "description": "Вы выйдете из аккаунта на этом сервере.",
+      "action": "Сменить сервер"
+    },
     "versionServer": "Сервер {server}",
     "offlineReason": "Офлайн · изменения приостановлены",
     "noHousehold": "Нет",
