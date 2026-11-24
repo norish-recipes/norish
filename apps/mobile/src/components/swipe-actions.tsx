@@ -106,6 +106,7 @@ const LAYOUTS = {
     circleLeft: (LIST_STEP + 48) / 2,
     icon: 20,
     text: "text-xs",
+    captionScale: undefined,
     fits: false,
   },
   row: {
@@ -119,6 +120,8 @@ const LAYOUTS = {
     circleLeft: (ROW_STEP + 30) / 2,
     icon: 14,
     text: "text-center text-[10px] leading-3",
+    // At most 1.2x under Dynamic Type: 30 + 3 + 14.4 pt still fits a 50 pt row with its shadow.
+    captionScale: 1.2,
     // A caption wider than the slot shrinks rather than ellipsizing.
     fits: true,
   },
@@ -133,6 +136,7 @@ const LAYOUTS = {
     circleLeft: 62,
     icon: 19,
     text: "text-xs",
+    captionScale: undefined,
     fits: false,
   },
 };
@@ -516,6 +520,7 @@ function ActionButton({
         <Animated.Text
           adjustsFontSizeToFit={layout.fits}
           className={`text-muted font-medium ${layout.text}`}
+          maxFontSizeMultiplier={layout.captionScale}
           minimumFontScale={layout.fits ? 0.7 : undefined}
           numberOfLines={layout.fits ? 1 : undefined}
           style={label}
