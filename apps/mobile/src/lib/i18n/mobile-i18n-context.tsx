@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import React, { createContext, use, useEffect, useState } from "react";
 import { Platform, Settings } from "react-native";
 import { deviceLanguage, matchDeviceLocale, resolveLocaleSelection } from "@/lib/i18n/locale-state";
@@ -20,9 +19,8 @@ import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
 import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
 import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
 import { useLocaleConfigQuery } from "@norish/shared-react/config";
-import { usePreferencesMutation } from "@norish/shared-react/reader";
 
-type MobileLocaleContextValue = {
+export type MobileLocaleContextValue = {
   locale: string;
   /** The languages the reader can pick. */
   options: EnabledLocale[];
@@ -32,7 +30,7 @@ type MobileLocaleContextValue = {
   setLocale: (nextLocale: string, options?: { fromServer?: boolean }) => void;
 };
 
-const MobileLocaleContext = createContext<MobileLocaleContextValue | null>(null);
+export const MobileLocaleContext = createContext<MobileLocaleContextValue | null>(null);
 
 const FALLBACK_MESSAGES: Record<string, unknown> = {
   auth: enAuthMessages,
@@ -194,29 +192,6 @@ export function MobileIntlProvider({
       {children}
     </LocaleScope>
   );
-}
-
-/** Signed in, below the platform adapter: saves a language the reader picks, one save at a time,
- * and puts back the shown one when the server does not take it. */
-export function LocaleSaveScope({ children }: { children: ReactNode }) {
-  const shown = useMobileLocaleSettings();
-  const { updatePreferences, isUpdatingPreferences } = usePreferencesMutation();
-
-  const value: MobileLocaleContextValue = {
-    ...shown,
-    setLocale: (nextLocale, options) => {
-      if (options?.fromServer) return shown.setLocale(nextLocale);
-      if (nextLocale === shown.locale || isUpdatingPreferences) return;
-      const previous = shown.locale;
-
-      shown.setLocale(nextLocale);
-      void updatePreferences({ locale: nextLocale }).then((took) => {
-        if (!took) shown.setLocale(previous);
-      });
-    },
-  };
-
-  return <MobileLocaleContext value={value}>{children}</MobileLocaleContext>;
 }
 
 export function MobileIntlFallbackProvider({ children }: { children: React.ReactNode }) {

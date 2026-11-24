@@ -1,9 +1,6 @@
 // @vitest-environment jsdom
-import {
-  LocaleSaveScope,
-  MobileIntlProvider,
-  useMobileLocaleSettings,
-} from "@/lib/i18n/mobile-i18n-context";
+import { LocaleSaveScope } from "@/lib/i18n/locale-save-scope";
+import { MobileIntlProvider, useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
