@@ -37,16 +37,29 @@ export function SignInMethods() {
   const { toast } = usePlatform();
   const [foreground] = useThemeColor(["foreground"] as const);
   const { user } = useProfileQuery();
-  const { providers: offered } = useAuthProvidersQuery();
+  const { providers: offered, hasData: providersRead, ...providers } = useAuthProvidersQuery();
   const { signInMethods, refetch, ...read } = useSignInMethodsQuery();
   const [busy, setBusy] = useState(false);
 
   const offeredIds = new Set(offered.map((provider) => provider.id));
   const passwordOffered = hasPassword(signInMethods, offeredIds);
-  const state = readState({ ...read, held: read.answered });
+  const bothRead = read.answered && providersRead;
+  const state = readState({
+    held: bothRead,
+    answered: bothRead,
+    isLoading: read.isLoading || providers.isLoading,
+    error: read.error ?? providers.error,
+  });
+  const retry = () => {
+    void refetch();
+    if (!providersRead) void providers.refetch();
+  };
 
-  // Until the methods are read, only a server that could never show the list hides it.
-  if (!showsSignInMethods(offered.length, offeredIds.has(SIGN_IN_METHODS.credential.id)))
+  // The read state decides first; only a read provider list can say the server never shows it.
+  if (
+    providersRead &&
+    !showsSignInMethods(offered.length, offeredIds.has(SIGN_IN_METHODS.credential.id))
+  )
     return null;
   if (state === "held" && !showsSignInMethods(offered.length, passwordOffered)) return null;
 
@@ -97,7 +110,7 @@ export function SignInMethods() {
     callAuthClient((client) => client.unlinkAccount({ accountId }), "removeFailed");
 
   return (
-    <ReadBody empty={null} name="settings-profile-sign-in-methods" state={state} onRetry={refetch}>
+    <ReadBody empty={null} name="settings-profile-sign-in-methods" state={state} onRetry={retry}>
       <SettingsGroup
         testID="settings-profile-sign-in-methods"
         title={text("settings.user.signInMethods.title")}

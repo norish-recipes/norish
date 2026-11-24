@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({
   offered: [] as { id: string; name: string; icon: string; type: "oauth" | "credential" }[],
   read: {} as Record<string, unknown>,
+  providersRead: {} as Record<string, unknown>,
 }));
 
 vi.mock("react-native", async () => {
@@ -25,7 +26,14 @@ vi.mock("@/components/provider-icon", () => ({ ProviderIcon: () => null }));
 vi.mock("@/lib/auth/use-auth-client", () => ({ useAuthClient: () => null }));
 vi.mock("@norish/shared-react/platform", () => ({ usePlatform: () => ({ toast: {} }) }));
 vi.mock("@norish/shared-react/config", () => ({
-  useAuthProvidersQuery: () => ({ providers: state.offered }),
+  useAuthProvidersQuery: () => ({
+    providers: state.offered,
+    hasData: true,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    ...state.providersRead,
+  }),
 }));
 vi.mock("@norish/shared-react/reader", () => ({
   useProfileQuery: () => ({ user: null }),
@@ -72,6 +80,7 @@ describe("the sign-in methods", () => {
   beforeEach(() => {
     state.offered = [PASSWORD, SSO];
     state.read = {};
+    state.providersRead = {};
   });
 
   it("shows a failed read as failed, never as an empty list", () => {
@@ -105,5 +114,23 @@ describe("the sign-in methods", () => {
     const { container } = render(<SignInMethods />);
 
     expect(container.innerHTML).toBe("");
+  });
+
+  it("shows Retry when both first reads failed, never hiding the unread provider list", () => {
+    state.offered = [];
+    state.providersRead = { hasData: false, error: new Error("down") };
+    state.read = { error: new Error("down") };
+    render(<SignInMethods />);
+
+    expect(screen.getByTestId("settings-profile-sign-in-methods-failed")).toBeTruthy();
+  });
+
+  it("loads while the provider list is still being read", () => {
+    state.offered = [];
+    state.providersRead = { hasData: false, isLoading: true };
+    state.read = { answered: true };
+    render(<SignInMethods />);
+
+    expect(screen.getByTestId("settings-profile-sign-in-methods-loading")).toBeTruthy();
   });
 });
