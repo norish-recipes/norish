@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ActionTone, SettingsActionKind, SettingsRowAction } from "../utils/row-actions";
+import type { SettingsActionKind, SettingsRowAction } from "../utils/row-actions";
 import {
   actionLook,
   menuActions,
@@ -13,10 +13,8 @@ import { versionLine } from "../utils/version-line";
 const act = (kind: SettingsActionKind): SettingsRowAction => ({
   kind,
   label: kind,
-  asks: kind !== "unlink",
   onPress: () => undefined,
 });
-const toneOf = (tone: ActionTone) => ({ ground: `ground-${tone}`, ink: `ink-${tone}` });
 const tones = (kinds: SettingsActionKind[]) => kinds.map((kind) => actionLook(kind).tone);
 
 describe("settings row actions", () => {
@@ -41,25 +39,8 @@ describe("settings row actions", () => {
   it("keeps Copy out of the swipe but in the menu, both in the same order", () => {
     const actions = [act("delete"), act("copy"), act("disable")];
 
-    expect(swipeActions(actions, toneOf, "row").map((a) => a.key)).toEqual(["disable", "delete"]);
+    expect(swipeActions(actions).map((a) => a.kind)).toEqual(["disable", "delete"]);
     expect(menuActions(actions, false).map((a) => a.kind)).toEqual(["copy", "disable", "delete"]);
-  });
-
-  it("turns a row's actions into swipe actions with their look, tone, caption and testID", () => {
-    const remove = { ...act("delete"), swipeLabel: "Del" };
-    const [swipe] = swipeActions([remove], toneOf, "row");
-
-    expect(swipe).toEqual({
-      key: "delete",
-      label: "delete",
-      caption: "Del",
-      icon: "trash-outline",
-      ground: "ground-danger",
-      ink: "ink-danger",
-      asks: true,
-      onPress: remove.onPress,
-      testID: "row-swipe-delete",
-    });
   });
 
   it("offers no menu while Offline", () => {

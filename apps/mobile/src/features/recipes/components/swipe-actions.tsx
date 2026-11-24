@@ -1,4 +1,3 @@
-import type { Reveal, SwipeZone } from "@/lib/swipe-reveal";
 import type { ComponentProps, ComponentRef, ReactNode, Ref } from "react";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SharedValue } from "react-native-reanimated";
@@ -18,8 +17,16 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { PressableScale } from "@/components/pressable-scale";
+import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact, mediumImpact } from "@/lib/haptics";
 import { closeOpenRow, useOpenRow } from "@/lib/open-row";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useThemeColor } from "heroui-native";
+
+import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
+
+import type { RecipeSwipeAction } from "../utils/card-actions";
+import type { Reveal, SwipeZone } from "../utils/swipe-reveal";
 import {
   actionOffset,
   capsuleStretch,
@@ -30,31 +37,26 @@ import {
   fullSwipeAction,
   fullSwipeAt,
   swipeZone,
-} from "@/lib/swipe-reveal";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useThemeColor } from "heroui-native";
+} from "../utils/swipe-reveal";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
-/** A row's size: `list` and `grid` are the recipe cards', `row` the list's scaled to fit a 50 pt row. */
-export type SwipeVariant = "list" | "grid" | "row";
-
 export type SwipeAction = {
-  key: string;
+  key: RecipeSwipeAction;
   label: string;
-  /** The text under the circle, where it is shorter than the spoken `label`. */
-  caption?: string;
-  icon: IconName;
-  /** The circle's background class, such as `bg-danger`. */
-  ground: string;
-  /** The icon's colour; white (`danger-foreground`) when unset. */
-  ink?: string;
-  /** The row stays open under the action's confirm, and a full swipe holds it there (a card's Delete). */
-  holdsOpen?: boolean;
-  /** It asks before it acts (a confirm or a sheet), so a full swipe may run it. */
-  asks: boolean;
   onPress: () => void;
   testID: string;
+};
+
+const ICONS: Record<SwipeAction["key"], IconName> = {
+  groceries: "bag-outline",
+  plan: "calendar-clear-outline",
+  delete: "trash-outline",
+};
+const GROUND: Record<SwipeAction["key"], string> = {
+  groceries: "bg-shop",
+  plan: "bg-plan",
+  delete: "bg-danger",
 };
 
 /** Plays the card's delete, then calls `done`, which removes it from the list. */
@@ -80,17 +82,16 @@ const COLLAPSE_MS = 350;
 export const HIDDEN_MS = 1000;
 
 /** When a leaving card hands over its removal: once the fill settles, and in a list the row closes. */
-export const leaveMs = (variant: SwipeVariant) =>
+export const leaveMs = (variant: RecipeViewMode) =>
   AFTER_SLIDE_MS + (variant === "list" ? COLLAPSE_MS : 0);
 
 // How far a card is dragged, in pt, for a release to open it: ReanimatedSwipeable opens when the
 // drag (plus a toss from its velocity) passes `-rightThreshold`, so the tick uses the same value.
 const OPEN_THRESHOLD = 40;
 
-// Circles: list 48 pt in a 208 pt panel of three, grid 44 pt in an 80 pt one, row 30 pt over a 12 pt
-// line to fit 50 pt. `circleLeft` is a resting circle's left edge from the row's right.
+// List circles are 48 pt in a 208 pt panel of three, the card 8 pt short of it; grid circles 44 pt in
+// an 80 pt one, 4 pt short. `circleLeft` is a resting circle's left edge from the row's right.
 const LIST_STEP = 208 / 3;
-const ROW_STEP = 60;
 // The room a stretched capsule leaves at the row's left edge.
 const CAPSULE_INSET = 16;
 const LAYOUTS = {
@@ -100,26 +101,10 @@ const LAYOUTS = {
     step: LIST_STEP,
     slot: "flex-1 justify-center",
     button: "items-center justify-center gap-[7px]",
+    circle: "size-12",
     circleSize: 48,
     circleLeft: (LIST_STEP + 48) / 2,
     icon: 20,
-    text: "text-xs",
-    captionScale: undefined,
-    shrinkToOneLine: false,
-  },
-  row: {
-    width: (count: number) => 8 + ROW_STEP * count,
-    panel: "flex-row pl-2",
-    step: ROW_STEP,
-    slot: "flex-1 justify-center",
-    button: "items-center justify-center gap-[3px]",
-    circleSize: 30,
-    circleLeft: (ROW_STEP + 30) / 2,
-    icon: 14,
-    text: "text-center text-[10px] leading-3",
-    // At most 1.2x under Dynamic Type: 30 + 3 + 14.4 pt still fits a 50 pt row with its shadow.
-    captionScale: 1.2,
-    shrinkToOneLine: true,
   },
   grid: {
     width: () => 84,
@@ -127,17 +112,14 @@ const LAYOUTS = {
     panel: "items-center justify-center gap-[18px] pl-1",
     slot: "w-[72px]",
     button: "items-center gap-1.5",
+    circle: "size-11",
     circleSize: 44,
     circleLeft: 62,
     icon: 19,
-    text: "text-xs",
-    captionScale: undefined,
-    shrinkToOneLine: false,
   },
 };
 
-/** `commits`: a full swipe runs the outermost action, so its circle stretches and the others fade. */
-type Layout = Omit<(typeof LAYOUTS)[SwipeVariant], "width"> & Reveal & { commits: boolean };
+type Layout = Omit<(typeof LAYOUTS)[RecipeViewMode], "width"> & Reveal;
 
 /** The delete's motion on the UI thread: how far the card is `extra` past its swipe, how far its
  * capsule is `gone`, and the most it can stretch (`reach`). */
@@ -155,21 +137,19 @@ const CIRCLE_SHADOW = {
   shadowOffset: { width: 0, height: 2 },
 };
 
-/** A row's swipe-left actions: coloured circles with a neutral label under each; none while not
- * `enabled`, which closes an open row. `ref` plays a card's delete; `itemKey` says which item that hid, as a recycled cell draws another. */
+/** The card's swipe-left actions: coloured circles on the page with a neutral label under each.
+ * `ref` plays the card's delete; `itemKey` says which item that hid, as a recycled cell draws another. */
 export function SwipeActions({
   ref,
   itemKey,
   variant,
   actions,
-  enabled = true,
   children,
 }: {
   ref?: Ref<SwipeActionsHandle>;
   itemKey: string;
-  variant: SwipeVariant;
+  variant: RecipeViewMode;
   actions: SwipeAction[];
-  enabled?: boolean;
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -192,14 +172,7 @@ export function SwipeActions({
   // Where the card's right edge is on screen, read as a drag starts: a delete can move it a column.
   const [rightEdge, setRightEdge] = useState(screenWidth);
   const fullAt = fullSwipeAt(openWidth, rightEdge);
-  const fullAction = fullSwipeAction(actions);
-  const layout: Layout = {
-    ...look,
-    width: openWidth,
-    count: actions.length,
-    fullAt,
-    commits: fullAction !== undefined,
-  };
+  const layout: Layout = { ...look, width: openWidth, count: actions.length, fullAt };
   const collapses = leaving && variant === "list";
   // The card sits `openWidth` out while held, so only the rest of its travel is its own.
   const extra = useDerivedValue(() =>
@@ -239,11 +212,6 @@ export function SwipeActions({
     resetMotion();
     setIsOpen(false);
   }, [itemKey]);
-
-  // A row left open as the swipe is turned off (Offline) closes, so its actions can't be pressed.
-  useEffect(() => {
-    if (!enabled && isOpen) rowRef.current?.close();
-  }, [enabled, isOpen]);
 
   useImperativeHandle(ref, () => ({
     leave: (done) => {
@@ -323,12 +291,11 @@ export function SwipeActions({
         <ReanimatedSwipeable
           ref={rowRef}
           containerStyle={variant === "grid" ? { flex: 1, borderRadius: 24 } : undefined}
-          enabled={enabled}
           renderRightActions={(progress, translation, methods) => (
             <>
               <SwipeWatch
                 dragging={dragging}
-                fullAt={fullAction ? fullAt : Infinity}
+                fullAt={fullAt}
                 fullSwipe={fullSwipe}
                 translation={translation}
               />
@@ -353,9 +320,11 @@ export function SwipeActions({
           onSwipeableOpen={() => setIsOpen(true)}
           onSwipeableOpenStartDrag={startDrag}
           onSwipeableWillOpen={() => {
+            const fullAction = fullSwipeAction(actions);
+
             if (fullSwipe.get() && fullAction) {
-              // A card's delete holds it for its confirm; Reduce Motion deletes from rest.
-              if (fullAction.holdsOpen && !reduceMotion) hold();
+              // A delete holds the card for its confirm; Reduce Motion deletes from rest.
+              if (fullAction.key === "delete" && !reduceMotion) hold();
               else rowRef.current?.close();
               fullAction.onPress();
             } else openRow.opened();
@@ -439,8 +408,8 @@ function ActionsPanel({
           motion={motion}
           translation={translation}
           onPress={() => {
-            // A card's delete keeps the row open under its confirm, as Mail does; Cancel leaves it open.
-            if (!action.holdsOpen) methods.close();
+            // A delete keeps the row open under its confirm, as Mail does; Cancel leaves it open.
+            if (action.key !== "delete") methods.close();
             action.onPress();
           }}
         />
@@ -467,15 +436,14 @@ function ActionButton({
 }) {
   const reduceMotion = useReducedMotion();
   const outermost = index === layout.count - 1;
-  const stretches = outermost && layout.commits && !reduceMotion;
   // How far the card is over the panel: a deleted card carries on past the swipe.
   const travel = useDerivedValue(() => -translation.get() + motion.extra.get());
   const stretch = useDerivedValue(() =>
-    stretches ? capsuleStretch(travel.get(), layout, motion.reach.get()) : 0
+    outermost && !reduceMotion ? capsuleStretch(travel.get(), layout, motion.reach.get()) : 0
   );
   const slide = useAnimatedStyle(() => {
     // Past the open width the other actions shrink and fade under the outermost's capsule.
-    const drop = reduceMotion || outermost || !layout.commits ? 0 : dropAway(travel.get(), layout);
+    const drop = reduceMotion || outermost ? 0 : dropAway(travel.get(), layout);
 
     return {
       opacity: (1 - drop) * (outermost ? 1 - motion.gone.get() : 1),
@@ -492,6 +460,8 @@ function ActionButton({
   }));
   const label = useAnimatedStyle(() => ({ opacity: 1 - Math.min(stretch.get() / 16, 1) }));
   const [onColour] = useThemeColor(["danger-foreground"] as const);
+  const shopForeground = useTokenColor("shop-foreground");
+  const icon = action.key === "groceries" && shopForeground ? shopForeground : onColour;
 
   return (
     <Animated.View className={layout.slot} style={slide}>
@@ -503,28 +473,17 @@ function ActionButton({
         onPress={onPress}
       >
         <Animated.View
-          className={`flex-row items-center rounded-full ${action.ground}`}
+          className={`flex-row items-center rounded-full ${layout.circle} ${GROUND[action.key]}`}
           style={[
             CIRCLE_SHADOW,
-            {
-              width: layout.circleSize,
-              height: layout.circleSize,
-              paddingLeft: (layout.circleSize - layout.icon) / 2,
-            },
+            { paddingLeft: (layout.circleSize - layout.icon) / 2 },
             outermost ? capsule : null,
           ]}
         >
-          <Ionicons color={action.ink ?? onColour} name={action.icon} size={layout.icon} />
+          <Ionicons color={icon} name={ICONS[action.key]} size={layout.icon} />
         </Animated.View>
-        <Animated.Text
-          adjustsFontSizeToFit={layout.shrinkToOneLine}
-          className={`text-muted font-medium ${layout.text}`}
-          maxFontSizeMultiplier={layout.captionScale}
-          minimumFontScale={layout.shrinkToOneLine ? 0.7 : undefined}
-          numberOfLines={layout.shrinkToOneLine ? 1 : undefined}
-          style={label}
-        >
-          {action.caption ?? action.label}
+        <Animated.Text className="text-muted text-xs font-medium" style={label}>
+          {action.label}
         </Animated.Text>
       </PressableScale>
     </Animated.View>

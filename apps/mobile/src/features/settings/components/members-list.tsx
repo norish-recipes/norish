@@ -68,7 +68,6 @@ export function MembersList({
             kind: look.kind,
             label: text(look.button),
             swipeLabel: look.swipe && text(look.swipe),
-            asks: true,
             onPress: confirmedWrite({
               title: text(look.title),
               message: `${text(look.message, { name })}\n\n${text(look.warning)}`,

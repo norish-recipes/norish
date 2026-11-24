@@ -10,10 +10,10 @@ import {
   fullSwipeAction,
   fullSwipeAt,
   swipeZone,
-} from "@/lib/swipe-reveal";
+} from "@/features/recipes/utils/swipe-reveal";
 import { describe, expect, it } from "vitest";
 
-import { releaseModule } from "../release-module";
+import { releaseModule } from "../../../../__tests__/release-module";
 
 const reveal = { width: 300, count: 3, step: 100, fullAt: 300 + FULL_SWIPE_OVERSHOOT };
 const offsets = (travel: number, reduceMotion = false) =>
@@ -47,7 +47,7 @@ describe("capsuleStretch", () => {
 
   it("reaches dropAway as the worklets plugin builds it, which captures it when capsuleStretch is defined", () => {
     const built = releaseModule<{ capsuleStretch: typeof capsuleStretch }>(
-      new URL("../../src/lib/swipe-reveal.ts", import.meta.url).pathname
+      new URL("../utils/swipe-reveal.ts", import.meta.url).pathname
     );
 
     expect(built.capsuleStretch(300 + FULL_SWIPE_OVERSHOOT, reveal, 1000)).toBe(264);
@@ -97,20 +97,10 @@ const list = (count: number) => 8 + LIST_ACTION * count;
 const GRID = 84;
 
 describe("fullSwipeAction", () => {
-  const asking = (key: string, asks = true) => ({ key, asks });
-
   it("is the outermost action: Delete when offered, else the last one", () => {
-    const groceries = asking("groceries");
-    const plan = asking("plan");
-    const remove = asking("delete");
-
-    expect(fullSwipeAction([groceries, plan, remove])).toBe(remove);
-    expect(fullSwipeAction([groceries, plan])).toBe(plan);
+    expect(fullSwipeAction(["groceries", "plan", "delete"])).toBe("delete");
+    expect(fullSwipeAction(["groceries", "plan"])).toBe("plan");
     expect(fullSwipeAction([])).toBeUndefined();
-  });
-
-  it("is none when the outermost action does not ask first, as a full swipe never acts unasked", () => {
-    expect(fullSwipeAction([asking("disable"), asking("unlink", false)])).toBeUndefined();
   });
 });
 

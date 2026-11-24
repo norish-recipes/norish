@@ -57,7 +57,6 @@ export function ApiKeysScreen() {
                         ? "settings.user.apiKeys.disableKey"
                         : "settings.user.apiKeys.enableKey"
                     ),
-                    asks: false,
                     onPress: settingsWrite(
                       () => toggleApiKey(key.id, !key.enabled),
                       `toggle:${key.id}`

@@ -1,4 +1,3 @@
-import type { SwipeAction } from "@/components/swipe-actions";
 import type { Link } from "expo-router";
 import type { ComponentProps } from "react";
 
@@ -8,19 +7,6 @@ export function recipeSwipeActions(canDelete: boolean) {
 }
 
 export type RecipeSwipeAction = ReturnType<typeof recipeSwipeActions>[number];
-
-/** A swipe circle's look: Groceries' icon takes `shopInk`, and Delete holds the card open for its
- * confirm. Each asks first: a sheet or Delete's confirm. */
-export const recipeSwipeLooks = (
-  shopInk: string | undefined
-): Record<
-  RecipeSwipeAction,
-  Pick<SwipeAction, "icon" | "ground" | "ink" | "holdsOpen" | "asks">
-> => ({
-  groceries: { icon: "bag-outline", ground: "bg-shop", ink: shopInk, asks: true },
-  plan: { icon: "calendar-clear-outline", ground: "bg-plan", asks: true },
-  delete: { icon: "trash-outline", ground: "bg-danger", holdsOpen: true, asks: true },
-});
 
 /** An SF Symbol, as the native context menu takes it. */
 export type MenuIcon = ComponentProps<typeof Link.MenuAction>["icon"];

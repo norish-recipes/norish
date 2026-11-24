@@ -5,11 +5,9 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Props = {
-  enabled?: boolean;
   renderRightActions: (progress: unknown, translation: unknown, methods: unknown) => ReactNode;
   onSwipeableOpenStartDrag: () => void;
   onSwipeableWillOpen: () => void;
-  onSwipeableOpen: () => void;
   children?: ReactNode;
 };
 
@@ -30,7 +28,7 @@ vi.mock("react-native", () => ({
   useWindowDimensions: () => ({ width: 402 }),
 }));
 vi.mock("react-native-reanimated", async () => {
-  const mock = await import("../mocks/reanimated");
+  const mock = await import("../../../../__tests__/mocks/reanimated");
 
   return {
     ...mock,
@@ -114,17 +112,14 @@ vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("heroui-native", () => ({ useThemeColor: () => ["white"] }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 
-const { SwipeActions, HIDDEN_MS, RESTORE_MS, leaveMs } = await import("@/components/swipe-actions");
+const { SwipeActions, HIDDEN_MS, RESTORE_MS, leaveMs } =
+  await import("@/features/recipes/components/swipe-actions");
 const { closeOpenRow } = await import("@/lib/open-row");
-type Handle = import("@/components/swipe-actions").SwipeActionsHandle;
+type Handle = import("@/features/recipes/components/swipe-actions").SwipeActionsHandle;
 
 const actions = ["groceries", "plan", "delete"].map((key) => ({
-  key,
+  key: key as "groceries",
   label: key,
-  icon: "trash-outline" as const,
-  ground: "bg-danger",
-  holdsOpen: key === "delete",
-  asks: true,
   onPress: vi.fn(),
   testID: key,
 }));
@@ -194,75 +189,6 @@ describe("SwipeActions", () => {
     act(() => swipe.props!.onSwipeableWillOpen());
 
     expect(plan!.onPress).toHaveBeenCalledTimes(1);
-    expect(swipe.close).toHaveBeenCalledTimes(1);
-  });
-
-  it("closes a row whose outermost action asks without holding it, on a tap or a full swipe", () => {
-    const remove = { ...actions[2]!, holdsOpen: false, onPress: vi.fn() };
-    const row = [actions[0]!, remove];
-    const { rerender } = render(
-      <SwipeActions actions={row} itemKey="r1" variant="list">
-        {null}
-      </SwipeActions>
-    );
-
-    fireEvent.click(screen.getByTestId("delete"));
-    expect(swipe.close).toHaveBeenCalledTimes(1);
-
-    act(() => {
-      swipe.finger!.onTouchesDown();
-      swipe.props!.onSwipeableOpenStartDrag();
-    });
-    swipe.translation.value = -300;
-    rerender(
-      <SwipeActions actions={row} itemKey="r1" variant="list">
-        {null}
-      </SwipeActions>
-    );
-    act(() => swipe.props!.onSwipeableWillOpen());
-
-    expect(remove.onPress).toHaveBeenCalledTimes(2);
-    expect(swipe.close).toHaveBeenCalledTimes(2);
-  });
-
-  it("only opens a row on a full swipe whose outermost action does not ask, and plays no full-swipe haptic", () => {
-    const unlink = { ...actions[2]!, holdsOpen: false, asks: false, onPress: vi.fn() };
-    const row = () => (
-      <SwipeActions actions={[unlink]} itemKey="r1" variant="row">
-        {null}
-      </SwipeActions>
-    );
-    const { rerender } = render(row());
-
-    act(() => {
-      swipe.finger!.onTouchesDown();
-      swipe.props!.onSwipeableOpenStartDrag();
-    });
-    swipe.translation.value = -300;
-    rerender(row());
-    act(() => swipe.props!.onSwipeableWillOpen());
-
-    expect(unlink.onPress).not.toHaveBeenCalled();
-    expect(swipe.close).not.toHaveBeenCalled();
-    expect(haptics.mediumImpact).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByTestId("delete"));
-    expect(unlink.onPress).toHaveBeenCalledTimes(1);
-  });
-
-  it("closes an open row once it is no longer enabled, as when the connection drops", () => {
-    const row = (enabled: boolean) => (
-      <SwipeActions actions={actions} enabled={enabled} itemKey="r1" variant="row">
-        {null}
-      </SwipeActions>
-    );
-    const { rerender } = render(row(true));
-
-    act(() => swipe.props!.onSwipeableOpen());
-    rerender(row(true));
-    expect(swipe.close).not.toHaveBeenCalled();
-
-    rerender(row(false));
     expect(swipe.close).toHaveBeenCalledTimes(1);
   });
 

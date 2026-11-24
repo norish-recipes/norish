@@ -2,7 +2,6 @@ import type { ComponentProps, ReactElement, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { NativeMenu } from "@/components/native-menu";
-import { SwipeActions } from "@/components/swipe-actions";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -10,6 +9,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import type { SettingsRowAction } from "../utils/row-actions";
 import { actionLook, menuActions, swipeActions, writeBlocked } from "../utils/row-actions";
+import { SwipeableRow } from "./swipeable-row";
 import { useActionTone } from "./use-action-tone";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -21,7 +21,7 @@ const ACCESSORY_ICONS = {
 } as const satisfies Record<string, IconName>;
 
 /** One settings list row: icon tile, title, subtitle, muted value and accessory. `actions` become
- * the recipe cards' swipe and a long-press menu; Offline turns both off, and a `write` row's own press. */
+ * swipe circles and a long-press menu; Offline turns both off, and a `write` row's own press. */
 export function SettingsRow({
   icon,
   title,
@@ -64,7 +64,7 @@ export function SettingsRow({
   const [foreground, muted, dangerInk] = useThemeColor(["foreground", "muted", "danger"] as const);
   const toneOf = useActionTone();
   const blocked = writeBlocked(write, isOffline);
-  const swipes = swipeActions(actions, toneOf, testID);
+  const swipes = swipeActions(actions);
   const menu = menuActions(actions, isOffline);
   const inkClass = danger ? "text-danger" : "text-foreground";
 
@@ -170,10 +170,9 @@ export function SettingsRow({
       {swipes.length === 0 ? (
         pressable
       ) : (
-        <SwipeActions actions={swipes} enabled={!isOffline} itemKey={testID} variant="row">
-          {/* Opaque, so the circles behind it show only as the swipe uncovers them. */}
-          <View className="bg-surface">{pressable}</View>
-        </SwipeActions>
+        <SwipeableRow actions={swipes} enabled={!isOffline}>
+          {pressable}
+        </SwipeableRow>
       )}
     </>
   );

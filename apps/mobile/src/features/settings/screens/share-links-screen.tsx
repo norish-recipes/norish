@@ -77,7 +77,6 @@ export function ShareLinksScreen() {
                   return {
                     kind: action,
                     label: text("recipes.sharePanel.copyLink"),
-                    asks: false,
                     onPress: () => void copyLink(share.id),
                   };
                 }
@@ -88,7 +87,6 @@ export function ShareLinksScreen() {
                   label: text(`${modal}.confirm`),
                   // "Delete link" does not fit a swipe circle's slot.
                   swipeLabel: action === "delete" ? text("common.actions.delete") : undefined,
-                  asks: true,
                   onPress: confirmedWrite({
                     title: text(`${modal}.title`),
                     message: text(`${modal}.message`, { recipeName: share.recipeName }),

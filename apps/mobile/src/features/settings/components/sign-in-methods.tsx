@@ -131,7 +131,6 @@ export function SignInMethods() {
                       {
                         kind: "unlink",
                         label: text("settings.user.signInMethods.remove"),
-                        asks: false,
                         onPress: settingsWrite(() => void unlink(account.id)),
                       },
                     ]
