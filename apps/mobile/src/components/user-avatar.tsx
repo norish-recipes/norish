@@ -16,7 +16,8 @@ export function UserAvatar({
   initialClassName: string;
 }) {
   return (
-    <Avatar alt={name} className={className}>
+    // HeroUI rounds the root by a fixed radius, which leaves corners on an avatar larger than 64 pt.
+    <Avatar alt={name} className={`rounded-full ${className}`}>
       {source ? (
         <Avatar.Image asChild source={source}>
           <Image
