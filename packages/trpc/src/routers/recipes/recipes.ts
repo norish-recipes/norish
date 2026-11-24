@@ -627,6 +627,8 @@ const convertMeasurements = authedProcedure
 
     // A stale conversion settles too, so a reader who missed the edit stops waiting on it.
     const publishConverted = async (stale: boolean) => {
+      if (stale)
+        log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale recipe conversion");
       const recipe = await getRecipeFull(recipeId);
 
       if (!recipe) return;
@@ -697,11 +699,6 @@ const convertMeasurements = authedProcedure
         if (targetSystem === original || (hasCopy && !withAI)) {
           const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-          if (result.stale)
-            log.info(
-              { userId: ctx.user.id, recipeId, version },
-              "Ignoring stale recipe conversion"
-            );
           await publishConverted(result.stale);
 
           return;
@@ -764,9 +761,8 @@ const convertMeasurements = authedProcedure
             )
         );
 
-        if (result.stale)
-          log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale recipe conversion");
-        else log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
+        if (!result.stale)
+          log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
         await publishConverted(result.stale);
       })
       .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
