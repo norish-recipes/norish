@@ -595,7 +595,7 @@
             >ADR-0012 — Cuisines and Tags share a shape and differ in governance</a
           >
           <p>
-            <b>Accepted.</b> Cuisines are a curated vocabulary in their own table; Tags stay an open
+            <b>Accepted; superseded in part by ADR-0043</b> (households add Cuisines of their own). Cuisines are a curated vocabulary in their own table; Tags stay an open
             folksonomy. Rejects a database enum, a config list, and reusing Tags.
           </p>
         </li>
@@ -765,7 +765,7 @@
             >ADR-0027 &mdash; Cookbooks reuse the recipe permission policy</a
           >
           <p>
-            <b>Accepted.</b> A Cookbook carries a <code>userId</code> and is seen, edited and
+            <b>Accepted; superseded in part by ADR-0041</b> (no admin bypass, no Orphaned state). A Cookbook carries a <code>userId</code> and is seen, edited and
             deleted under the existing <code>RECIPE_PERMISSION_POLICY</code> &mdash; no new setting
             and no second rule. Filing a recipe needs view on the recipe and edit on the cookbook,
             and never writes the recipe row, so membership is the cookbook's business rather than
@@ -905,7 +905,8 @@
           >
           <p>
             <b>Accepted; amended by ADR-0039</b> (rung 2 strips units-map phrases, a mint is
-            parented under the alias its text ends with). An Ingredient is one food known by many Ingredient Aliases; a recipe
+            parented under the alias its text ends with) <b>and ADR-0042</b> (one spelling, one
+            food within a household's catalogue). An Ingredient is one food known by many Ingredient Aliases; a recipe
             line, a Grocery, a recurring grocery and a Pantry Ingredient keep their text as written
             and point at the alias it resolved to, and Product Links, Aisle Links and store
             preferences are keyed by Ingredient. One resolver in
@@ -919,7 +920,8 @@
             >ADR-0038 &mdash; The ingredient catalogue is seeded from Open Food Facts under the ODbL</a
           >
           <p>
-            <b>Accepted; amended by ADR-0039</b> (the seed keeps nutrition codes). The Open Food Facts ingredients taxonomy, every entry and language, is
+            <b>Accepted; amended by ADR-0039</b> (the seed keeps nutrition codes) <b>and ADR-0042</b>
+            (the export is the seed plus the reader's household's foods). The Open Food Facts ingredients taxonomy, every entry and language, is
             fetched nightly and applied as ownerless Ingredients, seeded aliases and parents. A
             refresh never undoes a person's alias, merge or parent; a failed or malformed fetch
             leaves the last good seed. The first seed merges existing Ingredients it is sure of,
@@ -946,10 +948,47 @@
             >ADR-0040 &mdash; Categories are household-scoped, not instance-wide</a
           >
           <p>
-            <b>Accepted.</b> Categories move from an enum to Tag-shaped rows. The four built-ins are
+            <b>Accepted; superseded in part by ADR-0043</b> (Categories are created explicitly and
+            kept until deleted). Categories move from an enum to Tag-shaped rows. The four built-ins are
             fixed, and a household adds more on its own recipes, offered only to that household
             whatever the view policy. Rejects an administrator-owned list and a household settings
             table.
+          </p>
+        </li>
+        <li>
+          <a href="households/0041-the-household-is-the-permission-boundary.md"
+            >ADR-0041 &mdash; The household is the permission boundary</a
+          >
+          <p>
+            <b>Accepted.</b> Every account is in exactly one household, and household-owned rows
+            carry its id. One Permission Policy, Everyone or Household for view, edit and delete,
+            governs who outside a household reaches its recipes and cookbooks; everything else a
+            household keeps never crosses. A server administrator is an ordinary member under it.
+            Recipes and cookbooks leave with their Owner and are erased with their account. Rejects
+            per-kind policies, an Owner level, workspace-owned recipes, hand-over on deletion and an
+            admin read bypass. Supersedes ADR-0027 in part.
+          </p>
+        </li>
+        <li>
+          <a href="groceries/0042-each-household-has-its-own-catalogue-on-a-shared-seed.md"
+            >ADR-0042 &mdash; Each household has its own catalogue on a shared seed</a
+          >
+          <p>
+            <b>Accepted.</b> A household's catalogue is the seed plus its own foods, spellings and
+            junk marks; resolution, merges and AI never cross households, and a household's spelling
+            on a seeded food is its own. Rejects a policy-governed shared catalogue and list-only
+            hiding. Amends ADR-0037 and ADR-0038.
+          </p>
+        </li>
+        <li>
+          <a href="recipes/0043-tags-cuisines-and-categories-are-household-lists.md"
+            >ADR-0043 &mdash; Tags, Cuisines and Categories are household lists</a
+          >
+          <p>
+            <b>Accepted.</b> Each is a household's rows, unique on the folded name, plus instance
+            entries; a recipe carries only its household's. Entries are added explicitly and kept
+            until deleted, and households may add Cuisines. Rejects names derived from use, one
+            shared row per name and exact-case spellings. Supersedes ADR-0012 and ADR-0040 in part.
           </p>
         </li>
       </ul>

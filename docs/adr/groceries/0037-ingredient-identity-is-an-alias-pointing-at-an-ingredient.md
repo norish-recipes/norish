@@ -1,5 +1,7 @@
 # Ingredient identity is an alias pointing at an Ingredient
 
+> **Amended by ADR-0042.** One spelling is one food within a household's catalogue, the seed plus the household's own, not across the server; resolution never reads another household's spellings.
+
 Norish's ingredients were a flat list of whatever text a recipe once held: "onion", "onions", "onion, diced" and "ui" were four rows, and everything a household taught Norish about a food — a Product Link, an Aisle Link, a store preference, a Pantry Ingredient — was keyed by folded name text and so taught once per spelling. A tidier list alone would change nothing, because every reader matched on text.
 
 **An Ingredient is one food, known by many Ingredient Aliases, and every reference points at an alias.** A recipe line, a Grocery and a recurring grocery keep their text exactly as written ("onions, diced" still reads that way, so a shopper can still choose to buy them pre-diced) and store the alias that text resolved to; the alias points at the Ingredient. A Pantry Ingredient stores its alias too, but is about the food rather than a line, so it shows the Ingredient. An alias's fold — the one grocery folding — is unique, so one spelling means one food instance-wide. Product Links, Aisle Links and store preferences are facts about an Ingredient at a Store, so teaching Norish where "onion" is filed files every alias of it. A merge moves aliases from one Ingredient to another and deletes the emptied one; nothing that points at an alias moves, which is what makes a wrong merge one alias move to undo.

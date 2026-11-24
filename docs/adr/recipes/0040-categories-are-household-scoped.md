@@ -1,5 +1,7 @@
 # Categories are household-scoped, not instance-wide
 
+> **Superseded in part by ADR-0043.** A household's Categories are its own rows, created explicitly and kept until a member deletes one; they are still offered only to that household.
+
 Households asked for more Categories than Breakfast, Lunch, Dinner and Snack (issue #442: drinks, desserts, appetizers, side dishes). Categories leave the `recipe_category` enum and move to a `categories` table with a `recipe_categories` join, the same shape as `tags`. The four built-ins stay fixed for everyone, and a household adds more by naming one on its own recipe. Unlike Tags, the list a person is offered is always the built-ins plus the Categories on recipes owned by them or their household, whatever the recipe view policy. Tags under the "everyone" policy offer every Tag on the instance. That is fine for autocomplete, but Categories render as a row of chips in the recipe form and the filters, and on a public instance that row would fill up with every household's names. We rejected an administrator-owned list (the Cuisine pattern, ADR-0012), because one household's "Cocktails" is no reason to change every household's list, and the administrator of a public instance should not be curating a vocabulary for strangers. We rejected a per-household settings table, because a list defined by usage needs no settings page, no way to manage an empty Category and no new household storage.
 
 ## Consequences

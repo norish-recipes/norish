@@ -1,5 +1,7 @@
 # The ingredient catalogue is seeded from Open Food Facts under the ODbL
 
+> **Amended by ADR-0042.** The export is the seed plus the reader's household's own foods.
+
 A new instance knew no foods: "ui", "onion" and "Zwiebel" were three Ingredients until a Decision or a person said otherwise, and an instance without AI never learned it. Deduplication should work from the first import, in every language a household cooks in.
 
 **The catalogue is seeded from the Open Food Facts ingredients taxonomy — every entry, every language, additives included — fetched nightly.** Each entry becomes an ownerless Ingredient named for its English name (else its first name) and carrying the entry's id (`en:onion`); each of its names becomes a seeded alias with its language; its first parent becomes the Parent Ingredient. The file is read whole and validated before anything is applied, and applied in one transaction, so a failed fetch or a file that is not a taxonomy (an error page served in its place) leaves the last good seed. The fetch is conditional on the last applied file's validators, runs on the midnight cron and at every boot (cheap once applied), and reports failure through the job monitor like every scheduled task. `INGREDIENT_CATALOGUE_URL` points it at a mirror; empty turns it off, and Norish resolves names without a seed exactly as before.
