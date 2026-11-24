@@ -101,24 +101,29 @@ export async function updateUserAllergies(
       return { applied: false, version: authoritativeVersion, stale: true };
     }
 
-    // Delete existing allergies
+    // A stored name sent back keeps its tag as stored; only new names are cleaned into tags.
+    const stored = await tx
+      .select({ id: tags.id, name: tags.name })
+      .from(userAllergies)
+      .innerJoin(tags, eq(userAllergies.tagId, tags.id))
+      .where(eq(userAllergies.userId, userId));
+    const sent = new Set(allergyNames.map((name) => name.toLowerCase()));
+    const kept = stored.filter((tag) => sent.has(tag.name.toLowerCase()));
+    const keptNames = new Set(kept.map((tag) => tag.name.toLowerCase()));
+
     await tx.delete(userAllergies).where(eq(userAllergies.userId, userId));
 
-    if (allergyNames.length === 0) {
-      return { applied: true, version: nextVersion, stale: false };
-    }
-
-    // Get or create tags
-    const tagRecords = await getOrCreateManyTagsTx(tx, allergyNames);
-
-    // Insert new allergies
-    const rows = tagRecords.map((tag) => ({
+    const added = await getOrCreateManyTagsTx(
+      tx,
+      allergyNames.filter((name) => !keptNames.has(name.toLowerCase()))
+    );
+    const rows = [...kept, ...added].map((tag) => ({
       userId,
       tagId: tag.id,
       version: nextVersion,
     }));
 
-    await tx.insert(userAllergies).values(rows).onConflictDoNothing();
+    if (rows.length > 0) await tx.insert(userAllergies).values(rows).onConflictDoNothing();
 
     return { applied: true, version: nextVersion, stale: false };
   });

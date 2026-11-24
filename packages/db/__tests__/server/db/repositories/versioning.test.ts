@@ -245,6 +245,16 @@ describe("versioned repository behavior", () => {
     ]);
   });
 
+  it("keeps a stored allergy name a save sends back unchanged, cleaning only new ones", async () => {
+    const db = getTestDb();
+    const [stored] = await db.insert(tags).values({ name: "<milk>" }).returning();
+
+    await db.insert(userAllergies).values({ userId: testUserId, tagId: stored!.id, version: 1 });
+    await updateUserAllergies(testUserId, ["<milk>", "<b>Soy</b>"], 1);
+
+    expect((await getUserAllergies(testUserId)).allergies).toEqual(["<milk>", "Soy"]);
+  });
+
   it("treats stale allergy updates as no-ops", async () => {
     await updateUserAllergies(testUserId, ["Peanuts"], 0);
 
