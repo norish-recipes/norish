@@ -625,7 +625,8 @@ const convertMeasurements = authedProcedure
       "Converting recipe measurements"
     );
 
-    const publishConverted = async () => {
+    // A stale conversion settles too, so a reader who missed the edit stops waiting on it.
+    const publishConverted = async (stale: boolean) => {
       const recipe = await getRecipeFull(recipeId);
 
       if (!recipe) return;
@@ -634,7 +635,7 @@ const convertMeasurements = authedProcedure
 
       void recipes.publish(
         "converted",
-        { recipe },
+        { recipe, conversion: { target: targetSystem, withAI, version }, stale },
         { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
       );
     };
@@ -696,16 +697,12 @@ const convertMeasurements = authedProcedure
         if (targetSystem === original || (hasCopy && !withAI)) {
           const result = await setActiveSystemForRecipe(recipe.id, targetSystem, version);
 
-          if (result.stale) {
+          if (result.stale)
             log.info(
               { userId: ctx.user.id, recipeId, version },
               "Ignoring stale recipe conversion"
             );
-
-            return;
-          }
-
-          await publishConverted();
+          await publishConverted(result.stale);
 
           return;
         }
@@ -767,14 +764,10 @@ const convertMeasurements = authedProcedure
             )
         );
 
-        if (result.stale) {
+        if (result.stale)
           log.info({ userId: ctx.user.id, recipeId, version }, "Ignoring stale recipe conversion");
-
-          return;
-        }
-
-        log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
-        await publishConverted();
+        else log.info({ userId: ctx.user.id, recipeId, withAI }, "Recipe measurements converted");
+        await publishConverted(result.stale);
       })
       .catch((err) => handleRecipeError(ctx, err, "convert recipe measurements", { recipeId }));
 
