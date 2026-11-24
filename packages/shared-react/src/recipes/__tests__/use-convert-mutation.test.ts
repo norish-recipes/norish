@@ -34,8 +34,10 @@ describe("useConvertMutation", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    act(() => void result.current.convertMeasurements("us", 1));
-    act(() => void result.current.convertMeasurements("metric", 1));
+    act(() => void result.current.convertMeasurements({ target: "us", withAI: false, version: 1 }));
+    act(
+      () => void result.current.convertMeasurements({ target: "metric", withAI: false, version: 1 })
+    );
     await act(async () => answers[0]!.reject(new Error("Conversion failed")));
     await act(async () => answers[1]!.reject(new Error("Conversion failed")));
     await act(async () => {
@@ -64,7 +66,7 @@ describe("useConvertMutation", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    act(() => void result.current.convertMeasurements("us", 1));
+    act(() => void result.current.convertMeasurements({ target: "us", withAI: false, version: 1 }));
     await vi.waitFor(() =>
       expect(queryClient.getQueryData(key)).toMatchObject({ systemUsed: "us" })
     );

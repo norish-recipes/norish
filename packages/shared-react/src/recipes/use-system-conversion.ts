@@ -19,7 +19,7 @@ import {
 } from "../reader";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
+import { sameConversion, useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
 import { useLoadedPageRecipe, useRecipeConversion } from "./use-recipe-page";
 import { useRecipeQuery } from "./use-recipe-query";
 
@@ -89,7 +89,7 @@ export function useSystemConversion(): SystemConversion {
     convertTo: (option) => {
       if (!option.withAI && option.system === currentSystem) return;
 
-      startConversion(option.system, option.withAI, true);
+      startConversion({ target: option.system, withAI: option.withAI }, { manual: true });
     },
   };
 }
@@ -119,14 +119,7 @@ export function useAutoConversion() {
       const page = store.getState();
       const asked = page.manualConversion;
 
-      if (
-        settled.id !== recipeId ||
-        !asked ||
-        asked.target !== conversion.target ||
-        asked.withAI !== conversion.withAI ||
-        asked.version !== conversion.version
-      )
-        return;
+      if (settled.id !== recipeId || !asked || !sameConversion(asked, conversion)) return;
       confirmedRef.current = !stale;
       page.endManualConversion();
     },
@@ -169,7 +162,7 @@ export function useAutoConversion() {
 
     const hasCopy = recipe.recipeIngredients.some((line) => line.systemUsed === target.system);
 
-    startConversion(target.system, target.withAI && isAIEnabled && !hasCopy);
+    startConversion({ target: target.system, withAI: target.withAI && isAIEnabled && !hasCopy });
   }, [
     recipe,
     choice,

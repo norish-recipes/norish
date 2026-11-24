@@ -3,7 +3,7 @@
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
+import type { FullRecipeDTO, MeasurementSystem, RecipeConversion } from "@norish/shared/contracts";
 
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { olderThanHeld } from "../offline/version-order";
@@ -16,7 +16,7 @@ type ConvertMutationContext = {
 };
 
 type ConvertMutationResult = {
-  convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI?: boolean) => void;
+  convertMeasurements: (conversion: RecipeConversion) => void;
   error: unknown;
   reset: () => void;
   isConverting: boolean;
@@ -99,8 +99,8 @@ export function useConvertMutation(
   const { mutate: mutateMutation } = mutation;
 
   return {
-    convertMeasurements: (targetSystem, version, withAI = false) => {
-      mutateMutation({ recipeId, targetSystem, version, withAI });
+    convertMeasurements: ({ target, version, withAI }) => {
+      mutateMutation({ recipeId, targetSystem: target, version, withAI });
     },
     error: mutation.error,
     reset: mutation.reset,

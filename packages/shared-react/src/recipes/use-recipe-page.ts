@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import type {
   FullRecipeDTO,
   MeasurementSystem,
+  RecipeConversion,
   RecipeIngredientsDto,
 } from "@norish/shared/contracts";
 
@@ -63,8 +64,12 @@ export function usePageEnrichment(): RecipeEnrichmentResult {
 type RecipeConversionResult = {
   /** The system on its way, until the recipe shows it. */
   convertingTo: MeasurementSystem | null;
-  /** Convert to `target`; with AI, the copy in it is written again even where one exists. */
-  startConversion: (target: MeasurementSystem, withAI?: boolean, manual?: boolean) => void;
+  /** Converts to `target`; with AI, the copy in it is written again even where one exists. One
+   * picked by hand (`manual`) is settled by its own result alone. */
+  startConversion: (
+    asked: Omit<RecipeConversion, "version">,
+    options?: { manual?: boolean }
+  ) => void;
 };
 
 export function useRecipeConversion(): RecipeConversionResult {
@@ -91,11 +96,12 @@ export function useRecipeConversion(): RecipeConversionResult {
 
   return {
     convertingTo: conversion && !isOver ? conversion.target : null,
-    startConversion: (target, withAI = false, manual = false) => {
+    startConversion: (asked, { manual = false } = {}) => {
       if (!recipe) return;
+      const conversion = { ...asked, version: recipe.version };
 
-      store.getState().startConversion({ target, withAI, version: recipe.version }, manual);
-      convertMeasurements(target, recipe.version, withAI);
+      store.getState().startConversion(conversion, manual);
+      convertMeasurements(conversion);
     },
   };
 }

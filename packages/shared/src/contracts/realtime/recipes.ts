@@ -7,11 +7,7 @@
 
 import { z } from "zod";
 
-import type {
-  FullRecipeDTO,
-  MeasurementSystem,
-  RecipeDashboardDTO,
-} from "@norish/shared/contracts";
+import type { FullRecipeDTO, RecipeConversion, RecipeDashboardDTO } from "@norish/shared/contracts";
 import type {
   RecipeEnrichmentKind,
   RecipeEnrichmentLifecycleEventDto,
@@ -83,7 +79,7 @@ export const recipesRealtime = defineRealtimeCatalogue("recipe", {
     scope: "policy",
     payload: z.custom<{
       recipe: FullRecipeDTO;
-      conversion: { target: MeasurementSystem; withAI: boolean; version: number };
+      conversion: RecipeConversion;
       stale: boolean;
     }>(),
   },

@@ -3,12 +3,13 @@
 import type { ReactNode } from "react";
 import { createStore } from "zustand";
 
-import type { MeasurementSystem } from "@norish/shared/contracts";
+import type { RecipeConversion } from "@norish/shared/contracts";
 
 import { createPageStoreContext } from "../page-store";
 
-/** A conversion the reader asked for, and the recipe version it was asked on. */
-type RecipeConversion = { target: MeasurementSystem; withAI: boolean; version: number };
+/** Whether two conversions ask the same of the same recipe version. */
+export const sameConversion = (a: RecipeConversion, b: RecipeConversion) =>
+  a.target === b.target && a.withAI === b.withAI && a.version === b.version;
 
 export type RecipePageState = {
   recipeId: string;

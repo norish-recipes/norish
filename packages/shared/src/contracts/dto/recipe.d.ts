@@ -10,6 +10,8 @@ import type {
 } from "@norish/shared/contracts/zod";
 
 export type MeasurementSystem = (typeof measurementSystems)[number];
+/** A conversion asked for: the system, whether AI writes the copy, the recipe version asked on. */
+export type RecipeConversion = { target: MeasurementSystem; withAI: boolean; version: number };
 export type RecipeCategory = string;
 export type RecipeDashboardDTO = z.output<typeof RecipeDashboardSchema>;
 export type FullRecipeDTO = z.output<typeof FullRecipeSchema>;
