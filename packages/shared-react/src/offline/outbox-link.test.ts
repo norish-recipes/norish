@@ -88,17 +88,25 @@ describe("createOutboxLink", () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 
-  it("excludes a caldav password and a site auth token value, not the procedures beside them", async () => {
+  it("excludes credentials and one-time secrets, not the procedures beside them", async () => {
     const failure = new TypeError("Failed to fetch");
 
-    for (const path of ["caldav.saveConfig", "siteAuthTokens.create", "households.join"]) {
+    for (const path of [
+      "caldav.saveConfig",
+      "siteAuthTokens.create",
+      "households.join",
+      "user.apiKeys.create",
+      "recipes.shareCreate",
+    ]) {
       await runLink(mutationOp({ path, input: { id: "x" } }), errorWith(failure));
     }
     expect(enqueue).not.toHaveBeenCalled();
 
     await runLink(mutationOp({ path: "caldav.deleteConfig" }), errorWith(failure));
     await runLink(mutationOp({ path: "households.leave" }), errorWith(failure));
-    expect(enqueue).toHaveBeenCalledTimes(2);
+    await runLink(mutationOp({ path: "user.apiKeys.toggle" }), errorWith(failure));
+    await runLink(mutationOp({ path: "recipes.shareRevoke" }), errorWith(failure));
+    expect(enqueue).toHaveBeenCalledTimes(4);
   });
 
   it("excludes procedures of the admin router only", async () => {
