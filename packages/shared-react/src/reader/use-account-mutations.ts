@@ -1,5 +1,6 @@
 "use client";
 
+import type { QueryClient } from "@tanstack/react-query";
 import type { inferRouterInputs } from "@trpc/server";
 import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -28,14 +29,44 @@ export function useFailedWrite() {
   };
 }
 
+/** The last versioned profile write sent from each cache, so the next one reads the version it committed. */
+const lastSend = new WeakMap<QueryClient, Promise<unknown>>();
+
+/** Sends `write` at the profile's version once every earlier versioned write settled; a failed read
+ * of the version fails the write unsent, shown as a failed save. */
+function useVersionedSend() {
+  const queryClient = useQueryClient();
+  const { showError } = usePlatform();
+  const { sendVersion } = useProfileCache();
+
+  return <T>(context: string, write: (version: number) => Promise<T>): Promise<T> => {
+    const sent = (lastSend.get(queryClient) ?? Promise.resolve())
+      .then(() =>
+        sendVersion().catch((error: unknown) => {
+          showError(error, context);
+          throw error;
+        })
+      )
+      .then(write);
+
+    lastSend.set(
+      queryClient,
+      sent.catch(() => undefined)
+    );
+
+    return sent;
+  };
+}
+
 type ProfileAnswer = WriteResult & { stale?: boolean };
 
 /** The Reader's name and Avatar; each answers with the user as it now is. */
 export function useProfileMutations() {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
-  const { sendVersion, mergeUser, invalidate } = useProfileCache();
+  const { mergeUser, invalidate } = useProfileCache();
   const failed = useFailedWrite();
+  const send = useVersionedSend();
   const refuseStale = useStaleRefusal();
 
   // A stale write is refused as changed elsewhere and resolves once the profile is reread.
@@ -51,16 +82,18 @@ export function useProfileMutations() {
     },
     onError: failed(context),
   });
-  const settleName = settle("user-settings:update-name");
-  const settleUpload = settle("user-settings:upload-avatar");
-  const settleDelete = settle("user-settings:delete-avatar");
+  const nameContext = "user-settings:update-name";
+  const uploadContext = "user-settings:upload-avatar";
+  const deleteContext = "user-settings:delete-avatar";
 
-  const { mutateAsync: mutateName } = useMutation(trpc.user.updateName.mutationOptions(settleName));
+  const { mutateAsync: mutateName } = useMutation(
+    trpc.user.updateName.mutationOptions(settle(nameContext))
+  );
   const { mutateAsync: mutateUpload } = useMutation(
-    trpc.user.uploadAvatar.mutationOptions(settleUpload)
+    trpc.user.uploadAvatar.mutationOptions(settle(uploadContext))
   );
   const { mutateAsync: mutateDelete, isPending: isDeletingAvatar } = useMutation(
-    trpc.user.deleteAvatar.mutationOptions(settleDelete)
+    trpc.user.deleteAvatar.mutationOptions(settle(deleteContext))
   );
 
   return {
@@ -75,14 +108,14 @@ export function useProfileMutations() {
         return false;
       }
 
-      return acceptedFresh(sendVersion().then((version) => mutateName({ name, version })));
+      return acceptedFresh(send(nameContext, (version) => mutateName({ name, version })));
     },
     /** Resolves whether the upload went through; the reader is shown why not. */
     uploadAvatar: (file: Blob): Promise<boolean> =>
-      acceptedFresh(sendVersion().then((version) => mutateUpload(uploadForm({ file, version })))),
+      acceptedFresh(send(uploadContext, (version) => mutateUpload(uploadForm({ file, version })))),
     /** Resolves whether the delete went through; the reader is shown why not. */
     deleteAvatar: (): Promise<boolean> =>
-      acceptedFresh(sendVersion().then((version) => mutateDelete({ version }))),
+      acceptedFresh(send(deleteContext, (version) => mutateDelete({ version }))),
     isDeletingAvatar,
   };
 }
@@ -97,12 +130,12 @@ export function usePreferencesSaving() {
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { held, sendVersion, write, mergePreferences, invalidate } = useProfileCache();
+  const { held, write, mergePreferences, invalidate } = useProfileCache();
   const failed = useFailedWrite();
+  const send = useVersionedSend();
   const refuseStale = useStaleRefusal();
-  const mutationKey = trpc.user.updatePreferences.mutationKey();
   const saving = usePreferencesSaving();
+  const context = "user-settings:update-preferences";
 
   type PreferencePatch = inferRouterInputs<AppRouter>["user"]["updatePreferences"]["preferences"];
   type OptimisticSave = { version: number; previous: PreferencePatch };
@@ -153,29 +186,22 @@ export function usePreferencesMutation() {
 
           return;
         }
-        if (answer.stale) refuseStale("user-settings:update-preferences");
+        if (answer.stale) refuseStale(context);
         mergePreferences(answer.preferences, answer.version);
       },
       onError: (error, { preferences }, optimistic) => {
         if (shouldPreserveOptimisticUpdate(error)) return;
 
         rollBack(preferences, optimistic);
-        failed("user-settings:update-preferences")(error);
+        failed(context)(error);
       },
     })
   );
 
   return {
-    /** Resolves whether the server took them; refused unsent while another save is in flight,
-     * which would send the same version. */
+    /** Resolves whether the server took them; sent once every earlier profile write settled. */
     updatePreferences: (preferences: Partial<UserPreferencesDto>): Promise<boolean> =>
-      acceptedFresh(
-        sendVersion().then<{ success: boolean; stale?: boolean }>((version) =>
-          queryClient.isMutating({ mutationKey }) > 0
-            ? { success: false }
-            : mutateAsync({ preferences, version })
-        )
-      ),
+      acceptedFresh(send(context, (version) => mutateAsync({ preferences, version }))),
     isUpdatingPreferences: saving,
   };
 }

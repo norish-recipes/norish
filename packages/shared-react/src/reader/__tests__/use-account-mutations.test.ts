@@ -188,6 +188,34 @@ describe("the Account's writes", () => {
       }
     );
 
+    it.each(["user.updatePreferences", "user.updateName", "user.deleteAvatar"])(
+      "%s fails as a refused save when the first profile read fails",
+      async (path) => {
+        queryClient.removeQueries({ queryKey: USER_KEY });
+        const result = render(() => ({
+          preferences: usePreferencesMutation(),
+          profile: useProfileMutations(),
+        }));
+        const write = {
+          "user.updatePreferences": () =>
+            result.current.preferences.updatePreferences({ locale: "nl" }),
+          "user.updateName": () => result.current.profile.updateName("Grace"),
+          "user.deleteAvatar": () => result.current.profile.deleteAvatar(),
+        }[path]!;
+        let took: boolean | undefined;
+
+        act(() => void write().then((answer) => (took = answer)));
+        await waitFor(() =>
+          expect(queryClient.getQueryState(USER_KEY)?.fetchStatus).toBe("fetching")
+        );
+        await act(async () => failRead("user.get", new TypeError("Network request failed")));
+
+        await waitFor(() => expect(took).toBe(false));
+        expect(trpcCalls[path]).toBeUndefined();
+        expect(adapter.showError).toHaveBeenCalledOnce();
+      }
+    );
+
     it("take what the server holds on a stale answer and say it changed elsewhere", async () => {
       const result = render(() => usePreferencesMutation());
 
@@ -222,7 +250,7 @@ describe("the Account's writes", () => {
       await waitFor(() => expect(took).toBe(false));
     });
 
-    it("refuse a second save while one is in flight, which would send the same version", async () => {
+    it("send a second save once the first settles, at the version it committed", async () => {
       const result = render(() => usePreferencesMutation());
       let second: boolean | undefined;
 
@@ -230,10 +258,53 @@ describe("the Account's writes", () => {
         void result.current.updatePreferences({ locale: "nl" });
         void result.current.updatePreferences({ locale: "de" }).then((t) => (second = t));
       });
+      await answerCall("user.updatePreferences", {
+        success: true,
+        preferences: { locale: "nl" },
+        version: 4,
+      });
+      expect((await sentCall("user.updatePreferences", 1)).input).toEqual({
+        preferences: { locale: "de" },
+        version: 4,
+      });
+      await answerCall(
+        "user.updatePreferences",
+        { success: true, preferences: { locale: "de" }, version: 5 },
+        1
+      );
 
-      await waitFor(() => expect(second).toBe(false));
-      expect(trpcCalls["user.updatePreferences"]).toHaveLength(1);
-      expect(profile()?.user.preferences?.locale).toBe("nl");
+      await waitFor(() => expect(second).toBe(true));
+      expect(profile()?.user).toMatchObject({ version: 5, preferences: { locale: "de" } });
+    });
+
+    it("keep the last of two choices made while the first profile read is pending", async () => {
+      queryClient.removeQueries({ queryKey: USER_KEY });
+      let firstRead: (value: UserSettingsDto) => void = () => {};
+      const read = new Promise<UserSettingsDto>((resolve) => (firstRead = resolve));
+      let stored = PROFILE.user.version;
+
+      // As the real server: a write at any version but the stored one is refused as stale.
+      serveTRPC(async (called, input) => {
+        if (called === "user.get") return read;
+        const { version, preferences } = input as { version: number; preferences: object };
+
+        if (version !== stored)
+          return { success: true, stale: true, preferences: {}, version: stored };
+
+        return { success: true, preferences, version: ++stored };
+      });
+      const result = render(() => ({ read: useProfileQuery(), save: usePreferencesMutation() }));
+      const took: boolean[] = [];
+
+      act(() => {
+        void result.current.save.updatePreferences({ locale: "nl" }).then((t) => took.push(t));
+        void result.current.save.updatePreferences({ locale: "de" }).then((t) => took.push(t));
+      });
+      await act(async () => firstRead(PROFILE));
+
+      await waitFor(() => expect(took).toEqual([true, true]));
+      expect(result.current.read.user?.preferences?.locale).toBe("de");
+      expect(adapter.showError).not.toHaveBeenCalled();
     });
 
     it("roll back and say so when the write fails", async () => {
@@ -249,20 +320,27 @@ describe("the Account's writes", () => {
   });
 
   describe("the current version", () => {
-    it("is the newest either cache learned, for every versioned write", async () => {
-      queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: [], version: 6 });
-      const result = render(() => ({
-        preferences: usePreferencesMutation(),
-        profile: useProfileMutations(),
-      }));
+    it.each(["user.updatePreferences", "user.updateName", "user.deleteAvatar"])(
+      "is the newest either cache learned, for %s",
+      async (path) => {
+        queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: [], version: 6 });
+        const result = render(() => ({
+          preferences: usePreferencesMutation(),
+          profile: useProfileMutations(),
+        }));
 
-      act(() => void result.current.preferences.updatePreferences({ afterPlanning: "calendar" }));
-      expect((await sentCall("user.updatePreferences")).input.version).toBe(6);
-      act(() => void result.current.profile.updateName("Grace"));
-      expect((await sentCall("user.updateName")).input.version).toBe(6);
-      act(() => void result.current.profile.deleteAvatar());
-      expect((await sentCall("user.deleteAvatar")).input.version).toBe(6);
-    });
+        act(
+          () =>
+            void {
+              "user.updatePreferences": () =>
+                result.current.preferences.updatePreferences({ afterPlanning: "calendar" }),
+              "user.updateName": () => result.current.profile.updateName("Grace"),
+              "user.deleteAvatar": () => result.current.profile.deleteAvatar(),
+            }[path]!()
+        );
+        expect((await sentCall(path)).input.version).toBe(6);
+      }
+    );
 
     it("keeps a newer profile when rollback cannot identify its optimistic fields", async () => {
       const result = render(() => usePreferencesMutation());
