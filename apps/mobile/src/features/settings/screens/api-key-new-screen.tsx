@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import { LabelWithHint } from "@/components/hint-button";
 import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { SheetInput } from "@/components/sheet-input";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useText } from "@/lib/i18n/use-text";
 import { useNavigation, useRouter } from "expo-router";
-import { TextField } from "heroui-native";
 import { FormattedMessage } from "react-intl";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";
@@ -18,6 +15,7 @@ import {
 } from "@norish/shared-react/reader";
 
 import { OfflineCapsule } from "../components/offline-capsule";
+import { SettingsField } from "../components/settings-form";
 import { settingsWrite } from "../utils/settings-write";
 
 /** The create key sheet. Once made, the key is shown here only, with Copy; from Create until the
@@ -121,21 +119,15 @@ export function ApiKeyNewScreen() {
     >
       <SheetBody contentClassName="gap-4">
         <OfflineCapsule />
-        <View>
-          <LabelWithHint label={text("settings.user.apiKeys.keyNameLabel")} />
-          <TextField>
-            <SheetInput
-              accessibilityLabel={text("settings.user.apiKeys.keyNameLabel")}
-              editable={!isOffline}
-              maxLength={API_KEY_NAME_MAX_LENGTH}
-              placeholder={text("settings.user.apiKeys.keyNamePlaceholder")}
-              returnKeyType="done"
-              testID="settings-api-key-new-name"
-              value={name}
-              onChangeText={setName}
-            />
-          </TextField>
-        </View>
+        <SettingsField
+          label={text("settings.user.apiKeys.keyNameLabel")}
+          maxLength={API_KEY_NAME_MAX_LENGTH}
+          placeholder={text("settings.user.apiKeys.keyNamePlaceholder")}
+          returnKeyType="done"
+          testID="settings-api-key-new-name"
+          value={name}
+          onChangeText={setName}
+        />
       </SheetBody>
     </Sheet>
   );
