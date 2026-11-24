@@ -1,3 +1,4 @@
+import type { SwipeAction } from "@/components/swipe-actions";
 import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { ComponentProps } from "react";
 
@@ -43,9 +44,31 @@ export const orderActions = (actions: SettingsRowAction[]) => [
   ...actions.filter(removes),
 ];
 
-/** The swipe's actions: Copy is for the menu, since a swipe action is a state change. */
-export const swipeActions = (actions: SettingsRowAction[]) =>
-  orderActions(actions).filter((action) => action.kind !== "copy");
+/** The swipe's actions, coloured by `toneOf`: Copy is for the menu, since a swipe action is a state
+ * change. Each testID is `<row testID>-swipe-<kind>`. */
+export const swipeActions = (
+  actions: SettingsRowAction[],
+  toneOf: (tone: ActionTone) => { ground: string; ink?: string },
+  testID: string
+): SwipeAction[] =>
+  orderActions(actions)
+    .filter((action) => action.kind !== "copy")
+    .map((action) => {
+      const look = LOOKS[action.kind];
+      const tone = toneOf(look.tone);
+
+      return {
+        key: action.kind,
+        label: action.label,
+        caption: action.swipeLabel,
+        icon: look.icon,
+        ground: tone.ground,
+        ink: tone.ink,
+        asks: action.asks,
+        onPress: action.onPress,
+        testID: `${testID}-swipe-${action.kind}`,
+      };
+    });
 
 /** The long-press menu's actions, in the swipe's order: none while Offline, as no settings write is Queued. */
 export const menuActions = (actions: SettingsRowAction[], offline: boolean) =>

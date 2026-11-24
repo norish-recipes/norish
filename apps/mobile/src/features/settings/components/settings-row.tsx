@@ -1,4 +1,3 @@
-import type { SwipeAction } from "@/components/swipe-actions";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -65,22 +64,7 @@ export function SettingsRow({
   const [foreground, muted, dangerInk] = useThemeColor(["foreground", "muted", "danger"] as const);
   const toneOf = useActionTone();
   const blocked = writeBlocked(write, isOffline);
-  const swipes: SwipeAction[] = swipeActions(actions).map((action) => {
-    const look = actionLook(action.kind);
-    const tone = toneOf(look.tone);
-
-    return {
-      key: action.kind,
-      label: action.label,
-      caption: action.swipeLabel,
-      icon: look.icon,
-      ground: tone.ground,
-      ink: tone.ink,
-      asks: action.asks,
-      onPress: action.onPress,
-      testID: `${testID}-swipe-${action.kind}`,
-    };
-  });
+  const swipes = swipeActions(actions, toneOf, testID);
   const menu = menuActions(actions, isOffline);
   const inkClass = danger ? "text-danger" : "text-foreground";
 
