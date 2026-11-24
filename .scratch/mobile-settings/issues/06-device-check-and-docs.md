@@ -2,7 +2,7 @@
 
 **What to build:** Close the set: Maestro flows, a device check, release notes and docs.
 
-**Blocked by:** 02, 03, 04, 05
+**Blocked by:** 02, 03, 04, 05, 07
 
 **Status:** ready-for-agent
 
@@ -63,3 +63,7 @@ The realtime flake: not from this branch. Offline, each failed socket attempt do
 Closing verification at `27c789592`: all seven gates 0, mobile lint at the baseline's 11, web E2E 282 of 282. iOS simulator compile last green at `2976db972` (no Swift change since).
 
 The run stops here on Mike's decisions (ticket 03's scope, the Outbox exclusion, the silent refused link, Copy link, the stored one-time secrets) and on the simulator another session holds. This ticket's own boxes are all still open.
+
+### Mike's decisions (2026-11-24)
+
+Ticket 03 is fixed here; only secret-carrying writes stay out of the Outbox; the silent refused link is accepted; a share link becomes viewable (ticket 07, which now blocks this one); one-time responses are stored as a marker. Mike says no one else is using the simulator, so this run may take it or stop it. `27c789592` stays unless he says otherwise.

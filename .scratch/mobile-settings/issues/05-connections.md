@@ -62,3 +62,9 @@ Round 2 outcome: fixed in `add818f6d` (web's dialog drops the key however it clo
 Asks left with Mike:
 - Copy link on share links (the share-links box stays unticked for it).
 - The idempotency middleware stores the plaintext response of `apiKeys.create` and `shareCreate` in Valkey for seven days, and a replay returns it. Confirmed, unchanged. Options: don't store (a replay makes a second key), store redacted (breaks `RecipeShareCreatedSchema`), or store a marker and refuse the replay (recommended), plus keeping both out of the Outbox.
+
+### Mike's decisions (2026-11-24)
+
+- Copy link: add a way to view a share link. It needs the server to keep the token readable, so it is ticket 07; the share-links box here stays unticked until 07 is done.
+- Stored one-time secrets: store a marker and refuse the replay, and keep `apiKeys.create` and `recipes.shareCreate` out of the Outbox.
+- Outbox: only writes that carry a secret stay out (`offline/uncaptured.ts` already lists the credential inputs). The spec's line is changed to say so.

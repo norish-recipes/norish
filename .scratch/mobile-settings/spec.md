@@ -41,7 +41,7 @@ Settings becomes a pushed page opened from the avatar menu's "All settings", wit
 - **Avatar.** Picked with the existing `use-photo-picker` / photo source sheet and uploaded as an `expo-file-system` `File`, the path the recipe editor uses.
 - **Sign-in methods.** Link opens the same system auth session the app's OIDC sign-in uses; unlink by swipe or long-press. The last method cannot be removed (as web).
 - **Delete account** mirrors web's danger zone, including its note for household admins, behind a destructive confirm.
-- **Offline.** Settings shows cached data; every save, swipe action and menu action is disabled, and the glass "Offline" capsule says why. Settings writes never enter the Outbox.
+- **Offline.** Settings shows cached data; every save, swipe action and menu action is disabled, and the glass "Offline" capsule says why. Settings writes that carry a secret (a site token value, a join code, a new API key or share link) never enter the Outbox; the list is `packages/shared-react/src/offline/uncaptured.ts`. (Changed 2026-11-24: it said no Settings write enters the Outbox.)
 
 ## Testing Decisions
 

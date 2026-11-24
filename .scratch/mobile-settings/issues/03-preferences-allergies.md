@@ -66,3 +66,7 @@ Eight high-confidence findings, none in the Settings pages themselves:
 - `8c4e28adf`: an emptied household allergy list falls back to the device's stale own list; before this ticket too.
 
 Decision asked: keep fixing these here, or revert the library-filter and auto-conversion fixes (`e7d3cfa6e`, `18d1c7bc3`, `7b6980694`, `ecc958adb`) into their own ticket and finish only the version and language ones here. Tickets 04 and 05 do not depend on the answer and go ahead.
+
+### Mike's decision (2026-11-24)
+
+Keep fixing here: all round 3 findings are fixed in this ticket, nothing is reverted into its own ticket. The fix round runs on Opus high (two rounds on lower tiers did not converge).

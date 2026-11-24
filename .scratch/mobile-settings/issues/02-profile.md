@@ -64,3 +64,7 @@ Round 2 outcome: fixed in `34a29ea31` (name-field rules), `1e3d312f0` (stale wri
 Round 3 outcome: fixed in `8b9991c29` (stale write resolves after the reread), `e10824c4b` (stale says "it changed elsewhere", web too), `51e8a42cc` (a draft that sends nothing drops once the field is left) and `b339f4daa` (`saveProfile` with tests; a name that doesn't go through stops the save and leaves the photo staged). Exit gates all 0 at `b339f4daa`, mobile lint at the baseline's 11 warnings. No fourth re-review: the final whole-branch pass reads this flow.
 
 Open after this ticket: the silent refused link (ask), and the `InlineErrorBlock` move once the other session's auth work is committed.
+
+### Mike's decision (2026-11-24)
+
+The silent refused sign-in-method link is accepted as it is. Nothing to change.
