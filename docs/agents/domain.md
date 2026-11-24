@@ -21,16 +21,20 @@ If a term or ADR you need doesn't exist, **proceed silently**. Don't flag absenc
 │   ├── offline/
 │   │   ├── 0001-web-offline-is-a-persisted-query-cache.md
 │   │   └── … 0002–0009
-│   └── releases/
-│       └── 0010-release-notes-use-a-release-checkpoint.md
+│   ├── releases/
+│   │   └── 0010-release-notes-use-a-release-checkpoint.md
+│   └── …                   ← other feature areas
 ├── apps/
 └── packages/
 ```
 
 ## ADR rules
 
-- **Numbering is global and immutable.** `ADR-NNNN` ids are unique across all area folders, and code comments reference them (`rg "ADR-0003"` hits real call sites) — never renumber, reuse, or retire a number. To pick the next number, scan **all** of `docs/adr/**` for the highest and add one.
-- **Folders are feature areas**, kebab-case: currently `offline/` and `releases/`; later e.g. `groceries/`, `recipes/`, `calendar/`, `household/`, `auth/`, `imports/`, `realtime/`. Create an area folder lazily with its first ADR. File an ADR in the area it most belongs to — its id stays findable regardless of folder.
+- **ADRs state the current decision.** When a later decision changes one, rewrite the earlier ADR in place. Don't add supersession notes, dated amendments, or struck-out history. Git keeps the history.
+- **Delete an ADR only when none of its decision still stands.** Repoint every citation of its number, including code comments, docs, and `docs/adr/index.html`, to the ADR that replaced it.
+- **Numbering is global and immutable.** `ADR-NNNN` ids are unique across all area folders and code cites them (`rg "ADR-0037"`). Never renumber or reuse one; a deleted ADR leaves a gap. To pick the next number, scan **all** of `docs/adr/**` for the highest and add one.
+- **Keep the index current.** `docs/adr/index.html` summarises each ADR as it now reads. Update its entry whenever an ADR is rewritten or deleted.
+- **Folders are feature areas**, in kebab-case: `ai/`, `cookbooks/`, `groceries/`, `households/`, `imports/`, `offline/`, `realtime/`, `recipes/`, `releases/`, and `ui/`. Create an area folder lazily with its first ADR. File an ADR in the area it most belongs to. Its id stays findable regardless of folder.
 - **Locate an ADR by number, not path**: glob `docs/adr/**/NNNN-*.md`.
 
 ## Growth path
@@ -48,6 +52,8 @@ If the concept you need isn't in the glossary yet, that's a signal — either yo
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
 > _Contradicts ADR-0004 (first-writer-wins on replay conflicts) — but worth reopening because…_
+
+If the decision changes, rewrite the older ADR to reflect it.
 
 ## Retired: openspec
 
