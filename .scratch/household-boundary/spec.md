@@ -93,9 +93,9 @@ Every account is in exactly one household, and the household is the boundary.
   - Add on the Content page;
   - an explicit "Create 'x'" row in the recipe picker, with existing entries shown first as you type;
   - AI under the permissive strategies (Tags `freeform`, Cuisines `extend`);
-  - imports.
+  - imports, which add Tags (a Norish Recipe Archive also adds its Categories).
 
-  AI and imports match against the household's list (fold first, then the near-match in `packages/shared/src/lib/cuisine-resolver.ts`) before creating. Imports still keep an unmatched Category as a Tag, and a Norish Recipe Archive still carries its Categories over.
+  AI and imports match against the household's list (fold first, then the near-match in `packages/shared/src/lib/cuisine-resolver.ts`) before creating. Imports still keep an unmatched Category as a Tag. A Cuisine an import names is attached only where the household's list already has it, as today (ADR-0022).
 
 - **Keeping entries.**
   - An entry stays until a member deletes it. The unused-tag and unused-category sweeps (`deleteOrphanedTagsTx`, `deleteOrphanedCategoriesTx`) go.
@@ -116,7 +116,7 @@ Every account is in exactly one household, and the household is the boundary.
 - **Rows.**
   - `ingredients`, `ingredient_aliases` and `ingredient_junk_pile` carry `household_id`, with null meaning the seed.
   - A spelling's fold, and an Ingredient's name, are unique within a household and among the seed.
-  - A household cannot add a spelling the seed already holds.
+  - Where a household's own spelling and the seed's are the same, the household's wins for that household. A seed refresh never takes over or changes a household's own food (it finds an entry by id, else by the seeded Ingredient holding its name).
 - **Resolution** (`packages/shared-server/src/ingredients/resolver.ts`):
   - It reads the household's spellings and the seed's, never another household's.
   - A new food lands in the household that created it: the recipe's household for a recipe line, the household for a grocery, a recurring grocery or a Pantry Ingredient.

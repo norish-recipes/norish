@@ -8,7 +8,8 @@
 
 - [ ] **Columns:** `ingredients`, `ingredient_aliases` and `ingredient_junk_pile` get `household_id` (null means the seed).
   - A spelling's fold and an Ingredient's name are unique within a household and among the seed.
-  - A household spelling that the seed already holds is refused.
+  - Where a household's spelling and the seed's are the same, the household's wins for that household.
+  - The seed refresh (`packages/db/src/repositories/ingredient-seed.ts`) finds an entry by id, else by the seeded Ingredient holding its name, and never adopts or changes a household's food.
   - `ownerId` stays as "added by".
 - [ ] **Migration** splits every non-seed Ingredient used by more than one household into a copy per household. The minting household keeps the original id. A copy carries:
   - the spellings that household's rows use;

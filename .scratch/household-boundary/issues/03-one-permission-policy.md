@@ -16,6 +16,7 @@
 - [ ] **No admin bypass, and no orphan branch:**
   - `canAccessResource`, `buildOwnerPolicyCondition` (`packages/db/src/repositories/recipes.ts`), `assertRecipeAccess` / `recipeAccess` / `findRecipeForViewer`, `assertCookbookAccess`, the media session check and `config.tags` lose their `isServerAdmin` branch and their null-owner branch.
   - The Household level means `household_id` equals the reader's.
+- [ ] **The admin recipe export** (`?scope=instance` in `apps/web/app/(app)/export/recipes/route.ts`, ADR-0022) goes. An admin exports what they can view, like everyone else.
 - [ ] **Client selectors** (`packages/shared-react/src/reader/permission-selectors.ts`) mirror the server, and drop the `owner` fallback.
 - [ ] **The admin card** (`apps/web/features/admin/components/permissions/permission-policy-card.tsx`) offers Everyone and Household, and disables edit and delete levels wider than view. The ingredient policy select goes.
 - [ ] **Out-of-view references:** a meal plan entry for a recipe the household can't see shows only the recipe's title, on web and mobile. Cookbook members and favourites already follow the view condition.
