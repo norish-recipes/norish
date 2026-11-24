@@ -75,7 +75,7 @@ export function useProfileCache(): ProfileCache {
   const version = () =>
     Math.max(held()?.user.version ?? 1, queryClient.getQueryData(allergiesKey)?.version ?? 0);
   const sendVersion = async () => {
-    if (!held()) await queryClient.ensureQueryData(trpc.user.get.queryOptions());
+    if (!held()) await queryClient.query({ ...trpc.user.get.queryOptions(), staleTime: "static" });
 
     return version();
   };
