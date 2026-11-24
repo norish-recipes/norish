@@ -17,3 +17,8 @@
 Supersedes the spec's Lists line "small swipe actions (34 pt circles, 11 pt labels)": the recipe cards' swipe is the design.
 
 ## Comments
+### Decision before implementation (2026-11-24, gatekeeper; Mike can overrule)
+
+The implementer stopped on a missing decision: the recipe swipe's action (a 48 pt circle with its label under it, about 71 pt) does not fit a 64 pt Settings row or a 50 pt member row, and the swipe clips to the row's height. Chosen: the recipe list look unchanged, and every row of a Settings list whose rows can have actions is at least 76 pt tall (all rows of that list, so a list never mixes heights). The size is one variant of the shared swipe, so "no labels" (44 pt circles on the rows' present heights) stays a small change if Mike prefers it.
+
+Settled with it: the swipe moves to `src/components/swipe-actions.tsx` and `src/lib/swipe-reveal.ts`, each action carrying its icon, colour and whether the row stays open under a confirm; one ordering function in `row-actions.ts` (the red removing action last, Copy in the menu only) used by the swipe and the long-press menu; a Settings row's red action closes the row and asks, without the card's slide-away.
