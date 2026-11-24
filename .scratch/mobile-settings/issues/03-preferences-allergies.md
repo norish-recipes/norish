@@ -163,3 +163,11 @@ Known limits, not fixed (rare):
 - a `converted` event that never reaches a page leaves automatic conversion off there until it is reopened.
 
 Reject: a browser test for a manual conversion settling while a preference changes (the hook tests hold the interleaving; a browser test cannot time it). Reject again: `url` naming a path. The browser suites run on the final code. Docs and release notes come with ticket 06.
+
+### Closing fix outcome (2026-11-24)
+
+- B1: the `lastSend` queue is gone. Name, Avatar and preference writes now share one TanStack mutation scope (`profile-writes`, `reader/versioned-write.ts`) and read the version only when their turn comes. A waiting write shows its optimistic value and counts as saving at once. The four paths joined the transport's 20 s timed writes (`SCOPED_WRITES`), which is shorter than Settings' 30 s release. `queryClient.clear()` at sign-out drops a waiting write unsent. A failed version read is marked as not queued. Each hole has a test.
+- B2: a queued preference save records the profile version it was queued at (`usePreferencesUnconfirmed`). Automatic conversion waits while the shown preferences still hold that save at that version. Limit: the mutation cache is not persisted, so after a relaunch while still offline the queued choice is no longer known to be unconfirmed.
+- S4 skipped: since B3, `useFailedWrite` branches on the Queued signal to decide what to tell, so `invalidateUnlessPreserved` would test that signal twice.
+- S3 left apart on purpose: `mergePreferences` rereads only on a skipped version, because a preference reply carries the profile's next state. The allergy save rereads the profile on any newer version, because its reply leaves the profile's version behind.
+- S9: the fallback provider accepted any well-formed code and stored an unoffered one. It now uses the same `isOffered` check as the others. `isValidLocale` stays only in the device-storage effect, which runs before the options load.
