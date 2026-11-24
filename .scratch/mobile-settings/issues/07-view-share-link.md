@@ -4,7 +4,7 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The server keeps a new share's token encrypted (`@norish/config/crypto`, as `site-auth-tokens.ts` does) in a nullable column next to `token_hash`, with a migration. Shares made before have none.
 - [x] A query returns one share's link to whoever may manage that share today (the same check revoke uses), and to no one else. It is a query, so nothing about it is stored for Replay.
@@ -39,3 +39,5 @@ Sound per the Spec reviewer: who the query answers matches revoke (others get th
 
 - `getRecipeShareUrl` answers no link unless the share is active (the list's status rule) or when the kept token won't decrypt (nothing logged); mobile rereads the list on a null link. `copyLink` now fails through `useCopyToClipboard`'s one toast (it takes a promise); `shareLinkActions` is one branch per status.
 - Verify held: Next sends no `Cache-Control` on a dynamic route handler (`build/templates/app-route.js` sets it only for ISR) and iOS `NSURLCache` may keep GETs; the tRPC route's `responseMeta` now answers `no-store` on every response (the service worker is already NetworkOnly for `/api/`, nothing relies on HTTP caching). Route test added. All gates green; mobile lint at 11 warnings.
+
+Exit gates at `e66e5f721` (Haiku verifier): all seven 0, mobile lint 11. The fix commits are read once more in the closing review.

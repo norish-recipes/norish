@@ -8,7 +8,7 @@
 
 - [x] Site tokens: list, add (sheet), delete with a confirm, by swipe and long-press (web has no enable or disable).
 - [x] API keys: list (first six characters shown), create (sheet), the created key shown once with Copy, disable or enable (`toggleApiKey`), delete with a confirm.
-- [ ] Share links: list with recipe, Copy link, revoke, reactivate, delete, by swipe and long-press.
+- [x] Share links: list with recipe, Copy link (ticket 07: long-press only, links made from 0.28 on), revoke, reactivate, delete, by swipe and long-press.
 - [x] Empty states per the canvas.
 - [x] Gates green.
 
