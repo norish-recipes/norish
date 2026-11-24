@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Nie zapisano: najpierw zmieniono to gdzie indziej"
   },
+  "lateAnswer": {
+    "title": "Serwer odpowiedział z opóźnieniem: jednak się udało."
+  },
   "storageUnavailable": {
     "title": "Pamięć niedostępna",
     "description": "Norish nie mógł odczytać pęku kluczy tego iPhone'a.",

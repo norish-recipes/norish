@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Not saved: it changed elsewhere first"
   },
+  "lateAnswer": {
+    "title": "The server answered late: it went through after all."
+  },
   "storageUnavailable": {
     "title": "Storage unavailable",
     "description": "Norish couldn't read this iPhone's keychain.",

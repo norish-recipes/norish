@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "저장되지 않음: 다른 곳에서 먼저 변경되었습니다"
   },
+  "lateAnswer": {
+    "title": "서버가 늦게 응답했습니다: 결국 완료되었습니다."
+  },
   "storageUnavailable": {
     "title": "저장소를 사용할 수 없음",
     "description": "Norish가 이 iPhone의 키체인을 읽지 못했습니다.",

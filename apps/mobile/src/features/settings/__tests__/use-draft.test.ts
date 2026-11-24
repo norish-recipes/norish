@@ -7,7 +7,8 @@ import type { DraftWrite } from "../utils/draft-rules";
 vi.mock("@/lib/offline/offline-now", () => ({ isOfflineNow: () => false }));
 
 const { useDraft } = await import("../hooks/use-draft");
-const { listenForNoAnswer, SETTINGS_WRITE_TIMEOUT_MS } = await import("../utils/settings-write");
+const { listenForWriteNotices, SETTINGS_WRITE_TIMEOUT_MS } =
+  await import("../utils/settings-write");
 
 const NAME: DraftWrite<string> = {
   sent: (draft) => draft,
@@ -19,7 +20,7 @@ describe("a draft's save", () => {
 
   it("frees Save when its request goes unanswered, and sends a repeat once", async () => {
     vi.useFakeTimers();
-    const stopListening = listenForNoAnswer(vi.fn());
+    const stopListening = listenForWriteNotices(vi.fn());
     const send = vi.fn(() => new Promise<boolean>(() => {}));
     const { result } = renderHook(() => useDraft(NAME, "Ann", { offline: false }));
 

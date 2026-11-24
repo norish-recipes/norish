@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Не е запазено: първо е променено другаде"
   },
+  "lateAnswer": {
+    "title": "Сървърът отговори късно: все пак се получи."
+  },
   "storageUnavailable": {
     "title": "Хранилището не е налично",
     "description": "Norish не успя да прочете ключодържателя на този iPhone.",

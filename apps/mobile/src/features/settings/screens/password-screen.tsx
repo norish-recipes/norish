@@ -13,7 +13,7 @@ import { passwordChecks } from "@norish/shared/lib/auth/password";
 import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { refusalOf } from "../utils/refusal-of";
-import { DROPPED, settingsWrite } from "../utils/settings-write";
+import { DROPPED, settingsWrite, tellWentThroughLate } from "../utils/settings-write";
 
 /** The change password sheet, mounted per opening so a closed sheet keeps no password; it stays
  * open while the change is under way. */
@@ -36,6 +36,17 @@ export function PasswordScreen() {
     navigation.setOptions({ gestureEnabled: !sending });
   }, [navigation, sending]);
 
+  // Closes the sheet while it is in front; a change answered after the release says it went through.
+  const changed = (late: boolean) => {
+    if (!navigation.isFocused()) return;
+    if (late) tellWentThroughLate();
+    else
+      toast.show({
+        severity: "success",
+        title: text("settings.user.signInMethods.passwordChanged"),
+      });
+    router.back();
+  };
   const sendChange = settingsWrite(
     () =>
       authClient
@@ -47,21 +58,21 @@ export function PasswordScreen() {
             })
           )
         : undefined,
-    "password-change"
+    "password-change",
+    undefined,
+    (late) => {
+      if (late === null) changed(true);
+    }
   );
   const change = async () => {
     setSending(true);
     const refusal = await sendChange();
 
     setSending(false);
-    if (refusal === undefined || refusal === DROPPED || !navigation.isFocused()) return;
-    if (!refusal) {
-      toast.show({
-        severity: "success",
-        title: text("settings.user.signInMethods.passwordChanged"),
-      });
-      router.back();
-    } else if (refusal.code === "INVALID_PASSWORD") setWrongPassword(true);
+    if (refusal === undefined || refusal === DROPPED) return;
+    if (!refusal) return changed(false);
+    if (!navigation.isFocused()) return;
+    if (refusal.code === "INVALID_PASSWORD") setWrongPassword(true);
     else
       toast.show({
         severity: "danger",

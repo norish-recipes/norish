@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Ikke gemt: det blev ændret et andet sted først"
   },
+  "lateAnswer": {
+    "title": "Serveren svarede sent: det lykkedes alligevel."
+  },
   "storageUnavailable": {
     "title": "Lager utilgængeligt",
     "description": "Norish kunne ikke læse denne iPhones nøglering.",

@@ -4,7 +4,7 @@ import {
   DROPPED,
   guardRepeat,
   guardWrite,
-  listenForNoAnswer,
+  listenForWriteNotices,
   SETTINGS_WRITE_TIMEOUT_MS,
 } from "../utils/settings-write";
 
@@ -112,7 +112,7 @@ describe("an unanswered write", () => {
   it("is released after the timeout as not gone through, told, and frees its key", async () => {
     vi.useFakeTimers();
     const told = vi.fn();
-    const stopListening = listenForNoAnswer(told);
+    const stopListening = listenForWriteNotices(told);
     const requests: ReturnType<typeof deferred>[] = [];
     const send = vi.fn(() => {
       const request = deferred();

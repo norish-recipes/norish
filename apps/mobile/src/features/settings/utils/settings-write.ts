@@ -12,16 +12,21 @@ export const guardWrite =
 export const SETTINGS_WRITE_TIMEOUT_MS = 30_000;
 
 const NO_ANSWER = "common.errors.noAnswer";
-let tellNoAnswer: (messageId: string) => void = () => {};
 
-/** Who tells the reader a write went unanswered; hands back the undo. */
-export const listenForNoAnswer = (tell: (messageId: string) => void) => {
-  tellNoAnswer = tell;
+type Tell = (messageId: string, severity?: "danger" | "success") => void;
+let tellReader: Tell = () => {};
+
+/** Who tells the reader a write went unanswered, or went through after all; hands back the undo. */
+export const listenForWriteNotices = (tell: Tell) => {
+  tellReader = tell;
 
   return () => {
-    if (tellNoAnswer === tell) tellNoAnswer = () => {};
+    if (tellReader === tell) tellReader = () => {};
   };
 };
+
+/** Tells the reader a write released as unanswered went through after all. */
+export const tellWentThroughLate = () => tellReader("common.lateAnswer.title", "success");
 
 /** A call dropped as a repeat of the write in flight under its key: neither success nor failure. */
 export const DROPPED = Symbol("dropped");
@@ -45,7 +50,7 @@ export const guardRepeat =
     const released = new Promise<undefined>((resolve) => {
       timer = setTimeout(() => {
         isReleased = true;
-        tellNoAnswer(noAnswer);
+        tellReader(noAnswer);
         resolve(undefined);
       }, SETTINGS_WRITE_TIMEOUT_MS);
     });

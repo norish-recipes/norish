@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Ei tallennettu: sitä muutettiin ensin muualla"
   },
+  "lateAnswer": {
+    "title": "Palvelin vastasi myöhässä: se onnistui sittenkin."
+  },
   "storageUnavailable": {
     "title": "Tallennustila ei ole käytettävissä",
     "description": "Norish ei voinut lukea tämän iPhonen avainnippua.",

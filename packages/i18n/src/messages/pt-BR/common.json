@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Não salvo: foi alterado antes em outro lugar"
   },
+  "lateAnswer": {
+    "title": "O servidor respondeu tarde: no fim deu certo."
+  },
   "storageUnavailable": {
     "title": "Armazenamento indisponível",
     "description": "O Norish não conseguiu ler o chaveiro deste iPhone.",

@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Nicht gespeichert: Es wurde zuerst anderswo geändert"
   },
+  "lateAnswer": {
+    "title": "Der Server hat spät geantwortet: Es hat doch geklappt."
+  },
   "storageUnavailable": {
     "title": "Speicher nicht verfügbar",
     "description": "Norish konnte den Schlüsselbund dieses iPhones nicht lesen.",

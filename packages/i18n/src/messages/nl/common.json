@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Niet opgeslagen: het is eerst ergens anders gewijzigd"
   },
+  "lateAnswer": {
+    "title": "De server antwoordde laat: het is toch gelukt."
+  },
   "storageUnavailable": {
     "title": "Opslag niet beschikbaar",
     "description": "Norish kon de sleutelhanger van deze iPhone niet lezen.",

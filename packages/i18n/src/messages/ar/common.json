@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "لم يُحفظ: تم تغييره في مكان آخر أولاً"
   },
+  "lateAnswer": {
+    "title": "ردّ الخادم متأخرًا: تمّت العملية في النهاية."
+  },
   "storageUnavailable": {
     "title": "التخزين غير متاح",
     "description": "تعذّر على Norish قراءة سلسلة مفاتيح هذا الـ iPhone.",

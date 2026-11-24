@@ -16,7 +16,7 @@ import {
 
 import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
-import { settingsWrite } from "../utils/settings-write";
+import { settingsWrite, tellWentThroughLate } from "../utils/settings-write";
 
 /** The create key sheet. Once made, the key is shown here only, with Copy; from Create until the
  * reader saved it the sheet cannot be closed, and closing it drops the key for good. */
@@ -36,22 +36,27 @@ export function ApiKeyNewScreen() {
     navigation.setOptions({ gestureEnabled: !locked });
   }, [navigation, locked]);
 
-  // A repeat press is dropped; a key answered after the release is dropped too, as the reader was
-  // told to check the list.
+  // The key is shown while this sheet is in front, one answered after the release saying it went
+  // through; a sheet gone forgets it.
+  const made = (key: string, late: boolean) => {
+    if (!navigation.isFocused()) return forgetCreatedKey();
+    if (late) tellWentThroughLate();
+    setCreated(key);
+  };
   const sendCreate = settingsWrite(
     () => createApiKey(apiKeyName(name)),
     "api-key-create",
     "settings.user.apiKeys.createNoAnswer",
-    (late) => late && forgetCreatedKey()
+    (late) => {
+      if (typeof late === "string") made(late, true);
+    }
   );
   const create = async () => {
     setSending(true);
     const key = await sendCreate();
 
     setSending(false);
-    if (typeof key !== "string") return;
-    if (navigation.isFocused()) setCreated(key);
-    else forgetCreatedKey();
+    if (typeof key === "string") made(key, false);
   };
 
   const saved = () => {

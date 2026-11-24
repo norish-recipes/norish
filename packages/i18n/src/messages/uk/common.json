@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Не збережено: спершу змінено деінде"
   },
+  "lateAnswer": {
+    "title": "Сервер відповів із запізненням: усе-таки вдалося."
+  },
   "storageUnavailable": {
     "title": "Сховище недоступне",
     "description": "Norish не вдалося прочитати зв'язку ключів цього iPhone.",

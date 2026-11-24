@@ -10,7 +10,7 @@ import { ChoiceRow } from "../components/choice-row";
 import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { SettingsGroup } from "../components/settings-group";
-import { settingsWrite } from "../utils/settings-write";
+import { settingsWrite, tellWentThroughLate } from "../utils/settings-write";
 
 const TYPES = ["header", "cookie"] as const;
 
@@ -34,16 +34,26 @@ export function TokenNewScreen() {
     navigation.setOptions({ gestureEnabled: !sending });
   }, [navigation, sending]);
 
+  // Closes the sheet while it is in front; an add answered after the release says it went through.
+  const added = (late: boolean) => {
+    if (!navigation.isFocused()) return;
+    if (late) tellWentThroughLate();
+    router.back();
+  };
   const sendCreate = settingsWrite(
     () => createToken({ domain, account, name, value, type }),
-    "token-create"
+    "token-create",
+    undefined,
+    (late) => {
+      if (late === true) added(true);
+    }
   );
   const add = async () => {
     setSending(true);
-    const added = await sendCreate();
+    const answer = await sendCreate();
 
     setSending(false);
-    if (added === true && navigation.isFocused()) router.back();
+    if (answer === true) added(false);
   };
 
   return (

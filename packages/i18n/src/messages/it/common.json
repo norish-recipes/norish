@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Non salvato: è stato modificato prima altrove"
   },
+  "lateAnswer": {
+    "title": "Il server ha risposto in ritardo: alla fine è andato a buon fine."
+  },
   "storageUnavailable": {
     "title": "Archiviazione non disponibile",
     "description": "Norish non è riuscito a leggere il portachiavi di questo iPhone.",

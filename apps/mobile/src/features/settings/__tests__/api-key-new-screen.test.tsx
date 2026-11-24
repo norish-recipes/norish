@@ -8,6 +8,7 @@ const state = vi.hoisted(() => ({
   forget: vi.fn(),
   back: vi.fn(),
   setOptions: vi.fn(),
+  focused: true,
 }));
 
 vi.mock("react-native", async () => {
@@ -44,7 +45,7 @@ vi.mock("react-intl", () => ({
 }));
 vi.mock("expo-router", () => ({
   useRouter: () => ({ back: state.back }),
-  useNavigation: () => ({ setOptions: state.setOptions, isFocused: () => true }),
+  useNavigation: () => ({ setOptions: state.setOptions, isFocused: () => state.focused }),
 }));
 vi.mock("@norish/shared-react/offline/react", () => ({
   useConnectivity: () => ({ isOffline: false }),
@@ -59,13 +60,17 @@ vi.mock("@norish/shared-react/reader", () => ({
 }));
 
 const { ApiKeyNewScreen } = await import("../screens/api-key-new-screen");
-const { listenForNoAnswer, SETTINGS_WRITE_TIMEOUT_MS } = await import("../utils/settings-write");
+const { listenForWriteNotices, SETTINGS_WRITE_TIMEOUT_MS } =
+  await import("../utils/settings-write");
 
 const close = () => screen.getByTestId("header-close") as HTMLButtonElement;
 const swipeable = () => state.setOptions.mock.lastCall?.[0].gestureEnabled;
 
 describe("the create key sheet", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    state.focused = true;
+  });
   afterEach(() => vi.useRealTimers());
 
   it("cannot be dismissed from Create until the key is saved, then forgets the key", async () => {
@@ -96,10 +101,9 @@ describe("the create key sheet", () => {
     expect(close().disabled).toBe(false);
   });
 
-  it("unlocks when the create goes unanswered, says the key may exist, and drops a late key", async () => {
+  const unanswered = async (told: () => void) => {
     vi.useFakeTimers();
-    const told = vi.fn();
-    const stopListening = listenForNoAnswer(told);
+    const stopListening = listenForWriteNotices(told);
 
     render(<ApiKeyNewScreen />);
     act(() => fireEvent.click(screen.getByTestId("header-confirm")));
@@ -110,10 +114,43 @@ describe("the create key sheet", () => {
     expect(swipeable()).toBe(true);
     expect(close().disabled).toBe(false);
 
+    return stopListening;
+  };
+
+  it("shows a key answered after the release while it is in front, saying it went through", async () => {
+    const told = vi.fn();
+    const stopListening = await unanswered(told);
+
+    await act(async () => state.settle("sk-late"));
+    expect(screen.getByTestId("settings-api-key-new-value").textContent).toBe("sk-late");
+    expect(told).toHaveBeenLastCalledWith("common.lateAnswer.title", "success");
+    expect(swipeable()).toBe(false);
+    expect(close().disabled).toBe(true);
+    expect(state.forget).not.toHaveBeenCalled();
+    stopListening();
+  });
+
+  it("forgets a key answered after the release once the sheet is gone", async () => {
+    const told = vi.fn();
+    const stopListening = await unanswered(told);
+
+    state.focused = false;
     await act(async () => state.settle("sk-late"));
     expect(screen.queryByTestId("settings-api-key-new-value")).toBeNull();
     expect(state.back).not.toHaveBeenCalled();
     expect(state.forget).toHaveBeenCalledOnce();
+    expect(told).toHaveBeenCalledOnce();
+    stopListening();
+  });
+
+  it("shows nothing more for a create that failed after the release", async () => {
+    const told = vi.fn();
+    const stopListening = await unanswered(told);
+
+    await act(async () => state.settle(null));
+    expect(screen.queryByTestId("settings-api-key-new-value")).toBeNull();
+    expect(state.forget).not.toHaveBeenCalled();
+    expect(told).toHaveBeenCalledOnce();
     stopListening();
   });
 });

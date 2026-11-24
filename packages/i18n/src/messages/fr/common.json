@@ -295,6 +295,9 @@
   "changedElsewhere": {
     "title": "Non enregistré : modifié ailleurs entre-temps"
   },
+  "lateAnswer": {
+    "title": "Le serveur a répondu tard : c'est passé quand même."
+  },
   "storageUnavailable": {
     "title": "Stockage indisponible",
     "description": "Norish n'a pas pu lire le trousseau de cet iPhone.",
