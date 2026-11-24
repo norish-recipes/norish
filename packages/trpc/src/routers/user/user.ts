@@ -189,15 +189,13 @@ const updateName = authedProcedure
       return { success: true, stale: true };
     }
 
-    const updatedUser = await getUserById(ctx.user.id);
-
-    if (!updatedUser) {
+    if (!result.value) {
       return { success: false, error: "User not found" };
     }
 
     return {
       success: true,
-      user: updatedUser,
+      user: result.value,
     };
   });
 
@@ -272,9 +270,7 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
     predecessorFilename ? [filename, predecessorFilename] : [filename]
   );
 
-  const updatedUser = await getUserById(ctx.user.id);
-
-  if (!updatedUser) {
+  if (!result.value) {
     return { success: false, error: "User not found" };
   }
 
@@ -284,7 +280,7 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
 
   return {
     success: true,
-    user: updatedUser,
+    user: result.value,
   };
 });
 
@@ -310,9 +306,7 @@ const deleteAvatar = authedProcedure
     // Delete keeps nothing — no payload should render a removed picture
     await sweepUserAvatars(ctx.user.id);
 
-    const updatedUser = await getUserById(ctx.user.id);
-
-    if (!updatedUser) {
+    if (!clearResult.value) {
       return { success: false, error: "User not found" };
     }
 
@@ -322,7 +316,7 @@ const deleteAvatar = authedProcedure
 
     return {
       success: true,
-      user: updatedUser,
+      user: clearResult.value,
     };
   });
 

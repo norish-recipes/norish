@@ -88,6 +88,13 @@ function createCaller(household: Context["household"] = HOUSEHOLD) {
   return userProcedures.createCaller(ctx);
 }
 
+/** An update's outcome as the repository answers it: the row that update committed. */
+const committed = (image: string | null) => ({
+  stale: false,
+  applied: true,
+  value: { id: "user-1", email: "user@example.com", name: "User One", image, version: 4 },
+});
+
 function buildUploadInput(version = 3) {
   const formData = new FormData();
 
@@ -116,10 +123,12 @@ describe("avatar caching contract (ADR-0021)", () => {
 
   describe("uploadAvatar", () => {
     it("mints a versioned filename and stores it as the user's image", async () => {
-      mockDb.getUserById
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-100.png", version: 3 })
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-1755000000000.png" });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.getUserById.mockResolvedValueOnce({
+        id: "user-1",
+        image: "/avatars/user-1-100.png",
+        version: 3,
+      });
+      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
 
       const result = await createCaller().uploadAvatar(buildUploadInput());
 
@@ -137,7 +146,7 @@ describe("avatar caching contract (ADR-0021)", () => {
 
     it("mints a different filename on each upload", async () => {
       mockDb.getUserById.mockResolvedValue({ id: "user-1", image: null, version: 3 });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
 
       const nowSpy = vi.spyOn(Date, "now");
 
@@ -153,10 +162,12 @@ describe("avatar caching contract (ADR-0021)", () => {
     });
 
     it("retains the immediate predecessor and sweeps older files after a successful update", async () => {
-      mockDb.getUserById
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-100.png", version: 3 })
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-1755000000000.png" });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.getUserById.mockResolvedValueOnce({
+        id: "user-1",
+        image: "/avatars/user-1-100.png",
+        version: 3,
+      });
+      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
 
       await createCaller().uploadAvatar(buildUploadInput());
 
@@ -167,14 +178,12 @@ describe("avatar caching contract (ADR-0021)", () => {
     });
 
     it("keeps only the new file when the user had no previous /avatars/ image", async () => {
-      mockDb.getUserById
-        .mockResolvedValueOnce({
-          id: "user-1",
-          image: "https://oauth.example/photo.jpg",
-          version: 3,
-        })
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-1755000000000.png" });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.getUserById.mockResolvedValueOnce({
+        id: "user-1",
+        image: "https://oauth.example/photo.jpg",
+        version: 3,
+      });
+      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
 
       await createCaller().uploadAvatar(buildUploadInput());
 
@@ -184,10 +193,8 @@ describe("avatar caching contract (ADR-0021)", () => {
     });
 
     it("emits memberProfileUpdated to the household after a successful upload", async () => {
-      mockDb.getUserById
-        .mockResolvedValueOnce({ id: "user-1", image: null, version: 3 })
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-1755000000000.png" });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.getUserById.mockResolvedValueOnce({ id: "user-1", image: null, version: 3 });
+      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
 
       await createCaller().uploadAvatar(buildUploadInput());
 
@@ -202,10 +209,8 @@ describe("avatar caching contract (ADR-0021)", () => {
     });
 
     it("skips the emit when the user has no household", async () => {
-      mockDb.getUserById
-        .mockResolvedValueOnce({ id: "user-1", image: null, version: 3 })
-        .mockResolvedValueOnce({ id: "user-1", image: "/avatars/user-1-1755000000000.png" });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.getUserById.mockResolvedValueOnce({ id: "user-1", image: null, version: 3 });
+      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
 
       const result = await createCaller(null).uploadAvatar(buildUploadInput());
 
@@ -234,8 +239,7 @@ describe("avatar caching contract (ADR-0021)", () => {
 
   describe("deleteAvatar", () => {
     it("sweeps every avatar file and emits memberProfileUpdated with a null image", async () => {
-      mockDb.clearUserAvatar.mockResolvedValue({ stale: false });
-      mockDb.getUserById.mockResolvedValue({ id: "user-1", image: null });
+      mockDb.clearUserAvatar.mockResolvedValue(committed(null));
 
       const result = await createCaller().deleteAvatar({ version: 3 });
 
@@ -262,9 +266,10 @@ describe("avatar caching contract (ADR-0021)", () => {
     });
   });
 
-  // A reply's preferences would be written over a preference save still in flight.
+  // A reply's preferences would be written over a preference save still in flight; a version read
+  // after the write would stamp a language saved elsewhere meanwhile as seen.
   it.each(["updateName", "uploadAvatar", "deleteAvatar"] as const)(
-    "%s answers the user without preferences",
+    "%s answers the user its own update committed, without preferences",
     async (write) => {
       const user = {
         id: "user-1",
@@ -273,12 +278,17 @@ describe("avatar caching contract (ADR-0021)", () => {
         image: null,
         version: 4,
       };
+      const committed = { stale: false, applied: true, value: user };
 
-      mockDb.getUserById.mockResolvedValue(user);
-      mockDb.getUserProfile.mockResolvedValue({ ...user, preferences: { locale: "en" } });
-      mockDb.updateUserName.mockResolvedValue({ stale: false });
-      mockDb.updateUserAvatar.mockResolvedValue({ stale: false });
-      mockDb.clearUserAvatar.mockResolvedValue({ stale: false });
+      mockDb.getUserById.mockResolvedValue({ ...user, version: 5 });
+      mockDb.getUserProfile.mockResolvedValue({
+        ...user,
+        version: 5,
+        preferences: { locale: "en" },
+      });
+      mockDb.updateUserName.mockResolvedValue(committed);
+      mockDb.updateUserAvatar.mockResolvedValue(committed);
+      mockDb.clearUserAvatar.mockResolvedValue(committed);
       const caller = createCaller();
       const result = await {
         updateName: () => caller.updateName({ name: "One", version: 3 }),

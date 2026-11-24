@@ -196,7 +196,9 @@ describe("versioned repository behavior", () => {
 
     expect(initialUser?.version).toBe(1);
 
-    await updateUserName(testUserId, "Updated Test User");
+    const renamed = await updateUserName(testUserId, "Updated Test User");
+
+    expect(renamed.value).toMatchObject({ name: "Updated Test User", version: 2 });
 
     const updatedUser = await getUserById(testUserId);
 

@@ -171,6 +171,15 @@ const profileColumns = {
   version: true,
 } as const;
 
+/** The profile columns as an update returns them: what that update committed. */
+const profileReturning = {
+  id: users.id,
+  email: users.email,
+  name: users.name,
+  image: users.image,
+  version: users.version,
+};
+
 function readProfile(
   user: Pick<typeof users.$inferSelect, keyof typeof profileColumns>
 ): VersionedUser {
@@ -275,7 +284,7 @@ export async function updateUserAvatar(
   userId: string,
   protectedPath: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<VersionedUser | null>> {
   const encryptedImage = encrypt(protectedPath);
   const whereConditions = [eq(users.id, userId)];
 
@@ -283,17 +292,17 @@ export async function updateUserAvatar(
     whereConditions.push(eq(users.version, version));
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(users)
     .set({ image: encryptedImage, version: sql`${users.version} + 1` })
     .where(and(...whereConditions))
-    .returning({ id: users.id });
+    .returning(profileReturning);
 
-  if (updated.length === 0 && version) {
+  if (!updated && version) {
     return staleOutcome();
   }
 
-  return appliedOutcome(undefined);
+  return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
 export async function getUserAvatarPath(userId: string): Promise<string | null> {
@@ -330,24 +339,24 @@ export async function getAllUserAvatars(): Promise<
 export async function clearUserAvatar(
   userId: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<VersionedUser | null>> {
   const whereConditions = [eq(users.id, userId)];
 
   if (version) {
     whereConditions.push(eq(users.version, version));
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(users)
     .set({ image: null, version: sql`${users.version} + 1` })
     .where(and(...whereConditions))
-    .returning({ id: users.id });
+    .returning(profileReturning);
 
-  if (updated.length === 0 && version) {
+  if (!updated && version) {
     return staleOutcome();
   }
 
-  return appliedOutcome(undefined);
+  return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
 /** The user's Sign-in Methods: one account row per provider, password included. */
@@ -397,7 +406,7 @@ export async function updateUserName(
   userId: string,
   name: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<VersionedUser | null>> {
   const encryptedName = encrypt(name);
   const whereConditions = [eq(users.id, userId)];
 
@@ -405,17 +414,17 @@ export async function updateUserName(
     whereConditions.push(eq(users.version, version));
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(users)
     .set({ name: encryptedName, version: sql`${users.version} + 1` })
     .where(and(...whereConditions))
-    .returning({ id: users.id });
+    .returning(profileReturning);
 
-  if (updated.length === 0 && version) {
+  if (!updated && version) {
     return staleOutcome();
   }
 
-  return appliedOutcome(undefined);
+  return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
 export async function deleteUser(userId: string): Promise<void> {
