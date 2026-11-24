@@ -145,6 +145,7 @@ describe("the Account's writes", () => {
         );
         expect(queryClient.getQueryState(USER_KEY)?.isInvalidated).toBe(!queued);
         expect(adapter.showError).toHaveBeenCalledTimes(queued ? 0 : 1);
+        expect(adapter.toast.show).not.toHaveBeenCalled();
       }
     );
 
@@ -585,7 +586,7 @@ describe("the Account's writes", () => {
       ["a rename", "user.updateName"],
       ["an Avatar upload", "user.uploadAvatar"],
       ["an Avatar delete", "user.deleteAvatar"],
-    ] as const)("shows no failure for %s the Outbox queued", async (_write, path) => {
+    ] as const)("says %s the Outbox queued waits for the connection", async (_write, path) => {
       const result = render(() => useProfileMutations());
       const file = new File(["x"], "a.png", { type: "image/png" });
 
@@ -601,6 +602,11 @@ describe("the Account's writes", () => {
 
       await act(async () => call.deferred.reject(new TypeError("Network request failed")));
 
+      expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
+        severity: "warning",
+        title: "common.queuedOffline.title",
+        description: "common.queuedOffline.description",
+      });
       expect(adapter.showError).not.toHaveBeenCalled();
       expect(profile()).toEqual(PROFILE);
     });

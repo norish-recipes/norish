@@ -12,20 +12,25 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 import type { WriteResult } from "../offline/settled";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
 import { accepted } from "../offline/settled";
-import { showRefusal, usePlatform } from "../platform";
+import { showQueued, showRefusal, usePlatform } from "../platform";
 import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
 import { projectedMutation } from "../trpc/projected-mutation";
 import { dropAndLeave, runSessionEnd } from "./session-end";
 import { useProfileCache, useProfileQuery } from "./use-profile";
 
-/** A failed write's `onError`: reread the profile and tell the reader; a write the Outbox queued did not fail. */
+/** A failed write's `onError`: rereads the profile and tells the reader. One the Outbox queued
+ * is said to wait for the connection; a write whose screen shows it queued skips this. */
 export function useFailedWrite() {
-  const { showError } = usePlatform();
+  const { showError, toast } = usePlatform();
   const { invalidate } = useProfileCache();
 
   return (context: string) => (error: unknown) => {
-    if (shouldPreserveOptimisticUpdate(error)) return;
+    if (shouldPreserveOptimisticUpdate(error)) {
+      showQueued(toast);
+
+      return;
+    }
     void invalidate();
     showError(error, context);
   };

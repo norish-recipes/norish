@@ -134,6 +134,30 @@ describe("the Account's API keys", () => {
     expect(profile()?.apiKeys).toEqual([{ ...PROFILE.apiKeys[0], id: "k2", enabled: false }]);
   });
 
+  it.each(["user.apiKeys.delete", "user.apiKeys.toggle"])(
+    "say %s the Outbox queued waits for the connection, since nothing shows it",
+    async (path) => {
+      const result = render(() => useApiKeyMutations());
+
+      act(() => {
+        void (path === "user.apiKeys.delete"
+          ? result.current.deleteApiKey("k1")
+          : result.current.toggleApiKey("k1", false));
+      });
+      const call = await sentCall(path);
+
+      await act(async () => call.deferred.reject(new TypeError("Network request failed")));
+
+      expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
+        severity: "warning",
+        title: "common.queuedOffline.title",
+        description: "common.queuedOffline.description",
+      });
+      expect(adapter.showError).not.toHaveBeenCalled();
+      expect(profile()).toEqual(PROFILE);
+    }
+  );
+
   it("resolve a delete and a toggle once the server answered, false when they failed", async () => {
     const result = render(() => useApiKeyMutations());
     let deleted: Promise<boolean> | undefined;
