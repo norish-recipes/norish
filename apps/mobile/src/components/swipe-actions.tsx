@@ -100,7 +100,6 @@ const LAYOUTS = {
     step: LIST_STEP,
     slot: "flex-1 justify-center",
     button: "items-center justify-center gap-[7px]",
-    circle: "size-12",
     circleSize: 48,
     circleLeft: (LIST_STEP + 48) / 2,
     icon: 20,
@@ -114,7 +113,6 @@ const LAYOUTS = {
     step: ROW_STEP,
     slot: "flex-1 justify-center",
     button: "items-center justify-center gap-[3px]",
-    circle: "size-[30px]",
     circleSize: 30,
     circleLeft: (ROW_STEP + 30) / 2,
     icon: 14,
@@ -129,7 +127,6 @@ const LAYOUTS = {
     panel: "items-center justify-center gap-[18px] pl-1",
     slot: "w-[72px]",
     button: "items-center gap-1.5",
-    circle: "size-11",
     circleSize: 44,
     circleLeft: 62,
     icon: 19,
@@ -506,10 +503,14 @@ function ActionButton({
         onPress={onPress}
       >
         <Animated.View
-          className={`flex-row items-center rounded-full ${layout.circle} ${action.ground}`}
+          className={`flex-row items-center rounded-full ${action.ground}`}
           style={[
             CIRCLE_SHADOW,
-            { paddingLeft: (layout.circleSize - layout.icon) / 2 },
+            {
+              width: layout.circleSize,
+              height: layout.circleSize,
+              paddingLeft: (layout.circleSize - layout.icon) / 2,
+            },
             outermost ? capsule : null,
           ]}
         >
