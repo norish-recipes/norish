@@ -57,6 +57,7 @@ function procedure(path: string[]) {
     // Subscribes to nothing: a test mocks `useSubscription` and delivers through its `onData`.
     subscriptionOptions: (_input: unknown, options: object = {}) => ({
       ...options,
+      path: name,
       subscribe: () => ({ unsubscribe: () => undefined }),
     }),
     mutationKey: () => [path],

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MEASUREMENT_SYSTEM_CHOICES } from "@norish/shared/contracts/zod/user";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 
-import { emitTrackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { emitTrackedEventOn } from "../../../__tests__/realtime/tracked-event";
 import {
   answerCall,
   answerRead,
@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
-// The page's one subscription: the failed recipe events.
+// The page's subscriptions: the failed and converted recipe events.
 const useSubscriptionMock = vi.hoisted(() => vi.fn((_options: unknown) => ({ reset: () => {} })));
 
 vi.mock("@trpc/tanstack-react-query", async () => ({
@@ -90,6 +90,15 @@ function renderOn<T>(hook: () => T, recipe: object = metricRecipe()) {
   const page = () => state!;
 
   return { queryClient, page, ...renderHook(hook, { wrapper }) };
+}
+
+/** The server's settlement of a conversion asked on `version`: the recipe as it now is. */
+function converted(
+  recipe: ReturnType<typeof metricRecipe>,
+  conversion: { target: string; withAI: boolean; version: number },
+  stale = false
+) {
+  emitTrackedEventOn(useSubscriptionMock, "recipes.onConverted", { recipe, conversion, stale });
 }
 
 /** A Preferences save in flight; the returned function settles it, `ok` or failed. */
@@ -205,11 +214,12 @@ describe("useAutoConversion", () => {
           (choice) => choice.system === system && !choice.withAI
         );
 
+        const applied = metricRecipe(["metric", "us"], system, index + 2);
+
         act(() => result.current.pick.convertTo(option!));
         await answerCall("recipes.convertMeasurements", { success: true }, index);
-        act(() =>
-          queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], system, index + 2))
-        );
+        act(() => queryClient.setQueryData(RECIPE_KEY, applied));
+        converted(applied, { target: system, withAI: false, version: index + 1 });
       };
       const settle = preferenceSave(queryClient);
 
@@ -248,8 +258,16 @@ describe("useAutoConversion", () => {
         await answerCall("recipes.convertMeasurements", { success: true });
         // Refused, the server announces the failure; stale, someone else's edit moved the recipe on.
         if (outcome === "refused")
-          emitTrackedEvent(useSubscriptionMock, { recipeId: "r1", reason: "Conversion failed" });
-        else act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric"], "metric", 2)));
+          emitTrackedEventOn(useSubscriptionMock, "recipes.onFailed", {
+            recipeId: "r1",
+            reason: "Conversion failed",
+          });
+        else {
+          const edited = metricRecipe(["metric"], "metric", 2);
+
+          act(() => queryClient.setQueryData(RECIPE_KEY, edited));
+          converted(edited, { target: "us", withAI: false, version: 1 }, true);
+        }
       }
       await settle(true);
       rerender();
@@ -260,6 +278,38 @@ describe("useAutoConversion", () => {
       expect(page().conversion).toMatchObject({ target: "us" });
     }
   );
+
+  it("credits a manual rewrite only with its own result, not with a newer recipe", async () => {
+    mocks.measurementSystem = "us";
+    mocks.isAIEnabled = true;
+    const { page, rerender, queryClient, result } = renderOn(
+      () => {
+        useAutoConversion();
+
+        return useSystemConversion();
+      },
+      { ...metricRecipe(["metric", "us"], "us"), originalSystem: "metric" }
+    );
+    const settle = preferenceSave(queryClient);
+
+    mocks.measurementSystem = "metric";
+    rerender();
+    act(() => result.current.convertTo(result.current.options.find((option) => option.withAI)!));
+    await answerCall("recipes.convertMeasurements", { success: true });
+    // Someone renames the recipe meanwhile, so the rewrite finds it edited and changes nothing.
+    const renamed = { ...metricRecipe(["metric", "us"], "us", 2), originalSystem: "metric" };
+
+    act(() => queryClient.setQueryData(RECIPE_KEY, renamed));
+    converted(renamed, { target: "us", withAI: true, version: 1 }, true);
+    await settle(true);
+    rerender();
+
+    expect(page().manualConversion).toBeNull();
+    expect((await sentCall("recipes.convertMeasurements", 1)).input).toMatchObject({
+      targetSystem: "metric",
+      withAI: false,
+    });
+  });
 
   it("waits for the server to confirm a manual switch that already shows optimistically", async () => {
     mocks.measurementSystem = "metric";
@@ -285,8 +335,11 @@ describe("useAutoConversion", () => {
     expect(page().conversion).toBeNull();
     expect(page().manualConversion).toMatchObject({ target: "us" });
 
-    // The server's recipe, at the next version, shows the pick: it stands.
-    act(() => queryClient.setQueryData(RECIPE_KEY, metricRecipe(["metric", "us"], "us", 2)));
+    // The server applied the pick: it stands.
+    const applied = metricRecipe(["metric", "us"], "us", 2);
+
+    act(() => queryClient.setQueryData(RECIPE_KEY, applied));
+    converted(applied, { target: "us", withAI: false, version: 1 });
     rerender();
 
     expect(page().manualConversion).toBeNull();

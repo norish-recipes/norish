@@ -41,3 +41,12 @@ export function emitTrackedEvent(useSubscriptionMock: Mock, payload: unknown) {
 
   act(() => onData(trackedEvent(payload)));
 }
+
+/** Delivers one event through the last subscription to `path` (as `recipes.onConverted`), if any. */
+export function emitTrackedEventOn(useSubscriptionMock: Mock, path: string, payload: unknown) {
+  const options = useSubscriptionMock.mock.calls
+    .map(([call]) => call as { path?: string; onData: (data: unknown) => void })
+    .findLast((call) => call.path === path);
+
+  if (options) act(() => options.onData(trackedEvent(payload)));
+}

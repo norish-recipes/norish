@@ -94,7 +94,7 @@ export function useSystemConversion(): SystemConversion {
 }
 
 /** Converts once per recipe and confirmed choice (Off included), on the server's copy, with AI only
- * for a missing copy; a pick by hand counts as acting on the choice confirmed next, so it stands. */
+ * for a missing copy; a pick by hand the server applied counts as acting on the next choice. */
 export function useAutoConversion() {
   const saving = usePreferencesSaving();
   const recipeId = useRecipePageStore((state) => state.recipeId);
@@ -105,9 +105,30 @@ export function useAutoConversion() {
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);
   const doneForRef = useRef<string | null>(null);
+  // Whether the pick by hand that just ended was the server's own result, not a stale one.
+  const confirmedRef = useRef(false);
   const store = useRecipePageStoreApi();
   const manual = useRecipePageStore((state) => state.manualConversion);
   const trpc = useTRPC();
+
+  // A pick by hand is settled by its own conversion's result alone.
+  useRealtimeSubscription<PayloadOf<RecipesRealtime, "converted">>(trpc.recipes.onConverted, {
+    onEvent: ({ recipe: settled, conversion, stale }) => {
+      const page = store.getState();
+      const asked = page.manualConversion;
+
+      if (
+        settled.id !== recipeId ||
+        !asked ||
+        asked.target !== conversion.target ||
+        asked.withAI !== conversion.withAI ||
+        asked.version !== conversion.version
+      )
+        return;
+      confirmedRef.current = !stale;
+      page.endManualConversion();
+    },
+  });
 
   // A failed conversion is announced, not answered: it ends the one on its way.
   useRealtimeSubscription<PayloadOf<RecipesRealtime, "failed">>(trpc.recipes.onFailed, {
@@ -124,15 +145,13 @@ export function useAutoConversion() {
     const target = measurementSystemTarget(choice);
     const doneFor = `${recipe.id}:${choice}`;
 
-    // A pick by hand stands once the server's recipe, newer than it, shows it.
-    if (manual) {
-      if (recipe.version <= manual.version) return;
-      store.getState().endManualConversion();
-      if (recipe.systemUsed === manual.target) {
-        doneForRef.current = doneFor;
+    // A pick by hand the server applied stands; one it found stale does not.
+    if (manual) return;
+    if (confirmedRef.current) {
+      confirmedRef.current = false;
+      doneForRef.current = doneFor;
 
-        return;
-      }
+      return;
     }
     if (doneForRef.current === doneFor) return;
     if (!target) {
