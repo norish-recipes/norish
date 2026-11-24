@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { useIsMutating } from "@tanstack/react-query";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import {
@@ -11,10 +10,10 @@ import {
   ownerAllows,
   useHiddenItemVisibility,
   usePermissions,
+  usePreferencesSaving,
   useProfileQuery,
   useRecipePermissions,
 } from "../reader";
-import { useTRPC } from "../trpc";
 import { useRecipePageStore } from "./recipe-page-store";
 import { useLoadedPageRecipe, useRecipeConversion } from "./use-recipe-page";
 import { useRecipeQuery } from "./use-recipe-query";
@@ -94,8 +93,7 @@ export function useSystemConversion(): SystemConversion {
  * may, once the server's copy is in (a cached one may be stale); with AI writes only a missing copy.
  * A choice counts once the server confirmed it, Off included, so a pick by hand after it stands. */
 export function useAutoConversion() {
-  const trpc = useTRPC();
-  const saving = useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
+  const saving = usePreferencesSaving();
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);
   const { convertingTo, startConversion } = useRecipeConversion();

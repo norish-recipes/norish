@@ -82,6 +82,13 @@ export function useProfileMutations() {
   };
 }
 
+/** Whether a Preferences save is in flight; until it settles, its choices are unconfirmed. */
+export function usePreferencesSaving() {
+  const trpc = useTRPC();
+
+  return useIsMutating({ mutationKey: trpc.user.updatePreferences.mutationKey() }) > 0;
+}
+
 /** The Reader's account-wide Preferences, changed optimistically. */
 export function usePreferencesMutation() {
   const trpc = useTRPC();
@@ -90,7 +97,7 @@ export function usePreferencesMutation() {
   const failed = useFailedWrite();
   const refuseStale = useStaleRefusal();
   const mutationKey = trpc.user.updatePreferences.mutationKey();
-  const saving = useIsMutating({ mutationKey }) > 0;
+  const saving = usePreferencesSaving();
 
   const { mutateAsync } = useMutation(
     trpc.user.updatePreferences.mutationOptions({

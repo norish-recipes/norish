@@ -19,7 +19,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
-vi.mock("../../reader", () => ({
+vi.mock("../../reader", async () => ({
+  usePreferencesSaving: (await import("../../reader/use-account-mutations")).usePreferencesSaving,
   ownerAllows: (_owner: string, can: (id: string) => boolean) => can(_owner),
   useProfileQuery: () => ({
     user: { preferences: { measurementSystem: mocks.measurementSystem } },
