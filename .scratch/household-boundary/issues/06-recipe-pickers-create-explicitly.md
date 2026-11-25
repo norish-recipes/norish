@@ -4,7 +4,7 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Web** pickers: `apps/web/components/shared/tag-input.tsx`, the category chips, and the cuisine picker in `apps/web/features/recipes/components/editor/provenance-fields.tsx`.
   - Existing entries match on the folded name.
