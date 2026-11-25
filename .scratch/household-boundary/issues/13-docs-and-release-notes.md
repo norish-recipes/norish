@@ -2,7 +2,7 @@
 
 **What to build:** The docs pages for households, permissions and the Content page, an Upgrade note, and the 0.28.0-beta release notes. Docs are written by Terra, following the docs rules in its brief. See `docs/agents/feature-docs.md`.
 
-**Blocked by:** 01–09, 11, 12
+**Blocked by:** 01–09, 11, 12, 14
 
 **Status:** ready-for-agent
 
