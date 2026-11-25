@@ -1,7 +1,21 @@
 /** Tags, Cuisines and Categories as household lists (ADR-0043): a row is its household's (null for
  * the instance), unique on its fold there; a recipe carries its household's and the instance's. */
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import {
+  and,
+  count,
+  countDistinct,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  like,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
@@ -23,17 +37,44 @@ import type { MutationOutcome } from "./mutation-outcomes";
 import { isConstraintViolation } from "./constraint-violation";
 import { ForeignHouseholdReferenceError } from "./household-rows";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
-import { rowsOf, uuidListSql } from "./raw-sql";
 
 export type ListKind = "tag" | "cuisine" | "category";
 
 export const LIST_KINDS = ["tag", "cuisine", "category"] as const satisfies readonly ListKind[];
 
 const KINDS = {
-  tag: { table: tags, link: recipeTags, entity: sql.identifier("tag_id") },
-  cuisine: { table: cuisines, link: recipeCuisines, entity: sql.identifier("cuisine_id") },
-  category: { table: categories, link: recipeCategories, entity: sql.identifier("category_id") },
+  tag: {
+    table: tags,
+    link: recipeTags,
+    entity: recipeTags.tagId,
+    linkRow: (recipeId: string, tagId: string, order: number) => ({ recipeId, tagId, order }),
+  },
+  cuisine: {
+    table: cuisines,
+    link: recipeCuisines,
+    entity: recipeCuisines.cuisineId,
+    linkRow: (recipeId: string, cuisineId: string, order: number) => ({
+      recipeId,
+      cuisineId,
+      order,
+    }),
+  },
+  category: {
+    table: categories,
+    link: recipeCategories,
+    entity: recipeCategories.categoryId,
+    linkRow: (recipeId: string, categoryId: string, order: number) => ({
+      recipeId,
+      categoryId,
+      order,
+    }),
+  },
 } as const;
+
+type ListTable = (typeof KINDS)[ListKind]["table"];
+
+/** Builds fragments without a connection, for queries other repositories run. */
+const qb = new QueryBuilder();
 
 /** An entry as its list shows it. */
 export interface ListEntryRow {
@@ -60,21 +101,34 @@ export function entryName(name: string): { name: string; fold: string } | null {
 }
 
 /**
- * The rows of a scope: a household's own, or the instance's for null; with `offered`, the instance's
- * too, as a household's list offers them. The household may be a subquery.
+ * The rows of a scope, by their `household_id`: a household's own, or the instance's for null; with
+ * `offered`, the instance's too, as a household's list offers them. The household may be a subquery.
  */
 export function inScope(
+  householdId: AnyPgColumn,
   scope: ListScope | SQL,
-  { offered = false, alias = sql.raw("e") }: { offered?: boolean; alias?: SQL } = {}
+  { offered = false }: { offered?: boolean } = {}
 ): SQL {
-  if (scope === null) return sql`${alias}.household_id IS NULL`;
+  if (scope === null) return isNull(householdId);
 
-  const own = sql`${alias}.household_id = ${scope}::uuid`;
+  const own = eq(householdId, scope);
 
-  return offered ? sql`(${own} OR ${alias}.household_id IS NULL)` : own;
+  return offered ? or(own, isNull(householdId))! : own;
 }
 
-const ROW_COLUMNS = sql`e.id, e.name, (e.household_id IS NULL) AS instance, e.version`;
+/** The columns of an entry as its list shows it. */
+const rowColumns = (table: ListTable) => ({
+  id: table.id,
+  name: table.name,
+  instance: isNull(table.householdId).mapWith(Boolean),
+  version: table.version,
+});
+
+/** A list's order: by name, then id. */
+const byName = (table: ListTable) => [sql`lower(${table.name})`, table.id];
+
+/** Instance entries before a household's own. */
+const instanceFirst = (table: ListTable) => sql`${table.householdId} NULLS FIRST`;
 
 /** The entry as its list shows it, without the other columns a query read. */
 const asEntryRow = ({ id, name, instance, version }: ListEntryRow): ListEntryRow => ({
@@ -91,12 +145,11 @@ const PENDING_FOLD_PREFIX = " ";
 export async function listPendingFoldEntries(kind: ListKind, tx: Db = db) {
   const { table } = KINDS[kind];
 
-  return rowsOf<{ id: string; name: string; household_id: string | null }>(
-    await tx.execute(sql`
-      SELECT e.id, e.name, e.household_id FROM ${table} e
-      WHERE starts_with(e.name_fold, ${PENDING_FOLD_PREFIX}) ORDER BY e.created_at, e.id
-    `)
-  );
+  return await tx
+    .select({ id: table.id, name: table.name, householdId: table.householdId })
+    .from(table)
+    .where(like(table.nameFold, `${PENDING_FOLD_PREFIX}%`))
+    .orderBy(table.createdAt, table.id);
 }
 
 /** The scope's entry folded as `fold`, other than `id`, with whether it is older than `id`. */
@@ -108,13 +161,15 @@ export async function findFoldedTwinTx(
   id: string
 ) {
   const { table } = KINDS[kind];
-  const [row] = rowsOf<{ id: string; older: boolean }>(
-    await tx.execute(sql`
-      SELECT e.id, (e.created_at, e.id) < (self.created_at, self.id) AS older
-      FROM ${table} e, ${table} self
-      WHERE self.id = ${id}::uuid AND e.id <> self.id AND ${inScope(scope)} AND e.name_fold = ${fold}
-    `)
-  );
+  const self = alias(table, "self");
+  const [row] = await tx
+    .select({
+      id: table.id,
+      older: sql<boolean>`(${table.createdAt}, ${table.id}) < (${self.createdAt}, ${self.id})`,
+    })
+    .from(table)
+    .innerJoin(self, eq(self.id, id))
+    .where(and(ne(table.id, self.id), inScope(table.householdId, scope), eq(table.nameFold, fold)));
 
   return row;
 }
@@ -123,7 +178,7 @@ export async function findFoldedTwinTx(
 export async function setEntryFoldTx(tx: DbTransaction, kind: ListKind, id: string, fold: string) {
   const { table } = KINDS[kind];
 
-  await tx.execute(sql`UPDATE ${table} SET name_fold = ${fold} WHERE id = ${id}::uuid`);
+  await tx.update(table).set({ nameFold: fold }).where(eq(table.id, id));
 }
 
 /** The household's entries and the instance's, by name. */
@@ -133,12 +188,12 @@ export async function listEntryRows(
   connection: Db = db
 ): Promise<ListEntryRow[]> {
   const { table } = KINDS[kind];
-  const result = await connection.execute(sql`
-    SELECT ${ROW_COLUMNS} FROM ${table} e WHERE ${inScope(householdId, { offered: true })}
-    ORDER BY lower(e.name), e.id
-  `);
 
-  return rowsOf<ListEntryRow>(result);
+  return await connection
+    .select(rowColumns(table))
+    .from(table)
+    .where(inScope(table.householdId, householdId, { offered: true }))
+    .orderBy(...byName(table));
 }
 
 /** {@link listEntryRows}' names. */
@@ -149,25 +204,26 @@ export async function listEntryNames(kind: ListKind, householdId: string): Promi
 /** {@link listEntryRows} with how many of the household's recipes carry each. */
 export async function listEntries(kind: ListKind, householdId: string): Promise<ListEntry[]> {
   const { table, link, entity } = KINDS[kind];
-  const result = await db.execute(sql`
-    SELECT ${ROW_COLUMNS}, (
-      SELECT count(*)::int FROM ${link} l JOIN ${recipes} r ON r.id = l.recipe_id
-      WHERE l.${entity} = e.id AND r.household_id = ${householdId}::uuid
-    ) AS "recipeCount"
-    FROM ${table} e WHERE ${inScope(householdId, { offered: true })}
-    ORDER BY lower(e.name), e.id
-  `);
 
-  return rowsOf<ListEntry>(result);
+  // A link joins only through a recipe of the household, so `count` sees just those.
+  return await db
+    .select({ ...rowColumns(table), recipeCount: count(recipes.id) })
+    .from(table)
+    .leftJoin(link, eq(entity, table.id))
+    .leftJoin(recipes, and(eq(recipes.id, link.recipeId), eq(recipes.householdId, householdId)))
+    .where(inScope(table.householdId, householdId, { offered: true }))
+    .groupBy(table.id)
+    .orderBy(...byName(table));
 }
 
 /** The household whose list a recipe's entries come from: the recipe's own. */
 export async function recipeHouseholdId(recipeId: string, connection: Db = db) {
-  const [row] = rowsOf<{ household_id: string }>(
-    await connection.execute(sql`SELECT household_id FROM ${recipes} WHERE id = ${recipeId}::uuid`)
-  );
+  const [row] = await connection
+    .select({ householdId: recipes.householdId })
+    .from(recipes)
+    .where(eq(recipes.id, recipeId));
 
-  return row?.household_id ?? null;
+  return row?.householdId ?? null;
 }
 
 /** How often a find-or-create looks again for a row a concurrent merge or delete removed. */
@@ -193,21 +249,21 @@ export async function entriesByFoldTx(
 
   for (let attempt = 0; attempt < ATTACH_ATTEMPTS && found.size < wanted.size; attempt += 1) {
     const missing = [...wanted.keys()].filter((fold) => !found.has(fold));
-    const rows = rowsOf<ListEntryRow & { name_fold: string }>(
-      await tx.execute(sql`
-        SELECT ${ROW_COLUMNS}, e.name_fold FROM ${table} e
-        WHERE ${inScope(householdId, { offered: true })} AND e.name_fold IN (${sql.join(
-          missing.map((fold) => sql`${fold}`),
-          sql`, `
-        )})
-        ORDER BY e.household_id NULLS FIRST
-        FOR KEY SHARE
-      `)
-    );
+    const rows = await tx
+      .select({ ...rowColumns(table), nameFold: table.nameFold })
+      .from(table)
+      .where(
+        and(
+          inScope(table.householdId, householdId, { offered: true }),
+          inArray(table.nameFold, missing)
+        )
+      )
+      .orderBy(instanceFirst(table))
+      .for("key share");
 
     // An instance entry wins over a household's own of the same fold.
     for (const row of rows) {
-      if (!found.has(row.name_fold)) found.set(row.name_fold, asEntryRow(row));
+      if (!found.has(row.nameFold)) found.set(row.nameFold, asEntryRow(row));
     }
 
     const absent = missing.filter((fold) => !found.has(fold));
@@ -222,16 +278,15 @@ export async function entriesByFoldTx(
       wanted.delete(fold);
     }
 
-    const creatable = absent.filter((fold) => wanted.has(fold));
+    const creatable = absent.flatMap((fold) => {
+      const name = wanted.get(fold);
+
+      return name === undefined ? [] : [{ householdId, name, nameFold: fold }];
+    });
 
     if (creatable.length === 0) break;
 
-    await tx.execute(sql`
-      INSERT INTO ${table} (household_id, name, name_fold) VALUES ${sql.join(
-        creatable.map((fold) => sql`(${householdId}::uuid, ${wanted.get(fold)}, ${fold})`),
-        sql`, `
-      )} ON CONFLICT DO NOTHING
-    `);
+    await tx.insert(table).values(creatable).onConflictDoNothing();
   }
 
   return found;
@@ -273,16 +328,25 @@ export async function replaceRecipeEntryIdsTx(
   const unique = [...new Set(ids)];
 
   if (unique.length > 0) {
-    const allowed = rowsOf<{ id: string }>(
-      await tx.execute(sql`
-        SELECT e.id FROM ${table} e
-        WHERE e.id IN (${uuidListSql(unique)}) AND (
-          ${inScope(sql`(SELECT household_id FROM ${recipes} WHERE id = ${recipeId}::uuid)`, { offered: true })}
-          OR EXISTS (SELECT 1 FROM ${link} l WHERE l.recipe_id = ${recipeId}::uuid AND l.${entity} = e.id)
+    const recipeHousehold = tx
+      .select({ householdId: recipes.householdId })
+      .from(recipes)
+      .where(eq(recipes.id, recipeId));
+    // At most one link per recipe and entry, so the join adds no rows; only the entries are held.
+    const allowed = await tx
+      .select({ id: table.id })
+      .from(table)
+      .leftJoin(link, and(eq(link.recipeId, recipeId), eq(entity, table.id)))
+      .where(
+        and(
+          inArray(table.id, unique),
+          or(
+            inScope(table.householdId, sql`(${recipeHousehold})`, { offered: true }),
+            isNotNull(link.recipeId)
+          )
         )
-        FOR KEY SHARE
-      `)
-    );
+      )
+      .for("key share", { of: table });
 
     if (allowed.length !== unique.length) throw new ForeignHouseholdReferenceError();
   }
@@ -290,22 +354,25 @@ export async function replaceRecipeEntryIdsTx(
   await writeRecipeLinksTx(tx, kind, recipeId, unique);
 }
 
-/** Inserts `links` (`VALUES` or a `SELECT` of recipe, entry and order), keeping one already there. */
-async function insertLinksTx(tx: DbTransaction, kind: ListKind, links: SQL): Promise<void> {
-  const { link, entity } = KINDS[kind];
+/** Links `recipeId` to `ids` in order, the first at `from`, keeping a link already there. */
+async function insertLinksTx(
+  tx: DbTransaction,
+  kind: ListKind,
+  links: readonly { recipeId: string; id: string; order: number }[]
+): Promise<void> {
+  const { link, linkRow } = KINDS[kind];
 
-  await tx.execute(
-    sql`INSERT INTO ${link} (recipe_id, ${entity}, "order") ${links} ON CONFLICT DO NOTHING`
-  );
+  if (links.length === 0) return;
+
+  await tx
+    .insert(link)
+    .values(links.map((row) => linkRow(row.recipeId, row.id, row.order)))
+    .onConflictDoNothing();
 }
 
-/** `VALUES` linking `recipeId` to `ids` in order, the first at `from`. */
-function linkValues(recipeId: string, ids: readonly string[], from = 0): SQL {
-  return sql`VALUES ${sql.join(
-    ids.map((id, index) => sql`(${recipeId}::uuid, ${id}::uuid, ${from + index})`),
-    sql`, `
-  )}`;
-}
+/** The links of `recipeId` to `ids` in order, the first at `from`. */
+const linksOf = (recipeId: string, ids: readonly string[], from = 0) =>
+  ids.map((id, index) => ({ recipeId, id, order: from + index }));
 
 async function writeRecipeLinksTx(
   tx: DbTransaction,
@@ -313,11 +380,10 @@ async function writeRecipeLinksTx(
   recipeId: string,
   ids: readonly string[]
 ): Promise<void> {
-  const unique = [...new Set(ids)];
+  const { link } = KINDS[kind];
 
-  await tx.execute(sql`DELETE FROM ${KINDS[kind].link} WHERE recipe_id = ${recipeId}::uuid`);
-
-  if (unique.length > 0) await insertLinksTx(tx, kind, linkValues(recipeId, unique));
+  await tx.delete(link).where(eq(link.recipeId, recipeId));
+  await insertLinksTx(tx, kind, linksOf(recipeId, [...new Set(ids)]));
 }
 
 /** A recipe's entry names, in order. */
@@ -327,12 +393,12 @@ export async function recipeEntryNames(
   connection: Db = db
 ): Promise<string[]> {
   const { table, link, entity } = KINDS[kind];
-  const rows = rowsOf<{ name: string }>(
-    await connection.execute(sql`
-      SELECT e.name FROM ${link} l JOIN ${table} e ON e.id = l.${entity}
-      WHERE l.recipe_id = ${recipeId}::uuid ORDER BY l."order", e.name
-    `)
-  );
+  const rows = await connection
+    .select({ name: table.name })
+    .from(link)
+    .innerJoin(table, eq(table.id, entity))
+    .where(eq(link.recipeId, recipeId))
+    .orderBy(link.order, table.name);
 
   return rows.map((row) => row.name);
 }
@@ -363,17 +429,15 @@ export async function appendRecipeEntriesTx(
     (fold) => entries.get(fold) ?? []
   );
 
-  if (added.length > 0) {
-    await insertLinksTx(
-      tx,
-      kind,
-      linkValues(
-        recipeId,
-        added.map((entry) => entry.id),
-        existing.length
-      )
-    );
-  }
+  await insertLinksTx(
+    tx,
+    kind,
+    linksOf(
+      recipeId,
+      added.map((entry) => entry.id),
+      existing.length
+    )
+  );
 
   return {
     added: added.map((entry) => entry.name),
@@ -391,13 +455,15 @@ async function foldedEntry(
   fold: string,
   lock = false
 ): Promise<ListEntryRow | undefined> {
-  const [row] = rowsOf<ListEntryRow>(
-    await connection.execute(sql`
-      SELECT ${ROW_COLUMNS} FROM ${KINDS[kind].table} e
-      WHERE ${inScope(scope, { offered: true })} AND e.name_fold = ${fold}
-      ORDER BY e.household_id NULLS FIRST LIMIT 1 ${lock ? sql`FOR UPDATE` : sql``}
-    `)
-  );
+  const { table } = KINDS[kind];
+  const query = connection
+    .select(rowColumns(table))
+    .from(table)
+    .where(and(inScope(table.householdId, scope, { offered: true }), eq(table.nameFold, fold)))
+    .orderBy(instanceFirst(table))
+    .limit(1)
+    .$dynamic();
+  const [row] = await (lock ? query.for("update") : query);
 
   return row;
 }
@@ -414,18 +480,22 @@ export async function addEntry(
 
   if (!entry) return null;
 
-  const [created] = rowsOf<ListEntryRow>(
-    await db.execute(sql`
-      INSERT INTO ${table} AS e (household_id, name, name_fold)
-      SELECT ${scope}::uuid, ${entry.name}, ${entry.fold}
-      WHERE NOT EXISTS (
-        SELECT 1 FROM ${table} o
-        WHERE ${inScope(null, { alias: sql.raw("o") })} AND o.name_fold = ${entry.fold}
-      )
-      ON CONFLICT DO NOTHING
-      RETURNING ${ROW_COLUMNS}
-    `)
-  );
+  const created = await db.transaction(async (tx) => {
+    const [instance] = await tx
+      .select({ id: table.id })
+      .from(table)
+      .where(and(isNull(table.householdId), eq(table.nameFold, entry.fold)));
+
+    if (instance) return undefined;
+
+    const [row] = await tx
+      .insert(table)
+      .values({ householdId: scope, name: entry.name, nameFold: entry.fold })
+      .onConflictDoNothing()
+      .returning(rowColumns(table));
+
+    return row;
+  });
 
   if (created) return { entry: created, created: true };
 
@@ -443,21 +513,25 @@ export async function mergeEntryTx(
   targetId: string
 ): Promise<ListEntryRow | undefined> {
   const { table, link, entity } = KINDS[kind];
+  // The callers hold the source FOR UPDATE, so no attach adds a link between these statements.
+  const moved = await tx
+    .select({ recipeId: link.recipeId, order: link.order })
+    .from(link)
+    .where(eq(entity, sourceId));
 
   await insertLinksTx(
     tx,
     kind,
-    sql`SELECT recipe_id, ${targetId}::uuid, "order" FROM ${link} WHERE ${entity} = ${sourceId}::uuid`
+    moved.map((row) => ({ recipeId: row.recipeId, id: targetId, order: row.order }))
   );
-  await tx.execute(sql`DELETE FROM ${link} WHERE ${entity} = ${sourceId}::uuid`);
-  await tx.execute(sql`DELETE FROM ${table} WHERE id = ${sourceId}::uuid`);
+  await tx.delete(link).where(eq(entity, sourceId));
+  await tx.delete(table).where(eq(table.id, sourceId));
 
-  const [target] = rowsOf<ListEntryRow>(
-    await tx.execute(sql`
-      UPDATE ${table} AS e SET version = e.version + 1 WHERE e.id = ${targetId}::uuid
-      RETURNING ${ROW_COLUMNS}
-    `)
-  );
+  const [target] = await tx
+    .update(table)
+    .set({ version: sql`${table.version} + 1` })
+    .where(eq(table.id, targetId))
+    .returning(rowColumns(table));
 
   return target;
 }
@@ -468,12 +542,11 @@ type EntryRef = { id: string; version: number };
 /** The scope's entry `id`, locked for the change. */
 async function lockOwnEntryTx(tx: DbTransaction, kind: ListKind, scope: ListScope, id: string) {
   const { table } = KINDS[kind];
-  const [row] = rowsOf<ListEntryRow & { name_fold: string }>(
-    await tx.execute(sql`
-      SELECT ${ROW_COLUMNS}, e.name_fold FROM ${table} e
-      WHERE e.id = ${id}::uuid AND ${inScope(scope)} FOR UPDATE
-    `)
-  );
+  const [row] = await tx
+    .select({ ...rowColumns(table), nameFold: table.nameFold })
+    .from(table)
+    .where(and(eq(table.id, id), inScope(table.householdId, scope)))
+    .for("update");
 
   return row;
 }
@@ -501,7 +574,7 @@ export async function renameEntry(
         if (!own) return null;
         if (own.version !== version) return staleOutcome<RenameEntryResult>();
 
-        if (own.name_fold !== entry.fold) {
+        if (own.nameFold !== entry.fold) {
           const target = await foldedEntry(tx, kind, scope, entry.fold, true);
 
           if (target) {
@@ -511,12 +584,11 @@ export async function renameEntry(
           }
         }
 
-        const [renamed] = rowsOf<ListEntryRow>(
-          await tx.execute(sql`
-            UPDATE ${table} AS e SET name = ${entry.name}, name_fold = ${entry.fold}, version = e.version + 1
-            WHERE e.id = ${id}::uuid RETURNING ${ROW_COLUMNS}
-          `)
-        );
+        const [renamed] = await tx
+          .update(table)
+          .set({ name: entry.name, nameFold: entry.fold, version: sql`${table.version} + 1` })
+          .where(eq(table.id, id))
+          .returning(rowColumns(table));
 
         return renamed ? appliedOutcome({ entry: renamed, merged: false }) : null;
       });
@@ -541,14 +613,20 @@ export async function mergeEntries(
 
   return await db.transaction(async (tx) => {
     // Both rows locked in id order, so two merges of the same pair cannot deadlock.
-    const locked = rowsOf<ListEntryRow & { owned: boolean }>(
-      await tx.execute(sql`
-        SELECT ${ROW_COLUMNS}, ${inScope(scope)} AS owned FROM ${table} e
-        WHERE e.id IN (${uuidListSql([source.id, target.id])})
-          AND ${inScope(scope, { offered: true })}
-        ORDER BY e.id FOR UPDATE
-      `)
-    );
+    const locked = await tx
+      .select({
+        ...rowColumns(table),
+        owned: inScope(table.householdId, scope).mapWith(Boolean),
+      })
+      .from(table)
+      .where(
+        and(
+          inArray(table.id, [source.id, target.id]),
+          inScope(table.householdId, scope, { offered: true })
+        )
+      )
+      .orderBy(table.id)
+      .for("update");
     const from = locked.find((row) => row.id === source.id && row.owned);
     const into = locked.find((row) => row.id === target.id);
 
@@ -578,11 +656,12 @@ export async function deleteEntry(
     if (!own) return null;
     if (own.version !== version) return staleOutcome<{ detached: number }>();
 
-    const detached = rowsOf<{ recipe_id: string }>(
-      await tx.execute(sql`DELETE FROM ${link} WHERE ${entity} = ${id}::uuid RETURNING recipe_id`)
-    );
+    const detached = await tx
+      .delete(link)
+      .where(eq(entity, id))
+      .returning({ recipeId: link.recipeId });
 
-    await tx.execute(sql`DELETE FROM ${table} WHERE id = ${id}::uuid`);
+    await tx.delete(table).where(eq(table.id, id));
 
     return appliedOutcome({ detached: detached.length });
   });
@@ -595,11 +674,10 @@ export async function findOwnEntry(
   id: string
 ): Promise<ListEntryRow | null> {
   const { table } = KINDS[kind];
-  const [row] = rowsOf<ListEntryRow>(
-    await db.execute(
-      sql`SELECT ${ROW_COLUMNS} FROM ${table} e WHERE e.id = ${id}::uuid AND ${inScope(scope)}`
-    )
-  );
+  const [row] = await db
+    .select(rowColumns(table))
+    .from(table)
+    .where(and(eq(table.id, id), inScope(table.householdId, scope)));
 
   return row ?? null;
 }
@@ -611,12 +689,12 @@ export function recipeCarriesFoldsSql(kind: ListKind, names: readonly string[], 
 
   if (folds.length === 0) return sql`false`;
 
-  return sql`(
-    SELECT count(DISTINCT carried.name_fold) FROM ${link} carried_link
-    JOIN ${table} carried ON carried.id = carried_link.${entity}
-    WHERE carried_link.recipe_id = "recipes"."id" AND carried.name_fold IN (${sql.join(
-      folds.map((fold) => sql`${fold}`),
-      sql`, `
-    )})
-  ) >= ${required}`;
+  // The join qualifies the columns, so `recipes.id` binds to the outer query's recipe.
+  const carried = qb
+    .select({ folds: countDistinct(table.nameFold) })
+    .from(link)
+    .innerJoin(table, eq(table.id, entity))
+    .where(and(eq(link.recipeId, recipes.id), inArray(table.nameFold, folds)));
+
+  return sql`(${carried}) >= ${required}`;
 }

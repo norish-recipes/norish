@@ -335,7 +335,7 @@ export async function foldPendingListEntries(): Promise<number> {
 
       for (const entry of pending) {
         const fold = entryFold(entry.name);
-        const twin = await findFoldedTwinTx(tx, kind, entry.household_id, fold, entry.id);
+        const twin = await findFoldedTwinTx(tx, kind, entry.householdId, fold, entry.id);
 
         if (twin?.older) {
           await mergeEntryTx(tx, kind, entry.id, twin.id);

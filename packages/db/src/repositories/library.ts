@@ -345,7 +345,7 @@ export async function listLibraryDiscover(ctx: RecipeListContext): Promise<Libra
       JOIN ${categories} carried ON carried.name_fold = own.name_fold
       JOIN ${recipeCategories} link ON link.category_id = carried.id
       JOIN ${recipes} ON ${recipes.id} = link.recipe_id
-      WHERE ${inScope(ctx.householdId, { offered: true, alias: sql.raw("own") })} AND ${visible}
+      WHERE ${inScope(ownCategories.householdId, ctx.householdId, { offered: true })} AND ${visible}
       ORDER BY own.name_fold, own.household_id NULLS FIRST,
         (${PRIMARY_IMAGE_SQL} IS NULL), ${recipes.createdAt} DESC, ${recipes.id} DESC
     `),
@@ -442,6 +442,7 @@ type NamedEntity = {
 };
 
 const carriedTags = alias(tagsTable, "carried");
+const ownCategories = alias(categories, "own");
 const carriedCategories = alias(categories, "carried");
 
 const TAG_NAMES: NamedEntity = {
