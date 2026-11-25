@@ -3,7 +3,8 @@ import { serverPackage } from "@/lib/server-package";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
-const { auth } = await serverPackage<typeof import("@norish/auth/auth")>("@norish/auth/auth");
+const { getVerifiedSession } =
+  await serverPackage<typeof import("@norish/auth/session")>("@norish/auth/session");
 const { buildNorishArchiveForViewer } = await serverPackage<
   typeof import("@norish/shared-server/archive/norish-export")
 >("@norish/shared-server/archive/norish-export");
@@ -56,13 +57,13 @@ function nodeStreamToWeb(nodeStream: ZipStream): ReadableStream<Uint8Array> {
 /** Recipe Archive export (ADR-0022): a `.norishrecipes` zip of every recipe the reader may view,
  * an admin's included, streamed straight into the response with nothing stored server-side. */
 export async function GET(req: Request) {
-  const session = await auth.api.getSession({ headers: req.headers });
+  // The user as the database holds them: an API key's session carries their fields encrypted.
+  const sessionUser = await getVerifiedSession(req.headers);
 
-  if (!session?.user) {
+  if (!sessionUser) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const sessionUser = session.user;
   const params = new URL(req.url).searchParams;
 
   if (params.get(ARCHIVE_PROBE_PARAM) === ARCHIVE_PROBE_VALUE) {
@@ -80,7 +81,7 @@ export async function GET(req: Request) {
       householdId: household.id,
     },
     exporter: {
-      name: sessionUser.name ?? null,
+      name: sessionUser.name || null,
       origin: SERVER_CONFIG.AUTH_URL,
     },
     exportedAt,

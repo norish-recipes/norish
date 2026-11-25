@@ -5,11 +5,16 @@ import { GET } from "@/app/(app)/export/recipes/route";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSessionMock = vi.hoisted(() => vi.fn());
+const storedIdentityMock = vi.hoisted(() => vi.fn());
 const buildArchiveMock = vi.hoisted(() => vi.fn());
 const householdMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/auth/auth", () => ({
   auth: { api: { getSession: getSessionMock } },
+}));
+
+vi.mock("@norish/db/repositories/users", () => ({
+  getUserSessionIdentity: storedIdentityMock,
 }));
 
 vi.mock("@norish/shared-server/archive/norish-export", () => ({
@@ -20,12 +25,16 @@ vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: householdMock,
 }));
 
-vi.mock("@norish/shared-server/logger", () => ({
-  serverLogger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock("@norish/shared-server/logger", () => {
+  const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
 
+  return { serverLogger: logger, authLogger: logger };
+});
+
+/** The user as the database holds them, behind a session that names them. */
 function signedInAs(user: { id: string; name?: string | null; isServerAdmin?: boolean }) {
-  getSessionMock.mockResolvedValue({ user });
+  getSessionMock.mockResolvedValue({ user: { id: user.id }, session: { token: "token" } });
+  storedIdentityMock.mockResolvedValue({ email: "ada@example.com", image: null, ...user });
 }
 
 function exportRequest(query = ""): Request {
@@ -65,6 +74,26 @@ describe("Recipe Archive export route", () => {
       /^attachment; filename="norish-recipes-\d{4}-\d{2}-\d{2}\.norishrecipes"$/
     );
     expect(response.body).toBeTruthy();
+  });
+
+  it("names the exporter in plain text when an API key opens the session", async () => {
+    signedInAs({ id: "user-1", name: "Ada" });
+    // An API key's session carries the user as Postgres holds them, encrypted.
+    getSessionMock.mockResolvedValue({ user: { id: "user-1", name: "QWRhIGVuY3J5cHRlZA==" } });
+
+    await GET(exportRequest());
+
+    expect(buildArchiveMock.mock.calls[0]?.[0]?.exporter.name).toBe("Ada");
+  });
+
+  it("refuses a session whose user is gone", async () => {
+    getSessionMock.mockResolvedValue({ user: { id: "user-1" } });
+    storedIdentityMock.mockResolvedValue(null);
+
+    const response = await GET(exportRequest());
+
+    expect(response.status).toBe(401);
+    expect(buildArchiveMock).not.toHaveBeenCalled();
   });
 
   it("asks the visibility layer with the household the viewer belongs to", async () => {
