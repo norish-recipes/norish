@@ -106,6 +106,8 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
           lastSyncAt: new Date(),
         })
       : updateCaldavSyncStatus(existingStatus.id, {
+          // An entry whose recipe was erased is a note now.
+          itemType,
           eventTitle,
           syncStatus: "synced",
           caldavEventUid: uid,
@@ -189,6 +191,7 @@ export async function handleCaldavJobFailed(
         lastSyncAt: new Date(),
       } satisfies CaldavSyncStatusInsertDto)
     : await updateCaldavSyncStatus(existingStatus.id, {
+        itemType,
         eventTitle,
         syncStatus: isFinal ? "failed" : "pending",
         retryCount: job.attemptsMade,

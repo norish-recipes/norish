@@ -189,6 +189,40 @@ describe("the CalDAV sync worker", () => {
     expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
   });
 
+  it("records an entry that became a note as a note when it syncs again", async () => {
+    const recipe = await helpers.createTestRecipe(member);
+    const { entry, run } = await syncJob(recipe.id);
+
+    await run();
+    const job = (itemType: string) => ({
+      id: "job-2",
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+      data: {
+        userId: member,
+        itemId: entry.id,
+        itemType,
+        plannedItemId: entry.id,
+        eventTitle: "Soep",
+        date: entry.date,
+        slot: entry.slot,
+        operation: "sync",
+        caldavServerUrl: "https://dav.example/",
+      },
+      updateProgress: vi.fn(),
+      log: vi.fn(async () => 0),
+    });
+
+    await captured.processor!(job("note"));
+    expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toMatchObject({
+      itemType: "note",
+    });
+    await worker.handleCaldavJobFailed(job("recipe") as never, new Error("Server down"));
+    expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toMatchObject({
+      itemType: "recipe",
+    });
+  });
+
   it("records no failure for an account deleted before its job failed", async () => {
     const { entry } = await syncJob();
 
