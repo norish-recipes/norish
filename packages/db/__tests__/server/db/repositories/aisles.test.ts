@@ -120,7 +120,7 @@ describe("aisles and aisle links", () => {
         [GROENTE, "Groente & fruit", 0],
         [ZUIVEL, "Zuivel en kaas", 1],
       ]);
-      await expect(getAisleById(BROOD)).resolves.toBeNull();
+      await expect(getAisleById(BROOD, storeId)).resolves.toBeNull();
     });
 
     it("lets two aisles swap names in one save", async () => {
@@ -356,10 +356,8 @@ describe("aisles and aisle links", () => {
         testHouseholdOf(userId)
       );
 
-      await expect(getAisleById(ZUIVEL)).resolves.toMatchObject({
-        storeId: other.id,
-        name: "Zuivel",
-      });
+      await expect(getAisleById(ZUIVEL, other.id)).resolves.toMatchObject({ name: "Zuivel" });
+      await expect(getAisleById(ZUIVEL, storeId)).resolves.toBeNull();
       await expect(listAislesByStoreIds([storeId])).resolves.toEqual([]);
     });
   });

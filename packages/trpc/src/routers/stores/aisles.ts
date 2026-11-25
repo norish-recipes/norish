@@ -50,9 +50,7 @@ const fileGroceryName = authedProcedure
 
     if (input.aisleId !== null) {
       // An aisle of another Store is not somewhere this Store files anything.
-      const aisle = await getAisleById(input.aisleId);
-
-      if (!aisle || aisle.storeId !== input.storeId) {
+      if (!(await getAisleById(input.aisleId, input.storeId))) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Aisle not found in this store" });
       }
     }

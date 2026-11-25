@@ -113,20 +113,11 @@ describe("filing a name at a Store", () => {
   });
 
   it("refuses an aisle that is not the Store's", async () => {
-    aislesRepository.getAisleById.mockResolvedValue({
-      id: ZUIVEL,
-      storeId: OTHER_STORE,
-      name: "Zuivel",
-    });
-
-    await expect(
-      caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
-
     aislesRepository.getAisleById.mockResolvedValue(null);
     await expect(
       caller.fileGroceryName({ storeId: STORE, name: "melk", aisleId: ZUIVEL })
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(aislesRepository.getAisleById).toHaveBeenCalledWith(ZUIVEL, STORE);
     expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
   });
 

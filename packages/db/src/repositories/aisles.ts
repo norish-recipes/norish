@@ -36,8 +36,13 @@ export async function listAislesByStoreIds(storeIds: string[], tx: Db = db): Pro
   return parseAisles(rows);
 }
 
-export async function getAisleById(id: string): Promise<AisleDto | null> {
-  const [row] = await db.select().from(aisles).where(eq(aisles.id, id)).limit(1);
+/** An aisle of this Store. */
+export async function getAisleById(id: string, storeId: string): Promise<AisleDto | null> {
+  const [row] = await db
+    .select()
+    .from(aisles)
+    .where(and(eq(aisles.id, id), eq(aisles.storeId, storeId)))
+    .limit(1);
 
   if (!row) return null;
   const parsed = AisleSelectSchema.safeParse(row);

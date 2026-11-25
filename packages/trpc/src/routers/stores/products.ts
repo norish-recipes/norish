@@ -87,10 +87,9 @@ const createProduct = authedProcedure
 const updateProduct = authedProcedure
   .input(StoreProductManualUpdateSchema)
   .mutation(async ({ ctx, input }) => {
-    const existing = await getStoreProductById(input.id);
+    const existing = await getStoreProductById(input.id, ctx.householdId);
 
     if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
-    await assertStoreAccess(ctx, existing.storeId);
 
     const product = await updateManualProduct(input);
 
@@ -187,10 +186,11 @@ async function assertCandidateIsTheShops(
  * the shopper is correcting that product, not describing a new one.
  */
 async function writeManualProduct(
+  householdId: string,
   storeId: string,
   choice: Extract<StoreProductChoice, { kind: "manual" }>
 ) {
-  const existing = choice.id ? await getStoreProductById(choice.id) : null;
+  const existing = choice.id ? await getStoreProductById(choice.id, householdId) : null;
 
   if (!existing) {
     return createManualProduct({
@@ -245,7 +245,7 @@ const chooseProduct = authedProcedure
     let storeProductId: string | null = null;
 
     if (input.choice.kind === "product") {
-      const product = await getStoreProductById(input.choice.storeProductId);
+      const product = await getStoreProductById(input.choice.storeProductId, ctx.householdId);
 
       if (!product || product.storeId !== input.storeId) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Product not found in this store" });
@@ -277,7 +277,7 @@ const chooseProduct = authedProcedure
     }
 
     if (input.choice.kind === "manual") {
-      const product = await writeManualProduct(input.storeId, input.choice);
+      const product = await writeManualProduct(ctx.householdId, input.storeId, input.choice);
 
       storeProductId = product.id;
       void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });

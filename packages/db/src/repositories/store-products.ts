@@ -11,7 +11,7 @@ import type {
   StoreProductReadingInput,
 } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
-import { storeProductLinks, storeProducts } from "@norish/db/schema";
+import { storeProductLinks, storeProducts, stores } from "@norish/db/schema";
 import {
   StoreProductLinkSelectSchema,
   StoreProductSelectSchema,
@@ -397,7 +397,10 @@ export async function setPackSizeByHand(
   id: string,
   pack: PackSizeDto | null
 ): Promise<StoreProductDto | null> {
-  const existing = await getStoreProductById(id);
+  const [existing] = await db
+    .select({ size: storeProducts.size })
+    .from(storeProducts)
+    .where(eq(storeProducts.id, id));
 
   if (!existing) return null;
   const columns = pack ? packColumns(pack) : packColumns(readPackSize(existing.size));
@@ -415,10 +418,19 @@ export async function setPackSizeByHand(
   return row ? parseProduct(row) : null;
 }
 
-export async function getStoreProductById(id: string): Promise<StoreProductDto | null> {
-  const [row] = await db.select().from(storeProducts).where(eq(storeProducts.id, id)).limit(1);
+/** A product of one of the household's Stores. */
+export async function getStoreProductById(
+  id: string,
+  householdId: string
+): Promise<StoreProductDto | null> {
+  const [row] = await db
+    .select({ product: storeProducts })
+    .from(storeProducts)
+    .innerJoin(stores, eq(stores.id, storeProducts.storeId))
+    .where(and(eq(storeProducts.id, id), eq(stores.householdId, householdId)))
+    .limit(1);
 
-  return row ? parseProduct(row) : null;
+  return row ? parseProduct(row.product) : null;
 }
 
 /** Everything one Store knows it sells, newest reading first. */

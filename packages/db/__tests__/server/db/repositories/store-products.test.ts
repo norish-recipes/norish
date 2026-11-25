@@ -308,7 +308,9 @@ describe("store products, product links and misses", () => {
       // its turn behind the one that has waited longer since.
       await noteProductUnreadable(first.id);
       await expect(stale()).resolves.toEqual([second.id, first.id]);
-      await expect(getStoreProductById(first.id)).resolves.toMatchObject({ price: 7.99 });
+      await expect(getStoreProductById(first.id, testHouseholdOf(userId))).resolves.toMatchObject({
+        price: 7.99,
+      });
     });
 
     it("is never stale, because nothing read it", async () => {
@@ -596,7 +598,7 @@ describe("store products, product links and misses", () => {
 
       await deleteStore(testHouseholdOf(userId), storeId, store!.version, false, []);
 
-      await expect(getStoreProductById(product.id)).resolves.toBeNull();
+      await expect(getStoreProductById(product.id, testHouseholdOf(userId))).resolves.toBeNull();
       await expect(getTestDb().select().from(storeProductLinks)).resolves.toEqual([]);
     });
 
@@ -611,7 +613,9 @@ describe("store products, product links and misses", () => {
 
       await getTestDb().delete(groceries).where(eq(groceries.id, grocery!.id));
 
-      await expect(getStoreProductById(product.id)).resolves.not.toBeNull();
+      await expect(
+        getStoreProductById(product.id, testHouseholdOf(userId))
+      ).resolves.not.toBeNull();
       await expect(resolveProductLink(storeId, await ingredient("kaas"))).resolves.toMatchObject({
         product: { id: product.id },
       });
