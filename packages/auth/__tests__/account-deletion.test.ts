@@ -54,6 +54,7 @@ vi.mock("@norish/shared-server/cache/household", () => ({
 }));
 vi.mock("@norish/shared-server/realtime/resume", () => ({ bumpViewEpoch: mocks.bumpViewEpoch }));
 vi.mock("@norish/shared-server/realtime/connection", () => ({
+  ACCOUNT_DELETED: "account-deleted",
   emitConnectionInvalidation: mocks.emitConnectionInvalidation,
 }));
 vi.mock("@norish/shared-server/realtime/households", () => ({

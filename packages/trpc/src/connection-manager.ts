@@ -1,7 +1,11 @@
 import type { WebSocket } from "ws";
 
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { connection, emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
+import {
+  ACCOUNT_DELETED,
+  connection,
+  emitConnectionInvalidation,
+} from "@norish/shared-server/realtime/connection";
 import { getRealtimeHub } from "@norish/shared-server/realtime/hub";
 
 // Use globalThis to survive HMR in development
@@ -37,14 +41,17 @@ export function unregisterConnection(userId: string, ws: WebSocket): void {
   log.trace({ userId, remaining: connections.size }, "Unregistered WebSocket connection");
 }
 
+/** The close a deleted account's sockets get: the client clears the device, Outbox included. */
+export const WS_CLOSE_ACCOUNT_DELETED = 4410;
+
 export function terminateUserConnections(userId: string, reason: string): void {
   const connections = userConnections.get(userId);
 
   if (connections) {
     log.info({ userId, count: connections.size, reason }, "Terminating user WebSocket connections");
     for (const ws of connections) {
-      // Close with code 4000 (custom application code) - client will auto-reconnect
-      ws.close(4000, reason);
+      // 4000 reconnects under the new identity; 4410 tells the client its account is gone.
+      ws.close(reason === ACCOUNT_DELETED ? WS_CLOSE_ACCOUNT_DELETED : 4000, reason);
     }
 
     userConnections.delete(userId);

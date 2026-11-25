@@ -6,6 +6,7 @@ import { sweepPendingUploadsOf } from "@norish/shared-server/media/pending-recip
 import { deleteRecipeImagesDir, sweepCookbookImages } from "@norish/shared-server/media/storage";
 import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { publishCalendarItemEvent } from "@norish/shared-server/realtime/calendar-items";
+import { ACCOUNT_DELETED } from "@norish/shared-server/realtime/connection";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 import { announceMembershipChange } from "@norish/shared-server/realtime/household-membership";
 import { households } from "@norish/shared-server/realtime/households";
@@ -53,7 +54,7 @@ export async function deleteUserAccount(
       "announce it",
       () =>
         announceMembershipChange(
-          { userId, reason: "account-deleted", affectedUserIds: deletion.memberIds },
+          { userId, reason: ACCOUNT_DELETED, affectedUserIds: deletion.memberIds },
           { toOthers: () => runEach(userId, announcements(userId, deletion)) }
         ),
     ],

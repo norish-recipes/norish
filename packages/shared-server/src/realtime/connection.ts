@@ -4,6 +4,9 @@ import { connectionRealtime } from "@norish/shared/contracts/realtime/connection
 
 export const connection = defineRealtimeDomain(connectionRealtime);
 
+/** The Scope Change of a deleted account: its sockets close for good, so its devices clear. */
+export const ACCOUNT_DELETED = "account-deleted";
+
 /**
  * Announce a Scope Change (ADR-0033): every process closes the user's live
  * sockets with 4000, and the client reconnects under its new identity. Await

@@ -40,6 +40,8 @@ type ManagedWebSocketClient = {
 
 /** The close code the server sends when the socket's session is not valid. */
 const WS_CLOSE_UNAUTHORIZED = 4401;
+/** The close code the server sends to the sockets of an account it deleted. */
+const WS_CLOSE_ACCOUNT_DELETED = 4410;
 
 /** The longest URL a batched read is sent with: under the 8 KB request line proxies take, with
  * room for headers (Node answers 431 past 16 KB). */
@@ -100,9 +102,15 @@ export function isNormalWebSocketClose(cause: unknown): boolean {
   return getWebSocketCloseCode(cause) === 1000;
 }
 
-/** The server said so with its close code; nothing else counts. */
+/** The server said so with its close code; nothing else counts. A deleted account is signed out too. */
 export function isUnauthorizedWebSocketClose(cause: unknown): boolean {
-  return getWebSocketCloseCode(cause) === WS_CLOSE_UNAUTHORIZED;
+  const code = getWebSocketCloseCode(cause);
+
+  return code === WS_CLOSE_UNAUTHORIZED || code === WS_CLOSE_ACCOUNT_DELETED;
+}
+
+export function isAccountDeletedWebSocketClose(cause: unknown): boolean {
+  return getWebSocketCloseCode(cause) === WS_CLOSE_ACCOUNT_DELETED;
 }
 
 export function isUnauthorizedTRPCError(cause: unknown): boolean {
