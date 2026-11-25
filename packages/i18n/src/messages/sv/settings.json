@@ -595,6 +595,35 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderering av receptdelning",
+      "description": "Granska offentliga receptlänkar på servern och hantera deras giltighet.",
+      "empty": "Inga delningslänkar hittades.",
+      "inactive": "Inaktiv",
+      "table": {
+        "recipe": "RECEPT",
+        "owner": "ÄGARE",
+        "status": "STATUS",
+        "created": "SKAPAD",
+        "expires": "UPPHÖR",
+        "actions": "ÅTGÄRDER"
+      },
+      "revokeModal": {
+        "title": "Återkalla länk",
+        "message": "Den här länken till {recipeName} slutar fungera tills den aktiveras igen.",
+        "confirm": "Återkalla"
+      },
+      "reactivateModal": {
+        "title": "Aktivera länken igen",
+        "message": "Den här länken till {recipeName} blir aktiv igen.",
+        "confirm": "Aktivera igen"
+      },
+      "deleteModal": {
+        "title": "Ta bort länk",
+        "message": "Ta bort den här delningslänken till {recipeName}? Det går inte att ångra.",
+        "confirm": "Ta bort länk"
+      }
+    },
     "general": {
       "title": "Allmänt",
       "allowRegistration": "Tillåt registrering av nya användare",

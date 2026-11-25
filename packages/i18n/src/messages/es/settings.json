@@ -595,6 +595,35 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderación de compartición de recetas",
+      "description": "Revisa los enlaces públicos de recetas en toda la instancia y modera su ciclo de vida.",
+      "empty": "No se encontraron enlaces para compartir.",
+      "inactive": "Inactivo",
+      "table": {
+        "recipe": "RECETA",
+        "owner": "PROPIETARIO",
+        "status": "ESTADO",
+        "created": "CREADO",
+        "expires": "EXPIRA",
+        "actions": "ACCIONES"
+      },
+      "revokeModal": {
+        "title": "Revocar enlace",
+        "message": "Este enlace para {recipeName} dejará de funcionar hasta que sea reactivado.",
+        "confirm": "Revocar"
+      },
+      "reactivateModal": {
+        "title": "Reactivar enlace",
+        "message": "Este enlace para {recipeName} volverá a estar activo.",
+        "confirm": "Reactivar"
+      },
+      "deleteModal": {
+        "title": "Eliminar enlace",
+        "message": "¿Eliminar este enlace para compartir {recipeName}? Esta acción no se puede deshacer.",
+        "confirm": "Eliminar enlace"
+      }
+    },
     "general": {
       "title": "General",
       "allowRegistration": "Permitir registro de nuevos usuarios",

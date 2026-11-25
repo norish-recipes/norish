@@ -595,6 +595,35 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderation von Rezept-Freigaben",
+      "description": "Überprüfe öffentliche Rezept-Links der gesamten Instanz und moderiere deren Lebenszyklus.",
+      "empty": "Keine Freigabe-Links gefunden.",
+      "inactive": "Inaktiv",
+      "table": {
+        "recipe": "REZEPT",
+        "owner": "EIGENTÜMER",
+        "status": "STATUS",
+        "created": "ERSTELLT",
+        "expires": "LÄUFT AB",
+        "actions": "AKTIONEN"
+      },
+      "revokeModal": {
+        "title": "Link widerrufen",
+        "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis er reaktiviert wird.",
+        "confirm": "Widerrufen"
+      },
+      "reactivateModal": {
+        "title": "Link reaktivieren",
+        "message": "Dieser Link für {recipeName} wird wieder aktiv.",
+        "confirm": "Reaktivieren"
+      },
+      "deleteModal": {
+        "title": "Link löschen",
+        "message": "Diesen Freigabe-Link für {recipeName} löschen? Dies kann nicht rückgängig gemacht werden.",
+        "confirm": "Link löschen"
+      }
+    },
     "general": {
       "title": "Allgemein",
       "allowRegistration": "Neue Benutzerregistrierung zulassen",

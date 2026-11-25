@@ -595,6 +595,35 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderação de compartilhamento de receitas",
+      "description": "Revise links públicos de receitas em toda a instância e modere seu ciclo de vida.",
+      "empty": "Nenhum link de compartilhamento encontrado.",
+      "inactive": "Inativo",
+      "table": {
+        "recipe": "RECEITA",
+        "owner": "PROPRIETÁRIO",
+        "status": "STATUS",
+        "created": "CRIADO",
+        "expires": "EXPIRA",
+        "actions": "AÇÕES"
+      },
+      "revokeModal": {
+        "title": "Revogar link",
+        "message": "Este link para {recipeName} deixará de funcionar até que seja reativado.",
+        "confirm": "Revogar"
+      },
+      "reactivateModal": {
+        "title": "Reativar link",
+        "message": "Este link para {recipeName} ficará ativo novamente.",
+        "confirm": "Reativar"
+      },
+      "deleteModal": {
+        "title": "Excluir link",
+        "message": "Excluir este link de compartilhamento para {recipeName}? Isso não pode ser desfeito.",
+        "confirm": "Excluir link"
+      }
+    },
     "general": {
       "title": "Geral",
       "allowRegistration": "Permitir cadastro de novos usuários",

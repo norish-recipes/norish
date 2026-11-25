@@ -595,6 +595,35 @@
     }
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderering av oppskriftdeling",
+      "description": "Bla gjennom offentlige oppskriftlenker på tvers av instansen og moderer livssyklusen deres.",
+      "empty": "Ingen delelenker funnet.",
+      "inactive": "Inaktiv",
+      "table": {
+        "recipe": "OPPSKRIFT",
+        "owner": "EIER",
+        "status": "STATUS",
+        "created": "OPPRETTET",
+        "expires": "UTLØPER",
+        "actions": "HANDLINGER"
+      },
+      "revokeModal": {
+        "title": "Tilbakekall lenke",
+        "message": "Denne lenken til {recipeName} slutter å virke inntil den gjenaktiveres.",
+        "confirm": "Tilbakekall"
+      },
+      "reactivateModal": {
+        "title": "Gjenaktiver lenke",
+        "message": "Denne lenken til {recipeName} blir aktiv igjen.",
+        "confirm": "Gjenaktiver"
+      },
+      "deleteModal": {
+        "title": "Slett lenke",
+        "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
+        "confirm": "Slett lenke"
+      }
+    },
     "general": {
       "title": "Generelt",
       "allowRegistration": "Tillat ny brukerregistrering",
