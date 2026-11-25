@@ -13,7 +13,7 @@ const mockGetHouseholdForUser = vi.fn();
 const mockFindHouseholdByName = vi.fn();
 const mockJoinHousehold = vi.fn();
 const mockRenameHousehold = vi.fn();
-const mockGetUsersByHouseholdId = vi.fn();
+const mockGetHouseholdMemberIds = vi.fn();
 
 vi.mock("@norish/db/repositories/users", () => ({
   setUserAdminStatus: (...args: unknown[]) => mockSetUserAdminStatus(...args),
@@ -26,8 +26,11 @@ vi.mock("@norish/db/repositories/households", () => ({
   findHouseholdByName: (...args: unknown[]) => mockFindHouseholdByName(...args),
   joinHousehold: (...args: unknown[]) => mockJoinHousehold(...args),
   renameHousehold: (...args: unknown[]) => mockRenameHousehold(...args),
-  getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
   NEW_HOUSEHOLD_NAME: "My household",
+}));
+
+vi.mock("@norish/db/repositories/household-members", () => ({
+  getHouseholdMemberIds: (...args: unknown[]) => mockGetHouseholdMemberIds(...args),
 }));
 
 vi.mock("@norish/shared-server/cache/household", () => ({
@@ -276,7 +279,7 @@ describe("processClaimsForUser", () => {
     });
     mockSetUserAdminStatus.mockResolvedValue(undefined);
     mockIsUserServerOwner.mockResolvedValue(false);
-    mockGetUsersByHouseholdId.mockResolvedValue([]);
+    mockGetHouseholdMemberIds.mockResolvedValue([]);
     mockGetUserById.mockResolvedValue({
       id: "user-123",
       name: "Test User",
