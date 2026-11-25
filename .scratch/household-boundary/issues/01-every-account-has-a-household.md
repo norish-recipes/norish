@@ -52,3 +52,13 @@
   8. fixed: lock waits count only this suite's database's client backends.
   9. fixed: the rerun compares whole `households` and `household_users` rows.
   - rejected: interim holds-nothing check racing inserts (ticket 09 removes it); claims matching by name (pre-existing, asked of the maintainer).
+- Review round 3:
+  1. fixed: a household of one made by leave or removal has no join code, so nothing under the lock reaches the pool; a pool-exhaustion race test.
+  2. fixed: the move returns who stays, read under its lock; leave and kick announce and drop the cache for them.
+  3. fixed: joining, renaming and deleting retry in a fresh transaction when the account moved before its lock landed; avatar files are swept after the delete commits.
+  4. fixed: `joinHousehold(userId, { householdId, name })` refuses the join when the name changed under the lock.
+  5. fixed: the E2E cleanup deletes through `deleteAccount`; `deleteHousehold` and `deleteUser` are gone.
+  6. fixed: both apps show each join refusal in the reader's language, mapped in `use-household-mutations` from `@norish/shared/lib/join-refusals`.
+  7. fixed: migrations run in one transaction (drizzle's migrator), so the trigger now comes before the backfill.
+  8. fixed: the test holds the household lock itself, each operation must wait behind it (`pg_blocking_pids`), and every settlement and the invariant are asserted; each race test fails with its lock removed, except the deletion-after-own-join test, which pins the retry.
+  - rejected: own expired code answers already-member; interim holds-nothing check; claims matching by name (asked of the maintainer).
