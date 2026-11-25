@@ -11,8 +11,9 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-shares";
 
 import type { ReadStatus } from "../trpc/read-status";
+import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import { readStatus } from "../trpc/read-status";
+import { readStatus, rereadAfterWrite } from "../trpc/read-status";
 
 type RecipeSharesQueryResult = {
   shares: RecipeShareSummaryDto[];
@@ -71,6 +72,12 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
   const queryClient = useQueryClient();
   const queryKey = trpc.recipes.shareListMine.queryKey();
   const query = useQuery(trpc.recipes.shareListMine.queryOptions());
+
+  // Told on the maker's own channel, so a link the maker may no longer view still rereads.
+  useRealtimeSubscription(trpc.recipes.onMyShareEvent, {
+    onEvent: () => void rereadAfterWrite(queryClient, queryKey),
+    liveQueryKeys: [queryKey],
+  });
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey });

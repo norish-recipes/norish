@@ -60,6 +60,11 @@ export const recipesRealtime = defineRealtimeCatalogue("recipe", {
   },
   /** One event for every share lifecycle transition; `kind` says which. */
   shareEvent: { scope: "policy", payload: RecipeShareEventSchema },
+  /** Tells the maker's devices a link changed, whoever may view its recipe: the link and kind only. */
+  myShareEvent: {
+    scope: "user",
+    payload: z.object({ kind: z.enum(recipeShareEventKinds), shareId: z.string() }),
+  },
   // z.custom: FullRecipeDTO has no standalone zod schema yet.
   updated: {
     scope: "policy",

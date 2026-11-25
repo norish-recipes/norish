@@ -452,6 +452,28 @@ describe("recipe share procedures", () => {
       }
     });
 
+    it("tells the maker's own devices of a moderation, naming the link and kind only", async () => {
+      isUserServerAdminMock.mockResolvedValue(true);
+      const admin = recipeSharesProcedures.createCaller(authedCtx as never);
+
+      getRecipeShareByIdMock.mockResolvedValue(othersShare);
+      revokeRecipeShareMock.mockResolvedValue(applied(2, new Date()));
+      reactivateRecipeShareMock.mockResolvedValue(applied(3, null));
+      deleteRecipeShareMock.mockResolvedValue({ stale: false });
+
+      await admin.shareRevokeAdmin({ id: shareId, version: 1 });
+      await admin.shareReactivateAdmin({ id: shareId, version: 2 });
+      await admin.shareDeleteAdmin({ id: shareId, version: 3 });
+
+      for (const kind of ["revoked", "reactivated", "deleted"] as const) {
+        expect(recipes.publish).toHaveBeenCalledWith(
+          "myShareEvent",
+          { kind, shareId },
+          { userId: "other-user" }
+        );
+      }
+    });
+
     it("answers NOT_FOUND to an admin for a share that is gone", async () => {
       isUserServerAdminMock.mockResolvedValue(true);
       const admin = recipeSharesProcedures.createCaller(authedCtx as never);

@@ -64,8 +64,9 @@ function toRecipeShareLifecycleEvent(
   });
 }
 
+/** The recipe's audience hears it, and the maker's own devices whether or not they may view it. */
 async function emitRecipeShareEvent(
-  share: Pick<RecipeShareDto, "id" | "recipeId" | "version">,
+  share: Pick<RecipeShareDto, "id" | "recipeId" | "version" | "userId">,
   type: RecipeShareLifecycleEventDto["type"]
 ) {
   const audience = await recipeAudience(share.recipeId);
@@ -77,6 +78,12 @@ async function emitRecipeShareEvent(
       audience
     );
   }
+
+  await recipes.publish(
+    "myShareEvent",
+    { kind: type, shareId: share.id },
+    { userId: share.userId }
+  );
 }
 
 async function getOwnedShareOrThrow(ctx: { user: { id: string } }, shareId: string) {
@@ -217,7 +224,7 @@ const remove = authedProcedure
 
     if (!result.stale) {
       await emitRecipeShareEvent(
-        { id: share.id, recipeId: share.recipeId, version: share.version },
+        { id: share.id, recipeId: share.recipeId, version: share.version, userId: share.userId },
         "deleted"
       );
     }
@@ -271,7 +278,7 @@ const removeAdmin = adminProcedure
 
     if (!result.stale) {
       await emitRecipeShareEvent(
-        { id: share.id, recipeId: share.recipeId, version: share.version },
+        { id: share.id, recipeId: share.recipeId, version: share.version, userId: share.userId },
         "deleted"
       );
     }
