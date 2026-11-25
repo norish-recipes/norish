@@ -116,9 +116,11 @@ describe("versioned repository behavior", () => {
       .insert(stepImages)
       .values({ stepId: step.id, image: "/step.jpg", order: "0" })
       .returning();
-    const [image] = await addRecipeImages(testRecipeId, [{ image: "/hero.jpg", order: 0 }]);
+    const [image] = await addRecipeImages(testRecipeId, [
+      { image: `/recipes/${testRecipeId}/hero.jpg`, order: 0 },
+    ]);
     const [video] = await addRecipeVideos(testRecipeId, [
-      { video: "/clip.mp4", thumbnail: null, duration: 12, order: 0 },
+      { video: `/recipes/${testRecipeId}/video-1.mp4`, thumbnail: null, duration: 12, order: 0 },
     ]);
 
     expect(recipeIngredient.version).toBe(1);

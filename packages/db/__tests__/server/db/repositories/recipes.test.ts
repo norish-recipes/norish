@@ -251,7 +251,7 @@ describe("Recipe Repository - updateRecipeWithRefs", () => {
       await updateRecipeWithRefs(testRecipeId, testUserId, {
         images: [
           {
-            image: "/new-image.jpg",
+            image: `/recipes/${testRecipeId}/new-image.jpg`,
             order: 0,
           },
         ],
