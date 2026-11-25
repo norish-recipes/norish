@@ -10,14 +10,17 @@ import { mkdtempSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { eq } from "drizzle-orm";
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import type { IconSet } from "@norish/shared-server/ingredients/icons";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { ingredients } from "@norish/db/schema";
+import { withTransaction } from "@norish/db/drizzle";
+import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
+import { listIconCatalogue, setIngredientIcon } from "@norish/db/repositories/ingredient-icons";
+import { lockTree } from "@norish/db/repositories/ingredient-relocation";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import {
   CatalogueEditError,
   mergeIngredients,
@@ -25,6 +28,7 @@ import {
   setParent,
 } from "@norish/shared-server/ingredients/catalogue";
 import {
+  deleteUnusedIngredientIcons,
   DRAFT_ICON_GRACE_MS,
   sweepIngredientIcons,
 } from "@norish/shared-server/ingredients/icon-drafts";
@@ -34,8 +38,9 @@ import {
 } from "@norish/shared-server/ingredients/icon-rounds";
 import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
+import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { getTestDb, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
+import { testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 // The image provider, drawing a plain square: the cut-out and the store are real.
@@ -75,11 +80,11 @@ describe("Ingredient Icons", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
+    // An administrator, so a seeded food's icon and parent are theirs to set.
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
-      isServerAdmin: false,
+      isServerAdmin: true,
     };
   });
 
@@ -88,13 +93,16 @@ describe("Ingredient Icons", () => {
     await testBase.teardown();
   });
 
+  /** A household's food, or with an Open Food Facts id a seeded one, with its own icon where given. */
   async function food(name: string, values: { offId?: string; icon?: string } = {}) {
-    const [resolved] = await resolveIngredients([name], { userId: actor.userId });
-    const id = resolved!.ingredientId;
+    const id = values.offId
+      ? await insertSeededIngredient({ name, offId: values.offId }, [
+          { text: name, fold: ingredientAliasFold(name), locale: "en" },
+        ])
+      : (await resolveIngredients([name], actor))[0]!.ingredientId;
+    const { icon } = values;
 
-    if (values.offId !== undefined || values.icon !== undefined) {
-      await getTestDb().update(ingredients).set(values).where(eq(ingredients.id, id));
-    }
+    if (icon !== undefined) await withTransaction((tx) => setIngredientIcon(tx, id, icon));
 
     return id;
   }
@@ -102,6 +110,25 @@ describe("Ingredient Icons", () => {
   async function shown(id: string) {
     return (await ingredientIcons([id], SET)).get(id)?.address ?? null;
   }
+
+  it("sweeps an erased household's icon files at once, keeping one another food still shows", async () => {
+    const gone = "dddddddddddddddddddddddddddddddd.webp";
+    const shared = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.webp";
+
+    for (const file of [gone, shared]) {
+      await fs.writeFile(path.join(uploadsDir, "ingredient-icons", file), "icon");
+    }
+    // Another household's copy of the food shows the same file.
+    await food("kipfilet", { icon: shared });
+
+    await expect(deleteUnusedIngredientIcons([gone, shared])).resolves.toBe(1);
+    await expect(fs.readdir(path.join(uploadsDir, "ingredient-icons"))).resolves.toEqual(
+      expect.arrayContaining([shared])
+    );
+    await expect(fs.readdir(path.join(uploadsDir, "ingredient-icons"))).resolves.not.toContain(
+      gone
+    );
+  });
 
   it("shows nothing for a food with no icon anywhere in its lineage", async () => {
     const kohlrabi = await food("kohlrabi");
@@ -126,7 +153,7 @@ describe("Ingredient Icons", () => {
   });
 
   it("borrows the nearest ancestor's own or shipped icon", async () => {
-    const allium = await food("allium", { icon: OTHER_OWN });
+    const allium = await food("allium", { offId: "en:allium", icon: OTHER_OWN });
     const onion = await food("onion", { offId: "en:onion" });
     const red = await food("red onion");
     const pearl = await food("pearl onion");
@@ -140,7 +167,7 @@ describe("Ingredient Icons", () => {
     expect(await shown(pearl)).toBe(address(SHIPPED_ONION));
     expect((await ingredientIcons([red], SET)).get(red)?.own).toBe(false);
 
-    await getTestDb().update(ingredients).set({ icon: OWN }).where(eq(ingredients.id, red));
+    await withTransaction((tx) => setIngredientIcon(tx, red, OWN));
     expect(await shown(pearl)).toBe(address(OWN));
   });
 
@@ -155,7 +182,7 @@ describe("Ingredient Icons", () => {
     expect(await shown(kohlrabi)).toBeNull();
 
     // Filed under a food with an icon, the group is passed by on the way up.
-    const produce = await food("produce", { icon: OTHER_OWN });
+    const produce = await food("produce", { offId: "en:produce", icon: OTHER_OWN });
 
     await setParent(actor, vegetables, produce);
     expect(await shown(kohlrabi)).toBe(address(OTHER_OWN));
@@ -181,12 +208,7 @@ describe("Ingredient Icons", () => {
     });
 
     await expect(save).rejects.toBeInstanceOf(CatalogueEditError);
-    const [row] = await getTestDb()
-      .select({ name: ingredients.name, icon: ingredients.icon })
-      .from(ingredients)
-      .where(eq(ingredients.id, onion));
-
-    expect(row).toEqual({ name: "onion", icon: null });
+    expect((await listIconCatalogue()).get(onion)).toMatchObject({ name: "onion", icon: null });
   });
 
   it("keeps the surviving food's own icon in a merge", async () => {
@@ -242,12 +264,15 @@ describe("Ingredient Icons", () => {
     const onion = await food("onion", { offId: "en:onion" });
     const red = await food("red onion");
 
-    await getTestDb().update(ingredients).set({ parentId: onion }).where(eq(ingredients.id, red));
+    await setParent(actor, red, onion);
 
     // A red onion keeps showing the onion, and a food merged away is gone: neither is listed.
     const merged = await food("romanesco");
 
-    await getTestDb().delete(ingredients).where(eq(ingredients.id, merged));
+    await withTransaction(async (tx) => {
+      await lockTree(tx);
+      await deleteCatalogueIngredient(tx, merged);
+    });
     // A vague group stays without one on purpose.
     const vegetables = await food("vegetables", { offId: "en:vegetables" });
 

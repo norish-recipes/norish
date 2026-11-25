@@ -19,6 +19,7 @@ import {
   households,
   householdUsers,
   ingredientAliases,
+  ingredientJunkPile,
   ingredientNutritionCorrections,
   ingredients,
   ingredientStorePreferences,
@@ -38,6 +39,7 @@ import {
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { isRetryableConflict } from "./constraint-violation";
+import { listHouseholdIconFiles } from "./ingredient-icons";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { turnPlannedRecipesIntoNotes } from "./planned-items";
 import { getUsersByIds } from "./users";
@@ -288,8 +290,6 @@ export async function moveToHouseholdOfOne(
 const HELD_BY_MEMBER: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
   [recipes, recipes.userId],
   [cookbooks, cookbooks.userId],
-  [ingredients, ingredients.ownerId],
-  [ingredientAliases, ingredientAliases.ownerId],
 ];
 
 const HELD_BY_HOUSEHOLD: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
@@ -300,6 +300,9 @@ const HELD_BY_HOUSEHOLD: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
   [pantryIngredients, pantryIngredients.householdId],
   [plannedItems, plannedItems.householdId],
   [ingredientNutritionCorrections, ingredientNutritionCorrections.householdId],
+  [ingredients, ingredients.householdId],
+  [ingredientAliases, ingredientAliases.householdId],
+  [ingredientJunkPile, ingredientJunkPile.householdId],
   [tags, tags.householdId],
   [categories, categories.householdId],
   [cuisines, cuisines.householdId],
@@ -554,6 +557,8 @@ export interface AccountDeletion {
   /** The erased recipes and cookbooks, whose files are swept after the commit. */
   recipeIds: string[];
   cookbookIds: string[];
+  /** The icon files an erased household's own foods showed, swept after the commit where unused. */
+  iconFiles: string[];
   /** The plan entries for those recipes that became notes, in households that stay. */
   notes: Array<typeof plannedItems.$inferSelect>;
 }
@@ -583,6 +588,7 @@ export async function deleteAccount(userId: string): Promise<AccountDeletion> {
     ).map((row) => row.id);
     // An erased household's own plan goes with it, so only the others' entries become notes.
     const notes = await turnPlannedRecipesIntoNotes(tx, recipeIds, erased);
+    const iconFiles = erased ? await listHouseholdIconFiles(tx, erased) : [];
 
     if (erased) {
       await tx.delete(households).where(eq(households.id, erased));
@@ -606,6 +612,7 @@ export async function deleteAccount(userId: string): Promise<AccountDeletion> {
       memberIds: others,
       recipeIds,
       cookbookIds,
+      iconFiles,
       notes,
     };
   });

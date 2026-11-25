@@ -24,7 +24,11 @@ import {
   groceries,
   households,
   householdUsers,
+  ingredientAIChanges,
+  ingredientAliases,
+  ingredientJunkPile,
   ingredientNutritionCorrections,
+  ingredients,
   ingredientStorePreferences,
   pantryIngredients,
   plannedItems,
@@ -611,6 +615,59 @@ describe("deleting an account", () => {
       expect(await ownRows(w.stranger)).toMatchObject({ user: 1, recipes: 1, cookbooks: 1 });
     });
 
+    it("takes the household's own catalogue along, and names the icon files to sweep, the seed's kept", async () => {
+      const w = await world();
+      const db = getTestDb();
+      const seeded = (await createTestIngredient({ name: `ui ${w.admin}` }))!;
+      const [own] = await db
+        .insert(ingredients)
+        .values({ householdId: w.household, name: "zelfgemaakt", icon: "own-icon.webp" })
+        .returning();
+
+      await db.insert(ingredientAliases).values([
+        {
+          householdId: w.household,
+          text: "zelfgemaakt",
+          fold: "zelfgemaakt",
+          ingredientId: own!.id,
+        },
+        { householdId: w.household, text: "uitje", fold: "uitje", ingredientId: seeded.id },
+      ]);
+      await db
+        .insert(ingredientJunkPile)
+        .values({ householdId: w.household, fold: "snufje", reason: "person" });
+      await db.insert(ingredientAIChanges).values({
+        householdId: w.household,
+        kind: "plain-name",
+        ingredientId: own!.id,
+        sure: true,
+        undo: { kind: "plain-name", formerName: "Zelfgemaakt", name: "zelfgemaakt" },
+      });
+
+      await deleteAccount(w.deleted);
+      const deletion = await deleteAccount(w.admin);
+      const left = async (
+        table:
+          | typeof ingredients
+          | typeof ingredientAliases
+          | typeof ingredientJunkPile
+          | typeof ingredientAIChanges
+      ) => (await db.select().from(table).where(eq(table.householdId, w.household))).length;
+
+      expect(deletion).toMatchObject({ householdErased: true, iconFiles: ["own-icon.webp"] });
+      for (const table of [
+        ingredients,
+        ingredientAliases,
+        ingredientJunkPile,
+        ingredientAIChanges,
+      ]) {
+        expect(await left(table)).toBe(0);
+      }
+      expect(await db.select().from(ingredients).where(eq(ingredients.id, seeded.id))).toHaveLength(
+        1
+      );
+    });
+
     it("turns another household's plan entry for its recipe into a note as its household goes", async () => {
       const w = await world();
 
@@ -931,6 +988,7 @@ describe("deleting an account", () => {
     await deleteAccount(user);
 
     expect(await deleteAccount(user)).toEqual({
+      iconFiles: [],
       householdId: null,
       householdErased: false,
       successorId: null,

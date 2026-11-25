@@ -1,5 +1,6 @@
 import type { AccountDeletion } from "@norish/db/repositories/households";
 import { deleteAccount, getHouseholdById } from "@norish/db/repositories/households";
+import { deleteUnusedIngredientIcons } from "@norish/shared-server/ingredients/icon-drafts";
 import { authLogger as log } from "@norish/shared-server/logger";
 import { sweepUserAvatars } from "@norish/shared-server/media/avatar-cleanup";
 import { sweepPendingUploadsOf } from "@norish/shared-server/media/pending-recipe-media";
@@ -82,6 +83,8 @@ export async function deleteUserAccount(
       "sweep a cookbook's files",
       () => sweepCookbookImages(id),
     ]),
+    // An erased household's foods went with it; a file another food still shows stays.
+    ["sweep its household's icon files", () => deleteUnusedIngredientIcons(deletion.iconFiles)],
   ]);
 }
 
