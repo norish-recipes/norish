@@ -58,6 +58,7 @@ import {
   createTestUser,
   getTestDb,
   joinTestHousehold,
+  mintTestFood,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -340,7 +341,6 @@ describe("Ingredient Nutrition", () => {
         {
           userId: householdA[0]!,
           householdId: testHouseholdOf(householdA[0]!),
-          memberIds: householdA,
           isServerAdmin: true,
         },
         id("en:red-onion"),
@@ -911,11 +911,8 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("lists the listed foods with a gap the options cover, never a grocery food", async () => {
-      const [grocery] = await getTestDb()
-        .insert(ingredients)
-        .values({ name: "tuna in a tin", ownerId: householdA[0]! })
-        .returning({ id: ingredients.id });
-      const ids = [id("en:onion"), id("en:red-onion"), grocery!.id];
+      const grocery = await mintTestFood(testHouseholdOf(householdA[0]!), "tuna in a tin");
+      const ids = [id("en:onion"), id("en:red-onion"), grocery.ingredientId];
 
       await expect(listFoodsWithGaps(ids, { nutrition: true, conversions: true })).resolves.toEqual(
         [{ id: id("en:red-onion"), name: "red onion" }]
@@ -929,9 +926,7 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("counts Fill gaps over every listed food, seeded ones included, never a grocery food", async () => {
-      await getTestDb()
-        .insert(ingredients)
-        .values({ name: "tuna in a tin", ownerId: householdA[0]! });
+      await mintTestFood(testHouseholdOf(householdA[0]!), "tuna in a tin");
       await saveNutritionEstimate(id("en:pickled-red-onion"), numbers(40));
       const set = {
         icons: { "en:onion": "0123456789abcdef0123456789abcdef.webp" },
@@ -975,7 +970,10 @@ describe("Ingredient Nutrition", () => {
         }
       );
 
-      const catalogue = await buildCatalogueExport(new Date("2026-10-01T00:00:00Z"));
+      const catalogue = await buildCatalogueExport(
+        testHouseholdOf(householdA[0]!),
+        new Date("2026-10-01T00:00:00Z")
+      );
       const onion = catalogue.ingredients.find((ingredient) => ingredient.id === id("en:onion"));
       const red = catalogue.ingredients.find((ingredient) => ingredient.id === id("en:red-onion"));
 

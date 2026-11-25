@@ -23,7 +23,7 @@ export async function recheckUndecidedMints(): Promise<RecheckOutcome> {
   const outcome: RecheckOutcome = { merged: 0, filed: 0 };
 
   for (const mint of await listUndecidedMints()) {
-    const targets = await findOtherFoodsSpelled(mint.id, mint.aliases);
+    const targets = await findOtherFoodsSpelled(mint.householdId, mint.id, mint.aliases);
 
     if (targets.size === 1) {
       const [target] = targets;
@@ -40,9 +40,9 @@ export async function recheckUndecidedMints(): Promise<RecheckOutcome> {
     }
     if (targets.size > 1) continue;
 
-    const read = await readName(mint.name);
+    const read = await readName(mint.householdId, mint.name);
 
-    if (read.plain) await adoptPlainName(mint.id, read.plain);
+    if (read.plain) await adoptPlainName(mint, read.plain);
     // A parent AI gave or took is AI's to change.
     if (mint.answered || mint.parentId !== null) continue;
 

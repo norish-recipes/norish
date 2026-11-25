@@ -23,8 +23,14 @@ const catalogue = vi.hoisted(() => ({
     async (ids: readonly string[]) =>
       new Map(ids.filter((id) => id !== "gone").map((id) => [id, `${id}!`]))
   ),
-  listAskableIngredientIds: vi.fn(async () => ["uien"]),
-  listWholeCatalogueCleanUpIds: vi.fn(async () => ["uien", "onion"]),
+  // Two households: a seeded food two households spelled is asked about once.
+  listCatalogueHouseholds: vi.fn(async () => ["household-a", "household-b"]),
+  listAskableIngredientIds: vi.fn(async (householdId: string) =>
+    householdId === "household-a" ? ["uien"] : []
+  ),
+  listWholeCatalogueCleanUpIds: vi.fn(async (householdId: string) =>
+    householdId === "household-a" ? ["uien", "onion"] : ["onion"]
+  ),
 }));
 const icons = vi.hoisted(() => ({
   listFoodsShowingNoIcon: vi.fn(async (ids: readonly string[]) =>

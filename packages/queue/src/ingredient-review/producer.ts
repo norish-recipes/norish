@@ -2,6 +2,7 @@ import type { IngredientReviewJobData } from "@norish/queue/contracts/job-types"
 import {
   findCatalogueIngredientNames,
   listAskableIngredientIds,
+  listCatalogueHouseholds,
   listWholeCatalogueCleanUpIds,
 } from "@norish/db/repositories/ingredient-catalogue";
 import {
@@ -33,11 +34,23 @@ export const CATALOGUE_CLEAN_UP = "clean-up";
 /** Which foods a Clean up catalogue run asks about (CONTEXT.md, Catalogue Cleanup). */
 export type CleanUpScope = "recipe-foods" | "whole-catalogue";
 
-/** The foods a Clean up over the scope asks about. */
+/**
+ * The foods a Clean up over the scope asks about, household by household; each is asked inside its
+ * own household and the seed, a seeded food once for every household's spellings on it.
+ */
 export async function listCleanUpFoods(scope: CleanUpScope): Promise<string[]> {
-  return scope === "whole-catalogue"
-    ? await listWholeCatalogueCleanUpIds()
-    : await listAskableIngredientIds();
+  const foods = new Set<string>();
+
+  for (const householdId of await listCatalogueHouseholds()) {
+    const ids =
+      scope === "whole-catalogue"
+        ? await listWholeCatalogueCleanUpIds(householdId)
+        : await listAskableIngredientIds(householdId);
+
+    for (const id of ids) foods.add(id);
+  }
+
+  return [...foods];
 }
 
 /** Whether a Clean up catalogue run is waiting or running: one runs at a time. */

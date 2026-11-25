@@ -10,6 +10,7 @@ import type {
 import { wasParentSetByAI } from "@norish/db/repositories/ingredient-ai-changes";
 import {
   findCatalogueIngredient,
+  listSpellingHouseholds,
   setIngredientFlagReason,
 } from "@norish/db/repositories/ingredient-catalogue";
 import { noTrace } from "@norish/shared/contracts/ingredient-catalogue";
@@ -41,20 +42,41 @@ export type CleanUpOutcome = ReviewOutcome & { spellings?: SpellingCheckOutcome 
 
 /**
  * A whole-catalogue Clean up of one food (CONTEXT.md), overriding a person's decisions and undos.
- * A seeded food is the catalogue's own: only the spellings added to it are checked.
+ * A seeded food is the catalogue's own: only the spellings households added to it are checked, each
+ * household's inside its own catalogue.
  */
 export async function cleanUpOverWholeCatalogue(ingredientId: string): Promise<CleanUpOutcome> {
   return await overridingDecisions(async () => {
     if (!(await findCatalogueIngredient(ingredientId))?.seeded)
       return await askAIAbout(ingredientId);
+    const checks: SpellingCheckOutcome[] = [];
+
+    for (const householdId of await listSpellingHouseholds(ingredientId)) {
+      checks.push(await checkSpellingsOf(householdId, ingredientId));
+    }
 
     return {
       outcome: "skipped",
       reason: "seeded",
       ...noTrace(),
-      spellings: await checkSpellingsOf(ingredientId),
+      spellings: togetherChecked(checks),
     };
   });
+}
+
+/** Several households' spelling checks of one food as one. */
+function togetherChecked(checks: readonly SpellingCheckOutcome[]): SpellingCheckOutcome {
+  const checked = checks.flatMap((check) => (check.outcome === "checked" ? [check] : []));
+
+  if (checked.length === 0) return checks[0] ?? { outcome: "skipped", reason: "none" };
+
+  return {
+    outcome: "checked",
+    kept: checked.flatMap((check) => check.kept),
+    removed: checked.flatMap((check) => check.removed),
+    moved: checked.flatMap((check) => check.moved),
+    unchanged: checked.flatMap((check) => check.unchanged),
+  };
 }
 
 /** Ask AI what a food is and make the answer; a food not merged away then gets its Plain Name. */
@@ -64,13 +86,21 @@ export async function askAIAbout(ingredientId: string): Promise<ReviewOutcome> {
 
   if (!row) return { outcome: "skipped", reason: "not-found", ...trace };
   if (!row.askable && !isOverriding()) return { outcome: "skipped", reason: "decided", ...trace };
+  // AI asks inside the food's household and the seed; a seeded food is never asked about.
+  if (!row.householdId) return { outcome: "skipped", reason: "seeded", ...trace };
+  const { householdId } = row;
 
   const current = row.parentId ? await findCatalogueIngredient(row.parentId) : null;
   const filedUnder = current && {
     ...current,
     byAI: await wasParentSetByAI(ingredientId, current.id),
   };
-  const answer = await askWhatFoodThisIs(row.name, { excludeId: ingredientId, filedUnder, trace });
+  const answer = await askWhatFoodThisIs(row.name, {
+    householdId,
+    excludeId: ingredientId,
+    filedUnder,
+    trace,
+  });
 
   if (answer.kind === "same") {
     const into = await findCatalogueIngredient(answer.ingredientId);
@@ -85,7 +115,9 @@ export async function askAIAbout(ingredientId: string): Promise<ReviewOutcome> {
   if (row.seeded && (answer.kind === "several" || answer.kind === "not-a-food")) {
     return { outcome: "skipped", reason: "seeded", ...trace };
   }
-  if (answer.kind === "several") return await announcingAfter(() => split(row, answer, trace));
+  if (answer.kind === "several") {
+    return await announcingAfter(() => split({ ...row, householdId }, answer, trace));
+  }
   if (answer.kind === "not-a-food") {
     // A tool goes unsure too (Mike, ticket 08); an unsure "names nothing" is only flagged.
     return answer.sure || answer.tool
@@ -101,7 +133,7 @@ export async function askAIAbout(ingredientId: string): Promise<ReviewOutcome> {
   const parent =
     answer.parent &&
     ((await findCatalogueIngredient(answer.parent.id)) ??
-      (await foundAgain(answer.parent.name, ingredientId)));
+      (await foundAgain(householdId, answer.parent.name, ingredientId)));
   // No parent from AI drops the current one, but never a seeded food's; a person's is never asked.
   const { outcome: filed, previous } =
     parent || (row.parentId && !row.seeded)
@@ -127,8 +159,8 @@ export async function askAIAbout(ingredientId: string): Promise<ReviewOutcome> {
     : { outcome: "unsure", reason: "ai-unsure", ...trace };
 }
 
-async function foundAgain(name: string, excludeId: string) {
-  const named = await findFoodNamed(name, excludeId);
+async function foundAgain(householdId: string, name: string, excludeId: string) {
+  const named = await findFoodNamed(householdId, name, excludeId);
 
   return named.kind === "found" ? await findCatalogueIngredient(named.food.ingredientId) : null;
 }
@@ -138,7 +170,7 @@ async function foundAgain(name: string, excludeId: string) {
  * and the food's rows name them instead; a part spelled by the food moves to the food named for it.
  */
 async function split(
-  food: { id: string; ownerId: string | null },
+  food: { id: string; householdId: string; ownerId: string | null },
   answer: Extract<AIResolution, { kind: "several" }>,
   trace: ReviewTrace
 ): Promise<ReviewOutcome> {
@@ -151,7 +183,7 @@ async function split(
 
   const read = await resolveParts(
     answer.parts.map((part) => (part.found ? { ...part.found, text: part.text } : part.text)),
-    { userId: food.ownerId },
+    { householdId: food.householdId, userId: food.ownerId },
     "split"
   );
   const parts = distinctFoods(read);
@@ -194,7 +226,9 @@ async function doubted(
 /** The food AI named was merged away meanwhile: the food stays as it was, and its flag says so. */
 async function foodGone(ingredientId: string, trace: ReviewTrace): Promise<ReviewOutcome> {
   await setIngredientFlagReason(ingredientId, "food-gone");
-  await ingredientChanges().changed([ingredientId]);
+  const householdId = (await findCatalogueIngredient(ingredientId))?.householdId;
+
+  if (householdId) await ingredientChanges().changed([ingredientId], householdId);
 
   return { outcome: "unsure", reason: "food-gone", ...trace };
 }

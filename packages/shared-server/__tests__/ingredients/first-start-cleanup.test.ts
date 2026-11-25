@@ -87,6 +87,7 @@ describe("the first-start cleanup", () => {
   /** An own food as earlier versions minted it: its name and every text as written a spelling. */
   async function oldMint(name: string, texts: string[]) {
     const rows = await mintIngredientWithAliases({
+      householdId: testHouseholdOf(userId),
       name,
       aliases: texts.map((text) => ({ text, fold: ingredientAliasFold(text) })),
       ownerId: userId,
@@ -147,7 +148,7 @@ describe("the first-start cleanup", () => {
     };
 
     await markDistinct(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       joined.ingredientId
     );
     const joinedLine = await insertTestRecipeLine(
@@ -177,7 +178,7 @@ describe("the first-start cleanup", () => {
     });
 
     await markDistinct(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       decided.ingredientId
     );
 
@@ -269,9 +270,9 @@ describe("the first-start cleanup", () => {
 
   it("splits a joined food keeping the word its parts share, and leaves one that reading misses", async () => {
     for (const text of ["cherry", "grape", "cherry tomato", "grape tomatoes", "zonnebloem"]) {
-      await mintTestFood(text, { locale: "en" });
+      await mintTestFood(testHouseholdOf(userId), text, { locale: "en" });
     }
-    await mintTestFood("kokosolie", { locale: "nl" });
+    await mintTestFood(testHouseholdOf(userId), "kokosolie", { locale: "nl" });
     const tomatoes = await oldMint("cherry or grape tomatoes", ["cherry or grape tomatoes"]);
     const oils = await oldMint("zonnebloem- of kokosolie", ["zonnebloem- of kokosolie"]);
     const recipe = await createTestRecipe(userId);
@@ -290,7 +291,7 @@ describe("the first-start cleanup", () => {
     const pair = await oldMint("Salt/pepper", ["Salt/pepper"]);
     const plus = await oldMint("salt + black pepper", ["salt + black pepper"]);
 
-    await mintTestFood("black pepper", { locale: "en" });
+    await mintTestFood(testHouseholdOf(userId), "black pepper", { locale: "en" });
     const recipe = await createTestRecipe(userId);
     const pairLine = await insertTestRecipeLine(
       { recipeId: recipe.id, name: "Salt & pepper", order: "0" },
@@ -307,7 +308,7 @@ describe("the first-start cleanup", () => {
   });
 
   it("merges a food named for a known food and a note into it, kept distinct or not", async () => {
-    const oil = await mintTestFood("olie", { locale: "nl" });
+    const oil = await mintTestFood(testHouseholdOf(userId), "olie", { locale: "nl" });
     const frying = await oldMint("olie om te bakken", ["olie om te bakken"]);
     const kept = await oldMint("zout naar keuze", ["zout naar keuze"]);
     const recipe = await createTestRecipe(userId);
@@ -321,12 +322,12 @@ describe("the first-start cleanup", () => {
     );
 
     await markDistinct(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       kept.ingredientId
     );
     // A parent 0.25 marked as a person's is no decision: its mark goes first.
     await setParent(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       frying.ingredientId,
       oil.ingredientId
     );
@@ -340,7 +341,7 @@ describe("the first-start cleanup", () => {
   });
 
   it("leaves a food named for a known food and a note whose parent a person chose since 0.25", async () => {
-    const oil = await mintTestFood("olie", { locale: "nl" });
+    const oil = await mintTestFood(testHouseholdOf(userId), "olie", { locale: "nl" });
     const frying = await oldMint("olie om te bakken", ["olie om te bakken"]);
     const line = await insertTestRecipeLine(
       { recipeId: (await createTestRecipe(userId)).id, name: "olie om te bakken" },
@@ -348,7 +349,7 @@ describe("the first-start cleanup", () => {
     );
 
     await setParent(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       frying.ingredientId,
       oil.ingredientId
     );
@@ -380,11 +381,11 @@ describe("the first-start cleanup", () => {
     );
 
     await markDistinct(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       melted.ingredientId
     );
     await withTransaction((tx) =>
-      addToJunkPile(tx, ["melted", "bakvorm", "chopped", "toppings"], { reason: "seed" })
+      addToJunkPile(tx, null, ["melted", "bakvorm", "chopped", "toppings"], { reason: "seed" })
     );
     forgetSpellingRules();
 
@@ -430,6 +431,7 @@ describe("the first-start cleanup", () => {
 
   it("leaves a joined food whose whole name another food spells, as a line would read it", async () => {
     await mintIngredientWithAliases({
+      householdId: testHouseholdOf(userId),
       name: "salt and pepper",
       aliases: [{ text: "zout en peper", fold: ingredientAliasFold("zout en peper") }],
       ownerId: userId,
@@ -470,6 +472,7 @@ describe("the first-start cleanup", () => {
 
   it("leaves a spelling on the junk pile to AI's spelling check", async () => {
     const [boneless] = (await addIngredientAliases({
+      householdId: testHouseholdOf(userId),
       ingredientId: seeded.get("en:salt")!,
       aliases: [{ text: "boneless", fold: "boneless" }],
       ownerId: userId,
@@ -480,7 +483,7 @@ describe("the first-start cleanup", () => {
       [boneless!.aliasId]
     );
 
-    await withTransaction((tx) => addToJunkPile(tx, ["boneless"], { reason: "seed" }));
+    await withTransaction((tx) => addToJunkPile(tx, null, ["boneless"], { reason: "seed" }));
     forgetSpellingRules();
 
     await expect(cleanUpCatalogueOnFirstStart()).resolves.toMatchObject({ removed: 0 });
@@ -531,7 +534,7 @@ describe("the first-start cleanup", () => {
     ]);
 
     await markDistinct(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       legacy.ingredientId
     );
 
@@ -703,6 +706,7 @@ describe("the first-start cleanup", () => {
   it("removes a spelling ending in a colon, so its line names no food and keeps its text", async () => {
     const lettuce = seeded.get("en:lettuce")!;
     const [colon] = (await addIngredientAliases({
+      householdId: testHouseholdOf(userId),
       ingredientId: lettuce,
       aliases: [{ text: "Voor de salade:", fold: ingredientAliasFold("Voor de salade:") }],
       ownerId: userId,
@@ -755,7 +759,6 @@ describe("the first-start cleanup", () => {
     const actor = {
       userId,
       householdId: testHouseholdOf(userId),
-      memberIds: [userId],
       isServerAdmin: false,
     };
     const prawns = await oldMint("king prawns", ["king prawns"]);

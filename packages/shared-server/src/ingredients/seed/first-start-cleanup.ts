@@ -13,6 +13,7 @@ import {
   deleteUnnamedOwnFoods,
   findCatalogueAliasOwner,
   findIngredientIdByFold,
+  listCatalogueHouseholds,
   unflagHiddenFoods,
   unmarkChosenParents,
 } from "@norish/db/repositories/ingredient-catalogue";
@@ -123,8 +124,11 @@ async function cleanUpCatalogue(from: number): Promise<CleanupOutcome> {
       }
       continue;
     }
+    // A spelling is read in its household's catalogue; the seed's own are only stripped above.
+    const { householdId } = spelling;
 
-    const { clean } = await readName(spelling.text);
+    if (!householdId) continue;
+    const { clean } = await readName(householdId, spelling.text);
 
     if (clean.text !== spelling.text || clean.fold !== spelling.fold) {
       variants.push({ ...spelling, clean });
@@ -132,7 +136,7 @@ async function cleanUpCatalogue(from: number): Promise<CleanupOutcome> {
     }
     // An own food's spelling read up to its note ("olie om te bakken") is that known food's,
     // kept distinct or named, unless a person chose its parent.
-    const noted = spelling.cleanable ? await findFoodBeforeNote(spelling.text) : null;
+    const noted = spelling.cleanable ? await findFoodBeforeNote(householdId, spelling.text) : null;
 
     if (noted && noted.ingredientId !== spelling.ingredientId) {
       variants.push({ ...spelling, clean: { text: noted.text, fold: noted.fold } });
@@ -172,7 +176,7 @@ async function cleanUpCatalogue(from: number): Promise<CleanupOutcome> {
   // 5. An own food whose name is joined ("zout en peper") is split, even one kept distinct; a mix
   // holding a joined spelling stays. Any other takes the clean name its name reduces to.
   for (const food of await listOwnFoods()) {
-    const read = await readName(food.name);
+    const read = await readName(food.householdId, food.name);
     const split = await read.parts(food.id);
 
     if (split) {
@@ -186,8 +190,10 @@ async function cleanUpCatalogue(from: number): Promise<CleanupOutcome> {
     }
   }
 
-  // 6. A hidden food has no flag (`unflagHiddenFoods`).
-  outcome.unflagged = await underTreeLock(unflagHiddenFoods);
+  // 6. A hidden food has no flag (`unflagHiddenFoods`), household by household.
+  for (const householdId of await listCatalogueHouseholds()) {
+    outcome.unflagged += await underTreeLock((tx) => unflagHiddenFoods(tx, householdId));
+  }
 
   // 8. A flag says only that AI changed a food unsure (`clearRetiredFlags`).
   outcome.retired = await underTreeLock(clearRetiredFlags);
@@ -239,12 +245,13 @@ async function removeVariants(variants: readonly Variant[]): Promise<number> {
     );
 
     for (const variant of variants) {
-      const spelling = await findCatalogueAliasOwner(tx, variant.id);
+      const householdId = variant.householdId;
+      const spelling = householdId && (await findCatalogueAliasOwner(tx, householdId, variant.id));
 
-      if (!spelling) continue;
-      if ((await countAliasesOf(tx, spelling.ingredientId)) <= 1) {
+      if (!householdId || !spelling) continue;
+      if ((await countAliasesOf(tx, spelling.ingredientId, householdId)) <= 1) {
         const target = variant.clean.fold
-          ? await findIngredientIdByFold(tx, variant.clean.fold)
+          ? await findIngredientIdByFold(tx, householdId, variant.clean.fold)
           : null;
 
         // A colon spelling's fold may be its clean one, so the food holding it is its own.

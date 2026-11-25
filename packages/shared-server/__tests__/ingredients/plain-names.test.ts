@@ -11,7 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
-import { adoptPlainName } from "@norish/db/repositories/ingredient-seed";
+import { adoptPlainName, insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { ingredientAliases, ingredients } from "@norish/db/schema";
 import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
@@ -58,7 +58,6 @@ describe("Plain Names", () => {
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
       isServerAdmin: false,
     };
     vi.mocked(generateStructured).mockReset();
@@ -71,7 +70,7 @@ describe("Plain Names", () => {
 
   /** A food a recipe line names, so AI may name it, flagged as the upgrade leaves them. */
   async function food(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId: actor.userId });
+    const [resolved] = await resolveIngredients([text], actor);
 
     await nameInATestRecipe(actor.userId, resolved!.aliasId, text);
     await getTestDb()
@@ -117,7 +116,7 @@ describe("Plain Names", () => {
     expect(await getSpellingTexts(tonijn)).toEqual(
       expect.arrayContaining(["Lekkerste Tonijn Uit Blik", "tonijn uit blik"])
     );
-    expect(await listAIChanges()).toMatchObject([
+    expect(await listAIChanges(actor)).toMatchObject([
       { sure: true, undo: { kind: "plain-name", formerName: "Lekkerste Tonijn Uit Blik" } },
     ]);
   });
@@ -128,7 +127,7 @@ describe("Plain Names", () => {
     readsAs("tijm");
     await expect(giveItsPlainName(thyme)).resolves.toEqual({ outcome: "plain" });
     expect(await row(thyme)).toMatchObject({ nameSettled: true, flagged: true });
-    expect(await listAIChanges()).toEqual([]);
+    expect(await listAIChanges(actor)).toEqual([]);
     await expect(giveItsPlainName(thyme)).resolves.toEqual({
       outcome: "skipped",
       reason: "settled",
@@ -152,7 +151,7 @@ describe("Plain Names", () => {
     readsAs("creme fraiche");
     await expect(giveItsPlainName(cream)).resolves.toEqual({ outcome: "plain" });
     expect(await row(cream)).toMatchObject({ name: "crème fraîche", nameSettled: true });
-    expect(await listAIChanges()).toEqual([]);
+    expect(await listAIChanges(actor)).toEqual([]);
   });
 
   it("lowers a name in capitals only to its plain name", async () => {
@@ -176,7 +175,7 @@ describe("Plain Names", () => {
       into: "onion",
     });
     expect(await getSpellingTexts(onion)).toContain("Verse Onion Deluxe");
-    expect(await listAIChanges()).toMatchObject([
+    expect(await listAIChanges(actor)).toMatchObject([
       {
         sure: true,
         ingredient: { id: onion },
@@ -193,7 +192,7 @@ describe("Plain Names", () => {
   }
 
   it("merges into a food spelling the plain name only where a recipe line lists it", async () => {
-    const [hidden] = await resolveIngredients(["uien"], { userId: actor.userId });
+    const [hidden] = await resolveIngredients(["uien"], actor);
 
     await spell(hidden!.ingredientId, "onion", "en");
     const messy = await food("Verse Onion Deluxe");
@@ -249,7 +248,7 @@ describe("Plain Names", () => {
 
     readsAs("Unox Knaks");
     await giveItsPlainName(knaks);
-    await undoAIChange(actor, (await listAIChanges())[0]!.id);
+    await undoAIChange(actor, (await listAIChanges(actor))[0]!.id);
 
     expect(await row(knaks)).toMatchObject({ name: "Unox Knaks Original", nameSettled: true });
   });
@@ -266,13 +265,11 @@ describe("Plain Names", () => {
   });
 
   it("asks about neither a seeded food nor one a person decided about", async () => {
-    const seeded = await food("salt");
+    const seeded = await insertSeededIngredient({ name: "salt", offId: "en:salt" }, [
+      { text: "salt", fold: "salt", locale: "en" },
+    ]);
     const kept = await food("Verse Kipfilet");
 
-    await getTestDb()
-      .update(ingredients)
-      .set({ offId: "en:salt" })
-      .where(eq(ingredients.id, seeded));
     await markDistinct(actor, kept);
 
     await expect(giveItsPlainName(seeded)).resolves.toEqual({
@@ -314,10 +311,13 @@ describe("Plain Names", () => {
 
     readsAs("tonijn uit blik");
     await giveItsPlainName(tonijn);
-    await adoptPlainName(tonijn, {
-      text: "lekkerste tonijn",
-      fold: ingredientAliasFold("lekkerste tonijn"),
-    });
+    await adoptPlainName(
+      { id: tonijn, householdId: actor.householdId },
+      {
+        text: "lekkerste tonijn",
+        fold: ingredientAliasFold("lekkerste tonijn"),
+      }
+    );
 
     expect(await row(tonijn)).toMatchObject({ name: "tonijn uit blik" });
   });

@@ -52,7 +52,6 @@ describe("looking at old undecided mints again", () => {
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
       isServerAdmin: true,
     };
     await getTestDb()
@@ -76,7 +75,7 @@ describe("looking at old undecided mints again", () => {
 
   /** A mint as the resolver made it before its rules changed: the text whole, flagged. */
   async function legacyMint(text: string): Promise<string> {
-    const minted = await mintTestFood(text, {
+    const minted = await mintTestFood(actor.householdId, text, {
       ownerId: actor.userId,
       flagged: true,
       flagReason: "upgrade",
@@ -113,7 +112,7 @@ describe("looking at old undecided mints again", () => {
             },
           ],
         },
-        { userId: actor.userId }
+        actor
       )
     );
 
@@ -169,7 +168,7 @@ describe("looking at old undecided mints again", () => {
 
   it("leaves a grocery food alone: no parent from its words, no merge", async () => {
     const grocery = async (text: string) => {
-      const minted = await mintTestFood(text, {
+      const minted = await mintTestFood(actor.householdId, text, {
         ownerId: actor.userId,
         flagged: true,
         flagReason: "upgrade",
@@ -220,7 +219,7 @@ describe("looking at old undecided mints again", () => {
       flagged: true,
       parent: null,
     });
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
     expect((await shown(crushed))!.aliases.map((alias) => alias.text).sort()).toEqual([
       "garlic cloves",
       "garlic cloves crushed",
@@ -239,7 +238,7 @@ describe("looking at old undecided mints again", () => {
     expect(await shown(oil)).toMatchObject({ flagged: true, parent: { id: seeded.get("en:oil") } });
     expect(await shown(answered)).toMatchObject({ parent: { id: seeded.get("en:tea") } });
     expect(
-      (await listAIChanges()).map((change) => [change.ingredient?.id, change.target?.id])
+      (await listAIChanges(actor)).map((change) => [change.ingredient?.id, change.target?.id])
     ).toEqual([[answered, seeded.get("en:tea")]]);
   });
 
@@ -262,7 +261,7 @@ describe("looking at old undecided mints again", () => {
 
     await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
     expect(await shown(legacy)).toMatchObject({ flagged: true, parent: null });
-    expect(await listAIChanges()).toMatchObject([{ target: null, sure: false }]);
+    expect(await listAIChanges(actor)).toMatchObject([{ target: null, sure: false }]);
   });
 
   it("leaves alone what a person decided, even under a flag raised again since", async () => {

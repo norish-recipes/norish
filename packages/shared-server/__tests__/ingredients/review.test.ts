@@ -28,6 +28,7 @@ import {
 } from "@norish/db/repositories/ingredient-relocation";
 import {
   applyIngredientSeed,
+  insertSeededIngredient,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
 import {
@@ -52,6 +53,7 @@ import {
   undoAIChange,
 } from "@norish/shared-server/ingredients/ai-changes";
 import {
+  addAlias,
   markDistinct,
   renameIngredient,
   setParent,
@@ -65,6 +67,7 @@ import {
   addTestPantryIngredient,
   addTestRecurringGrocery,
   createTestRecipe,
+  createTestUser,
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
@@ -187,7 +190,6 @@ describe("asking AI about an Ingredient", () => {
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
       isServerAdmin: false,
     };
     vi.mocked(decide).mockReset();
@@ -212,7 +214,7 @@ describe("asking AI about an Ingredient", () => {
 
   /** A food someone's action minted, unflagged; no row names it. */
   async function unnamed(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId: actor.userId });
+    const [resolved] = await resolveIngredients([text], actor);
 
     return resolved!;
   }
@@ -237,7 +239,7 @@ describe("asking AI about an Ingredient", () => {
 
   /** What Changed by AI lists, as kind, food, other food, sureness and what it was. */
   async function changes() {
-    return (await listAIChanges()).map((change) => ({
+    return (await listAIChanges(actor)).map((change) => ({
       kind: change.undo.kind,
       food: change.ingredient?.name ?? null,
       target: change.target?.name ?? null,
@@ -463,7 +465,7 @@ describe("asking AI about an Ingredient", () => {
 
       reads({ englishName: "peanut butter", sure: true });
       await askAIAbout(food.ingredientId);
-      await undoAIChange(actor, (await listAIChanges())[0]!.id);
+      await undoAIChange(actor, (await listAIChanges(actor))[0]!.id);
       await expect(parentOf(food.ingredientId)).resolves.toBe(butter);
 
       reads({ englishName: "peanut butter", sure: true });
@@ -492,7 +494,7 @@ describe("asking AI about an Ingredient", () => {
         { kind: "parent", food: "cookie butter", target: null, sure: false, kept: false },
       ]);
 
-      await undoAIChange(actor, (await listAIChanges())[0]!.id);
+      await undoAIChange(actor, (await listAIChanges(actor))[0]!.id);
       await expect(parentOf(food.ingredientId)).resolves.toBe(butter);
     });
 
@@ -527,17 +529,19 @@ describe("asking AI about an Ingredient", () => {
 
     it("lists and undoes a dropped parent merged into another food since as that food", async () => {
       const { food, butter } = await underButter("peanut butter");
-      const spread = await kept("spread");
+      const spread = await insertSeededIngredient({ name: "spread", offId: "en:spread" }, [
+        { text: "spread", fold: "spread", locale: "en" },
+      ]);
 
       reads({ englishName: "peanut butter", sure: true });
       await askAIAbout(food.ingredientId);
-      await withTransaction((tx) => mergeCatalogueIngredients(tx, butter!, spread.ingredientId));
+      await withTransaction((tx) => mergeCatalogueIngredients(tx, butter!, spread));
 
       expect(await listAIChangesFor(actor)).toMatchObject([
-        { kind: "parent", dropped: { id: spread.ingredientId } },
+        { kind: "parent", dropped: { id: spread } },
       ]);
-      await undoAIChange(actor, (await listAIChanges())[0]!.id);
-      await expect(parentOf(food.ingredientId)).resolves.toBe(spread.ingredientId);
+      await undoAIChange(actor, (await listAIChanges(actor))[0]!.id);
+      await expect(parentOf(food.ingredientId)).resolves.toBe(spread);
     });
   });
 
@@ -576,7 +580,7 @@ describe("asking AI about an Ingredient", () => {
         seedEntry("en:pepper", "pepper"),
         seedEntry("en:red-bell-pepper", "red bell pepper"),
       ]);
-      const bell = (await findIngredientFor("red bell pepper"))!;
+      const bell = (await findIngredientFor(actor.householdId, "red bell pepper"))!;
       const pointed = await flagged("red pointed peppers");
 
       await getTestDb()
@@ -596,7 +600,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("finds the parent AI names again when a merge took it away while AI was reading", async () => {
       await applyIngredientSeed([seedEntry("en:beef-steak", "beef steak")]);
-      const steak = (await findIngredientFor("beef steak"))!;
+      const steak = (await findIngredientFor(actor.householdId, "beef steak"))!;
       const biefstuk = await kept("biefstuk");
       const puntjes = await flagged("biefstukpuntjes");
 
@@ -1018,7 +1022,7 @@ describe("asking AI about an Ingredient", () => {
       const tortilla = await kept("tortilla");
       const tortillas = await flagged("maïstortilla");
 
-      await mintTestFood("tortila", { ownerId: actor.userId });
+      await mintTestFood(actor.householdId, "tortila", { ownerId: actor.userId });
       vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
       reads({ englishName: "tortila", sure: true });
       picks("tortilla", true);
@@ -1112,7 +1116,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("keeps baby potatoes its own food under potato: petite potatoes is not potatoes", async () => {
       await applyIngredientSeed([seedEntry("en:potato", "potato", "potatoes")]);
-      const potato = (await findIngredientFor("potatoes"))!;
+      const potato = (await findIngredientFor(actor.householdId, "potatoes"))!;
       const baby = await flagged("baby potatoes");
 
       reads({
@@ -1155,7 +1159,7 @@ describe("asking AI about an Ingredient", () => {
         seedEntry("en:red-bell-pepper", "red bell pepper", "red pepper"),
         seedEntry("en:chili-pepper", "chili pepper"),
       ]);
-      const chili = (await findIngredientFor("chili pepper"))!;
+      const chili = (await findIngredientFor(actor.householdId, "chili pepper"))!;
       const flakes = await flagged("red pepper flakes");
 
       reads({
@@ -1174,7 +1178,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("keeps deli ham its own food under ham: sliced ham is not ham", async () => {
       await applyIngredientSeed([seedEntry("en:ham", "ham")]);
-      const ham = (await findIngredientFor("ham"))!;
+      const ham = (await findIngredientFor(actor.householdId, "ham"))!;
       const deli = await flagged("deli ham");
 
       reads({
@@ -1190,7 +1194,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("files italian sausage under sausage, though AI's other name salsiccia is sausage's own spelling", async () => {
       await applyIngredientSeed([seedEntry("en:sausage", "sausage", "salsiccia")]);
-      const sausage = (await findIngredientFor("sausage"))!;
+      const sausage = (await findIngredientFor(actor.householdId, "sausage"))!;
       const italian = await flagged("italian sausage");
 
       reads({
@@ -1210,7 +1214,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("files pumpkin puree under pumpkin, though pumpkin holds the spelling pureed pumpkin", async () => {
       await applyIngredientSeed([seedEntry("en:pumpkin", "pumpkin", "pureed pumpkin")]);
-      const pumpkin = (await findIngredientFor("pumpkin"))!;
+      const pumpkin = (await findIngredientFor(actor.householdId, "pumpkin"))!;
       const puree = await flagged("pompoenpuree");
 
       reads({
@@ -1231,7 +1235,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("merges kippendijen into chicken thigh, the parent AI gives being its English name", async () => {
       await applyIngredientSeed([seedEntry("en:chicken-thigh", "chicken thigh")]);
-      const thigh = (await findIngredientFor("chicken thigh"))!;
+      const thigh = (await findIngredientFor(actor.householdId, "chicken thigh"))!;
       const dijen = await flagged("kippendijen");
 
       reads({
@@ -1253,7 +1257,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("merges edamame bonen into edamame, its English name edamame beans being edamame's spelling", async () => {
       await applyIngredientSeed([seedEntry("en:edamame", "edamame", "edamame beans")]);
-      const edamame = (await findIngredientFor("edamame"))!;
+      const edamame = (await findIngredientFor(actor.householdId, "edamame"))!;
       const bonen = await flagged("edamame bonen");
 
       reads({
@@ -1277,7 +1281,7 @@ describe("asking AI about an Ingredient", () => {
       await applyIngredientSeed([
         seedEntry("en:guajillo-chili", "guajillo chili", "guajillo chile"),
       ]);
-      const chili = (await findIngredientFor("guajillo chili"))!;
+      const chili = (await findIngredientFor(actor.householdId, "guajillo chili"))!;
       const peppers = await flagged("guajillo peppers");
 
       reads({
@@ -1299,7 +1303,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("merges guajillo peppers into guajillo chili, AI's other name guajillo chile being that parent in another inflection", async () => {
       await applyIngredientSeed([seedEntry("en:guajillo-chili", "guajillo chili")]);
-      const chili = (await findIngredientFor("guajillo chili"))!;
+      const chili = (await findIngredientFor(actor.householdId, "guajillo chili"))!;
       const peppers = await flagged("guajillo peppers");
 
       reads({
@@ -1321,7 +1325,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("files tenderstem broccoli under broccoli: its other name broccolini is not broccoli", async () => {
       await applyIngredientSeed([seedEntry("en:broccoli", "broccoli")]);
-      const broccoli = (await findIngredientFor("broccoli"))!;
+      const broccoli = (await findIngredientFor(actor.householdId, "broccoli"))!;
       const tenderstem = await flagged("tenderstem broccoli");
 
       reads({
@@ -1386,7 +1390,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("files burger buns under bread roll, the first of its parents the catalogue has", async () => {
       await applyIngredientSeed([seedEntry("en:bread-roll", "bread roll")]);
-      const roll = (await findIngredientFor("bread roll"))!;
+      const roll = (await findIngredientFor(actor.householdId, "bread roll"))!;
       const buns = await flagged("burger buns");
 
       reads({ englishName: "burger buns", parents: ["bun", "bread roll"], sure: true });
@@ -1416,7 +1420,7 @@ describe("asking AI about an Ingredient", () => {
 
     it("files italian sausage under sausage, the parent its names find, though the native parent finds braadworst", async () => {
       await applyIngredientSeed([seedEntry("en:sausage", "sausage", "salsiccia")]);
-      const sausage = (await findIngredientFor("sausage"))!;
+      const sausage = (await findIngredientFor(actor.householdId, "sausage"))!;
       await kept("braadworst");
       const italian = await flagged("italian sausage");
 
@@ -1515,15 +1519,14 @@ describe("asking AI about an Ingredient", () => {
     const onion = await kept("onion");
     const named = await flagged("sjalot");
     const parented = await flagged("red onion");
-    const [seeded] = await getTestDb()
-      .insert(ingredients)
-      .values({ name: "leek", offId: "en:leek", flagged: true })
-      .returning({ id: ingredients.id });
+    const seeded = await insertSeededIngredient({ name: "leek", offId: "en:leek", flagged: true }, [
+      { text: "leek", fold: "leek", locale: "en" },
+    ]);
 
     await renameIngredient(actor, named.ingredientId, "sjalotten");
     await setParent(actor, parented.ingredientId, onion.ingredientId);
 
-    for (const id of [onion.ingredientId, named.ingredientId, parented.ingredientId, seeded!.id]) {
+    for (const id of [onion.ingredientId, named.ingredientId, parented.ingredientId, seeded]) {
       await expect(askAIAbout(id)).resolves.toMatchObject({
         outcome: "skipped",
         reason: "decided",
@@ -1578,7 +1581,7 @@ describe("asking AI about an Ingredient", () => {
     await askAIAbout(bulbs.ingredientId);
     reads({ englishName: "red onion", parents: ["onion"], sure: true });
     await askAIAbout(red.ingredientId);
-    for (const change of await listAIChanges()) await undoAIChange(actor, change.id);
+    for (const change of await listAIChanges(actor)) await undoAIChange(actor, change.id);
 
     const restored = (await findIngredientByAliasId(bulbs.aliasId))!;
 
@@ -1605,7 +1608,7 @@ describe("asking AI about an Ingredient", () => {
 
     reads({ englishName: "red onion", parents: ["onion"], sure: false });
     await askAIAbout(red.ingredientId);
-    await keepAIChange(actor, (await listAIChanges())[0]!.id);
+    await keepAIChange(actor, (await listAIChanges(actor))[0]!.id);
 
     await expect(findIngredientByAliasId(red.aliasId)).resolves.toMatchObject({ flagged: false });
     await expect(askAIAbout(red.ingredientId)).resolves.toMatchObject({
@@ -2139,7 +2142,7 @@ describe("asking AI about an Ingredient", () => {
       expect(await exists(roller.ingredientId)).toBe(false);
       expect(await lineFoods(named.line)).toEqual({ joined: null, aliasIds: [] });
       expect(await rowsOf("groceries")).toEqual([{ name: "deegroller", aliasId: null }]);
-      const [change, ...others] = await listAIChanges();
+      const [change, ...others] = await listAIChanges(actor);
 
       expect(others).toEqual([]);
       expect(change).toMatchObject({
@@ -2208,7 +2211,7 @@ describe("asking AI about an Ingredient", () => {
         expect.objectContaining({ kind: "not-a-food", food: null, sure: true }),
       ]);
 
-      const [change] = await listAIChanges();
+      const [change] = await listAIChanges(actor);
 
       await undoAIChange(actor, change!.id);
       expect(await lineFoods(lines[1]!.id)).toEqual({ joined: null, aliasIds: [melted.aliasId] });
@@ -2230,7 +2233,7 @@ describe("asking AI about an Ingredient", () => {
       });
       expect(await lineFoods(line.id)).toMatchObject({ aliasIds: [butter.aliasId] });
 
-      const [change] = await listAIChanges();
+      const [change] = await listAIChanges(actor);
 
       await undoAIChange(actor, change!.id);
       expect(await lineFoods(line.id)).toMatchObject({
@@ -2247,7 +2250,7 @@ describe("asking AI about an Ingredient", () => {
       });
       expect(resolutionRequests()).toBe(1);
       expect(await exists(mould.ingredientId)).toBe(false);
-      expect(await listAIChanges()).toMatchObject([{ undo: { kind: "not-a-food" } }]);
+      expect(await listAIChanges(actor)).toMatchObject([{ undo: { kind: "not-a-food" } }]);
     });
 
     it("only flags a food AI is not sure names nothing, deleting nothing and remembering nothing", async () => {
@@ -2263,8 +2266,8 @@ describe("asking AI about an Ingredient", () => {
         flagged: true,
         flagReason: "ai-junk",
       });
-      expect(await listAIChanges()).toEqual([]);
-      await expect(listJunkFolds()).resolves.toEqual([]);
+      expect(await listAIChanges(actor)).toEqual([]);
+      await expect(listJunkFolds(actor.householdId)).resolves.toEqual([]);
     });
 
     it("keeps a food a Pantry Ingredient names, flagged, sure or not that it is not a food", async () => {
@@ -2292,7 +2295,7 @@ describe("asking AI about an Ingredient", () => {
             .where(inArray(recipeIngredients.name, [text]))
         ).resolves.toHaveLength(1);
       }
-      expect(await listAIChanges()).toEqual([]);
+      expect(await listAIChanges(actor)).toEqual([]);
     });
   });
 
@@ -2309,17 +2312,21 @@ describe("asking AI about an Ingredient", () => {
       const { food, butter } = await underButter("peanut butter");
       const frankfurter = await kept("frankfurter");
       const grocery = await unnamed("reserve eten");
-      const whole = await listWholeCatalogueCleanUpIds();
+      const whole = await listWholeCatalogueCleanUpIds(actor.householdId);
 
-      await expect(listAskableIngredientIds()).resolves.toEqual([food.ingredientId]);
+      await expect(listAskableIngredientIds(actor.householdId)).resolves.toEqual([
+        food.ingredientId,
+      ]);
       expect(whole).toEqual(expect.arrayContaining([food.ingredientId, frankfurter.ingredientId]));
       expect(whole).not.toContain(grocery.ingredientId);
       expect(whole).not.toContain(butter);
 
-      await getTestDb()
-        .insert(ingredientAliases)
-        .values({ text: "roomboter", fold: "roomboter", ingredientId: butter });
-      await expect(listWholeCatalogueCleanUpIds()).resolves.toContain(butter);
+      // A spelling the household gives a seeded food is what a whole-catalogue run checks there.
+      await addAlias(actor, butter, "roomboter");
+      await expect(listWholeCatalogueCleanUpIds(actor.householdId)).resolves.toContain(butter);
+      await expect(
+        listWholeCatalogueCleanUpIds(testHouseholdOf((await createTestUser()).id))
+      ).resolves.not.toContain(butter);
     });
 
     it("over the whole catalogue asks about a food a person parented, keeping the marker", async () => {
@@ -2345,7 +2352,7 @@ describe("asking AI about an Ingredient", () => {
 
       reads({ englishName: "peanut butter", sure: true });
       await askAIAbout(food.ingredientId);
-      await undoAIChange(actor, (await listAIChanges())[0]!.id);
+      await undoAIChange(actor, (await listAIChanges(actor))[0]!.id);
       await expect(parentOf(food.ingredientId)).resolves.toBe(butter);
 
       reads({ englishName: "peanut butter", sure: true });
@@ -2383,7 +2390,7 @@ describe("asking AI about an Ingredient", () => {
           .from(ingredients)
           .where(eq(ingredients.id, butter))
       ).resolves.toHaveLength(1);
-      expect(await listAIChanges()).toEqual([]);
+      expect(await listAIChanges(actor)).toEqual([]);
     });
   });
 });

@@ -422,7 +422,7 @@ export async function seedJunkPileOnce(
           .map((entry) => ingredientAliasFold(entry.text));
 
         return {
-          added: await withTransaction((tx) => addToJunkPile(tx, folds, { reason: "seed" })),
+          added: await withTransaction((tx) => addToJunkPile(tx, null, folds, { reason: "seed" })),
         };
       },
       // The pile changes what new text names, not what any row names now.

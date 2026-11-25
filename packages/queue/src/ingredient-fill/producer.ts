@@ -1,5 +1,5 @@
 import type { FillAsked } from "@norish/shared-server/ingredients/nutrition/fill-gaps";
-import { listListedIngredientIds } from "@norish/db/repositories/ingredient-catalogue";
+import { listListedFoodsOfEveryCatalogue } from "@norish/db/repositories/ingredient-catalogue";
 import {
   getAutomaticIngredientsConfig,
   isAIEnabled,
@@ -33,9 +33,12 @@ export interface FillGapsAsked extends FillAsked {
   icons: boolean;
 }
 
-/** Queue Fill gaps over every listed food: a fill job for nutrition and conversions, an icon job. */
+/**
+ * Queue Fill gaps over the seed and every household's listed foods, each in its own: a fill job for
+ * nutrition and conversions, an icon job.
+ */
 export async function addFillGapsJobs({ icons, ...fills }: FillGapsAsked): Promise<void> {
-  const listed = await listListedIngredientIds();
+  const listed = await listListedFoodsOfEveryCatalogue();
 
   await addIngredientFillJob(listed, fills, FILL_GAPS);
   if (icons) await addIconsJob(listed, FILL_GAPS);
