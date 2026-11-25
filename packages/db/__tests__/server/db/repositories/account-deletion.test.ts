@@ -1,16 +1,10 @@
 // @vitest-environment node
-/**
- * What one account deletion erases, keeps and changes (ADR-0041), table by table.
- *
- * Erased: the account's recipes (lines, steps, images, videos, share links, and every favourite,
- * rating and cookbook entry of them) and cookbooks; its ratings, favourites, allergies, API keys,
- * CalDAV, Site Accounts, share links and sign-in rows. Kept, "added by" null: the household's
- * things. Changed: plan entries for its recipes, in any household, become notes with the title;
- * grocery lines from its recipes stay as written, unlinked. A last member's household goes whole.
- */
+// What one account deletion erases, keeps and changes (ADR-0041), table by table: the cases
+// are a member, an admin with members, a last member, and references across households.
 import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { isRetryableConflict } from "@norish/db/repositories/constraint-violation";
 import { addRecipeToCookbook, createCookbook } from "@norish/db/repositories/cookbooks";
 import { addFavorite } from "@norish/db/repositories/favorites";
 import {
@@ -18,25 +12,34 @@ import {
   joinHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
-import { isRetryableConflict } from "@norish/db/repositories/constraint-violation";
 import { createPlannedItem } from "@norish/db/repositories/planned-items";
 import { rateRecipe } from "@norish/db/repositories/ratings";
 import { createStore } from "@norish/db/repositories/stores";
 import {
   accounts,
   apiKeys,
+  caldavSyncStatus,
   cookbookRecipes,
   cookbooks,
   groceries,
   households,
   householdUsers,
+  ingredientNutritionCorrections,
+  ingredientStorePreferences,
+  pantryIngredients,
   plannedItems,
   recipeFavorites,
+  recipeImages,
   recipeIngredients,
   recipeRatings,
   recipes,
   recipeShares,
+  recipeVideos,
+  recurringGroceries,
+  sessions,
   siteAuthTokens,
+  stepImages,
+  steps,
   stores,
   tags,
   userAllergies,
@@ -46,8 +49,13 @@ import {
 
 import {
   addTestGrocery,
+  addTestPantryIngredient,
+  addTestRecurringGrocery,
+  addTestStepImage,
+  createTestIngredient,
   createTestRecipe,
   createTestRecipeShare,
+  createTestRecipeStep,
   createTestUser,
   getTestDb,
   householdIdOf,
@@ -98,10 +106,116 @@ describe("deleting an account", () => {
     await db
       .insert(siteAuthTokens)
       .values({ userId, domain: "example.com", name: "session", valueEnc: "x", type: "cookie" });
+    await db.insert(sessions).values({
+      userId,
+      token: `session-${name}-${userId}`,
+      expiresAt: new Date(Date.now() + 86_400_000),
+    });
+    await db.insert(caldavSyncStatus).values({
+      userId,
+      itemId: crypto.randomUUID(),
+      itemType: "note",
+      eventTitle: name,
+    });
     await addRecipeToCookbook(cookbook.id, recipe.id);
+    await db
+      .insert(recipeImages)
+      .values({ recipeId: recipe.id, image: `/recipes/${recipe.id}/a.jpg` });
+    await db
+      .insert(recipeVideos)
+      .values({ recipeId: recipe.id, video: `/recipes/${recipe.id}/v.mp4` });
+    const step = await createTestRecipeStep(recipe.id, "metric", { step: "Roer" });
+
+    await addTestStepImage(step!.id, `/recipes/${recipe.id}/steps/s.jpg`);
 
     return { recipe, cookbook };
   }
+
+  /** The recipes' own rows: images, videos, steps and step images; all gone with them. */
+  async function mediaOf(recipeIds: string[]) {
+    const db = getTestDb();
+    const stepIds = (
+      await db.select({ id: steps.id }).from(steps).where(inArray(steps.recipeId, recipeIds))
+    ).map((row) => row.id);
+
+    return {
+      images: (
+        await db.select().from(recipeImages).where(inArray(recipeImages.recipeId, recipeIds))
+      ).length,
+      videos: (
+        await db.select().from(recipeVideos).where(inArray(recipeVideos.recipeId, recipeIds))
+      ).length,
+      steps: stepIds.length,
+      stepImages: stepIds.length
+        ? (await db.select().from(stepImages).where(inArray(stepImages.stepId, stepIds))).length
+        : 0,
+    };
+  }
+
+  const NO_MEDIA = { images: 0, videos: 0, steps: 0, stepImages: 0 };
+
+  /** Who added each of the household's things, table by table, in a stable order. */
+  async function householdThings(householdId: string) {
+    const db = getTestDb();
+    const addedBy = async (rows: Promise<Array<{ userId: string | null; id: string }>>) =>
+      (await rows).sort((a, b) => a.id.localeCompare(b.id)).map((row) => row.userId);
+    return {
+      stores: await addedBy(
+        db
+          .select({ id: stores.id, userId: stores.userId })
+          .from(stores)
+          .where(eq(stores.householdId, householdId))
+      ),
+      groceries: await addedBy(
+        db
+          .select({ id: groceries.id, userId: groceries.userId })
+          .from(groceries)
+          .where(eq(groceries.householdId, householdId))
+      ),
+      recurring: await addedBy(
+        db
+          .select({ id: recurringGroceries.id, userId: recurringGroceries.userId })
+          .from(recurringGroceries)
+          .where(eq(recurringGroceries.householdId, householdId))
+      ),
+      pantry: await addedBy(
+        db
+          .select({ id: pantryIngredients.id, userId: pantryIngredients.userId })
+          .from(pantryIngredients)
+          .where(eq(pantryIngredients.householdId, householdId))
+      ),
+      plan: await addedBy(
+        db
+          .select({ id: plannedItems.id, userId: plannedItems.userId })
+          .from(plannedItems)
+          .where(eq(plannedItems.householdId, householdId))
+      ),
+      corrections: await addedBy(
+        db
+          .select({
+            id: ingredientNutritionCorrections.id,
+            userId: ingredientNutritionCorrections.userId,
+          })
+          .from(ingredientNutritionCorrections)
+          .where(eq(ingredientNutritionCorrections.householdId, householdId))
+      ),
+      storePreferences: await addedBy(
+        db
+          .select({ id: ingredientStorePreferences.id, userId: ingredientStorePreferences.userId })
+          .from(ingredientStorePreferences)
+          .where(eq(ingredientStorePreferences.householdId, householdId))
+      ),
+    };
+  }
+
+  /** The same things, with every row the deleted account added now added by no one. */
+  const addedByNoOne = (things: Awaited<ReturnType<typeof householdThings>>, userId: string) =>
+    Object.fromEntries(
+      Object.entries(things).map(([table, adders]) => [
+        table,
+        adders.map((adder) => (adder === userId ? null : adder)),
+      ])
+    );
 
   /** The account's own rows, table by table; all empty once it is deleted. */
   async function ownRows(userId: string) {
@@ -131,6 +245,10 @@ describe("deleting an account", () => {
       membership: await count(
         db.select().from(householdUsers).where(eq(householdUsers.userId, userId))
       ),
+      sessions: await count(db.select().from(sessions).where(eq(sessions.userId, userId))),
+      caldavStatuses: await count(
+        db.select().from(caldavSyncStatus).where(eq(caldavSyncStatus.userId, userId))
+      ),
     };
   }
 
@@ -147,6 +265,8 @@ describe("deleting an account", () => {
     caldav: 0,
     siteAccounts: 0,
     membership: 0,
+    sessions: 0,
+    caldavStatuses: 0,
   };
 
   /** What refers to these recipes from anywhere: favourites, ratings, shares, cookbook entries. */
@@ -232,10 +352,23 @@ describe("deleting an account", () => {
     await planRecipe(household, deleted, admins.recipe.id);
     await addTestGrocery(stranger, { name: "prei", recipeIngredientId: line!.id });
     await addTestGrocery(deleted, { name: "melk" });
-    await createStore(crypto.randomUUID(), {
+    const store = await createStore(crypto.randomUUID(), {
       householdId: household,
       userId: deleted,
       name: "Markt",
+    });
+    const food = (await createTestIngredient({ name: `prei ${deleted}` }))!;
+
+    await addTestRecurringGrocery(deleted, { name: "eieren" });
+    await addTestPantryIngredient(deleted, { ingredientId: food.id });
+    await getTestDb()
+      .insert(ingredientNutritionCorrections)
+      .values({ householdId: household, userId: deleted, ingredientId: food.id });
+    await getTestDb().insert(ingredientStorePreferences).values({
+      householdId: household,
+      userId: deleted,
+      ingredientId: food.id,
+      storeId: store.id,
     });
 
     return { admin, deleted, stranger, household, elsewhere, own, admins, strangers };
@@ -246,9 +379,12 @@ describe("deleting an account", () => {
       const w = await world();
       const adminRowsBefore = await ownRows(w.admin);
       const strangerRowsBefore = await ownRows(w.stranger);
+      const thingsBefore = await householdThings(w.household);
+      const elsewhereBefore = await householdThings(w.elsewhere);
 
       const deletion = await deleteAccount(w.deleted);
 
+      expect(Object.values(thingsBefore).every((adders) => adders.includes(w.deleted))).toBe(true);
       expect(deletion).toMatchObject({
         householdId: w.household,
         householdErased: false,
@@ -259,6 +395,16 @@ describe("deleting an account", () => {
       });
       expect(await ownRows(w.deleted)).toEqual(NOTHING);
       expect(await referencesTo([w.own.recipe.id])).toEqual([]);
+      expect(await mediaOf([w.own.recipe.id])).toEqual(NO_MEDIA);
+      expect(await mediaOf([w.admins.recipe.id, w.strangers.recipe.id])).toEqual({
+        images: 2,
+        videos: 2,
+        steps: 2,
+        stepImages: 2,
+      });
+      // The household keeps every row, the ones the account added now added by no one.
+      expect(await householdThings(w.household)).toEqual(addedByNoOne(thingsBefore, w.deleted));
+      expect(await householdThings(w.elsewhere)).toEqual(elsewhereBefore);
 
       // Everyone else keeps their own rows; only their favourite, rating, share of it went.
       const lessOne = (rows: typeof adminRowsBefore) => ({
@@ -355,6 +501,8 @@ describe("deleting an account", () => {
   describe("of the admin of a household with others", () => {
     it("hands the role to who stays and erases the admin's recipes from every plan", async () => {
       const w = await world();
+      const thingsBefore = await householdThings(w.household);
+      const memberRowsBefore = await ownRows(w.deleted);
 
       const deletion = await deleteAccount(w.admin);
 
@@ -371,6 +519,15 @@ describe("deleting an account", () => {
           .where(eq(households.id, w.household))
       ).toEqual([{ adminUserId: w.deleted }]);
       expect(await ownRows(w.admin)).toEqual(NOTHING);
+      expect(await mediaOf([w.admins.recipe.id])).toEqual(NO_MEDIA);
+      expect(await referencesTo([w.admins.recipe.id])).toEqual([]);
+      expect(await householdThings(w.household)).toEqual(addedByNoOne(thingsBefore, w.admin));
+      expect(await ownRows(w.deleted)).toEqual({
+        ...memberRowsBefore,
+        favourites: memberRowsBefore.favourites - 1,
+        ratings: memberRowsBefore.ratings - 1,
+        shares: memberRowsBefore.shares - 1,
+      });
       expect(await planOf(w.household)).toEqual([
         // The admin's entry for the account's recipe stays, added by no one.
         expect.objectContaining({ itemType: "recipe", recipeId: w.own.recipe.id, userId: null }),
@@ -397,18 +554,40 @@ describe("deleting an account", () => {
       expect(
         await getTestDb().select().from(households).where(eq(households.id, w.household))
       ).toEqual([]);
-      expect(
-        await getTestDb().select().from(groceries).where(eq(groceries.householdId, w.household))
-      ).toEqual([]);
-      expect(
-        await getTestDb().select().from(stores).where(eq(stores.householdId, w.household))
-      ).toEqual([]);
-      expect(await planOf(w.household)).toEqual([]);
+      expect(await householdThings(w.household)).toEqual({
+        stores: [],
+        groceries: [],
+        recurring: [],
+        pantry: [],
+        plan: [],
+        corrections: [],
+        storePreferences: [],
+      });
+      expect(await ownRows(w.admin)).toEqual(NOTHING);
+      expect(await mediaOf([w.own.recipe.id, w.admins.recipe.id])).toEqual(NO_MEDIA);
+      expect(await referencesTo([w.own.recipe.id, w.admins.recipe.id])).toEqual([]);
       // The stranger's household is untouched.
       expect(await planOf(w.elsewhere)).toEqual([
         expect.objectContaining({ itemType: "note", title: "Soep" }),
       ]);
       expect(await ownRows(w.stranger)).toMatchObject({ user: 1, recipes: 1, cookbooks: 1 });
+    });
+
+    it("turns another household's plan entry for its recipe into a note as its household goes", async () => {
+      const w = await world();
+
+      await deleteAccount(w.deleted);
+      await planRecipe(w.elsewhere, w.stranger, w.admins.recipe.id);
+      const deletion = await deleteAccount(w.admin);
+
+      expect(deletion.householdErased).toBe(true);
+      expect(deletion.notes).toEqual([
+        expect.objectContaining({ householdId: w.elsewhere, title: "Stoof", recipeId: null }),
+      ]);
+      expect(await planOf(w.elsewhere)).toEqual([
+        expect.objectContaining({ itemType: "note", title: "Soep" }),
+        expect.objectContaining({ itemType: "note", title: "Stoof", userId: w.stranger }),
+      ]);
     });
   });
 
@@ -593,8 +772,14 @@ describe("deleting an account", () => {
 
     it("a grocery added while the deletion holds the household is refused for a retry", async () => {
       const m = await memberWithGrocery();
-      const holdRecipe = (tx: Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0]) =>
-        tx.select({ id: recipes.id }).from(recipes).where(eq(recipes.id, m.recipe.id)).for("update");
+      const holdRecipe = (
+        tx: Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0]
+      ) =>
+        tx
+          .select({ id: recipes.id })
+          .from(recipes)
+          .where(eq(recipes.id, m.recipe.id))
+          .for("update");
 
       // The deletion holds the household and waits on the recipe; the grocery shifts the
       // deleted member's line, then waits on the household the deletion holds.
@@ -609,9 +794,7 @@ describe("deleting an account", () => {
       });
       expect(settled[1]?.status).toBe("rejected");
       expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
-      expect(
-        await getTestDb().select().from(users).where(eq(users.id, m.deleted))
-      ).toEqual([]);
+      expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
     });
 
     it("a deletion that is the deadlock's victim tries again and erases the account", async () => {
@@ -634,19 +817,13 @@ describe("deleting an account", () => {
             undefined,
           "the deletion to wait on the line"
         );
-        await tx
-          .select()
-          .from(households)
-          .where(eq(households.id, m.household))
-          .for("key share");
+        await tx.select().from(households).where(eq(households.id, m.household)).for("key share");
       });
 
       await expect(deletion).resolves.toEqual(
         expect.objectContaining({ recipeIds: [m.recipe.id] })
       );
-      expect(
-        await getTestDb().select().from(users).where(eq(users.id, m.deleted))
-      ).toEqual([]);
+      expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
     });
   });
 
