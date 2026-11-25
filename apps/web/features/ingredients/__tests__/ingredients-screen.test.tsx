@@ -440,7 +440,6 @@ describe("IngredientsScreen", () => {
       recipes: [],
       groceries: [],
       pantry: false,
-      elsewhere: 0,
       counts: { recipeLines: 0, groceries: 0, pantry: 0 },
     };
     usesHeld = null;
@@ -708,7 +707,6 @@ describe("IngredientsScreen", () => {
       recipes: [{ id: "r1", name: "Saté" }],
       groceries: [{ name: "onions", done: true, recurring: false }],
       pantry: true,
-      elsewhere: 2,
       counts: { recipeLines: 3, groceries: 0, pantry: 1 },
     };
     await renderScreen();
@@ -741,7 +739,6 @@ describe("IngredientsScreen", () => {
     );
     expect(where).toHaveTextContent("onions · done");
     expect(where).toHaveTextContent("pantry");
-    expect(where).toHaveTextContent("elsewhere");
   });
 
   it("offers the plain Delete on a food AI says is not a food, its lines keeping their text", async () => {
@@ -749,7 +746,6 @@ describe("IngredientsScreen", () => {
       recipes: [],
       groceries: [],
       pantry: true,
-      elsewhere: 0,
       counts: { recipeLines: 2, groceries: 0, pantry: 1 },
     };
     items = [{ ...onion, name: "melted", flagReason: "ai-junk" }, salt];
@@ -883,7 +879,6 @@ describe("IngredientsScreen", () => {
         recipes: [],
         groceries: [],
         pantry: false,
-        elsewhere: 0,
         counts: { recipeLines: 0, groceries: 0, pantry: 0 },
       };
       answer();

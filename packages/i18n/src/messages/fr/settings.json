@@ -552,7 +552,6 @@
       "done": "fait",
       "repeats": "se répète",
       "pantry": "Dans le garde-manger",
-      "elsewhere": "{count, plural, one {# autre utilisation} other {# autres utilisations}} dans des recettes ou listes que vous ne pouvez pas ouvrir",
       "none": "Plus rien ne l'utilise"
     },
     "keepAlias": "Garder {alias}",

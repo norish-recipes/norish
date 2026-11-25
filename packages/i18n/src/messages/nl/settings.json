@@ -552,7 +552,6 @@
       "done": "afgevinkt",
       "repeats": "herhaalt",
       "pantry": "In de voorraadkast",
-      "elsewhere": "{count, plural, one {Nog # keer} other {Nog # keer}} in recepten of lijsten die je niet kunt openen",
       "none": "Niets gebruikt het meer"
     },
     "keepAlias": "{alias} behouden",

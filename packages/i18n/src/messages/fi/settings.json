@@ -552,7 +552,6 @@
       "done": "tehty",
       "repeats": "toistuu",
       "pantry": "Ruokavarastossa",
-      "elsewhere": "{count, plural, one {# käyttö lisää} other {# käyttöä lisää}} resepteissä tai listoissa, joita et voi avata",
       "none": "Mikään ei enää käytä sitä"
     },
     "keepAlias": "Säilytä {alias}",

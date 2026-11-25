@@ -710,12 +710,7 @@ function IngredientUsesContent({
   const t = useTranslations("settings.ingredients.uses");
   const tActions = useTranslations("common.actions");
   const { uses: data } = useIngredientUsesQuery(ingredientId);
-  const unused =
-    data &&
-    data.recipes.length === 0 &&
-    data.groceries.length === 0 &&
-    !data.pantry &&
-    data.elsewhere === 0;
+  const unused = data && data.recipes.length === 0 && data.groceries.length === 0 && !data.pantry;
 
   return (
     <>
@@ -757,9 +752,6 @@ function IngredientUsesContent({
             </Section>
           ) : null}
           {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
-          {data && data.elsewhere > 0 ? (
-            <p className="text-muted text-sm">{t("elsewhere", { count: data.elsewhere })}</p>
-          ) : null}
           {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
         </div>
       </Panel.Body>

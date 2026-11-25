@@ -552,7 +552,6 @@
       "done": "klart",
       "repeats": "upprepas",
       "pantry": "Finns i skafferiet",
-      "elsewhere": "{count, plural, one {# ytterligare användning} other {# ytterligare användningar}} i recept eller listor du inte kan öppna",
       "none": "Används inte längre"
     },
     "keepAlias": "Behåll {alias}",

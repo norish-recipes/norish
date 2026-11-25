@@ -552,7 +552,6 @@
       "done": "kjøpt",
       "repeats": "gjentas",
       "pantry": "I spiskammeret",
-      "elsewhere": "{count, plural, one {# bruk til} other {# bruk til}} i oppskrifter eller lister du ikke kan åpne",
       "none": "Ingenting bruker den lenger"
     },
     "keepAlias": "Behold {alias}",

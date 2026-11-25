@@ -552,7 +552,6 @@
       "done": "done",
       "repeats": "repeats",
       "pantry": "Kept in the pantry",
-      "elsewhere": "{count, plural, one {# more use} other {# more uses}} in recipes or lists you can't open",
       "none": "Nothing uses it any more"
     },
     "keepAlias": "Keep {alias}",

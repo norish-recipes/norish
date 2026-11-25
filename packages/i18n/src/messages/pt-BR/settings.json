@@ -552,7 +552,6 @@
       "done": "feito",
       "repeats": "repete",
       "pantry": "Na despensa",
-      "elsewhere": "{count, plural, one {Mais # uso} other {Mais # usos}} em receitas ou listas que você não pode abrir",
       "none": "Nada usa mais isso"
     },
     "keepAlias": "Manter {alias}",
