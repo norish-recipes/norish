@@ -624,6 +624,13 @@
       "when": 1795598239073,
       "tag": "0088_every_account_has_a_household",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1795605639349,
+      "tag": "0089_household_things_belong_to_the_household",
+      "breakpoints": true
     }
   ]
 }

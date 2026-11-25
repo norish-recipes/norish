@@ -1,6 +1,7 @@
 import { date, index, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { households } from "./households";
 import { ingredientAliases, ingredients } from "./ingredients";
 import { versionColumn } from "./shared";
 
@@ -8,9 +9,11 @@ export const recurringGroceries = pgTable(
   "recurring_groceries",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    householdId: uuid("household_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => households.id, { onDelete: "cascade" }),
+    /** Who added it; null once their account is deleted (ADR-0041). */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
 
     // Item details
     name: text("name").notNull(),
@@ -40,6 +43,7 @@ export const recurringGroceries = pgTable(
     ...versionColumn,
   },
   (t) => [
+    index("idx_recurring_groceries_household_id").on(t.householdId),
     index("idx_recurring_groceries_user_id").on(t.userId),
     index("idx_recurring_groceries_next_date").on(t.nextPlannedFor),
     index("idx_recurring_groceries_ingredient_alias_id").on(t.ingredientAliasId),
