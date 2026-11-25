@@ -164,5 +164,14 @@ describe("Cuisine repository", () => {
       expect((await listCuisines()).filter((c) => c.name === "Basque")).toHaveLength(1);
       expect(await cuisinesForNames(householdId, ["Catalan"], { create: false })).toEqual([]);
     });
+
+    it("creates no Cuisine over the bound, keeping the rest", async () => {
+      const found = await cuisinesForNames(householdId, ["x".repeat(81), "Galician"], {
+        create: true,
+      });
+
+      expect(found.map((c) => c.name)).toEqual(["Galician"]);
+      expect((await listCuisines()).some((c) => c.name.length > 80)).toBe(false);
+    });
   });
 });

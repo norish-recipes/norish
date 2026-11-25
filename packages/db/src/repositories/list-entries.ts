@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
+import { dbLogger } from "@norish/db/logger";
 import {
   categories,
   cuisines,
@@ -14,6 +15,7 @@ import {
   recipeTags,
   tags,
 } from "@norish/db/schema";
+import { LIST_NAME_MAX } from "@norish/shared/contracts/zod/list-entry";
 import { entryFold } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
@@ -171,8 +173,8 @@ export async function recipeHouseholdId(recipeId: string, connection: Db = db) {
 /** How often a find-or-create looks again for a row a concurrent merge or delete removed. */
 const ATTACH_ATTEMPTS = 3;
 
-/** The household's (or instance's) entries for `names`, keyed by fold, the missing ones created
- * when `create`; held `FOR KEY SHARE`, so a merge or delete waits for the attach. */
+/** The household's (or instance's) entries for `names`, keyed by fold, the missing ones under the
+ * kind's bound created when `create`; held `FOR KEY SHARE`, so a merge or delete waits for the attach. */
 export async function entriesByFoldTx(
   tx: DbTransaction,
   kind: ListKind,
@@ -210,11 +212,23 @@ export async function entriesByFoldTx(
 
     const absent = missing.filter((fold) => !found.has(fold));
 
-    if (!create || absent.length === 0) break;
+    if (!create) break;
+
+    // A name over the bound attaches when the list has it, but is never created.
+    for (const fold of absent) {
+      if ((wanted.get(fold) ?? "").length <= LIST_NAME_MAX[kind]) continue;
+
+      dbLogger.debug({ kind, name: wanted.get(fold) }, "Not creating a list entry over its bound");
+      wanted.delete(fold);
+    }
+
+    const creatable = absent.filter((fold) => wanted.has(fold));
+
+    if (creatable.length === 0) break;
 
     await tx.execute(sql`
       INSERT INTO ${table} (household_id, name, name_fold) VALUES ${sql.join(
-        absent.map((fold) => sql`(${householdId}::uuid, ${wanted.get(fold)}, ${fold})`),
+        creatable.map((fold) => sql`(${householdId}::uuid, ${wanted.get(fold)}, ${fold})`),
         sql`, `
       )} ON CONFLICT DO NOTHING
     `);

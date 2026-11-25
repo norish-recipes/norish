@@ -93,6 +93,12 @@ describe("Recipe Enrichment repository", () => {
       expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Dinner", "Snack"]);
     });
 
+    it("creates no Category over the bound, keeping the rest", async () => {
+      await replaceRecipeCategories(testRecipe.id, ["x".repeat(41), "Dinner"], "replace");
+
+      expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Dinner"]);
+    });
+
     it("rejects an empty proposal without touching stored values", async () => {
       await replaceRecipeCategories(testRecipe.id, ["Breakfast"], "replace");
 
