@@ -1,7 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, isNull, notInArray, or, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { and, asc, desc, eq, exists, isNull, notInArray, or, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type {
   CookbookSummaryDTO,
@@ -47,6 +47,9 @@ import { rowsOf, uuidListSql } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 import { buildPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
+
+const qb = new QueryBuilder();
+const filterLine = alias(recipeIngredients, "filter_line");
 
 export type LibraryListParams = {
   limit: number;
@@ -214,10 +217,14 @@ export async function listLibrary(
     }
 
     for (const id of new Set(ingredientIds)) {
-      tagAndIngredientClauses.push(sql`EXISTS (
-        SELECT 1 FROM recipe_ingredients filter_line
-        WHERE filter_line.recipe_id = "recipes"."id" AND ${lineNamesKindSql("filter_line", [id])}
-      )`);
+      tagAndIngredientClauses.push(
+        exists(
+          qb
+            .select({ id: filterLine.id })
+            .from(filterLine)
+            .where(and(eq(filterLine.recipeId, recipes.id), lineNamesKindSql(filterLine.id, [id])))
+        )
+      );
     }
 
     if (tagAndIngredientClauses.length) {

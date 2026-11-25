@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type { LibraryMatchDTO } from "@norish/shared/contracts/dto/cookbook";
 import type { SearchField } from "@norish/shared/contracts/store-types";
@@ -11,6 +12,8 @@ import { recipeIngredients, recipes, recipeTags, steps as stepsTable, tags } fro
 import { lineNamesKindSql } from "./ingredient-kinds";
 import { rowsOf, uuidListSql } from "./raw-sql";
 import { searchTsqueryTerms } from "./recipes";
+
+const matchLine = alias(recipeIngredients, "match_ri");
 
 /** One fragment around the hit; ts_headline takes no empty markers, so these are stripped after. */
 const MATCH_SNIPPET_OPTIONS =
@@ -190,7 +193,7 @@ export async function recipeIngredientMatches(
   const rows = rowsOf<Pick<MatchRow, "id" | "ingredient">>(
     await db.execute(sql`
     SELECT "recipes"."id" AS id,
-      ${ingredientLineSql(lineNamesKindSql("match_ri", ingredientIds))} AS ingredient
+      ${ingredientLineSql(lineNamesKindSql(matchLine.id, ingredientIds))} AS ingredient
     FROM ${recipes}
     WHERE "recipes"."id" IN (${uuidListSql(ids)})
   `)

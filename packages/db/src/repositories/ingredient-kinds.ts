@@ -1,10 +1,16 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { and, eq, exists, inArray, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
+import { ingredientAliases, ingredients, recipeIngredientFoods } from "../schema";
 import { uuidListSql } from "./raw-sql";
 
 /** How deep a walk down Parent Ingredient goes; a cycle in the data ends here. */
 const KIND_DEPTH_MAX = 32;
+
+const child = alias(ingredients, "child");
+const qb = new QueryBuilder();
 
 /**
  * The recursive CTE `kinds(root, ingredient_id, depth)`: each Ingredient of `roots` (a list or
@@ -12,11 +18,11 @@ const KIND_DEPTH_MAX = 32;
  */
 export function kindWalkSql(roots: SQL): SQL {
   return sql`kinds(root, ingredient_id, depth) as (
-      select i.id, i.id, 0 from ingredients i where i.id in (${roots})
+      select ${ingredients.id}, ${ingredients.id}, 0 from ${ingredients} where ${ingredients.id} in (${roots})
       union
-      select k.root, child.id, k.depth + 1 from kinds k
-      join ingredients child on child.parent_id = k.ingredient_id
-      where k.depth < ${sql.raw(String(KIND_DEPTH_MAX))}
+      select kinds.root, ${child.id}, kinds.depth + 1 from kinds
+      join ${ingredients} as ${child} on ${child.parentId} = kinds.ingredient_id
+      where kinds.depth < ${sql.raw(String(KIND_DEPTH_MAX))}
     )`;
 }
 
@@ -25,13 +31,21 @@ export function ingredientKindsSql(ids: readonly string[]): SQL {
   return sql`(with recursive ${kindWalkSql(uuidListSql(ids))} select ingredient_id from kinds)`;
 }
 
-/** Whether a recipe line (`line`, a table alias) names an Ingredient of `ingredientKindsSql(ids)`. */
-export function lineNamesKindSql(line: string, ids: readonly string[]): SQL {
-  return sql`EXISTS (
-    SELECT 1 FROM recipe_ingredient_foods ${sql.raw(`${line}_food`)}
-    JOIN ingredient_aliases ${sql.raw(`${line}_alias`)}
-      ON ${sql.raw(`${line}_alias`)}.id = ${sql.raw(`${line}_food`)}.ingredient_alias_id
-    WHERE ${sql.raw(`${line}_food`)}.recipe_ingredient_id = ${sql.raw(line)}.id
-      AND ${sql.raw(`${line}_alias`)}.ingredient_id IN ${ingredientKindsSql(ids)}
-  )`;
+/** Whether the recipe line `lineId` names an Ingredient of `ingredientKindsSql(ids)`. */
+export function lineNamesKindSql(lineId: AnyPgColumn, ids: readonly string[]): SQL {
+  return exists(
+    qb
+      .select({ line: recipeIngredientFoods.recipeIngredientId })
+      .from(recipeIngredientFoods)
+      .innerJoin(
+        ingredientAliases,
+        eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId)
+      )
+      .where(
+        and(
+          eq(recipeIngredientFoods.recipeIngredientId, lineId),
+          inArray(ingredientAliases.ingredientId, ingredientKindsSql(ids))
+        )
+      )
+  );
 }
