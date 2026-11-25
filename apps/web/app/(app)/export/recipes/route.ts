@@ -53,11 +53,8 @@ function nodeStreamToWeb(nodeStream: ZipStream): ReadableStream<Uint8Array> {
   });
 }
 
-/**
- * Recipe Archive export: streams a `.norishrecipes` zip of every recipe the signed-in user may
- * view under the Permission Policy, a server admin's export included (ADR-0022). The archive is
- * generated straight into the response; no temp file or stored artifact exists server-side.
- */
+/** Recipe Archive export (ADR-0022): a `.norishrecipes` zip of every recipe the reader may view,
+ * an admin's included, streamed straight into the response with nothing stored server-side. */
 export async function GET(req: Request) {
   const session = await auth.api.getSession({ headers: req.headers });
 

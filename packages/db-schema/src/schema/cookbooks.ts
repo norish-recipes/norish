@@ -8,9 +8,8 @@ import { householdIdFilledByTrigger, mutableRowColumns } from "./shared";
 /**
  * A Cookbook: a titled set of recipes, and nothing else.
  *
- * It belongs to its Owner like a recipe, carries the Owner's household, and is
- * seen, edited and deleted under the instance's Permission Policy rather than a
- * rule of its own (ADR-0027, ADR-0041).
+ * It belongs to its Owner like a recipe, in their household, under the Permission
+ * Policy rather than a rule of its own (ADR-0027, ADR-0041).
  *
  * The cover is derived at read time from the members' own images unless
  * someone has uploaded an `image` for the cookbook itself, which then shows

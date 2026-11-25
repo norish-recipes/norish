@@ -541,7 +541,6 @@ export async function removeRecipesFromCookbook(
     );
 }
 
-/** Which of these recipes this cookbook holds — the membership toggles. */
 /** The cookbook's members the reader may view; one out of view comes back when the policy widens. */
 export async function listCookbookMemberIds(
   ctx: RecipeListContext,
