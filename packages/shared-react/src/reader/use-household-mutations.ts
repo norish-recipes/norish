@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
 
@@ -8,26 +8,22 @@ import { wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
-import { useReader } from "./use-reader";
 
 /** Each action resolves whether its request went through: false when it failed. */
 type HouseholdMutationsResult = {
-  createHousehold: (name: string) => Promise<boolean>;
   joinHousehold: (code: string) => Promise<boolean>;
   leaveHousehold: (householdId: string) => Promise<boolean>;
   kickUser: (householdId: string, userId: string) => Promise<boolean>;
   regenerateJoinCode: (householdId: string) => Promise<boolean>;
   transferAdmin: (householdId: string, newAdminId: string) => Promise<boolean>;
   /** Whether each action's request is in flight, for a caller that must not send it twice. */
-  pending: Record<"create" | "join" | "leave" | "kick" | "regenerate" | "transfer", boolean>;
+  pending: Record<"join" | "leave" | "kick" | "regenerate" | "transfer", boolean>;
 };
 
 export function useHouseholdMutations(): HouseholdMutationsResult {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const { household, currentUserId } = useHousehold();
   const { setHouseholdData, invalidate } = useHouseholdCacheHelpers();
-  const userName = useReader().user?.name ?? null;
   const { showError } = usePlatform();
 
   const getHouseholdVersion = (householdId: string): number =>
@@ -42,48 +38,13 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     showError(error, `household:${action}`);
   };
 
-  const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
-    trpc.households.create.mutationOptions({
-      onSuccess: ({ id }, { name }) => {
-        if (!currentUserId) return;
-
-        const ownAllergies = queryClient.getQueryData(trpc.user.getAllergies.queryKey());
-
-        if (!ownAllergies) {
-          invalidate();
-
-          return;
-        }
-
-        const created: HouseholdSettingsDto = {
-          id,
-          name: name ?? "",
-          version: 1,
-          users: [{ id: currentUserId, name: userName, isAdmin: true, version: 1 }],
-          allergies: ownAllergies.allergies,
-        };
-
-        setHouseholdData((prev) =>
-          prev?.household ? prev : { household: created, currentUserId }
-        );
-      },
-      onError: onError("create"),
-    })
-  );
   // The joined household arrives through the subscription.
   const { mutateAsync: mutateJoin, isPending: isJoining } = useMutation(
     trpc.households.join.mutationOptions({ onError: onError("join") })
   );
+  // The new household of one arrives through the subscription.
   const { mutateAsync: mutateLeave, isPending: isLeaving } = useMutation(
-    trpc.households.leave.mutationOptions({
-      onSuccess: () => {
-        setHouseholdData((prev) => ({
-          household: null,
-          currentUserId: prev?.currentUserId ?? currentUserId ?? "",
-        }));
-      },
-      onError: onError("leave"),
-    })
+    trpc.households.leave.mutationOptions({ onError: onError("leave") })
   );
   const { mutateAsync: mutateKick, isPending: isKicking } = useMutation(
     trpc.households.kick.mutationOptions({
@@ -129,18 +90,6 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     })
   );
 
-  const createHousehold = (name: string): Promise<boolean> => {
-    if (!name.trim()) {
-      throw new Error("Household name cannot be empty");
-    }
-
-    if (!currentUserId) {
-      throw new Error("User ID not available");
-    }
-
-    return wentThrough(mutateCreate({ name: name.trim() }));
-  };
-
   const joinHousehold = (code: string): Promise<boolean> => {
     if (!code.trim()) {
       throw new Error("Join code cannot be empty");
@@ -178,14 +127,12 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
   };
 
   return {
-    createHousehold,
     joinHousehold,
     leaveHousehold,
     kickUser,
     regenerateJoinCode,
     transferAdmin,
     pending: {
-      create: isCreating,
       join: isJoining,
       leave: isLeaving,
       kick: isKicking,

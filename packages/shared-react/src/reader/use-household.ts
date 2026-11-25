@@ -32,7 +32,7 @@ type HouseholdCacheHelpers = {
   invalidateRecipes: () => void;
 };
 
-/** The Reader's household, or null outside one. */
+/** The Reader's household; null only while it loads. */
 export function useHousehold(): HouseholdResult {
   const trpc = useTRPC();
   const { data, error, isLoading } = useQuery(trpc.households.get.queryOptions());

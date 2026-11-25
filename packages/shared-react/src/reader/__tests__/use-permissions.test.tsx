@@ -21,7 +21,7 @@ const HOUSEHOLD_POLICY: PermissionsData = {
   recipePolicy: { view: "household", edit: "household", delete: "owner" },
   isAIEnabled: true,
   canDrawImages: false,
-  householdUserIds: [READER.id, "partner"],
+  householdMemberIds: [READER.id, "partner"],
   isServerAdmin: false,
 };
 
@@ -31,7 +31,7 @@ describe("permission selectors", () => {
       recipePolicy: { view: "owner", edit: "owner", delete: "owner" },
       isAIEnabled: false,
       canDrawImages: false,
-      householdUserIds: null,
+      householdMemberIds: [],
       isServerAdmin: false,
     });
   });
@@ -40,7 +40,7 @@ describe("permission selectors", () => {
     const permissions = normalizePermissionsData({
       ...HOUSEHOLD_POLICY,
       recipePolicy: { view: "household", edit: "household", delete: "household" },
-      householdUserIds: ["owner-1", "owner-2"],
+      householdMemberIds: ["owner-1", "owner-2"],
     });
 
     expect(selectCanDeleteRecipe(permissions, "viewer-1", "owner-1")).toBe(true);

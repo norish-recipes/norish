@@ -10,8 +10,6 @@ export { measurementChoices, shownMeasurement } from "./measurement-choices";
 export {
   adminViewOf,
   allowedMemberActions,
-  HOUSEHOLD_NAME_MAX_LENGTH,
-  isHouseholdName,
   isJoinCode,
   joinCodeDigits,
   joinCodeStatus,

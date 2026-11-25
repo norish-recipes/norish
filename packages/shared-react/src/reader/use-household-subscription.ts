@@ -34,7 +34,7 @@ export function useHouseholdSubscription() {
     ],
   };
 
-  // onCreated user-scoped: when current user creates or joins a household
+  // onCreated user-scoped: the reader's household after joining, leaving or being removed
   useRealtimeSubscription<Payload<"created">>(trpc.households.onCreated, {
     ...live,
     onEvent: (payload) => {
@@ -55,11 +55,7 @@ export function useHouseholdSubscription() {
         description: toast.translate("common.household.removedDescription"),
       });
 
-      // Clear household from cache
-      setHouseholdData((prev) => ({
-        household: null,
-        currentUserId: prev?.currentUserId ?? currentUserId ?? "",
-      }));
+      // Their new household of one arrived through onCreated just before.
     },
   });
 

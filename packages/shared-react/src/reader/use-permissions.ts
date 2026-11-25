@@ -47,10 +47,10 @@ export function useRecipePermissions(): RecipePermissions {
   const { data: access, isLoading } = useQuery({
     ...trpc.permissions.get.queryOptions(),
     select: (permissions) => {
-      const { recipePolicy, householdUserIds, isServerAdmin } =
+      const { recipePolicy, householdMemberIds, isServerAdmin } =
         normalizePermissionsData(permissions);
 
-      return { recipePolicy, householdUserIds, isServerAdmin };
+      return { recipePolicy, householdMemberIds, isServerAdmin };
     },
   });
 

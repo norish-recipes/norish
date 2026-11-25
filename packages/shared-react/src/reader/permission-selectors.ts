@@ -11,19 +11,22 @@ export type ReaderPermissions = {
   isAIEnabled: boolean;
   /** AI is on and an image provider can draw: Generate shows only then. */
   canDrawImages: boolean;
-  /** The household's members, or null outside one. */
-  householdUserIds: string[] | null;
+  /** The household's members, the Reader included. */
+  householdMemberIds: string[];
   isServerAdmin: boolean;
 };
 
 /** What a recipe permission is decided by. */
-type RecipeAccess = Pick<ReaderPermissions, "recipePolicy" | "householdUserIds" | "isServerAdmin">;
+type RecipeAccess = Pick<
+  ReaderPermissions,
+  "recipePolicy" | "householdMemberIds" | "isServerAdmin"
+>;
 
 type PermissionAccessInput = {
   policyLevel: PermissionLevel;
   userId: string;
   ownerId: string;
-  householdUserIds: string[] | null;
+  householdMemberIds: string[];
   isServerAdmin: boolean;
 };
 
@@ -40,7 +43,7 @@ export function normalizePermissionsData(
     recipePolicy: input?.recipePolicy ?? DEFAULT_RECIPE_POLICY,
     isAIEnabled: input?.isAIEnabled ?? false,
     canDrawImages: input?.canDrawImages ?? false,
-    householdUserIds: input?.householdUserIds ?? null,
+    householdMemberIds: input?.householdMemberIds ?? [],
     isServerAdmin: input?.isServerAdmin ?? false,
   };
 }
@@ -49,7 +52,7 @@ function checkPermissionAccess({
   policyLevel,
   userId,
   ownerId,
-  householdUserIds,
+  householdMemberIds,
   isServerAdmin,
 }: PermissionAccessInput): boolean {
   if (userId === ownerId) return true;
@@ -59,7 +62,7 @@ function checkPermissionAccess({
     case "everyone":
       return true;
     case "household":
-      return householdUserIds?.includes(ownerId) ?? false;
+      return householdMemberIds.includes(ownerId);
     case "owner":
     default:
       return false;
@@ -71,7 +74,7 @@ export function selectCanViewRecipe(permissions: RecipeAccess, userId: string, o
     policyLevel: permissions.recipePolicy.view,
     userId,
     ownerId,
-    householdUserIds: permissions.householdUserIds,
+    householdMemberIds: permissions.householdMemberIds,
     isServerAdmin: permissions.isServerAdmin,
   });
 }
@@ -81,7 +84,7 @@ export function selectCanEditRecipe(permissions: RecipeAccess, userId: string, o
     policyLevel: permissions.recipePolicy.edit,
     userId,
     ownerId,
-    householdUserIds: permissions.householdUserIds,
+    householdMemberIds: permissions.householdMemberIds,
     isServerAdmin: permissions.isServerAdmin,
   });
 }
@@ -91,7 +94,7 @@ export function selectCanDeleteRecipe(permissions: RecipeAccess, userId: string,
     policyLevel: permissions.recipePolicy.delete,
     userId,
     ownerId,
-    householdUserIds: permissions.householdUserIds,
+    householdMemberIds: permissions.householdMemberIds,
     isServerAdmin: permissions.isServerAdmin,
   });
 }

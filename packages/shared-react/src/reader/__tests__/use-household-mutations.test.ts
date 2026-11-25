@@ -98,58 +98,6 @@ describe("useHouseholdMutations", () => {
     });
   });
 
-  describe("createHousehold", () => {
-    it("rejects an empty name or a missing Reader", () => {
-      const result = render(createMockHouseholdData(null, "current-user"));
-
-      expect(() => result.current.createHousehold("   ")).toThrow("Household name cannot be empty");
-
-      const noReader = render({ household: null, currentUserId: "" });
-
-      expect(() => noReader.current.createHousehold("Home")).toThrow("User ID not available");
-    });
-
-    it("caches the new household with the Reader as admin", async () => {
-      queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: [], version: 3 });
-      const result = render(createMockHouseholdData(null, "current-user"));
-
-      await act(async () => void result.current.createHousehold("  Home  "));
-      expect(trpcCalls["households.create"]?.[0]?.input).toEqual({ name: "Home" });
-      await settle("create", 0, "resolve", { id: "h9" });
-
-      expect(cached()?.household).toMatchObject({
-        id: "h9",
-        name: "Home",
-        users: [{ id: "current-user", name: "Test User", isAdmin: true }],
-      });
-    });
-
-    it("keeps the Reader's allergy warnings on creation before the household reread", async () => {
-      queryClient.setQueryData(KEY, createMockHouseholdData(null, "current-user"));
-      queryClient.setQueryData(keyOf("user.getAllergies"), { allergies: ["milk"], version: 3 });
-      const { result } = renderHook(
-        () => ({ warnings: useActiveAllergies(), writes: useHouseholdMutations() }),
-        { wrapper: createTestWrapper(queryClient, adapter) }
-      );
-
-      expect(result.current.warnings.allergies).toEqual(["milk"]);
-      await act(async () => void result.current.writes.createHousehold("Home"));
-      await settle("create", 0, "resolve", { id: "h9" });
-
-      await waitFor(() => expect(cached()?.household?.id).toBe("h9"));
-      expect(result.current.warnings.allergies).toEqual(["milk"]);
-    });
-
-    it("refetches the household when it fails", async () => {
-      const result = render(createMockHouseholdData(null, "current-user"));
-
-      await act(async () => void result.current.createHousehold("Home"));
-      await settle("create", 0, "reject");
-
-      await waitFor(() => expect(isInvalidated()).toBe(true));
-    });
-  });
-
   describe("joinHousehold", () => {
     it("rejects an empty code", () => {
       const result = render(createMockHouseholdData(null, "current-user"));
@@ -183,14 +131,14 @@ describe("useHouseholdMutations", () => {
   });
 
   describe("leaveHousehold", () => {
-    it("sends the membership version and clears the household", async () => {
+    it("sends the membership version and waits for the new household to arrive", async () => {
       const result = render(household());
 
       await act(async () => void result.current.leaveHousehold("h1"));
       expect(trpcCalls["households.leave"]?.[0]?.input).toEqual({ householdId: "h1", version: 4 });
       await settle("leave", 0, "resolve", { success: true });
 
-      expect(cached()).toEqual({ household: null, currentUserId: "current-user" });
+      expect(cached()).toEqual(household());
     });
   });
 
