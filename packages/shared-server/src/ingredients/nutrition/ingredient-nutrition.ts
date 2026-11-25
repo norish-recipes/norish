@@ -409,9 +409,8 @@ export interface NutritionGaps {
 }
 
 /**
- * The gaps of each of these Ingredients, for AI's instance-wide estimate: no source or earlier
- * estimate gives the fact. A household's correction is its own and closes no gap; what a parent
- * would lend does not count. A piece fix, or AI's "no pieces", answers the piece weight.
+ * The facts no source or earlier estimate gives, for AI's instance-wide estimate: no household's
+ * correction or parent's lending closes one; a piece fix or "no pieces" answers the piece weight.
  */
 export async function findNutritionGaps(
   ingredientIds: readonly string[]

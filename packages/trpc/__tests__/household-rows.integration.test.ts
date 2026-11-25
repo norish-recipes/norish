@@ -1,8 +1,7 @@
 // @vitest-environment node
 /**
- * Stores, groceries, recurring groceries, the Pantry and the plan through their routers, with
- * the real household guard and the real repositories: a household reads and changes its own
- * rows, a housemate's included, and another household reads and changes none of them.
+ * Household rows through their routers, with the real guard and repositories: a household changes
+ * its own and a housemate's rows, and another household reads and changes none of them.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 

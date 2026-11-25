@@ -1,13 +1,7 @@
 // @vitest-environment node
 /**
- * Household rows belong to the household (ADR-0041).
- *
- * Run against a database migrated up to the migration before it, seeded as
- * earlier releases left it: two members of one household who both hold stores,
- * groceries, recurring groceries, plan entries, Pantry rows and corrections for
- * the same food and store preferences, one of them carrying rows that still
- * point into the household they came from, and Stores with aisles, products
- * and links. Applying it again changes nothing.
+ * Migration 0089 on a database seeded as earlier releases left it, one member's rows pointing into
+ * the household they came from (ADR-0041); a second run changes nothing.
  */
 
 import { randomUUID } from "node:crypto";

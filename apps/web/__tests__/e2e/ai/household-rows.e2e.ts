@@ -1,6 +1,5 @@
-// Household things belong to the household (ADR-0041): a member adds a Store, a grocery, a
-// recurring grocery, a Pantry item, a plan entry and a nutrition correction, then leaves. The
-// household keeps all of it; the member's new household of one starts with none of it.
+// A member adds one of each household thing, then leaves (ADR-0041): the household keeps it all,
+// and the member's new household of one starts with none of it.
 import { randomUUID } from "node:crypto";
 import type { BrowserContext, Page } from "@playwright/test";
 

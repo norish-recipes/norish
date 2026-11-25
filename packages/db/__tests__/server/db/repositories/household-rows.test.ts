@@ -1,8 +1,7 @@
 // @vitest-environment node
 /**
- * Stores, groceries, recurring groceries, the Pantry, plan entries, corrections and
- * store preferences belong to the household (ADR-0041): a member who leaves takes
- * none of them, and deleting an account deletes none of them.
+ * The seven kinds of household row stay with the household (ADR-0041): a member who leaves, or
+ * whose account is deleted, takes none of them.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
