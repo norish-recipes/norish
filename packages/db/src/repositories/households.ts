@@ -8,6 +8,7 @@ import type {
   HouseholdUserDto,
   HouseholdWithUsersNamesDto,
 } from "@norish/shared/contracts/dto/household";
+import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import { db } from "@norish/db/drizzle";
 import {
   cookbooks,
@@ -285,7 +286,7 @@ async function holdsAnything(tx: DbTransaction, userId: string): Promise<boolean
 
 export type JoinHouseholdOutcome =
   | { joined: HouseholdUserDto; leftHouseholdId: string; memberIds: string[] }
-  | { refused: "already-member" | "shared" | "holds-things" | "gone" | "expired" };
+  | { refused: JoinRefusal };
 
 /**
  * Moves an account into another household, deleting the household of one it leaves;

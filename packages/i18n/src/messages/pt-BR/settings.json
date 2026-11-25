@@ -301,7 +301,14 @@
       "description": "Insira um código de entrada para participar de uma casa existente.",
       "codeLabel": "Código de entrada",
       "codePlaceholder": "código de 6 dígitos",
-      "submitButton": "Entrar na casa"
+      "submitButton": "Entrar na casa",
+      "refused": {
+        "invalidCode": "Esse código de convite não é válido.",
+        "expired": "Esse código de convite expirou. Peça um novo.",
+        "alreadyMember": "Você já está nesta casa.",
+        "shared": "Saia primeiro da sua casa para entrar em outra.",
+        "holdsThings": "Sua casa tem receitas, compras ou planos próprios, então ainda não pode entrar em outra casa."
+      }
     }
   },
   "caldav": {

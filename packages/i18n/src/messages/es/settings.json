@@ -301,7 +301,14 @@
       "description": "Introduce un código de unión para unirte a un hogar existente.",
       "codeLabel": "Código de unión",
       "codePlaceholder": "Código de 6 dígitos",
-      "submitButton": "Unirse al hogar"
+      "submitButton": "Unirse al hogar",
+      "refused": {
+        "invalidCode": "Ese código de unión no es válido.",
+        "expired": "Ese código de unión ha caducado. Pide uno nuevo.",
+        "alreadyMember": "Ya estás en este hogar.",
+        "shared": "Sal primero de tu hogar para unirte a otro.",
+        "holdsThings": "Tu hogar tiene sus propias recetas, compras o planes, así que todavía no puede unirse a otro hogar."
+      }
     }
   },
   "caldav": {

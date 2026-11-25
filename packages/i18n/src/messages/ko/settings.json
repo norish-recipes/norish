@@ -301,7 +301,14 @@
       "description": "기존 가구에 참여하려면 참여 코드를 입력하세요.",
       "codeLabel": "참여 코드",
       "codePlaceholder": "6자리 코드",
-      "submitButton": "가구 참여"
+      "submitButton": "가구 참여",
+      "refused": {
+        "invalidCode": "유효하지 않은 참여 코드입니다.",
+        "expired": "참여 코드가 만료되었습니다. 새 코드를 요청하세요.",
+        "alreadyMember": "이미 이 가구에 속해 있습니다.",
+        "shared": "다른 가구에 참여하려면 먼저 현재 가구를 떠나세요.",
+        "holdsThings": "가구에 자체 레시피, 장보기 또는 계획이 있어 아직 다른 가구에 참여할 수 없습니다."
+      }
     }
   },
   "caldav": {

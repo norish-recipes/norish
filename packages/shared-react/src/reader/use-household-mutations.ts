@@ -2,12 +2,22 @@
 
 import { useMutation } from "@tanstack/react-query";
 
+import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
+import { joinRefusalOf } from "@norish/shared/lib/join-refusals";
 
 import { wentThrough } from "../offline/settled";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
+
+const JOIN_REFUSAL_COPY: Record<JoinRefusal, string> = {
+  gone: "settings.household.join.refused.invalidCode",
+  expired: "settings.household.join.refused.expired",
+  "already-member": "settings.household.join.refused.alreadyMember",
+  shared: "settings.household.join.refused.shared",
+  "holds-things": "settings.household.join.refused.holdsThings",
+};
 
 /** Each action resolves whether its request went through: false when it failed. */
 type HouseholdMutationsResult = {
@@ -24,7 +34,7 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
   const trpc = useTRPC();
   const { household, currentUserId } = useHousehold();
   const { setHouseholdData, invalidate } = useHouseholdCacheHelpers();
-  const { showError } = usePlatform();
+  const { showError, toast } = usePlatform();
 
   const getHouseholdVersion = (householdId: string): number =>
     household?.id === householdId ? household.version : 1;
@@ -38,9 +48,22 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     showError(error, `household:${action}`);
   };
 
+  // A refused join is told in the reader's language; any other failure as the server gave it.
+  const onJoinError = (error: unknown) => {
+    const refusal = error instanceof Error ? joinRefusalOf(error.message) : undefined;
+
+    if (!refusal) return onError("join")(error);
+    void invalidate();
+    toast.show({
+      severity: "danger",
+      title: toast.translate("common.errors.operationFailed"),
+      description: toast.translate(JOIN_REFUSAL_COPY[refusal]),
+    });
+  };
+
   // The joined household arrives through the subscription.
   const { mutateAsync: mutateJoin, isPending: isJoining } = useMutation(
-    trpc.households.join.mutationOptions({ onError: onError("join") })
+    trpc.households.join.mutationOptions({ onError: onJoinError })
   );
   // The new household of one arrives through the subscription.
   const { mutateAsync: mutateLeave, isPending: isLeaving } = useMutation(

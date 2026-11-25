@@ -8,6 +8,7 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 import { useActiveAllergies, useHouseholdMutations } from "@norish/shared-react/reader";
+import { JOIN_REFUSALS } from "@norish/shared/lib/join-refusals";
 
 import { keyOf, resetTRPCFake, trpcCalls } from "../../trpc/testing";
 import {
@@ -127,6 +128,32 @@ describe("useHouseholdMutations", () => {
           "household:join"
         )
       );
+    });
+  });
+
+  describe("a refused join", () => {
+    it.each([
+      ["gone", "invalidCode"],
+      ["expired", "expired"],
+      ["already-member", "alreadyMember"],
+      ["shared", "shared"],
+      ["holds-things", "holdsThings"],
+    ] as const)("tells the reader the %s refusal in their language", async (refusal, copy) => {
+      const result = render(createMockHouseholdData(null, "current-user"));
+
+      await act(async () => void result.current.joinHousehold("123456"));
+      await act(async () =>
+        trpcCalls["households.join"]![0]!.deferred.reject(new Error(JOIN_REFUSALS[refusal]))
+      );
+
+      await waitFor(() =>
+        expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
+          severity: "danger",
+          title: "common.errors.operationFailed",
+          description: `settings.household.join.refused.${copy}`,
+        })
+      );
+      expect(adapter.showError).not.toHaveBeenCalled();
     });
   });
 
