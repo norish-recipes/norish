@@ -156,7 +156,8 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
 });
 
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
-  id: z.uuid().optional(),
+  // A client-made id, in the database's spelling so its media folder matches.
+  id: z.uuid().toLowerCase().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
   // Vocabulary row ids, as the recipe form sends them. Names would reintroduce

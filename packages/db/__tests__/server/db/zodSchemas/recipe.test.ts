@@ -42,4 +42,10 @@ describe("recipe schemas", () => {
 
     expect(parsed.categories).toEqual([]);
   });
+
+  it("takes a client-made recipe id in any letter case as the database spells it", () => {
+    const id = "123E4567-E89B-12D3-A456-426614174000";
+
+    expect(FullRecipeInsertSchema.pick({ id: true }).parse({ id }).id).toBe(id.toLowerCase());
+  });
 });
