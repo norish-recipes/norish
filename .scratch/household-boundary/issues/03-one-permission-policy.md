@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Columns:** `recipes` and `cookbooks` get `household_id` (not null), filled from their owner's household.
   - Orphans (`user_id` null) go to the server owner, in the server owner's household.
