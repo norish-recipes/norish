@@ -56,7 +56,7 @@ export async function setFavorite(
 
 /** The reader's favourites they may view now; one out of view comes back when the policy widens. */
 export async function getFavoriteRecipesWithVersions(
-  viewer: RecipeListContext
+  ctx: RecipeListContext
 ): Promise<Array<{ recipeId: string; version: number }>> {
   return await db
     .select({ recipeId: recipeFavorites.recipeId, version: recipeFavorites.version })
@@ -64,15 +64,15 @@ export async function getFavoriteRecipesWithVersions(
     .innerJoin(recipes, eq(recipes.id, recipeFavorites.recipeId))
     .where(
       and(
-        eq(recipeFavorites.userId, viewer.userId),
-        await buildPolicyCondition(viewer, recipes.householdId, "view")
+        eq(recipeFavorites.userId, ctx.userId),
+        await buildPolicyCondition(ctx, recipes.householdId, "view")
       )
     );
 }
 
 /** Which of these recipes the reader favourited and may view now. */
 export async function getFavoritesByRecipeIds(
-  viewer: RecipeListContext,
+  ctx: RecipeListContext,
   recipeIds: string[]
 ): Promise<Set<string>> {
   if (recipeIds.length === 0) return new Set();
@@ -83,9 +83,9 @@ export async function getFavoritesByRecipeIds(
     .innerJoin(recipes, eq(recipes.id, recipeFavorites.recipeId))
     .where(
       and(
-        eq(recipeFavorites.userId, viewer.userId),
+        eq(recipeFavorites.userId, ctx.userId),
         inArray(recipeFavorites.recipeId, recipeIds),
-        await buildPolicyCondition(viewer, recipes.householdId, "view")
+        await buildPolicyCondition(ctx, recipes.householdId, "view")
       )
     );
 

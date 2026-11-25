@@ -7,7 +7,7 @@ import {
   tabPage,
 } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { useHouseholdRights } from "@/hooks/use-household-rights";
 import { useGroceriesSection } from "@/lib/groceries-section";
 import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
@@ -59,7 +59,7 @@ export function ShellTabs() {
     inSearch
   );
   const { cookbook } = useCookbookQuery(cookbookIdOf(screen.path) ?? "");
-  const { canEdit } = useOwnerRights();
+  const { canEdit } = useHouseholdRights();
   const plan = accessoryPlan(
     screen,
     hasTimers,

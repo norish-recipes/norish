@@ -1,5 +1,5 @@
 import React from "react";
-import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { useHouseholdRights } from "@/hooks/use-household-rights";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -48,7 +48,7 @@ export function CookbookAddRecipesScreen() {
   const intl = useIntl();
   const { cookbookId } = useLocalSearchParams<{ cookbookId: string }>();
   const { cookbook } = useCookbookQuery(cookbookId ?? "");
-  const { canEdit } = useOwnerRights();
+  const { canEdit } = useHouseholdRights();
 
   return cookbook && canEdit(cookbook) ? (
     <AddRecipesSheet key={cookbook.id} cookbook={cookbook} />
