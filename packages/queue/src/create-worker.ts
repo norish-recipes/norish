@@ -7,6 +7,7 @@
  * - runs its processor inside the operation context the job was enqueued
  *   under and a model-use ledger the AI Runtime records into, so no worker
  *   can miss the job monitor's AI-model chip
+ * - ends a job of a deleted account quietly and keeps none of its jobs
  * - logs its errors and failed jobs through the server logger
  * - is registered for shutdown
  * - passes its processor BullMQ's abort signal as a third parameter, which
@@ -27,6 +28,7 @@ import { AIError, rateLimitWaitMs } from "@norish/shared-server/ai/runtime/error
 import { createLogger } from "@norish/shared-server/logger";
 
 import type { QueueName } from "./queue-names";
+import { AccountGoneError, endingWithItsAccount, removeIfAccountGone } from "./account-jobs";
 import { baseWorkerOptions, QUEUE_SETTINGS } from "./config";
 import { stopAtNextStepOnceCancelled } from "./job-steps";
 import { createModelLedgerProcessor } from "./model-ledger-processor";
@@ -81,7 +83,9 @@ export function createWorker<T>(
     running.get(jobId)?.resolve();
     running.delete(jobId);
   };
-  const instrumented = createContextAwareProcessor(createModelLedgerProcessor(processor));
+  const instrumented = createContextAwareProcessor(
+    createModelLedgerProcessor(endingWithItsAccount(queueName, processor))
+  );
   const settle = async (job: Job<T>, token?: string, signal?: AbortSignal) => {
     const cancelled = () => signal?.aborted === true && signal.reason !== SHUTDOWN;
     let result: unknown;
@@ -133,20 +137,33 @@ export function createWorker<T>(
     log.error({ err, queueName }, "Worker error");
   });
 
-  worker.on("completed", (job) => recorded(job.id));
+  const forgetIfAccountGone = (job: Job<T> | undefined) =>
+    void removeIfAccountGone(queueName, job).catch((err: unknown) =>
+      log.warn({ err, queueName, jobId: job?.id }, "Could not check a settled job's account")
+    );
+
+  worker.on("completed", (job) => {
+    recorded(job.id);
+    forgetIfAccountGone(job);
+  });
 
   worker.on("failed", (job, err) => {
     recorded(job?.id);
-    log.error(
-      {
-        err,
-        queueName,
-        jobId: job?.id,
-        attempt: job?.attemptsMade,
-        final: job ? isFinalFailure(job, err) : undefined,
-      },
-      "Job failed"
-    );
+    forgetIfAccountGone(job);
+    if (err instanceof AccountGoneError) {
+      log.info({ queueName, jobId: job?.id }, "Job of a deleted account ended");
+    } else {
+      log.error(
+        {
+          err,
+          queueName,
+          jobId: job?.id,
+          attempt: job?.attemptsMade,
+          final: job ? isFinalFailure(job, err) : undefined,
+        },
+        "Job failed"
+      );
+    }
     if (!options.onFailed) return;
     Promise.resolve()
       .then(() => options.onFailed?.(job, err))

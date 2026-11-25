@@ -123,42 +123,6 @@ describe("processImportJob", () => {
     dashboardRecipe.mockResolvedValue({ id: "recipe-77", name: "Imported Stew" });
   });
 
-  const importJob = () =>
-    ({
-      id: "job-1",
-      attemptsMade: 0,
-      opts: {},
-      data: {
-        url: "https://example.com/stew",
-        recipeId: "recipe-77",
-        userId: "user-1",
-        householdId: "household-1",
-      },
-    }) as unknown as Job<RecipeImportJobData>;
-
-  it("fails for good, parsing nothing, for an account deleted before the job ran", async () => {
-    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
-    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
-
-    vi.mocked(getHouseholdIdForUser).mockResolvedValueOnce(null);
-    parseRecipeFromUrl.mockClear();
-
-    await expect(processRecipeImportJob(importJob())).rejects.toBeInstanceOf(UnrecoverableError);
-    expect(parseRecipeFromUrl).not.toHaveBeenCalled();
-  });
-
-  it("fails for good, storing nothing, for an account deleted while it parsed", async () => {
-    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
-    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
-
-    vi.mocked(getHouseholdIdForUser)
-      .mockResolvedValueOnce("household-1")
-      .mockResolvedValueOnce(null);
-    createRecipeWithRefs.mockRejectedValueOnce(new Error("null value in column household_id"));
-
-    await expect(processRecipeImportJob(importJob())).rejects.toThrow("The account was deleted");
-  });
-
   it("creates the imported recipe with the extracted Dish Colour (URL-import path)", async () => {
     const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
 

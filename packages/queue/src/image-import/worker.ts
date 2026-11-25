@@ -20,11 +20,7 @@ import { recipes } from "@norish/shared-server/realtime/recipes";
 
 import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
-import {
-  accountGone,
-  deleteUnstoredRecipeMedia,
-  failForGoodIfAccountGone,
-} from "../import-cleanup";
+import { deleteUnstoredRecipeMedia } from "../import-cleanup";
 import { reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -42,8 +38,9 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   // Emit import started event (shows skeleton)
   const started = await accountAudience(userId);
 
-  if (!started) throw accountGone();
-  void recipes.publish("importStarted", { recipeId, url: `[${files.length} image(s)]` }, started);
+  if (started) {
+    void recipes.publish("importStarted", { recipeId, url: `[${files.length} image(s)]` }, started);
+  }
 
   // Vision parsing reads the images; every inference happens afterwards.
   // A failure throws with its own message — extraction, not this worker,
@@ -56,9 +53,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Save the recipe
   await reportStep(job, "saving");
-  const created = await createResolvedRecipe(recipeId, userId, parsedRecipe, { userId }).catch(
-    failForGoodIfAccountGone(userId)
-  );
+  const created = await createResolvedRecipe(recipeId, userId, parsedRecipe, { userId });
   const createdId = created?.recipeId;
 
   if (!createdId) {

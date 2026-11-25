@@ -10,13 +10,13 @@ import {
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
-import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { findPlannedItemPlace } from "@norish/db/repositories/planned-items";
 import { accountCanViewRecipe } from "@norish/db/repositories/recipes";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createLogger } from "@norish/shared-server/logger";
 import { caldav } from "@norish/shared-server/realtime/caldav";
 
+import { AccountGoneError } from "../account-jobs";
 import { createWorker, isFinalFailure } from "../create-worker";
 import { reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
@@ -168,7 +168,7 @@ export async function handleCaldavJobFailed(
   const isFinal = isFinalFailure(job, error);
 
   // A deleted account keeps no status; its calendar went with its CalDAV settings.
-  if (!(await getHouseholdIdForUser(userId))) return;
+  if (error instanceof AccountGoneError) return;
 
   const errorMessage = truncateErrorMessage(error.message);
 

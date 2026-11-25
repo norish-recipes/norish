@@ -6,6 +6,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
+import { AccountGoneError } from "../../src/account-jobs";
 
 const handlers = vi.hoisted(() => ({
   syncPlannedItem: vi.fn(async () => ({ uid: "event-1" })),
@@ -201,7 +202,7 @@ describe("the CalDAV sync worker", () => {
           opts: { attempts: 3 },
           data: { userId: member, itemId: entry.id },
         } as never,
-        new Error("CalDAV not configured or disabled")
+        new AccountGoneError()
       )
     ).resolves.toBeUndefined();
   });
