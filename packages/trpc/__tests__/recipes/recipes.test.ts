@@ -254,7 +254,7 @@ describe("recipes procedures", () => {
       expect(lists.publish).toHaveBeenCalledWith(
         "changed",
         { kinds: ["tag", "cuisine", "category"] },
-        { householdId: "household-now" }
+        { viewPolicy: "household", householdId: "household-now" }
       );
     });
 

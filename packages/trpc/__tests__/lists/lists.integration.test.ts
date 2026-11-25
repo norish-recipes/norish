@@ -102,7 +102,33 @@ describe("the lists router", () => {
     });
     expect(await mine.list({ kind: "tag" })).toEqual([]);
     expect(realtime.published.map(({ event, target }) => [event, target])).toEqual(
-      Array(5).fill(["changed", { householdId: helpers.testHouseholdOf(member.id) }])
+      Array(5).fill([
+        "changed",
+        { viewPolicy: "everyone", householdId: helpers.testHouseholdOf(member.id) },
+      ])
+    );
+  });
+
+  it("tells the readers of the household's recipes under the policy at publish, naming no entry", async () => {
+    await serverConfig.setConfig(
+      "recipe_permission_policy",
+      { view: "household", edit: "household", delete: "household" },
+      null,
+      false
+    );
+
+    const mine = await as(member);
+    const { entry } = await mine.add({ kind: "tag", name: "Soja" });
+
+    await mine.rename({ kind: "tag", id: entry.id, version: 1, name: "Soy" });
+    expect(
+      realtime.published.map(({ event, payload, target }) => [event, payload, target])
+    ).toEqual(
+      Array(2).fill([
+        "changed",
+        { kinds: ["tag"] },
+        { viewPolicy: "household", householdId: helpers.testHouseholdOf(member.id) },
+      ])
     );
   });
 

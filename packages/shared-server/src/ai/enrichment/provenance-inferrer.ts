@@ -265,7 +265,7 @@ async function resolveProposedCuisines(
 
   const rows = await cuisinesForNames(householdId, created, { create: true });
 
-  announceListsChanged(householdId, ["cuisine"]);
+  await announceListsChanged(householdId, ["cuisine"]);
 
   return [...new Set([...ids, ...rows.map((row) => row.id)])];
 }

@@ -398,7 +398,7 @@ const updateCategories = authedProcedure
         { recipe: updated },
         await policyAudience(updated.householdId)
       );
-      announceListsChanged(updated.householdId, ["category"]);
+      await announceListsChanged(updated.householdId, ["category"]);
     }
 
     return { success: true };
@@ -439,7 +439,7 @@ const deleteProcedure = authedProcedure
         await policyAudience(householdId)
       );
       // Its entries count one recipe fewer.
-      announceListsChanged(householdId);
+      await announceListsChanged(householdId);
     }
 
     if (staleIds.length > 0) {

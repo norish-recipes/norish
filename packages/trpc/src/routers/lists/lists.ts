@@ -75,10 +75,10 @@ async function changeableScope(ctx: ListContext, kind: ListKind, id: string): Pr
   throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
 }
 
-/** A household list change reaches the household; an instance entry's reaches everyone. */
-function announce(kind: ListKind, scope: ListScope) {
+/** A household list change reaches its recipes' readers; an instance entry's reaches everyone. */
+async function announce(kind: ListKind, scope: ListScope) {
   if (scope === null) void config.publish("changed", {}, undefined);
-  else announceListsChanged(scope, [kind]);
+  else await announceListsChanged(scope, [kind]);
 }
 
 /** The household's entries plus the instance's, with how many of its recipes carry each; with
@@ -114,7 +114,7 @@ const add = authedProcedure
     if (!added) throw new TRPCError({ code: "BAD_REQUEST", message: "Names nothing" });
 
     log.info({ userId: ctx.user.id, kind: input.kind, created: added.created }, "List entry added");
-    if (added.created) announce(input.kind, scope);
+    if (added.created) await announce(input.kind, scope);
 
     return {
       entry: withEditable(ctx, input.kind, scope ?? ctx.householdId, added.entry),
@@ -140,7 +140,7 @@ const rename = authedProcedure
     const { entry, merged } = renamed.value;
 
     log.info({ userId: ctx.user.id, kind: input.kind, merged }, "List entry renamed");
-    announce(input.kind, scope);
+    await announce(input.kind, scope);
 
     return {
       stale: false,
@@ -160,7 +160,7 @@ const merge = authedProcedure
     if (merged.stale) return STALE;
 
     log.info({ userId: ctx.user.id, kind: input.kind }, "List entries merged");
-    announce(input.kind, scope);
+    await announce(input.kind, scope);
 
     return {
       stale: false,
@@ -179,7 +179,7 @@ const remove = authedProcedure
     if (deleted.stale) return STALE;
 
     log.info({ userId: ctx.user.id, kind: input.kind, ...deleted.value }, "List entry deleted");
-    announce(input.kind, scope);
+    await announce(input.kind, scope);
 
     return { stale: false, ...deleted.value };
   });

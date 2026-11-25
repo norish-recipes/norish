@@ -96,7 +96,7 @@ describe("publishEnrichmentRecipeUpdated", () => {
     expect(mocks.publishLists).toHaveBeenCalledWith(
       "changed",
       { kinds: ["tag"] },
-      { householdId: "owners-household" }
+      { viewPolicy: "household", householdId: "owners-household" }
     );
   });
 });
