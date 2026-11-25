@@ -34,6 +34,7 @@ import {
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+import { turnPlannedRecipesIntoNotes } from "./planned-items";
 import { getUsersByIds } from "./users";
 
 export async function getUsersByHouseholdId(householdId: string): Promise<HouseholdUserDto[]> {
@@ -517,12 +518,28 @@ export async function renameHouseholdOfOne(userId: string, name: string): Promis
   });
 }
 
+/** What one account deletion did, for the work that runs once it committed. */
+export interface AccountDeletion {
+  /** The household the account was in; null for an account already gone. */
+  householdId: string | null;
+  householdErased: boolean;
+  successorId: string | null;
+  /** Who stays in the household, longest-standing first. */
+  memberIds: string[];
+  /** The erased recipes and cookbooks, whose files are swept after the commit. */
+  recipeIds: string[];
+  cookbookIds: string[];
+  /** The plan entries for those recipes that became notes, in households that stay. */
+  notes: Array<typeof plannedItems.$inferSelect>;
+}
+
 /**
- * Deletes an account under its household's lock: the admin role passes to the
- * longest-standing member, or the household goes with its last member. Returns the successor.
+ * Deletes an account under its household's lock: the admin role passes to the longest-standing
+ * member, or the household goes with its last member. The account's recipes and cookbooks cascade
+ * away, and every plan entry for one of those recipes becomes a note first.
  */
-export async function deleteAccount(userId: string): Promise<string | null> {
-  const successor = await retryWhileMoved(MOVED, async (tx) => {
+export async function deleteAccount(userId: string): Promise<AccountDeletion> {
+  const deletion = await retryWhileMoved(MOVED, async (tx) => {
     const household = await lockHouseholdOf(tx, userId);
 
     if (household === MOVED) return MOVED;
@@ -530,9 +547,23 @@ export async function deleteAccount(userId: string): Promise<string | null> {
       ? (await memberIdsIn(tx, household.id)).filter((id) => id !== userId)
       : [];
     const successorId = household?.adminUserId === userId ? (others[0] ?? null) : null;
+    const erased = household && others.length === 0 ? household.id : null;
+    // Content rows after the household's: locked, so no household plans one of them meanwhile.
+    const recipeIds = (
+      await tx
+        .select({ id: recipes.id })
+        .from(recipes)
+        .where(eq(recipes.userId, userId))
+        .for("update")
+    ).map((row) => row.id);
+    const cookbookIds = (
+      await tx.select({ id: cookbooks.id }).from(cookbooks).where(eq(cookbooks.userId, userId))
+    ).map((row) => row.id);
+    // An erased household's own plan goes with it, so only the others' entries become notes.
+    const notes = await turnPlannedRecipesIntoNotes(tx, recipeIds, erased);
 
-    if (household && others.length === 0) {
-      await tx.delete(households).where(eq(households.id, household.id));
+    if (erased) {
+      await tx.delete(households).where(eq(households.id, erased));
     } else if (household && successorId) {
       await tx
         .update(households)
@@ -546,12 +577,20 @@ export async function deleteAccount(userId: string): Promise<string | null> {
 
     await tx.delete(users).where(eq(users.id, userId));
 
-    return successorId;
+    return {
+      householdId: household?.id ?? null,
+      householdErased: erased !== null,
+      successorId,
+      memberIds: others,
+      recipeIds,
+      cookbookIds,
+      notes,
+    };
   });
 
-  if (successor === MOVED) throw new Error("The account kept moving while being deleted");
+  if (deletion === MOVED) throw new Error("The account kept moving while being deleted");
 
-  return successor;
+  return deletion;
 }
 
 async function generateUniqueJoinCode(): Promise<string> {

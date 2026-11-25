@@ -14,7 +14,7 @@ import { auth } from "./auth";
  * never drift into leaving different debris behind.
  */
 export async function deleteUserAccount(userId: string): Promise<void> {
-  const successorId = await deleteAccount(userId);
+  const { successorId } = await deleteAccount(userId);
 
   if (successorId)
     log.info({ userId, successorId }, "Passed household on with its admin's account");

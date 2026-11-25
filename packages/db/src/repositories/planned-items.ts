@@ -1,5 +1,5 @@
 import type { AnyColumn, SQL } from "drizzle-orm";
-import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, gte, inArray, lte, ne, sql } from "drizzle-orm";
 
 import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 import { db } from "@norish/db/drizzle";
@@ -427,4 +427,35 @@ export async function getPlannedItemHouseholdId(itemId: string): Promise<string 
     .limit(1);
 
   return row?.householdId ?? null;
+}
+
+/**
+ * Every plan entry for these recipes, in any household but `except`, becomes a note with the
+ * recipe's title; the caller holds the recipes' row locks, so none is planned meanwhile.
+ */
+export async function turnPlannedRecipesIntoNotes(
+  trx: Transaction,
+  recipeIds: string[],
+  except: string | null
+): Promise<PlannedItem[]> {
+  if (recipeIds.length === 0) return [];
+
+  return await trx
+    .update(plannedItems)
+    .set({
+      itemType: "note",
+      title: sql`${recipes.name}`,
+      recipeId: null,
+      updatedAt: new Date(),
+      version: sql`${plannedItems.version} + 1`,
+    })
+    .from(recipes)
+    .where(
+      and(
+        eq(plannedItems.recipeId, recipes.id),
+        inArray(recipes.id, recipeIds),
+        except ? ne(plannedItems.householdId, except) : undefined
+      )
+    )
+    .returning(getTableColumns(plannedItems));
 }

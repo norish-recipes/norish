@@ -36,7 +36,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 describe("deleteUserAccount", () => {
   beforeEach(() => {
-    repositories.deleteAccount.mockResolvedValue(null);
+    repositories.deleteAccount.mockResolvedValue({ successorId: null });
     repositories.sweepUserAvatars.mockResolvedValue(undefined);
     repositories.emitConnectionInvalidation.mockResolvedValue(undefined);
     repositories.deleteUserSessions.mockResolvedValue(undefined);
@@ -45,7 +45,11 @@ describe("deleteUserAccount", () => {
   it("deletes the account, then sweeps avatars, ends its sessions and cuts live connections", async () => {
     const order: string[] = [];
 
-    repositories.deleteAccount.mockImplementation(async () => void order.push("delete"));
+    repositories.deleteAccount.mockImplementation(async () => {
+      order.push("delete");
+
+      return { successorId: null };
+    });
     repositories.sweepUserAvatars.mockImplementation(async () => void order.push("sweep"));
     repositories.emitConnectionInvalidation.mockImplementation(
       async () => void order.push("invalidate")

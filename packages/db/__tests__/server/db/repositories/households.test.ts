@@ -148,7 +148,7 @@ describe("households", () => {
 
       await joinHousehold(later.id, { householdId });
 
-      expect(await deleteAccount(admin.id)).toBe(member.id);
+      expect((await deleteAccount(admin.id)).successorId).toBe(member.id);
       expect(await getHouseholdForUser(member.id)).toMatchObject({
         id: householdId,
         adminUserId: member.id,
@@ -159,7 +159,10 @@ describe("households", () => {
       const user = await createTestUser();
       const householdId = await householdOf(user.id);
 
-      expect(await deleteAccount(user.id)).toBeNull();
+      expect(await deleteAccount(user.id)).toMatchObject({
+        successorId: null,
+        householdErased: true,
+      });
       expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([]);
       expect(
         await getTestDb().select().from(households).where(eq(households.id, householdId))
@@ -169,7 +172,10 @@ describe("households", () => {
     it("leaves a member's household to who stays", async () => {
       const { admin, member, householdId } = await sharedHousehold();
 
-      expect(await deleteAccount(member.id)).toBeNull();
+      expect(await deleteAccount(member.id)).toMatchObject({
+        successorId: null,
+        householdErased: false,
+      });
       expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([admin.id]);
     });
   });
@@ -298,7 +304,7 @@ describe("households", () => {
 
       expect(settled).toEqual([
         fulfilled(expect.objectContaining({ memberIds: [deleted.id] })),
-        fulfilled(joiner.id),
+        fulfilled(expect.objectContaining({ successorId: joiner.id, householdErased: false })),
       ]);
       expect(await getHouseholdForUser(joiner.id)).toMatchObject({
         id: household,
@@ -452,7 +458,7 @@ describe("households", () => {
 
       expect(settled).toEqual([
         fulfilled(expect.objectContaining({ leftHouseholdId: own })),
-        fulfilled(null),
+        fulfilled(expect.objectContaining({ householdId: targetHousehold, successorId: null })),
       ]);
       expect(await getHouseholdIdForUser(deleted.id)).toBeNull();
       expect(await getHouseholdMemberIdsByHouseholdId(targetHousehold)).toEqual([target.id]);
