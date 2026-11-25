@@ -27,15 +27,16 @@ import {
 } from "@norish/db/schema";
 
 import type { NamingRows } from "./ingredient-cleanup";
+import { inCatalogue } from "./catalogue-scope";
 import {
   clearAIFlagUnlessOpen,
   parentIsOpenAnswer,
   takeOpenParentChanges,
-  vouchForOpenAIChanges,
   wasParentUndone,
 } from "./ingredient-ai-changes";
 import { likeLiteral } from "./ingredient-aliases";
 import {
+  addSpellingUnlessKnown,
   deleteCatalogueAlias,
   hasNoKinds,
   ingredientIsListed,
@@ -43,11 +44,18 @@ import {
   nameIsFree,
 } from "./ingredient-catalogue";
 import { findRowsNamingSpellings } from "./ingredient-cleanup";
-import { closesCycle, lockFoods, lockTree, moveCatalogueAlias } from "./ingredient-relocation";
+import {
+  closesCycle,
+  fitsInCatalogueOf,
+  lockFoods,
+  lockTree,
+  moveCatalogueAlias,
+} from "./ingredient-relocation";
 
 /**
  * The catalogue seed's writes (ADR-0038): seeded Ingredients, aliases and parents are upserted, and
- * what a person made (an own alias, a merge, a move, a parent) outlives every refresh.
+ * what a person made (an own alias, a merge, a move, a parent) outlives every refresh. The seed reads
+ * and writes only the seed's rows: a household's food or spelling is never adopted or changed (ADR-0042).
  */
 
 const qb = new QueryBuilder();
@@ -89,8 +97,6 @@ export interface SeedEntry {
 export interface SeedOutcome {
   /** New Ingredients the seed minted. */
   created: number;
-  /** Existing Ingredients found to be an entry, which now carry its id. */
-  adopted: number;
   /** Entries whose name another entry's Ingredient already holds (merged there by a person). */
   absorbed: number;
   aliasesAdded: number;
@@ -137,7 +143,7 @@ function chunks<T>(items: readonly T[]): T[][] {
   return out;
 }
 
-/** The Ingredient each fold names, for the folds asked about. */
+/** The seeded Ingredient each of the seed's folds names, for the folds asked about. */
 async function holdersOf(
   tx: DbTransaction,
   folds: readonly string[]
@@ -153,7 +159,7 @@ async function holdersOf(
         seeded: ingredientAliases.seeded,
       })
       .from(ingredientAliases)
-      .where(inArray(ingredientAliases.fold, part));
+      .where(and(inArray(ingredientAliases.fold, part), isNull(ingredientAliases.householdId)));
 
     for (const { fold, ...holder } of rows) held.set(fold, holder);
   }
@@ -174,8 +180,9 @@ function closesCycleIn(parents: ReadonlyMap<string, string | null>, id: string, 
 }
 
 /**
- * Apply a parsed seed in one transaction: an entry finds (by id, else name, adopting it) or mints
- * its food, adds its spellings and a parent no person set; a dropped food goes only unused.
+ * Apply a parsed seed in one transaction: an entry finds its seeded food (by id, else the seeded
+ * food holding its name) or mints one, adds its spellings and a parent no person set; a dropped
+ * food goes only unused.
  */
 export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promise<SeedOutcome> {
   return await db.transaction(async (tx) => {
@@ -183,7 +190,6 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
     const outcome: SeedOutcome = {
       created: 0,
-      adopted: 0,
       absorbed: 0,
       aliasesAdded: 0,
       aliasCollisions: [],
@@ -201,7 +207,8 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
         parentChosen: ingredients.parentChosen,
         nutritionCodes: ingredients.nutritionCodes,
       })
-      .from(ingredients);
+      .from(ingredients)
+      .where(isNull(ingredients.householdId));
     const byId = new Map(existing.map((row) => [row.id, row]));
     const byOffId = new Map(existing.flatMap((row) => (row.offId ? [[row.offId, row.id]] : [])));
     const byName = new Map(existing.map((row) => [row.name.toLowerCase(), row.id]));
@@ -210,9 +217,8 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
       entries.map((entry) => entry.nameFold)
     );
 
-    // Which Ingredient each entry is.
+    // Which seeded Ingredient each entry is.
     const ingredientOf = new Map<string, string>();
-    const adopted = new Set<string>();
     const toCreate: SeedEntry[] = [];
 
     for (const entry of entries) {
@@ -225,30 +231,9 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
       const holder =
         nameHolders.get(entry.nameFold)?.ingredientId ?? byName.get(entry.name.toLowerCase());
-      const row = holder ? byId.get(holder) : undefined;
 
-      if (!row) {
-        toCreate.push(entry);
-      } else if (row.offId === null && !adopted.has(row.id)) {
-        adopted.add(row.id);
-        ingredientOf.set(entry.offId, row.id);
-        await tx
-          .update(ingredients)
-          .set({
-            offId: entry.offId,
-            name: sql`case when ${nameIsFree(row.id, entry.name)} then ${entry.name} else ${ingredients.name} end`,
-            flagged: false,
-            flagReason: null,
-            version: sql`${ingredients.version} + 1`,
-          })
-          .where(eq(ingredients.id, row.id));
-        // The seed vouches for the food: it files it, and AI's merges into it are sure.
-        await takeOpenParentChanges(tx, row.id);
-        await vouchForOpenAIChanges(tx, row.id);
-        outcome.adopted += 1;
-      } else {
-        outcome.absorbed += 1;
-      }
+      if (holder && byId.has(holder)) outcome.absorbed += 1;
+      else toCreate.push(entry);
     }
 
     for (const part of chunks(toCreate)) {
@@ -343,7 +328,9 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
         .update(ingredientAliases)
         .set({ locale: v.column("locale") })
         .from(v.from)
-        .where(eq(ingredientAliases.fold, v.column("fold")));
+        .where(
+          and(eq(ingredientAliases.fold, v.column("fold")), isNull(ingredientAliases.householdId))
+        );
     }
 
     // Parents, where no person chose one.
@@ -499,7 +486,13 @@ async function lockSpellingOn(
   const [alias] = await tx
     .select({ id: ingredientAliases.id })
     .from(ingredientAliases)
-    .where(and(eq(ingredientAliases.fold, fold), eq(ingredientAliases.ingredientId, fromId)));
+    .where(
+      and(
+        eq(ingredientAliases.fold, fold),
+        eq(ingredientAliases.ingredientId, fromId),
+        isNull(ingredientAliases.householdId)
+      )
+    );
 
   return alias?.id ?? null;
 }
@@ -537,12 +530,12 @@ export async function takeOffSeededSpelling(
   });
 }
 
-/** The listed own foods under `parentId` that no person filed there. */
+/** Every household's listed own foods under `parentId` that no person filed there. */
 export async function listUnchosenOwnChildren(
   parentId: string
-): Promise<Array<{ id: string; name: string }>> {
+): Promise<Array<{ id: string; name: string; householdId: string | null }>> {
   return await db
-    .select({ id: ingredients.id, name: ingredients.name })
+    .select({ id: ingredients.id, name: ingredients.name, householdId: ingredients.householdId })
     .from(ingredients)
     .where(
       and(
@@ -576,11 +569,12 @@ export async function listSeededIngredientIds(): Promise<Map<string, string>> {
 
 /** Every spelling of every Ingredient that is no taxonomy entry: what the seed's one pass reads. */
 export async function listUnseededSpellings(): Promise<
-  Array<{ ingredientId: string; text: string; fold: string }>
+  Array<{ ingredientId: string; householdId: string | null; text: string; fold: string }>
 > {
   return await db
     .select({
       ingredientId: ingredientAliases.ingredientId,
+      householdId: ingredientAliases.householdId,
       text: ingredientAliases.text,
       fold: ingredientAliases.fold,
     })
@@ -600,6 +594,7 @@ export async function flagIngredient(id: string): Promise<void> {
 /** An undecided mint; `answered`: AI's parent answer about it is open. */
 export interface UndecidedMint {
   id: string;
+  householdId: string;
   name: string;
   parentId: string | null;
   answered: boolean;
@@ -614,6 +609,7 @@ export async function listUndecidedMints(): Promise<UndecidedMint[]> {
   const rows = await db
     .select({
       id: ingredients.id,
+      householdId: ingredients.householdId,
       name: ingredients.name,
       parentId: ingredients.parentId,
       answered: parentIsOpenAnswer,
@@ -634,8 +630,10 @@ export async function listUndecidedMints(): Promise<UndecidedMint[]> {
   const byId = new Map<string, UndecidedMint>();
 
   for (const row of rows) {
+    if (!row.householdId) continue;
     const mint = byId.get(row.id) ?? {
       id: row.id,
+      householdId: row.householdId,
       name: row.name,
       parentId: row.parentId,
       answered: row.answered,
@@ -650,10 +648,11 @@ export async function listUndecidedMints(): Promise<UndecidedMint[]> {
 }
 
 /**
- * The undecided listed own foods without a parent, `ids` aside, a spelling of which holds a
- * spelling of one of `ids` as whole words: the earlier variants those new foods may be the parent of.
+ * The household's undecided listed own foods without a parent, `ids` aside, a spelling of which
+ * holds a spelling of one of `ids` as whole words: the earlier variants those new foods may parent.
  */
 export async function listParentlessMintsSpelledWith(
+  householdId: string,
   ids: readonly string[]
 ): Promise<Array<{ id: string; name: string }>> {
   if (ids.length === 0) return [];
@@ -675,7 +674,7 @@ export async function listParentlessMintsSpelledWith(
     .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, ingredients.id))
     .where(
       and(
-        isNull(ingredients.offId),
+        eq(ingredients.householdId, householdId),
         isNull(ingredients.parentId),
         eq(ingredients.keptDistinct, false),
         eq(ingredients.parentChosen, false),
@@ -692,14 +691,19 @@ export async function listParentlessMintsSpelledWith(
  * minted text and the name is free and unsettled; a spelling another food holds stays.
  */
 export async function adoptPlainName(
-  id: string,
+  mint: { id: string; householdId: string },
   plain: { text: string; fold: string }
 ): Promise<void> {
+  const { id, householdId } = mint;
+
   await db.transaction(async (tx) => {
-    await tx
-      .insert(ingredientAliases)
-      .values({ text: plain.text, fold: plain.fold, ingredientId: id, ownerId: null })
-      .onConflictDoNothing();
+    await addSpellingUnlessKnown(tx, {
+      householdId,
+      text: plain.text,
+      fold: plain.fold,
+      ingredientId: id,
+      ownerId: null,
+    });
     await tx
       .update(ingredients)
       .set({ name: plain.text, version: sql`${ingredients.version} + 1` })
@@ -729,6 +733,7 @@ export async function fileUndecidedMint(id: string, parentId: string): Promise<b
 async function fileUnder(id: string, parentId: string, where: SQL | undefined): Promise<boolean> {
   return await db.transaction(async (tx) => {
     await lockTree(tx);
+    if (!(await fitsInCatalogueOf(tx, id, parentId))) return false;
     if (await closesCycle(tx, id, parentId)) return false;
     // A person undid this parent once: AI and the words never set it again.
     if (await wasParentUndone(tx, id, parentId)) return false;
@@ -754,8 +759,8 @@ async function fileUnder(id: string, parentId: string, where: SQL | undefined): 
   });
 }
 
-/** The whole catalogue, for the export the ODbL asks be offered. */
-export async function listCatalogueForExport(): Promise<{
+/** The seed and one household's own catalogue, for the export the ODbL asks be offered. */
+export async function listCatalogueForExport(householdId: string): Promise<{
   ingredients: Array<{
     id: string;
     name: string;
@@ -775,6 +780,7 @@ export async function listCatalogueForExport(): Promise<{
         nutritionCodes: ingredients.nutritionCodes,
       })
       .from(ingredients)
+      .where(inCatalogue(ingredients.householdId, householdId))
       .orderBy(sql`lower(${ingredients.name})`),
     db
       .select({
@@ -783,6 +789,7 @@ export async function listCatalogueForExport(): Promise<{
         locale: ingredientAliases.locale,
       })
       .from(ingredientAliases)
+      .where(inCatalogue(ingredientAliases.householdId, householdId))
       .orderBy(ingredientAliases.createdAt, ingredientAliases.id),
   ]);
 

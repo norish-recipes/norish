@@ -15,8 +15,8 @@ import {
   listUnseededSpellings,
 } from "@norish/db/repositories/ingredient-seed";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { realtimeIngredientChanges } from "@norish/shared-server/ingredients/changes";
 import { createLogger } from "@norish/shared-server/logger";
-import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 import { norishReads } from "@norish/shared/lib/ingredient-names";
 import {
   ingredientAliasFold,
@@ -250,7 +250,7 @@ export async function oncePerVersion<T extends object>(
   await updateIngredientSeedState({ [key]: version });
   log.info(fields, done);
   if (changed(outcome)) {
-    await ingredientsRealtime.publish("changed", { ingredientIds: [] }, undefined);
+    await realtimeIngredientChanges.changed([], null);
   }
 
   return outcome;
@@ -326,8 +326,8 @@ export async function refreshIngredientCatalogue(
 
   // Merges, parents and removals change which food lines mean: open clients
   // refetch what they derived from Ingredients, as after a person's merge.
-  if (merged > 0 || outcome.parentsSet > 0 || outcome.removed > 0 || outcome.adopted > 0) {
-    await ingredientsRealtime.publish("changed", { ingredientIds: [] }, undefined);
+  if (merged > 0 || outcome.parentsSet > 0 || outcome.removed > 0) {
+    await realtimeIngredientChanges.changed([], null);
   }
 
   return "applied";
