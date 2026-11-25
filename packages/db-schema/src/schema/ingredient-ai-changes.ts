@@ -1,6 +1,7 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import type { RecipeIngredientJoin } from "./recipe-ingredients";
+import { households } from "./households";
 import { ingredients } from "./ingredients";
 
 /** A food AI deleted, its spellings and the rows that named it, for Undo to mint it again under its ids. */
@@ -60,13 +61,15 @@ export type AIChangeUndo =
 
 /**
  * AI Changes (CONTEXT.md): under `ingredientId` (naming `targetId`); a deleted food's food is in
- * `undo`. An undone row stays, so AI never makes that change again.
+ * `undo`. An undone row stays, so AI never makes that change again. `householdId` is the household
+ * whose catalogue AI changed, which lists it; null lists it to admins (ADR-0042).
  */
 export const ingredientAIChanges = pgTable(
   "ingredient_ai_changes",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     kind: text("kind").notNull(),
+    householdId: uuid("household_id").references(() => households.id, { onDelete: "cascade" }),
     ingredientId: uuid("ingredient_id").references(() => ingredients.id, { onDelete: "cascade" }),
     targetId: uuid("target_id").references(() => ingredients.id, { onDelete: "cascade" }),
     sure: boolean("sure").notNull(),
@@ -78,5 +81,6 @@ export const ingredientAIChanges = pgTable(
   (t) => [
     index("idx_ingredient_ai_changes_ingredient_id").on(t.ingredientId),
     index("idx_ingredient_ai_changes_created_at").on(t.createdAt),
+    index("idx_ingredient_ai_changes_household_id").on(t.householdId),
   ]
 );

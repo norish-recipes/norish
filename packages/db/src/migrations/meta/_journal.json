@@ -652,6 +652,13 @@
       "when": 1795630569573,
       "tag": "0092_household_lists",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1795646210831,
+      "tag": "0093_household_catalogues",
+      "breakpoints": true
     }
   ]
 }
