@@ -55,6 +55,7 @@ const at = new Date("2026-05-01T10:00:00.000Z");
 const stored: FullRecipeDTO = {
   id: "11111111-1111-4111-8111-111111111111",
   userId: "user-1",
+  householdId: "household-1",
   name: "Hoisin chicken",
   description: "Sticky and quick.",
   url: "https://example.com/hoisin",

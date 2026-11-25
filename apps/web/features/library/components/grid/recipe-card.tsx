@@ -32,11 +32,7 @@ import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
-import {
-  ownerAllows,
-  useHiddenItemVisibility,
-  useRecipePermissions,
-} from "@norish/shared-react/reader";
+import { useHiddenItemVisibility, useRecipePermissions } from "@norish/shared-react/reader";
 import { recipeCardFacts, useRecipeSelection } from "@norish/shared-react/recipes";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
@@ -231,7 +227,7 @@ function RecipeCardComponent({
 
   // Check if user can delete this recipe
   // Recipes without owner don not have restrictions
-  const showDeleteAction = ownerAllows(recipe.userId, canDeleteRecipe);
+  const showDeleteAction = canDeleteRecipe(recipe.householdId);
 
   const actions: SwipeAction[] = useMemo(() => {
     const baseActions: SwipeAction[] = [

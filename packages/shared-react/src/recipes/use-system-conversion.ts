@@ -9,7 +9,6 @@ import {
 } from "@norish/shared/lib/user-preferences";
 
 import {
-  ownerAllows,
   useHiddenItemVisibility,
   usePermissions,
   usePreferencesSaving,
@@ -155,7 +154,7 @@ export function useAutoConversion() {
       return;
     }
     if (recipe.recipeIngredients.length === 0) return;
-    if (!ownerAllows(recipe.userId, canEditRecipe)) return;
+    if (!canEditRecipe(recipe.householdId)) return;
 
     doneForRef.current = doneFor;
     if (recipe.systemUsed === target.system) return;

@@ -15,7 +15,7 @@ import { createMockFullRecipe, createMockHousehold, createMockUser } from "./rec
 
 const RECIPE = "11111111-1111-4111-8111-111111111111";
 const COOKBOOK = "22222222-2222-4222-8222-222222222222";
-const ROW_HOUSEHOLD = "row-household";
+const ROW_HOUSEHOLD = "33333333-3333-4333-8333-333333333333";
 
 const stored = vi.hoisted(() => ({ policy: {} as Record<string, string> }));
 const repos = vi.hoisted(() => ({
@@ -118,6 +118,7 @@ beforeEach(() => {
     createMockFullRecipe({
       id: RECIPE,
       userId: "owner",
+      householdId: ROW_HOUSEHOLD,
       notes: "",
       version: 1,
       tags: [],

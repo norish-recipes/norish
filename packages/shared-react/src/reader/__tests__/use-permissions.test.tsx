@@ -11,40 +11,54 @@ import {
 } from "@norish/shared-react/reader";
 
 import { answerRead, keyOf, resetTRPCFake } from "../../trpc/testing";
-import { READER, readerWrapper } from "./test-utils";
+import { readerWrapper } from "./test-utils";
 
 const PERMISSIONS_KEY = keyOf("permissions.get");
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
 const HOUSEHOLD_POLICY: PermissionsData = {
-  recipePolicy: { view: "household", edit: "household", delete: "owner" },
+  recipePolicy: { view: "everyone", edit: "household", delete: "household" },
   isAIEnabled: true,
   canDrawImages: false,
-  householdMemberIds: [READER.id, "partner"],
+  householdId: "readers-household",
   isServerAdmin: false,
 };
 
 describe("permission selectors", () => {
   it("normalizes undefined permission data to conservative defaults", () => {
     expect(normalizePermissionsData(undefined)).toEqual({
-      recipePolicy: { view: "owner", edit: "owner", delete: "owner" },
+      recipePolicy: { view: "household", edit: "household", delete: "household" },
       isAIEnabled: false,
       canDrawImages: false,
-      householdMemberIds: [],
+      householdId: null,
       isServerAdmin: false,
     });
   });
 
-  it("allows delete when household policy and owner is in household", () => {
-    const permissions = normalizePermissionsData({
-      ...HOUSEHOLD_POLICY,
-      recipePolicy: { view: "household", edit: "household", delete: "household" },
-      householdMemberIds: ["owner-1", "owner-2"],
-    });
+  it("decides by the row's household, as the server does", () => {
+    const permissions = normalizePermissionsData(HOUSEHOLD_POLICY);
 
-    expect(selectCanDeleteRecipe(permissions, "viewer-1", "owner-1")).toBe(true);
-    expect(selectCanDeleteRecipe(permissions, "viewer-1", "owner-3")).toBe(false);
+    expect(selectCanDeleteRecipe(permissions, "readers-household")).toBe(true);
+    expect(selectCanDeleteRecipe(permissions, "another-household")).toBe(false);
+    expect(
+      selectCanDeleteRecipe(
+        { ...permissions, recipePolicy: { ...permissions.recipePolicy, delete: "everyone" } },
+        "another-household"
+      )
+    ).toBe(true);
+  });
+
+  it("allows nothing before the server has named the reader's household", () => {
+    const permissions = normalizePermissionsData({ ...HOUSEHOLD_POLICY, householdId: null });
+
+    expect(selectCanDeleteRecipe(permissions, "readers-household")).toBe(false);
+  });
+
+  it("gives a server admin nothing past the policy", () => {
+    const permissions = normalizePermissionsData({ ...HOUSEHOLD_POLICY, isServerAdmin: true });
+
+    expect(selectCanDeleteRecipe(permissions, "another-household")).toBe(false);
   });
 });
 
@@ -89,20 +103,19 @@ describe("usePermissions", () => {
 });
 
 describe("useRecipePermissions", () => {
-  it("decides by the policy, the household and who the Reader is", async () => {
+  it("decides by the policy and the row's household", async () => {
     const { result } = renderHook(() => useRecipePermissions(), {
       wrapper: readerWrapper(createTestQueryClient()),
     });
 
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.canViewRecipe("partner")).toBe(false);
+    expect(result.current.canViewRecipe("readers-household")).toBe(false);
 
     act(() => answerRead("permissions.get", HOUSEHOLD_POLICY));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.canViewRecipe("partner")).toBe(true);
-    expect(result.current.canEditRecipe("stranger")).toBe(false);
-    expect(result.current.canDeleteRecipe("partner")).toBe(false);
-    expect(result.current.canDeleteRecipe(READER.id)).toBe(true);
+    expect(result.current.canViewRecipe("another-household")).toBe(true);
+    expect(result.current.canEditRecipe("another-household")).toBe(false);
+    expect(result.current.canDeleteRecipe("readers-household")).toBe(true);
   });
 });

@@ -11,7 +11,6 @@ import { useThemeColor } from "heroui-native";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import {
-  ownerAllows,
   useActiveAllergies,
   useHiddenItemVisibility,
   usePermissions,
@@ -53,7 +52,7 @@ export function useRecipeHeaderItems(): NativeStackHeaderItem[] {
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const label = useText();
   const favourite = isFavorite(recipe.id);
-  const canEdit = ownerAllows(recipe.userId, canEditRecipe);
+  const canEdit = canEditRecipe(recipe.householdId);
 
   const ai = AI_ACTIONS.filter(
     ([kind]) => kind !== "allergy-detection" || allergies.length > 0

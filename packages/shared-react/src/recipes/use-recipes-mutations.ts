@@ -15,6 +15,7 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import { usePermissions, useReader } from "../reader";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -117,7 +118,11 @@ function createOptimisticId(): string {
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
 }
 
-function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO | null {
+/** The Reader's own recipe, in their household; unknown ids offer nothing until the echo. */
+function createOptimisticFullRecipe(
+  input: FullRecipeInsertDTO,
+  owner: { userId: string; householdId: string }
+): FullRecipeDTO | null {
   if (!input.id) {
     return null;
   }
@@ -127,7 +132,7 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
 
   return {
     id: input.id,
-    userId: null,
+    ...owner,
     name: input.name,
     description: input.description ?? null,
     notes: input.notes ?? null,
@@ -233,6 +238,7 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
   return {
     id: recipe.id,
     userId: recipe.userId,
+    householdId: recipe.householdId,
     name: recipe.name,
     description: recipe.description,
     notes: recipe.notes,
@@ -275,11 +281,15 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const { setAllRecipesData, invalidate } = useRecipesCacheHelpers();
 
   const recipesPath = [trpc.recipes.list.queryKey({})[0]];
+  const owner = {
+    userId: useReader().user?.id ?? "",
+    householdId: usePermissions((permissions) => permissions.householdId) ?? "",
+  };
 
   const createMutation = useMutation(
     trpc.recipes.create.mutationOptions({
       onMutate: async (input) => {
-        const optimisticRecipe = createOptimisticFullRecipe(input);
+        const optimisticRecipe = createOptimisticFullRecipe(input, owner);
 
         if (!optimisticRecipe) {
           return {};

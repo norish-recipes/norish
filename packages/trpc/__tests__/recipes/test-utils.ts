@@ -79,6 +79,7 @@ export function createMockRecipeDashboard(
   return {
     id: `recipe-${crypto.randomUUID()}`,
     userId: "test-user-id",
+    householdId: "99999999-9999-4999-8999-999999999999",
     name: "Test Recipe",
     description: "A test recipe description",
     url: "https://example.com/recipe",
@@ -112,6 +113,7 @@ export function createMockFullRecipe(overrides: Partial<FullRecipeDTO> = {}): Fu
   return {
     id: `recipe-${crypto.randomUUID()}`,
     userId: "test-user-id",
+    householdId: "99999999-9999-4999-8999-999999999999",
     name: "Test Recipe",
     description: "A test recipe description",
     url: "https://example.com/recipe",

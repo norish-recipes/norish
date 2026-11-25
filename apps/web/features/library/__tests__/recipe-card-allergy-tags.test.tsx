@@ -98,6 +98,7 @@ function makeRecipe(tagNames: string[]): RecipeDashboardDTO {
   return {
     id: "recipe-1",
     userId: "user-1",
+    householdId: "household-1",
     name: "Pasta carbonara",
     description: null,
     notes: null,

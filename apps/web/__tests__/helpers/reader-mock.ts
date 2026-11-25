@@ -62,7 +62,6 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     offeredHiddenItems,
     measurementChoices,
     shownMeasurement,
-    ownerAllows,
   } = await vi.importActual<typeof import("@norish/shared-react/reader")>(
     "@norish/shared-react/reader"
   );
@@ -78,7 +77,6 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     offeredHiddenItems,
     measurementChoices,
     shownMeasurement,
-    ownerAllows,
     useHiddenItemVisibility: () => hiddenItemVisibility([]),
     useReader: () => ({
       user: read().user ?? null,

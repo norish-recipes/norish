@@ -174,6 +174,7 @@ describe("RecipeForm categories", () => {
   const mojito: FullRecipeDTO = {
     id: "11111111-1111-4111-8111-111111111111",
     userId: "user-1",
+    householdId: "household-1",
     name: "Mojito",
     description: null,
     url: null,

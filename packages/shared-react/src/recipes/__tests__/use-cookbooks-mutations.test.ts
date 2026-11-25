@@ -53,7 +53,11 @@ vi.mock("../../trpc", () => {
   };
 });
 
-vi.mock("../../reader", () => ({ useReader: () => ({ user: { id: "user-1" } }) }));
+vi.mock("../../reader", () => ({
+  useReader: () => ({ user: { id: "user-1" } }),
+  usePermissions: (select: (p: { householdId: string }) => unknown) =>
+    select({ householdId: "household-1" }),
+}));
 
 describe("useCookbooksMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

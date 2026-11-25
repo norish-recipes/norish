@@ -13,7 +13,7 @@ import { twMerge } from "tailwind-merge";
 
 import type { SelectedRecipe } from "@norish/shared-react/recipes";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
-import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { useCookbooksMutations, useRecipeSelection } from "@norish/shared-react/recipes";
 
 import { ActionBar, actionBarButtonClassName } from "./action-bar";
@@ -47,9 +47,9 @@ export default function RecipeSelectionBar({
   // Each selected recipe at the newest version this page has seen.
   const loaded = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const selected = [...selectedById.values()].map((recipe) => {
-    const { id, version, userId } = loaded.get(recipe.id) ?? recipe;
+    const { id, version, householdId } = loaded.get(recipe.id) ?? recipe;
 
-    return { id, version, userId };
+    return { id, version, householdId };
   });
   const count = selected.length;
   const isSelecting = count > 0;
@@ -75,11 +75,10 @@ export default function RecipeSelectionBar({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isSelecting, clear]);
 
-  // Orphaned recipes are anyone's to delete, as a single delete has it.
-  const deletable = selected.filter((recipe) => ownerAllows(recipe.userId, canDeleteRecipe));
+  const deletable = selected.filter((recipe) => canDeleteRecipe(recipe.householdId));
   const recipeIds = selected.map((recipe) => recipe.id);
   // Cookbooks answer to the recipe permission policy (ADR-0027).
-  const canRemove = cookbook ? ownerAllows(cookbook.userId, canEditRecipe) : false;
+  const canRemove = cookbook ? canEditRecipe(cookbook.householdId) : false;
 
   const confirmDelete = () => {
     setDeleteOpen(false);

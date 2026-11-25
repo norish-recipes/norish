@@ -17,7 +17,6 @@ export {
   type MemberAction,
 } from "./household-rules";
 export { everySecondUntil, noTick, nowToTheSecond } from "./join-code-clock";
-export { ownerAllows } from "./owner-access";
 export { useToday } from "./use-today";
 export { useHiddenItemVisibility } from "./use-hidden-item-visibility";
 export { useActiveAllergies } from "./use-active-allergies";

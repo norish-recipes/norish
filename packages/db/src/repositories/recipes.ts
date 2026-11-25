@@ -419,6 +419,7 @@ export function recipeSearchSql(
 const DASHBOARD_COLUMNS = {
   id: true,
   userId: true,
+  householdId: true,
   name: true,
   description: true,
   notes: true,
@@ -454,7 +455,8 @@ const DASHBOARD_WITH = {
 
 type DashboardRow = {
   id: string;
-  userId: string | null;
+  userId: string;
+  householdId: string;
   name: string;
   description: string | null;
   notes: string | null;
@@ -483,6 +485,7 @@ function toDashboardRecipe(r: DashboardRow) {
   return {
     id: r.id,
     userId: r.userId,
+    householdId: r.householdId,
     name: r.name,
     description: r.description ?? null,
     notes: r.notes ?? null,
@@ -766,6 +769,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
   const dto = {
     id: r.id,
     userId: r.userId,
+    householdId: r.householdId,
     name: r.name,
     description: r.description ?? null,
     notes: r.notes ?? null,
@@ -1115,6 +1119,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       originCountryName: true,
       originRegion: true,
       provenanceNote: true,
+      householdId: true,
       createdAt: true,
       updatedAt: true,
       version: true,
@@ -1210,6 +1215,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   const dto = {
     id: full.id,
     userId: full.userId,
+    householdId: full.householdId,
     name: full.name,
     description: full.description ?? null,
     notes: full.notes ?? null,

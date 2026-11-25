@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
-  recipe: null as { id: string; userId: string } | null,
+  recipe: null as { id: string; householdId: string } | null,
   error: null as unknown,
   permissionsLoading: false,
   mayEdit: true,
@@ -39,8 +39,6 @@ vi.mock("@trpc/client", () => ({
   },
 }));
 vi.mock("@norish/shared-react/reader", () => ({
-  ownerAllows: (ownerId: string | null, check: (id: string) => boolean) =>
-    ownerId ? check(ownerId) : true,
   useRecipePermissions: () => ({
     isLoading: state.permissionsLoading,
     canEditRecipe: () => state.mayEdit,
@@ -75,7 +73,7 @@ vi.mock("../screens/recipe-editor-screen", async () => {
 
 const { EditRecipeScreen } = await import("../screens/edit-recipe-screen");
 
-const recipe = { id: "recipe-1", userId: "owner" };
+const recipe = { id: "recipe-1", householdId: "owners-household" };
 
 describe("EditRecipeScreen", () => {
   beforeEach(() => {

@@ -22,7 +22,7 @@ import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
-import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { CardFacts } from "./card-facts";
@@ -80,8 +80,8 @@ function CookbookCardComponent({
 
   // Cookbooks answer to the recipe permission policy, so the same two
   // predicates the recipe card uses decide the menu here (ADR-0027).
-  const canEdit = ownerAllows(cookbook.userId, canEditRecipe);
-  const canDelete = ownerAllows(cookbook.userId, canDeleteRecipe);
+  const canEdit = canEditRecipe(cookbook.householdId);
+  const canDelete = canDeleteRecipe(cookbook.householdId);
 
   const open = useCallback(() => {
     if (!rowOpen) router.push(withOrigin(`/cookbooks/${cookbook.id}`, pathname));
@@ -419,7 +419,7 @@ const CookbookCard = memo(CookbookCardComponent, (previous, next) => {
       a.version === b.version &&
       // The owner decides whether this card offers Rename and Delete at all,
       // so an ownership change — a cookbook becoming Orphaned — has to redraw.
-      a.userId === b.userId &&
+      a.householdId === b.householdId &&
       a.memberCount === b.memberCount &&
       a.totalMinutes === b.totalMinutes &&
       a.minServings === b.minServings &&

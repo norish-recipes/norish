@@ -3,7 +3,7 @@ import { useHideTabBar } from "@/lib/tab-bar-visibility";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { useRecipeQuery } from "@norish/shared-react/recipes";
 import { isNotFoundError } from "@norish/shared-react/trpc";
 
@@ -17,7 +17,7 @@ export function EditRecipeScreen() {
   const { recipe, error } = useRecipeQuery(id);
   const { isLoading: checking, canEditRecipe } = useRecipePermissions();
   const [loaded, setLoaded] = useState(false);
-  const refused = !!recipe && !checking && !ownerAllows(recipe.userId, canEditRecipe);
+  const refused = !!recipe && !checking && !canEditRecipe(recipe.householdId);
 
   if (recipe && !loaded) setLoaded(true);
 

@@ -19,6 +19,11 @@ const server = vi.hoisted(() => ({
   convert: vi.fn(),
 }));
 
+vi.mock("../../reader", () => ({
+  useReader: () => ({ user: { id: "user-1" } }),
+  usePermissions: (select: (p: { householdId: string }) => unknown) =>
+    select({ householdId: "household-1" }),
+}));
 vi.mock("../../trpc", () => {
   const key =
     (...path: string[]) =>
@@ -196,6 +201,7 @@ describe("useRecipesMutations", () => {
     const detail: FullRecipeDTO = {
       id: "recipe-1",
       userId: "user-1",
+      householdId: "household-1",
       name: "Original recipe",
       description: null,
       notes: null,

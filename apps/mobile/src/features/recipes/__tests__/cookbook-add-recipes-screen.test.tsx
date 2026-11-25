@@ -25,7 +25,9 @@ vi.mock("../components/pick-sheet", async () => {
   };
 });
 vi.mock("@norish/shared-react/recipes", () => ({
-  useCookbookQuery: () => ({ cookbook: { id: "c1", title: "Soups", userId: "owner" } }),
+  useCookbookQuery: () => ({
+    cookbook: { id: "c1", title: "Soups", householdId: "owners-household" },
+  }),
   useCookbookAddRecipes: () => {
     state.addRecipesRead();
 
@@ -33,8 +35,6 @@ vi.mock("@norish/shared-react/recipes", () => ({
   },
 }));
 vi.mock("@norish/shared-react/reader", () => ({
-  ownerAllows: (ownerId: string | null, check: (id: string) => boolean) =>
-    ownerId ? check(ownerId) : true,
   useRecipePermissions: () => ({
     canEditRecipe: () => state.canEdit,
     canDeleteRecipe: () => state.canEdit,

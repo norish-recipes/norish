@@ -14,7 +14,6 @@ import {
   selectCanEditRecipe,
   selectCanViewRecipe,
 } from "./permission-selectors";
-import { useReader } from "./use-reader";
 
 const DEFAULTS = normalizePermissionsData(undefined);
 
@@ -35,33 +34,28 @@ export function usePermissions<T>(select: (permissions: ReaderPermissions) => T)
 type RecipePermissions = {
   /** Until the server has answered, every check below says no. */
   isLoading: boolean;
-  canViewRecipe: (ownerId: string) => boolean;
-  canEditRecipe: (ownerId: string) => boolean;
-  canDeleteRecipe: (ownerId: string) => boolean;
+  canViewRecipe: (householdId: string) => boolean;
+  canEditRecipe: (householdId: string) => boolean;
+  canDeleteRecipe: (householdId: string) => boolean;
 };
 
-/** Whether the Reader may view, edit or delete a recipe of `ownerId`'s. */
+/** Whether the Reader may view, edit or delete a recipe or cookbook of `householdId`. */
 export function useRecipePermissions(): RecipePermissions {
   const trpc = useTRPC();
-  const readerId = useReader().user?.id;
   const { data: access, isLoading } = useQuery({
     ...trpc.permissions.get.queryOptions(),
     select: (permissions) => {
-      const { recipePolicy, householdMemberIds, isServerAdmin } =
-        normalizePermissionsData(permissions);
+      const { recipePolicy, householdId } = normalizePermissionsData(permissions);
 
-      return { recipePolicy, householdMemberIds, isServerAdmin };
+      return { recipePolicy, householdId };
     },
   });
 
   return {
     isLoading,
-    canViewRecipe: (ownerId) =>
-      !!readerId && !!access && selectCanViewRecipe(access, readerId, ownerId),
-    canEditRecipe: (ownerId) =>
-      !!readerId && !!access && selectCanEditRecipe(access, readerId, ownerId),
-    canDeleteRecipe: (ownerId) =>
-      !!readerId && !!access && selectCanDeleteRecipe(access, readerId, ownerId),
+    canViewRecipe: (householdId) => !!access && selectCanViewRecipe(access, householdId),
+    canEditRecipe: (householdId) => !!access && selectCanEditRecipe(access, householdId),
+    canDeleteRecipe: (householdId) => !!access && selectCanDeleteRecipe(access, householdId),
   };
 }
 

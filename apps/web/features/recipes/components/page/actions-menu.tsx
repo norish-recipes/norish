@@ -26,7 +26,6 @@ import { twMerge } from "tailwind-merge";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 import {
-  ownerAllows,
   useActiveAllergies,
   usePermissions,
   useRecipePermissions,
@@ -87,8 +86,8 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
   const t = useTranslations("recipes.actions");
   const tPrint = useTranslations("recipes.print");
   const tEnrichment = useTranslations("recipes.enrichment");
-  const canEdit = ownerAllows(recipe.userId, canEditRecipe);
-  const canDelete = ownerAllows(recipe.userId, canDeleteRecipe);
+  const canEdit = canEditRecipe(recipe.householdId);
+  const canDelete = canDeleteRecipe(recipe.householdId);
 
   const handleDeleteClick = React.useCallback(() => {
     onDeleteModalOpen();

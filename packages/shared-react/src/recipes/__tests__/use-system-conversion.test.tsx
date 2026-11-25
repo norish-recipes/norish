@@ -39,7 +39,6 @@ vi.mock("@trpc/tanstack-react-query", async () => ({
 vi.mock("../../reader", async () => ({
   usePreferencesSaving: (await import("../../reader/use-account-mutations")).usePreferencesSaving,
   usePreferencesUnconfirmed: () => mocks.unconfirmed,
-  ownerAllows: (_owner: string, can: (id: string) => boolean) => can(_owner),
   useProfileQuery: () => ({
     user: { preferences: { measurementSystem: mocks.measurementSystem } },
   }),
@@ -58,6 +57,7 @@ const metricRecipe = (
 ) => ({
   id: "r1",
   userId: "owner",
+  householdId: "owners-household",
   version,
   systemUsed,
   recipeIngredients: copies.map((copy) => ({ systemUsed: copy })),

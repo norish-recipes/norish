@@ -12,7 +12,7 @@ import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
-import { useReader } from "../reader";
+import { usePermissions, useReader } from "../reader";
 import { useTRPC } from "../trpc";
 import { useCookbooksCacheHelpers } from "./use-cookbooks-cache";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
@@ -28,8 +28,9 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
     seedCookbook,
     seedCookbookMembers,
   } = useCookbooksCacheHelpers();
-  // So a cookbook created Offline is the Reader's own rather than Orphaned (ADR-0027).
+  // A cookbook created Offline is the Reader's own, in their household (ADR-0027).
   const currentUserId = useReader().user?.id;
+  const householdId = usePermissions((permissions) => permissions.householdId);
 
   // A queued write keeps its tentative state: there is nothing to refetch Offline, and refetching
   // would erase the change the reader can see (ADR-0009).
@@ -83,12 +84,11 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
 
         const now = new Date();
 
-        // The owner is the caller: minting this as Orphaned would offer rename
-        // and delete to everyone under every policy until the echo arrived
-        // (ADR-0027).
+        // The caller's own; with no household known yet it offers nothing until the echo.
         const tentative: CookbookSummaryDTO = {
           id,
-          userId: currentUserId ?? null,
+          userId: currentUserId ?? "",
+          householdId: householdId ?? "",
           title,
           createdAt: now,
           updatedAt: now,
