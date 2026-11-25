@@ -60,3 +60,13 @@
   13. fixed: `findNewestGroceryNamed(householdId, name)`; the E2E helpers pass the household.
   14. fixed: the router keeps its announcement chains and the test awaits `announcementsSettled()`.
   - moved to ticket 03: view check on recipeId / recipeIngredientId references and their joined recipe metadata; rejected: socket window between commit and Scope Change; reorder and markAllDone rely on scoped SQL; gap fill ignores household corrections.
+
+- Review round 3:
+  1. fixed: the generation is a random token; an invalidation sets a fresh one, a fill with none sets one if absent (`SET NX GET`), a reader needs a token equal to the entry's; tests for a lost token and a fill stalled across a flush.
+  2. fixed: authed procedures answer a primary-key collision (a client-made id another household's row holds) as NOT_FOUND "Not found", without the database's text; this covers every create path that takes a client id (products, Stores, groceries, recurring, plan entries, Pantry).
+  3. fixed: store lookup swallows only a foreign key ending `_store_id_stores_id_fk` (`isGoneStoreReference`); any other still throws.
+  4. fixed: a status that cannot be saved after the remote write takes the event off first (best effort, logged), then rethrows.
+  5. not changed: verified. `upgradeDataFromOlderReleases` is awaited in `apps/web/server/index.ts` before `startWorkers()` and `server.listen`, so nothing deletes an aisle or product meanwhile.
+  6. fixed: `announcementsSettled` and its set are gone; the test waits one loop turn, which runs out the mocks' promises.
+  7. fixed: the test seeds a newer same-named grocery in another household.
+  - rejected: an in-flight request keeps its earlier read; moved to ticket 04: survivors' cached roster after an account deletion.
