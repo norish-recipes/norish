@@ -229,6 +229,10 @@ async function warmLists(
     queryClient.query(withWarmGcTime(trpc.pantry.list.queryOptions())),
     // The reader's Device Preferences, so Offline start-up draws them.
     queryClient.query(withWarmGcTime(trpc.user.getDevicePreferences.queryOptions())),
+    // The household's Tags, Cuisines and Categories, so the recipe editor has choices Offline.
+    ...(["tag", "cuisine", "category"] as const).map((kind) =>
+      queryClient.query(withWarmGcTime(trpc.lists.list.queryOptions({ kind })))
+    ),
     ...calendarRanges.map((range) =>
       queryClient.query(withWarmGcTime(trpc.calendar.listItems.queryOptions(range)))
     ),
