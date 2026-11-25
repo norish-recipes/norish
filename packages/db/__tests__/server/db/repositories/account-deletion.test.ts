@@ -18,6 +18,7 @@ import {
   joinHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
+import { isRetryableConflict } from "@norish/db/repositories/constraint-violation";
 import { createPlannedItem } from "@norish/db/repositories/planned-items";
 import { rateRecipe } from "@norish/db/repositories/ratings";
 import { createStore } from "@norish/db/repositories/stores";
@@ -53,7 +54,7 @@ import {
   insertTestRecipeLine,
   joinTestHousehold,
 } from "../../../helpers/db-test-helpers";
-import { raceBehind } from "../../../helpers/lock-race";
+import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const DAY = "2031-05-06";
@@ -576,6 +577,76 @@ describe("deleting an account", () => {
       );
       expect(await planOf(elsewhere)).toEqual([]);
       await expectInvariant();
+    });
+  });
+
+  describe("deadlocked with a household write", () => {
+    async function memberWithGrocery() {
+      const admin = (await createTestUser())!.id;
+      const deleted = (await createTestUser())!.id;
+      const household = await joinTestHousehold(deleted, admin);
+      const recipe = await createTestRecipe(deleted, { name: "Soep" });
+      const grocery = await addTestGrocery(deleted, { name: "melk" });
+
+      return { admin, deleted, household, recipe, grocery };
+    }
+
+    it("a grocery added while the deletion holds the household is refused for a retry", async () => {
+      const m = await memberWithGrocery();
+      const holdRecipe = (tx: Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0]) =>
+        tx.select({ id: recipes.id }).from(recipes).where(eq(recipes.id, m.recipe.id)).for("update");
+
+      // The deletion holds the household and waits on the recipe; the grocery shifts the
+      // deleted member's line, then waits on the household the deletion holds.
+      const settled = await raceBehind(holdRecipe, [
+        () => deleteAccount(m.deleted),
+        () => addTestGrocery(m.admin, { name: "brood" }),
+      ]);
+
+      expect(settled[0]).toEqual({
+        status: "fulfilled",
+        value: expect.objectContaining({ recipeIds: [m.recipe.id] }),
+      });
+      expect(settled[1]?.status).toBe("rejected");
+      expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
+      expect(
+        await getTestDb().select().from(users).where(eq(users.id, m.deleted))
+      ).toEqual([]);
+    });
+
+    it("a deletion that is the deadlock's victim tries again and erases the account", async () => {
+      const m = await memberWithGrocery();
+      let deletion: Promise<unknown> = Promise.resolve();
+
+      // The test's write holds the member's line, then wants the household the deletion holds;
+      // its late deadlock check leaves the deletion to find the deadlock and be its victim.
+      await getTestDb().transaction(async (tx) => {
+        await tx.execute(sql`SET LOCAL deadlock_timeout = '10s'`);
+        await tx.select().from(groceries).where(eq(groceries.id, m.grocery.id)).for("update");
+        const holder = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
+          .rows[0]!.pid;
+
+        deletion = deleteAccount(m.deleted);
+        deletion.catch(() => undefined);
+        await waitFor(
+          async () =>
+            [...(await lockWaits()).values()].some((blockers) => blockers.includes(holder)) ||
+            undefined,
+          "the deletion to wait on the line"
+        );
+        await tx
+          .select()
+          .from(households)
+          .where(eq(households.id, m.household))
+          .for("key share");
+      });
+
+      await expect(deletion).resolves.toEqual(
+        expect.objectContaining({ recipeIds: [m.recipe.id] })
+      );
+      expect(
+        await getTestDb().select().from(users).where(eq(users.id, m.deleted))
+      ).toEqual([]);
     });
   });
 

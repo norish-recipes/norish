@@ -116,10 +116,13 @@ describe("cookbook procedures", () => {
       );
     });
 
-    it("refuses a create its Owner's move overtook as a conflict to retry", async () => {
+    it.each([
+      ["its Owner's move overtook", "NH001"],
+      ["that lost a deadlock", "40P01"],
+    ])("refuses a create %s as a conflict to retry", async (_, code) => {
       createCookbook.mockRejectedValue(
         new Error("Failed query: insert into cookbooks", {
-          cause: Object.assign(new Error("household changed"), { code: "NH001" }),
+          cause: Object.assign(new Error("refused"), { code }),
         })
       );
 

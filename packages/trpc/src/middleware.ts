@@ -82,7 +82,7 @@ export const authedProcedure = publicProcedure
   .use(withIdempotency)
   .use(withAuth)
   // A client-made id another household's row holds answers like a missing row, without the database's text.
-  // A write its Owner's move overtook is a 503, which the Outbox retries (a 409 would park it).
+  // A write its Owner's move overtook, or a deadlock's victim, is a 503 the Outbox retries (a 409 parks).
   .use(async ({ next }) => {
     const result = await next();
 

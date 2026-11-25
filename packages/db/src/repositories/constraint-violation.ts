@@ -62,13 +62,13 @@ export function isPrimaryKeyCollision(error: unknown): boolean {
   return false;
 }
 
-/** The SQLSTATE the owner-household trigger (migration 0090) refuses a write with. */
-const OWNER_MOVED_SQLSTATE = "NH001";
+/** The owner-household trigger's refusal (migration 0090), and Postgres aborting a deadlock's victim. */
+const RETRYABLE_SQLSTATES: unknown[] = ["NH001", "40P01"];
 
-/** Whether a write was refused for a retry: its Owner's household moved while it ran. */
+/** Whether a write was refused for a retry: its Owner's household moved, or it lost a deadlock. */
 export function isRetryableConflict(error: unknown): boolean {
   for (let current = error; current && typeof current === "object";) {
-    if ((current as { code?: unknown }).code === OWNER_MOVED_SQLSTATE) return true;
+    if (RETRYABLE_SQLSTATES.includes((current as { code?: unknown }).code)) return true;
     current = (current as { cause?: unknown }).cause;
   }
 

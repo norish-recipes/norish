@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { setTimeout as sleep } from "node:timers/promises";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
@@ -33,6 +34,7 @@ import {
 } from "@norish/shared/contracts/zod/household";
 
 import type { MutationOutcome } from "./mutation-outcomes";
+import { isRetryableConflict } from "./constraint-violation";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { turnPlannedRecipesIntoNotes } from "./planned-items";
 import { getUsersByIds } from "./users";
@@ -176,13 +178,30 @@ const MOVED = Symbol("moved");
 /** How many fresh transactions an operation tries on an account that keeps moving. */
 export const MOVED_ATTEMPTS = 3;
 
+/** How many times a locked membership write runs again after losing a deadlock to a household write. */
+const DEADLOCK_ATTEMPTS = 3;
+const DEADLOCK_BACKOFF_MS = 50;
+
+/** One transaction of a locked membership write, run afresh while Postgres picks it as a deadlock's victim. */
+async function lockedTransaction<T>(work: (tx: DbTransaction) => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await db.transaction(work);
+    } catch (error) {
+      if (attempt >= DEADLOCK_ATTEMPTS || !isRetryableConflict(error)) throw error;
+      // Retried at once, it can take the household back before the winner and deadlock again.
+      await sleep(DEADLOCK_BACKOFF_MS * attempt);
+    }
+  }
+}
+
 /** Runs `work` in a fresh transaction while it finds the account MOVED, then gives `givenUp`. */
 async function retryWhileMoved<T, G>(
   givenUp: G,
   work: (tx: DbTransaction) => Promise<T | typeof MOVED>
 ): Promise<T | G> {
   for (let attempt = 0; attempt < MOVED_ATTEMPTS; attempt++) {
-    const result = await db.transaction(work);
+    const result = await lockedTransaction(work);
 
     if (result !== MOVED) return result;
   }
@@ -224,7 +243,7 @@ export async function moveToHouseholdOfOne(
   version?: number,
   removedBy?: string
 ): Promise<MovedOutcome> {
-  return await db.transaction(async (tx) => {
+  return await lockedTransaction(async (tx) => {
     const [household] = await lockHouseholds(tx, [householdId]);
 
     if (!household) return staleOutcome();
@@ -448,7 +467,7 @@ export async function transferHouseholdAdmin(
   newAdminId: string,
   version?: number
 ): Promise<MutationOutcome<HouseholdDto>> {
-  return await db.transaction(async (tx) => {
+  return await lockedTransaction(async (tx) => {
     const [household] = await lockHouseholds(tx, [householdId]);
 
     if (household?.adminUserId !== currentAdminId) {
