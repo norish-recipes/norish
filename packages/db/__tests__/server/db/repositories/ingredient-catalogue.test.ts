@@ -36,24 +36,34 @@ describe("listCatalogueIngredients search", () => {
     await testBase.setup();
   });
 
-  beforeEach(async () => {
-    await testBase.beforeEachTest();
+  let household: string;
 
+  beforeEach(async () => {
+    const [user] = await testBase.beforeEachTest();
+
+    household = testHouseholdOf(user.id);
     const db = getTestDb();
     const [onion] = await db
       .insert(schema.ingredients)
-      .values({ name: "Onion", createdAt: new Date() })
+      .values({ householdId: household, name: "Onion", createdAt: new Date() })
       .returning();
     const [redOnion] = await db
       .insert(schema.ingredients)
-      .values({ name: "Red onion", parentId: onion!.id, createdAt: new Date() })
+      .values({
+        householdId: household,
+        name: "Red onion",
+        parentId: onion!.id,
+        createdAt: new Date(),
+      })
       .returning();
 
-    await db.insert(schema.ingredients).values({ name: "Chocolate", createdAt: new Date() });
+    await db
+      .insert(schema.ingredients)
+      .values({ householdId: household, name: "Chocolate", createdAt: new Date() });
     await db.insert(schema.ingredientAliases).values([
-      { text: "Onion", fold: "onion", ingredientId: onion!.id },
-      { text: "Ui", fold: "ui", locale: "nl", ingredientId: onion!.id },
-      { text: "Red onion", fold: "red onion", ingredientId: redOnion!.id },
+      { householdId: household, text: "Onion", fold: "onion", ingredientId: onion!.id },
+      { householdId: household, text: "Ui", fold: "ui", locale: "nl", ingredientId: onion!.id },
+      { householdId: household, text: "Red onion", fold: "red onion", ingredientId: redOnion!.id },
     ]);
   });
 
@@ -67,6 +77,7 @@ describe("listCatalogueIngredients search", () => {
   ) =>
     (
       await listCatalogueIngredients({
+        householdId: household,
         search,
         languages,
         flaggedOnly: false,
@@ -84,6 +95,7 @@ describe("listCatalogueIngredients search", () => {
       .insert(schema.ingredients)
       .values(
         ["Alcohol", "Honey", "Hot sauce", "Red hot chili", "Ahoy"].map((name) => ({
+          householdId: household,
           name,
           createdAt: new Date(),
         }))
@@ -104,6 +116,7 @@ describe("listCatalogueIngredients search", () => {
       .insert(schema.ingredients)
       .values(
         ["Extra virgin olive oil", "Olive", "Sunflower oil"].map((name) => ({
+          householdId: household,
           name,
           createdAt: new Date(),
         }))
@@ -132,19 +145,23 @@ describe("listCatalogueIngredients search", () => {
     const db = getTestDb();
     const [garlic] = await db
       .insert(schema.ingredients)
-      .values({ name: "Garlic", createdAt: new Date() })
+      .values({ householdId: household, name: "Garlic", createdAt: new Date() })
       .returning();
 
     await db
       .insert(schema.ingredients)
       .values(
         ["Acremella", "Crème fraîche", "Semi-skimmed milk", "Halfskimmed", "Aknot", "Hokmaal"].map(
-          (name) => ({ name, createdAt: new Date() })
+          (name) => ({ householdId: household, name, createdAt: new Date() })
         )
       );
-    await db
-      .insert(schema.ingredientAliases)
-      .values({ text: "Knoflook", fold: "knoflook", locale: "nl", ingredientId: garlic!.id });
+    await db.insert(schema.ingredientAliases).values({
+      householdId: household,
+      text: "Knoflook",
+      fold: "knoflook",
+      locale: "nl",
+      ingredientId: garlic!.id,
+    });
 
     expect(await names(parseIngredientSearch("creme"))).toEqual(["Crème fraîche", "Acremella"]);
     expect(await names(parseIngredientSearch("skimmed"))).toEqual([
@@ -162,6 +179,7 @@ describe("listCatalogueIngredients search", () => {
       .insert(schema.ingredients)
       .values(
         ["김치찌개", "ゴボウ", "Crème brûlée", "Extra virgin olive oil"].map((name) => ({
+          householdId: household,
           name,
           createdAt: new Date(),
         }))
@@ -180,15 +198,23 @@ describe("listCatalogueIngredients search", () => {
     const db = getTestDb();
     const [prawn] = await db
       .insert(schema.ingredients)
-      .values({ name: "Prawn", createdAt: new Date() })
+      .values({ householdId: household, name: "Prawn", createdAt: new Date() })
       .returning();
 
-    await db
-      .insert(schema.ingredients)
-      .values(["Tomato", "Cherry tomato"].map((name) => ({ name, createdAt: new Date() })));
-    await db
-      .insert(schema.ingredientAliases)
-      .values({ text: "Tôm", fold: "tom", locale: "vi", ingredientId: prawn!.id });
+    await db.insert(schema.ingredients).values(
+      ["Tomato", "Cherry tomato"].map((name) => ({
+        householdId: household,
+        name,
+        createdAt: new Date(),
+      }))
+    );
+    await db.insert(schema.ingredientAliases).values({
+      householdId: household,
+      text: "Tôm",
+      fold: "tom",
+      locale: "vi",
+      ingredientId: prawn!.id,
+    });
 
     expect(await names(parseIngredientSearch("tom"))).toEqual(["Cherry tomato", "Tomato", "Prawn"]);
     expect(await names(parseIngredientSearch("tom"), ["vi"])).toEqual([
@@ -215,6 +241,27 @@ describe("listCatalogueIngredients search", () => {
     ).toEqual(["Red onion"]);
   });
 
+  it("lists and finds nothing of another household's, nor its spelling on a seeded food", async () => {
+    const db = getTestDb();
+    const neighbour = testHouseholdOf((await createTestUser()).id);
+    const [seeded] = await db
+      .insert(schema.ingredients)
+      .values({ name: "Leek", offId: "en:leek", createdAt: new Date() })
+      .returning();
+
+    await db.insert(schema.ingredients).values({ householdId: neighbour, name: "Onion soup" });
+    await db.insert(schema.ingredientAliases).values({
+      householdId: neighbour,
+      text: "Prei",
+      fold: "prei",
+      ingredientId: seeded!.id,
+    });
+
+    expect(await names(parseIngredientSearch("onion"))).toEqual(["Onion", "Red onion"]);
+    expect(await names(parseIngredientSearch("prei"))).toEqual([]);
+    expect(await names(parseIngredientSearch("leek"))).toEqual(["Leek"]);
+  });
+
   it("lists everything without a search", async () => {
     expect(await names(null)).toEqual(["Chocolate", "Onion", "Red onion"]);
   });
@@ -227,6 +274,7 @@ describe("listCatalogueIngredients search", () => {
 describe("ingredient uses", () => {
   const testBase = new RepositoryTestBase("test_ingredient_uses");
   let me: { id: string };
+  let neighbourId: string;
   let chickenId: string;
   let recipeId: string;
 
@@ -240,6 +288,8 @@ describe("ingredient uses", () => {
     const db = getTestDb();
     const neighbour = await createTestUser();
     const chicken = await createTestIngredient({ name: "kipfilet" });
+
+    neighbourId = neighbour!.id;
     const [hand] = await db
       .insert(schema.ingredientAliases)
       .values({
@@ -281,21 +331,34 @@ describe("ingredient uses", () => {
     await testBase.teardown();
   });
 
-  it("lists the uses the viewer may see, a recipe once, and counts everything a delete touches", async () => {
-    expect(
-      await listIngredientUses(
-        { userId: me.id, householdId: testHouseholdOf(me.id), isServerAdmin: false },
-        chickenId
-      )
-    ).toEqual({
+  it("lists and counts the household's own uses alone, a recipe once", async () => {
+    expect(await listIngredientUses(testHouseholdOf(me.id), chickenId)).toEqual({
       recipes: [{ id: recipeId, name: "Saté" }],
       groceries: [
         { id: expect.any(String), name: "kipfilet met de hand", done: true, recurring: false },
       ],
       pantry: true,
-      elsewhere: 1,
-      counts: { recipeLines: 2, groceries: 2, pantry: 1 },
+      counts: { recipeLines: 2, groceries: 1, pantry: 1 },
     });
+    // The neighbour's household sees its grocery, and none of the other's recipe or Pantry.
+    expect(await listIngredientUses(testHouseholdOf(neighbourId), chickenId)).toEqual({
+      recipes: [],
+      groceries: [{ id: expect.any(String), name: "kipfilet", done: false, recurring: false }],
+      pantry: false,
+      counts: { recipeLines: 0, groceries: 1, pantry: 0 },
+    });
+  });
+
+  it("finds nothing of another household's own food by its id", async () => {
+    const theirs = await createTestIngredient({
+      name: "kipdij",
+      householdId: testHouseholdOf(neighbourId),
+    });
+
+    await expect(listIngredientUses(testHouseholdOf(me.id), theirs!.id)).resolves.toBeNull();
+    await expect(listIngredientUses(testHouseholdOf(neighbourId), theirs!.id)).resolves.toEqual(
+      expect.objectContaining({ counts: { recipeLines: 0, groceries: 0, pantry: 0 } })
+    );
   });
 
   it("lists a line naming several foods under each of them", async () => {
@@ -307,12 +370,12 @@ describe("ingredient uses", () => {
       [(await firstSpellingId(chickenId))!, (await firstSpellingId(satay!.id))!]
     );
 
-    const viewer = { userId: me.id, householdId: testHouseholdOf(me.id), isServerAdmin: false };
+    const household = testHouseholdOf(me.id);
 
-    expect((await listIngredientUses(viewer, satay!.id)).recipes).toEqual([
+    expect((await listIngredientUses(household, satay!.id))?.recipes).toEqual([
       { id: ricePan, name: "Rijstpan" },
     ]);
-    expect((await listIngredientUses(viewer, chickenId)).counts.recipeLines).toBe(3);
+    expect((await listIngredientUses(household, chickenId))?.counts.recipeLines).toBe(3);
   });
 
   it("lists and counts a repeating grocery once, not again for the copy it keeps on the list", async () => {
@@ -337,17 +400,13 @@ describe("ingredient uses", () => {
       recurringGroceryId: recurring!.id,
     });
 
-    const uses = await listIngredientUses(
-      { userId: me.id, householdId: testHouseholdOf(me.id), isServerAdmin: false },
-      chickenId
-    );
+    const uses = await listIngredientUses(testHouseholdOf(me.id), chickenId);
 
-    expect(uses.groceries).toEqual([
+    expect(uses?.groceries).toEqual([
       { id: expect.any(String), name: "kipfilet met de hand", done: true, recurring: false },
       { id: recurring!.id, name: "kipfilet", done: false, recurring: true },
     ]);
-    expect(uses.elsewhere).toBe(1);
-    expect(uses.counts.groceries).toBe(3);
+    expect(uses?.counts.groceries).toBe(2);
   });
 });
 
@@ -395,10 +454,13 @@ describe("insertSeededIngredient", () => {
   });
 
   it("writes the food with each spelling seeded, in its own language", async () => {
-    const id = await insertSeededIngredient({ name: "courgette", flagged: true }, [
-      { text: "courgette", fold: "courgette", locale: "en" },
-      { text: "zucchine", fold: "zucchine", locale: "it" },
-    ]);
+    const id = await insertSeededIngredient(
+      { name: "courgette", offId: "en:courgette", flagged: true },
+      [
+        { text: "courgette", fold: "courgette", locale: "en" },
+        { text: "zucchine", fold: "zucchine", locale: "it" },
+      ]
+    );
     const db = getTestDb();
     const [food] = await db.select().from(schema.ingredients).where(eq(schema.ingredients.id, id));
     const spellings = await db

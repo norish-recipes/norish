@@ -28,6 +28,7 @@ import {
   addTestGrocery,
   addTestPantryIngredient,
   addTestRecurringGrocery,
+  createTestIngredient,
   createTestUser,
   householdIdOf,
   joinTestHousehold,
@@ -54,7 +55,7 @@ describe("household rows", () => {
     admin = user.id;
     member = (await createTestUser()).id;
     household = await joinTestHousehold(member, admin);
-    food = (await mintTestFood("melk")).ingredientId;
+    food = (await createTestIngredient({ name: "melk" }))!.id;
 
     await addOneOfEverything(household);
   });

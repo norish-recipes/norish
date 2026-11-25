@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import * as schema from "@norish/db/schema";
 
-import { createTestIngredient, getTestDb } from "../../../helpers/db-test-helpers";
+import { createTestIngredient, getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("mintIngredientWithAliases on a name already taken", () => {
@@ -19,8 +19,12 @@ describe("mintIngredientWithAliases on a name already taken", () => {
     await testBase.setup();
   });
 
+  let householdId: string;
+
   beforeEach(async () => {
-    await testBase.beforeEachTest();
+    const [user] = await testBase.beforeEachTest();
+
+    householdId = testHouseholdOf(user.id);
   });
 
   afterAll(async () => {
@@ -29,6 +33,7 @@ describe("mintIngredientWithAliases on a name already taken", () => {
 
   const mintRedOnion = () =>
     mintIngredientWithAliases({
+      householdId,
       name: "red onion",
       aliases: [{ text: "red onions", fold: "red onions" }],
       ownerId: null,
@@ -40,7 +45,7 @@ describe("mintIngredientWithAliases on a name already taken", () => {
   const read = async (id: string) =>
     (await getTestDb().select().from(schema.ingredients).where(eq(schema.ingredients.id, id)))[0]!;
 
-  it("leaves a spelled Ingredient's parent and flag alone", async () => {
+  it("joins a seeded food of the name as the household's spelling, its parent and flag alone", async () => {
     const onion = await createTestIngredient({ name: "onion" });
     const redOnion = await createTestIngredient({ name: "red onion" });
 
@@ -58,7 +63,7 @@ describe("mintIngredientWithAliases on a name already taken", () => {
   it("takes over an Ingredient with no spelling", async () => {
     const [bare] = await getTestDb()
       .insert(schema.ingredients)
-      .values({ name: "red onion" })
+      .values({ name: "red onion", householdId })
       .returning();
 
     await mintRedOnion();

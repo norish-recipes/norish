@@ -1,6 +1,7 @@
-import { and, asc, between, eq, exists, inArray, isNotNull, like, or, sql } from "drizzle-orm";
+import { and, asc, between, eq, exists, inArray, isNull, like, or, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
+import type { Db } from "@norish/db/drizzle";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { FoodName, LocaleNames } from "@norish/shared/lib/ingredient-names";
 import { db } from "@norish/db/drizzle";
@@ -14,12 +15,14 @@ import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingre
 import { slipLengths } from "@norish/shared/lib/name-slips";
 
 import type { LineResolution } from "./ingredients";
+import { inCatalogue, ownBeforeSeed, seenBy } from "./catalogue-scope";
 import { isConstraintViolation } from "./constraint-violation";
 import { ingredientIsListed } from "./ingredient-catalogue";
 
 /**
  * The Ingredient Alias rows the resolver reads and writes; only the resolver
- * (`shared-server/ingredients`) calls the writers, the one path that mints (ADR-0037).
+ * (`shared-server/ingredients`) calls the writers, the one path that mints (ADR-0037). Every read
+ * is one household's catalogue, its own spellings before the seed's of the same fold (ADR-0042).
  */
 
 /**
@@ -62,42 +65,64 @@ const aliasColumns = {
 /** How many folds one lookup carries: an upgrade batch reads every plural of every line. */
 const FOLDS_PER_QUERY = 5000;
 
+/** The household's (else the seed's) spelling of each fold. */
 export async function findIngredientAliasesByFolds(
-  folds: readonly string[]
+  householdId: string,
+  folds: readonly string[],
+  tx: Pick<Db, "selectDistinctOn"> = db
 ): Promise<IngredientAliasRow[]> {
   const unique = Array.from(new Set(folds.filter((fold) => fold.length > 0)));
   const rows: IngredientAliasRow[] = [];
 
   for (let start = 0; start < unique.length; start += FOLDS_PER_QUERY) {
     rows.push(
-      ...(await db
-        .select(aliasColumns)
+      ...(await tx
+        .selectDistinctOn([ingredientAliases.fold], aliasColumns)
         .from(ingredientAliases)
-        .where(inArray(ingredientAliases.fold, unique.slice(start, start + FOLDS_PER_QUERY))))
+        .where(
+          and(
+            inArray(ingredientAliases.fold, unique.slice(start, start + FOLDS_PER_QUERY)),
+            inCatalogue(ingredientAliases.householdId, householdId)
+          )
+        )
+        .orderBy(ingredientAliases.fold, ownBeforeSeed(ingredientAliases.householdId)))
     );
   }
 
   return rows;
 }
 
-/** The foods whose lowercased name is one of `names`, each with one of its spellings. */
+/**
+ * The household's and the seed's foods whose lowercased name is one of `names`, each with one of
+ * its spellings there; the seed's first, so a reader keying by name keeps the household's.
+ */
 export async function findIngredientsNamed(
+  householdId: string,
   names: readonly string[]
 ): Promise<Array<IngredientRef & { name: string }>> {
   const unique = [...new Set(names.filter((name) => name.length > 0))];
 
   if (unique.length === 0) return [];
 
-  return await db
+  const rows = await db
     .selectDistinctOn([ingredients.id], {
       name: ingredients.name,
       ingredientId: ingredients.id,
       aliasId: ingredientAliases.id,
+      seed: isNull(ingredients.householdId).mapWith(Boolean),
     })
     .from(ingredients)
     .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, ingredients.id))
-    .where(inArray(sql`lower(${ingredients.name})`, unique))
+    .where(
+      and(
+        inArray(sql`lower(${ingredients.name})`, unique),
+        inCatalogue(ingredients.householdId, householdId),
+        inCatalogue(ingredientAliases.householdId, householdId)
+      )
+    )
     .orderBy(ingredients.id, asc(ingredientAliases.createdAt));
+
+  return rows.sort((a, b) => Number(b.seed) - Number(a.seed)).map(({ seed: _seed, ...row }) => row);
 }
 
 /** A text a LIKE pattern matches as written: its wildcards and escapes escaped. */
@@ -109,22 +134,27 @@ export function likeLiteral(part: string): string {
  * The spellings `fold` could be a slip of the fingers from (`@norish/shared/lib/name-slips`): of a
  * length a slip reaches, sharing its first or last letters, so one slip anywhere in it is found.
  */
-export async function findAliasesNearFold(fold: string): Promise<IngredientAliasRow[]> {
+export async function findAliasesNearFold(
+  householdId: string,
+  fold: string
+): Promise<IngredientAliasRow[]> {
   const { min, max } = slipLengths(fold);
   const ends = Math.min(3, Math.floor((fold.length - 1) / 2));
 
   return await db
-    .select(aliasColumns)
+    .selectDistinctOn([ingredientAliases.fold], aliasColumns)
     .from(ingredientAliases)
     .where(
       and(
+        inCatalogue(ingredientAliases.householdId, householdId),
         between(sql`length(${ingredientAliases.fold})`, min, max),
         or(
           like(ingredientAliases.fold, `${likeLiteral(fold.slice(0, ends))}%`),
           like(ingredientAliases.fold, `%${likeLiteral(fold.slice(-ends))}`)
         )
       )
-    );
+    )
+    .orderBy(ingredientAliases.fold, ownBeforeSeed(ingredientAliases.householdId));
 }
 
 /**
@@ -133,6 +163,7 @@ export async function findAliasesNearFold(fold: string): Promise<IngredientAlias
  * last words may file it under.
  */
 export async function findFoodSpellingsByFolds(
+  householdId: string,
   folds: readonly string[],
   among: "seeded" | "listed"
 ): Promise<IngredientAliasRow[]> {
@@ -141,15 +172,17 @@ export async function findFoodSpellingsByFolds(
   if (unique.length === 0) return [];
 
   return await db
-    .select(aliasColumns)
+    .selectDistinctOn([ingredientAliases.fold], aliasColumns)
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
     .where(
       and(
         inArray(ingredientAliases.fold, unique),
-        among === "seeded" ? isNotNull(ingredients.offId) : ingredientIsListed()
+        inCatalogue(ingredientAliases.householdId, householdId),
+        among === "seeded" ? isNull(ingredients.householdId) : ingredientIsListed()
       )
-    );
+    )
+    .orderBy(ingredientAliases.fold, ownBeforeSeed(ingredientAliases.householdId));
 }
 
 export async function findIngredientByAliasId(aliasId: string): Promise<IngredientRow | null> {
@@ -174,6 +207,7 @@ export async function findIngredientByAliasId(aliasId: string): Promise<Ingredie
  * for surfaces that show the Ingredient in the viewer's language.
  */
 export async function findLocaleNames(
+  householdId: string | null,
   ingredientIds: readonly string[],
   tx: Pick<typeof db, "select"> = db
 ): Promise<Map<string, LocaleNames>> {
@@ -192,6 +226,7 @@ export async function findLocaleNames(
     .where(
       and(
         inArray(ingredientAliases.ingredientId, unique),
+        seenBy(ingredientAliases.householdId, householdId),
         inArray(ingredientAliases.locale, [...CATALOGUE_LANGUAGES])
       )
     );
@@ -204,7 +239,9 @@ export async function findLocaleNames(
   return new Map(unique.map((id) => [id, chooseLocaleNames(byIngredient.get(id) ?? [])]));
 }
 
+/** The names of the household's and the seed's foods among `ids`; another household's are left out. */
 export async function findIngredientNamesByIds(
+  householdId: string,
   ids: readonly string[]
 ): Promise<Map<string, string>> {
   const unique = Array.from(new Set(ids));
@@ -214,18 +251,19 @@ export async function findIngredientNamesByIds(
   const rows = await db
     .select({ id: ingredients.id, name: ingredients.name })
     .from(ingredients)
-    .where(inArray(ingredients.id, unique));
+    .where(and(inArray(ingredients.id, unique), inCatalogue(ingredients.householdId, householdId)));
 
   return new Map(rows.map((row) => [row.id, row.name]));
 }
 
 /** Each Ingredient's catalogue name and its best spelling per language, for a name in the reader's. */
 export async function findIngredientDisplayNames(
+  householdId: string,
   ids: readonly string[]
 ): Promise<Map<string, FoodName>> {
   const [names, localeNames] = await Promise.all([
-    findIngredientNamesByIds(ids),
-    findLocaleNames(ids),
+    findIngredientNamesByIds(householdId, ids),
+    findLocaleNames(householdId, ids),
   ]);
 
   return new Map(
@@ -234,6 +272,8 @@ export async function findIngredientDisplayNames(
 }
 
 export interface MintIngredientInput {
+  /** The household whose recipe, list or Pantry the text came from: the mint is its food. */
+  householdId: string;
   name: string;
   /** The aliases to give it, the text that prompted the mint first. */
   aliases: ReadonlyArray<{ text: string; fold: string }>;
@@ -246,9 +286,18 @@ export interface MintIngredientInput {
   parentId?: string | null;
 }
 
+/** The parent `id` where it is still in the household's catalogue: a mint never files across households. */
+function catalogueParent(householdId: string, id: string) {
+  return qb
+    .select({ id: parentRow.id })
+    .from(parentRow)
+    .where(and(eq(parentRow.id, id), inCatalogue(parentRow.householdId, householdId)));
+}
+
 /**
- * Mint an Ingredient with its aliases, answering each fold's alias. A lost race or a name an
- * Ingredient has (any case) joins it, unless it has no spelling: the mint takes that over.
+ * Mint an Ingredient in a household with its aliases, answering each fold's alias. A lost race or a
+ * name the household's or the seed's food has (any case) joins it; a household's food with no
+ * spelling is taken over.
  */
 export async function mintIngredientWithAliases(
   input: MintIngredientInput
@@ -266,27 +315,15 @@ export async function mintIngredientWithAliases(
 
 async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[]> {
   const folds = input.aliases.map((alias) => alias.fold);
+  const { householdId } = input;
 
   return await db.transaction(async (tx) => {
-    const [minted] = await tx
-      .insert(ingredients)
-      .values({
-        name: input.name,
-        ownerId: input.ownerId,
-        flagged: input.flagged,
-        flagReason: input.flagged ? (input.flagReason ?? null) : null,
-        parentId: input.parentId
-          ? sql`(select ${ingredients.id} from ${ingredients} where ${ingredients.id} = ${input.parentId})`
-          : null,
-      })
-      .onConflictDoNothing()
-      .returning({ id: ingredients.id });
-
-    const [holder] = minted
-      ? []
-      : await tx
+    const holderOf = async () =>
+      (
+        await tx
           .select({
             id: ingredients.id,
+            seed: isNull(ingredients.householdId).mapWith(Boolean),
             spelled: exists(
               qb
                 .select({ id: ingredientAliases.id })
@@ -295,13 +332,37 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
             ).mapWith(Boolean),
           })
           .from(ingredients)
-          .where(eq(sql`lower(${ingredients.name})`, sql`lower(${input.name})`))
-          .limit(1);
+          .where(
+            and(
+              eq(sql`lower(${ingredients.name})`, sql`lower(${input.name})`),
+              inCatalogue(ingredients.householdId, householdId)
+            )
+          )
+          .orderBy(ownBeforeSeed(ingredients.householdId))
+          .limit(1)
+      ).at(0);
+    const seedHolder = await holderOf();
+    const [minted] = seedHolder
+      ? []
+      : await tx
+          .insert(ingredients)
+          .values({
+            householdId,
+            name: input.name,
+            ownerId: input.ownerId,
+            flagged: input.flagged,
+            flagReason: input.flagged ? (input.flagReason ?? null) : null,
+            parentId: input.parentId ? sql`${catalogueParent(householdId, input.parentId)}` : null,
+          })
+          .onConflictDoNothing()
+          .returning({ id: ingredients.id });
+    const holder = minted ? undefined : (seedHolder ?? (await holderOf()));
     const ingredientId = minted?.id ?? holder?.id;
 
     if (!ingredientId) throw new Error("Failed to mint or find ingredient");
 
-    const takenOver = holder !== undefined && !holder.spelled;
+    // A seeded food is the admins': a mint joins it as a spelling and changes nothing else.
+    const takenOver = holder !== undefined && !holder.spelled && !holder.seed;
 
     if (takenOver) {
       await tx
@@ -311,12 +372,7 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
           ownerId: sql`coalesce(${ingredients.ownerId}, ${input.ownerId})`,
           flagged: input.flagged,
           flagReason: input.flagged ? (input.flagReason ?? null) : null,
-          parentId: input.parentId
-            ? sql`${qb
-                .select({ id: parentRow.id })
-                .from(parentRow)
-                .where(eq(parentRow.id, input.parentId))}`
-            : null,
+          parentId: input.parentId ? sql`${catalogueParent(householdId, input.parentId)}` : null,
           version: sql`${ingredients.version} + 1`,
         })
         .where(eq(ingredients.id, ingredientId));
@@ -326,6 +382,7 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
       .insert(ingredientAliases)
       .values(
         input.aliases.map((alias) => ({
+          householdId,
           text: alias.text,
           fold: alias.fold,
           locale: input.locale,
@@ -335,10 +392,10 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
       )
       .onConflictDoNothing();
 
-    const rows = await tx
-      .select(aliasColumns)
-      .from(ingredientAliases)
-      .where(inArray(ingredientAliases.fold, folds));
+    // Each fold's alias, in the order the aliases were given.
+    const rows = (await findIngredientAliasesByFolds(householdId, folds, tx)).sort(
+      (a, b) => folds.indexOf(a.fold) - folds.indexOf(b.fold)
+    );
 
     if (!minted) return rows;
 
@@ -361,10 +418,11 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
 }
 
 /**
- * Add spellings to an existing Ingredient, answering each fold's alias; a fold another Ingredient
- * holds stays there. Null where the Ingredient was merged away.
+ * Add the household's spellings to its or a seeded Ingredient, answering each fold's alias; a fold
+ * the household's catalogue holds stays there. Null where the Ingredient was merged away.
  */
 export async function addIngredientAliases(input: {
+  householdId: string;
   ingredientId: string;
   aliases: ReadonlyArray<{ text: string; fold: string }>;
   ownerId: string | null;
@@ -375,6 +433,7 @@ export async function addIngredientAliases(input: {
       .insert(ingredientAliases)
       .values(
         input.aliases.map((alias) => ({
+          householdId: input.householdId,
           text: alias.text,
           fold: alias.fold,
           locale: input.locale,
@@ -388,7 +447,10 @@ export async function addIngredientAliases(input: {
     throw error;
   }
 
-  return await findIngredientAliasesByFolds(input.aliases.map((alias) => alias.fold));
+  return await findIngredientAliasesByFolds(
+    input.householdId,
+    input.aliases.map((alias) => alias.fold)
+  );
 }
 
 /** An Ingredient a new name might be, with some of the names it is known by. */
@@ -402,17 +464,21 @@ export interface IngredientCandidate {
 
 /** These Ingredients as candidates for a question, in order, each with its parent and shortest other names. */
 export async function findIngredientCandidatesByIds(
+  householdId: string,
   ids: readonly string[]
 ): Promise<IngredientCandidate[]> {
   if (ids.length === 0) return [];
 
   const parents = alias(ingredients, "parent");
   const candidates = await candidatesFor(
+    householdId,
     await db
       .select({ id: ingredients.id, name: ingredients.name, parent: parents.name })
       .from(ingredients)
       .leftJoin(parents, eq(parents.id, ingredients.parentId))
-      .where(inArray(ingredients.id, [...ids]))
+      .where(
+        and(inArray(ingredients.id, [...ids]), inCatalogue(ingredients.householdId, householdId))
+      )
   );
 
   return candidates.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
@@ -420,6 +486,7 @@ export async function findIngredientCandidatesByIds(
 
 /** Candidate rows for known Ingredients: each with its shortest other names. */
 async function candidatesFor(
+  householdId: string,
   rows: ReadonlyArray<{ id: string; name: string; parent: string | null }>
 ): Promise<IngredientCandidate[]> {
   if (rows.length === 0) return [];
@@ -428,9 +495,12 @@ async function candidatesFor(
     .select({ ingredientId: ingredientAliases.ingredientId, text: ingredientAliases.text })
     .from(ingredientAliases)
     .where(
-      inArray(
-        ingredientAliases.ingredientId,
-        rows.map((row) => row.id)
+      and(
+        inArray(
+          ingredientAliases.ingredientId,
+          rows.map((row) => row.id)
+        ),
+        inCatalogue(ingredientAliases.householdId, householdId)
       )
     )
     .orderBy(asc(sql`length(${ingredientAliases.fold})`), asc(ingredientAliases.id));

@@ -9,7 +9,6 @@ import {
   aisleLinks,
   aisles,
   groceries,
-  households,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
@@ -26,7 +25,6 @@ import {
 } from "@norish/db/schema";
 import { entryFold } from "@norish/shared/lib/fold-name";
 
-import { rowActor } from "./household-rows";
 import {
   findFoldedTwinTx,
   LIST_KINDS,
@@ -88,7 +86,7 @@ export async function listLinesWithoutFood(
       name: recipeIngredients.name,
       amount: recipeIngredients.amount,
       unit: recipeIngredients.unit,
-      ownerId: recipes.userId,
+      householdId: recipes.householdId,
     })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
@@ -112,7 +110,7 @@ export async function listGroceriesWithoutFood(
   afterId: string | null
 ): Promise<NamingRow[]> {
   return await db
-    .select({ id: groceries.id, name: groceries.name, ownerId: rowActor(groceries) })
+    .select({ id: groceries.id, name: groceries.name, householdId: groceries.householdId })
     .from(groceries)
     .where(
       and(
@@ -133,7 +131,7 @@ export async function listRecurringGroceriesWithoutFood(
     .select({
       id: recurringGroceries.id,
       name: recurringGroceries.name,
-      ownerId: rowActor(recurringGroceries),
+      householdId: recurringGroceries.householdId,
     })
     .from(recurringGroceries)
     .where(
@@ -146,15 +144,15 @@ export async function listRecurringGroceriesWithoutFood(
     .limit(limit);
 }
 
-/** Pantry Ingredients from before 0.25, with their old Ingredient's name and who resolves it. */
+/** Pantry Ingredients from before 0.25, with their old Ingredient's name and their household. */
 export async function listPantryIngredientsWithoutSpelling(): Promise<
-  Array<{ id: string; name: string; ownerId: string }>
+  Array<{ id: string; name: string; householdId: string }>
 > {
   return await db
     .select({
       id: pantryIngredients.id,
       name: ingredients.name,
-      ownerId: rowActor(pantryIngredients),
+      householdId: pantryIngredients.householdId,
     })
     .from(pantryIngredients)
     .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
@@ -227,10 +225,8 @@ export interface ParkedLink {
   id: string;
   kind: "aisle" | "product" | "preference";
   link: ParkedLinkRow;
-  /** Its Store's household; null where the Store went. */
+  /** Its Store's household, which resolves its name; null where the Store went. */
   householdId: string | null;
-  /** Who resolves its name: its Store's adder, else that household's admin. */
-  ownerId: string | null;
   /** The account a preference names, null where it is gone: then it was added by no one. */
   addedBy: string | null;
 }
@@ -243,12 +239,10 @@ export async function listParkedLinks(): Promise<ParkedLink[]> {
       kind: parkedNameKeyedLinks.kind,
       link: parkedNameKeyedLinks.link,
       householdId: stores.householdId,
-      ownerId: sql<string | null>`coalesce(${stores.userId}, ${households.adminUserId})`,
       addedBy: users.id,
     })
     .from(parkedNameKeyedLinks)
     .leftJoin(stores, sql`${stores.id} = (${parkedNameKeyedLinks.link}->>'store_id')::uuid`)
-    .leftJoin(households, eq(households.id, stores.householdId))
     .leftJoin(users, sql`${users.id} = ${parkedNameKeyedLinks.link}->>'user_id'`)
     .orderBy(desc(sql`${parkedNameKeyedLinks.link}->>'updated_at'`));
 }

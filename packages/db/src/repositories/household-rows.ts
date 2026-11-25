@@ -1,11 +1,10 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
-import { households, recurringGroceries, stores } from "@norish/db/schema";
+import { recurringGroceries, stores } from "@norish/db/schema";
 
 /** A household-owned table, as the by-id condition reads it (ADR-0041). */
 interface HouseholdTable {
@@ -31,16 +30,6 @@ export function householdRow(
 /** The acting household's rows among `ids`. */
 export function householdRows(table: HouseholdTable, householdId: string, ids: string[]): SQL {
   return and(inArray(table.id, ids), eq(table.householdId, householdId))!;
-}
-
-/** The member a household row's catalogue work runs as: its adder, else its household's admin. */
-export function rowActor(table: { userId: AnyPgColumn; householdId: AnyPgColumn }) {
-  const admin = new QueryBuilder()
-    .select({ adminUserId: households.adminUserId })
-    .from(households)
-    .where(eq(households.id, table.householdId));
-
-  return sql<string>`coalesce(${table.userId}, ${admin})`;
 }
 
 /** Thrown where a write points a household's row at another household's row. */

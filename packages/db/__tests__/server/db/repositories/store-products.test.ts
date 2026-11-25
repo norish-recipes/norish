@@ -62,7 +62,10 @@ describe("store products, product links and misses", () => {
 
   /** The Ingredient a grocery name resolves to, as every link writer resolves it. */
   async function ingredient(name: string) {
-    const [resolved] = await resolveIngredients([name], { userId });
+    const [resolved] = await resolveIngredients([name], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     return resolved!.ingredientId;
   }

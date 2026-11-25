@@ -51,6 +51,7 @@ import {
   recipeTags,
   tags as tagsTable,
 } from "../schema";
+import { inCatalogue } from "./catalogue-scope";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
@@ -451,7 +452,7 @@ export async function listLibrarySuggestions(
 
   const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [foods, tagNames, categoryNames] = await Promise.all([
-    matchedFoods(visible, search, except.ingredientIds),
+    matchedFoods(ctx.householdId, visible, search, except.ingredientIds),
     namesOnVisible(
       TAG_NAMES,
       ctx.householdId,
@@ -464,7 +465,10 @@ export async function listLibrarySuggestions(
     ),
     namesOnVisible(CATEGORY_NAMES, ctx.householdId, visible),
   ]);
-  const localeNames = await findLocaleNames(foods.map((food) => food.id));
+  const localeNames = await findLocaleNames(
+    ctx.householdId,
+    foods.map((food) => food.id)
+  );
 
   return {
     ingredients: foods.map((food) => ({ ...food, localeNames: localeNames.get(food.id) ?? {} })),
@@ -475,13 +479,19 @@ export async function listLibrarySuggestions(
 
 /** The text-matched Ingredients with the distinct visible recipes narrowing to each returns (the
  * recipes naming it or a kind of it), most first. The walk down the kinds starts at the matches. */
-async function matchedFoods(visible: SQL, search: IngredientSearch, except: string[]) {
+async function matchedFoods(
+  householdId: string,
+  visible: SQL,
+  search: IngredientSearch,
+  except: string[]
+) {
   const roots = qb
     .select({ id: ingredients.id })
     .from(ingredients)
     .where(
       and(
-        matchingSearch(search, undefined, true),
+        inCatalogue(ingredients.householdId, householdId),
+        matchingSearch(search, householdId, undefined, true),
         except.length ? notInArray(ingredients.id, except) : undefined
       )
     );

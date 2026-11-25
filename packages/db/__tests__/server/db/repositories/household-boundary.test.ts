@@ -58,6 +58,7 @@ import {
   getTestDb,
   householdIdOf,
   mintTestFood,
+  testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -159,7 +160,7 @@ describe("the household boundary", () => {
   });
 
   it("deletes none of another household's Pantry", async () => {
-    const food = (await mintTestFood("melk")).ingredientId;
+    const food = (await mintTestFood(testHouseholdOf(aUser), "melk")).ingredientId;
     const item = await addTestPantryIngredient(aUser, { ingredientId: food });
 
     expect(await deletePantryIngredient(item.id, b)).toBe(false);
@@ -197,7 +198,7 @@ describe("the household boundary", () => {
     const mine = await addTestGrocery(bUser, { name: "kaas" });
     const { recurringGrocery: myRecurring, grocery: myRecurringGrocery } =
       await addTestRecurringGrocery(bUser, { name: "boter" });
-    const food = (await mintTestFood("melk")).ingredientId;
+    const food = (await mintTestFood(testHouseholdOf(aUser), "melk")).ingredientId;
     const line = (fields: { storeId?: string; recurringGroceryId?: string }) => ({
       id: crypto.randomUUID(),
       groceries: {

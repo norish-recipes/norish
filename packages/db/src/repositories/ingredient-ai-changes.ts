@@ -22,8 +22,22 @@ import { repointLines } from "./ingredient-cleanup";
 
 /**
  * AI Changes (ADR-0037, amended 2026-10-17): written in the transaction that made them, kept or
- * undone by a person. The edit policy is checked in `@norish/shared-server/ingredients`.
+ * undone by a person. Each is the household's whose catalogue AI changed (ADR-0042); the rights are
+ * checked in `@norish/shared-server/ingredients`.
  */
+
+/** Who reads AI Changes: a household, and whether an admin, who also sees the seed's. */
+export interface AIChangeReader {
+  householdId: string;
+  isServerAdmin: boolean;
+}
+
+function readBy(reader: AIChangeReader) {
+  return or(
+    eq(ingredientAIChanges.householdId, reader.householdId),
+    reader.isServerAdmin ? isNull(ingredientAIChanges.householdId) : undefined
+  );
+}
 
 /**
  * One AI Change as Changed by AI lists it: the food it is listed under and the one it names. A
@@ -31,10 +45,12 @@ import { repointLines } from "./ingredient-cleanup";
  */
 export interface StoredAIChange {
   id: string;
+  /** The household whose catalogue AI changed; null for the seed's. */
+  householdId: string | null;
   sure: boolean;
   kept: boolean;
   createdAt: Date;
-  ingredient: { id: string; name: string; ownerId: string | null } | null;
+  ingredient: { id: string; name: string; householdId: string | null } | null;
   target: { id: string; name: string } | null;
   /** The parent a change to no parent took away. */
   dropped: { id: string; name: string } | null;
@@ -45,6 +61,8 @@ export interface StoredAIChange {
 export async function recordAIChange(
   tx: Db,
   change: {
+    /** The household whose catalogue AI changed. */
+    householdId: string;
     ingredientId?: string | null;
     targetId?: string | null;
     sure: boolean;
@@ -55,6 +73,7 @@ export async function recordAIChange(
     .insert(ingredientAIChanges)
     .values({
       kind: change.undo.kind,
+      householdId: change.householdId,
       ingredientId: change.ingredientId ?? null,
       targetId: change.targetId ?? null,
       sure: change.sure,
@@ -98,12 +117,13 @@ function selectChanges(tx: Db = db) {
   return tx
     .select({
       id: ingredientAIChanges.id,
+      householdId: ingredientAIChanges.householdId,
       sure: ingredientAIChanges.sure,
       keptAt: ingredientAIChanges.keptAt,
       createdAt: ingredientAIChanges.createdAt,
       ingredientId: ingredients.id,
       ingredientName: ingredients.name,
-      ingredientOwnerId: ingredients.ownerId,
+      ingredientHouseholdId: ingredients.householdId,
       targetId: targets.id,
       targetName: targets.name,
       droppedId: dropped.id,
@@ -128,12 +148,13 @@ type ChangeRow = Awaited<ReturnType<typeof selectChanges>>[number];
 function toStoredChange(row: ChangeRow): StoredAIChange {
   return {
     id: row.id,
+    householdId: row.householdId,
     sure: row.sure,
     kept: row.keptAt !== null,
     createdAt: row.createdAt,
     ingredient:
       row.ingredientId && row.ingredientName !== null
-        ? { id: row.ingredientId, name: row.ingredientName, ownerId: row.ingredientOwnerId }
+        ? { id: row.ingredientId, name: row.ingredientName, householdId: row.ingredientHouseholdId }
         : null,
     target: row.targetId && row.targetName ? { id: row.targetId, name: row.targetName } : null,
     dropped: row.droppedId && row.droppedName ? { id: row.droppedId, name: row.droppedName } : null,
@@ -142,16 +163,19 @@ function toStoredChange(row: ChangeRow): StoredAIChange {
 }
 
 /**
- * Open changes first, longest waiting first; then the last month's others, newest first, those
- * made before `clearedAt` left out.
+ * The reader's changes: open ones first, longest waiting first; then the last month's others,
+ * newest first, those made before `clearedAt` left out.
  */
-export async function listAIChanges(clearedAt?: Date): Promise<StoredAIChange[]> {
+export async function listAIChanges(
+  reader: AIChangeReader,
+  clearedAt?: Date
+): Promise<StoredAIChange[]> {
   const settled = and(
     sql`${ingredientAIChanges.createdAt} > now() - ${LISTED_FOR}`,
     clearedAt ? gt(ingredientAIChanges.createdAt, clearedAt) : undefined
   );
   const rows = await selectChanges()
-    .where(and(isNull(ingredientAIChanges.undoneAt), or(open, settled)))
+    .where(and(readBy(reader), isNull(ingredientAIChanges.undoneAt), or(open, settled)))
     .orderBy(
       desc(sql`${open}`),
       sql`case when ${open} then ${ingredientAIChanges.createdAt} end asc`,
@@ -181,10 +205,16 @@ export async function sweepAIChanges(): Promise<number> {
   return swept.length;
 }
 
-/** One change, locked for a Keep or an Undo; null where it is gone or already undone. */
-export async function lockAIChange(tx: DbTransaction, id: string): Promise<StoredAIChange | null> {
+/** One of the reader's changes, locked for a Keep or an Undo; null where it is gone, undone or not theirs. */
+export async function lockAIChange(
+  tx: DbTransaction,
+  reader: AIChangeReader,
+  id: string
+): Promise<StoredAIChange | null> {
   const [row] = await selectChanges(tx)
-    .where(and(eq(ingredientAIChanges.id, id), isNull(ingredientAIChanges.undoneAt)))
+    .where(
+      and(eq(ingredientAIChanges.id, id), readBy(reader), isNull(ingredientAIChanges.undoneAt))
+    )
     .for("update", { of: ingredientAIChanges });
 
   return row ? toStoredChange(row) : null;
@@ -571,9 +601,14 @@ function stillThere(table: typeof users | typeof ingredients, id: string | null)
  * Mint a deleted food again under its ids, with the spellings still free, pointing back the rows
  * that named it and name nothing now; false where no spelling is free, throws where the name is taken.
  */
-export async function restoreDeletedFood(tx: DbTransaction, food: DeletedFood): Promise<boolean> {
+export async function restoreDeletedFood(
+  tx: DbTransaction,
+  householdId: string,
+  food: DeletedFood
+): Promise<boolean> {
   await tx.insert(ingredients).values({
     id: food.ingredientId,
+    householdId,
     name: food.name,
     ownerId: stillThere(users, food.ownerId),
     parentId: stillThere(ingredients, food.parentId),
@@ -583,6 +618,7 @@ export async function restoreDeletedFood(tx: DbTransaction, food: DeletedFood): 
     .values(
       food.aliases.map((spelling) => ({
         ...spelling,
+        householdId,
         ingredientId: food.ingredientId,
         ownerId: stillThere(users, spelling.ownerId),
       }))
@@ -655,10 +691,18 @@ async function pointBack(
 export async function readChangedSpelling(
   tx: DbTransaction,
   aliasId: string
-): Promise<(ChangedSpelling["spelling"] & { ingredientId: string; seeded: boolean }) | null> {
+): Promise<
+  | (ChangedSpelling["spelling"] & {
+      ingredientId: string;
+      householdId: string | null;
+      seeded: boolean;
+    })
+  | null
+> {
   const [row] = await tx
     .select({
       id: ingredientAliases.id,
+      householdId: ingredientAliases.householdId,
       text: ingredientAliases.text,
       fold: ingredientAliases.fold,
       locale: ingredientAliases.locale,
@@ -762,7 +806,12 @@ export async function wasSpellingUndone(tx: Db, aliasId: string): Promise<boolea
  * The own food holding `fold` that was minted after `since` and nobody decided about: what reading
  * a removed spelling's rows again minted from its text.
  */
-export async function findMintHolding(tx: Db, fold: string, since: Date): Promise<string | null> {
+export async function findMintHolding(
+  tx: Db,
+  householdId: string,
+  fold: string,
+  since: Date
+): Promise<string | null> {
   const [row] = await tx
     .select({ id: ingredients.id })
     .from(ingredientAliases)
@@ -770,7 +819,8 @@ export async function findMintHolding(tx: Db, fold: string, since: Date): Promis
     .where(
       and(
         eq(ingredientAliases.fold, fold),
-        isNull(ingredients.offId),
+        eq(ingredientAliases.householdId, householdId),
+        eq(ingredients.householdId, householdId),
         gt(ingredients.createdAt, since),
         eq(ingredients.nameChosen, false),
         eq(ingredients.parentChosen, false),
@@ -787,13 +837,19 @@ export async function findMintHolding(tx: Db, fold: string, since: Date): Promis
  */
 export async function restoreSpelling(
   tx: DbTransaction,
+  householdId: string,
   ingredientId: string,
   undo: ChangedSpelling
 ): Promise<boolean> {
   const { spelling, left = {} } = undo;
   const [restored] = await tx
     .insert(ingredientAliases)
-    .values({ ...spelling, ingredientId, ownerId: stillThere(users, spelling.ownerId) })
+    .values({
+      ...spelling,
+      householdId,
+      ingredientId,
+      ownerId: stillThere(users, spelling.ownerId),
+    })
     .onConflictDoNothing()
     .returning({ id: ingredientAliases.id });
   // The text back on the food under another id (a mint merged back) is restored too.
@@ -805,6 +861,7 @@ export async function restoreSpelling(
         .where(
           and(
             eq(ingredientAliases.fold, spelling.fold),
+            eq(ingredientAliases.householdId, householdId),
             eq(ingredientAliases.ingredientId, ingredientId)
           )
         );

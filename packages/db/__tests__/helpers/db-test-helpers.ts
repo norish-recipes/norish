@@ -6,6 +6,7 @@
  * in a PostgreSQL database for integration tests.
  */
 
+import { randomUUID } from "node:crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { and, asc, eq, notInArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -196,24 +197,26 @@ export async function createTestHousehold(
   return household;
 }
 
-/**
- * Create a test ingredient
- */
+/** A test ingredient: a seeded food, unless it is given a household (ADR-0042). */
 export async function createTestIngredient(
   overrides: Partial<typeof schema.ingredients.$inferInsert> = {}
 ) {
   const db = getTestDb();
+  const householdId = overrides.householdId ?? null;
 
   const [ingredient] = await db
     .insert(schema.ingredients)
     .values({
       name: overrides.name ?? `Test Ingredient ${Date.now()}`,
       createdAt: overrides.createdAt ?? new Date(),
+      householdId,
+      offId: householdId ? null : (overrides.offId ?? `test:${randomUUID()}`),
     })
     .returning();
 
   // Its own name as its first alias, as every Ingredient has.
   await db.insert(schema.ingredientAliases).values({
+    householdId,
     text: ingredient!.name,
     fold: ingredient!.name.toLowerCase(),
     ingredientId: ingredient!.id,
@@ -222,12 +225,14 @@ export async function createTestIngredient(
   return ingredient;
 }
 
-/** A food Norish knows by one spelling, minted as the resolver would; shared, unflagged. */
+/** A household's food known by one spelling, minted as the resolver would; unflagged. */
 export async function mintTestFood(
+  householdId: string,
   text: string,
-  options: Partial<Omit<MintIngredientInput, "name" | "aliases">> = {}
+  options: Partial<Omit<MintIngredientInput, "householdId" | "name" | "aliases">> = {}
 ) {
   const [row] = await mintIngredientWithAliases({
+    householdId,
     name: text,
     aliases: [{ text, fold: ingredientAliasFold(text) }],
     ownerId: null,

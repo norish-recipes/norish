@@ -378,7 +378,10 @@ describe("aisles and aisle links", () => {
 
     /** The Ingredient a grocery name resolves to, as the filing procedure resolves it. */
     async function ingredient(name: string) {
-      const [resolved] = await resolveIngredients([name], { userId });
+      const [resolved] = await resolveIngredients([name], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
 
       return resolved!.ingredientId;
     }

@@ -28,7 +28,7 @@ describe("ingredient lineage", () => {
   it("reads more ids than a statement can bind one by one", async () => {
     const [onion] = await getTestDb()
       .insert(ingredients)
-      .values({ name: "onion" })
+      .values({ name: "onion", offId: "test:onion" })
       .returning({ id: ingredients.id });
     // Past PostgreSQL's 65,535 binds: the ids go as one array.
     const ids = [onion!.id, ...Array.from({ length: 70_000 }, () => randomUUID())];

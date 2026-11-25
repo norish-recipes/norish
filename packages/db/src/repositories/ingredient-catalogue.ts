@@ -35,8 +35,7 @@ import {
 import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import type { RecipeListContext } from "./recipes";
-import { buildPolicyCondition } from "./recipes";
+import { inCatalogue, ownBeforeSeed, seenBy } from "./catalogue-scope";
 
 const qb = new QueryBuilder();
 const kind = alias(ingredients, "k");
@@ -51,16 +50,17 @@ export const hasNoKinds = () =>
 
 /**
  * The catalogue as the Ingredients page reads it and edits within one Ingredient (ADR-0037); moves
- * between Ingredients are `ingredient-relocation`'s, the edit policy the caller's.
+ * between Ingredients are `ingredient-relocation`'s, the rights the caller's. Every read is one
+ * household's catalogue: the seed plus its own rows (ADR-0042).
  */
 
-/** One Ingredient as the page lists it, with every spelling it is known by. */
+/** One Ingredient as the page lists it, with every spelling the household knows it by. */
 export interface CatalogueIngredient {
   id: string;
   name: string;
   flagged: boolean;
   flagReason: string | null;
-  ownerId: string | null;
+  householdId: string | null;
   version: number;
   parent: { id: string; name: string } | null;
   /** How many Ingredients are kinds of this one. */
@@ -71,14 +71,14 @@ export interface CatalogueIngredient {
 export interface CatalogueAlias {
   id: string;
   text: string;
-  ownerId: string | null;
+  householdId: string | null;
   locale?: string | null;
   seeded?: boolean;
 }
 
-/** Who owns a row of the catalogue, which is what the edit policy is asked about. */
+/** Whose a row of the catalogue is: a household's, or the seed's (null), which is what rights ask. */
 export interface CatalogueOwner {
-  ownerId: string | null;
+  householdId: string | null;
 }
 
 /** The non-ASCII marks `foldName` drops (`\p{Diacritic}`), as regex class ranges Postgres reads. */
@@ -127,6 +127,7 @@ const searchedName = {
  * text's words. `parents` is only joined for a search of the `parent` field. */
 export function matchingSearch(
   search: IngredientSearch,
+  householdId: string,
   parents?: { id: AnyPgColumn; name: AnyPgColumn },
   start = false
 ) {
@@ -143,7 +144,7 @@ export function matchingSearch(
         : holds(sql`lower(${column})`, search.fold, start)
     ) ?? sql`false`;
   const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
-    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${test(sql`${ingredientAliases.fold}`)})`;
+    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${inCatalogue(ingredientAliases.householdId, householdId)} and ${test(sql`${ingredientAliases.fold}`)})`;
 
   const byField: Record<IngredientSearchField, SQL> = {
     name: name(ingredients.name),
@@ -166,11 +167,15 @@ export function nameStartsWith(column: AnyPgColumn, fold: string): SQL {
 
 /** The search's order over the name and the translations in the reader's `languages` (or none):
  * the exact fold, then a word starting with the first word typed; each translation set runs once. */
-function searchRank(search: IngredientSearch, languages: readonly string[]): SQL {
+function searchRank(
+  search: IngredientSearch,
+  languages: readonly string[],
+  householdId: string
+): SQL {
   const exact = (text: SQL) => sql`${text} = ${search.fold}`;
   const wordStart = (text: SQL) => holds(text, search.words[0] ?? search.fold, true);
   const translated = (test: (text: SQL) => SQL) =>
-    sql`${ingredients.id} in (select ${ingredientAliases.ingredientId} from ${ingredientAliases} where (${ingredientAliases.locale} is null or ${inArray(ingredientAliases.locale, [...languages])}) and ${test(sql`${ingredientAliases.fold}`)})`;
+    sql`${ingredients.id} in (select ${ingredientAliases.ingredientId} from ${ingredientAliases} where ${inCatalogue(ingredientAliases.householdId, householdId)} and (${ingredientAliases.locale} is null or ${inArray(ingredientAliases.locale, [...languages])}) and ${test(sql`${ingredientAliases.fold}`)})`;
 
   return sql`least(case when ${exact(searchedName.fold)} then 0 when ${wordStart(searchedName.fold)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
 }
@@ -178,6 +183,8 @@ function searchRank(search: IngredientSearch, languages: readonly string[]): SQL
 /** A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
  * search's ranks first, then the flagged, then by name. */
 export async function listCatalogueIngredients(query: {
+  /** The reader's household: the page lists the seed and its own foods. */
+  householdId: string;
   search: IngredientSearch | null;
   /** The reader's catalogue languages, whose translations rank a search (every one still matches). */
   languages: readonly string[];
@@ -194,16 +201,28 @@ export async function listCatalogueIngredients(query: {
   offset: number;
 }): Promise<CatalogueIngredient[]> {
   const parents = alias(ingredients, "parent");
-  const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
-  const ranks = query.search ? [searchRank(query.search, query.languages)] : [];
+  const matchesSearch = query.search
+    ? matchingSearch(query.search, query.householdId, parents)
+    : undefined;
+  const ranks = query.search ? [searchRank(query.search, query.languages, query.householdId)] : [];
   const listedKind = query.listedOnly
-    ? listedFood({ id: qualified(kind.id), offId: qualified(kind.offId) })
+    ? listedFood({
+        id: qualified(kind.id),
+        offId: qualified(kind.offId),
+        addedByHand: qualified(kind.addedByHand),
+      })
     : undefined;
   const kindsOf = (fields: { n: SQL }) =>
     qb
       .select(fields)
       .from(kind)
-      .where(and(eq(kind.parentId, ingredients.id), listedKind));
+      .where(
+        and(
+          eq(kind.parentId, ingredients.id),
+          inCatalogue(kind.householdId, query.householdId),
+          listedKind
+        )
+      );
 
   const page = db
     .select({
@@ -211,7 +230,7 @@ export async function listCatalogueIngredients(query: {
       name: ingredients.name,
       flagged: ingredients.flagged,
       flagReason: ingredients.flagReason,
-      ownerId: ingredients.ownerId,
+      householdId: ingredients.householdId,
       version: ingredients.version,
       parentId: parents.id,
       parentName: parents.name,
@@ -223,6 +242,7 @@ export async function listCatalogueIngredients(query: {
   const rows = await (query.search ? page.crossJoinLateral(searchedName.join) : page)
     .where(
       and(
+        inCatalogue(ingredients.householdId, query.householdId),
         query.id === undefined ? undefined : eq(ingredients.id, query.id),
         query.listedOnly ? ingredientIsListed() : undefined,
         query.flaggedOnly ? eq(ingredients.flagged, true) : undefined,
@@ -252,16 +272,19 @@ export async function listCatalogueIngredients(query: {
     .select({
       id: ingredientAliases.id,
       text: ingredientAliases.text,
-      ownerId: ingredientAliases.ownerId,
+      householdId: ingredientAliases.householdId,
       locale: ingredientAliases.locale,
       seeded: ingredientAliases.seeded,
       ingredientId: ingredientAliases.ingredientId,
     })
     .from(ingredientAliases)
     .where(
-      inArray(
-        ingredientAliases.ingredientId,
-        rows.map((row) => row.id)
+      and(
+        inArray(
+          ingredientAliases.ingredientId,
+          rows.map((row) => row.id)
+        ),
+        inCatalogue(ingredientAliases.householdId, query.householdId)
       )
     )
     .orderBy(asc(ingredientAliases.createdAt), asc(ingredientAliases.id));
@@ -275,18 +298,28 @@ export async function listCatalogueIngredients(query: {
   }));
 }
 
-/** Every spelling of one Ingredient, in every language, oldest first. */
-export async function listCatalogueAliasesOf(ingredientId: string): Promise<CatalogueAlias[]> {
+/** Every spelling the household knows one of its or a seeded Ingredient by, oldest first. */
+export async function listCatalogueAliasesOf(
+  householdId: string,
+  ingredientId: string
+): Promise<CatalogueAlias[]> {
   return await db
     .select({
       id: ingredientAliases.id,
       text: ingredientAliases.text,
-      ownerId: ingredientAliases.ownerId,
+      householdId: ingredientAliases.householdId,
       locale: ingredientAliases.locale,
       seeded: ingredientAliases.seeded,
     })
     .from(ingredientAliases)
-    .where(eq(ingredientAliases.ingredientId, ingredientId))
+    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
+    .where(
+      and(
+        eq(ingredientAliases.ingredientId, ingredientId),
+        inCatalogue(ingredients.householdId, householdId),
+        inCatalogue(ingredientAliases.householdId, householdId)
+      )
+    )
     .orderBy(asc(ingredientAliases.createdAt), asc(ingredientAliases.id));
 }
 
@@ -306,11 +339,12 @@ function namedByARecipeLine(food: SQL): SQL {
 }
 
 /**
- * Whether the Ingredients page lists a food: a seeded one always, an own one once a recipe line
- * names it. The others, grocery foods and own foods nothing names, are hidden and AI leaves them.
+ * Whether the Ingredients page lists a food: a seeded one or one added by hand always, an own one
+ * once a recipe line names it. The others, grocery foods and own foods nothing names, are hidden and
+ * AI leaves them.
  */
-function listedFood(food: { id: SQL; offId: SQL }): SQL {
-  return sql`(${food.offId} is not null or ${namedByARecipeLine(food.id)})`;
+function listedFood(food: { id: SQL; offId: SQL; addedByHand: SQL }): SQL {
+  return sql`(${food.offId} is not null or ${food.addedByHand} or ${namedByARecipeLine(food.id)})`;
 }
 
 /**
@@ -318,16 +352,21 @@ function listedFood(food: { id: SQL; offId: SQL }): SQL {
  * `ingredientIsNamed`.
  */
 export function ingredientIsListed(): SQL {
-  return listedFood({ id: qualified(ingredients.id), offId: qualified(ingredients.offId) });
+  return listedFood({
+    id: qualified(ingredients.id),
+    offId: qualified(ingredients.offId),
+    addedByHand: qualified(ingredients.addedByHand),
+  });
 }
 
 /**
- * Whether AI may ask about a food: an own one a recipe line names that no person kept, named or
- * parented (ADR-0037). Built per call, as `ingredientIsNamed`: importing runs no query builder.
+ * Whether AI may ask about a food: an own one a recipe line names that no person added, kept, named
+ * or parented (ADR-0037). Built per call, as `ingredientIsNamed`: importing runs no query builder.
  */
 function askableByAI(): SQL<boolean> {
   return sql<boolean>`(${and(
-    isNull(ingredients.offId),
+    isNotNull(ingredients.householdId),
+    eq(ingredients.addedByHand, false),
     eq(ingredients.keptDistinct, false),
     eq(ingredients.nameChosen, false),
     eq(ingredients.parentChosen, false),
@@ -345,8 +384,9 @@ export async function isAskableByAI(tx: Db, id: string): Promise<boolean> {
   return row?.askable ?? false;
 }
 
-/** Which of these foods are listed (seeded, or a recipe line names it), or only the seeded ones. */
+/** Which of these foods in the household's catalogue are listed (seeded, or a recipe line names it), or seeded. */
 export async function findIngredientIdsAmong(
+  householdId: string,
   ids: readonly string[],
   which: "listed" | "seeded"
 ): Promise<Set<string>> {
@@ -357,7 +397,8 @@ export async function findIngredientIdsAmong(
     .where(
       and(
         inArray(ingredients.id, [...new Set(ids)]),
-        which === "seeded" ? isNotNull(ingredients.offId) : ingredientIsListed()
+        inCatalogue(ingredients.householdId, householdId),
+        which === "seeded" ? isNull(ingredients.householdId) : ingredientIsListed()
       )
     );
 
@@ -371,6 +412,7 @@ export async function findIngredientIdsAmong(
 export async function findCatalogueIngredient(id: string): Promise<
   | (CatalogueOwner & {
       id: string;
+      ownerId: string | null;
       name: string;
       flagged: boolean;
       flagReason: string | null;
@@ -387,6 +429,7 @@ export async function findCatalogueIngredient(id: string): Promise<
       name: ingredients.name,
       flagged: ingredients.flagged,
       flagReason: ingredients.flagReason,
+      householdId: ingredients.householdId,
       ownerId: ingredients.ownerId,
       parentId: ingredients.parentId,
       nameSettled: ingredients.nameSettled,
@@ -425,53 +468,134 @@ export async function findCatalogueIngredientNames(
   return names;
 }
 
-/** Every food AI may ask about: what a Clean up over recipe foods asks about. */
-export async function listAskableIngredientIds(): Promise<string[]> {
-  const rows = await db.select({ id: ingredients.id }).from(ingredients).where(askableByAI());
+/** Every food of the household AI may ask about: what a Clean up over recipe foods asks about. */
+export async function listAskableIngredientIds(householdId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(and(eq(ingredients.householdId, householdId), askableByAI()));
 
   return rows.map((row) => row.id);
 }
 
 /**
- * What a Clean up over the whole catalogue asks about: every listed own food, and each seeded food
- * a person, an import or a merge added a spelling to, for that spelling's check alone.
+ * What a Clean up over the household's whole catalogue asks about: every listed own food no person
+ * added by hand, and each seeded food the household added a spelling to, for that spelling alone.
  */
-export async function listWholeCatalogueCleanUpIds(): Promise<string[]> {
+export async function listWholeCatalogueCleanUpIds(householdId: string): Promise<string[]> {
   const added = db
     .select({ one: sql`1` })
     .from(ingredientAliases)
     .where(
-      and(eq(ingredientAliases.ingredientId, ingredients.id), eq(ingredientAliases.seeded, false))
+      and(
+        eq(ingredientAliases.ingredientId, ingredients.id),
+        eq(ingredientAliases.householdId, householdId)
+      )
     );
   const rows = await db
     .select({ id: ingredients.id })
     .from(ingredients)
     .where(
       or(
-        and(isNull(ingredients.offId), ingredientIsListed()),
-        and(isNotNull(ingredients.offId), exists(added))
+        and(
+          eq(ingredients.householdId, householdId),
+          eq(ingredients.addedByHand, false),
+          ingredientIsListed()
+        ),
+        and(isNull(ingredients.householdId), exists(added))
       )
     );
 
   return rows.map((row) => row.id);
 }
 
-/** Every listed food, seeded ones included: what Fill gaps fills. */
-export async function listListedIngredientIds(): Promise<string[]> {
+/** The household's listed own foods, or the seed's foods (null): what Fill gaps fills. */
+export async function listListedIngredientIds(householdId: string | null): Promise<string[]> {
   const rows = await db
     .select({ id: ingredients.id })
     .from(ingredients)
-    .where(ingredientIsListed());
+    .where(
+      householdId === null
+        ? isNull(ingredients.householdId)
+        : and(eq(ingredients.householdId, householdId), ingredientIsListed())
+    );
 
   return rows.map((row) => row.id);
 }
 
-/** Lift the flag of every hidden food: no one sees it there and AI never asks. Answers how many. */
-export async function unflagHiddenFoods(tx: Db = db): Promise<number> {
+/** Which of these foods, in any household, are listed: for the jobs that keep the catalogue. */
+export async function findListedIngredientIds(ids: readonly string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await db
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(and(inArray(ingredients.id, [...new Set(ids)]), ingredientIsListed()));
+
+  return new Set(rows.map((row) => row.id));
+}
+
+/** The household each of these foods is in (null: the seed); a gone one is left out. */
+export async function findIngredientHouseholds(
+  ids: readonly string[],
+  tx: Db = db
+): Promise<Map<string, string | null>> {
+  if (ids.length === 0) return new Map();
+  const rows = await tx
+    .select({ id: ingredients.id, householdId: ingredients.householdId })
+    .from(ingredients)
+    .where(inArray(ingredients.id, [...new Set(ids)]));
+
+  return new Map(rows.map((row) => [row.id, row.householdId]));
+}
+
+/** The households with a spelling of their own on a food: whose spellings a check of it reads. */
+export async function listSpellingHouseholds(ingredientId: string): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ householdId: ingredientAliases.householdId })
+    .from(ingredientAliases)
+    .where(
+      and(
+        eq(ingredientAliases.ingredientId, ingredientId),
+        isNotNull(ingredientAliases.householdId)
+      )
+    );
+
+  return rows.flatMap((row) => (row.householdId ? [row.householdId] : []));
+}
+
+/** The seed's foods, then each household's listed own foods: what a run over every catalogue covers. */
+export async function listListedFoodsOfEveryCatalogue(): Promise<string[]> {
+  const listed = await listListedIngredientIds(null);
+
+  for (const householdId of await listCatalogueHouseholds()) {
+    listed.push(...(await listListedIngredientIds(householdId)));
+  }
+
+  return listed;
+}
+
+/** Every household with an own food: what a run over the catalogue loops over, each in its own. */
+export async function listCatalogueHouseholds(): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ householdId: ingredients.householdId })
+    .from(ingredients)
+    .where(isNotNull(ingredients.householdId));
+
+  return rows.flatMap((row) => (row.householdId ? [row.householdId] : []));
+}
+
+/** Lift the flag of the household's hidden foods: no one sees it there and AI never asks. How many. */
+export async function unflagHiddenFoods(tx: Db, householdId: string): Promise<number> {
   const unflagged = await tx
     .update(ingredients)
     .set({ flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
-    .where(and(eq(ingredients.flagged, true), sql`not ${ingredientIsListed()}`))
+    .where(
+      and(
+        eq(ingredients.householdId, householdId),
+        eq(ingredients.flagged, true),
+        sql`not ${ingredientIsListed()}`
+      )
+    )
     .returning({ id: ingredients.id });
 
   return unflagged.length;
@@ -496,32 +620,45 @@ export async function setIngredientFlagReason(id: string, flagReason: FlagReason
     .where(and(eq(ingredients.id, id), eq(ingredients.flagged, true)));
 }
 
+/** Whose a food in the household's catalogue is; null where it is gone or another household's. */
 export async function findCatalogueIngredientOwner(
-  tx: DbTransaction,
+  tx: Db,
+  householdId: string,
   id: string
 ): Promise<CatalogueOwner | null> {
   const [row] = await tx
-    .select({ ownerId: ingredients.ownerId })
+    .select({ householdId: ingredients.householdId })
     .from(ingredients)
-    .where(eq(ingredients.id, id))
+    .where(and(eq(ingredients.id, id), inCatalogue(ingredients.householdId, householdId)))
     .limit(1);
 
   return row ?? null;
 }
 
+/** Whose a spelling in the household's catalogue is, with its food; null where it is not there. */
 export async function findCatalogueAliasOwner(
   tx: DbTransaction,
+  householdId: string,
   aliasId: string
-): Promise<(CatalogueOwner & { ingredientId: string; text: string; fold: string }) | null> {
+): Promise<
+  | (CatalogueOwner & { ingredientId: string; text: string; fold: string; ownerId: string | null })
+  | null
+> {
   const [row] = await tx
     .select({
+      householdId: ingredientAliases.householdId,
       ownerId: ingredientAliases.ownerId,
       ingredientId: ingredientAliases.ingredientId,
       text: ingredientAliases.text,
       fold: ingredientAliases.fold,
     })
     .from(ingredientAliases)
-    .where(eq(ingredientAliases.id, aliasId))
+    .where(
+      and(
+        eq(ingredientAliases.id, aliasId),
+        inCatalogue(ingredientAliases.householdId, householdId)
+      )
+    )
     .limit(1);
 
   return row ?? null;
@@ -574,44 +711,91 @@ export async function keepIngredientDistinct(
   return row ?? null;
 }
 
-/** The Ingredient a spelling already names, if any. */
+/** The Ingredient a spelling already names in the household's catalogue, its own first. */
 export async function findIngredientIdByFold(
   tx: DbTransaction,
+  householdId: string,
   fold: string
 ): Promise<string | null> {
   const [row] = await tx
     .select({ ingredientId: ingredientAliases.ingredientId })
     .from(ingredientAliases)
-    .where(eq(ingredientAliases.fold, fold))
+    .where(
+      and(eq(ingredientAliases.fold, fold), inCatalogue(ingredientAliases.householdId, householdId))
+    )
+    .orderBy(ownBeforeSeed(ingredientAliases.householdId))
     .limit(1);
 
   return row?.ingredientId ?? null;
 }
 
 /**
- * Give an Ingredient a person's spelling; null where the unique fold refuses it, and the caller
- * says which food holds it.
+ * Give a food a spelling no one asked for (its new name, its plain name) where the household's
+ * catalogue (null: the seed's) knows no spelling of the fold, so it never shadows the seed's.
+ */
+export async function addSpellingUnlessKnown(
+  tx: Db,
+  input: {
+    householdId: string | null;
+    ingredientId: string;
+    text: string;
+    fold: string;
+    ownerId: string | null;
+  }
+): Promise<void> {
+  const [known] = await tx
+    .select({ id: ingredientAliases.id })
+    .from(ingredientAliases)
+    .where(
+      and(
+        eq(ingredientAliases.fold, input.fold),
+        seenBy(ingredientAliases.householdId, input.householdId)
+      )
+    )
+    .limit(1);
+
+  if (!known) await tx.insert(ingredientAliases).values(input).onConflictDoNothing();
+}
+
+/**
+ * Give an Ingredient a person's spelling, the household's (null: the seed's); null where the unique
+ * fold refuses it, and the caller says which food holds it.
  */
 export async function insertCatalogueAlias(
   tx: DbTransaction,
-  input: { ingredientId: string; text: string; fold: string; ownerId: string }
+  input: {
+    householdId: string | null;
+    ingredientId: string;
+    text: string;
+    fold: string;
+    ownerId: string;
+  }
 ): Promise<CatalogueAlias | null> {
   const [row] = await tx.insert(ingredientAliases).values(input).onConflictDoNothing().returning({
     id: ingredientAliases.id,
     text: ingredientAliases.text,
-    ownerId: ingredientAliases.ownerId,
+    householdId: ingredientAliases.householdId,
   });
 
   return row ?? null;
 }
 
+/** The spellings of a food the rows of a spelling of `householdId` (null: the seed's) may move to. */
+export function spellingsSeenBy(householdId: string | null): SQL {
+  return seenBy(ingredientAliases.householdId, householdId);
+}
+
 /**
- * Remove a spelling; its rows move to the food's spelling folded as its name, else its oldest. The
- * caller holds the Ingredient and has kept it another spelling.
+ * Remove a spelling; its rows move to the food's spelling folded as its name, else its oldest, among
+ * those its household sees. The caller holds the Ingredient and has kept it such a spelling.
  */
 export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): Promise<void> {
   const [food] = await tx
-    .select({ id: ingredients.id, name: ingredients.name })
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      householdId: ingredientAliases.householdId,
+    })
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
     .where(eq(ingredientAliases.id, aliasId));
@@ -621,7 +805,13 @@ export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): 
   const [heir] = await tx
     .select({ id: ingredientAliases.id })
     .from(ingredientAliases)
-    .where(and(eq(ingredientAliases.ingredientId, food.id), ne(ingredientAliases.id, aliasId)))
+    .where(
+      and(
+        eq(ingredientAliases.ingredientId, food.id),
+        ne(ingredientAliases.id, aliasId),
+        spellingsSeenBy(food.householdId)
+      )
+    )
     .orderBy(
       desc(sql`${ingredientAliases.fold} = ${ingredientAliasFold(food.name)}`),
       asc(ingredientAliases.createdAt),
@@ -640,17 +830,15 @@ export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): 
   await tx.delete(ingredientAliases).where(eq(ingredientAliases.id, aliasId));
 }
 
-/** Where an Ingredient is used, as one viewer may see it. */
+/** Where an Ingredient is used in the viewer's household (ADR-0042). */
 export interface IngredientUses {
-  /** The recipes the viewer may open with a line naming it. */
+  /** The household's recipes with a line naming it. */
   recipes: Array<{ id: string; name: string }>;
   /** The household's groceries and recurring groceries naming it. */
   groceries: Array<{ id: string; name: string | null; done: boolean; recurring: boolean }>;
   /** Whether the household keeps it in the Pantry. */
   pantry: boolean;
-  /** The uses the viewer may not see: other households' lists, recipes they cannot open. */
-  elsewhere: number;
-  /** Everything a delete touches, the viewer's or not; groceries include recurring ones. */
+  /** How many of the household's rows name it; groceries include recurring ones. */
   counts: { recipeLines: number; groceries: number; pantry: number };
 }
 
@@ -675,7 +863,7 @@ export function rowsNaming(food: string | SQL) {
   };
 }
 
-/** The Groceries and recurring groceries each condition picks, with their spelling, text and owner. */
+/** The Groceries and recurring groceries each condition picks, with their spelling, text and household. */
 export async function findGroceryRows(
   tx: Db,
   where: { groceries: SQL | undefined; recurring: SQL | undefined }
@@ -686,7 +874,7 @@ export async function findGroceryRows(
         id: table.id,
         aliasId: table.ingredientAliasId,
         name: table.name,
-        ownerId: table.userId,
+        householdId: table.householdId,
       })
       .from(table)
       .where(picked);
@@ -698,74 +886,65 @@ export async function findGroceryRows(
 }
 
 /**
- * What names an Ingredient for a viewer: recipes under the view policy, their household's groceries
- * and Pantry, and how many uses are someone else's.
+ * What of the viewer's household names an Ingredient of its catalogue: its recipes, groceries and
+ * Pantry, nothing of another household's. Null where the food is not in the catalogue.
  */
 export async function listIngredientUses(
-  viewer: RecipeListContext,
+  householdId: string,
   ingredientId: string
-): Promise<IngredientUses> {
+): Promise<IngredientUses | null> {
+  if (!(await findCatalogueIngredientOwner(db, householdId, ingredientId))) return null;
   const naming = rowsNaming(ingredientId);
-  const household = (householdId: AnyPgColumn) =>
-    sql<boolean>`${eq(householdId, viewer.householdId)}`;
-  const openable = (await buildPolicyCondition(viewer, recipes.householdId, "view")) ?? sql`true`;
 
   const [lines, groceryRows, recurringRows, pantryRows] = await Promise.all([
     db
-      .select({ id: recipes.id, name: recipes.name, visible: sql<boolean>`${openable}` })
+      .select({ id: recipes.id, name: recipes.name })
       .from(recipeIngredients)
       .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
       .where(
-        inArray(
-          recipeIngredients.id,
-          db
-            .select({ id: recipeIngredientFoods.recipeIngredientId })
-            .from(recipeIngredientFoods)
-            .where(naming.lineFoods)
+        and(
+          eq(recipes.householdId, householdId),
+          inArray(
+            recipeIngredients.id,
+            db
+              .select({ id: recipeIngredientFoods.recipeIngredientId })
+              .from(recipeIngredientFoods)
+              .where(naming.lineFoods)
+          )
         )
       )
       .orderBy(asc(sql`lower(${recipes.name})`)),
     db
-      .select({
-        id: groceries.id,
-        name: groceries.name,
-        done: groceries.isDone,
-        visible: household(groceries.householdId),
-      })
+      .select({ id: groceries.id, name: groceries.name, done: groceries.isDone })
       .from(groceries)
       // A repeating grocery's copy on the list is listed and counted once, as the repeat.
-      .where(and(naming.groceries, isNull(groceries.recurringGroceryId)))
+      .where(
+        and(
+          eq(groceries.householdId, householdId),
+          naming.groceries,
+          isNull(groceries.recurringGroceryId)
+        )
+      )
       .orderBy(asc(groceries.isDone), asc(sql`lower(${groceries.name})`)),
     db
-      .select({
-        id: recurringGroceries.id,
-        name: recurringGroceries.name,
-        visible: household(recurringGroceries.householdId),
-      })
+      .select({ id: recurringGroceries.id, name: recurringGroceries.name })
       .from(recurringGroceries)
-      .where(naming.recurringGroceries),
+      .where(and(eq(recurringGroceries.householdId, householdId), naming.recurringGroceries)),
     db
-      .select({ visible: household(pantryIngredients.householdId) })
+      .select({ id: pantryIngredients.id })
       .from(pantryIngredients)
-      .where(naming.pantry),
+      .where(and(eq(pantryIngredients.householdId, householdId), naming.pantry)),
   ]);
   // A recipe naming the food on several lines is listed once.
-  const openRecipes = new Map(lines.filter((line) => line.visible).map((line) => [line.id, line]));
+  const listed = new Map(lines.map((line) => [line.id, line]));
 
   return {
-    recipes: [...openRecipes.values()].map(({ id, name }) => ({ id, name })),
+    recipes: [...listed.values()],
     groceries: [
-      ...groceryRows
-        .filter((row) => row.visible)
-        .map(({ id, name, done }) => ({ id, name, done, recurring: false })),
-      ...recurringRows
-        .filter((row) => row.visible)
-        .map(({ id, name }) => ({ id, name, done: false, recurring: true })),
+      ...groceryRows.map(({ id, name, done }) => ({ id, name, done, recurring: false })),
+      ...recurringRows.map(({ id, name }) => ({ id, name, done: false, recurring: true })),
     ],
-    pantry: pantryRows.some((row) => row.visible),
-    elsewhere: [...lines, ...groceryRows, ...recurringRows, ...pantryRows].filter(
-      (row) => !row.visible
-    ).length,
+    pantry: pantryRows.length > 0,
     counts: {
       recipeLines: lines.length,
       groceries: groceryRows.length + recurringRows.length,
@@ -819,7 +998,21 @@ export async function deleteUnnamedOwnFoods(
     .where(
       and(
         eq(ingredientAliases.ingredientId, ingredients.id),
-        sql`${ingredientAliases.fold} not in (select ${ingredientJunkPile.fold} from ${ingredientJunkPile})`
+        notExists(
+          qb
+            .select({ id: ingredientJunkPile.id })
+            .from(ingredientJunkPile)
+            .where(
+              and(
+                eq(ingredientJunkPile.fold, ingredientAliases.fold),
+                or(
+                  eq(ingredientJunkPile.householdId, ingredients.householdId),
+                  isNull(ingredientJunkPile.householdId)
+                ),
+                ne(ingredientJunkPile.reason, "names-a-food")
+              )
+            )
+        )
       )
     );
   const deleted = await tx
@@ -831,6 +1024,7 @@ export async function deleteUnnamedOwnFoods(
           sql`not exists (${notJunk})`
         ),
         isNull(ingredients.offId),
+        eq(ingredients.addedByHand, false),
         sql`not ${ingredientIsNamed()}`,
         hasNoKinds()
       )
@@ -841,11 +1035,15 @@ export async function deleteUnnamedOwnFoods(
 }
 
 /**
- * Clear the mark on own Ingredients named again, delete those unnamed 90 nights and no one's
- * parent, mark the rest and unflag hidden ones; seeded ones never. The caller holds the tree lock.
+ * In one household, clear the mark on own Ingredients named again, delete those unnamed 90 nights,
+ * no one's parent and not added by hand, mark the rest and unflag hidden ones. The caller holds the
+ * tree lock.
  */
-export async function sweepUnusedCatalogueIngredients(tx: DbTransaction): Promise<string[]> {
-  const own = isNull(ingredients.offId);
+export async function sweepUnusedCatalogueIngredients(
+  tx: DbTransaction,
+  householdId: string
+): Promise<string[]> {
+  const own = and(eq(ingredients.householdId, householdId), eq(ingredients.addedByHand, false));
 
   await tx
     .update(ingredients)
@@ -872,19 +1070,26 @@ export async function sweepUnusedCatalogueIngredients(tx: DbTransaction): Promis
     .set({ unusedSince: sql`now()` })
     .where(and(own, isNull(ingredients.unusedSince), sql`not ${ingredientIsNamed()}`));
   // A food whose last recipe line went is hidden now.
-  await unflagHiddenFoods(tx);
+  await unflagHiddenFoods(tx, householdId);
 
   return deleted.map((row) => row.id);
 }
 
-/** Whether no Ingredient but `ingredientId` goes by `name`, in any case. */
+/**
+ * Whether no Ingredient but `ingredientId` goes by `name`, in any case, among the seed and the
+ * household of the `ingredients` row the outer statement is on.
+ */
 export function nameIsFree(ingredientId: string, name: string): SQL {
   return notExists(
     qb
       .select({ id: otherFood.id })
       .from(otherFood)
       .where(
-        and(ne(otherFood.id, ingredientId), eq(sql`lower(${otherFood.name})`, sql`lower(${name})`))
+        and(
+          ne(otherFood.id, ingredientId),
+          eq(sql`lower(${otherFood.name})`, sql`lower(${name})`),
+          or(eq(otherFood.householdId, ingredients.householdId), isNull(otherFood.householdId))
+        )
       )
   );
 }
@@ -920,13 +1125,16 @@ export async function renameToPlainName(
         nameIsFree(id, name)
       )
     )
-    .returning({ id: ingredients.id });
+    .returning({ id: ingredients.id, householdId: ingredients.householdId });
 
   if (row) {
-    await tx
-      .insert(ingredientAliases)
-      .values({ text: name, fold: ingredientAliasFold(name), ingredientId: id, ownerId: null })
-      .onConflictDoNothing();
+    await addSpellingUnlessKnown(tx, {
+      householdId: row.householdId,
+      text: name,
+      fold: ingredientAliasFold(name),
+      ingredientId: id,
+      ownerId: null,
+    });
   }
 
   return row !== undefined;
