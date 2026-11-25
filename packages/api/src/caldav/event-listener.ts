@@ -14,8 +14,7 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
-import { getHouseholdIdForUser } from "@norish/db/repositories/households";
-import { getPlannedItemHouseholdId } from "@norish/db/repositories/planned-items";
+import { findPlannedItemPlace } from "@norish/db/repositories/planned-items";
 import { addCaldavSyncJob, isCaldavSyncPending } from "@norish/queue/caldav-sync/producer";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
@@ -88,12 +87,7 @@ async function queueSyncJob(
   }
 
   // A member who left keeps syncing nothing of their old household's plan.
-  const [itemHouseholdId, adderHouseholdId] = await Promise.all([
-    getPlannedItemHouseholdId(item.id),
-    getHouseholdIdForUser(userId),
-  ]);
-
-  if (!itemHouseholdId || itemHouseholdId !== adderHouseholdId) return;
+  if ((await findPlannedItemPlace(item.id, userId)) !== "current") return;
 
   const queue = getQueues().caldavSync;
 

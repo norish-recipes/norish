@@ -23,11 +23,14 @@ const householdDb = vi.hoisted(() => ({
   transferHouseholdAdmin: vi.fn(),
 }));
 
+const caldavSync = vi.hoisted(() => ({ chaseLeftBehindEvents: vi.fn(async () => undefined) }));
+
 const householdCache = vi.hoisted(() => ({
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
 vi.mock("@norish/db", () => householdDb);
+vi.mock("../../src/routers/caldav/sync-service", () => caldavSync);
 vi.mock("@norish/shared-server/cache/household", () => householdCache);
 vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
 vi.mock("@norish/shared-server/realtime/connection", () => import("../mocks/realtime/connection"));

@@ -41,8 +41,7 @@ const db = vi.hoisted(() => ({
   getCaldavConfigDecrypted: vi.fn(),
   getCaldavSyncStatusByItemId: vi.fn(),
   getAllCaldavSyncStatusesByItemId: vi.fn(),
-  getHouseholdIdForUser: vi.fn(),
-  getPlannedItemHouseholdId: vi.fn(),
+  findPlannedItemPlace: vi.fn(),
 }));
 
 const queue = vi.hoisted(() => ({
@@ -59,11 +58,8 @@ vi.mock("@norish/db/repositories/caldav-sync-status", () => ({
   getCaldavSyncStatusByItemId: db.getCaldavSyncStatusByItemId,
   getAllCaldavSyncStatusesByItemId: db.getAllCaldavSyncStatusesByItemId,
 }));
-vi.mock("@norish/db/repositories/households", () => ({
-  getHouseholdIdForUser: db.getHouseholdIdForUser,
-}));
 vi.mock("@norish/db/repositories/planned-items", () => ({
-  getPlannedItemHouseholdId: db.getPlannedItemHouseholdId,
+  findPlannedItemPlace: db.findPlannedItemPlace,
 }));
 vi.mock("@norish/queue/caldav-sync/producer", () => ({
   addCaldavSyncJob: queue.addCaldavSyncJob,
@@ -122,8 +118,7 @@ beforeEach(async () => {
   db.getCaldavConfigDecrypted.mockResolvedValue({ enabled: true, serverUrl: "https://dav" });
   db.getCaldavSyncStatusByItemId.mockResolvedValue({ id: "status-1" });
   db.getAllCaldavSyncStatusesByItemId.mockResolvedValue([{ userId: "user-1" }]);
-  db.getHouseholdIdForUser.mockResolvedValue("household-1");
-  db.getPlannedItemHouseholdId.mockResolvedValue("household-1");
+  db.findPlannedItemPlace.mockResolvedValue("current");
   queue.addCaldavSyncJob.mockClear();
 });
 
@@ -181,7 +176,7 @@ describe("calendar companions", () => {
   });
 
   it("syncs nothing to the calendar of a member who has left the entry's household", async () => {
-    db.getHouseholdIdForUser.mockResolvedValue("household-2");
+    db.findPlannedItemPlace.mockResolvedValue("elsewhere");
     initCaldavSync();
 
     hub.emit(companionChannel("itemCreated"), envelope(companionChannel("itemCreated"), { item }));

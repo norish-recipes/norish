@@ -6,9 +6,11 @@ import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/cal
 import type { CaldavSyncEventData } from "@norish/shared/contracts/realtime/caldav";
 import {
   createCaldavSyncStatus,
+  deleteCaldavSyncStatusByItemId,
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
+import { findPlannedItemPlace } from "@norish/db/repositories/planned-items";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createLogger } from "@norish/shared-server/logger";
 import { caldav } from "@norish/shared-server/realtime/caldav";
@@ -50,9 +52,14 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
     void caldav.publish("syncEvent", { type: "itemStatusUpdated", data: payload }, { userId });
   }
 
-  if (operation === "delete") {
+  // Read now, not when queued: the account may have left the entry's household since.
+  const place = await findPlannedItemPlace(itemId, userId);
+
+  if (operation === "delete" || place !== "current") {
     await reportStep(job, "deleting-event");
     await deletePlannedItem(userId, itemId);
+    // An entry left behind in another household keeps no status on the leaver's calendar.
+    if (place === "elsewhere") await deleteCaldavSyncStatusByItemId(userId, itemId);
 
     return;
   }

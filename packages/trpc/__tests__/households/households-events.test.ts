@@ -20,11 +20,14 @@ const householdDb = vi.hoisted(() => ({
   transferHouseholdAdmin: vi.fn(),
 }));
 
+const caldavSync = vi.hoisted(() => ({ chaseLeftBehindEvents: vi.fn(async () => undefined) }));
+
 const householdCache = vi.hoisted(() => ({
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
 vi.mock("@norish/db", () => householdDb);
+vi.mock("../../src/routers/caldav/sync-service", () => caldavSync);
 vi.mock("@norish/shared-server/cache/household", () => householdCache);
 vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
 vi.mock("@norish/shared-server/realtime/connection", () => import("../mocks/realtime/connection"));
@@ -172,6 +175,8 @@ describe("household mutations announce before they restart the socket", () => {
     expect(households.published[1]!.target).toEqual({ userId: lateJoinerId });
     expect(households.published[2]!.target).toEqual({ userId: user.id });
     expect(households.published[2]!.payload).toMatchObject({ household: { id: "new-household" } });
+    // The leaver's synced entries of the household they left come off their calendar.
+    expect(caldavSync.chaseLeftBehindEvents).toHaveBeenCalledWith(user.id);
   });
 
   it("leave: refuses the only member, who has nowhere to leave to", async () => {
@@ -216,6 +221,7 @@ describe("household mutations announce before they restart the socket", () => {
       lateJoinerId,
     ]);
     expect(emitConnectionInvalidation).toHaveBeenCalledWith(memberId, "household-kicked");
+    expect(caldavSync.chaseLeftBehindEvents).toHaveBeenCalledWith(memberId);
   });
 
   describe("an announcement that fails still rescopes the moved session", () => {

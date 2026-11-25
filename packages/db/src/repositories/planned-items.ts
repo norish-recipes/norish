@@ -107,20 +107,22 @@ export async function getPlannedItemWithRecipeById(
   return row ?? null;
 }
 
-/** Whether the entry is in the household the account is in now. */
-export async function isPlannedItemInHouseholdOf(itemId: string, userId: string): Promise<boolean> {
+/** Whether the entry is in the household the account is in now, another one, or gone. */
+export async function findPlannedItemPlace(
+  itemId: string,
+  userId: string
+): Promise<"current" | "elsewhere" | null> {
   const [row] = await db
-    .select({ id: plannedItems.id })
+    .select({
+      current: sql<boolean>`${inArray(plannedItems.householdId, currentHouseholdIdSql(userId))}`,
+    })
     .from(plannedItems)
-    .where(
-      and(
-        eq(plannedItems.id, itemId),
-        inArray(plannedItems.householdId, currentHouseholdIdSql(userId))
-      )
-    )
+    .where(eq(plannedItems.id, itemId))
     .limit(1);
 
-  return row !== undefined;
+  if (!row) return null;
+
+  return row.current ? "current" : "elsewhere";
 }
 
 export async function listPlannedItemsBySlot(

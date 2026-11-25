@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 
 import type {
   CaldavSyncStatus,
@@ -13,6 +13,8 @@ import {
   CaldavSyncStatusInsertSchema,
   CaldavSyncStatusSelectSchema,
 } from "@norish/shared/contracts/zod/caldav-sync-status";
+
+import { currentHouseholdIdSql } from "./household-members";
 
 export async function createCaldavSyncStatus(
   input: CaldavSyncStatusInsertDto
@@ -112,7 +114,14 @@ export async function getCaldavSyncStatusesByUser(
       itemSlot: plannedItems.slot,
     })
     .from(caldavSyncStatus)
-    .leftJoin(plannedItems, eq(caldavSyncStatus.plannedItemId, plannedItems.id))
+    // An entry of a household the account has left shows no live date or slot.
+    .leftJoin(
+      plannedItems,
+      and(
+        eq(caldavSyncStatus.plannedItemId, plannedItems.id),
+        inArray(plannedItems.householdId, currentHouseholdIdSql(userId))
+      )
+    )
     .where(eq(caldavSyncStatus.userId, userId))
     .$dynamic();
 
@@ -197,6 +206,28 @@ export async function getPendingOrFailedSyncStatuses(
 
   return rows.map((row) => {
     const validated = CaldavSyncStatusSelectSchema.safeParse(row);
+
+    if (!validated.success) throw new Error("Invalid sync status data");
+
+    return validated.data;
+  });
+}
+
+/** The account's sync statuses of entries that stayed in a household it has left. */
+export async function listSyncStatusesLeftBehind(userId: string): Promise<CaldavSyncStatusDto[]> {
+  const rows = await db
+    .select({ status: caldavSyncStatus })
+    .from(caldavSyncStatus)
+    .innerJoin(plannedItems, eq(plannedItems.id, caldavSyncStatus.plannedItemId))
+    .where(
+      and(
+        eq(caldavSyncStatus.userId, userId),
+        notInArray(plannedItems.householdId, currentHouseholdIdSql(userId))
+      )
+    );
+
+  return rows.map(({ status }) => {
+    const validated = CaldavSyncStatusSelectSchema.safeParse(status);
 
     if (!validated.success) throw new Error("Invalid sync status data");
 

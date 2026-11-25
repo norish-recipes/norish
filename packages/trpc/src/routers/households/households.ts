@@ -32,6 +32,7 @@ import { JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { chaseLeftBehindEvents } from "../caldav/sync-service";
 
 /**
  * Transforms household data to DTO based on admin status
@@ -220,6 +221,9 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
           await publishHouseholdTo(ctx.user.id);
         }
       );
+      await chaseLeftBehindEvents(ctx.user.id).catch((err) =>
+        log.error({ err, userId: ctx.user.id }, "Failed to take a left household's plan off CalDAV")
+      );
     })
     .catch((err) => {
       log.error({ err, userId: ctx.user.id }, "Failed to leave household");
@@ -301,6 +305,12 @@ const kick = authedProcedure
             );
             await households.publish("memberRemoved", { userId: userIdToKick }, { householdId });
           }
+        );
+        await chaseLeftBehindEvents(userIdToKick).catch((err) =>
+          log.error(
+            { err, userId: userIdToKick },
+            "Failed to take a left household's plan off CalDAV"
+          )
         );
       })
       .catch((err) => {
