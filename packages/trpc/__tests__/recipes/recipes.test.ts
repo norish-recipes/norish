@@ -244,17 +244,18 @@ describe("recipes procedures", () => {
       dashboardRecipe.mockResolvedValue(mockDashboard);
 
       expect(await createCaller().create(input)).toBe(recipeId);
+      // Its entries may be new and count one recipe more, in the household it is in now; the
+      // create answers once that is announced.
+      expect(lists.publish).toHaveBeenCalledWith(
+        "changed",
+        { kinds: ["tag", "cuisine", "category"] },
+        { viewPolicy: "household", householdId: "household-now" }
+      );
       await settle();
       expect(recipes.publish).toHaveBeenCalledWith(
         "created",
         { recipe: mockDashboard },
         expect.anything()
-      );
-      // Its entries may be new and count one recipe more, in the household it is in now.
-      expect(lists.publish).toHaveBeenCalledWith(
-        "changed",
-        { kinds: ["tag", "cuisine", "category"] },
-        { viewPolicy: "household", householdId: "household-now" }
       );
     });
 
