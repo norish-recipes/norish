@@ -28,24 +28,14 @@ export async function addImportJob(
   data: RecipeImportJobData
 ): Promise<AddImportJobResult> {
   const policy = await getRecipePermissionPolicy();
-  const deduplicationId = recipeImportDeduplicationId(
-    data.url,
-    data.userId,
-    data.householdId,
-    policy.view
-  );
+  const deduplicationId = recipeImportDeduplicationId(data.url, data.householdId, policy.view);
 
   log.debug(
     { url: data.url, deduplicationId, policy: policy.view },
     "Attempting to add import job"
   );
 
-  const existingCheck = await recipeExistsByUrlForPolicy(
-    data.url,
-    data.userId,
-    data.householdId,
-    policy.view
-  );
+  const existingCheck = await recipeExistsByUrlForPolicy(data.url, data.householdId, policy.view);
 
   if (existingCheck.exists && existingCheck.existingRecipeId) {
     log.info(

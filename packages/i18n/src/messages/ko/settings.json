@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "권한",
-      "description": "다른 사람이 만든 것을 누가 보고 바꿀 수 있는지. 서버 관리자는 항상 전체 권한을 가집니다.",
+      "description": "가구 밖의 누가 그 가구의 레시피와 요리책을 보고 바꿀 수 있는지. 서버 관리자도 같은 규칙을 따릅니다.",
       "recipes": "레시피",
-      "ingredients": "식재료",
       "viewRecipes": "레시피 보기",
       "viewDescription": "대시보드에서 레시피를 볼 수 있는 사람",
       "editRecipes": "레시피 편집",
@@ -684,26 +683,9 @@
         "everyone": "모든 사람",
         "everyoneDescription": "인증된 모든 사용자",
         "household": "가구",
-        "householdDescription": "레시피 소유자와 가구 구성원",
-        "owner": "소유자만",
-        "ownerDescription": "레시피 소유자만"
+        "householdDescription": "레시피 소유자와 가구 구성원"
       },
       "note": "장보기 및 달력 항목은 항상 가구 규칙을 따릅니다. 가구 구성원은 서로의 항목을 편집하거나 삭제할 수 있습니다."
-    },
-    "ingredientPermissions": {
-      "title": "재료 권한",
-      "description": "누가 재료 이름을 바꾸고, 별개로 표시하거나 번역을 제거할 수 있는지 정합니다. 번역 추가는 누구나 할 수 있습니다.",
-      "editIngredients": "재료 편집",
-      "editDescription": "다른 사람이 추가한 재료를 누가 변경할 수 있는지",
-      "levels": {
-        "everyone": "모두",
-        "everyoneDescription": "로그인한 모든 사용자",
-        "household": "가구",
-        "householdDescription": "추가한 사람과 그 가구 구성원",
-        "owner": "소유자만",
-        "ownerDescription": "추가한 사람만"
-      },
-      "note": "기본 제공 카탈로그의 재료는 서버 관리자만 편집할 수 있습니다."
     },
     "system": {
       "title": "시스템 설정",

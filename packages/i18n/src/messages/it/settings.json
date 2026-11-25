@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Permessi",
-      "description": "Chi può vedere e modificare ciò che altri hanno creato. Gli amministratori del server hanno sempre accesso completo.",
+      "description": "Chi al di fuori di una famiglia può vedere e modificare le sue ricette e i suoi ricettari. Gli amministratori del server seguono le stesse regole.",
       "recipes": "Ricette",
-      "ingredients": "Ingredienti",
       "viewRecipes": "Visualizza ricette",
       "viewDescription": "Chi può vedere le ricette nella dashboard",
       "editRecipes": "Modifica ricette",
@@ -684,26 +683,9 @@
         "everyone": "Tutti",
         "everyoneDescription": "Tutti gli utenti autenticati",
         "household": "Nucleo familiare",
-        "householdDescription": "Il proprietario della ricetta e i membri del suo nucleo familiare",
-        "owner": "Solo proprietario",
-        "ownerDescription": "Solo il proprietario della ricetta"
+        "householdDescription": "Il proprietario della ricetta e i membri del suo nucleo familiare"
       },
       "note": "Spesa e voci del calendario seguono sempre le regole del nucleo familiare: i membri possono modificare o eliminare gli elementi degli altri."
-    },
-    "ingredientPermissions": {
-      "title": "Permessi degli ingredienti",
-      "description": "Chi può rinominare gli ingredienti, segnarli come distinti o rimuoverne le traduzioni. Chiunque può aggiungere una traduzione.",
-      "editIngredients": "Modifica ingredienti",
-      "editDescription": "Chi può cambiare un ingrediente aggiunto da qualcun altro",
-      "levels": {
-        "everyone": "Tutti",
-        "everyoneDescription": "Tutti gli utenti autenticati",
-        "household": "Nucleo familiare",
-        "householdDescription": "Chi lo ha aggiunto e i membri del suo nucleo",
-        "owner": "Solo proprietario",
-        "ownerDescription": "Solo chi lo ha aggiunto"
-      },
-      "note": "Gli ingredienti del catalogo integrato possono essere modificati solo dagli amministratori del server."
     },
     "system": {
       "title": "Impostazioni di sistema",

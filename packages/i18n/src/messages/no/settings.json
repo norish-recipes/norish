@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Tillatelser",
-      "description": "Hvem som kan se og endre det andre har laget. Serveradministratorer har alltid full tilgang.",
+      "description": "Hvem utenfor en husstand som kan se og endre oppskriftene og kokebøkene dens. Serveradministratorer følger de samme reglene.",
       "recipes": "Oppskrifter",
-      "ingredients": "Ingredienser",
       "viewRecipes": "Se oppskrifter",
       "viewDescription": "Hvem kan se oppskrifter i oversikten",
       "editRecipes": "Rediger oppskrifter",
@@ -684,26 +683,9 @@
         "everyone": "Alle",
         "everyoneDescription": "Alle godkjente brukere",
         "household": "Husstand",
-        "householdDescription": "Oppskriftens eier og husstandsmedlemmene deres",
-        "owner": "Bare eieren",
-        "ownerDescription": "Bare oppskriftens eier"
+        "householdDescription": "Oppskriftens eier og husstandsmedlemmene deres"
       },
       "note": "Handlelister og kalenderelementer følger alltid husstandens regler: husstandsmedlemmer kan redigere eller slette hverandres elementer."
-    },
-    "ingredientPermissions": {
-      "title": "Ingredienstillatelser",
-      "description": "Hvem som kan gi ingredienser nytt navn, markere dem som egne eller fjerne oversettelsene deres. Alle kan legge til en oversettelse.",
-      "editIngredients": "Rediger ingredienser",
-      "editDescription": "Hvem som kan endre en ingrediens noen andre har lagt til",
-      "levels": {
-        "everyone": "Alle",
-        "everyoneDescription": "Alle innloggede brukere",
-        "household": "Husstand",
-        "householdDescription": "Den som la den til og medlemmene i husstanden",
-        "owner": "Bare eier",
-        "ownerDescription": "Bare den som la den til"
-      },
-      "note": "Ingredienser fra den innebygde katalogen kan bare redigeres av serveradministratorer."
     },
     "system": {
       "title": "Systeminnstillinger",

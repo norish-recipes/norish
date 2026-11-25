@@ -6,11 +6,10 @@ import { SettingRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { Note } from "@/components/shared/note";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { PermissionLevel } from "@norish/config/zod/server-config";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import type { PermissionLevel, RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import { isWiderLevel, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAdminConfig, usePermissionPolicyMutations } from "@norish/shared-react/admin";
 
 import type { PermissionLevelLabels } from "./permission-level-select";
@@ -18,58 +17,47 @@ import { PermissionLevelSelect } from "./permission-level-select";
 
 type PolicyAction = "view" | "edit" | "delete";
 
-/**
- * Who may view, edit or delete what others made; Ingredients have only an edit level.
- * Each select saves as it changes.
- */
+/** The policy with one level changed; narrowing view narrows edit and delete with it. */
+function withLevel(
+  policy: RecipePermissionPolicy,
+  action: PolicyAction,
+  level: PermissionLevel
+): RecipePermissionPolicy {
+  const next = { ...policy, [action]: level };
+  const atMostView = (value: PermissionLevel) =>
+    isWiderLevel(value, next.view) ? next.view : value;
+
+  return { ...next, edit: atMostView(next.edit), delete: atMostView(next.delete) };
+}
+
+/** Who outside a household may view, edit or delete its recipes and cookbooks; each select saves. */
 export default function PermissionPolicyCard() {
   const t = useTranslations("settings.admin.permissions");
-  const tIngredients = useTranslations("settings.admin.ingredientPermissions");
   const recipePermissionPolicy = useAdminConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
-  const ingredientEdit = useAdminConfig(
-    ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
-    (policy) => policy?.edit
-  );
-  const { saveRecipePolicy, saveIngredientPolicy } = usePermissionPolicyMutations();
-  const [saving, setSaving] = useState<PolicyAction | "ingredients" | null>(null);
+  const { saveRecipePolicy } = usePermissionPolicyMutations();
+  const [saving, setSaving] = useState<PolicyAction | null>(null);
 
   const recipeLabels: PermissionLevelLabels = {
     everyone: { label: t("levels.everyone"), description: t("levels.everyoneDescription") },
     household: { label: t("levels.household"), description: t("levels.householdDescription") },
-    owner: { label: t("levels.owner"), description: t("levels.ownerDescription") },
-  };
-  const ingredientLabels: PermissionLevelLabels = {
-    everyone: {
-      label: tIngredients("levels.everyone"),
-      description: tIngredients("levels.everyoneDescription"),
-    },
-    household: {
-      label: tIngredients("levels.household"),
-      description: tIngredients("levels.householdDescription"),
-    },
-    owner: {
-      label: tIngredients("levels.owner"),
-      description: tIngredients("levels.ownerDescription"),
-    },
   };
 
   const handleRecipeChange = async (action: PolicyAction, value: PermissionLevel) => {
     if (!recipePermissionPolicy) return;
 
     setSaving(action);
-    await saveRecipePolicy({ ...recipePermissionPolicy, [action]: value }).finally(() =>
+    await saveRecipePolicy(withLevel(recipePermissionPolicy, action, value)).finally(() =>
       setSaving(null)
     );
   };
 
-  const handleIngredientChange = async (edit: PermissionLevel) => {
-    setSaving("ingredients");
-    await saveIngredientPolicy({ edit }).finally(() => setSaving(null));
-  };
-
+  const view = recipePermissionPolicy?.view;
   const renderPolicySelect = (action: PolicyAction, ariaLabel: string) => (
     <PermissionLevelSelect
       ariaLabel={ariaLabel}
+      disabledLevels={
+        action !== "view" && view === "household" ? (["everyone"] as const) : undefined
+      }
       isDisabled={saving !== null}
       labels={recipeLabels}
       value={recipePermissionPolicy?.[action] ?? null}
@@ -95,28 +83,6 @@ export default function PermissionPolicyCard() {
           {renderPolicySelect("delete", t("deleteRecipes"))}
         </SettingRow>
       </Section>
-
-      <Separator />
-
-      <Section
-        description={tIngredients("description")}
-        id="ingredients"
-        note={tIngredients("note")}
-        title={t("ingredients")}
-      >
-        <SettingRow
-          description={tIngredients("editDescription")}
-          title={tIngredients("editIngredients")}
-        >
-          <PermissionLevelSelect
-            ariaLabel={tIngredients("editIngredients")}
-            isDisabled={saving !== null}
-            labels={ingredientLabels}
-            value={ingredientEdit ?? null}
-            onChange={(level) => void handleIngredientChange(level)}
-          />
-        </SettingRow>
-      </Section>
     </SettingsCard>
   );
 }
@@ -125,22 +91,17 @@ export default function PermissionPolicyCard() {
 function Section({
   id,
   title,
-  description,
   note,
   children,
 }: {
   id: string;
   title: string;
-  description?: string;
   note: string;
   children: ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-4" data-testid={`permissions-${id}`}>
-      <div className="flex flex-col gap-0.5">
-        <h3 className="text-base font-semibold">{title}</h3>
-        {description ? <p className="text-muted text-base">{description}</p> : null}
-      </div>
+      <h3 className="text-base font-semibold">{title}</h3>
       {children}
       <Note>{note}</Note>
     </section>

@@ -193,43 +193,18 @@ export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null>
 }
 
 /**
- * Check if recipe URL exists based on view policy.
- * Used for queue deduplication before creating new recipes.
- *
- * - "everyone": Any recipe with this URL
- * - "household": Any recipe with this URL owned by household members
- * - "owner": Any recipe with this URL owned by the user
+ * A recipe with this URL the importer may view, for queue deduplication before
+ * creating a new one: any under view Everyone, the household's under Household.
  */
 export async function recipeExistsByUrlForPolicy(
   url: string,
-  userId: string,
   householdId: string,
-  viewPolicy: "everyone" | "household" | "owner"
+  viewPolicy: RecipeViewPolicy
 ): Promise<{ exists: boolean; existingRecipeId?: string }> {
-  let whereCondition: ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof eq>;
-
-  switch (viewPolicy) {
-    case "everyone":
-      // Check if URL exists at all
-      whereCondition = eq(recipes.url, url);
-      break;
-
-    case "household":
-      // Check if URL exists for any household member
-      whereCondition = and(
-        eq(recipes.url, url),
-        inArray(recipes.userId, householdMemberIdsSql(householdId))
-      );
-      break;
-
-    case "owner":
-      // Check if URL exists for this specific user
-      whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
-      break;
-
-    default:
-      whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
-  }
+  const whereCondition = and(
+    eq(recipes.url, url),
+    viewPolicy === "household" ? eq(recipes.householdId, householdId) : undefined
+  );
 
   const existing = await db.query.recipes.findFirst({
     where: whereCondition,
@@ -340,8 +315,6 @@ export async function buildOwnerPolicyCondition(
     return undefined;
   }
 
-  const ownOrOrphaned = () => or(eq(ownerColumn, ctx.userId), sql`${ownerColumn} IS NULL`);
-
   switch (level) {
     case "everyone":
       // No filtering needed
@@ -353,13 +326,6 @@ export async function buildOwnerPolicyCondition(
         inArray(ownerColumn, householdMemberIdsSql(ctx.householdId)),
         sql`${ownerColumn} IS NULL`
       );
-
-    case "owner":
-      // Only own rows + orphaned rows (null owner)
-      return ownOrOrphaned();
-
-    default:
-      return ownOrOrphaned();
   }
 }
 

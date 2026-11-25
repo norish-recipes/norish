@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Behörigheter",
-      "description": "Vem som får se och ändra det andra har skapat. Serveradministratörer har alltid full åtkomst.",
+      "description": "Vem utanför ett hushåll som får se och ändra dess recept och kokböcker. Serveradministratörer följer samma regler.",
       "recipes": "Recept",
-      "ingredients": "Ingredienser",
       "viewRecipes": "Visa recept",
       "viewDescription": "Vem som kan se recept på startsidan",
       "editRecipes": "Redigera recept",
@@ -684,26 +683,9 @@
         "everyone": "Alla",
         "everyoneDescription": "Alla inloggade användare",
         "household": "Hushåll",
-        "householdDescription": "Receptets ägare och medlemmarna i ägarens hushåll",
-        "owner": "Endast ägaren",
-        "ownerDescription": "Endast receptets ägare"
+        "householdDescription": "Receptets ägare och medlemmarna i ägarens hushåll"
       },
       "note": "Inköpslistor och kalenderposter följer alltid hushållets regler: medlemmar kan redigera och ta bort varandras poster."
-    },
-    "ingredientPermissions": {
-      "title": "Ingrediensbehörigheter",
-      "description": "Vem som får byta namn på ingredienser, markera dem som egna livsmedel eller ta bort deras översättningar. Alla kan lägga till en översättning.",
-      "editIngredients": "Redigera ingredienser",
-      "editDescription": "Vem som kan ändra en ingrediens som någon annan har lagt till",
-      "levels": {
-        "everyone": "Alla",
-        "everyoneDescription": "Alla inloggade användare",
-        "household": "Hushåll",
-        "householdDescription": "Den som lade till ingrediensen och medlemmarna i samma hushåll",
-        "owner": "Endast ägaren",
-        "ownerDescription": "Endast den som lade till ingrediensen"
-      },
-      "note": "Ingredienser från den inbyggda katalogen kan bara redigeras av serveradministratörer."
     },
     "system": {
       "title": "Systeminställningar",

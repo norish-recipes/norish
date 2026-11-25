@@ -74,7 +74,7 @@ describe("channel", () => {
     expect(domain.channel("becameUsable", undefined)).toBe("norish:grocery:internal:becameUsable");
   });
 
-  it("routes policy: everyone → broadcast, household → household:{key}, owner → user:{id}", () => {
+  it("routes policy: everyone → broadcast, household → household:{key}", () => {
     const target = { householdId: "hh-1", userId: "u-1" };
 
     expect(domain.channel("imported", { ...target, viewPolicy: "everyone" })).toBe(
@@ -83,20 +83,16 @@ describe("channel", () => {
     expect(domain.channel("imported", { ...target, viewPolicy: "household" })).toBe(
       "norish:grocery:household:hh-1:imported"
     );
-    expect(domain.channel("imported", { ...target, viewPolicy: "owner" })).toBe(
-      "norish:grocery:user:u-1:imported"
-    );
   });
 });
 
 describe("channelsFor", () => {
   const identity = { userId: "u-1", householdId: "hh-1" };
 
-  it("lists household, broadcast and user for a policy event, in that order", () => {
+  it("lists household and broadcast for a policy event, in that order", () => {
     expect(domain.channelsFor("imported", identity)).toEqual([
       "norish:grocery:household:hh-1:imported",
       "norish:grocery:broadcast:imported",
-      "norish:grocery:user:u-1:imported",
     ]);
   });
 
@@ -148,7 +144,7 @@ describe("publish", () => {
     await domain.publish(
       "imported",
       { recipeId: "r-1" },
-      { viewPolicy: "owner", householdId: "hh-1", userId: "u-1" }
+      { viewPolicy: "household", householdId: "hh-1", userId: "u-1" }
     );
 
     const envelope = lastPublished();
@@ -159,8 +155,8 @@ describe("publish", () => {
       eventId: EVENT_ID_PLACEHOLDER,
       eventName: "imported",
       namespace: "grocery",
-      scope: "user",
-      channel: "norish:grocery:user:u-1:imported",
+      scope: "household",
+      channel: "norish:grocery:household:hh-1:imported",
     });
     expect(envelope.meta.operationId).toBeUndefined();
     expect(new Date(envelope.meta.occurredAt).toISOString()).toBe(envelope.meta.occurredAt);

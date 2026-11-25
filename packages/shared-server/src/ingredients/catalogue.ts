@@ -1,8 +1,7 @@
 /**
- * A person's catalogue edits (ADR-0037), each one transaction under the ingredient permission
- * policy: adding an alias is open, the rest needs `edit`, a seeded row is an admin's.
+ * A person's catalogue edits (ADR-0037), each one transaction: adding an alias is open, the rest
+ * is their household's own rows, and a seeded row is an admin's.
  */
-import type { PermissionLevel } from "@norish/config/zod/server-config";
 import type { DbTransaction } from "@norish/db/drizzle";
 import type {
   CatalogueAlias,
@@ -49,7 +48,6 @@ import {
   moveCatalogueAlias,
   setCatalogueIngredientParent,
 } from "@norish/db/repositories/ingredient-relocation";
-import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { claimOwnIcon } from "@norish/shared-server/media/ingredient-icon";
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -76,27 +74,9 @@ export class CatalogueEditError extends Error {
   }
 }
 
-/**
- * Whether `actor` may edit a row owned by `ownerId` under `level`. Pure, so
- * a page of rows is judged against one read of the policy.
- */
-export function mayEditOwnedRow(
-  level: PermissionLevel,
-  actor: CatalogueActor,
-  ownerId: string | null
-): boolean {
-  if (actor.isServerAdmin) return true;
-  if (ownerId === null) return false;
-  if (ownerId === actor.userId) return true;
-
-  switch (level) {
-    case "everyone":
-      return true;
-    case "household":
-      return actor.memberIds.includes(ownerId);
-    default:
-      return false;
-  }
+/** Whether `actor` may edit a row owned by `ownerId`: their household's, or a seeded one as an admin. */
+export function mayEditOwnedRow(actor: CatalogueActor, ownerId: string | null): boolean {
+  return ownerId === null ? actor.isServerAdmin : actor.memberIds.includes(ownerId);
 }
 
 /** One spelling as the page shows it, and whether the viewer may remove or move it. */
@@ -161,22 +141,19 @@ export async function listIngredients(
   const search = query.search?.trim() ?? "";
   const offset = query.offset ?? 0;
   const languages = catalogueLanguagesFor(query.locale ?? "en");
-  const [policy, rows] = await Promise.all([
-    getIngredientPermissionPolicy(),
-    listCatalogueIngredients({
-      search: parseIngredientSearch(search, { match: query.match, fields: query.fields }),
-      languages,
-      flaggedOnly: query.flaggedOnly ?? false,
-      parentId: query.parentId,
-      standaloneOnly: query.standaloneOnly ?? false,
-      id: query.id,
-      listedOnly: query.listedOnly,
-      // One more than a page says whether there is a next one.
-      limit: INGREDIENT_PAGE_SIZE + 1,
-      offset,
-    }),
-  ]);
-  const may = (ownerId: string | null) => mayEditOwnedRow(policy.edit, actor, ownerId);
+  const rows = await listCatalogueIngredients({
+    search: parseIngredientSearch(search, { match: query.match, fields: query.fields }),
+    languages,
+    flaggedOnly: query.flaggedOnly ?? false,
+    parentId: query.parentId,
+    standaloneOnly: query.standaloneOnly ?? false,
+    id: query.id,
+    listedOnly: query.listedOnly,
+    // One more than a page says whether there is a next one.
+    limit: INGREDIENT_PAGE_SIZE + 1,
+    offset,
+  });
+  const may = (ownerId: string | null) => mayEditOwnedRow(actor, ownerId);
   const page = rows.slice(0, INGREDIENT_PAGE_SIZE);
   const [parentNames, icons] = await Promise.all([
     findLocaleNames(page.flatMap((row) => (row.parent ? [row.parent.id] : []))),
@@ -196,14 +173,9 @@ export async function listSpellings(
   actor: CatalogueActor,
   ingredientId: string
 ): Promise<IngredientSpelling[]> {
-  const [policy, aliases] = await Promise.all([
-    getIngredientPermissionPolicy(),
-    listCatalogueAliasesOf(ingredientId),
-  ]);
+  const aliases = await listCatalogueAliasesOf(ingredientId);
 
-  return aliases.map((alias) =>
-    spelling(alias, (ownerId) => mayEditOwnedRow(policy.edit, actor, ownerId))
-  );
+  return aliases.map((alias) => spelling(alias, (ownerId) => mayEditOwnedRow(actor, ownerId)));
 }
 
 function spelling(
@@ -285,9 +257,7 @@ export async function assertMayEdit<T extends CatalogueOwner>(
   row: T | null
 ): Promise<T> {
   if (!row) throw new CatalogueEditError("not-found");
-  const policy = await getIngredientPermissionPolicy();
-
-  if (!mayEditOwnedRow(policy.edit, actor, row.ownerId)) {
+  if (!mayEditOwnedRow(actor, row.ownerId)) {
     throw new CatalogueEditError("forbidden");
   }
 

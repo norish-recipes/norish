@@ -18,18 +18,8 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
   const policy = await getRecipePermissionPolicy();
   const queues = getQueues();
 
-  const visible = (job: ImportJob): boolean => {
-    switch (policy.view) {
-      case "everyone":
-        return true;
-      case "household":
-        return job.data.householdId === ctx.householdId;
-      case "owner":
-        return job.data.userId === ctx.user.id;
-    }
-
-    return false;
-  };
+  const visible = (job: ImportJob): boolean =>
+    policy.view === "everyone" || job.data.householdId === ctx.householdId;
 
   // Every import kind has a placeholder card, so a reread must list them all.
   const [urlJobs, imageJobs, pasteJobs] = await Promise.all([

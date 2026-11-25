@@ -31,9 +31,9 @@ type PermissionAccessInput = {
 };
 
 const DEFAULT_RECIPE_POLICY: RecipePermissionPolicy = {
-  view: "owner",
-  edit: "owner",
-  delete: "owner",
+  view: "household",
+  edit: "household",
+  delete: "household",
 };
 
 export function normalizePermissionsData(
@@ -63,9 +63,6 @@ function checkPermissionAccess({
       return true;
     case "household":
       return householdMemberIds.includes(ownerId);
-    case "owner":
-    default:
-      return false;
   }
 }
 

@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Permissions",
-      "description": "Who may see and change what others made. Server admins always have full access.",
+      "description": "Who outside a household may see and change its recipes and cookbooks. Server admins follow the same rules.",
       "recipes": "Recipes",
-      "ingredients": "Ingredients",
       "viewRecipes": "View recipes",
       "viewDescription": "Who can see recipes in the dashboard",
       "editRecipes": "Edit recipes",
@@ -684,26 +683,9 @@
         "everyone": "Everyone",
         "everyoneDescription": "All authenticated users",
         "household": "Household",
-        "householdDescription": "Recipe owner and their household members",
-        "owner": "Owner only",
-        "ownerDescription": "Only the recipe owner"
+        "householdDescription": "Recipe owner and their household members"
       },
       "note": "Groceries and calendar items always follow household rules: household members can edit or delete each other's items."
-    },
-    "ingredientPermissions": {
-      "title": "Ingredient permissions",
-      "description": "Who may rename ingredients, mark them distinct or remove their translations. Anyone can add a translation.",
-      "editIngredients": "Edit ingredients",
-      "editDescription": "Who can change an ingredient someone else added",
-      "levels": {
-        "everyone": "Everyone",
-        "everyoneDescription": "All authenticated users",
-        "household": "Household",
-        "householdDescription": "Whoever added it and their household members",
-        "owner": "Owner only",
-        "ownerDescription": "Only whoever added it"
-      },
-      "note": "Ingredients from the built-in catalogue can only be edited by server admins."
     },
     "system": {
       "title": "System settings",

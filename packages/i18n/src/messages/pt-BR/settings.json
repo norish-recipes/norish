@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Permissões",
-      "description": "Quem pode ver e alterar o que outros criaram. Administradores do servidor sempre têm acesso total.",
+      "description": "Quem fora de uma casa pode ver e alterar suas receitas e livros de receitas. Administradores do servidor seguem as mesmas regras.",
       "recipes": "Receitas",
-      "ingredients": "Ingredientes",
       "viewRecipes": "Visualizar receitas",
       "viewDescription": "Quem pode ver receitas no painel",
       "editRecipes": "Editar receitas",
@@ -684,26 +683,9 @@
         "everyone": "Todos",
         "everyoneDescription": "Todos os usuários autenticados",
         "household": "Casa",
-        "householdDescription": "Proprietário da receita e membros da sua casa",
-        "owner": "Somente proprietário",
-        "ownerDescription": "Apenas o proprietário da receita"
+        "householdDescription": "Proprietário da receita e membros da sua casa"
       },
       "note": "Compras e itens do calendário sempre seguem as regras da casa: membros da casa podem editar ou excluir os itens uns dos outros."
-    },
-    "ingredientPermissions": {
-      "title": "Permissões de ingredientes",
-      "description": "Quem pode renomear ingredientes, marcá-los como distintos ou remover suas traduções. Qualquer pessoa pode adicionar uma tradução.",
-      "editIngredients": "Editar ingredientes",
-      "editDescription": "Quem pode alterar um ingrediente que outra pessoa adicionou",
-      "levels": {
-        "everyone": "Todos",
-        "everyoneDescription": "Todos os usuários autenticados",
-        "household": "Casa",
-        "householdDescription": "Quem o adicionou e os membros da casa",
-        "owner": "Somente o dono",
-        "ownerDescription": "Somente quem o adicionou"
-      },
-      "note": "Ingredientes do catálogo integrado só podem ser editados por administradores do servidor."
     },
     "system": {
       "title": "Configurações do sistema",

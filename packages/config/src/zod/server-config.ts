@@ -20,7 +20,6 @@ export const ServerConfigKeys = {
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
   JOB_RETENTION: "job_retention",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
-  INGREDIENT_PERMISSION_POLICY: "ingredient_permission_policy",
   INGREDIENT_SEED_STATE: "ingredient_seed_state",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
@@ -858,15 +857,28 @@ export const DEFAULT_JOB_RETENTION: JobRetentionConfig = {
 // Recipe Permission Policy Schema
 // ============================================================================
 
-export const PermissionLevelSchema = z.enum(["everyone", "household", "owner"]);
+/** Who outside a recipe's household may act on it: Everyone, or the Household alone (ADR-0041). */
+export const PermissionLevelSchema = z.enum(["everyone", "household"]);
 
 export type PermissionLevel = z.infer<typeof PermissionLevelSchema>;
 
-export const RecipePermissionPolicySchema = z.object({
-  view: PermissionLevelSchema.default("everyone"),
-  edit: PermissionLevelSchema.default("household"),
-  delete: PermissionLevelSchema.default("household"),
-});
+/** Whether `level` reaches further than `than`. */
+export function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boolean {
+  return level === "everyone" && than === "household";
+}
+
+/** View, edit and delete; nobody may edit or delete what they cannot view. */
+export const RecipePermissionPolicySchema = z
+  .object({
+    view: PermissionLevelSchema.default("everyone"),
+    edit: PermissionLevelSchema.default("household"),
+    delete: PermissionLevelSchema.default("household"),
+  })
+  .refine(
+    (policy) =>
+      !isWiderLevel(policy.edit, policy.view) && !isWiderLevel(policy.delete, policy.view),
+    { message: "Edit and delete cannot reach further than view" }
+  );
 
 export type RecipePermissionPolicy = z.infer<typeof RecipePermissionPolicySchema>;
 
@@ -874,24 +886,6 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
   view: "everyone",
   edit: "household",
   delete: "household",
-};
-
-/**
- * Who may edit an Ingredient someone else minted: rename it, mark it
- * distinct, remove its aliases. One level, because Ingredients are always
- * visible — a hidden one would split the shared catalogue and leave recipes
- * pointing at food their readers cannot see. Adding an alias is open to
- * everyone; ownerless (seeded) rows are an administrator's alone, and an
- * administrator bypasses the policy, as for recipes.
- */
-export const IngredientPermissionPolicySchema = z.object({
-  edit: PermissionLevelSchema.default("household"),
-});
-
-export type IngredientPermissionPolicy = z.infer<typeof IngredientPermissionPolicySchema>;
-
-export const DEFAULT_INGREDIENT_PERMISSION_POLICY: IngredientPermissionPolicy = {
-  edit: "household",
 };
 
 /**
@@ -1001,8 +995,6 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return JobRetentionConfigSchema;
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return RecipePermissionPolicySchema;
-    case ServerConfigKeys.INGREDIENT_PERMISSION_POLICY:
-      return IngredientPermissionPolicySchema;
     case ServerConfigKeys.INGREDIENT_SEED_STATE:
       return IngredientSeedStateSchema;
     case ServerConfigKeys.PROMPTS:

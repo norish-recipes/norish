@@ -125,18 +125,4 @@ describe("the view policy scopes what counts as the same import", () => {
     expect(sameHousehold.status).toBe("duplicate");
     expect(otherHousehold.status).toBe("queued");
   });
-
-  it("owner: one per user", async () => {
-    policy.view = "owner";
-
-    await addImportJob(queue, importData());
-    const sameUser = await addImportJob(queue, importData({ recipeId: "recipe-2" }));
-    const otherUser = await addImportJob(
-      queue,
-      importData({ recipeId: "recipe-3", userId: "user-2" })
-    );
-
-    expect(sameUser.status).toBe("duplicate");
-    expect(otherUser.status).toBe("queued");
-  });
 });

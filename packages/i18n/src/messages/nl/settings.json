@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Rechten",
-      "description": "Wie mag zien en wijzigen wat anderen hebben gemaakt. Serverbeheerders hebben altijd volledige toegang.",
+      "description": "Wie buiten een huishouden de recepten en kookboeken ervan mag zien en wijzigen. Serverbeheerders volgen dezelfde regels.",
       "recipes": "Recepten",
-      "ingredients": "Ingrediënten",
       "viewRecipes": "Recepten bekijken",
       "viewDescription": "Wie recepten kan zien in het dashboard",
       "editRecipes": "Recepten bewerken",
@@ -684,26 +683,9 @@
         "everyone": "Iedereen",
         "everyoneDescription": "Alle geverifieerde gebruikers",
         "household": "Huishouden",
-        "householdDescription": "Recept eigenaar en hun huishoudleden",
-        "owner": "Alleen eigenaar",
-        "ownerDescription": "Alleen de eigenaar van het recept"
+        "householdDescription": "Recept eigenaar en hun huishoudleden"
       },
       "note": "Boodschappen en agenda-items volgen altijd de huishoudregels: huishoudleden kunnen elkaars items bewerken of verwijderen."
-    },
-    "ingredientPermissions": {
-      "title": "Ingrediëntrechten",
-      "description": "Wie ingrediënten mag hernoemen, als apart mag markeren of hun vertalingen mag verwijderen. Iedereen mag een vertaling toevoegen.",
-      "editIngredients": "Ingrediënten bewerken",
-      "editDescription": "Wie een ingrediënt mag wijzigen dat iemand anders heeft toegevoegd",
-      "levels": {
-        "everyone": "Iedereen",
-        "everyoneDescription": "Alle ingelogde gebruikers",
-        "household": "Huishouden",
-        "householdDescription": "Wie het heeft toegevoegd en de leden van diens huishouden",
-        "owner": "Alleen eigenaar",
-        "ownerDescription": "Alleen wie het heeft toegevoegd"
-      },
-      "note": "Ingrediënten uit de ingebouwde catalogus kunnen alleen door serverbeheerders worden bewerkt."
     },
     "system": {
       "title": "Systeeminstellingen",

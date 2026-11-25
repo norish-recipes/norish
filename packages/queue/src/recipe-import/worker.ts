@@ -60,7 +60,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
-  const existingCheck = await recipeExistsByUrlForPolicy(url, userId, householdId, viewPolicy);
+  const existingCheck = await recipeExistsByUrlForPolicy(url, householdId, viewPolicy);
 
   await completeStep(job, { alreadyExists: existingCheck.exists });
 

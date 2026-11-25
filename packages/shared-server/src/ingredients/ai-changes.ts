@@ -61,7 +61,6 @@ import {
   splitCatalogueIngredient,
 } from "@norish/db/repositories/ingredient-relocation";
 import { getUserPreferences } from "@norish/db/repositories/users";
-import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { distinctFoods } from "@norish/shared/lib/line-foods";
 
 import type { CatalogueActor, CatalogueEdit } from "./catalogue";
@@ -441,11 +440,9 @@ function subjectOf(change: StoredAIChange) {
   }
 }
 
-/** Whether `actor` may act on a change, by the ingredient policy on its food. */
-async function mayActOn(actor: CatalogueActor, change: StoredAIChange): Promise<boolean> {
-  const { edit } = await getIngredientPermissionPolicy();
-
-  return mayEditOwnedRow(edit, actor, subjectOf(change).ownerId);
+/** Whether `actor` may act on a change: whether they may edit its food. */
+function mayActOn(actor: CatalogueActor, change: StoredAIChange): boolean {
+  return mayEditOwnedRow(actor, subjectOf(change).ownerId);
 }
 
 /**
@@ -453,10 +450,9 @@ async function mayActOn(actor: CatalogueActor, change: StoredAIChange): Promise<
  * settled before they cleared it is left out.
  */
 export async function listAIChangesFor(actor: CatalogueActor): Promise<AIChangeItem[]> {
-  const [{ edit }, changes] = await Promise.all([
-    getIngredientPermissionPolicy(),
-    getUserPreferences(actor.userId).then((prefs) => listAIChanges(prefs.aiChangesClearedAt)),
-  ]);
+  const changes = await getUserPreferences(actor.userId).then((prefs) =>
+    listAIChanges(prefs.aiChangesClearedAt)
+  );
   const names = await findLocaleNames(
     changes.flatMap((change) =>
       [change.ingredient?.id, change.target?.id, change.dropped?.id].filter(
@@ -483,7 +479,7 @@ export async function listAIChangesFor(actor: CatalogueActor): Promise<AIChangeI
       target: change.target ? named(change.target) : null,
       dropped: change.dropped ? named(change.dropped) : null,
       from,
-      canAct: mayEditOwnedRow(edit, actor, ownerId),
+      canAct: mayEditOwnedRow(actor, ownerId),
     };
   });
 }
@@ -494,7 +490,7 @@ async function lockChangeFor(tx: DbTransaction, actor: CatalogueActor, changeId:
   const change = await lockAIChange(tx, changeId);
 
   if (!change) throw new CatalogueEditError("not-found");
-  if (!(await mayActOn(actor, change))) throw new CatalogueEditError("forbidden");
+  if (!mayActOn(actor, change)) throw new CatalogueEditError("forbidden");
 
   return change;
 }

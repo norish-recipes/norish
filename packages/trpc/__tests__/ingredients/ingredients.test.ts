@@ -1,12 +1,11 @@
 // @vitest-environment node
 /**
- * The Ingredients page's procedures under the ingredient permission policy.
+ * The Ingredients page's procedures: a member edits their household's Ingredients, an admin the seeded ones.
  * The catalogue repository and the policy are mocked; what is pinned here is
  * who may do what to whose Ingredient, and that a refused edit writes nothing.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { PermissionLevel } from "@norish/config/zod/server-config";
 import { CatalogueEditError } from "@norish/shared-server/ingredients/catalogue";
 
 import { ingredientsRouter } from "../../src/routers/ingredients";
@@ -71,7 +70,6 @@ const iconFiles = vi.hoisted(() => ({
   claimOwnIcon: vi.fn(async () => true),
 }));
 const policy = vi.hoisted(() => ({
-  getIngredientPermissionPolicy: vi.fn(),
   canDrawImages: vi.fn(async () => true),
   getUnits: vi.fn(async () => ({})),
 }));
@@ -135,10 +133,6 @@ function callerFor(options: { admin?: boolean } = {}) {
   return ingredientsRouter.createCaller(createMockCallerContext(ctx));
 }
 
-function withPolicy(edit: PermissionLevel) {
-  policy.getIngredientPermissionPolicy.mockResolvedValue({ edit });
-}
-
 function ownedBy(ownerId: string | null) {
   catalogue.findCatalogueIngredientOwner.mockResolvedValue({ ownerId });
   catalogue.findCatalogueAliasOwner.mockResolvedValue({
@@ -151,7 +145,6 @@ function ownedBy(ownerId: string | null) {
 
 beforeEach(() => {
   ingredientsRealtime.reset();
-  withPolicy("household");
   relocation.mergeCatalogueIngredients.mockResolvedValue(true);
   relocation.countAliasesOf.mockResolvedValue(2);
   relocation.findIngredientAncestors.mockResolvedValue(new Map());
@@ -162,41 +155,30 @@ beforeEach(() => {
 });
 
 describe("the edit policy", () => {
-  // [policy, owner, may the member edit?]
-  const matrix: Array<[PermissionLevel, string, boolean]> = [
-    ["everyone", ME, true],
-    ["everyone", HOUSEMATE, true],
-    ["everyone", STRANGER, true],
-    ["household", ME, true],
-    ["household", HOUSEMATE, true],
-    ["household", STRANGER, false],
-    ["owner", ME, true],
-    ["owner", HOUSEMATE, false],
-    ["owner", STRANGER, false],
+  // [owner, may the member edit?]
+  const matrix: Array<[string, boolean]> = [
+    [ME, true],
+    [HOUSEMATE, true],
+    [STRANGER, false],
   ];
 
-  it.each(matrix)(
-    "under %s, renaming an Ingredient owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
-      ownedBy(owner);
+  it.each(matrix)("renaming an Ingredient owned by %s is allowed: %s", async (owner, allowed) => {
+    ownedBy(owner);
 
-      const rename = callerFor().rename({ ingredientId: ONION, name: "Onion" });
+    const rename = callerFor().rename({ ingredientId: ONION, name: "Onion" });
 
-      if (allowed) {
-        await expect(rename).resolves.toEqual({ success: true });
-        expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(TX, ONION, "Onion");
-      } else {
-        await expect(rename).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(catalogue.renameCatalogueIngredient).not.toHaveBeenCalled();
-      }
+    if (allowed) {
+      await expect(rename).resolves.toEqual({ success: true });
+      expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(TX, ONION, "Onion");
+    } else {
+      await expect(rename).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(catalogue.renameCatalogueIngredient).not.toHaveBeenCalled();
     }
-  );
+  });
 
   it.each(matrix)(
-    "under %s, marking distinct an Ingredient owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
+    "marking distinct an Ingredient owned by %s is allowed: %s",
+    async (owner, allowed) => {
       ownedBy(owner);
 
       const mark = callerFor().markDistinct({ ingredientId: ONION });
@@ -213,49 +195,40 @@ describe("the edit policy", () => {
     }
   );
 
-  it.each(matrix)(
-    "under %s, deleting an Ingredient owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
-      ownedBy(owner);
+  it.each(matrix)("deleting an Ingredient owned by %s is allowed: %s", async (owner, allowed) => {
+    ownedBy(owner);
 
-      const remove = callerFor().remove({ ingredientId: ONION });
+    const remove = callerFor().remove({ ingredientId: ONION });
 
-      if (allowed) {
-        await expect(remove).resolves.toEqual({ success: true });
-        expect(catalogue.deleteCatalogueIngredient).toHaveBeenCalledWith(TX, ONION);
-        expect(ingredientsRealtime.published).toEqual([
-          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
-        ]);
-      } else {
-        await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(catalogue.deleteCatalogueIngredient).not.toHaveBeenCalled();
-      }
+    if (allowed) {
+      await expect(remove).resolves.toEqual({ success: true });
+      expect(catalogue.deleteCatalogueIngredient).toHaveBeenCalledWith(TX, ONION);
+      expect(ingredientsRealtime.published).toEqual([
+        expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+      ]);
+    } else {
+      await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(catalogue.deleteCatalogueIngredient).not.toHaveBeenCalled();
     }
-  );
+  });
 
-  it.each(matrix)(
-    "under %s, removing an alias added by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
-      ownedBy(owner);
+  it.each(matrix)("removing an alias added by %s is allowed: %s", async (owner, allowed) => {
+    ownedBy(owner);
 
-      const remove = callerFor().removeAlias({ aliasId: ALIAS });
+    const remove = callerFor().removeAlias({ aliasId: ALIAS });
 
-      if (allowed) {
-        await expect(remove).resolves.toEqual({ success: true });
-        expect(ingredientsRealtime.published).toEqual([
-          expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
-        ]);
-      } else {
-        await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(catalogue.deleteCatalogueAlias).not.toHaveBeenCalled();
-      }
+    if (allowed) {
+      await expect(remove).resolves.toEqual({ success: true });
+      expect(ingredientsRealtime.published).toEqual([
+        expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
+      ]);
+    } else {
+      await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(catalogue.deleteCatalogueAlias).not.toHaveBeenCalled();
     }
-  );
+  });
 
   it("puts a draft's spelling marked as not a food on the junk pile, and a plain removal nowhere", async () => {
-    withPolicy("everyone");
     ownedBy(ME);
     relocation.countAliasesOf.mockResolvedValue(3);
 
@@ -269,8 +242,7 @@ describe("the edit policy", () => {
     expect(junkPile.addToJunkPile).not.toHaveBeenCalled();
   });
 
-  it("leaves a seeded, ownerless Ingredient to administrators, whatever the policy", async () => {
-    withPolicy("everyone");
+  it("leaves a seeded, ownerless Ingredient to administrators, ", async () => {
     ownedBy(null);
 
     await expect(callerFor().rename({ ingredientId: ONION, name: "Onion" })).rejects.toMatchObject({
@@ -284,22 +256,20 @@ describe("the edit policy", () => {
     ).resolves.toEqual({ success: true });
   });
 
-  it("lets an administrator past the policy", async () => {
-    withPolicy("owner");
+  it("gives an administrator no way past another household's Ingredient", async () => {
     ownedBy(STRANGER);
 
-    await expect(callerFor({ admin: true }).markDistinct({ ingredientId: ONION })).resolves.toEqual(
-      { success: true }
-    );
-    await expect(callerFor({ admin: true }).removeAlias({ aliasId: ALIAS })).resolves.toEqual({
-      success: true,
+    await expect(
+      callerFor({ admin: true }).markDistinct({ ingredientId: ONION })
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(callerFor({ admin: true }).removeAlias({ aliasId: ALIAS })).rejects.toMatchObject({
+      code: "FORBIDDEN",
     });
   });
 
   it.each(matrix)(
-    "under %s, setting the parent of an Ingredient owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
+    "setting the parent of an Ingredient owned by %s is allowed: %s",
+    async (owner, allowed) => {
       ownedBy(owner);
 
       const set = callerFor().setParent({ ingredientId: ONION, parentId: UIEN });
@@ -318,23 +288,19 @@ describe("the edit policy", () => {
     }
   );
 
-  it.each(matrix)(
-    "under %s, moving an alias added by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
-      ownedBy(owner);
+  it.each(matrix)("moving an alias added by %s is allowed: %s", async (owner, allowed) => {
+    ownedBy(owner);
 
-      const move = callerFor().moveAlias({ aliasId: ALIAS, targetId: UIEN });
+    const move = callerFor().moveAlias({ aliasId: ALIAS, targetId: UIEN });
 
-      if (allowed) {
-        await expect(move).resolves.toEqual({ success: true });
-        expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(TX, ALIAS, UIEN);
-      } else {
-        await expect(move).rejects.toMatchObject({ code: "FORBIDDEN" });
-        expect(relocation.moveCatalogueAlias).not.toHaveBeenCalled();
-      }
+    if (allowed) {
+      await expect(move).resolves.toEqual({ success: true });
+      expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(TX, ALIAS, UIEN);
+    } else {
+      await expect(move).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(relocation.moveCatalogueAlias).not.toHaveBeenCalled();
     }
-  );
+  });
 
   it("moves an alias out to a new Ingredient the member owns, named for it", async () => {
     ownedBy(ME);
@@ -354,7 +320,6 @@ describe("the edit policy", () => {
   ])(
     "refuses a merge when the member may not edit %s",
     async (_which, sourceOwner, targetOwner) => {
-      withPolicy("household");
       catalogue.findCatalogueIngredientOwner.mockImplementation(
         async (_tx: unknown, id: string) => ({
           ownerId: id === UIEN ? sourceOwner : targetOwner,
@@ -369,7 +334,6 @@ describe("the edit policy", () => {
   );
 
   it("merges where the member may edit both, and tells every client", async () => {
-    withPolicy("household");
     catalogue.findCatalogueIngredientOwner.mockImplementation(async (_tx: unknown, id: string) => ({
       ownerId: id === UIEN ? HOUSEMATE : ME,
     }));
@@ -384,7 +348,6 @@ describe("the edit policy", () => {
   });
 
   it("leaves a merge of seeded Ingredients to administrators", async () => {
-    withPolicy("everyone");
     ownedBy(null);
 
     await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
@@ -396,7 +359,6 @@ describe("the edit policy", () => {
   });
 
   it("lets anyone add an alias, to a seeded Ingredient too", async () => {
-    withPolicy("owner");
     ownedBy(null);
     catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "ajuin", ownerId: ME });
 
@@ -472,7 +434,6 @@ describe("AI Changes", () => {
 
 describe("the tree of kinds", () => {
   beforeEach(() => {
-    withPolicy("household");
     catalogue.listCatalogueIngredients.mockResolvedValue([]);
   });
 
@@ -635,7 +596,6 @@ describe("the list", () => {
   });
 
   it("says, row by row, what the viewer may do", async () => {
-    withPolicy("household");
     catalogue.listCatalogueIngredients.mockResolvedValue([
       {
         id: ONION,
@@ -696,7 +656,6 @@ describe("the list", () => {
   });
 
   it("lists every spelling of one Ingredient on request", async () => {
-    withPolicy("household");
     catalogue.listCatalogueAliasesOf.mockResolvedValue([
       { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
       { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
@@ -748,21 +707,18 @@ describe("Ingredient Icons", () => {
     });
   });
 
-  // [policy, owner, may the member set the icon?]
-  const matrix: Array<[PermissionLevel, string | null, boolean]> = [
-    ["everyone", STRANGER, true],
-    ["household", HOUSEMATE, true],
-    ["household", STRANGER, false],
-    ["owner", ME, true],
-    ["owner", HOUSEMATE, false],
-    // A seeded food is an administrator's, whatever the policy.
-    ["everyone", null, false],
+  // [owner, may the member set the icon?]
+  const matrix: Array<[string | null, boolean]> = [
+    [ME, true],
+    [HOUSEMATE, true],
+    [STRANGER, false],
+    // A seeded food is an administrator's.
+    [null, false],
   ];
 
   it.each(matrix)(
-    "under %s, uploading an icon for a food owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
+    "uploading an icon for a food owned by %s is allowed: %s",
+    async (owner, allowed) => {
       ownedBy(owner);
 
       const upload = callerFor().uploadIcon(picture());
@@ -778,9 +734,8 @@ describe("Ingredient Icons", () => {
   );
 
   it.each(matrix)(
-    "under %s, saving a draft icon for a food owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
+    "saving a draft icon for a food owned by %s is allowed: %s",
+    async (owner, allowed) => {
       ownedBy(owner);
 
       const save = callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [], icon: FILE });
@@ -869,9 +824,8 @@ describe("Ingredient Icons", () => {
   });
 
   it.each(matrix)(
-    "under %s, generating an icon for a food owned by %s is allowed: %s",
-    async (level, owner, allowed) => {
-      withPolicy(level);
+    "generating an icon for a food owned by %s is allowed: %s",
+    async (owner, allowed) => {
       ownedBy(owner);
       iconsRepo.findIconLineage.mockResolvedValue(
         new Map([[ONION, { id: ONION, name: "onion", parentId: null, offId: null, icon: null }]])

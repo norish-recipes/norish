@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Uprawnienia",
-      "description": "Kto może widzieć i zmieniać to, co stworzyli inni. Administratorzy serwera zawsze mają pełny dostęp.",
+      "description": "Kto spoza gospodarstwa domowego może widzieć i zmieniać jego przepisy i książki kucharskie. Administratorów serwera obowiązują te same zasady.",
       "recipes": "Przepisy",
-      "ingredients": "Składniki",
       "viewRecipes": "Przeglądanie przepisów",
       "viewDescription": "Kto może widzieć przepisy na pulpicie",
       "editRecipes": "Edycja przepisów",
@@ -684,26 +683,9 @@
         "everyone": "Wszyscy",
         "everyoneDescription": "Wszyscy uwierzytelnieni użytkownicy",
         "household": "Gospodarstwo domowe",
-        "householdDescription": "Właściciel przepisu i członkowie jego gospodarstwa domowego",
-        "owner": "Tylko właściciel",
-        "ownerDescription": "Tylko właściciel przepisu"
+        "householdDescription": "Właściciel przepisu i członkowie jego gospodarstwa domowego"
       },
       "note": "Elementy zakupów i kalendarza zawsze podlegają zasadom gospodarstwa domowego: jego członkowie mogą edytować lub usuwać elementy pozostałych."
-    },
-    "ingredientPermissions": {
-      "title": "Uprawnienia składników",
-      "description": "Kto może zmieniać nazwy składników, oznaczać je jako odrębne lub usuwać ich tłumaczenia. Każdy może dodać tłumaczenie.",
-      "editIngredients": "Edytuj składniki",
-      "editDescription": "Kto może zmienić składnik dodany przez kogoś innego",
-      "levels": {
-        "everyone": "Wszyscy",
-        "everyoneDescription": "Wszyscy zalogowani użytkownicy",
-        "household": "Gospodarstwo domowe",
-        "householdDescription": "Osoba, która go dodała, i członkowie jej gospodarstwa",
-        "owner": "Tylko właściciel",
-        "ownerDescription": "Tylko osoba, która go dodała"
-      },
-      "note": "Składniki z wbudowanego katalogu mogą edytować tylko administratorzy serwera."
     },
     "system": {
       "title": "Ustawienia systemowe",

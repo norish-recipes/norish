@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Permissions",
-      "description": "Qui peut voir et modifier ce que d'autres ont créé. Les administrateurs du serveur ont toujours un accès complet.",
+      "description": "Qui, hors d'un foyer, peut voir et modifier ses recettes et ses livres de cuisine. Les administrateurs du serveur suivent les mêmes règles.",
       "recipes": "Recettes",
-      "ingredients": "Ingrédients",
       "viewRecipes": "Voir les recettes",
       "viewDescription": "Qui peut consulter les recettes",
       "editRecipes": "Modifier les recettes",
@@ -684,26 +683,9 @@
         "everyone": "Tout le monde",
         "everyoneDescription": "Tous les utilisateurs authentifiés",
         "household": "Foyer",
-        "householdDescription": "Le propriétaire et les membres de son foyer",
-        "owner": "Propriétaire uniquement",
-        "ownerDescription": "Uniquement le propriétaire de la recette"
+        "householdDescription": "Le propriétaire et les membres de son foyer"
       },
       "note": "Les courses et les éléments du calendrier suivent toujours les règles du foyer : les membres du foyer peuvent modifier ou supprimer les éléments des autres."
-    },
-    "ingredientPermissions": {
-      "title": "Permissions des ingrédients",
-      "description": "Qui peut renommer les ingrédients, les marquer comme distincts ou supprimer leurs traductions. Tout le monde peut ajouter une traduction.",
-      "editIngredients": "Modifier les ingrédients",
-      "editDescription": "Qui peut modifier un ingrédient ajouté par quelqu'un d'autre",
-      "levels": {
-        "everyone": "Tout le monde",
-        "everyoneDescription": "Tous les utilisateurs connectés",
-        "household": "Foyer",
-        "householdDescription": "La personne qui l'a ajouté et les membres de son foyer",
-        "owner": "Propriétaire uniquement",
-        "ownerDescription": "Uniquement la personne qui l'a ajouté"
-      },
-      "note": "Les ingrédients du catalogue intégré ne peuvent être modifiés que par les administrateurs du serveur."
     },
     "system": {
       "title": "Paramètres système",

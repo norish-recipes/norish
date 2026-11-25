@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Berechtigungen",
-      "description": "Wer sehen und ändern darf, was andere angelegt haben. Server-Admins haben immer vollen Zugriff.",
+      "description": "Wer außerhalb eines Haushalts dessen Rezepte und Kochbücher sehen und ändern darf. Server-Admins gelten dieselben Regeln.",
       "recipes": "Rezepte",
-      "ingredients": "Zutaten",
       "viewRecipes": "Rezepte ansehen",
       "viewDescription": "Wer kann Rezepte im Dashboard sehen",
       "editRecipes": "Rezepte bearbeiten",
@@ -684,26 +683,9 @@
         "everyone": "Alle",
         "everyoneDescription": "Alle authentifizierten Benutzer",
         "household": "Haushalt",
-        "householdDescription": "Rezept-Eigentümer und ihre Haushaltsmitglieder",
-        "owner": "Nur Eigentümer",
-        "ownerDescription": "Nur der Rezept-Eigentümer"
+        "householdDescription": "Rezept-Eigentümer und ihre Haushaltsmitglieder"
       },
       "note": "Einkaufs- und Kalendereinträge folgen immer den Haushaltsregeln: Haushaltsmitglieder können die Einträge der anderen bearbeiten oder löschen."
-    },
-    "ingredientPermissions": {
-      "title": "Zutatenberechtigungen",
-      "description": "Wer Zutaten umbenennen, als eigenständig markieren oder ihre Übersetzungen entfernen darf. Jeder darf eine Übersetzung hinzufügen.",
-      "editIngredients": "Zutaten bearbeiten",
-      "editDescription": "Wer eine Zutat ändern darf, die jemand anderes hinzugefügt hat",
-      "levels": {
-        "everyone": "Alle",
-        "everyoneDescription": "Alle angemeldeten Benutzer",
-        "household": "Haushalt",
-        "householdDescription": "Wer sie hinzugefügt hat und die Mitglieder des Haushalts",
-        "owner": "Nur Eigentümer",
-        "ownerDescription": "Nur wer sie hinzugefügt hat"
-      },
-      "note": "Zutaten aus dem eingebauten Katalog können nur von Serveradministratoren bearbeitet werden."
     },
     "system": {
       "title": "Systemeinstellungen",

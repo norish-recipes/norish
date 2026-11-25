@@ -671,9 +671,8 @@
     },
     "permissions": {
       "title": "Oikeudet",
-      "description": "Kuka saa nähdä ja muuttaa muiden tekemää. Palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "description": "Kuka kotitalouden ulkopuolelta saa nähdä ja muuttaa sen reseptejä ja keittokirjoja. Palvelimen ylläpitäjiä koskevat samat säännöt.",
       "recipes": "Reseptit",
-      "ingredients": "Ruoka-aineet",
       "viewRecipes": "Reseptien katselu",
       "viewDescription": "Kuka näkee reseptit etusivulla",
       "editRecipes": "Reseptien muokkaus",
@@ -684,26 +683,9 @@
         "everyone": "Kaikki",
         "everyoneDescription": "Kaikki kirjautuneet käyttäjät",
         "household": "Kotitalous",
-        "householdDescription": "Reseptin omistaja ja hänen kotitaloutensa jäsenet",
-        "owner": "Vain omistaja",
-        "ownerDescription": "Vain reseptin omistaja"
+        "householdDescription": "Reseptin omistaja ja hänen kotitaloutensa jäsenet"
       },
       "note": "Ostokset ja kalenterimerkinnät noudattavat aina kotitalouden sääntöjä: kotitalouden jäsenet voivat muokata tai poistaa toistensa merkintöjä."
-    },
-    "ingredientPermissions": {
-      "title": "Ainesosien oikeudet",
-      "description": "Kuka saa nimetä ainesosia uudelleen, merkitä ne erillisiksi tai poistaa niiden käännöksiä. Kuka tahansa voi lisätä käännöksen.",
-      "editIngredients": "Muokkaa ainesosia",
-      "editDescription": "Kuka voi muuttaa jonkun toisen lisäämää ainesosaa",
-      "levels": {
-        "everyone": "Kaikki",
-        "everyoneDescription": "Kaikki kirjautuneet käyttäjät",
-        "household": "Kotitalous",
-        "householdDescription": "Lisääjä ja hänen kotitaloutensa jäsenet",
-        "owner": "Vain omistaja",
-        "ownerDescription": "Vain lisääjä"
-      },
-      "note": "Sisäänrakennetun luettelon ainesosia voivat muokata vain palvelimen ylläpitäjät."
     },
     "system": {
       "title": "Järjestelmäasetukset",

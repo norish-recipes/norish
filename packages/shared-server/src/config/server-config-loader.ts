@@ -20,7 +20,6 @@ import type {
   DecisionUse,
   I18nLocaleConfig,
   ImageGenerationConfig,
-  IngredientPermissionPolicy,
   IngredientWordsMap,
   PageRenderersConfig,
   PromptsConfig,
@@ -42,7 +41,6 @@ import {
   DecisionConfigSchema,
   DEFAULT_AUTOMATIC_INGREDIENTS,
   DEFAULT_CUISINE_STRATEGY,
-  DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   DEFAULT_TAG_STRATEGY,
   IngredientWordsConfigSchema,
@@ -342,15 +340,6 @@ export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolic
   const value = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
 
   return value ?? DEFAULT_RECIPE_PERMISSION_POLICY;
-}
-
-/** Who may edit an Ingredient someone else minted (ADR-0037). */
-export async function getIngredientPermissionPolicy(): Promise<IngredientPermissionPolicy> {
-  const value = await getConfig<IngredientPermissionPolicy>(
-    ServerConfigKeys.INGREDIENT_PERMISSION_POLICY
-  );
-
-  return value ?? DEFAULT_INGREDIENT_PERMISSION_POLICY;
 }
 
 /**

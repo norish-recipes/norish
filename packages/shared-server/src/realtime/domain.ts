@@ -62,7 +62,7 @@ export interface RealtimeDomain<C extends RealtimeCatalogue> {
     target: TargetFor<ScopeOf<C, E>>
   ): Promise<void>;
   channel<E extends EventName<C>>(event: E, target: TargetFor<ScopeOf<C, E>>): string;
-  /** The channels a subscriber with this identity listens on; `policy` → household, broadcast, user. */
+  /** The channels a subscriber with this identity listens on; `policy` → household and broadcast. */
   channelsFor<E extends ClientEventName<C>>(
     event: E,
     identity: { userId: string; householdId: string }
@@ -93,7 +93,7 @@ function resolveChannel(
       return { scope, channel: buildChannel({ namespace, scope, id: userId, event }) };
     }
     case "policy": {
-      const { viewPolicy, householdId, userId } = target as PolicyTarget;
+      const { viewPolicy, householdId } = target as PolicyTarget;
 
       switch (viewPolicy) {
         case "everyone":
@@ -105,11 +105,6 @@ function resolveChannel(
           return {
             scope: "household",
             channel: buildChannel({ namespace, scope: "household", id: householdId, event }),
-          };
-        case "owner":
-          return {
-            scope: "user",
-            channel: buildChannel({ namespace, scope: "user", id: userId, event }),
           };
       }
       throw new Error(`Unknown view policy "${String(viewPolicy)}" for ${namespace}:${event}`);
@@ -151,7 +146,6 @@ export function defineRealtimeDomain<C extends RealtimeCatalogue>(catalogue: C):
         return [
           buildChannel({ namespace, scope: "household", id: identity.householdId, event }),
           buildChannel({ namespace, scope: "broadcast", event }),
-          buildChannel({ namespace, scope: "user", id: identity.userId, event }),
         ];
       case "internal":
         throw new Error(`Internal event "${namespace}:${event}" is not subscribable`);

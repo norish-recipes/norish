@@ -245,10 +245,6 @@ export function usePermissionPolicyMutations() {
       trpc.admin.updateRecipePermissionPolicy.mutationOptions(),
       "admin-permissions:recipes"
     ),
-    saveIngredientPolicy: useConfigWrite(
-      trpc.admin.updateIngredientPermissionPolicy.mutationOptions(),
-      "admin-permissions:ingredients"
-    ),
   };
 }
 
