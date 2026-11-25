@@ -15,22 +15,25 @@ import { useTRPC } from "../trpc";
 import { SECRET_ANSWER } from "../trpc/one-time-secret";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
-type RecipeShareMutationsResult = {
+/** What a share-links table does to a link; each resolves whether its request went through. */
+export type ShareLinkMutations = {
+  revokeShare: (id: string, version: number) => Promise<boolean>;
+  reactivateShare: (id: string, version: number) => Promise<boolean>;
+  deleteShare: (id: string, version: number) => Promise<boolean>;
+  isRevoking: boolean;
+  isReactivating: boolean;
+  isDeleting: boolean;
+};
+
+type RecipeShareMutationsResult = ShareLinkMutations & {
   createShare: (
     expiresIn?: CreateRecipeShareInputDto["expiresIn"]
   ) => Promise<RecipeShareCreatedDto | null>;
   /** Drops the new link from the mutation's result, once its panel closed. */
   forgetCreatedShare: () => void;
   updateShare: (input: UpdateRecipeShareInputDto) => void;
-  /** Each resolves whether its request went through; a failure is shown. */
-  revokeShare: (id: string, version: number) => Promise<boolean>;
-  reactivateShare: (id: string, version: number) => Promise<boolean>;
-  deleteShare: (id: string, version: number) => Promise<boolean>;
   isCreating: boolean;
   isUpdating: boolean;
-  isRevoking: boolean;
-  isReactivating: boolean;
-  isDeleting: boolean;
 };
 
 export function useRecipeShareMutations(recipeId: string | null): RecipeShareMutationsResult {
@@ -40,6 +43,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
+    invalidateAdminRecipeShares,
     invalidateRecipeShare,
     removeRecipeShare,
   } = useRecipeShareCacheHelpers();
@@ -50,12 +54,14 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     }
 
     invalidateMyRecipeShares();
+    invalidateAdminRecipeShares();
     invalidateRecipeShare(shareId);
   };
   // A failed action rereads the lists: a share whose recipe was deleted elsewhere answers NOT_FOUND.
   const failed = (context: string) => (error: unknown) => {
     invalidateRecipeShares(recipeId);
     invalidateMyRecipeShares();
+    invalidateAdminRecipeShares();
     showError(error, context);
   };
 
@@ -110,6 +116,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
       onSuccess: ({ stale }, variables) => {
         invalidateRecipeShares(recipeId);
         invalidateMyRecipeShares();
+        invalidateAdminRecipeShares();
         if (stale) refuseStale("recipe-share-panel:delete");
         else removeRecipeShare(variables.id);
       },

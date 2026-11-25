@@ -20,6 +20,7 @@ export function useRecipeShareSubscription(
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
+    invalidateAdminRecipeShares,
     invalidateRecipeShare,
     removeRecipeShare,
   } = useRecipeShareCacheHelpers();
@@ -29,6 +30,7 @@ export function useRecipeShareSubscription(
   const handleEvent = (payload: RecipeShareLifecycleEventDto) => {
     // Always invalidate inventory queries so settings pages stay fresh.
     invalidateMyRecipeShares();
+    invalidateAdminRecipeShares();
 
     if (!recipeId || payload.recipeId !== recipeId) {
       return;
@@ -51,6 +53,7 @@ export function useRecipeShareSubscription(
     onEvent: (payload) => handleEvent(payload.share),
     liveQueryKeys: [
       trpc.recipes.shareListMine.queryKey(),
+      trpc.recipes.shareListAdmin.queryKey(),
       trpc.recipes.shareGet.pathKey(),
       ...(recipeId ? [trpc.recipes.shareList.queryKey({ recipeId })] : []),
     ],

@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
+  AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
   RecipeShareSummaryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
@@ -31,6 +32,7 @@ type ShareInventoryQueryResult<TShare> = ReadStatus & {
 };
 
 type MyRecipeSharesQueryResult = ShareInventoryQueryResult<RecipeShareInventoryDto>;
+type AdminRecipeSharesQueryResult = ShareInventoryQueryResult<AdminRecipeShareInventoryDto>;
 
 export function useRecipeSharesQuery(recipeId: string | null): RecipeSharesQueryResult {
   const trpc = useTRPC();
@@ -79,5 +81,19 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
     ...readStatus(query),
     queryKey,
     invalidate,
+  };
+}
+
+export function useAdminRecipeSharesQuery(): AdminRecipeSharesQueryResult {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryKey = trpc.recipes.shareListAdmin.queryKey();
+  const query = useQuery(trpc.recipes.shareListAdmin.queryOptions());
+
+  return {
+    shares: query.data ?? [],
+    ...readStatus(query),
+    queryKey,
+    invalidate: () => void queryClient.invalidateQueries({ queryKey }),
   };
 }

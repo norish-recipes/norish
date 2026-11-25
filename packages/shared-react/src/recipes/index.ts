@@ -47,9 +47,15 @@ export {
 } from "./use-recipes-subscription";
 export type { ShareLinkAction } from "./share-link-rules";
 export { shareLinkActions } from "./share-link-rules";
+export { useAdminRecipeShareMutations } from "./use-admin-recipe-share-mutations";
+export type { ShareLinkMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareSubscription } from "./use-recipe-share-subscription";
-export { useMyRecipeSharesQuery, useRecipeSharesQuery } from "./use-recipe-shares-query";
+export {
+  useAdminRecipeSharesQuery,
+  useMyRecipeSharesQuery,
+  useRecipeSharesQuery,
+} from "./use-recipe-shares-query";
 export { useShareLink } from "./use-share-link";
 export { useSharePublicConfigQuery } from "./use-share-public-config-query";
 export { useSharedRecipeQuery } from "./use-shared-recipe-query";
