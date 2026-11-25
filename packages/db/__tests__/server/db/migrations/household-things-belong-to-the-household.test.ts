@@ -6,7 +6,8 @@
  * earlier releases left it: two members of one household who both hold stores,
  * groceries, recurring groceries, plan entries, Pantry rows and corrections for
  * the same food and store preferences, one of them carrying rows that still
- * point into the household they came from. Applying it again changes nothing.
+ * point into the household they came from, and Stores with aisles, products
+ * and links. Applying it again changes nothing.
  */
 
 import { randomUUID } from "node:crypto";
@@ -43,6 +44,23 @@ describe("household things belong to the household", () => {
   const plan = { ann: id(), bob: id(), cat: id() };
   const correction = { annMilk: id(), bobMilk: id(), catMilk: id() };
   const preference = { annMilk: id(), bobMilk: id(), bobEggs: id(), catSalt: id() };
+  const aisle = { bob: id(), cat: id() };
+  const aisleLink = { bob: id(), cat: id() };
+  const product = { bob: id(), cat: id() };
+  const productLink = { bob: id(), cat: id() };
+
+  /** A Store's aisles, products and links as they stood: they follow their Store, untouched. */
+  const storeKept = (table: string) =>
+    rows(
+      table,
+      {
+        aisles: "id, store_id, name",
+        aisle_links: "id, store_id, ingredient_id, aisle_id",
+        store_products: "id, store_id, name",
+        store_product_links: "id, store_id, ingredient_id, store_product_id",
+      }[table]!
+    );
+  const STORE_TABLES = ["aisles", "aisle_links", "store_products", "store_product_links"];
 
   async function applyMigration(tag: string): Promise<void> {
     const sql = await readFile(resolve(MIGRATIONS_FOLDER, `${tag}.sql`), "utf8");
@@ -75,7 +93,7 @@ describe("household things belong to the household", () => {
       "ingredient_store_preferences",
     ];
 
-    return Promise.all(tables.map((table) => rows(table, "*")));
+    return Promise.all([...tables, ...STORE_TABLES].map((table) => rows(table, "*")));
   }
 
   beforeAll(async () => {
@@ -203,6 +221,27 @@ describe("household things belong to the household", () => {
         food.salt,
       ]
     );
+
+    for (const owner of ["bob", "cat"] as const) {
+      await q("INSERT INTO aisles (id, store_id, name) VALUES ($1, $2, 'Dairy')", [
+        aisle[owner],
+        store[owner],
+      ]);
+      await q(
+        "INSERT INTO aisle_links (id, store_id, ingredient_id, aisle_id) VALUES ($1, $2, $3, $4)",
+        [aisleLink[owner], store[owner], food.milk, aisle[owner]]
+      );
+      await q(
+        `INSERT INTO store_products (id, store_id, name, price, currency)
+         VALUES ($1, $2, 'Milk 1 L', 1.29, 'EUR')`,
+        [product[owner], store[owner]]
+      );
+      await q(
+        `INSERT INTO store_product_links (id, store_id, ingredient_id, store_product_id)
+         VALUES ($1, $2, $3, $4)`,
+        [productLink[owner], store[owner], food.milk, product[owner]]
+      );
+    }
 
     await applyMigration(MIGRATION_TAG);
   }, 180_000);
@@ -334,11 +373,44 @@ describe("household things belong to the household", () => {
     ).rejects.toThrow(/uq_ingredient_nutrition_corrections_household_ingredient/);
   });
 
+  /** Every Store's aisles, products and links, by table. */
+  const storeRows = () => Promise.all(STORE_TABLES.map(storeKept));
+  const asSeeded = () =>
+    [
+      (["bob", "cat"] as const).map((owner) => ({
+        id: aisle[owner],
+        store_id: store[owner],
+        name: "Dairy",
+      })),
+      (["bob", "cat"] as const).map((owner) => ({
+        id: aisleLink[owner],
+        store_id: store[owner],
+        ingredient_id: food.milk,
+        aisle_id: aisle[owner],
+      })),
+      (["bob", "cat"] as const).map((owner) => ({
+        id: product[owner],
+        store_id: store[owner],
+        name: "Milk 1 L",
+      })),
+      (["bob", "cat"] as const).map((owner) => ({
+        id: productLink[owner],
+        store_id: store[owner],
+        ingredient_id: food.milk,
+        store_product_id: product[owner],
+      })),
+    ].map(sorted);
+
+  it("keeps each Store's aisles, products and links with their ids and references", async () => {
+    expect(await storeRows()).toEqual(asSeeded());
+  });
+
   it("changes nothing when it runs again", async () => {
     const before = await snapshot();
 
     await applyMigration(MIGRATION_TAG);
 
     expect(await snapshot()).toEqual(before);
+    expect(await storeRows()).toEqual(asSeeded());
   });
 });
