@@ -72,6 +72,14 @@ describe("plannedItemChanges", () => {
     ).toBeNull();
   });
 
+  it("never writes text for a recipe out of view, which shows by its title alone", () => {
+    const outOfView = { ...recipe, recipeId: null };
+
+    expect(
+      plannedItemChanges(outOfView, { ...unchanged(outOfView), title: "A note now" })
+    ).toBeNull();
+  });
+
   it("never writes text for a recipe", () => {
     expect(plannedItemChanges(recipe, { ...unchanged(recipe), title: "x", slot: "Snack" })).toEqual(
       { slot: "Snack" }

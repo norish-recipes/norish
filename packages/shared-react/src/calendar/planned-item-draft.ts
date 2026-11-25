@@ -3,18 +3,16 @@ import { useRef, useState } from "react";
 import type { PlannedItemFromQuery, Slot } from "@norish/shared/contracts";
 import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 
-import { isRecipeItem } from "./todays-meals";
-
 /** What the planned-item sheet edits before it saves. */
 export type PlannedItemDraft = { title: string; date: string; slot: Slot };
 
 /** What Save writes: each touched field that differs from the live item. Null when none does, or
- * when a note's touched text is blank, which a note cannot be. */
+ * when a note's touched text is blank, which a note cannot be. A recipe entry has no text. */
 export function plannedItemChanges(
   item: PlannedItemFromQuery,
   touched: Partial<PlannedItemDraft>
 ): PlannedItemEdit | null {
-  const title = isRecipeItem(item) ? undefined : touched.title?.trim();
+  const title = item.itemType === "recipe" ? undefined : touched.title?.trim();
 
   if (title === "") return null;
 

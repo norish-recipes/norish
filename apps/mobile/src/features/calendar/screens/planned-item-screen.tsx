@@ -49,6 +49,8 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
   const { title, subtitle } = usePlannedItemText()(item);
   const { draft, changes, setTitle, saveAndClose, confirm, fields } = usePlannedItemSheet(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
+  // A recipe the household may not view (any more) shows by its title alone.
+  const isRecipe = item.itemType === "recipe";
 
   return (
     <Sheet
@@ -72,7 +74,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
           confirmRemove(item)
         ),
       ]}
-      title={recipeId ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" }) : title}
+      title={isRecipe ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" }) : title}
     >
       <SheetBody>
         {recipeId ? (
@@ -94,8 +96,13 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
               />
             </Card>
           </View>
-        ) : null}
-        {recipeId ? null : (
+        ) : isRecipe ? (
+          <View className="mb-3">
+            <Card>
+              <CardRow first label={title} testID="planned-item-recipe-title-only" />
+            </Card>
+          </View>
+        ) : (
           <TextField className="mb-3">
             <SheetInput
               accessibilityLabel={intl.formatMessage({ id: "calendar.editNote.noteLabel" })}
