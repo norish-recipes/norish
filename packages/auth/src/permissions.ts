@@ -46,11 +46,9 @@ export async function canAccessResource(
   }
 }
 
-/** Refuses a household row whose owner is not in the caller's household. */
-export async function assertHouseholdAccess(householdId: string, ownerId: string): Promise<void> {
-  if (!(await isHouseholdMember(householdId, ownerId))) {
-    throw new Error("FORBIDDEN");
-  }
+/** Refuses a household row that belongs to another household than the caller's. */
+export function assertHouseholdAccess(householdId: string, rowHouseholdId: string): void {
+  if (householdId !== rowHouseholdId) throw new Error("FORBIDDEN");
 }
 
 export async function assertAIEnabled(): Promise<void> {

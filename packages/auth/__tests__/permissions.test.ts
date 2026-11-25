@@ -69,12 +69,11 @@ describe("canAccessResource", () => {
 });
 
 describe("assertHouseholdAccess", () => {
-  it("lets a member reach their own and a housemate's rows", async () => {
-    await expect(assertHouseholdAccess("household1", "user1")).resolves.toBeUndefined();
-    await expect(assertHouseholdAccess("household1", "user2")).resolves.toBeUndefined();
+  it("lets the household reach a row that is its own", () => {
+    expect(() => assertHouseholdAccess("household1", "household1")).not.toThrow();
   });
 
-  it("refuses a row owned outside the household", async () => {
-    await expect(assertHouseholdAccess("household3", "user1")).rejects.toThrow("FORBIDDEN");
+  it("refuses a row of another household", () => {
+    expect(() => assertHouseholdAccess("household3", "household1")).toThrow("FORBIDDEN");
   });
 });
