@@ -6,8 +6,3 @@ export const uuidListSql = (ids: readonly string[]) =>
     ids.map((id) => sql`${id}::uuid`),
     sql`, `
   );
-
-/** The rows of a raw `db.execute` result. */
-export function rowsOf<T>(result: unknown): T[] {
-  return ((result as { rows?: T[] }).rows ?? []) as T[];
-}
