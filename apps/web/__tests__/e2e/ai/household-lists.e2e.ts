@@ -1,7 +1,8 @@
 /**
- * Tags are household lists (ADR-0043): household A's Tags are never offered to household B, even
- * when B may view every recipe; B sees them on A's recipe, and filtering by B's own Tag of the
- * same folded name finds A's recipe too. Under view Household, B finds only its own.
+ * Tags are household lists (ADR-0043): household A's Tags are never offered to household B, in
+ * the lists, the Filters dialog, Search's suggestions or Discover, even when B may view every
+ * recipe; B sees them on A's recipe, and filtering by B's own Tag of the same folded name (not
+ * merely the same lowercase) finds A's recipe too. Under view Household, B finds only its own.
  */
 import type { Page } from "@playwright/test";
 
@@ -21,8 +22,8 @@ for (const view of ["everyone", "household"] as const) {
     aiStack,
   }) => {
     const word = `List${Date.now().toString(36)}`;
-    const theirTag = `${word}soja`;
-    const ourTag = `${word.toUpperCase()}SOJA`;
+    const theirTag = `${word}-Café`;
+    const ourTag = `${word.toUpperCase()} CAFE`;
     const theirOnly = `${word}smoky`;
     const theirs = `${word} Tofu`;
     const ours = `${word} Stew`;
@@ -54,6 +55,22 @@ for (const view of ["everyone", "household"] as const) {
 
     expect(offered.tags.filter(ofThisRun)).toEqual([ourTag]);
     expect(listed.map((entry) => entry.name).filter(ofThisRun)).toEqual([ourTag]);
+
+    const suggested = await queryTrpc<{ tags: string[] }>(
+      aiStack.baseURL,
+      aiStack.ownerCookies,
+      "library.suggest",
+      { text: word }
+    );
+    const discovered = await callTrpc<{ tags: string[] }>(
+      aiStack.baseURL,
+      aiStack.ownerCookies,
+      "library.discover"
+    );
+
+    expect(suggested.tags).toEqual([ourTag]);
+    // Discover shows the twelve most used Tags, which this run's need not reach.
+    expect(discovered.tags.filter(ofThisRun).filter((tag) => tag !== ourTag)).toEqual([]);
 
     const context = await signedInContext(browser, aiStack.baseURL, OWNER, {
       viewport: { width: 1280, height: 1200 },
