@@ -22,6 +22,7 @@ export async function listCategoryNamesForHousehold(householdId: string): Promis
 
     return builtIn === -1 ? BUILT_IN_CATEGORIES.length : builtIn;
   };
+
   // Array sort is stable, so the household's own keep their name order.
   return (await listEntryNames("category", householdId)).sort((a, b) => rank(a) - rank(b));
 }
