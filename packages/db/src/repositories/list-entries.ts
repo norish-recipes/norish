@@ -4,7 +4,6 @@ import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
-  count,
   countDistinct,
   eq,
   inArray,
@@ -204,14 +203,17 @@ export async function listEntryNames(kind: ListKind, householdId: string): Promi
 export async function listEntries(kind: ListKind, householdId: string): Promise<ListEntry[]> {
   const { table, link, entity } = KINDS[kind];
 
-  // A link joins only through a recipe of the household, so `count` sees just those.
+  // The join qualifies the columns, so the count correlates on the outer entry.
+  const carriers = qb
+    .select({ n: sql<number>`count(*)::int` })
+    .from(link)
+    .innerJoin(recipes, eq(recipes.id, link.recipeId))
+    .where(and(eq(entity, table.id), eq(recipes.householdId, householdId)));
+
   return await db
-    .select({ ...rowColumns(table), recipeCount: count(recipes.id) })
+    .select({ ...rowColumns(table), recipeCount: sql<number>`${carriers}` })
     .from(table)
-    .leftJoin(link, eq(entity, table.id))
-    .leftJoin(recipes, and(eq(recipes.id, link.recipeId), eq(recipes.householdId, householdId)))
     .where(inScope(table.householdId, householdId, { offered: true }))
-    .groupBy(table.id)
     .orderBy(...byName(table));
 }
 

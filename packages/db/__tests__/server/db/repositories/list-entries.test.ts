@@ -281,6 +281,16 @@ describe("household lists", () => {
     });
   });
 
+  it("counts an instance entry over the household's own recipes only", async () => {
+    for (const recipe of [ann.recipe, bob.recipe]) {
+      await db.transaction((tx) => attachCategoriesToRecipeByInputTx(tx, recipe, ["Dinner"]));
+    }
+
+    const dinner = (await listEntries("category", ann.household)).find((e) => e.name === "Dinner");
+
+    expect(dinner).toMatchObject({ instance: true, recipeCount: 1 });
+  });
+
   it("merges onto an instance entry, and only the scope's own source", async () => {
     const mine = (await addEntry("category", ann.household, "Supper"))!.entry;
     const [dinner] = (await listEntries("category", ann.household)).filter(
