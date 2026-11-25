@@ -6,6 +6,7 @@ import {
   DocumentMagnifyingGlassIcon,
   GlobeAltIcon,
   KeyIcon,
+  LinkIcon,
   QueueListIcon,
   ShieldCheckIcon,
   SparklesIcon,
@@ -20,6 +21,7 @@ export default function AdminSkeleton() {
         { icon: Cog6ToothIcon, section: "admin.general", rows: 3 },
         { icon: UsersIcon, section: "admin.users", description: true, rows: 2 },
         { icon: ShieldCheckIcon, section: "admin.permissions", description: true, rows: 3 },
+        { icon: LinkIcon, section: "admin.shareLinks", description: true, rows: 1 },
         { icon: KeyIcon, section: "admin.authProviders", description: true, rows: 3 },
         {
           icon: DocumentMagnifyingGlassIcon,
