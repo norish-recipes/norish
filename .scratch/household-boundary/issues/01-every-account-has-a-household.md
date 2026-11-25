@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Migration:** every account without a household gets a household of one, named the way a new one is.
 - [x] **Sign-up** creates the household of one. This covers every Sign-in Method, including the first user who becomes server owner (`packages/auth/src/auth.ts`).
