@@ -1317,8 +1317,7 @@
                         "type": "array",
                         "items": {
                           "type": "string",
-                          "minLength": 1,
-                          "maxLength": 40
+                          "minLength": 1
                         }
                       },
                       "steps": {
@@ -2510,8 +2509,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "minLength": 1,
-                      "maxLength": 40
+                      "minLength": 1
                     }
                   },
                   "filterMode": {
@@ -3144,8 +3142,7 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "minLength": 1,
-                      "maxLength": 40
+                      "minLength": 1
                     }
                   },
                   "steps": {
