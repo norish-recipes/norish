@@ -12,7 +12,9 @@ import type {
 import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import { db } from "@norish/db/drizzle";
 import {
+  categories,
   cookbooks,
+  cuisines,
   groceries,
   households,
   householdUsers,
@@ -25,6 +27,7 @@ import {
   recipes,
   recurringGroceries,
   stores,
+  tags,
   users,
 } from "@norish/db/schema";
 import {
@@ -297,6 +300,9 @@ const HELD_BY_HOUSEHOLD: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
   [pantryIngredients, pantryIngredients.householdId],
   [plannedItems, plannedItems.householdId],
   [ingredientNutritionCorrections, ingredientNutritionCorrections.householdId],
+  [tags, tags.householdId],
+  [categories, categories.householdId],
+  [cuisines, cuisines.householdId],
 ];
 
 async function holdsAnything(

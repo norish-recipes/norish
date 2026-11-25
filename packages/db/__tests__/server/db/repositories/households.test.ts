@@ -25,6 +25,7 @@ import {
   renameHouseholdOfOne,
   transferHouseholdAdmin,
 } from "@norish/db/repositories/households";
+import { addEntry } from "@norish/db/repositories/list-entries";
 import { households, householdUsers, users } from "@norish/db/schema";
 
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
@@ -209,6 +210,22 @@ describe("households", () => {
       });
       expect(await householdOf(joiner.id)).toBe(own);
     });
+
+    it.each(["tag", "cuisine", "category"] as const)(
+      "is refused from a household of one that holds an unused %s",
+      async (kind) => {
+        const admin = await createTestUser();
+        const joiner = await createTestUser();
+        const own = await householdOf(joiner.id);
+
+        await addEntry(kind, own, "Kept");
+
+        expect(
+          await joinHousehold(joiner.id, { householdId: await householdOf(admin.id) })
+        ).toEqual({ refused: "holds-things" });
+        expect(await householdOf(joiner.id)).toBe(own);
+      }
+    );
 
     it("is refused from a household with other members", async () => {
       const { member, householdId } = await sharedHousehold();
