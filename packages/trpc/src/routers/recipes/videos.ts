@@ -12,6 +12,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
 import { afterCommit } from "../../after-commit";
@@ -23,7 +24,6 @@ import {
   assertRecipeAccess,
   assertRecipeMediaAccess,
   createSettled,
-  mediaRecipeId,
 } from "./helpers";
 
 // --- Shared Helpers ---
@@ -73,7 +73,7 @@ async function extractAndValidateVideo(formData: FormDataInput): Promise<VideoVa
 const uploadGalleryVideo = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = mediaRecipeId(input.get("recipeId"));
+    const recipeId = mediaId(input.get("recipeId"));
     const orderStr = input.get("order") as string | null;
     const durationStr = input.get("duration") as string | null;
 

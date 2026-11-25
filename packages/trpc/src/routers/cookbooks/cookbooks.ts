@@ -20,6 +20,7 @@ import {
   CookbookSummarySchema,
   CookbookUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 import { formDataInputSchema, getFormDataString } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
@@ -155,7 +156,7 @@ const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async (
  * until an `update` saves it, which also sweeps away uploads never saved.
  */
 const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
-  const cookbookId = getFormDataString(input, "cookbookId");
+  const cookbookId = mediaId(getFormDataString(input, "cookbookId"));
 
   if (!cookbookId) return { success: false as const, error: "Cookbook ID is required" };
 

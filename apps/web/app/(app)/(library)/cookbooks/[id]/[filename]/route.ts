@@ -3,20 +3,19 @@ import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveCookbookMedia } from "@/lib/recipe-media";
 import { serverPackage } from "@/lib/server-package";
 
+import { mediaId } from "@norish/shared/lib/recipe-media";
+
 const { getCookbookRow } = await serverPackage<typeof import("@norish/db/repositories/cookbooks")>(
   "@norish/db/repositories/cookbooks"
 );
-
-const VALID_UUID_PATTERN = /^[a-f0-9-]{36}$/i;
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request, { params }: RouteContext<"/cookbooks/[id]/[filename]">) {
   const { id, filename } = await params;
 
-  if (!id || !VALID_UUID_PATTERN.test(id)) {
-    return NextResponse.json({ error: "Invalid cookbook ID" }, { status: 400 });
-  }
+  // Only the database's spelling of the id: another reaches the same folder on some disks.
+  if (mediaId(id) !== id) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const refused = await refuseUnlessViewer(
     req,

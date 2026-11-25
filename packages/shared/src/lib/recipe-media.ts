@@ -34,3 +34,10 @@ export function primaryRecipeImage(carrier: PrimaryImageCarrier): string | null 
 
   return gallery[0]?.image ?? null;
 }
+
+const CANONICAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** A recipe or cookbook id a media path is built from, only in the database's lowercase spelling. */
+export function mediaId(value: unknown): string | null {
+  return typeof value === "string" && CANONICAL_UUID.test(value) ? value : null;
+}

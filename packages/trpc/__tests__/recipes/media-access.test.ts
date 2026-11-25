@@ -100,6 +100,21 @@ describe("recipe media procedures check the recipe before touching files", () =>
     expect(saveImageBytesMock).not.toHaveBeenCalled();
   });
 
+  it("refuses an id in another spelling than the database's", async () => {
+    const caller = imagesProcedures.createCaller(ctx as never);
+
+    expect(await caller.uploadImage(upload("image", recipeId.toUpperCase()))).toEqual({
+      success: false,
+      error: "Recipe ID is required",
+    });
+    expect(await caller.deleteImage({ url: `/recipes/${recipeId.toUpperCase()}/a.jpg` })).toEqual({
+      success: false,
+      error: "Invalid image URL format",
+    });
+    expect(assertRecipeMediaAccessMock).not.toHaveBeenCalled();
+    expect(saveImageBytesMock).not.toHaveBeenCalled();
+  });
+
   it("uploads to a recipe only once the caller may edit it", async () => {
     const caller = imagesProcedures.createCaller(ctx as never);
 

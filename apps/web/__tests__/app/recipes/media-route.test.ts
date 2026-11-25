@@ -124,4 +124,18 @@ describe("a signed-in reader's recipe media", () => {
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(readFileMock).not.toHaveBeenCalled();
   });
+
+  it("is not found under another spelling of the id, even to a reader who may open it", async () => {
+    readSessionPrincipal.mockResolvedValueOnce({ userId: "user-1", token: "token" });
+    canAccessResource.mockResolvedValueOnce(true);
+
+    const upper = recipeId.toUpperCase();
+    const response = await getRecipeMedia(
+      new Request(`http://localhost/recipes/${upper}/cover.jpg`),
+      { params: Promise.resolve({ id: upper, filename: "cover.jpg" }) }
+    );
+
+    expect(response.status).toBe(404);
+    expect(readFileMock).not.toHaveBeenCalled();
+  });
 });

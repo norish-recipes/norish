@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
@@ -10,6 +9,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { claimPendingRecipeMedia } from "@norish/shared-server/media/pending-recipe-media";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 export type RecipeUserContext = {
   user: { id: string };
@@ -128,19 +128,9 @@ export async function assertRecipeAccess(
   refuseUnlessAllowed((await recipeAccess(ctx, [recipeId], action)).get(recipeId), "recipe");
 }
 
-/**
- * A recipe id a media path is built from: a UUID or nothing, since it becomes
- * a directory name under the uploads folder.
- */
-export function mediaRecipeId(value: unknown): string | null {
-  const parsed = z.uuid().safeParse(value);
-
-  return parsed.success ? parsed.data : null;
-}
-
 /** The recipe a stored media URL (`/recipes/{id}/…`) belongs to. */
 export function recipeIdOfMediaUrl(url: string): string | null {
-  return mediaRecipeId(/^\/recipes\/([^/]+)\//.exec(url)?.[1]);
+  return mediaId(/^\/recipes\/([^/]+)\//.exec(url)?.[1]);
 }
 
 /**

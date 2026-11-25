@@ -18,6 +18,7 @@ import {
 } from "@norish/shared-server/media/storage";
 import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeImageInputSchema, MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
 import { afterCommit } from "../../after-commit";
@@ -29,7 +30,6 @@ import {
   assertRecipeAccess,
   assertRecipeMediaAccess,
   createSettled,
-  mediaRecipeId,
   recipeIdOfMediaUrl,
 } from "./helpers";
 
@@ -74,7 +74,7 @@ export async function extractAndValidateImage(
  * Requires recipeId to save to: uploads/recipes/{recipeId}/{hash}.jpg
  */
 const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
-  const recipeId = mediaRecipeId(input.get("recipeId"));
+  const recipeId = mediaId(input.get("recipeId"));
 
   log.debug({ userId: ctx.user.id, recipeId }, "Uploading recipe image");
 
@@ -145,7 +145,7 @@ const deleteImage = authedProcedure
 const uploadStepImage = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = mediaRecipeId(input.get("recipeId"));
+    const recipeId = mediaId(input.get("recipeId"));
 
     log.debug({ userId: ctx.user.id, recipeId }, "Uploading step image");
 
@@ -214,7 +214,7 @@ const deleteStepImage = authedProcedure
 const uploadGalleryImage = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = mediaRecipeId(input.get("recipeId"));
+    const recipeId = mediaId(input.get("recipeId"));
     const orderStr = input.get("order") as string | null;
 
     log.debug({ userId: ctx.user.id, recipeId }, "Uploading gallery image");
