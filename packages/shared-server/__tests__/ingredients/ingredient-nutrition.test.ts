@@ -828,7 +828,7 @@ describe("Ingredient Nutrition", () => {
       expect(worked).toMatchObject({ estimated: true, credits: [], household: false });
     });
 
-    it("finds a gap where nothing of the food's own, nor any household's correction, gives the fact", async () => {
+    it("finds a gap where nothing of the food's own gives the fact, whatever a household corrected", async () => {
       const gaps = await findNutritionGaps([
         id("en:onion"),
         id("en:red-onion"),
@@ -863,7 +863,8 @@ describe("Ingredient Nutrition", () => {
 
       const after = await findNutritionGaps([id("en:red-onion"), id("en:brandy")]);
 
-      expect(after.get(id("en:red-onion"))).toMatchObject({ numbers: true, density: false });
+      // One household's correction is its own: every other household still lacks the density.
+      expect(after.get(id("en:red-onion"))).toMatchObject({ numbers: true, density: true });
       expect(after.get(id("en:brandy"))).toMatchObject({ numbers: false, density: true });
     });
 

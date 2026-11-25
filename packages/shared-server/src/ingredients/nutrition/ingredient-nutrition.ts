@@ -49,7 +49,6 @@ import type {
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import {
-  findAnyCorrections,
   findHouseholdCorrections,
   findNutritionEstimates,
   findNutritionFoods,
@@ -410,9 +409,9 @@ export interface NutritionGaps {
 }
 
 /**
- * The gaps of each of these Ingredients: no source, earlier estimate or household's correction,
- * any household's, gives the fact; what a parent would lend does not count. A piece fix, or AI's
- * "no pieces", answers the piece weight. An id that names no Ingredient answers nothing.
+ * The gaps of each of these Ingredients, for AI's instance-wide estimate: no source or earlier
+ * estimate gives the fact. A household's correction is its own and closes no gap; what a parent
+ * would lend does not count. A piece fix, or AI's "no pieces", answers the piece weight.
  */
 export async function findNutritionGaps(
   ingredientIds: readonly string[]
@@ -420,30 +419,17 @@ export async function findNutritionGaps(
   const lineage = await findNutritionLineage(ingredientIds);
   const nodes = [...new Set(ingredientIds)].flatMap((id) => lineage.get(id) ?? []);
   const sources = await readSources(nodes, NO_CORRECTIONS);
-  const corrected = new Map<string, NutritionGaps>();
-
-  for (const row of await findAnyCorrections(ingredientIds)) {
-    const was = corrected.get(row.ingredientId);
-    const typed = [row.kcal, row.fat, row.carbs, row.protein].every((value) => value !== null);
-
-    corrected.set(row.ingredientId, {
-      numbers: !!was?.numbers || row.numbersFood !== null || typed,
-      pieceWeight: !!was?.pieceWeight || row.pieceWeightFood !== null || row.pieceWeight !== null,
-      density: !!was?.density || row.densityFood !== null || row.density !== null,
-    });
-  }
 
   return new Map(
     nodes.map((node) => {
       const own = ownFacts(node, sources);
-      const fixed = corrected.get(node.id);
 
       return [
         node.id,
         {
-          numbers: !own.numbers && !fixed?.numbers,
-          pieceWeight: !own.pieceWeight && !fixed?.pieceWeight && !isPieceless(node, sources),
-          density: !own.density && !fixed?.density,
+          numbers: !own.numbers,
+          pieceWeight: !own.pieceWeight && !isPieceless(node, sources),
+          density: !own.density,
         },
       ];
     })

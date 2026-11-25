@@ -315,18 +315,6 @@ export async function removeHouseholdCorrections(
   return removed.length;
 }
 
-/** Every household's corrections to these Ingredients, whoever made them. */
-export async function findAnyCorrections(
-  ingredientIds: readonly string[]
-): Promise<NutritionCorrectionRow[]> {
-  if (ingredientIds.length === 0) return [];
-
-  return await db
-    .select()
-    .from(ingredientNutritionCorrections)
-    .where(inArray(ingredientNutritionCorrections.ingredientId, [...new Set(ingredientIds)]));
-}
-
 /** AI's estimate of an Ingredient's missing facts, as stored. */
 export type NutritionEstimateRow = typeof ingredientNutritionEstimates.$inferSelect;
 
