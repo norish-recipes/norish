@@ -6,7 +6,7 @@ import type { BrowserContext, Locator, Page } from "@playwright/test";
 import type { SessionCookies } from "../harness/auth";
 import type { ThrowawayUser } from "./admin-users-support";
 import { closeAndDelete } from "../harness/accounts";
-import { settingsCard as card, signedInContext, signIn } from "../harness/auth";
+import { settingsCard as card, joinWithCode, signedInContext, signIn } from "../harness/auth";
 import { callTrpc } from "../harness/trpc";
 import { signUpThrowawayUser } from "./admin-users-support";
 import { expect, test } from "./fixture";
@@ -15,14 +15,6 @@ const HOUSEHOLD_SETTINGS = "/settings/household";
 
 function memberRow(page: Page, name: string): Locator {
   return card(page, "Members").getByRole("row").filter({ hasText: name });
-}
-
-async function joinWithCode(page: Page, code: string): Promise<void> {
-  const join = card(page, "Join household");
-
-  await join.locator("input").first().click();
-  await page.keyboard.type(code);
-  await join.getByRole("button", { name: "Join household" }).click();
 }
 
 /** The reader's household is just them: its own card, no members list, and a way to join another. */

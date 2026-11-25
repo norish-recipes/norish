@@ -1,12 +1,12 @@
 // A member adds one of each household thing, then leaves (ADR-0041): the household keeps it all,
 // and the member's new household of one starts with none of it.
 import { randomUUID } from "node:crypto";
-import type { BrowserContext, Page } from "@playwright/test";
+import type { BrowserContext } from "@playwright/test";
 
 import type { SessionCookies } from "../harness/auth";
 import type { ThrowawayUser } from "./admin-users-support";
 import { closeAndDelete } from "../harness/accounts";
-import { settingsCard as card, signedInContext, signIn } from "../harness/auth";
+import { settingsCard as card, joinWithCode, signedInContext, signIn } from "../harness/auth";
 import { openGroceries, rowFor } from "../harness/groceries";
 import { callTrpc, queryTrpc } from "../harness/trpc";
 import { signUpThrowawayUser } from "./admin-users-support";
@@ -59,14 +59,6 @@ async function heldBy(
     plan: plan.map((entry) => entry.title ?? ""),
     kcal: nutrition?.numbers?.value.kcal ?? null,
   };
-}
-
-async function joinWithCode(page: Page, code: string): Promise<void> {
-  const join = card(page, "Join household");
-
-  await join.locator("input").first().click();
-  await page.keyboard.type(code);
-  await join.getByRole("button", { name: "Join household" }).click();
 }
 
 test("a member who leaves takes none of the household's things, and starts with none of them", async ({

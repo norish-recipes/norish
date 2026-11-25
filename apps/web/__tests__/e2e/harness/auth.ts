@@ -54,3 +54,12 @@ export function settingsCard(page: Page, title: string): Locator {
     .locator('[data-slot="card"]')
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
 }
+
+/** Types a join code into the household settings' Join household card and sends it. */
+export async function joinWithCode(page: Page, code: string): Promise<void> {
+  const join = settingsCard(page, "Join household");
+
+  await join.locator("input").first().click();
+  await page.keyboard.type(code);
+  await join.getByRole("button", { name: "Join household" }).click();
+}
