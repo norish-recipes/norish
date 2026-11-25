@@ -1,6 +1,7 @@
 import type { z } from "zod";
 
 import type {
+  AdminRecipeShareInventorySchema,
   CreateRecipeShareInputSchema,
   PublicRecipeViewSchema,
   ReactivateRecipeShareInputSchema,
@@ -18,6 +19,7 @@ import type {
 export type RecipeShareDto = z.output<typeof RecipeShareSelectSchema>;
 export type RecipeShareSummaryDto = z.output<typeof RecipeShareSummarySchema>;
 export type RecipeShareInventoryDto = z.output<typeof RecipeShareInventorySchema>;
+export type AdminRecipeShareInventoryDto = z.output<typeof AdminRecipeShareInventorySchema>;
 export type RecipeShareCreatedDto = z.output<typeof RecipeShareCreatedSchema>;
 export type RecipeShareMutationResultDto = z.output<typeof RecipeShareMutationResultSchema>;
 export type RecipeShareDeleteResultDto = z.output<typeof RecipeShareDeleteResultSchema>;

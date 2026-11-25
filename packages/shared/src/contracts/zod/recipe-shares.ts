@@ -44,6 +44,13 @@ export const RecipeShareInventorySchema = RecipeShareSummarySchema.extend({
   recipeName: z.string(),
 });
 
+export const AdminRecipeShareInventorySchema = RecipeShareInventorySchema.extend({
+  ownerId: z.string(),
+  ownerName: z.string().nullable(),
+  /** False while the maker may not view the recipe: the link is inactive until they may again. */
+  makerMayView: z.boolean(),
+});
+
 export const CreateRecipeShareInputSchema = z.object({
   recipeId: z.uuid(),
   expiresIn: RecipeShareExpiryPolicySchema.default("forever"),

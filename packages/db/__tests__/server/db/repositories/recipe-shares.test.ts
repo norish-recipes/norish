@@ -13,6 +13,7 @@ import {
   getRecipeShareById,
   getRecipeShareByToken,
   getRecipeShareInventoryByUserId,
+  getRecipeShareInventoryForAdmin,
   getRecipeSharesByUserId,
   getRecipeShareUrl,
   revokeRecipeShare,
@@ -29,6 +30,7 @@ import {
   createTestRecipeStep,
   createTestUser,
   getTestDb,
+  joinTestHousehold,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -302,5 +304,49 @@ describe("recipe share repository", () => {
 
     await setView("everyone");
     expect((await getActiveRecipeShareByToken(token))?.id).toBe(created.id);
+  });
+
+  it("lists every household's links for an admin, inactive ones marked, and revokes across households", async () => {
+    await setConfig(
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      { view: "everyone", edit: "household", delete: "household" },
+      null,
+      false
+    );
+    // The admin and the test user are household A; Bob is household B.
+    const admin = (await createTestUser({ name: "Admin", isServerAdmin: true })).id;
+    const bob = (await createTestUser({ name: "Bob" })).id;
+
+    await joinTestHousehold(admin, testUserId);
+    const stew = await createTestRecipe(bob, { name: "Stew" });
+    const bobs = await createRecipeShare(bob, { recipeId: stew.id, expiresIn: "forever" });
+    const crossed = await createRecipeShare(testUserId, {
+      recipeId: stew.id,
+      expiresIn: "forever",
+    });
+
+    await setConfig(
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      { view: "household", edit: "household", delete: "household" },
+      null,
+      false
+    );
+    const listed = await getRecipeShareInventoryForAdmin();
+
+    expect(listed.map((s) => [s.id, s.recipeName, s.ownerName, s.status, s.makerMayView])).toEqual([
+      [crossed.id, "Stew", "Test User", "active", false],
+      [bobs.id, "Stew", "Bob", "active", true],
+    ]);
+    // The maker's own view and the public page still treat the crossed link as inactive.
+    expect(await getRecipeShareInventoryByUserId(testUserId)).toEqual([]);
+    expect(await getActiveRecipeShareByToken(crossed.url.replace("/share/", ""))).toBeNull();
+
+    const revoked = await revokeRecipeShare(bobs.id, bobs.version);
+
+    expect(revoked.value?.status).toBe("revoked");
+    expect((await getRecipeShareInventoryForAdmin()).find((s) => s.id === bobs.id)?.status).toBe(
+      "revoked"
+    );
+    expect(await getActiveRecipeShareByToken(bobs.url.replace("/share/", ""))).toBeNull();
   });
 });

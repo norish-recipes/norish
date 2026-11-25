@@ -110,7 +110,7 @@ const searchStep = alias(stepsTable, "search_step");
  */
 export type PolicyAction = "view" | "edit" | "delete";
 
-async function getRecipePolicy(executor: Db = db): Promise<RecipePermissionPolicy> {
+export async function getRecipePolicy(executor: Db = db): Promise<RecipePermissionPolicy> {
   const stored = await getConfig<RecipePermissionPolicy>(
     ServerConfigKeys.RECIPE_PERMISSION_POLICY,
     false,
