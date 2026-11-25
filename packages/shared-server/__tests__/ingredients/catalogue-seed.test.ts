@@ -7,11 +7,9 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import {
   findIngredientByAliasId,
@@ -20,7 +18,6 @@ import {
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
 import { listPantryIngredientsByHousehold } from "@norish/db/repositories/pantry";
-import { ingredientAliases, ingredients, serverConfig } from "@norish/db/schema";
 import { mergeByAI, parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import {
   addAlias,
@@ -52,10 +49,14 @@ import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
   addTestGrocery,
+  addTestSeedSpelling,
+  clearTestSeedState,
   createTestUser,
   getSpellingTexts,
-  getTestDb,
   nameInATestRecipe,
+  readTestIngredientNamed,
+  readTestSeedSpelling,
+  setTestSeedSpellingLocale,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -108,9 +109,7 @@ describe("the ingredient catalogue seed", () => {
     };
     admin = { ...actor, isServerAdmin: true };
     // The seed's state is instance configuration, which the clean-up keeps.
-    await getTestDb()
-      .delete(serverConfig)
-      .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
+    await clearTestSeedState();
   });
 
   afterAll(async () => {
@@ -130,17 +129,7 @@ describe("the ingredient catalogue seed", () => {
   }
 
   async function ingredientNamed(name: string) {
-    const [row] = await getTestDb()
-      .select({
-        id: ingredients.id,
-        offId: ingredients.offId,
-        ownerId: ingredients.ownerId,
-        flagged: ingredients.flagged,
-      })
-      .from(ingredients)
-      .where(eq(ingredients.name, name));
-
-    return row ?? null;
+    return await readTestIngredientNamed(name);
   }
 
   describe("applying a file", () => {
@@ -211,14 +200,7 @@ describe("the ingredient catalogue seed", () => {
     it("keeps each entry's nutrition codes, and a code changed upstream arrives with the next one", async () => {
       await applySeedFile(excerpt);
 
-      const codesOf = async (name: string) => {
-        const [row] = await getTestDb()
-          .select({ codes: ingredients.nutritionCodes })
-          .from(ingredients)
-          .where(eq(ingredients.name, name));
-
-        return row?.codes;
-      };
+      const codesOf = async (name: string) => (await readTestIngredientNamed(name))?.nutritionCodes;
 
       await expect(codesOf("onion")).resolves.toEqual({
         ciqual: ["20034"],
@@ -343,12 +325,7 @@ describe("the ingredient catalogue seed", () => {
     }
 
     async function seasoningAlias() {
-      const [row] = await getTestDb()
-        .select({ id: ingredientAliases.id })
-        .from(ingredientAliases)
-        .where(eq(ingredientAliases.fold, "seasoning"));
-
-      return row!.id;
+      return (await readTestSeedSpelling("seasoning"))!.id;
     }
 
     it("gives seasoning to mixed spices, every time the file is applied, and files a seasoning there quietly", async () => {
@@ -400,17 +377,8 @@ describe("the ingredient catalogue seed", () => {
       await applySeedFile(`${excerpt}\n\nen: chicken thigh\n`);
       const thigh = (await ingredientNamed("chicken thigh"))!.id;
       // As a seed from before the correction left it.
-      const [drumstick] = await getTestDb()
-        .insert(ingredientAliases)
-        .values({
-          ingredientId: thigh,
-          text: "chicken drumstick",
-          fold: ingredientAliasFold("chicken drumstick"),
-          locale: "en",
-          seeded: true,
-        })
-        .returning({ id: ingredientAliases.id });
-      const line = await nameInATestRecipe(actor.userId, drumstick!.id, "chicken drumstick");
+      const drumstick = await addTestSeedSpelling(thigh, "chicken drumstick", "en");
+      const line = await nameInATestRecipe(actor.userId, drumstick, "chicken drumstick");
 
       await updateIngredientSeedState({ correctionsVersion: SEED_CORRECTIONS_VERSION - 1 });
       await expect(correctSeedOnce()).resolves.toEqual({ moved: 1, refiled: 0 });
@@ -428,11 +396,7 @@ describe("the ingredient catalogue seed", () => {
       // Open Food Facts lists Afrikaans before Dutch, and the first claim kept the spelling.
       const file = `${excerpt}\n\nen: cheese\naf: Kaas\nnl: kaas\n`;
       const cheese = async () => (await ingredientNamed("cheese"))!.id;
-      const kaasIn = (locale: string) =>
-        getTestDb()
-          .update(ingredientAliases)
-          .set({ locale })
-          .where(eq(ingredientAliases.fold, "kaas"));
+      const kaasIn = (locale: string) => setTestSeedSpellingLocale("kaas", locale);
 
       await refreshIngredientCatalogue(serving(file, '"v1"').fetchImpl);
       await expect(parentOf((await resolve("belegen kaas")).ingredientId)).resolves.toBe(

@@ -6,7 +6,6 @@
  * decision about the food. Both follow `edit` on the food the change was
  * about, and a person looking after a food keeps what AI was unsure of.
  */
-import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
@@ -17,9 +16,10 @@ import {
   takeOpenParentChanges,
 } from "@norish/db/repositories/ingredient-ai-changes";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
+import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors, lockTree } from "@norish/db/repositories/ingredient-relocation";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
-import { ingredientAIChanges, ingredients } from "@norish/db/schema";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import {
   deleteByAI,
@@ -40,13 +40,16 @@ import {
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
+  backdateTestAIChanges,
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
-  getTestDb,
   insertTestRecipeLine,
   joinTestHousehold,
+  listTestAIChanges,
   nameInATestRecipe,
+  readTestIngredient,
+  setTestIngredients,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -141,10 +144,7 @@ describe("keeping and undoing AI Changes", () => {
     const red = await mint("red onion");
 
     // The words filed it under vegetable, as the seed's recheck would; AI moved it.
-    await getTestDb()
-      .update(ingredients)
-      .set({ parentId: vegetable.ingredientId })
-      .where(eq(ingredients.id, red.ingredientId));
+    await setTestIngredients(red.ingredientId, { parentId: vegetable.ingredientId });
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     await expect(parentOf(red.ingredientId)).resolves.toBe(onion.ingredientId);
 
@@ -185,12 +185,10 @@ describe("keeping and undoing AI Changes", () => {
     ).resolves.toBe("applied");
     await undoAIChange(actor, (await onlyChange()).id);
 
-    const [row] = await getTestDb()
-      .select({ name: ingredients.name, nameSettled: ingredients.nameSettled })
-      .from(ingredients)
-      .where(eq(ingredients.id, tonijn.ingredientId));
-
-    expect(row).toEqual({ name: "GR TONIJN UIT BLIK", nameSettled: true });
+    expect(await readTestIngredient(tonijn.ingredientId)).toMatchObject({
+      name: "GR TONIJN UIT BLIK",
+      nameSettled: true,
+    });
   });
 
   it("leaves a parent a person set since: Undo only remembers", async () => {
@@ -201,10 +199,7 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     const change = await onlyChange();
 
-    await getTestDb()
-      .update(ingredients)
-      .set({ parentId: allium.ingredientId })
-      .where(eq(ingredients.id, red.ingredientId));
+    await setTestIngredients(red.ingredientId, { parentId: allium.ingredientId });
     await undoAIChange(actor, change.id);
 
     await expect(parentOf(red.ingredientId)).resolves.toBe(allium.ingredientId);
@@ -243,10 +238,11 @@ describe("keeping and undoing AI Changes", () => {
 
   it("lists a change only to the household whose catalogue AI changed, a merge into the seed's included", async () => {
     // Merged into a seeded food, which only an administrator may edit.
-    const [seeded] = await getTestDb()
-      .insert(ingredients)
-      .values({ name: "leek", offId: "en:leek" })
-      .returning({ id: ingredients.id });
+    const seeded = {
+      id: await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+        { text: "leek", fold: "leek", locale: "en" },
+      ]),
+    };
     const prei = await mint("prei");
     const stranger = await createTestUser();
     const strangers = {
@@ -255,7 +251,7 @@ describe("keeping and undoing AI Changes", () => {
       isServerAdmin: false,
     };
 
-    await mergeByAI(prei.ingredientId, seeded!.id, false);
+    await mergeByAI(prei.ingredientId, seeded.id, false);
     const change = await onlyChange();
 
     // Another household neither sees it nor reaches it by its id.
@@ -367,10 +363,7 @@ describe("keeping and undoing AI Changes", () => {
     const tonijn = await mint("GR TONIJN UIT BLIK");
 
     // AI was unsure the food is one of its own, then gave it its Plain Name.
-    await getTestDb()
-      .update(ingredients)
-      .set({ flagged: true, flagReason: "ai-unsure" })
-      .where(eq(ingredients.id, tonijn.ingredientId));
+    await setTestIngredients(tonijn.ingredientId, { flagged: true, flagReason: "ai-unsure" });
     await renameByAI(tonijn.ingredientId, "GR TONIJN UIT BLIK", "tonijn uit blik");
     await undoAIChange(actor, (await onlyChange()).id);
 
@@ -387,12 +380,10 @@ describe("keeping and undoing AI Changes", () => {
     await mergeByAI(uien.ingredientId, onion.ingredientId, false);
     await keepAIChange(actor, (await onlyChange()).id);
 
-    const [row] = await getTestDb()
-      .select({ flagged: ingredients.flagged, keptDistinct: ingredients.keptDistinct })
-      .from(ingredients)
-      .where(eq(ingredients.id, onion.ingredientId));
-
-    expect(row).toEqual({ flagged: false, keptDistinct: false });
+    expect(await readTestIngredient(onion.ingredientId)).toMatchObject({
+      flagged: false,
+      keptDistinct: false,
+    });
   });
 
   it("follows a parent merged away to the food it joined, and goes with a parent deleted", async () => {
@@ -416,7 +407,7 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     const change = await onlyChange();
     // Two idle connections, so the two transactions below really run at once.
-    const warm = () => withTransaction((tx) => tx.execute(sql`select 1`));
+    const warm = () => withTransaction((tx) => listJunkFolds(actor.householdId, tx));
 
     await Promise.all([warm(), warm()]);
 
@@ -477,16 +468,15 @@ describe("keeping and undoing AI Changes", () => {
       (await listAIChangesFor(actor)).find((it) => it.kind === "plain-name")!.id
     );
     // A month and a day ago, all but the newest.
-    await getTestDb()
-      .update(ingredientAIChanges)
-      .set({ createdAt: sql`now() - interval '31 days'` });
+    await backdateTestAIChanges(31);
     await renameByAI(shallot.ingredientId, "shallot", "sjalot");
 
     await expect(sweepAIChanges()).resolves.toBe(2);
 
-    const left = await getTestDb()
-      .select({ ingredientId: ingredientAIChanges.ingredientId, kind: ingredientAIChanges.kind })
-      .from(ingredientAIChanges);
+    const left = (await listTestAIChanges()).map(({ ingredientId, kind }) => ({
+      ingredientId,
+      kind,
+    }));
 
     // The open parent, the undone name AI remembers, and this month's name.
     expect(left).toEqual(

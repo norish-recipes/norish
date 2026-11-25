@@ -9,13 +9,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createGroceries, createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
-import { ingredients } from "@norish/db/schema";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 
 import {
   addTestGrocery,
-  getTestDb,
+  listTestIngredientIds,
   mintTestFood,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -93,7 +92,7 @@ describe("grocery names through aliases", () => {
         householdId: testHouseholdOf(userId),
       })
     ).resolves.toEqual([null]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
+    await expect(listTestIngredientIds()).resolves.toHaveLength(0);
   });
 
   it("keeps a grocery's having no food while an edit leaves its text alone, and resolves a new text", async () => {
@@ -115,7 +114,7 @@ describe("grocery names through aliases", () => {
         { userId, householdId: testHouseholdOf(userId) }
       )
     ).resolves.toEqual([null]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
+    await expect(listTestIngredientIds()).resolves.toHaveLength(0);
 
     const [renamed] = await resolveGroceryNames(
       [{ name: "deeg", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
@@ -155,7 +154,7 @@ describe("grocery names through aliases", () => {
         householdId: testHouseholdOf(userId),
       })
     ).resolves.toEqual([null, null, expect.objectContaining({ aliasId: expect.any(String) })]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(1);
+    await expect(listTestIngredientIds()).resolves.toHaveLength(1);
   });
 
   it("has nothing to resolve for a grocery with no name", async () => {
@@ -192,7 +191,7 @@ describe("grocery names through aliases", () => {
         [{ id: "d", name: ")" }],
         [{ id: "e", name: null }],
       ]);
-      await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(4);
+      await expect(listTestIngredientIds()).resolves.toHaveLength(4);
     });
 
     it("keeps whole a grocery whose joined text an edit leaves alone", async () => {

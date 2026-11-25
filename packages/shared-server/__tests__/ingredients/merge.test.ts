@@ -5,7 +5,6 @@
  * lines behind a spelling follow it wherever it goes, and a wrong merge is
  * one move to undo. The edit policy's matrix is pinned at the procedures.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
@@ -24,7 +23,6 @@ import {
   getIngredientStorePreference,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { ingredients } from "@norish/db/schema";
 import {
   addAlias,
   CatalogueEditError,
@@ -42,9 +40,9 @@ import {
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
-  getTestDb,
   insertTestRecipeLine,
   joinTestHousehold,
+  setTestIngredients,
   testGroceryFoods,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -96,10 +94,7 @@ describe("merging Ingredients and moving aliases", () => {
 
   /** Flag a food as AI unsure of it: a mint is unflagged. */
   async function flag(ingredientId: string) {
-    await getTestDb()
-      .update(ingredients)
-      .set({ flagged: true, flagReason: "ai-unsure" })
-      .where(eq(ingredients.id, ingredientId));
+    await setTestIngredients(ingredientId, { flagged: true, flagReason: "ai-unsure" });
   }
 
   async function typed(name: string) {

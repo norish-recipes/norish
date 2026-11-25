@@ -8,7 +8,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { and, asc, eq, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
@@ -16,6 +16,7 @@ import type { MintIngredientInput } from "@norish/db/repositories/ingredient-ali
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
 import type { GroceryInsertDto } from "@norish/shared/contracts/dto/groceries";
 import { encrypt, hashToken } from "@norish/config/crypto";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getRecipeFull } from "@norish/db";
 import { createGroceries, deleteGroceryByIds } from "@norish/db/repositories/groceries";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
@@ -223,6 +224,132 @@ export async function createTestIngredient(
   });
 
   return ingredient;
+}
+
+/** Set columns of test Ingredients as a scenario needs them: a flag, a parent, a mark. */
+export async function setTestIngredients(
+  ids: string | readonly string[],
+  values: Partial<typeof schema.ingredients.$inferInsert>
+): Promise<void> {
+  await getTestDb()
+    .update(schema.ingredients)
+    .set(values)
+    .where(inArray(schema.ingredients.id, typeof ids === "string" ? [ids] : [...ids]));
+}
+
+/** One Ingredient as stored, or null once it is gone. */
+export async function readTestIngredient(id: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.ingredients)
+    .where(eq(schema.ingredients.id, id));
+
+  return row ?? null;
+}
+
+/** The Ingredient named exactly this, as stored, or null. */
+export async function readTestIngredientNamed(name: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.ingredients)
+    .where(eq(schema.ingredients.name, name));
+
+  return row ?? null;
+}
+
+/** The seed's spelling of a fold, as stored, or null. */
+export async function readTestSeedSpelling(fold: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.ingredientAliases)
+    .where(
+      and(eq(schema.ingredientAliases.fold, fold), isNull(schema.ingredientAliases.householdId))
+    );
+
+  return row ?? null;
+}
+
+/** A seeded spelling written onto a seeded food, as an earlier seed left one; its id. */
+export async function addTestSeedSpelling(ingredientId: string, text: string, locale: string) {
+  const [row] = await getTestDb()
+    .insert(schema.ingredientAliases)
+    .values({ ingredientId, text, fold: ingredientAliasFold(text), locale, seeded: true })
+    .returning({ id: schema.ingredientAliases.id });
+
+  return row!.id;
+}
+
+/** Give the seed's spelling of a fold another language, as an earlier seed stamped it. */
+export async function setTestSeedSpellingLocale(fold: string, locale: string): Promise<void> {
+  await getTestDb()
+    .update(schema.ingredientAliases)
+    .set({ locale })
+    .where(
+      and(eq(schema.ingredientAliases.fold, fold), isNull(schema.ingredientAliases.householdId))
+    );
+}
+
+/** Every Ingredient's id: how many foods the catalogue holds. */
+export async function listTestIngredientIds(): Promise<string[]> {
+  const rows = await getTestDb().select({ id: schema.ingredients.id }).from(schema.ingredients);
+
+  return rows.map((row) => row.id);
+}
+
+/** The foods a recipe line names, in order. */
+export async function testLineFoods(lineId: string): Promise<string[]> {
+  const rows = await getTestDb()
+    .select({ ingredientId: schema.ingredientAliases.ingredientId })
+    .from(schema.recipeIngredientFoods)
+    .innerJoin(
+      schema.ingredientAliases,
+      eq(schema.ingredientAliases.id, schema.recipeIngredientFoods.ingredientAliasId)
+    )
+    .where(eq(schema.recipeIngredientFoods.recipeIngredientId, lineId))
+    .orderBy(asc(schema.recipeIngredientFoods.position));
+
+  return rows.map((row) => row.ingredientId);
+}
+
+/** A recipe line's text and its first spelling, or undefined once it is gone. */
+export async function testLineSpelling(lineId: string) {
+  const [line] = await getTestDb()
+    .select({
+      name: schema.recipeIngredients.name,
+      aliasId: schema.recipeIngredientFoods.ingredientAliasId,
+    })
+    .from(schema.recipeIngredients)
+    .leftJoin(
+      schema.recipeIngredientFoods,
+      eq(schema.recipeIngredientFoods.recipeIngredientId, schema.recipeIngredients.id)
+    )
+    .where(eq(schema.recipeIngredients.id, lineId));
+
+  return line;
+}
+
+/** Delete a recipe line, as an edit of its recipe would. */
+export async function deleteTestRecipeLine(lineId: string): Promise<void> {
+  await getTestDb().delete(schema.recipeIngredients).where(eq(schema.recipeIngredients.id, lineId));
+}
+
+/** Forget what the catalogue seed applied, so a scenario seeds from scratch. */
+export async function clearTestSeedState(): Promise<void> {
+  await getTestDb()
+    .delete(schema.serverConfig)
+    .where(eq(schema.serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
+}
+
+/** Date every AI Change `days` back, as though AI made them then. */
+export async function backdateTestAIChanges(days: number): Promise<void> {
+  await getTestDb()
+    .update(schema.ingredientAIChanges)
+    .set({ createdAt: new Date(Date.now() - days * 24 * 60 * 60 * 1000) });
+}
+
+/** Every AI Change as stored. */
+export async function listTestAIChanges() {
+  return await getTestDb().select().from(schema.ingredientAIChanges);
 }
 
 /** A household's food known by one spelling, minted as the resolver would; unflagged. */

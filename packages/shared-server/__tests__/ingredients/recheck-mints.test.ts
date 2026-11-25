@@ -6,11 +6,9 @@
  * rules improve, a person's decisions are left alone, and the pass runs once
  * per rung version.
  */
-import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import {
@@ -18,7 +16,6 @@ import {
   fileUndecidedMint,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
-import { ingredients, serverConfig } from "@norish/db/schema";
 import { parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import { listIngredients, markDistinct } from "@norish/shared-server/ingredients/catalogue";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
@@ -28,9 +25,11 @@ import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredi
 
 import {
   addTestGrocery,
-  getTestDb,
+  clearTestSeedState,
   mintTestFood,
   nameInATestRecipe,
+  readTestIngredient,
+  setTestIngredients,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -54,9 +53,7 @@ describe("looking at old undecided mints again", () => {
       householdId: testHouseholdOf(user.id),
       isServerAdmin: true,
     };
-    await getTestDb()
-      .delete(serverConfig)
-      .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
+    await clearTestSeedState();
     await applyIngredientSeed([
       seedEntry("en:salt", "salt", "zout"),
       seedEntry("en:parsley", "parsley", "peterselie"),
@@ -138,10 +135,7 @@ describe("looking at old undecided mints again", () => {
     const merged = await legacyMint("salt to taste");
     const filed = await legacyMint("verse peterselie");
 
-    await getTestDb()
-      .update(ingredients)
-      .set({ flagged: false, flagReason: null })
-      .where(inArray(ingredients.id, [merged, filed]));
+    await setTestIngredients([merged, filed], { flagged: false, flagReason: null });
 
     await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 1, filed: 1 });
     expect(await shown(merged)).toBeNull();
@@ -156,10 +150,11 @@ describe("looking at old undecided mints again", () => {
     const parented = await legacyMint("ground cumin");
 
     await markDistinct(actor, distinct);
-    await getTestDb()
-      .update(ingredients)
-      .set({ parentId: seeded.get("en:salt")!, parentChosen: true, flagged: false })
-      .where(eq(ingredients.id, parented));
+    await setTestIngredients(parented, {
+      parentId: seeded.get("en:salt")!,
+      parentChosen: true,
+      flagged: false,
+    });
 
     await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
     expect(await shown(distinct)).toMatchObject({ flagged: false });
@@ -186,16 +181,8 @@ describe("looking at old undecided mints again", () => {
     const salt = await grocery("salt to taste");
 
     await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
-    const row = async (id: string) =>
-      (
-        await getTestDb()
-          .select({ parentId: ingredients.parentId })
-          .from(ingredients)
-          .where(eq(ingredients.id, id))
-      )[0];
-
-    await expect(row(parsley)).resolves.toEqual({ parentId: null });
-    await expect(row(salt)).resolves.toEqual({ parentId: null });
+    await expect(readTestIngredient(parsley)).resolves.toMatchObject({ parentId: null });
+    await expect(readTestIngredient(salt)).resolves.toMatchObject({ parentId: null });
   });
 
   it("merges a legacy mint whose preparation was written without a comma", async () => {
@@ -269,14 +256,8 @@ describe("looking at old undecided mints again", () => {
     const parented = await legacyMint("ground cumin");
 
     await markDistinct(actor, distinct);
-    await getTestDb()
-      .update(ingredients)
-      .set({ flagged: true })
-      .where(eq(ingredients.id, distinct));
-    await getTestDb()
-      .update(ingredients)
-      .set({ parentId: seeded.get("en:salt")!, parentChosen: true })
-      .where(eq(ingredients.id, parented));
+    await setTestIngredients(distinct, { flagged: true });
+    await setTestIngredients(parented, { parentId: seeded.get("en:salt")!, parentChosen: true });
 
     await expect(recheckUndecidedMintsOnRungChange()).resolves.toEqual({ merged: 0, filed: 0 });
     expect(await shown(distinct)).not.toBeNull();
