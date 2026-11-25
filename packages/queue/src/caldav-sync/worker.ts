@@ -23,11 +23,24 @@ const log = createLogger("worker:caldav-sync");
 
 type CaldavItemStatusUpdatedPayload = CaldavSyncEventData["itemStatusUpdated"];
 
+async function takeOffCalendar(
+  job: Job<CaldavSyncJobData>,
+  userId: string,
+  itemId: string,
+  place: "current" | "elsewhere" | null
+): Promise<void> {
+  const deletePlannedItem = requireQueueApiHandler("deletePlannedItem");
+
+  await reportStep(job, "deleting-event");
+  await deletePlannedItem(userId, itemId);
+  // An entry left behind in another household keeps no status on the leaver's calendar.
+  if (place === "elsewhere") await deleteCaldavSyncStatusByItemId(userId, itemId);
+}
+
 /**
  * Process a single CalDAV sync job.
  */
 async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> {
-  const deletePlannedItem = requireQueueApiHandler("deletePlannedItem");
   const syncPlannedItem = requireQueueApiHandler("syncPlannedItem");
   const { userId, itemId, itemType, plannedItemId, eventTitle, operation } = job.data;
 
@@ -56,10 +69,7 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   const place = await findPlannedItemPlace(itemId, userId);
 
   if (operation === "delete" || place !== "current") {
-    await reportStep(job, "deleting-event");
-    await deletePlannedItem(userId, itemId);
-    // An entry left behind in another household keeps no status on the leaver's calendar.
-    if (place === "elsewhere") await deleteCaldavSyncStatusByItemId(userId, itemId);
+    await takeOffCalendar(job, userId, itemId, place);
 
     return;
   }
@@ -95,6 +105,15 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
         errorMessage: null,
         lastSyncAt: new Date(),
       });
+
+  // A leave or deletion during the write found no status to chase, so this job takes it off.
+  const placeAfter = await findPlannedItemPlace(itemId, userId);
+
+  if (placeAfter !== "current") {
+    await takeOffCalendar(job, userId, itemId, placeAfter);
+
+    return;
+  }
 
   // Emit success events
   const successPayload = {

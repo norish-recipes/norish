@@ -130,4 +130,18 @@ describe("the CalDAV sync worker", () => {
     expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
     expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toBeNull();
   });
+
+  it("takes off an event it wrote while its adder left, keeping no status", async () => {
+    const { entry, run } = await syncJob();
+
+    handlers.syncPlannedItem.mockImplementationOnce(async () => {
+      await households.moveToHouseholdOfOne(household, member);
+
+      return { uid: "event-1" };
+    });
+    await run();
+
+    expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
+    expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toBeNull();
+  });
 });
