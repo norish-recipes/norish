@@ -82,11 +82,9 @@ describe("every account has a household", () => {
 
   /** Every household and membership, to compare runs row by row. */
   async function snapshot() {
-    const households = await pool.query(
-      "SELECT id, name, admin_user_id FROM households ORDER BY id"
-    );
+    const households = await pool.query("SELECT * FROM households ORDER BY id");
     const members = await pool.query(
-      "SELECT household_id, user_id FROM household_users ORDER BY household_id, user_id"
+      "SELECT * FROM household_users ORDER BY household_id, user_id"
     );
 
     return { households: households.rows, members: members.rows };
