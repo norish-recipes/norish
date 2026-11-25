@@ -330,11 +330,11 @@ test("Delete says how many stay when the reader may not delete some", async ({
   const memberRecipe = `${word} Mine`;
   const memberCookies = await signIn(aiStack.baseURL, MEMBER);
 
-  // Everyone sees every recipe; only its owner deletes it.
+  // Everyone sees every recipe; only its own household (here its Owner) deletes it.
   await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
     view: "everyone",
-    edit: "owner",
-    delete: "owner",
+    edit: "household",
+    delete: "household",
   });
   await callTrpc(aiStack.baseURL, memberCookies, "recipes.create", {
     name: memberRecipe,
@@ -388,8 +388,8 @@ test("Delete is unavailable when no selected recipe may be deleted", async ({
 
   await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
     view: "everyone",
-    edit: "owner",
-    delete: "owner",
+    edit: "household",
+    delete: "household",
   });
 
   const { context, page } = await libraryWith(browser, aiStack, names, {
