@@ -345,6 +345,11 @@ export async function firstSpellingId(ingredientId: string): Promise<string | un
   return alias?.id;
 }
 
+/** An image on a recipe step, as the step editor stores one. */
+export async function addTestStepImage(stepId: string, image: string) {
+  await getTestDb().insert(schema.stepImages).values({ stepId, image, order: "0" });
+}
+
 /**
  * Create test recipe steps
  */

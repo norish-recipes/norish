@@ -14,23 +14,21 @@ import {
   createPlannedItem,
   listPlannedItemsByHouseholdAndDateRange,
 } from "@norish/db/repositories/planned-items";
-import { recipeImages, recipeVideos, stepImages } from "@norish/db/schema";
+import { addRecipeImages, addRecipeVideos } from "@norish/db/repositories/recipes";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 
-import type { TestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import {
   addTestGrocery,
   addTestRecurringGrocery,
+  addTestStepImage,
   createTestRecipeStep,
-  getTestDb,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("cleanup_workflows");
 
-let db: TestDb;
 let userId: string;
 let recipeId: string;
 let uploadsDir: string;
@@ -55,7 +53,6 @@ async function createTestFile(filePath: string) {
 describe("cleanup workflows", () => {
   beforeAll(async () => {
     await testBase.setup();
-    db = getTestDb();
     originalUploadsDir = SERVER_CONFIG.UPLOADS_DIR;
     originalCleanupMonths = SERVER_CONFIG.SCHEDULER_CLEANUP_MONTHS;
   });
@@ -114,27 +111,20 @@ describe("cleanup workflows", () => {
     await createTestFile(path.join(stepsDir, orphanedStepImage));
     await createTestFile(path.join(missingRecipeDir, "obsolete.jpg"));
 
-    await db.insert(recipeImages).values([
-      { recipeId, image: `/recipes/${recipeId}/${referencedThumb}`, order: "0" },
-      { recipeId, image: `/recipes/${recipeId}/${referencedGalleryImage}`, order: "1" },
+    await addRecipeImages(recipeId, [
+      { image: `/recipes/${recipeId}/${referencedThumb}`, order: 0 },
+      { image: `/recipes/${recipeId}/${referencedGalleryImage}`, order: 1 },
     ]);
-
-    await db.insert(recipeVideos).values({
-      recipeId,
-      video: `/recipes/${recipeId}/${referencedVideo}`,
-      order: "0",
-    });
+    await addRecipeVideos(recipeId, [
+      { video: `/recipes/${recipeId}/${referencedVideo}`, order: 0 },
+    ]);
 
     const step = await createTestRecipeStep(recipeId, "metric", {
       step: "Add toppings",
       order: "0",
     });
 
-    await db.insert(stepImages).values({
-      stepId: step.id,
-      image: `/recipes/${recipeId}/steps/${referencedStepImage}`,
-      order: "0",
-    });
+    await addTestStepImage(step!.id, `/recipes/${recipeId}/steps/${referencedStepImage}`);
 
     const mediaResult = await cleanupOrphanedImages();
     const stepResult = await cleanupOrphanedStepImages();
