@@ -13,6 +13,7 @@
     "./calendar/todays-meals": "./src/calendar/todays-meals.ts",
     "./groceries": "./src/groceries/index.ts",
     "./ingredients": "./src/ingredients/index.ts",
+    "./lists": "./src/lists/index.ts",
     "./reader": "./src/reader/index.ts",
     "./page-store": "./src/page-store/index.tsx",
     "./settled-text": "./src/settled-text/index.ts",
