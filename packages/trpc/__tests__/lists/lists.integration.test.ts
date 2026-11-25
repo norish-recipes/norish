@@ -106,6 +106,20 @@ describe("the lists router", () => {
     );
   });
 
+  it("takes a name under the bound its recipes take it", async () => {
+    const mine = await as(member);
+    const { entry } = await mine.add({ kind: "category", name: "Brunch" });
+
+    await expect(mine.add({ kind: "category", name: "x".repeat(41) })).rejects.toThrow();
+    await expect(
+      mine.rename({ kind: "category", id: entry.id, version: 1, name: "x".repeat(41) })
+    ).rejects.toThrow();
+    await expect(mine.add({ kind: "cuisine", name: "x".repeat(81) })).rejects.toThrow();
+    expect(
+      await mine.rename({ kind: "category", id: entry.id, version: 1, name: ` ${"y".repeat(40)} ` })
+    ).toMatchObject({ entry: { name: "y".repeat(40) } });
+  });
+
   it("never offers or changes another household's entries", async () => {
     const { entry } = await (await as(member)).add({ kind: "cuisine", name: "Grandma's" });
     const stranger = await as(admin);

@@ -20,6 +20,7 @@ import {
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { config } from "@norish/shared-server/realtime/config";
 import { lists } from "@norish/shared-server/realtime/lists";
+import { ListEntryNameSchemas } from "@norish/shared/contracts/zod";
 
 import type { AuthedProcedureContext } from "../../middleware";
 import { authedProcedure } from "../../middleware";
@@ -27,9 +28,18 @@ import { router } from "../../trpc";
 import { assertRecipeAccess, notFoundError } from "../recipes/helpers";
 
 const KindSchema = z.enum(LIST_KINDS);
-const NameSchema = z.string().trim().min(1).max(80);
 
 type ListContext = Pick<AuthedProcedureContext, "householdId" | "isServerAdmin">;
+
+/** The name as its kind takes it, under the bound recipes write it with. */
+function entryName(kind: ListKind, name: string): string {
+  const parsed = ListEntryNameSchemas[kind].safeParse(name);
+
+  if (!parsed.success)
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Not a name this list takes" });
+
+  return parsed.data;
+}
 
 /** Whether the caller may change an entry of their scope: built-in Categories never, other instance entries as an admin. */
 function mayChangeInstance(ctx: ListContext, kind: ListKind): boolean {
@@ -95,7 +105,7 @@ const add = authedProcedure
   .input(
     z.object({
       kind: KindSchema,
-      name: NameSchema,
+      name: z.string(),
       recipeId: z.uuid().optional(),
       instance: z.boolean().optional(),
     })
@@ -106,7 +116,7 @@ const add = authedProcedure
     }
 
     const scope = input.instance ? null : await listHousehold(ctx, input.recipeId);
-    const added = await addEntry(input.kind, scope, input.name);
+    const added = await addEntry(input.kind, scope, entryName(input.kind, input.name));
 
     if (!added) throw new TRPCError({ code: "BAD_REQUEST", message: "Names nothing" });
 
@@ -126,10 +136,10 @@ const STALE = { stale: true } as const;
 
 /** Renames an entry; a name the list already has merges the two and answers the one kept. */
 const rename = authedProcedure
-  .input(EntryRefSchema.extend({ kind: KindSchema, name: NameSchema }))
+  .input(EntryRefSchema.extend({ kind: KindSchema, name: z.string() }))
   .mutation(async ({ ctx, input }) => {
     const scope = await changeableScope(ctx, input.kind, input.id);
-    const renamed = await renameEntry(input.kind, scope, input, input.name);
+    const renamed = await renameEntry(input.kind, scope, input, entryName(input.kind, input.name));
 
     if (!renamed) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
     if (renamed.stale) return STALE;

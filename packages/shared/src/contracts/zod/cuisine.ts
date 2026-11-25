@@ -17,6 +17,3 @@ export const CuisineSummarySchema = z.object({
   name: z.string(),
   version: z.number(),
 });
-
-/** Bounds shared by every write path so one rule governs the vocabulary. */
-export const CuisineNameSchema = z.string().trim().min(1).max(80);

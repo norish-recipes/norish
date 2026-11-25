@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { measurementSystems, recipeCategorySchema } from "./recipe";
+import { measurementSystems } from "./recipe";
 import { StepIngredientOutputSchema } from "./step-ingredients";
 
 export const recipeShareExpiryPolicies = ["1day", "1week", "1month", "1year", "forever"] as const;
@@ -163,7 +163,7 @@ export const PublicRecipeViewSchema = z.object({
   fat: z.string().nullable(),
   carbs: z.string().nullable(),
   protein: z.string().nullable(),
-  categories: z.array(recipeCategorySchema).default([]),
+  categories: z.array(z.string()).default([]),
   tags: z.array(PublicRecipeTagSchema).default([]),
   recipeIngredients: z.array(PublicRecipeIngredientSchema).default([]),
   steps: z.array(PublicRecipeStepSchema).default([]),

@@ -23,6 +23,17 @@ describe("recipeCategorySchema", () => {
 });
 
 describe("recipe schemas", () => {
+  it("reads a stored Category of any length, so an older one stays readable", () => {
+    const long = "x".repeat(60);
+
+    expect(FullRecipeSchema.pick({ categories: true }).parse({ categories: [long] })).toEqual({
+      categories: [long],
+    });
+    expect(RecipeDashboardSchema.pick({ categories: true }).parse({ categories: [long] })).toEqual({
+      categories: [long],
+    });
+  });
+
   it("parses categories on dashboard schema", () => {
     const parsed = RecipeDashboardSchema.pick({ categories: true }).parse({});
 

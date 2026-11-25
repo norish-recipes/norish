@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { tags } from "@norish/db-schema/schema";
 
+import { ListEntryNameSchemas } from "./list-entry";
+
 export const TagSelectBaseSchema = createSelectSchema(tags);
 export const TagInsertBaseSchema = createInsertSchema(tags).omit({
   id: true,
@@ -14,4 +16,4 @@ export const TagSummarySchema = z.object({
   name: z.string(),
   version: z.number(),
 });
-export const TagNameSchema = TagSelectBaseSchema.pick({ name: true });
+export const TagNameSchema = z.object({ name: ListEntryNameSchemas.tag });
