@@ -202,9 +202,6 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
     });
   }
 
-  // Store remaining member IDs from the already-fetched household data
-  const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
-
   // Remove user async and emit events - fire and forget
   moveToHouseholdOfOne(householdId, ctx.user.id, version)
     .then(async (result) => {
@@ -219,11 +216,13 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
 
       log.info({ userId: ctx.user.id, householdId }, "User left household");
 
+      const { memberIds } = result.value;
+
       await announceMembershipChange(
-        { userId: ctx.user.id, reason: "household-left", affectedUserIds: remainingMemberIds },
+        { userId: ctx.user.id, reason: "household-left", affectedUserIds: memberIds },
         async () => {
           // Remaining members hear it before the leaver's socket restarts.
-          for (const memberId of remainingMemberIds) {
+          for (const memberId of memberIds) {
             await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
           }
 
@@ -280,10 +279,6 @@ const kick = authedProcedure
       });
     }
 
-    // Get remaining member IDs for cache invalidation
-    const remainingMemberIds =
-      household?.users.filter((u) => u.id !== userIdToKick).map((u) => u.id) ?? [];
-
     // Kick user async and emit events
     kickUserFromHousehold(householdId, userIdToKick, ctx.user.id, version)
       .then(async (result) => {
@@ -299,7 +294,11 @@ const kick = authedProcedure
         log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
 
         await announceMembershipChange(
-          { userId: userIdToKick, reason: "household-kicked", affectedUserIds: remainingMemberIds },
+          {
+            userId: userIdToKick,
+            reason: "household-kicked",
+            affectedUserIds: result.value.memberIds,
+          },
           async () => {
             // The kicked user gets their new household of one and hears why before the
             // socket closes; the reconnect refetches under the new identity (ADR-0011).

@@ -77,6 +77,13 @@ describe("household mutations announce before they restart the socket", () => {
     ],
   };
   const ctx = createMockAuthedContext(user, household);
+  const lateJoinerId = crypto.randomUUID();
+  /** A move that went through, with the members its locked transaction left behind. */
+  const moved = (memberIds: string[]) => ({
+    stale: false,
+    applied: true,
+    value: { household: { id: "new-household" }, memberIds },
+  });
 
   beforeEach(() => {
     households.reset();
@@ -132,7 +139,7 @@ describe("household mutations announce before they restart the socket", () => {
     householdDb.getHouseholdForUser
       .mockResolvedValueOnce(leaver)
       .mockResolvedValue({ ...household, id: "new-household", users: [household.users[0]] });
-    householdDb.moveToHouseholdOfOne.mockResolvedValue({ stale: false, applied: true });
+    householdDb.moveToHouseholdOfOne.mockResolvedValue(moved([memberId, lateJoinerId]));
 
     await householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 });
     await settle();
@@ -141,12 +148,20 @@ describe("household mutations announce before they restart the socket", () => {
     expect(timeline()).toEqual([
       "cache:drop",
       "household:userLeft",
+      "household:userLeft",
       "household:created",
       "connection.invalidate:household-left",
     ]);
+    // Who stays comes from the move itself, so a member who joined meanwhile hears it too.
+    expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
+      user.id,
+      memberId,
+      lateJoinerId,
+    ]);
     expect(households.published[0]!.target).toEqual({ userId: memberId });
-    expect(households.published[1]!.target).toEqual({ userId: user.id });
-    expect(households.published[1]!.payload).toMatchObject({ household: { id: "new-household" } });
+    expect(households.published[1]!.target).toEqual({ userId: lateJoinerId });
+    expect(households.published[2]!.target).toEqual({ userId: user.id });
+    expect(households.published[2]!.payload).toMatchObject({ household: { id: "new-household" } });
   });
 
   it("leave: refuses the only member, who has nowhere to leave to", async () => {
@@ -169,7 +184,7 @@ describe("household mutations announce before they restart the socket", () => {
   });
 
   it("kick: the kicked user and the household hear it before the kicked user's invalidation", async () => {
-    householdDb.kickUserFromHousehold.mockResolvedValue({ stale: false });
+    householdDb.kickUserFromHousehold.mockResolvedValue(moved([user.id, lateJoinerId]));
 
     await householdsRouter
       .createCaller(ctx as never)
@@ -185,6 +200,11 @@ describe("household mutations announce before they restart the socket", () => {
     ]);
     // The removed member gets their new household of one before their socket restarts.
     expect(households.published[0]!.target).toEqual({ userId: memberId });
+    expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
+      memberId,
+      user.id,
+      lateJoinerId,
+    ]);
     expect(emitConnectionInvalidation).toHaveBeenCalledWith(memberId, "household-kicked");
   });
 
@@ -212,7 +232,7 @@ describe("household mutations announce before they restart the socket", () => {
 
     it("leave", async () => {
       householdDb.getHouseholdForUser.mockResolvedValue({ ...household, adminUserId: memberId });
-      householdDb.moveToHouseholdOfOne.mockResolvedValue({ stale: false, applied: true });
+      householdDb.moveToHouseholdOfOne.mockResolvedValue(moved([memberId]));
 
       await householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 });
       await settle();
@@ -225,7 +245,7 @@ describe("household mutations announce before they restart the socket", () => {
     });
 
     it("kick", async () => {
-      householdDb.kickUserFromHousehold.mockResolvedValue({ stale: false });
+      householdDb.kickUserFromHousehold.mockResolvedValue(moved([user.id]));
 
       await householdsRouter
         .createCaller(ctx as never)

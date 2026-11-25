@@ -197,16 +197,18 @@ async function memberIdsIn(tx: DbTransaction, householdId: string): Promise<stri
   return rows.map((row) => row.userId);
 }
 
+export type MovedOutcome = MutationOutcome<{ household: HouseholdDto; memberIds: string[] }>;
+
 /**
- * Takes a member out of a household and into a new household of one, in one
- * transaction under the household's lock. Pass `removedBy` when the admin removes them.
+ * Takes a member out of a household and into a new household of one, in one transaction
+ * under the household's lock. `memberIds` are who stays. Pass `removedBy` for the admin's removal.
  */
 export async function moveToHouseholdOfOne(
   householdId: string,
   userId: string,
   version?: number,
   removedBy?: string
-): Promise<MutationOutcome<HouseholdDto>> {
+): Promise<MovedOutcome> {
   return await db.transaction(async (tx) => {
     const [household] = await lockHouseholds(tx, [householdId]);
 
@@ -217,7 +219,9 @@ export async function moveToHouseholdOfOne(
     if (household.adminUserId === userId) {
       throw new Error("The household admin hands the role on before leaving");
     }
-    if ((await memberIdsIn(tx, householdId)).length <= 1) {
+    const memberIds = (await memberIdsIn(tx, householdId)).filter((id) => id !== userId);
+
+    if (memberIds.length === 0) {
       throw new Error("The last member cannot leave their household");
     }
 
@@ -239,7 +243,7 @@ export async function moveToHouseholdOfOne(
       return staleOutcome();
     }
 
-    return appliedOutcome(await insertHouseholdOfOne(tx, userId));
+    return appliedOutcome({ household: await insertHouseholdOfOne(tx, userId), memberIds });
   });
 }
 
@@ -398,7 +402,7 @@ export async function kickUserFromHousehold(
   userIdToKick: string,
   adminUserId: string,
   version?: number
-): Promise<MutationOutcome<HouseholdDto>> {
+): Promise<MovedOutcome> {
   return await moveToHouseholdOfOne(householdId, userIdToKick, version, adminUserId);
 }
 

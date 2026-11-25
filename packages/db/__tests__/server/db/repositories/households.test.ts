@@ -103,8 +103,11 @@ describe("households", () => {
       const outcome = await moveToHouseholdOfOne(householdId, member.id);
 
       expect(outcome.applied).toBe(true);
-      expect(outcome.value).toMatchObject({ name: NEW_HOUSEHOLD_NAME, adminUserId: member.id });
-      expect(await householdOf(member.id)).toBe(outcome.value!.id);
+      expect(outcome.value).toEqual({
+        household: expect.objectContaining({ name: NEW_HOUSEHOLD_NAME, adminUserId: member.id }),
+        memberIds: [admin.id],
+      });
+      expect(await householdOf(member.id)).toBe(outcome.value!.household.id);
       expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([admin.id]);
     });
 
@@ -113,7 +116,7 @@ describe("households", () => {
 
       const outcome = await moveToHouseholdOfOne(householdId, member.id);
 
-      expect(outcome.value).toMatchObject({ joinCode: null, joinCodeExpiresAt: null });
+      expect(outcome.value?.household).toMatchObject({ joinCode: null, joinCodeExpiresAt: null });
     });
 
     it("by the admin's hand, ends the same way", async () => {
@@ -122,7 +125,7 @@ describe("households", () => {
       const outcome = await kickUserFromHousehold(householdId, member.id, admin.id);
 
       expect(outcome.applied).toBe(true);
-      expect(await householdOf(member.id)).toBe(outcome.value!.id);
+      expect(await householdOf(member.id)).toBe(outcome.value!.household.id);
       expect(await isHouseholdMember(householdId, member.id)).toBe(false);
     });
 
@@ -397,6 +400,29 @@ describe("households", () => {
       expect(settled).toEqual([
         fulfilled(expect.objectContaining({ applied: true })),
         rejected("New admin must be a member of the household"),
+      ]);
+      await expectEveryAccountHoused();
+    });
+  });
+
+  describe("racing a leave against a join", () => {
+    it("names who stays as the move found them under the lock", async () => {
+      const { admin, member, householdId } = await sharedHousehold();
+      const joiner = await createTestUser();
+
+      const settled = await raceBehindLock(householdId, [
+        () => joinHousehold(joiner.id, { householdId }),
+        () => moveToHouseholdOfOne(householdId, member.id),
+      ]);
+
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ memberIds: [admin.id, member.id] })),
+        fulfilled(
+          expect.objectContaining({
+            applied: true,
+            value: expect.objectContaining({ memberIds: [admin.id, joiner.id] }),
+          })
+        ),
       ]);
       await expectEveryAccountHoused();
     });
