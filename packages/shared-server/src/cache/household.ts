@@ -5,40 +5,39 @@ import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 const CACHE_PREFIX = "norish:cache:household:user:";
 const CACHE_TTL_SECONDS = 30;
+/** What an invalidation leaves: readers miss, and no fill that read the old roster lands over it. */
+const INVALIDATED = "invalidated";
 
 type CachedHousehold = Awaited<ReturnType<typeof dbGetHouseholdForUser>>;
 
 export async function getCachedHouseholdForUser(userId: string): Promise<CachedHousehold> {
   const valkey = await getPublisherClient();
   const cacheKey = `${CACHE_PREFIX}${userId}`;
-
-  // Try cache first
   const cached = await valkey.get(cacheKey);
 
-  if (cached) {
+  if (cached && cached !== INVALIDATED) {
     return superjson.parse<CachedHousehold>(cached);
   }
 
-  // Fetch from DB
   const household = await dbGetHouseholdForUser(userId);
 
-  // Cache result (including null)
-  await valkey.setex(cacheKey, CACHE_TTL_SECONDS, superjson.stringify(household));
+  // Only into an empty key (null cached too): an invalidation since the read wins.
+  await valkey.set(cacheKey, superjson.stringify(household), "EX", CACHE_TTL_SECONDS, "NX");
 
   return household;
 }
 
 export async function invalidateHouseholdCache(userId: string): Promise<void> {
-  const valkey = await getPublisherClient();
-
-  await valkey.del(`${CACHE_PREFIX}${userId}`);
+  await invalidateHouseholdCacheForUsers([userId]);
 }
 
 export async function invalidateHouseholdCacheForUsers(userIds: string[]): Promise<void> {
   if (userIds.length === 0) return;
 
   const valkey = await getPublisherClient();
-  const keys = userIds.map((id) => `${CACHE_PREFIX}${id}`);
+  const marks = valkey.multi();
 
-  await valkey.del(...keys);
+  // Outlives any fill that read before the change; the next read after it fills afresh.
+  for (const id of userIds) marks.set(`${CACHE_PREFIX}${id}`, INVALIDATED, "EX", CACHE_TTL_SECONDS);
+  await marks.exec();
 }
