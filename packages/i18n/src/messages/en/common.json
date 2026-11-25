@@ -312,7 +312,14 @@
     "adminTransferred": "Transferred admin to {name}",
     "unknownMember": "Unknown",
     "removedTitle": "Removed from household",
-    "removedDescription": "An admin removed you from the household."
+    "removedDescription": "An admin removed you from the household.",
+    "joinRefused": {
+      "invalidCode": "That join code is not valid.",
+      "expired": "That join code has expired. Ask for a new one.",
+      "alreadyMember": "You are already in this household.",
+      "shared": "Leave your household first to join another one.",
+      "holdsThings": "Your household has recipes, groceries or plans of its own, so it cannot join another household yet."
+    }
   },
   "photos": {
     "pickFailedTitle": "Couldn't pick a photo",

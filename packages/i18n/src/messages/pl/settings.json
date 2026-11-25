@@ -301,14 +301,7 @@
       "description": "Wpisz kod dołączenia, aby dołączyć do istniejącego gospodarstwa domowego.",
       "codeLabel": "Kod dołączenia",
       "codePlaceholder": "6-cyfrowy kod",
-      "submitButton": "Dołącz do gospodarstwa domowego",
-      "refused": {
-        "invalidCode": "Ten kod dołączenia jest nieprawidłowy.",
-        "expired": "Ten kod dołączenia wygasł. Poproś o nowy.",
-        "alreadyMember": "Jesteś już w tym gospodarstwie domowym.",
-        "shared": "Najpierw opuść swoje gospodarstwo domowe, aby dołączyć do innego.",
-        "holdsThings": "Twoje gospodarstwo domowe ma własne przepisy, zakupy lub plany, więc nie może jeszcze dołączyć do innego."
-      }
+      "submitButton": "Dołącz do gospodarstwa domowego"
     }
   },
   "caldav": {

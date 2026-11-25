@@ -312,7 +312,14 @@
     "adminTransferred": "Overførte administrator til {name}",
     "unknownMember": "Ukjent",
     "removedTitle": "Fjernet fra husstanden",
-    "removedDescription": "En administrator har fjernet deg fra husstanden."
+    "removedDescription": "En administrator har fjernet deg fra husstanden.",
+    "joinRefused": {
+      "invalidCode": "Den koden er ikke gyldig.",
+      "expired": "Den koden har utløpt. Be om en ny.",
+      "alreadyMember": "Du er allerede i denne husstanden.",
+      "shared": "Forlat husstanden din først for å bli med i en annen.",
+      "holdsThings": "Husstanden din har egne oppskrifter, innkjøp eller planer, så den kan ikke bli med i en annen husstand ennå."
+    }
   },
   "photos": {
     "pickFailedTitle": "Kunne ikke velge bilde",

@@ -150,7 +150,7 @@ describe("useHouseholdMutations", () => {
         expect(adapter.toast.show).toHaveBeenCalledExactlyOnceWith({
           severity: "danger",
           title: "common.errors.operationFailed",
-          description: `settings.household.join.refused.${copy}`,
+          description: `common.household.joinRefused.${copy}`,
         })
       );
       expect(adapter.showError).not.toHaveBeenCalled();

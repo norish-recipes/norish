@@ -312,7 +312,14 @@
     "adminTransferred": "Admin übertragen an {name}",
     "unknownMember": "Unbekannt",
     "removedTitle": "Aus dem Haushalt entfernt",
-    "removedDescription": "Ein Admin hat Sie aus dem Haushalt entfernt."
+    "removedDescription": "Ein Admin hat Sie aus dem Haushalt entfernt.",
+    "joinRefused": {
+      "invalidCode": "Dieser Beitrittscode ist ungültig.",
+      "expired": "Dieser Beitrittscode ist abgelaufen. Bitten Sie um einen neuen.",
+      "alreadyMember": "Sie sind bereits in diesem Haushalt.",
+      "shared": "Verlassen Sie zuerst Ihren Haushalt, um einem anderen beizutreten.",
+      "holdsThings": "Ihr Haushalt hat eigene Rezepte, Einkäufe oder Pläne und kann deshalb noch keinem anderen Haushalt beitreten."
+    }
   },
   "photos": {
     "pickFailedTitle": "Foto konnte nicht gewählt werden",

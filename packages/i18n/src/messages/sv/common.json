@@ -312,7 +312,14 @@
     "adminTransferred": "Administratörsbehörigheten har överförts till {name}",
     "unknownMember": "Okänd",
     "removedTitle": "Borttagen från hushållet",
-    "removedDescription": "En administratör har tagit bort dig från hushållet."
+    "removedDescription": "En administratör har tagit bort dig från hushållet.",
+    "joinRefused": {
+      "invalidCode": "Den koden är inte giltig.",
+      "expired": "Den koden har gått ut. Be om en ny.",
+      "alreadyMember": "Du är redan med i det här hushållet.",
+      "shared": "Lämna ditt hushåll först för att gå med i ett annat.",
+      "holdsThings": "Ditt hushåll har egna recept, inköp eller planer och kan därför inte gå med i ett annat hushåll än."
+    }
   },
   "photos": {
     "pickFailedTitle": "Det gick inte att välja foto",

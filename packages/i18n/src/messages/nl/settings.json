@@ -301,14 +301,7 @@
       "description": "Voer een join code in om lid te worden van een bestaand huishouden.",
       "codeLabel": "Join code",
       "codePlaceholder": "6-cijferige code",
-      "submitButton": "Join huishouden",
-      "refused": {
-        "invalidCode": "Die join code is niet geldig.",
-        "expired": "Die join code is verlopen. Vraag om een nieuwe.",
-        "alreadyMember": "Je zit al in dit huishouden.",
-        "shared": "Verlaat eerst je huishouden om bij een ander te komen.",
-        "holdsThings": "Je huishouden heeft eigen recepten, boodschappen of plannen, dus het kan nog niet bij een ander huishouden."
-      }
+      "submitButton": "Join huishouden"
     }
   },
   "caldav": {

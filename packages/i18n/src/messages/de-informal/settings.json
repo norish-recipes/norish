@@ -301,14 +301,7 @@
       "description": "Gib einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten.",
       "codeLabel": "Beitrittscode",
       "codePlaceholder": "6-stelliger Code",
-      "submitButton": "Haushalt beitreten",
-      "refused": {
-        "invalidCode": "Dieser Beitrittscode ist ungültig.",
-        "expired": "Dieser Beitrittscode ist abgelaufen. Bitte um einen neuen.",
-        "alreadyMember": "Du bist bereits in diesem Haushalt.",
-        "shared": "Verlass zuerst deinen Haushalt, um einem anderen beizutreten.",
-        "holdsThings": "Dein Haushalt hat eigene Rezepte, Einkäufe oder Pläne und kann deshalb noch keinem anderen Haushalt beitreten."
-      }
+      "submitButton": "Haushalt beitreten"
     }
   },
   "caldav": {

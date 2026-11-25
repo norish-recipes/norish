@@ -12,11 +12,11 @@ import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
 
 const JOIN_REFUSAL_COPY: Record<JoinRefusal, string> = {
-  gone: "settings.household.join.refused.invalidCode",
-  expired: "settings.household.join.refused.expired",
-  "already-member": "settings.household.join.refused.alreadyMember",
-  shared: "settings.household.join.refused.shared",
-  "holds-things": "settings.household.join.refused.holdsThings",
+  gone: "common.household.joinRefused.invalidCode",
+  expired: "common.household.joinRefused.expired",
+  "already-member": "common.household.joinRefused.alreadyMember",
+  shared: "common.household.joinRefused.shared",
+  "holds-things": "common.household.joinRefused.holdsThings",
 };
 
 /** Each action resolves whether its request went through: false when it failed. */

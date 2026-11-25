@@ -301,14 +301,7 @@
       "description": "Skriv inn en invitasjonskode for å bli med i en eksisterende husstand.",
       "codeLabel": "Invitasjonskode",
       "codePlaceholder": "6-sifret kode",
-      "submitButton": "Bli med i husstand",
-      "refused": {
-        "invalidCode": "Den koden er ikke gyldig.",
-        "expired": "Den koden har utløpt. Be om en ny.",
-        "alreadyMember": "Du er allerede i denne husstanden.",
-        "shared": "Forlat husstanden din først for å bli med i en annen.",
-        "holdsThings": "Husstanden din har egne oppskrifter, innkjøp eller planer, så den kan ikke bli med i en annen husstand ennå."
-      }
+      "submitButton": "Bli med i husstand"
     }
   },
   "caldav": {

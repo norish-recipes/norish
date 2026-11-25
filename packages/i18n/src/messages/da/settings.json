@@ -301,14 +301,7 @@
       "description": "Indtast en tilmeldingskode for at tilmelde dig en eksisterende husstand.",
       "codeLabel": "Tilmeldingskode",
       "codePlaceholder": "6-cifret kode",
-      "submitButton": "Tilmeld husstand",
-      "refused": {
-        "invalidCode": "Den kode er ikke gyldig.",
-        "expired": "Den kode er udløbet. Bed om en ny.",
-        "alreadyMember": "Du er allerede i denne husstand.",
-        "shared": "Forlad først din husstand for at blive medlem af en anden.",
-        "holdsThings": "Din husstand har sine egne opskrifter, indkøb eller planer, så den kan endnu ikke blive medlem af en anden husstand."
-      }
+      "submitButton": "Tilmeld husstand"
     }
   },
   "caldav": {
