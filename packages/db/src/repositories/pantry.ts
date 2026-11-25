@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import { and, asc, desc, eq, notInArray, notLike, sql } from "drizzle-orm";
-import { QueryBuilder } from "drizzle-orm/pg-core";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -21,6 +21,8 @@ import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
 
 const qb = new QueryBuilder();
+const walkStart = alias(ingredients, "walk_start");
+const walkParent = alias(ingredients, "walk_parent");
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
 /** Pantry rows as read, with each Ingredient's spelling in every language. */
@@ -56,11 +58,13 @@ function selectPantry(tx: Db = db) {
       name: ingredients.name,
       ancestorIds: sql<string[]>`(
         with recursive up(ancestor, depth) as (
-          select i.parent_id, 1 from ${ingredients} i
-          where i.id = ${pantryIngredients.ingredientId} and i.parent_id is not null
+          select ${walkStart.parentId}, 1 from ${ingredients} as ${walkStart}
+          where ${walkStart.id} = ${pantryIngredients.ingredientId}
+            and ${walkStart.parentId} is not null
           union all
-          select p.parent_id, up.depth + 1 from up join ${ingredients} p on p.id = up.ancestor
-          where p.parent_id is not null and up.depth < 32
+          select ${walkParent.parentId}, up.depth + 1 from up
+          join ${ingredients} as ${walkParent} on ${walkParent.id} = up.ancestor
+          where ${walkParent.parentId} is not null and up.depth < 32
         )
         select coalesce(array_agg(ancestor::text order by depth), '{}'::text[]) from up
       )`,
