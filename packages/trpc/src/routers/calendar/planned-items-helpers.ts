@@ -132,9 +132,12 @@ export async function listPlannedRecipesByRange(
 ) {
   const items = await listItemsByRange(ctx, startISO, endISO);
 
-  return items
-    .filter((item) => (item.itemType === "recipe" && item.recipeId) || includeNotes)
-    .map(toPlannedRecipeListItem);
+  return (
+    items
+      // A recipe out of view stays, with its title only, as the app shows it.
+      .filter((item) => item.itemType === "recipe" || includeNotes)
+      .map(toPlannedRecipeListItem)
+  );
 }
 
 export async function createCalendarItem(ctx: CalendarProcedureContext, input: CreateItemInput) {

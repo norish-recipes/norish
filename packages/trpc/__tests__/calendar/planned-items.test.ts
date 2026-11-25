@@ -270,6 +270,34 @@ describe("calendar planned recipe openapi procedures", () => {
     ]);
   });
 
+  it("lists a planned recipe out of view with its title only, as the app does", async () => {
+    listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([
+      {
+        id: "5b8c3c1e-9b0a-4f1e-8a51-1f8f2b6f7a10",
+        userId: ctx.user.id,
+        date: "2025-01-15",
+        slot: "Dinner",
+        sortOrder: 0,
+        itemType: "recipe",
+        recipeId: null,
+        title: null,
+        version: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        recipeName: "Their stew",
+        recipeImage: null,
+        servings: null,
+        calories: null,
+      },
+    ]);
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    expect(await caller.listTodayPlannedRecipes({})).toEqual([
+      expect.objectContaining({ itemType: "recipe", recipeId: null, recipeName: "Their stew" }),
+    ]);
+  });
+
   it("lists the current week's planned recipes using server time", async () => {
     listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([]);
 
