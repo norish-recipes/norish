@@ -285,7 +285,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
               <div className="flex flex-wrap gap-2">
                 {editor.categoryOptions.map((category) => {
-                  const active = form.categories.includes(category);
+                  const active = hasName(form.categories, category);
 
                   return (
                     <ChipButton

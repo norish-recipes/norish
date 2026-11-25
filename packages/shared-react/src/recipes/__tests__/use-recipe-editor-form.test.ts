@@ -106,6 +106,15 @@ describe("useRecipeEditorForm", () => {
     expect(result.current.form.categories).toEqual(["Breakfast"]);
   });
 
+  it("toggles a Category off whatever its case, by the shared fold rule", () => {
+    const { result } = renderHook(() =>
+      useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" })
+    );
+
+    act(() => result.current.toggleCategory("soups"));
+    expect(result.current.form.categories).toEqual([]);
+  });
+
   it("takes a new recipe's system from its lines until the reader picks one", () => {
     const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }));
     const cups = { ingredientName: "flour", amount: 2, unit: "cups", order: 0 } as const;

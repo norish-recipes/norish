@@ -59,8 +59,20 @@ vi.mock("@/components/servings-stepper", () => ({ ServingsStepper: () => null })
 vi.mock("@/components/checkmark", () => ({ Checkmark: () => <span>ticked</span> }));
 vi.mock("@/components/slice-row", () => ({ SliceHairline: () => null, sliceRowClass: () => "" }));
 vi.mock("@/components/toggle-chip", () => ({
-  ToggleChip: ({ label, onPress, disabled, testID }: Props & { label: string }) => (
-    <button disabled={disabled} data-testid={testID} type="button" onClick={onPress}>
+  ToggleChip: ({
+    label,
+    onPress,
+    disabled,
+    testID,
+    active,
+  }: Props & { label: string; active?: boolean }) => (
+    <button
+      aria-pressed={active}
+      disabled={disabled}
+      data-testid={testID}
+      type="button"
+      onClick={onPress}
+    >
       {label}
     </button>
   ),
@@ -208,7 +220,7 @@ function renderCard(set = vi.fn(), onAddCategory = vi.fn(), over: object = {}) {
   render(
     <TagsAndCategoriesCard
       categoryLabel={(name) => name}
-      categoryOptions={[]}
+      categoryOptions={["Dinner"]}
       form={form(over)}
       recipeId={RECIPE}
       set={set}
@@ -219,6 +231,14 @@ function renderCard(set = vi.fn(), onAddCategory = vi.fn(), over: object = {}) {
 
   return { set, onAddCategory };
 }
+
+describe("the Category chips", () => {
+  it("show a Category as selected whatever its case", () => {
+    renderCard(vi.fn(), vi.fn(), { categories: ["dinner"] });
+
+    expect(screen.getByTestId("editor-category-Dinner").getAttribute("aria-pressed")).toBe("true");
+  });
+});
 
 describe("the Tag picker", () => {
   it("picks an existing Tag typed in another case, and offers no Create row for it", () => {

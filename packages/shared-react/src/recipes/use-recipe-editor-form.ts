@@ -148,8 +148,8 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   const toggleCategory = (category: RecipeCategory) =>
     setForm((prev) => ({
       ...prev,
-      categories: prev.categories.includes(category)
-        ? prev.categories.filter((c) => c !== category)
+      categories: hasName(prev.categories, category)
+        ? prev.categories.filter((c) => !hasName([c], category))
         : [...prev.categories, category],
     }));
   // An entry of the list, picked or just created: the picker makes new ones, a save makes none.

@@ -69,7 +69,7 @@ export function TagsAndCategoriesCard({
           {categoryOptions.map((category) => (
             <ToggleChip
               key={category}
-              active={form.categories.includes(category)}
+              active={hasName(form.categories, category)}
               label={categoryLabel(category)}
               testID={`editor-category-${category}`}
               onPress={() => onToggleCategory(category)}
