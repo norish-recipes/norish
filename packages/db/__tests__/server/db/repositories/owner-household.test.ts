@@ -6,6 +6,7 @@
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { isRetryableConflict } from "@norish/db/repositories/constraint-violation";
 import { createCookbook } from "@norish/db/repositories/cookbooks";
 import {
   deleteAccount,
@@ -200,6 +201,14 @@ describe("a recipe's household follows its Owner", () => {
       await expectInvariant();
     });
 
+    it("takes only its own refusal for a retry, not every serialization failure", () => {
+      const serialization = Object.assign(new Error("could not serialize access"), {
+        code: "40001",
+      });
+
+      expect(isRetryableConflict(new Error("Failed query", { cause: serialization }))).toBe(false);
+    });
+
     it("refuses a recipe written during a move, for a retry", async () => {
       const { member, householdId } = await memberWithThings();
       let writing: Promise<{ householdId: string }> = Promise.resolve({ householdId: "" });
@@ -220,7 +229,8 @@ describe("a recipe's household follows its Owner", () => {
         await waitForLockWait();
       });
 
-      await expect(writing).rejects.toMatchObject({ cause: { code: "40001" } });
+      await expect(writing).rejects.toMatchObject({ cause: { code: "NH001" } });
+      expect(isRetryableConflict(await writing.catch((error: unknown) => error))).toBe(true);
       expect(newHousehold).not.toBe(householdId);
       await expectInvariant();
     });
@@ -287,7 +297,7 @@ describe("a recipe's household follows its Owner", () => {
       expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected"]);
       expect(settled[0]).toEqual(fulfilled(expect.objectContaining({ applied: true })));
       expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
-        /"code":"40001"/
+        /"code":"NH001"/
       );
       await expectInvariant();
     });
@@ -304,7 +314,7 @@ describe("a recipe's household follows its Owner", () => {
       // A conflict to retry, never a deadlock's victim (40P01), and nothing left behind.
       expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected", "fulfilled"]);
       expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
-        /"code":"40001"/
+        /"code":"NH001"/
       );
       expect(
         await getTestDb()
@@ -384,7 +394,7 @@ describe("a recipe's household follows its Owner", () => {
 
       expect(settled[0]).toEqual(fulfilled(expect.objectContaining({ leftHouseholdId: own })));
       expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
-        /"code":"40001"/
+        /"code":"NH001"/
       );
       await expectInvariant();
     });
@@ -418,7 +428,7 @@ describe("a recipe's household follows its Owner", () => {
       // Refused for a retry, which then finds the account gone; never a deadlock's victim.
       expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected"]);
       expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
-        /"code":"40001"/
+        /"code":"NH001"/
       );
       expect(
         await getTestDb()
