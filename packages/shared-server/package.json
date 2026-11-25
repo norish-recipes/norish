@@ -51,6 +51,7 @@
     "./realtime/audience": "./src/realtime/audience.ts",
     "./realtime/caldav": "./src/realtime/caldav.ts",
     "./realtime/calendar": "./src/realtime/calendar.ts",
+    "./realtime/calendar-items": "./src/realtime/calendar-items.ts",
     "./realtime/channel": "./src/realtime/channel.ts",
     "./realtime/config": "./src/realtime/config.ts",
     "./realtime/connection": "./src/realtime/connection.ts",

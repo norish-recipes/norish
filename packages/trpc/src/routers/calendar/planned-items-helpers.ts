@@ -21,11 +21,11 @@ import {
   moveItem,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { publishCalendarItemEvent } from "@norish/shared-server/realtime/calendar-items";
 import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
 import { assertRecipeAccess } from "../recipes/helpers";
-import { publishCalendarItemEvent } from "./publish";
 
 export type CalendarProcedureContext = {
   user: { id: string };
