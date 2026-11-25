@@ -64,3 +64,14 @@ Review round 1:
 16. Fixed: those comments are two lines.
 
 Moved to ticket 09: list changes reaching a leaver's recipes and the foreign keys behind them. Moved to ticket 06: a save re-creating a deleted name, the cross-household editor's Cuisines. Rejected: request ordering around a membership move, exact-fold Cuisine import (ADR-0022), allergy names compared by fold, shared SQL fragments inside packages/db, over-long names. Asked of the maintainer: hand-written SQL in list-entries.ts.
+
+Review round 2:
+
+1. Fixed: filters, recipe saves and archive reads take any stored Category name; only a new entry is bounded (`LIST_NAME_MAX`).
+2. Fixed: `entriesByFoldTx` creates no entry over its kind's bound (debug log); the recipe's other entries still save.
+3. Fixed: `sortSourceCategories` keys by `entryFold`; a Norish archive's Categories match the household's by fold, then near-match.
+4. Fixed: `lists.changed` is policy-scoped, published to the household's `policyAudience` at publish, kinds only.
+5. Fixed: E2E asserts Discover offers exactly the reader's own Tag.
+6. Fixed: the list announce is asserted once the create answers, before the after-commit wait.
+
+Rejected: attach or detach not bumping the entry version; queue-time matching when the importer moves before the job runs; an extra announce from the extend strategy.
