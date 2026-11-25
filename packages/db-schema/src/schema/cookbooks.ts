@@ -1,10 +1,9 @@
-import { sql } from "drizzle-orm";
 import { index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 import { households } from "./households";
 import { recipes } from "./recipes";
-import { mutableRowColumns } from "./shared";
+import { householdIdFilledByTrigger, mutableRowColumns } from "./shared";
 
 /**
  * A Cookbook: a titled set of recipes, and nothing else.
@@ -24,11 +23,7 @@ export const cookbooks = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    /** Always the Owner's current household: a trigger sets it on every write and membership move. */
-    householdId: uuid("household_id")
-      .notNull()
-      .references(() => households.id, { onDelete: "cascade" })
-      .$defaultFn(() => sql`NULL`),
+    householdId: householdIdFilledByTrigger(() => households.id),
     title: text("title").notNull(),
     image: text("image"),
     ...mutableRowColumns,

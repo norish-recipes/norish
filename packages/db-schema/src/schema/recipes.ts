@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   index,
   integer,
@@ -15,7 +14,7 @@ import {
 import type { StoredNutrients } from "./ingredient-nutrition";
 import { users } from "./auth";
 import { households } from "./households";
-import { versionColumn } from "./shared";
+import { householdIdFilledByTrigger, versionColumn } from "./shared";
 
 export const measurementSystemEnum = pgEnum("measurement_system", ["metric", "us"]);
 
@@ -27,11 +26,7 @@ export const recipes = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    /** Always the Owner's current household: a trigger sets it on every write and membership move. */
-    householdId: uuid("household_id")
-      .notNull()
-      .references(() => households.id, { onDelete: "cascade" })
-      .$defaultFn(() => sql`NULL`),
+    householdId: householdIdFilledByTrigger(() => households.id),
     name: text("name").notNull(),
     description: text("description"),
     url: text("url"),
