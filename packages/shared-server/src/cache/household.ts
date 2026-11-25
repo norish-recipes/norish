@@ -4,25 +4,35 @@ import { getHouseholdForUser as dbGetHouseholdForUser } from "@norish/db/reposit
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 const CACHE_PREFIX = "norish:cache:household:user:";
+/** Bumped by each invalidation; an entry counts only while it carries the current one. */
+const GENERATION_PREFIX = "norish:cache:household:generation:";
 const CACHE_TTL_SECONDS = 30;
-/** What an invalidation leaves: readers miss, and no fill that read the old roster lands over it. */
-const INVALIDATED = "invalidated";
 
 type CachedHousehold = Awaited<ReturnType<typeof dbGetHouseholdForUser>>;
 
 export async function getCachedHouseholdForUser(userId: string): Promise<CachedHousehold> {
   const valkey = await getPublisherClient();
   const cacheKey = `${CACHE_PREFIX}${userId}`;
-  const cached = await valkey.get(cacheKey);
+  const [cached, stored] = await valkey.mget(cacheKey, `${GENERATION_PREFIX}${userId}`);
+  const generation = stored ?? "0";
 
-  if (cached && cached !== INVALIDATED) {
-    return superjson.parse<CachedHousehold>(cached);
+  if (cached) {
+    const split = cached.indexOf(":");
+
+    if (cached.slice(0, split) === generation) {
+      return superjson.parse<CachedHousehold>(cached.slice(split + 1));
+    }
   }
 
   const household = await dbGetHouseholdForUser(userId);
 
-  // Only into an empty key (null cached too): an invalidation since the read wins.
-  await valkey.set(cacheKey, superjson.stringify(household), "EX", CACHE_TTL_SECONDS, "NX");
+  // Stamped with the generation read before the database: an invalidation since makes it stale.
+  await valkey.set(
+    cacheKey,
+    `${generation}:${superjson.stringify(household)}`,
+    "EX",
+    CACHE_TTL_SECONDS
+  );
 
   return household;
 }
@@ -35,9 +45,8 @@ export async function invalidateHouseholdCacheForUsers(userIds: string[]): Promi
   if (userIds.length === 0) return;
 
   const valkey = await getPublisherClient();
-  const marks = valkey.multi();
+  const bumps = valkey.multi();
 
-  // Outlives any fill that read before the change; the next read after it fills afresh.
-  for (const id of userIds) marks.set(`${CACHE_PREFIX}${id}`, INVALIDATED, "EX", CACHE_TTL_SECONDS);
-  await marks.exec();
+  for (const id of userIds) bumps.incr(`${GENERATION_PREFIX}${id}`);
+  await bumps.exec();
 }
