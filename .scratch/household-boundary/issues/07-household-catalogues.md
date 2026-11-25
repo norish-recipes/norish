@@ -6,12 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] **Columns:** `ingredients`, `ingredient_aliases` and `ingredient_junk_pile` get `household_id` (null means the seed).
+- [x] **Columns:** `ingredients`, `ingredient_aliases` and `ingredient_junk_pile` get `household_id` (null means the seed).
   - A spelling's fold and an Ingredient's name are unique within a household and among the seed.
   - Where a household's spelling and the seed's are the same, the household's wins for that household.
   - The seed refresh (`packages/db/src/repositories/ingredient-seed.ts`) finds an entry by id, else by the seeded Ingredient holding its name, and never adopts or changes a household's food.
   - `ownerId` stays as "added by".
-- [ ] **Migration** splits every non-seed Ingredient used by more than one household into a copy per household. The minting household keeps the original id. A copy carries:
+- [x] **Migration** splits every non-seed Ingredient used by more than one household into a copy per household. The minting household keeps the original id. A copy carries:
   - the spellings that household's rows use;
   - the icon;
   - a parent in the same household or the seed;
@@ -19,20 +19,33 @@
 
   Aisle Links, Product Links and store preferences follow the copy belonging to their store's household. Ownerless non-seed foods go to the server owner's household (spec, "Upgrade").
 
-- [ ] **The resolver** (`packages/shared-server/src/ingredients/resolver.ts`) reads only the household's spellings and the seed's, and mints into the household that triggered it.
-- [ ] **Rights** (`mayEditOwnedRow` and its callers in `packages/shared-server/src/ingredients/catalogue.ts`):
+- [x] **The resolver** (`packages/shared-server/src/ingredients/resolver.ts`) reads only the household's spellings and the seed's, and mints into the household that triggered it.
+- [x] **Rights** (`mayEditOwnedRow` and its callers in `packages/shared-server/src/ingredients/catalogue.ts`):
   - any member of the household may act;
   - the seed is admin-only;
   - a merge needs edit on both foods;
   - an alias added to a seed food is the household's;
   - the ingredient policy is gone.
-- [ ] **AI per household:** the automatic review, Catalogue Cleanup and Fill Gaps (`packages/trpc/src/routers/admin/ingredient-catalogue.ts`, queue workers) run per household plus the seed. An admin-started run loops over households. AI Changes and flags are listed to the owning household.
-- [ ] **Export** (`apps/web/app/(app)/export/ingredients/route.ts`): the seed plus the reader's household's foods.
-- [ ] **Adding by hand:** an `ingredients.add` procedure (a name plus optional spellings) marks the food as added by hand. The unused sweep and AI never delete it. Minted foods keep the 90-day rule.
-- [ ] **Realtime:** catalogue events go on the household channel.
-- [ ] **Tests:**
+- [x] **AI per household:** the automatic review, Catalogue Cleanup and Fill Gaps (`packages/trpc/src/routers/admin/ingredient-catalogue.ts`, queue workers) run per household plus the seed. An admin-started run loops over households. AI Changes and flags are listed to the owning household.
+- [x] **Export** (`apps/web/app/(app)/export/ingredients/route.ts`): the seed plus the reader's household's foods.
+- [x] **Adding by hand:** an `ingredients.add` procedure (a name plus optional spellings) marks the food as added by hand. The unused sweep and AI never delete it. Minted foods keep the 90-day rule.
+- [x] **Realtime:** catalogue events go on the household channel.
+- [x] **Tests:**
   - resolution never crosses households: B's "kipfilet XL" mints B's own food even though A has one;
   - a household spelling on a seed food changes only that household's resolution;
   - a cross-household merge is refused;
   - a migration test for the split;
   - E2E with two households on the Ingredients page.
+
+## Comments
+
+- Migration 0093 (SQL, rerunnable): a seeded food (`off_id`) and the seed's own spellings and junk stay `household_id` null; an own food goes to its minter's household, else the heir of ticket 03 (server owner, longest-standing admin, account), and with no account at all it is deleted; a person's spelling on a seeded food goes to its adder's household (else the heir's). A seeded food under an own parent loses that parent. Every household naming an own food (recipe lines through the recipe's household; groceries, recurring, Pantry, corrections, store preferences; Aisle and Product Links through their Store's household; a child's own parents, recursively) other than its home gets a copy: no "added by", same flags and icon file, the spellings its rows use (else the oldest), its parent as that household's copy or the seed's, AI estimates, and the merge/parent/plain-name AI Changes remapped to its spellings and parents; a spelling change stays with the spelling's household. Every row of that household is re-pointed; a person's spelling on a seeded food is copied per household using it. Junk: the seed's stays, every other mark is held for each household. Names and folds were unique server-wide, so the split makes no duplicates; a household food named like a seeded one is tested in the seed refresh instead.
+- Uniqueness: partial unique indexes on (household, lower(name)) / (household, fold) where household set, and on lower(name) / fold among the seed; CHECK `(household_id is null) = (off_id is not null)`. Reads are `inCatalogue` (`catalogue-scope.ts`), the household's row of a fold first; an automatic spelling (rename, plain name, cleanup rewrite) is never written over a fold the catalogue knows, so only a person's add shadows the seed. A household lifts a seed junk mark for itself with a `names-a-food` row.
+- Resolver: `ResolveActor.householdId` required, per-household junk in the rules cache; recipe saves read the recipe's household when they resolve (`lineHousehold`), groceries/recurring/Pantry/store lookups the request's, boot conversions and re-resolution each row's. A mint whose name the household or the seed has joins that food (a seeded one only gains the spelling). Seed refresh finds by `off_id`, else the seeded food holding the name, never adopts (`adopted` gone).
+- Rights: the household's rows any member, the seed's admins; a by-id read outside the catalogue answers not found. Merge: same household, or a household's food into a seeded one by an admin of that household; seeded into a household's is forbidden. A seeded spelling moves only to a seeded food; a seeded food is filed only under a seeded one.
+- AI: every change runs in the asked food's household plus the seed (`lockForAI` refuses others) and records `household_id`; listed to that household, null rows to admins (none are made). Clean up, Fill gaps and the sweep loop households; a seeded food's added spellings are checked per household.
+- `ingredients.add({ name, spellings?, locale? })` answers `{ ingredient: IngredientListItem | null, created }`; an existing household or seeded food of the name answers `created: false` unchanged; rename's name rules; `added_by_hand` keeps it listed, unswept and out of AI.
+- Realtime: `ingredients.changed` is policy-scoped: the household channel, everyone for an admin's seed edit. `ctx.userIds` and `memberIds` are gone; the roster cache stays for the WS context, export and media session; `householdMemberIdsSql` (random picks) and `getHouseholdMemberIdsByUserId` (CalDAV dedup) read account rows.
+- Ticket 08: `icons`, `names`, `nutrition(For)` and library suggestions answer only the reader's catalogue, so another household's recipe shows no icons or nutrition for its own foods until its lines are read through the reader's catalogue. Ticket 09 must re-home a leaver's lines, which still point at the old household's foods and spellings (no constraint blocks it; deleting that household's last member then drops those line foods), and merge catalogues on join; `HELD_BY_HOUSEHOLD` now counts foods, spellings and junk.
+- Not moved: first-start-cleanup, review, spelling-check, resolver, plain-names, resolver-ai, parent-from-words, ingredient-nutrition and the api upgrade tests still read the test db directly (only the listed files moved). The E2E spec typechecks and lints but was not run.
+
