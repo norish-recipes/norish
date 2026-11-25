@@ -15,6 +15,7 @@ import {
 } from "@norish/db/schema";
 
 import type { RecipeListContext } from "./recipes";
+import { lineageCte } from "./ingredient-kinds";
 import { isFirstLineFood } from "./ingredients";
 import { buildPolicyCondition } from "./recipes";
 
@@ -82,9 +83,6 @@ export interface NutritionNode {
   nutritionCodes: NutritionCodes | null;
 }
 
-/** How deep the tree is ever walked: a guard, since the tree has no cycle to loop on. */
-const MAX_DEPTH = 64;
-
 /** These Ingredients and every ancestor of each, by id. */
 export async function findNutritionLineage(
   ids: readonly string[]
@@ -93,37 +91,20 @@ export async function findNutritionLineage(
 
   if (wanted.length === 0) return new Map();
 
-  const result = await db.execute<{
-    id: string;
-    name: string;
-    parent_id: string | null;
-    off_id: string | null;
-    nutrition_codes: NutritionCodes | null;
-  }>(sql`
-    with recursive lineage(id, depth) as (
-      select i.id, 0 from ${ingredients} i
-      where i.id = any(${sql.param(wanted)}::uuid[])
-      union
-      select p.id, lineage.depth + 1 from lineage
-      join ${ingredients} c on c.id = lineage.id
-      join ${ingredients} p on p.id = c.parent_id
-      where lineage.depth < ${MAX_DEPTH}
-    )
-    select distinct i.id::text as id, i.name, i.parent_id::text as parent_id, i.off_id, i.nutrition_codes
-    from lineage join ${ingredients} i on i.id = lineage.id`);
+  const lineage = lineageCte(wanted);
+  const rows = await db
+    .with(lineage)
+    .selectDistinct({
+      id: ingredients.id,
+      name: ingredients.name,
+      parentId: ingredients.parentId,
+      offId: ingredients.offId,
+      nutritionCodes: ingredients.nutritionCodes,
+    })
+    .from(lineage)
+    .innerJoin(ingredients, eq(ingredients.id, lineage.lineageId));
 
-  return new Map(
-    result.rows.map((row) => [
-      row.id,
-      {
-        id: row.id,
-        name: row.name,
-        parentId: row.parent_id,
-        offId: row.off_id,
-        nutritionCodes: row.nutrition_codes,
-      },
-    ])
-  );
+  return new Map(rows.map((row) => [row.id, row]));
 }
 
 /** Norish's rules about these taxonomy entries. */

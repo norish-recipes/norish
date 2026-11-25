@@ -9,7 +9,12 @@ import { uuidListSql } from "./raw-sql";
 /** How deep a walk down Parent Ingredient goes; a cycle in the data ends here. */
 const KIND_DEPTH_MAX = 32;
 
+/** How deep a walk up Parent Ingredient goes: a guard, since the tree has no cycle to loop on. */
+const LINEAGE_DEPTH_MAX = 64;
+
 const child = alias(ingredients, "child");
+const lineageChild = alias(ingredients, "lineage_child");
+const lineageParent = alias(ingredients, "lineage_parent");
 const qb = new QueryBuilder();
 
 /**
@@ -47,5 +52,23 @@ export function lineNamesKindSql(lineId: AnyPgColumn, ids: readonly string[]): S
           inArray(ingredientAliases.ingredientId, ingredientKindsSql(ids))
         )
       )
+  );
+}
+
+/**
+ * The CTE `lineage(lineage_id)`: each Ingredient of `ids` and every ancestor of each, possibly
+ * repeated. No recursive CTE in the builder, so the walk is SQL over the schema inside a `$with`.
+ */
+export function lineageCte(ids: readonly string[]) {
+  return qb.$with("lineage", { lineageId: sql<string>`lineage_id`.as("lineage_id") }).as(
+    sql`with recursive walk(id, depth) as (
+      select ${ingredients.id}, 0 from ${ingredients} where ${inArray(ingredients.id, [...ids])}
+      union
+      select ${lineageParent.id}, walk.depth + 1 from walk
+      join ${ingredients} as ${lineageChild} on ${lineageChild.id} = walk.id
+      join ${ingredients} as ${lineageParent} on ${lineageParent.id} = ${lineageChild.parentId}
+      where walk.depth < ${LINEAGE_DEPTH_MAX}
+    )
+    select id as lineage_id from walk`
   );
 }
