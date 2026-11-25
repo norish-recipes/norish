@@ -12,7 +12,6 @@ vi.mock("@norish/auth/account-deletion", () => ({ deleteUserAccount }));
 vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
-    MASTER_KEY: "QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=",
     UPLOADS_DIR: "/tmp",
   },
 }));
