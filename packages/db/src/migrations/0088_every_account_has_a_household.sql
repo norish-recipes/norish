@@ -14,17 +14,8 @@ WHERE NOT EXISTS (
 );--> statement-breakpoint
 DROP INDEX IF EXISTS "idx_household_users_user_id";--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "uq_household_users_user_id" ON "household_users" USING btree ("user_id");--> statement-breakpoint
--- An account without a household gets a household of one, named as sign-up names one.
-WITH made AS (
-  INSERT INTO "households" ("name", "admin_user_id")
-  SELECT 'My household', u."id" FROM "user" u
-  WHERE NOT EXISTS (SELECT 1 FROM "household_users" hu WHERE hu."user_id" = u."id")
-  RETURNING "id", "admin_user_id"
-)
-INSERT INTO "household_users" ("household_id", "user_id")
-SELECT "id", "admin_user_id" FROM made;
---> statement-breakpoint
 -- Every new account, by any Sign-in Method, gets its household of one in the transaction that creates it.
+-- Before the backfill: CREATE TRIGGER locks "user" against inserts until the migration commits.
 CREATE OR REPLACE FUNCTION "create_household_of_one"() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE made uuid;
 BEGIN
@@ -35,4 +26,13 @@ END;
 $$;--> statement-breakpoint
 DROP TRIGGER IF EXISTS "trg_user_household_of_one" ON "user";--> statement-breakpoint
 CREATE TRIGGER "trg_user_household_of_one" AFTER INSERT ON "user"
-FOR EACH ROW EXECUTE FUNCTION "create_household_of_one"();
+FOR EACH ROW EXECUTE FUNCTION "create_household_of_one"();--> statement-breakpoint
+-- An account without a household gets a household of one, named as sign-up names one.
+WITH made AS (
+  INSERT INTO "households" ("name", "admin_user_id")
+  SELECT 'My household', u."id" FROM "user" u
+  WHERE NOT EXISTS (SELECT 1 FROM "household_users" hu WHERE hu."user_id" = u."id")
+  RETURNING "id", "admin_user_id"
+)
+INSERT INTO "household_users" ("household_id", "user_id")
+SELECT "id", "admin_user_id" FROM made;
