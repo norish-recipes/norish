@@ -21,14 +21,21 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { XMarkIcon } from "@heroicons/react/16/solid";
+
+interface TagRemoval {
+  /** The accessible name of a chip's cross. */
+  label: (tag: string) => string;
+  onRemove: (tag: string) => void;
+}
 
 interface SortableTagItemProps {
   tag: string;
-  label?: string;
-  onActivate: (tag: string) => void;
+  removal?: TagRemoval;
+  onActivate?: (tag: string) => void;
 }
 
-function SortableTagItem({ tag, label, onActivate }: SortableTagItemProps) {
+function SortableTagItem({ tag, removal, onActivate }: SortableTagItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tag,
   });
@@ -41,32 +48,43 @@ function SortableTagItem({ tag, label, onActivate }: SortableTagItemProps) {
 
   return (
     // A Tag on the recipe is a chip that names a thing, and it is active:
-    // filled in the accent colour, like a selected filter chip.
-    <button
+    // filled in the accent colour, like a selected filter chip. The name is the drag handle and
+    // does what `onActivate` says; the cross, when there is one, is what removes it.
+    <span
       ref={setNodeRef}
-      aria-label={label}
-      className="bg-accent text-accent-foreground hover:bg-accent/90 inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:cursor-grabbing"
+      className="bg-accent text-accent-foreground inline-flex items-center gap-1 rounded-full py-1.5 pr-1.5 pl-3 text-xs font-medium"
       style={style}
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onActivate(tag);
-      }}
-      {...attributes}
-      {...listeners}
     >
-      <span>{tag}</span>
-    </button>
+      <button
+        className="cursor-grab touch-none active:cursor-grabbing"
+        type="button"
+        onClick={onActivate && (() => onActivate(tag))}
+        {...attributes}
+        {...listeners}
+      >
+        {tag}
+      </button>
+      {removal ? (
+        <button
+          aria-label={removal.label(tag)}
+          className="hover:bg-accent-foreground/20 inline-flex size-4 cursor-pointer items-center justify-center rounded-full transition-colors"
+          type="button"
+          onClick={() => removal.onRemove(tag)}
+        >
+          <XMarkIcon aria-hidden className="size-3" />
+        </button>
+      ) : null}
+    </span>
   );
 }
 
 interface SortableTagChipsProps {
   value: string[];
   onChange: (tags: string[]) => void;
-  /** What a click on a chip does: the pointer sensor's distance tells it from a drag. */
-  onActivate: (tag: string) => void;
-  /** The accessible name of a chip, when its click does something its text does not say. */
-  chipLabel?: (tag: string) => string;
+  /** What a click on a chip's name does; the pointer sensor's distance tells it from a drag. */
+  onActivate?: (tag: string) => void;
+  /** A cross on each chip that removes it. */
+  removal?: TagRemoval;
   /** The field that follows the chips, inline. */
   children?: ReactNode;
 }
@@ -76,7 +94,7 @@ export function SortableTagChips({
   value,
   onChange,
   onActivate,
-  chipLabel,
+  removal,
   children,
 }: SortableTagChipsProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -108,7 +126,7 @@ export function SortableTagChips({
       >
         <SortableContext items={value} strategy={horizontalListSortingStrategy}>
           {value.map((tag) => (
-            <SortableTagItem key={tag} label={chipLabel?.(tag)} tag={tag} onActivate={onActivate} />
+            <SortableTagItem key={tag} removal={removal} tag={tag} onActivate={onActivate} />
           ))}
         </SortableContext>
 

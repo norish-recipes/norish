@@ -100,6 +100,31 @@ beforeEach(() => {
 });
 
 describe("TagPicker chips", () => {
+  it("removes a Tag with its chip's cross, and a plain click on the chip keeps it", async () => {
+    const user = userEvent.setup();
+
+    render(<Tags initial={["BBQ", "Café"]} />);
+    await user.click(screen.getByText("BBQ"));
+    expect(screen.getByTestId("tags")).toHaveTextContent("BBQ|Café");
+
+    await user.click(screen.getByRole("button", { name: "removeNamed BBQ" }));
+    expect(screen.getByTestId("tags")).toHaveTextContent(/^Café$/);
+  });
+
+  it("removes the last Tag on Backspace in the empty field, and nothing while text is there", async () => {
+    const user = userEvent.setup();
+
+    render(<Tags initial={["BBQ", "Café"]} />);
+
+    const field = screen.getByRole("combobox", { name: "addTag" });
+
+    await user.type(field, "x{Backspace}");
+    expect(screen.getByTestId("tags")).toHaveTextContent("BBQ|Café");
+
+    await user.keyboard("{Backspace}");
+    expect(screen.getByTestId("tags")).toHaveTextContent(/^BBQ$/);
+  });
+
   it("says the list could not be read, with a way to read it again", async () => {
     const user = userEvent.setup();
 

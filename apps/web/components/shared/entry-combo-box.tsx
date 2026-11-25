@@ -23,6 +23,8 @@ interface EntryComboBoxProps {
   entryLabel?: (name: string) => string;
   /** Open on focus and list everything, for a short list; else only once something is typed. */
   opensOnFocus?: boolean;
+  /** Backspace in the empty field, for a field that holds chips. */
+  onBackspaceEmpty?: () => void;
   className?: string;
   inputClassName?: string;
   inputVariant?: "primary" | "secondary";
@@ -41,6 +43,7 @@ export function EntryComboBox({
   placeholder,
   entryLabel,
   opensOnFocus = false,
+  onBackspaceEmpty,
   className,
   inputClassName,
   inputVariant = "secondary",
@@ -118,6 +121,9 @@ export function EntryComboBox({
           placeholder={placeholder}
           style={{ fontSize: "16px" }}
           variant={inputVariant}
+          onKeyDown={(event) => {
+            if (event.key === "Backspace" && typed === "") onBackspaceEmpty?.();
+          }}
         />
         <ComboBox.Popover>
           {/* Say why in the list itself: an open list hides the field below from a screen reader. */}

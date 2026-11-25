@@ -24,9 +24,11 @@ export default function TagPicker({ value, onChange, recipeId }: TagPickerProps)
     // A field holding chips is still a field: the same soft fill and border as the form's inputs.
     <div className="group bg-default flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border border-(--field-border) px-3 py-2 shadow-none">
       <SortableTagChips
-        chipLabel={(tag) => t("removeNamed", { name: tag })}
+        removal={{
+          label: (tag) => t("removeNamed", { name: tag }),
+          onRemove: (tag) => onChange(value.filter((other) => other !== tag)),
+        }}
         value={value}
-        onActivate={(tag) => onChange(value.filter((other) => other !== tag))}
         onChange={onChange}
       >
         <EntryComboBox
@@ -37,6 +39,7 @@ export default function TagPicker({ value, onChange, recipeId }: TagPickerProps)
           placeholder={value.length === 0 ? t("addTag") : ""}
           recipeId={recipeId}
           isSelected={(entry) => hasName(value, entry.name)}
+          onBackspaceEmpty={() => onChange(value.slice(0, -1))}
           onSelect={(entry) => {
             if (!hasName(value, entry.name)) onChange([...value, entry.name]);
           }}
