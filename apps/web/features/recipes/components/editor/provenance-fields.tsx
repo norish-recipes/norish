@@ -143,7 +143,11 @@ export default function ProvenanceFields({
           placeholder={t("cuisines")}
           recipeId={recipeId}
           isSelected={(entry) => value.cuisineIds.includes(entry.id)}
-          onSelect={(entry) => patch({ cuisineIds: [...value.cuisineIds, entry.id] })}
+          onSelect={(entry) => {
+            if (!value.cuisineIds.includes(entry.id)) {
+              patch({ cuisineIds: [...value.cuisineIds, entry.id] });
+            }
+          }}
         />
       </div>
 

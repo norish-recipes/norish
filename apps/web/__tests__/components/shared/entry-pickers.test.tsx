@@ -343,6 +343,16 @@ describe("Cuisine picker", () => {
     expect(screen.getByTestId("ids")).toHaveTextContent("new-Peruvian");
   });
 
+  it("adds a Cuisine by id only when the recipe does not have it yet", async () => {
+    const user = userEvent.setup();
+
+    render(<Cuisines carried={[{ id: "new-Peruvian", name: "Peruvian" }]} />);
+    await user.type(screen.getByRole("combobox", { name: "cuisines" }), "Peruvian");
+    await user.click(screen.getByRole("option", { name: "create Peruvian" }));
+
+    expect(screen.getByTestId("ids").textContent).toBe("new-Peruvian");
+  });
+
   it("names a carried Cuisine the list does not offer, never by its id", () => {
     render(<Cuisines carried={[{ id: "old-id", name: "Old household's" }]} />);
 
