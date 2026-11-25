@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, exists, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { LineJoin } from "@norish/shared/lib/line-foods";
@@ -23,7 +24,9 @@ import { moveMergedAIChanges } from "./ingredient-ai-changes";
 import { rowsNaming } from "./ingredient-catalogue";
 import { writeRecipeLineFoodsTx } from "./ingredients";
 import { lockPantryFood } from "./pantry";
-import { uuidListSql } from "./raw-sql";
+
+const qb = new QueryBuilder();
+const parentRow = alias(ingredients, "parent_row");
 
 /**
  * What moves between Ingredients (ADR-0037): a merge, an alias move, a parent. Each takes the tree
@@ -34,18 +37,18 @@ import { uuidListSql } from "./raw-sql";
  * Rows holding a fact about an Ingredient, unique on it plus one column: a Product and Aisle Link
  * per Store; a store preference, correction and Pantry row per household.
  */
-const PANTRY_KEYED = { table: pantryIngredients, key: "household_id" } as const;
+const PANTRY_KEYED = { table: pantryIngredients, key: pantryIngredients.householdId } as const;
 const KEYED_BY_INGREDIENT = [
-  { table: storeProductLinks, key: "store_id" },
-  { table: aisleLinks, key: "store_id" },
-  { table: ingredientStorePreferences, key: "household_id" },
-  { table: ingredientNutritionCorrections, key: "household_id" },
+  { table: storeProductLinks, key: storeProductLinks.storeId },
+  { table: aisleLinks, key: aisleLinks.storeId },
+  { table: ingredientStorePreferences, key: ingredientStorePreferences.householdId },
+  { table: ingredientNutritionCorrections, key: ingredientNutritionCorrections.householdId },
   PANTRY_KEYED,
 ] as const;
 
 /**
- * Re-point the rows `which` picks out of `table` (as `p`) at `targetId`, deleting each one the
- * target already has under the table's key.
+ * Re-point the rows `which` picks out of `table` at `targetId`, deleting each one the target
+ * already has under the table's key.
  */
 async function repointKeyed(
   tx: DbTransaction,
@@ -53,12 +56,26 @@ async function repointKeyed(
   which: SQL,
   targetId: string
 ): Promise<void> {
-  const column = sql.identifier(key);
+  const held = alias(table, "held");
 
-  await tx.execute(sql`
-    delete from ${table} p using ${table} q
-    where ${which} and q.ingredient_id = ${targetId} and q.${column} = p.${column} and q.id <> p.id`);
-  await tx.execute(sql`update ${table} p set ingredient_id = ${targetId} where ${which}`);
+  await tx.delete(table).where(
+    and(
+      which,
+      exists(
+        qb
+          .select({ id: held.id })
+          .from(held)
+          .where(
+            and(
+              eq(held.ingredientId, targetId),
+              eq(sql`${held}.${sql.identifier(key.name)}`, key),
+              ne(held.id, table.id)
+            )
+          )
+      )
+    )
+  );
+  await tx.update(table).set({ ingredientId: targetId }).where(which);
 }
 
 /**
@@ -102,18 +119,27 @@ async function ancestorsOf(tx: Db, ids: readonly string[]): Promise<Map<string, 
 
   const answer = new Map(wanted.map((id) => [id, [] as string[]]));
 
-  const result = await tx.execute<{ start: string; ancestor: string; depth: number }>(sql`
-    with recursive up(start, ancestor, depth) as (
-      select i.id, i.parent_id, 1 from ${ingredients} i
-      where i.id in (${uuidListSql(wanted)}) and i.parent_id is not null
-      union all
-      select up.start, p.parent_id, up.depth + 1 from up
-      join ${ingredients} p on p.id = up.ancestor
-      where p.parent_id is not null and up.depth < ${MAX_DEPTH}
-    )
-    select start::text as start, ancestor::text as ancestor, depth from up order by start, depth`);
+  // No recursive CTE in the builder: the walk is SQL over the schema, read through a builder query.
+  const walked = tx
+    .$with("ancestry", {
+      start: sql<string>`start`.as("start"),
+      ancestor: sql<string>`ancestor`.as("ancestor"),
+      depth: sql<number>`depth`.as("depth"),
+    })
+    .as(
+      sql`with recursive up(start, ancestor, depth) as (
+        select ${ingredients.id}, ${ingredients.parentId}, 1 from ${ingredients}
+        where ${inArray(ingredients.id, wanted)} and ${isNotNull(ingredients.parentId)}
+        union all
+        select up.start, ${parentRow.parentId}, up.depth + 1 from up
+        join ${ingredients} as ${parentRow} on ${parentRow.id} = up.ancestor
+        where ${isNotNull(parentRow.parentId)} and up.depth < ${MAX_DEPTH}
+      )
+      select start::text as start, ancestor::text as ancestor, depth from up`
+    );
+  const rows = await tx.with(walked).select().from(walked).orderBy(walked.start, walked.depth);
 
-  for (const row of result.rows) answer.get(row.start)?.push(row.ancestor);
+  for (const row of rows) answer.get(row.start)?.push(row.ancestor);
 
   return answer;
 }
@@ -166,9 +192,15 @@ export async function mergeCatalogueIngredients(
   // Where the target sat under the source it first moves up to the source's parent, so the children
   // re-parented onto it can never close a cycle.
   if ((await ancestorsOf(tx, [targetId])).get(targetId)?.includes(sourceId)) {
-    await tx.execute(sql`
-      update ${ingredients} set parent_id = (select parent_id from ${ingredients} where id = ${sourceId})
-      where id = ${targetId}`);
+    const sourceParent = qb
+      .select({ parentId: ingredients.parentId })
+      .from(ingredients)
+      .where(eq(ingredients.id, sourceId));
+
+    await tx
+      .update(ingredients)
+      .set({ parentId: sql`${sourceParent}` })
+      .where(eq(ingredients.id, targetId));
   }
   await tx
     .update(ingredients)
@@ -179,7 +211,7 @@ export async function mergeCatalogueIngredients(
   // Under the add's `pantry:<ingredient>` lock, so a Pantry add of the target waits for the move.
   await lockPantryFood(tx, targetId);
   for (const keyed of KEYED_BY_INGREDIENT) {
-    await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);
+    await repointKeyed(tx, keyed, eq(keyed.table.ingredientId, sourceId), targetId);
   }
   for (const table of [groceries, recurringGroceries]) {
     await tx.update(table).set({ ingredientId: targetId }).where(eq(table.ingredientId, sourceId));
@@ -195,11 +227,15 @@ export async function mergeCatalogueIngredients(
     .where(eq(ingredients.id, sourceId))
     .returning({ offId: ingredients.offId, icon: ingredients.icon });
 
-  await tx.execute(sql`update ${ingredients} set version = version + 1,
-      ${keepFlag ? sql`` : sql`flagged = false, flag_reason = null,`}
-      off_id = coalesce(off_id, ${gone?.offId ?? null}),
-      icon = coalesce(icon, ${gone?.icon ?? null})
-    where id = ${targetId}`);
+  await tx
+    .update(ingredients)
+    .set({
+      version: sql`${ingredients.version} + 1`,
+      ...(keepFlag ? {} : { flagged: false, flagReason: null }),
+      offId: sql`coalesce(${ingredients.offId}, ${gone?.offId ?? null})`,
+      icon: sql`coalesce(${ingredients.icon}, ${gone?.icon ?? null})`,
+    })
+    .where(eq(ingredients.id, targetId));
 
   return true;
 }
@@ -252,7 +288,7 @@ export async function moveCatalogueAlias(
     .set({ ingredientId: targetId, updatedAt: new Date() })
     .where(eq(ingredientAliases.id, aliasId));
   await lockPantryFood(tx, targetId);
-  await repointKeyed(tx, PANTRY_KEYED, sql`p.ingredient_alias_id = ${aliasId}`, targetId);
+  await repointKeyed(tx, PANTRY_KEYED, eq(pantryIngredients.ingredientAliasId, aliasId), targetId);
   for (const table of [groceries, recurringGroceries]) {
     await tx
       .update(table)
