@@ -104,6 +104,34 @@ async function getShareOrThrow(shareId: string) {
   return share;
 }
 
+type ShareRow = Awaited<ReturnType<typeof getShareOrThrow>>;
+
+/** A write on a share: a stale one answers the share as it stands, an applied one is announced. */
+async function writeShare(
+  share: ShareRow,
+  write: () => Promise<Awaited<ReturnType<typeof revokeRecipeShare>>>,
+  type: RecipeShareLifecycleEventDto["type"]
+) {
+  const result = await write();
+
+  if (result.stale || !result.value) {
+    return { ...toRecipeShareSummary(share), stale: true };
+  }
+
+  await emitRecipeShareEvent(result.value, type);
+
+  return { ...result.value, stale: false };
+}
+
+/** A delete of a share, announced unless it was stale. */
+async function deleteShare(share: ShareRow, version: number) {
+  const result = await deleteRecipeShare(share.id, version);
+
+  if (!result.stale) await emitRecipeShareEvent(share, "deleted");
+
+  return { success: true, stale: result.stale };
+}
+
 const create = authedProcedure
   .input(CreateRecipeShareInputSchema)
   .output(RecipeShareCreatedSchema)
@@ -151,15 +179,7 @@ const update = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    const result = await updateRecipeShare(input);
-
-    if (result.stale || !result.value) {
-      return { ...toRecipeShareSummary(share), stale: true };
-    }
-
-    await emitRecipeShareEvent(result.value, "updated");
-
-    return { ...result.value, stale: false };
+    return writeShare(share, () => updateRecipeShare(input), "updated");
   });
 
 const revoke = authedProcedure
@@ -170,15 +190,7 @@ const revoke = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    const result = await revokeRecipeShare(input.id, input.version);
-
-    if (result.stale || !result.value) {
-      return { ...toRecipeShareSummary(share), stale: true };
-    }
-
-    await emitRecipeShareEvent(result.value, "revoked");
-
-    return { ...result.value, stale: false };
+    return writeShare(share, () => revokeRecipeShare(input.id, input.version), "revoked");
   });
 
 const reactivate = authedProcedure
@@ -189,15 +201,7 @@ const reactivate = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    const result = await reactivateRecipeShare(input.id, input.version);
-
-    if (result.stale || !result.value) {
-      return { ...toRecipeShareSummary(share), stale: true };
-    }
-
-    await emitRecipeShareEvent(result.value, "reactivated");
-
-    return { ...result.value, stale: false };
+    return writeShare(share, () => reactivateRecipeShare(input.id, input.version), "reactivated");
   });
 
 // Who made a share and may still edit its recipe may read its link; anyone else gets NOT_FOUND.
@@ -220,16 +224,7 @@ const remove = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    const result = await deleteRecipeShare(input.id, input.version);
-
-    if (!result.stale) {
-      await emitRecipeShareEvent(
-        { id: share.id, recipeId: share.recipeId, version: share.version, userId: share.userId },
-        "deleted"
-      );
-    }
-
-    return { success: true, stale: result.stale };
+    return deleteShare(share, input.version);
   });
 
 // Share-link moderation: an admin lists and acts on every account's links, across households.
@@ -242,15 +237,8 @@ const revokeAdmin = adminProcedure
   .output(RecipeShareMutationResultSchema)
   .mutation(async ({ input }) => {
     const share = await getShareOrThrow(input.id);
-    const result = await revokeRecipeShare(input.id, input.version);
 
-    if (result.stale || !result.value) {
-      return { ...toRecipeShareSummary(share), stale: true };
-    }
-
-    await emitRecipeShareEvent(result.value, "revoked");
-
-    return { ...result.value, stale: false };
+    return writeShare(share, () => revokeRecipeShare(input.id, input.version), "revoked");
   });
 
 const reactivateAdmin = adminProcedure
@@ -258,32 +246,15 @@ const reactivateAdmin = adminProcedure
   .output(RecipeShareMutationResultSchema)
   .mutation(async ({ input }) => {
     const share = await getShareOrThrow(input.id);
-    const result = await reactivateRecipeShare(input.id, input.version);
 
-    if (result.stale || !result.value) {
-      return { ...toRecipeShareSummary(share), stale: true };
-    }
-
-    await emitRecipeShareEvent(result.value, "reactivated");
-
-    return { ...result.value, stale: false };
+    return writeShare(share, () => reactivateRecipeShare(input.id, input.version), "reactivated");
   });
 
 const removeAdmin = adminProcedure
   .input(DeleteRecipeShareInputSchema)
   .output(RecipeShareDeleteResultSchema)
   .mutation(async ({ input }) => {
-    const share = await getShareOrThrow(input.id);
-    const result = await deleteRecipeShare(input.id, input.version);
-
-    if (!result.stale) {
-      await emitRecipeShareEvent(
-        { id: share.id, recipeId: share.recipeId, version: share.version, userId: share.userId },
-        "deleted"
-      );
-    }
-
-    return { success: true, stale: result.stale };
+    return deleteShare(await getShareOrThrow(input.id), input.version);
   });
 
 const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(async ({ ctx }) => {
