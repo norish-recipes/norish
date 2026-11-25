@@ -22,7 +22,8 @@ type EditPlannedRecipePanelProps = {
   itemId: string;
   recipeName: string;
   recipeImage: string | null;
-  recipeId: string;
+  /** Null for a recipe the household may not view (any more): its title alone shows. */
+  recipeId: string | null;
   date: string;
   slot: Slot;
 };
@@ -63,8 +64,8 @@ export function EditPlannedRecipePanel({
     deleteItem(itemId);
     onOpenChange(false);
   };
-  const handleDuplicate = () => {
-    planRecipe(selectedDate.toString(), selectedSlot, recipeId);
+  const handleDuplicate = (id: string) => {
+    planRecipe(selectedDate.toString(), selectedSlot, id);
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {
@@ -74,21 +75,34 @@ export function EditPlannedRecipePanel({
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
       <Panel.Body className="gap-5">
-        {/* Recipe preview */}
-        <Link
-          className="focus-visible:ring-accent group flex items-center gap-3 rounded-xl p-2 outline-none focus-visible:ring-2"
-          href={`/recipes/${recipeId}`}
-          onClick={() => onOpenChange(false)}
-        >
-          <PlannedItemThumbnail alt={recipeName} image={recipeImage} itemType="recipe" size="md" />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-foreground truncate text-base font-medium">{recipeName}</span>
-            <span className="text-accent flex items-center gap-1 text-sm group-hover:underline">
-              {tTimeline("goToRecipe")}
-              <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+        {recipeId ? (
+          <Link
+            className="focus-visible:ring-accent group flex items-center gap-3 rounded-xl p-2 outline-none focus-visible:ring-2"
+            href={`/recipes/${recipeId}`}
+            onClick={() => onOpenChange(false)}
+          >
+            <PlannedItemThumbnail
+              alt={recipeName}
+              image={recipeImage}
+              itemType="recipe"
+              size="md"
+            />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-foreground truncate text-base font-medium">{recipeName}</span>
+              <span className="text-accent flex items-center gap-1 text-sm group-hover:underline">
+                {tTimeline("goToRecipe")}
+                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-3 p-2" data-testid="planned-recipe-title-only">
+            <PlannedItemThumbnail alt={recipeName} image={null} itemType="recipe" size="md" />
+            <span className="text-foreground min-w-0 flex-1 truncate text-base font-medium">
+              {recipeName}
             </span>
           </div>
-        </Link>
+        )}
 
         <DateAndSlotFields
           selectedDate={selectedDate}
@@ -105,9 +119,11 @@ export function EditPlannedRecipePanel({
             </ActionButton>
           }
         >
-          <ActionButton action="duplicate" onPress={handleDuplicate}>
-            {tActions("duplicate")}
-          </ActionButton>
+          {recipeId ? (
+            <ActionButton action="duplicate" onPress={() => handleDuplicate(recipeId)}>
+              {tActions("duplicate")}
+            </ActionButton>
+          ) : null}
           <ActionButton action="save" onPress={handleSave}>
             {tActions("save")}
           </ActionButton>

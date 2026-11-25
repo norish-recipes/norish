@@ -122,7 +122,7 @@ function CalendarScreenContent() {
           date={editingRecipe.date}
           itemId={editingRecipe.id}
           open={!!editingRecipe}
-          recipeId={editingRecipe.recipeId ?? ""}
+          recipeId={editingRecipe.recipeId}
           recipeImage={editingRecipe.recipeImage ?? null}
           recipeName={editingRecipe.recipeName ?? ""}
           slot={editingRecipe.slot}
