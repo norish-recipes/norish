@@ -11,8 +11,9 @@ import type { PlannedItemWithRecipe } from "@norish/db/repositories/planned-item
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getPendingOrFailedSyncStatuses } from "@norish/db/repositories/caldav-sync-status";
 import {
+  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsByHouseholdAndDateRange,
 } from "@norish/db/repositories/planned-items";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
 import { getQueues } from "@norish/queue/registry";
@@ -88,7 +89,10 @@ async function queueItemDelete(
  *   not be queued at all. Whether each one reaches the server is reported
  *   per item over the caldav subscription.
  */
-export async function syncAllFutureItems(userId: string): Promise<{
+export async function syncAllFutureItems(
+  userId: string,
+  householdId: string
+): Promise<{
   totalSynced: number;
   totalFailed: number;
 }> {
@@ -100,7 +104,10 @@ export async function syncAllFutureItems(userId: string): Promise<{
     return { totalSynced: 0, totalFailed: 0 };
   }
 
-  const items = await listPlannedItemsByUserAndDateRange([userId], todayKey(), FAR_FUTURE);
+  // A member's calendar carries the entries they added to their household's plan.
+  const items = (
+    await listPlannedItemsByHouseholdAndDateRange(householdId, todayKey(), FAR_FUTURE)
+  ).filter((item) => item.userId === userId);
 
   let totalSynced = 0;
   let totalFailed = 0;
@@ -127,7 +134,10 @@ export async function syncAllFutureItems(userId: string): Promise<{
  * the credentials were wrong, or the job that would have retried it was
  * dropped. An item deleted in the meantime is chased off the calendar instead.
  */
-export async function retryFailedSyncs(userId: string): Promise<{
+export async function retryFailedSyncs(
+  userId: string,
+  householdId: string
+): Promise<{
   totalRetried: number;
   totalFailed: number;
 }> {
@@ -146,9 +156,13 @@ export async function retryFailedSyncs(userId: string): Promise<{
 
   for (const status of statuses) {
     try {
-      const item = await getPlannedItemWithRecipeById(status.itemId);
+      const [item, itemHouseholdId] = await Promise.all([
+        getPlannedItemWithRecipeById(status.itemId),
+        getPlannedItemHouseholdId(status.itemId),
+      ]);
 
-      if (item) {
+      // An entry left behind in a household the member has left comes off their calendar.
+      if (item && itemHouseholdId === householdId) {
         await queueItemSync(userId, config.serverUrl, item);
       } else {
         await queueItemDelete(userId, config.serverUrl, status.itemId);

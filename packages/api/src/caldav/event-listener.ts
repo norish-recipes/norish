@@ -14,6 +14,8 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RealtimeEventEnvelope } from "@norish/shared/contracts/realtime/envelope";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
 import { getCaldavSyncStatusByItemId } from "@norish/db/repositories/caldav-sync-status";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
+import { getPlannedItemHouseholdId } from "@norish/db/repositories/planned-items";
 import { addCaldavSyncJob, isCaldavSyncPending } from "@norish/queue/caldav-sync/producer";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
@@ -72,14 +74,26 @@ async function getCaldavServerUrl(userId: string): Promise<string | null> {
  * calendar has or is about to have: one with a sync row, or one whose first
  * sync is still pending, which the edit then joins with its newer state.
  */
-async function queueSyncJob(item: PlannedItem, { edit }: { edit: boolean }): Promise<void> {
-  const caldavServerUrl = await getCaldavServerUrl(item.userId);
+async function queueSyncJob(
+  { userId, ...item }: PlannedItem,
+  { edit }: { edit: boolean }
+): Promise<void> {
+  // An entry's calendar is its adder's; a former member's entry has none.
+  const caldavServerUrl = userId ? await getCaldavServerUrl(userId) : null;
 
-  if (!caldavServerUrl) {
-    log.debug({ userId: item.userId, itemId: item.id }, "CalDAV not configured, skipping sync");
+  if (!userId || !caldavServerUrl) {
+    log.debug({ userId, itemId: item.id }, "CalDAV not configured, skipping sync");
 
     return;
   }
+
+  // A member who left keeps syncing nothing of their old household's plan.
+  const [itemHouseholdId, adderHouseholdId] = await Promise.all([
+    getPlannedItemHouseholdId(item.id),
+    getHouseholdIdForUser(userId),
+  ]);
+
+  if (!itemHouseholdId || itemHouseholdId !== adderHouseholdId) return;
 
   const queue = getQueues().caldavSync;
 
@@ -87,15 +101,15 @@ async function queueSyncJob(item: PlannedItem, { edit }: { edit: boolean }): Pro
   if (
     edit &&
     !(await isCaldavSyncPending(queue, caldavServerUrl, item.id)) &&
-    !(await getCaldavSyncStatusByItemId(item.userId, item.id))
+    !(await getCaldavSyncStatusByItemId(userId, item.id))
   ) {
-    log.debug({ id: item.id, userId: item.userId }, "Item not synced to CalDAV, skipping edit");
+    log.debug({ id: item.id, userId }, "Item not synced to CalDAV, skipping edit");
 
     return;
   }
 
   await addCaldavSyncJob(queue, {
-    userId: item.userId,
+    userId,
     itemId: item.id,
     itemType: item.itemType,
     plannedItemId: item.id,

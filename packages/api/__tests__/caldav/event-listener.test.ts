@@ -41,6 +41,8 @@ const db = vi.hoisted(() => ({
   getCaldavConfigDecrypted: vi.fn(),
   getCaldavSyncStatusByItemId: vi.fn(),
   getAllCaldavSyncStatusesByItemId: vi.fn(),
+  getHouseholdIdForUser: vi.fn(),
+  getPlannedItemHouseholdId: vi.fn(),
 }));
 
 const queue = vi.hoisted(() => ({
@@ -56,6 +58,12 @@ vi.mock("@norish/db/repositories/caldav-config", () => ({
 vi.mock("@norish/db/repositories/caldav-sync-status", () => ({
   getCaldavSyncStatusByItemId: db.getCaldavSyncStatusByItemId,
   getAllCaldavSyncStatusesByItemId: db.getAllCaldavSyncStatusesByItemId,
+}));
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: db.getHouseholdIdForUser,
+}));
+vi.mock("@norish/db/repositories/planned-items", () => ({
+  getPlannedItemHouseholdId: db.getPlannedItemHouseholdId,
 }));
 vi.mock("@norish/queue/caldav-sync/producer", () => ({
   addCaldavSyncJob: queue.addCaldavSyncJob,
@@ -114,6 +122,9 @@ beforeEach(async () => {
   db.getCaldavConfigDecrypted.mockResolvedValue({ enabled: true, serverUrl: "https://dav" });
   db.getCaldavSyncStatusByItemId.mockResolvedValue({ id: "status-1" });
   db.getAllCaldavSyncStatusesByItemId.mockResolvedValue([{ userId: "user-1" }]);
+  db.getHouseholdIdForUser.mockResolvedValue("household-1");
+  db.getPlannedItemHouseholdId.mockResolvedValue("household-1");
+  queue.addCaldavSyncJob.mockClear();
 });
 
 describe("calendar companions", () => {
@@ -167,6 +178,28 @@ describe("calendar companions", () => {
         caldavServerUrl: "https://dav",
       })
     );
+  });
+
+  it("syncs nothing to the calendar of a member who has left the entry's household", async () => {
+    db.getHouseholdIdForUser.mockResolvedValue("household-2");
+    initCaldavSync();
+
+    hub.emit(companionChannel("itemCreated"), envelope(companionChannel("itemCreated"), { item }));
+    await settle();
+
+    expect(queue.addCaldavSyncJob).not.toHaveBeenCalled();
+  });
+
+  it("syncs a former member's entry to no calendar", async () => {
+    initCaldavSync();
+
+    hub.emit(
+      companionChannel("itemCreated"),
+      envelope(companionChannel("itemCreated"), { item: { ...item, userId: null } })
+    );
+    await settle();
+
+    expect(queue.addCaldavSyncJob).not.toHaveBeenCalled();
   });
 
   it("queues a delete for every user who had the item synced", async () => {
