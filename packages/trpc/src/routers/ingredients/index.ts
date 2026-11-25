@@ -11,6 +11,7 @@ import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findIngredientDisplayNames } from "@norish/db/repositories/ingredient-aliases";
 import { listIngredientUses } from "@norish/db/repositories/ingredient-catalogue";
+import { findIdsInCatalogue } from "@norish/db/repositories/ingredient-nutrition";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
 import { canDrawImages } from "@norish/shared-server/config/server-config-loader";
 import {
@@ -63,17 +64,16 @@ import { router } from "../../trpc";
 import { ingredientsSubscriptions } from "./subscriptions";
 
 /**
- * The Ingredient a name Norish already knows resolves to, or null. A reader:
- * it never mints, so a grocery panel can ask what a Store remembers about a
- * name while it is still being typed (ADR-0037). Ingredients are always
- * visible, so the answer is nobody's in particular.
+ * The Ingredient a name already resolves to in the viewer's household, or null.
+ * A reader: it never mints, so a grocery panel can ask what a Store remembers
+ * about a name while it is still being typed (ADR-0037, ADR-0042).
  */
 const ingredientName = z.string().trim().min(1).max(300);
 
 const find = authedProcedure
   .input(z.object({ name: ingredientName }))
-  .query(async ({ input }): Promise<{ ingredientId: string } | null> => {
-    const ingredient = await findIngredientFor(input.name);
+  .query(async ({ ctx, input }): Promise<{ ingredientId: string } | null> => {
+    const ingredient = await findIngredientFor(ctx.householdId, input.name);
 
     return ingredient ? { ingredientId: ingredient.ingredientId } : null;
   });
@@ -186,10 +186,16 @@ const spellings = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(({ ctx, input }) => listSpellings(actorOf(ctx), input.ingredientId));
 
-/** Where an Ingredient is still used, for the panel a refused delete opens. */
+/** Where the household still uses an Ingredient of its catalogue, for the panel a refused delete opens. */
 const uses = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(({ ctx, input }) => listIngredientUses(actorOf(ctx), input.ingredientId));
+  .query(async ({ ctx, input }) => {
+    const found = await listIngredientUses(ctx.householdId, input.ingredientId);
+
+    if (!found) throw new TRPCError({ code: "NOT_FOUND", message: "not-found" });
+
+    return found;
+  });
 
 const addAlias = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), text: ingredientName }))
@@ -262,23 +268,24 @@ const settleAIChanges = authedProcedure
   });
 
 /**
- * Which Ingredient Icon each of these foods shows, by address, or null for
- * the placeholder: what every surface that names foods reads, once for all
- * the foods it shows. Ingredients are always visible, so the answer is
- * nobody's in particular.
+ * Which Ingredient Icon each of these foods of the viewer's catalogue shows, by
+ * address, or null for the placeholder: what every surface that names foods
+ * reads, once for all the foods it shows. Another household's foods are left out.
  */
 const icons = authedProcedure
   .input(z.object({ ids: z.array(z.uuid()).max(500) }))
-  .query(async ({ input }): Promise<Record<string, string | null>> =>
-    Object.fromEntries(await ingredientIconAddresses(input.ids))
+  .query(async ({ ctx, input }): Promise<Record<string, string | null>> =>
+    Object.fromEntries(
+      await ingredientIconAddresses([...(await findIdsInCatalogue(ctx.householdId, input.ids))])
+    )
   );
 
 /** Each of these foods' names by id, with its spellings per language, for the chips that name them;
- * a food that is gone has none. */
+ * a food that is gone, or another household's, has none. */
 const names = authedProcedure
   .input(z.object({ ids: z.array(z.uuid()).max(MAX_FILTER_INGREDIENTS) }))
-  .query(async ({ input }): Promise<Record<string, FoodName>> =>
-    Object.fromEntries(await findIngredientDisplayNames(input.ids))
+  .query(async ({ ctx, input }): Promise<Record<string, FoodName>> =>
+    Object.fromEntries(await findIngredientDisplayNames(ctx.householdId, input.ids))
   );
 
 const ICON_PICTURE_TYPES: ReadonlySet<string> = new Set(ICON_PICTURE_MIME_TYPES);
@@ -399,7 +406,8 @@ const setParent = authedProcedure
 const nutrition = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(async ({ ctx, input }): Promise<IngredientNutrition | null> => {
-    const answer = await resolveIngredientNutrition([input.ingredientId], {
+    const ids = await findIdsInCatalogue(ctx.householdId, [input.ingredientId]);
+    const answer = await resolveIngredientNutrition([...ids], {
       householdId: ctx.householdId,
     });
 
@@ -414,7 +422,8 @@ const nutrition = authedProcedure
 const nutritionFor = authedProcedure
   .input(z.object({ ingredientIds: z.array(z.uuid()).max(500) }))
   .query(async ({ ctx, input }): Promise<Record<string, IngredientNutrition>> => {
-    const answer = await resolveIngredientNutrition(input.ingredientIds, {
+    const ids = await findIdsInCatalogue(ctx.householdId, input.ingredientIds);
+    const answer = await resolveIngredientNutrition([...ids], {
       householdId: ctx.householdId,
     });
 

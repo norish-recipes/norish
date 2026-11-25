@@ -1,6 +1,7 @@
 /**
- * A person's catalogue edits (ADR-0037), each one transaction: adding an alias is open, the rest
- * is their household's own rows, and a seeded row is an admin's.
+ * A person's catalogue edits (ADR-0037), each one transaction, in their household's catalogue
+ * (ADR-0042): any member edits the household's own rows, a seeded row is an admin's, and a spelling
+ * anyone adds to a seeded food is their household's.
  */
 import type { DbTransaction } from "@norish/db/drizzle";
 import type {
@@ -20,6 +21,7 @@ import { isConstraintViolation } from "@norish/db/repositories/constraint-violat
 import { keepOpenAIChangesOf } from "@norish/db/repositories/ingredient-ai-changes";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import {
+  addSpellingUnlessKnown,
   deleteCatalogueAlias,
   deleteCatalogueIngredient,
   findCatalogueAliasOwner,
@@ -28,6 +30,7 @@ import {
   insertCatalogueAlias,
   keepIngredientDistinct,
   listCatalogueAliasesOf,
+  listCatalogueHouseholds,
   listCatalogueIngredients,
   renameCatalogueIngredient,
   sweepUnusedCatalogueIngredients,
@@ -39,6 +42,7 @@ import {
   closesCycle,
   countAliasesOf,
   findIngredientAncestors,
+  fitsInCatalogueOf,
   insertCatalogueIngredient,
   lockFoods,
   lockIngredientNamed,
@@ -60,10 +64,9 @@ import { ingredientIcons } from "./icons";
 import { resolveAgain } from "./resolve-again";
 import { cleanIngredientText, forgetSpellingRules } from "./resolver";
 
-/** Who is editing. `memberIds` is their household, them included; an admin edits seeded rows. */
+/** Who is editing: a member of `householdId`; an admin also edits seeded rows. */
 export interface CatalogueActor extends RecipeListContext {
   isServerAdmin: boolean;
-  memberIds: readonly string[];
 }
 
 export type { CatalogueRefusal };
@@ -75,9 +78,14 @@ export class CatalogueEditError extends Error {
   }
 }
 
-/** Whether `actor` may edit a row owned by `ownerId`: their household's, or a seeded one as an admin. */
-export function mayEditOwnedRow(actor: CatalogueActor, ownerId: string | null): boolean {
-  return ownerId === null ? actor.isServerAdmin : actor.memberIds.includes(ownerId);
+/** Whether `actor` may edit a row of `householdId`: their household's, or the seed's (null) as an admin. */
+export function mayEditOwnedRow(actor: CatalogueActor, householdId: string | null): boolean {
+  return householdId === null ? actor.isServerAdmin : householdId === actor.householdId;
+}
+
+/** Who hears of an edit to a food of `householdId`: its household, or everyone for an admin's seed edit. */
+export function audienceOf(actor: CatalogueActor, householdId: string | null): string | null {
+  return householdId ?? (actor.isServerAdmin ? null : actor.householdId);
 }
 
 /** One spelling as the page shows it, and whether the viewer may remove or move it. */
@@ -143,6 +151,7 @@ export async function listIngredients(
   const offset = query.offset ?? 0;
   const languages = catalogueLanguagesFor(query.locale ?? "en");
   const rows = await listCatalogueIngredients({
+    householdId: actor.householdId,
     search: parseIngredientSearch(search, { match: query.match, fields: query.fields }),
     languages,
     flaggedOnly: query.flaggedOnly ?? false,
@@ -154,10 +163,13 @@ export async function listIngredients(
     limit: INGREDIENT_PAGE_SIZE + 1,
     offset,
   });
-  const may = (ownerId: string | null) => mayEditOwnedRow(actor, ownerId);
+  const may = (householdId: string | null) => mayEditOwnedRow(actor, householdId);
   const page = rows.slice(0, INGREDIENT_PAGE_SIZE);
   const [parentNames, icons] = await Promise.all([
-    findLocaleNames(page.flatMap((row) => (row.parent ? [row.parent.id] : []))),
+    findLocaleNames(
+      actor.householdId,
+      page.flatMap((row) => (row.parent ? [row.parent.id] : []))
+    ),
     ingredientIcons(page.map((row) => row.id)),
   ]);
 
@@ -174,27 +186,29 @@ export async function listSpellings(
   actor: CatalogueActor,
   ingredientId: string
 ): Promise<IngredientSpelling[]> {
-  const aliases = await listCatalogueAliasesOf(ingredientId);
+  const aliases = await listCatalogueAliasesOf(actor.householdId, ingredientId);
 
-  return aliases.map((alias) => spelling(alias, (ownerId) => mayEditOwnedRow(actor, ownerId)));
+  return aliases.map((alias) =>
+    spelling(alias, (householdId) => mayEditOwnedRow(actor, householdId))
+  );
 }
 
 function spelling(
   alias: CatalogueAlias,
-  may: (ownerId: string | null) => boolean
+  may: (householdId: string | null) => boolean
 ): IngredientSpelling {
   return {
     id: alias.id,
     text: alias.text,
     locale: alias.locale ?? null,
     seeded: alias.seeded ?? false,
-    canRemove: may(alias.ownerId),
+    canRemove: may(alias.householdId),
   };
 }
 
 function listItem(
   row: CatalogueIngredient,
-  may: (ownerId: string | null) => boolean,
+  may: (householdId: string | null) => boolean,
   parentNames: ReadonlyMap<string, LocaleNames>,
   languages: readonly string[],
   icon: IngredientIcon
@@ -217,15 +231,19 @@ function listItem(
     kinds: row.kinds,
     icon: icon.address,
     ownIcon: icon.own,
-    canEdit: may(row.ownerId),
+    canEdit: may(row.householdId),
     aliases: shown,
     hiddenSpellings: all.length - shown.length,
   };
 }
 
-/** What an edit did: the Ingredients it changed, for every screen showing them to refetch. */
+/**
+ * What an edit did: the Ingredients it changed, for every screen showing them to refetch, and who
+ * hears of it (`audienceOf`): their household, or everyone (null).
+ */
 export interface CatalogueEdit {
   changed: string[];
+  audience: string | null;
 }
 
 /**
@@ -237,7 +255,7 @@ export async function inEdit<T extends CatalogueEdit>(
 ): Promise<T> {
   const edit = await withTransaction(run);
 
-  await ingredientChanges().changed(edit.changed);
+  if (edit.changed.length > 0) await ingredientChanges().changed(edit.changed, edit.audience);
 
   return edit;
 }
@@ -252,25 +270,31 @@ export async function refusedOn<T>(refusal: CatalogueRefusal, write: () => Promi
   }
 }
 
-/** Refuse unless the row exists and `actor` may edit it, whoever owns it. */
+/** Refuse unless the row is in the actor's catalogue and `actor` may edit it. */
 export async function assertMayEdit<T extends CatalogueOwner>(
   actor: CatalogueActor,
   row: T | null
 ): Promise<T> {
   if (!row) throw new CatalogueEditError("not-found");
-  if (!mayEditOwnedRow(actor, row.ownerId)) {
+  if (!mayEditOwnedRow(actor, row.householdId)) {
     throw new CatalogueEditError("forbidden");
   }
 
   return row;
 }
 
+/** The one access check on a food by id: in the actor's catalogue and theirs to edit; its household. */
 async function assertMayEditIngredient(
   tx: DbTransaction,
   actor: CatalogueActor,
   ingredientId: string
-): Promise<void> {
-  await assertMayEdit(actor, await findCatalogueIngredientOwner(tx, ingredientId));
+): Promise<string | null> {
+  return (
+    await assertMayEdit(
+      actor,
+      await findCatalogueIngredientOwner(tx, actor.householdId, ingredientId)
+    )
+  ).householdId;
 }
 
 /**
@@ -285,8 +309,9 @@ export async function assertMayEditFood(
 }
 
 /**
- * Add a spelling to any Ingredient, seeded too, stored clean (`cleanSpelling`) and taken off the
- * junk pile; one another Ingredient holds is refused, one this Ingredient holds is a no-op.
+ * Add a household spelling to any Ingredient of its catalogue, seeded too, stored clean
+ * (`cleanSpelling`) and taken off the household's junk pile; one another of the household's foods
+ * holds is refused, one this Ingredient is known by already is a no-op.
  */
 export async function addAlias(
   actor: CatalogueActor,
@@ -312,23 +337,29 @@ async function addAliasIn(
   const cleaned = cleanSpelling(cleanIngredientText(text));
 
   if (!cleaned) throw new CatalogueEditError("empty");
-  if (!(await findCatalogueIngredientOwner(tx, ingredientId))) {
-    throw new CatalogueEditError("not-found");
-  }
+  const food = await findCatalogueIngredientOwner(tx, actor.householdId, ingredientId);
+
+  if (!food) throw new CatalogueEditError("not-found");
 
   const fold = ingredientAliasFold(cleaned);
+  const audience = audienceOf(actor, food.householdId);
+  const piled = await takeOffJunkPile(tx, actor.householdId, [fold]);
+
+  if ((await findIngredientIdByFold(tx, actor.householdId, fold)) === ingredientId) {
+    return { changed: [ingredientId], audience, piled };
+  }
+  // The household's spelling beats the seed's of the same fold, so only its own refuses one.
   const alias = await insertCatalogueAlias(tx, {
+    householdId: actor.householdId,
     ingredientId,
     text: cleaned,
     fold,
     ownerId: actor.userId,
   });
 
-  if (!alias && (await findIngredientIdByFold(tx, fold)) !== ingredientId) {
-    throw new CatalogueEditError("spelling-taken");
-  }
+  if (!alias) throw new CatalogueEditError("spelling-taken");
 
-  return { changed: [ingredientId], piled: await takeOffJunkPile(tx, [fold]) };
+  return { changed: [ingredientId], audience, piled };
 }
 
 /**
@@ -352,8 +383,12 @@ async function renameIngredientIn(
   const cleaned = cleanIngredientText(name);
 
   if (!cleaned) throw new CatalogueEditError("empty");
-  await assertMayEditIngredient(tx, actor, ingredientId);
+  const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
 
+  // A name the household's catalogue (the seed's, for a seeded food) has for another food is taken.
+  if (await lockIngredientNamed(tx, householdId, cleaned, ingredientId)) {
+    throw new CatalogueEditError("name-taken");
+  }
   const renamed = await refusedOn("name-taken", () =>
     renameCatalogueIngredient(tx, ingredientId, cleaned)
   );
@@ -364,7 +399,8 @@ async function renameIngredientIn(
   const spelling = cleanSpelling(cleaned);
 
   if (spelling) {
-    await insertCatalogueAlias(tx, {
+    await addSpellingUnlessKnown(tx, {
+      householdId,
       ingredientId,
       text: spelling,
       fold: ingredientAliasFold(spelling),
@@ -372,7 +408,7 @@ async function renameIngredientIn(
     });
   }
 
-  return { changed: [ingredientId] };
+  return { changed: [ingredientId], audience: audienceOf(actor, householdId) };
 }
 
 /**
@@ -393,9 +429,12 @@ async function setParentIn(
   ingredientId: string,
   parentId: string | null
 ): Promise<CatalogueEdit> {
-  await assertMayEditIngredient(tx, actor, ingredientId);
+  const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
   const ids = parentId ? [ingredientId, parentId] : [ingredientId];
 
+  if (parentId && !(await findCatalogueIngredientOwner(tx, actor.householdId, parentId))) {
+    throw new CatalogueEditError("not-found");
+  }
   if (!(await lockFoods(tx, ids))) throw new CatalogueEditError("not-found");
   if (parentId && (await closesCycle(tx, ingredientId, parentId))) {
     throw new CatalogueEditError("cycle");
@@ -403,13 +442,17 @@ async function setParentIn(
   // The parent it leaves and the one it joins each count one kind more or less.
   const [previous] = (await findIngredientAncestors([ingredientId], tx)).get(ingredientId) ?? [];
 
-  await setCatalogueIngredientParent(tx, ingredientId, parentId);
+  // A seeded food is every household's, so it is filed only under a seeded one.
+  if (!(await setCatalogueIngredientParent(tx, ingredientId, parentId))) {
+    throw new CatalogueEditError("forbidden");
+  }
   await keepOpenAIChangesOf(tx, ingredientId);
 
   return {
     changed: [
       ...new Set([ingredientId, ...(previous ? [previous] : []), ...(parentId ? [parentId] : [])]),
     ],
+    audience: audienceOf(actor, householdId),
   };
 }
 
@@ -421,8 +464,8 @@ export async function deleteIngredient(
   actor: CatalogueActor,
   ingredientId: string
 ): Promise<CatalogueEdit> {
-  const naming = await withTransaction(async (tx) => {
-    await assertMayEditIngredient(tx, actor, ingredientId);
+  const { naming, audience } = await withTransaction(async (tx) => {
+    const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
     // The tree lock, as for every edit that changes what a row points at:
     // a merge into this Ingredient must not land while it goes.
     if (!(await lockFoods(tx, [ingredientId]))) throw new CatalogueEditError("not-found");
@@ -430,30 +473,38 @@ export async function deleteIngredient(
 
     await deleteCatalogueIngredient(tx, ingredientId);
 
-    return rows;
+    return { naming: rows, audience: audienceOf(actor, householdId) };
   });
 
   try {
     await resolveAgain(naming, "repoint");
   } finally {
     // The delete went through either way.
-    await ingredientChanges().changed([ingredientId]);
+    await ingredientChanges().changed([ingredientId], audience);
   }
 
-  return { changed: [ingredientId] };
+  return { changed: [ingredientId], audience };
 }
 
-/** The nightly sweep: delete own Ingredients nothing has named for 90 days; seeded ones stay. */
+/**
+ * The nightly sweep, household by household: delete own Ingredients nothing has named for 90 days
+ * that no person added by hand; seeded ones stay.
+ */
 export async function sweepUnusedIngredients(): Promise<{ deleted: number }> {
-  const deleted = await withTransaction(async (tx) => {
-    await lockTree(tx);
+  let count = 0;
 
-    return await sweepUnusedCatalogueIngredients(tx);
-  });
+  for (const householdId of await listCatalogueHouseholds()) {
+    const deleted = await withTransaction(async (tx) => {
+      await lockTree(tx);
 
-  if (deleted.length > 0) await ingredientChanges().changed(deleted);
+      return await sweepUnusedCatalogueIngredients(tx, householdId);
+    });
 
-  return { deleted: deleted.length };
+    if (deleted.length > 0) await ingredientChanges().changed(deleted, householdId);
+    count += deleted.length;
+  }
+
+  return { deleted: count };
 }
 
 /**
@@ -465,19 +516,21 @@ export async function markDistinct(
   ingredientId: string
 ): Promise<CatalogueEdit> {
   return await inEdit(async (tx) => {
-    await assertMayEditIngredient(tx, actor, ingredientId);
+    const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
+
     if (!(await keepIngredientDistinct(tx, ingredientId))) {
       throw new CatalogueEditError("not-found");
     }
     await keepOpenAIChangesOf(tx, ingredientId);
 
-    return { changed: [ingredientId] };
+    return { changed: [ingredientId], audience: audienceOf(actor, householdId) };
   });
 }
 
 /**
  * Merge `sourceId` into `targetId` (`edit` on both): the source's spellings and their lines mean
- * the target, and the source goes.
+ * the target, and the source goes. Never across households, nor a seeded food into a household's;
+ * a household's food goes into a seeded one only by an admin of that household.
  */
 export async function mergeIngredients(
   actor: CatalogueActor,
@@ -487,19 +540,24 @@ export async function mergeIngredients(
   if (sourceId === targetId) throw new CatalogueEditError("same-ingredient");
 
   return await inEdit(async (tx) => {
-    await assertMayEditIngredient(tx, actor, sourceId);
+    const householdId = await assertMayEditIngredient(tx, actor, sourceId);
+
     await assertMayEditIngredient(tx, actor, targetId);
+    if (!(await fitsInCatalogueOf(tx, sourceId, targetId))) {
+      throw new CatalogueEditError("forbidden");
+    }
     if (!(await mergeCatalogueIngredients(tx, sourceId, targetId))) {
       throw new CatalogueEditError("not-found");
     }
 
-    return { changed: [sourceId, targetId] };
+    return { changed: [sourceId, targetId], audience: audienceOf(actor, householdId) };
   });
 }
 
 /**
- * Move a spelling (`edit` on it) to another Ingredient, or to a new unflagged one named for it
- * (`targetId` null), never a food's last. Answers the food it now names.
+ * Move a spelling (`edit` on it) to another Ingredient of the catalogue, or to a new unflagged one
+ * of the household named for it (`targetId` null), never a food's last. A seeded spelling moves only
+ * to a seeded food. Answers the food it now names.
  */
 export async function moveAlias(
   actor: CatalogueActor,
@@ -511,38 +569,58 @@ export async function moveAlias(
     // the alias is then still where it was read.
     await lockTree(tx);
 
-    const alias = await assertMayEdit(actor, await findCatalogueAliasOwner(tx, aliasId));
+    const alias = await assertMayEdit(
+      actor,
+      await findCatalogueAliasOwner(tx, actor.householdId, aliasId)
+    );
     const sourceId = alias.ingredientId;
+    const audience = audienceOf(actor, alias.householdId);
+    const target =
+      targetId && (await findCatalogueIngredientOwner(tx, actor.householdId, targetId));
 
+    if (targetId && !target) throw new CatalogueEditError("not-found");
     if (!(await lockFoods(tx, targetId ? [sourceId, targetId] : [sourceId]))) {
       throw new CatalogueEditError("not-found");
     }
-    if (targetId === sourceId) return { ingredientId: sourceId, changed: [sourceId] };
-    if ((await countAliasesOf(tx, sourceId)) <= 1) throw new CatalogueEditError("last-alias");
+    if (targetId === sourceId) return { ingredientId: sourceId, changed: [sourceId], audience };
+    // Every household's rows may name a seeded spelling, so it stays on a seeded food.
+    if (alias.householdId === null && (!target || target.householdId !== null)) {
+      throw new CatalogueEditError("forbidden");
+    }
+    if ((await countAliasesOf(tx, sourceId, alias.householdId)) <= 1) {
+      throw new CatalogueEditError("last-alias");
+    }
     if (targetId) {
       await moveCatalogueAlias(tx, aliasId, targetId);
 
-      return { ingredientId: targetId, changed: [sourceId, targetId] };
+      return { ingredientId: targetId, changed: [sourceId, targetId], audience };
     }
 
     const to = await refusedOn("name-taken", () =>
-      moveToFoodNamedFor(tx, { id: aliasId, text: alias.text }, { ownerId: actor.userId })
+      moveToFoodNamedFor(
+        tx,
+        { id: aliasId, text: alias.text },
+        { householdId: actor.householdId, ownerId: actor.userId }
+      )
     );
 
     // A person asked for a new food, so another one of that name refuses it.
     if (!to.minted) throw new CatalogueEditError("name-taken");
 
-    return { ingredientId: to.id, changed: [sourceId, to.id] };
+    return { ingredientId: to.id, changed: [sourceId, to.id], audience };
   });
 }
 
-/** Move a spelling to the food named for it, minted with `values` where no food has that name. */
+/**
+ * Move a spelling to the food of the household's catalogue named for it, minted in the household
+ * with `values` where no food there has that name.
+ */
 export async function moveToFoodNamedFor(
   tx: DbTransaction,
   alias: { id: string; text: string },
   values: Omit<Parameters<typeof insertCatalogueIngredient>[1], "name">
 ): Promise<{ id: string; minted: boolean }> {
-  const existing = await lockIngredientNamed(tx, alias.text);
+  const existing = await lockIngredientNamed(tx, values.householdId, alias.text);
   const food = existing
     ? { id: existing, minted: false }
     : { id: await insertCatalogueIngredient(tx, { name: alias.text, ...values }), minted: true };
@@ -576,7 +654,10 @@ async function removeAliasIn(
     junk?: boolean;
   } = {}
 ): Promise<PileEdit> {
-  const alias = await assertMayEdit(actor, await findCatalogueAliasOwner(tx, aliasId));
+  const alias = await assertMayEdit(
+    actor,
+    await findCatalogueAliasOwner(tx, actor.householdId, aliasId)
+  );
 
   if (of !== undefined && alias.ingredientId !== of) throw new CatalogueEditError("not-found");
 
@@ -585,14 +666,20 @@ async function removeAliasIn(
   if ((await lockIngredients(tx, [alias.ingredientId])) < 1) {
     throw new CatalogueEditError("not-found");
   }
-  if ((await countAliasesOf(tx, alias.ingredientId)) <= 1) {
+  if ((await countAliasesOf(tx, alias.ingredientId, alias.householdId)) <= 1) {
     throw new CatalogueEditError("last-alias");
   }
   await deleteCatalogueAlias(tx, aliasId);
-  // Folds are unique, so no other food still holds the text.
-  const piled = junk ? await addToJunkPile(tx, [alias.fold], { reason: "person" }) : 0;
+  // The mark is the spelling's household's, or the seed's for a seeded spelling.
+  const piled = junk
+    ? await addToJunkPile(tx, alias.householdId, [alias.fold], { reason: "person" })
+    : 0;
 
-  return { changed: [alias.ingredientId], piled };
+  return {
+    changed: [alias.ingredientId],
+    audience: audienceOf(actor, alias.householdId),
+    piled,
+  };
 }
 
 /** An Ingredient's draft as the panel holds it until Save: only what differs is sent. */
@@ -621,6 +708,9 @@ export async function saveDraft(
   const { piled, ...edit } = await inEdit(async (tx) => {
     const changed = new Set([ingredientId]);
     let piled = 0;
+    const food = await findCatalogueIngredientOwner(tx, actor.householdId, ingredientId);
+
+    if (!food) throw new CatalogueEditError("not-found");
 
     if (draft.name !== undefined) await renameIngredientIn(tx, actor, ingredientId, draft.name);
     if (draft.parentId !== undefined) {
@@ -639,7 +729,7 @@ export async function saveDraft(
     for (const text of draft.add) piled += (await addAliasIn(tx, actor, ingredientId, text)).piled;
     if (draft.icon !== undefined) await setIconIn(tx, actor, ingredientId, draft.icon);
 
-    return { changed: [...changed], piled };
+    return { changed: [...changed], audience: audienceOf(actor, food.householdId), piled };
   });
 
   if (piled > 0) forgetSpellingRules();

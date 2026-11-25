@@ -58,7 +58,6 @@ const withAuth = middleware(async ({ ctx, next }) => {
         user,
         household,
         householdId: household.id,
-        userIds: household.users.map((member: { id: string }) => member.id),
         isServerAdmin,
         operationId: ctx.operationId ?? null,
       },
@@ -69,7 +68,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
 /**
  * Authenticated procedure with full context:
  * - User must be logged in
- * - Household context available (ctx.household, ctx.householdId, and its members as ctx.userIds)
+ * - Household context available (ctx.household, ctx.householdId)
  * - Recipes and cookbooks: the Permission Policy, through the routers' access helpers
  *
  * `withIdempotency` runs first: any mutation carrying an `x-operation-id` is
@@ -146,8 +145,6 @@ export type AuthedProcedureContext = Omit<Context, "household"> & {
   // The request's own household, or the cached one `withAuth` falls back to.
   household: NonNullable<Context["household"]> | HouseholdWithUsersNamesDto;
   householdId: string;
-  /** The household's members, the caller included. */
-  userIds: string[];
   isServerAdmin: boolean;
   operationId: OperationId | null;
 };
@@ -159,13 +156,13 @@ export function viewerOf(
   return { userId: ctx.user.id, householdId: ctx.householdId };
 }
 
-/** The caller as the Ingredient catalogue judges an edit: the viewer, with their household's members. */
+/** The caller as the Ingredient catalogue judges an edit: a member of their household (ADR-0042). */
 export function actorOf(
-  ctx: Pick<AuthedProcedureContext, "householdId" | "isServerAdmin" | "userIds"> & {
+  ctx: Pick<AuthedProcedureContext, "householdId" | "isServerAdmin"> & {
     user: { id: string };
   }
 ): CatalogueActor {
-  return { ...viewerOf(ctx), isServerAdmin: ctx.isServerAdmin, memberIds: ctx.userIds };
+  return { ...viewerOf(ctx), isServerAdmin: ctx.isServerAdmin };
 }
 
 /**
