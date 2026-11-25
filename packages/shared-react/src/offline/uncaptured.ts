@@ -12,6 +12,8 @@ const UNCAPTURED_PROCEDURES: ReadonlySet<string> = new Set([
   "siteAuthTokens.create",
   "siteAuthTokens.update",
   "households.join",
+  // Creating a list entry needs the server: it fails at once rather than waiting in the Outbox.
+  "lists.add",
   ...ONE_TIME_SECRET_PATHS,
 ]);
 

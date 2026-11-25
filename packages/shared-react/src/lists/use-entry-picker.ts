@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { PickerEntry, PickerKind } from "./entry-matching";
 import { useCategoriesQuery } from "../config";
+import { MUTATION_SEND_TIMEOUT_MS } from "../offline/outbox-link";
 import { useConnectivity } from "../offline/react";
 import { answered } from "../offline/settled";
 import { useTRPC } from "../trpc";
@@ -23,11 +24,27 @@ interface EntryPickerOptions {
   onSelect: (entry: PickerEntry) => void;
 }
 
-/** Whether any picker is making an entry: a save waits for it, or it would leave the entry out. */
-export function useEntryCreatePending() {
-  const trpc = useTRPC();
+// The creates under way, each held by the picker that started it until it settles, times out or goes.
+const creating = new Set<symbol>();
+const watchers = new Set<() => void>();
 
-  return useIsMutating({ mutationKey: trpc.lists.add.mutationKey() }) > 0;
+function track(token: symbol, on: boolean) {
+  if (on) creating.add(token);
+  else creating.delete(token);
+  watchers.forEach((notify) => notify());
+}
+
+/** Whether a mounted picker is making an entry: a save waits for it, or it would leave the entry out. */
+export function useEntryCreatePending() {
+  return useSyncExternalStore(
+    (notify) => {
+      watchers.add(notify);
+
+      return () => watchers.delete(notify);
+    },
+    () => creating.size > 0,
+    () => false
+  );
 }
 
 /**
@@ -35,7 +52,7 @@ export function useEntryCreatePending() {
  * a "Create 'x'" row only where the loaded list has no entry of that name. Creating needs the
  * server, so offline the row is offered but not taken. It makes the entry (`lists.add`) and then
  * selects what the server answers, through the latest `onSelect`; a second call while one is
- * under way does nothing. A failed create stays said until the reader picks or tries again.
+ * under way does nothing. A create that never answers fails after the send timeout. A failed create stays said until the reader picks or tries again.
  */
 export function useEntryPicker({
   kind,
@@ -51,6 +68,8 @@ export function useEntryPicker({
   const { entries, loaded, failed, retry } = useListEntries(kind, recipeId);
   const add = useMutation(trpc.lists.add.mutationOptions());
   const underWayRef = useRef(false);
+  const goneRef = useRef(false);
+  const tokenRef = useRef(Symbol("entry-create"));
   // A create answers later: what it selects into is what the form holds then, not when it began.
   const selectRef = useRef(onSelect);
   const [failedName, setFailedName] = useState<string | null>(null);
@@ -71,6 +90,17 @@ export function useEntryPicker({
     selectRef.current = onSelect;
   });
 
+  useEffect(() => {
+    const token = tokenRef.current;
+
+    goneRef.current = false;
+
+    return () => {
+      goneRef.current = true;
+      track(token, false);
+    };
+  }, []);
+
   const pick = (entry: PickerEntry) => {
     setFailedName(null);
     selectRef.current(entry);
@@ -81,10 +111,20 @@ export function useEntryPicker({
 
     underWayRef.current = true;
     setFailedName(null);
+    track(tokenRef.current, true);
 
-    const added = await answered(add.mutateAsync({ kind, name: offer.name, recipeId }));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const noAnswer = new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), MUTATION_SEND_TIMEOUT_MS);
+    });
+    const added = await Promise.race([
+      answered(add.mutateAsync({ kind, name: offer.name, recipeId })),
+      noAnswer,
+    ]);
 
+    clearTimeout(timer);
     underWayRef.current = false;
+    track(tokenRef.current, false);
 
     if (!added) {
       setFailedName(offer.name);
@@ -98,13 +138,15 @@ export function useEntryPicker({
         ? [...current, added.entry]
         : current
     );
-    pick(added.entry);
+
+    // A picker that has gone must not write its old selection over a newer one.
+    if (!goneRef.current) pick(added.entry);
   };
 
   return {
     ...view,
     /** The "Create" row is offered but cannot be taken: offline, or while one is being made. */
-    createDisabled: isOffline || add.isPending,
+    createDisabled: isOffline || (add.isPending && !failedName),
     pick,
     createAndSelect,
     retryList: retry,

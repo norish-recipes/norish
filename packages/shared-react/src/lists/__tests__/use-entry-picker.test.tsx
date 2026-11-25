@@ -8,17 +8,20 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
+import { MUTATION_SEND_TIMEOUT_MS } from "../../offline/outbox-link";
 import { ConnectivityProvider } from "../../offline/react";
 import {
   answerCall,
   answerRead,
   failCall,
   failRead,
+  keyOf,
   resetTRPCFake,
   sentCall,
   serveTRPC,
   trpcCalls,
 } from "../../trpc/testing";
+import { isUncaptured } from "../../offline/uncaptured";
 import { useEntryCreatePending, useEntryPicker } from "../use-entry-picker";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
@@ -62,7 +65,10 @@ const readList = (result: { current: { offer: { kind: string } } }, entries: unk
     expect(result.current.offer.kind).not.toBe("none");
   });
 
-afterEach(resetTRPCFake);
+afterEach(() => {
+  vi.useRealTimers();
+  resetTRPCFake();
+});
 
 describe("useEntryPicker", () => {
   it("matches typed text on the fold and leaves out what is selected", async () => {
@@ -279,5 +285,70 @@ describe("useEntryPicker", () => {
     await waitFor(() => expect(result.current.pending).toBe(true));
     await answerCall("lists.add", { created: true, entry: entry("9", "Grill") });
     await waitFor(() => expect(result.current.pending).toBe(false));
+  });
+
+  describe("a create that does not answer", () => {
+    const start = async (queryClient = createTestQueryClient()) => {
+      resetTRPCFake();
+      const onSelect = vi.fn();
+      const wrapper = createTestWrapper(queryClient, fakePlatformAdapter());
+      const picker = renderHook(
+        () => useEntryPicker({ kind: "tag", typed: "Grill", isSelected: () => false, onSelect }),
+        { wrapper }
+      );
+      const pending = renderHook(() => useEntryCreatePending(), { wrapper });
+
+      await readList(picker.result);
+      act(() => void picker.result.current.createAndSelect());
+      await waitFor(() => expect(pending.result.current).toBe(true));
+
+      return { picker, pending, onSelect, queryClient };
+    };
+
+    it("stops holding a save when the picker that started it goes", async () => {
+      const { picker, pending } = await start();
+
+      picker.unmount();
+      await waitFor(() => expect(pending.result.current).toBe(false));
+    });
+
+    it("times out with the create-failed message, and a late answer selects nothing", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { picker, pending, onSelect } = await start();
+
+      await act(() => vi.advanceTimersByTimeAsync(MUTATION_SEND_TIMEOUT_MS));
+      await waitFor(() => expect(pending.result.current).toBe(false));
+      expect(picker.result.current.problem).toEqual({
+        key: "createFailed",
+        values: { name: "Grill" },
+      });
+      await answerCall("lists.add", { created: true, entry: entry("9", "Grill") });
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("is never queued in the Outbox: a network rejection fails at once", () => {
+      expect(isUncaptured("lists.add")).toBe(true);
+    });
+  });
+
+  it("drops the answer of a create whose picker has gone, leaving the entry in the list", async () => {
+    resetTRPCFake();
+    const queryClient = createTestQueryClient();
+    const onSelect = vi.fn();
+    const wrapper = createTestWrapper(queryClient, fakePlatformAdapter());
+    const { result, unmount } = renderHook(
+      () => useEntryPicker({ kind: "tag", typed: "Grill", isSelected: () => false, onSelect }),
+      { wrapper }
+    );
+
+    await readList(result);
+    act(() => void result.current.createAndSelect());
+    unmount();
+    await answerCall("lists.add", { created: true, entry: entry("9", "Grill") });
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(queryClient.getQueryData(keyOf("lists.list", { kind: "tag" }))).toEqual([
+      entry("9", "Grill"),
+    ]);
   });
 });
