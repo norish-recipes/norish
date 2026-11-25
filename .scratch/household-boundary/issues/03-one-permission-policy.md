@@ -37,3 +37,29 @@
 - `isServerAdmin` remains for instance rights only: admin procedures and the admin area, account roles, the AI-key prompt, and seeded catalogue rows.
 - Not done: the E2E specs typecheck and lint but were not run.
 
+- For ticket 09: `recipes.household_id` and `cookbooks.household_id` cascade from the household row, so anything that deletes a household must move its recipes and cookbooks first.
+- Review round 1:
+  1. fixed: gallery, video, thumbnail and step-image rows name only the recipe's own folder (remote URLs pass), checked in the repository; every file deletion names its recipe; a not-yet-stored id is claimed in Valkey by its first uploader, and a create with another's id is refused.
+  2. fixed: the null case was the new-recipe form's uploads; a file whose row is missing is served only to the account holding the claim, and a cookbook file never.
+  3. fixed: a share link is inactive while its maker may not view the recipe and works again after; the inventory leaves such shares out; share procedures already need edit, so view.
+  4. fixed: a taken recipe id is a `TakenIdError`, answered NOT_FOUND "Not found" like a key collision.
+  5. fixed: the trigger locks household, then membership; an update keeping its Owner keeps the household, the move's nested update is taken as it is; eight race tests, seven fail on the old triggers (a leave queued before an update cannot deadlock).
+  6. fixed: recorded above for ticket 09.
+  7. fixed: `policyAudience`/`recipeAudience`/`cookbookAudience`/`accountAudience` read the row's household and the policy at publish; imports, archive batches, pending and import status read the account's household now.
+  8. fixed: confirmed; a policy-scoped cursor carries the view level, so one minted under another is refused identity-changed and the client refetches.
+  9. fixed: `readerScopedKeys` (recipes, cookbooks, Library, favourites, ratings, plan, groceries, Tags, policy) reread on a policy change and a member joining or leaving; a move of the Reader rereads everything.
+  10. fixed: the API lists a planned recipe out of view by title.
+  11. fixed: grocery reads and RETURNING mask a recipe line out of view; an edit keeps its stored line unchecked; a toggle writes only `isDone`.
+  12. fixed: confirmed; the worker links a recipe only while the account may view it when the job runs.
+  13. fixed: `isRecipeOutOfView` in `shared-react/calendar`, used by the web panel and mobile sheet; the draft keeps "a recipe entry has no text", which is not that predicate.
+  14. fixed: `policyReach` is the rule; `policyAllows`, the SQL condition and the dedup id use it; `findRecipeIdByUrlForAccount`; Tags by the view condition; `resourceAccess` + `refuseUnlessAllowed` for recipes and cookbooks.
+  15. fixed: `canViewRecipe`.
+  16. fixed: `getRecipeHouseholdId`, the three selectors (now `selectAllows`) and `{ query }` gone; `PolicyTarget` used; `CookbookUserContext.user` gone. `ratingAudience` now reads at publish (7), so it stays.
+  17. fixed: `householdIdFilledByTrigger` in `schema/shared.ts`.
+  18. fixed: comment gone; `useReaderOwner` gives no optimistic row until the Owner is known.
+  19. fixed: `useHouseholdRights`/`HouseholdRow`; favourites take `ctx`.
+  20. fixed: the harness finds recipes through `recipes.list` as the signed-in reader; export deleted.
+  21. fixed: all five trimmed.
+  22. fixed: in the touched functions of the share cache, both web cards and the actions menu; `use-recipe-shares-query.ts` only lost a function, so its hooks stay.
+  23. fixed: the mocks answer only for the row under test.
+  - asked of the maintainer: admin job monitor payloads, admin bulk AI enrichment, admin share-link moderation; moved: ingredient usage counts to ticket 07, file sweep and plan notes to ticket 04; rejected: in-flight requests keep their authorisation, the seeded-Ingredient admin path.
