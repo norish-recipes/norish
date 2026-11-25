@@ -1,4 +1,5 @@
 import type { SQL } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, eq, inArray, isNotNull, isNull, like, not, or, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -35,6 +36,14 @@ import { closesCycle, lockFoods, lockTree, moveCatalogueAlias } from "./ingredie
  * The catalogue seed's writes (ADR-0038): seeded Ingredients, aliases and parents are upserted, and
  * what a person made (an own alias, a merge, a move, a parent) outlives every refresh.
  */
+
+/** One update of many rows: each row whose `key` is a pair's first takes that pair's value. */
+function valueByKey(key: AnyPgColumn, pairs: ReadonlyArray<readonly [SQL, SQL]>): SQL {
+  return sql`case ${key} ${sql.join(
+    pairs.map(([match, value]) => sql`when ${match} then ${value}`),
+    sql` `
+  )} end`;
+}
 
 /** One taxonomy entry as the seed applies it, its spellings already folded. */
 export interface SeedEntry {
@@ -296,15 +305,20 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
     // A spelling the entry keeps takes the language the file now gives it first.
     for (const part of chunks(restamps)) {
-      const values = sql.join(
-        part.map(({ fold, locale }) => sql`(${fold}, ${locale}::text)`),
-        sql`, `
-      );
-
-      await tx.execute(sql`
-        update ${ingredientAliases} set locale = v.locale
-        from (values ${values}) as v(fold, locale)
-        where ${ingredientAliases}.fold = v.fold`);
+      await tx
+        .update(ingredientAliases)
+        .set({
+          locale: valueByKey(
+            ingredientAliases.fold,
+            part.map(({ fold, locale }) => [sql`${fold}`, sql`${locale}::text`])
+          ),
+        })
+        .where(
+          inArray(
+            ingredientAliases.fold,
+            part.map(({ fold }) => fold)
+          )
+        );
     }
 
     // Parents, where no person chose one.
@@ -330,15 +344,20 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
 
     for (const part of chunks(parentUpdates)) {
-      const values = sql.join(
-        part.map(({ id, parentId }) => sql`(${id}::uuid, ${parentId}::uuid)`),
-        sql`, `
-      );
-
-      await tx.execute(sql`
-        update ${ingredients} set parent_id = v.parent_id
-        from (values ${values}) as v(id, parent_id)
-        where ${ingredients}.id = v.id`);
+      await tx
+        .update(ingredients)
+        .set({
+          parentId: valueByKey(
+            ingredients.id,
+            part.map(({ id, parentId }) => [sql`${id}::uuid`, sql`${parentId}::uuid`])
+          ),
+        })
+        .where(
+          inArray(
+            ingredients.id,
+            part.map(({ id }) => id)
+          )
+        );
     }
     outcome.parentsSet = parentUpdates.length;
 
@@ -356,17 +375,23 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
 
     for (const part of chunks(codeUpdates)) {
-      const values = sql.join(
-        part.map(
-          ({ id, codes }) => sql`(${id}::uuid, ${codes ? JSON.stringify(codes) : null}::jsonb)`
-        ),
-        sql`, `
-      );
-
-      await tx.execute(sql`
-        update ${ingredients} set nutrition_codes = v.codes
-        from (values ${values}) as v(id, codes)
-        where ${ingredients}.id = v.id`);
+      await tx
+        .update(ingredients)
+        .set({
+          nutritionCodes: valueByKey(
+            ingredients.id,
+            part.map(({ id, codes }) => [
+              sql`${id}::uuid`,
+              sql`${codes ? JSON.stringify(codes) : null}::jsonb`,
+            ])
+          ),
+        })
+        .where(
+          inArray(
+            ingredients.id,
+            part.map(({ id }) => id)
+          )
+        );
     }
     outcome.nutritionChanged = codeUpdates.length;
 
