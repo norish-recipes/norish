@@ -43,3 +43,20 @@
   17. fixed: `lockHousehold`; the router helpers replaced the `ownerId` locals.
   18. fixed: `rememberStorePreference(householdId, userId, …)`.
   - rejected: preference takes its store's household; one preference per household and food; userId stays on DTOs; catalogue maintenance and ingredient tests go to ticket 07.
+
+- Review round 2:
+  1. fixed: a per-account generation replaces the marker; entries carry the generation read before the database, checked in one `MGET`; tests for a stalled fill, two fills and an invalidation with no entry.
+  2. fixed: the worker reads the entry's place again after the write and takes off an event written while its adder left, keeping no status.
+  3. fixed: leave and kick clear the calendar in a `finally` after the announcements.
+  4. fixed: a failed event removal throws, so the job's retries and the failed status keep it retryable.
+  5. fixed: the status list, its count and the summary leave out statuses of entries in another household (an entry deleted since still shows, so "removed" keeps its history).
+  6. fixed: `getCaldavSyncStatusById` and `getFailedSyncStatuses` deleted.
+  7. fixed: a parked aisle or product link whose aisle or product is gone is skipped and counted in a log; the other boot conversions cannot meet a gone household or actor (household columns are NOT NULL, the admin is NOT NULL, a gone Store or account was already handled); real-Postgres test.
+  8. not changed: verified. Every one of the seven tables has a NOT NULL `household_id` since 0089, which ran while `user_id` was still NOT NULL; the admin is only the actor.
+  9. fixed: `assertPantryIngredientAccess`.
+  10. fixed: nothing read there reached the client or changed state; `getAisleById` now takes the Store and `getStoreProductById` the household in their WHERE, so updating another household's product answers NOT_FOUND.
+  11. not changed: `resolveIngredientNutrition` is unchanged since 9df97cf30; a food's own facts already came before a parent's.
+  12. fixed: `listStaleProducts` takes the Store ids in its WHERE; a Store deleted mid-visit ends refresh and lookup jobs with a debug log (lookup had the same defect).
+  13. fixed: `findNewestGroceryNamed(householdId, name)`; the E2E helpers pass the household.
+  14. fixed: the router keeps its announcement chains and the test awaits `announcementsSettled()`.
+  - moved to ticket 03: view check on recipeId / recipeIngredientId references and their joined recipe metadata; rejected: socket window between commit and Scope Change; reorder and markAllDone rely on scoped SQL; gap fill ignores household corrections.
