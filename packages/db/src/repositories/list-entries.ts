@@ -12,6 +12,7 @@ import {
   isNull,
   like,
   ne,
+  notExists,
   or,
   sql,
 } from "drizzle-orm";
@@ -115,6 +116,9 @@ const rowColumns = (table: ListTable) => ({
   instance: isNull(table.householdId).mapWith(Boolean),
   version: table.version,
 });
+
+/** One row to select constants from: the builder has no select without `from`. */
+const ONE_ROW = sql`(values (1)) as ${sql.identifier("one_row")}`;
 
 /** `column`'s own default: an insert-from-select names every column. */
 const defaultOf = (column: AnyPgColumn) => sql`${column.default}`.as(column.name);
@@ -475,22 +479,32 @@ export async function addEntry(
 
   if (!entry) return null;
 
-  const created = await db.transaction(async (tx) => {
-    const [instance] = await tx
-      .select({ id: table.id })
-      .from(table)
-      .where(and(isNull(table.householdId), eq(table.nameFold, entry.fold)));
-
-    if (instance) return undefined;
-
-    const [row] = await tx
-      .insert(table)
-      .values({ householdId: scope, name: entry.name, nameFold: entry.fold })
-      .onConflictDoNothing()
-      .returning(rowColumns(table));
-
-    return row;
-  });
+  const instance = alias(table, "instance");
+  // One statement: an instance entry committed meanwhile is answered, never shadowed.
+  const [created] = await db
+    .insert(table)
+    .select(
+      qb
+        .select({
+          id: defaultOf(table.id),
+          householdId: sql<string | null>`${scope}::uuid`.as(table.householdId.name),
+          name: sql<string>`${entry.name}`.as(table.name.name),
+          nameFold: sql<string>`${entry.fold}`.as(table.nameFold.name),
+          createdAt: defaultOf(table.createdAt),
+          version: defaultOf(table.version),
+        })
+        .from(ONE_ROW)
+        .where(
+          notExists(
+            qb
+              .select({ id: instance.id })
+              .from(instance)
+              .where(and(isNull(instance.householdId), eq(instance.nameFold, entry.fold)))
+          )
+        )
+    )
+    .onConflictDoNothing()
+    .returning(rowColumns(table));
 
   if (created) return { entry: created, created: true };
 
@@ -508,6 +522,7 @@ export async function mergeEntryTx(
   targetId: string
 ): Promise<ListEntryRow | undefined> {
   const { table, link, entity, linkRow } = KINDS[kind];
+
   // One statement, so a link attached or dropped meanwhile is moved as it stands; any count.
   await tx
     .insert(link)
