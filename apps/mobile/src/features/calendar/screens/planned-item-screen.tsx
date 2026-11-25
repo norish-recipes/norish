@@ -18,7 +18,7 @@ import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { useCalendarRangeQuery, usePlannedItemText } from "@norish/shared-react/calendar";
-import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
+import { isRecipeItem, isRecipeOutOfView } from "@norish/shared-react/calendar/todays-meals";
 import { usePlatform } from "@norish/shared-react/platform";
 
 /** A planned item's sheet: a draft of its note's text, day and slot that Save writes as one change
@@ -49,8 +49,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
   const { title, subtitle } = usePlannedItemText()(item);
   const { draft, changes, setTitle, saveAndClose, confirm, fields } = usePlannedItemSheet(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
-  // A recipe the household may not view (any more) shows by its title alone.
-  const isRecipe = item.itemType === "recipe";
+  const outOfView = isRecipeOutOfView(item);
 
   return (
     <Sheet
@@ -74,7 +73,11 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
           confirmRemove(item)
         ),
       ]}
-      title={isRecipe ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" }) : title}
+      title={
+        recipeId || outOfView
+          ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" })
+          : title
+      }
     >
       <SheetBody>
         {recipeId ? (
@@ -96,7 +99,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
               />
             </Card>
           </View>
-        ) : isRecipe ? (
+        ) : outOfView ? (
           <View className="mb-3">
             <Card>
               <CardRow first label={title} testID="planned-item-recipe-title-only" />

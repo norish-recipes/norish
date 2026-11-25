@@ -15,7 +15,12 @@ type PlannedItemSubtitleLabels = {
   servings: string;
 };
 
-/** Whether a planned item opens a recipe; a note, or a recipe since deleted, has none. */
+/** Whether a planned recipe is one the household may not view (any more): its title alone shows. */
+export function isRecipeOutOfView(item: Pick<PlannedItemFromQuery, "itemType" | "recipeId">) {
+  return item.itemType === "recipe" && item.recipeId === null;
+}
+
+/** Whether a planned item opens a recipe; a note, or a recipe out of view, has none. */
 export function isRecipeItem(
   item: PlannedItemFromQuery
 ): item is PlannedItemFromQuery & { recipeId: string } {

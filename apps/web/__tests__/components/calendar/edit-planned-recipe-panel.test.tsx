@@ -4,6 +4,8 @@ import { EditPlannedRecipePanel } from "@/features/calendar/components/panels/ed
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
+
 const held = vi.hoisted(() => ({ planRecipe: vi.fn(), moveItem: vi.fn(), deleteItem: vi.fn() }));
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
@@ -35,19 +37,21 @@ vi.mock("@/components/shared/action-button", () => ({
   ),
 }));
 
-const props = {
-  open: true,
-  onOpenChange: vi.fn(),
-  itemId: "item-1",
-  recipeName: "Stew",
-  recipeImage: "/recipes/r1/a.jpg",
-  date: "2026-11-12",
-  slot: "Dinner" as const,
-};
+const props = { open: true, onOpenChange: vi.fn() };
+const item = (recipeId: string | null) =>
+  ({
+    id: "item-1",
+    itemType: "recipe",
+    recipeId,
+    recipeName: "Stew",
+    recipeImage: "/recipes/r1/a.jpg",
+    date: "2026-11-12",
+    slot: "Dinner",
+  }) as PlannedItemFromQuery;
 
 describe("EditPlannedRecipePanel", () => {
   it("links to a recipe the household may view, and plans it again", () => {
-    render(<EditPlannedRecipePanel {...props} recipeId="r1" />);
+    render(<EditPlannedRecipePanel {...props} item={item("r1")} />);
 
     expect(screen.getByRole("link").getAttribute("href")).toBe("/recipes/r1");
     fireEvent.click(screen.getByText("duplicate"));
@@ -55,7 +59,7 @@ describe("EditPlannedRecipePanel", () => {
   });
 
   it("shows a recipe out of view by its title alone, with nothing to open or plan again", () => {
-    render(<EditPlannedRecipePanel {...props} recipeId={null} />);
+    render(<EditPlannedRecipePanel {...props} item={item(null)} />);
 
     expect(screen.getByTestId("planned-recipe-title-only").textContent).toContain("Stew");
     expect(screen.queryByRole("link")).toBeNull();
