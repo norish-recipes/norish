@@ -57,6 +57,7 @@ import {
   RECIPE_CATEGORY_NAMES_SQL,
   recipeInAnyCategorySql,
 } from "./categories";
+import { TakenIdError } from "./constraint-violation";
 import { replaceRecipeCuisinesTx } from "./cuisines";
 import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
 import {
@@ -902,7 +903,7 @@ export async function createRecipeWithRefs(
       });
 
       if (sameId) {
-        if (sameId.userId !== userId) throw new Error("Recipe id is already taken");
+        if (sameId.userId !== userId) throw new TakenIdError();
 
         return { status: "existing", recipeId };
       }

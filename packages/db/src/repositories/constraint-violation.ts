@@ -42,9 +42,17 @@ export function isGoneStoreReference(error: unknown): boolean {
   return false;
 }
 
+/** Thrown where a create finds its client-made id held by another account's row. */
+export class TakenIdError extends Error {
+  constructor() {
+    super("Id is already taken");
+  }
+}
+
 /** Whether a write was refused because its id is already taken: a client-made id another row holds. */
 export function isPrimaryKeyCollision(error: unknown): boolean {
   for (let current = error; current && typeof current === "object";) {
+    if (current instanceof TakenIdError) return true;
     const { code, constraint } = current as { code?: unknown; constraint?: unknown };
 
     if (code === "23505") return typeof constraint === "string" && constraint.endsWith("_pkey");

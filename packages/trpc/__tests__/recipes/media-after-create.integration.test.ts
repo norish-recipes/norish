@@ -251,4 +251,21 @@ describe("a gallery upload right after recipes.create", () => {
     );
     expect(await caller().create({ ...recipe("Mine"), id: pendingId })).toBe(pendingId);
   });
+
+  it("answers an id another account's recipe holds as not found, like any taken id", async () => {
+    const { createTestUser } = await import("../../../db/__tests__/helpers/db-test-helpers");
+    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
+    const other = { ...(await createTestUser()), isServerAdmin: false } as User;
+    const asOther = createCaller({
+      user: other,
+      household: { id: (await getHouseholdIdForUser(other.id))!, users: [] },
+      operationId: null,
+    } as never);
+    const id = await caller().create(recipe("Held"));
+
+    await expect(asOther.create({ ...recipe("Taken"), id })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Not found",
+    });
+  });
 });
