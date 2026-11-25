@@ -243,9 +243,9 @@ describe("a gallery upload right after recipes.create", () => {
 
     expect(await caller().uploadGalleryImage(photo(pendingId, 0))).toMatchObject({ success: true });
     await expect(asOther.uploadGalleryImage(photo(pendingId, 1))).rejects.toThrow("not found");
-    await expect(
-      asOther.deleteImage({ url: `/recipes/${pendingId}/a.jpg` })
-    ).rejects.toThrow("not found");
+    await expect(asOther.deleteImage({ url: `/recipes/${pendingId}/a.jpg` })).rejects.toThrow(
+      "not found"
+    );
     await expect(asOther.create({ ...recipe("Taken"), id: pendingId })).rejects.toThrow(
       "Not found"
     );
