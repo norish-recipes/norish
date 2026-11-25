@@ -25,3 +25,19 @@
 - OIDC claims now place only a household of one: join the claimed household (same refusal as joining), or rename it to the claim when none has that name.
 - `ctx.userIds` (the household's member ids) stays for the user-id-keyed queries ticket 02 moves to `household_id`; repositories filter by a `household_users` subquery on the household id.
 - Not done: the E2E specs typecheck and lint but were not run. ADR-0032 ("a household-less user's household key is their user id") and ADR-0033 ("household key") still describe the old keying, left for the docs writer.
+- Review round 1:
+  1. fixed: every `assertHouseholdAccess` caller passes `ctx.householdId`; a Pantry test runs the real guard.
+  2. fixed: join and move lock the households they touch in id order and re-check admin and last member under the lock; a race test pins it. A move no longer deletes an emptied household (leaving one is refused).
+  3. fixed: migration 0088 hands an admin role whose holder no longer lives there to the longest-standing member; fixture, invariant and full-row rerun check added.
+  4. fixed: a claim equal to the default household name is ignored and logged. Other widening found: an account alone in a household it made or was left alone in was skipped before; now the claim renames that household or joins it to the claimed one.
+  5. fixed: cache invalidation and the Scope Change run in a `finally` after the announcements.
+  6. not changed: the only Job Scheduler (`scheduled-tasks`) carries `{ taskType }`, and the long-delayed CalDAV jobs carry no household; jobs with `householdId` retry within seconds.
+  7. not changed: a code expired after 10 minutes already reached the screens as no code, so a household of one shows the same "Generate" state.
+  8. fixed: web join slots map a module constant; the mobile form has no slots.
+  9. fixed: `announceHouseholdJoin` in `shared-server/realtime/household-membership.ts`, used by the router and the claim processor.
+  10. fixed: `publishHouseholdTo` in the households router.
+  11. fixed: `getHouseholdMemberIdsByHouseholdId` / `getHouseholdMemberIdsByUserId`.
+  12. fixed: both live in `repositories/household-members`; the re-export is gone.
+  13. fixed: the claim processor reads member ids directly.
+  14. not changed: the rules (`isJoinCode`, `joinCodeDigits`) are already shared; each app keeps only a `useState` and its own JSX.
+  - rejected: default-name literal in migration SQL (SQL can't import the constant); HELD_BY_MEMBER table list (interim, ticket 09 removes it).
