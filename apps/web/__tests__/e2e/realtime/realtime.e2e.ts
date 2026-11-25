@@ -89,17 +89,17 @@ test.beforeAll(async ({ realtimeStack }) => {
   contextA = await stack.newContext("a");
   pageA = await contextA.newPage();
 
-  // A founds the household before either browser opens a socket, so the
-  // join later is the one Scope Change the scenario is about.
-  const created = await callMutation(pageA, stack.baseURL, "households.create", {
-    name: "Realtime household",
+  // A's household of one gets a join code before either browser opens a socket, so
+  // the join later is the one Scope Change the scenario is about.
+  const own = (await readHousehold(stack, "a"))!;
+  const coded = await callMutation(pageA, stack.baseURL, "households.regenerateCode", {
+    householdId: own.id,
+    version: own.version,
   });
 
-  expect(created.ok).toBe(true);
+  expect(coded.ok).toBe(true);
   await expect.poll(() => readHousehold(stack, "a").then((row) => row?.joinCode)).toBeTruthy();
   household = (await readHousehold(stack, "a"))!;
-  // The create finishes asynchronously with a connection invalidation; let it land.
-  await delay(1_000);
 
   await openGroceries(pageA);
   await waitForSocket(pageA, 1);

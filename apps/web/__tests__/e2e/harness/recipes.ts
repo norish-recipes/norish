@@ -14,7 +14,7 @@ import { callTrpc, queryTrpc, TrpcHttpError } from "./trpc";
 /** A server admin's view: every recipe and cookbook, whoever owns it. */
 export const ADMIN_VIEW: RecipeListContext = {
   userId: "",
-  householdUserIds: null,
+  householdId: "",
   isServerAdmin: true,
 };
 

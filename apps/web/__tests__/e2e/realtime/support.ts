@@ -41,6 +41,7 @@ export async function callQuery<T>(page: Page, baseURL: string, procedure: strin
 
 export interface HouseholdRow {
   id: string;
+  version: number;
   /** Only the household's admin is shown the code. */
   joinCode: string | null;
 }
@@ -51,10 +52,12 @@ export async function readHousehold(
   identity: Identity
 ): Promise<HouseholdRow | null> {
   const { household } = await callTrpc<{
-    household: { id: string; joinCode?: string | null } | null;
+    household: { id: string; version: number; joinCode?: string | null } | null;
   }>(stack.baseURL, stack.cookies[identity], "households.get");
 
-  return household ? { id: household.id, joinCode: household.joinCode ?? null } : null;
+  return household
+    ? { id: household.id, version: household.version, joinCode: household.joinCode ?? null }
+    : null;
 }
 
 /** The newest grocery by this name: a new grocery takes the top of its store's list. */

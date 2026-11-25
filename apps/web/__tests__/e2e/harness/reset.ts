@@ -1,5 +1,6 @@
 import { withTransaction } from "@norish/db/drizzle";
 import { deleteGroceryByIds, listGroceriesByUsers } from "@norish/db/repositories/groceries";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { lockTree } from "@norish/db/repositories/ingredient-relocation";
 import { listCatalogueForExport } from "@norish/db/repositories/ingredient-seed";
@@ -20,9 +21,13 @@ export async function deleteEveryRecipe(): Promise<void> {
 /** Delete every grocery and recurring grocery on the server, ticked or not. */
 export async function deleteEveryGrocery(): Promise<void> {
   const userIds = await getAllUserIds();
-  const groceries = await listGroceriesByUsers(userIds, { includeDone: true });
 
-  await deleteGroceryByIds(groceries, userIds);
+  for (const userId of userIds) {
+    const householdId = await getHouseholdIdForUser(userId);
+    const groceries = await listGroceriesByUsers([userId], { includeDone: true });
+
+    if (householdId) await deleteGroceryByIds(groceries, householdId);
+  }
   await deleteRecurringGroceryByIds(
     (await listRecurringGroceriesByUsers(userIds)).map((recurring) => recurring.id)
   );
