@@ -41,3 +41,14 @@
   13. fixed: the claim processor reads member ids directly.
   14. not changed: the rules (`isJoinCode`, `joinCodeDigits`) are already shared; each app keeps only a `useState` and its own JSX.
   - rejected: default-name literal in migration SQL (SQL can't import the constant); HELD_BY_MEMBER table list (interim, ticket 09 removes it).
+- Review round 2:
+  1. fixed: `deleteAccount` locks the household and hands the admin role on, or erases a household of one, in the deleting transaction; race test.
+  2. fixed: `transferHouseholdAdmin` locks and re-checks admin and membership; race test.
+  3. fixed: `joinHousehold(userId, { joinCode })` checks the code and its expiry under the lock and returns the members it joined; race test.
+  4. fixed: `renameHouseholdOfOne` renames only while still a household of one, under the lock; race test.
+  5. fixed: a default-name claim is dropped before the first claim is picked.
+  6. fixed: `announceHouseholdJoin` reads the joiner's name inside the guarantee.
+  7. fixed: confirmed; the cache drops first, then announcements, then the Scope Change, which runs even when either throws; timeline test.
+  8. fixed: lock waits count only this suite's database's client backends.
+  9. fixed: the rerun compares whole `households` and `household_users` rows.
+  - rejected: interim holds-nothing check racing inserts (ticket 09 removes it); claims matching by name (pre-existing, asked of the maintainer).
