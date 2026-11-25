@@ -51,12 +51,12 @@ describe("compareStreamIds", () => {
 });
 
 describe("identityHashFor", () => {
-  it("is eight hex characters of sha1(userId|householdKey)", () => {
-    const hash = identityHashFor({ userId: "u-1", householdKey: "hh-1" });
+  it("is eight hex characters of sha1(userId|householdId)", () => {
+    const hash = identityHashFor({ userId: "u-1", householdId: "hh-1" });
 
     expect(hash).toMatch(/^[0-9a-f]{8}$/);
     expect(hash).toBe("8ca3af7f");
-    expect(identityHashFor({ userId: "u-1", householdKey: "hh-2" })).not.toBe(hash);
+    expect(identityHashFor({ userId: "u-1", householdId: "hh-2" })).not.toBe(hash);
   });
 });
 

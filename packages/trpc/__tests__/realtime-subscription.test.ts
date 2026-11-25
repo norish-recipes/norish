@@ -190,7 +190,7 @@ const IMPORTED = {
   broadcast: "norish:grocery:broadcast:imported",
   user: `norish:grocery:user:${USER}:imported`,
 };
-const identity = { userId: USER, householdKey: HOUSEHOLD };
+const identity = { userId: USER, householdId: HOUSEHOLD };
 const hash = identityHashFor(identity);
 
 /** Stream ids must be younger than the TTL, so they are minted from now. */
@@ -253,6 +253,13 @@ async function subscribe<K extends "onCreated" | "onFailed" | "onImported" | "on
   const stream = (await call(input)) as AsyncIterable<unknown>;
 
   return { iterator: stream[Symbol.asyncIterator](), controller };
+}
+
+/** A socket's context: the household is not on it, so the subscription reads it. */
+function readsItsHousehold() {
+  return { ...createMockAuthedContext(), household: null } as unknown as ReturnType<
+    typeof createMockAuthedContext
+  >;
 }
 
 async function failure(promise: Promise<unknown>): Promise<TRPCError> {
@@ -326,14 +333,13 @@ describe("channel selection", () => {
     controller.abort();
   });
 
-  it("uses the user id as household key for a household-less user", async () => {
-    const ctx = createMockAuthedContext(undefined, null);
-    const { iterator, controller } = await subscribe("onCreated", undefined, ctx);
+  it("refuses an account whose household is gone, as a deleted account's is", async () => {
+    vi.mocked(getCachedHouseholdForUser).mockResolvedValueOnce(null);
 
-    await take(iterator);
-    expect(ctx.householdKey).toBe(USER);
-    expect([...hub.sources.keys()]).toEqual([`norish:grocery:household:${USER}:created`]);
-    controller.abort();
+    const { iterator } = await subscribe("onCreated", undefined, readsItsHousehold());
+
+    expect((await failure(iterator.next())).code).toBe("UNAUTHORIZED");
+    expect(hub.subscribe).not.toHaveBeenCalled();
   });
 
   it("refuses an internal event at runtime as well as at the type level", async () => {
@@ -625,13 +631,13 @@ describe("resume", () => {
       id: "household-a",
     });
     const cursorFromA = encodeCursor({
-      identityHash: identityHashFor({ userId: USER, householdKey: "household-a" }),
+      identityHash: identityHashFor({ userId: USER, householdId: "household-a" }),
       ids: [id(1)],
     });
 
     seedStream("norish:grocery:household:household-a:created", [[id(2), { ids: ["a"] }]]);
 
-    expect(other.householdKey).toBe("household-a");
+    expect(other.householdId).toBe("household-a");
 
     const { iterator, controller } = await subscribe("onCreated", { lastEventId: cursorFromA });
 
@@ -676,11 +682,7 @@ describe("a read that fails", () => {
   it("ends Lagged unavailable when the socket's household lookup fails", async () => {
     vi.mocked(getCachedHouseholdForUser).mockRejectedValueOnce(new Error("Command timed out"));
 
-    const { iterator, controller } = await subscribe(
-      "onCreated",
-      undefined,
-      createMockAuthedContext(undefined, null)
-    );
+    const { iterator, controller } = await subscribe("onCreated", undefined, readsItsHousehold());
 
     expect((await laggedAfterThePause(iterator.next())).reason).toBe("unavailable");
     expect(logged.warn).toHaveBeenCalledWith(

@@ -52,19 +52,19 @@ function channelFor(namespace: string, event: string, scope: RealtimeScope, targ
       return buildChannel({
         namespace,
         scope,
-        id: (target as { householdKey: string }).householdKey,
+        id: (target as { householdId: string }).householdId,
         event,
       });
     case "user":
       return buildChannel({ namespace, scope, id: (target as { userId: string }).userId, event });
     case "policy": {
-      const { viewPolicy, householdKey, userId } = target as PolicyTarget;
+      const { viewPolicy, householdId, userId } = target as PolicyTarget;
 
       switch (viewPolicy) {
         case "everyone":
           return buildChannel({ namespace, scope: "broadcast", event });
         case "household":
-          return buildChannel({ namespace, scope: "household", id: householdKey, event });
+          return buildChannel({ namespace, scope: "household", id: householdId, event });
         case "owner":
           return buildChannel({ namespace, scope: "user", id: userId, event });
       }
@@ -95,19 +95,19 @@ export function createFakeRealtimeDomain<C extends RealtimeCatalogue>(
   const channel = (event: string, target: unknown) =>
     channelFor(namespace, event, specFor(catalogue, event).scope, target);
 
-  const channelsFor = (event: string, identity: { userId: string; householdKey: string }) => {
+  const channelsFor = (event: string, identity: { userId: string; householdId: string }) => {
     const { scope } = specFor(catalogue, event);
 
     switch (scope) {
       case "household":
-        return [buildChannel({ namespace, scope, id: identity.householdKey, event })];
+        return [buildChannel({ namespace, scope, id: identity.householdId, event })];
       case "user":
         return [buildChannel({ namespace, scope, id: identity.userId, event })];
       case "broadcast":
         return [buildChannel({ namespace, scope, event })];
       case "policy":
         return [
-          buildChannel({ namespace, scope: "household", id: identity.householdKey, event }),
+          buildChannel({ namespace, scope: "household", id: identity.householdId, event }),
           buildChannel({ namespace, scope: "broadcast", event }),
           buildChannel({ namespace, scope: "user", id: identity.userId, event }),
         ];

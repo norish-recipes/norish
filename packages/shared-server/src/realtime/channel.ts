@@ -16,7 +16,7 @@ export const STREAM_PREFIX = `${CHANNEL_PREFIX}:stream`;
 export interface ChannelParts {
   namespace: string;
   scope: RealtimeEventScope;
-  /** Household key or user id; absent for `broadcast` and `internal`. */
+  /** Household id or user id; absent for `broadcast` and `internal`. */
   id?: string;
   event: string;
 }

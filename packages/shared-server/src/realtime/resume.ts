@@ -70,13 +70,13 @@ export function compareStreamIds(a: string, b: string): number {
 
 export interface RealtimeIdentity {
   userId: string;
-  householdKey: string;
+  householdId: string;
 }
 
-/** The first eight hex characters of `sha1(userId + "|" + householdKey)`. */
+/** The first eight hex characters of `sha1(userId + "|" + householdId)`. */
 export function identityHashFor(identity: RealtimeIdentity): string {
   return createHash("sha1")
-    .update(`${identity.userId}|${identity.householdKey}`)
+    .update(`${identity.userId}|${identity.householdId}`)
     .digest("hex")
     .slice(0, IDENTITY_HASH_LENGTH);
 }
