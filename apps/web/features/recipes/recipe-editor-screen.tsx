@@ -23,6 +23,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { LineMoves, RecipeFormErrors } from "@norish/shared-react/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
+import { hasName } from "@norish/shared-react/lists";
 import {
   useRecipeEditorForm,
   useRecipeId,
@@ -275,7 +276,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
             <div>
               <p className="text-muted mb-3 text-base">{t("tagsHelp")}</p>
               <TagPicker
-                recipeId={mode === "edit" ? initialData?.id : undefined}
+                recipeId={editor.listRecipeId}
                 value={form.tags}
                 onChange={(tags) => set("tags", tags)}
               />
@@ -306,8 +307,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
                   kind="category"
                   label={t("addCategory")}
                   placeholder={t("addCategory")}
-                  recipeId={mode === "edit" ? initialData?.id : undefined}
-                  isSelected={(entry) => form.categories.includes(entry.name)}
+                  recipeId={editor.listRecipeId}
+                  isSelected={(entry) => hasName(form.categories, entry.name)}
                   onSelect={(entry) => editor.addCategory(entry.name)}
                 />
               </div>
@@ -377,7 +378,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           <div className="ml-0 md:ml-9">
             <ProvenanceFields
               carriedCuisines={initialData?.cuisines}
-              recipeId={mode === "edit" ? initialData?.id : undefined}
+              recipeId={editor.listRecipeId}
               value={form.provenance}
               onChange={(provenance) => set("provenance", provenance)}
             />
@@ -477,7 +478,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           </Button>
           <Button
             className="min-w-24"
-            isDisabled={isSubmitting}
+            isDisabled={isSubmitting || editor.isCreatingEntry}
             isPending={isSubmitting}
             size="lg"
             variant="primary"

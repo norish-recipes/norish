@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ComboBox, Input, Label, ListBox } from "@heroui/react";
+import { Button, ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PickerEntry, PickerKind } from "@norish/shared-react/lists";
@@ -46,11 +46,12 @@ export function EntryComboBox({
   inputVariant = "secondary",
 }: EntryComboBoxProps) {
   const t = useTranslations("recipes.picker");
+  const tActions = useTranslations("common.actions");
   const [typed, setTyped] = useState("");
-  // A combo box closes when its selection changes: a pick sets it for one render, then takes it
-  // back and clears the field the pick filled with the row's text.
+  // A combo box closes when its selection changes, so a pick sets it for one render and then
+  // takes it back, clearing the text the pick filled in.
   const [picked, setPicked] = useState<string | null>(null);
-  const done = (key: string) => {
+  const settle = (key: string) => {
     setPicked(key);
     setTimeout(() => {
       setPicked(null);
@@ -64,32 +65,19 @@ export function EntryComboBox({
     isSelected,
     onSelect: (entry) => {
       onSelect(entry);
-      done(entry.id);
+      settle(entry.id);
     },
   });
-  const { offer } = picker;
+  const { offer, problem } = picker;
   const items = [
     ...picker.matches.map((entry) => ({
       id: entry.id,
       text: entryLabel ? entryLabel(entry.name) : entry.name,
     })),
     ...(offer.kind === "create"
-      ? [
-          {
-            id: CREATE_KEY,
-            text: picker.isOffline
-              ? t("createOffline", { name: offer.name })
-              : t("create", { name: offer.name }),
-          },
-        ]
+      ? [{ id: CREATE_KEY, text: t(picker.createLabelKey, { name: offer.name }) }]
       : []),
   ];
-  const problem =
-    offer.kind === "tooLong"
-      ? t("tooLong", { max: offer.max })
-      : picker.createFailed && offer.kind === "create"
-        ? t("createFailed", { name: offer.name })
-        : null;
   const problemId = `${label}-problem`;
 
   return (
@@ -119,9 +107,7 @@ export function EntryComboBox({
 
           const entry = picker.matches.find((candidate) => candidate.id === key);
 
-          if (!entry) return;
-          onSelect(entry);
-          done(entry.id);
+          if (entry) picker.pick(entry);
         }}
         onInputChange={setTyped}
       >
@@ -136,7 +122,11 @@ export function EntryComboBox({
         <ComboBox.Popover>
           {/* Say why in the list itself: an open list hides the field below from a screen reader. */}
           <ListBox
-            renderEmptyState={() => <p className="text-danger px-3 py-2 text-sm">{problem}</p>}
+            renderEmptyState={() => (
+              <p className="text-danger px-3 py-2 text-sm">
+                {problem ? t(problem.key, problem.values) : null}
+              </p>
+            )}
           >
             {(item: { id: string; text: string }) => (
               <ListBox.Item
@@ -151,9 +141,14 @@ export function EntryComboBox({
         </ComboBox.Popover>
       </ComboBox>
       {problem ? (
-        <p className="text-danger mt-1 text-sm" id={problemId} role="alert">
-          {problem}
-        </p>
+        <div className="text-danger mt-1 text-sm" id={problemId} role="alert">
+          {t(problem.key, problem.values)}
+          {problem.key === "loadFailed" ? (
+            <Button className="ml-2" size="sm" variant="tertiary" onPress={picker.retryList}>
+              {tActions("retry")}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

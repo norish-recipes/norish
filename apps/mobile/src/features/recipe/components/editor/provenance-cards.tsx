@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { PickerEntry } from "@norish/shared-react/lists";
 import type { ProvenanceFormValue } from "@norish/shared-react/recipes";
 import type { MeasurementSystem } from "@norish/shared/contracts";
 import { chosenEntries, useListEntries } from "@norish/shared-react/lists";
@@ -14,8 +15,33 @@ import { countryFlagEmoji, listCountryOptions } from "@norish/shared/lib/recipe-
 
 import { SectionCard } from "../tint";
 import { choiceRoute, requestChoice } from "./choice-request";
-import { AddChip, RemovableChip } from "./detail-cards";
+import { RemovableChip } from "./detail-cards";
 import { EditorField, EditorInput } from "./editor-parts";
+
+/** The chip, ruled by a hairline, that adds one more. */
+export function AddChip({
+  label,
+  testID,
+  onPress,
+}: {
+  label: string;
+  testID: string;
+  onPress: () => void;
+}) {
+  const [muted] = useThemeColor(["muted"] as const);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="border-separator h-[34px] flex-row items-center gap-1.5 rounded-full border px-3"
+      testID={testID}
+      onPress={onPress}
+    >
+      <Ionicons color={muted} name="add" size={15} />
+      <Text className="text-foreground text-[15px] font-medium">{label}</Text>
+    </Pressable>
+  );
+}
 
 /** Country, region, cuisines and a note, as one atomic group. */
 export function ProvenanceCard({
@@ -29,7 +55,7 @@ export function ProvenanceCard({
   /** The recipe being edited, once it exists: its household's Cuisines are the ones offered. */
   recipeId?: string;
   /** The Cuisines the recipe carries, which it keeps whatever the list offers. */
-  carriedCuisines?: { id: string; name: string }[];
+  carriedCuisines?: PickerEntry[];
 }) {
   const intl = useIntl();
   const { entries: cuisines } = useListEntries("cuisine", recipeId);

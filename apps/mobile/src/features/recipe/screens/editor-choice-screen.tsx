@@ -1,9 +1,11 @@
+import type { RowPosition } from "@/components/slice-row";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Checkmark } from "@/components/checkmark";
 import { Sheet, SheetList } from "@/components/sheet";
 import { SheetSearchField } from "@/components/sheet-search-field";
 import { SliceHairline, sliceRowClass } from "@/components/slice-row";
+import { ToggleChip } from "@/components/toggle-chip";
 import { useText } from "@/lib/i18n/use-text";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -22,6 +24,38 @@ interface SheetProps {
   pick: (key: string) => void;
 }
 
+/** A row of the sheet's card: its label, a tick when chosen, dimmed and inert when `disabled`. */
+function ChoiceRow({
+  position,
+  label,
+  ticked,
+  disabled = false,
+  testID,
+  onPress,
+}: {
+  position: RowPosition;
+  label: string;
+  ticked?: boolean;
+  disabled?: boolean;
+  testID: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: ticked, disabled }}
+      className={`${sliceRowClass(position)} justify-between ${disabled ? "opacity-50" : ""}`}
+      disabled={disabled}
+      testID={testID}
+      onPress={onPress}
+    >
+      <SliceHairline first={position.first} />
+      <Text className="text-foreground flex-1 text-base">{label}</Text>
+      {ticked ? <Checkmark /> : null}
+    </Pressable>
+  );
+}
+
 /** The sheet's rows in a card under a search field; `create` is the row that makes a new entry. */
 function ChoiceSheet({
   name,
@@ -33,11 +67,14 @@ function ChoiceSheet({
   rows,
   create,
   notice,
+  onRetry,
 }: SheetProps & {
   rows: Choice[];
   create?: { label: string; disabled: boolean; onPress: () => void };
   /** Why a typed name is not offered, or why making it failed. */
   notice?: string;
+  /** Set when the list could not be read: a way to read it again. */
+  onRetry?: () => void;
 }) {
   const intl = useIntl();
   const data: (Choice | "create")[] = create ? [...rows, "create"] : rows;
@@ -54,7 +91,17 @@ function ChoiceSheet({
               onChange={onQueryChange}
             />
             {notice ? (
-              <Text className="text-danger px-1 pt-2 text-[13px] font-medium">{notice}</Text>
+              <View className="flex-row flex-wrap items-center gap-2 px-1 pt-2">
+                <Text className="text-danger text-[13px] font-medium">{notice}</Text>
+                {onRetry ? (
+                  <ToggleChip
+                    active={false}
+                    label={intl.formatMessage({ id: "common.actions.retry" })}
+                    testID={`${name}-retry`}
+                    onPress={onRetry}
+                  />
+                ) : null}
+              </View>
             ) : null}
           </View>
         }
@@ -65,35 +112,24 @@ function ChoiceSheet({
 
           if (item === "create") {
             return (
-              <Pressable
-                accessibilityLabel={create?.label}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: create?.disabled }}
-                className={`${sliceRowClass(position)} justify-between ${create?.disabled ? "opacity-50" : ""}`}
+              <ChoiceRow
                 disabled={create?.disabled}
+                label={create?.label ?? ""}
+                position={position}
                 testID={`${name}-create`}
-                onPress={create?.onPress}
-              >
-                <SliceHairline first={position.first} />
-                <Text className="text-foreground flex-1 text-base">{create?.label}</Text>
-              </Pressable>
+                onPress={() => create?.onPress()}
+              />
             );
           }
 
-          const ticked = selected.includes(item.key);
-
           return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: ticked }}
-              className={`${sliceRowClass(position)} justify-between`}
+            <ChoiceRow
+              label={item.label}
+              position={position}
               testID={`${name}-${item.key}`}
+              ticked={selected.includes(item.key)}
               onPress={() => pick(item.key)}
-            >
-              <SliceHairline first={position.first} />
-              <Text className="text-foreground flex-1 text-base">{item.label}</Text>
-              {ticked ? <Checkmark /> : null}
-            </Pressable>
+            />
           );
         }}
       />
@@ -124,26 +160,27 @@ function ListChoiceSheet({ list, ...sheet }: SheetProps & { list: ChoiceList }) 
       sheet.onQueryChange("");
     },
   });
-  const { offer } = picker;
+  const { offer, problem } = picker;
   const rows = picker.matches.map((entry) => ({ key: entry.id, label: entry.name }));
   const create =
     offer.kind === "create"
       ? {
-          label: picker.isOffline
-            ? text("recipes.picker.createOffline", { name: offer.name })
-            : text("recipes.picker.create", { name: offer.name }),
+          label: text(`recipes.picker.${picker.createLabelKey}`, { name: offer.name }),
           disabled: picker.createDisabled,
           onPress: () => void picker.createAndSelect(),
         }
       : undefined;
-  const notice =
-    offer.kind === "tooLong"
-      ? text("recipes.picker.tooLong", { max: offer.max })
-      : picker.createFailed && offer.kind === "create"
-        ? text("recipes.picker.createFailed", { name: offer.name })
-        : undefined;
+  const notice = problem ? text(`recipes.picker.${problem.key}`, problem.values) : undefined;
 
-  return <ChoiceSheet {...sheet} create={create} notice={notice} rows={rows} />;
+  return (
+    <ChoiceSheet
+      {...sheet}
+      create={create}
+      notice={notice}
+      rows={rows}
+      onRetry={problem?.key === "loadFailed" ? picker.retryList : undefined}
+    />
+  );
 }
 
 /** A searchable list over the editor, for its country and cuisines: its name, title and mode from the route, the rest from `requestChoice`. */

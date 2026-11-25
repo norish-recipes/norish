@@ -5,7 +5,6 @@ import { useText } from "@/lib/i18n/use-text";
 
 import type { PickerEntry, PickerKind } from "@norish/shared-react/lists";
 import { useEntryPicker } from "@norish/shared-react/lists";
-import { entryFold } from "@norish/shared/lib/fold-name";
 
 import { EditorInput } from "./editor-parts";
 
@@ -49,25 +48,13 @@ export function EntryField({
       setTyped("");
     },
   });
-  const { offer } = picker;
+  const { offer, problem } = picker;
   const searching = typed.trim() !== "";
   const matches = searching ? picker.matches.slice(0, SHOWN) : [];
-  const pick = (entry: PickerEntry) => {
-    onSelect(entry);
-    setTyped("");
-  };
   // Return takes the entry named in full, never makes one.
-  const submit = () => {
-    const whole = picker.matches.find((entry) => entryFold(entry.name) === entryFold(typed));
-
-    if (whole) pick(whole);
+  const pickWhatIsTyped = () => {
+    if (picker.exactMatch) picker.pick(picker.exactMatch);
   };
-  const problem =
-    offer.kind === "tooLong"
-      ? text("recipes.picker.tooLong", { max: offer.max })
-      : picker.createFailed && offer.kind === "create"
-        ? text("recipes.picker.createFailed", { name: offer.name })
-        : null;
 
   return (
     <View className="gap-2">
@@ -81,7 +68,7 @@ export function EntryField({
         testID={testID}
         value={typed}
         onChangeText={setTyped}
-        onSubmitEditing={submit}
+        onSubmitEditing={pickWhatIsTyped}
       />
       {matches.length > 0 || offer.kind === "create" ? (
         <View className="flex-row flex-wrap gap-2">
@@ -91,7 +78,7 @@ export function EntryField({
               active={false}
               label={entryLabel ? entryLabel(entry.name) : entry.name}
               testID={`${testID}-match-${entry.id}`}
-              onPress={() => pick(entry)}
+              onPress={() => picker.pick(entry)}
             />
           ))}
           {offer.kind === "create" ? (
@@ -99,18 +86,28 @@ export function EntryField({
               active={false}
               disabled={picker.createDisabled}
               icon="add"
-              label={
-                picker.isOffline
-                  ? text("recipes.picker.createOffline", { name: offer.name })
-                  : text("recipes.picker.create", { name: offer.name })
-              }
+              label={text(`recipes.picker.${picker.createLabelKey}`, { name: offer.name })}
               testID={`${testID}-create`}
               onPress={() => void picker.createAndSelect()}
             />
           ) : null}
         </View>
       ) : null}
-      {problem ? <Text className="text-danger text-[13px] font-medium">{problem}</Text> : null}
+      {problem ? (
+        <View className="flex-row flex-wrap items-center gap-2">
+          <Text className="text-danger text-[13px] font-medium">
+            {text(`recipes.picker.${problem.key}`, problem.values)}
+          </Text>
+          {problem.key === "loadFailed" ? (
+            <ToggleChip
+              active={false}
+              label={text("common.actions.retry")}
+              testID={`${testID}-retry`}
+              onPress={picker.retryList}
+            />
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }

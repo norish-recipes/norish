@@ -1,6 +1,6 @@
 import type { BuiltInCategory } from "@norish/shared/lib/categories";
 import { LIST_NAME_MAX, ListEntryNameSchemas } from "@norish/shared/contracts/zod";
-import { resolveCategoryName } from "@norish/shared/lib/categories";
+import { BUILT_IN_CATEGORIES, resolveCategoryName } from "@norish/shared/lib/categories";
 import { entryFold } from "@norish/shared/lib/fold-name";
 
 export type PickerKind = keyof typeof ListEntryNameSchemas;
@@ -92,4 +92,83 @@ export function chosenEntries(
 
     return known ? [{ id, name: known.name }] : [];
   });
+}
+
+/** Whether `names` has one folding like `name`: the one "already selected" rule, for every kind. */
+export function hasName(names: readonly string[], name: string): boolean {
+  const fold = entryFold(name);
+
+  return names.some((known) => entryFold(known) === fold);
+}
+
+/** Entries with the built-in Categories first, in their order; the rest keep theirs. */
+export function builtInsFirst<T extends PickerEntry>(entries: readonly T[]): T[] {
+  const builtIns: readonly string[] = BUILT_IN_CATEGORIES;
+  const rank = ({ name }: T) => {
+    const place = builtIns.indexOf(name);
+
+    return place === -1 ? builtIns.length : place;
+  };
+
+  // Array sort is stable.
+  return [...entries].sort((a, b) => rank(a) - rank(b));
+}
+
+/** What a picker says when something is wrong: a key under `recipes.picker` and its values. */
+export interface PickerProblem {
+  key: "loadFailed" | "tooLong" | "createFailed";
+  values: Record<string, string | number>;
+}
+
+interface PickerViewInput<T extends PickerEntry> {
+  kind: PickerKind;
+  entries: readonly T[];
+  /** The list has been read; until then nothing is offered to create. */
+  loaded: boolean;
+  /** Reading the list failed. */
+  listFailed: boolean;
+  typed: string;
+  isSelected: (entry: PickerEntry) => boolean;
+  aliases?: CategoryAliases;
+  /** The name a create last failed for, until the reader acts on it. */
+  failedName: string | null;
+  offline: boolean;
+}
+
+/**
+ * What a picker shows for typed text: the matches, the Create row and its label key, the entry
+ * Return picks (the one named in full), and the problem to say (the list, a long name, a create).
+ */
+export function entryPickerView<T extends PickerEntry>({
+  kind,
+  entries,
+  loaded,
+  listFailed,
+  typed,
+  isSelected,
+  aliases,
+  failedName,
+  offline,
+}: PickerViewInput<T>) {
+  const offer: CreateOffer = loaded ? createOffer(kind, entries, typed, aliases) : { kind: "none" };
+  const matches = matchEntries(
+    kind,
+    entries.filter((entry) => !isSelected(entry)),
+    typed,
+    aliases
+  );
+  const fold = entryFold(typed);
+  let problem: PickerProblem | null = null;
+
+  if (listFailed) problem = { key: "loadFailed", values: {} };
+  else if (offer.kind === "tooLong") problem = { key: "tooLong", values: { max: offer.max } };
+  else if (failedName !== null) problem = { key: "createFailed", values: { name: failedName } };
+
+  return {
+    matches,
+    offer,
+    problem,
+    createLabelKey: offline ? ("createOffline" as const) : ("create" as const),
+    exactMatch: fold === "" ? undefined : matches.find((entry) => entryFold(entry.name) === fold),
+  };
 }

@@ -11,13 +11,15 @@ import {
 import { ConnectivityProvider } from "../../offline/react";
 import {
   answerCall,
+  answerRead,
   failCall,
+  failRead,
   resetTRPCFake,
   sentCall,
   serveTRPC,
   trpcCalls,
 } from "../../trpc/testing";
-import { useEntryPicker } from "../use-entry-picker";
+import { useEntryCreatePending, useEntryPicker } from "../use-entry-picker";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -53,6 +55,13 @@ function setUp(typed: string, recipeId?: string) {
   return { ...hook, reads, onSelect };
 }
 
+/** Answers the list read with `entries` and waits for the picker to show it. */
+const readList = (result: { current: { offer: { kind: string } } }, entries: unknown[] = []) =>
+  waitFor(() => {
+    answerRead("lists.list", entries);
+    expect(result.current.offer.kind).not.toBe("none");
+  });
+
 afterEach(resetTRPCFake);
 
 describe("useEntryPicker", () => {
@@ -71,7 +80,8 @@ describe("useEntryPicker", () => {
 
     const cafe = setUp("cafe");
 
-    await waitFor(() => expect(cafe.result.current.isLoading).toBe(false));
+    await waitFor(() => expect(cafe.result.current.matches).toHaveLength(0));
+    await waitFor(() => expect(cafe.result.current.offer).toEqual({ kind: "none" }));
     expect(cafe.result.current.offer).toEqual({ kind: "none" });
   });
 
@@ -91,6 +101,7 @@ describe("useEntryPicker", () => {
       { wrapper }
     );
 
+    await readList(result);
     await act(async () => {
       void result.current.createAndSelect();
       void result.current.createAndSelect();
@@ -112,7 +123,7 @@ describe("useEntryPicker", () => {
   it("creates nothing for a name the list has", async () => {
     const { result } = setUp("bbq");
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.matches).toHaveLength(1));
     await act(async () => result.current.createAndSelect());
     expect(trpcCalls["lists.add"]).toBeUndefined();
   });
@@ -126,10 +137,13 @@ describe("useEntryPicker", () => {
       { wrapper }
     );
 
+    await readList(result);
     act(() => void result.current.createAndSelect());
     await failCall("lists.add");
 
-    await waitFor(() => expect(result.current.createFailed).toBe(true));
+    await waitFor(() =>
+      expect(result.current.problem).toEqual({ key: "createFailed", values: { name: "Grill" } })
+    );
     expect(onSelect).not.toHaveBeenCalled();
     expect(result.current.offer).toEqual({ kind: "create", name: "Grill" });
   });
@@ -157,9 +171,113 @@ describe("useEntryPicker", () => {
       { wrapper }
     );
 
+    await readList(result);
     expect(result.current.offer).toEqual({ kind: "create", name: "Grill" });
     expect(result.current.createDisabled).toBe(true);
     await act(async () => result.current.createAndSelect());
     expect(trpcCalls["lists.add"]).toBeUndefined();
+  });
+
+  describe("while the list is unread or unreadable", () => {
+    const hold = (typed: string) => {
+      resetTRPCFake();
+
+      return renderHook(
+        () => useEntryPicker({ kind: "tag", typed, isSelected: () => false, onSelect: vi.fn() }),
+        { wrapper: createTestWrapper(createTestQueryClient(), fakePlatformAdapter()) }
+      );
+    };
+
+    it("offers no Create row until the list has loaded, then none for a name it has", async () => {
+      const { result } = hold("BBQ");
+
+      expect(result.current.offer).toEqual({ kind: "none" });
+      answerRead("lists.list", [entry("1", "BBQ")]);
+      await waitFor(() => expect(result.current.matches).toHaveLength(1));
+      expect(result.current.offer).toEqual({ kind: "none" });
+    });
+
+    it("says the list failed to load, and reads it again on retry", async () => {
+      const { result } = hold("Grill");
+
+      failRead("lists.list");
+      await waitFor(() =>
+        expect(result.current.problem).toEqual({ key: "loadFailed", values: {} })
+      );
+      expect(result.current.offer).toEqual({ kind: "none" });
+
+      act(() => result.current.retryList());
+      answerRead("lists.list", []);
+      await waitFor(() => expect(result.current.problem).toBeNull());
+      expect(result.current.offer).toEqual({ kind: "create", name: "Grill" });
+    });
+  });
+
+  it("selects into what the form holds when the create answers, not when it began", async () => {
+    resetTRPCFake();
+    const first = vi.fn();
+    const second = vi.fn();
+    const wrapper = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+    const { result, rerender } = renderHook(
+      ({ onSelect }) =>
+        useEntryPicker({ kind: "tag", typed: "Grill", isSelected: () => false, onSelect }),
+      { wrapper, initialProps: { onSelect: first } }
+    );
+
+    await readList(result);
+    act(() => void result.current.createAndSelect());
+    rerender({ onSelect: second });
+    await answerCall("lists.add", { created: true, entry: entry("9", "Grill") });
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledWith(entry("9", "Grill"));
+  });
+
+  it("keeps a failed create said when the text changes, until the reader picks or tries again", async () => {
+    resetTRPCFake();
+    const wrapper = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+    const onSelect = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ typed }) => useEntryPicker({ kind: "tag", typed, isSelected: () => false, onSelect }),
+      { wrapper, initialProps: { typed: "Grill" } }
+    );
+
+    await readList(result);
+    act(() => void result.current.createAndSelect());
+    await failCall("lists.add");
+    await waitFor(() => expect(result.current.problem?.key).toBe("createFailed"));
+
+    rerender({ typed: "Smoke" });
+    expect(result.current.problem).toEqual({ key: "createFailed", values: { name: "Grill" } });
+
+    act(() => result.current.pick(entry("1", "BBQ")));
+    expect(result.current.problem).toBeNull();
+  });
+
+  it("knows a create is under way, so a save can wait for it", async () => {
+    resetTRPCFake();
+    const wrapper = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+    const { result } = renderHook(
+      () => ({
+        picker: useEntryPicker({
+          kind: "tag",
+          typed: "Grill",
+          isSelected: () => false,
+          onSelect: vi.fn(),
+        }),
+        pending: useEntryCreatePending(),
+      }),
+      { wrapper }
+    );
+
+    await waitFor(() => {
+      answerRead("lists.list", []);
+      expect(result.current.picker.offer.kind).toBe("create");
+    });
+    expect(result.current.pending).toBe(false);
+    act(() => void result.current.picker.createAndSelect());
+    await waitFor(() => expect(result.current.pending).toBe(true));
+    await answerCall("lists.add", { created: true, entry: entry("9", "Grill") });
+    await waitFor(() => expect(result.current.pending).toBe(false));
   });
 });

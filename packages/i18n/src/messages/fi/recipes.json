@@ -567,7 +567,8 @@
     "create": "Luo \"{name}\"",
     "createOffline": "Voit luoda kohteen \"{name}\", kun olet verkossa.",
     "tooLong": "Nimessä saa olla enintään {max} merkkiä.",
-    "createFailed": "Kohdetta \"{name}\" ei voitu luoda. Yritä uudelleen."
+    "createFailed": "Kohdetta \"{name}\" ei voitu luoda. Yritä uudelleen.",
+    "loadFailed": "Luetteloa ei voitu ladata."
   },
   "search": {
     "sortBestMatch": "Paras osuma",

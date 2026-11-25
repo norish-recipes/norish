@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
   entries: [] as { id: string; name: string }[],
   created: vi.fn(),
   offline: false,
+  listFailed: false,
+  failedName: null as string | null,
+  retry: vi.fn(),
   readFor: vi.fn(),
 }));
 
@@ -33,7 +36,7 @@ vi.mock("@norish/shared-react/lists", async (importOriginal) => {
     useListEntries: (kind: string, recipeId?: string) => {
       mocks.readFor(kind, recipeId);
 
-      return { entries: mocks.entries, isLoading: false };
+      return { entries: mocks.entries, loaded: true, failed: false, retry: vi.fn() };
     },
     useEntryPicker: ({
       kind,
@@ -42,34 +45,36 @@ vi.mock("@norish/shared-react/lists", async (importOriginal) => {
       isSelected,
       onSelect,
     }: Parameters<typeof actual.useEntryPicker>[0]) => {
-      const offer = actual.createOffer(kind, mocks.entries, typed);
-
       mocks.readFor(kind, recipeId);
 
+      const view = actual.entryPickerView({
+        kind,
+        entries: mocks.entries,
+        loaded: true,
+        listFailed: mocks.listFailed,
+        typed,
+        isSelected,
+        failedName: mocks.failedName,
+        offline: mocks.offline,
+      });
+
       return {
-        isLoading: false,
-        matches: actual.matchEntries(
-          kind,
-          mocks.entries.filter((entry) => !isSelected(entry)),
-          typed
-        ),
-        offer,
-        isOffline: mocks.offline,
+        ...view,
         createDisabled: mocks.offline,
-        isCreating: false,
-        createFailed: false,
+        pick: onSelect,
+        retryList: mocks.retry,
         createAndSelect: async () => {
-          if (offer.kind !== "create" || mocks.offline) return;
-          mocks.created(offer.name);
-          onSelect({ id: `new-${offer.name}`, name: offer.name });
+          if (view.offer.kind !== "create" || mocks.offline) return;
+          mocks.created(view.offer.name);
+          onSelect({ id: `new-${view.offer.name}`, name: view.offer.name });
         },
       };
     },
   };
 });
 
-function Tags({ recipeId }: { recipeId?: string }) {
-  const [tags, setTags] = useState<string[]>([]);
+function Tags({ recipeId, initial = [] }: { recipeId?: string; initial?: string[] }) {
+  const [tags, setTags] = useState<string[]>(initial);
 
   return (
     <>
@@ -89,6 +94,30 @@ beforeEach(() => {
   mocks.created.mockClear();
   mocks.readFor.mockClear();
   mocks.offline = false;
+  mocks.listFailed = false;
+  mocks.failedName = null;
+  mocks.retry.mockClear();
+});
+
+describe("TagPicker chips", () => {
+  it("says the list could not be read, with a way to read it again", async () => {
+    const user = userEvent.setup();
+
+    mocks.listFailed = true;
+    render(<Tags />);
+    expect(screen.getByRole("alert")).toHaveTextContent("loadFailed");
+    await user.click(screen.getByRole("button", { name: "retry" }));
+    expect(mocks.retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a failed create said while other text is typed", async () => {
+    const user = userEvent.setup();
+
+    mocks.failedName = "Grill";
+    render(<Tags />);
+    await user.type(screen.getByRole("combobox", { name: "addTag" }), "Smoke");
+    expect(screen.getByRole("alert", { hidden: true })).toHaveTextContent("createFailed Grill");
+  });
 });
 
 describe("TagPicker", () => {

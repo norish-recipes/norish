@@ -567,7 +567,8 @@
     "create": "Opprett \"{name}\"",
     "createOffline": "Du kan opprette \"{name}\" når du er på nett.",
     "tooLong": "Navn kan ha høyst {max} tegn.",
-    "createFailed": "Kunne ikke opprette \"{name}\". Prøv igjen."
+    "createFailed": "Kunne ikke opprette \"{name}\". Prøv igjen.",
+    "loadFailed": "Kunne ikke laste listen."
   },
   "search": {
     "sortBestMatch": "Beste treff",

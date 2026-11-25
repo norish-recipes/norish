@@ -11,8 +11,8 @@ import { useIntl } from "react-intl";
 
 import type { RecipeFormState } from "@norish/shared-react/recipes";
 import type { RecipeCategory } from "@norish/shared/contracts";
+import { hasName } from "@norish/shared-react/lists";
 import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
-import { entryFold } from "@norish/shared/lib/fold-name";
 
 import { SectionCard } from "../tint";
 import { EditorInput } from "./editor-parts";
@@ -38,31 +38,6 @@ export function RemovableChip({ label, onRemove }: { label: string; onRemove: ()
   );
 }
 
-/** The chip, ruled by a hairline, that adds one more. */
-export function AddChip({
-  label,
-  testID,
-  onPress,
-}: {
-  label: string;
-  testID: string;
-  onPress: () => void;
-}) {
-  const [muted] = useThemeColor(["muted"] as const);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      className="border-separator h-[34px] flex-row items-center gap-1.5 rounded-full border px-3"
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons color={muted} name="add" size={15} />
-      <Text className="text-foreground text-[15px] font-medium">{label}</Text>
-    </Pressable>
-  );
-}
-
 export function TagsAndCategoriesCard({
   form,
   set,
@@ -83,7 +58,6 @@ export function TagsAndCategoriesCard({
   onAddCategory: (name: string) => void;
 }) {
   const text = useText();
-  const hasTag = (name: string) => form.tags.some((tag) => entryFold(tag) === entryFold(name));
 
   return (
     <SectionCard title={text("recipes.editor.tagsAndCategories")}>
@@ -104,7 +78,7 @@ export function TagsAndCategoriesCard({
         </View>
         <EntryField
           entryLabel={categoryLabel}
-          isSelected={(entry) => form.categories.includes(entry.name)}
+          isSelected={(entry) => hasName(form.categories, entry.name)}
           kind="category"
           label={text("recipes.form.addCategory")}
           placeholder={text("recipes.form.addCategory")}
@@ -135,14 +109,14 @@ export function TagsAndCategoriesCard({
           </View>
         ) : null}
         <EntryField
-          isSelected={(entry) => hasTag(entry.name)}
+          isSelected={(entry) => hasName(form.tags, entry.name)}
           kind="tag"
           label={text("recipes.editor.addTag")}
           placeholder={text("recipes.editor.addTag")}
           recipeId={recipeId}
           testID="editor-tag-input"
           onSelect={(entry) => {
-            if (!hasTag(entry.name)) set("tags", [...form.tags, entry.name]);
+            if (!hasName(form.tags, entry.name)) set("tags", [...form.tags, entry.name]);
           }}
         />
       </View>

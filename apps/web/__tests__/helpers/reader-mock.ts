@@ -82,6 +82,17 @@ export async function mockReader(read: () => MockReader = () => ({})) {
       user: read().user ?? null,
       isLoading: false,
     }),
+    useHousehold: () => {
+      const id = permissions().householdId;
+
+      return {
+        household: id ? { id } : null,
+        currentUserId: read().user?.id,
+        isAdmin: false,
+        error: null,
+        isLoading: false,
+      };
+    },
     useSignOut: () => async () => {},
     useProfileQuery: () => ({ user: read().user ?? null, apiKeys: [] }),
     usePermissions: <T>(select: (p: ReaderPermissions) => T) => select(permissions()),

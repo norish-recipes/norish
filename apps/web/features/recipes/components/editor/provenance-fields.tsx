@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
 import { ChipButton } from "@/components/shared/chip-button";
 import { EntryComboBox } from "@/components/shared/entry-combo-box";
 import { ComboBox, Input, Label, ListBox, TextArea, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { PickerEntry } from "@norish/shared-react/lists";
 import type { ProvenanceFormValue } from "@norish/shared-react/recipes";
 import { chosenEntries, useListEntries } from "@norish/shared-react/lists";
 import { listCountryOptions } from "@norish/shared/lib/recipe-provenance";
@@ -30,7 +30,7 @@ interface ProvenanceFieldsProps {
   /** The recipe being edited, once it exists: its household's Cuisines are the ones offered. */
   recipeId?: string;
   /** The Cuisines the recipe carries, which it keeps whatever the list offers. */
-  carriedCuisines?: { id: string; name: string }[];
+  carriedCuisines?: PickerEntry[];
 }
 
 /**
@@ -55,7 +55,7 @@ export default function ProvenanceFields({
   const t = useTranslations("recipes.form");
   const tEditor = useTranslations("recipes.editor");
   const { entries: cuisines } = useListEntries("cuisine", recipeId);
-  const countries = useMemo(() => listCountryOptions(locale), [locale]);
+  const countries = listCountryOptions(locale);
 
   const patch = (changes: Partial<ProvenanceFormValue>) => onChange({ ...value, ...changes });
 

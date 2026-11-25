@@ -4,12 +4,17 @@ import type { SetStateAction } from "react";
 import { useState } from "react";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 import type { RecipeEditorMode, RecipeFormErrors, RecipeFormState } from "./recipe-editor";
 import type { LineMoves } from "./recipe-editor-rows";
 import { useUnitsQuery } from "../config";
-import { useListEntries } from "../lists";
+import {
+  builtInsFirst,
+  hasName,
+  useEntryCreatePending,
+  useListEntries,
+  useListRecipeId,
+} from "../lists";
 import { useHydrated } from "../platform/use-hydrated";
 import { useDevicePreference } from "../reader";
 import {
@@ -35,7 +40,9 @@ interface UseRecipeEditorFormOptions {
 export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEditorFormOptions) {
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
   // The list of the recipe's own household, which is another's when its edit policy allows.
-  const { entries: categoryEntries } = useListEntries("category", initialData?.id);
+  const listRecipeId = useListRecipeId(mode === "edit" ? initialData : undefined);
+  const { entries: categoryEntries } = useListEntries("category", listRecipeId);
+  const isCreatingEntry = useEntryCreatePending();
   const [unitStyle] = useDevicePreference("unitStyle");
   // False on the server and while hydrating, so the browser's first render matches the server's.
   const isHydrated = useHydrated();
@@ -131,15 +138,9 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   };
 
   // The list, built-ins first, plus any the recipe carries from elsewhere or was just given.
-  const builtIns: readonly string[] = BUILT_IN_CATEGORIES;
-  const rank = (name: string) => {
-    const place = builtIns.indexOf(name);
-
-    return place === -1 ? builtIns.length : place;
-  };
   const categoryOptions = Array.from(
     new Set([
-      ...categoryEntries.map((entry) => entry.name).sort((a, b) => rank(a) - rank(b)),
+      ...builtInsFirst(categoryEntries).map((entry) => entry.name),
       ...(initialData?.categories ?? []),
       ...form.categories,
     ])
@@ -154,14 +155,17 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   // An entry of the list, picked or just created: the picker makes new ones, a save makes none.
   const addCategory = (name: string) =>
     setForm((prev) =>
-      prev.categories.includes(name) ? prev : { ...prev, categories: [...prev.categories, name] }
+      hasName(prev.categories, name) ? prev : { ...prev, categories: [...prev.categories, name] }
     );
 
   const isReady = mode !== "edit" || !initialData || initializedRecipeId === initialData.id;
   const hasUnsavedChanges = isReady && isRecipeFormDirty(form, mode, initialData, labeller);
 
-  /** Validates and, when the form may be saved, hands back what to send. */
+  /** Validates and, when the form may be saved, hands back what to send. A save waits for an
+   * entry being created, or it would leave that entry out. */
   const submit = () => {
+    if (isCreatingEntry) return null;
+
     const found = validateRecipeForm(form);
 
     setErrors(found);
@@ -174,6 +178,8 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   return {
     form,
     set,
+    listRecipeId,
+    isCreatingEntry,
     errors,
     submit,
     failSubmit,

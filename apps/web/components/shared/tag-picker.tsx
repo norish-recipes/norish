@@ -4,7 +4,7 @@ import { EntryComboBox } from "@/components/shared/entry-combo-box";
 import { SortableTagChips } from "@/components/shared/sortable-tag-chips";
 import { useTranslations } from "next-intl";
 
-import { entryFold } from "@norish/shared/lib/fold-name";
+import { hasName } from "@norish/shared-react/lists";
 
 interface TagPickerProps {
   value: string[];
@@ -19,7 +19,6 @@ interface TagPickerProps {
  */
 export default function TagPicker({ value, onChange, recipeId }: TagPickerProps) {
   const t = useTranslations("recipes.editor");
-  const has = (name: string) => value.some((tag) => entryFold(tag) === entryFold(name));
 
   return (
     // A field holding chips is still a field: the same soft fill and border as the form's inputs.
@@ -37,9 +36,9 @@ export default function TagPicker({ value, onChange, recipeId }: TagPickerProps)
           label={t("addTag")}
           placeholder={value.length === 0 ? t("addTag") : ""}
           recipeId={recipeId}
-          isSelected={(entry) => has(entry.name)}
+          isSelected={(entry) => hasName(value, entry.name)}
           onSelect={(entry) => {
-            if (!has(entry.name)) onChange([...value, entry.name]);
+            if (!hasName(value, entry.name)) onChange([...value, entry.name]);
           }}
         />
       </SortableTagChips>

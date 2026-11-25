@@ -567,7 +567,8 @@
     "create": "Skapa \"{name}\"",
     "createOffline": "Du kan skapa \"{name}\" när du är online.",
     "tooLong": "Namn får vara högst {max} tecken.",
-    "createFailed": "Det gick inte att skapa \"{name}\". Försök igen."
+    "createFailed": "Det gick inte att skapa \"{name}\". Försök igen.",
+    "loadFailed": "Det gick inte att läsa in listen."
   },
   "search": {
     "sortBestMatch": "Bästa träff",

@@ -91,9 +91,10 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   const uploads = useEditorUploads(recipeId);
   const { form, set } = editor;
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
-  // A photo still uploading is not in the form yet, and a second tap would save twice.
+  // A photo still uploading, or an entry being created, is not in the form yet, and a second
+  // tap would save twice.
   const [saving, setSaving] = useState(false);
-  const busy = saving || uploads.isUploading;
+  const busy = saving || uploads.isUploading || editor.isCreatingEntry;
   const text = useText();
   const error = (field: "name" | "ingredients" | "steps" | "servings") => {
     const key = editor.errors[field];
@@ -261,7 +262,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               categoryLabel={categoryLabel}
               categoryOptions={editor.categoryOptions}
               form={form}
-              recipeId={mode === "edit" ? initialData?.id : undefined}
+              recipeId={editor.listRecipeId}
               set={set}
               onAddCategory={editor.addCategory}
               onToggleCategory={editor.toggleCategory}
@@ -270,7 +271,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
             <NutritionCard form={form} set={set} />
             <ProvenanceCard
               carriedCuisines={initialData?.cuisines}
-              recipeId={mode === "edit" ? initialData?.id : undefined}
+              recipeId={editor.listRecipeId}
               value={form.provenance}
               onChange={(provenance) => set("provenance", provenance)}
             />

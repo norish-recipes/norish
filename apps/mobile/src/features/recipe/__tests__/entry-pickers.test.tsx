@@ -18,6 +18,9 @@ const mocks = vi.hoisted(() => ({
   created: vi.fn(),
   readFor: vi.fn(),
   offline: false,
+  listFailed: false,
+  failedName: null as string | null,
+  retry: vi.fn(),
   request: null as null | {
     choices: unknown[];
     list?: { kind: string; recipeId?: string };
@@ -142,7 +145,7 @@ vi.mock("@norish/shared-react/lists", async (importOriginal) => {
     useListEntries: (kind: string, recipeId?: string) => {
       mocks.readFor(kind, recipeId);
 
-      return { entries: mocks.entries, isLoading: false };
+      return { entries: mocks.entries, loaded: true, failed: false, retry: vi.fn() };
     },
     useEntryPicker: ({
       kind,
@@ -151,26 +154,28 @@ vi.mock("@norish/shared-react/lists", async (importOriginal) => {
       isSelected,
       onSelect,
     }: Parameters<typeof actual.useEntryPicker>[0]) => {
-      const offer = actual.createOffer(kind, mocks.entries, typed);
-
       mocks.readFor(kind, recipeId);
 
+      const view = actual.entryPickerView({
+        kind,
+        entries: mocks.entries,
+        loaded: true,
+        listFailed: mocks.listFailed,
+        typed,
+        isSelected,
+        failedName: mocks.failedName,
+        offline: mocks.offline,
+      });
+
       return {
-        isLoading: false,
-        matches: actual.matchEntries(
-          kind,
-          mocks.entries.filter((entry) => !isSelected(entry)),
-          typed
-        ),
-        offer,
-        isOffline: mocks.offline,
+        ...view,
         createDisabled: mocks.offline,
-        isCreating: false,
-        createFailed: false,
+        pick: onSelect,
+        retryList: mocks.retry,
         createAndSelect: async () => {
-          if (offer.kind !== "create" || mocks.offline) return;
-          mocks.created(offer.name);
-          onSelect({ id: `new-${offer.name}`, name: offer.name });
+          if (view.offer.kind !== "create" || mocks.offline) return;
+          mocks.created(view.offer.name);
+          onSelect({ id: `new-${view.offer.name}`, name: view.offer.name });
         },
       };
     },
@@ -193,6 +198,9 @@ beforeEach(() => {
   mocks.readFor.mockClear();
   mocks.back.mockClear();
   mocks.offline = false;
+  mocks.listFailed = false;
+  mocks.failedName = null;
+  mocks.retry.mockClear();
   mocks.request = null;
 });
 
@@ -266,6 +274,25 @@ describe("the Tag picker", () => {
     renderCard();
 
     expect(mocks.readFor).toHaveBeenCalledWith("tag", RECIPE);
+  });
+});
+
+describe("a picker whose list cannot be read or whose create failed", () => {
+  it("says so, and reads the list again on retry", () => {
+    mocks.listFailed = true;
+    renderCard();
+
+    expect(screen.getAllByText("recipes.picker.loadFailed")).toHaveLength(2);
+    fireEvent.click(screen.getByTestId("editor-tag-input-retry"));
+    expect(mocks.retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a failed create said while other text is typed", () => {
+    mocks.failedName = "Grill";
+    renderCard();
+    fireEvent.change(screen.getByTestId("editor-tag-input"), { target: { value: "Smoke" } });
+
+    expect(screen.getAllByText("recipes.picker.createFailed Grill")).toHaveLength(2);
   });
 });
 

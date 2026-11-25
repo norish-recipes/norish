@@ -567,7 +567,8 @@
     "create": "Utwórz \"{name}\"",
     "createOffline": "Możesz utworzyć \"{name}\", gdy będziesz online.",
     "tooLong": "Nazwa może mieć najwyżej {max} znaków.",
-    "createFailed": "Nie udało się utworzyć \"{name}\". Spróbuj ponownie."
+    "createFailed": "Nie udało się utworzyć \"{name}\". Spróbuj ponownie.",
+    "loadFailed": "Nie udało się wczytać listy."
   },
   "search": {
     "sortBestMatch": "Najlepsze dopasowanie",

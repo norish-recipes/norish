@@ -9,8 +9,12 @@ vi.mock("../../config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
 }));
 const listRead = vi.fn();
+const creating = vi.hoisted(() => ({ now: false }));
 
-vi.mock("../../lists", () => ({
+vi.mock("../../lists", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../lists")>()),
+  useListRecipeId: (recipe?: { id: string }) => recipe?.id,
+  useEntryCreatePending: () => creating.now,
   useListEntries: (kind: string, recipeId?: string) => {
     listRead(kind, recipeId);
 
@@ -69,6 +73,10 @@ const stored: FullRecipeDTO = {
   images: [],
   videos: [],
 };
+
+afterEach(() => {
+  creating.now = false;
+});
 
 describe("useRecipeEditorForm", () => {
   it("seeds an edit's lines and steps and is clean until a field changes", () => {
@@ -145,5 +153,31 @@ describe("useRecipeEditorForm", () => {
       ingredients: "ingredientsRequired",
       steps: "stepsRequired",
     });
+  });
+
+  it("saves an edit only once no entry is being created", () => {
+    const { result, rerender } = renderHook(() =>
+      useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" })
+    );
+
+    creating.now = true;
+    rerender();
+    expect(result.current.isCreatingEntry).toBe(true);
+    expect(result.current.submit()).toBeNull();
+    expect(result.current.errors).toEqual({});
+
+    creating.now = false;
+    rerender();
+    expect(result.current.submit()).not.toBeNull();
+  });
+
+  it("does not add a Category folding like one it has, and names its household's list by the recipe", () => {
+    const { result } = renderHook(() =>
+      useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" })
+    );
+
+    act(() => result.current.addCategory("soups"));
+    expect(result.current.form.categories).toEqual(["Soups"]);
+    expect(result.current.listRecipeId).toBe("recipe-1");
   });
 });

@@ -567,7 +567,8 @@
     "create": "Créer \"{name}\"",
     "createOffline": "Vous pourrez créer \"{name}\" une fois en ligne.",
     "tooLong": "Un nom peut avoir {max} caractères au maximum.",
-    "createFailed": "Impossible de créer \"{name}\". Réessayez."
+    "createFailed": "Impossible de créer \"{name}\". Réessayez.",
+    "loadFailed": "Impossible de charger la liste."
   },
   "search": {
     "sortBestMatch": "Meilleure correspondance",

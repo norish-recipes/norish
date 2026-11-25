@@ -567,7 +567,8 @@
     "create": "\"{name}\" erstellen",
     "createOffline": "Sie können \"{name}\" erstellen, wenn Sie online sind.",
     "tooLong": "Namen dürfen höchstens {max} Zeichen haben.",
-    "createFailed": "\"{name}\" konnte nicht erstellt werden. Versuchen Sie es erneut."
+    "createFailed": "\"{name}\" konnte nicht erstellt werden. Versuchen Sie es erneut.",
+    "loadFailed": "Die Liste konnte nicht geladen werden."
   },
   "search": {
     "sortBestMatch": "Beste Treffer",

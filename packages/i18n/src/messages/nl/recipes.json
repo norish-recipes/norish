@@ -567,7 +567,8 @@
     "create": "\"{name}\" maken",
     "createOffline": "Je kunt \"{name}\" maken als je online bent.",
     "tooLong": "Namen mogen maximaal {max} tekens hebben.",
-    "createFailed": "\"{name}\" maken is niet gelukt. Probeer het opnieuw."
+    "createFailed": "\"{name}\" maken is niet gelukt. Probeer het opnieuw.",
+    "loadFailed": "De lijst laden is niet gelukt."
   },
   "search": {
     "sortBestMatch": "Beste match",

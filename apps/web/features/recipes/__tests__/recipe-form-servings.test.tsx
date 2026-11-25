@@ -17,7 +17,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-const mocks = vi.hoisted(() => ({ createRecipe: vi.fn(), push: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  createRecipe: vi.fn(),
+  push: vi.fn(),
+  readerHousehold: "household-2" as string | null,
+}));
 
 vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
@@ -55,7 +59,9 @@ vi.mock("@norish/shared-react/config", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(undefined, {
+    reader: () => ({ permissions: { householdId: mocks.readerHousehold } }),
+  })
 );
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
@@ -133,6 +139,7 @@ const entry = (id: string, name: string, instance = false) => ({ id, name, insta
 beforeEach(() => {
   mocks.createRecipe.mockReset();
   mocks.push.mockReset();
+  mocks.readerHousehold = "household-2";
   sentWrites.mockReset();
   readAnswers.clear();
   writeAnswers.clear();
@@ -248,11 +255,23 @@ describe("RecipeForm categories", () => {
     );
   });
 
-  it("reads the list of the recipe being edited, not the editor's", async () => {
+  it("reads the list of another household's recipe being edited, not the editor's", async () => {
     renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
     await screen.findByRole("button", { name: "Breakfast" });
     expect(sentReads).toHaveBeenCalledWith("lists.list", { kind: "category", recipeId: mojito.id });
+  });
+
+  it("reads the household's own list for a recipe of the reader's household, as the cache has it", async () => {
+    mocks.readerHousehold = "household-1";
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+
+    await screen.findByRole("button", { name: "Breakfast" });
+    expect(sentReads).toHaveBeenCalledWith("lists.list", { kind: "category" });
+    expect(sentReads).not.toHaveBeenCalledWith(
+      "lists.list",
+      expect.objectContaining({ recipeId: mojito.id })
+    );
   });
 
   async function typeCategory(user: ReturnType<typeof userEvent.setup>, text: string) {

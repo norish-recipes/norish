@@ -21,6 +21,7 @@ const state = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   isUploading: false,
+  creatingEntry: false,
   /** The photo sheet's pick, waiting for the reader to choose a photo. */
   pendingPick: null as (() => void) | null,
   galleryUpload: null as PromiseWithResolvers<object[]> | null,
@@ -169,8 +170,11 @@ vi.mock("@norish/shared-react/config", () => ({
   useIngredientsSubscription: () => undefined,
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
 }));
-vi.mock("@norish/shared-react/lists", () => ({
-  useListEntries: () => ({ entries: [], isLoading: false }),
+vi.mock("@norish/shared-react/lists", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/lists")>()),
+  useListEntries: () => ({ entries: [], loaded: true, failed: false, retry: () => {} }),
+  useListRecipeId: (recipe?: { id: string }) => recipe?.id,
+  useEntryCreatePending: () => state.creatingEntry,
 }));
 vi.mock("@norish/shared-react/ingredients", () => ({
   useFoodsByName: () => new Map(),
@@ -304,6 +308,7 @@ describe("RecipeEditorScreen with its real rows", () => {
     state.create.mockReset();
     state.update.mockReset();
     state.isUploading = false;
+    state.creatingEntry = false;
     state.pendingPick = null;
     state.galleryUpload = null;
   });
@@ -403,6 +408,15 @@ describe("RecipeEditorScreen with its real rows", () => {
 
   it("does not save while a photo uploads", () => {
     state.isUploading = true;
+    render(<RecipeEditorScreen initialData={stored} mode="edit" />);
+    save();
+
+    expect(screen.getByTestId("header-confirm")).toHaveProperty("disabled", true);
+    expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it("does not save while an entry is being created, or it would be left out", () => {
+    state.creatingEntry = true;
     render(<RecipeEditorScreen initialData={stored} mode="edit" />);
     save();
 

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { chosenEntries, createOffer, matchEntries } from "../entry-matching";
+import {
+  builtInsFirst,
+  chosenEntries,
+  createOffer,
+  entryPickerView,
+  hasName,
+  matchEntries,
+} from "../entry-matching";
 
 const list = (...names: string[]) => names.map((name, index) => ({ id: `e${index}`, name }));
 
@@ -69,5 +76,66 @@ describe("chosenEntries", () => {
       { id: "b", name: "Carried" },
       { id: "a", name: "Thai" },
     ]);
+  });
+});
+
+describe("hasName", () => {
+  it("is one rule for every kind: the fold, not the exact name", () => {
+    expect(hasName(["Café", "BBQ"], "cafe")).toBe(true);
+    expect(hasName(["Café"], "Cafe au lait")).toBe(false);
+  });
+});
+
+describe("builtInsFirst", () => {
+  it("puts the built-ins first in their order and keeps the rest as they were", () => {
+    const entries = list("Zesty", "Dinner", "Apples", "Breakfast");
+
+    expect(builtInsFirst(entries).map((e) => e.name)).toEqual([
+      "Breakfast",
+      "Dinner",
+      "Zesty",
+      "Apples",
+    ]);
+  });
+});
+
+describe("entryPickerView", () => {
+  const view = (over: Partial<Parameters<typeof entryPickerView>[0]> = {}) =>
+    entryPickerView({
+      kind: "tag",
+      entries: list("BBQ", "Café"),
+      loaded: true,
+      listFailed: false,
+      typed: "",
+      isSelected: () => false,
+      failedName: null,
+      offline: false,
+      ...over,
+    });
+
+  it("offers nothing to create until the list is loaded", () => {
+    expect(view({ loaded: false, entries: [], typed: "BBQ" }).offer).toEqual({ kind: "none" });
+    expect(view({ typed: "Grill" }).offer).toEqual({ kind: "create", name: "Grill" });
+  });
+
+  it("says one problem: the list, then a long name, then a failed create", () => {
+    expect(view({ listFailed: true, failedName: "x" }).problem?.key).toBe("loadFailed");
+    expect(view({ typed: "x".repeat(81), kind: "cuisine", failedName: "y" }).problem).toEqual({
+      key: "tooLong",
+      values: { max: 80 },
+    });
+    expect(view({ failedName: "Grill" }).problem).toEqual({
+      key: "createFailed",
+      values: { name: "Grill" },
+    });
+    expect(view().problem).toBeNull();
+  });
+
+  it("names the Create label by connectivity, and the entry Return picks by the fold in full", () => {
+    expect(view({ offline: true }).createLabelKey).toBe("createOffline");
+    expect(view().createLabelKey).toBe("create");
+    expect(view({ typed: "cafe" }).exactMatch?.name).toBe("Café");
+    expect(view({ typed: "caf" }).exactMatch).toBeUndefined();
+    expect(view({ typed: "" }).exactMatch).toBeUndefined();
   });
 });
