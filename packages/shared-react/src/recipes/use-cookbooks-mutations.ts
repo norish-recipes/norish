@@ -12,7 +12,7 @@ import {
   invalidateUnlessPreserved,
   shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
-import { usePermissions, useReader } from "../reader";
+import { useReaderOwner } from "../reader";
 import { useTRPC } from "../trpc";
 import { useCookbooksCacheHelpers } from "./use-cookbooks-cache";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
@@ -29,8 +29,7 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
     seedCookbookMembers,
   } = useCookbooksCacheHelpers();
   // A cookbook created Offline is the Reader's own, in their household (ADR-0027).
-  const currentUserId = useReader().user?.id;
-  const householdId = usePermissions((permissions) => permissions.householdId);
+  const owner = useReaderOwner();
 
   // A queued write keeps its tentative state: there is nothing to refetch Offline, and refetching
   // would erase the change the reader can see (ADR-0009).
@@ -80,15 +79,13 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
   const createMutation = useMutation(
     trpc.cookbooks.create.mutationOptions({
       onMutate: ({ id, title, recipeIds = [] }) => {
-        if (!id) return undefined;
+        // With no Owner known yet there is nothing to show until the echo.
+        if (!id || !owner) return undefined;
 
         const now = new Date();
-
-        // The caller's own; with no household known yet it offers nothing until the echo.
         const tentative: CookbookSummaryDTO = {
           id,
-          userId: currentUserId ?? "",
-          householdId: householdId ?? "",
+          ...owner,
           title,
           createdAt: now,
           updatedAt: now,

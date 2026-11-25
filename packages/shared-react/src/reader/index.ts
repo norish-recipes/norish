@@ -41,6 +41,7 @@ export { useSessionReader, type SessionUser } from "./session";
 export {
   usePermissions,
   usePermissionsSubscription,
+  useReaderOwner,
   useRecipePermissions,
 } from "./use-permissions";
 export {

@@ -20,9 +20,7 @@ const proxy = vi.hoisted(() => ({ current: undefined as unknown }));
 
 vi.mock("../../trpc", () => ({ useTRPC: () => proxy.current }));
 vi.mock("../../reader", () => ({
-  useReader: () => ({ user: { id: "reader-1" } }),
-  usePermissions: (select: (p: { householdId: string }) => unknown) =>
-    select({ householdId: "household-1" }),
+  useReaderOwner: () => ({ userId: "reader-1", householdId: "household-1" }),
 }));
 
 describe("a cookbook created Offline", () => {

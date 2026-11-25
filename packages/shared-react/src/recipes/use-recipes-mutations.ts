@@ -15,7 +15,7 @@ import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
 import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
-import { usePermissions, useReader } from "../reader";
+import { useReaderOwner } from "../reader";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
@@ -281,15 +281,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const { setAllRecipesData, invalidate } = useRecipesCacheHelpers();
 
   const recipesPath = [trpc.recipes.list.queryKey({})[0]];
-  const owner = {
-    userId: useReader().user?.id ?? "",
-    householdId: usePermissions((permissions) => permissions.householdId) ?? "",
-  };
+  const owner = useReaderOwner();
 
   const createMutation = useMutation(
     trpc.recipes.create.mutationOptions({
       onMutate: async (input) => {
-        const optimisticRecipe = createOptimisticFullRecipe(input, owner);
+        const optimisticRecipe = owner && createOptimisticFullRecipe(input, owner);
 
         if (!optimisticRecipe) {
           return {};

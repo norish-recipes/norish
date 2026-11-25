@@ -54,9 +54,7 @@ vi.mock("../../trpc", () => {
 });
 
 vi.mock("../../reader", () => ({
-  useReader: () => ({ user: { id: "user-1" } }),
-  usePermissions: (select: (p: { householdId: string }) => unknown) =>
-    select({ householdId: "household-1" }),
+  useReaderOwner: () => ({ userId: "user-1", householdId: "household-1" }),
 }));
 
 describe("useCookbooksMutations", () => {

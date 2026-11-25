@@ -10,6 +10,7 @@ import type { ReaderPermissions } from "./permission-selectors";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { normalizePermissionsData, selectAllows } from "./permission-selectors";
+import { useReader } from "./use-reader";
 
 const DEFAULTS = normalizePermissionsData(undefined);
 
@@ -25,6 +26,14 @@ export function usePermissions<T>(select: (permissions: ReaderPermissions) => T)
   });
 
   return data === undefined ? select(DEFAULTS) : data;
+}
+
+/** The Reader as the Owner of what they make, for an optimistic row; null until both are known. */
+export function useReaderOwner(): { userId: string; householdId: string } | null {
+  const userId = useReader().user?.id;
+  const householdId = usePermissions((permissions) => permissions.householdId);
+
+  return userId && householdId ? { userId, householdId } : null;
 }
 
 type RecipePermissions = {

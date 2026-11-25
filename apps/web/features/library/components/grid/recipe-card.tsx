@@ -225,8 +225,6 @@ function RecipeCardComponent({
     });
   }, [onDelete, recipe.id, recipe.version, onDeleteModalClose]);
 
-  // Check if user can delete this recipe
-  // Recipes without owner don not have restrictions
   const showDeleteAction = canDeleteRecipe(recipe.householdId);
 
   const actions: SwipeAction[] = useMemo(() => {
