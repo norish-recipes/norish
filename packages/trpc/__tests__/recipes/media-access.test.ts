@@ -10,7 +10,7 @@ const assertRecipeMediaAccessMock = vi.hoisted(() => vi.fn());
 const releaseRecipeMediaClaimMock = vi.hoisted(() => vi.fn());
 const saveImageBytesMock = vi.hoisted(() => vi.fn());
 const deleteImageByUrlMock = vi.hoisted(() => vi.fn());
-const deleteVideoByUrlMock = vi.hoisted(() => vi.fn());
+const deleteUnreferencedRecipeFileMock = vi.hoisted(() => vi.fn());
 const deleteStepImageByUrlMock = vi.hoisted(() => vi.fn());
 const saveVideoBytesMock = vi.hoisted(() => vi.fn());
 const getRecipeImageByIdMock = vi.hoisted(() => vi.fn());
@@ -38,7 +38,8 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   deleteImageByUrl: deleteImageByUrlMock,
   deleteStepImageByUrl: deleteStepImageByUrlMock,
   saveVideoBytes: saveVideoBytesMock,
-  deleteVideoByUrl: deleteVideoByUrlMock,
+  deleteVideoByUrl: vi.fn(),
+  deleteUnreferencedRecipeFile: deleteUnreferencedRecipeFileMock,
 }));
 
 vi.mock("@norish/shared-server/media/dish-color", () => ({
@@ -206,8 +207,14 @@ describe("recipe media procedures check the recipe before touching files", () =>
     await imagesProcedures.createCaller(ctx as never).uploadGalleryImage(upload("image", recipeId));
     await videosProcedures.createCaller(ctx as never).uploadGalleryVideo(upload("video", recipeId));
 
-    expect(deleteImageByUrlMock).toHaveBeenCalledWith(`/recipes/${recipeId}/a.jpg`, recipeId);
-    expect(deleteVideoByUrlMock).toHaveBeenCalledWith(`/recipes/${recipeId}/v.mp4`, recipeId);
+    expect(deleteUnreferencedRecipeFileMock).toHaveBeenCalledWith(
+      `/recipes/${recipeId}/a.jpg`,
+      recipeId
+    );
+    expect(deleteUnreferencedRecipeFileMock).toHaveBeenCalledWith(
+      `/recipes/${recipeId}/v.mp4`,
+      recipeId
+    );
   });
 
   it("refuses a media URL outside a recipe folder", async () => {

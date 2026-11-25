@@ -582,6 +582,15 @@ export async function deleteImageByUrl(url: string, recipeId: string): Promise<v
   });
 }
 
+/** After a failed row insert: removes the file unless a row still names it (files are named by content). */
+export async function deleteUnreferencedRecipeFile(url: string, recipeId: string): Promise<void> {
+  const { isRecipeMediaReferenced } = await import("@norish/db/repositories/recipes");
+
+  if (await isRecipeMediaReferenced(url)) return;
+  if (/\/video-[^/]+$/.test(url)) await deleteVideoByUrl(url, recipeId);
+  else await deleteImageByUrl(url, recipeId);
+}
+
 /**
  * Delete step image by URL.
  * URL format: /recipes/{recipeId}/steps/{hash}.jpg

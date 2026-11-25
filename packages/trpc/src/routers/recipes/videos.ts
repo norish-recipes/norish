@@ -9,7 +9,11 @@ import {
 } from "@norish/db/repositories/recipes";
 import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
+import {
+  deleteUnreferencedRecipeFile,
+  deleteVideoByUrl,
+  saveVideoBytes,
+} from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
 import { mediaId } from "@norish/shared/lib/recipe-media";
@@ -126,7 +130,7 @@ const uploadGalleryVideo = authedProcedure
           },
         ]).catch(async (error: unknown) => {
           // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
-          await deleteVideoByUrl(savedVideo.video, recipeId);
+          await deleteUnreferencedRecipeFile(savedVideo.video, recipeId);
           throw error;
         });
 

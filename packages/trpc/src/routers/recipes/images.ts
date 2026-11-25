@@ -13,6 +13,7 @@ import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-colo
 import {
   deleteImageByUrl,
   deleteStepImageByUrl,
+  deleteUnreferencedRecipeFile,
   saveImageBytes,
   saveStepImageBytes,
 } from "@norish/shared-server/media/storage";
@@ -261,7 +262,7 @@ const uploadGalleryImage = authedProcedure
         const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]).catch(
           async (error: unknown) => {
             // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
-            await deleteImageByUrl(url, recipeId);
+            await deleteUnreferencedRecipeFile(url, recipeId);
             throw error;
           }
         );

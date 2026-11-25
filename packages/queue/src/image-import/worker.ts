@@ -14,7 +14,7 @@ import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
-import { deleteImageByUrl, saveImageBytes } from "@norish/shared-server/media/storage";
+import { deleteUnreferencedRecipeFile, saveImageBytes } from "@norish/shared-server/media/storage";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
@@ -76,7 +76,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
         await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
       } catch (error) {
         // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
-        await deleteImageByUrl(imagePath, recipeId);
+        await deleteUnreferencedRecipeFile(imagePath, recipeId);
         throw error;
       }
       // Vision imports store their primary image only here, after the

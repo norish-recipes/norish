@@ -13,7 +13,7 @@ const updateRecipeDishColor = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
-const deleteImageByUrl = vi.fn();
+const deleteUnreferencedRecipeFile = vi.fn();
 const dishColorForImageUrl = vi.fn();
 
 vi.mock("@norish/db", () => ({
@@ -77,7 +77,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
-  deleteImageByUrl,
+  deleteUnreferencedRecipeFile,
   deleteRecipeImagesDir: vi.fn(),
   saveImageBytes,
 }));
@@ -183,7 +183,10 @@ describe("processImageImportJob", () => {
       },
     } as never);
 
-    expect(deleteImageByUrl).toHaveBeenCalledWith("/recipes/recipe-123/uploaded.jpg", "recipe-123");
+    expect(deleteUnreferencedRecipeFile).toHaveBeenCalledWith(
+      "/recipes/recipe-123/uploaded.jpg",
+      "recipe-123"
+    );
   });
 
   it("stores the Dish Colour extracted from the saved image (vision path)", async () => {

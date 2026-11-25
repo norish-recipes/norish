@@ -16,8 +16,20 @@ vi.mock("@norish/config/env-config-server", () => ({
   },
 }));
 
-const { deleteImageByUrl, deleteStepImageByUrl, deleteVideoByUrl } =
-  await import("@norish/shared-server/media/storage");
+const referenced = vi.hoisted(() => new Set<string>());
+
+vi.mock("@norish/db/repositories/recipes", () => ({
+  isRecipeMediaReferenced: async (url: string) => referenced.has(url),
+}));
+
+const {
+  deleteImageByUrl,
+  deleteStepImageByUrl,
+  deleteUnreferencedRecipeFile,
+  deleteVideoByUrl,
+  saveImageBytes,
+} = await import("@norish/shared-server/media/storage");
+const sharp = (await import("sharp")).default;
 
 const OWNER = "0c7fcd0e-4f1a-4f5f-9a5e-92b1a54d21aa";
 const OTHER = "1d8fcd0e-4f1a-4f5f-9a5e-92b1a54d21bb";
@@ -60,5 +72,30 @@ describe("recipe media deletion", () => {
     await deleteImageByUrl(`/recipes/${OWNER}/b.jpg`, OWNER);
 
     expect(await exists(image)).toBe(false);
+  });
+
+  it("keeps a picture uploaded twice when the second row fails, the first naming it", async () => {
+    const png = await sharp({
+      create: { width: 64, height: 64, channels: 3, background: "#c33" },
+    })
+      .png({ compressionLevel: 0 })
+      .toBuffer();
+    const first = await saveImageBytes(png, OWNER);
+
+    referenced.add(first);
+    const second = await saveImageBytes(png, OWNER);
+
+    await deleteUnreferencedRecipeFile(second, OWNER);
+
+    expect(second).toBe(first);
+    expect(await exists(path.join(uploadsDir, first.slice(1)))).toBe(true);
+  });
+
+  it("removes a failed upload's file that no row names", async () => {
+    const video = await stored(`recipes/${OWNER}/video-2.mp4`);
+
+    await deleteUnreferencedRecipeFile(`/recipes/${OWNER}/video-2.mp4`, OWNER);
+
+    expect(await exists(video)).toBe(false);
   });
 });

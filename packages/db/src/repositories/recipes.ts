@@ -2295,6 +2295,25 @@ export async function replaceRecipeVideos(
   });
 }
 
+/** Whether a gallery image or video row (its file or thumbnail) still names this media URL. */
+export async function isRecipeMediaReferenced(url: string): Promise<boolean> {
+  const [image] = await db
+    .select({ id: recipeImages.id })
+    .from(recipeImages)
+    .where(eq(recipeImages.image, url))
+    .limit(1);
+
+  if (image) return true;
+
+  const [video] = await db
+    .select({ id: recipeVideos.id })
+    .from(recipeVideos)
+    .where(or(eq(recipeVideos.video, url), eq(recipeVideos.thumbnail, url)))
+    .limit(1);
+
+  return video !== undefined;
+}
+
 /**
  * List all media references stored in the database (gallery images and
  * videos), with every recipe id. Used by startup media cleanup to detect

@@ -3,7 +3,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { ForeignRecipeMediaError } from "@norish/db/repositories/recipe-media-references";
-import { addRecipeImages, addRecipeVideos, getRecipeFull } from "@norish/db/repositories/recipes";
+import {
+  addRecipeImages,
+  addRecipeVideos,
+  getRecipeFull,
+  isRecipeMediaReferenced,
+} from "@norish/db/repositories/recipes";
 
 import { createTestRecipe, createTestUser } from "../../../helpers/db-test-helpers";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "../../../helpers/recipe-writes";
@@ -100,5 +105,22 @@ describe("recipe media references", () => {
       addRecipeVideos(id, [{ video: `/recipes/${id}/video-1.mp4`, thumbnail: foreign(), order: 0 }])
     ).rejects.toThrow(ForeignRecipeMediaError);
     expect((await getRecipeFull(id))?.images).toEqual([]);
+  });
+
+  it("tells whether a gallery image, video or thumbnail row still names a file", async () => {
+    const id = victimRecipeId;
+
+    await addRecipeImages(id, [{ image: `/recipes/${id}/a.jpg`, order: 0 }]);
+    await addRecipeVideos(id, [
+      { video: `/recipes/${id}/video-1.mp4`, thumbnail: `/recipes/${id}/t.jpg`, order: 0 },
+    ]);
+
+    expect(
+      await Promise.all(
+        ["a.jpg", "video-1.mp4", "t.jpg", "b.jpg"].map((f) =>
+          isRecipeMediaReferenced(`/recipes/${id}/${f}`)
+        )
+      )
+    ).toEqual([true, true, true, false]);
   });
 });
