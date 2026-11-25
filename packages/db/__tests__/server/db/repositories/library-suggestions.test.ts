@@ -7,6 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listLibrary, listLibrarySuggestions } from "@norish/db/repositories/library";
+import { addEntry } from "@norish/db/repositories/list-entries";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import { ingredientAliases, ingredients } from "@norish/db/schema";
 
@@ -302,6 +303,43 @@ describe("the typing suggestions", () => {
       expect((await ask("so")).tags).toEqual(["Soja"]);
       expect((await ask("so", strangerId)).tags).toEqual(["soja!"]);
     });
+
+    it.each(["everyone", "household"] as const)(
+      "offers only the reader's and the instance's entries under view %s, counting every visible recipe of the fold",
+      async (view) => {
+        await setConfig(
+          ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+          { view, edit: "household", delete: "household" },
+          null,
+          false
+        );
+
+        const [ours, ours2] = [
+          await recipeNaming(ownerId, [], "Ours"),
+          await recipeNaming(ownerId, [], "Ours too"),
+        ];
+        const [theirs, theirs2] = [
+          await recipeNaming(strangerId, [], "Theirs"),
+          await recipeNaming(strangerId, [], "Theirs too"),
+        ];
+
+        await tagRecipes([ours.id], "Soja");
+        await tagRecipes([ours.id, ours2.id], "Sour");
+        await tagRecipes([theirs.id, theirs2.id], "soja!");
+        await tagRecipes([theirs.id], "Smoky");
+        await tagRecipes([theirs.id], "smoked");
+        await addEntry("tag", testHouseholdOf(ownerId), "Smoked");
+        await categorise([theirs.id], "Supper");
+        await categorise([ours.id], "Dessert");
+
+        const answer = await ask("s");
+
+        expect(answer.tags).toEqual(
+          view === "everyone" ? ["Soja", "Sour", "Smoked"] : ["Sour", "Soja"]
+        );
+        expect(answer.categories).toEqual(["Dessert"]);
+      }
+    );
 
     it("leaves out the applied Tags, in any case, before the cap", async () => {
       const [one, two] = [

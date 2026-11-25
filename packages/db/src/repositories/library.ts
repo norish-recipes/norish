@@ -1,6 +1,7 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, notInArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, notInArray, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type {
   CookbookSummaryDTO,
@@ -41,7 +42,7 @@ import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
-import { recipeCarriesFoldsSql } from "./list-entries";
+import { offeredTo, recipeCarriesFoldsSql } from "./list-entries";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { rowsOf, uuidListSql } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
@@ -333,19 +334,20 @@ export async function listLibrary(
 const DISCOVER_CATEGORIES = 4;
 const DISCOVER_TAGS = 12;
 
-/** What Search offers with no text: up to four Categories holding a visible recipe, built-ins first
- * in their fixed order, and the Tags most used over visible recipes. */
+/** What Search offers with no text: up to four of the reader's Categories holding a visible recipe,
+ * built-ins first in their fixed order, and the reader's Tags most used over visible recipes. */
 export async function listLibraryDiscover(ctx: RecipeListContext): Promise<LibraryDiscoverDTO> {
   const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [categoryRows, tagNames] = await Promise.all([
     // A Category's photo is the newest visible recipe that has an image; none when no recipe does.
     db.execute(sql`
-      SELECT DISTINCT ON (${categories.nameFold}) ${categories.name} AS name, ${PRIMARY_IMAGE_SQL} AS image
-      FROM ${categories}
-      JOIN ${recipeCategories} link ON link.category_id = ${categories.id}
+      SELECT DISTINCT ON (own.name_fold) own.name AS name, ${PRIMARY_IMAGE_SQL} AS image
+      FROM ${categories} own
+      JOIN ${categories} carried ON carried.name_fold = own.name_fold
+      JOIN ${recipeCategories} link ON link.category_id = carried.id
       JOIN ${recipes} ON ${recipes.id} = link.recipe_id
-      WHERE ${visible}
-      ORDER BY ${categories.nameFold}, (${categories.householdId} = ${ctx.householdId}::uuid) DESC NULLS FIRST,
+      WHERE ${offeredTo(ctx.householdId, sql.raw("own"))} AND ${visible}
+      ORDER BY own.name_fold, own.household_id NULLS FIRST,
         (${PRIMARY_IMAGE_SQL} IS NULL), ${recipes.createdAt} DESC, ${recipes.id} DESC
     `),
     namesOnVisible(TAG_NAMES, ctx.householdId, visible, DISCOVER_TAGS),
@@ -369,8 +371,8 @@ export async function listLibraryDiscover(ctx: RecipeListContext): Promise<Libra
 /** How many of each kind the typing state offers. */
 const SUGGESTIONS_PER_KIND = 3;
 
-/** The Ingredients and Tags whose word starts with `text` and that narrow to a visible recipe, most
- * used first and `except` left out before the cap; every Category on a visible recipe. */
+/** The Ingredients and the reader's Tags whose word starts with `text` and that narrow to a visible
+ * recipe, most used first and `except` left out before the cap; the reader's Categories likewise. */
 export async function listLibrarySuggestions(
   ctx: RecipeListContext,
   text: string,
@@ -435,8 +437,13 @@ type NamedEntity = {
     nameFold: AnyPgColumn;
     householdId: AnyPgColumn;
   };
-  link: { table: PgTable; recipeId: AnyPgColumn; entityId: AnyPgColumn; entity: AnyPgColumn };
+  /** The same table again, as the entries recipes carry: any household's of the reader's fold. */
+  carried: { table: PgTable; id: AnyPgColumn; nameFold: AnyPgColumn };
+  link: { table: PgTable; recipeId: AnyPgColumn; entityId: AnyPgColumn };
 };
+
+const carriedTags = alias(tagsTable, "carried");
+const carriedCategories = alias(categories, "carried");
 
 const TAG_NAMES: NamedEntity = {
   entity: {
@@ -445,12 +452,8 @@ const TAG_NAMES: NamedEntity = {
     nameFold: tagsTable.nameFold,
     householdId: tagsTable.householdId,
   },
-  link: {
-    table: recipeTags,
-    recipeId: recipeTags.recipeId,
-    entityId: recipeTags.tagId,
-    entity: tagsTable.id,
-  },
+  carried: { table: carriedTags, id: carriedTags.id, nameFold: carriedTags.nameFold },
+  link: { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
 };
 
 const CATEGORY_NAMES: NamedEntity = {
@@ -460,32 +463,37 @@ const CATEGORY_NAMES: NamedEntity = {
     nameFold: categories.nameFold,
     householdId: categories.householdId,
   },
+  carried: {
+    table: carriedCategories,
+    id: carriedCategories.id,
+    nameFold: carriedCategories.nameFold,
+  },
   link: {
     table: recipeCategories,
     recipeId: recipeCategories.recipeId,
     entityId: recipeCategories.categoryId,
-    entity: categories.id,
   },
 };
 
 /**
- * The names of an entity (Tag or Category) on recipes that satisfy `where`, most used first. Each
- * households' entries of one fold are one name, spelled as the reader's household spells it.
+ * The household's and the instance's entries (Tags or Categories) whose fold a recipe satisfying
+ * `where` carries, in any household, most such recipes first; an instance entry's name wins.
  */
 async function namesOnVisible(
-  { entity, link }: NamedEntity,
+  { entity, carried, link }: NamedEntity,
   householdId: string,
   where: SQL | undefined,
   limit?: number
 ): Promise<string[]> {
   const query = db
     .select({
-      name: sql<string>`(array_agg(${entity.name} ORDER BY (${entity.householdId} = ${householdId}::uuid) DESC NULLS FIRST, ${entity.name}))[1]`,
+      name: sql<string>`(array_agg(${entity.name} ORDER BY ${entity.householdId} NULLS FIRST, ${entity.name}))[1]`,
     })
     .from(entity.table)
-    .innerJoin(link.table, eq(link.entityId, link.entity))
+    .innerJoin(carried.table, eq(carried.nameFold, entity.nameFold))
+    .innerJoin(link.table, eq(link.entityId, carried.id))
     .innerJoin(recipes, eq(recipes.id, link.recipeId))
-    .where(where)
+    .where(and(or(eq(entity.householdId, householdId), isNull(entity.householdId)), where))
     .groupBy(entity.nameFold)
     .orderBy(desc(sql`count(distinct ${recipes.id})`), asc(entity.nameFold))
     .$dynamic();

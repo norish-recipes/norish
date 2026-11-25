@@ -189,6 +189,40 @@ describe("the discover reads", () => {
     });
   });
 
+  it.each(["everyone", "household"] as const)(
+    "offers only the reader's and the instance's entries under view %s, counting every visible recipe of the fold",
+    async (view) => {
+      await setConfig(
+        ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        { view, edit: "household", delete: "household" },
+        null,
+        false
+      );
+
+      const [ours, ours2] = [await recipe(ownerId), await recipe(ownerId)];
+      const [theirs, theirs2] = [await recipe(strangerId), await recipe(strangerId)];
+
+      await tag([ours], "Soja");
+      await tag([ours, ours2], "Sour");
+      await tag([theirs, theirs2], "soja!");
+      await tag([theirs], "Smoky");
+      await categorise([theirs], "Supper");
+      await categorise([theirs], "Dinner");
+      await categorise([ours], "Dessert");
+
+      expect(await discover()).toEqual({
+        categories:
+          view === "everyone"
+            ? [
+                { name: "Dinner", image: null },
+                { name: "Dessert", image: null },
+              ]
+            : [{ name: "Dessert", image: null }],
+        tags: view === "everyone" ? ["Soja", "Sour"] : ["Sour", "Soja"],
+      });
+    }
+  );
+
   it("returns nothing for a reader with no recipes", async () => {
     expect(await discover()).toEqual({ categories: [], tags: [] });
   });

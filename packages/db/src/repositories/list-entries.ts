@@ -64,7 +64,7 @@ function ownedBy(scope: ListScope, alias = sql.raw("e")): SQL {
 }
 
 /** The rows a household is offered: its own and the instance's. */
-function offeredTo(householdId: string, alias = sql.raw("e")): SQL {
+export function offeredTo(householdId: string, alias = sql.raw("e")): SQL {
   return sql`(${alias}.household_id = ${householdId}::uuid OR ${alias}.household_id IS NULL)`;
 }
 
