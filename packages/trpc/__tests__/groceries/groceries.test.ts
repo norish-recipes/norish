@@ -886,8 +886,30 @@ describe("grocery names through Ingredient Aliases", () => {
     );
   });
 
+  it("refuses a line from a recipe the household may not view, and stores nothing", async () => {
+    getRecipeInfoForGroceries.mockResolvedValue(new Map());
+
+    await expect(
+      createGroceriesData(ctx, [
+        {
+          id: crypto.randomUUID(),
+          name: "onions",
+          unit: null,
+          amount: 1,
+          isDone: false,
+          recipeIngredientId: crypto.randomUUID(),
+        },
+      ])
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(getRecipeInfoForGroceries).toHaveBeenCalledWith(expect.any(Array), ctx.householdId);
+  });
+
   it("stores a new grocery with the alias its name resolved to, and its text as written", async () => {
     const recipeIngredientId = crypto.randomUUID();
+
+    getRecipeInfoForGroceries.mockResolvedValue(
+      new Map([[recipeIngredientId, { recipeId: crypto.randomUUID(), recipeName: "Soup" }]])
+    );
 
     await createGroceriesData(ctx, [
       { id: crypto.randomUUID(), name: "Uien", unit: null, amount: 1, isDone: false },

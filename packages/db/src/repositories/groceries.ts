@@ -17,6 +17,7 @@ import {
 
 import type { IngredientRef } from "./ingredient-aliases";
 import { assertOwnReferences, householdRow, householdRows } from "./household-rows";
+import { buildPolicyCondition } from "./recipes";
 
 /** The grocery last added under this name on the household's list. */
 export async function findNewestGroceryNamed(
@@ -497,13 +498,16 @@ export async function assignGroceryToStore(
 }
 
 /**
- * Get recipe info for groceries that have a recipeIngredientId.
- * Returns a Map of recipeIngredientId -> { recipeId, recipeName }
+ * The recipe of each grocery line a recipe added, by recipe line id, for the recipes the
+ * household may view now. A line of one out of view is left out: it lists with the hand-added.
  */
 export async function getRecipeInfoForGroceries(
-  recipeIngredientIds: string[]
+  recipeIngredientIds: string[],
+  householdId: string
 ): Promise<Map<string, { recipeId: string; recipeName: string }>> {
   if (recipeIngredientIds.length === 0) return new Map();
+
+  const viewable = await buildPolicyCondition({ householdId }, recipes.householdId, "view");
 
   const rows = await db
     .select({
@@ -513,7 +517,7 @@ export async function getRecipeInfoForGroceries(
     })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipeIngredients.recipeId, recipes.id))
-    .where(inArray(recipeIngredients.id, recipeIngredientIds));
+    .where(and(inArray(recipeIngredients.id, recipeIngredientIds), viewable));
 
   return new Map(
     rows.map((r) => [r.recipeIngredientId, { recipeId: r.recipeId, recipeName: r.recipeName }])

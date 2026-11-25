@@ -22,7 +22,12 @@ import {
   getFavoritesByRecipeIds,
   setFavorite,
 } from "@norish/db/repositories/favorites";
+import { getRecipeInfoForGroceries } from "@norish/db/repositories/groceries";
 import { listLibrary } from "@norish/db/repositories/library";
+import {
+  createPlannedItem,
+  listPlannedItemsByHouseholdAndDateRange,
+} from "@norish/db/repositories/planned-items";
 import {
   findExistingRecipe,
   getRandomRecipeCandidates,
@@ -35,8 +40,10 @@ import {
 import { setConfig } from "@norish/db/repositories/server-config";
 
 import {
+  addTestGrocery,
   createTestRecipe,
   createTestUser,
+  insertTestRecipeLine,
   joinTestHousehold,
   testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
@@ -205,6 +212,46 @@ describe("the Permission Policy over two households", () => {
     ]);
     expect(await getFavoritesByRecipeIds(viewer(ann), [stew])).toEqual(new Set([stew]));
     expect((await listCookbookMemberIds(annsCookbook)).sort()).toEqual([soup, stew].sort());
+  });
+
+  it("shows a plan entry for a recipe out of view by its title alone, and all of it after", async () => {
+    await createPlannedItem({
+      householdId: testHouseholdOf(ann),
+      userId: ann,
+      date: "2026-01-05",
+      slot: "Dinner",
+      itemType: "recipe",
+      recipeId: stew,
+      title: null,
+    });
+    const plan = async () =>
+      (
+        await listPlannedItemsByHouseholdAndDateRange(
+          testHouseholdOf(ann),
+          "2026-01-01",
+          "2026-01-31"
+        )
+      ).map(({ recipeId, recipeName, servings }) => ({ recipeId, recipeName, servings }));
+
+    await setView("household");
+    expect(await plan()).toEqual([{ recipeId: null, recipeName: "Stew", servings: null }]);
+
+    await setView("everyone");
+    expect(await plan()).toEqual([{ recipeId: stew, recipeName: "Stew", servings: 4 }]);
+  });
+
+  it("lists a grocery line from a recipe out of view with the hand-added ones, and back after", async () => {
+    const line = await insertTestRecipeLine({ recipeId: stew, name: "beans" });
+
+    await addTestGrocery(ann, { name: "beans", recipeIngredientId: line.id });
+
+    await setView("household");
+    expect(await getRecipeInfoForGroceries([line.id], testHouseholdOf(ann))).toEqual(new Map());
+
+    await setView("everyone");
+    expect(await getRecipeInfoForGroceries([line.id], testHouseholdOf(ann))).toEqual(
+      new Map([[line.id, { recipeId: stew, recipeName: "Stew" }]])
+    );
   });
 
   it("matches an import only within the importer's household", async () => {

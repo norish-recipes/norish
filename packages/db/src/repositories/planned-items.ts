@@ -1,3 +1,4 @@
+import type { AnyColumn, SQL } from "drizzle-orm";
 import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
@@ -10,6 +11,7 @@ import { currentHouseholdIdSql } from "./household-members";
 import { householdRow } from "./household-rows";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
+import { buildPolicyCondition } from "./recipes";
 
 type PlannedItem = typeof plannedItems.$inferSelect;
 type PlannedItemInsert = typeof plannedItems.$inferInsert;
@@ -23,28 +25,39 @@ export type PlannedItemWithRecipe = Omit<PlannedItem, "householdId"> & {
   calories: number | null;
 };
 
-/** Every read of plan entries as screens show them: the entry and its recipe's name and picture. */
-function selectWithRecipe() {
-  return db
-    .select({
-      id: plannedItems.id,
-      userId: plannedItems.userId,
-      date: plannedItems.date,
-      slot: plannedItems.slot,
-      sortOrder: plannedItems.sortOrder,
-      itemType: plannedItems.itemType,
-      recipeId: plannedItems.recipeId,
-      title: plannedItems.title,
-      version: plannedItems.version,
-      createdAt: plannedItems.createdAt,
-      updatedAt: plannedItems.updatedAt,
-      recipeName: recipes.name,
-      recipeImage: PRIMARY_IMAGE_SQL.as("recipeImage"),
-      servings: recipes.servings,
-      calories: recipes.calories,
-    })
-    .from(plannedItems)
-    .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id));
+/**
+ * Every read of plan entries as screens show them: the entry and its recipe's name and picture.
+ * A recipe the household may not view (any more) shows its title only: no id, picture or numbers.
+ */
+async function selectWithRecipe(householdId: string) {
+  const condition = await buildPolicyCondition({ householdId }, recipes.householdId, "view");
+  const viewable = condition ? sql`(${condition})` : sql`true`;
+  const ifViewable = <T>(value: SQL<unknown> | AnyColumn) =>
+    sql<T | null>`CASE WHEN ${viewable} THEN ${value} END`;
+
+  // Wrapped, so awaiting the policy read does not run the half-built query.
+  return {
+    query: db
+      .select({
+        id: plannedItems.id,
+        userId: plannedItems.userId,
+        date: plannedItems.date,
+        slot: plannedItems.slot,
+        sortOrder: plannedItems.sortOrder,
+        itemType: plannedItems.itemType,
+        recipeId: ifViewable<string>(plannedItems.recipeId).as("recipeId"),
+        title: plannedItems.title,
+        version: plannedItems.version,
+        createdAt: plannedItems.createdAt,
+        updatedAt: plannedItems.updatedAt,
+        recipeName: recipes.name,
+        recipeImage: ifViewable<string>(PRIMARY_IMAGE_SQL).as("recipeImage"),
+        servings: ifViewable<number>(recipes.servings).as("servings"),
+        calories: ifViewable<number>(recipes.calories).as("calories"),
+      })
+      .from(plannedItems)
+      .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id)),
+  };
 }
 
 export async function listPlannedItemsByHouseholdAndDateRange(
@@ -52,7 +65,9 @@ export async function listPlannedItemsByHouseholdAndDateRange(
   startDate: string,
   endDate: string
 ): Promise<PlannedItemWithRecipe[]> {
-  return await selectWithRecipe()
+  return await (
+    await selectWithRecipe(householdId)
+  ).query
     .where(
       and(
         eq(plannedItems.householdId, householdId),
@@ -69,7 +84,9 @@ export async function listPlannedItemsAddedBy(
   userId: string,
   fromDate: string
 ): Promise<PlannedItemWithRecipe[]> {
-  return await selectWithRecipe()
+  return await (
+    await selectWithRecipe(householdId)
+  ).query
     .where(
       and(
         eq(plannedItems.householdId, householdId),
@@ -85,7 +102,9 @@ export async function listPlannedItemsWithRecipeBySlot(
   date: string,
   slot: PlannedItemSlot
 ): Promise<PlannedItemWithRecipe[]> {
-  return await selectWithRecipe()
+  return await (
+    await selectWithRecipe(householdId)
+  ).query
     .where(
       and(
         eq(plannedItems.householdId, householdId),
@@ -100,7 +119,9 @@ export async function getPlannedItemWithRecipeById(
   id: string,
   householdId: string
 ): Promise<PlannedItemWithRecipe | null> {
-  const [row] = await selectWithRecipe()
+  const [row] = await (
+    await selectWithRecipe(householdId)
+  ).query
     .where(householdRow(plannedItems, householdId, id))
     .limit(1);
 

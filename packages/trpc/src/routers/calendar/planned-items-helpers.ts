@@ -24,6 +24,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
+import { assertRecipeAccess } from "../recipes/helpers";
 import { publishCalendarItemEvent } from "./publish";
 
 export type CalendarProcedureContext = {
@@ -138,6 +139,9 @@ export async function listPlannedRecipesByRange(
 
 export async function createCalendarItem(ctx: CalendarProcedureContext, input: CreateItemInput) {
   const { id, date, slot, itemType, recipeId, title } = input;
+
+  // Only a recipe the household may view now; one out of view answers as a gone one.
+  if (recipeId) await assertRecipeAccess(ctx, recipeId, "view");
 
   const newItem = await createPlannedItem({
     // Client-minted id when supplied; drizzle falls back to its default when undefined (ADR-0003).

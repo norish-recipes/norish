@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
@@ -9,15 +9,23 @@ import {
   listPlannedItemsByHouseholdAndDateRange,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
+import { everyRecipeIn } from "../mocks/recipes-repository";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
+vi.mock("@norish/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db")>()),
+  getRecipeHouseholdIds: (await import("../mocks/recipes-repository")).getRecipeHouseholdIds,
+}));
 vi.mock("@norish/shared-server/realtime/calendar", () => import("../mocks/realtime/calendar"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
+
+// Every recipe a test plans is the household's own, which the policy always lets it view.
+beforeEach(() => everyRecipeIn("test-household-id"));
 
 function createPlannedItemRow(overrides: Record<string, unknown> = {}) {
   return {

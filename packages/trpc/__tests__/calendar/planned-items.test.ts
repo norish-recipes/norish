@@ -12,7 +12,7 @@ import {
   listWeekPlannedRecipesProcedure,
 } from "../../src/routers/calendar/planned-items";
 import { router } from "../../src/trpc";
-import { assertHouseholdAccess } from "../mocks/permissions";
+import { assertHouseholdAccess, policy, resetPermissionsMocks } from "../mocks/permissions";
 import {
   createPlannedItem,
   deletePlannedItem,
@@ -22,6 +22,7 @@ import {
   listPlannedItemsByHouseholdAndDateRange,
   moveItem,
 } from "../mocks/planned-items";
+import { everyRecipeIn } from "../mocks/recipes-repository";
 import {
   createMockAuthedContext,
   createMockCallerContext,
@@ -31,8 +32,15 @@ import {
 
 vi.mock("@norish/db/repositories/planned-items", () => import("../mocks/planned-items"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
+vi.mock("@norish/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db")>()),
+  getRecipeHouseholdIds: (await import("../mocks/recipes-repository")).getRecipeHouseholdIds,
+}));
 vi.mock("@norish/shared-server/realtime/calendar", () => import("../mocks/realtime/calendar"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
+
+// Every recipe a test plans is the household's own, which the policy always lets it view.
+beforeEach(() => everyRecipeIn("test-household-id"));
 
 const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
   transformer: superjson,
@@ -457,6 +465,24 @@ describe("calendar planned recipe openapi procedures", () => {
       title: null,
     });
     expect(result).toEqual({ id: itemId });
+  });
+
+  it("refuses to plan a recipe out of view, through the app and the API alike", async () => {
+    policy.view = "household";
+    everyRecipeIn("another-household");
+    createPlannedItem.mockClear();
+
+    const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
+
+    await expect(
+      caller.createPlannedRecipe({
+        date: "2025-01-20",
+        slot: "Dinner",
+        recipeId: crypto.randomUUID(),
+      })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(createPlannedItem).not.toHaveBeenCalled();
+    resetPermissionsMocks();
   });
 
   it("inserts a planned recipe with the client-minted id when one is supplied", async () => {

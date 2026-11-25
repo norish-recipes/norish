@@ -287,7 +287,7 @@ export interface RecipeListContext {
  * one read the same. Cookbooks answer to this same condition (ADR-0027).
  */
 export async function buildPolicyCondition(
-  ctx: RecipeListContext,
+  ctx: Pick<RecipeListContext, "householdId">,
   householdColumn: AnyPgColumn,
   action: PolicyAction = "view"
 ) {

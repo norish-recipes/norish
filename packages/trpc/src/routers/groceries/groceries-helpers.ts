@@ -150,7 +150,7 @@ export async function listGroceriesData(ctx: GroceryProcedureContext) {
     .map((grocery) => grocery.recipeIngredientId)
     .filter((id): id is string => id !== null);
 
-  const recipeInfoMap = await getRecipeInfoForGroceries(recipeIngredientIds);
+  const recipeInfoMap = await getRecipeInfoForGroceries(recipeIngredientIds, ctx.householdId);
   const recipeMap: Record<string, { recipeId: string; recipeName: string }> = {};
 
   for (const [key, value] of recipeInfoMap) {
@@ -175,6 +175,16 @@ export async function createGroceriesData(
   input: Array<z.infer<typeof GroceryCreateSchema>>,
   edit?: GroceryEdit
 ) {
+  // A line from a recipe only while the household may view that recipe; else as if it were gone.
+  const fromRecipes = [
+    ...new Set(input.flatMap((g) => (g.recipeIngredientId ? [g.recipeIngredientId] : []))),
+  ];
+  const viewable = await getRecipeInfoForGroceries(fromRecipes, ctx.householdId);
+
+  if (fromRecipes.some((lineId) => !viewable.has(lineId))) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+  }
+
   // An edit with no other foods has nothing to merge into.
   const existingGroceries =
     input.length > 0 ? await listGroceriesByHousehold(ctx.householdId, { includeDone: false }) : [];

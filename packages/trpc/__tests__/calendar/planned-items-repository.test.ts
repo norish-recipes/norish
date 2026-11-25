@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { db } from "@norish/db/drizzle";
 import {
   getPlannedItemHouseholdId,
-  listPlannedItemsByHouseholdAndDateRange,
   listPlannedItemsBySlot,
 } from "@norish/db/repositories/planned-items";
 
@@ -20,49 +19,6 @@ describe("planned items repository", () => {
   const householdId = "household-1";
   const date = "2025-01-10";
   const slot = "Dinner" as const;
-
-  describe("listPlannedItemsByHouseholdAndDateRange", () => {
-    it("returns items sorted by date, slot, sortOrder", async () => {
-      const items = [{ id: "a" }, { id: "b" }];
-      const orderBy = vi.fn().mockResolvedValue(items);
-      const where = vi.fn().mockReturnValue({ orderBy });
-      const leftJoin = vi.fn().mockReturnValue({ where });
-
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({ leftJoin }),
-      } as any);
-
-      const result = await listPlannedItemsByHouseholdAndDateRange(
-        householdId,
-        "2025-01-01",
-        "2025-01-31"
-      );
-
-      expect(dbMock.select).toHaveBeenCalled();
-      expect(leftJoin).toHaveBeenCalled();
-      expect(where).toHaveBeenCalled();
-      expect(orderBy).toHaveBeenCalled();
-      expect(result).toEqual(items);
-    });
-
-    it("returns empty array for no matches", async () => {
-      const orderBy = vi.fn().mockResolvedValue([]);
-      const where = vi.fn().mockReturnValue({ orderBy });
-      const leftJoin = vi.fn().mockReturnValue({ where });
-
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({ leftJoin }),
-      } as any);
-
-      const result = await listPlannedItemsByHouseholdAndDateRange(
-        householdId,
-        "2025-01-01",
-        "2025-01-31"
-      );
-
-      expect(result).toEqual([]);
-    });
-  });
 
   describe("listPlannedItemsBySlot", () => {
     it("returns items for date/slot sorted by sortOrder", async () => {
