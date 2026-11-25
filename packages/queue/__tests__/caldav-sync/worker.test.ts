@@ -144,4 +144,17 @@ describe("the CalDAV sync worker", () => {
     expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
     expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toBeNull();
   });
+
+  it("takes off an event it wrote when the account went meanwhile and no status can be saved", async () => {
+    const { entry, run } = await syncJob();
+
+    handlers.syncPlannedItem.mockImplementationOnce(async () => {
+      await households.deleteAccount(member);
+
+      return { uid: "event-1" };
+    });
+    await expect(run()).rejects.toThrow();
+
+    expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
+  });
 });

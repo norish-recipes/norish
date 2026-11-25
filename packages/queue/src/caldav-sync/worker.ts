@@ -84,27 +84,35 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   await reportStep(job, "syncing-event");
   const { uid } = await syncPlannedItem(userId, itemId, eventTitle, date, slot as Slot, recipeId);
 
-  const persistedStatus = isNewRecord
-    ? await createCaldavSyncStatus({
-        userId,
-        itemId,
-        itemType,
-        plannedItemId,
-        eventTitle,
-        syncStatus: "synced",
-        caldavEventUid: uid,
-        retryCount: job.attemptsMade,
-        errorMessage: null,
-        lastSyncAt: new Date(),
-      })
-    : await updateCaldavSyncStatus(existingStatus.id, {
-        eventTitle,
-        syncStatus: "synced",
-        caldavEventUid: uid,
-        retryCount: job.attemptsMade,
-        errorMessage: null,
-        lastSyncAt: new Date(),
-      });
+  const persistedStatus = await (
+    isNewRecord
+      ? createCaldavSyncStatus({
+          userId,
+          itemId,
+          itemType,
+          plannedItemId,
+          eventTitle,
+          syncStatus: "synced",
+          caldavEventUid: uid,
+          retryCount: job.attemptsMade,
+          errorMessage: null,
+          lastSyncAt: new Date(),
+        })
+      : updateCaldavSyncStatus(existingStatus.id, {
+          eventTitle,
+          syncStatus: "synced",
+          caldavEventUid: uid,
+          retryCount: job.attemptsMade,
+          errorMessage: null,
+          lastSyncAt: new Date(),
+        })
+  ).catch(async (error: unknown) => {
+    // No status to chase the event just written (the account went meanwhile), so take it off now.
+    await takeOffCalendar(job, userId, itemId, null).catch((cleanup: unknown) =>
+      log.warn({ err: cleanup, userId, itemId }, "Could not take off an event with no status")
+    );
+    throw error;
+  });
 
   // A leave or deletion during the write found no status to chase, so this job takes it off.
   const placeAfter = await findPlannedItemPlace(itemId, userId);
