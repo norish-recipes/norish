@@ -29,6 +29,9 @@ vi.mock("@norish/db/repositories/recipes", () => ({
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   getCookbookRow: async () => ({ householdId: "household-1" }),
 }));
+vi.mock("@norish/db/repositories/recipe-shares", () => ({
+  getActiveRecipeShareByToken: async () => ({ recipeId }),
+}));
 vi.mock("@norish/shared-server/media/pending-recipe-media", () => ({
   pendingRecipeMediaUploader: async () => null,
 }));
@@ -45,6 +48,9 @@ const { GET: getRecipeMedia } = await import("@/app/(app)/recipes/[id]/[filename
 const { GET: getStepMedia } = await import("@/app/(app)/recipes/[id]/steps/[filename]/route");
 const { GET: getCookbookMedia } =
   await import("@/app/(app)/(library)/cookbooks/[id]/[filename]/route");
+const { GET: getSharedMedia } = await import("@/app/share/[token]/media/[filename]/route");
+const { GET: getSharedStepMedia } = await import("@/app/share/[token]/steps/[filename]/route");
+const { GET: getIngredientIcon } = await import("@/app/ingredient-icons/[file]/route");
 
 const request = () => new Request("http://localhost/media");
 
@@ -70,12 +76,43 @@ describe("the key file over HTTP", () => {
     }
   });
 
-  it("while the same reader is served the recipe's own media", async () => {
-    const answer = await getRecipeMedia(request(), {
-      params: Promise.resolve({ id: recipeId, filename: "cover.jpg" }),
-    });
+  it("is out of reach of a shared recipe's media and step media", async () => {
+    for (const filename of [
+      "master-key.json",
+      "../.norish/master-key.json",
+      `../../.norish/master-key.json`,
+      "..%2F..%2F.norish%2Fmaster-key.json",
+    ]) {
+      const params = Promise.resolve({ token: "share-token", filename });
 
-    expect(answer.status).toBe(200);
-    expect(await answer.text()).toBe("cover-bytes");
+      await expectRefused(await getSharedMedia(request(), { params }));
+      await expectRefused(await getSharedStepMedia(request(), { params }));
+    }
+  });
+
+  it("is out of reach of the ingredient icons", async () => {
+    for (const file of [
+      "master-key.json",
+      "../.norish/master-key.json",
+      "../../.norish/master-key.json",
+    ]) {
+      await expectRefused(
+        await getIngredientIcon(request(), { params: Promise.resolve({ file }) })
+      );
+    }
+  });
+
+  it("while the same reader is served the recipe's own media, shared or not", async () => {
+    for (const answer of [
+      await getRecipeMedia(request(), {
+        params: Promise.resolve({ id: recipeId, filename: "cover.jpg" }),
+      }),
+      await getSharedMedia(request(), {
+        params: Promise.resolve({ token: "share-token", filename: "cover.jpg" }),
+      }),
+    ]) {
+      expect(answer.status).toBe(200);
+      expect(await answer.text()).toBe("cover-bytes");
+    }
   });
 });
