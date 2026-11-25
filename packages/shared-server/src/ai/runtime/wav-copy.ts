@@ -12,6 +12,7 @@ import { execFile } from "node:child_process";
 import { rm } from "node:fs/promises";
 import { promisify } from "node:util";
 
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { getFfmpegPath } from "@norish/shared-server/media/ffmpeg";
 
 const execFileAsync = promisify(execFile);
@@ -44,7 +45,7 @@ export async function withWavCopy<T>(
         "pcm_s16le",
         wavPath,
       ],
-      { windowsHide: true }
+      { windowsHide: true, env: childEnv() }
     );
 
     return await send(wavPath);

@@ -9,6 +9,7 @@ import { decode } from "html-entities";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getVideoConfig } from "@norish/shared-server/config/server-config-loader";
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { videoLogger as log } from "@norish/shared-server/logger";
 import { getFfmpegPath } from "@norish/shared-server/media/ffmpeg";
 
@@ -145,6 +146,7 @@ async function execYtDlp(url: string, options: string[], cwd?: string): Promise<
       cwd,
       windowsHide: true,
       maxBuffer: 64 * 1024 * 1024,
+      env: childEnv(),
     });
 
     return stdout;

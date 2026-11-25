@@ -87,6 +87,19 @@ describe("the embedded parser", () => {
     expect(embeddedParserState()).toBe("running");
   });
 
+  it("gives the parser this process's pid and none of Norish's secrets", async () => {
+    const { withEmbeddedParser } = await load();
+
+    await withEmbeddedParser(async () => 1);
+
+    const { env } = spawnMock.mock.calls[0]![2];
+
+    expect(env.PARSER_API_PARENT_PID).toBe(String(process.pid));
+    expect(process.env.MASTER_KEY).toBeDefined();
+    expect(env).not.toHaveProperty("MASTER_KEY");
+    expect(env).not.toHaveProperty("DATABASE_URL");
+  });
+
   it("stops once idle for the idle time, and the next import starts it again", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const { embeddedParserState, PARSER_IDLE_STOP_MS, withEmbeddedParser } = await load();

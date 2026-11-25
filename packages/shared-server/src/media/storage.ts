@@ -10,6 +10,7 @@ import {
   getMaxVideoFileSize,
   getPageRenderersConfig,
 } from "@norish/shared-server/config/server-config-loader";
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { guardedFetch } from "@norish/shared-server/private-addresses";
 
@@ -826,7 +827,7 @@ async function probeVideoCodecs(
         "-i",
         inputPath,
       ],
-      { stdio: ["ignore", "pipe", "pipe"] }
+      { stdio: ["ignore", "pipe", "pipe"], env: childEnv() }
     );
 
     let stdout = "";
@@ -994,6 +995,7 @@ function runFfmpeg(ffmpegPath: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpegPath, ["-y", ...args], {
       stdio: ["ignore", "pipe", "pipe"],
+      env: childEnv(),
     });
 
     let stderr = "";
