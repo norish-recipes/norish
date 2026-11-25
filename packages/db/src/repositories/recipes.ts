@@ -172,11 +172,6 @@ export async function getRecipeHouseholdIds(recipeIds: string[]): Promise<Map<st
   return new Map(rows.map((row) => [row.id, row.householdId]));
 }
 
-/** The recipe's household, or null when there is no such recipe. */
-export async function getRecipeHouseholdId(recipeId: string): Promise<string | null> {
-  return (await getRecipeHouseholdIds([recipeId])).get(recipeId) ?? null;
-}
-
 export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null> {
   const rows = await db.query.recipes.findFirst({
     where: eq(recipes.url, url),

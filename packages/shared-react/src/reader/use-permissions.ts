@@ -9,12 +9,7 @@ import type { PermissionsRealtime } from "@norish/shared/contracts/realtime/perm
 import type { ReaderPermissions } from "./permission-selectors";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import {
-  normalizePermissionsData,
-  selectCanDeleteRecipe,
-  selectCanEditRecipe,
-  selectCanViewRecipe,
-} from "./permission-selectors";
+import { normalizePermissionsData, selectAllows } from "./permission-selectors";
 
 const DEFAULTS = normalizePermissionsData(undefined);
 
@@ -54,9 +49,9 @@ export function useRecipePermissions(): RecipePermissions {
 
   return {
     isLoading,
-    canViewRecipe: (householdId) => !!access && selectCanViewRecipe(access, householdId),
-    canEditRecipe: (householdId) => !!access && selectCanEditRecipe(access, householdId),
-    canDeleteRecipe: (householdId) => !!access && selectCanDeleteRecipe(access, householdId),
+    canViewRecipe: (householdId) => !!access && selectAllows(access, "view", householdId),
+    canEditRecipe: (householdId) => !!access && selectAllows(access, "edit", householdId),
+    canDeleteRecipe: (householdId) => !!access && selectAllows(access, "delete", householdId),
   };
 }
 

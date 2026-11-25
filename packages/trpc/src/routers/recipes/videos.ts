@@ -4,7 +4,7 @@ import {
   addRecipeVideos,
   countRecipeVideos,
   deleteRecipeVideoById,
-  getRecipeHouseholdId,
+  getRecipeHouseholdIds,
   getRecipeVideoById,
 } from "@norish/db/repositories/recipes";
 import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
@@ -114,9 +114,7 @@ const uploadGalleryVideo = authedProcedure
       const order = orderStr ? parseInt(orderStr, 10) : currentCount;
 
       // Check if recipe exists in database before inserting into recipe_videos
-      const recipeHousehold = await getRecipeHouseholdId(recipeId);
-
-      if (recipeHousehold !== null) {
+      if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
         // Recipe exists, add to database
         const [videoRecord] = await addRecipeVideos(recipeId, [
           {

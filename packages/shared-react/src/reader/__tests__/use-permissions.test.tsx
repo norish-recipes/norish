@@ -5,7 +5,7 @@ import type { PermissionsData } from "@norish/shared-react/reader";
 import { createTestQueryClient } from "@norish/shared-react/platform/testing";
 import {
   normalizePermissionsData,
-  selectCanDeleteRecipe,
+  selectAllows,
   usePermissions,
   useRecipePermissions,
 } from "@norish/shared-react/reader";
@@ -39,11 +39,12 @@ describe("permission selectors", () => {
   it("decides by the row's household, as the server does", () => {
     const permissions = normalizePermissionsData(HOUSEHOLD_POLICY);
 
-    expect(selectCanDeleteRecipe(permissions, "readers-household")).toBe(true);
-    expect(selectCanDeleteRecipe(permissions, "another-household")).toBe(false);
+    expect(selectAllows(permissions, "delete", "readers-household")).toBe(true);
+    expect(selectAllows(permissions, "delete", "another-household")).toBe(false);
     expect(
-      selectCanDeleteRecipe(
+      selectAllows(
         { ...permissions, recipePolicy: { ...permissions.recipePolicy, delete: "everyone" } },
+        "delete",
         "another-household"
       )
     ).toBe(true);
@@ -52,13 +53,13 @@ describe("permission selectors", () => {
   it("allows nothing before the server has named the reader's household", () => {
     const permissions = normalizePermissionsData({ ...HOUSEHOLD_POLICY, householdId: null });
 
-    expect(selectCanDeleteRecipe(permissions, "readers-household")).toBe(false);
+    expect(selectAllows(permissions, "delete", "readers-household")).toBe(false);
   });
 
   it("gives a server admin nothing past the policy", () => {
     const permissions = normalizePermissionsData({ ...HOUSEHOLD_POLICY, isServerAdmin: true });
 
-    expect(selectCanDeleteRecipe(permissions, "another-household")).toBe(false);
+    expect(selectAllows(permissions, "delete", "another-household")).toBe(false);
   });
 });
 

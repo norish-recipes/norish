@@ -47,7 +47,7 @@ vi.mock("@norish/db/repositories/recipes", () => ({
   countRecipeImages: vi.fn().mockResolvedValue(0),
   deleteRecipeImageById: deleteRecipeImageByIdMock,
   getRecipeImageById: getRecipeImageByIdMock,
-  getRecipeHouseholdId: vi.fn().mockResolvedValue(null),
+  getRecipeHouseholdIds: vi.fn().mockResolvedValue(new Map()),
   addRecipeVideos: vi.fn(),
   countRecipeVideos: vi.fn().mockResolvedValue(0),
   deleteRecipeVideoById: vi.fn(),

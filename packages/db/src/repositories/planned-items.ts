@@ -25,39 +25,44 @@ export type PlannedItemWithRecipe = Omit<PlannedItem, "householdId"> & {
   calories: number | null;
 };
 
+const PLAN_ORDER = [asc(plannedItems.date), asc(plannedItems.slot), asc(plannedItems.sortOrder)];
+
 /**
- * Every read of plan entries as screens show them: the entry and its recipe's name and picture.
+ * Every read of plan entries as screens show them, of the household's entries `where` names.
  * A recipe the household may not view (any more) shows its title only: no id, picture or numbers.
  */
-async function selectWithRecipe(householdId: string) {
+async function selectWithRecipe(
+  householdId: string,
+  where: SQL | undefined,
+  orderBy: SQL[] = PLAN_ORDER
+): Promise<PlannedItemWithRecipe[]> {
   const condition = await buildPolicyCondition({ householdId }, recipes.householdId, "view");
   const viewable = condition ? sql`(${condition})` : sql`true`;
   const ifViewable = <T>(value: SQL<unknown> | AnyColumn) =>
     sql<T | null>`CASE WHEN ${viewable} THEN ${value} END`;
 
-  // Wrapped, so awaiting the policy read does not run the half-built query.
-  return {
-    query: db
-      .select({
-        id: plannedItems.id,
-        userId: plannedItems.userId,
-        date: plannedItems.date,
-        slot: plannedItems.slot,
-        sortOrder: plannedItems.sortOrder,
-        itemType: plannedItems.itemType,
-        recipeId: ifViewable<string>(plannedItems.recipeId).as("recipeId"),
-        title: plannedItems.title,
-        version: plannedItems.version,
-        createdAt: plannedItems.createdAt,
-        updatedAt: plannedItems.updatedAt,
-        recipeName: recipes.name,
-        recipeImage: ifViewable<string>(PRIMARY_IMAGE_SQL).as("recipeImage"),
-        servings: ifViewable<number>(recipes.servings).as("servings"),
-        calories: ifViewable<number>(recipes.calories).as("calories"),
-      })
-      .from(plannedItems)
-      .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id)),
-  };
+  return await db
+    .select({
+      id: plannedItems.id,
+      userId: plannedItems.userId,
+      date: plannedItems.date,
+      slot: plannedItems.slot,
+      sortOrder: plannedItems.sortOrder,
+      itemType: plannedItems.itemType,
+      recipeId: ifViewable<string>(plannedItems.recipeId).as("recipeId"),
+      title: plannedItems.title,
+      version: plannedItems.version,
+      createdAt: plannedItems.createdAt,
+      updatedAt: plannedItems.updatedAt,
+      recipeName: recipes.name,
+      recipeImage: ifViewable<string>(PRIMARY_IMAGE_SQL).as("recipeImage"),
+      servings: ifViewable<number>(recipes.servings).as("servings"),
+      calories: ifViewable<number>(recipes.calories).as("calories"),
+    })
+    .from(plannedItems)
+    .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id))
+    .where(and(eq(plannedItems.householdId, householdId), where))
+    .orderBy(...orderBy);
 }
 
 export async function listPlannedItemsByHouseholdAndDateRange(
@@ -65,17 +70,10 @@ export async function listPlannedItemsByHouseholdAndDateRange(
   startDate: string,
   endDate: string
 ): Promise<PlannedItemWithRecipe[]> {
-  return await (
-    await selectWithRecipe(householdId)
-  ).query
-    .where(
-      and(
-        eq(plannedItems.householdId, householdId),
-        gte(plannedItems.date, startDate),
-        lte(plannedItems.date, endDate)
-      )
-    )
-    .orderBy(asc(plannedItems.date), asc(plannedItems.slot), asc(plannedItems.sortOrder));
+  return selectWithRecipe(
+    householdId,
+    and(gte(plannedItems.date, startDate), lte(plannedItems.date, endDate))
+  );
 }
 
 /** The household's entries a member added, from `fromDate` on: what their calendar carries. */
@@ -84,17 +82,10 @@ export async function listPlannedItemsAddedBy(
   userId: string,
   fromDate: string
 ): Promise<PlannedItemWithRecipe[]> {
-  return await (
-    await selectWithRecipe(householdId)
-  ).query
-    .where(
-      and(
-        eq(plannedItems.householdId, householdId),
-        eq(plannedItems.userId, userId),
-        gte(plannedItems.date, fromDate)
-      )
-    )
-    .orderBy(asc(plannedItems.date), asc(plannedItems.slot), asc(plannedItems.sortOrder));
+  return selectWithRecipe(
+    householdId,
+    and(eq(plannedItems.userId, userId), gte(plannedItems.date, fromDate))
+  );
 }
 
 export async function listPlannedItemsWithRecipeBySlot(
@@ -102,28 +93,18 @@ export async function listPlannedItemsWithRecipeBySlot(
   date: string,
   slot: PlannedItemSlot
 ): Promise<PlannedItemWithRecipe[]> {
-  return await (
-    await selectWithRecipe(householdId)
-  ).query
-    .where(
-      and(
-        eq(plannedItems.householdId, householdId),
-        eq(plannedItems.date, date),
-        eq(plannedItems.slot, slot)
-      )
-    )
-    .orderBy(asc(plannedItems.sortOrder));
+  return selectWithRecipe(
+    householdId,
+    and(eq(plannedItems.date, date), eq(plannedItems.slot, slot)),
+    [asc(plannedItems.sortOrder)]
+  );
 }
 
 export async function getPlannedItemWithRecipeById(
   id: string,
   householdId: string
 ): Promise<PlannedItemWithRecipe | null> {
-  const [row] = await (
-    await selectWithRecipe(householdId)
-  ).query
-    .where(householdRow(plannedItems, householdId, id))
-    .limit(1);
+  const [row] = await selectWithRecipe(householdId, householdRow(plannedItems, householdId, id));
 
   return row ?? null;
 }

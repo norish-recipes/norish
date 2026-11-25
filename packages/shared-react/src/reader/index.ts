@@ -33,7 +33,7 @@ export { useReader, useSeededSession } from "./use-reader";
 export { expireSession, useSessionExpiry, useSignOut } from "./session-end";
 export {
   normalizePermissionsData,
-  selectCanDeleteRecipe,
+  selectAllows,
   type PermissionsData,
   type ReaderPermissions,
 } from "./permission-selectors";

@@ -3,7 +3,7 @@ import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveRecipeMedia } from "@/lib/recipe-media";
 import { serverPackage } from "@/lib/server-package";
 
-const { getRecipeHouseholdId } = await serverPackage<
+const { getRecipeHouseholdIds } = await serverPackage<
   typeof import("@norish/db/repositories/recipes")
 >("@norish/db/repositories/recipes");
 const { pendingRecipeMediaUploader } = await serverPackage<
@@ -24,7 +24,7 @@ export async function GET(req: Request, { params }: RouteContext<"/recipes/[id]/
 
   const refused = await refuseUnlessViewer(
     req,
-    () => getRecipeHouseholdId(id),
+    async () => (await getRecipeHouseholdIds([id])).get(id) ?? null,
     () => pendingRecipeMediaUploader(id)
   );
 

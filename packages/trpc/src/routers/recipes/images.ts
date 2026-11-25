@@ -5,7 +5,7 @@ import {
   addRecipeImages,
   countRecipeImages,
   deleteRecipeImageById,
-  getRecipeHouseholdId,
+  getRecipeHouseholdIds,
   getRecipeImageById,
 } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -253,9 +253,7 @@ const uploadGalleryImage = authedProcedure
       // Check if recipe exists in database before inserting into recipe_images
       // For new recipes (created via form), the recipe doesn't exist yet - images will be
       // linked when the recipe is saved via createRecipeWithRefs
-      const recipeHousehold = await getRecipeHouseholdId(recipeId);
-
-      if (recipeHousehold !== null) {
+      if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
         // Recipe exists, add to database
         const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]);
 

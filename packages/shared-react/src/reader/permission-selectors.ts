@@ -39,21 +39,13 @@ export function normalizePermissionsData(
 }
 
 /** The server's rule (`policyAllows`) for a row of `rowHouseholdId`; no answer yet is no. */
-function allows(permissions: RowAccess, action: keyof RecipePermissionPolicy, row: string) {
+export function selectAllows(
+  permissions: RowAccess,
+  action: keyof RecipePermissionPolicy,
+  rowHouseholdId: string
+) {
   return (
     permissions.householdId !== null &&
-    policyAllows(permissions.recipePolicy, action, permissions.householdId, row)
+    policyAllows(permissions.recipePolicy, action, permissions.householdId, rowHouseholdId)
   );
-}
-
-export function selectCanViewRecipe(permissions: RowAccess, rowHouseholdId: string) {
-  return allows(permissions, "view", rowHouseholdId);
-}
-
-export function selectCanEditRecipe(permissions: RowAccess, rowHouseholdId: string) {
-  return allows(permissions, "edit", rowHouseholdId);
-}
-
-export function selectCanDeleteRecipe(permissions: RowAccess, rowHouseholdId: string) {
-  return allows(permissions, "delete", rowHouseholdId);
 }

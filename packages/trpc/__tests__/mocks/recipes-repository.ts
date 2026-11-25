@@ -13,7 +13,6 @@ export const getRecipeHouseholdIds = vi.fn(
       ids.flatMap((id) => (recipeHouseholds.has(id) ? [[id, recipeHouseholds.get(id)!]] : []))
     )
 );
-export const getRecipeHouseholdId = vi.fn(async (id: string) => recipeHouseholds.get(id) ?? null);
 /** Every recipe a test asks about exists, in `householdId`. */
 export function everyRecipeIn(householdId: string) {
   getRecipeHouseholdIds.mockImplementation(
@@ -39,7 +38,6 @@ export function resetRecipesMocks() {
           ids.flatMap((id) => (recipeHouseholds.has(id) ? [[id, recipeHouseholds.get(id)!]] : []))
         )
     );
-  getRecipeHouseholdId.mockClear();
   createRecipeWithRefs.mockReset();
   updateRecipeWithRefs.mockReset();
   updateRecipeCategories.mockReset();

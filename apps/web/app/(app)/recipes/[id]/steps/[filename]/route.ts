@@ -3,7 +3,7 @@ import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveRecipeStepMedia } from "@/lib/recipe-media";
 import { serverPackage } from "@/lib/server-package";
 
-const { getRecipeHouseholdId } = await serverPackage<
+const { getRecipeHouseholdIds } = await serverPackage<
   typeof import("@norish/db/repositories/recipes")
 >("@norish/db/repositories/recipes");
 const { pendingRecipeMediaUploader } = await serverPackage<
@@ -27,7 +27,7 @@ export async function GET(
 
   const refused = await refuseUnlessViewer(
     req,
-    () => getRecipeHouseholdId(id),
+    async () => (await getRecipeHouseholdIds([id])).get(id) ?? null,
     () => pendingRecipeMediaUploader(id)
   );
 
