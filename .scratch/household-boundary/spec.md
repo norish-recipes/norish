@@ -72,7 +72,7 @@ Every account is in exactly one household, and the household is the boundary.
 
   Admin rights cover the instance settings, accounts and instance entries. Server owner and admin stay one role.
 
-  Three operator tools keep reaching across households, by Mike's decision on 2026-11-25: share-link moderation (the admin card lists every account's share links with the recipe name and who made it, and revokes them), the job monitor (every job with its payload and result), and the admin-started bulk AI enrichment over every household's recipes. OIDC household claims keep matching a household by name.
+  Three operator tools keep reaching across households, by Mike's decision on 2026-11-25: share-link moderation (the admin card lists every account's share links with the recipe name and who made it, and revokes them), the job monitor (every job with its payload and result), and the admin-started bulk AI enrichment over every household's recipes. OIDC household claims keep matching a household by name, and a claim keeps acting on an account that is alone in its household at every sign-in (every account now has a household, so this replaces "has no household"); both are revisited only if complaints come in.
 
 - **A policy change never changes data.** Some references exist only because reading across households was allowed:
   - another household's recipe in your cookbook;
