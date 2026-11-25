@@ -753,9 +753,7 @@
                       "default": [],
                       "type": "array",
                       "items": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 40
+                        "type": "string"
                       }
                     },
                     "author": {
@@ -1933,9 +1931,7 @@
                               "default": [],
                               "type": "array",
                               "items": {
-                                "type": "string",
-                                "minLength": 1,
-                                "maxLength": 40
+                                "type": "string"
                               }
                             },
                             "author": {
@@ -2735,9 +2731,7 @@
                             "default": [],
                             "type": "array",
                             "items": {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 40
+                              "type": "string"
                             }
                           },
                           "author": {
@@ -3574,9 +3568,7 @@
                               "default": [],
                               "type": "array",
                               "items": {
-                                "type": "string",
-                                "minLength": 1,
-                                "maxLength": 40
+                                "type": "string"
                               }
                             },
                             "author": {
@@ -3952,9 +3944,7 @@
                               "default": [],
                               "type": "array",
                               "items": {
-                                "type": "string",
-                                "minLength": 1,
-                                "maxLength": 40
+                                "type": "string"
                               }
                             },
                             "author": {
