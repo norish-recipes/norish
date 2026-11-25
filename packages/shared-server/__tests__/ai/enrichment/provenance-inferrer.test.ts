@@ -13,7 +13,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { cuisinesForNames, listCuisinesForHousehold } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames } from "@norish/db/repositories/cuisines";
+import { listEntryRows } from "@norish/db/repositories/list-entries";
 import {
   AIDisabledError,
   AIProviderError,
@@ -41,10 +42,8 @@ vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOrigina
   verifyClaims: mocked.verifyClaims,
 }));
 
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisinesForHousehold: vi.fn(),
-  cuisinesForNames: vi.fn(),
-}));
+vi.mock("@norish/db/repositories/cuisines", () => ({ cuisinesForNames: vi.fn() }));
+vi.mock("@norish/db/repositories/list-entries", () => ({ listEntryRows: vi.fn() }));
 
 vi.mock("@norish/shared-server/realtime/list-changes", () => ({ announceListsChanged: vi.fn() }));
 
@@ -103,7 +102,7 @@ function sentRequest(): CapturedRequest {
 beforeEach(() => {
   vi.mocked(getCuisineStrategy).mockResolvedValue("existing");
   vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
-  vi.mocked(listCuisinesForHousehold).mockResolvedValue(VOCABULARY);
+  vi.mocked(listEntryRows).mockResolvedValue(VOCABULARY);
   vi.mocked(cuisinesForNames).mockResolvedValue([]);
   // Validation keeps everything unless a test says otherwise.
   mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
@@ -376,7 +375,7 @@ describe("Cuisines", () => {
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
     // Not from a compile-time enum: whatever the administrator has right now.
-    expect(listCuisinesForHousehold).toHaveBeenCalledWith("household-1");
+    expect(listEntryRows).toHaveBeenCalledWith("cuisine", "household-1");
     expect(describeCuisineField()).toContain("Italian, Japanese, Dutch");
   });
 
@@ -484,7 +483,7 @@ describe("Cuisines", () => {
   });
 
   it("asks for an empty list when the vocabulary is empty", async () => {
-    vi.mocked(listCuisinesForHousehold).mockResolvedValue([]);
+    vi.mocked(listEntryRows).mockResolvedValue([]);
     respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "Note." });
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
@@ -722,7 +721,7 @@ describe("the Decision path", () => {
       version: 1,
     }));
 
-    vi.mocked(listCuisinesForHousehold).mockResolvedValue(vocabulary);
+    vi.mocked(listEntryRows).mockResolvedValue(vocabulary);
     mocked.decide.mockImplementation(
       ({ questions }: { questions: Record<string, { type: string }> }) =>
         Promise.resolve({

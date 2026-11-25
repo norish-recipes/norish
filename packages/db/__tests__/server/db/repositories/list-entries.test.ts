@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import { attachCategoriesToRecipeByInputTx } from "@norish/db/repositories/categories";
-import { getRecipeCuisines, replaceRecipeCuisinesTx } from "@norish/db/repositories/cuisines";
+import { getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
 import {
   addEntry,
@@ -21,9 +21,10 @@ import {
   recipeEntryNames,
   renameEntry,
   replaceRecipeEntriesByNameTx,
+  replaceRecipeEntryIdsTx,
 } from "@norish/db/repositories/list-entries";
 import { getRecipeFull, listRecipes } from "@norish/db/repositories/recipes";
-import { appendRecipeTags, attachTagsToRecipeByInputTx } from "@norish/db/repositories/tags";
+import { appendRecipeTags } from "@norish/db/repositories/tags";
 
 import {
   createTestRecipe,
@@ -38,7 +39,7 @@ const testBase = new RepositoryTestBase("test_list_entries");
 
 const tagsOf = (recipeId: string) => recipeEntryNames("tag", recipeId);
 const attachTags = (recipeId: string, names: string[]) =>
-  db.transaction((tx) => attachTagsToRecipeByInputTx(tx, recipeId, names));
+  db.transaction((tx) => replaceRecipeEntriesByNameTx(tx, "tag", recipeId, names));
 const rowCount = async (name: string) =>
   (
     await getTestDb().execute<{ n: number }>(
@@ -128,16 +129,18 @@ describe("household lists", () => {
     const foreign = (await addEntry("cuisine", bob.household, "Bob's"))!.entry;
     const [instance] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
 
-    await db.transaction((tx) => replaceRecipeCuisinesTx(tx, ann.recipe, [own.id, instance!.id]));
+    await db.transaction((tx) =>
+      replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [own.id, instance!.id])
+    );
     await expect(
-      db.transaction((tx) => replaceRecipeCuisinesTx(tx, ann.recipe, [foreign.id]))
+      db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [foreign.id]))
     ).rejects.toThrow(ForeignHouseholdReferenceError);
 
     // A recipe that moved household still carries its old household's entry until ticket 09.
     await getTestDb().execute(
       sql`INSERT INTO recipe_cuisines (recipe_id, cuisine_id) VALUES (${bob.recipe}, ${own.id})`
     );
-    await db.transaction((tx) => replaceRecipeCuisinesTx(tx, bob.recipe, [own.id]));
+    await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", bob.recipe, [own.id]));
     expect((await getRecipeCuisines(bob.recipe)).map((c) => c.name)).toEqual(["Grandma's"]);
   });
 

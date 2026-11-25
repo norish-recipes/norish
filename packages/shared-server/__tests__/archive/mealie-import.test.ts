@@ -32,13 +32,9 @@ vi.mock("@norish/db/repositories/categories", () => ({
     .fn()
     .mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
 }));
-vi.mock("@norish/db/repositories/tags", () => ({
-  listTagNamesForHousehold: vi.fn().mockResolvedValue([]),
-}));
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisinesForHousehold: vi
-    .fn()
-    .mockResolvedValue([{ id: "italian-id", name: "Italian", version: 1 }]),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn().mockResolvedValue([]),
+  listEntryRows: vi.fn().mockResolvedValue([{ id: "italian-id", name: "Italian", version: 1 }]),
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: vi.fn(),

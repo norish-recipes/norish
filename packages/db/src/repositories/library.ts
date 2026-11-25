@@ -37,7 +37,6 @@ import {
   recipeTags,
   tags as tagsTable,
 } from "../schema";
-import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
@@ -173,7 +172,7 @@ export async function listLibrary(
     if (searchSql) conditions.push(searchSql.match);
 
     if (categories?.length) {
-      conditions.push(recipeInAnyCategorySql(categories));
+      conditions.push(recipeCarriesFoldsSql("category", categories));
     }
 
     if (maxCookingTime !== undefined) {

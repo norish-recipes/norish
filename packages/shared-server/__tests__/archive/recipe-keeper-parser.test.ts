@@ -32,11 +32,9 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
 }));
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: mockRateRecipe }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: mockAddFavorite }));
-vi.mock("@norish/db/repositories/tags", () => ({
-  listTagNamesForHousehold: vi.fn().mockResolvedValue([]),
-}));
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisinesForHousehold: vi.fn().mockResolvedValue([]),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn().mockResolvedValue([]),
+  listEntryRows: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@norish/db/repositories/categories", () => ({
   listCategoryNamesForHousehold: mockListCategoryNames,

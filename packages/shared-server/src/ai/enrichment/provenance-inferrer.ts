@@ -49,7 +49,8 @@
 
 import type { CuisineStrategy } from "@norish/config/zod/server-config";
 import type { CuisineVocabularyEntry } from "@norish/shared/lib/cuisine-resolver";
-import { cuisinesForNames, listCuisinesForHousehold } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames } from "@norish/db/repositories/cuisines";
+import { listEntryRows } from "@norish/db/repositories/list-entries";
 import {
   getCuisineStrategy,
   isDecisionUseEnabled,
@@ -382,7 +383,7 @@ export async function inferRecipeProvenance(
   // The request schema is built from the vocabulary as it stands right now,
   // never from a compile-time list. The strategy shapes the request as well as
   // the resolution: what the model is allowed to propose is the same decision.
-  const vocabulary = await listCuisinesForHousehold(recipe.householdId);
+  const vocabulary = await listEntryRows("cuisine", recipe.householdId);
   const strategy = await getCuisineStrategy();
 
   let decided: DecidedProvenance | null = null;

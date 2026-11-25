@@ -9,7 +9,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { listTagNamesForHousehold } from "@norish/db/repositories/tags";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import { AIDisabledError } from "@norish/shared-server/ai/runtime/errors";
 import {
   getTagStrategy,
@@ -38,8 +38,8 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isDecisionUseEnabled: vi.fn(),
 }));
 
-vi.mock("@norish/db/repositories/tags", () => ({
-  listTagNamesForHousehold: vi.fn(),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -76,7 +76,7 @@ describe("Auto-Tagger", () => {
 
   beforeEach(() => {
     vi.mocked(getTagStrategy).mockResolvedValue("predefined");
-    vi.mocked(listTagNamesForHousehold).mockResolvedValue([]);
+    vi.mocked(listEntryNames).mockResolvedValue([]);
     mocked.generateStructured.mockResolvedValue({ tags: [] });
     // No Decision Model for validation unless a test says otherwise: every
     // claim is kept unjudged.
@@ -138,12 +138,12 @@ describe("Auto-Tagger", () => {
 
     it("fetches existing tags and offers them to the model in predefined_db mode", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
-      vi.mocked(listTagNamesForHousehold).mockResolvedValue(["dinner", "italian", "vegetarian"]);
+      vi.mocked(listEntryNames).mockResolvedValue(["dinner", "italian", "vegetarian"]);
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Dinner"] });
 
       const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
-      expect(listTagNamesForHousehold).toHaveBeenCalledWith("household-1");
+      expect(listEntryNames).toHaveBeenCalledWith("tag", "household-1");
       expect(mocked.generateStructured).toHaveBeenCalledWith(
         expect.objectContaining({
           sections: expect.arrayContaining([
@@ -157,7 +157,7 @@ describe("Auto-Tagger", () => {
     it("does not fetch DB tags in predefined mode", async () => {
       await generateTagsForRecipe(mockRecipe, "household-1");
 
-      expect(listTagNamesForHousehold).not.toHaveBeenCalled();
+      expect(listEntryNames).not.toHaveBeenCalled();
     });
 
     it("normalizes tags (lowercase, trim, deduplicate)", async () => {
@@ -174,7 +174,7 @@ describe("Auto-Tagger", () => {
 
     it("spells a freeform Tag as the household's list does, a near miss included", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("freeform");
-      vi.mocked(listTagNamesForHousehold).mockResolvedValue(["Vegetarian", "One-pot"]);
+      vi.mocked(listEntryNames).mockResolvedValue(["Vegetarian", "One-pot"]);
       mocked.generateStructured.mockResolvedValue({
         tags: ["vegeterian", "one pot", "smoky"],
       });
@@ -184,7 +184,7 @@ describe("Auto-Tagger", () => {
         "One-pot",
         "smoky",
       ]);
-      expect(listTagNamesForHousehold).toHaveBeenCalledWith("household-1");
+      expect(listEntryNames).toHaveBeenCalledWith("tag", "household-1");
     });
 
     it("lets an AI failure out for the caller to handle", async () => {
@@ -229,7 +229,7 @@ describe("Auto-Tagger", () => {
       // input; they are not claims, so a stored "vegetarian" that the model
       // did not propose is never judged and cannot be dropped.
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
-      vi.mocked(listTagNamesForHousehold).mockResolvedValue(["vegetarian", "dinner"]);
+      vi.mocked(listEntryNames).mockResolvedValue(["vegetarian", "dinner"]);
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
       mocked.decide.mockResolvedValue(verdicts({ italian: 0.9, vegetarian: 0.01 }));
 
@@ -327,7 +327,7 @@ describe("Auto-Tagger", () => {
       "lets the Decision Model confirm each tag the language model proposes under %s, whatever Validate enrichments says",
       async (strategy) => {
         vi.mocked(getTagStrategy).mockResolvedValue(strategy);
-        vi.mocked(listTagNamesForHousehold).mockResolvedValue(["italian"]);
+        vi.mocked(listEntryNames).mockResolvedValue(["italian"]);
         mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Vegan"] });
         mocked.decide.mockResolvedValue(verdicts({ italian: 0.8, vegan: 0.3 }));
 

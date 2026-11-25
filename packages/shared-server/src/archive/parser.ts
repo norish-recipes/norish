@@ -12,8 +12,8 @@ import {
   createCookbook,
   findOwnCookbookIdByTitle,
 } from "@norish/db/repositories/cookbooks";
-import { listCuisinesForHousehold } from "@norish/db/repositories/cuisines";
 import { addFavorite } from "@norish/db/repositories/favorites";
+import { listEntryRows } from "@norish/db/repositories/list-entries";
 import { rateRecipe } from "@norish/db/repositories/ratings";
 import {
   createResolvedRecipe,
@@ -562,7 +562,7 @@ export async function importRecipeItems(
 
 /** The importing household's Cuisines and the instance's, by folded name. */
 async function loadCuisineVocabulary(householdId: string): Promise<Map<string, string>> {
-  const vocabulary = await listCuisinesForHousehold(householdId);
+  const vocabulary = await listEntryRows("cuisine", householdId);
 
   return new Map(vocabulary.map((cuisine) => [entryFold(cuisine.name), cuisine.id]));
 }

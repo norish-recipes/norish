@@ -38,7 +38,7 @@ import {
 } from "@norish/shared/lib/recipe-enrichment";
 
 import { attachCategoriesToRecipeByInputTx, recipeHasCategoriesTx } from "./categories";
-import { replaceRecipeCuisinesTx } from "./cuisines";
+import { replaceRecipeEntryIdsTx } from "./list-entries";
 
 /**
  * SQL predicate for "this recipe's Nutrition Information group is incomplete".
@@ -462,7 +462,7 @@ export async function replaceRecipeProvenance(
 
     if (updated.length === 0) return false;
 
-    await replaceRecipeCuisinesTx(tx, recipeId, cuisineIds);
+    await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, cuisineIds);
 
     return true;
   });
@@ -513,7 +513,7 @@ async function fillProvenanceGapsFromClaim(
       .where(eq(recipes.id, recipeId));
 
     if (fill.fillCuisines) {
-      await replaceRecipeCuisinesTx(tx, recipeId, cuisineIds);
+      await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, cuisineIds);
     }
 
     return true;

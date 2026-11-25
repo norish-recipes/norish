@@ -12,7 +12,7 @@
  * and its tags are validated as any kind's claims are.
  */
 
-import { listTagNamesForHousehold } from "@norish/db/repositories/tags";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import {
   getTagStrategy,
   isDecisionUseEnabled,
@@ -128,7 +128,7 @@ export async function generateTagsForRecipe(
   // The recipe household's Tags: offered under predefined_db, matched before creating under freeform.
   const householdTags =
     strategy === "predefined_db" || strategy === "freeform"
-      ? await listTagNamesForHousehold(householdId)
+      ? await listEntryNames("tag", householdId)
       : [];
 
   const output = await generateStructured({

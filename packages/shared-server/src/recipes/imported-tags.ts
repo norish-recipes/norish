@@ -1,4 +1,4 @@
-import { listTagNamesForHousehold } from "@norish/db/repositories/tags";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import { matchNamesToList } from "@norish/shared/lib/list-match";
 
 /** An import's Tags as its household's list spells them: fold, then near-match, else a new Tag (ADR-0043). */
@@ -8,7 +8,7 @@ export async function matchImportedTags<T extends { tags?: { name: string }[] }>
 ): Promise<T> {
   if (!recipe.tags?.length) return recipe;
 
-  const list = await listTagNamesForHousehold(householdId);
+  const list = await listEntryNames("tag", householdId);
   const names = matchNamesToList(
     recipe.tags.map((tag) => tag.name),
     list

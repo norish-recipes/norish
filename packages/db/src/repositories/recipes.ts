@@ -55,13 +55,8 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
-import {
-  attachCategoriesToRecipeByInputTx,
-  RECIPE_CATEGORY_NAMES_SQL,
-  recipeInAnyCategorySql,
-} from "./categories";
+import { attachCategoriesToRecipeByInputTx, RECIPE_CATEGORY_NAMES_SQL } from "./categories";
 import { TakenIdError } from "./constraint-violation";
-import { replaceRecipeCuisinesTx } from "./cuisines";
 import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
 import {
   attachIngredientsToRecipeByInputTx,
@@ -70,7 +65,11 @@ import {
   resolvedRecipeLineValues,
   writeRecipeLineFoodsTx,
 } from "./ingredients";
-import { recipeCarriesFoldsSql } from "./list-entries";
+import {
+  recipeCarriesFoldsSql,
+  replaceRecipeEntriesByNameTx,
+  replaceRecipeEntryIdsTx,
+} from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { assertOwnRecipeMedia } from "./recipe-media-references";
@@ -81,7 +80,6 @@ import {
   loadIngredientLineIdsByOrderTx,
   syncStepIngredientsTx,
 } from "./steps";
-import { attachTagsToRecipeByInputTx } from "./tags";
 
 /**
  * Which of the recipe permission policy's three levels a query is asking
@@ -599,7 +597,7 @@ export async function listRecipes(
   }
 
   if (categories?.length) {
-    whereConditions.push(recipeInAnyCategorySql(categories));
+    whereConditions.push(recipeCarriesFoldsSql("category", categories));
   }
 
   if (maxCookingTime !== undefined) {
@@ -882,15 +880,16 @@ export async function createRecipeWithRefs(
     const rid = inserted.id;
 
     if (payload.tags.length) {
-      await attachTagsToRecipeByInputTx(
+      await replaceRecipeEntriesByNameTx(
         tx,
+        "tag",
         rid,
         payload.tags.map((t) => t.name)
       );
     }
 
     if (payload.cuisines.length) {
-      await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
+      await replaceRecipeEntryIdsTx(tx, "cuisine", rid, payload.cuisines);
     }
 
     if (payload.categories.length) {
@@ -1689,7 +1688,7 @@ export async function updateRecipeWithRefs(
     // Replace Cuisines if provided. An empty array is an editor clearing them,
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {
-      await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
+      await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines);
     }
 
     // An empty list leaves the Categories alone, as it always has.
@@ -1699,8 +1698,9 @@ export async function updateRecipeWithRefs(
 
     // Replace tags if provided
     if (payload.tags !== undefined) {
-      await attachTagsToRecipeByInputTx(
+      await replaceRecipeEntriesByNameTx(
         tx,
+        "tag",
         recipeId,
         payload.tags.map((t) => t.name)
       );
@@ -1805,7 +1805,7 @@ export async function getRandomRecipeCandidates(
   }
 
   if (category) {
-    whereConditions.push(recipeInAnyCategorySql([category]));
+    whereConditions.push(recipeCarriesFoldsSql("category", [category]));
   }
 
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;

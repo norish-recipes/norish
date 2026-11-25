@@ -5,8 +5,7 @@ import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-con
 import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
-import { listCuisinesForHousehold } from "@norish/db/repositories/cuisines";
-import { listTagNamesForHousehold } from "@norish/db/repositories/tags";
+import { listEntryNames, listEntryRows } from "@norish/db/repositories/list-entries";
 import {
   getIngredientWords,
   getLocaleConfig,
@@ -97,7 +96,7 @@ const localeConfig = publicProcedure.query(async () => {
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
-  return { tags: await listTagNamesForHousehold(ctx.householdId) };
+  return { tags: await listEntryNames("tag", ctx.householdId) };
 });
 
 /** The built-in Categories, then the household's own, whatever the Permission Policy (ADR-0040). */
@@ -114,7 +113,7 @@ const categories = authedProcedure.query(async ({ ctx }) => {
 const cuisines = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting cuisines");
 
-  return { cuisines: await listCuisinesForHousehold(ctx.householdId) };
+  return { cuisines: await listEntryRows("cuisine", ctx.householdId) };
 });
 
 /**

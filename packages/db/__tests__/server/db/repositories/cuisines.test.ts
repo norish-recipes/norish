@@ -8,13 +8,14 @@ import { eq, notInArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
+import { cuisinesForNames, getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import {
-  cuisinesForNames,
-  getRecipeCuisines,
-  listCuisinesForHousehold,
-  replaceRecipeCuisinesTx,
-} from "@norish/db/repositories/cuisines";
-import { addEntry, deleteEntry, renameEntry } from "@norish/db/repositories/list-entries";
+  addEntry,
+  deleteEntry,
+  listEntryRows,
+  renameEntry,
+  replaceRecipeEntryIdsTx,
+} from "@norish/db/repositories/list-entries";
 import { cuisines, recipes } from "@norish/db/schema";
 
 import { testHouseholdOf } from "../../../helpers/db-test-helpers";
@@ -24,9 +25,9 @@ describe("Cuisine repository", () => {
   let recipeId: string;
   let householdId: string;
   let seededIds: string[];
-  const listCuisines = () => listCuisinesForHousehold(householdId);
+  const listCuisines = () => listEntryRows("cuisine", householdId);
   const attach = (ids: string[]) =>
-    db.transaction((tx) => replaceRecipeCuisinesTx(tx, recipeId, ids));
+    db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, ids));
   const testBase = new RepositoryTestBase("test_cuisines");
 
   async function readRecipeRow() {

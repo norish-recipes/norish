@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { cuisinesForNames, getRecipeCuisines } from "@norish/db/repositories/cuisines";
+import { recipeEntryNames } from "@norish/db/repositories/list-entries";
 import {
   replaceRecipeCategories,
   replaceRecipeNutrition,
@@ -11,7 +12,7 @@ import {
   writeInferredStepIngredients,
 } from "@norish/db/repositories/recipe-enrichment";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
-import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
+import { appendRecipeTags } from "@norish/db/repositories/tags";
 
 import { createTestRecipe } from "../../../helpers/db-test-helpers";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "../../../helpers/recipe-writes";
@@ -42,7 +43,7 @@ describe("Recipe Enrichment repository", () => {
       const result = await appendRecipeTags(testRecipe.id, ["Vegan", "Quick"]);
 
       expect(result.added).toEqual(["Vegan", "Quick"]);
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(
         expect.arrayContaining(["Supplied", "Vegan", "Quick"])
       );
     });
@@ -52,7 +53,7 @@ describe("Recipe Enrichment repository", () => {
       const second = await appendRecipeTags(testRecipe.id, ["Vegan"]);
 
       expect(second.added).toEqual([]);
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(["Vegan"]);
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(["Vegan"]);
     });
 
     it("normalizes duplicates, blanks, and casing", async () => {
@@ -66,7 +67,7 @@ describe("Recipe Enrichment repository", () => {
       ]);
 
       expect(result.added).toEqual(["Quick"]);
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(["Vegan", "Quick"]);
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(["Vegan", "Quick"]);
     });
 
     it("keeps both finding sets when two appends run concurrently", async () => {
@@ -77,7 +78,7 @@ describe("Recipe Enrichment repository", () => {
         appendRecipeTags(testRecipe.id, ["Allergen-Milk", "Allergen-Egg"]),
       ]);
 
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(
         expect.arrayContaining(["Supplied", "Tag-A", "Tag-B", "Allergen-Milk", "Allergen-Egg"])
       );
     });

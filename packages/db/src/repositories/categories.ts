@@ -1,4 +1,3 @@
-import type { SQL } from "drizzle-orm";
 import { eq, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -6,7 +5,7 @@ import { categories, recipeCategories } from "@norish/db/schema";
 import { BUILT_IN_CATEGORIES, resolveCategoryName } from "@norish/shared/lib/categories";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
-import { listEntryRows, recipeCarriesFoldsSql, replaceRecipeEntriesByNameTx } from "./list-entries";
+import { listEntryNames, replaceRecipeEntriesByNameTx } from "./list-entries";
 
 // A recipe's Category names in order, as a correlated subquery on `"recipes"`:
 // the query using it must not alias the recipes table.
@@ -16,11 +15,6 @@ export const RECIPE_CATEGORY_NAMES_SQL = sql<string[]>`COALESCE((
   WHERE link.recipe_id = "recipes"."id"
 ), '{}')`;
 
-/** Recipes carrying any of `names`, matched on the folded name in any household's list. */
-export function recipeInAnyCategorySql(names: readonly string[]): SQL {
-  return recipeCarriesFoldsSql("category", names);
-}
-
 /** The Categories a household is offered: the built-ins in their order, then its own (ADR-0040). */
 export async function listCategoryNamesForHousehold(householdId: string): Promise<string[]> {
   const rank = (name: string) => {
@@ -28,10 +22,8 @@ export async function listCategoryNamesForHousehold(householdId: string): Promis
 
     return builtIn === -1 ? BUILT_IN_CATEGORIES.length : builtIn;
   };
-  const rows = await listEntryRows("category", householdId);
-
   // Array sort is stable, so the household's own keep their name order.
-  return rows.map((row) => row.name).sort((a, b) => rank(a) - rank(b));
+  return (await listEntryNames("category", householdId)).sort((a, b) => rank(a) - rank(b));
 }
 
 export async function recipeHasCategoriesTx(tx: DbTransaction, recipeId: string): Promise<boolean> {
