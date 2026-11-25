@@ -18,6 +18,7 @@ import {
 import { cookbooks, households, householdUsers, recipes } from "@norish/db/schema";
 
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import { raceBehind } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("a recipe's household follows its Owner", () => {
@@ -221,6 +222,185 @@ describe("a recipe's household follows its Owner", () => {
 
       expect((await writing).householdId).toBe(newHousehold);
       expect(newHousehold).not.toBe(householdId);
+      await expectInvariant();
+    });
+  });
+
+  describe("a write racing a move, locked in the moves' order", () => {
+    type Tx = Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0];
+    const holdHousehold = (id: string) => (tx: Tx) =>
+      tx.select({ id: households.id }).from(households).where(eq(households.id, id)).for("update");
+    const holdMembership = (userId: string) => (tx: Tx) =>
+      tx
+        .select({ userId: householdUsers.userId })
+        .from(householdUsers)
+        .where(eq(householdUsers.userId, userId))
+        .for("update");
+    const holdRecipe = (id: string) => (tx: Tx) =>
+      tx.select({ id: recipes.id }).from(recipes).where(eq(recipes.id, id)).for("update");
+    const fulfilled = (value: unknown) => ({ status: "fulfilled", value });
+
+    async function recipeRow(id: string) {
+      const [row] = await getTestDb()
+        .select({ name: recipes.name, householdId: recipes.householdId })
+        .from(recipes)
+        .where(eq(recipes.id, id));
+
+      return row;
+    }
+
+    const rename = (id: string, householdId: string) => () =>
+      getTestDb().update(recipes).set({ name: "Renamed", householdId }).where(eq(recipes.id, id));
+
+    it("settles a recipe insert queued before a leave", async () => {
+      const { member, householdId } = await memberWithThings();
+
+      const settled = await raceBehind(holdMembership(member.id), [
+        () => createTestRecipe(member.id, { name: "Racing" }),
+        () => moveToHouseholdOfOne(householdId, member.id),
+      ]);
+      const now = await householdOf(member.id);
+
+      // The insert lands first, in the old household, and the leave then carries it along.
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ name: "Racing" })),
+        fulfilled(expect.objectContaining({ applied: true })),
+      ]);
+      const inserted = (settled[0] as PromiseFulfilledResult<{ id: string }>).value;
+
+      expect(now).not.toBe(householdId);
+      expect((await recipeRow(inserted.id))?.householdId).toBe(now);
+      await expectInvariant();
+    });
+
+    it("settles a leave queued before a recipe insert", async () => {
+      const { member, householdId } = await memberWithThings();
+
+      const settled = await raceBehind(holdHousehold(householdId), [
+        () => moveToHouseholdOfOne(householdId, member.id),
+        () => createTestRecipe(member.id, { name: "Racing" }),
+      ]);
+      const now = await householdOf(member.id);
+
+      expect(now).not.toBe(householdId);
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ applied: true })),
+        fulfilled(expect.objectContaining({ householdId: now })),
+      ]);
+      await expectInvariant();
+    });
+
+    it("settles a recipe update queued before a leave", async () => {
+      const { member, householdId, recipe } = await memberWithThings();
+      const stranger = await householdOf((await createTestUser()).id);
+
+      const settled = await raceBehind(holdRecipe(recipe.id), [
+        rename(recipe.id, stranger),
+        () => moveToHouseholdOfOne(householdId, member.id),
+      ]);
+
+      expect(settled).toEqual([
+        fulfilled(expect.anything()),
+        fulfilled(expect.objectContaining({ applied: true })),
+      ]);
+      expect(await recipeRow(recipe.id)).toEqual({
+        name: "Renamed",
+        householdId: await householdOf(member.id),
+      });
+      await expectInvariant();
+    });
+
+    it("settles a leave queued before a recipe update", async () => {
+      const { member, householdId, recipe } = await memberWithThings();
+      const stranger = await householdOf((await createTestUser()).id);
+
+      const settled = await raceBehind(holdRecipe(recipe.id), [
+        () => moveToHouseholdOfOne(householdId, member.id),
+        rename(recipe.id, stranger),
+      ]);
+
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ applied: true })),
+        fulfilled(expect.anything()),
+      ]);
+      expect(await recipeRow(recipe.id)).toEqual({
+        name: "Renamed",
+        householdId: await householdOf(member.id),
+      });
+      await expectInvariant();
+    });
+
+    it("settles a cookbook insert queued before a join", async () => {
+      const joiner = await createTestUser();
+      const own = await householdOf(joiner.id);
+      const target = await householdOf((await createTestUser()).id);
+
+      const settled = await raceBehind(holdMembership(joiner.id), [
+        () => createCookbook({ userId: joiner.id, title: "Racing" }),
+        () => joinHousehold(joiner.id, { householdId: target }),
+      ]);
+
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ householdId: own })),
+        fulfilled({ refused: "holds-things" }),
+      ]);
+      await expectInvariant();
+    });
+
+    it("settles a join queued before a cookbook insert", async () => {
+      const joiner = await createTestUser();
+      const own = await householdOf(joiner.id);
+      const target = await householdOf((await createTestUser()).id);
+
+      const settled = await raceBehind(holdHousehold(own), [
+        () => joinHousehold(joiner.id, { householdId: target }),
+        () => createCookbook({ userId: joiner.id, title: "Racing" }),
+      ]);
+
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ leftHouseholdId: own })),
+        fulfilled(expect.objectContaining({ householdId: target })),
+      ]);
+      await expectInvariant();
+    });
+
+    it("settles a recipe insert queued before the account's deletion", async () => {
+      const { member } = await memberWithThings();
+
+      const settled = await raceBehind(holdMembership(member.id), [
+        () => createTestRecipe(member.id, { name: "Racing" }),
+        () => deleteAccount(member.id),
+      ]);
+
+      expect(settled.map((s) => s.status)).toEqual(["fulfilled", "fulfilled"]);
+      expect(
+        await getTestDb()
+          .select({ id: recipes.id })
+          .from(recipes)
+          .where(eq(recipes.userId, member.id))
+      ).toEqual([]);
+      await expectInvariant();
+    });
+
+    it("settles an account deletion queued before a recipe insert", async () => {
+      const { member, householdId } = await memberWithThings();
+
+      const settled = await raceBehind(holdHousehold(householdId), [
+        () => deleteAccount(member.id),
+        () => createTestRecipe(member.id, { name: "Racing" }),
+      ]);
+
+      // Refused for the account being gone, not chosen as a deadlock's victim.
+      expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected"]);
+      expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
+        /"code":"23\d{3}"/
+      );
+      expect(
+        await getTestDb()
+          .select({ id: recipes.id })
+          .from(recipes)
+          .where(eq(recipes.userId, member.id))
+      ).toEqual([]);
       await expectInvariant();
     });
   });

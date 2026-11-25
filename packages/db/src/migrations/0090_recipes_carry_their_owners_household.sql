@@ -1,14 +1,26 @@
 -- Recipes and cookbooks carry their Owner's household (ADR-0041), and nothing is left without an Owner.
 ALTER TABLE "recipes" ADD COLUMN IF NOT EXISTS "household_id" uuid;--> statement-breakpoint
 ALTER TABLE "cookbooks" ADD COLUMN IF NOT EXISTS "household_id" uuid;--> statement-breakpoint
--- A row's household is always its Owner's, whatever a write says; it waits out a membership move.
+-- A row's household is always its Owner's: household row, then membership, as a move locks them.
+-- A write keeping its Owner keeps the household; a move's own update (nested) is taken as it is.
 CREATE OR REPLACE FUNCTION "set_owner_household"() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE attempt int := 0;
+DECLARE
+  attempt int := 0;
+  seen uuid;
 BEGIN
+  IF TG_OP = 'UPDATE' AND pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'UPDATE' AND NEW."user_id" = OLD."user_id" AND OLD."household_id" IS NOT NULL THEN
+    NEW."household_id" := OLD."household_id";
+    RETURN NEW;
+  END IF;
   LOOP
+    SELECT "household_id" INTO seen FROM "household_users" WHERE "user_id" = NEW."user_id";
+    PERFORM 1 FROM "households" WHERE "id" = seen FOR KEY SHARE;
     SELECT "household_id" INTO NEW."household_id" FROM "household_users"
     WHERE "user_id" = NEW."user_id" FOR SHARE;
-    EXIT WHEN FOUND OR attempt = 2;
+    EXIT WHEN NEW."household_id" IS NOT DISTINCT FROM seen OR attempt = 2;
     attempt := attempt + 1;
   END LOOP;
   RETURN NEW;
