@@ -204,7 +204,7 @@
     "notesPlaceholder": "Voeg tips voor de voorbereiding, aanpassingen of serveersuggesties toe voor dit recept...",
     "ingredientsHelp": "Typ ingrediënten zoals \"2 kopjes bloem\" - we verwerken automatisch hoeveelheden en eenheden.",
     "instructionsHelp": "Schrijf duidelijke stapsgewijze instructies. Druk op Enter om naar de volgende stap te gaan.",
-    "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Tags op het recept zijn gevuld, nieuwe tags hebben een omstippelde rand.",
+    "tagsHelp": "Kies een tag of maak een nieuwe.",
     "tagsAndCategories": "Tags & Categorieën",
     "categoriesHelp": "Selecteer maaltijdcategorieën voor dit recept.",
     "addCategory": "Categorie toevoegen",
@@ -225,7 +225,7 @@
     "originRegion": "Streek",
     "originRegionPlaceholder": "bijv. Sicilië",
     "cuisines": "Keukens",
-    "cuisinesHelp": "Kies uit de lijst van je installatie. Meerdere is logisch bij een fusiongerecht.",
+    "cuisinesHelp": "Kies uit de lijst of maak er zelf een. Meerdere is logisch bij een fusiongerecht.",
     "provenanceNote": "Toelichting",
     "provenanceNotePlaceholder": "Een paar zinnen over waar dit gerecht vandaan komt…",
     "servings": "Porties",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Tags en categorieën",
     "categories": "Categorieën",
     "tags": "Tags",
-    "tagsHint": "Kies een suggestie of typ een nieuwe tag; nieuwe tags hebben een stippelrand.",
+    "tagsHint": "Kies een tag uit de lijst of maak een nieuwe.",
     "addTag": "Tag toevoegen",
     "removeNamed": "{name} verwijderen",
     "servingsAndTime": "Porties en tijd",
@@ -562,6 +562,12 @@
     "discardMessage": "Je hebt niet-opgeslagen wijzigingen.",
     "keepEditing": "Verder bewerken",
     "discard": "Weggooien"
+  },
+  "picker": {
+    "create": "\"{name}\" maken",
+    "createOffline": "Je kunt \"{name}\" maken als je online bent.",
+    "tooLong": "Namen mogen maximaal {max} tekens hebben.",
+    "createFailed": "\"{name}\" maken is niet gelukt. Probeer het opnieuw."
   },
   "search": {
     "sortBestMatch": "Beste match",

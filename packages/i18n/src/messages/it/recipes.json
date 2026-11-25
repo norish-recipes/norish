@@ -204,7 +204,7 @@
     "notesPlaceholder": "Aggiungi note di preparazione, modifiche o suggerimenti per questa ricetta...",
     "ingredientsHelp": "Digita gli ingredienti come \"2 tazze di farina\" - analizzeremo automaticamente quantità e unità.",
     "instructionsHelp": "Scrivi istruzioni chiare passo dopo passo. Premi Invio per passare al passaggio successivo.",
-    "tagsHelp": "Digita i tag e clicca i suggerimenti per aggiungerli. I tag della ricetta sono pieni, i nuovi tag hanno un bordo tratteggiato.",
+    "tagsHelp": "Scegli un tag o creane uno nuovo.",
     "tagsAndCategories": "Tag e categorie",
     "categoriesHelp": "Seleziona le categorie di pasto per questa ricetta.",
     "addCategory": "Aggiungi categoria",
@@ -225,7 +225,7 @@
     "originRegion": "Regione",
     "originRegionPlaceholder": "es. Sicilia",
     "cuisines": "Cucine",
-    "cuisinesHelp": "Scegli dall'elenco della tua installazione. Per un piatto fusion ne servono più d'una.",
+    "cuisinesHelp": "Scegli dall'elenco o creane una tua. Più di una ha senso per un piatto fusion.",
     "provenanceNote": "Nota",
     "provenanceNotePlaceholder": "Qualche frase su da dove viene questo piatto…",
     "servings": "Porzioni",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Tag e categorie",
     "categories": "Categorie",
     "tags": "Tag",
-    "tagsHint": "Scegli un suggerimento o scrivi un nuovo tag; i nuovi tag hanno un bordo tratteggiato.",
+    "tagsHint": "Scegli un tag dall'elenco o creane uno nuovo.",
     "addTag": "Aggiungi un tag",
     "removeNamed": "Rimuovi {name}",
     "servingsAndTime": "Porzioni e tempo",
@@ -562,6 +562,12 @@
     "discardMessage": "Hai modifiche non salvate.",
     "keepEditing": "Continua a modificare",
     "discard": "Scarta"
+  },
+  "picker": {
+    "create": "Crea \"{name}\"",
+    "createOffline": "Potrai creare \"{name}\" quando sarai online.",
+    "tooLong": "I nomi possono avere al massimo {max} caratteri.",
+    "createFailed": "Impossibile creare \"{name}\". Riprova."
   },
   "search": {
     "sortBestMatch": "Migliore corrispondenza",

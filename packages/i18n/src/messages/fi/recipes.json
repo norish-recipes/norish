@@ -204,7 +204,7 @@
     "notesPlaceholder": "Lisää valmisteluohjeita, muutoksia tai tarjoiluvinkkejä tälle reseptille...",
     "ingredientsHelp": "Kirjoita ainesosat muodossa \"2 dl jauhoja\" – tunnistamme määrät ja yksiköt automaattisesti.",
     "instructionsHelp": "Kirjoita selkeät vaiheittaiset ohjeet. Siirry seuraavaan vaiheeseen painamalla Enter.",
-    "tagsHelp": "Kirjoita tunnisteita ja lisää niitä napsauttamalla ehdotuksia. Reseptissä jo olevat tunnisteet ovat täytettyjä; uusilla on katkoviivareunus.",
+    "tagsHelp": "Valitse tunniste tai luo uusi.",
     "tagsAndCategories": "Tunnisteet ja kategoriat",
     "categoriesHelp": "Valitse tämän reseptin ateriakategoriat.",
     "addCategory": "Lisää kategoria",
@@ -225,7 +225,7 @@
     "originRegion": "Alue",
     "originRegionPlaceholder": "esim. Sisilia",
     "cuisines": "Ruokakulttuurit",
-    "cuisinesHelp": "Valitse asennuksesi listalta. Fuusioruoalle useampi on järkevä.",
+    "cuisinesHelp": "Valitse luettelosta tai luo oma. Useampi sopii fuusioruoalle.",
     "provenanceNote": "Huomautus",
     "provenanceNotePlaceholder": "Muutama lause siitä, mistä tämä ruoka on peräisin…",
     "servings": "Annokset",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Tunnisteet ja luokat",
     "categories": "Luokat",
     "tags": "Tunnisteet",
-    "tagsHint": "Valitse ehdotus tai kirjoita uusi tunniste; uusilla tunnisteilla on katkoviivareuna.",
+    "tagsHint": "Valitse tunniste luettelosta tai luo uusi.",
     "addTag": "Lisää tunniste",
     "removeNamed": "Poista {name}",
     "servingsAndTime": "Annokset ja aika",
@@ -562,6 +562,12 @@
     "discardMessage": "Sinulla on tallentamattomia muutoksia.",
     "keepEditing": "Jatka muokkausta",
     "discard": "Hylkää"
+  },
+  "picker": {
+    "create": "Luo \"{name}\"",
+    "createOffline": "Voit luoda kohteen \"{name}\", kun olet verkossa.",
+    "tooLong": "Nimessä saa olla enintään {max} merkkiä.",
+    "createFailed": "Kohdetta \"{name}\" ei voitu luoda. Yritä uudelleen."
   },
   "search": {
     "sortBestMatch": "Paras osuma",

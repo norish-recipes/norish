@@ -204,7 +204,7 @@
     "notesPlaceholder": "Adicione notas de preparo, ajustes ou dicas de como servir esta receita...",
     "ingredientsHelp": "Digite ingredientes como \"2 xícaras de farinha\" - vamos analisar automaticamente quantidades e unidades.",
     "instructionsHelp": "Escreva instruções claras passo a passo. Pressione Enter para passar para a próxima etapa.",
-    "tagsHelp": "Digite tags e clique nas sugestões para adicionar. As tags da receita são preenchidas, novas tags têm uma borda tracejada.",
+    "tagsHelp": "Escolha uma tag ou crie uma nova.",
     "tagsAndCategories": "Tags e categorias",
     "categoriesHelp": "Selecione categorias de refeição para esta receita.",
     "addCategory": "Adicionar categoria",
@@ -225,7 +225,7 @@
     "originRegion": "Região",
     "originRegionPlaceholder": "ex.: Sicília",
     "cuisines": "Culinárias",
-    "cuisinesHelp": "Escolha da lista da sua instalação. Várias fazem sentido em um prato fusion.",
+    "cuisinesHelp": "Escolha da lista ou crie a sua. Várias fazem sentido para um prato fusion.",
     "provenanceNote": "Nota",
     "provenanceNotePlaceholder": "Algumas frases sobre de onde vem este prato…",
     "servings": "Porções",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Tags e categorias",
     "categories": "Categorias",
     "tags": "Tags",
-    "tagsHint": "Escolha uma sugestão ou digite uma nova tag; novas tags têm borda tracejada.",
+    "tagsHint": "Escolha uma tag da lista ou crie uma nova.",
     "addTag": "Adicionar uma tag",
     "removeNamed": "Remover {name}",
     "servingsAndTime": "Porções e tempo",
@@ -562,6 +562,12 @@
     "discardMessage": "Você tem alterações não salvas.",
     "keepEditing": "Continuar editando",
     "discard": "Descartar"
+  },
+  "picker": {
+    "create": "Criar \"{name}\"",
+    "createOffline": "Você poderá criar \"{name}\" quando estiver online.",
+    "tooLong": "Os nomes podem ter no máximo {max} caracteres.",
+    "createFailed": "Não foi possível criar \"{name}\". Tente de novo."
   },
   "search": {
     "sortBestMatch": "Melhor correspondência",

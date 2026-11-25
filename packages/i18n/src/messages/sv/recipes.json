@@ -204,7 +204,7 @@
     "notesPlaceholder": "Lägg till förberedelsetips, anpassningar eller serveringsförslag...",
     "ingredientsHelp": "Skriv ingredienser som ”2 dl mjöl” så tolkar vi mängder och enheter automatiskt.",
     "instructionsHelp": "Skriv tydliga instruktioner steg för steg. Tryck på Enter för att gå till nästa steg.",
-    "tagsHelp": "Skriv taggar och klicka på förslag för att lägga till dem. Befintliga taggar är fyllda, nya taggar har en streckad ram.",
+    "tagsHelp": "Välj en tagg eller skapa en ny.",
     "tagsAndCategories": "Taggar och kategorier",
     "categoriesHelp": "Välj måltidskategorier för det här receptet.",
     "addCategory": "Lägg till kategori",
@@ -225,7 +225,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "T.ex. Sicilien",
     "cuisines": "Matkulturer",
-    "cuisinesHelp": "Välj från serverns lista. Flera kan passa för en rätt som blandar matkulturer.",
+    "cuisinesHelp": "Välj i listan eller skapa en egen. Flera passar för en fusionsrätt.",
     "provenanceNote": "Anteckning",
     "provenanceNotePlaceholder": "Några meningar om var den här rätten kommer ifrån…",
     "servings": "Portioner",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Taggar och kategorier",
     "categories": "Kategorier",
     "tags": "Taggar",
-    "tagsHint": "Välj ett förslag eller skriv en ny tagg; nya taggar har streckad kant.",
+    "tagsHint": "Välj en tagg i listan eller skapa en ny.",
     "addTag": "Lägg till en tagg",
     "removeNamed": "Ta bort {name}",
     "servingsAndTime": "Portioner och tid",
@@ -562,6 +562,12 @@
     "discardMessage": "Du har osparade ändringar.",
     "keepEditing": "Fortsätt redigera",
     "discard": "Släng"
+  },
+  "picker": {
+    "create": "Skapa \"{name}\"",
+    "createOffline": "Du kan skapa \"{name}\" när du är online.",
+    "tooLong": "Namn får vara högst {max} tecken.",
+    "createFailed": "Det gick inte att skapa \"{name}\". Försök igen."
   },
   "search": {
     "sortBestMatch": "Bästa träff",

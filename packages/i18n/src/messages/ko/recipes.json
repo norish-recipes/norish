@@ -204,7 +204,7 @@
     "notesPlaceholder": "이 레시피에 대한 준비 메모, 조정 또는 서빙 팁을 추가하세요...",
     "ingredientsHelp": "\"밀가루 2컵\"과 같은 재료를 입력하면 양과 단위가 자동으로 분석됩니다.",
     "instructionsHelp": "단계별 조리 방법을 작성하세요. Enter를 눌러 다음 단계로 이동하세요.",
-    "tagsHelp": "태그를 입력하고 제안을 클릭하여 추가하세요. 레시피에 추가된 태그는 색으로 채워지고, 새 태그에는 점선 테두리가 있습니다.",
+    "tagsHelp": "태그를 고르거나 새로 만드세요.",
     "tagsAndCategories": "태그 및 카테고리",
     "categoriesHelp": "이 레시피에 대한 식사 카테고리를 선택하세요.",
     "addCategory": "카테고리 추가",
@@ -225,7 +225,7 @@
     "originRegion": "지역",
     "originRegionPlaceholder": "예: 시칠리아",
     "cuisines": "요리",
-    "cuisinesHelp": "설치본의 목록에서 선택하세요. 퓨전 요리라면 여러 개가 알맞습니다.",
+    "cuisinesHelp": "목록에서 고르거나 직접 만드세요. 퓨전 요리라면 여러 개가 알맞습니다.",
     "provenanceNote": "설명",
     "provenanceNotePlaceholder": "이 요리의 출처에 대한 몇 문장…",
     "servings": "인분",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "태그 및 카테고리",
     "categories": "카테고리",
     "tags": "태그",
-    "tagsHint": "제안을 고르거나 새 태그를 입력하세요. 새 태그는 점선 테두리로 표시됩니다.",
+    "tagsHint": "목록에서 태그를 고르거나 새로 만드세요.",
     "addTag": "태그 추가",
     "removeNamed": "{name} 삭제",
     "servingsAndTime": "인분 및 시간",
@@ -562,6 +562,12 @@
     "discardMessage": "저장하지 않은 변경 사항이 있습니다.",
     "keepEditing": "계속 편집",
     "discard": "버리기"
+  },
+  "picker": {
+    "create": "\"{name}\" 만들기",
+    "createOffline": "온라인일 때 \"{name}\"을(를) 만들 수 있습니다.",
+    "tooLong": "이름은 최대 {max}자까지 쓸 수 있습니다.",
+    "createFailed": "\"{name}\"을(를) 만들지 못했습니다. 다시 시도하세요."
   },
   "search": {
     "sortBestMatch": "가장 일치",

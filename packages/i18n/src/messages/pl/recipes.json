@@ -204,7 +204,7 @@
     "notesPlaceholder": "Uwagi, wskazówki dotyczące podania...",
     "ingredientsHelp": "Wpisuj składniki jak \"2 szklanki mąki\" – automatycznie przetworzymy ilości i jednostki.",
     "instructionsHelp": "Pisz jasne instrukcje krok po kroku. Naciśnij Enter, aby przejść do następnego kroku.",
-    "tagsHelp": "Wpisuj tagi i klikaj sugestie, aby dodać.",
+    "tagsHelp": "Wybierz tag lub utwórz nowy.",
     "tagsAndCategories": "Tagi i kategorie",
     "categoriesHelp": "Wybierz kategorie posiłku.",
     "addCategory": "Dodaj kategorię",
@@ -225,7 +225,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "np. Sycylia",
     "cuisines": "Kuchnie",
-    "cuisinesHelp": "Wybierz z listy swojej instalacji. Kilka ma sens przy daniu fusion.",
+    "cuisinesHelp": "Wybierz z listy lub utwórz własną. W daniu fusion sensowne bywa kilka.",
     "provenanceNote": "Notatka",
     "provenanceNotePlaceholder": "Kilka zdań o tym, skąd pochodzi to danie…",
     "servings": "Porcje",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Tagi i kategorie",
     "categories": "Kategorie",
     "tags": "Tagi",
-    "tagsHint": "Wybierz podpowiedź lub wpisz nowy tag; nowe tagi mają przerywaną ramkę.",
+    "tagsHint": "Wybierz tag z listy lub utwórz nowy.",
     "addTag": "Dodaj tag",
     "removeNamed": "Usuń {name}",
     "servingsAndTime": "Porcje i czas",
@@ -562,6 +562,12 @@
     "discardMessage": "Masz niezapisane zmiany.",
     "keepEditing": "Edytuj dalej",
     "discard": "Odrzuć"
+  },
+  "picker": {
+    "create": "Utwórz \"{name}\"",
+    "createOffline": "Możesz utworzyć \"{name}\", gdy będziesz online.",
+    "tooLong": "Nazwa może mieć najwyżej {max} znaków.",
+    "createFailed": "Nie udało się utworzyć \"{name}\". Spróbuj ponownie."
   },
   "search": {
     "sortBestMatch": "Najlepsze dopasowanie",

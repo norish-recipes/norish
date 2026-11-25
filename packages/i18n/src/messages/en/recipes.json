@@ -204,7 +204,7 @@
     "notesPlaceholder": "Add prep notes, adjustments or serving tips for this recipe...",
     "ingredientsHelp": "Type ingredients like \"2 cups flour\" - we'll automatically parse amounts and units.",
     "instructionsHelp": "Write clear step-by-step instructions. Press Enter to move to the next step.",
-    "tagsHelp": "Type tags and click suggestions to add. Tags on the recipe are filled in; new tags have a dashed border.",
+    "tagsHelp": "Pick a tag or create a new one.",
     "tagsAndCategories": "Tags & Categories",
     "categoriesHelp": "Select meal categories for this recipe.",
     "addCategory": "Add a category",
@@ -225,7 +225,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "e.g. Sicily",
     "cuisines": "Cuisines",
-    "cuisinesHelp": "Pick from your deployment's list. Several make sense for a fusion dish.",
+    "cuisinesHelp": "Pick from the list or create your own. Several make sense for a fusion dish.",
     "provenanceNote": "Note",
     "provenanceNotePlaceholder": "A few sentences about where this dish comes from…",
     "servings": "Servings",
@@ -546,7 +546,7 @@
     "tagsAndCategories": "Tags & categories",
     "categories": "Categories",
     "tags": "Tags",
-    "tagsHint": "Pick a suggestion or type a new tag; new tags have a dashed border.",
+    "tagsHint": "Pick a tag from the list, or create a new one.",
     "addTag": "Add a tag",
     "removeNamed": "Remove {name}",
     "servingsAndTime": "Servings & time",
@@ -562,6 +562,12 @@
     "discardMessage": "You have unsaved changes.",
     "keepEditing": "Keep editing",
     "discard": "Discard"
+  },
+  "picker": {
+    "create": "Create \"{name}\"",
+    "createOffline": "You can create \"{name}\" when you are online.",
+    "tooLong": "Names can have at most {max} characters.",
+    "createFailed": "Could not create \"{name}\". Try again."
   },
   "search": {
     "sortBestMatch": "Best match",
