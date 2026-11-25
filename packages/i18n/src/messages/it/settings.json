@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Elimina account",
         "permanentWarning": "Questa azione è permanente e non può essere annullata!",
-        "dataWarning": "I tuoi dati personali inclusi spesa, voci del calendario e note verranno eliminati permanentemente.",
-        "recipesNote": "Le ricette che hai creato verranno conservate ma non saranno più collegate al tuo account.",
-        "adminNote": "Se sei l'amministratore di un nucleo familiare con altri membri, devi prima trasferire i privilegi di amministratore.",
+        "dataWarning": "Le tue ricette e i tuoi ricettari vengono eliminati, insieme a valutazioni, preferiti, allergie, preferenze, chiavi API, link di condivisione, CalDAV e token dei siti.",
+        "recipesNote": "Il tuo nucleo familiare mantiene spesa, negozi, dispensa e piano dei pasti. Le tue ricette nel piano restano lì come note.",
+        "adminNote": "Se sei l'amministratore del nucleo familiare, subentra il membro presente da più tempo. Se sei l'ultimo membro, il nucleo familiare viene eliminato con tutto ciò che contiene.",
         "confirmButton": "Elimina il mio account"
       }
     },

@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Slett konto",
         "permanentWarning": "Denne handlingen er permanent og kan ikke angres!",
-        "dataWarning": "De personlige dataene dine inkludert handlelister, kalenderhendelser og notater slettes permanent.",
-        "recipesNote": "Oppskrifter du har opprettet, beholdes, men vil ikke lenger være knyttet til kontoen din.",
-        "adminNote": "Hvis du er administrator for en husstand med andre medlemmer, må du overføre administratorrettigheter først.",
+        "dataWarning": "Oppskriftene og kokebøkene dine slettes, sammen med vurderinger, favoritter, allergier, preferanser, API-nøkler, delingslenker, CalDAV og nettstedtokener.",
+        "recipesNote": "Husstanden din beholder handlelister, butikker, spiskammer og måltidsplan. Oppskriftene dine i planen blir stående der som notater.",
+        "adminNote": "Hvis du er administrator for husstanden, tar medlemmet som har vært med lengst over. Hvis du er det siste medlemmet, slettes husstanden med alt i den.",
         "confirmButton": "Slett kontoen min"
       }
     },

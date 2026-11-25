@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Eliminar cuenta",
         "permanentWarning": "¡Esta acción es permanente y no se puede deshacer!",
-        "dataWarning": "Tus datos personales, incluidas la lista de la compra, entradas del calendario y notas, se eliminarán de forma permanente.",
-        "recipesNote": "Las recetas que hayas creado se conservarán, pero dejarán de estar vinculadas a tu cuenta.",
-        "adminNote": "Si eres admin de un hogar con otros miembros, debes transferir los privilegios de administrador primero.",
+        "dataWarning": "Se eliminan tus recetas y recetarios, junto con tus valoraciones, favoritos, alergias, preferencias, claves API, enlaces compartidos, CalDAV y tokens de sitios.",
+        "recipesNote": "Tu hogar conserva su lista de la compra, tiendas, despensa y plan de comidas. Tus recetas del plan se quedan allí como notas.",
+        "adminNote": "Si eres admin del hogar, el miembro más antiguo toma el relevo. Si eres su último miembro, el hogar se elimina con todo lo que contiene.",
         "confirmButton": "Eliminar mi cuenta"
       }
     },

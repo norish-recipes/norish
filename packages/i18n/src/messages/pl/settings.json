@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Usuń konto",
         "permanentWarning": "Ta operacja jest trwała i nie można jej cofnąć!",
-        "dataWarning": "Twoje dane osobiste, w tym zakupy, wpisy w kalendarzu i notatki, zostaną trwale usunięte.",
-        "recipesNote": "Utworzone przez Ciebie przepisy zostaną zachowane, ale nie będą już powiązane z Twoim kontem.",
-        "adminNote": "Jeśli jesteś administratorem gospodarstwa domowego z innymi członkami, musisz najpierw przekazać uprawnienia administratora.",
+        "dataWarning": "Twoje przepisy i książki kucharskie zostaną usunięte, razem z ocenami, ulubionymi, alergiami, preferencjami, kluczami API, linkami udostępniania, CalDAV i tokenami stron.",
+        "recipesNote": "Twoje gospodarstwo domowe zachowa zakupy, sklepy, spiżarnię i plan posiłków. Twoje przepisy w planie zostaną w nim jako notatki.",
+        "adminNote": "Jeśli jesteś administratorem gospodarstwa, jego rolę przejmie najdłużej należący członek. Jeśli jesteś ostatnim członkiem, gospodarstwo zostanie usunięte z całą zawartością.",
         "confirmButton": "Usuń moje konto"
       }
     },

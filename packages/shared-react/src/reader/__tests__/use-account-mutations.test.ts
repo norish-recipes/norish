@@ -695,25 +695,6 @@ describe("the Account's writes", () => {
       unmount();
     });
 
-    it("stays and says why when the server refuses, and a later sign-out still runs", async () => {
-      const result = render(() => useDeleteAccountMutation());
-
-      act(() => result.current.deleteAccount());
-      await answerCall("user.deleteAccount", { success: false, error: "Transfer admin first" });
-
-      expect(adapter.offlineEngine.clearForSignOut).not.toHaveBeenCalled();
-      expect(adapter.leave).not.toHaveBeenCalled();
-      expect(adapter.showError).toHaveBeenCalledWith(
-        "Transfer admin first",
-        "user-settings:delete-account"
-      );
-
-      const signOut = render(() => useSignOut()).current;
-
-      await act(() => signOut());
-      expect(adapter.leave).toHaveBeenCalledExactlyOnceWith("sign-out");
-    });
-
     it("leaves as an expiry when the session expired under a failing delete", async () => {
       const { unmount } = renderHook(() => useSessionExpiry(), {
         wrapper: createTestWrapper(queryClient, adapter),

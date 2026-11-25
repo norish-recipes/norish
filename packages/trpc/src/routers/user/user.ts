@@ -8,7 +8,6 @@ import {
   clearUserAvatar,
   getAllergiesForUsers,
   getApiKeysForUser,
-  getHouseholdForUser,
   getSignInMethodsForUser,
   getUserAllergies,
   getUserById,
@@ -316,25 +315,11 @@ const deleteAvatar = authedProcedure
   });
 
 /**
- * Delete user account
+ * Delete the reader's own account, as an admin's removal does: an admin's role passes to the
+ * longest-standing member, and a last member takes the household along.
  */
 const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Deleting account");
-
-  // Check if user is admin of household with other members
-  const household = await getHouseholdForUser(ctx.user.id);
-
-  if (household && household.adminUserId === ctx.user.id) {
-    const memberCount = household.users.length;
-
-    if (memberCount > 1) {
-      return {
-        success: false,
-        error:
-          "You cannot delete your account while you are the admin of a household with other members. Transfer admin privileges first or have all members leave.",
-      };
-    }
-  }
 
   await deleteUserAccount(ctx.user.id);
 

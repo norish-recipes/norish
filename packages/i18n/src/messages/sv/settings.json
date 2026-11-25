@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Ta bort konto",
         "permanentWarning": "Den här åtgärden är permanent och går inte att ångra!",
-        "dataWarning": "Dina personliga data, inklusive inköpslistor, kalenderposter och anteckningar, tas bort permanent.",
-        "recipesNote": "Recept du har skapat behålls men kopplas inte längre till ditt konto.",
-        "adminNote": "Om du är administratör i ett hushåll med andra medlemmar måste du först överföra administratörsbehörigheten.",
+        "dataWarning": "Dina recept och kokböcker tas bort, liksom dina betyg, favoriter, allergier, inställningar, API-nycklar, delningslänkar, CalDAV och webbplatstokens.",
+        "recipesNote": "Ditt hushåll behåller sina inköp, butiker, skafferi och måltidsplan. Dina recept i planen ligger kvar där som anteckningar.",
+        "adminNote": "Om du är administratör för hushållet tar den medlem som varit med längst över. Om du är den sista medlemmen tas hushållet bort med allt i det.",
         "confirmButton": "Ta bort mitt konto"
       }
     },

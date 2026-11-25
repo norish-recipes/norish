@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Excluir conta",
         "permanentWarning": "Esta ação é permanente e não pode ser desfeita!",
-        "dataWarning": "Seus dados pessoais, incluindo compras, entradas de calendário e notas, serão excluídos permanentemente.",
-        "recipesNote": "As receitas que você criou serão preservadas, mas não estarão mais vinculadas à sua conta.",
-        "adminNote": "Se você for o administrador de uma casa com outros membros, deverá transferir os privilégios de admin primeiro.",
+        "dataWarning": "Suas receitas e livros de receitas são excluídos, junto com suas avaliações, favoritos, alergias, preferências, chaves de API, links de compartilhamento, CalDAV e tokens de sites.",
+        "recipesNote": "Sua casa mantém as compras, lojas, despensa e plano de refeições. Suas receitas no plano continuam lá como notas.",
+        "adminNote": "Se você for o administrador da casa, o membro mais antigo assume. Se você for o último membro, a casa é excluída com tudo o que há nela.",
         "confirmButton": "Excluir minha conta"
       }
     },

@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Poista tili",
         "permanentWarning": "Tämä toiminto on pysyvä eikä sitä voi kumota!",
-        "dataWarning": "Henkilökohtaiset tietosi, mukaan lukien ostokset, kalenterimerkinnät ja muistiinpanot, poistetaan pysyvästi.",
-        "recipesNote": "Luomasi reseptit säilyvät, mutta niitä ei enää liitetä tiliisi.",
-        "adminNote": "Jos olet sellaisen kotitalouden ylläpitäjä, jossa on muita jäseniä, sinun on ensin siirrettävä ylläpito-oikeudet.",
+        "dataWarning": "Reseptisi ja keittokirjasi poistetaan, samoin arviosi, suosikkisi, allergiasi, asetuksesi, API-avaimesi, jakolinkkisi, CalDAV ja sivustotunnukset.",
+        "recipesNote": "Kotitaloutesi säilyttää ostoksensa, kauppansa, ruokakomeronsa ja ateriasuunnitelmansa. Suunnitelmassa olevat reseptisi jäävät sinne muistiinpanoina.",
+        "adminNote": "Jos olet kotitalouden ylläpitäjä, pisimpään mukana ollut jäsen jatkaa ylläpitäjänä. Jos olet sen viimeinen jäsen, kotitalous poistetaan kaikkine sisältöineen.",
         "confirmButton": "Poista tilini"
       }
     },

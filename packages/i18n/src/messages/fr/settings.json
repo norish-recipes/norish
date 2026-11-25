@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Supprimer le compte",
         "permanentWarning": "Cette action est permanente et irréversible !",
-        "dataWarning": "Vos données personnelles, y compris les courses, entrées du calendrier et notes, seront définitivement supprimées.",
-        "recipesNote": "Les recettes que vous avez créées seront conservées mais ne seront plus liées à votre compte.",
-        "adminNote": "Si vous êtes l’admin d’un foyer avec d’autres membres, vous devez d’abord transférer les privilèges admin.",
+        "dataWarning": "Vos recettes et livres de cuisine sont supprimés, ainsi que vos notes, favoris, allergies, préférences, clés API, liens de partage, CalDAV et jetons de site.",
+        "recipesNote": "Votre foyer garde ses courses, magasins, garde-manger et planning des repas. Vos recettes au planning y restent sous forme de notes.",
+        "adminNote": "Si vous êtes l’admin du foyer, le membre le plus ancien prend le relais. Si vous en êtes le dernier membre, le foyer est supprimé avec tout son contenu.",
         "confirmButton": "Supprimer mon compte"
       }
     },

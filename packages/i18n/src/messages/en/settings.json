@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Delete account",
         "permanentWarning": "This action is permanent and cannot be undone!",
-        "dataWarning": "Your personal data including groceries, calendar entries, and notes will be permanently deleted.",
-        "recipesNote": "Recipes you created will be preserved but will no longer be linked to your account.",
-        "adminNote": "If you are the admin of a household with other members, you must transfer admin privileges first.",
+        "dataWarning": "Your recipes and cookbooks are deleted, along with your ratings, favorites, allergies, preferences, API keys, share links, CalDAV and site tokens.",
+        "recipesNote": "Your household keeps its groceries, stores, pantry and meal plan. Your recipes on the plan stay there as notes.",
+        "adminNote": "If you are the household admin, the longest-standing member takes over. If you are its last member, the household is deleted with everything in it.",
         "confirmButton": "Delete my account"
       }
     },

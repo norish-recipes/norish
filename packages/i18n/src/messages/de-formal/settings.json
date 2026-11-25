@@ -136,9 +136,9 @@
       "deleteModal": {
         "title": "Konto löschen",
         "permanentWarning": "Diese Aktion ist permanent und kann nicht rückgängig gemacht werden!",
-        "dataWarning": "Ihre persönlichen Daten, einschließlich Einkaufsliste, Kalendereinträge und Notizen, werden permanent gelöscht.",
-        "recipesNote": "Rezepte, die Sie erstellt haben, werden erhalten, aber nicht mehr mit Ihrem Konto verknüpft.",
-        "adminNote": "Wenn Sie Administrator eines Haushalts mit anderen Mitgliedern sind, müssen Sie die Admin-Berechtigung zunächst übertragen.",
+        "dataWarning": "Ihre Rezepte und Kochbücher werden gelöscht, ebenso Ihre Bewertungen, Favoriten, Allergien, Einstellungen, API-Schlüssel, Freigabelinks, CalDAV und Website-Tokens.",
+        "recipesNote": "Ihr Haushalt behält seine Einkaufsliste, Geschäfte, Vorratskammer und Essensplanung. Ihre Rezepte im Plan bleiben dort als Notizen.",
+        "adminNote": "Wenn Sie Administrator des Haushalts sind, übernimmt das am längsten dabei befindliche Mitglied. Sind Sie das letzte Mitglied, wird der Haushalt mit allem darin gelöscht.",
         "confirmButton": "Mein Konto löschen"
       }
     },
