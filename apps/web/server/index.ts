@@ -22,6 +22,7 @@ import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
 import { stopEmbeddedParser } from "@norish/shared-server/embedded-parser";
 import { serverLogger as log, redactUrl } from "@norish/shared-server/logger";
+import { resolveMasterKey } from "@norish/shared-server/master-key";
 import { startRealtimeHub } from "@norish/shared-server/realtime/hub";
 import { addBasePath, BASE_PATH } from "@norish/shared/lib/base-path";
 
@@ -37,6 +38,8 @@ async function main() {
   log.info("-".repeat(50));
 
   await runMigrations();
+  // Before the first step that encrypts, decrypts, signs or hashes.
+  await resolveMasterKey();
   log.info("-".repeat(50));
 
   // Before the config sync, which drops the fields an older release's settings still hold.

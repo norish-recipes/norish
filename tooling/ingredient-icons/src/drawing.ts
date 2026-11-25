@@ -10,6 +10,7 @@ import { resetDbConnection } from "@norish/db/drizzle";
 import { drawIngredientIcon } from "@norish/shared-server/ai/enrichment/ingredient-icon-drawer";
 import { AIError } from "@norish/shared-server/ai/runtime/errors";
 import { foodToDraw } from "@norish/shared-server/ingredients/icon-drafts";
+import { resolveMasterKey } from "@norish/shared-server/master-key";
 import { makeIngredientIcon, standsOnTile } from "@norish/shared-server/media/ingredient-icon";
 
 export function say(...parts: unknown[]): void {
@@ -74,9 +75,10 @@ export async function drawIcon(ingredientId: string, tier: ImageTier): Promise<B
   }
 }
 
-/** Run a script to its end: a failure is printed and sets the exit code, and the database is let go either way. */
+/** Run a script to its end, the Master Key opened first: a failure is printed and sets the exit code, and the database is let go either way. */
 export function run(main: () => Promise<void>): void {
-  main()
+  resolveMasterKey()
+    .then(main)
     .catch((error: unknown) => {
       process.stderr.write(`${error instanceof Error ? (error.stack ?? error.message) : error}\n`);
       process.exitCode = 1;

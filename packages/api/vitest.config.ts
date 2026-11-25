@@ -21,6 +21,7 @@ export default defineConfig({
     // The ingredient backfill's tests start a Postgres container.
     hookTimeout: 60000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
+    setupFiles: ["../config/__tests__/setup/master-key.ts"],
     env: {
       NODE_ENV: "development",
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",

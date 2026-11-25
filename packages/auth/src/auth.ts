@@ -9,7 +9,7 @@ import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 
 import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
-import { AUTH_SECRET, encrypt, hmacIndex, safeDecrypt } from "@norish/config/crypto";
+import { authSecret, encrypt, hmacIndex, safeDecrypt } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
@@ -302,7 +302,7 @@ function createBetterAuth() {
 
   return betterAuth({
     database: encryptedEmailAdapter,
-    secret: AUTH_SECRET,
+    secret: authSecret(),
     // A path in `baseURL` would replace `basePath`, so the prefix rides on `basePath` alone.
     baseURL: new URL(SERVER_CONFIG.AUTH_URL).origin,
     basePath: addBasePath("/api/auth"),

@@ -47,6 +47,7 @@
     "./lib/workspace-paths": "./src/lib/workspace-paths.ts",
     "./lib/operation-context": "./src/lib/operation-context.ts",
     "./lib/child-env": "./src/lib/child-env.ts",
+    "./master-key": "./src/master-key.ts",
     "./page-renderers": "./src/page-renderers.ts",
     "./private-addresses": "./src/private-addresses.ts",
     "./realtime/archive": "./src/realtime/archive.ts",
