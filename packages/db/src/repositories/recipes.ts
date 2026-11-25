@@ -302,7 +302,9 @@ export async function buildPolicyCondition(
 export async function accountViewCondition(userId: string, householdColumn: AnyPgColumn) {
   const level = await getRecipePolicyLevel("view");
 
-  return level === "household" ? inArray(householdColumn, currentHouseholdIdSql(userId)) : undefined;
+  return level === "household"
+    ? inArray(householdColumn, currentHouseholdIdSql(userId))
+    : undefined;
 }
 
 /** Whether the account, in its household now, may view the recipe. */

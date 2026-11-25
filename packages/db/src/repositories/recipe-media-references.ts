@@ -8,7 +8,11 @@ export class ForeignRecipeMediaError extends Error {
 const REMOTE = /^https?:\/\//i;
 
 /** Whether `url` is remote or one of this recipe's files: `/recipes/{id}/{file}`, a step's under `steps/`. */
-export function isOwnRecipeMedia(recipeId: string, url: string, place: "gallery" | "step"): boolean {
+export function isOwnRecipeMedia(
+  recipeId: string,
+  url: string,
+  place: "gallery" | "step"
+): boolean {
   if (REMOTE.test(url)) return true;
   const folder = place === "step" ? `/recipes/${recipeId}/steps/` : `/recipes/${recipeId}/`;
 

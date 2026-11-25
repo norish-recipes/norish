@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import {
   createRecipeShare,
   deleteRecipeShare,
@@ -19,13 +20,12 @@ import {
 } from "@norish/db/repositories/recipe-shares";
 import { setConfig } from "@norish/db/repositories/server-config";
 import * as schema from "@norish/db/schema";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import {
   createTestIngredient,
+  createTestRecipe,
   createTestRecipeIngredients,
   createTestRecipeShare,
-  createTestRecipe,
   createTestRecipeStep,
   createTestUser,
   getTestDb,
@@ -284,7 +284,10 @@ describe("recipe share repository", () => {
     const other = await createTestRecipe((await createTestUser()).id, { name: "Their soup" });
 
     await setView("everyone");
-    const created = await createRecipeShare(testUserId, { recipeId: other.id, expiresIn: "forever" });
+    const created = await createRecipeShare(testUserId, {
+      recipeId: other.id,
+      expiresIn: "forever",
+    });
     const token = created.url.replace("/share/", "");
 
     expect(await getActiveRecipeShareByToken(token)).not.toBeNull();
