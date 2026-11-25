@@ -82,13 +82,3 @@ export function hmacIndex(value: string): string {
 export function hashToken(token: string): string {
   return crypto.createHmac("sha256", keys().hmac).update(token).digest("hex");
 }
-
-export function safeDecrypt(value: string | null | undefined): string | null {
-  if (!value) return null;
-
-  try {
-    return decrypt(value);
-  } catch {
-    return value;
-  }
-}

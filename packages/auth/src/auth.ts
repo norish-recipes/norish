@@ -9,13 +9,13 @@ import { nextCookies } from "better-auth/next-js";
 import { genericOAuth } from "better-auth/plugins";
 
 import type { ApiKeyAuthService } from "@norish/shared/contracts/dto/auth";
-import { authSecret, encrypt, hmacIndex, safeDecrypt } from "@norish/config/crypto";
+import { authSecret, decrypt, encrypt, hmacIndex } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { setApiKeyAuthService } from "@norish/db/repositories/api-keys";
 import { setConfig } from "@norish/db/repositories/server-config";
-import { countUsers } from "@norish/db/repositories/users";
+import { countUsers, getAdapterUserById } from "@norish/db/repositories/users";
 import * as schema from "@norish/db/schema/auth";
 import { isRegistrationEnabled } from "@norish/shared-server/config/server-config-loader";
 import { authLogger } from "@norish/shared-server/logger";
@@ -49,9 +49,9 @@ import { valkeySecondaryStorage } from "./secondary-storage";
  * but we store encrypted emails. This wrapper converts email lookups
  * to use the deterministic emailHmac field instead.
  *
- * The user it finds by email, or joined onto an account (an OAuth sign-in),
- * comes back decrypted: Better Auth compares the provider's verified email
- * with it to mark the user verified, and seeds the session with it.
+ * Rows come back as Postgres holds them, encrypted, but for two emails Better Auth compares: a
+ * user found by email carries the address searched for, and a user joined onto an account
+ * (an OAuth sign-in) its decrypted email, checked against the provider's verified one.
  */
 function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
   baseAdapterFactory: (options: T) => DBAdapter<T>
@@ -61,61 +61,72 @@ function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
 
     return {
       ...baseAdapter,
-      findOne: async (params) => {
+      findOne: async <R>(params: Parameters<DBAdapter<T>["findOne"]>[0]) => {
         if (params.model === "user" && params.where) {
           const emailWhere = params.where.find(
             (w: Where) => w.field === "email" && w.value && typeof w.value === "string"
           );
 
           if (emailWhere) {
-            // Lookup by email - convert to emailHmac
-            const emailHmacValue = hmacIndex(emailWhere.value as string);
+            const email = emailWhere.value as string;
             const modifiedWhere = params.where.map((w: Where) =>
-              w.field === "email" ? { ...w, field: "emailHmac", value: emailHmacValue } : w
+              w.field === "email" ? { ...w, field: "emailHmac", value: hmacIndex(email) } : w
             );
+            const user = await baseAdapter.findOne<R>({ ...params, where: modifiedWhere });
 
-            return decryptUser(
-              await baseAdapter.findOne({
-                ...params,
-                where: modifiedWhere,
-              })
-            );
+            // The HMAC matched this address, and Better Auth drops a user whose email differs.
+            return user && { ...user, email };
           }
         }
 
-        const result = await baseAdapter.findOne(params);
-
-        return params.model === "account" ? decryptJoinedUser(result) : result;
+        return baseAdapter.findOne<R>(params);
       },
       // Better Auth finds the owner of an OAuth account with a findMany joined
       // onto the user.
       findMany: async <R>(params: Parameters<DBAdapter<T>["findMany"]>[0]) => {
         const results = await baseAdapter.findMany<R>(params);
 
-        return params.model === "account" ? results.map((row) => decryptJoinedUser(row)) : results;
+        return params.model === "account" ? results.map(withJoinedUserEmail) : results;
       },
     };
   };
 }
 
-function decryptJoinedUser<T>(row: T): T {
-  if (row && typeof row === "object" && "user" in row) {
-    return { ...row, user: decryptUser(row.user) };
+function withJoinedUserEmail<R>(row: R): R {
+  if (row && typeof row === "object" && "user" in row && isStoredUser(row.user)) {
+    return { ...row, user: { ...row.user, email: decrypt(row.user.email) } };
   }
 
   return row;
 }
 
-// Helper to decrypt user object fields
-function decryptUser(user: any): any {
-  if (!user) return user;
+type StoredUser = { id: string; email: string; name?: string | null; image?: string | null };
 
-  return {
-    ...user,
-    email: safeDecrypt(user.email),
-    name: safeDecrypt(user.name),
-    image: safeDecrypt(user.image),
-  };
+function isStoredUser(user: unknown): user is StoredUser {
+  return Boolean(user && typeof user === "object" && "id" in user && "email" in user);
+}
+
+// Nothing stored is empty encrypted, as the user hooks below write it.
+const decryptStored = (value: string | null | undefined) => (value ? decrypt(value) : value);
+
+/**
+ * The user's email, name and image in plain text, read from ciphertext only: a session fetch's
+ * user is the session store's copy, still encrypted, and any other response's is read again.
+ */
+async function plainUserFields(path: string, user: StoredUser) {
+  if (path === "/get-session") {
+    return {
+      email: decryptStored(user.email),
+      name: decryptStored(user.name),
+      image: decryptStored(user.image),
+    };
+  }
+
+  const stored = await getAdapterUserById(user.id);
+
+  if (!stored) throw new Error("The user this response names is gone");
+
+  return { email: stored.email, name: stored.name, image: stored.image };
 }
 
 // Norish reads a provider's tokens while signing in and never calls the provider after, so
@@ -538,19 +549,12 @@ function createBetterAuth() {
       after: createAuthMiddleware(async (ctx) => {
         const returned = ctx.context.returned;
 
-        if (!returned || typeof returned !== "object") return;
+        if (returned && typeof returned === "object" && "user" in returned) {
+          const { user } = returned;
 
-        if ("user" in returned && returned.user) {
-          (returned as any).user = decryptUser(returned.user);
-        }
-
-        if (
-          "session" in returned &&
-          returned.session &&
-          typeof returned.session === "object" &&
-          "user" in returned.session
-        ) {
-          (returned.session as any).user = decryptUser((returned.session as any).user);
+          if (isStoredUser(user)) {
+            returned.user = { ...user, ...(await plainUserFields(ctx.path, user)) };
+          }
         }
       }),
     },

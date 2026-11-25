@@ -42,14 +42,33 @@ vi.mock("@norish/db/repositories/server-config", () => ({
   setConfig: vi.fn(),
   getConfig: async (key: string) => serverConfig[key] ?? null,
 }));
-vi.mock("@norish/db/repositories/users", () => ({
-  countUsers: vi.fn().mockResolvedValue(2),
-  isUserServerOwner: async () => false,
-  setUserAdminStatus: async (userId: string, isAdmin: boolean) => {
-    if (isAdmin) admins.add(userId);
-    else admins.delete(userId);
-  },
-}));
+vi.mock("@norish/db/repositories/users", async () => {
+  const { decrypt } = await import("@norish/config/crypto");
+  const open = (value: string | null) => (value ? decrypt(value) : null);
+
+  return {
+    countUsers: vi.fn().mockResolvedValue(2),
+    // The repository's read, of the row the memory adapter holds in place of Postgres.
+    getAdapterUserById: async (userId: string) => {
+      const rows = store.user as { id: string; email: string; name: string; image: string }[];
+      const user = rows.find((row) => row.id === userId);
+
+      return (
+        user && {
+          ...user,
+          email: decrypt(user.email),
+          name: open(user.name),
+          image: open(user.image),
+        }
+      );
+    },
+    isUserServerOwner: async () => false,
+    setUserAdminStatus: async (userId: string, isAdmin: boolean) => {
+      if (isAdmin) admins.add(userId);
+      else admins.delete(userId);
+    },
+  };
+});
 vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdForUser: vi.fn(),
   deleteAccount: vi.fn(async () => ({
