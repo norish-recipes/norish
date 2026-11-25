@@ -13,7 +13,7 @@ import { upgradeOAuthTokens } from "./before-0-26-oauth-tokens";
 import { upgradeHouseholdLists } from "./before-0-28-household-lists";
 
 /** Raised when a release adds an upgrade, so every instance runs the data upgrades once more. */
-export const UPGRADES_VERSION = 2;
+export const UPGRADES_VERSION = 1;
 
 /** Settings in an older shape, before the config sync drops the fields it does not know. */
 export async function upgradeSettingsFromOlderReleases(): Promise<void> {
@@ -21,7 +21,8 @@ export async function upgradeSettingsFromOlderReleases(): Promise<void> {
   await upgradePromptCopies();
 }
 
-/** Older releases' files and rows, once per `UPGRADES_VERSION`, after the first catalogue seed. */
+/** Older releases' files and rows, once per `UPGRADES_VERSION`, after the first catalogue seed;
+ * the 0.28 list fold at every boot until it is done. */
 export async function upgradeDataFromOlderReleases(): Promise<void> {
   await runOnBoot(
     () =>
@@ -31,9 +32,8 @@ export async function upgradeDataFromOlderReleases(): Promise<void> {
           const dishColours = await upgradeDishColours();
           const ingredients = await upgradeIngredients();
           const oauthTokens = await upgradeOAuthTokens();
-          const listEntries = await upgradeHouseholdLists();
 
-          return { pictures, dishColours, oauthTokens, listEntries, ...ingredients };
+          return { pictures, dishColours, oauthTokens, ...ingredients };
         },
         changed: ({ rows, links }) => rows + links > 0,
         done: "Upgraded data from older releases",
@@ -43,4 +43,10 @@ export async function upgradeDataFromOlderReleases(): Promise<void> {
       failed: "Upgrading data from older releases failed",
     }
   );
+  // Every boot until no name waits for its fold, whatever the steps above did: until then a
+  // waiting name matches no filter or write by its fold (ticket 05, Comments).
+  await runOnBoot(upgradeHouseholdLists, {
+    skipped: "No list names from before 0.28 wait for their fold",
+    failed: "Folding list names from before 0.28 failed",
+  });
 }
