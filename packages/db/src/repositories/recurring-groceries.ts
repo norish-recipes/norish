@@ -19,6 +19,7 @@ import { getTodayString, shouldBeActive } from "@norish/shared/lib/recurrence/ca
 import type { CreatedGroceries } from "./groceries";
 import type { MutationOutcome } from "./mutation-outcomes";
 import { createGroceries } from "./groceries";
+import { assertOwnReferences, householdRow } from "./household-rows";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export type RecurringGroceryDto = z.output<typeof RecurringGrocerySelectBaseSchema>;
@@ -28,11 +29,14 @@ export type RecurringGroceryUpdateDto = z.input<typeof RecurringGroceryUpdateBas
 /** Thrown inside a transaction to roll back a version-guarded write that matched zero rows. */
 class StaleWriteError extends Error {}
 
-export async function getRecurringGroceryById(id: string): Promise<RecurringGroceryDto | null> {
+export async function getRecurringGroceryById(
+  id: string,
+  householdId: string
+): Promise<RecurringGroceryDto | null> {
   const [row] = await db
     .select()
     .from(recurringGroceries)
-    .where(eq(recurringGroceries.id, id))
+    .where(householdRow(recurringGroceries, householdId, id))
     .limit(1);
 
   if (!row) return null;
@@ -40,21 +44,6 @@ export async function getRecurringGroceryById(id: string): Promise<RecurringGroc
   const parsed = RecurringGrocerySelectBaseSchema.safeParse(row);
 
   if (!parsed.success) throw new Error("Failed to parse recurring grocery by id");
-
-  return parsed.data;
-}
-
-export async function getRecurringGroceriesByIds(ids: string[]): Promise<RecurringGroceryDto[]> {
-  if (ids.length === 0) return [];
-
-  const rows = await db
-    .select()
-    .from(recurringGroceries)
-    .where(inArray(recurringGroceries.id, ids));
-
-  const parsed = z.array(RecurringGrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse recurring groceries by ids");
 
   return parsed.data;
 }
@@ -90,6 +79,9 @@ export async function createRecurringGroceries(
   tx: Db = db
 ): Promise<CreatedRecurringGroceries> {
   return await tx.transaction(async (trx) => {
+    if (items.some(({ recurring }) => recurring.householdId !== householdId)) {
+      throw new Error("Recurring groceries are created in the household they are listed for");
+    }
     const rows = await trx
       .insert(recurringGroceries)
       .values(
@@ -124,7 +116,8 @@ export async function createRecurringGroceries(
 }
 
 export async function updateRecurringGrocery(
-  data: RecurringGroceryUpdateDto
+  data: RecurringGroceryUpdateDto,
+  householdId: string
 ): Promise<RecurringGroceryDto | null> {
   const updateData = {
     ...data,
@@ -132,16 +125,10 @@ export async function updateRecurringGrocery(
     updatedAt: new Date(),
   };
 
-  const whereConditions = [eq(recurringGroceries.id, data.id!)];
-
-  if (data.version) {
-    whereConditions.push(eq(recurringGroceries.version, data.version));
-  }
-
   const [row] = await db
     .update(recurringGroceries)
     .set({ ...updateData, version: sql`${recurringGroceries.version} + 1` })
-    .where(and(...whereConditions))
+    .where(householdRow(recurringGroceries, householdId, data.id, data.version))
     .returning();
 
   if (!row) return null;
@@ -153,23 +140,8 @@ export async function updateRecurringGrocery(
   return parsed.data;
 }
 
-export async function updateRecurringGroceries(
-  dataList: RecurringGroceryUpdateDto[]
-): Promise<RecurringGroceryDto[]> {
-  const results: RecurringGroceryDto[] = [];
-
-  for (const data of dataList) {
-    const result = await updateRecurringGrocery(data);
-
-    if (result) {
-      results.push(result);
-    }
-  }
-
-  return results;
-}
-
 export async function updateRecurringGroceryWithGrocery(
+  householdId: string,
   recurringData: RecurringGroceryUpdateDto,
   groceryRef: {
     id: string;
@@ -187,16 +159,13 @@ export async function updateRecurringGroceryWithGrocery(
 
   try {
     const result = await tx.transaction(async (trx) => {
-      const recurringWhere = [eq(recurringGroceries.id, recurringData.id!)];
-
-      if (recurringData.version) {
-        recurringWhere.push(eq(recurringGroceries.version, recurringData.version));
-      }
-
+      await assertOwnReferences(householdId, { storeIds: [groceryRef.storeId] }, trx);
       const [recurringRow] = await trx
         .update(recurringGroceries)
         .set({ ...updateData, version: sql`${recurringGroceries.version} + 1` })
-        .where(and(...recurringWhere))
+        .where(
+          householdRow(recurringGroceries, householdId, recurringData.id, recurringData.version)
+        )
         .returning();
 
       if (!recurringRow) throw new StaleWriteError();
@@ -223,13 +192,7 @@ export async function updateRecurringGroceryWithGrocery(
       const [groceryRow] = await trx
         .update(groceries)
         .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
-        .where(
-          and(
-            eq(groceries.id, groceryRef.id),
-            eq(groceries.version, groceryRef.version),
-            eq(groceries.householdId, recurringRow.householdId)
-          )
-        )
+        .where(householdRow(groceries, householdId, groceryRef.id, groceryRef.version))
         .returning();
 
       if (!groceryRow) throw new StaleWriteError();
@@ -249,6 +212,7 @@ export async function updateRecurringGroceryWithGrocery(
 }
 
 export async function detachRecurringGrocery(
+  householdId: string,
   input: {
     recurringGroceryId: string;
     recurringVersion: number;
@@ -272,15 +236,18 @@ export async function detachRecurringGrocery(
 
   try {
     const grocery = await tx.transaction(async (trx) => {
+      await assertOwnReferences(householdId, { storeIds: [input.grocery.storeId] }, trx);
       const deleted = await trx
         .delete(recurringGroceries)
         .where(
-          and(
-            eq(recurringGroceries.id, input.recurringGroceryId),
-            eq(recurringGroceries.version, input.recurringVersion)
+          householdRow(
+            recurringGroceries,
+            householdId,
+            input.recurringGroceryId,
+            input.recurringVersion
           )
         )
-        .returning({ householdId: recurringGroceries.householdId });
+        .returning({ id: recurringGroceries.id });
 
       if (!deleted[0]) throw new StaleWriteError();
 
@@ -289,13 +256,7 @@ export async function detachRecurringGrocery(
       const [row] = await trx
         .update(groceries)
         .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
-        .where(
-          and(
-            eq(groceries.id, input.grocery.id),
-            eq(groceries.version, input.grocery.version),
-            eq(groceries.householdId, deleted[0].householdId)
-          )
-        )
+        .where(householdRow(groceries, householdId, input.grocery.id, input.grocery.version))
         .returning();
 
       if (!row) throw new StaleWriteError();
@@ -333,13 +294,7 @@ export async function checkRecurringGrocery(input: {
       const [groceryRow] = await trx
         .update(groceries)
         .set({ isDone: input.isDone, version: sql`${groceries.version} + 1` })
-        .where(
-          and(
-            eq(groceries.id, input.groceryId),
-            eq(groceries.version, input.groceryVersion),
-            eq(groceries.householdId, input.householdId)
-          )
-        )
+        .where(householdRow(groceries, input.householdId, input.groceryId, input.groceryVersion))
         .returning();
 
       if (!groceryRow) throw new StaleWriteError();
@@ -360,10 +315,11 @@ export async function checkRecurringGrocery(input: {
             version: sql`${recurringGroceries.version} + 1`,
           })
           .where(
-            and(
-              eq(recurringGroceries.id, input.recurringUpdate.id),
-              eq(recurringGroceries.version, input.recurringUpdate.version),
-              eq(recurringGroceries.householdId, input.householdId)
+            householdRow(
+              recurringGroceries,
+              input.householdId,
+              input.recurringUpdate.id,
+              input.recurringUpdate.version
             )
           )
           .returning();
@@ -388,6 +344,7 @@ export async function checkRecurringGrocery(input: {
 }
 
 export async function deleteRecurringGroceryById(
+  householdId: string,
   id: string,
   version?: number
 ): Promise<{ stale: boolean; deletedGroceryIds: string[] }> {
@@ -397,17 +354,11 @@ export async function deleteRecurringGroceryById(
     const linked = await trx
       .select({ id: groceries.id })
       .from(groceries)
-      .where(eq(groceries.recurringGroceryId, id));
-
-    const whereConditions = [eq(recurringGroceries.id, id)];
-
-    if (version) {
-      whereConditions.push(eq(recurringGroceries.version, version));
-    }
+      .where(and(eq(groceries.recurringGroceryId, id), eq(groceries.householdId, householdId)));
 
     const deletedRows = await trx
       .delete(recurringGroceries)
-      .where(and(...whereConditions))
+      .where(householdRow(recurringGroceries, householdId, id, version))
       .returning({ id: recurringGroceries.id });
 
     if (deletedRows.length === 0) {
@@ -417,16 +368,25 @@ export async function deleteRecurringGroceryById(
     const linkedIds = linked.map((g) => g.id);
 
     if (linkedIds.length > 0) {
-      await trx.delete(groceries).where(inArray(groceries.id, linkedIds));
+      await trx
+        .delete(groceries)
+        .where(and(inArray(groceries.id, linkedIds), eq(groceries.householdId, householdId)));
     }
 
     return { stale: false, deletedGroceryIds: linkedIds };
   });
 }
 
-export async function deleteRecurringGroceryByIds(ids: string[]): Promise<void> {
+export async function deleteRecurringGroceryByIds(
+  ids: string[],
+  householdId: string
+): Promise<void> {
   if (ids.length === 0) return;
-  await db.delete(recurringGroceries).where(inArray(recurringGroceries.id, ids));
+  await db
+    .delete(recurringGroceries)
+    .where(
+      and(inArray(recurringGroceries.id, ids), eq(recurringGroceries.householdId, householdId))
+    );
 }
 
 export type DueRecurringGrocery = {
@@ -484,7 +444,12 @@ export async function getDueRecurringGroceries(): Promise<DueRecurringGrocery[]>
     const [groceryRow] = await db
       .select()
       .from(groceries)
-      .where(eq(groceries.recurringGroceryId, recurringRow.id))
+      .where(
+        and(
+          eq(groceries.recurringGroceryId, recurringRow.id),
+          eq(groceries.householdId, recurringRow.householdId)
+        )
+      )
       .limit(1);
 
     if (!groceryRow) {
@@ -523,14 +488,12 @@ export async function getDueRecurringGroceries(): Promise<DueRecurringGrocery[]>
   return results;
 }
 
-/**
- * Uncheck a grocery item by setting isDone to false.
- */
-export async function uncheckGrocery(groceryId: string): Promise<void> {
+/** Uncheck the household's grocery. */
+export async function uncheckGrocery(groceryId: string, householdId: string): Promise<void> {
   await db
     .update(groceries)
     .set({ isDone: false, version: sql`${groceries.version} + 1` })
-    .where(eq(groceries.id, groceryId));
+    .where(householdRow(groceries, householdId, groceryId));
 }
 
 /** The household a recurring grocery belongs to, for the household guard. */

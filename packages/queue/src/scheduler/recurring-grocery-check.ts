@@ -26,7 +26,7 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
     for (const item of dueItems) {
       try {
         // Uncheck the grocery
-        await uncheckGrocery(item.grocery.id);
+        await uncheckGrocery(item.grocery.id, item.recurringGrocery.householdId);
 
         // Calculate next occurrence
         const pattern = recurrencePatternOf(item.recurringGrocery);
@@ -38,11 +38,14 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
         );
 
         // Update the recurring grocery with new dates
-        await updateRecurringGrocery({
-          id: item.recurringGrocery.id,
-          nextPlannedFor: nextDate,
-          lastCheckedDate: item.recurringGrocery.nextPlannedFor,
-        });
+        await updateRecurringGrocery(
+          {
+            id: item.recurringGrocery.id,
+            nextPlannedFor: nextDate,
+            lastCheckedDate: item.recurringGrocery.nextPlannedFor,
+          },
+          item.recurringGrocery.householdId
+        );
 
         // The row's own household, whoever added it.
         void groceries.publish(

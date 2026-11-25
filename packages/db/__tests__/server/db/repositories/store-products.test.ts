@@ -594,7 +594,7 @@ describe("store products, product links and misses", () => {
       await upsertProductLink(storeId, await ingredient("kaas"), product.id);
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
-      await deleteStore(storeId, store!.version, false, []);
+      await deleteStore(testHouseholdOf(userId), storeId, store!.version, false, []);
 
       await expect(getStoreProductById(product.id)).resolves.toBeNull();
       await expect(getTestDb().select().from(storeProductLinks)).resolves.toEqual([]);

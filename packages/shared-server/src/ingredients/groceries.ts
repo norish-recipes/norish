@@ -7,10 +7,23 @@ import type { ResolveActor } from "./resolver";
 import { cleanIngredientText, resolveIngredients, typedParts } from "./resolver";
 
 /** A grocery's name as written, the recipe line it was added from, and the grocery it edits, if any. */
-export interface GroceryName {
+export type GroceryName = {
   name: string | null;
   recipeIngredientId?: string | null;
-  groceryId?: string | null;
+} & ({ groceryId?: null } | { groceryId: string; householdId: string });
+
+/** The groceries edits name, read in their own households. */
+async function editedFoods(items: readonly GroceryName[]) {
+  const edited = new Map<string, { name: string | null; food: IngredientRef | null }>();
+  const edits = items.flatMap((item) => (item.groceryId ? [item] : []));
+
+  for (const householdId of new Set(edits.map((edit) => edit.householdId))) {
+    const ids = edits.flatMap((edit) => (edit.householdId === householdId ? [edit.groceryId] : []));
+
+    for (const [id, food] of await findGroceryFoods(ids, householdId)) edited.set(id, food);
+  }
+
+  return edited;
 }
 
 /** The food an item keeps, if any: an edit's unchanged text, or a one-food line's own text. */
@@ -21,7 +34,7 @@ async function keptFoods(
     findRecipeLineAliases(
       items.flatMap((item) => (item.recipeIngredientId ? [item.recipeIngredientId] : []))
     ),
-    findGroceryFoods(items.flatMap((item) => (item.groceryId ? [item.groceryId] : []))),
+    editedFoods(items),
   ]);
 
   return items.map((item) => {

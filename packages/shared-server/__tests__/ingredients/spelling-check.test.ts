@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { withTransaction } from "@norish/db/drizzle";
-import { updateGrocery } from "@norish/db/repositories/groceries";
+import { updateGroceries } from "@norish/db/repositories/groceries";
 import { addIngredientAliases } from "@norish/db/repositories/ingredient-aliases";
 import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import {
@@ -379,11 +379,10 @@ describe("AI checks the spellings added to a seeded food", () => {
     await getTestDb().transaction((tx) =>
       writeRecipeLineFoodsTx(tx, [{ id: edited.id, aliasIds: [thighSpelling!.id] }])
     );
-    await updateGrocery({
-      id: repointed.id,
-      ingredientAliasId: thighSpelling!.id,
-      ingredientId: thigh,
-    });
+    await updateGroceries(
+      [{ id: repointed.id, ingredientAliasId: thighSpelling!.id, ingredientId: thigh }],
+      testHouseholdOf(userId)
+    );
     const [change] = await listAIChangesFor(actor);
 
     await undoAIChange(actor, change!.id);

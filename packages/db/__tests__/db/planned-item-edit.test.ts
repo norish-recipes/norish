@@ -71,10 +71,10 @@ describe("editPlannedItem", () => {
   ] as const)("%s: stored together, bumped once", async (_, edit, expected) => {
     const soup = await plan("Dinner", "Soup");
 
-    const result = await editPlannedItem(soup.id, edit, soup.version);
+    const result = await editPlannedItem(testHouseholdOf(userId), soup.id, edit, soup.version);
 
     expect(result.stale).toBe(false);
-    expect(await getPlannedItemById(soup.id)).toMatchObject({
+    expect(await getPlannedItemById(soup.id, testHouseholdOf(userId))).toMatchObject({
       ...expected,
       version: soup.version + 1,
     });
@@ -83,17 +83,25 @@ describe("editPlannedItem", () => {
   it("nothing: writes nothing and keeps the version", async () => {
     const soup = await plan("Dinner", "Soup");
 
-    const result = await editPlannedItem(soup.id, {}, soup.version);
+    const result = await editPlannedItem(testHouseholdOf(userId), soup.id, {}, soup.version);
 
     expect(result).toMatchObject({ stale: false, value: { version: soup.version } });
-    expect(await getPlannedItemById(soup.id)).toMatchObject({ title: "Soup", version: 1 });
+    expect(await getPlannedItemById(soup.id, testHouseholdOf(userId))).toMatchObject({
+      title: "Soup",
+      version: 1,
+    });
   });
 
   it("a date or slot named as it is moves nothing", async () => {
     const soup = await plan("Dinner", "Soup");
 
     await plan("Dinner", "Salad");
-    await editPlannedItem(soup.id, { title: "Leek soup", date, slot: "Dinner" }, soup.version);
+    await editPlannedItem(
+      testHouseholdOf(userId),
+      soup.id,
+      { title: "Leek soup", date, slot: "Dinner" },
+      soup.version
+    );
 
     expect(await titlesIn(date, "Dinner")).toEqual([
       ["Leek soup", 0],
@@ -106,7 +114,12 @@ describe("editPlannedItem", () => {
 
     await plan("Dinner", "Salad");
     await plan("Lunch", "Toast", nextDay);
-    await editPlannedItem(soup.id, { title: "Leek soup", date: nextDay, slot: "Lunch" }, 1);
+    await editPlannedItem(
+      testHouseholdOf(userId),
+      soup.id,
+      { title: "Leek soup", date: nextDay, slot: "Lunch" },
+      1
+    );
 
     expect(await titlesIn(date, "Dinner")).toEqual([["Salad", 0]]);
     expect(await titlesIn(nextDay, "Lunch")).toEqual([
@@ -119,13 +132,14 @@ describe("editPlannedItem", () => {
     const soup = await plan("Dinner", "Soup");
 
     const result = await editPlannedItem(
+      testHouseholdOf(userId),
       soup.id,
       { title: "Leek soup", date: nextDay, slot: "Lunch" },
       soup.version + 1
     );
 
     expect(result.stale).toBe(true);
-    expect(await getPlannedItemById(soup.id)).toMatchObject({
+    expect(await getPlannedItemById(soup.id, testHouseholdOf(userId))).toMatchObject({
       title: "Soup",
       date,
       slot: "Dinner",
@@ -135,6 +149,7 @@ describe("editPlannedItem", () => {
 
   it("is stale for a removed item", async () => {
     const result = await editPlannedItem(
+      testHouseholdOf(userId),
       "00000000-0000-4000-8000-000000000001",
       { title: "Leek soup" },
       1
@@ -152,26 +167,31 @@ describe("two writes at one version", () => {
     await plan("Dinner", "Salad");
     await plan("Lunch", "Toast", nextDay);
     // The pool is reset per suite: warm two connections so the writes really overlap.
-    await Promise.all([getPlannedItemById(soup.id), getPlannedItemById(soup.id)]);
+    await Promise.all([
+      getPlannedItemById(soup.id, testHouseholdOf(userId)),
+      getPlannedItemById(soup.id, testHouseholdOf(userId)),
+    ]);
     const results = await Promise.all(writes(soup.id));
 
     expect(results.map(({ stale }) => stale).sort()).toEqual([false, true]);
     expect((await titlesIn(nextDay, "Lunch")).map(([, sortOrder]) => sortOrder)).toEqual([0, 1]);
     expect(await titlesIn(date, "Dinner")).toEqual([["Salad", 0]]);
-    expect(await getPlannedItemById(soup.id)).toMatchObject({ version: 2 });
+    expect(await getPlannedItemById(soup.id, testHouseholdOf(userId))).toMatchObject({
+      version: 2,
+    });
   }
 
   it("an edit and a move: one applies, the other writes nothing", async () => {
     await race((id) => [
-      editPlannedItem(id, { date: nextDay, slot: "Lunch" }, 1),
-      moveItem(id, nextDay, "Lunch", 0, 1),
+      editPlannedItem(testHouseholdOf(userId), id, { date: nextDay, slot: "Lunch" }, 1),
+      moveItem(testHouseholdOf(userId), id, nextDay, "Lunch", 0, 1),
     ]);
   });
 
   it("two moves: one applies, the other writes nothing", async () => {
     await race((id) => [
-      moveItem(id, nextDay, "Lunch", 0, 1),
-      moveItem(id, nextDay, "Lunch", 1, 1),
+      moveItem(testHouseholdOf(userId), id, nextDay, "Lunch", 0, 1),
+      moveItem(testHouseholdOf(userId), id, nextDay, "Lunch", 1, 1),
     ]);
   });
 });
@@ -203,8 +223,8 @@ describe("two writes renumbering one slot", () => {
 
     await plan("Dinner", "Bread");
     await overlap(() => [
-      moveItem(soup.id, nextDay, "Lunch", 0),
-      moveItem(salad.id, nextDay, "Breakfast", 0),
+      moveItem(testHouseholdOf(userId), soup.id, nextDay, "Lunch", 0),
+      moveItem(testHouseholdOf(userId), salad.id, nextDay, "Breakfast", 0),
     ]);
   });
 
@@ -215,8 +235,8 @@ describe("two writes renumbering one slot", () => {
     await plan("Lunch", "Wrap", nextDay);
     await plan("Lunch", "Fruit", nextDay);
     await overlap(() => [
-      moveItem(soup.id, nextDay, "Lunch"),
-      moveItem(toast.id, nextDay, "Lunch"),
+      moveItem(testHouseholdOf(userId), soup.id, nextDay, "Lunch"),
+      moveItem(testHouseholdOf(userId), toast.id, nextDay, "Lunch"),
     ]);
   });
 
@@ -224,7 +244,10 @@ describe("two writes renumbering one slot", () => {
     const soup = await plan("Dinner", "Soup");
 
     await plan("Lunch", "Wrap", nextDay);
-    await overlap(() => [moveItem(soup.id, nextDay, "Lunch", 0), plan("Lunch", "Pie", nextDay)]);
+    await overlap(() => [
+      moveItem(testHouseholdOf(userId), soup.id, nextDay, "Lunch", 0),
+      plan("Lunch", "Pie", nextDay),
+    ]);
   });
 
   it("a delete against a move out of its slot", async () => {
@@ -233,7 +256,10 @@ describe("two writes renumbering one slot", () => {
     await overlap(() => {
       const write = Promise.all([plan("Dinner", "Soup"), plan("Dinner", "Salad")]).then(
         ([soup, salad]) =>
-          Promise.all([deletePlannedItem(soup.id), moveItem(salad.id, nextDay, "Lunch", 0)])
+          Promise.all([
+            deletePlannedItem(soup.id, testHouseholdOf(userId)),
+            moveItem(testHouseholdOf(userId), salad.id, nextDay, "Lunch", 0),
+          ])
       );
 
       return [write];

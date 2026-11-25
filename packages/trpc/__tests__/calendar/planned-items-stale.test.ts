@@ -9,6 +9,7 @@ import {
   deletePlannedItem,
   editPlannedItem,
   getPlannedItemById,
+  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
@@ -51,6 +52,7 @@ describe("calendar planned items stale handling", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    getPlannedItemHouseholdId.mockResolvedValue(ctx.householdId);
     getPlannedItemById.mockResolvedValue(createPlannedItem());
     assertHouseholdAccess.mockReturnValue(undefined);
   });
@@ -117,7 +119,14 @@ describe("calendar planned items stale handling", () => {
       targetSlot: item.slot as "Breakfast",
     });
 
-    expect(moveItem).toHaveBeenCalledWith(item.id, item.date, item.slot, undefined, item.version);
+    expect(moveItem).toHaveBeenCalledWith(
+      ctx.householdId,
+      item.id,
+      item.date,
+      item.slot,
+      undefined,
+      item.version
+    );
   });
 
   it("logs stale deleteItem mutations as no-ops", async () => {

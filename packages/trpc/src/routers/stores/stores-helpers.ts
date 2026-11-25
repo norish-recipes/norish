@@ -19,18 +19,29 @@ export type StoreProcedureContext = {
 };
 
 /**
- * A Store belongs to one household; its products, links and the groceries
- * filed under it follow it exactly. Every procedure handed a store id — to
- * price under, link to, or file a grocery in — holds it to this.
+ * A Store belongs to one household; its products, links and the groceries filed under it follow it
+ * exactly. Whether the Store exists, refusing one of another household.
  */
-export async function assertStoreAccess(
-  ctx: Pick<StoreProcedureContext, "user" | "householdId">,
+export async function storeExistsForHousehold(
+  ctx: Pick<StoreProcedureContext, "householdId">,
   storeId: string
-): Promise<void> {
+): Promise<boolean> {
   const householdId = await getStoreHouseholdId(storeId);
 
-  if (!householdId) throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
+  if (!householdId) return false;
   assertHouseholdAccess(ctx.householdId, householdId);
+
+  return true;
+}
+
+/** Every procedure handed a store id (to price under, link to, or file a grocery in) holds it to this. */
+export async function assertStoreAccess(
+  ctx: Pick<StoreProcedureContext, "householdId">,
+  storeId: string
+): Promise<void> {
+  if (!(await storeExistsForHousehold(ctx, storeId))) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
+  }
 }
 
 export async function listStoresData(ctx: StoreProcedureContext) {

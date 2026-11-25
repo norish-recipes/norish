@@ -8,7 +8,7 @@ import type {
   GroceryUpdateDto,
 } from "@norish/shared/contracts/dto/groceries";
 import { db, holdLock } from "@norish/db/drizzle";
-import { groceries, recipeIngredients, recipes, recurringGroceries } from "@norish/db/schema";
+import { groceries, recipeIngredients, recipes } from "@norish/db/schema";
 import {
   GroceryInsertBaseSchema,
   GrocerySelectBaseSchema,
@@ -16,18 +16,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import type { IngredientRef } from "./ingredient-aliases";
-
-export async function getGroceryById(id: string): Promise<GroceryDto | null> {
-  const [row] = await db.select().from(groceries).where(eq(groceries.id, id)).limit(1);
-
-  if (!row) return null;
-
-  const parsed = GrocerySelectBaseSchema.safeParse(row);
-
-  if (!parsed.success) throw new Error("Failed to parse grocery by id");
-
-  return parsed.data;
-}
+import { assertOwnReferences, householdRow, householdRows } from "./household-rows";
 
 /** The grocery last added under this name, on anyone's list. */
 export async function findNewestGroceryNamed(name: string): Promise<GroceryDto | null> {
@@ -41,10 +30,13 @@ export async function findNewestGroceryNamed(name: string): Promise<GroceryDto |
   return row ? GrocerySelectBaseSchema.parse(row) : null;
 }
 
-export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
+export async function getGroceriesByIds(ids: string[], householdId: string): Promise<GroceryDto[]> {
   if (ids.length === 0) return [];
 
-  const rows = await db.select().from(groceries).where(inArray(groceries.id, ids));
+  const rows = await db
+    .select()
+    .from(groceries)
+    .where(householdRows(groceries, householdId, ids));
 
   const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
 
@@ -53,26 +45,22 @@ export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
   return parsed.data;
 }
 
-/**
- * Groceries' (or recurring groceries') texts and the food each names, by id; one naming no
- * food has none (ADR-0037).
- */
+/** The household's groceries' texts and the food each names, by id; one naming no food has none (ADR-0037). */
 export async function findGroceryFoods(
   ids: readonly string[],
-  kind: "groceries" | "recurring" = "groceries"
+  householdId: string
 ): Promise<Map<string, { name: string | null; food: IngredientRef | null }>> {
   if (ids.length === 0) return new Map();
-  const table = kind === "groceries" ? groceries : recurringGroceries;
 
   const rows = await db
     .select({
-      id: table.id,
-      name: table.name,
-      aliasId: table.ingredientAliasId,
-      ingredientId: table.ingredientId,
+      id: groceries.id,
+      name: groceries.name,
+      aliasId: groceries.ingredientAliasId,
+      ingredientId: groceries.ingredientId,
     })
-    .from(table)
-    .where(inArray(table.id, [...new Set(ids)]));
+    .from(groceries)
+    .where(householdRows(groceries, householdId, [...new Set(ids)]));
 
   return new Map(
     rows.map(({ id, name, aliasId, ingredientId }) => [
@@ -153,6 +141,17 @@ export async function createGroceries(
 
   return await tx.transaction(async (trx) => {
     await lockGroceryList(trx, householdId);
+    if (prepared.some((item) => item.householdId !== householdId)) {
+      throw new Error("Groceries are created in the household whose list is locked");
+    }
+    await assertOwnReferences(
+      householdId,
+      {
+        storeIds: prepared.map((item) => item.storeId),
+        recurringGroceryIds: prepared.map((item) => item.recurringGroceryId),
+      },
+      trx
+    );
 
     // Group items by storeId for efficient updates
     const storeGroups = new Map<string | null, typeof prepared>();
@@ -208,31 +207,6 @@ export async function createGroceries(
   });
 }
 
-export async function updateGrocery(input: GroceryUpdateDto): Promise<GroceryDto | null> {
-  const parsed = GroceryUpdateBaseSchema.safeParse(input);
-
-  if (!parsed.success) throw new Error("Invalid GroceryUpdateDto");
-
-  const whereConditions = [eq(groceries.id, input.id)];
-
-  if (parsed.data.version) {
-    whereConditions.push(eq(groceries.version, parsed.data.version));
-  }
-
-  const [row] = await db
-    .update(groceries)
-    .set({ ...(parsed.data as any), version: sql`${groceries.version} + 1` })
-    .where(and(...whereConditions))
-    .returning();
-
-  if (!row) return null;
-  const validated = GrocerySelectBaseSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Failed to parse updated grocery");
-
-  return validated.data;
-}
-
 export async function updateGroceries(
   input: GroceryUpdateDto[],
   householdId: string,
@@ -244,20 +218,22 @@ export async function updateGroceries(
 
   return await tx.transaction(async (trx) => {
     await lockGroceryList(trx, householdId);
+    await assertOwnReferences(
+      householdId,
+      {
+        storeIds: parsed.data.map((g) => g.storeId),
+        recurringGroceryIds: parsed.data.map((g) => g.recurringGroceryId),
+      },
+      trx
+    );
 
     const updatedGroceries: GroceryDto[] = [];
 
     for (const g of parsed.data) {
-      const whereConditions = [eq(groceries.id, g.id)];
-
-      if (g.version) {
-        whereConditions.push(eq(groceries.version, g.version));
-      }
-
       const [row] = await trx
         .update(groceries)
         .set({ ...(g as any), version: sql`${groceries.version} + 1` })
-        .where(and(...whereConditions))
+        .where(householdRow(groceries, householdId, g.id, g.version))
         .returning();
 
       if (row) {
@@ -272,35 +248,6 @@ export async function updateGroceries(
 
     return updatedGroceries;
   });
-}
-
-export async function toggleGrocery(id: string, isDone?: boolean): Promise<GroceryDto | null> {
-  const current = await db
-    .select({ id: groceries.id, isDone: groceries.isDone })
-    .from(groceries)
-    .where(eq(groceries.id, id))
-    .limit(1);
-
-  if (!current[0]) return null;
-
-  const next = typeof isDone === "boolean" ? isDone : !current[0].isDone;
-
-  const [row] = await db
-    .update(groceries)
-    .set({ isDone: next, version: sql`${groceries.version} + 1` })
-    .where(eq(groceries.id, id))
-    .returning();
-
-  if (!row) return null;
-  const validated = GrocerySelectBaseSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Failed to parse toggled grocery");
-
-  return validated.data;
-}
-
-export async function deleteGroceryById(id: string): Promise<void> {
-  await db.delete(groceries).where(eq(groceries.id, id));
 }
 
 export async function deleteGroceryByIds(
@@ -320,7 +267,7 @@ export async function deleteGroceryByIds(
     for (const item of items) {
       const deleted = await trx
         .delete(groceries)
-        .where(and(eq(groceries.id, item.id), eq(groceries.version, item.version)))
+        .where(householdRow(groceries, householdId, item.id, item.version))
         .returning({ id: groceries.id });
 
       if (deleted.length > 0) {
@@ -374,6 +321,7 @@ export async function reorderGroceriesInStore(
 
   return await db.transaction(async (trx) => {
     await lockGroceryList(trx, householdId);
+    await assertOwnReferences(householdId, { storeIds: updates.map((u) => u.storeId) }, trx);
 
     const updatedGroceries: GroceryDto[] = [];
 
@@ -392,7 +340,7 @@ export async function reorderGroceriesInStore(
       const [row] = await trx
         .update(groceries)
         .set({ ...updateData, version: sql`${groceries.version} + 1` })
-        .where(and(eq(groceries.id, id), eq(groceries.version, version)))
+        .where(householdRow(groceries, householdId, id, version))
         .returning();
 
       if (row) {
@@ -519,25 +467,19 @@ export async function deleteDoneInStore(
   });
 }
 
-/**
- * Assign a grocery to a store within a transaction
- */
+/** File the household's grocery under one of its Stores, or none. */
 export async function assignGroceryToStore(
   groceryId: string,
   newStoreId: string | null,
-  _householdId: string,
+  householdId: string,
   version?: number
 ): Promise<GroceryDto | null> {
-  const whereConditions = [eq(groceries.id, groceryId)];
-
-  if (version) {
-    whereConditions.push(eq(groceries.version, version));
-  }
+  await assertOwnReferences(householdId, { storeIds: [newStoreId] });
 
   const [updated] = await db
     .update(groceries)
     .set({ storeId: newStoreId, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-    .where(and(...whereConditions))
+    .where(householdRow(groceries, householdId, groceryId, version))
     .returning();
 
   if (!updated) return null;

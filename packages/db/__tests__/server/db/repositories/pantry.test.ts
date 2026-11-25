@@ -215,8 +215,8 @@ describe("pantry ingredients", () => {
   it("removes an item, and says so only the first time", async () => {
     await add(OLIVE, { userId, name: "Olive Oil" });
 
-    await expect(deletePantryIngredient(OLIVE)).resolves.toBe(true);
-    await expect(deletePantryIngredient(OLIVE)).resolves.toBe(false);
+    await expect(deletePantryIngredient(OLIVE, testHouseholdOf(userId))).resolves.toBe(true);
+    await expect(deletePantryIngredient(OLIVE, testHouseholdOf(userId))).resolves.toBe(false);
     await expect(getPantryIngredientHouseholdId(OLIVE)).resolves.toBeNull();
     await expect(listPantryIngredientsByHousehold(testHouseholdOf(userId))).resolves.toEqual([]);
   });

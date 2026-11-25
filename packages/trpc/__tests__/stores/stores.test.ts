@@ -375,7 +375,8 @@ describe("stores procedures", () => {
           { id: zuivel, name: "Zuivel" },
           { id: brood, name: "Brood" },
         ],
-      })
+      }),
+      ctx.householdId
     );
     expect(stores.publish).toHaveBeenCalledWith(
       "updated",

@@ -9,6 +9,7 @@ import { ingredients, pantryIngredients } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
 import { householdMemberIdsSql } from "./household-members";
+import { householdRow } from "./household-rows";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
 
@@ -144,7 +145,7 @@ export async function addPantryIngredients(
           ingredientAliasId,
         })
         .returning({ id: pantryIngredients.id });
-      const item = row && (await findPantryIngredient(row.id, tx));
+      const item = row && (await findPantryIngredient(row.id, owner.householdId, tx));
 
       if (!item) throw new Error("Failed to create pantry ingredient");
 
@@ -155,27 +156,13 @@ export async function addPantryIngredients(
   });
 }
 
-/** The household's Pantry rows with the spelling each points at, oldest first. */
-export async function listPantrySpellings(
-  householdId: string
-): Promise<Array<{ id: string; ingredientId: string; ingredientAliasId: string | null }>> {
-  return await db
-    .select({
-      id: pantryIngredients.id,
-      ingredientId: pantryIngredients.ingredientId,
-      ingredientAliasId: pantryIngredients.ingredientAliasId,
-    })
-    .from(pantryIngredients)
-    .where(eq(pantryIngredients.householdId, householdId))
-    .orderBy(asc(pantryIngredients.createdAt), asc(pantryIngredients.id));
-}
-
-/** One Pantry Ingredient with its name, however it was reached. */
-export async function findPantryIngredient(
+/** One of the household's Pantry Ingredients with its name. */
+async function findPantryIngredient(
   id: string,
+  householdId: string,
   tx: Db = db
 ): Promise<PantryIngredientDto | null> {
-  return findOnePantryIngredient(eq(pantryIngredients.id, id), tx);
+  return findOnePantryIngredient(householdRow(pantryIngredients, householdId, id), tx);
 }
 
 /** The household a Pantry Ingredient belongs to, for the household guard. */
@@ -195,10 +182,10 @@ export async function getPantryIngredientHouseholdId(id: string): Promise<string
  * already gone is nothing to report. The Ingredient stays: it is not the
  * household's to delete.
  */
-export async function deletePantryIngredient(id: string): Promise<boolean> {
+export async function deletePantryIngredient(id: string, householdId: string): Promise<boolean> {
   const deleted = await db
     .delete(pantryIngredients)
-    .where(eq(pantryIngredients.id, id))
+    .where(householdRow(pantryIngredients, householdId, id))
     .returning({ id: pantryIngredients.id });
 
   return deleted.length > 0;

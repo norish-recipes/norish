@@ -49,13 +49,18 @@ async function slotOf(slot: Slot) {
 
 /** The slot-mate's next move, edit and delete, each sent with its old version, all apply. */
 async function expectWritableAt(id: string, version: number) {
-  const moved = await moveItem(id, date, "Snack", 0, version);
+  const moved = await moveItem(testHouseholdOf(userId), id, date, "Snack", 0, version);
 
   expect(moved.stale).toBe(false);
-  const updated = await editPlannedItem(id, { title: "renamed" }, version + 1);
+  const updated = await editPlannedItem(
+    testHouseholdOf(userId),
+    id,
+    { title: "renamed" },
+    version + 1
+  );
 
   expect(updated.stale).toBe(false);
-  expect((await deletePlannedItem(id, version + 2)).stale).toBe(false);
+  expect((await deletePlannedItem(id, testHouseholdOf(userId), version + 2)).stale).toBe(false);
 }
 
 describe("slot-mate versions", () => {
@@ -66,7 +71,7 @@ describe("slot-mate versions", () => {
     const x = await plan("Lunch", "x");
     const y = await plan("Lunch", "y");
 
-    const result = await moveItem(a.id, date, "Lunch", 1, a.version);
+    const result = await moveItem(testHouseholdOf(userId), a.id, date, "Lunch", 1, a.version);
 
     expect(result.stale).toBe(false);
     expect(result.value?.version).toBe(a.version + 1);
@@ -89,7 +94,7 @@ describe("slot-mate versions", () => {
     const b = await plan("Dinner", "b");
     const c = await plan("Dinner", "c");
 
-    const result = await moveItem(c.id, date, "Dinner", 0, c.version);
+    const result = await moveItem(testHouseholdOf(userId), c.id, date, "Dinner", 0, c.version);
 
     expect(result.value?.version).toBe(c.version + 1);
     expect(await slotOf("Dinner")).toEqual([
@@ -106,7 +111,9 @@ describe("slot-mate versions", () => {
     await plan("Lunch", "x");
     await plan("Lunch", "y");
 
-    expect((await moveItem(a.id, date, "Lunch", undefined, a.version)).stale).toBe(false);
+    expect(
+      (await moveItem(testHouseholdOf(userId), a.id, date, "Lunch", undefined, a.version)).stale
+    ).toBe(false);
     expect((await slotOf("Lunch")).map(({ title, sortOrder }) => [title, sortOrder])).toEqual([
       ["x", 0],
       ["y", 1],
@@ -119,13 +126,13 @@ describe("slot-mate versions", () => {
     const b = await plan("Dinner", "b");
     const c = await plan("Dinner", "c");
 
-    expect((await deletePlannedItem(a.id, a.version)).stale).toBe(false);
+    expect((await deletePlannedItem(a.id, testHouseholdOf(userId), a.version)).stale).toBe(false);
     expect(await slotOf("Dinner")).toEqual([
       { title: "b", sortOrder: 0, version: b.version },
       { title: "c", sortOrder: 1, version: c.version },
     ]);
 
     await expectWritableAt(c.id, c.version);
-    expect(await getPlannedItemById(c.id)).toBeNull();
+    expect(await getPlannedItemById(c.id, testHouseholdOf(userId))).toBeNull();
   });
 });

@@ -105,6 +105,7 @@ describe("recurring groceries procedures", () => {
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
     getRecurringGroceryHouseholdId.mockResolvedValue(ctx.householdId);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
     assertHouseholdAccess.mockReturnValue(undefined);
     createRecurringGroceries.mockImplementation(madeAsAsked);
     listGroceriesByHousehold.mockResolvedValue([]);
@@ -339,6 +340,7 @@ describe("recurring groceries procedures", () => {
         )
       );
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         expect.objectContaining({ id: recurringGroceryId, name: "zout" }),
         expect.anything(),
         TX
@@ -348,7 +350,7 @@ describe("recurring groceries procedures", () => {
       );
       // The new food keeps nothing of the grocery being renamed.
       expect(resolveGroceryNames).toHaveBeenCalledWith(
-        [{ name: "zout", groceryId }, { name: "peper" }],
+        [{ name: "zout", groceryId, householdId: ctx.householdId }, { name: "peper" }],
         { userId: ctx.user.id }
       );
     });
@@ -404,6 +406,7 @@ describe("recurring groceries procedures", () => {
       );
       // The detach and the new grocery are one transaction.
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         expect.objectContaining({ grocery: expect.objectContaining({ name: "zout" }) }),
         TX
       );
@@ -501,7 +504,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(result).toEqual({ success: true, stale: false });
-      expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
+      expect(deleteRecurringGroceryById).toHaveBeenCalledWith(ctx.householdId, "r1", 4);
       expect(groceries.publish).toHaveBeenCalledWith(
         "deleted",
         {
@@ -529,7 +532,7 @@ describe("recurring groceries procedures", () => {
       expect(result).toEqual({ success: true, stale: true });
       await flushAsync();
 
-      expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
+      expect(deleteRecurringGroceryById).toHaveBeenCalledWith(ctx.householdId, "r1", 4);
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringDeleted", expect.anything(), {
         householdId: ctx.householdId,
       });
@@ -568,6 +571,7 @@ describe("recurring groceries procedures", () => {
 
       expect(result).toEqual({ success: true, stale: false });
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           id: "r1",
           version: 2,
@@ -610,6 +614,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           id: "r1",
           version: 2,
@@ -680,6 +685,7 @@ describe("recurring groceries procedures", () => {
       expect(result).toEqual({ success: true, stale: false });
       // Parsed ingredient comes from the mocked parseIngredientWithDefaults
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           recurringGroceryId,
           recurringVersion: 2,
@@ -736,6 +742,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           recurringGroceryId,
           recurringVersion: 2,
@@ -997,6 +1004,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
     getRecurringGroceryHouseholdId.mockResolvedValue(ctx.householdId);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
     assertHouseholdAccess.mockReturnValue(undefined);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([link]);
     // Pricing answers only for the household's own Stores.

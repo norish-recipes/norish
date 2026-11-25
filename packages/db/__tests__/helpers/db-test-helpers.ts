@@ -7,7 +7,7 @@
  */
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { and, eq, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, notInArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
@@ -16,19 +16,11 @@ import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts"
 import type { GroceryInsertDto } from "@norish/shared/contracts/dto/groceries";
 import { encrypt, hashToken } from "@norish/config/crypto";
 import { getRecipeFull } from "@norish/db";
-import {
-  createGroceries,
-  deleteGroceryByIds,
-  findGroceryFoods,
-  listGroceriesByHousehold,
-} from "@norish/db/repositories/groceries";
+import { createGroceries, deleteGroceryByIds } from "@norish/db/repositories/groceries";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { isFirstLineFood, writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
-import { addPantryIngredients, listPantrySpellings } from "@norish/db/repositories/pantry";
-import {
-  createRecurringGroceries,
-  listRecurringGroceriesByHousehold,
-} from "@norish/db/repositories/recurring-groceries";
+import { addPantryIngredients } from "@norish/db/repositories/pantry";
+import { createRecurringGroceries } from "@norish/db/repositories/recurring-groceries";
 import * as schema from "@norish/db/schema";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
@@ -561,27 +553,33 @@ export async function testGroceryFoods(
   userId: string,
   kind: "groceries" | "recurring" = "groceries"
 ) {
-  const householdId = await householdIdOf(userId);
-  const rows =
-    kind === "groceries"
-      ? await listGroceriesByHousehold(householdId)
-      : await listRecurringGroceriesByHousehold(householdId);
-  const foods = await findGroceryFoods(
-    rows.map((row) => row.id),
-    kind
-  );
+  const table = kind === "groceries" ? schema.groceries : schema.recurringGroceries;
+  const rows = await getTestDb()
+    .select({
+      id: table.id,
+      name: table.name,
+      aliasId: table.ingredientAliasId,
+      ingredientId: table.ingredientId,
+    })
+    .from(table)
+    .where(eq(table.householdId, await householdIdOf(userId)));
 
-  return rows
-    .map((row) => ({
-      id: row.id,
-      name: row.name,
-      aliasId: foods.get(row.id)?.food?.aliasId ?? null,
-      ingredientId: row.ingredientId ?? null,
-    }))
-    .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "") || a.id.localeCompare(b.id));
+  return rows.sort(
+    (a, b) => (a.name ?? "").localeCompare(b.name ?? "") || a.id.localeCompare(b.id)
+  );
 }
 
 /** The spellings a member's household's Pantry rows point at, oldest first. */
 export async function testPantrySpellings(userId: string) {
-  return listPantrySpellings(await householdIdOf(userId));
+  const pantry = schema.pantryIngredients;
+
+  return await getTestDb()
+    .select({
+      id: pantry.id,
+      ingredientId: pantry.ingredientId,
+      ingredientAliasId: pantry.ingredientAliasId,
+    })
+    .from(pantry)
+    .where(eq(pantry.householdId, await householdIdOf(userId)))
+    .orderBy(asc(pantry.createdAt), asc(pantry.id));
 }

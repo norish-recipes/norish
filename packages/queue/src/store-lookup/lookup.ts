@@ -166,7 +166,7 @@ export async function matchGroceryName(input: {
   onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
   const { storeId, ingredientId, name, householdId } = input;
-  const store = await getStoreById(storeId);
+  const store = await getStoreById(storeId, householdId);
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
   const gaveUp = async (): Promise<{ matched: boolean }> => {

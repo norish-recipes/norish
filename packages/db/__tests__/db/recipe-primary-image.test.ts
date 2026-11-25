@@ -149,10 +149,13 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
   it("getPlannedItemWithRecipeById resolves the same way", async () => {
     const { planned } = await planAll();
 
-    expect((await getPlannedItemWithRecipeById(planned.galleryOnly.id))?.recipeImage).toMatch(
-      /\/first\.jpg$/
-    );
-    expect((await getPlannedItemWithRecipeById(planned.noImage.id))?.recipeImage).toBeNull();
+    expect(
+      (await getPlannedItemWithRecipeById(planned.galleryOnly.id, testHouseholdOf(userId)))
+        ?.recipeImage
+    ).toMatch(/\/first\.jpg$/);
+    expect(
+      (await getPlannedItemWithRecipeById(planned.noImage.id, testHouseholdOf(userId)))?.recipeImage
+    ).toBeNull();
   });
 
   it("listPlannedItemsWithRecipeBySlot resolves the same way", async () => {

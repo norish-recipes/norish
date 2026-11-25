@@ -113,7 +113,9 @@ describe("household rows through their routers", () => {
     await expect(
       mine.update({ id: store.id, version: store.version, name: "Dirk" })
     ).resolves.toEqual({ success: true, stale: false });
-    expect((await repositories.stores.getStoreById(store.id))?.name).toBe("Dirk");
+    expect(
+      (await repositories.stores.getStoreById(store.id, helpers.testHouseholdOf(admin.id)))?.name
+    ).toBe("Dirk");
   });
 
   it("groceries: the household ticks a housemate's line, another household cannot", async () => {

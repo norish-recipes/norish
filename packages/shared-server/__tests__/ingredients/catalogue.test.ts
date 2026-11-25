@@ -11,7 +11,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { updateGrocery } from "@norish/db/repositories/groceries";
+import { updateGroceries } from "@norish/db/repositories/groceries";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
@@ -419,7 +419,7 @@ describe("the ingredient catalogue", () => {
     const grocery = await addTestGrocery(actor.userId, { name: "zout en peper" });
     const parts = [{ name: "zout", aliasId: zout.aliasId, ingredientId: zout.ingredientId }];
 
-    await updateGrocery({ id: grocery.id, name: "suiker" });
+    await updateGroceries([{ id: grocery.id, name: "suiker" }], testHouseholdOf(actor.userId));
     await db.transaction((tx) =>
       writeGroceryParts(tx, "groceries", [{ id: grocery.id, name: "zout en peper", parts }])
     );

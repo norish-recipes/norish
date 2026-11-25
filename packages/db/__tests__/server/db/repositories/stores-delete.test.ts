@@ -52,7 +52,7 @@ describe("deleteStore with a grocery snapshot", () => {
       await householdIdOf(userId)
     );
 
-    const result = await deleteStore(store.id, store.version, true, [
+    const result = await deleteStore(testHouseholdOf(userId), store.id, store.version, true, [
       { id: groceryId, version: 1 },
     ]);
 
@@ -62,7 +62,7 @@ describe("deleteStore with a grocery snapshot", () => {
       storeDeleted: true,
       stale: false,
     });
-    expect(await getStoreById(store.id)).toBeNull();
+    expect(await getStoreById(store.id, testHouseholdOf(userId))).toBeNull();
   });
 
   it("returns the lines it moved to Unsorted, at their new version", async () => {
@@ -93,7 +93,7 @@ describe("deleteStore with a grocery snapshot", () => {
       await householdIdOf(userId)
     );
 
-    const result = await deleteStore(store.id, store.version, false, [
+    const result = await deleteStore(testHouseholdOf(userId), store.id, store.version, false, [
       { id: groceryId, version: 1 },
     ]);
 

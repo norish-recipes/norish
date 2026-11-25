@@ -163,7 +163,7 @@ describe("delayed-delivery repository safety", () => {
       })
       .returning();
 
-    const result = await deleteStore(store.id, store.version, true, [
+    const result = await deleteStore(testHouseholdOf(testUserId), store.id, store.version, true, [
       { id: snapshotted.id, version: snapshotted.version },
     ]);
     const [storedStore] = await db.select().from(stores).where(eq(stores.id, store.id)).limit(1);

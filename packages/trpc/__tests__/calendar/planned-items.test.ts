@@ -396,6 +396,7 @@ describe("calendar planned recipe openapi procedures", () => {
       title: "Eat out",
       version: 1,
     });
+    getPlannedItemHouseholdId.mockResolvedValue(ctx.householdId);
     deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
     assertHouseholdAccess.mockReturnValue(undefined);
 
@@ -403,7 +404,7 @@ describe("calendar planned recipe openapi procedures", () => {
     const result = await caller.deletePlannedRecipe({ itemId, version: 1 });
 
     expect(result).toEqual({ success: true, stale: false });
-    expect(deletePlannedItem).toHaveBeenCalledWith(itemId, 1);
+    expect(deletePlannedItem).toHaveBeenCalledWith(itemId, ctx.householdId, 1);
   });
 
   it("creates a planned recipe item", async () => {
@@ -515,6 +516,7 @@ describe("calendar planned recipe openapi procedures", () => {
       title: null,
       version: 2,
     });
+    getPlannedItemHouseholdId.mockResolvedValue(ctx.householdId);
     deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
     assertHouseholdAccess.mockReturnValue(undefined);
 

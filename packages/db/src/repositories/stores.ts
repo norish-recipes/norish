@@ -24,6 +24,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import { listAislesByStoreIds, saveStoreAisles } from "./aisles";
+import { assertOwnReferences, householdRow } from "./household-rows";
 
 // Fuse.js configuration for ingredient name fuzzy matching
 // threshold: 0 = exact match, 1 = match anything
@@ -64,8 +65,12 @@ async function withAisles(rows: (typeof stores.$inferSelect)[], tx: Db = db): Pr
   return parsed.data;
 }
 
-export async function getStoreById(id: string): Promise<StoreDto | null> {
-  const [row] = await db.select().from(stores).where(eq(stores.id, id)).limit(1);
+export async function getStoreById(id: string, householdId: string): Promise<StoreDto | null> {
+  const [row] = await db
+    .select()
+    .from(stores)
+    .where(householdRow(stores, householdId, id))
+    .limit(1);
 
   if (!row) return null;
   const [store] = await withAisles([row]);
@@ -138,23 +143,20 @@ export async function createStore(id: string, input: StoreInsertDto): Promise<St
   });
 }
 
-export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | null> {
+export async function updateStore(
+  input: StoreUpdateDto,
+  householdId: string
+): Promise<StoreDto | null> {
   const parsed = StoreUpdateBaseSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid StoreUpdateDto");
   const { aisles, ...columns } = parsed.data;
 
-  const whereConditions = [eq(stores.id, input.id)];
-
-  if (columns.version) {
-    whereConditions.push(eq(stores.version, columns.version));
-  }
-
   return await db.transaction(async (trx) => {
     const [row] = await trx
       .update(stores)
       .set({ ...columns, updatedAt: new Date(), version: sql`${stores.version} + 1` })
-      .where(and(...whereConditions))
+      .where(householdRow(stores, householdId, input.id, columns.version))
       .returning();
 
     if (!row) return null;
@@ -185,13 +187,7 @@ export async function reorderStores(
         .update(stores)
         // Renumbering is not an edit: the version stays, so a write queued on it still lands.
         .set({ sortOrder: i, updatedAt: new Date() })
-        .where(
-          and(
-            eq(stores.id, storeUpdate.id),
-            eq(stores.version, storeUpdate.version),
-            eq(stores.householdId, householdId)
-          )
-        )
+        .where(householdRow(stores, householdId, storeUpdate.id, storeUpdate.version))
         .returning();
 
       if (row) updatedRows.push(row);
@@ -202,6 +198,7 @@ export async function reorderStores(
 }
 
 export async function deleteStore(
+  householdId: string,
   storeId: string,
   version: number,
   deleteGroceries: boolean,
@@ -219,11 +216,10 @@ export async function deleteStore(
       for (const row of rows) movedGroceries.push(GrocerySelectBaseSchema.parse(row));
     };
 
-    const [storeRow] = await trx
-      .select({ id: stores.id })
-      .from(stores)
-      .where(and(eq(stores.id, storeId), eq(stores.version, version)))
-      .limit(1);
+    const theStore = householdRow(stores, householdId, storeId, version);
+    // The household's lines filed under the Store; another household's never are.
+    const filed = and(eq(groceries.storeId, storeId), eq(groceries.householdId, householdId));
+    const [storeRow] = await trx.select({ id: stores.id }).from(stores).where(theStore).limit(1);
 
     if (!storeRow) {
       return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
@@ -234,13 +230,7 @@ export async function deleteStore(
         for (const grocery of grocerySnapshot) {
           const deleted = await trx
             .delete(groceries)
-            .where(
-              and(
-                eq(groceries.id, grocery.id),
-                eq(groceries.version, grocery.version),
-                eq(groceries.storeId, storeId)
-              )
-            )
+            .where(and(householdRow(groceries, householdId, grocery.id, grocery.version), filed))
             .returning({ id: groceries.id });
 
           if (deleted.length > 0) {
@@ -252,13 +242,7 @@ export async function deleteStore(
           const moved = await trx
             .update(groceries)
             .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-            .where(
-              and(
-                eq(groceries.id, grocery.id),
-                eq(groceries.version, grocery.version),
-                eq(groceries.storeId, storeId)
-              )
-            )
+            .where(and(householdRow(groceries, householdId, grocery.id, grocery.version), filed))
             .returning();
 
           keepMoved(moved);
@@ -269,7 +253,7 @@ export async function deleteStore(
       const [remainingCount] = await trx
         .select({ count: sql<number>`count(*)::int` })
         .from(groceries)
-        .where(eq(groceries.storeId, storeId));
+        .where(filed);
 
       const isEmpty = (remainingCount?.count ?? 0) === 0;
 
@@ -280,10 +264,7 @@ export async function deleteStore(
           .where(eq(ingredientStorePreferences.storeId, storeId));
 
         // Delete the store
-        const deletedStore = await trx
-          .delete(stores)
-          .where(and(eq(stores.id, storeId), eq(stores.version, version)))
-          .returning({ id: stores.id });
+        const deletedStore = await trx.delete(stores).where(theStore).returning({ id: stores.id });
 
         if (deletedStore.length === 0) {
           return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
@@ -296,22 +277,19 @@ export async function deleteStore(
     // Legacy path (no snapshot): process all current groceries
     if (deleteGroceries) {
       // Get grocery IDs before deleting
-      const groceryRows = await trx
-        .select({ id: groceries.id })
-        .from(groceries)
-        .where(eq(groceries.storeId, storeId));
+      const groceryRows = await trx.select({ id: groceries.id }).from(groceries).where(filed);
 
       deletedGroceryIds = groceryRows.map((g) => g.id);
 
       // Delete groceries
-      await trx.delete(groceries).where(eq(groceries.storeId, storeId));
+      await trx.delete(groceries).where(filed);
     } else {
       // Set storeId to null for groceries in this store
       keepMoved(
         await trx
           .update(groceries)
           .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-          .where(eq(groceries.storeId, storeId))
+          .where(filed)
           .returning()
       );
     }
@@ -322,10 +300,7 @@ export async function deleteStore(
       .where(eq(ingredientStorePreferences.storeId, storeId));
 
     // Delete the store
-    const deletedStore = await trx
-      .delete(stores)
-      .where(and(eq(stores.id, storeId), eq(stores.version, version)))
-      .returning({ id: stores.id });
+    const deletedStore = await trx.delete(stores).where(theStore).returning({ id: stores.id });
 
     if (deletedStore.length === 0) {
       return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
@@ -346,11 +321,11 @@ export async function getStoreHouseholdId(storeId: string): Promise<string | nul
   return row?.householdId ?? null;
 }
 
-export async function countGroceriesInStore(storeId: string): Promise<number> {
+export async function countGroceriesInStore(storeId: string, householdId: string): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(groceries)
-    .where(eq(groceries.storeId, storeId));
+    .where(and(eq(groceries.storeId, storeId), eq(groceries.householdId, householdId)));
 
   return row?.count ?? 0;
 }
@@ -416,6 +391,7 @@ export async function upsertIngredientStorePreference(
   const parsed = IngredientStorePreferenceInsertSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid IngredientStorePreferenceInsertDto");
+  await assertOwnReferences(householdId, { storeIds: [storeId] });
 
   const [row] = await db
     .insert(ingredientStorePreferences)

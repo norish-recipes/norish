@@ -45,7 +45,7 @@ describe("the Pantry's household guard", () => {
     pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue(ctx.householdId);
 
     await expect(caller.remove({ id: OLIVE })).resolves.toBe(OLIVE);
-    expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE);
+    expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE, ctx.householdId);
   });
 
   it("refuses another household's item", async () => {

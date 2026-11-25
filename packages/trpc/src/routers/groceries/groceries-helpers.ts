@@ -26,10 +26,12 @@ import {
   updateGroceries,
 } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
-import { listRecurringGroceriesByHousehold } from "@norish/db/repositories/recurring-groceries";
+import {
+  getRecurringGroceryHouseholdId,
+  listRecurringGroceriesByHousehold,
+} from "@norish/db/repositories/recurring-groceries";
 import {
   findBestIngredientStorePreference,
-  getStoreHouseholdId,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
 import {
@@ -57,13 +59,41 @@ export type GroceryProcedureContext = {
  * offline, or nameless), or sent to no Store, teaches nothing.
  */
 export async function rememberStorePreference(
-  ctx: GroceryProcedureContext,
+  householdId: string,
+  userId: string,
   ingredientId: string | null | undefined,
   storeId: string | null | undefined
 ): Promise<void> {
   if (!ingredientId || !storeId) return;
-  await upsertIngredientStorePreference(ctx.householdId, ctx.user.id, ingredientId, storeId);
-  log.debug({ userId: ctx.user.id, ingredientId, storeId }, "Saved ingredient store preference");
+  await upsertIngredientStorePreference(householdId, userId, ingredientId, storeId);
+  log.debug({ userId, ingredientId, storeId }, "Saved ingredient store preference");
+}
+
+/** The ids among these that still exist, once every one is the household's own. */
+export async function groceriesOfHousehold(
+  ctx: Pick<GroceryProcedureContext, "householdId">,
+  groceryIds: string[]
+): Promise<Set<string>> {
+  const householdIds = await getGroceryHouseholdIds(groceryIds);
+
+  for (const householdId of householdIds.values()) {
+    assertHouseholdAccess(ctx.householdId, householdId);
+  }
+
+  return new Set(householdIds.keys());
+}
+
+/** A recurring grocery a procedure names is the household's own. */
+export async function assertRecurringAccess(
+  ctx: Pick<GroceryProcedureContext, "householdId">,
+  recurringGroceryId: string
+): Promise<void> {
+  const householdId = await getRecurringGroceryHouseholdId(recurringGroceryId);
+
+  if (!householdId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Recurring grocery not found" });
+  }
+  assertHouseholdAccess(ctx.householdId, householdId);
 }
 
 type GroceryMergeCandidate = {
@@ -192,6 +222,10 @@ export async function createGroceriesData(
   const named = new Set(input.map((grocery) => grocery.storeId).filter((id): id is string => !!id));
 
   for (const storeId of named) await assertStoreAccess(ctx, storeId);
+  // So is a recurring grocery it says the line repeats.
+  const repeating = new Set(input.flatMap((grocery) => grocery.recurringGroceryId ?? []));
+
+  for (const recurringGroceryId of repeating) await assertRecurringAccess(ctx, recurringGroceryId);
 
   // A Grocery names one food: a name whose words join foods is a grocery per food, merged alone.
   for (const grocery of (await groceryParts(input)).flat()) {
@@ -411,15 +445,14 @@ export async function toggleGroceriesData(
   log.debug({ userId: ctx.user.id, count: groceryIds.length, isDone }, "Toggling groceries");
 
   // A line another member deleted lost to an earlier write: it is left out and answers stale.
-  const ownerIds = await getGroceryHouseholdIds(groceryIds);
+  const present = await groceriesOfHousehold(ctx, groceryIds);
 
-  if (rejectMissing && ownerIds.size !== groceryIds.length) {
+  if (rejectMissing && present.size !== groceryIds.length) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
   }
 
-  for (const householdId of ownerIds.values()) assertHouseholdAccess(ctx.householdId, householdId);
-
-  const existingGroceries = ownerIds.size > 0 ? await getGroceriesByIds([...ownerIds.keys()]) : [];
+  const existingGroceries =
+    present.size > 0 ? await getGroceriesByIds([...present], ctx.householdId) : [];
 
   const updatedGroceries = existingGroceries.map((grocery) => ({
     ...grocery,
@@ -483,16 +516,14 @@ export async function deleteGroceriesData(
   log.info({ userId: ctx.user.id, count: groceryIds.length }, "Deleting groceries");
 
   // A line already gone is a delete that already happened: it is skipped, not stale.
-  const ownerIds = await getGroceryHouseholdIds(groceryIds);
+  const present = await groceriesOfHousehold(ctx, groceryIds);
 
-  if (rejectMissing && ownerIds.size !== groceryIds.length) {
+  if (rejectMissing && present.size !== groceryIds.length) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Some groceries not found" });
   }
 
-  for (const householdId of ownerIds.values()) assertHouseholdAccess(ctx.householdId, householdId);
-
   const result = await deleteGroceryByIds(
-    input.groceries.filter((grocery) => ownerIds.has(grocery.id)),
+    input.groceries.filter((grocery) => present.has(grocery.id)),
     ctx.householdId
   );
 
@@ -531,28 +562,15 @@ export async function assignGroceryToStoreData(
 
   log.debug({ userId: ctx.user.id, groceryId, storeId }, "Assigning grocery to store");
 
-  const [ownerIds, storeOwnerId] = await Promise.all([
-    getGroceryHouseholdIds([groceryId]),
-    storeId ? getStoreHouseholdId(storeId) : Promise.resolve(null),
-  ]);
-  const ownerId = ownerIds.get(groceryId);
+  // A line another member deleted lost to an earlier write: stale, as a changed version is.
+  const exists = (await groceriesOfHousehold(ctx, [groceryId])).has(groceryId);
 
-  if (rejectMissing && !ownerId) {
+  if (rejectMissing && !exists) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Grocery not found" });
   }
+  if (storeId) await assertStoreAccess(ctx, storeId);
 
-  // A line another member deleted lost to an earlier write: stale, as a changed version is.
-  if (ownerId) assertHouseholdAccess(ctx.householdId, ownerId);
-
-  if (storeId) {
-    if (!storeOwnerId) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-    }
-    assertHouseholdAccess(ctx.householdId, storeOwnerId);
-  }
-
-  const [grocery] = ownerId ? await getGroceriesByIds([groceryId]) : [];
-  const updated = grocery
+  const updated = exists
     ? await assignGroceryToStore(groceryId, storeId, ctx.householdId, version)
     : null;
 
@@ -578,7 +596,9 @@ export async function assignGroceryToStoreData(
   // Store's answer was never about this one.
   await afterCommit(ctx, "pricing and remembering the Store", async () => {
     await noticeGroceries(ctx, [updated]);
-    if (savePreference) await rememberStorePreference(ctx, updated.ingredientId, storeId);
+    if (savePreference) {
+      await rememberStorePreference(ctx.householdId, ctx.user.id, updated.ingredientId, storeId);
+    }
   });
 
   void groceries.publish(

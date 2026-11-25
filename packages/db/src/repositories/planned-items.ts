@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import type { PlannedItemEdit } from "@norish/shared/contracts/zod";
 import { db } from "@norish/db/drizzle";
@@ -6,6 +6,8 @@ import { households, plannedItems, recipes } from "@norish/db/schema";
 import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { MutationOutcome } from "./mutation-outcomes";
+import { currentHouseholdIdSql } from "./household-members";
+import { householdRow } from "./household-rows";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 
@@ -21,12 +23,9 @@ export type PlannedItemWithRecipe = Omit<PlannedItem, "householdId"> & {
   calories: number | null;
 };
 
-export async function listPlannedItemsByHouseholdAndDateRange(
-  householdId: string,
-  startDate: string,
-  endDate: string
-): Promise<PlannedItemWithRecipe[]> {
-  return await db
+/** Every read of plan entries as screens show them: the entry and its recipe's name and picture. */
+function selectWithRecipe() {
+  return db
     .select({
       id: plannedItems.id,
       userId: plannedItems.userId,
@@ -45,7 +44,15 @@ export async function listPlannedItemsByHouseholdAndDateRange(
       calories: recipes.calories,
     })
     .from(plannedItems)
-    .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id))
+    .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id));
+}
+
+export async function listPlannedItemsByHouseholdAndDateRange(
+  householdId: string,
+  startDate: string,
+  endDate: string
+): Promise<PlannedItemWithRecipe[]> {
+  return await selectWithRecipe()
     .where(
       and(
         eq(plannedItems.householdId, householdId),
@@ -56,31 +63,29 @@ export async function listPlannedItemsByHouseholdAndDateRange(
     .orderBy(asc(plannedItems.date), asc(plannedItems.slot), asc(plannedItems.sortOrder));
 }
 
+/** The household's entries a member added, from `fromDate` on: what their calendar carries. */
+export async function listPlannedItemsAddedBy(
+  householdId: string,
+  userId: string,
+  fromDate: string
+): Promise<PlannedItemWithRecipe[]> {
+  return await selectWithRecipe()
+    .where(
+      and(
+        eq(plannedItems.householdId, householdId),
+        eq(plannedItems.userId, userId),
+        gte(plannedItems.date, fromDate)
+      )
+    )
+    .orderBy(asc(plannedItems.date), asc(plannedItems.slot), asc(plannedItems.sortOrder));
+}
+
 export async function listPlannedItemsWithRecipeBySlot(
   householdId: string,
   date: string,
   slot: PlannedItemSlot
 ): Promise<PlannedItemWithRecipe[]> {
-  return await db
-    .select({
-      id: plannedItems.id,
-      userId: plannedItems.userId,
-      date: plannedItems.date,
-      slot: plannedItems.slot,
-      sortOrder: plannedItems.sortOrder,
-      itemType: plannedItems.itemType,
-      recipeId: plannedItems.recipeId,
-      title: plannedItems.title,
-      version: plannedItems.version,
-      createdAt: plannedItems.createdAt,
-      updatedAt: plannedItems.updatedAt,
-      recipeName: recipes.name,
-      recipeImage: PRIMARY_IMAGE_SQL.as("recipeImage"),
-      servings: recipes.servings,
-      calories: recipes.calories,
-    })
-    .from(plannedItems)
-    .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id))
+  return await selectWithRecipe()
     .where(
       and(
         eq(plannedItems.householdId, householdId),
@@ -92,32 +97,30 @@ export async function listPlannedItemsWithRecipeBySlot(
 }
 
 export async function getPlannedItemWithRecipeById(
-  id: string
+  id: string,
+  householdId: string
 ): Promise<PlannedItemWithRecipe | null> {
-  const [row] = await db
-    .select({
-      id: plannedItems.id,
-      userId: plannedItems.userId,
-      date: plannedItems.date,
-      slot: plannedItems.slot,
-      sortOrder: plannedItems.sortOrder,
-      itemType: plannedItems.itemType,
-      recipeId: plannedItems.recipeId,
-      title: plannedItems.title,
-      version: plannedItems.version,
-      createdAt: plannedItems.createdAt,
-      updatedAt: plannedItems.updatedAt,
-      recipeName: recipes.name,
-      recipeImage: PRIMARY_IMAGE_SQL.as("recipeImage"),
-      servings: recipes.servings,
-      calories: recipes.calories,
-    })
-    .from(plannedItems)
-    .leftJoin(recipes, eq(plannedItems.recipeId, recipes.id))
-    .where(eq(plannedItems.id, id))
+  const [row] = await selectWithRecipe()
+    .where(householdRow(plannedItems, householdId, id))
     .limit(1);
 
   return row ?? null;
+}
+
+/** Whether the entry is in the household the account is in now. */
+export async function isPlannedItemInHouseholdOf(itemId: string, userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: plannedItems.id })
+    .from(plannedItems)
+    .where(
+      and(
+        eq(plannedItems.id, itemId),
+        inArray(plannedItems.householdId, currentHouseholdIdSql(userId))
+      )
+    )
+    .limit(1);
+
+  return row !== undefined;
 }
 
 export async function listPlannedItemsBySlot(
@@ -138,15 +141,22 @@ export async function listPlannedItemsBySlot(
     .orderBy(asc(plannedItems.sortOrder));
 }
 
-export async function getPlannedItemById(id: string): Promise<PlannedItem | null> {
-  const [row] = await db.select().from(plannedItems).where(eq(plannedItems.id, id)).limit(1);
+export async function getPlannedItemById(
+  id: string,
+  householdId: string
+): Promise<PlannedItem | null> {
+  const [row] = await db
+    .select()
+    .from(plannedItems)
+    .where(householdRow(plannedItems, householdId, id))
+    .limit(1);
 
   return row ?? null;
 }
 
 export async function createPlannedItem(input: PlannedItemInsert): Promise<PlannedItem> {
   return await db.transaction(async (trx) => {
-    await lockPlanner(trx, input.householdId);
+    await lockHousehold(trx, input.householdId);
     const [last] = await trx
       .select({ sortOrder: plannedItems.sortOrder })
       .from(plannedItems)
@@ -175,20 +185,15 @@ export async function createPlannedItem(input: PlannedItemInsert): Promise<Plann
 
 export async function deletePlannedItem(
   id: string,
+  householdId: string,
   version?: number
 ): Promise<MutationOutcome<{ deletedItem: PlannedItem; reindexedItems: PlannedItem[] }>> {
   return await db.transaction(async (trx) => {
-    if (!(await lockPlannerOf(trx, id))) return staleOutcome();
-
-    const deleteWhereConditions = [eq(plannedItems.id, id)];
-
-    if (version) {
-      deleteWhereConditions.push(eq(plannedItems.version, version));
-    }
+    await lockHousehold(trx, householdId);
 
     const [deletedItem] = await trx
       .delete(plannedItems)
-      .where(and(...deleteWhereConditions))
+      .where(householdRow(plannedItems, householdId, id, version))
       .returning();
 
     if (!deletedItem) {
@@ -237,8 +242,8 @@ type PlannedItemMove = { date: string; slot: PlannedItemSlot; index?: number };
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Every write that renumbers a household's slots takes this lock first, so two never wait on each other.
-async function lockPlanner(trx: Transaction, householdId: string) {
+// Every write that renumbers a household's slots locks its household row first, so two queue, not deadlock.
+async function lockHousehold(trx: Transaction, householdId: string) {
   await trx
     .select({ id: households.id })
     .from(households)
@@ -246,32 +251,19 @@ async function lockPlanner(trx: Transaction, householdId: string) {
     .for("no key update");
 }
 
-/** Locks the planner of a plan; false when the plan is gone. */
-async function lockPlannerOf(trx: Transaction, itemId: string): Promise<boolean> {
-  const [owner] = await trx
-    .select({ householdId: plannedItems.householdId })
-    .from(plannedItems)
-    .where(eq(plannedItems.id, itemId))
-    .limit(1);
-
-  if (!owner) return false;
-  await lockPlanner(trx, owner.householdId);
-
-  return true;
-}
-
-// Under the planner's lock: a second write at the same version waits, then finds no row at that version.
-async function selectCurrent(trx: Transaction, itemId: string, version?: number) {
-  if (!(await lockPlannerOf(trx, itemId))) return null;
-
-  const conditions = [eq(plannedItems.id, itemId)];
-
-  if (version) conditions.push(eq(plannedItems.version, version));
+// Under the household lock: a second write at the same version waits, then finds no row at that version.
+async function selectCurrent(
+  trx: Transaction,
+  itemId: string,
+  householdId: string,
+  version?: number
+) {
+  await lockHousehold(trx, householdId);
 
   const [current] = await trx
     .select()
     .from(plannedItems)
-    .where(and(...conditions))
+    .where(householdRow(plannedItems, householdId, itemId, version))
     .limit(1);
 
   return current ?? null;
@@ -383,6 +375,7 @@ function writtenRow(row: PlannedItem | null | undefined): PlannedItem {
 }
 
 export async function moveItem(
+  householdId: string,
   itemId: string,
   targetDate: string,
   targetSlot: PlannedItemSlot,
@@ -391,7 +384,7 @@ export async function moveItem(
   version?: number
 ): Promise<MutationOutcome<PlannedItem>> {
   return await db.transaction(async (trx) => {
-    const current = await selectCurrent(trx, itemId, version);
+    const current = await selectCurrent(trx, itemId, householdId, version);
 
     if (!current) return staleOutcome();
 
@@ -403,12 +396,13 @@ export async function moveItem(
 
 /** Title, date and slot under one version check; nothing to change writes nothing. */
 export async function editPlannedItem(
+  householdId: string,
   itemId: string,
   edit: PlannedItemEdit,
   version: number
 ): Promise<MutationOutcome<PlannedItem>> {
   return await db.transaction(async (trx) => {
-    const current = await selectCurrent(trx, itemId, version);
+    const current = await selectCurrent(trx, itemId, householdId, version);
 
     if (!current) return staleOutcome();
 

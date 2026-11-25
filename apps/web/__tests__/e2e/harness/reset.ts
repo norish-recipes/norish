@@ -33,7 +33,8 @@ export async function deleteEveryGrocery(): Promise<void> {
       householdId
     );
     await deleteRecurringGroceryByIds(
-      (await listRecurringGroceriesByHousehold(householdId)).map((recurring) => recurring.id)
+      (await listRecurringGroceriesByHousehold(householdId)).map((recurring) => recurring.id),
+      householdId
     );
   }
 }

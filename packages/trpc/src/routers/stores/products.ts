@@ -116,7 +116,7 @@ const searchShop = authedProcedure
   .input(StoreShopSearchSchema)
   .query(async ({ ctx, input }): Promise<{ candidates: StoreCandidate[]; answered: boolean }> => {
     await assertStoreAccess(ctx, input.storeId);
-    const store = await getStoreById(input.storeId);
+    const store = await getStoreById(input.storeId, ctx.householdId);
 
     if (!store?.searchAddress) return { candidates: [], answered: false };
 
@@ -162,8 +162,12 @@ function hostOf(address: string | null | undefined): string | null {
  * server never saw the search that produced it, so the one thing it can hold
  * the page to is the shop: the host of the Store's Search Address or website.
  */
-async function assertCandidateIsTheShops(storeId: string, pageUrl: string): Promise<void> {
-  const store = await getStoreById(storeId);
+async function assertCandidateIsTheShops(
+  householdId: string,
+  storeId: string,
+  pageUrl: string
+): Promise<void> {
+  const store = await getStoreById(storeId, householdId);
   const shop = hostOf(store?.searchAddress) ?? hostOf(store?.website);
   const page = hostOf(pageUrl);
 
@@ -255,7 +259,7 @@ const chooseProduct = authedProcedure
       // A candidate came from the Store's own shop, so its page is on that
       // shop's host. Anything else is not a product page Norish will read and
       // refresh on the household's behalf.
-      await assertCandidateIsTheShops(input.storeId, candidate.url);
+      await assertCandidateIsTheShops(ctx.householdId, input.storeId, candidate.url);
       const product = await upsertReadProduct({
         storeId: input.storeId,
         name: candidate.name,

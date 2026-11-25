@@ -7,6 +7,7 @@ import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   editPlannedItem,
   getPlannedItemById,
+  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
 } from "../mocks/planned-items";
@@ -64,16 +65,17 @@ describe("calendar.editItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    getPlannedItemHouseholdId.mockResolvedValue(stored.householdId);
     getPlannedItemById.mockResolvedValue(stored);
     assertHouseholdAccess.mockReturnValue(undefined);
     listPlannedItemsWithRecipeBySlot.mockResolvedValue([]);
-    editPlannedItem.mockImplementation(async (_id, change: object) => ({
+    editPlannedItem.mockImplementation(async (_household, _id, change: object) => ({
       applied: true,
       stale: false,
       value: { ...stored, ...named(change), version: stored.version + 1 },
     }));
     getPlannedItemWithRecipeById.mockImplementation(async () => {
-      const [, change = {}] = editPlannedItem.mock.calls[0] ?? [];
+      const [, , change = {}] = editPlannedItem.mock.calls[0] ?? [];
 
       return withRecipe({ ...named(change), version: stored.version + 1 });
     });
@@ -90,7 +92,7 @@ describe("calendar.editItem", () => {
     const result = await edit(change);
 
     expect(editPlannedItem).toHaveBeenCalledTimes(1);
-    expect(editPlannedItem).toHaveBeenCalledWith(ID, change, stored.version);
+    expect(editPlannedItem).toHaveBeenCalledWith(ctx.householdId, ID, change, stored.version);
     expect(published()).toEqual([event, `${event}Internal`]);
     expect(result).toEqual({
       success: true,

@@ -101,13 +101,17 @@ describe("grocery names through aliases", () => {
     await withTransaction((tx) => deleteCatalogueIngredient(tx, food!.ingredientId));
 
     await expect(
-      resolveGroceryNames([{ name: "Deegroller", groceryId: grocery.id }], { userId })
+      resolveGroceryNames(
+        [{ name: "Deegroller", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
+        { userId }
+      )
     ).resolves.toEqual([null]);
     await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
 
-    const [renamed] = await resolveGroceryNames([{ name: "deeg", groceryId: grocery.id }], {
-      userId,
-    });
+    const [renamed] = await resolveGroceryNames(
+      [{ name: "deeg", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
+      { userId }
+    );
 
     expect(renamed).toEqual(expect.objectContaining({ aliasId: expect.any(String) }));
   });
@@ -199,16 +203,18 @@ describe("grocery names through aliases", () => {
         testHouseholdOf(userId)
       );
 
+      const edit = { groceryId, householdId: testHouseholdOf(userId) };
+
       await expect(
         groceryParts([
-          { name: "Zout en peper", groceryId: groceryId },
-          { name: "peper en zout", groceryId: groceryId },
+          { name: "Zout en peper", ...edit },
+          { name: "peper en zout", ...edit },
         ])
       ).resolves.toEqual([
-        [{ name: "Zout en peper", groceryId: groceryId }],
+        [{ name: "Zout en peper", ...edit }],
         [
-          { name: "peper", groceryId: groceryId },
-          { name: "zout", groceryId: groceryId, id: undefined },
+          { name: "peper", ...edit },
+          { name: "zout", ...edit, id: undefined },
         ],
       ]);
     });
