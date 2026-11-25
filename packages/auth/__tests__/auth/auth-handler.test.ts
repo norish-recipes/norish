@@ -52,14 +52,22 @@ vi.mock("@norish/db/repositories/users", () => ({
 }));
 vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdForUser: vi.fn(),
-  deleteAccount: vi.fn(async () => null),
+  deleteAccount: vi.fn(async () => ({
+    householdId: null,
+    householdErased: false,
+    successorId: null,
+    memberIds: [],
+    recipeIds: [],
+    cookbookIds: [],
+    notes: [],
+  })),
 }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isRegistrationEnabled: async () => registration.enabled,
 }));
 vi.mock("@norish/shared-server/media/avatar-cleanup", () => ({ sweepUserAvatars: vi.fn() }));
-vi.mock("@norish/shared-server/realtime/connection", () => ({
-  emitConnectionInvalidation: vi.fn(),
+vi.mock("@norish/shared-server/realtime/household-membership", () => ({
+  announceMembershipChange: vi.fn(),
 }));
 vi.mock("@norish/shared-server/logger", () => {
   const logger = { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() };
