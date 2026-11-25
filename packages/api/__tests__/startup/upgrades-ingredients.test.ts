@@ -9,11 +9,16 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { upgradeIngredients } from "@norish/api/startup/upgrades/before-0-25-ingredients";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { deleteAccount } from "@norish/db/repositories/households";
 import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
-import { createStore, findBestIngredientStorePreference } from "@norish/db/repositories/stores";
+import {
+  createStore,
+  findBestIngredientStorePreference,
+  getIngredientStorePreference,
+} from "@norish/db/repositories/stores";
 import {
   aisleLinks,
   aisles,
@@ -32,8 +37,10 @@ import {
   addTestPantryIngredient,
   addTestRecurringGrocery,
   createTestRecipe,
+  createTestUser,
   getTestDb,
   insertTestRecipeLine,
+  joinTestHousehold,
   testGroceryFoods,
   testHouseholdOf,
   testPantrySpellings,
@@ -223,5 +230,101 @@ describe("the upgrade of ingredients from before 0.25", () => {
       await db.select().from(storeProductLinks).where(eq(storeProductLinks.id, storeGone))
     ).toEqual([]);
     expect(await db.select().from(parkedNameKeyedLinks)).toEqual([]);
+  });
+
+  /** Who an Ingredient a household row minted belongs to. */
+  async function mintedBy(ingredientId: string | null) {
+    const [row] = await getTestDb()
+      .select({ ownerId: ingredients.ownerId })
+      .from(ingredients)
+      .where(eq(ingredients.id, ingredientId!));
+
+    return row?.ownerId;
+  }
+
+  it("resolves the rows of a deleted member as their household's, not as the seed's", async () => {
+    const member = (await createTestUser()).id;
+
+    await joinTestHousehold(member, userId);
+    const grocery = await addTestGrocery(member, { name: "kardemom" });
+    const { recurringGrocery: recurring } = await addTestRecurringGrocery(member, {
+      name: "saffraan",
+      alone: true,
+    });
+    const pantry = await addTestPantryIngredient(member, {
+      ingredientId: await oldIngredient("Komijn"),
+    });
+
+    await deleteAccount(member);
+    await upgradeIngredients();
+
+    const groceryNow = (await testGroceryFoods(userId)).find((row) => row.id === grocery.id);
+    const recurringNow = (await testGroceryFoods(userId, "recurring")).find(
+      (row) => row.id === recurring.id
+    );
+    const pantryNow = (await testPantrySpellings(userId)).find((row) => row.id === pantry.id);
+
+    expect(await mintedBy(groceryNow!.ingredientId)).toBe(userId);
+    expect(await mintedBy(recurringNow!.ingredientId)).toBe(userId);
+    expect(pantryNow!.ingredientAliasId).not.toBeNull();
+    expect(await mintedBy(pantryNow!.ingredientId)).toBe(userId);
+  });
+
+  it("restores a deleted account's store preference to its Store's household, added by no one", async () => {
+    const store = await createStore(randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Shop",
+    });
+    const salt = seeded.get("en:salt")!;
+
+    await park("preference", {
+      normalized_name: "zout",
+      store_id: store.id,
+      user_id: randomUUID(),
+    });
+    expect((await upgradeIngredients()).links).toBe(1);
+
+    expect(await getIngredientStorePreference(testHouseholdOf(userId), salt)).toMatchObject({
+      storeId: store.id,
+      userId: null,
+    });
+  });
+
+  it("keys a parked link by its own household's groceries, never another household's", async () => {
+    const stranger = (await createTestUser()).id;
+    const salt = seeded.get("en:salt")!;
+    const [zout] = await getTestDb()
+      .select({ id: ingredientAliases.id })
+      .from(ingredientAliases)
+      .where(eq(ingredientAliases.text, "zout"));
+    const store = await createStore(randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Shop",
+    });
+    const [aisle] = await getTestDb()
+      .insert(aisles)
+      .values({ storeId: store.id, name: "Spices" })
+      .returning();
+
+    // Another household calls salt "fleur de sel"; this one never said so.
+    await addTestGrocery(stranger, {
+      name: "Fleur de sel",
+      ingredientAliasId: zout!.id,
+      ingredientId: salt,
+    });
+    const parked = await park("aisle", {
+      normalized_name: "fleur de sel",
+      store_id: store.id,
+      aisle_id: aisle!.id,
+    });
+
+    await upgradeIngredients();
+
+    const [link] = await getTestDb().select().from(aisleLinks).where(eq(aisleLinks.id, parked));
+
+    expect(link!.ingredientId).not.toBe(salt);
+    expect(await mintedBy(link!.ingredientId)).toBe(userId);
   });
 });

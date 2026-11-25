@@ -32,6 +32,11 @@ export function householdRows(table: HouseholdTable, householdId: string, ids: s
   return and(inArray(table.id, ids), eq(table.householdId, householdId))!;
 }
 
+/** The member a household row's catalogue work runs as: its adder, else its household's admin. */
+export function rowActor(table: { userId: AnyPgColumn; householdId: AnyPgColumn }) {
+  return sql<string>`coalesce(${table.userId}, (select h.admin_user_id from households h where h.id = ${table.householdId}))`;
+}
+
 /** Thrown where a write points a household's row at another household's row. */
 export class ForeignHouseholdReferenceError extends Error {
   constructor() {

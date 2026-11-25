@@ -8,6 +8,7 @@ import {
   accounts,
   aisleLinks,
   groceries,
+  households,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
@@ -19,7 +20,10 @@ import {
   recurringGroceries,
   storeProductLinks,
   stores,
+  users,
 } from "@norish/db/schema";
+
+import { rowActor } from "./household-rows";
 
 /** What the boot upgrades from older releases (startup/upgrades) read and write. */
 
@@ -98,7 +102,7 @@ export async function listGroceriesWithoutFood(
   afterId: string | null
 ): Promise<NamingRow[]> {
   return await db
-    .select({ id: groceries.id, name: groceries.name, ownerId: groceries.userId })
+    .select({ id: groceries.id, name: groceries.name, ownerId: rowActor(groceries) })
     .from(groceries)
     .where(
       and(
@@ -119,7 +123,7 @@ export async function listRecurringGroceriesWithoutFood(
     .select({
       id: recurringGroceries.id,
       name: recurringGroceries.name,
-      ownerId: recurringGroceries.userId,
+      ownerId: rowActor(recurringGroceries),
     })
     .from(recurringGroceries)
     .where(
@@ -132,12 +136,16 @@ export async function listRecurringGroceriesWithoutFood(
     .limit(limit);
 }
 
-/** Pantry Ingredients from before 0.25, with their old Ingredient's name. */
+/** Pantry Ingredients from before 0.25, with their old Ingredient's name and who resolves it. */
 export async function listPantryIngredientsWithoutSpelling(): Promise<
-  Array<{ id: string; name: string; ownerId: string | null }>
+  Array<{ id: string; name: string; ownerId: string }>
 > {
   return await db
-    .select({ id: pantryIngredients.id, name: ingredients.name, ownerId: pantryIngredients.userId })
+    .select({
+      id: pantryIngredients.id,
+      name: ingredients.name,
+      ownerId: rowActor(pantryIngredients),
+    })
     .from(pantryIngredients)
     .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
     .where(isNull(pantryIngredients.ingredientAliasId));
@@ -177,17 +185,22 @@ export async function setPantryIngredientFood(id: string, food: IngredientRef): 
   });
 }
 
-/** Every grocery and recurring grocery name with the Ingredient it names. */
+/** Every grocery and recurring grocery name with the Ingredient it names, by household. */
 export async function listGroceryNamesWithFood(): Promise<
-  Array<{ name: string; ingredientId: string }>
+  Array<{ householdId: string; name: string; ingredientId: string }>
 > {
   const rows = await db
-    .selectDistinct({ name: groceries.name, ingredientId: groceries.ingredientId })
+    .selectDistinct({
+      householdId: groceries.householdId,
+      name: groceries.name,
+      ingredientId: groceries.ingredientId,
+    })
     .from(groceries)
     .where(and(isNotNull(groceries.name), isNotNull(groceries.ingredientId)))
     .union(
       db
         .selectDistinct({
+          householdId: recurringGroceries.householdId,
           name: recurringGroceries.name,
           ingredientId: recurringGroceries.ingredientId,
         })
@@ -195,8 +208,8 @@ export async function listGroceryNamesWithFood(): Promise<
         .where(isNotNull(recurringGroceries.ingredientId))
     );
 
-  return rows.flatMap((row) =>
-    row.name && row.ingredientId ? [{ name: row.name, ingredientId: row.ingredientId }] : []
+  return rows.flatMap(({ householdId, name, ingredientId }) =>
+    name && ingredientId ? [{ householdId, name, ingredientId }] : []
   );
 }
 
@@ -204,30 +217,30 @@ export interface ParkedLink {
   id: string;
   kind: "aisle" | "product" | "preference";
   link: ParkedLinkRow;
-  /** The member it belongs to: a preference's, or its Store's adder; null where the Store went. */
-  ownerId: string | null;
   /** Its Store's household; null where the Store went. */
   householdId: string | null;
+  /** Who resolves its name: its Store's adder, else that household's admin. */
+  ownerId: string | null;
+  /** The account a preference names, null where it is gone: then it was added by no one. */
+  addedBy: string | null;
 }
 
 /** The parked links, newest first: the newest wins where two land on one food. */
 export async function listParkedLinks(): Promise<ParkedLink[]> {
-  const rows = await db
+  return await db
     .select({
       id: parkedNameKeyedLinks.id,
       kind: parkedNameKeyedLinks.kind,
       link: parkedNameKeyedLinks.link,
-      storeOwnerId: stores.userId,
       householdId: stores.householdId,
+      ownerId: sql<string | null>`coalesce(${stores.userId}, ${households.adminUserId})`,
+      addedBy: users.id,
     })
     .from(parkedNameKeyedLinks)
     .leftJoin(stores, sql`${stores.id} = (${parkedNameKeyedLinks.link}->>'store_id')::uuid`)
+    .leftJoin(households, eq(households.id, stores.householdId))
+    .leftJoin(users, sql`${users.id} = ${parkedNameKeyedLinks.link}->>'user_id'`)
     .orderBy(desc(sql`${parkedNameKeyedLinks.link}->>'updated_at'`));
-
-  return rows.map(({ storeOwnerId, ...row }) => ({
-    ...row,
-    ownerId: storeOwnerId && (row.link.user_id ?? storeOwnerId),
-  }));
 }
 
 /**
@@ -270,10 +283,10 @@ export async function unparkLink(
         })
         .onConflictDoNothing()
         .returning({ id: storeProductLinks.id });
-    } else if (kind === "preference" && link.user_id && parked.householdId) {
+    } else if (kind === "preference" && parked.householdId) {
       put = await tx
         .insert(ingredientStorePreferences)
-        .values({ ...row, householdId: parked.householdId, userId: link.user_id })
+        .values({ ...row, householdId: parked.householdId, userId: parked.addedBy })
         .onConflictDoNothing()
         .returning({ id: ingredientStorePreferences.id });
     }
