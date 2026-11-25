@@ -422,9 +422,27 @@ describe("recipe share procedures", () => {
       reactivateRecipeShareMock.mockResolvedValue(applied(3, null));
       deleteRecipeShareMock.mockResolvedValue({ stale: false });
 
-      await expect(admin.shareListAdmin()).resolves.toMatchObject([
-        { id: shareId, ownerName: "Other", makerMayView: false },
+      const list = await admin.shareListAdmin();
+
+      expect(list).toHaveLength(1);
+      expect(Object.keys(list[0]!).sort()).toEqual([
+        "createdAt",
+        "expiresAt",
+        "hasLink",
+        "id",
+        "lastAccessedAt",
+        "makerMayView",
+        "ownerId",
+        "ownerName",
+        "recipeId",
+        "recipeName",
+        "revokedAt",
+        "status",
+        "updatedAt",
+        "userId",
+        "version",
       ]);
+      expect(list[0]).toMatchObject({ id: shareId, ownerName: "Other", makerMayView: false });
       await expect(admin.shareRevokeAdmin({ id: shareId, version: 1 })).resolves.toMatchObject({
         status: "revoked",
         stale: false,

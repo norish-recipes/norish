@@ -8,7 +8,6 @@ import {
   createRecipeShare,
   deleteRecipeShare,
   getActiveRecipeShareByToken,
-  getAllRecipeShares,
   getPublicRecipeView,
   getRecipeShareById,
   getRecipeShareByToken,
@@ -16,6 +15,7 @@ import {
   getRecipeShareInventoryForAdmin,
   getRecipeSharesByUserId,
   getRecipeShareUrl,
+  reactivateRecipeShare,
   revokeRecipeShare,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
@@ -157,10 +157,6 @@ describe("recipe share repository", () => {
     expect(revoked.stale).toBe(false);
     expect(revoked.value?.status).toBe("revoked");
     expect(revoked.value?.revokedAt).not.toBeNull();
-
-    const allShares = await getAllRecipeShares();
-
-    expect(allShares).toHaveLength(1);
 
     const removed = await deleteRecipeShare(created.id, revoked.value!.version);
 
@@ -333,6 +329,23 @@ describe("recipe share repository", () => {
     );
     const listed = await getRecipeShareInventoryForAdmin();
 
+    expect(Object.keys(listed[0]!).sort()).toEqual([
+      "createdAt",
+      "expiresAt",
+      "hasLink",
+      "id",
+      "lastAccessedAt",
+      "makerMayView",
+      "ownerId",
+      "ownerName",
+      "recipeId",
+      "recipeName",
+      "revokedAt",
+      "status",
+      "updatedAt",
+      "userId",
+      "version",
+    ]);
     expect(listed.map((s) => [s.id, s.recipeName, s.ownerName, s.status, s.makerMayView])).toEqual([
       [crossed.id, "Stew", "Test User", "active", false],
       [bobs.id, "Stew", "Bob", "active", true],
@@ -348,5 +361,13 @@ describe("recipe share repository", () => {
       "revoked"
     );
     expect(await getActiveRecipeShareByToken(bobs.url.replace("/share/", ""))).toBeNull();
+
+    // An admin reactivating the crossed link leaves it inactive on the public page.
+    const crossedToken = crossed.url.replace("/share/", "");
+    const off = await revokeRecipeShare(crossed.id, crossed.version);
+    const on = await reactivateRecipeShare(crossed.id, off.value!.version);
+
+    expect(on.value?.status).toBe("active");
+    expect(await getActiveRecipeShareByToken(crossedToken)).toBeNull();
   });
 });
