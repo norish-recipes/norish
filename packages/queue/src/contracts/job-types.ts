@@ -9,6 +9,7 @@ export interface RecipeImportJobData {
   url: string;
   recipeId: string;
   userId: string;
+  /** The importer's household when queued, for the duplicate key only: the job reads it afresh. */
   householdId: string;
   forceAI?: boolean;
 }
@@ -42,7 +43,6 @@ export interface ImageImportFile {
 export interface ImageImportJobData {
   recipeId: string;
   userId: string;
-  householdId: string;
   files: ImageImportFile[];
 }
 
@@ -54,7 +54,6 @@ export interface PasteImportJobData {
   batchId: string;
   recipeIds: string[];
   userId: string;
-  householdId: string;
   text: string;
   forceAI?: boolean;
   structuredRecipes?: StructuredPasteImportRecipe[];

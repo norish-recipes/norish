@@ -34,6 +34,7 @@ import {
 } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import { importerHouseholdId } from "../importer-household";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -45,7 +46,7 @@ const log = createLogger("worker:recipe-import");
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> {
   const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
-  const { url, recipeId, userId, householdId } = job.data;
+  const { url, recipeId, userId } = job.data;
 
   log.info(
     { jobId: job.id, url, recipeId, attempt: job.attemptsMade + 1 },
@@ -88,6 +89,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
 
+  const householdId = await importerHouseholdId(userId);
   const householdCategories = await listCategoryNamesForHousehold(householdId);
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.

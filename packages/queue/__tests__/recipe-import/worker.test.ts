@@ -167,6 +167,27 @@ describe("processImportJob", () => {
     ]);
   });
 
+  it("parses with the household the importer is in when the job runs, not when it was queued", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    await processRecipeImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        url: "https://example.com/margarita",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdId: "household-left",
+      },
+    } as unknown as Job<RecipeImportJobData>);
+
+    expect(parseRecipeFromUrl.mock.calls.at(-1)?.[2]?.householdCategories).toEqual([
+      "Breakfast",
+      "Drinks",
+    ]);
+  });
+
   it("announces the import to whoever may view it once stored, not when it started", async () => {
     const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
 

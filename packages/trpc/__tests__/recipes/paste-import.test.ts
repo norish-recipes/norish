@@ -78,8 +78,9 @@ describe("importFromPasteProcedure", () => {
         batchId: "batch-1",
         recipeIds: ["123e4567-e89b-42d3-a456-426614174001", "123e4567-e89b-42d3-a456-426614174002"],
         userId: user.id,
-        householdId: ctx.householdId,
       })
     );
+    // The worker reads the importer's household as it runs.
+    expect(mocks.addPasteImportJob.mock.calls[0]?.[1]).not.toHaveProperty("householdId");
   });
 });

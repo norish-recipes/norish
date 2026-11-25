@@ -22,6 +22,7 @@ import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import { importerHouseholdId } from "../importer-household";
 import { reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -32,7 +33,7 @@ const log = createLogger("worker:image-import");
  */
 export async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
   const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
-  const { recipeId, userId, householdId, files } = job.data;
+  const { recipeId, userId, files } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
@@ -42,6 +43,8 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   if (started) {
     void recipes.publish("importStarted", { recipeId, url: `[${files.length} image(s)]` }, started);
   }
+
+  const householdId = await importerHouseholdId(userId);
 
   // Vision parsing reads the images; every inference happens afterwards.
   // A failure throws with its own message — extraction, not this worker,

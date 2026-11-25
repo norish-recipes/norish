@@ -827,7 +827,6 @@ const importFromImagesProcedure = authedProcedure
     const result = await addImageImportJob(queues.imageImport, {
       recipeId,
       userId: ctx.user.id,
-      householdId: ctx.householdId,
       files,
     });
 
@@ -873,7 +872,6 @@ export const importFromPasteProcedure = authedProcedure
     const result = await addPasteImportJob(queues.pasteImport, {
       ...preparedImport,
       userId: ctx.user.id,
-      householdId: ctx.householdId,
     });
 
     if (result.status === "duplicate") {

@@ -31,6 +31,7 @@ import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
 import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import { importerHouseholdId } from "../importer-household";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -144,7 +145,8 @@ async function createStructuredRecipe(
 export async function processPasteImportJob(
   job: Job<PasteImportJobData>
 ): Promise<PasteImportJobResult> {
-  const { recipeIds, structuredRecipes, userId, householdId, text, forceAI } = job.data;
+  const { recipeIds, structuredRecipes, userId, text, forceAI } = job.data;
+  const householdId = await importerHouseholdId(userId);
 
   log.info(
     { jobId: job.id, recipeIds, attempt: job.attemptsMade + 1 },
