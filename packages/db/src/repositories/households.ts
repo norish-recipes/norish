@@ -179,16 +179,49 @@ async function insertHouseholdOfOne(tx: DbTransaction, userId: string): Promise<
   return HouseholdSelectBaseSchema.parse(row);
 }
 
+/** Locks the households in id order, so two moves never wait on each other in a cycle. */
+async function lockHouseholds(tx: DbTransaction, ids: string[]) {
+  return await tx
+    .select({ id: households.id, adminUserId: households.adminUserId })
+    .from(households)
+    .where(inArray(households.id, ids))
+    .orderBy(households.id)
+    .for("update");
+}
+
+async function memberCount(tx: DbTransaction, householdId: string): Promise<number> {
+  const rows = await tx
+    .select({ userId: householdUsers.userId })
+    .from(householdUsers)
+    .where(eq(householdUsers.householdId, householdId));
+
+  return rows.length;
+}
+
 /**
  * Takes a member out of a household and into a new household of one, in one
- * transaction, so no account is ever left without one. An emptied household goes.
+ * transaction under the household's lock. Pass `removedBy` when the admin removes them.
  */
 export async function moveToHouseholdOfOne(
   householdId: string,
   userId: string,
-  version?: number
+  version?: number,
+  removedBy?: string
 ): Promise<MutationOutcome<HouseholdDto>> {
   return await db.transaction(async (tx) => {
+    const [household] = await lockHouseholds(tx, [householdId]);
+
+    if (!household) return staleOutcome();
+    if (removedBy !== undefined && household.adminUserId !== removedBy) {
+      throw new Error("Only the household admin can kick members");
+    }
+    if (household.adminUserId === userId) {
+      throw new Error("The household admin hands the role on before leaving");
+    }
+    if ((await memberCount(tx, householdId)) <= 1) {
+      throw new Error("The last member cannot leave their household");
+    }
+
     const whereConditions = [
       eq(householdUsers.householdId, householdId),
       eq(householdUsers.userId, userId),
@@ -205,16 +238,6 @@ export async function moveToHouseholdOfOne(
 
     if (deletedMembership.length === 0) {
       return staleOutcome();
-    }
-
-    const remaining = await tx
-      .select({ userId: householdUsers.userId })
-      .from(householdUsers)
-      .where(eq(householdUsers.householdId, householdId))
-      .limit(1);
-
-    if (remaining.length === 0) {
-      await tx.delete(households).where(eq(households.id, householdId));
     }
 
     return appliedOutcome(await insertHouseholdOfOne(tx, userId));
@@ -252,7 +275,7 @@ async function holdsAnything(tx: DbTransaction, userId: string): Promise<boolean
 
 export type JoinHouseholdOutcome =
   | { joined: HouseholdUserDto; leftHouseholdId: string }
-  | { refused: "already-member" | "shared" | "holds-things" };
+  | { refused: "already-member" | "shared" | "holds-things" | "gone" };
 
 /**
  * Moves an account into another household, deleting the household of one it
@@ -264,32 +287,37 @@ export async function joinHousehold(
   householdId: string
 ): Promise<JoinHouseholdOutcome> {
   return await db.transaction(async (tx) => {
-    const [current] = await tx
-      .select({ householdId: householdUsers.householdId })
-      .from(householdUsers)
-      .where(eq(householdUsers.userId, userId))
-      .for("update");
+    const current = await householdIdIn(tx, userId);
 
     if (!current) throw new Error("Account has no household");
-    if (current.householdId === householdId) return { refused: "already-member" };
+    if (current === householdId) return { refused: "already-member" };
 
-    const members = await tx
-      .select({ userId: householdUsers.userId })
-      .from(householdUsers)
-      .where(eq(householdUsers.householdId, current.householdId));
+    const locked = await lockHouseholds(tx, [current, householdId]);
 
-    if (members.length > 1) return { refused: "shared" };
+    if (!locked.some((h) => h.id === householdId)) return { refused: "gone" };
+    // Every move of this account locks its household first, so this read is now stable.
+    if ((await householdIdIn(tx, userId)) !== current) throw new Error("Household changed");
+    if ((await memberCount(tx, current)) > 1) return { refused: "shared" };
     if (await holdsAnything(tx, userId)) return { refused: "holds-things" };
 
-    await tx.delete(households).where(eq(households.id, current.householdId));
+    await tx.delete(households).where(eq(households.id, current));
 
     const [row] = await tx.insert(householdUsers).values({ householdId, userId }).returning();
 
     return {
       joined: HouseholdUserSelectBaseSchema.parse(row),
-      leftHouseholdId: current.householdId,
+      leftHouseholdId: current,
     };
   });
+}
+
+async function householdIdIn(tx: DbTransaction, userId: string): Promise<string | null> {
+  const [row] = await tx
+    .select({ householdId: householdUsers.householdId })
+    .from(householdUsers)
+    .where(eq(householdUsers.userId, userId));
+
+  return row?.householdId ?? null;
 }
 
 export async function findHouseholdByJoinCode(code: string): Promise<HouseholdDto | null> {
@@ -346,28 +374,14 @@ export async function isUserHouseholdAdmin(householdId: string, userId: string):
   return household?.adminUserId === userId;
 }
 
-/**
- * Kicks a user from a household (admin only)
- */
+/** The admin removes a member, who lands in a new household of one. */
 export async function kickUserFromHousehold(
   householdId: string,
   userIdToKick: string,
   adminUserId: string,
   version?: number
 ): Promise<MutationOutcome<HouseholdDto>> {
-  // Verify admin
-  const isAdmin = await isUserHouseholdAdmin(householdId, adminUserId);
-
-  if (!isAdmin) {
-    throw new Error("Only the household admin can kick members");
-  }
-
-  // Cannot kick yourself
-  if (userIdToKick === adminUserId) {
-    throw new Error("Admin cannot kick themselves. Transfer admin first or leave the household.");
-  }
-
-  return await moveToHouseholdOfOne(householdId, userIdToKick, version);
+  return await moveToHouseholdOfOne(householdId, userIdToKick, version, adminUserId);
 }
 
 /**
