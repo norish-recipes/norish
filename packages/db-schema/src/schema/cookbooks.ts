@@ -1,17 +1,17 @@
+import { sql } from "drizzle-orm";
 import { index, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { households } from "./households";
 import { recipes } from "./recipes";
 import { mutableRowColumns } from "./shared";
 
 /**
  * A Cookbook: a titled set of recipes, and nothing else.
  *
- * It carries a `userId` like a recipe and is seen, edited and deleted under
- * the instance's `RECIPE_PERMISSION_POLICY` rather than a rule of its own
- * (ADR-0027); deleting an account detaches the cookbooks it made instead of
- * destroying them, and an orphaned row is visible to everyone under every
- * policy exactly as an orphaned recipe is.
+ * It belongs to its Owner like a recipe, carries the Owner's household, and is
+ * seen, edited and deleted under the instance's Permission Policy rather than a
+ * rule of its own (ADR-0027, ADR-0041).
  *
  * The cover is derived at read time from the members' own images unless
  * someone has uploaded an `image` for the cookbook itself, which then shows
@@ -21,15 +21,21 @@ export const cookbooks = pgTable(
   "cookbooks",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Always the Owner's current household: a trigger sets it on every write and membership move. */
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" })
+      .$defaultFn(() => sql`NULL`),
     title: text("title").notNull(),
     image: text("image"),
     ...mutableRowColumns,
   },
   (t) => [
     index("idx_cookbooks_user_id").on(t.userId),
+    index("idx_cookbooks_household_id").on(t.householdId),
     index("idx_cookbooks_title").on(t.title),
     index("idx_cookbooks_created_at_desc").on(t.createdAt.desc()),
   ]

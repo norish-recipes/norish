@@ -23,19 +23,24 @@ export const recipeCategorySchema = z.string().overwrite(cleanCategoryName).min(
 // The stored nutrients beyond the four, by the catalogue's keys rather than as any JSON.
 const nutritionExtras = ExtraNutrientsSchema.nullish();
 
-export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
-  userId: z.string().nullable(),
-  nutritionExtras,
-});
+export const RecipeSelectBaseSchema = createSelectSchema(recipes)
+  .omit({ householdId: true })
+  .extend({
+    userId: z.string().nullable(),
+    nutritionExtras,
+  });
 export const RecipeInsertBaseSchema = createInsertSchema(recipes)
   .omit({
     id: true,
     updatedAt: true,
     createdAt: true,
     userId: true, // set from session server-side
+    householdId: true, // the Owner's, set by the database
   })
   .extend({ nutritionExtras });
-export const RecipeUpdateBaseSchema = createUpdateSchema(recipes).extend({ nutritionExtras });
+export const RecipeUpdateBaseSchema = createUpdateSchema(recipes)
+  .omit({ householdId: true })
+  .extend({ nutritionExtras });
 
 export const AuthorSchema = z
   .object({

@@ -119,7 +119,7 @@ export async function withResolvedIngredients<
  */
 export function createResolvedRecipe(
   recipeId: string,
-  userId: string | null | undefined,
+  userId: string,
   payload: FullRecipeInsertDTO,
   actor: ResolveActor
 ): Promise<CreateRecipeResult | null> {

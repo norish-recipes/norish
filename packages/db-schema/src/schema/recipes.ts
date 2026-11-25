@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   integer,
@@ -13,6 +14,7 @@ import {
 
 import type { StoredNutrients } from "./ingredient-nutrition";
 import { users } from "./auth";
+import { households } from "./households";
 import { versionColumn } from "./shared";
 
 export const measurementSystemEnum = pgEnum("measurement_system", ["metric", "us"]);
@@ -21,9 +23,15 @@ export const recipes = pgTable(
   "recipes",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
+    /** The Owner; deleting the account erases the recipe (ADR-0041). */
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Always the Owner's current household: a trigger sets it on every write and membership move. */
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" })
+      .$defaultFn(() => sql`NULL`),
     name: text("name").notNull(),
     description: text("description"),
     url: text("url"),
@@ -67,6 +75,7 @@ export const recipes = pgTable(
   },
   (t) => [
     index("idx_recipes_user_id").on(t.userId),
+    index("idx_recipes_household_id").on(t.householdId),
     index("idx_recipes_name").on(t.name),
     unique("uq_recipes_url_user").on(t.url, t.userId),
     index("idx_recipes_created_at_desc").on(t.createdAt.desc()),

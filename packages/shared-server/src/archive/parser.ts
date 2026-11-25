@@ -343,13 +343,11 @@ function isParseError(
 }
 
 async function applyImportedMarks(
-  userId: string | undefined,
+  userId: string,
   recipeId: string,
   importedRating: number | undefined,
   importedFavorite: boolean | undefined
 ): Promise<void> {
-  if (!userId) return;
-
   if (importedRating) {
     try {
       await rateRecipe(userId, recipeId, importedRating);
@@ -373,13 +371,13 @@ async function applyImportedMarks(
  * run, filing only ever adds a membership, and a failure is logged and never
  * fails the import, like the imported rating.
  */
-function createCookbookFiler(userId: string | undefined) {
+function createCookbookFiler(userId: string) {
   const cookbookIds = new Map<string, string>();
 
   return async (recipeId: string, titles: string[] | undefined): Promise<CookbookFiling[]> => {
     const filings: CookbookFiling[] = [];
 
-    if (!userId || !titles) return filings;
+    if (!titles) return filings;
 
     for (const title of titles) {
       const trimmed = title.trim();
@@ -449,7 +447,7 @@ export type ImportProgressListener = (
  */
 export async function importRecipeItems(
   items: AsyncGenerator<RecipeImportItemOrError, void, unknown>,
-  userId: string | undefined,
+  userId: string,
   userIds: string[],
   onProgress?: ImportProgressListener
 ): Promise<ImportResult> {
@@ -489,22 +487,13 @@ export async function importRecipeItems(
       const existingId = await findExistingRecipe(userIds, dto.url, dto.name, [...writtenThisRun]);
 
       if (existingId) {
-        const overwriteUserId = userId ?? userIds[0];
-
-        if (!overwriteUserId) {
-          throw new Error("Cannot overwrite existing recipe without user context");
-        }
-
         const overwriteDto = await rehomeArchiveMediaToRecipe(dto, existingId);
 
         // The receiving instance extracts its own Dish Colour from the
         // media it just rehomed; nothing colour-shaped travels in an archive.
-        await updateResolvedRecipe(
-          existingId,
-          overwriteUserId,
-          await withDishColorForUpdate(overwriteDto),
-          { userId: overwriteUserId }
-        );
+        await updateResolvedRecipe(existingId, userId, await withDishColorForUpdate(overwriteDto), {
+          userId,
+        });
 
         writtenThisRun.add(existingId);
         await applyImportedMarks(userId, existingId, importedRating, importedFavorite);
@@ -528,7 +517,7 @@ export async function importRecipeItems(
       }
 
       const created = await createResolvedRecipe(recipeId, userId, await withDishColor(dto), {
-        userId: userId ?? null,
+        userId,
       });
 
       let filings: CookbookFiling[] = [];
@@ -840,7 +829,7 @@ async function* generateRecipeKeeperRecipes(
  * Import archive (auto-detects Norish, Mela, Mealie, Paprika, Tandoor, or Recipe Keeper format)
  */
 export async function importArchive(
-  userId: string | undefined,
+  userId: string,
   userIds: string[],
   zipBytes: Buffer,
   onProgress?: ImportProgressListener

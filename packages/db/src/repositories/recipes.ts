@@ -885,7 +885,7 @@ export type WithIngredientResolutions<T> = T & { ingredientResolutions: Ingredie
 
 export async function createRecipeWithRefs(
   recipeId: string,
-  userId: string | null | undefined,
+  userId: string,
   input: WithIngredientResolutions<FullRecipeInsertDTO>
 ): Promise<CreateRecipeResult | null> {
   const resolutions = input.ingredientResolutions;
@@ -942,13 +942,13 @@ export async function createRecipeWithRefs(
       });
 
       if (sameId) {
-        if (sameId.userId !== (userId ?? null)) throw new Error("Recipe id is already taken");
+        if (sameId.userId !== userId) throw new Error("Recipe id is already taken");
 
         return { status: "existing", recipeId };
       }
 
       const existing = await tx.query.recipes.findFirst({
-        where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId ?? "")),
+        where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId)),
         columns: { id: true },
       });
 
