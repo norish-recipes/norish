@@ -61,3 +61,13 @@ export function isPrimaryKeyCollision(error: unknown): boolean {
 
   return false;
 }
+
+/** Whether a write was refused for a retry (`40001`): its Owner's household moved while it ran. */
+export function isRetryableConflict(error: unknown): boolean {
+  for (let current = error; current && typeof current === "object";) {
+    if ((current as { code?: unknown }).code === "40001") return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  return false;
+}

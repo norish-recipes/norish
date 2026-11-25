@@ -200,7 +200,7 @@ describe("a recipe's household follows its Owner", () => {
       await expectInvariant();
     });
 
-    it("puts a recipe written during a move in the household the move ends in", async () => {
+    it("refuses a recipe written during a move, for a retry", async () => {
       const { member, householdId } = await memberWithThings();
       let writing: Promise<{ householdId: string }> = Promise.resolve({ householdId: "" });
       let newHousehold = "";
@@ -220,7 +220,7 @@ describe("a recipe's household follows its Owner", () => {
         await waitForLockWait();
       });
 
-      expect((await writing).householdId).toBe(newHousehold);
+      await expect(writing).rejects.toMatchObject({ cause: { code: "40001" } });
       expect(newHousehold).not.toBe(householdId);
       await expectInvariant();
     });
@@ -273,7 +273,7 @@ describe("a recipe's household follows its Owner", () => {
       await expectInvariant();
     });
 
-    it("settles a leave queued before a recipe insert", async () => {
+    it("refuses a recipe insert queued behind a leave, for a retry", async () => {
       const { member, householdId } = await memberWithThings();
 
       const settled = await raceBehind(holdHousehold(householdId), [
@@ -282,11 +282,36 @@ describe("a recipe's household follows its Owner", () => {
       ]);
       const now = await householdOf(member.id);
 
+      // The insert locked the household the leave left: it is refused for a retry, never moved on.
       expect(now).not.toBe(householdId);
-      expect(settled).toEqual([
-        fulfilled(expect.objectContaining({ applied: true })),
-        fulfilled(expect.objectContaining({ householdId: now })),
+      expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected"]);
+      expect(settled[0]).toEqual(fulfilled(expect.objectContaining({ applied: true })));
+      expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
+        /"code":"40001"/
+      );
+      await expectInvariant();
+    });
+
+    it("refuses an insert whose household moved, under a deletion holding the new one", async () => {
+      const { member, householdId } = await memberWithThings();
+
+      const settled = await raceBehind(holdHousehold(householdId), [
+        () => moveToHouseholdOfOne(householdId, member.id),
+        () => createTestRecipe(member.id, { name: "Racing" }),
+        () => deleteAccount(member.id),
       ]);
+
+      // A conflict to retry, never a deadlock's victim (40P01), and nothing left behind.
+      expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected", "fulfilled"]);
+      expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
+        /"code":"40001"/
+      );
+      expect(
+        await getTestDb()
+          .select({ id: recipes.id })
+          .from(recipes)
+          .where(eq(recipes.userId, member.id))
+      ).toEqual([]);
       await expectInvariant();
     });
 
@@ -347,7 +372,7 @@ describe("a recipe's household follows its Owner", () => {
       await expectInvariant();
     });
 
-    it("settles a join queued before a cookbook insert", async () => {
+    it("refuses a cookbook insert queued behind a join, for a retry", async () => {
       const joiner = await createTestUser();
       const own = await householdOf(joiner.id);
       const target = await householdOf((await createTestUser()).id);
@@ -357,10 +382,10 @@ describe("a recipe's household follows its Owner", () => {
         () => createCookbook({ userId: joiner.id, title: "Racing" }),
       ]);
 
-      expect(settled).toEqual([
-        fulfilled(expect.objectContaining({ leftHouseholdId: own })),
-        fulfilled(expect.objectContaining({ householdId: target })),
-      ]);
+      expect(settled[0]).toEqual(fulfilled(expect.objectContaining({ leftHouseholdId: own })));
+      expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
+        /"code":"40001"/
+      );
       await expectInvariant();
     });
 
@@ -390,10 +415,10 @@ describe("a recipe's household follows its Owner", () => {
         () => createTestRecipe(member.id, { name: "Racing" }),
       ]);
 
-      // Refused for the account being gone, not chosen as a deadlock's victim.
+      // Refused for a retry, which then finds the account gone; never a deadlock's victim.
       expect(settled.map((s) => s.status)).toEqual(["fulfilled", "rejected"]);
       expect(JSON.stringify((settled[1] as PromiseRejectedResult).reason)).toMatch(
-        /"code":"23\d{3}"/
+        /"code":"40001"/
       );
       expect(
         await getTestDb()

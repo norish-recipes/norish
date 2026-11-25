@@ -114,6 +114,21 @@ describe("cookbook procedures", () => {
         expect.objectContaining({ id, title: "Christmas" })
       );
     });
+
+    it("refuses a create its Owner's move overtook as a conflict to retry", async () => {
+      createCookbook.mockRejectedValue(
+        new Error("Failed query: insert into cookbooks", {
+          cause: Object.assign(new Error("household changed"), { code: "40001" }),
+        })
+      );
+
+      const { caller } = callerFor();
+
+      await expect(caller.cookbooks.create({ title: "Racing" })).rejects.toMatchObject({
+        code: "CONFLICT",
+        message: "Changed meanwhile, try again",
+      });
+    });
   });
 
   describe("update", () => {

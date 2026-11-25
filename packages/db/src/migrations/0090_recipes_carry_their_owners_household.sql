@@ -2,10 +2,10 @@
 ALTER TABLE "recipes" ADD COLUMN IF NOT EXISTS "household_id" uuid;--> statement-breakpoint
 ALTER TABLE "cookbooks" ADD COLUMN IF NOT EXISTS "household_id" uuid;--> statement-breakpoint
 -- A row's household is always its Owner's: household row, then membership, as a move locks them.
+-- A membership that moved meanwhile refuses the write (40001, retryable) rather than lock more.
 -- A write keeping its Owner keeps the household; a move's own update (nested) is taken as it is.
 CREATE OR REPLACE FUNCTION "set_owner_household"() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
-  attempt int := 0;
   seen uuid;
 BEGIN
   IF TG_OP = 'UPDATE' AND pg_trigger_depth() > 1 THEN
@@ -15,14 +15,13 @@ BEGIN
     NEW."household_id" := OLD."household_id";
     RETURN NEW;
   END IF;
-  LOOP
-    SELECT "household_id" INTO seen FROM "household_users" WHERE "user_id" = NEW."user_id";
-    PERFORM 1 FROM "households" WHERE "id" = seen FOR KEY SHARE;
-    SELECT "household_id" INTO NEW."household_id" FROM "household_users"
-    WHERE "user_id" = NEW."user_id" FOR SHARE;
-    EXIT WHEN NEW."household_id" IS NOT DISTINCT FROM seen OR attempt = 2;
-    attempt := attempt + 1;
-  END LOOP;
+  SELECT "household_id" INTO seen FROM "household_users" WHERE "user_id" = NEW."user_id";
+  PERFORM 1 FROM "households" WHERE "id" = seen FOR KEY SHARE;
+  SELECT "household_id" INTO NEW."household_id" FROM "household_users"
+  WHERE "user_id" = NEW."user_id" FOR SHARE;
+  IF NEW."household_id" IS DISTINCT FROM seen THEN
+    RAISE EXCEPTION 'The Owner''s household changed during the write' USING ERRCODE = '40001';
+  END IF;
   RETURN NEW;
 END;
 $$;--> statement-breakpoint

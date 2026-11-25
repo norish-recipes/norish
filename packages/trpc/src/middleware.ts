@@ -6,7 +6,10 @@ import type { FullRecipeDTO, HouseholdWithUsersNamesDto, User } from "@norish/sh
 import type { RecipeShareDto } from "@norish/shared/contracts/dto/recipe-shares";
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
 import { isUserServerAdmin } from "@norish/db";
-import { isPrimaryKeyCollision } from "@norish/db/repositories/constraint-violation";
+import {
+  isPrimaryKeyCollision,
+  isRetryableConflict,
+} from "@norish/db/repositories/constraint-violation";
 import { getActiveRecipeShareByToken } from "@norish/db/repositories/recipe-shares";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
@@ -79,11 +82,15 @@ export const authedProcedure = publicProcedure
   .use(withIdempotency)
   .use(withAuth)
   // A client-made id another household's row holds answers like a missing row, without the database's text.
+  // A write its Owner's move overtook is a conflict to retry.
   .use(async ({ next }) => {
     const result = await next();
 
     if (!result.ok && isPrimaryKeyCollision(result.error)) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    }
+    if (!result.ok && isRetryableConflict(result.error)) {
+      throw new TRPCError({ code: "CONFLICT", message: "Changed meanwhile, try again" });
     }
 
     return result;
