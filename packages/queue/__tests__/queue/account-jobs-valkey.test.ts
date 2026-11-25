@@ -18,10 +18,15 @@ import { closeBullConnection, getBullClient } from "../../src/valkey/bullmq";
 const config = vi.hoisted(() => ({ url: "" }));
 const gone = vi.hoisted(() => new Set<string>());
 const queues = vi.hoisted(() => new Map<string, Queue>());
+const deleteRecipeImagesDir = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdIdForUser: async (userId: string) => (gone.has(userId) ? null : "household-1"),
 }));
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: async () => new Map(),
+}));
+vi.mock("@norish/shared-server/media/storage", () => ({ deleteRecipeImagesDir }));
 vi.mock("@norish/queue/registry", () => ({
   getQueueByName: (name: QueueName) => queues.get(name),
 }));
@@ -50,6 +55,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   gone.clear();
+  deleteRecipeImagesDir.mockClear();
   for (const name of ACCOUNT_QUEUES) {
     queues.set(name, new Queue(name, { connection: getBullClient() }));
   }
@@ -143,4 +149,29 @@ it("runs nothing of a job whose account went before it started, and keeps none o
 
   await expect.poll(() => images.getJob(job.id!)).toBeUndefined();
   expect(processor).not.toHaveBeenCalled();
+});
+
+it("removes the jobs of a paused queue, and the media a removed paste or import downloaded", async () => {
+  const images = queues.get(IMAGES)!;
+  const pasted = queues.get(QUEUE_NAMES.PASTE_IMPORT)!;
+  const pastedIds = [crypto.randomUUID(), crypto.randomUUID()];
+  const imageId = crypto.randomUUID();
+
+  await images.pause();
+  const paused = await images.add("import", photos("deleted", imageId));
+  const paste = await pasted.add("paste", {
+    batchId: "batch",
+    recipeIds: pastedIds,
+    userId: "deleted",
+    householdId: "household-1",
+    text: "Soep",
+  });
+
+  await removeAccountJobs("deleted", []);
+
+  expect(await images.getJob(paused.id!)).toBeUndefined();
+  expect(await pasted.getJob(paste.id!)).toBeUndefined();
+  expect(deleteRecipeImagesDir.mock.calls.map(([id]) => id).sort()).toEqual(
+    [...pastedIds, imageId].sort()
+  );
 });
