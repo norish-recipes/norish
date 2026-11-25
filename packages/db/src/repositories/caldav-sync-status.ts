@@ -51,20 +51,6 @@ export async function updateCaldavSyncStatus(
   return result.data;
 }
 
-export async function getCaldavSyncStatusById(id: string): Promise<CaldavSyncStatusDto | null> {
-  const rows = await db.select().from(caldavSyncStatus).where(eq(caldavSyncStatus.id, id)).limit(1);
-
-  const row = rows[0];
-
-  if (!row) return null;
-
-  const validated = CaldavSyncStatusSelectSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Invalid sync status data");
-
-  return validated.data;
-}
-
 export async function getCaldavSyncStatusByItemId(
   userId: string,
   itemId: string
@@ -172,23 +158,6 @@ export async function getCaldavSyncStatusesByUser(
   }));
 
   return { items: viewItems, total: count };
-}
-
-export async function getFailedSyncStatuses(): Promise<CaldavSyncStatusDto[]> {
-  const rows = await db
-    .select()
-    .from(caldavSyncStatus)
-    .where(
-      and(eq(caldavSyncStatus.syncStatus, "failed"), sql`${caldavSyncStatus.retryCount} < 10`)
-    );
-
-  return rows.map((row) => {
-    const validated = CaldavSyncStatusSelectSchema.safeParse(row);
-
-    if (!validated.success) throw new Error("Invalid sync status data");
-
-    return validated.data;
-  });
 }
 
 export async function getPendingOrFailedSyncStatuses(
