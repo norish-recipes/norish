@@ -63,3 +63,10 @@
   22. fixed: in the touched functions of the share cache, both web cards and the actions menu; `use-recipe-shares-query.ts` only lost a function, so its hooks stay.
   23. fixed: the mocks answer only for the row under test.
   - asked of the maintainer: admin job monitor payloads, admin bulk AI enrichment, admin share-link moderation; moved: ingredient usage counts to ticket 07, file sweep and plan notes to ticket 04; rejected: in-flight requests keep their authorisation, the seeded-Ingredient admin path.
+- Review round 2:
+  1. fixed: only the upload writing an id's first file claims it; files whose claim is gone are no one's (no serve, upload, delete or create).
+  2. fixed: `mediaId` takes only the lowercase spelling; recipe, step, video and cookbook routes and procedures refuse any other as not found.
+  3. fixed: a View Epoch in Valkey, bumped after a policy change and with every membership announcement, is in every cursor's identity; one server-wide epoch.
+  4. fixed: the offline QueryClient drops a read's data, in memory and stored, when it answers NOT_FOUND; a network failure keeps it.
+  5. fixed: the trigger locks once, household then membership, and raises 40001 when the membership moved; `authedProcedure` answers it CONFLICT. Owner-household races 20/20.
+  6. fixed: cookbook events take `cookbookAudience` at publish (a delete: the household its RETURNING names); enrichment's update takes `recipeAudience`.
