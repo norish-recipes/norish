@@ -4,7 +4,8 @@
  *
  * Run against a database migrated up to the migration before it, seeded with
  * accounts as earlier releases left them: some in a household, some in none,
- * one in two. Applying the migration a second time changes nothing.
+ * some in two, and households whose admin no longer lives there. Applying the
+ * migration a second time changes nothing.
  */
 
 import { randomUUID } from "node:crypto";
@@ -36,10 +37,19 @@ describe("every account has a household", () => {
     alone: "user-alone",
     secondAlone: "user-second-alone",
     inTwo: "user-in-two",
+    displacedAdmin: "user-displaced-admin",
+    elder: "user-elder",
+    younger: "user-younger",
+    formerAdmin: "user-former-admin",
+    lodgerEarly: "user-lodger-early",
+    lodgerLate: "user-lodger-late",
   };
   const shared = randomUUID();
   const first = randomUUID();
   const later = randomUUID();
+  const home = randomUUID();
+  const displaced = randomUUID();
+  const adminless = randomUUID();
 
   async function applyMigration(tag: string): Promise<void> {
     const sql = await readFile(resolve(MIGRATIONS_FOLDER, `${tag}.sql`), "utf8");
@@ -68,6 +78,27 @@ describe("every account has a household", () => {
     );
 
     return result.rows.map((row) => row.user_id);
+  }
+
+  /** Every household and membership, to compare runs row by row. */
+  async function snapshot() {
+    const households = await pool.query(
+      "SELECT id, name, admin_user_id FROM households ORDER BY id"
+    );
+    const members = await pool.query(
+      "SELECT household_id, user_id FROM household_users ORDER BY household_id, user_id"
+    );
+
+    return { households: households.rows, members: members.rows };
+  }
+
+  async function adminOf(householdId: string): Promise<string | undefined> {
+    const result = await pool.query<{ admin_user_id: string }>(
+      "SELECT admin_user_id FROM households WHERE id = $1",
+      [householdId]
+    );
+
+    return result.rows[0]?.admin_user_id;
   }
 
   async function count(table: string): Promise<number> {
@@ -117,6 +148,17 @@ describe("every account has a household", () => {
     await member(first, users.inTwo, "2024-02-01");
     await household(later, "Later", users.inTwo);
     await member(later, users.inTwo, "2024-03-01");
+    // The admin is taken out of the household they joined later; the role passes on.
+    await household(home, "Home", users.displacedAdmin);
+    await member(home, users.displacedAdmin, "2024-01-15");
+    await household(displaced, "Displaced", users.displacedAdmin);
+    await member(displaced, users.displacedAdmin, "2024-04-01");
+    await member(displaced, users.younger, "2024-04-03");
+    await member(displaced, users.elder, "2024-04-02");
+    // An admin who left without handing the role on.
+    await household(adminless, "Adminless", users.formerAdmin);
+    await member(adminless, users.lodgerLate, "2024-05-02");
+    await member(adminless, users.lodgerEarly, "2024-05-01");
 
     await applyMigration(MIGRATION_TAG);
   }, 180_000);
@@ -151,6 +193,28 @@ describe("every account has a household", () => {
     expect(await count(`households WHERE id = '${later}'`)).toBe(0);
   });
 
+  it("hands a displaced admin's role to the longest-standing member who stays", async () => {
+    expect(await memberIdsOf(displaced)).toEqual([users.elder, users.younger].sort());
+    expect(await adminOf(displaced)).toBe(users.elder);
+    expect(await adminOf(home)).toBe(users.displacedAdmin);
+  });
+
+  it("hands the role on in a household whose admin no longer lives there", async () => {
+    expect(await adminOf(adminless)).toBe(users.lodgerEarly);
+    expect((await householdsOf(users.formerAdmin))[0]).toMatchObject({
+      name: "My household",
+      admin_user_id: users.formerAdmin,
+    });
+  });
+
+  it("leaves every household with an admin who is one of its members", async () => {
+    expect(
+      await count(`households h WHERE NOT EXISTS (
+        SELECT 1 FROM household_users hu
+        WHERE hu.household_id = h.id AND hu.user_id = h.admin_user_id)`)
+    ).toBe(0);
+  });
+
   it("refuses a second membership from here on", async () => {
     await expect(
       pool.query("INSERT INTO household_users (household_id, user_id) VALUES ($1, $2)", [
@@ -169,16 +233,10 @@ describe("every account has a household", () => {
   });
 
   it("changes nothing when it runs again", async () => {
-    const before = {
-      households: await count("households"),
-      members: await count("household_users"),
-    };
+    const before = await snapshot();
 
     await applyMigration(MIGRATION_TAG);
 
-    expect({
-      households: await count("households"),
-      members: await count("household_users"),
-    }).toEqual(before);
+    expect(await snapshot()).toEqual(before);
   });
 });

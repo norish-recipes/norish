@@ -4,6 +4,14 @@ WHERE earlier."user_id" = hu."user_id"
   AND (earlier."created_at", earlier."household_id") < (hu."created_at", hu."household_id");--> statement-breakpoint
 DELETE FROM "households" h
 WHERE NOT EXISTS (SELECT 1 FROM "household_users" hu WHERE hu."household_id" = h."id");--> statement-breakpoint
+-- A household whose admin no longer lives there hands the role to its longest-standing member.
+UPDATE "households" h SET "admin_user_id" = (
+  SELECT hu."user_id" FROM "household_users" hu WHERE hu."household_id" = h."id"
+  ORDER BY hu."created_at", hu."user_id" LIMIT 1
+)
+WHERE NOT EXISTS (
+  SELECT 1 FROM "household_users" hu WHERE hu."household_id" = h."id" AND hu."user_id" = h."admin_user_id"
+);--> statement-breakpoint
 DROP INDEX IF EXISTS "idx_household_users_user_id";--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "uq_household_users_user_id" ON "household_users" USING btree ("user_id");--> statement-breakpoint
 -- An account without a household gets a household of one, named as sign-up names one.
