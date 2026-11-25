@@ -15,6 +15,8 @@ import {
 } from "@norish/config/crypto";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
+import { forgetMasterKey } from "../../config/__tests__/helpers/master-key";
+
 const config = vi.hoisted(() => ({
   UPLOADS_DIR: "",
   MASTER_KEY: undefined as string | undefined,
@@ -49,16 +51,13 @@ const { keyFilePath, readKeyFile, resolveMasterKey, writeKeyFile } =
 
 const keyDir = () => path.dirname(keyFilePath());
 const modeOf = async (target: string) => (await fs.stat(target)).mode & 0o777;
-const forgetOpenedKey = () => {
-  delete (globalThis as Record<symbol, unknown>)[Symbol.for("norish:master-key")];
-};
 
 /** What `key` encrypts `plain` to, with no key left open after. */
 function sealedBy(key: Buffer, plain: string): string {
   initMasterKey(key);
   const sealed = encrypt(plain);
 
-  forgetOpenedKey();
+  forgetMasterKey();
 
   return sealed;
 }
@@ -68,7 +67,7 @@ function lookupBy(key: Buffer): string {
   initMasterKey(key);
   const lookup = hmacIndex("ada@example.com");
 
-  forgetOpenedKey();
+  forgetMasterKey();
 
   return lookup;
 }
@@ -84,7 +83,7 @@ beforeEach(() => {
   database.written = null;
   setConfig.mockReset();
   logged.length = 0;
-  forgetOpenedKey();
+  forgetMasterKey();
 });
 
 afterEach(() => {

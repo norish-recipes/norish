@@ -10,9 +10,11 @@ import {
   initMasterKey,
 } from "@norish/config/crypto";
 
+import { forgetMasterKey } from "../helpers/master-key";
+
 describe("the Master Key's derived keys", () => {
   beforeEach(() => {
-    delete (globalThis as Record<symbol, unknown>)[Symbol.for("norish:master-key")];
+    forgetMasterKey();
   });
 
   it("refuses to encrypt, decrypt, sign or hash before boot opened a key", () => {
