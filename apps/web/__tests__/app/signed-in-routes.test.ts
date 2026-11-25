@@ -9,7 +9,12 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SIGNED_IN_APP = path.join(__dirname, "../../app/(app)");
-const SESSION_CHECKS = ["refuseWithoutSession(", "refuseUnlessViewer(", "auth.api.getSession("];
+const SESSION_CHECKS = [
+  "refuseWithoutSession(",
+  "refuseUnlessViewer(",
+  "auth.api.getSession(",
+  "getVerifiedSession(",
+];
 
 const handlers = readdirSync(SIGNED_IN_APP, { recursive: true, encoding: "utf8" })
   .filter((file) => path.basename(file) === "route.ts")
