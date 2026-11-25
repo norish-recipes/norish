@@ -189,6 +189,7 @@ export function seeder({ trpc, query }) {
         "API keys"
       ),
     // A recipe as the recipe form saves one; answers its id.
+    /** @param {{ name: string, ingredients?: string[], steps?: string[], tags?: string[], categories?: string[], minutes?: number }} recipe */
     async createRecipe({
       name,
       ingredients = [],
