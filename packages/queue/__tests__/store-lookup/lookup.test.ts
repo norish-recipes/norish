@@ -98,6 +98,10 @@ function useShop(options: {
   return visited;
 }
 
+/** Postgres refusing a write onto a Store deleted meanwhile, as drizzle wraps it. */
+const storeGone = () =>
+  Object.assign(new Error("insert failed"), { cause: { code: "23503", constraint: "fk_store" } });
+
 describe("matchGroceryName", () => {
   beforeEach(() => {
     resetQueueApiHandlersForTests();
@@ -132,6 +136,22 @@ describe("matchGroceryName", () => {
     });
 
     expect(visited[0]).toBe("https://www.dirk.nl/zoeken/producten/oude%20kaas");
+  });
+
+  it.each([
+    ["linking", "upsertReadProduct"],
+    ["a Miss", "linkIfUnanswered"],
+  ] as const)("ends quietly when the Store goes while %s is written", async (_, write) => {
+    useShop({
+      candidates: [candidate(write === "upsertReadProduct" ? "Oude kaas" : "Jonge kaas")],
+      product: { name: "Oude kaas", price: 7.99, currency: "EUR" },
+    });
+    mocks[write].mockRejectedValue(storeGone());
+    mocks.getStoreHouseholdId.mockResolvedValueOnce(HOUSEHOLD).mockResolvedValue(null);
+
+    await expect(
+      matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" })
+    ).resolves.toEqual({ matched: false });
   });
 
   it("reads the product's own page for the price it keeps", async () => {
@@ -859,7 +879,28 @@ describe("refreshProducts", () => {
 
     await refreshProducts({ productIds: ["manual-1"], storeId: STORE, now: new Date() });
 
-    expect(mocks.listStaleProducts).toHaveBeenCalledWith(["manual-1"], expect.any(Date));
+    expect(mocks.listStaleProducts).toHaveBeenCalledWith([STORE], ["manual-1"], expect.any(Date));
     expect(mocks.upsertReadProduct).not.toHaveBeenCalled();
+  });
+
+  it("ends quietly when the Store goes while the shop is being read", async () => {
+    mocks.listStaleProducts.mockResolvedValue([
+      { id: "p1", storeId: STORE, pageUrl: PRODUCT_PAGE, isManual: false },
+    ]);
+    useShop({ product: { name: "Oude kaas", price: 8.99, currency: "EUR" } });
+    mocks.upsertReadProduct.mockRejectedValue(storeGone());
+    mocks.getStoreHouseholdId.mockResolvedValueOnce(HOUSEHOLD).mockResolvedValue(null);
+
+    await expect(refreshProducts({ productIds: ["p1"], storeId: STORE })).resolves.toEqual({
+      refreshed: 0,
+    });
+  });
+
+  it("asks the repository only for this Store's products", async () => {
+    mocks.listStaleProducts.mockResolvedValue([]);
+
+    await refreshProducts({ productIds: ["p1"], storeId: STORE });
+
+    expect(mocks.listStaleProducts).toHaveBeenCalledWith([STORE], ["p1"], expect.any(Date));
   });
 });

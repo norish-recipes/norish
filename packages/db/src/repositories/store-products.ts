@@ -445,7 +445,7 @@ export async function listStoreProducts(storeId: string): Promise<StoreProductDt
 }
 
 /**
- * The read products among these whose Shelf Price is older than the ceiling,
+ * The read products of these Stores among these ids whose Shelf Price is older than the ceiling,
  * least recently touched first. A by-hand product is never stale: nothing
  * read it, and nothing may refresh it. "Touched" rather than "priced": a page
  * that could not be re-read is noted as tried (see `noteProductUnreadable`),
@@ -453,15 +453,17 @@ export async function listStoreProducts(storeId: string): Promise<StoreProductDt
  * filling every refresh with pages that answer nothing.
  */
 export async function listStaleProducts(
+  storeIds: string[],
   productIds: string[],
   olderThan: Date
 ): Promise<StoreProductDto[]> {
-  if (productIds.length === 0) return [];
+  if (storeIds.length === 0 || productIds.length === 0) return [];
   const rows = await db
     .select()
     .from(storeProducts)
     .where(
       and(
+        inArray(storeProducts.storeId, storeIds),
         inArray(storeProducts.id, productIds),
         eq(storeProducts.isManual, false),
         isNotNull(storeProducts.pageUrl),

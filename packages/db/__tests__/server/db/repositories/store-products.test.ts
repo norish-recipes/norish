@@ -298,7 +298,7 @@ describe("store products, product links and misses", () => {
         .where(eq(storeProducts.id, second.id));
 
       const stale = () =>
-        listStaleProducts([first.id, second.id], new Date()).then((rows) =>
+        listStaleProducts([storeId], [first.id, second.id], new Date()).then((rows) =>
           rows.map((row) => row.id)
         );
 
@@ -327,7 +327,7 @@ describe("store products, product links and misses", () => {
         .update(storeProducts)
         .set({ pricedAt: new Date("2020-01-01T00:00:00Z") });
 
-      const stale = await listStaleProducts([manual.id, read.id], new Date());
+      const stale = await listStaleProducts([storeId], [manual.id, read.id], new Date());
 
       expect(stale.map((product) => product.id)).toEqual([read.id]);
     });

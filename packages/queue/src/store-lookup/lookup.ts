@@ -11,7 +11,10 @@ import type {
   StoreProductReadingInput,
 } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
-import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
+import {
+  isConstraintViolation,
+  isStaleIngredientReference,
+} from "@norish/db/repositories/constraint-violation";
 import {
   clearPendingLink,
   linkIfUnanswered,
@@ -235,10 +238,13 @@ export async function matchGroceryName(input: {
       "No unmistakable match; a Miss"
     );
     await input.onStep?.("saving-link");
-    const written = await linkUnlessGone(() =>
-      linkIfUnanswered(storeId, ingredientId, null, decided?.asked ? decided.suggestion : null)
+    const written = await unlessStoreGone(storeId, () =>
+      linkUnlessGone(() =>
+        linkIfUnanswered(storeId, ingredientId, null, decided?.asked ? decided.suggestion : null)
+      )
     );
 
+    if (written === null) return { matched: false };
     await input.onStepDone?.({ written });
     await announceLink(householdId, storeId, ingredientId);
 
@@ -258,8 +264,17 @@ export async function matchGroceryName(input: {
   if (!reading) return gaveUp();
 
   await input.onStep?.("saving-link");
-  const product = await upsertReadProduct(reading);
-  const linked = await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id));
+  const written = await unlessStoreGone(storeId, async () => {
+    const product = await upsertReadProduct(reading);
+
+    return {
+      product,
+      linked: await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id)),
+    };
+  });
+
+  if (!written) return { matched: false };
+  const { product, linked } = written;
 
   await input.onStepDone?.({ written: linked });
   announceProduct(householdId, product);
@@ -301,6 +316,18 @@ async function linkUnlessGone(write: () => Promise<boolean>): Promise<boolean> {
   }
 }
 
+/** A write after a shop visit; a Store deleted meanwhile ends the job quietly, as null. */
+async function unlessStoreGone<T>(storeId: string, write: () => Promise<T>): Promise<T | null> {
+  try {
+    return await write();
+  } catch (error) {
+    if (!isConstraintViolation(error, "23503") || (await getStoreHouseholdId(storeId))) throw error;
+    log.debug({ storeId }, "The Store was deleted while the shop was being read");
+
+    return null;
+  }
+}
+
 /**
  * Re-read the Shelf Prices that have gone stale. A by-hand product is never
  * here: nothing read it, and nothing may overwrite what its owner typed.
@@ -313,9 +340,7 @@ export async function refreshProducts(input: {
   const now = input.now ?? new Date();
   // The Store's household as it is now, not as it was when the job was queued.
   const householdId = await getStoreHouseholdId(input.storeId);
-  const stale = (await listStaleProducts(input.productIds, staleBefore(now))).filter(
-    (product) => product.storeId === input.storeId
-  );
+  const stale = await listStaleProducts([input.storeId], input.productIds, staleBefore(now));
 
   if (!householdId || stale.length === 0) return { refreshed: 0 };
 
@@ -341,8 +366,9 @@ export async function refreshProducts(input: {
       continue;
     }
 
-    const updated = await upsertReadProduct(reading);
+    const updated = await unlessStoreGone(input.storeId, () => upsertReadProduct(reading));
 
+    if (!updated) return { refreshed };
     announceProduct(householdId, updated);
     refreshed += 1;
   }

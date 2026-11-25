@@ -179,7 +179,8 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
 
   if (productIds.length === 0) return links;
 
-  const stale = await listStaleProducts(productIds, staleBefore());
+  const storeIds = [...new Set(links.map((link) => link.storeId))];
+  const stale = await listStaleProducts(storeIds, productIds, staleBefore());
 
   if (stale.length === 0) return links;
 
