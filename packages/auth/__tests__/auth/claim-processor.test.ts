@@ -372,7 +372,10 @@ describe("processClaimsForUser", () => {
       await processClaimsForUser(userId, profile, enabledConfig);
 
       expect(mockFindHouseholdByName).toHaveBeenCalledWith("smiths");
-      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, { householdId: "hh-123", name: "smiths" });
+      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, {
+        householdId: "hh-123",
+        name: "smiths",
+      });
       expect(mockRenameHouseholdOfOne).not.toHaveBeenCalled();
     });
 
@@ -433,7 +436,10 @@ describe("processClaimsForUser", () => {
 
       await processClaimsForUser(userId, profile, enabledConfig);
 
-      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, { householdId: "hh-123", name: "smiths" });
+      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, {
+        householdId: "hh-123",
+        name: "smiths",
+      });
       expect(mockRenameHouseholdOfOne).not.toHaveBeenCalled();
     });
 
@@ -487,7 +493,10 @@ describe("processClaimsForUser", () => {
       await processClaimsForUser(userId, profile, enabledConfig);
 
       expect(mockSetUserAdminStatus).toHaveBeenCalledWith(userId, true);
-      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, { householdId: "family-hh", name: "family" });
+      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, {
+        householdId: "family-hh",
+        name: "family",
+      });
     });
   });
 

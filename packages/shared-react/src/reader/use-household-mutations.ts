@@ -2,8 +2,8 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
+import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import { joinRefusalOf } from "@norish/shared/lib/join-refusals";
 
 import { wentThrough } from "../offline/settled";
