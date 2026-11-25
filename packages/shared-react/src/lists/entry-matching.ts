@@ -80,3 +80,16 @@ export function createOffer(
 
   return folds.has(entryFold(name)) ? { kind: "none" } : { kind: "create", name };
 }
+
+/** The chosen ids as named entries, in order: from the list, else from what the recipe carries. */
+export function chosenEntries(
+  ids: readonly string[],
+  entries: readonly PickerEntry[],
+  carried: readonly PickerEntry[] = []
+): PickerEntry[] {
+  return ids.flatMap((id) => {
+    const known = entries.find((entry) => entry.id === id) ?? carried.find((c) => c.id === id);
+
+    return known ? [{ id, name: known.name }] : [];
+  });
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createOffer, matchEntries } from "../entry-matching";
+import { chosenEntries, createOffer, matchEntries } from "../entry-matching";
 
 const list = (...names: string[]) => names.map((name, index) => ({ id: `e${index}`, name }));
 
@@ -57,5 +57,17 @@ describe("createOffer", () => {
     expect(createOffer("category", [], "x".repeat(40))).toMatchObject({ kind: "create" });
     expect(createOffer("cuisine", [], "x".repeat(81))).toEqual({ kind: "tooLong", max: 80 });
     expect(createOffer("tag", [], "x".repeat(500))).toMatchObject({ kind: "create" });
+  });
+});
+
+describe("chosenEntries", () => {
+  it("names a chosen id from the list, else from what the recipe carries, else drops it", () => {
+    const entries = [{ id: "a", name: "Thai" }];
+    const carried = [{ id: "b", name: "Carried" }];
+
+    expect(chosenEntries(["b", "a", "zzz"], entries, carried)).toEqual([
+      { id: "b", name: "Carried" },
+      { id: "a", name: "Thai" },
+    ]);
   });
 });
