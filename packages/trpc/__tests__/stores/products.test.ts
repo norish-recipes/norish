@@ -93,7 +93,10 @@ describe("chooseProduct", () => {
 
     await caller.chooseProduct({ storeId: STORE, name: "Uien", choice: { kind: "none" } });
 
-    expect(resolveIngredient).toHaveBeenCalledWith("Uien", { userId: ctx.user.id });
+    expect(resolveIngredient).toHaveBeenCalledWith("Uien", {
+      userId: ctx.user.id,
+      householdId: ctx.householdId,
+    });
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,
       "ingredient:onion",
@@ -436,7 +439,7 @@ describe("searchShop", () => {
     const result = await caller.searchShop({ storeId: STORE, term: "oude kaas" });
 
     expect(result).toEqual({ candidates: offered, answered: true });
-    expect(findIngredientFor).toHaveBeenCalledWith("oude kaas");
+    expect(findIngredientFor).toHaveBeenCalledWith(ctx.householdId, "oude kaas");
     expect(storeProductsRepository.resolveProductLink).toHaveBeenCalledWith(
       STORE,
       "ingredient:oude kaas"

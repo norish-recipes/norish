@@ -65,7 +65,10 @@ describe("filing a name at a Store", () => {
   it("files the name under the aisle and tells the household where it now is", async () => {
     const filing = await caller.fileGroceryName({ storeId: STORE, name: "Melk", aisleId: ZUIVEL });
 
-    expect(resolveIngredient).toHaveBeenCalledWith("Melk", { userId: ctx.user.id });
+    expect(resolveIngredient).toHaveBeenCalledWith("Melk", {
+      userId: ctx.user.id,
+      householdId: ctx.householdId,
+    });
     expect(aislesRepository.fileIngredient).toHaveBeenCalledWith(STORE, "ingredient:melk", ZUIVEL);
     expect(filing).toEqual({ storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL });
     expect(stores.publish).toHaveBeenCalledWith(

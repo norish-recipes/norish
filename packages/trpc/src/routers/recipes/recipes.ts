@@ -45,6 +45,7 @@ import { isVideoParsingEnabled } from "@norish/shared-server/config/server-confi
 import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
+  lineHousehold,
   updateResolvedRecipe,
   withResolvedIngredients,
 } from "@norish/shared-server/ingredients/recipe-lines";
@@ -754,8 +755,11 @@ const convertMeasurements = authedProcedure
         }));
 
         const result = await writeResolved(
-          () =>
-            withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id }),
+          async () =>
+            withResolvedIngredients(
+              { recipeIngredients: ingredients },
+              { userId: ctx.user.id, householdId: await lineHousehold(ctx.user.id, recipe.id) }
+            ),
           (resolved) =>
             writeConvertedCopy(
               recipe.id,

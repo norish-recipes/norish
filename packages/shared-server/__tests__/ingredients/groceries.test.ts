@@ -54,7 +54,7 @@ describe("grocery names through aliases", () => {
             { ingredientId: null, ingredientName: text, amount: 1, unit: null, order: 0 },
           ],
         },
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     );
 
@@ -63,7 +63,10 @@ describe("grocery names through aliases", () => {
 
   it("recognises a name typed by hand as the food a recipe line names", async () => {
     const line = await recipeLine("onions, diced");
-    const [typed] = await resolveGroceryNames([{ name: "Onions" }], { userId });
+    const [typed] = await resolveGroceryNames([{ name: "Onions" }], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     expect(typed?.ingredientId).toBe(line.ingredientId);
   });
@@ -72,7 +75,7 @@ describe("grocery names through aliases", () => {
     const line = await recipeLine("onions, diced");
     const [fromRecipe, typed] = await resolveGroceryNames(
       [{ name: "onions, diced", recipeIngredientId: line.id }, { name: "onions, diced" }],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(fromRecipe).toEqual(typed);
@@ -85,13 +88,19 @@ describe("grocery names through aliases", () => {
     await withTransaction((tx) => deleteCatalogueIngredient(tx, line.ingredientId!));
 
     await expect(
-      resolveGroceryNames([{ name: "deegroller", recipeIngredientId: line.id }], { userId })
+      resolveGroceryNames([{ name: "deegroller", recipeIngredientId: line.id }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      })
     ).resolves.toEqual([null]);
     await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
   });
 
   it("keeps a grocery's having no food while an edit leaves its text alone, and resolves a new text", async () => {
-    const [food] = await resolveGroceryNames([{ name: "deegroller" }], { userId });
+    const [food] = await resolveGroceryNames([{ name: "deegroller" }], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
     const grocery = await addTestGrocery(userId, {
       name: "deegroller",
       ingredientAliasId: food!.aliasId,
@@ -103,14 +112,14 @@ describe("grocery names through aliases", () => {
     await expect(
       resolveGroceryNames(
         [{ name: "Deegroller", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     ).resolves.toEqual([null]);
     await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
 
     const [renamed] = await resolveGroceryNames(
       [{ name: "deeg", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(renamed).toEqual(expect.objectContaining({ aliasId: expect.any(String) }));
@@ -120,7 +129,7 @@ describe("grocery names through aliases", () => {
     const line = await recipeLine("olive oil");
     const [renamed] = await resolveGroceryNames(
       [{ name: "extra virgin olive oil", recipeIngredientId: line.id }],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(renamed?.ingredientId).not.toBe(line.ingredientId);
@@ -129,9 +138,11 @@ describe("grocery names through aliases", () => {
   it("answers a grocery replayed after being added offline exactly as it did the first time", async () => {
     const first = await resolveGroceryNames([{ name: "Uien" }, { name: "leeks, sliced" }], {
       userId,
+      householdId: testHouseholdOf(userId),
     });
     const replayed = await resolveGroceryNames([{ name: "Uien" }, { name: "leeks, sliced" }], {
       userId,
+      householdId: testHouseholdOf(userId),
     });
 
     expect(replayed).toEqual(first);
@@ -139,25 +150,32 @@ describe("grocery names through aliases", () => {
 
   it("keeps a typed grocery that names no food without one, and mints nothing", async () => {
     await expect(
-      resolveGroceryNames([{ name: ")" }, { name: "—" }, { name: "leeks" }], { userId })
+      resolveGroceryNames([{ name: ")" }, { name: "—" }, { name: "leeks" }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      })
     ).resolves.toEqual([null, null, expect.objectContaining({ aliasId: expect.any(String) })]);
     await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(1);
   });
 
   it("has nothing to resolve for a grocery with no name", async () => {
     await expect(
-      resolveGroceryNames([{ name: null }, { name: "  " }], { userId })
+      resolveGroceryNames([{ name: null }, { name: "  " }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      })
     ).resolves.toEqual([null, null]);
   });
 
   describe("a name whose words join foods", () => {
     beforeEach(async () => {
-      for (const text of ["zout", "peper", "boter", "olie"]) await mintTestFood(text);
+      for (const text of ["zout", "peper", "boter", "olie"])
+        await mintTestFood(testHouseholdOf(userId), text);
     });
 
     it("stands for a grocery per food it joins, the first of alternatives, and minting nothing", async () => {
       await expect(
-        groceryParts([
+        groceryParts(testHouseholdOf(userId), [
           { id: "a", name: "Zout en peper" },
           { id: "b", name: "boter of olie" },
           { id: "c", name: "zout en suiker" },
@@ -178,7 +196,10 @@ describe("grocery names through aliases", () => {
     });
 
     it("keeps whole a grocery whose joined text an edit leaves alone", async () => {
-      const [zout] = await resolveGroceryNames([{ name: "zout" }], { userId });
+      const [zout] = await resolveGroceryNames([{ name: "zout" }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
       const groceryId = crypto.randomUUID();
 
       await createGroceries(
@@ -206,7 +227,7 @@ describe("grocery names through aliases", () => {
       const edit = { groceryId, householdId: testHouseholdOf(userId) };
 
       await expect(
-        groceryParts([
+        groceryParts(testHouseholdOf(userId), [
           { name: "Zout en peper", ...edit },
           { name: "peper en zout", ...edit },
         ])

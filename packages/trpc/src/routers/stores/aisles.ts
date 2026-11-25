@@ -57,7 +57,7 @@ const fileGroceryName = authedProcedure
 
     // Markup alone names no food, and is filed nowhere.
     const filing = await writeResolved(
-      () => resolveIngredient(input.name, { userId: ctx.user.id }),
+      () => resolveIngredient(input.name, { userId: ctx.user.id, householdId: ctx.householdId }),
       async (ingredient) =>
         ingredient
           ? await fileIngredient(input.storeId, ingredient.ingredientId, input.aisleId)

@@ -154,7 +154,7 @@ describe("household rows through their routers", () => {
   });
 
   it("pantry: a housemate's item is the household's, another household cannot remove it", async () => {
-    const food = await helpers.mintTestFood("olijfolie");
+    const food = await helpers.mintTestFood(helpers.testHouseholdOf(admin.id), "olijfolie");
     const item = await helpers.addTestPantryIngredient(housemate.id, food);
     const mine = await as(routers.pantry, admin);
     const theirs = await as(routers.pantry, stranger);

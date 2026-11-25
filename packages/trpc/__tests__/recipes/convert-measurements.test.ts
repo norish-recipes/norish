@@ -21,6 +21,7 @@ vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtim
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 vi.mock("@norish/shared-server/ingredients/resolver", () => import("../mocks/ingredient-resolver"));
 vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
+  lineHousehold: async () => "test-household-id",
   withResolvedIngredients: async (input: object) => ({
     ...input,
     ingredientResolutions: new Map(),

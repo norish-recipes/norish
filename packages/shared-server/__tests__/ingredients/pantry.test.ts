@@ -56,7 +56,7 @@ describe("the Pantry through aliases", () => {
             order,
           })),
         },
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     );
 

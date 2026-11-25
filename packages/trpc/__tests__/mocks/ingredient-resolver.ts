@@ -17,7 +17,7 @@ export const resolveIngredient = vi.fn(async (text: string) =>
   cleanIngredientText(text) ? answer(text) : null
 );
 
-export const findIngredientFor = vi.fn(async (text: string) => {
+export const findIngredientFor = vi.fn(async (_householdId: string, text: string) => {
   const { aliasId, ingredientId } = answer(text);
 
   return text.trim() ? { aliasId, ingredientId } : null;

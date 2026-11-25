@@ -59,7 +59,7 @@ const linkFor = authedProcedure
   .input(StoreProductLinkLookupSchema)
   .query(async ({ ctx, input }): Promise<ResolvedProductLink | null> => {
     await assertStoreAccess(ctx, input.storeId);
-    const ingredient = await findIngredientFor(input.name);
+    const ingredient = await findIngredientFor(ctx.householdId, input.name);
 
     return ingredient ? resolveProductLink(input.storeId, ingredient.ingredientId) : null;
   });
@@ -126,7 +126,7 @@ const searchShop = authedProcedure
     // What the lookup's Decision said about these products, kept with the
     // Miss for this name (ADR-0035): the offered list is ordered by it, most
     // likely first. One indexed row, no request.
-    const ingredient = await findIngredientFor(input.term);
+    const ingredient = await findIngredientFor(ctx.householdId, input.term);
     const link = ingredient
       ? await resolveProductLink(input.storeId, ingredient.ingredientId)
       : null;
@@ -295,7 +295,7 @@ const chooseProduct = authedProcedure
     // The choice is about the food the grocery names, so every spelling of it
     // at this Store is priced by it (ADR-0037).
     const ingredient = await writeResolved(
-      () => resolveIngredient(input.name, { userId: ctx.user.id }),
+      () => resolveIngredient(input.name, { userId: ctx.user.id, householdId: ctx.householdId }),
       async (resolved) => {
         if (resolved) await upsertProductLink(input.storeId, resolved.ingredientId, storeProductId);
 

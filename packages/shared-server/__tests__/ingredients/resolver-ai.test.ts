@@ -80,7 +80,10 @@ describe("ingredient resolver with AI on", () => {
   });
 
   async function resolveOne(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId });
+    const [resolved] = await resolveIngredients([text], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     return resolved!;
   }
@@ -103,7 +106,7 @@ describe("ingredient resolver with AI on", () => {
             order,
           })),
         },
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     );
 
@@ -166,12 +169,15 @@ describe("ingredient resolver with AI on", () => {
       recipeIngredients: [{ ingredientName: "melted", ingredientId: null }],
     });
 
-    const [change, ...others] = await listAIChanges();
+    const [change, ...others] = await listAIChanges({
+      householdId: testHouseholdOf(userId),
+      isServerAdmin: false,
+    });
 
     expect(others).toEqual([]);
     expect(change).toMatchObject({ sure: true, undo: { kind: "not-a-food" } });
     await undoAIChange(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       change!.id
     );
     await expect(getRecipeFull(recipeId)).resolves.toMatchObject({
@@ -185,7 +191,7 @@ describe("ingredient resolver with AI on", () => {
 
     modelAnswers.push(noFoodReading(true));
     await askAIAbout(melted.ingredientId);
-    await expect(listJunkFolds()).resolves.toEqual(["melted"]);
+    await expect(listJunkFolds(testHouseholdOf(userId))).resolves.toEqual(["melted"]);
     vi.mocked(generateStructured).mockClear();
     const minted: string[] = [];
 
@@ -203,20 +209,26 @@ describe("ingredient resolver with AI on", () => {
       onIngredientsMinted(undefined);
     }
 
-    const [change] = await listAIChanges();
+    const [change] = await listAIChanges({
+      householdId: testHouseholdOf(userId),
+      isServerAdmin: false,
+    });
 
     await undoAIChange(
-      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       change!.id
     );
-    await expect(listJunkFolds()).resolves.toEqual([]);
+    await expect(listJunkFolds(testHouseholdOf(userId))).resolves.toEqual([]);
     const restored = await saved(["melted"]);
 
     expect(restored.lines).toMatchObject([{ ingredientId: melted.ingredientId }]);
   });
 
   it("adds a grocery it does not know asking AI nothing", async () => {
-    const [typed] = await resolveGroceryNames([{ name: "Unox Knaks" }], { userId });
+    const [typed] = await resolveGroceryNames([{ name: "Unox Knaks" }], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     expectNoAIRequest();
     await expect(findIngredientByAliasId(typed!.aliasId)).resolves.toMatchObject({
@@ -269,7 +281,7 @@ describe("ingredient resolver with AI on", () => {
       userId,
       await withResolvedIngredients(
         { name: "Soup", systemUsed: "metric", recipeIngredients: lines },
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     );
     const [kept, edited, reparsed] = (await getRecipeFull(recipeId))!.recipeIngredients;
@@ -323,7 +335,10 @@ describe("ingredient resolver with AI on", () => {
   describe("a slip of the fingers", () => {
     it("takes the known food a text is one slip of, AI on or off", async () => {
       const parmesan = await resolveOne("parmezaan");
-      const [late, early] = await resolveIngredients(["parmezan", "parmesaan"], { userId });
+      const [late, early] = await resolveIngredients(["parmezan", "parmesaan"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
 
       expect(late).toMatchObject({ ingredientId: parmesan.ingredientId });
       expect(early).toMatchObject({ ingredientId: parmesan.ingredientId });
@@ -336,11 +351,17 @@ describe("ingredient resolver with AI on", () => {
     });
 
     it("takes no slip under five letters, of the first letter, nor one two foods are equally near", async () => {
-      const [meel, parmesan] = await resolveIngredients(["meel", "parmezaan"], { userId });
-      const [chilli, sause] = await resolveIngredients(["chilli sauce", "chili sause"], { userId });
+      const [meel, parmesan] = await resolveIngredients(["meel", "parmezaan"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
+      const [chilli, sause] = await resolveIngredients(["chilli sauce", "chili sause"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
       const [melk, barmezaan, chili] = await resolveIngredients(
         ["melk", "barmezaan", "chili sauce"],
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       );
 
       expect(melk!.ingredientId).not.toBe(meel!.ingredientId);

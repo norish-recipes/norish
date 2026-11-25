@@ -155,9 +155,9 @@ const createRecurring = authedProcedure
 
     try {
       // A name whose words join foods repeats each on its rule, all or none.
-      const parts = await groceryPartsOf(input);
+      const parts = await groceryPartsOf(ctx.householdId, input);
       const made = await writeResolved(
-        () => resolveGroceryNames(parts, { userId: ctx.user.id }),
+        () => resolveGroceryNames(parts, { userId: ctx.user.id, householdId: ctx.householdId }),
         (foods) =>
           createRecurringGroceries(recurringRows(ctx, input, parts, foods), ctx.householdId)
       );
@@ -220,12 +220,17 @@ const updateRecurring = authedProcedure
         const [renamed, ...others] =
           data.name === undefined
             ? [undefined]
-            : await groceryPartsOf({ name: data.name, groceryId, householdId: ctx.householdId });
+            : await groceryPartsOf(ctx.householdId, {
+                name: data.name,
+                groceryId,
+                householdId: ctx.householdId,
+              });
         const { outcome, made } = await writeResolved(
           // The other foods are new, so they keep nothing of the grocery being renamed.
           () =>
             resolveGroceryNames(renamed ? [renamed, ...others.map(({ name }) => ({ name }))] : [], {
               userId: ctx.user.id,
+              householdId: ctx.householdId,
             }),
           ([food, ...foods]) =>
             withTransaction(async (tx) => {
@@ -341,7 +346,7 @@ const detachRecurring = authedProcedure
         }
 
         // A new name joining foods keeps the grocery as the first and adds the rest, all or none.
-        const [renamed, ...others] = await groceryPartsOf({
+        const [renamed, ...others] = await groceryPartsOf(ctx.householdId, {
           name: parsedIngredient.description,
           groceryId,
           householdId: ctx.householdId,

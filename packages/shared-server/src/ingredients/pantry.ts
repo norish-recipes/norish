@@ -12,13 +12,13 @@ export async function addToPantry(
   input: { userId: string; householdId: string; name: string }
 ): Promise<PantryAdded[]> {
   const typed: { id?: string; name: string } = { id, name: input.name };
-  const [parts = [typed]] = await typedParts([typed], { alternatives: "each" });
+  const [parts = [typed]] = await typedParts(input.householdId, [typed], { alternatives: "each" });
 
   return await writeResolved(
     () =>
       resolveIngredients(
         parts.map((part) => part.name),
-        { userId: input.userId }
+        { userId: input.userId, householdId: input.householdId }
       ),
     (foods) =>
       addPantryIngredients(
@@ -48,7 +48,7 @@ export async function addPickedToPantry(
   id: string,
   input: { userId: string; householdId: string; ingredientId: string }
 ): Promise<PantryAdded[]> {
-  const spelling = await findIngredientOwnSpelling(input.ingredientId);
+  const spelling = await findIngredientOwnSpelling(input.householdId, input.ingredientId);
 
   return spelling ? await addPantryIngredients([{ id, ...spelling }], input) : [];
 }

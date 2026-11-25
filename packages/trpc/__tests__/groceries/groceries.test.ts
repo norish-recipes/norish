@@ -694,7 +694,7 @@ describe("stale grocery updates", () => {
 
     expect(resolveGroceryNames).toHaveBeenCalledWith(
       [expect.objectContaining({ recipeIngredientId, groceryId })],
-      { userId: ctx.user.id }
+      { userId: ctx.user.id, householdId: ctx.householdId }
     );
   });
 
@@ -928,7 +928,7 @@ describe("grocery names through Ingredient Aliases", () => {
         expect.objectContaining({ name: "Uien", recipeIngredientId: null }),
         expect.objectContaining({ name: "onions, diced", recipeIngredientId }),
       ],
-      { userId: ctx.user.id }
+      { userId: ctx.user.id, householdId: ctx.householdId }
     );
     expect(createGroceries).toHaveBeenCalledWith(
       [

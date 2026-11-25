@@ -12,11 +12,13 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
 import {
+  addIngredientAliases,
   findIngredientByAliasId,
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
 import { addToJunkPile } from "@norish/db/repositories/ingredient-junk-pile";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { addPantryIngredients } from "@norish/db/repositories/pantry";
 import { setConfig } from "@norish/db/repositories/server-config";
 import { ingredients } from "@norish/db/schema";
@@ -37,6 +39,7 @@ import {
 import { DEFAULT_INGREDIENT_WORDS, ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  createTestUser,
   getSpellingTexts,
   getTestDb,
   mintTestFood,
@@ -67,7 +70,10 @@ describe("ingredient resolver", () => {
   });
 
   async function resolveOne(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId });
+    const [resolved] = await resolveIngredients([text], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     return resolved!;
   }
@@ -83,6 +89,93 @@ describe("ingredient resolver", () => {
     });
   });
 
+  describe("in two households (ADR-0042)", () => {
+    async function otherHousehold() {
+      const other = await createTestUser();
+
+      return { userId: other.id, householdId: testHouseholdOf(other.id) };
+    }
+
+    it("mints B's own 'kipfilet XL' though A has one, and each reads only its own", async () => {
+      const b = await otherHousehold();
+      const [mine] = await resolveIngredients(["kipfilet XL"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
+      const [theirs] = await resolveIngredients(["kipfilet XL"], b);
+
+      expect(theirs!.ingredientId).not.toBe(mine!.ingredientId);
+      await expect(findIngredientFor(b.householdId, "kipfilet XL")).resolves.toMatchObject({
+        ingredientId: theirs!.ingredientId,
+      });
+      await expect(
+        findIngredientFor(testHouseholdOf(userId), "kipfilet XL")
+      ).resolves.toMatchObject({ ingredientId: mine!.ingredientId });
+      // Nor a slip of the fingers finds the other household's food.
+      expect((await resolveIngredients(["kipfilet XLL"], b))[0]!.ingredientId).not.toBe(
+        mine!.ingredientId
+      );
+    });
+
+    it("lets a household's spelling on a seeded food change only that household's reading", async () => {
+      const b = await otherHousehold();
+      const a = { userId, householdId: testHouseholdOf(userId) };
+      const onion = await insertSeededIngredient({ name: "onion", offId: "en:onion" }, [
+        { text: "onion", fold: "onion", locale: "en" },
+      ]);
+      const shallot = await insertSeededIngredient({ name: "shallot", offId: "en:shallot" }, [
+        { text: "shallot", fold: "shallot", locale: "en" },
+        { text: "sjalot", fold: "sjalot", locale: "nl" },
+      ]);
+
+      await addIngredientAliases({
+        householdId: a.householdId,
+        ingredientId: onion,
+        aliases: [{ text: "uitje", fold: "uitje" }],
+        ownerId: userId,
+        locale: "nl",
+      });
+      // A's own "sjalot" beats the seed's for A alone.
+      await addIngredientAliases({
+        householdId: a.householdId,
+        ingredientId: onion,
+        aliases: [{ text: "sjalot", fold: "sjalot" }],
+        ownerId: userId,
+        locale: "nl",
+      });
+
+      await expect(resolveIngredients(["uitje", "sjalot"], a)).resolves.toMatchObject([
+        { ingredientId: onion },
+        { ingredientId: onion },
+      ]);
+      const [uitje, sjalot] = await resolveIngredients(["uitje", "sjalot"], b);
+
+      expect(uitje!.ingredientId).not.toBe(onion);
+      expect(sjalot!.ingredientId).toBe(shallot);
+    });
+
+    it("mints a recipe line in the recipe's household, whoever saves it", async () => {
+      const b = await otherHousehold();
+      const recipeId = crypto.randomUUID();
+
+      await createResolvedRecipe(
+        recipeId,
+        b.userId,
+        {
+          name: "Soep",
+          systemUsed: "metric",
+          recipeIngredients: [
+            { ingredientId: null, ingredientName: "sterrenmunt", amount: 1, unit: null, order: 0 },
+          ],
+        },
+        { userId: b.userId }
+      );
+
+      await expect(findIngredientFor(b.householdId, "sterrenmunt")).resolves.not.toBeNull();
+      await expect(findIngredientFor(testHouseholdOf(userId), "sterrenmunt")).resolves.toBeNull();
+    });
+  });
+
   it("hands on the foods someone's action mints, never a spelling it knew nor the upgrade's", async () => {
     const minted: string[][] = [];
 
@@ -90,6 +183,7 @@ describe("ingredient resolver", () => {
     try {
       const [first, again] = await resolveIngredients(["paprikapoeder", "paprikapoeder"], {
         userId,
+        householdId: testHouseholdOf(userId),
       });
 
       // One food minted, handed on once.
@@ -97,7 +191,11 @@ describe("ingredient resolver", () => {
       expect(again!.ingredientId).toBe(first!.ingredientId);
 
       await resolveOne("paprikapoeder");
-      await resolveIngredients(["kerriepoeder"], { userId }, "upgrade");
+      await resolveIngredients(
+        ["kerriepoeder"],
+        { userId, householdId: testHouseholdOf(userId) },
+        "upgrade"
+      );
       expect(minted).toHaveLength(1);
     } finally {
       onIngredientsMinted(undefined);
@@ -170,7 +268,7 @@ describe("ingredient resolver", () => {
   it("mints one Ingredient for texts in one call that resolve alike", async () => {
     const [first, second, third] = await resolveIngredients(
       ["garlic, minced", "Garlic", "garlic (2 cloves)"],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(second!.ingredientId).toBe(first!.ingredientId);
@@ -297,14 +395,19 @@ describe("ingredient resolver", () => {
   });
 
   it("reads a name up to its note where a known food comes before it and none after", async () => {
-    const [oil, chicken, rice] = await resolveIngredients(["olie", "kip", "rijst"], { userId });
+    const [oil, chicken, rice] = await resolveIngredients(["olie", "kip", "rijst"], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
     const [frying, served, both, joined] = await resolveIngredients(
       ["olie om te bakken", "lekker met pesto", "kip met rijst", "kip en ananas"],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(frying).toMatchObject({ ingredientId: oil!.ingredientId, aliasId: oil!.aliasId });
-    await expect(findIngredientFor("olie om te bakken")).resolves.toMatchObject({
+    await expect(
+      findIngredientFor(testHouseholdOf(userId), "olie om te bakken")
+    ).resolves.toMatchObject({
       ingredientId: oil!.ingredientId,
     });
     // The words before a note name a food only where one is known: "lekker" is none.
@@ -362,18 +465,22 @@ describe("ingredient resolver", () => {
   it("finds what a text already resolves to without minting anything", async () => {
     const onions = await resolveOne("onions");
 
-    await expect(findIngredientFor("Onions, sliced")).resolves.toEqual({
+    await expect(findIngredientFor(testHouseholdOf(userId), "Onions, sliced")).resolves.toEqual({
       aliasId: onions.aliasId,
       ingredientId: onions.ingredientId,
     });
-    await expect(findIngredientFor("leeks")).resolves.toBeNull();
+    await expect(findIngredientFor(testHouseholdOf(userId), "leeks")).resolves.toBeNull();
     // Still unknown: the lookup above left nothing behind.
-    await expect(findIngredientFor("leeks")).resolves.toBeNull();
+    await expect(findIngredientFor(testHouseholdOf(userId), "leeks")).resolves.toBeNull();
   });
 
   it("answers nothing for a text that is markup alone, and mints nothing", async () => {
-    await expect(resolveIngredient("<br>&nbsp;", { userId })).resolves.toBeNull();
-    await expect(resolveIngredient("Leeks", { userId })).resolves.toMatchObject({ text: "Leeks" });
+    await expect(
+      resolveIngredient("<br>&nbsp;", { userId, householdId: testHouseholdOf(userId) })
+    ).resolves.toBeNull();
+    await expect(
+      resolveIngredient("Leeks", { userId, householdId: testHouseholdOf(userId) })
+    ).resolves.toMatchObject({ text: "Leeks" });
   });
 
   it("points a text with brackets or an amount at its clean spelling, never one of its own", async () => {
@@ -424,17 +531,16 @@ describe("ingredient resolver", () => {
   });
 
   it("answers no food for a text with no letter or digit once cleaned, and mints nothing", async () => {
-    await expect(resolveIngredients([")", "—", "($0.02)"], { userId })).resolves.toEqual([
-      null,
-      null,
-      null,
-    ]);
+    await expect(
+      resolveIngredients([")", "—", "($0.02)"], { userId, householdId: testHouseholdOf(userId) })
+    ).resolves.toEqual([null, null, null]);
     await expect(getTestDb().select().from(ingredients)).resolves.toEqual([]);
   });
 
   it("a mint that loses the race for one of its spellings joins the winner with the other", async () => {
     // Another request minted "onions, diced" between this mint's read and write.
     const [winner] = await mintIngredientWithAliases({
+      householdId: testHouseholdOf(userId),
       name: "onions, diced",
       aliases: [{ text: "onions, diced", fold: ingredientAliasFold("onions, diced") }],
       ownerId: userId,
@@ -443,6 +549,7 @@ describe("ingredient resolver", () => {
     });
 
     const rows = await mintIngredientWithAliases({
+      householdId: testHouseholdOf(userId),
       name: "onions",
       aliases: [
         { text: "onions, diced", fold: ingredientAliasFold("onions, diced") },
@@ -474,7 +581,7 @@ describe("ingredient resolver", () => {
         userId,
         await withResolvedIngredients(
           { name: "Soup", systemUsed: "metric", recipeIngredients: [line("onions, diced", 0)] },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -497,8 +604,8 @@ describe("ingredient resolver", () => {
       await recipe("verse krieltjes");
       await recipe("krieltjes");
 
-      const variant = await findIngredientFor("verse krieltjes");
-      const parent = await findIngredientFor("krieltjes");
+      const variant = await findIngredientFor(testHouseholdOf(userId), "verse krieltjes");
+      const parent = await findIngredientFor(testHouseholdOf(userId), "krieltjes");
       const [row] = await getTestDb()
         .select({ parentId: ingredients.parentId })
         .from(ingredients)
@@ -521,7 +628,7 @@ describe("ingredient resolver", () => {
             systemUsed: "metric",
             recipeIngredients: [{ ...line("red ones, from the garden", 0), foodTexts: ["onions"] }],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -529,7 +636,9 @@ describe("ingredient resolver", () => {
         { ingredientName: "red ones, from the garden", ingredientId: onions.ingredientId },
       ]);
       // The line's text never became a spelling of anything.
-      await expect(findIngredientFor("red ones, from the garden")).resolves.toBeNull();
+      await expect(
+        findIngredientFor(testHouseholdOf(userId), "red ones, from the garden")
+      ).resolves.toBeNull();
     });
 
     it("leaves out a line whose text is markup alone, and saves the rest", async () => {
@@ -544,7 +653,7 @@ describe("ingredient resolver", () => {
             systemUsed: "metric",
             recipeIngredients: [line("&nbsp;", 0), line("leeks", 1)],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -570,7 +679,7 @@ describe("ingredient resolver", () => {
               line("leeks", 2),
             ],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -580,7 +689,9 @@ describe("ingredient resolver", () => {
         { ingredientName: "leeks" },
       ]);
       // "# Sauce" folds like "sauce", and still never became a spelling of it.
-      await expect(findIngredientFor("# For the topping:")).resolves.toBeNull();
+      await expect(
+        findIngredientFor(testHouseholdOf(userId), "# For the topping:")
+      ).resolves.toBeNull();
       expect((await resolveOne("sauce")).ingredientId).toBe(sauce.ingredientId);
     });
 
@@ -600,7 +711,7 @@ describe("ingredient resolver", () => {
               { ...line("olie:", 1), unit: "tbsp" },
             ],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -608,7 +719,9 @@ describe("ingredient resolver", () => {
         { ingredientName: "Voor de salade:", ingredientId: null },
         { ingredientName: "olie:", ingredientId: olie.ingredientId },
       ]);
-      await expect(findIngredientFor("Voor de salade")).resolves.toBeNull();
+      await expect(
+        findIngredientFor(testHouseholdOf(userId), "Voor de salade")
+      ).resolves.toBeNull();
     });
 
     it("keeps a line's price as written while its food is read without it", async () => {
@@ -624,7 +737,7 @@ describe("ingredient resolver", () => {
             systemUsed: "metric",
             recipeIngredients: [{ ...line("baking soda ($0.02)", 0), unit: "tsp" }],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -645,7 +758,7 @@ describe("ingredient resolver", () => {
             systemUsed: "metric",
             recipeIngredients: [line("el", 0), line("GR RUNDERGEHAKT", 1)],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -653,7 +766,7 @@ describe("ingredient resolver", () => {
         { ingredientName: "el", ingredientId: null },
         { ingredientName: "GR RUNDERGEHAKT" },
       ]);
-      await expect(findIngredientFor("el")).resolves.toBeNull();
+      await expect(findIngredientFor(testHouseholdOf(userId), "el")).resolves.toBeNull();
       // The gram an import left in the name is no part of the food's.
       const [, beef] = (await getRecipeFull(recipeId))!.recipeIngredients;
 
@@ -681,7 +794,7 @@ describe("ingredient resolver", () => {
               { ...line("bol mozzarella", 2), amount: 150, unit: "gram" },
             ],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -701,7 +814,9 @@ describe("ingredient resolver", () => {
         { ingredientName: "bol mozzarella", amount: 150, unit: "gram" },
       ]);
       // Read past, never learned: the text is no spelling of the food.
-      await expect(findIngredientFor("rol bladerdeeg")).resolves.toBeNull();
+      await expect(
+        findIngredientFor(testHouseholdOf(userId), "rol bladerdeeg")
+      ).resolves.toBeNull();
     });
 
     it("re-resolves an edited line's text on update", async () => {
@@ -712,7 +827,7 @@ describe("ingredient resolver", () => {
         userId,
         await withResolvedIngredients(
           { name: "Soup", systemUsed: "metric", recipeIngredients: [line("leek", 0)] },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
       const [leekLine] = (await getRecipeFull(recipeId))!.recipeIngredients;
@@ -726,7 +841,7 @@ describe("ingredient resolver", () => {
             systemUsed: "metric",
             recipeIngredients: [{ ...line("carrots (peeled)", 0), id: leekLine!.id }],
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -743,7 +858,7 @@ describe("ingredient resolver", () => {
   describe("a line joining foods", () => {
     /** A food Norish knows, spelled in a language. */
     async function food(text: string, locale: string | null) {
-      return (await mintTestFood(text, { locale })).ingredientId;
+      return (await mintTestFood(testHouseholdOf(userId), text, { locale })).ingredientId;
     }
 
     /** Save a recipe with these line texts and answer its lines as read back. */
@@ -763,7 +878,7 @@ describe("ingredient resolver", () => {
       await createRecipeWithRefs(
         recipeId,
         userId,
-        await withResolvedIngredients(payload, { userId })
+        await withResolvedIngredients(payload, { userId, householdId: testHouseholdOf(userId) })
       );
 
       return (await getRecipeFull(recipeId))!.recipeIngredients;
@@ -946,6 +1061,7 @@ describe("ingredient resolver", () => {
 
     it("names one food where every part is a spelling of it", async () => {
       const [row] = await mintIngredientWithAliases({
+        householdId: testHouseholdOf(userId),
         name: "spring onion",
         aliases: [
           { text: "spring onions", fold: ingredientAliasFold("spring onions") },
@@ -999,7 +1115,7 @@ describe("ingredient resolver", () => {
                 },
               ],
             },
-            { userId },
+            { userId, householdId: testHouseholdOf(userId) },
             recipeId
           )
         );
@@ -1021,7 +1137,7 @@ describe("ingredient resolver", () => {
   describe("the junk pile", () => {
     async function pile(...texts: string[]) {
       await withTransaction((tx) =>
-        addToJunkPile(tx, texts.map(ingredientAliasFold), { reason: "seed" })
+        addToJunkPile(tx, null, texts.map(ingredientAliasFold), { reason: "seed" })
       );
       forgetSpellingRules();
     }
@@ -1044,7 +1160,7 @@ describe("ingredient resolver", () => {
               order,
             })),
           },
-          { userId }
+          { userId, householdId: testHouseholdOf(userId) }
         )
       );
 
@@ -1052,8 +1168,8 @@ describe("ingredient resolver", () => {
     }
 
     it("drops a comma piece on the pile and reads the text on the rest; all on it, the text names no food", async () => {
-      const breasts = await mintTestFood("skinless chicken breasts");
-      const zout = await mintTestFood("zout");
+      const breasts = await mintTestFood(testHouseholdOf(userId), "skinless chicken breasts");
+      const zout = await mintTestFood(testHouseholdOf(userId), "zout");
 
       await pile("boneless", "to taste");
       const minted: string[] = [];
@@ -1086,8 +1202,8 @@ describe("ingredient resolver", () => {
     });
 
     it("reads the parts a joining word leaves once one is dropped, each joining word with its parts", async () => {
-      const salt = await mintTestFood("salt", { locale: "en" });
-      const pepper = await mintTestFood("pepper", { locale: "en" });
+      const salt = await mintTestFood(testHouseholdOf(userId), "salt", { locale: "en" });
+      const pepper = await mintTestFood(testHouseholdOf(userId), "pepper", { locale: "en" });
 
       await pile("boneless");
       const [unknown, middle] = await lines([
@@ -1110,9 +1226,12 @@ describe("ingredient resolver", () => {
     it("keeps a typed grocery on the pile, naming no food", async () => {
       await pile("boneless");
 
-      await expect(resolveGroceryNames([{ name: "boneless" }], { userId })).resolves.toEqual([
-        null,
-      ]);
+      await expect(
+        resolveGroceryNames([{ name: "boneless" }], {
+          userId,
+          householdId: testHouseholdOf(userId),
+        })
+      ).resolves.toEqual([null]);
       await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
     });
   });

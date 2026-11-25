@@ -83,11 +83,12 @@ export async function resolveGroceryNames(
  * peper" is "zout" and "peper", "boter of olie" is "boter". A kept name (`keptFoods`) stays whole.
  */
 export async function groceryParts<T extends GroceryName & { id?: string | null }>(
+  householdId: string,
   items: readonly T[]
 ): Promise<Array<[T, ...T[]]>> {
   const [kept, split] = await Promise.all([
     keptFoods(items),
-    typedParts(items, { alternatives: "first" }),
+    typedParts(householdId, items, { alternatives: "first" }),
   ]);
 
   return items.map((item, index) => (!kept[index] && split[index]) || [item]);
@@ -95,9 +96,10 @@ export async function groceryParts<T extends GroceryName & { id?: string | null 
 
 /** `groceryParts` for one grocery. */
 export async function groceryPartsOf<T extends GroceryName & { id?: string | null }>(
+  householdId: string,
   item: T
 ): Promise<[T, ...T[]]> {
-  const [parts = [item]] = await groceryParts([item]);
+  const [parts = [item]] = await groceryParts(householdId, [item]);
 
   return parts;
 }

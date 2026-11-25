@@ -288,11 +288,11 @@ describe("recurring groceries procedures", () => {
 
       expect(resolveGroceryNames).toHaveBeenCalledWith(
         [expect.objectContaining({ name: "Melk", groceryId })],
-        { userId: ctx.user.id }
+        { userId: ctx.user.id, householdId: ctx.householdId }
       );
       expect(resolveGroceryNames).toHaveBeenCalledWith(
         [expect.objectContaining({ name: "Test", groceryId })],
-        { userId: ctx.user.id }
+        { userId: ctx.user.id, householdId: ctx.householdId }
       );
     });
 
@@ -351,7 +351,7 @@ describe("recurring groceries procedures", () => {
       // The new food keeps nothing of the grocery being renamed.
       expect(resolveGroceryNames).toHaveBeenCalledWith(
         [{ name: "zout", groceryId, householdId: ctx.householdId }, { name: "peper" }],
-        { userId: ctx.user.id }
+        { userId: ctx.user.id, householdId: ctx.householdId }
       );
     });
 

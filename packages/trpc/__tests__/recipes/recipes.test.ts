@@ -60,6 +60,11 @@ vi.mock("@norish/db/repositories/list-entries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/db/repositories/list-entries")>()),
   recipeHouseholdId: vi.fn(async () => "household-now"),
 }));
+// The household a new recipe's lines resolve in: its Owner's.
+vi.mock("@norish/db/repositories/households", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db/repositories/households")>()),
+  getHouseholdIdForUser: vi.fn(async () => "household-now"),
+}));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 const readRecipeNutrition = vi.hoisted(() => vi.fn());

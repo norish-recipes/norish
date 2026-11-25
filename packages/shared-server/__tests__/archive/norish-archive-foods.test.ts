@@ -109,7 +109,6 @@ describe("a Recipe Archive round trip", () => {
     const actor: CatalogueActor = {
       userId,
       householdId: testHouseholdOf(userId),
-      memberIds: [userId],
       isServerAdmin: false,
     };
     const ingredientId = (await getRecipeFull(recipeId))!.recipeIngredients[0]!.ingredientId!;

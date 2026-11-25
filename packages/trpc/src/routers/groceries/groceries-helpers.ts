@@ -246,7 +246,7 @@ export async function createGroceriesData(
   for (const recurringGroceryId of repeating) await assertRecurringAccess(ctx, recurringGroceryId);
 
   // A Grocery names one food: a name whose words join foods is a grocery per food, merged alone.
-  for (const grocery of (await groceryParts(input)).flat()) {
+  for (const grocery of (await groceryParts(ctx.householdId, input)).flat()) {
     const normalizedName = normalizeForMerge(grocery.name);
     const recipeKey = grocery.recipeIngredientId ?? "manual";
     const recurringKey = grocery.recurringGroceryId ?? "none";
@@ -345,7 +345,7 @@ export async function createGroceriesData(
           ...groceriesToCreate.map(({ groceries: grocery }) => grocery),
           ...(edit ? [edit.name] : []),
         ],
-        { userId: ctx.user.id }
+        { userId: ctx.user.id, householdId: ctx.householdId }
       ),
     async (aliases) => {
       await fileNewLines(aliases);

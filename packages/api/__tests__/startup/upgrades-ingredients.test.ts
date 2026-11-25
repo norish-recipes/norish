@@ -79,9 +79,12 @@ describe("the upgrade of ingredients from before 0.25", () => {
     await testBase.teardown();
   });
 
-  /** An `ingredients` row as releases before 0.25 wrote it: a name, no spelling. */
+  /** An `ingredients` row as releases before 0.25 wrote it, a name and no spelling, in a household as 0093 gave it one. */
   async function oldIngredient(name: string) {
-    const [row] = await getTestDb().insert(ingredients).values({ name }).returning();
+    const [row] = await getTestDb()
+      .insert(ingredients)
+      .values({ name, householdId: testHouseholdOf(userId) })
+      .returning();
 
     return row!.id;
   }
@@ -260,14 +263,14 @@ describe("the upgrade of ingredients from before 0.25", () => {
     expect(await db.select().from(parkedNameKeyedLinks)).toEqual([]);
   });
 
-  /** Who an Ingredient a household row minted belongs to. */
-  async function mintedBy(ingredientId: string | null) {
+  /** The household whose catalogue an Ingredient a household row minted is in. */
+  async function mintedIn(ingredientId: string | null) {
     const [row] = await getTestDb()
-      .select({ ownerId: ingredients.ownerId })
+      .select({ householdId: ingredients.householdId })
       .from(ingredients)
       .where(eq(ingredients.id, ingredientId!));
 
-    return row?.ownerId;
+    return row?.householdId;
   }
 
   it("resolves the rows of a deleted member as their household's, not as the seed's", async () => {
@@ -292,10 +295,10 @@ describe("the upgrade of ingredients from before 0.25", () => {
     );
     const pantryNow = (await testPantrySpellings(userId)).find((row) => row.id === pantry.id);
 
-    expect(await mintedBy(groceryNow!.ingredientId)).toBe(userId);
-    expect(await mintedBy(recurringNow!.ingredientId)).toBe(userId);
+    expect(await mintedIn(groceryNow!.ingredientId)).toBe(testHouseholdOf(userId));
+    expect(await mintedIn(recurringNow!.ingredientId)).toBe(testHouseholdOf(userId));
     expect(pantryNow!.ingredientAliasId).not.toBeNull();
-    expect(await mintedBy(pantryNow!.ingredientId)).toBe(userId);
+    expect(await mintedIn(pantryNow!.ingredientId)).toBe(testHouseholdOf(userId));
   });
 
   it("restores a deleted account's store preference to its Store's household, added by no one", async () => {
@@ -353,6 +356,6 @@ describe("the upgrade of ingredients from before 0.25", () => {
     const [link] = await getTestDb().select().from(aisleLinks).where(eq(aisleLinks.id, parked));
 
     expect(link!.ingredientId).not.toBe(salt);
-    expect(await mintedBy(link!.ingredientId)).toBe(userId);
+    expect(await mintedIn(link!.ingredientId)).toBe(testHouseholdOf(userId));
   });
 });

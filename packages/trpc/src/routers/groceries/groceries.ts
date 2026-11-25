@@ -100,7 +100,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       const recipeIngredientId = await getGroceryRecipeLine(groceryId, ctx.householdId);
       // A new name joining foods renames it to the first and adds the rest, each finding its own
       // Store and pack count as a typed add does.
-      const [renamed, ...others] = await groceryPartsOf({
+      const [renamed, ...others] = await groceryPartsOf(ctx.householdId, {
         name: parsedIngredient.description,
         recipeIngredientId,
         groceryId,

@@ -12,7 +12,10 @@ import {
   findIngredientsNamed,
   mintIngredientWithAliases,
 } from "@norish/db/repositories/ingredient-aliases";
-import { findIngredientIdsAmong } from "@norish/db/repositories/ingredient-catalogue";
+import {
+  findIngredientHouseholds,
+  findIngredientIdsAmong,
+} from "@norish/db/repositories/ingredient-catalogue";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import {
   fileUndecidedMint,
@@ -40,7 +43,8 @@ import { announceMinted, announcingAfter } from "./minted";
 
 /**
  * The one module that mints Ingredients and aliases (ADR-0037). A text resolves by its fold, its
- * stripped fold, its joined parts, a slip, else a flagged mint that AI's pass follows.
+ * stripped fold, its joined parts, a slip, else a flagged mint that AI's pass follows. Everything is
+ * read in one household's catalogue, the seed plus its own, and minted there (ADR-0042).
  */
 
 /**
@@ -49,8 +53,9 @@ import { announceMinted, announcingAfter } from "./minted";
  */
 export const RUNG_VERSION = 12;
 
-/** Who the resolution is for: the owner of anything it mints. */
+/** Who the resolution is for: the household whose catalogue it reads and mints in, and who added it. */
 export interface ResolveActor {
+  householdId: string;
   userId: string | null;
   /** The language the text is in, where the caller knows it. */
   locale?: string | null;
@@ -162,37 +167,69 @@ function spellingOf(text: string, rules: ResolverRules, keysOf = spellingKeys): 
 /** How long built rules are reused: a pass over an instance's history asks thousands of times a minute. */
 export const RULES_TTL_MS = 10_000;
 
-let builtRules: { at: number; rules: Promise<ResolverRules> } | null = null;
+let builtRules: { at: number; rules: Promise<SpellingRules> } | null = null;
+/** Each household's junk pile with the seed's, read as the rules are. */
+const builtJunk = new Map<string, { at: number; junk: Promise<ReadonlySet<string>> }>();
 
-/** Read the units map, the ingredient words and the junk pile afresh next time: one just changed. */
+/** Read the units map, the ingredient words and the junk piles afresh next time: one just changed. */
 export function forgetSpellingRules(): void {
   builtRules = null;
+  builtJunk.clear();
 }
 
-/** The rules rung 2 reads a name by, rebuilt at most every `RULES_TTL_MS` so an edit lands soon. */
-export async function currentRules(): Promise<ResolverRules> {
+/** A value rebuilt at most every `RULES_TTL_MS`; a failed read is not kept. */
+function fresh<T>(
+  held: { at: number; value: Promise<T> } | undefined,
+  read: () => Promise<T>,
+  keep: (entry: { at: number; value: Promise<T> } | null) => void
+): Promise<T> {
   const now = Date.now();
 
-  if (!builtRules || now - builtRules.at > RULES_TTL_MS) {
-    const rules = Promise.all([getUnits(), getIngredientWords(), listJunkFolds()]).then(
-      ([units, words, junk]) => ({ ...spellingRules(units, words), junk: new Set(junk) })
-    );
+  if (held && now - held.at <= RULES_TTL_MS) return held.value;
+  const value = read();
+  const entry = { at: now, value };
 
-    builtRules = { at: now, rules };
-    // A failed read is not kept: the next call reads again.
-    rules.catch(() => {
-      if (builtRules?.rules === rules) builtRules = null;
-    });
-  }
+  keep(entry);
+  value.catch(() => keep(null));
 
-  return await builtRules.rules;
+  return value;
 }
 
-/** The aliases Norish already has for these spellings, by fold, in one query. */
+/**
+ * The rules rung 2 reads a household's names by, with its junk pile and the seed's, rebuilt at most
+ * every `RULES_TTL_MS` so an edit lands soon.
+ */
+export async function currentRules(householdId: string): Promise<ResolverRules> {
+  const rules = fresh(
+    builtRules ? { at: builtRules.at, value: builtRules.rules } : undefined,
+    () =>
+      Promise.all([getUnits(), getIngredientWords()]).then(([units, words]) =>
+        spellingRules(units, words)
+      ),
+    (entry) => {
+      builtRules = entry && { at: entry.at, rules: entry.value };
+    }
+  );
+  const held = builtJunk.get(householdId);
+  const junk = fresh(
+    held && { at: held.at, value: held.junk },
+    async () => new Set(await listJunkFolds(householdId)),
+    (entry) => {
+      if (entry) builtJunk.set(householdId, { at: entry.at, junk: entry.value });
+      else builtJunk.delete(householdId);
+    }
+  );
+
+  return { ...(await rules), junk: await junk };
+}
+
+/** The aliases the household's catalogue has for these spellings, by fold, in one query. */
 async function knownAliases(
+  householdId: string,
   spellings: readonly Spelling[]
 ): Promise<Map<string, IngredientAliasRow>> {
   const rows = await findIngredientAliasesByFolds(
+    householdId,
     spellings.flatMap((spelling) => [
       spelling.fold,
       spelling.bareFold,
@@ -306,15 +343,17 @@ export async function resolveLineFoods(
  * alternatives ("boter of olie") the first or each. The first keeps the row's id (ADR-0003).
  */
 export async function typedParts<T extends { id?: string | null; name: string | null }>(
+  householdId: string,
   rows: readonly T[],
   { alternatives }: { alternatives: "first" | "each" }
 ): Promise<Array<[T, ...T[]]>> {
-  const rules = await currentRules();
+  const rules = await currentRules(householdId);
   const read = rows.map((row) => ({
     row,
     spelling: spellingOf(cleanIngredientText(row.name ?? ""), rules),
   }));
   const { byWords } = await readByWords(
+    householdId,
     read.map(({ spelling }) => spelling),
     rules,
     true
@@ -443,6 +482,7 @@ function knownFoodsIn(
  * the foods the words name for each spelling not known whole. One query; mints nothing.
  */
 async function readByWords(
+  householdId: string,
   asWritten: readonly Spelling[],
   rules: ResolverRules,
   splitJoined: boolean,
@@ -461,7 +501,7 @@ async function readByWords(
   const lists = new Map(
     splitting.map((spelling) => [spelling, laterPieces(spelling.clean, rules)] as const)
   );
-  const known = await knownAliases([
+  const known = await knownAliases(householdId, [
     ...spellings,
     ...[...splits.values()].flatMap((found) => found.readings.flat()),
     ...[...lists.values()].flat(),
@@ -496,13 +536,22 @@ async function resolveTexts(
   mode: ResolveMode,
   splitJoined: boolean
 ): Promise<Array<ResolvedFoods | null>> {
-  const rules = await currentRules();
+  const { householdId } = actor;
+  const rules = await currentRules(householdId);
   const asWritten = texts.map((text) => spellingOf(cleanIngredientText(text), rules));
-  const { spellings, known, byWords, later } = await readByWords(asWritten, rules, splitJoined);
+  const { spellings, known, byWords, later } = await readByWords(
+    householdId,
+    asWritten,
+    rules,
+    splitJoined
+  );
   const unknown = spellings.filter(
     (spelling) => !matchRead(spelling, known) && !byWords.has(spelling)
   );
-  const slips = await findSlips(mode === "person" || mode === "upgrade" ? unknown : []);
+  const slips = await findSlips(
+    householdId,
+    mode === "person" || mode === "upgrade" ? unknown : []
+  );
   const resolved = new Map<Spelling, ResolvedFoods>();
   const minted = new Set<string>();
   // A comma list's later known foods join the foods its first piece names, all needed together.
@@ -537,6 +586,7 @@ async function resolveTexts(
       // The food a slip names may have been merged away since it was found; the text is then minted.
       const joined = slip
         ? await addIngredientAliases({
+            householdId,
             ingredientId: slip.ingredientId,
             aliases: [cleanAlias(spelling)],
             ownerId: actor.userId,
@@ -548,7 +598,7 @@ async function resolveTexts(
         (await mint(spelling, actor, {
           // A mint for someone's action is unflagged: AI's pass, where on, looks at it after.
           flagReason: slip ? "food-gone" : mode === "upgrade" ? "upgrade" : null,
-          parent: await parentFromWords(spelling),
+          parent: await parentFromWords(householdId, spelling),
         }));
 
       for (const row of rows) known.set(row.fold, row);
@@ -567,15 +617,22 @@ async function resolveTexts(
 }
 
 /**
- * File the parentless undecided foods minted before these under the one their words now find
- * ("verse krieltjes" once "krieltjes" is minted), as the recheck would: a mint finds only foods
- * already there. Once written, as a parent must be listed.
+ * File the parentless undecided foods minted before these, in each one's household, under the one
+ * their words now find ("verse krieltjes" once "krieltjes" is minted), as the recheck would: a mint
+ * finds only foods already there. Once written, as a parent must be listed.
  */
 async function adoptEarlierVariants(mintedIds: readonly string[]): Promise<void> {
-  for (const variant of await listParentlessMintsSpelledWith(mintedIds)) {
-    const parentId = await (await readName(variant.name)).parent(variant.id);
+  const byHousehold = new Map<string, string[]>();
 
-    if (parentId && mintedIds.includes(parentId)) await fileUndecidedMint(variant.id, parentId);
+  for (const [id, householdId] of await findIngredientHouseholds(mintedIds)) {
+    if (householdId) byHousehold.set(householdId, [...(byHousehold.get(householdId) ?? []), id]);
+  }
+  for (const [householdId, ids] of byHousehold) {
+    for (const variant of await listParentlessMintsSpelledWith(householdId, ids)) {
+      const parentId = await (await readName(householdId, variant.name)).parent(variant.id);
+
+      if (parentId && ids.includes(parentId)) await fileUndecidedMint(variant.id, parentId);
+    }
   }
 }
 
@@ -584,6 +641,7 @@ async function adoptEarlierVariants(mintedIds: readonly string[]): Promise<void>
  * key, best first (`slipsNear`).
  */
 async function findSlips(
+  householdId: string,
   spellings: readonly Spelling[],
   keep: (row: IngredientAliasRow) => boolean = () => true
 ): Promise<Map<string, FoundFood[]>> {
@@ -595,7 +653,7 @@ async function findSlips(
       if (!mayBeASlip(key)) return;
       const near = slipsNear(
         key,
-        (await findAliasesNearFold(key)).filter(keep),
+        (await findAliasesNearFold(householdId, key)).filter(keep),
         (row) => row.fold,
         (row) => row.ingredientId
       );
@@ -635,6 +693,7 @@ async function mint(
   const alias = cleanAlias(spelling);
 
   return await mintIngredientWithAliases({
+    householdId: actor.householdId,
     name: alias.text,
     aliases: [alias],
     ownerId: actor.userId,
@@ -650,7 +709,11 @@ async function mint(
  * and sizes alone, read up to a word a name ends before ("in", "om"); else the longest a listed
  * own food has ("krieltjes" for "verse krieltjes"), never `exceptId`'s own; else null.
  */
-async function parentFromWords(spelling: Spelling, exceptId?: string): Promise<string | null> {
+async function parentFromWords(
+  householdId: string,
+  spelling: Spelling,
+  exceptId?: string
+): Promise<string | null> {
   const { rules } = spelling;
   const all = spelling.key.split(" ");
   const cut = noteAt(all, rules);
@@ -681,7 +744,7 @@ async function parentFromWords(spelling: Spelling, exceptId?: string): Promise<s
 
   for (const among of ["seeded", "listed"] as const) {
     const spelled = new Map(
-      (await findFoodSpellingsByFolds(windows, among))
+      (await findFoodSpellingsByFolds(householdId, windows, among))
         .filter((row) => norishReads(row.locale) && row.ingredientId !== exceptId)
         .map((row) => [row.fold, row.ingredientId])
     );
@@ -705,8 +768,8 @@ export interface NameRead {
   parts: (ownId: string) => Promise<{ parts: ResolvedIngredient[]; joined: LineJoin } | null>;
 }
 
-export async function readName(text: string): Promise<NameRead> {
-  const rules = await currentRules();
+export async function readName(householdId: string, text: string): Promise<NameRead> {
+  const rules = await currentRules(householdId);
   const cleaned = cleanIngredientText(text);
   const spelling = spellingOf(cleaned, rules);
   // The first-start cleanup reads without the junk pile: junk is left to AI's spelling check.
@@ -719,9 +782,11 @@ export async function readName(text: string): Promise<NameRead> {
         ? { text: spelling.plain, fold: spelling.plainFold }
         : null,
     clean: cleanAlias(withJunk),
-    parent: (exceptId) => parentFromWords(spelling, exceptId),
+    parent: (exceptId) => parentFromWords(householdId, spelling, exceptId),
     parts: async (ownId) => {
-      const named = (await readByWords([withJunk], junkKept, true, ownId)).byWords.get(withJunk);
+      const named = (await readByWords(householdId, [withJunk], junkKept, true, ownId)).byWords.get(
+        withJunk
+      );
 
       return named?.joined ? { parts: named.foods, joined: named.joined } : null;
     },
@@ -742,16 +807,19 @@ function cleanAlias({ clean, fold, plain, plainFold }: Spelling) {
 }
 
 /**
- * The Ingredient a text already resolves to by rungs 1 and 2, else null: for readers, which must
- * never mint.
+ * The Ingredient a text already resolves to in the household by rungs 1 and 2, else null: for
+ * readers, which must never mint.
  */
-export async function findIngredientFor(text: string): Promise<IngredientRef | null> {
+export async function findIngredientFor(
+  householdId: string,
+  text: string
+): Promise<IngredientRef | null> {
   const cleaned = cleanIngredientText(text);
 
   if (!cleaned) return null;
 
-  const spelling = spellingOf(cleaned, await currentRules());
-  const match = matchRead(spelling, await knownAliases([spelling]));
+  const spelling = spellingOf(cleaned, await currentRules(householdId));
+  const match = matchRead(spelling, await knownAliases(householdId, [spelling]));
 
   return match ? refOf(match) : null;
 }
@@ -760,11 +828,14 @@ export async function findIngredientFor(text: string): Promise<IngredientRef | n
  * The spelling of the known food a text names before its note, where the words after it name
  * none ("olie om te bakken" is olie), ignoring what spells the whole text; else null.
  */
-export async function findFoodBeforeNote(text: string): Promise<IngredientAliasRow | null> {
-  const spelling = spellingOf(cleanIngredientText(text), await currentRules());
+export async function findFoodBeforeNote(
+  householdId: string,
+  text: string
+): Promise<IngredientAliasRow | null> {
+  const spelling = spellingOf(cleanIngredientText(text), await currentRules(householdId));
 
   if (!spelling.noted) return null;
-  const known = await knownAliases([spelling]);
+  const known = await knownAliases(householdId, [spelling]);
 
   if (spelling.noted.rest.some((fold) => known.has(fold))) return null;
 
@@ -796,18 +867,21 @@ export function refOf({ aliasId, ingredientId }: IngredientRef): IngredientRef {
  * else the one food rungs 1–2 find in a language Norish reads; and that filter, for slips.
  */
 async function otherFoodsSpelled(
+  householdId: string,
   ingredientId: string,
   spellings: readonly Spelling[],
   among?: "listed" | "seeded"
 ) {
   const readable = spellings.filter((spelling) => spelling.text && !spellingNamesNoFood(spelling));
-  const all = await knownAliases(readable);
+  const all = await knownAliases(householdId, readable);
   const names = await findIngredientsNamed(
+    householdId,
     readable.flatMap((spelling) => [spelling.fold, spelling.clean.toLowerCase()])
   );
   const kept =
     among &&
     (await findIngredientIdsAmong(
+      householdId,
       [...all.values(), ...names].map((row) => row.ingredientId),
       among
     ));
@@ -832,32 +906,35 @@ async function otherFoodsSpelled(
   return { matched, other };
 }
 
-/** The foods other than `ingredientId` rungs 1–2 find for a mint's spellings, for the recheck. */
+/** The foods other than `ingredientId` rungs 1–2 find in its household for a mint's spellings, for the recheck. */
 export async function findOtherFoodsSpelled(
+  householdId: string,
   ingredientId: string,
   texts: readonly string[]
 ): Promise<Set<string>> {
-  const rules = await currentRules();
+  const rules = await currentRules(householdId);
   const spellings = texts.map((text) => spellingOf(cleanIngredientText(text), rules));
-  const { matched } = await otherFoodsSpelled(ingredientId, spellings);
+  const { matched } = await otherFoodsSpelled(householdId, ingredientId, spellings);
 
   return new Set([...matched.values()].flatMap((match) => (match ? [match.ingredientId] : [])));
 }
 
 /**
- * The listed (or seeded) foods other than `except` each of AI's names finds, as written: the food
+ * The household's listed (or seeded) foods other than `except` each of AI's names finds, as written: the food
  * named it, else the one rungs 1–2 find, else every food a slip of the fingers away, best first.
  */
 export async function findFood(
+  householdId: string,
   names: readonly string[],
   { except, among }: { except: string; among: "listed" | "seeded" }
 ): Promise<FoundFood[][]> {
-  const rules = await currentRules();
+  const rules = await currentRules(householdId);
   const spellings = names.map((name) =>
     spellingOf(cleanIngredientText(name), rules, wholeSpellingKeys)
   );
-  const { matched, other } = await otherFoodsSpelled(except, spellings, among);
+  const { matched, other } = await otherFoodsSpelled(householdId, except, spellings, among);
   const slipped = await findSlips(
+    householdId,
     [...matched].flatMap(([spelling, match]) => (match ? [] : [spelling])),
     other
   );
@@ -871,6 +948,7 @@ export async function findFood(
   // A hidden food is never AI's answer: no merge into it, no parent, no split part. A category is
   // a seeded food: an own one may be a placeholder ("toppings") whose lines leave the choice open.
   const kept = await findIngredientIdsAmong(
+    householdId,
     found.flat().map((one) => one.ingredientId),
     among
   );

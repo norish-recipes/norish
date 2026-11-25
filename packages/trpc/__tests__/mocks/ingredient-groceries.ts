@@ -18,7 +18,10 @@ export const ingredientColumns = (
 
 /** "x en y" is a grocery each, as a name whose words join two foods is; the first keeps the id. */
 export const groceryParts = vi.fn(
-  async <T extends { id?: string | null; name: string | null }>(items: readonly T[]) =>
+  async <T extends { id?: string | null; name: string | null }>(
+    _householdId: string,
+    items: readonly T[]
+  ) =>
     items.map((item) => {
       const [first, ...rest] = item.name?.split(" en ") ?? [item.name];
 
@@ -27,6 +30,6 @@ export const groceryParts = vi.fn(
 );
 
 export const groceryPartsOf = vi.fn(
-  async <T extends { id?: string | null; name: string | null }>(item: T) =>
-    (await groceryParts([item]))[0]
+  async <T extends { id?: string | null; name: string | null }>(householdId: string, item: T) =>
+    (await groceryParts(householdId, [item]))[0]
 );

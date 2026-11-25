@@ -49,7 +49,6 @@ describe("Parent Ingredients", () => {
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
       isServerAdmin: false,
     };
   });
@@ -59,7 +58,7 @@ describe("Parent Ingredients", () => {
   });
 
   async function mint(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId: actor.userId });
+    const [resolved] = await resolveIngredients([text], actor);
 
     return resolved!;
   }

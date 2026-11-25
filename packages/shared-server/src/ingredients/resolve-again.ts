@@ -2,7 +2,7 @@ import type { NamingRow, NamingRows } from "@norish/db/repositories/ingredient-c
 import type { GroceryPart } from "@norish/db/repositories/ingredient-relocation";
 import { withTransaction } from "@norish/db/drizzle";
 import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
-import { findIngredientIdsAmong } from "@norish/db/repositories/ingredient-catalogue";
+import { findIngredientHouseholds } from "@norish/db/repositories/ingredient-catalogue";
 import { repointLines } from "@norish/db/repositories/ingredient-cleanup";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
@@ -12,7 +12,8 @@ import type { ResolveMode } from "./resolver";
 import { resolveIngredients, resolveLineFoods, typedParts, writeResolved } from "./resolver";
 
 /**
- * Point each row at what its text resolves to in `mode`, minting for its owner unless repointing;
+ * Point each row at what its text resolves to in `mode` in its own household, minting there unless
+ * repointing;
  * a Grocery naming several foods becomes one per food (`typedParts`). With `refine`, only a line
  * that now reads other foods is written, and one reading none keeps a seeded food (its spelling is
  * AI's spelling check's to judge). Answers how many lines were written.
@@ -27,13 +28,13 @@ export async function resolveAgain(
   return await writeResolved(
     async () => {
       const units = await getUnits();
-      const lines = await resolveByOwner(rows.lines, async (owned, userId) => {
+      const lines = await resolveByHousehold(rows.lines, async (owned, householdId) => {
         const texts = owned.map(({ name, amount, unit }) =>
           lineNamesNoFood({ text: name ?? "", amount })
             ? ""
             : lineFoodText({ text: name ?? "", amount, unit }, units)
         );
-        const foods = await resolveLineFoods(texts, { userId }, mode);
+        const foods = await resolveLineFoods(texts, { householdId, userId: null }, mode);
 
         return owned.flatMap((line, index) => {
           const resolved = foods[index];
@@ -55,11 +56,11 @@ export async function resolveAgain(
         });
       });
       const groceriesOf = (naming: readonly NamingRow[]) =>
-        resolveByOwner(naming, async (owned, userId) => {
-          const split = await typedParts(owned, { alternatives: "first" });
+        resolveByHousehold(naming, async (owned, householdId) => {
+          const split = await typedParts(householdId, owned, { alternatives: "first" });
           const foods = await resolveIngredients(
             split.flat().map((part) => part.name ?? ""),
-            { userId },
+            { householdId, userId: null },
             mode
           );
           let partIndex = 0;
@@ -90,9 +91,8 @@ export async function resolveAgain(
 
       const before = refine ? await findRecipeLineAliases(lines.map((line) => line.id)) : null;
       const seeded = before
-        ? await findIngredientIdsAmong(
-            [...before.values()].flatMap((line) => line.foods.map((food) => food.ingredientId)),
-            "seeded"
+        ? await findSeededAmong(
+            [...before.values()].flatMap((line) => line.foods.map((food) => food.ingredientId))
           )
         : new Set<string>();
       const written = (line: (typeof lines)[number]) => {
@@ -133,17 +133,26 @@ function readsAsBefore(
   );
 }
 
-/** Resolve rows a batch per owner, so what a text mints is its row's owner's. */
-async function resolveByOwner<R extends NamingRow, T>(
+/** Resolve rows a batch per household, so each reads and mints in its own catalogue (ADR-0042). */
+async function resolveByHousehold<R extends NamingRow, T>(
   rows: readonly R[],
-  resolve: (owned: R[], userId: string | null) => Promise<T[]>
+  resolve: (held: R[], householdId: string) => Promise<T[]>
 ): Promise<T[]> {
-  const byOwner = new Map<string | null, R[]>();
+  const byHousehold = new Map<string, R[]>();
   const resolved: T[] = [];
 
-  for (const row of rows) byOwner.set(row.ownerId, [...(byOwner.get(row.ownerId) ?? []), row]);
-
-  for (const [userId, owned] of byOwner) resolved.push(...(await resolve(owned, userId)));
+  for (const row of rows) {
+    byHousehold.set(row.householdId, [...(byHousehold.get(row.householdId) ?? []), row]);
+  }
+  for (const [householdId, held] of byHousehold)
+    resolved.push(...(await resolve(held, householdId)));
 
   return resolved;
+}
+
+/** Which of these foods are seeded. */
+async function findSeededAmong(ids: readonly string[]): Promise<Set<string>> {
+  const households = await findIngredientHouseholds(ids);
+
+  return new Set(ids.filter((id) => households.get(id) === null));
 }
