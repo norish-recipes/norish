@@ -20,6 +20,9 @@ vi.mock(
   "@norish/shared-server/realtime/permissions",
   () => import("../mocks/realtime/permissions")
 );
+const bumpViewEpoch = vi.hoisted(() => vi.fn(async () => undefined));
+
+vi.mock("@norish/shared-server/realtime/resume", () => ({ bumpViewEpoch }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -35,7 +38,7 @@ beforeEach(() => {
 });
 
 describe("the Permission Policy", () => {
-  it("is stored, and announced to everyone", async () => {
+  it("is stored, refuses older Resume cursors, and is announced to everyone", async () => {
     const policy = { view: "household", edit: "household", delete: "household" } as const;
 
     await expect(admin().updateRecipePermissionPolicy(policy)).resolves.toEqual({
@@ -47,6 +50,9 @@ describe("the Permission Policy", () => {
       policy,
       expect.any(String),
       false
+    );
+    expect(bumpViewEpoch.mock.invocationCallOrder[0]).toBeGreaterThan(
+      setConfig.mock.invocationCallOrder[0]!
     );
     expect(permissionsRealtime.published).toEqual([
       expect.objectContaining({ event: "policyUpdated", payload: { recipePolicy: policy } }),

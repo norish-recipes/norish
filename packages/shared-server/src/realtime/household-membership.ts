@@ -2,6 +2,7 @@ import type { HouseholdUserInfo } from "@norish/shared/contracts/realtime/househ
 import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
 import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
 import { households } from "@norish/shared-server/realtime/households";
+import { bumpViewEpoch } from "@norish/shared-server/realtime/resume";
 
 /** Who hears a committed membership change: the account that moved, then those who stay. */
 export interface MembershipAnnouncements {
@@ -10,15 +11,18 @@ export interface MembershipAnnouncements {
 }
 
 /**
- * Drops the household cache, tells the mover, then its Scope Change (ADR-0033) without waiting on
- * those who stay, who hear last. Each step runs even when an earlier one throws.
+ * Drops the household cache and older cursors, tells the mover, then its Scope Change (ADR-0033)
+ * without waiting on those who stay, who hear last. Each step runs even when an earlier one throws.
  */
 export async function announceMembershipChange(
   change: { userId: string; reason: string; affectedUserIds: string[] },
   announce: MembershipAnnouncements
 ): Promise<void> {
   try {
-    await invalidateHouseholdCacheForUsers([change.userId, ...change.affectedUserIds]);
+    await Promise.all([
+      invalidateHouseholdCacheForUsers([change.userId, ...change.affectedUserIds]),
+      bumpViewEpoch(),
+    ]);
   } finally {
     try {
       await announce.toMover?.();

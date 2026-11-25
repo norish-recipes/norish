@@ -17,6 +17,7 @@ import type Valkey from "ioredis";
 import type { Result } from "ioredis";
 
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
+import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 import { RealtimeLaggedError } from "./hub";
 
@@ -71,18 +72,28 @@ export function compareStreamIds(a: string, b: string): number {
 export interface RealtimeIdentity {
   userId: string;
   householdId: string;
-  /** A policy-scoped event's view level: a cursor minted under another one is refused. */
-  viewPolicy?: string;
+  /** The View Epoch at subscribe: a cursor minted under an earlier one is refused. */
+  viewEpoch: string;
 }
 
-/** The first eight hex characters of `sha1(userId|householdId)`, with `|viewPolicy` when given. */
+/** The first eight hex characters of `sha1(userId|householdId|viewEpoch)`. */
 export function identityHashFor(identity: RealtimeIdentity): string {
-  const policy = identity.viewPolicy ? `|${identity.viewPolicy}` : "";
-
   return createHash("sha1")
-    .update(`${identity.userId}|${identity.householdId}${policy}`)
+    .update(`${identity.userId}|${identity.householdId}|${identity.viewEpoch}`)
     .digest("hex")
     .slice(0, IDENTITY_HASH_LENGTH);
+}
+
+const VIEW_EPOCH_KEY = "norish:realtime:view-epoch";
+
+// ponytail: one epoch for the server; a per-household one if membership changes grow common.
+/** Moves after a policy or membership change, so no event buffered under the old view replays. */
+export async function bumpViewEpoch(): Promise<void> {
+  await (await getPublisherClient()).incr(VIEW_EPOCH_KEY);
+}
+
+export async function readViewEpoch(): Promise<string> {
+  return (await (await getPublisherClient()).get(VIEW_EPOCH_KEY)) ?? "0";
 }
 
 export interface RealtimeCursor {

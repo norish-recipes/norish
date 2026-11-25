@@ -35,6 +35,7 @@ vi.mock("@norish/shared-server/cache/household", () => ({
   invalidateHouseholdCacheForUsers: mockInvalidateHouseholdCache,
 }));
 
+vi.mock("@norish/shared-server/realtime/resume", () => ({ bumpViewEpoch: vi.fn() }));
 vi.mock("@norish/shared-server/realtime/connection", () => ({
   emitConnectionInvalidation: mockEmitConnectionInvalidation,
 }));

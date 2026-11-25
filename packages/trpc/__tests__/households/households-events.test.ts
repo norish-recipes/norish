@@ -28,7 +28,13 @@ const householdCache = vi.hoisted(() => ({
 
 vi.mock("@norish/db", () => householdDb);
 vi.mock("../../src/routers/caldav/sync-service", () => caldavSync);
+const viewEpoch = vi.hoisted(() => ({ bumpViewEpoch: vi.fn(async () => undefined) }));
+
 vi.mock("@norish/shared-server/cache/household", () => householdCache);
+vi.mock("@norish/shared-server/realtime/resume", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-server/realtime/resume")>()),
+  ...viewEpoch,
+}));
 vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));
 vi.mock("@norish/shared-server/realtime/connection", () => import("../mocks/realtime/connection"));
 vi.mock("@norish/shared-server/logger", () => ({
@@ -42,7 +48,7 @@ const { households } = await import("../mocks/realtime/households");
 /** Mutations announce after they answer; the mocks resolve at once, so one loop turn runs it all. */
 const settled = () => new Promise((resolve) => setImmediate(resolve));
 
-/** Every cache drop, household event and invalidation, in the order they ran. */
+/** Every cache drop, View Epoch bump, household event and invalidation, in the order they ran. */
 function timeline(): string[] {
   const events = households.published.map((entry) => ({
     order: households.publish.mock.invocationCallOrder[households.published.indexOf(entry)]!,
@@ -56,7 +62,12 @@ function timeline(): string[] {
     (order) => ({ order, label: "cache:drop" })
   );
 
-  return [...cacheDrops, ...events, ...invalidations]
+  const epochBumps = viewEpoch.bumpViewEpoch.mock.invocationCallOrder.map((order) => ({
+    order,
+    label: "epoch:bump",
+  }));
+
+  return [...cacheDrops, ...epochBumps, ...events, ...invalidations]
     .sort((a, b) => a.order - b.order)
     .map((e) => e.label);
 }
@@ -88,6 +99,7 @@ describe("household mutations announce before they restart the socket", () => {
     households.reset();
     emitConnectionInvalidation.mockClear();
     householdCache.invalidateHouseholdCacheForUsers.mockClear();
+    viewEpoch.bumpViewEpoch.mockClear();
     caldavSync.chaseLeftBehindEvents.mockClear();
     householdDb.getAllergiesForUsers.mockResolvedValue([]);
     householdDb.getHouseholdForUser.mockResolvedValue(household);
@@ -107,6 +119,7 @@ describe("household mutations announce before they restart the socket", () => {
     expect(householdDb.joinHousehold).toHaveBeenCalledWith(user.id, { joinCode: "123456" });
     expect(timeline()).toEqual([
       "cache:drop",
+      "epoch:bump",
       "household:created",
       "connection.invalidate:household-joined",
       "household:userJoined",
@@ -157,6 +170,7 @@ describe("household mutations announce before they restart the socket", () => {
     expect(householdDb.moveToHouseholdOfOne).toHaveBeenCalledWith(householdId, user.id, 3);
     expect(timeline()).toEqual([
       "cache:drop",
+      "epoch:bump",
       "household:created",
       "connection.invalidate:household-left",
       "household:userLeft",
@@ -205,6 +219,7 @@ describe("household mutations announce before they restart the socket", () => {
 
     expect(timeline()).toEqual([
       "cache:drop",
+      "epoch:bump",
       "household:created",
       "household:userKicked",
       "connection.invalidate:household-kicked",
