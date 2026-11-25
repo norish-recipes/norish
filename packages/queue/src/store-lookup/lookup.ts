@@ -20,7 +20,7 @@ import {
   resolveProductLink,
   upsertReadProduct,
 } from "@norish/db/repositories/store-products";
-import { getStoreById } from "@norish/db/repositories/stores";
+import { getStoreById, getStoreHouseholdId } from "@norish/db/repositories/stores";
 import { createLogger } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { chooseUnmistakable } from "@norish/shared/lib/auto-link";
@@ -161,12 +161,13 @@ export async function matchGroceryName(input: {
   ingredientId: string;
   /** The grocery's name: what the shop is searched for. */
   name: string;
-  householdId: string;
   onStep?: (step: string) => Promise<void>;
   onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
-  const { storeId, ingredientId, name, householdId } = input;
-  const store = await getStoreById(storeId, householdId);
+  const { storeId, ingredientId, name } = input;
+  // Read when the job runs, so the answer reaches the household the Store is in now.
+  const householdId = await getStoreHouseholdId(storeId);
+  const store = householdId ? await getStoreById(storeId, householdId) : null;
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
   const gaveUp = async (): Promise<{ matched: boolean }> => {
@@ -175,7 +176,7 @@ export async function matchGroceryName(input: {
     return { matched: false };
   };
 
-  if (!store?.searchAddress) return gaveUp();
+  if (!householdId || !store?.searchAddress) return gaveUp();
 
   // The job is only ever queued for a name the Store did not know. By the time
   // it runs a shopper may have said which product this is — through the
@@ -305,14 +306,18 @@ async function linkUnlessGone(write: () => Promise<boolean>): Promise<boolean> {
  * here: nothing read it, and nothing may overwrite what its owner typed.
  */
 export async function refreshProducts(input: {
+  storeId: string;
   productIds: string[];
-  householdId: string;
   now?: Date;
 }): Promise<{ refreshed: number }> {
   const now = input.now ?? new Date();
-  const stale = await listStaleProducts(input.productIds, staleBefore(now));
+  // The Store's household as it is now, not as it was when the job was queued.
+  const householdId = await getStoreHouseholdId(input.storeId);
+  const stale = (await listStaleProducts(input.productIds, staleBefore(now))).filter(
+    (product) => product.storeId === input.storeId
+  );
 
-  if (stale.length === 0) return { refreshed: 0 };
+  if (!householdId || stale.length === 0) return { refreshed: 0 };
 
   const fetchStorePage = requireQueueApiHandler("fetchStorePage");
   const readProduct = requireQueueApiHandler("readProduct");
@@ -338,7 +343,7 @@ export async function refreshProducts(input: {
 
     const updated = await upsertReadProduct(reading);
 
-    announceProduct(input.householdId, updated);
+    announceProduct(householdId, updated);
     refreshed += 1;
   }
 

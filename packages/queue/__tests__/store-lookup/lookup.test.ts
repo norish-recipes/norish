@@ -17,6 +17,7 @@ import { resetStoreVisitPacingForTests } from "@norish/queue/store-lookup/pace";
 
 const mocks = vi.hoisted(() => ({
   getStoreById: vi.fn(),
+  getStoreHouseholdId: vi.fn(),
   clearPendingLink: vi.fn(),
   linkIfUnanswered: vi.fn(),
   upsertReadProduct: vi.fn(),
@@ -27,7 +28,10 @@ const mocks = vi.hoisted(() => ({
   decideProduct: vi.fn(),
 }));
 
-vi.mock("@norish/db/repositories/stores", () => ({ getStoreById: mocks.getStoreById }));
+vi.mock("@norish/db/repositories/stores", () => ({
+  getStoreById: mocks.getStoreById,
+  getStoreHouseholdId: mocks.getStoreHouseholdId,
+}));
 vi.mock("@norish/db/repositories/store-products", () => ({
   clearPendingLink: mocks.clearPendingLink,
   linkIfUnanswered: mocks.linkIfUnanswered,
@@ -100,6 +104,7 @@ describe("matchGroceryName", () => {
     resetStoreVisitPacingForTests(1);
     for (const mock of Object.values(mocks)) mock.mockReset();
     mocks.getStoreById.mockResolvedValue({ id: STORE, searchAddress: SEARCH_ADDRESS });
+    mocks.getStoreHouseholdId.mockResolvedValue(HOUSEHOLD);
     mocks.resolveProductLink.mockResolvedValue({
       storeId: STORE,
       ingredientId: KAAS,
@@ -124,7 +129,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(visited[0]).toBe("https://www.dirk.nl/zoeken/producten/oude%20kaas");
@@ -140,7 +144,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: true });
@@ -165,7 +168,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -183,7 +185,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -203,7 +204,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     // The page is the authority, and the page presented no Sale at €8.49.
@@ -228,7 +228,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -253,7 +252,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -271,7 +269,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
       expect.objectContaining({ size: "930 g", pack: grams })
@@ -285,7 +282,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -309,7 +305,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
       });
 
       expect(mocks.decideProduct).not.toHaveBeenCalled();
@@ -333,7 +328,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
       });
 
       expect(result).toEqual({ matched: true });
@@ -368,7 +362,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
       });
 
       expect(result).toEqual({ matched: false });
@@ -397,7 +390,6 @@ describe("matchGroceryName", () => {
           storeId: STORE,
           ingredientId: KAAS,
           name: "oude kaas",
-          householdId: HOUSEHOLD,
         })
       ).resolves.toEqual({ matched: false });
     });
@@ -410,7 +402,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
       });
 
       expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, KAAS, null, null);
@@ -453,7 +444,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -489,7 +479,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -522,7 +511,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -542,7 +530,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -566,7 +553,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -586,7 +572,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: true });
@@ -609,7 +594,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: true });
@@ -635,7 +619,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -653,7 +636,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     // The conditional write turns the pending row into the Miss; nothing
@@ -678,7 +660,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -702,7 +683,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -720,7 +700,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     // The conditional write, never the unconditional one: a Miss found by the
@@ -745,7 +724,6 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdId: HOUSEHOLD,
       })
     ).resolves.toEqual({ matched: true });
   });
@@ -758,12 +736,33 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(visited).toEqual([]);
     expect(mocks.linkIfUnanswered).not.toHaveBeenCalled();
     // Nothing can be asked, so nothing is left saying it is being asked.
+    expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
+  });
+
+  it("tells the household the Store is in when the job runs, not when it was queued", async () => {
+    mocks.getStoreHouseholdId.mockResolvedValue("household-now");
+    useShop({ candidates: [candidate("Oude kaas 500 g", "a"), candidate("Oude kaas 1 kg", "b")] });
+
+    await matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" });
+
+    expect(mocks.getStoreById).toHaveBeenCalledWith(STORE, "household-now");
+    expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
+      householdId: "household-now",
+    });
+  });
+
+  it("asks nothing for a Store that is gone", async () => {
+    mocks.getStoreHouseholdId.mockResolvedValue(null);
+    const visited = useShop({ candidates: [candidate("Oude kaas")] });
+
+    await matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" });
+
+    expect(visited).toEqual([]);
     expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
   });
 
@@ -777,7 +776,6 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdId: HOUSEHOLD,
     });
 
     expect(mocks.publish).toHaveBeenCalledWith(
@@ -796,16 +794,31 @@ describe("refreshProducts", () => {
     resetQueueApiHandlersForTests();
     resetStoreVisitPacingForTests(1);
     for (const mock of Object.values(mocks)) mock.mockReset();
+    mocks.getStoreHouseholdId.mockResolvedValue(HOUSEHOLD);
     mocks.upsertReadProduct.mockImplementation((reading: Record<string, unknown>) =>
       Promise.resolve({ id: "product-1", ...reading })
     );
+  });
+
+  it("tells the household the Store is in when the refresh runs", async () => {
+    mocks.getStoreHouseholdId.mockResolvedValue("household-now");
+    mocks.listStaleProducts.mockResolvedValue([
+      { id: "p1", storeId: STORE, pageUrl: PRODUCT_PAGE, isManual: false },
+    ]);
+    useShop({ product: { name: "Oude kaas", price: 8.99, currency: "EUR" } });
+
+    await refreshProducts({ productIds: ["p1"], storeId: STORE });
+
+    expect(mocks.publish).toHaveBeenCalledWith("productUpdated", expect.anything(), {
+      householdId: "household-now",
+    });
   });
 
   it("visits nothing when nothing is stale", async () => {
     mocks.listStaleProducts.mockResolvedValue([]);
     const visited = useShop({});
 
-    await expect(refreshProducts({ productIds: ["p1"], householdId: HOUSEHOLD })).resolves.toEqual({
+    await expect(refreshProducts({ productIds: ["p1"], storeId: STORE })).resolves.toEqual({
       refreshed: 0,
     });
     expect(visited).toEqual([]);
@@ -817,7 +830,7 @@ describe("refreshProducts", () => {
     ]);
     const visited = useShop({ product: { name: "Oude kaas", price: 8.99, currency: "EUR" } });
 
-    await expect(refreshProducts({ productIds: ["p1"], householdId: HOUSEHOLD })).resolves.toEqual({
+    await expect(refreshProducts({ productIds: ["p1"], storeId: STORE })).resolves.toEqual({
       refreshed: 1,
     });
     expect(visited).toEqual([PRODUCT_PAGE]);
@@ -832,7 +845,7 @@ describe("refreshProducts", () => {
     ]);
     useShop({ product: null });
 
-    await expect(refreshProducts({ productIds: ["p1"], householdId: HOUSEHOLD })).resolves.toEqual({
+    await expect(refreshProducts({ productIds: ["p1"], storeId: STORE })).resolves.toEqual({
       refreshed: 0,
     });
     // The attempt is noted so a dead page takes its turn behind live ones;
@@ -844,7 +857,7 @@ describe("refreshProducts", () => {
   it("asks only for products the repository calls stale, which is never a by-hand one", async () => {
     mocks.listStaleProducts.mockResolvedValue([]);
 
-    await refreshProducts({ productIds: ["manual-1"], householdId: HOUSEHOLD, now: new Date() });
+    await refreshProducts({ productIds: ["manual-1"], storeId: STORE, now: new Date() });
 
     expect(mocks.listStaleProducts).toHaveBeenCalledWith(["manual-1"], expect.any(Date));
     expect(mocks.upsertReadProduct).not.toHaveBeenCalled();

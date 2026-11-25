@@ -67,7 +67,6 @@ describe("asking a Store what an Ingredient means", () => {
         storeId: STORE,
         ingredientId: "ingredient:oude kaas",
         name: "Oude kaas",
-        householdId: "household-1",
       },
       expect.not.objectContaining({ delay: expect.anything() })
     );

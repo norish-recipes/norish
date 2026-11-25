@@ -125,9 +125,8 @@ export type StoreLookupJobData =
       ingredientId: string;
       /** The grocery's name as the list shows it: what the shop is searched for. */
       name: string;
-      householdId: string;
     }
-  | { kind: "refresh"; storeId: string; productIds: string[]; householdId: string };
+  | { kind: "refresh"; storeId: string; productIds: string[] };
 
 /** Drawing these foods' Ingredient Icons, for a mint's pass or Fill gaps, a step per food. */
 export interface IngredientIconsJobData {

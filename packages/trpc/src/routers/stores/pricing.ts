@@ -80,7 +80,6 @@ async function askStore(
     storeId: pair.storeId,
     ingredientId: pair.ingredientId,
     name: pair.name,
-    householdId: ctx.householdId,
   }).catch((err: unknown) => {
     log.error({ err, storeId: pair.storeId }, "Failed to enqueue a store lookup");
   });
@@ -198,7 +197,6 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
         kind: "refresh",
         storeId,
         productIds: ids,
-        householdId: ctx.householdId,
       }).catch((err: unknown) => {
         log.error({ err, storeId }, "Failed to enqueue a Shelf Price refresh");
       })
