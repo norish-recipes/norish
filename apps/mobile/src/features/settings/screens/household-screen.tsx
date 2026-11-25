@@ -10,8 +10,8 @@ import {
 } from "@norish/shared-react/reader";
 
 import { JoinCodeCard } from "../components/join-code-card";
+import { JoinHouseholdForm } from "../components/join-household-form";
 import { MembersList } from "../components/members-list";
-import { NoHouseholdForms } from "../components/no-household-forms";
 import { ReadBody } from "../components/read-body";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
@@ -19,8 +19,8 @@ import { SettingsRow } from "../components/settings-row";
 import { useConfirmedWrite } from "../hooks/use-confirmed-write";
 import { readState } from "../utils/read-state";
 
-/** Household: the members, join code and Leave, or create-or-join when the Reader has none. Being
- * kicked or leaving empties the cached household, which lands here as the no-household state. */
+/** Household: the members, join code and Leave; a household of one shows just you, its join code
+ * and a code to join another. Leaving or being removed lands here as a new household of one. */
 export function HouseholdScreen() {
   const text = useText();
   const confirmedWrite = useConfirmedWrite();
@@ -52,13 +52,21 @@ export function HouseholdScreen() {
 
   return (
     <SettingsPage testID="settings-household-screen" title={text("settings.tabs.household")}>
-      <ReadBody
-        empty={<NoHouseholdForms />}
-        name="settings-household"
-        state={page}
-        onRetry={invalidate}
-      >
-        {household ? (
+      <ReadBody empty={null} name="settings-household" state={page} onRetry={invalidate}>
+        {household && household.users.length === 1 ? (
+          <>
+            <SettingsGroup className="pt-1">
+              <SettingsRow
+                icon="home-outline"
+                testID="settings-household-name"
+                title={household.name}
+                value={text("settings.household.info.justYou")}
+              />
+            </SettingsGroup>
+            {admin ? <JoinCodeCard household={admin} /> : null}
+            <JoinHouseholdForm />
+          </>
+        ) : household ? (
           <>
             <SettingsGroup className="pt-1">
               <SettingsRow

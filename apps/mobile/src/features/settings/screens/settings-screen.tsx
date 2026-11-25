@@ -16,7 +16,6 @@ import { ProfileCard } from "../components/profile-card";
 import { SettingsGroup } from "../components/settings-group";
 import { SettingsPage } from "../components/settings-page";
 import { SettingsRow } from "../components/settings-row";
-import { readState } from "../utils/read-state";
 import { versionLine } from "../utils/version-line";
 
 type SettingsPath =
@@ -29,14 +28,7 @@ export function SettingsScreen() {
   const router = useRouter();
   const { user } = useReader();
   const { allergies } = useAllergiesQuery();
-  const { household, currentUserId, isLoading, error } = useHousehold();
-  // As the Household page reads it: "No household" only once a read said so.
-  const householdRead = readState({
-    held: household !== null,
-    answered: currentUserId !== undefined,
-    isLoading,
-    error,
-  });
+  const { household } = useHousehold();
   const serverVersion = useServerVersionQuery();
   const serverAddress = use(ServerAddressContext);
   const { locale, options } = useMobileLocaleSettings();
@@ -83,10 +75,7 @@ export function SettingsScreen() {
           icon="people-outline"
           testID="settings-root-household"
           title={text("settings.tabs.household")}
-          value={
-            household?.name ??
-            (householdRead === "empty" ? text("settings.mobile.noHousehold") : undefined)
-          }
+          value={household?.name}
           onPress={open("household")}
         />
       </SettingsGroup>
