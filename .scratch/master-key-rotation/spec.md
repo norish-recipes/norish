@@ -42,14 +42,14 @@ Better Auth API keys are hashed without a secret and survive a rotation.
 
 A key is available from `MASTER_KEY`, `MASTER_KEY_PREVIOUS`, or the key file's `current` and `previous`. `MASTER_KEY` set means env mode, and the key file is ignored.
 
-| Fingerprint in DB | Matches                    | Outcome                                                                      |
-| ----------------- | -------------------------- | ---------------------------------------------------------------------------- |
-| none              | `MASTER_KEY` set           | Adopt it, write the fingerprint (every pre-change instance)                  |
-| none              | no `MASTER_KEY`, no users  | First boot: generate the key file, write the fingerprint                     |
-| none              | no `MASTER_KEY`, users     | Refuse to start                                                              |
-| present           | current key                | Start                                                                        |
-| present           | previous key               | Re-key to the current key, then start                                        |
-| present           | nothing                    | Refuse to start                                                              |
+| Fingerprint in DB | Matches                            | Outcome                                                     |
+| ----------------- | ---------------------------------- | ----------------------------------------------------------- |
+| none              | `MASTER_KEY` set                   | Adopt it, write the fingerprint (every pre-change instance) |
+| none              | no `MASTER_KEY`, nothing encrypted | First boot: generate the key file, write the fingerprint    |
+| none              | no `MASTER_KEY`, encrypted data    | Refuse to start                                             |
+| present           | current key                        | Start                                                       |
+| present           | previous key                       | Re-key to the current key, then start                       |
+| present           | nothing                            | Refuse to start                                             |
 
 A refusal names which key is missing and says the only way out is restoring `MASTER_KEY` or the volume from a backup. There is no reset mode.
 

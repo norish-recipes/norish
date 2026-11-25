@@ -4,7 +4,7 @@ The Master Key protects against a leak of the database alone: a dump, a backup o
 
 **Where it lives.** An administrator may set `MASTER_KEY`, which pins it. Otherwise the instance generates one at its first start into `<UPLOADS_DIR>/.norish/master-key.json` (mode `0600`), so one backup of the database and the volume restores everything. It is never stored in Postgres, never reaches a child process's environment, and no Admin UI reveals it.
 
-**Which key is right.** The database holds a fingerprint of the current key. Boot refuses to start when no available key matches it, and generates a key only when there is no fingerprint, no `MASTER_KEY` and no users. A lost key has no recovery mode: the way back is the backup.
+**Which key is right.** The database holds a fingerprint of the current key. Boot refuses to start when no available key matches it, and generates a key only when there is no fingerprint, no `MASTER_KEY` and nothing encrypted yet. A lost key has no recovery mode: the way back is the backup.
 
 **Rotation retires the old key.** Rotation runs at boot in one transaction: every encrypted value is re-encrypted, every lookup hash recomputed, every session ended, and the fingerprint moved to the new key. Sign-in signing derives from the Master Key, so every web and mobile session ends.
 
