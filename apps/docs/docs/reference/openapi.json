@@ -3302,6 +3302,11 @@
                         "video"
                       ]
                     }
+                  },
+                  "createEntries": {
+                    "default": true,
+                    "description": "Whether a tag or category name the household's list lacks is created. Send false to attach only entries the list has.",
+                    "type": "boolean"
                   }
                 },
                 "required": [
