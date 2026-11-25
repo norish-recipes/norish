@@ -417,7 +417,7 @@ export async function toggleGroceriesData(
   }
 
   for (const ownerId of ownerIds.values()) {
-    await assertHouseholdAccess(ctx.user.id, ownerId);
+    await assertHouseholdAccess(ctx.householdId, ownerId);
   }
 
   const existingGroceries = ownerIds.size > 0 ? await getGroceriesByIds([...ownerIds.keys()]) : [];
@@ -491,7 +491,7 @@ export async function deleteGroceriesData(
   }
 
   for (const ownerId of ownerIds.values()) {
-    await assertHouseholdAccess(ctx.user.id, ownerId);
+    await assertHouseholdAccess(ctx.householdId, ownerId);
   }
 
   const result = await deleteGroceryByIds(
@@ -545,13 +545,13 @@ export async function assignGroceryToStoreData(
   }
 
   // A line another member deleted lost to an earlier write: stale, as a changed version is.
-  if (ownerId) await assertHouseholdAccess(ctx.user.id, ownerId);
+  if (ownerId) await assertHouseholdAccess(ctx.householdId, ownerId);
 
   if (storeId) {
     if (!storeOwnerId) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
     }
-    await assertHouseholdAccess(ctx.user.id, storeOwnerId);
+    await assertHouseholdAccess(ctx.householdId, storeOwnerId);
   }
 
   const [grocery] = ownerId ? await getGroceriesByIds([groceryId]) : [];

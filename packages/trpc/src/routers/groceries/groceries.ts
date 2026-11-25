@@ -83,7 +83,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       // A line another member deleted lost to an earlier write: stale, as a changed version is.
       if (!ownerId) return { success: true, stale: true };
 
-      await assertHouseholdAccess(ctx.user.id, ownerId);
+      await assertHouseholdAccess(ctx.householdId, ownerId);
       // The Store the grocery is filed under, and priced through, is the
       // household's own — as it is for a drag or an assignment.
       if (storeId) await assertStoreAccess(ctx, storeId);
@@ -499,7 +499,7 @@ const reorderInStore = authedProcedure
 
         // Check household access for all groceries
         for (const ownerId of ownerIds.values()) {
-          await assertHouseholdAccess(ctx.user.id, ownerId);
+          await assertHouseholdAccess(ctx.householdId, ownerId);
         }
 
         // Verify access to any stores being assigned to
@@ -509,7 +509,7 @@ const reorderInStore = authedProcedure
           if (!storeOwnerId) {
             throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
           }
-          await assertHouseholdAccess(ctx.user.id, storeOwnerId);
+          await assertHouseholdAccess(ctx.householdId, storeOwnerId);
         }
 
         // Perform reorder (and optional store changes)

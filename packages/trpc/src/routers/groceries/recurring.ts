@@ -211,7 +211,7 @@ const updateRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.user.id, ownerId);
+        await assertHouseholdAccess(ctx.householdId, ownerId);
 
         // A new name is resolved, and the grocery on the list takes the same answer; one
         // joining foods renames it to the first and repeats the rest on its rule, all or none.
@@ -327,7 +327,7 @@ const detachRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.user.id, ownerId);
+        await assertHouseholdAccess(ctx.householdId, ownerId);
 
         const units = await getUnits();
         const parsedIngredient = parseIngredientWithDefaults(raw, units)[0];
@@ -434,7 +434,7 @@ const deleteRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.user.id, ownerId);
+        await assertHouseholdAccess(ctx.householdId, ownerId);
         const result = await deleteRecurringGroceryById(recurringGroceryId, version);
 
         if (result.stale) {
@@ -512,7 +512,7 @@ const checkRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.user.id, ownerId);
+        await assertHouseholdAccess(ctx.householdId, ownerId);
 
         const recurringGrocery = await getRecurringGroceryById(recurringGroceryId);
 

@@ -159,7 +159,7 @@ describe("calendar.editItem", () => {
     assertHouseholdAccess.mockRejectedValue(new Error("Access denied"));
 
     await expect(edit({ title: "Leek soup" })).rejects.toThrow("Access denied");
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, stored.userId);
+    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, stored.userId);
     expect(editPlannedItem).not.toHaveBeenCalled();
     expect(calendar.publish).not.toHaveBeenCalled();
   });

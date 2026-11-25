@@ -498,9 +498,9 @@ describe("grocery permission checks", () => {
       getGroceryOwnerIds.mockResolvedValue(ownerIds);
       assertHouseholdAccess.mockResolvedValue(undefined);
 
-      await assertHouseholdAccess("user-1", "user-1");
+      await assertHouseholdAccess("household-1", "user-1");
 
-      expect(assertHouseholdAccess).toHaveBeenCalledWith("user-1", "user-1");
+      expect(assertHouseholdAccess).toHaveBeenCalledWith("household-1", "user-1");
     });
 
     it("allows household member to update grocery", async () => {
@@ -510,9 +510,9 @@ describe("grocery permission checks", () => {
       getGroceryOwnerIds.mockResolvedValue(ownerIds);
       assertHouseholdAccess.mockResolvedValue(undefined);
 
-      await assertHouseholdAccess("user-1", "user-2");
+      await assertHouseholdAccess("household-1", "user-2");
 
-      expect(assertHouseholdAccess).toHaveBeenCalledWith("user-1", "user-2");
+      expect(assertHouseholdAccess).toHaveBeenCalledWith("household-1", "user-2");
     });
 
     it("throws when grocery not found", async () => {
@@ -537,7 +537,7 @@ describe("grocery permission checks", () => {
       deleteGroceryByIds.mockResolvedValue(undefined);
 
       for (const ownerId of ownerIds.values()) {
-        await assertHouseholdAccess("user-1", ownerId);
+        await assertHouseholdAccess("household-1", ownerId);
       }
 
       expect(assertHouseholdAccess).toHaveBeenCalledTimes(2);

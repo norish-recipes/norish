@@ -78,7 +78,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
           });
         }
 
-        await assertHouseholdAccess(ctx.user.id, item.userId);
+        await assertHouseholdAccess(ctx.householdId, item.userId);
 
         if (
           item.date === targetDate &&
@@ -154,7 +154,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
           });
         }
 
-        await assertHouseholdAccess(ctx.user.id, ownerId);
+        await assertHouseholdAccess(ctx.householdId, ownerId);
 
         await deletePlannedItem(itemId);
 
@@ -568,7 +568,7 @@ describe("calendar planned items procedures", () => {
       });
 
       expect(getPlannedItemById).toHaveBeenCalledWith("item-123");
-      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, mockItem.userId);
+      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, mockItem.userId);
       expect(moveItem).toHaveBeenCalledWith("item-123", "2025-01-15", "Breakfast", 2);
       expect(result).toEqual({ success: true, moved: true });
     });
@@ -654,7 +654,7 @@ describe("calendar planned items procedures", () => {
       });
 
       expect(getPlannedItemById).toHaveBeenCalledWith("item-123");
-      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, mockItem.userId);
+      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, mockItem.userId);
       expect(moveItem).not.toHaveBeenCalled();
       expect(result).toEqual({ success: true, moved: false });
     });
@@ -836,7 +836,7 @@ describe("calendar planned items procedures", () => {
       const result = await caller.deleteItem({ itemId: "item-123" });
 
       expect(getPlannedItemOwnerId).toHaveBeenCalledWith("item-123");
-      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, "test-user-id");
+      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, "test-user-id");
       expect(deletePlannedItem).toHaveBeenCalledWith("item-123");
       expect(result).toEqual({ success: true });
     });

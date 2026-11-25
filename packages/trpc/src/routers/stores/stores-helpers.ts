@@ -25,13 +25,13 @@ export type StoreProcedureContext = {
  * price under, link to, or file a grocery in — holds it to this.
  */
 export async function assertStoreAccess(
-  ctx: Pick<StoreProcedureContext, "user">,
+  ctx: Pick<StoreProcedureContext, "user" | "householdId">,
   storeId: string
 ): Promise<void> {
   const ownerId = await getStoreOwnerId(storeId);
 
   if (!ownerId) throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-  await assertHouseholdAccess(ctx.user.id, ownerId);
+  await assertHouseholdAccess(ctx.householdId, ownerId);
 }
 
 export async function listStoresData(ctx: StoreProcedureContext) {

@@ -65,7 +65,7 @@ const remove = authedProcedure
 
     if (!ownerId)
       throw new TRPCError({ code: "NOT_FOUND", message: "Pantry ingredient not found" });
-    await assertHouseholdAccess(ctx.user.id, ownerId);
+    await assertHouseholdAccess(ctx.householdId, ownerId);
 
     const removed = await deletePantryIngredient(input.id);
 

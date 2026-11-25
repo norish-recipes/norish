@@ -191,7 +191,7 @@ export async function deleteCalendarItem(
   }
   if (!item) return { success: true, stale: false };
 
-  await assertHouseholdAccess(ctx.user.id, item.userId);
+  await assertHouseholdAccess(ctx.householdId, item.userId);
 
   const deleteResult = await deletePlannedItem(itemId, version);
 
@@ -248,7 +248,7 @@ async function itemAtVersion(
   // A plan another member removed lost to an earlier write: stale, as a changed version is.
   if (!item) return null;
 
-  await assertHouseholdAccess(ctx.user.id, item.userId);
+  await assertHouseholdAccess(ctx.householdId, item.userId);
 
   // A write at another version changes nothing, whatever it asks (ADR-0004).
   if (item.version === version) return item;

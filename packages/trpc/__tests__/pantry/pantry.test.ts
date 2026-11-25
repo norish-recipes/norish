@@ -174,7 +174,7 @@ describe("the Pantry", () => {
   it("removes an item and tells the household which", async () => {
     await expect(caller.remove({ id: OLIVE })).resolves.toBe(OLIVE);
 
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, ctx.user.id);
+    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, ctx.user.id);
     expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE);
     expect(pantry.publish).toHaveBeenCalledWith(
       "removed",
