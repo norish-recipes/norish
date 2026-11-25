@@ -125,11 +125,10 @@ const join = authedProcedure
 
     log.info({ userId: ctx.user.id }, "Joining household by code");
 
-    // Validate cleaned code format
-    JoinCodeSchema.parse(cleaned);
-
-    // The code is checked under the household's lock, in the move's own transaction.
-    const outcome = await joinHousehold(ctx.user.id, { joinCode: cleaned });
+    // A malformed code is refused like an unknown one; a real one is checked under the lock.
+    const outcome = JoinCodeSchema.safeParse(cleaned).success
+      ? await joinHousehold(ctx.user.id, { joinCode: cleaned })
+      : ({ refused: "gone" } as const);
 
     if ("refused" in outcome) {
       const badCode = outcome.refused === "gone" || outcome.refused === "expired";

@@ -8,7 +8,7 @@ import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { InputOTP, Label, REGEXP_ONLY_DIGITS } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHouseholdMutations } from "@norish/shared-react/reader";
+import { isJoinCode, useHouseholdMutations } from "@norish/shared-react/reader";
 
 const CODE_SLOTS = [0, 1, 2, 3, 4, 5] as const;
 
@@ -16,8 +16,10 @@ export default function JoinHouseholdCard() {
   const t = useTranslations("settings.household");
   const { joinHousehold } = useHouseholdMutations();
   const [joinCode, setJoinCode] = useState("");
+  const complete = isJoinCode(joinCode);
   const handleJoinHousehold = (e: SubmitEvent) => {
     e.preventDefault();
+    if (!complete) return;
     void joinHousehold(joinCode).then((went) => went && setJoinCode(""));
   };
   return (
@@ -46,7 +48,12 @@ export default function JoinHouseholdCard() {
           </InputOTP>
         </div>
         <ActionButtonGroup className="mt-auto">
-          <ActionButton action="apply" icon={ArrowRightEndOnRectangleIcon} type="submit">
+          <ActionButton
+            action="apply"
+            icon={ArrowRightEndOnRectangleIcon}
+            isDisabled={!complete}
+            type="submit"
+          >
             {t("join.submitButton")}
           </ActionButton>
         </ActionButtonGroup>

@@ -133,6 +133,16 @@ describe("household mutations announce before they restart the socket", () => {
     expect(timeline()).toEqual([]);
   });
 
+  it("join: refuses a malformed code as an invalid one without reaching the move", async () => {
+    householdDb.joinHousehold.mockClear();
+
+    await expect(householdsRouter.createCaller(ctx as never).join({ code: "123" })).rejects.toThrow(
+      /Invalid join code/
+    );
+
+    expect(householdDb.joinHousehold).not.toHaveBeenCalled();
+  });
+
   it("leave: the members hear `userLeft`, then the leaver gets their new household of one", async () => {
     const leaver = { ...household, adminUserId: memberId };
 
