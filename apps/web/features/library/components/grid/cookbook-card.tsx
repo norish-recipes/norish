@@ -417,8 +417,8 @@ const CookbookCard = memo(CookbookCardComponent, (previous, next) => {
     (a.id === b.id &&
       a.title === b.title &&
       a.version === b.version &&
-      // The owner decides whether this card offers Rename and Delete at all,
-      // so an ownership change — a cookbook becoming Orphaned — has to redraw.
+      // The household decides whether this card offers Rename and Delete at all,
+      // so a cookbook moving with its Owner has to redraw.
       a.householdId === b.householdId &&
       a.memberCount === b.memberCount &&
       a.totalMinutes === b.totalMinutes &&
