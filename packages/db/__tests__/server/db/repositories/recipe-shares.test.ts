@@ -11,18 +11,23 @@ import {
   getPublicRecipeView,
   getRecipeShareById,
   getRecipeShareByToken,
+  getRecipeShareInventoryByUserId,
   getRecipeSharesByUserId,
   getRecipeShareUrl,
   revokeRecipeShare,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
+import { setConfig } from "@norish/db/repositories/server-config";
 import * as schema from "@norish/db/schema";
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import {
   createTestIngredient,
   createTestRecipeIngredients,
   createTestRecipeShare,
+  createTestRecipe,
   createTestRecipeStep,
+  createTestUser,
   getTestDb,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -266,5 +271,33 @@ describe("recipe share repository", () => {
     ]);
     expect(publicRecipe?.steps[0]?.stepIngredients[0]).not.toHaveProperty("id");
     expect(publicRecipe?.steps[0]?.stepIngredients[0]).not.toHaveProperty("recipeIngredientId");
+  });
+
+  it("is inactive while its maker may not view the recipe, and works again after", async () => {
+    const setView = (view: "everyone" | "household") =>
+      setConfig(
+        ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        { view, edit: "household", delete: "household" },
+        null,
+        false
+      );
+    const other = await createTestRecipe((await createTestUser()).id, { name: "Their soup" });
+
+    await setView("everyone");
+    const created = await createRecipeShare(testUserId, { recipeId: other.id, expiresIn: "forever" });
+    const token = created.url.replace("/share/", "");
+
+    expect(await getActiveRecipeShareByToken(token)).not.toBeNull();
+    expect((await getRecipeShareInventoryByUserId(testUserId)).map((s) => s.recipeName)).toEqual([
+      "Their soup",
+    ]);
+
+    await setView("household");
+    expect(await getActiveRecipeShareByToken(token)).toBeNull();
+    expect(await getRecipeShareInventoryByUserId(testUserId)).toEqual([]);
+    expect(await getRecipeShareById(created.id)).not.toBeNull();
+
+    await setView("everyone");
+    expect((await getActiveRecipeShareByToken(token))?.id).toBe(created.id);
   });
 });

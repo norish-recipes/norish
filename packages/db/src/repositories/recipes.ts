@@ -58,7 +58,7 @@ import {
   recipeInAnyCategorySql,
 } from "./categories";
 import { replaceRecipeCuisinesTx } from "./cuisines";
-import { householdMemberIdsSql } from "./household-members";
+import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
@@ -295,6 +295,23 @@ export async function buildPolicyCondition(
   const level = await getRecipePolicyLevel(action);
 
   return level === "household" ? eq(householdColumn, ctx.householdId) : undefined;
+}
+
+/** The view condition for an account read by its id, in the household it is in now. */
+export async function accountViewCondition(userId: string, householdColumn: AnyPgColumn) {
+  const level = await getRecipePolicyLevel("view");
+
+  return level === "household" ? inArray(householdColumn, currentHouseholdIdSql(userId)) : undefined;
+}
+
+/** Whether the account, in its household now, may view the recipe. */
+export async function accountCanViewRecipe(userId: string, recipeId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.id, recipeId), await accountViewCondition(userId, recipes.householdId)));
+
+  return row !== undefined;
 }
 
 /** The recipe list's own view condition. */

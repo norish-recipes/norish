@@ -30,7 +30,7 @@ import {
   resolveRecipeShareExpiresAt,
   toRecipeShareSummary,
 } from "./recipe-share-helpers";
-import { getRecipeFull } from "./recipes";
+import { accountCanViewRecipe, accountViewCondition, getRecipeFull } from "./recipes";
 
 type ActiveShareOptions = {
   touchLastAccessedAt?: boolean;
@@ -153,7 +153,10 @@ export async function getRecipeShareInventoryByUserId(
     })
     .from(recipeShares)
     .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
-    .where(eq(recipeShares.userId, userId))
+    // A recipe the maker may no longer view is left out until they may again.
+    .where(
+      and(eq(recipeShares.userId, userId), await accountViewCondition(userId, recipes.householdId))
+    )
     .orderBy(desc(recipeShares.createdAt));
 
   return rows.map(({ share, recipeName }) =>
@@ -253,6 +256,9 @@ export async function getActiveRecipeShareByToken(
   if (!share || getRecipeShareStatus(share) !== "active") {
     return null;
   }
+
+  // Inactive while its maker may not view the recipe; it works again once they may.
+  if (!(await accountCanViewRecipe(share.userId, share.recipeId))) return null;
 
   if (!options.touchLastAccessedAt) {
     return share;
