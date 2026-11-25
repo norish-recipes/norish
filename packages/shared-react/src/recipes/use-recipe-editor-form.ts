@@ -4,11 +4,12 @@ import type { SetStateAction } from "react";
 import { useState } from "react";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
-import { resolveCategoryName } from "@norish/shared/lib/categories";
+import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 
 import type { RecipeEditorMode, RecipeFormErrors, RecipeFormState } from "./recipe-editor";
 import type { LineMoves } from "./recipe-editor-rows";
-import { useCategoriesQuery, useUnitsQuery } from "../config";
+import { useUnitsQuery } from "../config";
+import { useListEntries } from "../lists";
 import { useHydrated } from "../platform/use-hydrated";
 import { useDevicePreference } from "../reader";
 import {
@@ -33,7 +34,8 @@ interface UseRecipeEditorFormOptions {
  * detected system of a new recipe, the Categories offered, validation and the save payload. */
 export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEditorFormOptions) {
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
-  const { categories: householdCategories, builtInAliases } = useCategoriesQuery();
+  // The list of the recipe's own household, which is another's when its edit policy allows.
+  const { entries: categoryEntries } = useListEntries("category", initialData?.id);
   const [unitStyle] = useDevicePreference("unitStyle");
   // False on the server and while hydrating, so the browser's first render matches the server's.
   const isHydrated = useHydrated();
@@ -128,9 +130,19 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     }));
   };
 
-  // The household's list, plus any the recipe carries from elsewhere or was just given.
+  // The list, built-ins first, plus any the recipe carries from elsewhere or was just given.
+  const builtIns: readonly string[] = BUILT_IN_CATEGORIES;
+  const rank = (name: string) => {
+    const place = builtIns.indexOf(name);
+
+    return place === -1 ? builtIns.length : place;
+  };
   const categoryOptions = Array.from(
-    new Set([...householdCategories, ...(initialData?.categories ?? []), ...form.categories])
+    new Set([
+      ...categoryEntries.map((entry) => entry.name).sort((a, b) => rank(a) - rank(b)),
+      ...(initialData?.categories ?? []),
+      ...form.categories,
+    ])
   );
   const toggleCategory = (category: RecipeCategory) =>
     setForm((prev) => ({
@@ -139,15 +151,11 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
         ? prev.categories.filter((c) => c !== category)
         : [...prev.categories, category],
     }));
-  // Resolved like the server does, so a typed name picks the chip it will save as.
-  const addCategory = (typed: string) => {
-    const pick = resolveCategoryName(typed, builtInAliases, categoryOptions);
-
-    if (!pick) return;
+  // An entry of the list, picked or just created: the picker makes new ones, a save makes none.
+  const addCategory = (name: string) =>
     setForm((prev) =>
-      prev.categories.includes(pick) ? prev : { ...prev, categories: [...prev.categories, pick] }
+      prev.categories.includes(name) ? prev : { ...prev, categories: [...prev.categories, name] }
     );
-  };
 
   const isReady = mode !== "edit" || !initialData || initializedRecipeId === initialData.id;
   const hasUnsavedChanges = isReady && isRecipeFormDirty(form, mode, initialData, labeller);

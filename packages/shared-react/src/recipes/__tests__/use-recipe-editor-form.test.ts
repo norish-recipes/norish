@@ -7,10 +7,20 @@ import { useRecipeEditorForm } from "../use-recipe-editor-form";
 
 vi.mock("../../config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
-  useCategoriesQuery: () => ({
-    categories: ["Breakfast", "Dinner"],
-    builtInAliases: { breakfast: "Breakfast", ontbijt: "Breakfast" },
-  }),
+}));
+const listRead = vi.fn();
+
+vi.mock("../../lists", () => ({
+  useListEntries: (kind: string, recipeId?: string) => {
+    listRead(kind, recipeId);
+
+    return {
+      entries: [
+        { id: "c2", name: "Dinner" },
+        { id: "c1", name: "Breakfast" },
+      ],
+    };
+  },
 }));
 vi.mock("../../reader", () => ({ useDevicePreference: () => ["short"] }));
 
@@ -75,13 +85,14 @@ describe("useRecipeEditorForm", () => {
     expect(result.current.hasUnsavedChanges).toBe(true);
   });
 
-  it("offers the recipe's own Categories and resolves a typed name to a chip", () => {
+  it("offers the recipe's household's Categories and the recipe's own, and adds a picked one", () => {
     const { result } = renderHook(() =>
       useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" })
     );
 
     expect(result.current.categoryOptions).toEqual(["Breakfast", "Dinner", "Soups"]);
-    act(() => result.current.addCategory("Ontbijt"));
+    expect(listRead).toHaveBeenCalledWith("category", "recipe-1");
+    act(() => result.current.addCategory("Breakfast"));
     expect(result.current.form.categories).toEqual(["Soups", "Breakfast"]);
     act(() => result.current.toggleCategory("Soups"));
     expect(result.current.form.categories).toEqual(["Breakfast"]);
