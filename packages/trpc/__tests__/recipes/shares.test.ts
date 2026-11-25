@@ -319,6 +319,36 @@ describe("recipe share procedures", () => {
     expect(assertRecipeAccessMock).not.toHaveBeenCalled();
   });
 
+  it("gives a server admin no way into another user's share", async () => {
+    const admin = recipeSharesProcedures.createCaller({
+      ...createMockAuthedContext(createMockUser({ isServerAdmin: true }), household),
+      connectionId: null,
+      operationId: null,
+    } as never);
+
+    getRecipeShareByIdMock.mockResolvedValue({
+      id: shareId,
+      userId: "other-user",
+      recipeId,
+      tokenHash: "hashed",
+      expiresAt: null,
+      revokedAt: null,
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 1,
+    });
+
+    for (const attempt of [
+      () => admin.shareUrl({ id: shareId }),
+      () => admin.shareRevoke({ id: shareId, version: 1 }),
+      () => admin.shareReactivate({ id: shareId, version: 1 }),
+      () => admin.shareDelete({ id: shareId, version: 1 }),
+    ]) {
+      await expect(attempt()).rejects.toMatchObject({ code: "NOT_FOUND" });
+    }
+  });
+
   describe("a share's link", () => {
     const ownShare = {
       id: shareId,

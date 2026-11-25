@@ -12,24 +12,20 @@ import { LinkIcon } from "@heroicons/react/24/outline";
 import { Table } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import type {
-  AdminRecipeShareInventoryDto,
-  RecipeShareInventoryDto,
-} from "@norish/shared/contracts/dto/recipe-shares";
+import type { RecipeShareInventoryDto } from "@norish/shared/contracts/dto/recipe-shares";
 import { shareLinkActions, useRecipeShareMutations } from "@norish/shared-react/recipes";
 
-type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
+type ShareRow = RecipeShareInventoryDto;
 type ConfirmAction = {
   share: ShareRow;
   type: "revoke" | "reactivate" | "delete";
 } | null;
 type Props = {
-  namespace: "settings.user.shareLinks" | "settings.admin.shareLinks";
+  namespace: "settings.user.shareLinks";
   shares: ShareRow[];
   isLoading: boolean;
-  showOwner?: boolean;
 };
-type ColumnKey = "recipe" | "owner" | "status" | "created" | "expires" | "actions";
+type ColumnKey = "recipe" | "status" | "created" | "expires" | "actions";
 /** toLocaleString's fields, in the locale and zone next-intl gives server and browser alike. */
 const DATE_AND_TIME = {
   year: "numeric",
@@ -45,15 +41,7 @@ const CONFIRM_BUTTONS = {
   reactivate: { action: "apply", icon: PlayIcon, variant: "primary" },
   delete: { action: "delete", variant: "danger" },
 } as const;
-function hasOwnerFields(share: ShareRow): share is AdminRecipeShareInventoryDto {
-  return "ownerId" in share;
-}
-export default function ShareLinksTableCard({
-  namespace,
-  shares,
-  isLoading,
-  showOwner = false,
-}: Props) {
+export default function ShareLinksTableCard({ namespace, shares, isLoading }: Props) {
   const t = useTranslations(namespace);
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
@@ -80,14 +68,6 @@ export default function ShareLinksTableCard({
       key: "recipe",
       label: t("table.recipe"),
     },
-    ...(showOwner
-      ? [
-          {
-            key: "owner" as const,
-            label: t("table.owner"),
-          },
-        ]
-      : []),
     {
       key: "status",
       label: t("table.status"),
@@ -109,8 +89,6 @@ export default function ShareLinksTableCard({
     switch (columnKey) {
       case "recipe":
         return share.recipeName;
-      case "owner":
-        return hasOwnerFields(share) ? (share.ownerName ?? share.ownerId) : "-";
       case "status":
         return <RecipeShareStatusChip status={share.status} />;
       case "created":

@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { and, desc, eq, sql } from "drizzle-orm";
 
 import type {
-  AdminRecipeShareInventoryDto,
   CreateRecipeShareInputDto,
   PublicRecipeViewDTO,
   RecipeShareCreatedDto,
@@ -11,13 +10,11 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { decrypt, encrypt, hashToken, safeDecrypt } from "@norish/config/crypto";
+import { decrypt, encrypt, hashToken } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
-import { users } from "@norish/db/schema/auth";
 import { recipeShares } from "@norish/db/schema/recipe-shares";
 import { recipes } from "@norish/db/schema/recipes";
 import {
-  AdminRecipeShareInventorySchema,
   CreateRecipeShareInputSchema,
   RecipeShareCreatedSchema,
   RecipeShareInventorySchema,
@@ -163,29 +160,6 @@ export async function getRecipeShareInventoryByUserId(
     RecipeShareInventorySchema.parse({
       ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
       recipeName,
-    })
-  );
-}
-
-export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShareInventoryDto[]> {
-  const rows = await db
-    .select({
-      share: recipeShares,
-      recipeName: recipes.name,
-      ownerId: users.id,
-      ownerName: users.name,
-    })
-    .from(recipeShares)
-    .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
-    .innerJoin(users, eq(recipeShares.userId, users.id))
-    .orderBy(desc(recipeShares.createdAt));
-
-  return rows.map(({ share, recipeName, ownerId, ownerName }) =>
-    AdminRecipeShareInventorySchema.parse({
-      ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
-      recipeName,
-      ownerId,
-      ownerName: safeDecrypt(ownerName),
     })
   );
 }

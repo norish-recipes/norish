@@ -37,7 +37,6 @@ vi.mock("../../trpc", () => ({
       shareList: procedure("shareList"),
       shareGet: procedure("shareGet"),
       shareListMine: procedure("shareListMine"),
-      shareListAdmin: procedure("shareListAdmin"),
     },
   }),
 }));

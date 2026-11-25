@@ -595,34 +595,6 @@
     }
   },
   "admin": {
-    "shareLinks": {
-      "title": "Reseptien jakojen valvonta",
-      "description": "Tarkastele palvelimen julkisia reseptilinkkejä ja valvo niiden elinkaarta.",
-      "empty": "Jakolinkkejä ei löytynyt.",
-      "table": {
-        "recipe": "RESEPTI",
-        "owner": "OMISTAJA",
-        "status": "TILA",
-        "created": "LUOTU",
-        "expires": "VANHENEE",
-        "actions": "TOIMINNOT"
-      },
-      "revokeModal": {
-        "title": "Mitätöi linkki",
-        "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes se otetaan uudelleen käyttöön.",
-        "confirm": "Mitätöi"
-      },
-      "reactivateModal": {
-        "title": "Ota linkki uudelleen käyttöön",
-        "message": "Tämä reseptin {recipeName} linkki aktivoituu uudelleen.",
-        "confirm": "Ota käyttöön"
-      },
-      "deleteModal": {
-        "title": "Poista linkki",
-        "message": "Poistetaanko tämä reseptin {recipeName} jakolinkki? Tätä ei voi kumota.",
-        "confirm": "Poista linkki"
-      }
-    },
     "general": {
       "title": "Yleiset",
       "allowRegistration": "Salli uusien käyttäjien rekisteröityminen",

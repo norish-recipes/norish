@@ -595,34 +595,6 @@
     }
   },
   "admin": {
-    "shareLinks": {
-      "title": "Moderazione link di condivisione ricette",
-      "description": "Controlla i link pubblici alle ricette dell'istanza e gestiscine il ciclo di vita.",
-      "empty": "Nessun link di condivisione trovato.",
-      "table": {
-        "recipe": "RICETTA",
-        "owner": "PROPRIETARIO",
-        "status": "STATO",
-        "created": "CREATO",
-        "expires": "SCADE",
-        "actions": "AZIONI"
-      },
-      "revokeModal": {
-        "title": "Revoca link",
-        "message": "Questo link per {recipeName} smetterà di funzionare finché non verrà riattivato.",
-        "confirm": "Revoca"
-      },
-      "reactivateModal": {
-        "title": "Riattiva link",
-        "message": "Questo link per {recipeName} tornerà attivo.",
-        "confirm": "Riattiva"
-      },
-      "deleteModal": {
-        "title": "Elimina link",
-        "message": "Eliminare questo link di condivisione per {recipeName}? Questa azione non può essere annullata.",
-        "confirm": "Elimina link"
-      }
-    },
     "general": {
       "title": "Generale",
       "allowRegistration": "Consenti registrazione nuovi utenti",

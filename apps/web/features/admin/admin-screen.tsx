@@ -10,7 +10,6 @@ import GeneralCard from "./components/general/general-card";
 import JobQueueCard from "./components/jobs/job-queue-card";
 import PageRenderersCard from "./components/page-renderers/page-renderers-card";
 import PermissionPolicyCard from "./components/permissions/permission-policy-card";
-import AdminShareLinksCard from "./components/share-links-card";
 import SystemCard from "./components/system/system-card";
 import UsersCard from "./components/users/users-card";
 
@@ -26,7 +25,6 @@ export function AdminScreen() {
       <GeneralCard />
       <UsersCard />
       <PermissionPolicyCard />
-      <AdminShareLinksCard />
       <AuthProvidersCard />
       <ContentDetectionCard />
       <PageRenderersCard />

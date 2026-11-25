@@ -49,11 +49,7 @@ export type { ShareLinkAction } from "./share-link-rules";
 export { shareLinkActions } from "./share-link-rules";
 export { useRecipeShareMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareSubscription } from "./use-recipe-share-subscription";
-export {
-  useAdminRecipeSharesQuery,
-  useMyRecipeSharesQuery,
-  useRecipeSharesQuery,
-} from "./use-recipe-shares-query";
+export { useMyRecipeSharesQuery, useRecipeSharesQuery } from "./use-recipe-shares-query";
 export { useShareLink } from "./use-share-link";
 export { useSharePublicConfigQuery } from "./use-share-public-config-query";
 export { useSharedRecipeQuery } from "./use-shared-recipe-query";

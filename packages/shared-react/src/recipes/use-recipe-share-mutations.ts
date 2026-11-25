@@ -40,7 +40,6 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
-    invalidateAdminRecipeShares,
     invalidateRecipeShare,
     removeRecipeShare,
   } = useRecipeShareCacheHelpers();
@@ -51,14 +50,12 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     }
 
     invalidateMyRecipeShares();
-    invalidateAdminRecipeShares();
     invalidateRecipeShare(shareId);
   };
   // A failed action rereads the lists: a share whose recipe was deleted elsewhere answers NOT_FOUND.
   const failed = (context: string) => (error: unknown) => {
     invalidateRecipeShares(recipeId);
     invalidateMyRecipeShares();
-    invalidateAdminRecipeShares();
     showError(error, context);
   };
 
@@ -113,7 +110,6 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
       onSuccess: ({ stale }, variables) => {
         invalidateRecipeShares(recipeId);
         invalidateMyRecipeShares();
-        invalidateAdminRecipeShares();
         if (stale) refuseStale("recipe-share-panel:delete");
         else removeRecipeShare(variables.id);
       },

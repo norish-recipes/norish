@@ -120,7 +120,6 @@ describe("liveQueryKeys", () => {
       [["recipes", "shareList"], { input: { recipeId: "r1" }, type: "query" }],
       [["recipes", "shareGet"], { input: { id: "s1" }, type: "query" }],
       read(["recipes", "shareListMine"]),
-      read(["recipes", "shareListAdmin"]),
     ]);
 
     goLive(() => useRecipeShareSubscription("r1"));
