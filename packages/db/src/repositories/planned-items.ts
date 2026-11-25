@@ -444,8 +444,9 @@ export async function turnPlannedRecipesIntoNotes(
     .update(plannedItems)
     .set({
       itemType: "note",
-      // An entry with a title of its own keeps it; one that showed the recipe takes its name.
-      title: sql`COALESCE(NULLIF(${plannedItems.title}, ''), ${recipes.name})`,
+      // A recipe entry showed the recipe's name and takes it; a note keeps a title of its own.
+      title: sql`CASE WHEN ${plannedItems.itemType} = 'recipe' THEN ${recipes.name}
+        ELSE COALESCE(NULLIF(${plannedItems.title}, ''), ${recipes.name}) END`,
       recipeId: null,
       updatedAt: new Date(),
       version: sql`${plannedItems.version} + 1`,

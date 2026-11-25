@@ -488,6 +488,23 @@ describe("deleting an account", () => {
       ]);
     });
 
+    it("gives a recipe entry the recipe's name, not a stored title it never showed", async () => {
+      const w = await world();
+
+      await createPlannedItem({
+        householdId: w.elsewhere,
+        userId: w.stranger,
+        date: DAY,
+        slot: "Lunch",
+        itemType: "recipe",
+        recipeId: w.own.recipe.id,
+        title: "Oude titel",
+      });
+      await deleteAccount(w.deleted);
+
+      expect((await planOf(w.elsewhere)).map((entry) => entry.title)).toEqual(["Soep", "Soep"]);
+    });
+
     it("keeps the household's things and the grocery lines made from its recipes", async () => {
       const w = await world();
 
