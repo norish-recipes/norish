@@ -27,6 +27,7 @@ vi.mock("@norish/db/repositories/households", () => ({
   joinHousehold: (...args: unknown[]) => mockJoinHousehold(...args),
   renameHousehold: (...args: unknown[]) => mockRenameHousehold(...args),
   getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
+  NEW_HOUSEHOLD_NAME: "My household",
 }));
 
 vi.mock("@norish/shared-server/cache/household", () => ({
@@ -407,6 +408,18 @@ describe("processClaimsForUser", () => {
       await processClaimsForUser(userId, profile, enabledConfig);
 
       expect(mockJoinHousehold).toHaveBeenCalledWith(userId, "hh-123");
+      expect(mockRenameHousehold).not.toHaveBeenCalled();
+    });
+
+    it("ignores a claim naming the default household, which every sign-up gets", async () => {
+      const profile = { groups: ["norish_household_my household"] };
+
+      mockFindHouseholdByName.mockResolvedValue({ id: "strangers-hh", name: "My household" });
+
+      await processClaimsForUser(userId, profile, enabledConfig);
+
+      expect(mockFindHouseholdByName).not.toHaveBeenCalled();
+      expect(mockJoinHousehold).not.toHaveBeenCalled();
       expect(mockRenameHousehold).not.toHaveBeenCalled();
     });
 

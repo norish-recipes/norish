@@ -5,6 +5,7 @@ import {
   getHouseholdForUser,
   getUsersByHouseholdId,
   joinHousehold,
+  NEW_HOUSEHOLD_NAME,
   renameHousehold,
 } from "@norish/db/repositories/households";
 import { getUserById, isUserServerOwner, setUserAdminStatus } from "@norish/db/repositories/users";
@@ -292,6 +293,16 @@ export async function processClaimsForUser(
 
   // A claim places only an account still in a household of one; a shared household keeps them.
   if (claims.householdName) {
+    // Every sign-up's household carries the default name, so it never identifies one.
+    if (claims.householdName.trim().toLowerCase() === NEW_HOUSEHOLD_NAME.toLowerCase()) {
+      authLogger.warn(
+        { userId, claimedHousehold: claims.householdName },
+        "OIDC household claim names the default household, ignoring it"
+      );
+
+      return;
+    }
+
     const current = await getHouseholdForUser(userId);
 
     if (!current || current.users.length > 1) {
