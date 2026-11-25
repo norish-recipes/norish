@@ -11,6 +11,7 @@ import {
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
 import { findPlannedItemPlace } from "@norish/db/repositories/planned-items";
+import { accountCanViewRecipe } from "@norish/db/repositories/recipes";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createLogger } from "@norish/shared-server/logger";
 import { caldav } from "@norish/shared-server/realtime/caldav";
@@ -75,7 +76,12 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   }
 
   // operation === "sync" handles both create and update
-  const { date, slot, recipeId } = job.data;
+  const { date, slot } = job.data;
+  // Linked only to a recipe the account may view now; one out of view syncs as its title.
+  const recipeId =
+    job.data.recipeId && (await accountCanViewRecipe(userId, job.data.recipeId))
+      ? job.data.recipeId
+      : undefined;
 
   // Check if sync status record exists
   const isNewRecord = !existingStatus;

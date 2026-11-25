@@ -74,19 +74,21 @@ describe("the CalDAV sync worker", () => {
     await testBase.teardown();
   });
 
-  async function syncJob() {
+  async function syncJob(recipeId?: string) {
     const entry = await planned.createPlannedItem({
       householdId: household,
       userId: member,
       date: "2999-01-01",
       slot: "Dinner",
-      itemType: "note",
-      title: "Soep",
+      itemType: recipeId ? "recipe" : "note",
+      title: recipeId ? null : "Soep",
+      recipeId: recipeId ?? null,
     });
     const data = {
+      recipeId,
       userId: member,
       itemId: entry.id,
-      itemType: "note",
+      itemType: recipeId ? "recipe" : "note",
       plannedItemId: entry.id,
       eventTitle: "Soep",
       date: entry.date,
@@ -117,6 +119,33 @@ describe("the CalDAV sync worker", () => {
     expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toMatchObject({
       syncStatus: "synced",
     });
+  });
+
+  it("links the event to a recipe only while the account may view it when the job runs", async () => {
+    const { setConfig } = await import("@norish/db/repositories/server-config");
+    const { ServerConfigKeys } = await import("@norish/config/zod/server-config");
+    const setView = (view: "everyone" | "household") =>
+      setConfig(
+        ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        { view, edit: "household", delete: "household" },
+        null,
+        false
+      );
+    const theirs = await helpers.createTestRecipe((await helpers.createTestUser()).id);
+
+    await setView("everyone");
+    const { run } = await syncJob(theirs.id);
+
+    // Queued while in view; view narrowed before it ran.
+    await setView("household");
+    await run();
+    await setView("everyone");
+    await run();
+
+    expect(handlers.syncPlannedItem.mock.calls.map((call) => (call as unknown[])[5])).toEqual([
+      undefined,
+      theirs.id,
+    ]);
   });
 
   it("takes an entry its adder left behind off their calendar, status and all", async () => {
