@@ -23,3 +23,23 @@
 - Still on member ids (owner-keyed until 03/05/07): `ctx.userIds` for tags, categories, allergies, the permissions router and the catalogue actor; `listPantrySuggestions` reads the members' recipes; the roster cache serves the WS context, export and media session. HTTP requests read the household fresh per request.
 - Outside `packages/db` nothing queries the seven tables; the shared-server and api tests that seeded them with drizzle now go through repository-backed helpers. `packages/db`'s own tests still seed directly. The E2E spec typechecks and lints but was not run.
 
+- Review round 1:
+  1. fixed: every by-id op on the seven tables takes the acting household through `householdRow`/`householdRows` (`repositories/household-rows.ts`); routers keep their refusals; a real-Postgres boundary test.
+  2. fixed: `assertOwnReferences` refuses a Store or recurring grocery of another household on every grocery, recurring and preference write; Store and recurring deletion and the scheduler select groceries by household too.
+  3. fixed: `storeExistsForHousehold`/`assertStoreAccess`, `groceriesOfHousehold`, `assertRecurringAccess`, and `plannedItemOfHousehold` for the plan.
+  4. fixed: the CalDAV worker reads `findPlannedItemPlace` when it runs; an entry left behind is deleted from the calendar instead.
+  5. fixed: the status list joins only plan entries of the account's current household.
+  6. fixed: leave and remove queue the existing delete job for each left-behind status after the move commits; the worker drops the status, or the status alone goes when CalDAV is off.
+  7. fixed: `listPlannedItemsAddedBy(householdId, userId, from)`; retry reads the entry scoped to the household; real-repository test with two households.
+  8. fixed: an invalidation leaves a 30 s marker a fill cannot overwrite (`SET NX`); deterministic Valkey test.
+  9. fixed: cache drop, the mover's own events, their Scope Change, then the members who stay; the mover's `created`/`userKicked` still arrive before the close, and the reconnect refetches.
+  10. fixed: boot conversions resolve a row as its adder or its household's admin, key parked links by their own household's groceries, restore a gone account's preference added by no one, and log a link dropped with its Store; real-Postgres tests.
+  11. fixed: Fill gaps ignores household corrections; `findAnyCorrections` is gone.
+  12. fixed: store lookup and refresh jobs carry no household and read the Store's at run time.
+  13. fixed: the last-member deletion asserts all seven tables.
+  14. fixed: aisles, aisle links, products and product links in the fixture, checked after both runs.
+  15. fixed: both headers, plus three other headers over two lines.
+  16. fixed: `findGroceryFoods(ids, householdId)` groceries only; `listPantrySpellings` gone, helpers read the test db; unused `getGroceryById`, `toggleGrocery`, `deleteGroceryById`, `updateGrocery`, `getRecurringGroceriesByIds`, `updateRecurringGroceries` deleted.
+  17. fixed: `lockHousehold`; the router helpers replaced the `ownerId` locals.
+  18. fixed: `rememberStorePreference(householdId, userId, …)`.
+  - rejected: preference takes its store's household; one preference per household and food; userId stays on DTOs; catalogue maintenance and ingredient tests go to ticket 07.
