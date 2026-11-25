@@ -2,6 +2,7 @@ import type { AccountDeletion } from "@norish/db/repositories/households";
 import { deleteAccount, getHouseholdById } from "@norish/db/repositories/households";
 import { authLogger as log } from "@norish/shared-server/logger";
 import { sweepUserAvatars } from "@norish/shared-server/media/avatar-cleanup";
+import { sweepPendingUploadsOf } from "@norish/shared-server/media/pending-recipe-media";
 import { deleteRecipeImagesDir, sweepCookbookImages } from "@norish/shared-server/media/storage";
 import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { publishCalendarItemEvent } from "@norish/shared-server/realtime/calendar-items";
@@ -31,7 +32,11 @@ async function runEach(userId: string, steps: Step[]): Promise<void> {
  * The one way an account goes, its own or an admin's removal. Once the delete committed it
  * succeeds: sessions, Scope Change (ADR-0033), announcements and files each log their own failure.
  */
-export async function deleteUserAccount(userId: string): Promise<void> {
+export async function deleteUserAccount(
+  userId: string,
+  /** The queue layer's, which this package cannot reach: its jobs and their payloads. */
+  removeJobs: (userId: string, recipeIds: string[]) => Promise<void>
+): Promise<void> {
   const deletion = await deleteAccount(userId);
 
   if (deletion.successorId)
@@ -52,6 +57,9 @@ export async function deleteUserAccount(userId: string): Promise<void> {
           { toOthers: () => runEach(userId, announcements(userId, deletion)) }
         ),
     ],
+    // Before the files, so no job waiting to run writes one after the sweep.
+    ["remove its jobs", () => removeJobs(userId, deletion.recipeIds)],
+    ["sweep its uploads for recipes never saved", () => sweepPendingUploadsOf(userId)],
     ["sweep its avatar", () => sweepUserAvatars(userId)],
     ...deletion.recipeIds.map((id): Step => [
       "sweep a recipe's files",

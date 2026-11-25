@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   recipesPublish: vi.fn(),
   cookbooksPublish: vi.fn(),
   publishCalendarItemEvent: vi.fn(),
+  removeJobs: vi.fn(),
+  sweepPendingUploadsOf: vi.fn(),
 }));
 
 vi.mock("@norish/auth/auth", () => ({
@@ -39,6 +41,9 @@ vi.mock("@norish/db/repositories/households", () => ({
 }));
 vi.mock("@norish/shared-server/media/avatar-cleanup", () => ({
   sweepUserAvatars: mocks.sweepUserAvatars,
+}));
+vi.mock("@norish/shared-server/media/pending-recipe-media", () => ({
+  sweepPendingUploadsOf: mocks.sweepPendingUploadsOf,
 }));
 vi.mock("@norish/shared-server/media/storage", () => ({
   deleteRecipeImagesDir: mocks.deleteRecipeImagesDir,
@@ -111,8 +116,8 @@ describe("deleteUserAccount", () => {
     }
   });
 
-  it("ends sessions, rescopes the account, tells everyone else, then sweeps the files", async () => {
-    await deleteUserAccount("gone");
+  it("ends sessions, rescopes the account, tells everyone else, removes its jobs, then sweeps the files", async () => {
+    await deleteUserAccount("gone", mocks.removeJobs);
 
     expect(order).toEqual([
       "delete",
@@ -145,6 +150,8 @@ describe("deleteUserAccount", () => {
         },
         "elsewhere",
       ])}`,
+      'removeJobs ["gone",["recipe-1"]]',
+      'sweepPendingUploadsOf ["gone"]',
       'sweepUserAvatars ["gone"]',
       'deleteRecipeImagesDir ["recipe-1"]',
       'sweepCookbookImages ["cookbook-1"]',
@@ -160,7 +167,7 @@ describe("deleteUserAccount", () => {
       notes: [],
     });
 
-    await deleteUserAccount("gone");
+    await deleteUserAccount("gone", mocks.removeJobs);
 
     expect(mocks.householdsPublish).not.toHaveBeenCalled();
     expect(mocks.recipesPublish).toHaveBeenCalledOnce();
@@ -173,7 +180,7 @@ describe("deleteUserAccount", () => {
     mocks.householdsPublish.mockRejectedValue(new Error("publish failed"));
     mocks.recipesPublish.mockRejectedValue(new Error("publish failed"));
 
-    await expect(deleteUserAccount("gone")).resolves.toBeUndefined();
+    await expect(deleteUserAccount("gone", mocks.removeJobs)).resolves.toBeUndefined();
     expect(mocks.emitConnectionInvalidation).toHaveBeenCalledWith("gone", "account-deleted");
     expect(mocks.householdsPublish).toHaveBeenCalledTimes(2);
     expect(mocks.cookbooksPublish).toHaveBeenCalledOnce();
@@ -185,7 +192,7 @@ describe("deleteUserAccount", () => {
   it("keeps the deletion when a file sweep fails, and sweeps the rest", async () => {
     mocks.sweepUserAvatars.mockRejectedValue(new Error("disk"));
 
-    await expect(deleteUserAccount("gone")).resolves.toBeUndefined();
+    await expect(deleteUserAccount("gone", mocks.removeJobs)).resolves.toBeUndefined();
     expect(mocks.deleteRecipeImagesDir).toHaveBeenCalledWith("recipe-1");
     expect(mocks.sweepCookbookImages).toHaveBeenCalledWith("cookbook-1");
   });
@@ -193,7 +200,7 @@ describe("deleteUserAccount", () => {
   it("keeps every file of an account whose deletion failed", async () => {
     mocks.deleteAccount.mockRejectedValue(new Error("connection lost"));
 
-    await expect(deleteUserAccount("gone")).rejects.toThrow("connection lost");
+    await expect(deleteUserAccount("gone", mocks.removeJobs)).rejects.toThrow("connection lost");
     expect(mocks.sweepUserAvatars).not.toHaveBeenCalled();
     expect(mocks.deleteRecipeImagesDir).not.toHaveBeenCalled();
     expect(mocks.emitConnectionInvalidation).not.toHaveBeenCalled();

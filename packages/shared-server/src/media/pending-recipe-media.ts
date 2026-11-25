@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
@@ -9,10 +9,10 @@ const PREFIX = "norish:pending-recipe-media:";
 /** As long as the nightly media cleanup leaves a recipe folder with no recipe. */
 const TTL_SECONDS = 24 * 60 * 60;
 
+const folderOf = (recipeId: string) => path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId);
+
 async function hasFiles(recipeId: string): Promise<boolean> {
-  const entries = await readdir(path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes", recipeId)).catch(
-    () => []
-  );
+  const entries = await readdir(folderOf(recipeId)).catch(() => []);
 
   return entries.length > 0;
 }
@@ -54,4 +54,23 @@ export async function pendingRecipeMediaUploader(recipeId: string): Promise<stri
   const valkey = await getPublisherClient();
 
   return valkey.get(`${PREFIX}${recipeId}`);
+}
+
+/** Erases a deleted account's uploads for recipes it never saved: their files and claims. */
+export async function sweepPendingUploadsOf(userId: string): Promise<void> {
+  const valkey = await getPublisherClient();
+  let cursor = "0";
+
+  do {
+    const [next, keys] = await valkey.scan(cursor, "MATCH", `${PREFIX}*`, "COUNT", 500);
+    const holders = keys.length > 0 ? await valkey.mget(...keys) : [];
+    const theirs = keys.filter((_, index) => holders[index] === userId);
+
+    // Only its holder can save a claimed id, so a recipe saved with one went with the account.
+    for (const key of theirs) {
+      await rm(folderOf(key.slice(PREFIX.length)), { recursive: true, force: true });
+    }
+    if (theirs.length > 0) await valkey.del(...theirs);
+    cursor = next;
+  } while (cursor !== "0");
 }

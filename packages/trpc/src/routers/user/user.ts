@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
 import { deleteUserAccount } from "@norish/auth/account-deletion";
+import { removeAccountJobs } from "@norish/queue/remove-account-jobs";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -320,7 +321,7 @@ const deleteAvatar = authedProcedure
 const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Deleting account");
 
-  await deleteUserAccount(ctx.user.id);
+  await deleteUserAccount(ctx.user.id, removeAccountJobs);
 
   log.info({ userId: ctx.user.id }, "Account deleted");
 

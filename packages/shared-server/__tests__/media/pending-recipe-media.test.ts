@@ -1,6 +1,6 @@
 // @vitest-environment node
 /** Media for a recipe not stored yet belongs to the upload that wrote its first file, or no one. */
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
@@ -10,6 +10,7 @@ import {
   mayUsePendingRecipeId,
   pendingRecipeMediaUploader,
   releasePendingRecipeId,
+  sweepPendingUploadsOf,
 } from "../../src/media/pending-recipe-media";
 import { closeValkeyConnections, getPublisherClient } from "../../src/valkey/client";
 import { startValkey, valkeyUrl } from "../helpers/valkey";
@@ -105,4 +106,33 @@ it("gives back the claim of an upload that wrote no file, and keeps one that did
   expect(await pendingRecipeMediaUploader(rejected)).toBeNull();
   expect(await mayUsePendingRecipeId(rejected, "someone-else", "upload")).toBe(true);
   expect(await pendingRecipeMediaUploader(written)).toBe("uploader");
+});
+
+it("erases a deleted account's pending uploads, files and claims, and no one else's", async () => {
+  const [first, second, others] = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+  const exists = (id: string) =>
+    access(path.join(config.uploads, "recipes", id)).then(
+      () => true,
+      () => false
+    );
+
+  for (const [id, uploader] of [
+    [first, "deleted"],
+    [second, "deleted"],
+    [others, "stays"],
+  ] as const) {
+    expect(await mayUsePendingRecipeId(id, uploader, "upload")).toBe(true);
+    await writeFirstFile(id);
+  }
+
+  await sweepPendingUploadsOf("deleted");
+
+  expect([await exists(first), await exists(second), await exists(others)]).toEqual([
+    false,
+    false,
+    true,
+  ]);
+  expect(await pendingRecipeMediaUploader(first)).toBeNull();
+  expect(await pendingRecipeMediaUploader(second)).toBeNull();
+  expect(await pendingRecipeMediaUploader(others)).toBe("stays");
 });

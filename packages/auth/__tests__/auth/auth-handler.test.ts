@@ -559,7 +559,7 @@ describe("account deletion", () => {
     const userId = (await sessionFor(first.cookie))?.user.id ?? "";
     const { deleteUserAccount } = await import("@norish/auth/account-deletion");
 
-    await deleteUserAccount(userId);
+    await deleteUserAccount(userId, async () => undefined);
 
     expect(await sessionFor(first.cookie)).toBeNull();
     expect(await sessionFor(second.cookie)).toBeNull();

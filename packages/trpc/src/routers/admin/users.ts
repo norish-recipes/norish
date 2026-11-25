@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { deleteUserAccount } from "@norish/auth/account-deletion";
+import { removeAccountJobs } from "@norish/queue/remove-account-jobs";
 import {
   getUserRoleFlags,
   listUsersForAdmin,
@@ -97,7 +98,7 @@ const remove = adminProcedure.input(DeleteUserInputSchema).mutation(async ({ inp
 
   log.info({ actingUserId: ctx.user.id, userId }, "Deleting user");
 
-  await deleteUserAccount(userId);
+  await deleteUserAccount(userId, removeAccountJobs);
 
   return { success: true };
 });

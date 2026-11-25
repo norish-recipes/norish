@@ -35,6 +35,6 @@ describe("deleting one's own account", () => {
     const caller = userProcedures.createCaller(createMockAuthedContext(admin, household) as never);
 
     expect(await caller.deleteAccount()).toEqual({ success: true });
-    expect(deleteUserAccount).toHaveBeenCalledExactlyOnceWith(admin.id);
+    expect(deleteUserAccount).toHaveBeenCalledExactlyOnceWith(admin.id, expect.any(Function));
   });
 });
