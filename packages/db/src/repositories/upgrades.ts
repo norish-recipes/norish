@@ -7,6 +7,7 @@ import { db } from "@norish/db/drizzle";
 import {
   accounts,
   aisleLinks,
+  aisles,
   groceries,
   households,
   ingredients,
@@ -19,6 +20,7 @@ import {
   recipes,
   recurringGroceries,
   storeProductLinks,
+  storeProducts,
   stores,
   users,
 } from "@norish/db/schema";
@@ -243,19 +245,22 @@ export async function listParkedLinks(): Promise<ParkedLink[]> {
     .orderBy(desc(sql`${parkedNameKeyedLinks.link}->>'updated_at'`));
 }
 
+/** What became of a parked link: put back, dropped, or dropped because its aisle or product went. */
+export type Unparked = "restored" | "dropped" | "target-gone";
+
 /**
  * Put a parked link back keyed by its food, unless its Store (or member) holds a newer one for that
- * food; a link naming no food (null) is not put back. Either way it leaves the parking.
+ * food; a link naming no food (null) or a gone aisle or product is not put back. It leaves the parking.
  */
 export async function unparkLink(
   parked: ParkedLink,
   ingredientId: string | null
-): Promise<boolean> {
+): Promise<Unparked> {
   const { id, kind, link } = parked;
 
   return await db.transaction(async (tx) => {
     await tx.delete(parkedNameKeyedLinks).where(eq(parkedNameKeyedLinks.id, id));
-    if (!ingredientId) return false;
+    if (!ingredientId) return "dropped";
 
     const row = {
       id,
@@ -267,12 +272,26 @@ export async function unparkLink(
     let put: Array<{ id: string }> = [];
 
     if (kind === "aisle" && link.aisle_id) {
+      const [aisle] = await tx
+        .select({ id: aisles.id })
+        .from(aisles)
+        .where(eq(aisles.id, link.aisle_id));
+
+      if (!aisle) return "target-gone";
       put = await tx
         .insert(aisleLinks)
         .values({ ...row, aisleId: link.aisle_id })
         .onConflictDoNothing()
         .returning({ id: aisleLinks.id });
     } else if (kind === "product") {
+      if (link.store_product_id) {
+        const [product] = await tx
+          .select({ id: storeProducts.id })
+          .from(storeProducts)
+          .where(eq(storeProducts.id, link.store_product_id));
+
+        if (!product) return "target-gone";
+      }
       put = await tx
         .insert(storeProductLinks)
         .values({
@@ -291,6 +310,6 @@ export async function unparkLink(
         .returning({ id: ingredientStorePreferences.id });
     }
 
-    return put.length > 0;
+    return put.length > 0 ? "restored" : "dropped";
   });
 }

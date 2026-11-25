@@ -232,6 +232,34 @@ describe("the upgrade of ingredients from before 0.25", () => {
     expect(await db.select().from(parkedNameKeyedLinks)).toEqual([]);
   });
 
+  it("skips a parked link whose aisle or product is gone while its Store stays", async () => {
+    const store = await createStore(randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Shop",
+    });
+    const aisleGone = await park("aisle", {
+      normalized_name: "zout",
+      store_id: store.id,
+      aisle_id: randomUUID(),
+    });
+    const productGone = await park("product", {
+      normalized_name: "peper",
+      store_id: store.id,
+      store_product_id: randomUUID(),
+    });
+
+    expect((await upgradeIngredients()).links).toBe(0);
+
+    const db = getTestDb();
+
+    expect(await db.select().from(aisleLinks).where(eq(aisleLinks.id, aisleGone))).toEqual([]);
+    expect(
+      await db.select().from(storeProductLinks).where(eq(storeProductLinks.id, productGone))
+    ).toEqual([]);
+    expect(await db.select().from(parkedNameKeyedLinks)).toEqual([]);
+  });
+
   /** Who an Ingredient a household row minted belongs to. */
   async function mintedBy(ingredientId: string | null) {
     const [row] = await getTestDb()

@@ -87,7 +87,7 @@ async function upgradePantry(): Promise<number> {
 
 /**
  * A parked link is keyed by the food its household's grocery of that name names, else the food its
- * name resolves to; one naming none, or whose Store went, is dropped.
+ * name resolves to; one naming none, or whose Store, aisle or product went, is dropped.
  */
 async function upgradeParkedLinks(): Promise<number> {
   const groceryFoods = new Map<string, string>();
@@ -101,6 +101,7 @@ async function upgradeParkedLinks(): Promise<number> {
   }
 
   let kept = 0;
+  let targetGone = 0;
 
   for (const parked of await listParkedLinks()) {
     const name = parked.link.normalized_name;
@@ -116,7 +117,14 @@ async function upgradeParkedLinks(): Promise<number> {
           null)
         : null;
 
-    if (await unparkLink(parked, ingredientId)) kept += 1;
+    const outcome = await unparkLink(parked, ingredientId);
+
+    if (outcome === "restored") kept += 1;
+    if (outcome === "target-gone") targetGone += 1;
+  }
+
+  if (targetGone > 0) {
+    log.info({ count: targetGone }, "Dropped parked links whose aisle or product is gone");
   }
 
   return kept;
