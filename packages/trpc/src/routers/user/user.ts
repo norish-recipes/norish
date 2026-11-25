@@ -2,7 +2,6 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
 import { deleteUserAccount } from "@norish/auth/account-deletion";
-import { removeAccountJobs } from "@norish/queue/remove-account-jobs";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
@@ -19,6 +18,7 @@ import {
   updateUserName,
   updateUserPreferences,
 } from "@norish/db";
+import { removeAccountJobs } from "@norish/queue/remove-account-jobs";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   deleteAvatarByFilename,
