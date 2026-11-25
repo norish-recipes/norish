@@ -69,8 +69,8 @@ for (const view of ["everyone", "household"] as const) {
     );
 
     expect(suggested.tags).toEqual([ourTag]);
-    // Discover shows the twelve most used Tags, which this run's need not reach.
-    expect(discovered.tags.filter(ofThisRun).filter((tag) => tag !== ourTag)).toEqual([]);
+    // The reader's own Tag is offered, theirs never.
+    expect(discovered.tags.filter(ofThisRun)).toEqual([ourTag]);
 
     const context = await signedInContext(browser, aiStack.baseURL, OWNER, {
       viewport: { width: 1280, height: 1200 },
