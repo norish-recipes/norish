@@ -2,7 +2,13 @@
 // owner is confirmed, and an account switch purges the departed owner's cache and re-keys.
 
 import type { Query } from "@tanstack/react-query";
-import { dehydrate, hydrate, partialMatchKey, QueryClient } from "@tanstack/react-query";
+import {
+  dehydrate,
+  hydrate,
+  partialMatchKey,
+  QueryCache,
+  QueryClient,
+} from "@tanstack/react-query";
 import { createTRPCClient } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
@@ -11,6 +17,7 @@ import type { AppRouter } from "@norish/trpc/client";
 import { isSearchListInput } from "@norish/shared/contracts/list-queries";
 
 import type { OfflineStorage } from "./storage";
+import { isNotFoundError } from "../trpc/not-found";
 import { ownerDataKey, ownerDataPrefix, purgeForeignReadArtifacts } from "./cache-identity";
 import { clearLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
@@ -72,6 +79,14 @@ export function createOfflineQueryClient({
   refetchOnMount = true,
 }: { refetchOnMount?: RefetchOnMount } = {}): QueryClient {
   const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+      // A refused read keeps no copy, here or stored: after a policy or membership change too.
+      onError: (error, query) => {
+        if (isNotFoundError(error) && query.state.data !== undefined) {
+          query.setState({ data: undefined, dataUpdatedAt: 0 });
+        }
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: QUERY_STALE_TIME_MS,

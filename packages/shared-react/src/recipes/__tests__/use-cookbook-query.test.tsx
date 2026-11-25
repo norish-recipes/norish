@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestWrapper } from "@norish/shared-react/platform/testing";
 
+import { createOfflineQueryClient } from "../../offline/cache-manager";
 import { resetTRPCFake, serveTRPC } from "../../trpc/testing";
 import { useCookbookQuery } from "../use-cookbook-query";
 
@@ -49,6 +50,29 @@ describe("useCookbookQuery", () => {
 
     await waitFor(() => expect(result.current.error).not.toBeNull());
     expect(reads()).toBe(2);
+    expect(result.current.isNotFound).toBe(false);
+  });
+
+  it("drops a cookbook whose reread is refused after the view narrows, and shows it when it widens", async () => {
+    const cookbook = { id: "cookbook-1", name: "Soups" };
+    let answer: () => Promise<unknown> = async () => cookbook;
+
+    serveTRPC(() => answer());
+    const queryClient = createOfflineQueryClient();
+    const { result } = renderHook(() => useCookbookQuery("cookbook-1"), {
+      wrapper: createTestWrapper(queryClient),
+    });
+
+    await waitFor(() => expect(result.current.cookbook).toEqual(cookbook));
+
+    answer = () => Promise.reject(trpcError("NOT_FOUND", 404));
+    await queryClient.invalidateQueries();
+    await waitFor(() => expect(result.current.isNotFound).toBe(true));
+    expect(result.current.cookbook).toBeUndefined();
+
+    answer = async () => cookbook;
+    await queryClient.invalidateQueries();
+    await waitFor(() => expect(result.current.cookbook).toEqual(cookbook));
     expect(result.current.isNotFound).toBe(false);
   });
 });

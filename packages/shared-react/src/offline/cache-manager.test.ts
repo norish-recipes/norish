@@ -1,5 +1,5 @@
 import { dehydrate, hydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
-import { createTRPCClient } from "@trpc/client";
+import { createTRPCClient, TRPCClientError } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -334,6 +334,35 @@ describe("createCacheManager", () => {
     for (const { key, value } of cachedReads) {
       expect(restored.queryClient.getQueryData(key)).toEqual(value);
     }
+  });
+
+  it("drops a read refused as not found, in memory and stored, and keeps it when unreachable", async () => {
+    const manager = createManager();
+    const key = [["cookbooks", "get"], { input: { id: "c1" }, type: "query" }];
+    const notFound = TRPCClientError.from({
+      error: { message: "Not found", code: -32004, data: { code: "NOT_FOUND", httpStatus: 404 } },
+    });
+    const read = (queryFn: () => Promise<unknown>) =>
+      manager.queryClient.fetchQuery({ queryKey: key, queryFn, retry: false, staleTime: 0 });
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(key, { id: "c1", name: "Soups" });
+    await expect(read(() => Promise.reject(new Error("backend unavailable")))).rejects.toThrow();
+    await manager.flush();
+    expect(manager.queryClient.getQueryData(key)).toEqual({ id: "c1", name: "Soups" });
+    expect(await persisted(storage, "u1")).toHaveLength(1);
+
+    // The view narrows: the reread is refused.
+    await expect(read(() => Promise.reject(notFound))).rejects.toBe(notFound);
+    await manager.flush();
+    expect(manager.queryClient.getQueryData(key)).toBeUndefined();
+    expect(await persisted(storage, "u1")).toEqual([]);
+
+    // And widens again.
+    await read(async () => ({ id: "c1", name: "Soups" }));
+    await manager.flush();
+    expect(manager.queryClient.getQueryData(key)).toEqual({ id: "c1", name: "Soups" });
+    expect(await persisted(storage, "u1")).toHaveLength(1);
   });
 
   it("never persists a mutation waiting behind another in its scope (the Outbox is the queue)", async () => {
