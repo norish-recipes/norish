@@ -118,11 +118,14 @@ it("ends a job running as its account goes quietly, and keeps none of it", async
   const images = queues.get(IMAGES)!;
   let release = () => {};
   const running = new Promise<void>((resolve) => (release = resolve));
+  let entered = () => {};
+  const processing = new Promise<void>((resolve) => (entered = resolve));
   let failure: unknown;
 
   createWorker(
     IMAGES,
     async () => {
+      entered();
       await running;
       // The save fails on the account's missing row.
       throw new Error("insert or update violates foreign key constraint");
@@ -131,7 +134,7 @@ it("ends a job running as its account goes quietly, and keeps none of it", async
   );
   const job = await images.add("import", photos("deleted"));
 
-  await expect.poll(() => images.getJobState(job.id!)).toBe("active");
+  await processing;
   gone.add("deleted");
   await removeAccountJobs("deleted", []);
   release();
