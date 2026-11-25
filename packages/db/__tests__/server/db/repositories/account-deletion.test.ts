@@ -302,6 +302,26 @@ describe("deleting an account", () => {
       );
     });
 
+    it("keeps a note's own title, taking only its link to the recipe", async () => {
+      const w = await world();
+
+      await createPlannedItem({
+        householdId: w.elsewhere,
+        userId: w.stranger,
+        date: DAY,
+        slot: "Lunch",
+        itemType: "note",
+        recipeId: w.own.recipe.id,
+        title: "Soep bij oma",
+      });
+      await deleteAccount(w.deleted);
+
+      expect(await planOf(w.elsewhere)).toEqual([
+        expect.objectContaining({ itemType: "note", recipeId: null, title: "Soep" }),
+        expect.objectContaining({ itemType: "note", recipeId: null, title: "Soep bij oma" }),
+      ]);
+    });
+
     it("keeps the household's things and the grocery lines made from its recipes", async () => {
       const w = await world();
 

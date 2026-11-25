@@ -430,8 +430,8 @@ export async function getPlannedItemHouseholdId(itemId: string): Promise<string 
 }
 
 /**
- * Every plan entry for these recipes, in any household but `except`, becomes a note with the
- * recipe's title; the caller holds the recipes' row locks, so none is planned meanwhile.
+ * Every plan entry for these recipes, in any household but `except`, becomes a note; the caller
+ * holds the recipes' row locks, so none is planned meanwhile.
  */
 export async function turnPlannedRecipesIntoNotes(
   trx: Transaction,
@@ -444,7 +444,8 @@ export async function turnPlannedRecipesIntoNotes(
     .update(plannedItems)
     .set({
       itemType: "note",
-      title: sql`${recipes.name}`,
+      // An entry with a title of its own keeps it; one that showed the recipe takes its name.
+      title: sql`COALESCE(NULLIF(${plannedItems.title}, ''), ${recipes.name})`,
       recipeId: null,
       updatedAt: new Date(),
       version: sql`${plannedItems.version} + 1`,
