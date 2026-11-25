@@ -6,7 +6,7 @@ import { z } from "zod";
 import { initMasterKey, masterKeyFingerprint, masterKeyOpens } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { findNewestEncryptedValue } from "@norish/db/repositories/master-key";
+import { countEncryptedRows, findNewestCiphertext } from "@norish/db/repositories/master-key";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { serverLogger as log } from "@norish/shared-server/logger";
 
@@ -168,14 +168,16 @@ export async function resolveMasterKey(): Promise<void> {
   }
 
   // No fingerprint: an instance from before fingerprints, or one that has never started.
-  const written = await findNewestEncryptedValue();
+  const encrypted = (await countEncryptedRows()) > 0;
 
-  if (written && !source.pinned) {
+  if (encrypted && !source.pinned) {
     throw refusal("MASTER_KEY is not set, and this database holds data an earlier key encrypted.");
   }
 
-  const key = written
-    ? keyThatFits(source, (candidate) => masterKeyOpens(candidate, written))
+  // A value that does not decrypt, an empty one included, never shows that a key fits.
+  const newest = encrypted ? await findNewestCiphertext() : null;
+  const key = encrypted
+    ? keyThatFits(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest))
     : (source.keys?.current ?? (await generateKeyFile()));
 
   await setConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT, masterKeyFingerprint(key), null, false);

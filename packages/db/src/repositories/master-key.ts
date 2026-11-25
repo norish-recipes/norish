@@ -5,11 +5,20 @@ import { db } from "@norish/db/drizzle";
 import { users } from "../schema/auth";
 import { serverConfig } from "../schema/server-config";
 
-/**
- * What the instance's key wrote last: the newest account's email, else the newest secret setting.
- * Null on an instance that holds nothing encrypted; every other encrypted row belongs to an account.
- */
-export async function findNewestEncryptedValue(): Promise<string | null> {
+const secretSetting = isNotNull(serverConfig.valueEnc);
+
+/** Rows that hold encrypted data: every account and every secret setting; the rest belong to an account. */
+export async function countEncryptedRows(): Promise<number> {
+  const [accounts, secrets] = await Promise.all([
+    db.$count(users),
+    db.$count(serverConfig, secretSetting),
+  ]);
+
+  return accounts + secrets;
+}
+
+/** What to try a key on: the newest account's email, else the newest secret setting. */
+export async function findNewestCiphertext(): Promise<string | null> {
   const [user] = await db
     .select({ email: users.email })
     .from(users)
@@ -21,7 +30,7 @@ export async function findNewestEncryptedValue(): Promise<string | null> {
   const [setting] = await db
     .select({ valueEnc: serverConfig.valueEnc })
     .from(serverConfig)
-    .where(isNotNull(serverConfig.valueEnc))
+    .where(secretSetting)
     .orderBy(desc(serverConfig.updatedAt))
     .limit(1);
 

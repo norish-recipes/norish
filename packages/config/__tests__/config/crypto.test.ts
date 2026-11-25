@@ -8,6 +8,7 @@ import {
   hashToken,
   hmacIndex,
   initMasterKey,
+  masterKeyOpens,
 } from "@norish/config/crypto";
 
 import { forgetMasterKey } from "../helpers/master-key";
@@ -48,5 +49,20 @@ describe("the Master Key's derived keys", () => {
 
     expect(copy.decrypt(sealed)).toBe("shared");
     expect(copy.authSecret()).toBe(authSecret());
+  });
+
+  it("shows a key opens data only with ciphertext that key wrote", () => {
+    const key = randomBytes(32);
+
+    initMasterKey(key);
+    const sealed = encrypt("ada@example.com");
+    // An IV and a 4-byte tag: a short tag must not let a guess through.
+    const truncated = Buffer.from(sealed, "base64").subarray(0, 16).toString("base64");
+
+    expect(masterKeyOpens(key, sealed)).toBe(true);
+    expect(masterKeyOpens(randomBytes(32), sealed)).toBe(false);
+    for (const value of ["", "ada@example.com", "bm90IGNpcGhlcnRleHQ=", truncated]) {
+      expect(masterKeyOpens(key, value)).toBe(false);
+    }
   });
 });

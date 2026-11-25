@@ -5,9 +5,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { decrypt, masterKeyFingerprint } from "@norish/config/crypto";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { findNewestEncryptedValue } from "@norish/db/repositories/master-key";
+import { countEncryptedRows, findNewestCiphertext } from "@norish/db/repositories/master-key";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
-import { serverConfig } from "@norish/db/schema";
+import { serverConfig, users } from "@norish/db/schema";
 
 import { cleanDatabase, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -31,14 +31,37 @@ describe("what boot checks a Master Key against", () => {
   it("finds nothing encrypted on an instance with no accounts and no secret settings", async () => {
     await setConfig(ServerConfigKeys.REGISTRATION_ENABLED, true, null, false);
 
-    expect(await findNewestEncryptedValue()).toBeNull();
+    expect(await countEncryptedRows()).toBe(0);
+    expect(await findNewestCiphertext()).toBeNull();
+  });
+
+  it("counts every account and every secret setting", async () => {
+    await createTestUser({ email: "ada@example.com" });
+    await createTestUser({ email: "grace@example.com" });
+    await setConfig(ServerConfigKeys.REGISTRATION_ENABLED, true, null, false);
+    await setConfig(
+      ServerConfigKeys.IMAGE_GENERATION_CONFIG,
+      { provider: "openai", model: "gpt-image-1", apiKey: "openai-key" },
+      null,
+      true
+    );
+
+    expect(await countEncryptedRows()).toBe(3);
+  });
+
+  it("counts an account whose stored email is empty", async () => {
+    await createTestUser({ email: "ada@example.com" });
+    await getTestDb().update(users).set({ email: "" });
+
+    expect(await countEncryptedRows()).toBe(1);
+    expect(await findNewestCiphertext()).toBe("");
   });
 
   it("finds the newest account's email", async () => {
     await createTestUser({ email: "old@example.com", createdAt: new Date("2026-01-01") });
     await createTestUser({ email: "new@example.com", createdAt: new Date("2026-06-01") });
 
-    const written = await findNewestEncryptedValue();
+    const written = await findNewestCiphertext();
 
     expect(written && decrypt(written)).toBe("new@example.com");
   });
@@ -52,7 +75,7 @@ describe("what boot checks a Master Key against", () => {
       true
     );
 
-    const written = await findNewestEncryptedValue();
+    const written = await findNewestCiphertext();
 
     expect(written && JSON.parse(decrypt(written))).toMatchObject({ apiKey: "openai-key" });
   });

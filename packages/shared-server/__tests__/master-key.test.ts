@@ -22,10 +22,10 @@ const config = vi.hoisted(() => ({
   MASTER_KEY: undefined as string | undefined,
   MASTER_KEY_PREVIOUS: undefined as string | undefined,
 }));
-// The database as boot sees it: the stored fingerprint, and what the instance's key wrote last.
+// The database as boot sees it: the stored fingerprint, and each encrypted row's value, newest last.
 const database = vi.hoisted(() => ({
   fingerprint: null as string | null,
-  written: null as string | null,
+  encrypted: [] as string[],
 }));
 const setConfig = vi.hoisted(() => vi.fn());
 const logged = vi.hoisted(() => [] as unknown[]);
@@ -37,7 +37,8 @@ vi.mock("@norish/db/repositories/server-config", () => ({
   setConfig,
 }));
 vi.mock("@norish/db/repositories/master-key", () => ({
-  findNewestEncryptedValue: async () => database.written,
+  countEncryptedRows: async () => database.encrypted.length,
+  findNewestCiphertext: async () => database.encrypted.at(-1) ?? null,
 }));
 vi.mock("@norish/shared-server/logger", () => {
   const record = (...args: unknown[]) => void logged.push(args);
@@ -80,7 +81,7 @@ beforeEach(() => {
   config.MASTER_KEY = undefined;
   config.MASTER_KEY_PREVIOUS = undefined;
   database.fingerprint = null;
-  database.written = null;
+  database.encrypted = [];
   setConfig.mockReset();
   logged.length = 0;
   forgetMasterKey();
@@ -164,7 +165,7 @@ describe("which key boot opens", () => {
   describe("with no fingerprint in the database", () => {
     it("adopts MASTER_KEY over the data it wrote, as every instance from before does", async () => {
       config.MASTER_KEY = keyA.toString("base64");
-      database.written = sealedBy(keyA, "ada@example.com");
+      database.encrypted = [sealedBy(keyA, "ada@example.com")];
 
       await resolveMasterKey();
 
@@ -184,7 +185,7 @@ describe("which key boot opens", () => {
 
     it("refuses a MASTER_KEY that does not open the data, and writes no fingerprint for it", async () => {
       config.MASTER_KEY = keyB.toString("base64");
-      database.written = sealedBy(keyA, "ada@example.com");
+      database.encrypted = [sealedBy(keyA, "ada@example.com")];
 
       const boot = resolveMasterKey();
 
@@ -199,7 +200,7 @@ describe("which key boot opens", () => {
     it("refuses to re-key yet when only MASTER_KEY_PREVIOUS opens the data", async () => {
       config.MASTER_KEY = keyB.toString("base64");
       config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
-      database.written = sealedBy(keyA, "ada@example.com");
+      database.encrypted = [sealedBy(keyA, "ada@example.com")];
 
       await expect(resolveMasterKey()).rejects.toThrow(
         "This database is encrypted with MASTER_KEY_PREVIOUS"
@@ -227,8 +228,29 @@ describe("which key boot opens", () => {
       expect(fingerprintWritten()).toBe(masterKeyFingerprint(keyA));
     });
 
+    it.each([
+      ["an account whose stored email is empty", ""],
+      ["a value that is not ciphertext", "bm90IGNpcGhlcnRleHQ="],
+    ])("refuses a MASTER_KEY over %s, which it cannot be shown to open", async (_, value) => {
+      config.MASTER_KEY = keyA.toString("base64");
+      database.encrypted = [value];
+
+      await expect(resolveMasterKey()).rejects.toThrow(
+        "MASTER_KEY is not the key this database is encrypted with."
+      );
+      expect(setConfig).not.toHaveBeenCalled();
+    });
+
+    it("refuses without MASTER_KEY over an account whose stored email is empty", async () => {
+      database.encrypted = [""];
+
+      await expect(resolveMasterKey()).rejects.toThrow("MASTER_KEY is not set");
+      expect(await readKeyFile()).toBeNull();
+      expect(setConfig).not.toHaveBeenCalled();
+    });
+
     it("refuses without MASTER_KEY over data an earlier key wrote, generating nothing", async () => {
-      database.written = sealedBy(keyA, "ada@example.com");
+      database.encrypted = [sealedBy(keyA, "ada@example.com")];
 
       const boot = resolveMasterKey();
 
