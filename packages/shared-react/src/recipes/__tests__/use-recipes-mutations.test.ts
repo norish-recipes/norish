@@ -145,7 +145,7 @@ describe("useRecipesMutations", () => {
       });
       expect(firstCard()).toMatchObject({ id, name: "Metric recipe" });
       expect(server.create).toHaveBeenCalledWith(
-        expect.objectContaining({ id, name: "Metric recipe", createEntries: false }),
+        expect.objectContaining({ id, name: "Metric recipe" }),
         expect.anything()
       );
     });

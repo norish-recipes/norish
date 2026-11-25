@@ -4,7 +4,7 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recipesRouter } from "../../src/routers/recipes";
-import { updateRecipeProcedure } from "../../src/routers/recipes/recipes";
+import { createRecipeProcedure, updateRecipeProcedure } from "../../src/routers/recipes/recipes";
 import { router } from "../../src/trpc";
 import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
 import { lists } from "../mocks/realtime/lists";
@@ -259,18 +259,19 @@ describe("recipes procedures", () => {
       );
     });
 
-    it("creates the entries it names unless told to attach only", async () => {
+    it("the editors' create makes no entry, the REST create makes them", async () => {
       createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
       dashboardRecipe.mockResolvedValue(createMockRecipeDashboard({ id: recipeId }));
 
       await createCaller().create(input);
-      await createCaller().create({ ...input, createEntries: false });
+      await router({ createRecipe: createRecipeProcedure })
+        .createCaller({ ...ctx, connectionId: null, operationId: null })
+        .createRecipe(input);
 
       expect(createRecipeWithRefs.mock.calls.map((call) => call[3])).toEqual([
-        { createEntries: true },
         { createEntries: false },
+        { createEntries: true },
       ]);
-      expect(createRecipeWithRefs.mock.calls[1]?.[2]).not.toHaveProperty("createEntries");
     });
 
     it("answers a replayed create whose id is already stored", async () => {
@@ -439,7 +440,7 @@ describe("recipes procedures", () => {
           images: [{ image: recipeImage, order: 0 }],
           dishColor: EXTRACTED_DISH_COLOR,
         }),
-        { createEntries: true }
+        { createEntries: false }
       );
     });
 

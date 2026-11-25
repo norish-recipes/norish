@@ -529,9 +529,8 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
     }
   };
 
-  // A save attaches the entries the pickers made; it creates none by typing.
   const createRecipe = (input: FullRecipeInsertDTO): void => {
-    mutateCreate({ ...input, createEntries: false });
+    mutateCreate(input);
   };
 
   const updateRecipe = (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks): void => {

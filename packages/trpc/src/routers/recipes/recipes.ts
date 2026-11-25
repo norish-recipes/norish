@@ -228,6 +228,68 @@ export const getEditableProcedure = authedProcedure
     return recipe;
   });
 
+/** Store a created recipe and announce it; `entryOptions` says whether its names make entries. */
+async function applyRecipeCreate(
+  ctx: RecipeUserContext,
+  input: z.infer<typeof FullRecipeInsertSchema>,
+  entryOptions: EntryWriteOptions
+) {
+  const recipeId = input.id ?? randomUUID();
+
+  log.info(
+    { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
+    "Creating recipe"
+  );
+  log.debug({ recipe: input }, "Full recipe data");
+
+  // The id is answered once the recipe is stored, so media uploaded with it lands on the recipe.
+  // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
+  const created = await whileCreating(recipeId, async () => {
+    // Files another account uploaded for this id are not this create's to take.
+    if (input.id && !(await mayUsePendingRecipeId(recipeId, ctx.user.id, "create"))) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    }
+
+    return createResolvedRecipe(
+      recipeId,
+      ctx.user.id,
+      await withDishColor(input),
+      { userId: ctx.user.id },
+      entryOptions
+    );
+  }).catch((err: unknown) => {
+    log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
+    throw err;
+  });
+
+  if (!created) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create recipe" });
+  }
+
+  // Stored: a failure from here on only logs, so no client drops a recipe that exists.
+  void afterCommit(ctx, "announcing the created recipe", async () => {
+    const dashboardDto = await dashboardRecipe(created.recipeId);
+
+    if (dashboardDto) {
+      log.info({ userId: ctx.user.id, recipeId: created.recipeId }, "Recipe created");
+      void recipes.publish(
+        "created",
+        { recipe: dashboardDto },
+        await policyAudience(dashboardDto.householdId)
+      );
+    }
+
+    // A manually created recipe enters the same automatic flow as an
+    // import: importing is not a prerequisite for automation.
+    await announceUsableRecipe(created, {
+      userId: ctx.user.id,
+      householdId: ctx.householdId,
+    });
+  });
+
+  return recipeId;
+}
+
 export const createRecipeProcedure = authedProcedure
   .meta({
     openapi: {
@@ -243,73 +305,15 @@ export const createRecipeProcedure = authedProcedure
       },
     },
   })
-  .input(
-    FullRecipeInsertSchema.extend({
-      createEntries: z
-        .boolean()
-        .default(true)
-        .describe(
-          "Whether a tag or category name the household's list lacks is created. Send false to attach only entries the list has."
-        ),
-    })
-  )
+  .input(FullRecipeInsertSchema)
   .output(z.uuid())
-  .mutation(async ({ ctx, input: { createEntries, ...input } }) => {
-    const recipeId = input.id ?? randomUUID();
+  .mutation(({ ctx, input }) => applyRecipeCreate(ctx, input, { createEntries: true }));
 
-    log.info(
-      { userId: ctx.user.id, recipeName: input.name, recipeId, providedId: input.id },
-      "Creating recipe"
-    );
-    log.debug({ recipe: input }, "Full recipe data");
-
-    // The id is answered once the recipe is stored, so media uploaded with it lands on the recipe.
-    // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
-    const created = await whileCreating(recipeId, async () => {
-      // Files another account uploaded for this id are not this create's to take.
-      if (input.id && !(await mayUsePendingRecipeId(recipeId, ctx.user.id, "create"))) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
-      }
-
-      return createResolvedRecipe(
-        recipeId,
-        ctx.user.id,
-        await withDishColor(input),
-        { userId: ctx.user.id },
-        { createEntries }
-      );
-    }).catch((err: unknown) => {
-      log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
-      throw err;
-    });
-
-    if (!created) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create recipe" });
-    }
-
-    // Stored: a failure from here on only logs, so no client drops a recipe that exists.
-    void afterCommit(ctx, "announcing the created recipe", async () => {
-      const dashboardDto = await dashboardRecipe(created.recipeId);
-
-      if (dashboardDto) {
-        log.info({ userId: ctx.user.id, recipeId: created.recipeId }, "Recipe created");
-        void recipes.publish(
-          "created",
-          { recipe: dashboardDto },
-          await policyAudience(dashboardDto.householdId)
-        );
-      }
-
-      // A manually created recipe enters the same automatic flow as an
-      // import: importing is not a prerequisite for automation.
-      await announceUsableRecipe(created, {
-        userId: ctx.user.id,
-        householdId: ctx.householdId,
-      });
-    });
-
-    return recipeId;
-  });
+// The editors' create: it attaches the entries their pickers made, and creates none itself.
+const create = authedProcedure
+  .input(FullRecipeInsertSchema)
+  .output(z.uuid())
+  .mutation(({ ctx, input }) => applyRecipeCreate(ctx, input, { createEntries: false }));
 
 /** Apply an edit and announce it; a stale `version` changes nothing and returns no recipe. */
 async function applyRecipeUpdate(
@@ -1001,7 +1005,7 @@ export const recipesProcedures = router({
   get: getProcedure,
   nutrition: nutritionProcedure,
   getEditable: getEditableProcedure,
-  create: createRecipeProcedure,
+  create,
   update,
   delete: deleteProcedure,
   importFromUrl: importFromUrlProcedure,
