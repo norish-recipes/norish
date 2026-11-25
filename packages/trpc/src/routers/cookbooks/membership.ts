@@ -154,7 +154,7 @@ const memberIds = authedProcedure
   .query(async ({ ctx, input }) => {
     await assertCookbookAccess(ctx, input.cookbookId, "view");
 
-    return listCookbookMemberIds(input.cookbookId);
+    return listCookbookMemberIds(viewerOf(ctx), input.cookbookId);
   });
 
 export const cookbookMembershipProcedures = router({

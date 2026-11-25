@@ -215,7 +215,7 @@ describe("cookbook repository", () => {
       await addRecipeToCookbook(cookbook.id, recipe.id);
       await addRecipeToCookbook(cookbook.id, recipe.id);
 
-      expect(await listCookbookMemberIds(cookbook.id)).toEqual([recipe.id]);
+      expect(await listCookbookMemberIds(viewer(ownerId), cookbook.id)).toEqual([recipe.id]);
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(1);
     });
 
@@ -259,13 +259,13 @@ describe("cookbook repository", () => {
       await addRecipeToCookbook(cookbook.id, pasta.id);
       await addRecipesToCookbook(cookbook.id, [pasta.id, pizza.id]);
 
-      expect((await listCookbookMemberIds(cookbook.id)).sort()).toEqual(
+      expect((await listCookbookMemberIds(viewer(ownerId), cookbook.id)).sort()).toEqual(
         [pasta.id, pizza.id].sort()
       );
 
       await removeRecipesFromCookbook(cookbook.id, [pasta.id, pizza.id]);
 
-      expect(await listCookbookMemberIds(cookbook.id)).toEqual([]);
+      expect(await listCookbookMemberIds(viewer(ownerId), cookbook.id)).toEqual([]);
     });
 
     it("counts only the members the reader can see, and all of them again when it widens", async () => {
@@ -285,7 +285,7 @@ describe("cookbook repository", () => {
       // Nothing was changed: the membership comes back as it was.
       await setPolicy({ view: "everyone", edit: "household", delete: "household" });
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(2);
-      expect((await listCookbookMemberIds(cookbook.id)).sort()).toEqual(
+      expect((await listCookbookMemberIds(viewer(ownerId), cookbook.id)).sort()).toEqual(
         [theirs.id, mine.id].sort()
       );
     });
@@ -518,7 +518,7 @@ describe("cookbook repository", () => {
       expect(surviving).not.toBeNull();
       expect(surviving?.title).toBe("Weeknights");
       expect(surviving?.memberCount).toBe(0);
-      expect(await listCookbookMemberIds(cookbook.id)).toEqual([]);
+      expect(await listCookbookMemberIds(viewer(ownerId), cookbook.id)).toEqual([]);
     });
 
     it("deleting a cookbook leaves every recipe it held untouched", async () => {

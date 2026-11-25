@@ -41,6 +41,9 @@ vi.mock("@norish/db", async (importOriginal) => {
   return {
     ...actual,
     dashboardRecipe: mocks.dashboardRecipe,
+    // Every imported recipe is the importer's household's own.
+    getRecipeHouseholdIds: async (ids: string[]) =>
+      new Map(ids.map((id) => [id, "test-household-id"])),
   };
 });
 

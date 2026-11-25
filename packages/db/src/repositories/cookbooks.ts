@@ -542,11 +542,21 @@ export async function removeRecipesFromCookbook(
 }
 
 /** Which of these recipes this cookbook holds — the membership toggles. */
-export async function listCookbookMemberIds(cookbookId: string): Promise<string[]> {
+/** The cookbook's members the reader may view; one out of view comes back when the policy widens. */
+export async function listCookbookMemberIds(
+  ctx: RecipeListContext,
+  cookbookId: string
+): Promise<string[]> {
   const rows = await db
     .select({ recipeId: cookbookRecipes.recipeId })
     .from(cookbookRecipes)
-    .where(eq(cookbookRecipes.cookbookId, cookbookId));
+    .innerJoin(recipes, eq(recipes.id, cookbookRecipes.recipeId))
+    .where(
+      and(
+        eq(cookbookRecipes.cookbookId, cookbookId),
+        await buildPolicyCondition(ctx, recipes.householdId, "view")
+      )
+    );
 
   return rows.map((row) => row.recipeId);
 }

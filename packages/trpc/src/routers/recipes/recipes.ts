@@ -574,11 +574,13 @@ export const importStatusProcedure = authedProcedure
         if (state === "completed") {
           // A URL already in the library ends the import on that recipe.
           const importedId = typeof job.returnvalue === "string" ? job.returnvalue : input.recipeId;
+          // A recipe gone out of view since the import ended is not named.
+          const viewable = (await recipeAccess(ctx, [importedId], "view")).has(importedId);
 
           return {
             ...status,
             status: "completed" as const,
-            recipe: await dashboardRecipe(importedId),
+            recipe: viewable ? await dashboardRecipe(importedId) : null,
           };
         }
 

@@ -226,7 +226,10 @@ describe("cookbook membership", () => {
     const result = await callerFor().cookbooks.memberIds({ cookbookId: COOKBOOK_ID });
 
     expect(result).toEqual([RECIPE_ID]);
-    expect(listCookbookMemberIds).toHaveBeenCalledWith(COOKBOOK_ID);
+    expect(listCookbookMemberIds).toHaveBeenCalledWith(
+      { userId: "test-user-id", householdId: "test-household-id" },
+      COOKBOOK_ID
+    );
     expectNoRecipeWrites();
   });
 

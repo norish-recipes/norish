@@ -211,7 +211,9 @@ describe("the Permission Policy over two households", () => {
       stew,
     ]);
     expect(await getFavoritesByRecipeIds(viewer(ann), [stew])).toEqual(new Set([stew]));
-    expect((await listCookbookMemberIds(annsCookbook)).sort()).toEqual([soup, stew].sort());
+    expect((await listCookbookMemberIds(viewer(ann), annsCookbook)).sort()).toEqual(
+      [soup, stew].sort()
+    );
   });
 
   it("shows a plan entry for a recipe out of view by its title alone, and all of it after", async () => {
