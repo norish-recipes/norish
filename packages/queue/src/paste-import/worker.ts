@@ -21,7 +21,6 @@ import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
-import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
@@ -30,6 +29,7 @@ import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
+import { deleteUnstoredRecipeMedia } from "../import-cleanup";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -244,7 +244,8 @@ async function handleJobFailed(
   const { recipeIds, userId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
-  await Promise.all(recipeIds.map((recipeId) => deleteRecipeImagesDir(recipeId)));
+  // A retry needs the pre-parsed files; the recipes stored before the failure keep theirs.
+  if (isFinal) await deleteUnstoredRecipeMedia(recipeIds);
 
   const audience = isFinal ? await accountAudience(userId) : null;
 

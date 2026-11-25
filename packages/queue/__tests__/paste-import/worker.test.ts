@@ -25,9 +25,12 @@ vi.mock("@norish/db/repositories/ratings", () => ({
 vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
 }));
+const storedIds = vi.hoisted(() => ({ except: new Set<string>() }));
+
 vi.mock("@norish/db/repositories/recipes", () => ({
   getRecipeHouseholdIds: vi.fn(
-    async (ids: string[]) => new Map(ids.map((id) => [id, "household-1"]))
+    async (ids: string[]) =>
+      new Map(ids.filter((id) => !storedIds.except.has(id)).map((id) => [id, "household-1"]))
   ),
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
@@ -71,9 +74,42 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }),
 }));
 
-vi.mock("@norish/shared-server/media/storage", () => ({
-  deleteRecipeImagesDir: vi.fn(),
+const deleteRecipeImagesDir = vi.hoisted(() => vi.fn());
+const worker = vi.hoisted(() => ({
+  onFailed: undefined as ((job: unknown, error: Error) => Promise<void>) | undefined,
 }));
+
+vi.mock("@norish/shared-server/media/storage", () => ({ deleteRecipeImagesDir }));
+
+vi.mock("../../src/create-worker", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../src/create-worker")>()),
+  createWorker: vi.fn((_name: string, _process: unknown, options: typeof worker) => {
+    worker.onFailed = options.onFailed;
+  }),
+}));
+
+describe("a failed paste import", () => {
+  const failedJob = (attemptsMade: number) => ({
+    id: "job-1",
+    attemptsMade,
+    opts: { attempts: 3 },
+    data: { recipeIds: ["stored", "not-stored"], userId: "user-1" },
+  });
+
+  it("keeps every file while it will be retried, then removes only what no recipe holds", async () => {
+    const { startPasteImportWorker } = await import("../../src/paste-import/worker");
+
+    startPasteImportWorker();
+    storedIds.except = new Set(["not-stored"]);
+
+    await worker.onFailed!(failedJob(1), new Error("boom"));
+    expect(deleteRecipeImagesDir).not.toHaveBeenCalled();
+
+    await worker.onFailed!(failedJob(3), new Error("boom"));
+    expect(deleteRecipeImagesDir.mock.calls).toEqual([["not-stored"]]);
+    storedIds.except = new Set();
+  });
+});
 
 describe("processPasteImportJob", () => {
   it("creates valid structured recipes in order and persists normalized ratings", async () => {

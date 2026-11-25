@@ -14,12 +14,13 @@ import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
-import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
+import { saveImageBytes } from "@norish/shared-server/media/storage";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
 import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
+import { deleteUnstoredRecipeMedia } from "../import-cleanup";
 import { reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -120,7 +121,7 @@ async function handleJobFailed(
 
   const { recipeId, userId, files } = job.data;
 
-  await deleteRecipeImagesDir(recipeId);
+  await deleteUnstoredRecipeMedia([recipeId]);
 
   // Emit failed event (removes skeleton)
   const audience = await accountAudience(userId);
