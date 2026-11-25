@@ -52,6 +52,13 @@ vi.mock("@norish/shared-server/cache/household", () => ({
   }),
 }));
 
+// What the import landed is in the importer's household when it is announced.
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(async (ids: string[]) => new Map(ids.map((id) => [id, "house-1"]))),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({
+  getCookbookRow: vi.fn(async () => ({ householdId: "house-1" })),
+}));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/realtime/archive", () => import("../mocks/realtime/archive"));
 vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/realtime/cookbooks"));

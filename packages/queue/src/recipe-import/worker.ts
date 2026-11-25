@@ -16,6 +16,7 @@ import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-l
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import {
   NOT_A_RECIPE_REASON,
@@ -51,19 +52,14 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
     "Processing recipe import job"
   );
 
-  const policy = await getRecipePermissionPolicy();
-  const viewPolicy = policy.view;
-  const ctx = { userId, householdId };
-
   // Emit import started event
-  void recipes.publish(
-    "importStarted",
-    { recipeId, url },
-    { viewPolicy, householdId: ctx.householdId }
-  );
+  const started = await accountAudience(userId);
+
+  if (started) void recipes.publish("importStarted", { recipeId, url }, started);
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
+  const viewPolicy = (await getRecipePermissionPolicy()).view;
   const existingCheck = await recipeExistsByUrlForPolicy(url, householdId, viewPolicy);
 
   await completeStep(job, { alreadyExists: existingCheck.exists });
@@ -86,7 +82,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
           pendingRecipeId: recipeId,
           toast: "imported",
         },
-        { viewPolicy: policy.view, householdId: dashboardDto.householdId }
+        await policyAudience(dashboardDto.householdId)
       );
     }
 
@@ -179,7 +175,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
         toast: "imported",
         ...incomplete,
       },
-      { viewPolicy: policy.view, householdId: dashboardDto.householdId }
+      await policyAudience(dashboardDto.householdId)
     );
   }
 
@@ -198,16 +194,16 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { url, recipeId, userId, householdId } = job.data;
+  const { url, recipeId, userId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
   await deleteRecipeImagesDir(recipeId);
 
   if (isFinal) {
     // Emit failed event to remove skeleton
-    const policy = await getRecipePermissionPolicy();
-    const ctx = { userId, householdId };
+    const audience = await accountAudience(userId);
 
+    if (!audience) return;
     void recipes.publish(
       "failed",
       {
@@ -215,7 +211,7 @@ async function handleJobFailed(
         recipeId,
         url,
       },
-      { viewPolicy: policy.view, householdId: ctx.householdId }
+      audience
     );
   }
 }

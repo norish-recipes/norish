@@ -17,14 +17,12 @@ import { dashboardRecipe } from "@norish/db";
 import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import {
-  getRecipePermissionPolicy,
-  isAIEnabled,
-} from "@norish/shared-server/config/server-config-loader";
+import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
@@ -152,20 +150,11 @@ export async function processPasteImportJob(
     "Processing paste import job"
   );
 
-  const policy = await getRecipePermissionPolicy();
-  const viewPolicy = policy.view;
-  const ctx = { userId, householdId };
+  const started = await accountAudience(userId);
 
-  recipeIds.forEach((recipeId) => {
-    void recipes.publish(
-      "importStarted",
-      {
-        recipeId,
-        url: "[pasted]",
-      },
-      { viewPolicy, householdId: ctx.householdId }
-    );
-  });
+  for (const recipeId of recipeIds) {
+    if (started) void recipes.publish("importStarted", { recipeId, url: "[pasted]" }, started);
+  }
 
   const created: CreateRecipeResult[] = [];
 
@@ -237,7 +226,7 @@ export async function processPasteImportJob(
         pendingRecipeId: result.recipeId,
         toast: "imported",
       },
-      { viewPolicy: policy.view, householdId: dashboardDto.householdId }
+      await policyAudience(dashboardDto.householdId)
     );
 
     await announceUsableRecipe(result, { userId, householdId });
@@ -252,26 +241,20 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeIds, userId, householdId } = job.data;
+  const { recipeIds, userId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
   await Promise.all(recipeIds.map((recipeId) => deleteRecipeImagesDir(recipeId)));
 
-  if (isFinal) {
-    const policy = await getRecipePermissionPolicy();
-    const ctx = { userId, householdId };
+  const audience = isFinal ? await accountAudience(userId) : null;
 
-    recipeIds.forEach((recipeId) => {
-      void recipes.publish(
-        "failed",
-        {
-          reason: error.message || "Failed to import recipe",
-          recipeId,
-          url: "[pasted]",
-        },
-        { viewPolicy: policy.view, householdId: ctx.householdId }
-      );
-    });
+  if (!audience) return;
+  for (const recipeId of recipeIds) {
+    void recipes.publish(
+      "failed",
+      { reason: error.message || "Failed to import recipe", recipeId, url: "[pasted]" },
+      audience
+    );
   }
 }
 

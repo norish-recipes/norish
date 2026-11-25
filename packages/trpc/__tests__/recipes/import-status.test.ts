@@ -30,6 +30,12 @@ vi.mock("@norish/queue/registry", () => ({
 }));
 
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
+// Each job's account is in the household it was queued from, unless a test moves it.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn(async (userId: string) =>
+    userId === "other-user" ? "other-household" : "test-household-id"
+  ),
+}));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: mocks.getRecipePermissionPolicy,

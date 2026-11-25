@@ -59,7 +59,9 @@ vi.mock("@norish/db/repositories/recipe-shares", async () => ({
 vi.mock("@norish/db/repositories/recipes", () => ({
   getRecipeFull: getRecipeFullMock,
   // The shared recipe is the household's own.
-  getRecipeHouseholdId: vi.fn().mockResolvedValue("test-household-id"),
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "test-household-id"]))
+  ),
 }));
 
 vi.mock("@norish/shared-server/ingredients/icons", () => ({

@@ -48,6 +48,7 @@
     "./page-renderers": "./src/page-renderers.ts",
     "./private-addresses": "./src/private-addresses.ts",
     "./realtime/archive": "./src/realtime/archive.ts",
+    "./realtime/audience": "./src/realtime/audience.ts",
     "./realtime/caldav": "./src/realtime/caldav.ts",
     "./realtime/calendar": "./src/realtime/calendar.ts",
     "./realtime/channel": "./src/realtime/channel.ts",

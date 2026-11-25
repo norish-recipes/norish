@@ -19,15 +19,14 @@ import {
   toRecipeShareSummary,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
-import { getRecipeHouseholdId } from "@norish/db/repositories/recipes";
 import {
-  getRecipePermissionPolicy,
   getTimerKeywords,
   getUnits,
   isTimersEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { ingredientIconAddresses } from "@norish/shared-server/ingredients/icons";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { recipeAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import {
   CreateRecipeShareInputSchema,
@@ -51,11 +50,6 @@ import { authedProcedure, sharedRecipeProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess } from "./helpers";
 
-type ShareMutationContext = {
-  user: { id: string };
-  householdId: string;
-};
-
 function toRecipeShareLifecycleEvent(
   share: Pick<RecipeShareDto, "id" | "recipeId" | "version">,
   type: RecipeShareLifecycleEventDto["type"]
@@ -69,20 +63,18 @@ function toRecipeShareLifecycleEvent(
 }
 
 async function emitRecipeShareEvent(
-  ctx: ShareMutationContext,
   share: Pick<RecipeShareDto, "id" | "recipeId" | "version">,
   type: RecipeShareLifecycleEventDto["type"]
 ) {
-  const policy = await getRecipePermissionPolicy();
+  const audience = await recipeAudience(share.recipeId);
 
-  await recipes.publish(
-    "shareEvent",
-    { kind: type, share: toRecipeShareLifecycleEvent(share, type) },
-    {
-      viewPolicy: policy.view,
-      householdId: (await getRecipeHouseholdId(share.recipeId)) ?? ctx.householdId,
-    }
-  );
+  if (audience) {
+    await recipes.publish(
+      "shareEvent",
+      { kind: type, share: toRecipeShareLifecycleEvent(share, type) },
+      audience
+    );
+  }
 }
 
 async function getOwnedShareOrThrow(ctx: { user: { id: string } }, shareId: string) {
@@ -105,7 +97,7 @@ const create = authedProcedure
 
     const share = await createRecipeShare(ctx.user.id, input);
 
-    await emitRecipeShareEvent(ctx, share, "created");
+    await emitRecipeShareEvent(share, "created");
 
     return share;
   });
@@ -148,7 +140,7 @@ const update = authedProcedure
       return { ...toRecipeShareSummary(share), stale: true };
     }
 
-    await emitRecipeShareEvent(ctx, result.value, "updated");
+    await emitRecipeShareEvent(result.value, "updated");
 
     return { ...result.value, stale: false };
   });
@@ -167,7 +159,7 @@ const revoke = authedProcedure
       return { ...toRecipeShareSummary(share), stale: true };
     }
 
-    await emitRecipeShareEvent(ctx, result.value, "revoked");
+    await emitRecipeShareEvent(result.value, "revoked");
 
     return { ...result.value, stale: false };
   });
@@ -186,7 +178,7 @@ const reactivate = authedProcedure
       return { ...toRecipeShareSummary(share), stale: true };
     }
 
-    await emitRecipeShareEvent(ctx, result.value, "reactivated");
+    await emitRecipeShareEvent(result.value, "reactivated");
 
     return { ...result.value, stale: false };
   });
@@ -215,7 +207,6 @@ const remove = authedProcedure
 
     if (!result.stale) {
       await emitRecipeShareEvent(
-        ctx,
         { id: share.id, recipeId: share.recipeId, version: share.version },
         "deleted"
       );

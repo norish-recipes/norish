@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
-import { canAccessResource, isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
+import { isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
   dashboardRecipe,
   deleteRecipesByIds,
@@ -40,10 +40,7 @@ import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
 import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
 import { readStepProgress } from "@norish/queue/job-steps";
 import { getQueues } from "@norish/queue/registry";
-import {
-  getRecipePermissionPolicy,
-  isVideoParsingEnabled,
-} from "@norish/shared-server/config/server-config-loader";
+import { isVideoParsingEnabled } from "@norish/shared-server/config/server-config-loader";
 import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
@@ -55,6 +52,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
 import { claimPendingRecipeMedia } from "@norish/shared-server/media/pending-recipe-media";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
@@ -76,6 +74,7 @@ import { router } from "../../trpc";
 import {
   announceRecipeUpdated,
   assertRecipeAccess,
+  canViewImportOf,
   findRecipeForViewer,
   handleRecipeError,
   recipeAccess,
@@ -278,12 +277,10 @@ export const createRecipeProcedure = authedProcedure
 
       if (dashboardDto) {
         log.info({ userId: ctx.user.id, recipeId: created.recipeId }, "Recipe created");
-        const policy = await getRecipePermissionPolicy();
-
         void recipes.publish(
           "created",
           { recipe: dashboardDto },
-          { viewPolicy: policy.view, householdId: dashboardDto.householdId }
+          await policyAudience(dashboardDto.householdId)
         );
       }
 
@@ -394,12 +391,10 @@ const updateCategories = authedProcedure
     const updated = await getRecipeFull(input.recipeId);
 
     if (updated) {
-      const policy = await getRecipePermissionPolicy();
-
       void recipes.publish(
         "updated",
         { recipe: updated },
-        { viewPolicy: policy.view, householdId: updated.householdId }
+        await policyAudience(updated.householdId)
       );
     }
 
@@ -430,17 +425,15 @@ const deleteProcedure = authedProcedure
     // Only once the rows are gone: a kept recipe still needs its images.
     await Promise.all(removed.map((id) => deleteRecipeImagesDir(id)));
 
-    const policy = await getRecipePermissionPolicy();
-
     if (removed.length > 0) {
       log.info({ userId: ctx.user.id, count: removed.length }, "Recipes deleted");
     }
-    // Each recipe's own household hears of it, whoever deleted it.
-    for (const householdId of new Set(removed.map((id) => households.get(id) ?? ctx.householdId))) {
+    // Each recipe's own household, as it was before the delete, hears of it, whoever deleted it.
+    for (const householdId of new Set(removed.flatMap((id) => households.get(id) ?? []))) {
       void recipes.publish(
         "deleted",
-        { ids: removed.filter((id) => (households.get(id) ?? ctx.householdId) === householdId) },
-        { viewPolicy: policy.view, householdId }
+        { ids: removed.filter((id) => households.get(id) === householdId) },
+        await policyAudience(householdId)
       );
     }
 
@@ -547,7 +540,7 @@ export const importStatusProcedure = authedProcedure
   .query(async ({ ctx, input }) => {
     const queue = getQueues().recipeImport;
     let job = await queue.getJob(input.recipeId);
-    const canView = job && (await canAccessResource("view", ctx.householdId, job.data.householdId));
+    const canView = job && (await canViewImportOf(ctx, job.data.userId));
 
     if (job && canView) {
       let state = await job.getState();
@@ -639,12 +632,10 @@ const convertMeasurements = authedProcedure
 
       if (!recipe) return;
 
-      const policy = await getRecipePermissionPolicy();
-
       void recipes.publish(
         "converted",
         { recipe, conversion: { target: targetSystem, withAI, version }, stale },
-        { viewPolicy: policy.view, householdId: recipe.householdId }
+        await policyAudience(recipe.householdId)
       );
     };
 

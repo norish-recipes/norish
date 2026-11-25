@@ -10,9 +10,12 @@ import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeBecameUsablePayload } from "@norish/shared/contracts/realtime/recipe-enrichment";
 import type { RecipeEnrichmentLifecycleState } from "@norish/shared/lib/recipe-enrichment";
-import { getRecipeHouseholdId } from "@norish/db/repositories/recipes";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
+import {
+  accountAudience,
+  policyAudience,
+  recipeAudience,
+} from "@norish/shared-server/realtime/audience";
 import { recipeEnrichment } from "@norish/shared-server/realtime/recipe-enrichment";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
@@ -50,6 +53,13 @@ export async function publishEnrichmentLifecycle(
   data: RecipeEnrichmentJobData,
   state: Exclude<RecipeEnrichmentLifecycleState, "idle">
 ): Promise<void> {
+  // The recipe's household now, whoever asked; the requester's once the recipe is gone.
+  const audience =
+    (await recipeAudience(data.recipeId)) ??
+    (await accountAudience(data.requestedByUserId ?? data.userId));
+
+  if (!audience) return;
+
   await recipes.publish(
     "enrichment",
     {
@@ -63,7 +73,7 @@ export async function publishEnrichmentLifecycle(
         ? { requestedByUserId: data.requestedByUserId ?? data.userId }
         : {}),
     },
-    { viewPolicy: await viewPolicy(), householdId: await recipeHousehold(data) }
+    audience
   );
 }
 
@@ -79,15 +89,6 @@ export async function publishEnrichmentRecipeUpdated(
       source: "enrichment",
       kind: data.kind,
     },
-    { viewPolicy: await viewPolicy(), householdId: recipe.householdId }
+    await policyAudience(recipe.householdId)
   );
-}
-
-async function viewPolicy() {
-  return (await getRecipePermissionPolicy()).view;
-}
-
-/** The recipe's household, whoever asked; the requester's when the recipe is gone. */
-async function recipeHousehold(data: RecipeEnrichmentJobData): Promise<string> {
-  return (await getRecipeHouseholdId(data.recipeId)) ?? data.householdId;
 }

@@ -53,8 +53,20 @@ vi.mock("@norish/db/repositories/site-auth-tokens", () => ({
   getDecryptedTokensByUserId,
 }));
 
+// The audience reads each row's household and the account's at publish time.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "household-1"]))
+  ),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
+const getRecipePermissionPolicy = vi.hoisted(() => vi.fn());
+
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "everyone" }),
+  getRecipePermissionPolicy,
 }));
 
 vi.mock("@norish/queue/api-handlers", () => ({
@@ -102,6 +114,7 @@ const PARSED_RECIPE = {
 
 describe("processImportJob", () => {
   beforeEach(() => {
+    getRecipePermissionPolicy.mockResolvedValue({ view: "everyone" });
     recipeExistsByUrlForPolicy.mockResolvedValue({ exists: false });
     getDecryptedTokensByUserId.mockResolvedValue([]);
     parseRecipeFromUrl.mockResolvedValue({ recipe: PARSED_RECIPE, usedAI: false });
@@ -152,6 +165,35 @@ describe("processImportJob", () => {
       "Breakfast",
       "Drinks",
     ]);
+  });
+
+  it("announces the import to whoever may view it once stored, not when it started", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    // View narrows to Household while the page is being parsed.
+    parseRecipeFromUrl.mockImplementation(async () => {
+      getRecipePermissionPolicy.mockResolvedValue({ view: "household" });
+
+      return { recipe: PARSED_RECIPE, usedAI: false };
+    });
+    dashboardRecipe.mockResolvedValue({ id: "recipe-77", householdId: "household-1" });
+
+    await processRecipeImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        url: "https://example.com/stew",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdId: "household-1",
+      },
+    } as unknown as Job<RecipeImportJobData>);
+
+    expect(publishRecipe).toHaveBeenCalledWith("imported", expect.anything(), {
+      viewPolicy: "household",
+      householdId: "household-1",
+    });
   });
 
   it("ends on the existing recipe when the URL is already in the library", async () => {

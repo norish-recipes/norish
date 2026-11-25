@@ -30,6 +30,16 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
   dishColorForImageUrl,
 }));
 
+// The audience reads each row's household and the account's at publish time.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "household-1"]))
+  ),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAIConfig: vi.fn().mockResolvedValue({
     automaticEnrichment: {

@@ -13,8 +13,14 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 // The recipe lives in another household than the requester's (edit Everyone).
 vi.mock("@norish/db/repositories/recipes", () => ({
-  getRecipeHouseholdId: vi.fn().mockResolvedValue("owners-household"),
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "owners-household"]))
+  ),
 }));
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));

@@ -11,11 +11,11 @@ import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import { addRecipeImages, dashboardRecipe, updateRecipeDishColor } from "@norish/db";
 import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
 import { createWorker } from "../create-worker";
@@ -34,19 +34,12 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
-  const policy = await getRecipePermissionPolicy();
-  const viewPolicy = policy.view;
-  const ctx = { userId, householdId };
-
   // Emit import started event (shows skeleton)
-  void recipes.publish(
-    "importStarted",
-    {
-      recipeId,
-      url: `[${files.length} image(s)]`,
-    },
-    { viewPolicy, householdId: ctx.householdId }
-  );
+  const started = await accountAudience(userId);
+
+  if (started) {
+    void recipes.publish("importStarted", { recipeId, url: `[${files.length} image(s)]` }, started);
+  }
 
   // Vision parsing reads the images; every inference happens afterwards.
   // A failure throws with its own message — extraction, not this worker,
@@ -103,7 +96,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
         pendingRecipeId: recipeId,
         toast: "imported",
       },
-      { viewPolicy: policy.view, householdId: dashboardDto.householdId }
+      await policyAudience(dashboardDto.householdId)
     );
   }
 
@@ -125,14 +118,14 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeId, userId, householdId, files } = job.data;
+  const { recipeId, userId, files } = job.data;
 
   await deleteRecipeImagesDir(recipeId);
 
   // Emit failed event (removes skeleton)
-  const policy = await getRecipePermissionPolicy();
-  const ctx = { userId, householdId };
+  const audience = await accountAudience(userId);
 
+  if (!audience) return;
   void recipes.publish(
     "failed",
     {
@@ -140,7 +133,7 @@ async function handleJobFailed(
       recipeId,
       url: `[${files.length} image(s)]`,
     },
-    { viewPolicy: policy.view, householdId: ctx.householdId }
+    audience
   );
 }
 

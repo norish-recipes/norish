@@ -5,9 +5,10 @@ import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { canAccessResource } from "@norish/auth/permissions";
 import { getRecipeFull, getRecipeHouseholdIds } from "@norish/db";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { claimPendingRecipeMedia } from "@norish/shared-server/media/pending-recipe-media";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
 export type RecipeUserContext = {
@@ -39,14 +40,10 @@ export async function emitRecipeFailure(
   reason: string,
   meta?: { recipeId?: string; url?: string }
 ): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
-
   // Nothing stored yet: the actor's household, the one the recipe was for.
-  void recipes.publish(
-    "failed",
-    { reason, ...meta },
-    { viewPolicy: policy.view, householdId: ctx.householdId }
-  );
+  const audience = await accountAudience(ctx.user.id);
+
+  if (audience) void recipes.publish("failed", { reason, ...meta }, audience);
 }
 
 export function handleRecipeError(
@@ -68,15 +65,8 @@ export async function announceRecipeUpdated(
 ): Promise<FullRecipeDTO | null> {
   const stored = await getRecipeFull(recipeId);
 
-  if (stored) {
-    const policy = await getRecipePermissionPolicy();
-
-    void recipes.publish(
-      "updated",
-      { recipe: stored },
-      { viewPolicy: policy.view, householdId: stored.householdId }
-    );
-  }
+  if (stored)
+    void recipes.publish("updated", { recipe: stored }, await policyAudience(stored.householdId));
 
   return stored;
 }
@@ -151,6 +141,16 @@ export async function assertRecipeMediaAccess(
   } else if (!(await claimPendingRecipeMedia(recipeId, ctx.user.id))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
   }
+}
+
+/** Whether the reader may view an account's import, from the household it is in now. */
+export async function canViewImportOf(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  userId: string
+): Promise<boolean> {
+  const householdId = await getHouseholdIdForUser(userId);
+
+  return householdId !== null && (await canAccessResource("view", ctx.householdId, householdId));
 }
 
 /** The recipe, or null when there is none or the reader may not view it. */

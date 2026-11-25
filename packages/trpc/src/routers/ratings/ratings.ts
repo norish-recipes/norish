@@ -3,9 +3,8 @@ import {
   getUserRatingWithVersion,
   rateRecipe,
 } from "@norish/db/repositories/ratings";
-import { getRecipeHouseholdId } from "@norish/db/repositories/recipes";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { accountAudience, recipeAudience } from "@norish/shared-server/realtime/audience";
 import { ratings } from "@norish/shared-server/realtime/ratings";
 import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contracts/zod";
 
@@ -15,21 +14,17 @@ import { assertRecipeAccess, recipeAccess } from "../recipes/helpers";
 
 interface UserContext {
   user: { id: string };
-  householdId: string;
 }
 
-/** Rating events reach the recipe's own household, or the actor's when it is gone. */
+/** Rating events reach the recipe's own household now, or the actor's once it is gone. */
 async function ratingAudience(ctx: UserContext, recipeId: string) {
-  const policy = await getRecipePermissionPolicy();
-
-  return {
-    viewPolicy: policy.view,
-    householdId: (await getRecipeHouseholdId(recipeId)) ?? ctx.householdId,
-  };
+  return (await recipeAudience(recipeId)) ?? (await accountAudience(ctx.user.id));
 }
 
 async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
-  void ratings.publish("ratingFailed", { recipeId, reason }, await ratingAudience(ctx, recipeId));
+  const audience = await ratingAudience(ctx, recipeId);
+
+  if (audience) void ratings.publish("ratingFailed", { recipeId, reason }, audience);
 }
 
 const rate = authedProcedure.input(RatingInputSchema).mutation(async ({ ctx, input }) => {
@@ -53,11 +48,15 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(async ({ ctx, inp
         rating === null ? "Recipe rating removed" : "Recipe rated"
       );
 
-      void ratings.publish(
-        "ratingUpdated",
-        { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
-        await ratingAudience(ctx, recipeId)
-      );
+      const audience = await ratingAudience(ctx, recipeId);
+
+      if (audience) {
+        void ratings.publish(
+          "ratingUpdated",
+          { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
+          audience
+        );
+      }
     })
     .catch((err) => {
       const error = err as Error;

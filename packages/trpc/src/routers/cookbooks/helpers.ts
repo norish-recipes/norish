@@ -1,12 +1,12 @@
 import { TRPCError } from "@trpc/server";
 
 import type { PermissionAction } from "@norish/auth/permissions";
-import type { PermissionLevel } from "@norish/config/zod/server-config";
+import type { PolicyTarget } from "@norish/shared-server/realtime/domain";
 import type { ClientEventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
 import { canAccessResource } from "@norish/auth/permissions";
 import { getCookbookRow } from "@norish/db/repositories/cookbooks";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
 export type CookbookUserContext = {
@@ -39,23 +39,18 @@ export async function assertCookbookAccess(
   return cookbook;
 }
 
-/**
- * Broadcast a cookbook event to whoever the view policy says may see it: the
- * cookbook's own household, or everyone. The same reach the cookbook has.
- */
+/** Broadcast a cookbook event to whoever the view policy now lets see the household's cookbooks. */
 export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealtime>>(
   householdId: string,
   event: E,
   data: PayloadOf<CookbooksRealtime, E>
 ): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
-  // Every cookbook event is policy-scoped; the generic `TargetFor` cannot see
-  // that for an open `E`, so the target shape is pinned here once.
+  // Every cookbook event is policy-scoped; `TargetFor` cannot see that for an open `E`.
   const publish = cookbooks.publish as (
     event: E,
     payload: PayloadOf<CookbooksRealtime, E>,
-    target: { viewPolicy: PermissionLevel; householdId: string }
+    target: PolicyTarget
   ) => Promise<void>;
 
-  await publish(event, data, { viewPolicy: policy.view, householdId });
+  await publish(event, data, await policyAudience(householdId));
 }
