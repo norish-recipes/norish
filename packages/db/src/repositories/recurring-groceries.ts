@@ -59,57 +59,18 @@ export async function getRecurringGroceriesByIds(ids: string[]): Promise<Recurri
   return parsed.data;
 }
 
-export async function listRecurringGroceriesByUser(userId: string): Promise<RecurringGroceryDto[]> {
+export async function listRecurringGroceriesByHousehold(
+  householdId: string
+): Promise<RecurringGroceryDto[]> {
   const rows = await db
     .select()
     .from(recurringGroceries)
-    .where(eq(recurringGroceries.userId, userId))
+    .where(eq(recurringGroceries.householdId, householdId))
     .orderBy(desc(recurringGroceries.createdAt));
 
   const parsed = z.array(RecurringGrocerySelectBaseSchema).safeParse(rows);
 
   if (!parsed.success) throw new Error("Failed to parse recurring groceries");
-
-  return parsed.data;
-}
-
-export async function listRecurringGroceriesByUsers(
-  userIds: string[]
-): Promise<RecurringGroceryDto[]> {
-  if (!userIds.length) return [];
-
-  const rows = await db
-    .select()
-    .from(recurringGroceries)
-    .where(inArray(recurringGroceries.userId, userIds))
-    .orderBy(desc(recurringGroceries.createdAt));
-
-  const parsed = z.array(RecurringGrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse recurring groceries (users)");
-
-  return parsed.data;
-}
-
-export async function listDueRecurringGroceries(
-  userIds: string[],
-  dueDate: string // YYYY-MM-DD
-): Promise<RecurringGroceryDto[]> {
-  if (!userIds.length) return [];
-
-  const rows = await db
-    .select()
-    .from(recurringGroceries)
-    .where(
-      and(
-        inArray(recurringGroceries.userId, userIds),
-        lte(recurringGroceries.nextPlannedFor, dueDate)
-      )
-    );
-
-  const parsed = z.array(RecurringGrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse due recurring groceries");
 
   return parsed.data;
 }
@@ -262,7 +223,13 @@ export async function updateRecurringGroceryWithGrocery(
       const [groceryRow] = await trx
         .update(groceries)
         .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
-        .where(and(eq(groceries.id, groceryRef.id), eq(groceries.version, groceryRef.version)))
+        .where(
+          and(
+            eq(groceries.id, groceryRef.id),
+            eq(groceries.version, groceryRef.version),
+            eq(groceries.householdId, recurringRow.householdId)
+          )
+        )
         .returning();
 
       if (!groceryRow) throw new StaleWriteError();
@@ -313,9 +280,9 @@ export async function detachRecurringGrocery(
             eq(recurringGroceries.version, input.recurringVersion)
           )
         )
-        .returning({ id: recurringGroceries.id });
+        .returning({ householdId: recurringGroceries.householdId });
 
-      if (deleted.length === 0) throw new StaleWriteError();
+      if (!deleted[0]) throw new StaleWriteError();
 
       // The FK ON DELETE SET NULL detaches the grocery without bumping its
       // version, so the guard below still matches the client-supplied version.
@@ -323,7 +290,11 @@ export async function detachRecurringGrocery(
         .update(groceries)
         .set({ ...(groceryUpdate.data as any), version: sql`${groceries.version} + 1` })
         .where(
-          and(eq(groceries.id, input.grocery.id), eq(groceries.version, input.grocery.version))
+          and(
+            eq(groceries.id, input.grocery.id),
+            eq(groceries.version, input.grocery.version),
+            eq(groceries.householdId, deleted[0].householdId)
+          )
         )
         .returning();
 
@@ -344,6 +315,7 @@ export async function detachRecurringGrocery(
 }
 
 export async function checkRecurringGrocery(input: {
+  householdId: string;
   groceryId: string;
   groceryVersion: number;
   isDone: boolean;
@@ -361,7 +333,13 @@ export async function checkRecurringGrocery(input: {
       const [groceryRow] = await trx
         .update(groceries)
         .set({ isDone: input.isDone, version: sql`${groceries.version} + 1` })
-        .where(and(eq(groceries.id, input.groceryId), eq(groceries.version, input.groceryVersion)))
+        .where(
+          and(
+            eq(groceries.id, input.groceryId),
+            eq(groceries.version, input.groceryVersion),
+            eq(groceries.householdId, input.householdId)
+          )
+        )
         .returning();
 
       if (!groceryRow) throw new StaleWriteError();
@@ -384,7 +362,8 @@ export async function checkRecurringGrocery(input: {
           .where(
             and(
               eq(recurringGroceries.id, input.recurringUpdate.id),
-              eq(recurringGroceries.version, input.recurringUpdate.version)
+              eq(recurringGroceries.version, input.recurringUpdate.version),
+              eq(recurringGroceries.householdId, input.householdId)
             )
           )
           .returning();
@@ -454,7 +433,7 @@ export type DueRecurringGrocery = {
   recurringGrocery: {
     id: string;
     version: number;
-    userId: string;
+    householdId: string;
     name: string;
     unit: string | null;
     amount: number | null;
@@ -532,11 +511,7 @@ export async function getDueRecurringGroceries(): Promise<DueRecurringGrocery[]>
       }
 
       results.push({
-        recurringGrocery: {
-          ...recurringParsed.data,
-          version: recurringParsed.data.version,
-          userId: recurringRow.userId, // Include userId from raw row
-        },
+        recurringGrocery: { ...recurringParsed.data, householdId: recurringRow.householdId },
         grocery: {
           ...groceryParsed.data,
           version: groceryParsed.data.version,
@@ -558,17 +533,15 @@ export async function uncheckGrocery(groceryId: string): Promise<void> {
     .where(eq(groceries.id, groceryId));
 }
 
-/**
- * Get the owner userId for a recurring grocery (for permission checks)
- */
-export async function getRecurringGroceryOwnerId(
+/** The household a recurring grocery belongs to, for the household guard. */
+export async function getRecurringGroceryHouseholdId(
   recurringGroceryId: string
 ): Promise<string | null> {
   const [row] = await db
-    .select({ userId: recurringGroceries.userId })
+    .select({ householdId: recurringGroceries.householdId })
     .from(recurringGroceries)
     .where(eq(recurringGroceries.id, recurringGroceryId))
     .limit(1);
 
-  return row?.userId ?? null;
+  return row?.householdId ?? null;
 }

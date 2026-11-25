@@ -15,7 +15,7 @@ import {
   moveItem,
 } from "@norish/db/repositories/planned-items";
 
-import { createTestUser } from "../helpers/db-test-helpers";
+import { createTestUser, testHouseholdOf } from "../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("planned_item_versions");
@@ -31,11 +31,18 @@ beforeEach(async () => {
 });
 
 async function plan(slot: Slot, title: string) {
-  return createPlannedItem({ userId, date, slot, itemType: "note", title });
+  return createPlannedItem({
+    householdId: testHouseholdOf(userId),
+    userId,
+    date,
+    slot,
+    itemType: "note",
+    title,
+  });
 }
 
 async function slotOf(slot: Slot) {
-  return (await listPlannedItemsBySlot([userId], date, slot)).map(
+  return (await listPlannedItemsBySlot(testHouseholdOf(userId), date, slot)).map(
     ({ title, sortOrder, version }) => ({ title, sortOrder, version })
   );
 }

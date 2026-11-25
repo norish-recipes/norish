@@ -7,7 +7,6 @@ import { db, holdLock } from "@norish/db/drizzle";
 import {
   aisleLinks,
   groceries,
-  householdUsers,
   ingredientAliases,
   ingredientNutritionCorrections,
   ingredients,
@@ -33,14 +32,14 @@ import { uuidListSql } from "./raw-sql";
 
 /**
  * Rows holding a fact about an Ingredient, unique on it plus one column: a Product and Aisle Link
- * per Store; a store preference, correction and Pantry row per member.
+ * per Store; a store preference, correction and Pantry row per household.
  */
-const PANTRY_KEYED = { table: pantryIngredients, key: "user_id" } as const;
+const PANTRY_KEYED = { table: pantryIngredients, key: "household_id" } as const;
 const KEYED_BY_INGREDIENT = [
   { table: storeProductLinks, key: "store_id" },
   { table: aisleLinks, key: "store_id" },
-  { table: ingredientStorePreferences, key: "user_id" },
-  { table: ingredientNutritionCorrections, key: "user_id" },
+  { table: ingredientStorePreferences, key: "household_id" },
+  { table: ingredientNutritionCorrections, key: "household_id" },
   PANTRY_KEYED,
 ] as const;
 
@@ -60,20 +59,6 @@ async function repointKeyed(
     delete from ${table} p using ${table} q
     where ${which} and q.ingredient_id = ${targetId} and q.${column} = p.${column} and q.id <> p.id`);
   await tx.execute(sql`update ${table} p set ingredient_id = ${targetId} where ${which}`);
-}
-
-/**
- * A merge or move can leave a household two Pantry rows for `targetId` (one per member): the oldest
- * stays, under the add's `pantry:<ingredient>` lock.
- */
-async function keepOnePantryRowPerHousehold(tx: DbTransaction, targetId: string): Promise<void> {
-  await lockPantryFood(tx, targetId);
-  await tx.execute(sql`
-    delete from ${pantryIngredients} p
-    using ${pantryIngredients} q, ${householdUsers} hp, ${householdUsers} hq
-    where p.ingredient_id = ${targetId} and q.ingredient_id = ${targetId} and p.id <> q.id
-      and hp.user_id = p.user_id and hq.user_id = q.user_id and hp.household_id = hq.household_id
-      and (q.created_at, q.id) < (p.created_at, p.id)`);
 }
 
 /**
@@ -191,10 +176,11 @@ export async function mergeCatalogueIngredients(
     .where(eq(ingredients.parentId, sourceId));
   await moveMergedAIChanges(tx, sourceId, targetId);
 
+  // Under the add's `pantry:<ingredient>` lock, so a Pantry add of the target waits for the move.
+  await lockPantryFood(tx, targetId);
   for (const keyed of KEYED_BY_INGREDIENT) {
     await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);
   }
-  await keepOnePantryRowPerHousehold(tx, targetId);
   for (const table of [groceries, recurringGroceries]) {
     await tx.update(table).set({ ingredientId: targetId }).where(eq(table.ingredientId, sourceId));
   }
@@ -265,8 +251,8 @@ export async function moveCatalogueAlias(
     .update(ingredientAliases)
     .set({ ingredientId: targetId, updatedAt: new Date() })
     .where(eq(ingredientAliases.id, aliasId));
+  await lockPantryFood(tx, targetId);
   await repointKeyed(tx, PANTRY_KEYED, sql`p.ingredient_alias_id = ${aliasId}`, targetId);
-  await keepOnePantryRowPerHousehold(tx, targetId);
   for (const table of [groceries, recurringGroceries]) {
     await tx
       .update(table)
@@ -361,22 +347,23 @@ export async function splitCatalogueIngredient(
   }
 
   const keepers = await tx
-    .select({ userId: pantryIngredients.userId })
+    .select({ householdId: pantryIngredients.householdId, userId: pantryIngredients.userId })
     .from(pantryIngredients)
     .where(eq(pantryIngredients.ingredientId, sourceId));
 
   for (const part of keepers.length > 0 ? parts : []) {
+    await lockPantryFood(tx, part.ingredientId);
     await tx
       .insert(pantryIngredients)
       .values(
-        keepers.map(({ userId }) => ({
+        keepers.map(({ householdId, userId }) => ({
+          householdId,
           userId,
           ingredientId: part.ingredientId,
           ingredientAliasId: part.aliasId,
         }))
       )
       .onConflictDoNothing();
-    await keepOnePantryRowPerHousehold(tx, part.ingredientId);
   }
   await tx.delete(ingredients).where(eq(ingredients.id, sourceId));
 }

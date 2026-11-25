@@ -2,7 +2,7 @@ import type { Slot } from "./planned-item";
 
 export type PlannedItemFromQuery = {
   id: string;
-  userId: string;
+  userId: string | null;
   date: string;
   slot: Slot;
   sortOrder: number;

@@ -9,7 +9,7 @@ import { rateRecipe } from "@norish/db/repositories/ratings";
 import { deleteStore } from "@norish/db/repositories/stores";
 import { groceries, recipeFavorites, recipeRatings, stores } from "@norish/db/schema";
 
-import { getTestDb, householdIdOf } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("delayed-delivery repository safety", () => {
@@ -70,6 +70,7 @@ describe("delayed-delivery repository safety", () => {
     const [grocery] = await db
       .insert(groceries)
       .values({
+        householdId: testHouseholdOf(testUserId),
         userId: testUserId,
         name: "Milk",
         unit: "piece",
@@ -93,15 +94,32 @@ describe("delayed-delivery repository safety", () => {
     const db = getTestDb();
     const [store] = await db
       .insert(stores)
-      .values({ userId: testUserId, name: "Pantry", color: "primary" })
+      .values({
+        householdId: testHouseholdOf(testUserId),
+        userId: testUserId,
+        name: "Pantry",
+        color: "primary",
+      })
       .returning();
     const [snapshotted] = await db
       .insert(groceries)
-      .values({ userId: testUserId, storeId: store.id, name: "Bread", isDone: true })
+      .values({
+        householdId: testHouseholdOf(testUserId),
+        userId: testUserId,
+        storeId: store.id,
+        name: "Bread",
+        isDone: true,
+      })
       .returning();
     const [laterAdded] = await db
       .insert(groceries)
-      .values({ userId: testUserId, storeId: store.id, name: "Eggs", isDone: true })
+      .values({
+        householdId: testHouseholdOf(testUserId),
+        userId: testUserId,
+        storeId: store.id,
+        name: "Eggs",
+        isDone: true,
+      })
       .returning();
 
     const deletedIds = await deleteDoneInStore(await householdIdOf(testUserId), store.id, [
@@ -117,15 +135,32 @@ describe("delayed-delivery repository safety", () => {
     const db = getTestDb();
     const [store] = await db
       .insert(stores)
-      .values({ userId: testUserId, name: "Bakery", color: "primary" })
+      .values({
+        householdId: testHouseholdOf(testUserId),
+        userId: testUserId,
+        name: "Bakery",
+        color: "primary",
+      })
       .returning();
     const [snapshotted] = await db
       .insert(groceries)
-      .values({ userId: testUserId, storeId: store.id, name: "Flour", isDone: false })
+      .values({
+        householdId: testHouseholdOf(testUserId),
+        userId: testUserId,
+        storeId: store.id,
+        name: "Flour",
+        isDone: false,
+      })
       .returning();
     const [laterAdded] = await db
       .insert(groceries)
-      .values({ userId: testUserId, storeId: store.id, name: "Sugar", isDone: false })
+      .values({
+        householdId: testHouseholdOf(testUserId),
+        userId: testUserId,
+        storeId: store.id,
+        name: "Sugar",
+        isDone: false,
+      })
       .returning();
 
     const result = await deleteStore(store.id, store.version, true, [

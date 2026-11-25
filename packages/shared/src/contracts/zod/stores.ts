@@ -61,6 +61,7 @@ export const StoreAislesInputSchema = z.array(AisleInputSchema);
 // Store select schema: a Store travels with its Aisles, in order (ADR-0031).
 export const StoreSelectBaseSchema = createSelectSchema(stores)
   .omit({
+    householdId: true,
     createdAt: true,
     updatedAt: true,
   })
@@ -68,6 +69,7 @@ export const StoreSelectBaseSchema = createSelectSchema(stores)
 
 // Store insert schema (without userId - added server-side)
 export const StoreInsertBaseSchema = z.object({
+  householdId: z.uuid(),
   userId: z.string(),
   name: z.string().min(1, "Store name is required").max(100),
   color: StoreColorSchema.default("primary"),
@@ -182,6 +184,7 @@ export const IngredientStorePreferenceSelectSchema = createSelectSchema(
 });
 
 export const IngredientStorePreferenceInsertSchema = z.object({
+  householdId: z.uuid(),
   userId: z.string(),
   ingredientId: z.uuid(),
   storeId: z.uuid(),

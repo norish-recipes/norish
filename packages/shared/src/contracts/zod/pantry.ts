@@ -30,7 +30,7 @@ export const PantryIngredientNameSchema = z
  * Ingredient.
  */
 export const PantryIngredientSelectSchema = createSelectSchema(pantryIngredients)
-  .omit({ createdAt: true, updatedAt: true, ingredientAliasId: true })
+  .omit({ createdAt: true, updatedAt: true, ingredientAliasId: true, householdId: true })
   .extend({
     name: z.string(),
     /**

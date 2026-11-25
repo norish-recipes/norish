@@ -409,6 +409,7 @@ describe("the Library union", () => {
         .insert(pantryIngredients)
         .values([
           {
+            householdId: testHouseholdOf(ownerId),
             userId: ownerId,
             ingredientId: resolved[0]!.ingredientId,
             ingredientAliasId: resolved[0]!.aliasId,
@@ -511,6 +512,7 @@ describe("the Library union", () => {
       // A housemate keeps them: the Pantry is the household's.
       await db.insert(pantryIngredients).values(
         ["red onion", "olive oil", "garlic"].map((name) => ({
+          householdId: testHouseholdOf(ownerId),
           userId: housemate.id,
           ingredientId: food[name]!.ingredientId,
           ingredientAliasId: food[name]!.aliasId,

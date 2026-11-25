@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createGroceries } from "@norish/db/repositories/groceries";
 import { createStore, deleteStore, getStoreById } from "@norish/db/repositories/stores";
 
-import { householdIdOf } from "../../../helpers/db-test-helpers";
+import { householdIdOf, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("deleteStore with a grocery snapshot", () => {
@@ -25,7 +25,11 @@ describe("deleteStore with a grocery snapshot", () => {
   });
 
   it("deletes the Store once the snapshot has emptied it", async () => {
-    const store = await createStore(crypto.randomUUID(), { userId, name: "Markt" });
+    const store = await createStore(crypto.randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Markt",
+    });
     const groceryId = crypto.randomUUID();
 
     await createGroceries(
@@ -33,6 +37,7 @@ describe("deleteStore with a grocery snapshot", () => {
         {
           id: groceryId,
           groceries: {
+            householdId: testHouseholdOf(userId),
             userId,
             name: "melk",
             unit: null,
@@ -61,7 +66,11 @@ describe("deleteStore with a grocery snapshot", () => {
   });
 
   it("returns the lines it moved to Unsorted, at their new version", async () => {
-    const store = await createStore(crypto.randomUUID(), { userId, name: "Markt" });
+    const store = await createStore(crypto.randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Markt",
+    });
     const groceryId = crypto.randomUUID();
 
     await createGroceries(
@@ -69,6 +78,7 @@ describe("deleteStore with a grocery snapshot", () => {
         {
           id: groceryId,
           groceries: {
+            householdId: testHouseholdOf(userId),
             userId,
             name: "melk",
             unit: null,

@@ -8,6 +8,7 @@ import { RECURRENCE_RULES } from "@norish/shared/contracts/recurrence";
 export const RecurringGrocerySelectBaseSchema = createSelectSchema(recurringGroceries)
   .omit({
     ingredientAliasId: true,
+    householdId: true,
     userId: true,
     createdAt: true,
     updatedAt: true,

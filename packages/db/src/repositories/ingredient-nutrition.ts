@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 
 import type { NutritionCodes } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
@@ -15,7 +15,6 @@ import {
 } from "@norish/db/schema";
 
 import type { RecipeListContext } from "./recipes";
-import { householdMemberIdsSql } from "./household-members";
 import { isFirstLineFood } from "./ingredients";
 import { buildOwnerPolicyCondition } from "./recipes";
 
@@ -237,10 +236,7 @@ export interface NutritionCorrectionValues {
   density: number | null;
 }
 
-/**
- * The household's correction to each of these Ingredients: the most recent
- * any of its members made, whoever that was.
- */
+/** The household's correction to each of these Ingredients. */
 export async function findHouseholdCorrections(
   ingredientIds: readonly string[],
   householdId: string
@@ -253,26 +249,19 @@ export async function findHouseholdCorrections(
     .where(
       and(
         inArray(ingredientNutritionCorrections.ingredientId, [...new Set(ingredientIds)]),
-        inArray(ingredientNutritionCorrections.userId, householdMemberIdsSql(householdId))
+        eq(ingredientNutritionCorrections.householdId, householdId)
       )
-    )
-    .orderBy(
-      desc(ingredientNutritionCorrections.updatedAt),
-      desc(ingredientNutritionCorrections.id)
     );
-  const latest = new Map<string, NutritionCorrectionRow>();
 
-  for (const row of rows) if (!latest.has(row.ingredientId)) latest.set(row.ingredientId, row);
-
-  return latest;
+  return new Map(rows.map((row) => [row.ingredientId, row]));
 }
 
 /**
- * Write a member's correction to an Ingredient, replacing their own earlier
- * one: it becomes the household's, as the most recent. False where the
- * Ingredient is gone.
+ * Write a member's correction to an Ingredient, replacing the household's
+ * earlier one. False where the Ingredient is gone.
  */
 export async function saveNutritionCorrection(
+  householdId: string,
   userId: string,
   ingredientId: string,
   values: NutritionCorrectionValues
@@ -288,11 +277,15 @@ export async function saveNutritionCorrection(
 
   await db
     .insert(ingredientNutritionCorrections)
-    .values({ userId, ingredientId, ...values, updatedAt: now })
+    .values({ householdId, userId, ingredientId, ...values, updatedAt: now })
     .onConflictDoUpdate({
-      target: [ingredientNutritionCorrections.userId, ingredientNutritionCorrections.ingredientId],
+      target: [
+        ingredientNutritionCorrections.householdId,
+        ingredientNutritionCorrections.ingredientId,
+      ],
       set: {
         ...values,
+        userId,
         updatedAt: now,
         version: sql`${ingredientNutritionCorrections.version} + 1`,
       },
@@ -302,8 +295,8 @@ export async function saveNutritionCorrection(
 }
 
 /**
- * Remove a household's correction to an Ingredient, every member's, so the
- * sources' numbers are back for all of them. How many rows went.
+ * Remove a household's correction to an Ingredient, so the sources' numbers
+ * are back for all of it. How many rows went.
  */
 export async function removeHouseholdCorrections(
   ingredientId: string,
@@ -314,7 +307,7 @@ export async function removeHouseholdCorrections(
     .where(
       and(
         eq(ingredientNutritionCorrections.ingredientId, ingredientId),
-        inArray(ingredientNutritionCorrections.userId, householdMemberIdsSql(householdId))
+        eq(ingredientNutritionCorrections.householdId, householdId)
       )
     )
     .returning({ id: ingredientNutritionCorrections.id });

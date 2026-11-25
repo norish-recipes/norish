@@ -15,7 +15,7 @@ import {
   moveItem,
 } from "@norish/db/repositories/planned-items";
 
-import { createTestUser } from "../helpers/db-test-helpers";
+import { createTestUser, testHouseholdOf } from "../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("planned_item_edit");
@@ -32,14 +32,20 @@ beforeEach(async () => {
 });
 
 async function plan(slot: Slot, title: string, day = date) {
-  return createPlannedItem({ userId, date: day, slot, itemType: "note", title });
+  return createPlannedItem({
+    householdId: testHouseholdOf(userId),
+    userId,
+    date: day,
+    slot,
+    itemType: "note",
+    title,
+  });
 }
 
 async function titlesIn(day: string, slot: Slot) {
-  return (await listPlannedItemsBySlot([userId], day, slot)).map(({ title, sortOrder }) => [
-    title,
-    sortOrder,
-  ]);
+  return (await listPlannedItemsBySlot(testHouseholdOf(userId), day, slot)).map(
+    ({ title, sortOrder }) => [title, sortOrder]
+  );
 }
 
 describe("editPlannedItem", () => {

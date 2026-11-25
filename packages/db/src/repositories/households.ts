@@ -261,27 +261,39 @@ export async function moveToHouseholdOfOne(
   });
 }
 
-/** What a household of one holds under its member's id, which joining cannot merge yet. */
+/** What a household of one holds, under its member's id or its own, which joining cannot merge yet. */
 const HELD_BY_MEMBER: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
   [recipes, recipes.userId],
   [cookbooks, cookbooks.userId],
-  [stores, stores.userId],
-  [ingredientStorePreferences, ingredientStorePreferences.userId],
-  [groceries, groceries.userId],
-  [recurringGroceries, recurringGroceries.userId],
-  [pantryIngredients, pantryIngredients.userId],
-  [plannedItems, plannedItems.userId],
-  [ingredientNutritionCorrections, ingredientNutritionCorrections.userId],
   [ingredients, ingredients.ownerId],
   [ingredientAliases, ingredientAliases.ownerId],
 ];
 
-async function holdsAnything(tx: DbTransaction, userId: string): Promise<boolean> {
-  for (const [table, owner] of HELD_BY_MEMBER) {
+const HELD_BY_HOUSEHOLD: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
+  [stores, stores.householdId],
+  [ingredientStorePreferences, ingredientStorePreferences.householdId],
+  [groceries, groceries.householdId],
+  [recurringGroceries, recurringGroceries.householdId],
+  [pantryIngredients, pantryIngredients.householdId],
+  [plannedItems, plannedItems.householdId],
+  [ingredientNutritionCorrections, ingredientNutritionCorrections.householdId],
+];
+
+async function holdsAnything(
+  tx: DbTransaction,
+  userId: string,
+  householdId: string
+): Promise<boolean> {
+  const held = [
+    ...HELD_BY_MEMBER.map(([table, column]) => [table, eq(column, userId)] as const),
+    ...HELD_BY_HOUSEHOLD.map(([table, column]) => [table, eq(column, householdId)] as const),
+  ];
+
+  for (const [table, where] of held) {
     const rows = await tx
       .select({ one: sql`1` })
       .from(table)
-      .where(eq(owner, userId))
+      .where(where)
       .limit(1);
 
     if (rows.length > 0) return true;
@@ -337,7 +349,7 @@ export async function joinHousehold(
     // Every move of this account locks its household first, so this read is now stable.
     if ((await householdIdIn(tx, userId)) !== current) return MOVED;
     if ((await memberIdsIn(tx, current)).length > 1) return { refused: "shared" };
-    if (await holdsAnything(tx, userId)) return { refused: "holds-things" };
+    if (await holdsAnything(tx, userId, current)) return { refused: "holds-things" };
 
     const memberIds = await memberIdsIn(tx, householdId);
 

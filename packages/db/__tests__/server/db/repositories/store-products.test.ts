@@ -23,7 +23,7 @@ import { deleteStore } from "@norish/db/repositories/stores";
 import { groceries, storeProductLinks, storeProducts, stores } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const PAGE = "https://www.dirk.nl/boodschappen/zuivel-kaas/kaas-stuk/oude-kaas/97752";
@@ -45,7 +45,12 @@ describe("store products, product links and misses", () => {
     userId = user.id;
     const [store] = await getTestDb()
       .insert(stores)
-      .values({ userId, name: "Dirk", website: "https://www.dirk.nl" })
+      .values({
+        householdId: testHouseholdOf(userId),
+        userId,
+        name: "Dirk",
+        website: "https://www.dirk.nl",
+      })
       .returning();
 
     storeId = store!.id;
@@ -601,7 +606,7 @@ describe("store products, product links and misses", () => {
       await upsertProductLink(storeId, await ingredient("kaas"), product.id);
       const [grocery] = await getTestDb()
         .insert(groceries)
-        .values({ userId, storeId, name: "Kaas" })
+        .values({ householdId: testHouseholdOf(userId), userId, storeId, name: "Kaas" })
         .returning();
 
       await getTestDb().delete(groceries).where(eq(groceries.id, grocery!.id));

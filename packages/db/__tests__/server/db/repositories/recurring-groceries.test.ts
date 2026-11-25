@@ -14,7 +14,7 @@ import {
 } from "@norish/db/repositories/recurring-groceries";
 import { groceries, recurringGroceries, stores } from "@norish/db/schema";
 
-import { getTestDb, householdIdOf } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("recurring groceries transactional writes", () => {
@@ -43,6 +43,7 @@ describe("recurring groceries transactional writes", () => {
     return {
       recurring: {
         id,
+        householdId: testHouseholdOf(testUserId),
         userId: testUserId,
         name,
         amount: 1,
@@ -56,6 +57,7 @@ describe("recurring groceries transactional writes", () => {
       grocery: {
         id: crypto.randomUUID(),
         groceries: {
+          householdId: testHouseholdOf(testUserId),
           userId: testUserId,
           name,
           unit: "liter",
@@ -292,7 +294,12 @@ describe("recurring groceries transactional writes", () => {
       const db = getTestDb();
       const [store] = await db
         .insert(stores)
-        .values({ userId: testUserId, name: "Bakery", color: "primary" })
+        .values({
+          householdId: testHouseholdOf(testUserId),
+          userId: testUserId,
+          name: "Bakery",
+          color: "primary",
+        })
         .returning();
 
       const outcome = await updateRecurringGroceryWithGrocery(
@@ -334,6 +341,7 @@ describe("recurring groceries transactional writes", () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
       const outcome = await checkRecurringGrocery({
+        householdId: testHouseholdOf(testUserId),
         groceryId: grocery.id,
         groceryVersion: grocery.version,
         isDone: true,
@@ -362,6 +370,7 @@ describe("recurring groceries transactional writes", () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
       const outcome = await checkRecurringGrocery({
+        householdId: testHouseholdOf(testUserId),
         groceryId: grocery.id,
         groceryVersion: grocery.version,
         isDone: true,
@@ -391,6 +400,7 @@ describe("recurring groceries transactional writes", () => {
       const { grocery } = await createRecurringWithGrocery();
 
       const outcome = await checkRecurringGrocery({
+        householdId: testHouseholdOf(testUserId),
         groceryId: grocery.id,
         groceryVersion: grocery.version,
         isDone: false,

@@ -256,10 +256,25 @@ describe("ingredient uses", () => {
     await createTestRecipeIngredients(recipeId, chickenId, "metric");
     await createTestRecipeIngredients(recipeId, chickenId, "metric", { order: "1" });
     await db.insert(schema.groceries).values([
-      { userId: me.id, name: "kipfilet met de hand", ingredientAliasId: hand!.id, isDone: true },
-      { userId: neighbour!.id, name: "kipfilet", ingredientId: chickenId },
+      {
+        householdId: testHouseholdOf(me.id),
+        userId: me.id,
+        name: "kipfilet met de hand",
+        ingredientAliasId: hand!.id,
+        isDone: true,
+      },
+      {
+        householdId: testHouseholdOf(neighbour!.id),
+        userId: neighbour!.id,
+        name: "kipfilet",
+        ingredientId: chickenId,
+      },
     ]);
-    await db.insert(schema.pantryIngredients).values({ userId: me.id, ingredientId: chickenId });
+    await db.insert(schema.pantryIngredients).values({
+      householdId: testHouseholdOf(me.id),
+      userId: me.id,
+      ingredientId: chickenId,
+    });
   });
 
   afterAll(async () => {
@@ -305,6 +320,7 @@ describe("ingredient uses", () => {
     const [recurring] = await db
       .insert(schema.recurringGroceries)
       .values({
+        householdId: testHouseholdOf(me.id),
         userId: me.id,
         name: "kipfilet",
         ingredientId: chickenId,
@@ -314,6 +330,7 @@ describe("ingredient uses", () => {
       .returning({ id: schema.recurringGroceries.id });
 
     await db.insert(schema.groceries).values({
+      householdId: testHouseholdOf(me.id),
       userId: me.id,
       name: "kipfilet",
       ingredientId: chickenId,

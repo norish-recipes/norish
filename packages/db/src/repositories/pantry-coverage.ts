@@ -1,16 +1,13 @@
 import type { SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
-import { householdMemberIdsSql } from "./household-members";
-
 /**
- * `covered(ingredient_id, depth)`: every food the members' Pantry covers, the
- * kept Ingredients and each food they are a kind of. Goes after `with recursive`;
- * `members` is a parenthesised id list or a subquery.
+ * `covered(ingredient_id, depth)`: every food the household's Pantry covers, the
+ * kept Ingredients and each food they are a kind of. Goes after `with recursive`.
  */
-export function coveredCte(members: SQL): SQL {
+export function coveredCte(householdId: string): SQL {
   return sql`covered(ingredient_id, depth) as (
-      select p.ingredient_id, 0 from pantry_ingredients p where p.user_id in ${members}
+      select p.ingredient_id, 0 from pantry_ingredients p where p.household_id = ${householdId}
       union
       select i.parent_id, c.depth + 1 from covered c
       join ingredients i on i.id = c.ingredient_id
@@ -25,7 +22,7 @@ export function coveredCte(members: SQL): SQL {
  * any other line by all.
  */
 export function pantryCoverageSql(householdId: string): SQL<number | null> {
-  const covered = sql`(with recursive ${coveredCte(sql`${householdMemberIdsSql(householdId)}`)} select ingredient_id from covered)`;
+  const covered = sql`(with recursive ${coveredCte(householdId)} select ingredient_id from covered)`;
 
   return sql<number | null>`(
     SELECT avg(CASE WHEN line_covered THEN 1 ELSE 0 END)::real FROM (

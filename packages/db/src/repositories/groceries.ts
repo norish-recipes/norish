@@ -8,7 +8,7 @@ import type {
   GroceryUpdateDto,
 } from "@norish/shared/contracts/dto/groceries";
 import { db, holdLock } from "@norish/db/drizzle";
-import { groceries, householdUsers, recipeIngredients, recipes } from "@norish/db/schema";
+import { groceries, recipeIngredients, recipes, recurringGroceries } from "@norish/db/schema";
 import {
   GroceryInsertBaseSchema,
   GrocerySelectBaseSchema,
@@ -16,7 +16,6 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import type { IngredientRef } from "./ingredient-aliases";
-import { householdMemberIdsSql } from "./household-members";
 
 export async function getGroceryById(id: string): Promise<GroceryDto | null> {
   const [row] = await db.select().from(groceries).where(eq(groceries.id, id)).limit(1);
@@ -54,21 +53,26 @@ export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
   return parsed.data;
 }
 
-/** Groceries' texts and the food each names, by id; one naming no food has none (ADR-0037). */
+/**
+ * Groceries' (or recurring groceries') texts and the food each names, by id; one naming no
+ * food has none (ADR-0037).
+ */
 export async function findGroceryFoods(
-  ids: readonly string[]
+  ids: readonly string[],
+  kind: "groceries" | "recurring" = "groceries"
 ): Promise<Map<string, { name: string | null; food: IngredientRef | null }>> {
   if (ids.length === 0) return new Map();
+  const table = kind === "groceries" ? groceries : recurringGroceries;
 
   const rows = await db
     .select({
-      id: groceries.id,
-      name: groceries.name,
-      aliasId: groceries.ingredientAliasId,
-      ingredientId: groceries.ingredientId,
+      id: table.id,
+      name: table.name,
+      aliasId: table.ingredientAliasId,
+      ingredientId: table.ingredientId,
     })
-    .from(groceries)
-    .where(inArray(groceries.id, [...new Set(ids)]));
+    .from(table)
+    .where(inArray(table.id, [...new Set(ids)]));
 
   return new Map(
     rows.map(({ id, name, aliasId, ingredientId }) => [
@@ -86,67 +90,20 @@ const LIST_ORDER = [
   asc(groceries.id),
 ];
 
-export async function listGroceriesByUser(
-  userId: string,
-  options?: { includeDone?: boolean }
-): Promise<GroceryDto[]> {
-  const includeDone = options?.includeDone ?? true;
-
-  const rows = await db
-    .select()
-    .from(groceries)
-    .where(
-      includeDone
-        ? eq(groceries.userId, userId)
-        : and(eq(groceries.userId, userId), eq(groceries.isDone, false))
-    )
-    .orderBy(...LIST_ORDER);
-
-  const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse groceries");
-
-  return parsed.data;
-}
-
-export async function listGroceriesByUsers(
-  userIds: string[],
-  options?: { includeDone?: boolean }
-): Promise<GroceryDto[]> {
-  if (!userIds.length) return [];
-  const includeDone = options?.includeDone ?? true;
-
-  const rows = await db
-    .select()
-    .from(groceries)
-    .where(
-      includeDone
-        ? inArray(groceries.userId, userIds)
-        : and(inArray(groceries.userId, userIds), eq(groceries.isDone, false))
-    )
-    .orderBy(...LIST_ORDER);
-
-  const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse groceries (users)");
-
-  return parsed.data;
-}
-
 export async function listGroceriesByHousehold(
   householdId: string,
   options?: { includeDone?: boolean }
 ): Promise<GroceryDto[]> {
-  const members = await db
-    .select({ userId: householdUsers.userId })
-    .from(householdUsers)
-    .where(eq(householdUsers.householdId, householdId));
+  const includeDone = options?.includeDone ?? true;
+  const household = eq(groceries.householdId, householdId);
 
-  const userIds = members.map((m) => m.userId);
+  const rows = await db
+    .select()
+    .from(groceries)
+    .where(includeDone ? household : and(household, eq(groceries.isDone, false)))
+    .orderBy(...LIST_ORDER);
 
-  if (!userIds.length) return [];
-
-  return listGroceriesByUsers(userIds, options);
+  return parseRows(rows, "groceries");
 }
 
 /**
@@ -220,7 +177,7 @@ export async function createGroceries(
         })
         .where(
           and(
-            inArray(groceries.userId, householdMemberIdsSql(householdId)),
+            eq(groceries.householdId, householdId),
             eq(groceries.isDone, false),
             storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId)
           )
@@ -392,32 +349,16 @@ export async function deleteDoneGroceriesBefore(beforeDate: string): Promise<num
   return result.rowCount ?? 0;
 }
 
-/**
- * Get the owner userId for a single grocery item (for permission checks)
- */
-export async function getGroceryOwnerId(groceryId: string): Promise<string | null> {
-  const [row] = await db
-    .select({ userId: groceries.userId })
-    .from(groceries)
-    .where(eq(groceries.id, groceryId))
-    .limit(1);
-
-  return row?.userId ?? null;
-}
-
-/**
- * Get the owner userIds for multiple grocery items (for permission checks)
- * Returns a Map of groceryId -> userId
- */
-export async function getGroceryOwnerIds(groceryIds: string[]): Promise<Map<string, string>> {
+/** The household each grocery belongs to, by id, for the household guard. */
+export async function getGroceryHouseholdIds(groceryIds: string[]): Promise<Map<string, string>> {
   if (groceryIds.length === 0) return new Map();
 
   const rows = await db
-    .select({ id: groceries.id, userId: groceries.userId })
+    .select({ id: groceries.id, householdId: groceries.householdId })
     .from(groceries)
     .where(inArray(groceries.id, groceryIds));
 
-  return new Map(rows.map((r) => [r.id, r.userId]));
+  return new Map(rows.map((r) => [r.id, r.householdId]));
 }
 
 /**
@@ -484,7 +425,7 @@ export async function markAllDoneInStore(
 
     if (!groceriesToMark) {
       const whereConditions = [
-        inArray(groceries.userId, householdMemberIdsSql(householdId)),
+        eq(groceries.householdId, householdId),
         eq(groceries.isDone, false),
         storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
       ];
@@ -502,7 +443,7 @@ export async function markAllDoneInStore(
 
     for (const grocery of groceriesToMark) {
       const whereConditions = [
-        inArray(groceries.userId, householdMemberIdsSql(householdId)),
+        eq(groceries.householdId, householdId),
         eq(groceries.id, grocery.id),
         eq(groceries.version, grocery.version),
         eq(groceries.isDone, false),
@@ -540,7 +481,7 @@ export async function deleteDoneInStore(
 
     if (!groceriesToDelete) {
       const whereConditions = [
-        inArray(groceries.userId, householdMemberIdsSql(householdId)),
+        eq(groceries.householdId, householdId),
         eq(groceries.isDone, true),
         storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
       ];
@@ -557,7 +498,7 @@ export async function deleteDoneInStore(
 
     for (const grocery of groceriesToDelete) {
       const whereConditions = [
-        inArray(groceries.userId, householdMemberIdsSql(householdId)),
+        eq(groceries.householdId, householdId),
         eq(groceries.id, grocery.id),
         eq(groceries.version, grocery.version),
         eq(groceries.isDone, true),

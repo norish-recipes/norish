@@ -13,14 +13,14 @@ import {
   createStore,
   deleteStore,
   getStoreById,
-  listStoresByUserIds,
+  listStoresByHousehold,
   reorderStores,
   updateStore,
 } from "@norish/db/repositories/stores";
 import { aisleLinks, aisles, stores } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const ZUIVEL = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -42,7 +42,11 @@ describe("aisles and aisle links", () => {
 
     userId = user.id;
     // A plain Store, with no shop behind it: aisles need none.
-    const store = await createStore(crypto.randomUUID(), { userId, name: "Markt" });
+    const store = await createStore(crypto.randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Markt",
+    });
 
     storeId = store.id;
   });
@@ -56,7 +60,7 @@ describe("aisles and aisle links", () => {
   describe("a Store keeps one aisle list, in order", () => {
     it("is created with no aisles, and reads as such everywhere", async () => {
       await expect(getStoreById(storeId)).resolves.toMatchObject({ aisles: [] });
-      const [store] = await listStoresByUserIds([userId]);
+      const [store] = await listStoresByHousehold(testHouseholdOf(userId));
 
       expect(store?.aisles).toEqual([]);
     });
@@ -79,7 +83,7 @@ describe("aisles and aisle links", () => {
       await expect(getStoreById(storeId)).resolves.toMatchObject({
         aisles: [{ name: "Groente" }, { name: "Zuivel" }, { name: "Brood" }],
       });
-      const [listed] = await listStoresByUserIds([userId]);
+      const [listed] = await listStoresByHousehold(testHouseholdOf(userId));
 
       expect(names(listed!.aisles)).toEqual(["Groente", "Zuivel", "Brood"]);
     });
@@ -217,6 +221,7 @@ describe("aisles and aisle links", () => {
 
     it("is created with its aisles in one go", async () => {
       const store = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
         userId,
         name: "Dirk",
         aisles: [
@@ -235,19 +240,29 @@ describe("aisles and aisle links", () => {
       await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
-      const [reordered] = await reorderStores([{ id: storeId, version: store!.version }]);
+      const [reordered] = await reorderStores(
+        [{ id: storeId, version: store!.version }],
+        testHouseholdOf(userId)
+      );
 
       expect(names(reordered!.aisles)).toEqual(["Zuivel"]);
     });
 
     it("renumbers the Stores a reorder is given and leaves their versions alone", async () => {
-      const other = await createStore(crypto.randomUUID(), { userId, name: "Dirk" });
+      const other = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
+        userId,
+        name: "Dirk",
+      });
       const [markt] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
-      const first = await reorderStores([
-        { id: other.id, version: other.version },
-        { id: storeId, version: markt!.version },
-      ]);
+      const first = await reorderStores(
+        [
+          { id: other.id, version: other.version },
+          { id: storeId, version: markt!.version },
+        ],
+        testHouseholdOf(userId)
+      );
 
       expect(first.map((store) => [store.id, store.sortOrder, store.version])).toEqual([
         [other.id, 0, other.version],
@@ -255,15 +270,18 @@ describe("aisles and aisle links", () => {
       ]);
 
       // A second reorder from the same held versions lands too.
-      const second = await reorderStores([
-        { id: storeId, version: markt!.version },
-        { id: other.id, version: other.version },
-      ]);
+      const second = await reorderStores(
+        [
+          { id: storeId, version: markt!.version },
+          { id: other.id, version: other.version },
+        ],
+        testHouseholdOf(userId)
+      );
 
       expect(second.map((store) => store.sortOrder)).toEqual([0, 1]);
-      await expect(reorderStores([{ id: storeId, version: markt!.version + 5 }])).resolves.toEqual(
-        []
-      );
+      await expect(
+        reorderStores([{ id: storeId, version: markt!.version + 5 }], testHouseholdOf(userId))
+      ).resolves.toEqual([]);
     });
 
     it("refuses two aisles whose names differ only in case", async () => {
@@ -276,6 +294,7 @@ describe("aisles and aisle links", () => {
 
     it("never touches another Store's aisle, whatever id it is handed", async () => {
       const other = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
         userId,
         name: "Jumbo",
         aisles: [{ id: ZUIVEL, name: "Zuivel" }],
@@ -353,6 +372,7 @@ describe("aisles and aisle links", () => {
 
     it("reads the links of a household's Stores in one query", async () => {
       const other = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
         userId,
         name: "Jumbo",
         aisles: [{ id: GROENTE, name: "Groente" }],

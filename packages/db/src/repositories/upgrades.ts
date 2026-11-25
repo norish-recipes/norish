@@ -134,7 +134,7 @@ export async function listRecurringGroceriesWithoutFood(
 
 /** Pantry Ingredients from before 0.25, with their old Ingredient's name. */
 export async function listPantryIngredientsWithoutSpelling(): Promise<
-  Array<{ id: string; name: string; ownerId: string }>
+  Array<{ id: string; name: string; ownerId: string | null }>
 > {
   return await db
     .select({ id: pantryIngredients.id, name: ingredients.name, ownerId: pantryIngredients.userId })
@@ -144,13 +144,13 @@ export async function listPantryIngredientsWithoutSpelling(): Promise<
 }
 
 /**
- * Point a Pantry Ingredient at its food. A member holding that food already held it twice, as two
- * names that fold alike, so the second row goes.
+ * Point a Pantry Ingredient at its food. A household holding that food already held it twice, as
+ * two names that fold alike, so the second row goes.
  */
 export async function setPantryIngredientFood(id: string, food: IngredientRef): Promise<void> {
   await db.transaction(async (tx) => {
     const [row] = await tx
-      .select({ userId: pantryIngredients.userId })
+      .select({ householdId: pantryIngredients.householdId })
       .from(pantryIngredients)
       .where(and(eq(pantryIngredients.id, id), isNull(pantryIngredients.ingredientAliasId)));
 
@@ -161,7 +161,7 @@ export async function setPantryIngredientFood(id: string, food: IngredientRef): 
       .from(pantryIngredients)
       .where(
         and(
-          eq(pantryIngredients.userId, row.userId),
+          eq(pantryIngredients.householdId, row.householdId),
           eq(pantryIngredients.ingredientId, food.ingredientId),
           sql`${pantryIngredients.id} <> ${id}`
         )
@@ -204,8 +204,10 @@ export interface ParkedLink {
   id: string;
   kind: "aisle" | "product" | "preference";
   link: ParkedLinkRow;
-  /** The member it belongs to: a preference's, or its Store's owner; null where the Store went. */
+  /** The member it belongs to: a preference's, or its Store's adder; null where the Store went. */
   ownerId: string | null;
+  /** Its Store's household; null where the Store went. */
+  householdId: string | null;
 }
 
 /** The parked links, newest first: the newest wins where two land on one food. */
@@ -216,6 +218,7 @@ export async function listParkedLinks(): Promise<ParkedLink[]> {
       kind: parkedNameKeyedLinks.kind,
       link: parkedNameKeyedLinks.link,
       storeOwnerId: stores.userId,
+      householdId: stores.householdId,
     })
     .from(parkedNameKeyedLinks)
     .leftJoin(stores, sql`${stores.id} = (${parkedNameKeyedLinks.link}->>'store_id')::uuid`)
@@ -267,10 +270,10 @@ export async function unparkLink(
         })
         .onConflictDoNothing()
         .returning({ id: storeProductLinks.id });
-    } else if (kind === "preference" && link.user_id) {
+    } else if (kind === "preference" && link.user_id && parked.householdId) {
       put = await tx
         .insert(ingredientStorePreferences)
-        .values({ ...row, userId: link.user_id })
+        .values({ ...row, householdId: parked.householdId, userId: link.user_id })
         .onConflictDoNothing()
         .returning({ id: ingredientStorePreferences.id });
     }

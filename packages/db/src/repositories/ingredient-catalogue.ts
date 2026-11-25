@@ -35,7 +35,6 @@ import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { RecipeListContext } from "./recipes";
-import { householdMemberIdsSql } from "./household-members";
 import { buildOwnerPolicyCondition } from "./recipes";
 
 /**
@@ -695,8 +694,8 @@ export async function listIngredientUses(
   ingredientId: string
 ): Promise<IngredientUses> {
   const naming = rowsNaming(ingredientId);
-  const household = (userId: AnyPgColumn) =>
-    sql<boolean>`${inArray(userId, householdMemberIdsSql(viewer.householdId))}`;
+  const household = (householdId: AnyPgColumn) =>
+    sql<boolean>`${eq(householdId, viewer.householdId)}`;
   const openable = (await buildOwnerPolicyCondition(viewer, recipes.userId, "view")) ?? sql`true`;
 
   const [lines, groceryRows, recurringRows, pantryRows] = await Promise.all([
@@ -719,7 +718,7 @@ export async function listIngredientUses(
         id: groceries.id,
         name: groceries.name,
         done: groceries.isDone,
-        visible: household(groceries.userId),
+        visible: household(groceries.householdId),
       })
       .from(groceries)
       // A repeating grocery's copy on the list is listed and counted once, as the repeat.
@@ -729,12 +728,12 @@ export async function listIngredientUses(
       .select({
         id: recurringGroceries.id,
         name: recurringGroceries.name,
-        visible: household(recurringGroceries.userId),
+        visible: household(recurringGroceries.householdId),
       })
       .from(recurringGroceries)
       .where(naming.recurringGroceries),
     db
-      .select({ visible: household(pantryIngredients.userId) })
+      .select({ visible: household(pantryIngredients.householdId) })
       .from(pantryIngredients)
       .where(naming.pantry),
   ]);

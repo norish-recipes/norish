@@ -12,8 +12,7 @@ import {
   createGroceries,
   deleteGroceryByIds,
   findNewestGroceryNamed,
-  listGroceriesByUser,
-  listGroceriesByUsers,
+  listGroceriesByHousehold,
   lockGroceryList,
   markAllDoneInStore,
   reorderGroceriesInStore,
@@ -22,7 +21,7 @@ import {
 import { createStore } from "@norish/db/repositories/stores";
 import { groceries } from "@norish/db/schema";
 
-import { getTestDb, householdIdOf } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("what a create shifts", () => {
@@ -41,7 +40,13 @@ describe("what a create shifts", () => {
 
     userId = user.id;
     householdId = await householdIdOf(userId);
-    storeId = (await createStore(crypto.randomUUID(), { userId, name: "Markt" })).id;
+    storeId = (
+      await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
+        userId,
+        name: "Markt",
+      })
+    ).id;
   });
 
   afterAll(async () => {
@@ -51,6 +56,7 @@ describe("what a create shifts", () => {
   const line = (name: string, overrides: Partial<typeof groceries.$inferInsert> = {}) => ({
     id: crypto.randomUUID(),
     groceries: {
+      householdId: testHouseholdOf(userId),
       userId,
       name,
       unit: null,
@@ -112,7 +118,11 @@ describe("what a create shifts", () => {
   });
 
   it("leaves a done sibling, and a sibling in another Store, alone", async () => {
-    const other = await createStore(crypto.randomUUID(), { userId, name: "Bakker" });
+    const other = await createStore(crypto.randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Bakker",
+    });
     const done = await createGroceries([line("klaar", { isDone: true })], householdId);
     const elsewhere = await createGroceries([line("brood", { storeId: other.id })], householdId);
 
@@ -194,7 +204,10 @@ describe("what a create shifts", () => {
       const held = new Promise<void>((resolve) => (release = resolve));
 
       // Two connections idle first, so the writer below waits on a lock, not on a connection.
-      await Promise.all([listGroceriesByUsers([userId]), listGroceriesByUsers([userId])]);
+      await Promise.all([
+        listGroceriesByHousehold(householdId),
+        listGroceriesByHousehold(householdId),
+      ]);
 
       // A rename that adds another food: it locks its row, then moves the list.
       const edit = withTransaction(async (tx) => {
@@ -253,6 +266,7 @@ describe("findNewestGroceryNamed", () => {
         {
           id,
           groceries: {
+            householdId: testHouseholdOf(userId),
             userId,
             name,
             unit: null,
@@ -305,6 +319,7 @@ describe("the order a list comes back in", () => {
         {
           id,
           groceries: {
+            householdId: testHouseholdOf(userId),
             userId,
             name,
             unit: null,
@@ -322,18 +337,15 @@ describe("the order a list comes back in", () => {
   it("breaks a sortOrder tie by Store, no Store first, then by id", async () => {
     const [first, second] = [uuid(1), uuid(2)];
 
-    await createStore(second, { userId, name: "Bakker" });
-    await createStore(first, { userId, name: "Markt" });
+    await createStore(second, { householdId: testHouseholdOf(userId), userId, name: "Bakker" });
+    await createStore(first, { householdId: testHouseholdOf(userId), userId, name: "Markt" });
     // Every one lands at sortOrder 0, added against the expected order.
     await add(uuid(14), "brood", second);
     await add(uuid(13), "kaas", first, true);
     await add(uuid(12), "appel", first);
     await add(uuid(11), "melk", null);
 
-    for (const listed of [
-      await listGroceriesByUser(userId),
-      await listGroceriesByUsers([userId]),
-    ]) {
+    for (const listed of [await listGroceriesByHousehold(householdId)]) {
       expect(listed.map(({ name, sortOrder }) => [name, sortOrder])).toEqual([
         ["melk", 0],
         ["appel", 0],

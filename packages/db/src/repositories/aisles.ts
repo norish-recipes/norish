@@ -158,21 +158,18 @@ export async function listAisleLinksByStoreIds(storeIds: string[]): Promise<Aisl
  */
 export async function listInheritedAisleLinks(
   storeIds: string[],
-  userIds: string[]
+  householdId: string
 ): Promise<AisleLinkDto[]> {
-  if (storeIds.length === 0 || userIds.length === 0) return [];
+  if (storeIds.length === 0) return [];
 
   const stores = uuidListSql(storeIds);
-  const users = sql.join(
-    userIds.map((id) => sql`${id}`),
-    sql`, `
-  );
   const result = await db.execute<{ storeId: string; ingredientId: string; aisleId: string }>(sql`
     with recursive listed as (
-      select ingredient_id from groceries where user_id in (${users}) and ingredient_id is not null
+      select ingredient_id from groceries
+        where household_id = ${householdId} and ingredient_id is not null
       union
       select ingredient_id from recurring_groceries
-        where user_id in (${users}) and ingredient_id is not null
+        where household_id = ${householdId} and ingredient_id is not null
     ),
     up(start, ancestor, depth) as (
       select i.id, i.parent_id, 1 from ingredients i
