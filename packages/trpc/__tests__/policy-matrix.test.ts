@@ -111,36 +111,42 @@ async function outcome(run: () => Promise<unknown>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Only the row under test exists: a call with any other id finds nothing.
   repos.getRecipeHouseholdIds.mockImplementation(
-    async (ids: string[]) => new Map(ids.map((id) => [id, ROW_HOUSEHOLD]))
+    async (ids: string[]) =>
+      new Map(ids.filter((id) => id === RECIPE).map((id) => [id, ROW_HOUSEHOLD]))
   );
-  repos.getRecipeFull.mockResolvedValue(
-    createMockFullRecipe({
-      id: RECIPE,
-      userId: "owner",
-      householdId: ROW_HOUSEHOLD,
-      notes: "",
-      version: 1,
-      tags: [],
-      recipeIngredients: [],
-      steps: [],
-      author: undefined,
-    })
-  );
+  const recipe = createMockFullRecipe({
+    id: RECIPE,
+    userId: "owner",
+    householdId: ROW_HOUSEHOLD,
+    notes: "",
+    version: 1,
+    tags: [],
+    recipeIngredients: [],
+    steps: [],
+    author: undefined,
+  });
+
+  repos.getRecipeFull.mockImplementation(async (id: string) => (id === RECIPE ? recipe : null));
   repos.deleteRecipesByIds.mockImplementation(async (items: Array<{ id: string }>) => ({
     deletedIds: items.map((item) => item.id),
     staleIds: [],
   }));
-  repos.getCookbookRow.mockResolvedValue({
-    id: COOKBOOK,
-    userId: "owner",
-    householdId: ROW_HOUSEHOLD,
-    title: "Weeknights",
-    image: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    version: 1,
-  });
+  repos.getCookbookRow.mockImplementation(async (id: string) =>
+    id !== COOKBOOK
+      ? null
+      : {
+          id: COOKBOOK,
+          userId: "owner",
+          householdId: ROW_HOUSEHOLD,
+          title: "Weeknights",
+          image: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          version: 1,
+        }
+  );
   repos.updateCookbook.mockResolvedValue({ stale: false, value: null });
   repos.deleteCookbookById.mockResolvedValue({ stale: false, value: undefined });
 });
