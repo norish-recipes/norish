@@ -79,10 +79,10 @@ const create = authedProcedure
     const cookbook = { ...created, memberCount: recipeIds.length };
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook created");
-    await emitCookbookEvent(ctx, "created", { cookbook });
+    await emitCookbookEvent(cookbook.householdId, "created", { cookbook });
 
     if (recipeIds.length > 0) {
-      await emitCookbookEvent(ctx, "membershipChanged", {
+      await emitCookbookEvent(cookbook.householdId, "membershipChanged", {
         cookbookId: cookbook.id,
         recipeIds,
         isMember: true,
@@ -122,13 +122,13 @@ const update = authedProcedure
     if (input.image !== undefined) await sweepCookbookImages(cookbook.id, input.image);
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook updated");
-    await emitCookbookEvent(ctx, "updated", { cookbook });
+    await emitCookbookEvent(cookbook.householdId, "updated", { cookbook });
 
     return cookbook;
   });
 
 const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async ({ ctx, input }) => {
-  await assertCookbookAccess(ctx, input.id, "delete");
+  const { householdId } = await assertCookbookAccess(ctx, input.id, "delete");
 
   const outcome = await deleteCookbookById(input.id, input.version);
 
@@ -145,7 +145,7 @@ const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async (
   // go with it, through the join table's cascade.
   await sweepCookbookImages(input.id);
   log.info({ userId: ctx.user.id, cookbookId: input.id }, "Cookbook deleted");
-  await emitCookbookEvent(ctx, "deleted", { id: input.id });
+  await emitCookbookEvent(householdId, "deleted", { id: input.id });
 
   return { id: input.id, deleted: true };
 });

@@ -162,7 +162,7 @@ describe("cookbook membership", () => {
     expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
       { cookbookId: COOKBOOK_ID, recipeIds: [RECIPE_ID, HIDDEN_ID], isMember: true },
-      { viewPolicy: "household", userId: "test-user-id", householdId: "test-household-id" }
+      { viewPolicy: "household", householdId: "test-household-id" }
     );
   });
 

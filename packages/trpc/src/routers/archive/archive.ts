@@ -134,7 +134,8 @@ async function runArchiveImportAsync(
   // Archive-created recipes reach whoever the view policy says may see them,
   // like every other recipe create.
   const viewPolicy = (await getRecipePermissionPolicy()).view;
-  const target = { viewPolicy, userId, householdId };
+  // The importer's household: every recipe and cookbook the import makes is theirs.
+  const target = { viewPolicy, householdId };
 
   // Calculate dynamic batch size based on total
   const batchSize = Math.max(1, calculateBatchSize(total));

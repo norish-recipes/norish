@@ -12,6 +12,7 @@ import {
   FullRecipeInsertSchema,
   getRandomRecipeCandidates,
   getRecipeFull,
+  getRecipeHouseholdIds,
   listRecipes,
   RecipeConvertInputSchema,
   RecipeDeleteInputSchema,
@@ -276,7 +277,7 @@ export const createRecipeProcedure = authedProcedure
         void recipes.publish(
           "created",
           { recipe: dashboardDto },
-          { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+          { viewPolicy: policy.view, householdId: dashboardDto.householdId }
         );
       }
 
@@ -392,7 +393,7 @@ const updateCategories = authedProcedure
       void recipes.publish(
         "updated",
         { recipe: updated },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+        { viewPolicy: policy.view, householdId: updated.householdId }
       );
     }
 
@@ -417,6 +418,7 @@ const deleteProcedure = authedProcedure
     // One gone, or out of view, is not in the map and answers as deleted; nothing is touched.
     const absent = input.recipes.filter((recipe) => !access.has(recipe.id)).map(({ id }) => id);
 
+    const households = await getRecipeHouseholdIds(permitted.map(({ id }) => id));
     const { deletedIds: removed, staleIds } = await deleteRecipesByIds(permitted);
 
     // Only once the rows are gone: a kept recipe still needs its images.
@@ -426,10 +428,13 @@ const deleteProcedure = authedProcedure
 
     if (removed.length > 0) {
       log.info({ userId: ctx.user.id, count: removed.length }, "Recipes deleted");
+    }
+    // Each recipe's own household hears of it, whoever deleted it.
+    for (const householdId of new Set(removed.map((id) => households.get(id) ?? ctx.householdId))) {
       void recipes.publish(
         "deleted",
-        { ids: removed },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+        { ids: removed.filter((id) => (households.get(id) ?? ctx.householdId) === householdId) },
+        { viewPolicy: policy.view, householdId }
       );
     }
 
@@ -631,7 +636,7 @@ const convertMeasurements = authedProcedure
       void recipes.publish(
         "converted",
         { recipe, conversion: { target: targetSystem, withAI, version }, stale },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+        { viewPolicy: policy.view, householdId: recipe.householdId }
       );
     };
 

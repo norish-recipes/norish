@@ -163,7 +163,7 @@ export async function processPasteImportJob(
         recipeId,
         url: "[pasted]",
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      { viewPolicy, householdId: ctx.householdId }
     );
   });
 
@@ -237,7 +237,7 @@ export async function processPasteImportJob(
         pendingRecipeId: result.recipeId,
         toast: "imported",
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      { viewPolicy: policy.view, householdId: dashboardDto.householdId }
     );
 
     await announceUsableRecipe(result, { userId, householdId });
@@ -269,7 +269,7 @@ async function handleJobFailed(
           recipeId,
           url: "[pasted]",
         },
-        { viewPolicy: policy.view, ...ctx }
+        { viewPolicy: policy.view, householdId: ctx.householdId }
       );
     });
   }

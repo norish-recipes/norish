@@ -58,6 +58,8 @@ vi.mock("@norish/db/repositories/recipe-shares", async () => ({
 
 vi.mock("@norish/db/repositories/recipes", () => ({
   getRecipeFull: getRecipeFullMock,
+  // The shared recipe is the household's own.
+  getRecipeHouseholdId: vi.fn().mockResolvedValue("test-household-id"),
 }));
 
 vi.mock("@norish/shared-server/ingredients/icons", () => ({
@@ -140,7 +142,7 @@ describe("recipe share procedures", () => {
           version: 1,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
+      { viewPolicy: "household", householdId: authedCtx.householdId }
     );
     expect(result.url).toBe("/share/token-1");
   });
@@ -480,7 +482,7 @@ describe("recipe share procedures", () => {
           version: 2,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
+      { viewPolicy: "household", householdId: authedCtx.householdId }
     );
   });
 
@@ -529,7 +531,7 @@ describe("recipe share procedures", () => {
           version: 3,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
+      { viewPolicy: "household", householdId: authedCtx.householdId }
     );
   });
 
@@ -563,7 +565,7 @@ describe("recipe share procedures", () => {
           version: 4,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
+      { viewPolicy: "household", householdId: authedCtx.householdId }
     );
   });
 });

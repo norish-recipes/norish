@@ -11,6 +11,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
+// The recipe lives in another household than the requester's (edit Everyone).
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdId: vi.fn().mockResolvedValue("owners-household"),
+}));
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
@@ -40,6 +44,10 @@ describe("publishEnrichmentLifecycle", () => {
     await publishEnrichmentLifecycle(data, "queued");
     await publishEnrichmentLifecycle(data, "failed");
 
+    expect(mocks.publishRecipe.mock.calls[0]?.[2]).toEqual({
+      viewPolicy: "household",
+      householdId: "owners-household",
+    });
     expect(mocks.publishRecipe.mock.calls[0]?.[1]).toEqual({
       recipeId: "recipe-1",
       runId: "run-1",
@@ -62,14 +70,14 @@ describe("publishEnrichmentLifecycle", () => {
 
 describe("publishEnrichmentRecipeUpdated", () => {
   it("marks the canonical update as enrichment-originated, naming its kind", async () => {
-    const recipe = { id: "recipe-1" } as FullRecipeDTO;
+    const recipe = { id: "recipe-1", householdId: "owners-household" } as FullRecipeDTO;
 
     await publishEnrichmentRecipeUpdated(data, recipe);
 
     expect(mocks.publishRecipe).toHaveBeenCalledWith(
       "updated",
       { recipe, source: "enrichment", kind: data.kind },
-      { viewPolicy: "household", userId: "user-1", householdId: "household-1" }
+      { viewPolicy: "household", householdId: "owners-household" }
     );
   });
 });

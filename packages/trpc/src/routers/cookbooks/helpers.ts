@@ -40,11 +40,11 @@ export async function assertCookbookAccess(
 }
 
 /**
- * Broadcast a cookbook event to whoever the view policy says may see it —
- * the same reach the cookbook itself has.
+ * Broadcast a cookbook event to whoever the view policy says may see it: the
+ * cookbook's own household, or everyone. The same reach the cookbook has.
  */
 export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealtime>>(
-  ctx: Pick<CookbookUserContext, "user" | "householdId">,
+  householdId: string,
   event: E,
   data: PayloadOf<CookbooksRealtime, E>
 ): Promise<void> {
@@ -54,12 +54,8 @@ export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealt
   const publish = cookbooks.publish as (
     event: E,
     payload: PayloadOf<CookbooksRealtime, E>,
-    target: { viewPolicy: PermissionLevel; userId: string; householdId: string }
+    target: { viewPolicy: PermissionLevel; householdId: string }
   ) => Promise<void>;
 
-  await publish(event, data, {
-    viewPolicy: policy.view,
-    userId: ctx.user.id,
-    householdId: ctx.householdId,
-  });
+  await publish(event, data, { viewPolicy: policy.view, householdId });
 }

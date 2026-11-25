@@ -42,7 +42,7 @@ const setMembership = authedProcedure
   .mutation(async ({ ctx, input }) => {
     const access = await recipeAccess(ctx, input.recipeIds, "view");
 
-    await assertCookbookAccess(ctx, input.cookbookId, "edit");
+    const { householdId } = await assertCookbookAccess(ctx, input.cookbookId, "edit");
 
     // A recipe gone or unseen by the time a queued call replays is left out,
     // so the rest still land.
@@ -66,7 +66,7 @@ const setMembership = authedProcedure
     );
 
     if (recipeIds.length > 0) {
-      await emitCookbookEvent(ctx, "membershipChanged", {
+      await emitCookbookEvent(householdId, "membershipChanged", {
         cookbookId: input.cookbookId,
         recipeIds,
         isMember: input.isMember,

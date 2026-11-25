@@ -10,6 +10,7 @@ import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeBecameUsablePayload } from "@norish/shared/contracts/realtime/recipe-enrichment";
 import type { RecipeEnrichmentLifecycleState } from "@norish/shared/lib/recipe-enrichment";
+import { getRecipeHouseholdId } from "@norish/db/repositories/recipes";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 import { recipeEnrichment } from "@norish/shared-server/realtime/recipe-enrichment";
@@ -62,7 +63,7 @@ export async function publishEnrichmentLifecycle(
         ? { requestedByUserId: data.requestedByUserId ?? data.userId }
         : {}),
     },
-    { viewPolicy: await viewPolicy(), ...emitContext(data) }
+    { viewPolicy: await viewPolicy(), householdId: await recipeHousehold(data) }
   );
 }
 
@@ -78,7 +79,7 @@ export async function publishEnrichmentRecipeUpdated(
       source: "enrichment",
       kind: data.kind,
     },
-    { viewPolicy: await viewPolicy(), ...emitContext(data) }
+    { viewPolicy: await viewPolicy(), householdId: recipe.householdId }
   );
 }
 
@@ -86,6 +87,7 @@ async function viewPolicy() {
   return (await getRecipePermissionPolicy()).view;
 }
 
-function emitContext(data: RecipeEnrichmentJobData): { userId: string; householdId: string } {
-  return { userId: data.userId, householdId: data.householdId };
+/** The recipe's household, whoever asked; the requester's when the recipe is gone. */
+async function recipeHousehold(data: RecipeEnrichmentJobData): Promise<string> {
+  return (await getRecipeHouseholdId(data.recipeId)) ?? data.householdId;
 }

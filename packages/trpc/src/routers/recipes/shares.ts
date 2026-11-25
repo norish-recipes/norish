@@ -19,6 +19,7 @@ import {
   toRecipeShareSummary,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
+import { getRecipeHouseholdId } from "@norish/db/repositories/recipes";
 import {
   getRecipePermissionPolicy,
   getTimerKeywords,
@@ -77,7 +78,10 @@ async function emitRecipeShareEvent(
   await recipes.publish(
     "shareEvent",
     { kind: type, share: toRecipeShareLifecycleEvent(share, type) },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+    {
+      viewPolicy: policy.view,
+      householdId: (await getRecipeHouseholdId(share.recipeId)) ?? ctx.householdId,
+    }
   );
 }
 

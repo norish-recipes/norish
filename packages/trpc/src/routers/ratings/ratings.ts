@@ -3,6 +3,7 @@ import {
   getUserRatingWithVersion,
   rateRecipe,
 } from "@norish/db/repositories/ratings";
+import { getRecipeHouseholdId } from "@norish/db/repositories/recipes";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ratings } from "@norish/shared-server/realtime/ratings";
@@ -16,14 +17,18 @@ interface UserContext {
   householdId: string;
 }
 
-async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
+/** Rating events reach the recipe's own household, or the actor's when it is gone. */
+async function ratingAudience(ctx: UserContext, recipeId: string) {
   const policy = await getRecipePermissionPolicy();
 
-  void ratings.publish(
-    "ratingFailed",
-    { recipeId, reason },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
-  );
+  return {
+    viewPolicy: policy.view,
+    householdId: (await getRecipeHouseholdId(recipeId)) ?? ctx.householdId,
+  };
+}
+
+async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
+  void ratings.publish("ratingFailed", { recipeId, reason }, await ratingAudience(ctx, recipeId));
 }
 
 const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) => {
@@ -40,7 +45,6 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
       }
 
       const stats = await getAverageRating(recipeId);
-      const policy = await getRecipePermissionPolicy();
 
       log.info(
         { userId: ctx.user.id, recipeId, rating, isNew: result.isNew },
@@ -50,7 +54,7 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
       void ratings.publish(
         "ratingUpdated",
         { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+        await ratingAudience(ctx, recipeId)
       );
     })
     .catch((err) => {

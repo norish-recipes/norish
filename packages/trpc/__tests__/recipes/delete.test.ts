@@ -107,9 +107,28 @@ describe("recipes.delete", () => {
   it("deletes another household's recipe under delete Everyone", async () => {
     policy.delete = "everyone";
 
-    await caller().recipes.delete({ recipes: [{ id: THEIRS, version: 1 }] });
+    await caller().recipes.delete({
+      recipes: [
+        { id: THEIRS, version: 1 },
+        { id: MINE, version: 1 },
+      ],
+    });
 
-    expect(mocks.deleteRecipesByIds).toHaveBeenCalledWith([{ id: THEIRS, version: 1 }]);
+    expect(mocks.deleteRecipesByIds).toHaveBeenCalledWith([
+      { id: THEIRS, version: 1 },
+      { id: MINE, version: 1 },
+    ]);
+    // Each recipe's own household hears of it, not the deleter's alone.
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "deleted",
+      { ids: [THEIRS] },
+      { viewPolicy: "household", householdId: "another-household" }
+    );
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "deleted",
+      { ids: [MINE] },
+      { viewPolicy: "household", householdId: "test-household-id" }
+    );
   });
 
   it("announces the deleted recipes to everyone and the kept ones to the caller", async () => {
@@ -120,7 +139,7 @@ describe("recipes.delete", () => {
     expect(recipes.publish).toHaveBeenCalledWith(
       "deleted",
       { ids: [MINE] },
-      { viewPolicy: "household", userId: "test-user-id", householdId: "test-household-id" }
+      { viewPolicy: "household", householdId: "test-household-id" }
     );
     expect(recipes.publish).toHaveBeenCalledWith(
       "deleteKept",

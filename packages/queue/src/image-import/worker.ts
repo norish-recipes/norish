@@ -45,7 +45,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
       recipeId,
       url: `[${files.length} image(s)]`,
     },
-    { viewPolicy: viewPolicy, ...ctx }
+    { viewPolicy, householdId: ctx.householdId }
   );
 
   // Vision parsing reads the images; every inference happens afterwards.
@@ -103,7 +103,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
         pendingRecipeId: recipeId,
         toast: "imported",
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      { viewPolicy: policy.view, householdId: dashboardDto.householdId }
     );
   }
 
@@ -140,7 +140,7 @@ async function handleJobFailed(
       recipeId,
       url: `[${files.length} image(s)]`,
     },
-    { viewPolicy: policy.view, ...ctx }
+    { viewPolicy: policy.view, householdId: ctx.householdId }
   );
 }
 

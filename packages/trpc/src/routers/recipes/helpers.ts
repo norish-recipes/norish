@@ -40,10 +40,11 @@ export async function emitRecipeFailure(
 ): Promise<void> {
   const policy = await getRecipePermissionPolicy();
 
+  // Nothing stored yet: the actor's household, the one the recipe was for.
   void recipes.publish(
     "failed",
     { reason, ...meta },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+    { viewPolicy: policy.view, householdId: ctx.householdId }
   );
 }
 
@@ -72,7 +73,7 @@ export async function announceRecipeUpdated(
     void recipes.publish(
       "updated",
       { recipe: stored },
-      { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
+      { viewPolicy: policy.view, householdId: stored.householdId }
     );
   }
 

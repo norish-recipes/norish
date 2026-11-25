@@ -44,7 +44,8 @@ const log = createLogger("realtime");
 /** The placeholder the Lua script replaces with the stream entry id. */
 export const EVENT_ID_PLACEHOLDER = "$ID$";
 
-export type PolicyTarget = { viewPolicy: PermissionLevel; householdId: string; userId: string };
+/** A policy-scoped event reaches the household of the recipe or cookbook it is about, or everyone. */
+export type PolicyTarget = { viewPolicy: PermissionLevel; householdId: string };
 
 export type TargetFor<S extends RealtimeScope> = S extends "household"
   ? { householdId: string }

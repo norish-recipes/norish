@@ -193,7 +193,7 @@ describe("archiveRouter.importArchive", () => {
     expect(recipes.publish).toHaveBeenCalledWith(
       "recipeBatchCreated",
       { recipes: [recipe] },
-      { viewPolicy: "everyone", userId: "user-1", householdId: "house-1" }
+      { viewPolicy: "everyone", householdId: "house-1" }
     );
     expect(recipes.publish).not.toHaveBeenCalledWith("recipeBatchCreated", expect.anything(), {
       householdId: "house-1",
@@ -296,7 +296,7 @@ describe("archiveRouter.importArchive", () => {
     // The import runs detached from the mutation; let it settle.
     for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve));
 
-    const target = { viewPolicy: "everyone", userId: "user-1", householdId: "house-1" };
+    const target = { viewPolicy: "everyone", householdId: "house-1" };
 
     expect(cookbooks.publish).toHaveBeenCalledTimes(3);
     expect(cookbooks.publish).toHaveBeenCalledWith("created", { cookbook: made }, target);

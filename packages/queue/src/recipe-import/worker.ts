@@ -56,7 +56,11 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   const ctx = { userId, householdId };
 
   // Emit import started event
-  void recipes.publish("importStarted", { recipeId, url }, { viewPolicy: viewPolicy, ...ctx });
+  void recipes.publish(
+    "importStarted",
+    { recipeId, url },
+    { viewPolicy, householdId: ctx.householdId }
+  );
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
@@ -82,7 +86,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
           pendingRecipeId: recipeId,
           toast: "imported",
         },
-        { viewPolicy: viewPolicy, ...ctx }
+        { viewPolicy: policy.view, householdId: dashboardDto.householdId }
       );
     }
 
@@ -175,7 +179,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
         toast: "imported",
         ...incomplete,
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      { viewPolicy: policy.view, householdId: dashboardDto.householdId }
     );
   }
 
@@ -211,7 +215,7 @@ async function handleJobFailed(
         recipeId,
         url,
       },
-      { viewPolicy: policy.view, ...ctx }
+      { viewPolicy: policy.view, householdId: ctx.householdId }
     );
   }
 }

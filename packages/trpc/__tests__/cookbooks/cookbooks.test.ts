@@ -97,7 +97,7 @@ describe("cookbook procedures", () => {
       expect(cookbooks.publish).toHaveBeenCalledWith(
         "created",
         { cookbook: summary },
-        { viewPolicy: "household", userId: "test-user-id", householdId: "test-household-id" }
+        { viewPolicy: "household", householdId: "test-household-id" }
       );
     });
 
