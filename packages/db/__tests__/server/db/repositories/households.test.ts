@@ -108,12 +108,12 @@ describe("households", () => {
       expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([admin.id]);
     });
 
-    it("gives the new household a join code", async () => {
+    it("gives the new household no join code until its admin generates one", async () => {
       const { member, householdId } = await sharedHousehold();
 
       const outcome = await moveToHouseholdOfOne(householdId, member.id);
 
-      expect(outcome.value?.joinCode).toMatch(/^\d{6}$/);
+      expect(outcome.value).toMatchObject({ joinCode: null, joinCodeExpiresAt: null });
     });
 
     it("by the admin's hand, ends the same way", async () => {
@@ -400,6 +400,23 @@ describe("households", () => {
       ]);
       await expectEveryAccountHoused();
     });
+  });
+
+  describe("moving out while every pooled connection waits on the household", () => {
+    it("settles without needing another connection under the lock", async () => {
+      const { admin, member, householdId } = await sharedHousehold();
+      // pg's default pool size; the repository pool sets none.
+      const renames = Array.from({ length: 9 }, () => () => renameHouseholdOfOne(admin.id, "Ours"));
+
+      const settled = await raceBehindLock(householdId, [
+        () => moveToHouseholdOfOne(householdId, member.id),
+        ...renames,
+      ]);
+
+      expect(settled[0]).toEqual(fulfilled(expect.objectContaining({ applied: true })));
+      expect(settled.slice(1)).toEqual(renames.map(() => fulfilled(householdId)));
+      await expectEveryAccountHoused();
+    }, 10_000);
   });
 
   describe("moving out, checked under the household's lock", () => {

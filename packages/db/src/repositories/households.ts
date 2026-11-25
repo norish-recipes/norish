@@ -145,14 +145,10 @@ export async function getHouseholdForUser(
 }
 
 async function insertHouseholdOfOne(tx: DbTransaction, userId: string): Promise<HouseholdDto> {
+  // No join code, as sign-up makes one: generating it here would query the pool under the lock.
   const [row] = await tx
     .insert(households)
-    .values({
-      name: NEW_HOUSEHOLD_NAME,
-      adminUserId: userId,
-      joinCode: await generateUniqueJoinCode(),
-      joinCodeExpiresAt: new Date(Date.now() + JOIN_CODE_LIFETIME_MS),
-    })
+    .values({ name: NEW_HOUSEHOLD_NAME, adminUserId: userId })
     .returning();
 
   await tx.insert(householdUsers).values({ householdId: row!.id, userId });
