@@ -1,9 +1,4 @@
-import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-
-import { cuisines } from "@norish/db-schema/schema";
-
-export const CuisineSelectBaseSchema = createSelectSchema(cuisines);
 
 /**
  * A Cuisine as it travels with a recipe.
