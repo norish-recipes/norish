@@ -44,3 +44,14 @@ Review round 1:
 16. Fixed: the db test is named for what it checks; the REST create is covered through its router.
 
 Rejected: Cuisine chips with a combo box, the mobile inline Category field, no space splitting, the silent drop of a name the list lost, lists as a cross-cutting folder, the allergies input.
+
+Review round 2:
+
+1. Fixed: pending creates are held by the picker that started them and end on settle, unmount or the send timeout (create-failed message); `lists.add` is uncaptured, never queued in the Outbox.
+2. Fixed: a create answering after its picker has gone drops the answer (entry stays in the list); the web Cuisine picker adds an id only when it is not there.
+3. Fixed: Category chips and `toggleCategory` use the shared `hasName` fold.
+4. Fixed: an editor save attaches only the exact entries it names; the alias mapping is for imports and AI.
+5. Fixed (verified: `lists.list` was not warmed): the warm set reads the Tag, Cuisine and Category lists.
+6. Fixed: the Maestro seed makes Tags and Categories with `lists.add` before `recipes.create`; no other fixture sends names to a creating path.
+
+Rejected: an Owner moving household while a housemate edits their recipe; the REST create tested through a test router; the E2E blurring before save.
