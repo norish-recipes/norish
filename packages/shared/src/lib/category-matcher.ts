@@ -25,7 +25,7 @@ import {
   lookupFoldedName,
   resolveCategoryName,
 } from "./categories";
-import { foldName } from "./fold-name";
+import { entryFold, foldName } from "./fold-name";
 import { editDistance, listMatcher } from "./list-match";
 
 type BuiltInCategoryKey = "breakfast" | "lunch" | "dinner" | "snack";
@@ -162,13 +162,13 @@ export function sortSourceCategories(
   household: readonly string[],
   match: (name: string) => BuiltInCategory | null = matchCategory
 ): { categories: string[]; tags: string[] } {
-  const byTerm = Object.fromEntries(household.map((name) => [foldName(name), name]));
+  const byTerm = Object.fromEntries(household.map((name) => [entryFold(name), name]));
   const nearMiss = listMatcher(household, (name) => name);
   const categories = new Set<string>();
   const tags = new Map<string, string>();
 
   for (const name of names.map(cleanCategoryName).filter(Boolean)) {
-    const category = lookupFoldedName(byTerm, foldName(name)) ?? nearMiss(name) ?? match(name);
+    const category = lookupFoldedName(byTerm, entryFold(name)) ?? nearMiss(name) ?? match(name);
 
     if (category) categories.add(category);
     else if (!tags.has(name.toLowerCase())) tags.set(name.toLowerCase(), name);

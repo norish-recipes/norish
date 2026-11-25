@@ -113,6 +113,13 @@ describe("sortSourceCategories", () => {
     });
   });
 
+  it("tells emoji-only Categories apart", () => {
+    expect(sortSourceCategories(["🍰", "🍹"], [...household, "🔥", "🍰"])).toEqual({
+      categories: ["🍰"],
+      tags: ["🍹"],
+    });
+  });
+
   it("catches a household Category's plural and accented spelling", () => {
     expect(sortSourceCategories(["Desserts", "dessért", "Drink"], household)).toEqual({
       categories: ["Dessert"],
