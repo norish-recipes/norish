@@ -154,6 +154,21 @@ describe("deleting an account", () => {
 
   const NO_MEDIA = { images: 0, videos: 0, steps: 0, stepImages: 0 };
 
+  /** The step-image rows of these recipes, read before their steps go. */
+  async function stepImageIdsOf(recipeIds: string[]) {
+    const rows = await getTestDb()
+      .select({ id: stepImages.id })
+      .from(stepImages)
+      .innerJoin(steps, eq(steps.id, stepImages.stepId))
+      .where(inArray(steps.recipeId, recipeIds));
+
+    return rows.map((row) => row.id);
+  }
+
+  async function stepImagesLeft(ids: string[]) {
+    return getTestDb().select().from(stepImages).where(inArray(stepImages.id, ids));
+  }
+
   /** Who added each of the household's things, table by table, in a stable order. */
   async function householdThings(householdId: string) {
     const db = getTestDb();
@@ -382,6 +397,8 @@ describe("deleting an account", () => {
       const thingsBefore = await householdThings(w.household);
       const elsewhereBefore = await householdThings(w.elsewhere);
 
+      const stepImagesBefore = await stepImageIdsOf([w.own.recipe.id]);
+
       const deletion = await deleteAccount(w.deleted);
 
       expect(Object.values(thingsBefore).every((adders) => adders.includes(w.deleted))).toBe(true);
@@ -396,6 +413,8 @@ describe("deleting an account", () => {
       expect(await ownRows(w.deleted)).toEqual(NOTHING);
       expect(await referencesTo([w.own.recipe.id])).toEqual([]);
       expect(await mediaOf([w.own.recipe.id])).toEqual(NO_MEDIA);
+      expect(stepImagesBefore).toHaveLength(1);
+      expect(await stepImagesLeft(stepImagesBefore)).toEqual([]);
       expect(await mediaOf([w.admins.recipe.id, w.strangers.recipe.id])).toEqual({
         images: 2,
         videos: 2,
@@ -504,6 +523,8 @@ describe("deleting an account", () => {
       const thingsBefore = await householdThings(w.household);
       const memberRowsBefore = await ownRows(w.deleted);
 
+      const stepImagesBefore = await stepImageIdsOf([w.admins.recipe.id]);
+
       const deletion = await deleteAccount(w.admin);
 
       expect(deletion).toMatchObject({
@@ -520,6 +541,8 @@ describe("deleting an account", () => {
       ).toEqual([{ adminUserId: w.deleted }]);
       expect(await ownRows(w.admin)).toEqual(NOTHING);
       expect(await mediaOf([w.admins.recipe.id])).toEqual(NO_MEDIA);
+      expect(stepImagesBefore).toHaveLength(1);
+      expect(await stepImagesLeft(stepImagesBefore)).toEqual([]);
       expect(await referencesTo([w.admins.recipe.id])).toEqual([]);
       expect(await householdThings(w.household)).toEqual(addedByNoOne(thingsBefore, w.admin));
       expect(await ownRows(w.deleted)).toEqual({
@@ -539,6 +562,8 @@ describe("deleting an account", () => {
   describe("of a household's last member", () => {
     it("erases the household with everything in it, and notes only the plans that stay", async () => {
       const w = await world();
+
+      const stepImagesBefore = await stepImageIdsOf([w.own.recipe.id, w.admins.recipe.id]);
 
       await deleteAccount(w.deleted);
       const deletion = await deleteAccount(w.admin);
@@ -565,6 +590,8 @@ describe("deleting an account", () => {
       });
       expect(await ownRows(w.admin)).toEqual(NOTHING);
       expect(await mediaOf([w.own.recipe.id, w.admins.recipe.id])).toEqual(NO_MEDIA);
+      expect(stepImagesBefore).toHaveLength(2);
+      expect(await stepImagesLeft(stepImagesBefore)).toEqual([]);
       expect(await referencesTo([w.own.recipe.id, w.admins.recipe.id])).toEqual([]);
       // The stranger's household is untouched.
       expect(await planOf(w.elsewhere)).toEqual([
