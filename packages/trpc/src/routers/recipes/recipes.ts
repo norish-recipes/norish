@@ -50,7 +50,7 @@ import {
 import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
-import { claimPendingRecipeMedia } from "@norish/shared-server/media/pending-recipe-media";
+import { mayUsePendingRecipeId } from "@norish/shared-server/media/pending-recipe-media";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
@@ -256,7 +256,7 @@ export const createRecipeProcedure = authedProcedure
     // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
     const created = await whileCreating(recipeId, async () => {
       // Files another account uploaded for this id are not this create's to take.
-      if (input.id && !(await claimPendingRecipeMedia(recipeId, ctx.user.id))) {
+      if (input.id && !(await mayUsePendingRecipeId(recipeId, ctx.user.id, "create"))) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
       }
 

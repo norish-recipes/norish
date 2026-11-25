@@ -85,7 +85,7 @@ const uploadGalleryVideo = authedProcedure
 
     // A create of this id still running links the file once it is stored.
     await createSettled(recipeId);
-    await assertRecipeMediaAccess(ctx, recipeId);
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     // Check max videos limit
     const currentCount = await countRecipeVideos(recipeId);

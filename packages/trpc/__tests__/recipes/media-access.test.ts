@@ -121,7 +121,7 @@ describe("recipe media procedures check the recipe before touching files", () =>
     assertRecipeMediaAccessMock.mockRejectedValue(forbidden);
 
     await expect(caller.uploadGalleryImage(upload("image", recipeId))).rejects.toThrow(forbidden);
-    expect(assertRecipeMediaAccessMock).toHaveBeenCalledWith(expect.anything(), recipeId);
+    expect(assertRecipeMediaAccessMock).toHaveBeenCalledWith(expect.anything(), recipeId, "upload");
     expect(saveImageBytesMock).not.toHaveBeenCalled();
 
     const videos = videosProcedures.createCaller(ctx as never);
@@ -153,7 +153,11 @@ describe("recipe media procedures check the recipe before touching files", () =>
     ).rejects.toThrow(forbidden);
 
     expect(assertRecipeAccessMock).toHaveBeenCalledWith(expect.anything(), otherRecipe, "edit");
-    expect(assertRecipeMediaAccessMock).toHaveBeenCalledWith(expect.anything(), otherRecipe);
+    expect(assertRecipeMediaAccessMock).toHaveBeenCalledWith(
+      expect.anything(),
+      otherRecipe,
+      "delete"
+    );
     expect(deleteImageByUrlMock).not.toHaveBeenCalled();
     expect(deleteStepImageByUrlMock).not.toHaveBeenCalled();
     expect(deleteRecipeImageByIdMock).not.toHaveBeenCalled();

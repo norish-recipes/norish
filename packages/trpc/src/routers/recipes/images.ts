@@ -82,7 +82,7 @@ const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({
     return { success: false, error: "Recipe ID is required" };
   }
 
-  await assertRecipeMediaAccess(ctx, recipeId);
+  await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
   const validation = await extractAndValidateImage(input);
 
@@ -121,7 +121,7 @@ const deleteImage = authedProcedure
       return { success: false, error: "Invalid image URL format" };
     }
 
-    await assertRecipeMediaAccess(ctx, recipeId);
+    await assertRecipeMediaAccess(ctx, recipeId, "delete");
 
     try {
       await deleteImageByUrl(input.url, recipeId);
@@ -153,7 +153,7 @@ const uploadStepImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
-    await assertRecipeMediaAccess(ctx, recipeId);
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     const validation = await extractAndValidateImage(input);
 
@@ -187,7 +187,7 @@ const deleteStepImage = authedProcedure
       return { success: false, error: "Invalid image URL format" };
     }
 
-    await assertRecipeMediaAccess(ctx, recipeId);
+    await assertRecipeMediaAccess(ctx, recipeId, "delete");
 
     try {
       await deleteStepImageByUrl(input.url, recipeId);
@@ -225,7 +225,7 @@ const uploadGalleryImage = authedProcedure
 
     // A create of this id still running links the file once it is stored.
     await createSettled(recipeId);
-    await assertRecipeMediaAccess(ctx, recipeId);
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     // Check max images limit
     const currentCount = await countRecipeImages(recipeId);

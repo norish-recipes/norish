@@ -6,7 +6,7 @@ import { canAccessResource, resourceAccess } from "@norish/auth/permissions";
 import { getRecipeFull, getRecipeHouseholdIds } from "@norish/db";
 import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { claimPendingRecipeMedia } from "@norish/shared-server/media/pending-recipe-media";
+import { mayUsePendingRecipeId } from "@norish/shared-server/media/pending-recipe-media";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { mediaId } from "@norish/shared/lib/recipe-media";
@@ -135,15 +135,16 @@ export function recipeIdOfMediaUrl(url: string): string | null {
 
 /**
  * Refuses media work on a recipe the reader may not edit. A recipe not stored yet (the new-recipe
- * form uploads first) is the account's that first uploaded for its id.
+ * form uploads first) is the account's whose upload wrote its first file.
  */
 export async function assertRecipeMediaAccess(
   ctx: Pick<RecipeUserContext, "user" | "householdId">,
-  recipeId: string
+  recipeId: string,
+  use: "upload" | "delete"
 ): Promise<void> {
   if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
     await assertRecipeAccess(ctx, recipeId, "edit");
-  } else if (!(await claimPendingRecipeMedia(recipeId, ctx.user.id))) {
+  } else if (!(await mayUsePendingRecipeId(recipeId, ctx.user.id, use))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
   }
 }
