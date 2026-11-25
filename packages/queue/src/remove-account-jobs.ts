@@ -1,4 +1,4 @@
-import type { Job, JobType } from "bullmq";
+import type { Job, JobType, Queue } from "bullmq";
 
 import { createLogger } from "@norish/shared-server/logger";
 
@@ -6,6 +6,7 @@ import { ACCOUNT_QUEUES } from "./account-jobs";
 import { deleteUnstoredRecipeMedia } from "./import-cleanup";
 import { QUEUE_NAMES } from "./queue-names";
 import { getQueueByName } from "./registry";
+import { getBullClient } from "./valkey/bullmq";
 
 const log = createLogger("queue:account-jobs");
 
@@ -29,6 +30,23 @@ function importedRecipeIds(name: string, data: AccountJobData): string[] {
   const imports: string[] = [QUEUE_NAMES.RECIPE_IMPORT, QUEUE_NAMES.IMAGE_IMPORT];
 
   return imports.includes(name) && typeof data.recipeId === "string" ? [data.recipeId] : [];
+}
+
+/** Drops the follow-ups BullMQ keeps (`dn:` hashes) for a deduplicated job still running. */
+async function removeDeferredFollowUps(queue: Queue, belongs: (data: AccountJobData) => boolean) {
+  const client = getBullClient();
+  let cursor = "0";
+
+  do {
+    const [next, keys] = await client.scan(cursor, "MATCH", queue.toKey("dn:*"), "COUNT", 500);
+
+    for (const key of keys) {
+      const data = await client.hget(key, "data");
+
+      if (data && belongs(JSON.parse(data) as AccountJobData)) await client.del(key);
+    }
+    cursor = next;
+  } while (cursor !== "0");
 }
 
 /** Removes every job of a deleted account, and of its erased recipes, that no worker is running. */
@@ -55,6 +73,7 @@ export async function removeAccountJobs(userId: string, recipeIds: string[]): Pr
             )
         )
       );
+      if (name === QUEUE_NAMES.CALDAV_SYNC) await removeDeferredFollowUps(queue, belongs);
     })
   );
   await deleteUnstoredRecipeMedia(unstored);

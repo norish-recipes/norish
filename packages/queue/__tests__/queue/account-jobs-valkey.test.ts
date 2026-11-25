@@ -10,6 +10,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from "vite
 import type { QueueName } from "../../src/queue-names";
 import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { ACCOUNT_QUEUES, AccountGoneError } from "../../src/account-jobs";
+import { addCaldavSyncJob } from "../../src/caldav-sync/producer";
 import { closeWorkers, createWorker } from "../../src/create-worker";
 import { QUEUE_NAMES } from "../../src/queue-names";
 import { removeAccountJobs } from "../../src/remove-account-jobs";
@@ -175,3 +176,43 @@ it("removes the jobs of a paused queue, and the media a removed paste or import 
     [...pastedIds, imageId].sort()
   );
 });
+
+it("drops the follow-up CalDAV keeps for a sync still running", async () => {
+  const caldav = queues.get(QUEUE_NAMES.CALDAV_SYNC)!;
+  let release = () => {};
+  const running = new Promise<void>((resolve) => (release = resolve));
+  let entered = () => {};
+  const processing = new Promise<void>((resolve) => (entered = resolve));
+  const processor = vi.fn(async () => {
+    entered();
+    await running;
+  });
+  const sync = (eventTitle: string) => ({
+    userId: "deleted",
+    itemId: "item-1",
+    itemType: "note" as const,
+    plannedItemId: "item-1",
+    eventTitle,
+    date: "2026-11-25",
+    slot: "Dinner",
+    operation: "sync" as const,
+    caldavServerUrl: "https://dav.example.com",
+  });
+
+  createWorker(QUEUE_NAMES.CALDAV_SYNC, processor);
+  await addCaldavSyncJob(caldav, sync("first"));
+  await caldav.promoteJobs();
+  await processing;
+  await addCaldavSyncJob(caldav, sync("second"));
+  expect(await getBullClient().keys(caldav.toKey("dn:*"))).toHaveLength(1);
+
+  await removeAccountJobs("deleted", []);
+  release();
+
+  expect(await getBullClient().keys(caldav.toKey("dn:*"))).toEqual([]);
+  await expect
+    .poll(async () => (await caldav.getJobCounts("active", "waiting", "delayed")).active)
+    .toBe(0);
+  expect(await caldav.getJobCounts("waiting", "delayed")).toEqual({ waiting: 0, delayed: 0 });
+  expect(processor).toHaveBeenCalledTimes(1);
+}, 20_000);
