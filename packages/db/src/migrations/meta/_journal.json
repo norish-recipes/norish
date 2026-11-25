@@ -617,6 +617,13 @@
       "when": 1795505073921,
       "tag": "0087_recipe_share_token_enc",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1795598239073,
+      "tag": "0088_every_account_has_a_household",
+      "breakpoints": true
     }
   ]
 }
