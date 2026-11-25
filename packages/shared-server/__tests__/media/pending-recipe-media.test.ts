@@ -9,6 +9,7 @@ import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import {
   mayUsePendingRecipeId,
   pendingRecipeMediaUploader,
+  releasePendingRecipeId,
 } from "../../src/media/pending-recipe-media";
 import { closeValkeyConnections, getPublisherClient } from "../../src/valkey/client";
 import { startValkey, valkeyUrl } from "../helpers/valkey";
@@ -87,4 +88,21 @@ it("accepts only the database's spelling of an id", async () => {
 
   expect(await mayUsePendingRecipeId(id.toUpperCase(), "uploader", "upload")).toBe(false);
   expect(await mayUsePendingRecipeId(id.toUpperCase(), "uploader", "create")).toBe(false);
+});
+
+it("gives back the claim of an upload that wrote no file, and keeps one that did", async () => {
+  const rejected = crypto.randomUUID();
+  const written = crypto.randomUUID();
+
+  for (const id of [rejected, written]) {
+    expect(await mayUsePendingRecipeId(id, "uploader", "upload")).toBe(true);
+  }
+  await writeFirstFile(written);
+  await releasePendingRecipeId(rejected, "uploader");
+  await releasePendingRecipeId(written, "uploader");
+  await releasePendingRecipeId(written, "someone-else");
+
+  expect(await pendingRecipeMediaUploader(rejected)).toBeNull();
+  expect(await mayUsePendingRecipeId(rejected, "someone-else", "upload")).toBe(true);
+  expect(await pendingRecipeMediaUploader(written)).toBe("uploader");
 });

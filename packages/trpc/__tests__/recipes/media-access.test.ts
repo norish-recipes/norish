@@ -7,6 +7,7 @@ import { createMockAuthedContext, createMockHousehold, createMockUser } from "./
 
 const assertRecipeAccessMock = vi.hoisted(() => vi.fn());
 const assertRecipeMediaAccessMock = vi.hoisted(() => vi.fn());
+const releaseRecipeMediaClaimMock = vi.hoisted(() => vi.fn());
 const saveImageBytesMock = vi.hoisted(() => vi.fn());
 const deleteImageByUrlMock = vi.hoisted(() => vi.fn());
 const deleteStepImageByUrlMock = vi.hoisted(() => vi.fn());
@@ -20,6 +21,7 @@ vi.mock("../../src/routers/recipes/helpers", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../src/routers/recipes/helpers")>()),
   assertRecipeAccess: assertRecipeAccessMock,
   assertRecipeMediaAccess: assertRecipeMediaAccessMock,
+  releaseRecipeMediaClaim: releaseRecipeMediaClaimMock,
 }));
 
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
@@ -31,7 +33,7 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 
 vi.mock("@norish/shared-server/media/storage", () => ({
   saveImageBytes: saveImageBytesMock,
-  saveStepImageBytes: vi.fn(),
+  saveStepImageBytes: saveImageBytesMock,
   deleteImageByUrl: deleteImageByUrlMock,
   deleteStepImageByUrl: deleteStepImageByUrlMock,
   saveVideoBytes: saveVideoBytesMock,
@@ -85,6 +87,7 @@ describe("recipe media procedures check the recipe before touching files", () =>
   }
 
   beforeEach(() => {
+    vi.clearAllMocks();
     getCachedHouseholdForUserMock.mockResolvedValue(household);
     assertRecipeAccessMock.mockResolvedValue(undefined);
     assertRecipeMediaAccessMock.mockResolvedValue(undefined);
@@ -161,6 +164,32 @@ describe("recipe media procedures check the recipe before touching files", () =>
     expect(deleteImageByUrlMock).not.toHaveBeenCalled();
     expect(deleteStepImageByUrlMock).not.toHaveBeenCalled();
     expect(deleteRecipeImageByIdMock).not.toHaveBeenCalled();
+  });
+
+  it("claims no recipe id for an upload it rejects", async () => {
+    const images = imagesProcedures.createCaller(ctx as never);
+    const videos = videosProcedures.createCaller(ctx as never);
+    const notAnImage = new FormData();
+
+    notAnImage.append("recipeId", recipeId);
+    notAnImage.append("image", new File(["x"], "x.txt", { type: "text/plain" }));
+
+    for (const run of [images.uploadImage, images.uploadStepImage, images.uploadGalleryImage]) {
+      expect(await run(notAnImage)).toMatchObject({ success: false });
+    }
+    expect(await videos.uploadGalleryVideo(upload("image", recipeId))).toMatchObject({
+      success: false,
+    });
+    expect(assertRecipeMediaAccessMock).not.toHaveBeenCalled();
+
+    saveImageBytesMock.mockRejectedValue(new Error("disk full"));
+    saveVideoBytesMock.mockRejectedValue(new Error("disk full"));
+    await images.uploadImage(upload("image", recipeId));
+    await images.uploadStepImage(upload("image", recipeId));
+    await images.uploadGalleryImage(upload("image", recipeId));
+    await videos.uploadGalleryVideo(upload("video", recipeId));
+    expect(releaseRecipeMediaClaimMock).toHaveBeenCalledTimes(4);
+    expect(releaseRecipeMediaClaimMock).toHaveBeenCalledWith(expect.anything(), recipeId);
   });
 
   it("refuses a media URL outside a recipe folder", async () => {

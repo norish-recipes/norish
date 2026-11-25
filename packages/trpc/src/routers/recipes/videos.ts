@@ -24,6 +24,7 @@ import {
   assertRecipeAccess,
   assertRecipeMediaAccess,
   createSettled,
+  releaseRecipeMediaClaim,
 } from "./helpers";
 
 // --- Shared Helpers ---
@@ -84,6 +85,12 @@ const uploadGalleryVideo = authedProcedure
     }
 
     // A create of this id still running links the file once it is stored.
+    const validation = await extractAndValidateVideo(input);
+
+    if (!validation.success) {
+      return validation;
+    }
+
     await createSettled(recipeId);
     await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
@@ -95,12 +102,6 @@ const uploadGalleryVideo = authedProcedure
         success: false,
         error: `Maximum ${MAX_RECIPE_VIDEOS} videos allowed per recipe`,
       };
-    }
-
-    const validation = await extractAndValidateVideo(input);
-
-    if (!validation.success) {
-      return validation;
     }
 
     try {
@@ -166,6 +167,7 @@ const uploadGalleryVideo = authedProcedure
       const message = error instanceof Error ? error.message : "Failed to upload gallery video";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload gallery video");
+      await releaseRecipeMediaClaim(ctx, recipeId);
 
       return { success: false, error: message };
     }

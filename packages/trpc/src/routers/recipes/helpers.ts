@@ -6,7 +6,10 @@ import { canAccessResource, resourceAccess } from "@norish/auth/permissions";
 import { getRecipeFull, getRecipeHouseholdIds } from "@norish/db";
 import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { mayUsePendingRecipeId } from "@norish/shared-server/media/pending-recipe-media";
+import {
+  mayUsePendingRecipeId,
+  releasePendingRecipeId,
+} from "@norish/shared-server/media/pending-recipe-media";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { mediaId } from "@norish/shared/lib/recipe-media";
@@ -147,6 +150,14 @@ export async function assertRecipeMediaAccess(
   } else if (!(await mayUsePendingRecipeId(recipeId, ctx.user.id, use))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
   }
+}
+
+/** After a failed upload: drops the claim on a recipe id not stored yet if no file was written. */
+export async function releaseRecipeMediaClaim(
+  ctx: Pick<RecipeUserContext, "user">,
+  recipeId: string
+): Promise<void> {
+  await releasePendingRecipeId(recipeId, ctx.user.id);
 }
 
 /** Whether the reader may view an account's import, from the household it is in now. */

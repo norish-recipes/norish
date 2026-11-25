@@ -31,6 +31,7 @@ import {
   assertRecipeMediaAccess,
   createSettled,
   recipeIdOfMediaUrl,
+  releaseRecipeMediaClaim,
 } from "./helpers";
 
 // --- Shared Helpers ---
@@ -82,13 +83,13 @@ const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({
     return { success: false, error: "Recipe ID is required" };
   }
 
-  await assertRecipeMediaAccess(ctx, recipeId, "upload");
-
   const validation = await extractAndValidateImage(input);
 
   if (!validation.success) {
     return validation;
   }
+
+  await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
   try {
     const url = await saveImageBytes(validation.bytes, recipeId);
@@ -100,6 +101,7 @@ const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({
     const message = error instanceof Error ? error.message : "Failed to upload image";
 
     log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload recipe image");
+    await releaseRecipeMediaClaim(ctx, recipeId);
 
     return { success: false, error: message };
   }
@@ -153,13 +155,13 @@ const uploadStepImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
-    await assertRecipeMediaAccess(ctx, recipeId, "upload");
-
     const validation = await extractAndValidateImage(input);
 
     if (!validation.success) {
       return validation;
     }
+
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     try {
       const url = await saveStepImageBytes(validation.bytes, recipeId);
@@ -171,6 +173,7 @@ const uploadStepImage = authedProcedure
       const message = error instanceof Error ? error.message : "Failed to upload step image";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload step image");
+      await releaseRecipeMediaClaim(ctx, recipeId);
 
       return { success: false, error: message };
     }
@@ -224,6 +227,12 @@ const uploadGalleryImage = authedProcedure
     }
 
     // A create of this id still running links the file once it is stored.
+    const validation = await extractAndValidateImage(input);
+
+    if (!validation.success) {
+      return validation;
+    }
+
     await createSettled(recipeId);
     await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
@@ -235,12 +244,6 @@ const uploadGalleryImage = authedProcedure
         success: false,
         error: `Maximum ${MAX_RECIPE_IMAGES} images allowed per recipe`,
       };
-    }
-
-    const validation = await extractAndValidateImage(input);
-
-    if (!validation.success) {
-      return validation;
     }
 
     try {
@@ -294,6 +297,7 @@ const uploadGalleryImage = authedProcedure
       const message = error instanceof Error ? error.message : "Failed to upload gallery image";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload gallery image");
+      await releaseRecipeMediaClaim(ctx, recipeId);
 
       return { success: false, error: message };
     }

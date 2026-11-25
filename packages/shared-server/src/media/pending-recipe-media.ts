@@ -41,6 +41,14 @@ export async function mayUsePendingRecipeId(
   return raced === null || raced === userId;
 }
 
+/** Gives back a claim whose upload wrote no file, so a rejected upload leaves no claim behind. */
+export async function releasePendingRecipeId(recipeId: string, userId: string): Promise<void> {
+  const valkey = await getPublisherClient();
+  const key = `${PREFIX}${recipeId}`;
+
+  if ((await valkey.get(key)) === userId && !(await hasFiles(recipeId))) await valkey.del(key);
+}
+
 /** The account that uploaded media for a recipe id not stored yet, if any. */
 export async function pendingRecipeMediaUploader(recipeId: string): Promise<string | null> {
   const valkey = await getPublisherClient();
