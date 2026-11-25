@@ -13,6 +13,7 @@ import {
 } from "@norish/db/repositories/ingredient-aliases";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { announceRecipeListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { lineFoodText, lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
@@ -126,7 +127,12 @@ export function createResolvedRecipe(
   return writeResolved(
     () => withResolvedIngredients(payload, actor),
     (resolved) => createRecipeWithRefs(recipeId, userId, resolved)
-  );
+  ).then(async (created) => {
+    // Its Tags, Cuisines and Categories may be new entries, and count one recipe more.
+    if (created?.status === "inserted") await announceRecipeListsChanged(created.recipeId);
+
+    return created;
+  });
 }
 
 /** Update a recipe with its lines resolved, as `createResolvedRecipe` creates one. */
@@ -140,5 +146,9 @@ export function updateResolvedRecipe(
   return writeResolved(
     () => withResolvedIngredients(payload, actor, recipeId),
     (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version)
-  );
+  ).then(async (updated) => {
+    if (updated.applied) await announceRecipeListsChanged(recipeId);
+
+    return updated;
+  });
 }

@@ -55,6 +55,7 @@ import {
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { resolveCuisines } from "@norish/shared/lib/cuisine-resolver";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { countryDisplayName, listCountryOptions } from "@norish/shared/lib/recipe-provenance";
@@ -262,6 +263,8 @@ async function resolveProposedCuisines(
   if (created.length === 0) return ids;
 
   const rows = await cuisinesForNames(householdId, created, { create: true });
+
+  announceListsChanged(householdId, ["cuisine"]);
 
   return [...new Set([...ids, ...rows.map((row) => row.id)])];
 }

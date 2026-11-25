@@ -7,6 +7,7 @@ import { recipesRouter } from "../../src/routers/recipes";
 import { updateRecipeProcedure } from "../../src/routers/recipes/recipes";
 import { router } from "../../src/trpc";
 import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
+import { lists } from "../mocks/realtime/lists";
 import { recipes } from "../mocks/realtime/recipes";
 // Import mocks for assertions
 import {
@@ -53,6 +54,12 @@ vi.mock("@norish/db", async (importOriginal) => {
 vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
+vi.mock("@norish/shared-server/realtime/lists", () => import("../mocks/realtime/lists"));
+// The household a recipe is in as its list change is announced.
+vi.mock("@norish/db/repositories/list-entries", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db/repositories/list-entries")>()),
+  recipeHouseholdId: vi.fn(async () => "household-now"),
+}));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 const readRecipeNutrition = vi.hoisted(() => vi.fn());
@@ -242,6 +249,12 @@ describe("recipes procedures", () => {
         "created",
         { recipe: mockDashboard },
         expect.anything()
+      );
+      // Its entries may be new and count one recipe more, in the household it is in now.
+      expect(lists.publish).toHaveBeenCalledWith(
+        "changed",
+        { kinds: ["tag", "cuisine", "category"] },
+        { householdId: "household-now" }
       );
     });
 

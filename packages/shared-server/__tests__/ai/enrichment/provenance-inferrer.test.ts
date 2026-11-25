@@ -23,6 +23,7 @@ import {
   getCuisineStrategy,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
 
 const mocked = vi.hoisted(() => ({
   generateStructured: vi.fn(),
@@ -44,6 +45,8 @@ vi.mock("@norish/db/repositories/cuisines", () => ({
   listCuisinesForHousehold: vi.fn(),
   cuisinesForNames: vi.fn(),
 }));
+
+vi.mock("@norish/shared-server/realtime/list-changes", () => ({ announceListsChanged: vi.fn() }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getCuisineStrategy: vi.fn(),
@@ -468,6 +471,7 @@ describe("Cuisines", () => {
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
     expect(cuisinesForNames).toHaveBeenCalledWith("household-1", ["Basque"], { create: true });
+    expect(announceListsChanged).toHaveBeenCalledWith("household-1", ["cuisine"]);
     expect(claim.cuisineIds).toEqual(["id-basque"]);
   });
 

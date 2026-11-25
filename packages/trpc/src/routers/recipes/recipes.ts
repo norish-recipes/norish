@@ -53,6 +53,7 @@ import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/med
 import { mayUsePendingRecipeId } from "@norish/shared-server/media/pending-recipe-media";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { policyAudience } from "@norish/shared-server/realtime/audience";
+import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
@@ -397,6 +398,7 @@ const updateCategories = authedProcedure
         { recipe: updated },
         await policyAudience(updated.householdId)
       );
+      announceListsChanged(updated.householdId, ["category"]);
     }
 
     return { success: true };
@@ -436,6 +438,8 @@ const deleteProcedure = authedProcedure
         { ids: removed.filter((id) => households.get(id) === householdId) },
         await policyAudience(householdId)
       );
+      // Its entries count one recipe fewer.
+      announceListsChanged(householdId);
     }
 
     if (staleIds.length > 0) {

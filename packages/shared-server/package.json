@@ -64,6 +64,7 @@
     "./realtime/hub": "./src/realtime/hub.ts",
     "./realtime/ingredients": "./src/realtime/ingredients.ts",
     "./realtime/pantry": "./src/realtime/pantry.ts",
+    "./realtime/list-changes": "./src/realtime/list-changes.ts",
     "./realtime/lists": "./src/realtime/lists.ts",
     "./realtime/permissions": "./src/realtime/permissions.ts",
     "./realtime/ratings": "./src/realtime/ratings.ts",

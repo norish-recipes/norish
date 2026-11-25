@@ -19,7 +19,7 @@ import {
 } from "@norish/db/repositories/list-entries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { config } from "@norish/shared-server/realtime/config";
-import { lists } from "@norish/shared-server/realtime/lists";
+import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { ListEntryNameSchemas } from "@norish/shared/contracts/zod";
 
 import type { AuthedProcedureContext } from "../../middleware";
@@ -81,7 +81,7 @@ async function changeableScope(ctx: ListContext, kind: ListKind, id: string): Pr
 /** A household list change reaches the household; an instance entry's reaches everyone. */
 function announce(kind: ListKind, scope: ListScope) {
   if (scope === null) void config.publish("changed", {}, undefined);
-  else void lists.publish("changed", { kind }, { householdId: scope });
+  else announceListsChanged(scope, [kind]);
 }
 
 /**

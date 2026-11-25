@@ -6,12 +6,17 @@
  * modules extract and persist, and stop there.
  */
 
+import type { ListKind } from "@norish/db/repositories/list-entries";
 import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeBecameUsablePayload } from "@norish/shared/contracts/realtime/recipe-enrichment";
-import type { RecipeEnrichmentLifecycleState } from "@norish/shared/lib/recipe-enrichment";
+import type {
+  RecipeEnrichmentKind,
+  RecipeEnrichmentLifecycleState,
+} from "@norish/shared/lib/recipe-enrichment";
 import { createLogger } from "@norish/shared-server/logger";
 import { accountAudience, recipeAudience } from "@norish/shared-server/realtime/audience";
+import { announceRecipeListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { recipeEnrichment } from "@norish/shared-server/realtime/recipe-enrichment";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
@@ -73,11 +78,23 @@ export async function publishEnrichmentLifecycle(
   );
 }
 
-/** Publish the canonical recipe value after an enrichment write. */
+/** The lists each enrichment writes into: its entries may be new, and count one recipe more. */
+const LISTS_WRITTEN: Partial<Record<RecipeEnrichmentKind, readonly ListKind[]>> = {
+  "auto-tagging": ["tag"],
+  "allergy-detection": ["tag"],
+  "auto-categorization": ["category"],
+  "recipe-provenance": ["cuisine"],
+};
+
+/** Publish the canonical recipe value after an enrichment write, and the lists it wrote into. */
 export async function publishEnrichmentRecipeUpdated(
   data: RecipeEnrichmentJobData,
   recipe: FullRecipeDTO
 ): Promise<void> {
+  const written = LISTS_WRITTEN[data.kind];
+
+  if (written) await announceRecipeListsChanged(recipe.id, written);
+
   const audience = await recipeAudience(recipe.id);
 
   if (!audience) return;

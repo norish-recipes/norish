@@ -6,6 +6,7 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 const mocks = vi.hoisted(() => ({
   publishRecipe: vi.fn(async () => undefined),
   publishEnrichment: vi.fn(async () => undefined),
+  publishLists: vi.fn(async () => undefined),
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -21,6 +22,11 @@ vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  LIST_KINDS: ["tag", "cuisine", "category"],
+  recipeHouseholdId: vi.fn().mockResolvedValue("owners-household"),
+}));
+vi.mock("@norish/shared-server/realtime/lists", () => ({ lists: { publish: mocks.publishLists } }));
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
@@ -85,6 +91,12 @@ describe("publishEnrichmentRecipeUpdated", () => {
       "updated",
       { recipe, source: "enrichment", kind: data.kind },
       { viewPolicy: "household", householdId: "owners-household" }
+    );
+    // The Tags it wrote may be new entries of that household's list.
+    expect(mocks.publishLists).toHaveBeenCalledWith(
+      "changed",
+      { kinds: ["tag"] },
+      { householdId: "owners-household" }
     );
   });
 });
