@@ -45,7 +45,7 @@ vi.mock("@norish/db", async (importOriginal) => {
     getRecipeHouseholdIds: recipes.getRecipeHouseholdIds,
     getRecipesByUrlsForPolicy: vi.fn(),
     listRecipes: recipes.listRecipes,
-    recipeExistsByUrlForPolicy: vi.fn(),
+    findRecipeIdByUrlForAccount: vi.fn(),
     updateRecipeCategories: recipes.updateRecipeCategories,
     updateRecipeWithRefs: recipes.updateRecipeWithRefs,
   };

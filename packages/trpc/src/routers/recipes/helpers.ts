@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
-import { canAccessResource } from "@norish/auth/permissions";
+import { canAccessResource, resourceAccess } from "@norish/auth/permissions";
 import { getRecipeFull, getRecipeHouseholdIds } from "@norish/db";
 import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -71,27 +71,52 @@ export async function announceRecipeUpdated(
   return stored;
 }
 
-/**
- * Whether the reader may do `action` to each recipe, under the Permission Policy. A recipe they
- * may not view is left out, exactly as one that does not exist.
- */
+/** Whether the reader may do `action` to each recipe; one they may not view is left out, as one
+ * that does not exist. */
 export async function recipeAccess(
   ctx: Pick<RecipeUserContext, "householdId">,
   recipeIds: string[],
   action: PermissionAction
 ): Promise<Map<string, boolean>> {
-  const households = await getRecipeHouseholdIds(recipeIds);
   const access = new Map<string, boolean>();
 
-  for (const [recipeId, householdId] of households) {
-    if (!(await canAccessResource("view", ctx.householdId, householdId))) continue;
-    access.set(
-      recipeId,
-      action === "view" || (await canAccessResource(action, ctx.householdId, householdId))
-    );
+  for (const [recipeId, householdId] of await getRecipeHouseholdIds(recipeIds)) {
+    const allowed = await resourceAccess(action, ctx.householdId, householdId);
+
+    if (allowed !== undefined) access.set(recipeId, allowed);
   }
 
   return access;
+}
+
+/** Whether the reader may view the recipe; a gone one and a hidden one answer the same. */
+export async function canViewRecipe(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  recipeId: string
+): Promise<boolean> {
+  return (await recipeAccess(ctx, [recipeId], "view")).has(recipeId);
+}
+
+/** A recipe or cookbook the reader may not view, or that is gone: the two read the same. */
+export function notFoundError(what: "recipe" | "cookbook") {
+  return new TRPCError({
+    code: "NOT_FOUND",
+    message: `${what === "recipe" ? "Recipe" : "Cookbook"} not found`,
+  });
+}
+
+/** Refuses what `resourceAccess` answered: not found when out of view, forbidden when not allowed. */
+export function refuseUnlessAllowed(
+  allowed: boolean | undefined,
+  what: "recipe" | "cookbook"
+): asserts allowed {
+  if (allowed === undefined) throw notFoundError(what);
+  if (!allowed) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `You do not have permission to access this ${what}`,
+    });
+  }
 }
 
 /** Refuses unless the reader may do `action`; a recipe they may not view is not found. */
@@ -100,17 +125,7 @@ export async function assertRecipeAccess(
   recipeId: string,
   action: PermissionAction
 ): Promise<void> {
-  const allowed = (await recipeAccess(ctx, [recipeId], action)).get(recipeId);
-
-  if (allowed === undefined) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
-  }
-  if (!allowed) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this recipe",
-    });
-  }
+  refuseUnlessAllowed((await recipeAccess(ctx, [recipeId], action)).get(recipeId), "recipe");
 }
 
 /**
@@ -158,7 +173,5 @@ export async function findRecipeForViewer(
   ctx: Pick<RecipeUserContext, "householdId">,
   recipeId: string
 ): Promise<FullRecipeDTO | null> {
-  const viewable = (await recipeAccess(ctx, [recipeId], "view")).has(recipeId);
-
-  return viewable ? getRecipeFull(recipeId) : null;
+  return (await canViewRecipe(ctx, recipeId)) ? getRecipeFull(recipeId) : null;
 }

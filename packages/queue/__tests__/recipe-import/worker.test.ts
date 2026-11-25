@@ -25,7 +25,7 @@ import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
-const recipeExistsByUrlForPolicy = vi.fn();
+const findRecipeIdByUrlForAccount = vi.fn();
 const getDecryptedTokensByUserId = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
 const parseRecipeFromUrl = vi.fn();
@@ -41,7 +41,7 @@ vi.mock("@norish/shared-server/ai/runtime/errors", async (importOriginal) => ({
 vi.mock("@norish/db", () => ({
   createRecipeWithRefs,
   dashboardRecipe,
-  recipeExistsByUrlForPolicy,
+  findRecipeIdByUrlForAccount,
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
@@ -115,7 +115,7 @@ const PARSED_RECIPE = {
 describe("processImportJob", () => {
   beforeEach(() => {
     getRecipePermissionPolicy.mockResolvedValue({ view: "everyone" });
-    recipeExistsByUrlForPolicy.mockResolvedValue({ exists: false });
+    findRecipeIdByUrlForAccount.mockResolvedValue(null);
     getDecryptedTokensByUserId.mockResolvedValue([]);
     parseRecipeFromUrl.mockResolvedValue({ recipe: PARSED_RECIPE, usedAI: false });
     withDishColor.mockImplementation(async (dto) => ({ ...dto, dishColor: "#7c4a1e" }));
@@ -199,7 +199,7 @@ describe("processImportJob", () => {
   it("ends on the existing recipe when the URL is already in the library", async () => {
     const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
 
-    recipeExistsByUrlForPolicy.mockResolvedValue({ exists: true, existingRecipeId: "recipe-12" });
+    findRecipeIdByUrlForAccount.mockResolvedValue("recipe-12");
 
     await expect(
       processRecipeImportJob({

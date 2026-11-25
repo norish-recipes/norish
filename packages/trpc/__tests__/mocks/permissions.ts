@@ -15,6 +15,13 @@ export const canAccessResource = vi.fn(
     policyAllows(policy, action, reader, row)
 );
 export const getRecipePermissionPolicy = vi.fn(async () => ({ ...policy }));
+export const resourceAccess = vi.fn(
+  async (action: keyof RecipePermissionPolicy, reader: string, row: string) => {
+    if (!(await canAccessResource("view", reader, row))) return undefined;
+
+    return action === "view" || (await canAccessResource(action, reader, row));
+  }
+);
 export const isAIEnabled = vi.fn().mockResolvedValue(true);
 /** Refuses as the real one does, by what `isAIEnabled` is set to answer. */
 export const assertAIEnabled = vi.fn(async () => {

@@ -3,7 +3,7 @@ import z from "zod";
 
 import type { TagDto } from "@norish/shared/contracts/dto/tag";
 import { db } from "@norish/db/drizzle";
-import { recipes, recipeTags, tags, userAllergies } from "@norish/db/schema";
+import { recipeTags, tags, userAllergies } from "@norish/db/schema";
 import { TagSelectBaseSchema } from "@norish/shared/contracts/zod";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { normalizeEnrichmentTagNames } from "@norish/shared/lib/recipe-enrichment";
@@ -18,25 +18,6 @@ export async function listAllTagNames(): Promise<string[]> {
     .selectDistinct({ name: tags.name, lowerName })
     .from(tags)
     .innerJoin(recipeTags, eq(tags.id, recipeTags.tagId))
-    .orderBy(lowerName);
-
-  return rows.map((r) => r.name).filter(Boolean);
-}
-
-/**
- * List tag names used by recipes owned by the given users (typically the
- * requesting user plus their household members).
- */
-export async function listTagNamesForUsers(userIds: string[]): Promise<string[]> {
-  if (!userIds.length) return [];
-
-  const lowerName = sql<string>`lower(${tags.name})`.as("lower_name");
-  const rows = await db
-    .selectDistinct({ name: tags.name, lowerName })
-    .from(tags)
-    .innerJoin(recipeTags, eq(tags.id, recipeTags.tagId))
-    .innerJoin(recipes, eq(recipeTags.recipeId, recipes.id))
-    .where(inArray(recipes.userId, userIds))
     .orderBy(lowerName);
 
   return rows.map((r) => r.name).filter(Boolean);

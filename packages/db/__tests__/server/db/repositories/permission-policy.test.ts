@@ -36,11 +36,11 @@ import {
 } from "@norish/db/repositories/planned-items";
 import {
   findExistingRecipe,
+  findRecipeIdByUrlForAccount,
   getRandomRecipeCandidates,
   getRecipeHouseholdIds,
   listRecipes,
   listVisibleRecipeIds,
-  recipeExistsByUrlForPolicy,
   searchRecipesByName,
 } from "@norish/db/repositories/recipes";
 import { setConfig } from "@norish/db/repositories/server-config";
@@ -126,10 +126,7 @@ describe("the Permission Policy over two households", () => {
     expect(await listed(admin)).toEqual([soup, stew].sort());
     expect(ours(await listVisibleRecipeIds(viewer(bob)))).toEqual([soup, stew].sort());
     expect((await searchRecipesByName(viewer(bob), "Soup")).map((r) => r.id)).toEqual([soup]);
-    expect(
-      (await recipeExistsByUrlForPolicy("https://a.example/soup", testHouseholdOf(bob), "everyone"))
-        .exists
-    ).toBe(true);
+    expect(await findRecipeIdByUrlForAccount("https://a.example/soup", bob)).toBe(soup);
   });
 
   it("lists only the reader's household's recipes under view Household, an admin's included", async () => {
@@ -140,15 +137,7 @@ describe("the Permission Policy over two households", () => {
     expect(await listed(admin)).toEqual([]);
     expect(await searchRecipesByName(viewer(bob), "Soup")).toEqual([]);
     expect(ours((await getRandomRecipeCandidates(viewer(bob))).map((r) => r.id))).toEqual([stew]);
-    expect(
-      (
-        await recipeExistsByUrlForPolicy(
-          "https://a.example/soup",
-          testHouseholdOf(bob),
-          "household"
-        )
-      ).exists
-    ).toBe(false);
+    expect(await findRecipeIdByUrlForAccount("https://a.example/soup", bob)).toBeNull();
 
     const library = await listLibrary(viewer(admin), { limit: 50 });
 

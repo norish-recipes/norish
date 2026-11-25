@@ -1,40 +1,32 @@
-import { TRPCError } from "@trpc/server";
-
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { PolicyTarget } from "@norish/shared-server/realtime/domain";
 import type { ClientEventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
-import { canAccessResource } from "@norish/auth/permissions";
+import { resourceAccess } from "@norish/auth/permissions";
 import { getCookbookRow } from "@norish/db/repositories/cookbooks";
 import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
+import { notFoundError, refuseUnlessAllowed } from "../recipes/helpers";
+
 export type CookbookUserContext = {
-  user: { id: string };
   householdId: string;
 };
 
-/**
- * Cookbooks answer to the recipe Permission Policy, not a rule of their own (ADR-0027). One the
- * reader may not view is not found; one they may view but not `action` is forbidden.
- * Returns the row so a caller that needs the version or title does not read it twice.
- */
+/** Cookbooks answer to the recipe Permission Policy (ADR-0027), refused as a recipe is. Returns
+ * the row so a caller that needs the version or title does not read it twice. */
 export async function assertCookbookAccess(
-  ctx: Pick<CookbookUserContext, "householdId">,
+  ctx: CookbookUserContext,
   cookbookId: string,
   action: PermissionAction
 ) {
   const cookbook = await getCookbookRow(cookbookId);
 
-  if (!cookbook || !(await canAccessResource("view", ctx.householdId, cookbook.householdId))) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Cookbook not found" });
-  }
-  if (!(await canAccessResource(action, ctx.householdId, cookbook.householdId))) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this cookbook",
-    });
-  }
+  if (!cookbook) throw notFoundError("cookbook");
+  refuseUnlessAllowed(
+    await resourceAccess(action, ctx.householdId, cookbook.householdId),
+    "cookbook"
+  );
 
   return cookbook;
 }

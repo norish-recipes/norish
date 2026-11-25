@@ -888,17 +888,26 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
   delete: "household",
 };
 
-/**
- * Whether a reader in `readerHouseholdId` may act on a recipe or cookbook of `rowHouseholdId`.
- * The one rule both servers' checks and the apps' selectors apply; no role reaches past it.
- */
+/** The one rule: whose recipes and cookbooks a reader of `readerHouseholdId` reaches with
+ * `action`, every household's (null) or their own household's alone. No role reaches past it. */
+export function policyReach(
+  policy: RecipePermissionPolicy,
+  action: keyof RecipePermissionPolicy,
+  readerHouseholdId: string
+): string | null {
+  return policy[action] === "everyone" ? null : readerHouseholdId;
+}
+
+/** Whether a reader in `readerHouseholdId` may act on a recipe or cookbook of `rowHouseholdId`. */
 export function policyAllows(
   policy: RecipePermissionPolicy,
   action: keyof RecipePermissionPolicy,
   readerHouseholdId: string,
   rowHouseholdId: string
 ): boolean {
-  return policy[action] === "everyone" || readerHouseholdId === rowHouseholdId;
+  const reach = policyReach(policy, action, readerHouseholdId);
+
+  return reach === null || reach === rowHouseholdId;
 }
 
 /**

@@ -29,6 +29,18 @@ export async function canAccessResource(
   return policyAllows(await getRecipePermissionPolicy(), action, readerHouseholdId, rowHouseholdId);
 }
 
+/** What a reader may do to a recipe or cookbook of `rowHouseholdId`: nothing at all (undefined,
+ * it reads as missing) unless they may view it, then whether `action` is allowed. */
+export async function resourceAccess(
+  action: PermissionAction,
+  readerHouseholdId: string,
+  rowHouseholdId: string
+): Promise<boolean | undefined> {
+  if (!(await canAccessResource("view", readerHouseholdId, rowHouseholdId))) return undefined;
+
+  return action === "view" || (await canAccessResource(action, readerHouseholdId, rowHouseholdId));
+}
+
 /** Refuses a household row that belongs to another household than the caller's. */
 export function assertHouseholdAccess(householdId: string, rowHouseholdId: string): void {
   if (householdId !== rowHouseholdId) throw new Error("FORBIDDEN");

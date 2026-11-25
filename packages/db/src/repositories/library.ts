@@ -338,6 +338,20 @@ export async function listLibrary(
   return { items, total };
 }
 
+/** Every Tag name on a recipe the reader may view, as the Permission Policy says. */
+export async function listTagNamesForViewer(ctx: Pick<RecipeListContext, "householdId">) {
+  const lowerName = sql<string>`lower(${tagsTable.name})`.as("lower_name");
+  const rows = await db
+    .selectDistinct({ name: tagsTable.name, lowerName })
+    .from(tagsTable)
+    .innerJoin(recipeTags, eq(tagsTable.id, recipeTags.tagId))
+    .innerJoin(recipes, eq(recipeTags.recipeId, recipes.id))
+    .where(await buildPolicyCondition(ctx, recipes.householdId, "view"))
+    .orderBy(lowerName);
+
+  return rows.map((r) => r.name).filter(Boolean);
+}
+
 /** How many Categories and Tags Search offers with no text. */
 const DISCOVER_CATEGORIES = 4;
 const DISCOVER_TAGS = 12;

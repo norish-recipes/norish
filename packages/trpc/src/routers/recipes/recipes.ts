@@ -75,6 +75,7 @@ import {
   announceRecipeUpdated,
   assertRecipeAccess,
   canViewImportOf,
+  canViewRecipe,
   findRecipeForViewer,
   handleRecipeError,
   recipeAccess,
@@ -574,7 +575,7 @@ export const importStatusProcedure = authedProcedure
           // A URL already in the library ends the import on that recipe.
           const importedId = typeof job.returnvalue === "string" ? job.returnvalue : input.recipeId;
           // A recipe gone out of view since the import ended is not named.
-          const viewable = (await recipeAccess(ctx, [importedId], "view")).has(importedId);
+          const viewable = await canViewRecipe(ctx, importedId);
 
           return {
             ...status,

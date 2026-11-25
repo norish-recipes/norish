@@ -6,11 +6,10 @@ import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import { listCuisines } from "@norish/db/repositories/cuisines";
-import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
+import { listTagNamesForViewer } from "@norish/db/repositories/library";
 import {
   getIngredientWords,
   getLocaleConfig,
-  getRecipePermissionPolicy,
   getRecurrenceConfig,
   getTimerKeywords,
   getUnits,
@@ -22,7 +21,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getValkeyHealth } from "@norish/shared-server/valkey/client";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
-import { authedProcedure } from "../../middleware";
+import { authedProcedure, viewerOf } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
 import {
   liveResponseSchema,
@@ -94,18 +93,11 @@ const localeConfig = publicProcedure.query(async () => {
   };
 });
 
-/**
- * Every tag name on a recipe the reader may view: all of them under view Everyone, the
- * household's otherwise. A server admin is a reader like any other.
- */
+/** Every tag name on a recipe the reader may view; a server admin is a reader like any other. */
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
-  const policy = await getRecipePermissionPolicy();
-  const tagNames =
-    policy.view === "everyone" ? await listAllTagNames() : await listTagNamesForUsers(ctx.userIds);
-
-  return { tags: tagNames };
+  return { tags: await listTagNamesForViewer(viewerOf(ctx)) };
 });
 
 /**

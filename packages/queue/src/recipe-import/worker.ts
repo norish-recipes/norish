@@ -7,11 +7,10 @@
 import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import { dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
+import { dashboardRecipe, findRecipeIdByUrlForAccount } from "@norish/db";
 import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
@@ -59,19 +58,15 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
-  const viewPolicy = (await getRecipePermissionPolicy()).view;
-  const existingCheck = await recipeExistsByUrlForPolicy(url, householdId, viewPolicy);
+  const existingRecipeId = await findRecipeIdByUrlForAccount(url, userId);
 
-  await completeStep(job, { alreadyExists: existingCheck.exists });
+  await completeStep(job, { alreadyExists: existingRecipeId !== null });
 
-  if (existingCheck.exists && existingCheck.existingRecipeId) {
-    const dashboardDto = await dashboardRecipe(existingCheck.existingRecipeId);
+  if (existingRecipeId) {
+    const dashboardDto = await dashboardRecipe(existingRecipeId);
 
     if (dashboardDto) {
-      log.info(
-        { jobId: job.id, existingRecipeId: existingCheck.existingRecipeId },
-        "Recipe already exists, returning existing"
-      );
+      log.info({ jobId: job.id, existingRecipeId }, "Recipe already exists, returning existing");
 
       // Include pendingRecipeId so client can remove the skeleton
       // Show imported toast since no processing will follow for existing recipes
@@ -86,7 +81,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
       );
     }
 
-    return existingCheck.existingRecipeId;
+    return existingRecipeId;
   }
 
   // No allergy list is fetched here: extraction reads the source, and allergy

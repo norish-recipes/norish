@@ -10,7 +10,7 @@ import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contract
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertRecipeAccess, recipeAccess } from "../recipes/helpers";
+import { assertRecipeAccess, canViewRecipe } from "../recipes/helpers";
 
 interface UserContext {
   user: { id: string };
@@ -72,7 +72,7 @@ const getUserRatingProcedure = authedProcedure
   .input(RatingGetInputSchema)
   .query(async ({ ctx, input }) => {
     // A recipe out of view answers as one never rated, as a gone one does.
-    const viewable = (await recipeAccess(ctx, [input.recipeId], "view")).has(input.recipeId);
+    const viewable = await canViewRecipe(ctx, input.recipeId);
     const rating = viewable
       ? await getUserRatingWithVersion(ctx.user.id, input.recipeId)
       : { rating: null, version: null };
@@ -81,7 +81,7 @@ const getUserRatingProcedure = authedProcedure
   });
 
 const getAverage = authedProcedure.input(RatingGetInputSchema).query(async ({ ctx, input }) => {
-  const viewable = (await recipeAccess(ctx, [input.recipeId], "view")).has(input.recipeId);
+  const viewable = await canViewRecipe(ctx, input.recipeId);
   const stats = viewable
     ? await getAverageRating(input.recipeId)
     : { averageRating: null, ratingCount: 0 };

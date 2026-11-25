@@ -21,6 +21,7 @@ import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contract
 import type { LineJoin } from "@norish/shared/lib/line-foods";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
+  policyReach,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
@@ -80,8 +81,6 @@ import {
 } from "./steps";
 import { attachTagsToRecipeByInputTx } from "./tags";
 
-type RecipeViewPolicy = RecipePermissionPolicy["view"];
-
 /**
  * Which of the recipe permission policy's three levels a query is asking
  * about. Spelled out here rather than imported from `@norish/auth`, which
@@ -89,17 +88,14 @@ type RecipeViewPolicy = RecipePermissionPolicy["view"];
  */
 export type PolicyAction = "view" | "edit" | "delete";
 
-async function getRecipePolicyLevel(
-  action: PolicyAction,
-  executor: Db = db
-): Promise<RecipeViewPolicy> {
-  const policy = await getConfig<RecipePermissionPolicy>(
+async function getRecipePolicy(executor: Db = db): Promise<RecipePermissionPolicy> {
+  const stored = await getConfig<RecipePermissionPolicy>(
     ServerConfigKeys.RECIPE_PERMISSION_POLICY,
     false,
     executor
   );
 
-  return policy?.[action] ?? DEFAULT_RECIPE_PERMISSION_POLICY[action];
+  return { ...DEFAULT_RECIPE_PERMISSION_POLICY, ...stored };
 }
 
 function nonEmpty(s: string | null | undefined): s is string {
@@ -194,35 +190,6 @@ export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null>
 }
 
 /**
- * A recipe with this URL the importer may view, for queue deduplication before
- * creating a new one: any under view Everyone, the household's under Household.
- */
-export async function recipeExistsByUrlForPolicy(
-  url: string,
-  householdId: string,
-  viewPolicy: RecipeViewPolicy
-): Promise<{ exists: boolean; existingRecipeId?: string }> {
-  const whereCondition = and(
-    eq(recipes.url, url),
-    viewPolicy === "household" ? eq(recipes.householdId, householdId) : undefined
-  );
-
-  const existing = await db.query.recipes.findFirst({
-    where: whereCondition,
-    columns: { id: true },
-  });
-
-  if (existing) {
-    dbLogger.debug(
-      { url, recipeId: existing.id, viewPolicy },
-      "Found existing recipe by URL for policy"
-    );
-  }
-
-  return { exists: existing !== undefined, existingRecipeId: existing?.id };
-}
-
-/**
  * Check if a recipe already exists within a household context.
  * First checks by URL (if provided), then falls back to exact title match.
  * A title match never crosses URLs: where both recipes carry one and they
@@ -291,29 +258,38 @@ export interface RecipeListContext {
   householdId: string;
 }
 
-/**
- * The SQL the Permission Policy puts on a recipe's or cookbook's household column for one action:
- * nothing under Everyone, the reader's own household under Household. A missing row and a hidden
- * one read the same. Cookbooks answer to this same condition (ADR-0027).
- */
+/** The Permission Policy's rule (`policyReach`) as SQL on a recipe's or cookbook's household
+ * column (ADR-0027); a hidden row reads as a missing one. */
 export async function buildPolicyCondition(
   ctx: Pick<RecipeListContext, "householdId">,
   householdColumn: AnyPgColumn,
   action: PolicyAction = "view",
   executor: Db = db
 ) {
-  const level = await getRecipePolicyLevel(action, executor);
+  const reach = policyReach(await getRecipePolicy(executor), action, ctx.householdId);
 
-  return level === "household" ? eq(householdColumn, ctx.householdId) : undefined;
+  return reach === null ? undefined : eq(householdColumn, reach);
 }
 
 /** The view condition for an account read by its id, in the household it is in now. */
 export async function accountViewCondition(userId: string, householdColumn: AnyPgColumn) {
-  const level = await getRecipePolicyLevel("view");
+  const [current] = await currentHouseholdIdSql(userId);
 
-  return level === "household"
-    ? inArray(householdColumn, currentHouseholdIdSql(userId))
-    : undefined;
+  return current ? buildPolicyCondition(current, householdColumn) : sql`false`;
+}
+
+/** A recipe with this URL the account may view now, for an import to end on instead. */
+export async function findRecipeIdByUrlForAccount(
+  url: string,
+  userId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.url, url), await accountViewCondition(userId, recipes.householdId)))
+    .limit(1);
+
+  return row?.id ?? null;
 }
 
 /** Whether the account, in its household now, may view the recipe. */

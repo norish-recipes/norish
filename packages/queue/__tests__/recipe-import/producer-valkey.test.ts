@@ -18,7 +18,7 @@ import { getBullConnectionOptions } from "../../src/valkey/bullmq";
 
 const policy = vi.hoisted(() => ({ view: "everyone" as PermissionLevel }));
 const db = vi.hoisted(() => ({
-  recipeExistsByUrlForPolicy: vi.fn(async () => ({ exists: false as boolean })),
+  findRecipeIdByUrlForAccount: vi.fn(async (): Promise<string | null> => null),
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -86,10 +86,7 @@ it("imports the URL again once the first import has finished, though its job is 
 });
 
 it("answers with the recipe a URL already imported, and queues nothing", async () => {
-  db.recipeExistsByUrlForPolicy.mockResolvedValueOnce({
-    exists: true,
-    existingRecipeId: "kept",
-  } as never);
+  db.findRecipeIdByUrlForAccount.mockResolvedValueOnce("kept");
 
   await expect(addImportJob(queue, importData())).resolves.toEqual({
     status: "exists",

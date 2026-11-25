@@ -6,7 +6,8 @@
 
 import type { Queue } from "bullmq";
 
-import type { PermissionLevel } from "@norish/config/zod/server-config";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import { policyReach } from "@norish/config/zod/server-config";
 import { normalizeUrl } from "@norish/shared/lib/helpers";
 
 export function sanitizeUrlForJobId(url: string): string {
@@ -16,18 +17,18 @@ export function sanitizeUrlForJobId(url: string): string {
 }
 
 /**
- * The deduplication id of a URL import, scoped by the view policy: one import
- * of a URL in flight at a time, for everyone or per household.
- * BullMQ allows no colons in it, so the parts are joined with underscores.
+ * The deduplication id of a URL import, scoped by whom its result is viewable to: one import of a
+ * URL in flight at a time. BullMQ allows no colons in it, so the parts are joined with underscores.
  */
 export function recipeImportDeduplicationId(
   url: string,
   householdId: string,
-  viewPolicy: PermissionLevel
+  policy: RecipePermissionPolicy
 ): string {
   const sanitized = sanitizeUrlForJobId(url);
+  const reach = policyReach(policy, "view", householdId);
 
-  return viewPolicy === "household" ? `import_${householdId}_${sanitized}` : `import_${sanitized}`;
+  return reach ? `import_${reach}_${sanitized}` : `import_${sanitized}`;
 }
 
 /**
