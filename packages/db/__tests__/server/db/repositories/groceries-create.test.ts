@@ -21,7 +21,12 @@ import {
 import { createStore } from "@norish/db/repositories/stores";
 import { groceries } from "@norish/db/schema";
 
-import { getTestDb, householdIdOf, testHouseholdOf } from "../../../helpers/db-test-helpers";
+import {
+  createTestUser,
+  getTestDb,
+  householdIdOf,
+  testHouseholdOf,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("what a create shifts", () => {
@@ -258,7 +263,7 @@ describe("findNewestGroceryNamed", () => {
     await testBase.teardown();
   });
 
-  const add = async (name: string, isDone: boolean) => {
+  const add = async (name: string, isDone: boolean, adder = userId) => {
     const id = crypto.randomUUID();
 
     await createGroceries(
@@ -266,8 +271,8 @@ describe("findNewestGroceryNamed", () => {
         {
           id,
           groceries: {
-            householdId: testHouseholdOf(userId),
-            userId,
+            householdId: testHouseholdOf(adder),
+            userId: adder,
             name,
             unit: null,
             amount: null,
@@ -277,7 +282,7 @@ describe("findNewestGroceryNamed", () => {
           },
         },
       ],
-      householdId
+      testHouseholdOf(adder)
     );
 
     return id;
@@ -288,6 +293,7 @@ describe("findNewestGroceryNamed", () => {
     const newest = await add("melk", true);
 
     await add("brood", false);
+    await add("melk", false, (await createTestUser()).id);
 
     expect((await findNewestGroceryNamed(householdId, "melk"))?.id).toBe(newest);
     expect(await findNewestGroceryNamed(householdId, "kaas")).toBeNull();
