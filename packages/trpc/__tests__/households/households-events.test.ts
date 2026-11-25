@@ -1,10 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  announcementsSettled,
-  householdsRouter,
-} from "@norish/trpc/routers/households/households";
+import { announcementsSettled, householdsRouter } from "@norish/trpc/routers/households/households";
 
 import {
   createMockAuthedContext,
