@@ -814,23 +814,70 @@ describe("deleting an account", () => {
       return { admin, deleted, household, recipe, grocery };
     }
 
+    type TestTransaction = Parameters<
+      Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]
+    >[0];
+
+    /** Holds a lock in a transaction of its own until released; `pid` is its backend. */
+    async function holdUntilReleased(lock: (tx: TestTransaction) => Promise<unknown>) {
+      let release = () => {};
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let held = (_pid: number) => {};
+      const pid = new Promise<number>((resolve) => (held = resolve));
+      const done = getTestDb().transaction(async (tx) => {
+        await lock(tx);
+        held((await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`)).rows[0]!.pid);
+        await gate;
+      });
+
+      return {
+        pid: await Promise.race([pid, done.then(() => Promise.reject(new Error("Lock not held")))]),
+        release: async () => {
+          release();
+          await done;
+        },
+      };
+    }
+
+    const blockedBy = async (pid: number, blocker: number) =>
+      (await lockWaits()).get(pid)?.includes(blocker) || undefined;
+    const waiterOn = async (blocker: number, except: number[] = []) =>
+      [...(await lockWaits())].find(
+        ([pid, blockers]) => !except.includes(pid) && blockers.includes(blocker)
+      )?.[0];
+    const lockRecipe = (recipeId: string) => (tx: TestTransaction) =>
+      tx.select().from(recipes).where(eq(recipes.id, recipeId)).for("update");
+
     it("a grocery added while the deletion holds the household is refused for a retry", async () => {
       const m = await memberWithGrocery();
-      const holdRecipe = (
-        tx: Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0]
-      ) =>
-        tx
-          .select({ id: recipes.id })
-          .from(recipes)
-          .where(eq(recipes.id, m.recipe.id))
-          .for("update");
+      const adminsLine = await addTestGrocery(m.admin, { name: "kaas" });
+      const recipeHold = await holdUntilReleased(lockRecipe(m.recipe.id));
+      const lineHold = await holdUntilReleased((tx) =>
+        tx.select().from(groceries).where(eq(groceries.id, adminsLine.id)).for("update")
+      );
+      const runs: Promise<unknown>[] = [];
 
-      // The deletion holds the household and waits on the recipe; the grocery shifts the
-      // deleted member's line, then waits on the household the deletion holds.
-      const settled = await raceBehind(holdRecipe, [
-        () => deleteAccount(m.deleted),
-        () => addTestGrocery(m.admin, { name: "brood" }),
-      ]);
+      try {
+        // The deletion holds the household and waits on the recipe; the grocery's shift holds the
+        // deleted member's line and waits on the admin's.
+        runs.push(deleteAccount(m.deleted));
+        runs[0]!.catch(() => undefined);
+        const deleter = await waitFor(() => waiterOn(recipeHold.pid), "the deletion to wait");
+
+        runs.push(addTestGrocery(m.admin, { name: "brood" }));
+        runs[1]!.catch(() => undefined);
+        const adder = await waitFor(() => waiterOn(lineHold.pid, [deleter]), "the grocery");
+
+        await recipeHold.release();
+        await waitFor(() => blockedBy(deleter, adder), "the deletion to wait on the line");
+        // Postgres checks a wait for a deadlock once, deadlock_timeout in: the deletion's finds
+        // none, so the grocery's wait on the household closes the cycle and its check finds it.
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } finally {
+        await recipeHold.release();
+        await lineHold.release();
+      }
+      const settled = await Promise.allSettled(runs);
 
       expect(settled[0]).toEqual({
         status: "fulfilled",
@@ -844,51 +891,38 @@ describe("deleting an account", () => {
     it("a deletion that is the deadlock's victim tries again and erases the account", async () => {
       const m = await memberWithGrocery();
       let deletion: Promise<unknown> = Promise.resolve();
-      let releaseRecipe = () => {};
-      let recipeHolder: Promise<unknown> = Promise.resolve();
-      const recipeHeld = new Promise<number>((resolveHeld) => {
-        const gate = new Promise<void>((resolve) => (releaseRecipe = resolve));
+      const recipeHold = await holdUntilReleased(lockRecipe(m.recipe.id));
 
-        recipeHolder = getTestDb().transaction(async (tx) => {
-          await tx.select().from(recipes).where(eq(recipes.id, m.recipe.id)).for("update");
-          resolveHeld(
-            (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`)).rows[0]!.pid
+      try {
+        // The deletion holds the household and waits on the recipe while the test's write, holding
+        // the line, waits on the household; let go, the deletion's wait on the line closes the cycle.
+        await getTestDb().transaction(async (tx) => {
+          await tx.execute(sql`SET LOCAL deadlock_timeout = '10s'`);
+          await tx.select().from(groceries).where(eq(groceries.id, m.grocery.id)).for("update");
+          const holder = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
+            .rows[0]!.pid;
+
+          deletion = deleteAccount(m.deleted);
+          deletion.catch(() => undefined);
+          const deleter = await waitFor(
+            () => waiterOn(recipeHold.pid),
+            "the deletion to wait on the recipe"
           );
-          await gate;
+          const keyShare = tx
+            .select()
+            .from(households)
+            .where(eq(households.id, m.household))
+            .for("key share")
+            .execute();
+
+          await waitFor(() => blockedBy(holder, deleter), "the write to wait on the deletion");
+          await recipeHold.release();
+          await waitFor(() => blockedBy(deleter, holder), "the deletion to wait on the line");
+          await keyShare;
         });
-      });
-      const blockedBy = async (pid: number, blocker: number) =>
-        (await lockWaits()).get(pid)?.includes(blocker) || undefined;
-
-      // The deletion holds the household and waits on the recipe while the test's write, holding
-      // the line, waits on the household; let go, the deletion's wait on the line closes the cycle.
-      await getTestDb().transaction(async (tx) => {
-        await tx.execute(sql`SET LOCAL deadlock_timeout = '10s'`);
-        await tx.select().from(groceries).where(eq(groceries.id, m.grocery.id)).for("update");
-        const holder = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
-          .rows[0]!.pid;
-        const recipePid = await recipeHeld;
-
-        deletion = deleteAccount(m.deleted);
-        deletion.catch(() => undefined);
-        const deleter = await waitFor(
-          async () =>
-            [...(await lockWaits())].find(([, blockers]) => blockers.includes(recipePid))?.[0],
-          "the deletion to wait on the recipe"
-        );
-        const keyShare = tx
-          .select()
-          .from(households)
-          .where(eq(households.id, m.household))
-          .for("key share")
-          .execute();
-
-        await waitFor(() => blockedBy(holder, deleter), "the write to wait on the deletion");
-        releaseRecipe();
-        await recipeHolder;
-        await waitFor(() => blockedBy(deleter, holder), "the deletion to wait on the line");
-        await keyShare;
-      });
+      } finally {
+        await recipeHold.release();
+      }
 
       await expect(deletion).resolves.toEqual(
         expect.objectContaining({ recipeIds: [m.recipe.id] })
