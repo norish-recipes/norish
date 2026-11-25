@@ -1,5 +1,6 @@
 "use client";
 
+import type { QueryKey } from "@tanstack/react-query";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
@@ -59,18 +60,27 @@ export function useRecipePermissions(): RecipePermissions {
   };
 }
 
+/** Every read the Permission Policy or the household's members decide: recipes, cookbooks and
+ * what refers to them (Library, favourites, ratings, plan, groceries, Tags), and the policy. */
+export function readerScopedKeys(trpc: ReturnType<typeof useTRPC>): QueryKey[] {
+  return [
+    trpc.permissions.get.queryKey(),
+    trpc.recipes.pathKey(),
+    trpc.cookbooks.pathKey(),
+    trpc.library.pathKey(),
+    trpc.favorites.pathKey(),
+    trpc.ratings.pathKey(),
+    trpc.calendar.pathKey(),
+    trpc.groceries.pathKey(),
+    trpc.config.tags.queryKey(),
+  ];
+}
+
 /** Rereads what a policy change can alter; the shell mounts it once. */
 export function usePermissionsSubscription() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  // The policy itself, and which recipes the reader may see: the paged lists are infinite
-  // queries, so they match by path; the library path also holds Search's Categories and Tags.
-  const affectedKeys = [
-    trpc.permissions.get.queryKey(),
-    trpc.recipes.list.pathKey(),
-    trpc.library.pathKey(),
-    trpc.cookbooks.recipes.pathKey(),
-  ];
+  const affectedKeys = readerScopedKeys(trpc);
 
   useRealtimeSubscription<PayloadOf<PermissionsRealtime, "policyUpdated">>(
     trpc.permissions.onPolicyUpdated,

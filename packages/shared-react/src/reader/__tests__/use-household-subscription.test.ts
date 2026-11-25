@@ -106,13 +106,22 @@ vi.mock("../../trpc", () => ({
       },
     },
     recipes: {
+      pathKey: () => [["recipes"]],
       get: { pathKey: () => [["recipes", "get"]] },
     },
     calendar: {
+      pathKey: () => [["calendar"]],
       listRecipes: {
         queryKey: () => [["calendar", "listRecipes"], { type: "query" }],
       },
     },
+    permissions: { get: { queryKey: () => [["permissions", "get"], { type: "query" }] } },
+    cookbooks: { pathKey: () => [["cookbooks"]] },
+    library: { pathKey: () => [["library"]] },
+    favorites: { pathKey: () => [["favorites"]] },
+    ratings: { pathKey: () => [["ratings"]] },
+    groceries: { pathKey: () => [["groceries"]] },
+    config: { tags: { queryKey: () => [["config", "tags"], { type: "query" }] } },
     user: {
       get: {
         queryKey: () => [["user", "get"], { type: "query" }],
@@ -307,6 +316,40 @@ describe("useHouseholdSubscription", () => {
         title: "common.household.removedTitle",
         description: "common.household.removedDescription",
       });
+    });
+  });
+
+  describe("a membership change", () => {
+    it("rereads the recipes and cookbooks a member joining or leaving brings or takes", () => {
+      queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+      for (const name of ["onUserJoined", "onUserLeft", "onMemberRemoved"]) {
+        invalidateSpy.mockClear();
+        act(() => {
+          subscriptionCallbacks[name]?.(
+            trackedEvent({ user: createMockHouseholdUser({ id: "u2" }), userId: "u2" })
+          );
+        });
+
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["calendar"]] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["groceries"]] });
+      }
+    });
+
+    it("rereads everything once the Reader is in another household", () => {
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+      act(() => {
+        subscriptionCallbacks.onCreated?.(
+          trackedEvent({ household: createMockHouseholdSettings({ id: "h2" }) })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith();
     });
   });
 

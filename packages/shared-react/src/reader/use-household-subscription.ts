@@ -11,6 +11,7 @@ import { usePlatform } from "../platform";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useHouseholdCacheHelpers } from "./use-household";
+import { readerScopedKeys } from "./use-permissions";
 import { useReader } from "./use-reader";
 
 type Payload<E extends EventName<HouseholdsRealtime>> = PayloadOf<HouseholdsRealtime, E>;
@@ -42,6 +43,8 @@ export function useHouseholdSubscription() {
         household: payload.household,
         currentUserId: prev?.currentUserId ?? currentUserId ?? "",
       }));
+      // Another household: nearly every read answers for the household, so all go again.
+      void queryClient.invalidateQueries();
     },
   });
 
@@ -72,6 +75,7 @@ export function useHouseholdSubscription() {
   useRealtimeSubscription<Payload<"userJoined">>(trpc.households.onUserJoined, {
     ...live,
     onEvent: (payload) => {
+      rereadReaderScope();
       setHouseholdData((prev) => {
         if (!prev?.household) return prev;
 
@@ -99,7 +103,13 @@ export function useHouseholdSubscription() {
     },
   });
 
+  // A member's recipes and cookbooks come and go with them.
+  const rereadReaderScope = () => {
+    for (const key of readerScopedKeys(trpc)) void queryClient.invalidateQueries({ queryKey: key });
+  };
+
   const removeMember = (payload: { userId: string }) => {
+    rereadReaderScope();
     setHouseholdData((prev) => {
       if (!prev?.household) return prev;
 
