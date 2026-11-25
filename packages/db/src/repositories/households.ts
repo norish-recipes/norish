@@ -34,8 +34,6 @@ import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getUsersByIds } from "./users";
 
-export { getHouseholdMemberIds, householdMemberIdsSql } from "./household-members";
-
 export async function getUsersByHouseholdId(householdId: string): Promise<HouseholdUserDto[]> {
   const rows = await db.query.householdUsers.findMany({
     where: eq(householdUsers.householdId, householdId),
@@ -143,24 +141,6 @@ export async function getHouseholdForUser(
   if (!parsed.success) throw new Error("Failed to parse household for user");
 
   return parsed.data;
-}
-
-/** Everyone in the account's household, the account included. */
-export async function getHouseholdMemberIdsForUser(userId: string): Promise<string[]> {
-  const rows = await db
-    .select({ userId: householdUsers.userId })
-    .from(householdUsers)
-    .where(
-      inArray(
-        householdUsers.householdId,
-        db
-          .select({ householdId: householdUsers.householdId })
-          .from(householdUsers)
-          .where(eq(householdUsers.userId, userId))
-      )
-    );
-
-  return rows.map((row) => row.userId);
 }
 
 async function insertHouseholdOfOne(tx: DbTransaction, userId: string): Promise<HouseholdDto> {

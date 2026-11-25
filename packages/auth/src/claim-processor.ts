@@ -1,4 +1,5 @@
 import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
+import { getHouseholdMemberIdsByHouseholdId } from "@norish/db/repositories/household-members";
 import {
   findHouseholdByName,
   getHouseholdForUser,
@@ -6,7 +7,6 @@ import {
   NEW_HOUSEHOLD_NAME,
   renameHousehold,
 } from "@norish/db/repositories/households";
-import { getHouseholdMemberIds } from "@norish/db/repositories/household-members";
 import { getUserById, isUserServerOwner, setUserAdminStatus } from "@norish/db/repositories/users";
 import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
 import { authLogger } from "@norish/shared-server/logger";
@@ -328,7 +328,7 @@ export async function processClaimsForUser(
       return;
     }
 
-    const existingMemberIds = await getHouseholdMemberIds(claimed.id);
+    const existingMemberIds = await getHouseholdMemberIdsByHouseholdId(claimed.id);
     const outcome = await joinHousehold(userId, claimed.id);
 
     if ("refused" in outcome) {

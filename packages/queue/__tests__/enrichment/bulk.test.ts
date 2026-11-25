@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getRecipeFull = vi.fn();
-const getHouseholdMemberIds = vi.fn();
+const getHouseholdMemberIdsByHouseholdId = vi.fn();
 const getAllergiesForUsers = vi.fn();
 const getAllRecipesForEnrichment = vi.fn();
 const isAIEnabled = vi.fn();
 const getAutomaticEnrichmentConfig = vi.fn();
 const addEnrichmentJob = vi.fn();
 
+vi.mock("@norish/db/repositories/household-members", () => ({
+  getHouseholdMemberIdsByHouseholdId,
+}));
 vi.mock("@norish/db", () => ({
   getRecipeFull,
-  getHouseholdMemberIds,
   getAllergiesForUsers,
 }));
 
@@ -73,7 +75,7 @@ function recipe(id: string, overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   getRecipeFull.mockImplementation(async (id: string) => recipe(id));
-  getHouseholdMemberIds.mockResolvedValue(["user-1"]);
+  getHouseholdMemberIdsByHouseholdId.mockResolvedValue(["user-1"]);
   getAllergiesForUsers.mockResolvedValue(["Milk"]);
   isAIEnabled.mockResolvedValue(true);
   getAutomaticEnrichmentConfig.mockResolvedValue(ALL_ON);

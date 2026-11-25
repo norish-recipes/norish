@@ -18,7 +18,8 @@ import type {
   RecipeEnrichmentKind,
   RecipeEnrichmentSkipReason,
 } from "@norish/shared/lib/recipe-enrichment";
-import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
+import { getAllergiesForUsers, getRecipeFull } from "@norish/db";
+import { getHouseholdMemberIdsByHouseholdId } from "@norish/db/repositories/household-members";
 import { getQueueByName } from "@norish/queue/registry";
 import {
   getAutomaticEnrichmentConfig,
@@ -259,7 +260,7 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
 }
 
 async function loadHouseholdHasAllergies(context: RecipeEnrichmentContext): Promise<boolean> {
-  const memberIds = await getHouseholdMemberIds(context.householdId);
+  const memberIds = await getHouseholdMemberIdsByHouseholdId(context.householdId);
   const allergies = await getAllergiesForUsers(memberIds);
 
   return allergies.length > 0;

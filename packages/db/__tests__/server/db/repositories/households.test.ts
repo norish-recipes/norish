@@ -8,10 +8,12 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  getHouseholdMemberIdsByHouseholdId,
+  getHouseholdMemberIdsByUserId,
+} from "@norish/db/repositories/household-members";
+import {
   getHouseholdForUser,
   getHouseholdIdForUser,
-  getHouseholdMemberIds,
-  getHouseholdMemberIdsForUser,
   isHouseholdMember,
   joinHousehold,
   kickUserFromHousehold,
@@ -79,10 +81,10 @@ describe("households", () => {
       const { admin, member, householdId } = await sharedHousehold();
       const outsider = await createTestUser();
 
-      expect((await getHouseholdMemberIds(householdId)).sort()).toEqual(
+      expect((await getHouseholdMemberIdsByHouseholdId(householdId)).sort()).toEqual(
         [admin.id, member.id].sort()
       );
-      expect((await getHouseholdMemberIdsForUser(member.id)).sort()).toEqual(
+      expect((await getHouseholdMemberIdsByUserId(member.id)).sort()).toEqual(
         [admin.id, member.id].sort()
       );
       expect(await isHouseholdMember(householdId, member.id)).toBe(true);
@@ -99,7 +101,7 @@ describe("households", () => {
       expect(outcome.applied).toBe(true);
       expect(outcome.value).toMatchObject({ name: NEW_HOUSEHOLD_NAME, adminUserId: member.id });
       expect(await householdOf(member.id)).toBe(outcome.value!.id);
-      expect(await getHouseholdMemberIds(householdId)).toEqual([admin.id]);
+      expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([admin.id]);
     });
 
     it("gives the new household a join code", async () => {
@@ -141,7 +143,7 @@ describe("households", () => {
 
       expect(outcome).toMatchObject({ leftHouseholdId: left });
       expect(await householdOf(joiner.id)).toBe(target);
-      expect(await getHouseholdMemberIds(left)).toEqual([]);
+      expect(await getHouseholdMemberIdsByHouseholdId(left)).toEqual([]);
     });
 
     it("is refused from a household of one that holds a recipe", async () => {

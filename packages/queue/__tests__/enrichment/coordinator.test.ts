@@ -3,16 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 
 const getRecipeFull = vi.fn();
-const getHouseholdMemberIds = vi.fn();
+const getHouseholdMemberIdsByHouseholdId = vi.fn();
 const getAllergiesForUsers = vi.fn();
 const isAIEnabled = vi.fn();
 const getAutomaticEnrichmentConfig = vi.fn();
 const isImageGenerationConfigured = vi.fn();
 const addEnrichmentJob = vi.fn();
 
+vi.mock("@norish/db/repositories/household-members", () => ({
+  getHouseholdMemberIdsByHouseholdId,
+}));
 vi.mock("@norish/db", () => ({
   getRecipeFull,
-  getHouseholdMemberIds,
   getAllergiesForUsers,
 }));
 
@@ -78,7 +80,7 @@ function outcome(results: Awaited<ReturnType<typeof enrichRecipe>>, kind: Recipe
 
 beforeEach(() => {
   getRecipeFull.mockResolvedValue(recipe());
-  getHouseholdMemberIds.mockResolvedValue(["user-1"]);
+  getHouseholdMemberIdsByHouseholdId.mockResolvedValue(["user-1"]);
   getAllergiesForUsers.mockResolvedValue(["Milk"]);
   isAIEnabled.mockResolvedValue(true);
   getAutomaticEnrichmentConfig.mockResolvedValue(ALL_ON);

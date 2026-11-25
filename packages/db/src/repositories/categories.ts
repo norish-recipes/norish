@@ -11,7 +11,7 @@ import {
 } from "@norish/shared/lib/categories";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
-import { getHouseholdMemberIds } from "./household-members";
+import { getHouseholdMemberIdsByHouseholdId } from "./household-members";
 
 // A recipe's Category names in order, as a correlated subquery on `"recipes"`:
 // the query using it must not alias the recipes table.
@@ -55,7 +55,7 @@ export async function listCategoryNamesForUsers(userIds: string[]): Promise<stri
 export async function listCategoryNamesForViewer(viewer: {
   householdId: string;
 }): Promise<string[]> {
-  return listCategoryNamesForUsers(await getHouseholdMemberIds(viewer.householdId));
+  return listCategoryNamesForUsers(await getHouseholdMemberIdsByHouseholdId(viewer.householdId));
 }
 
 /**

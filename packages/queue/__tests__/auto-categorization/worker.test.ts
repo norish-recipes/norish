@@ -11,15 +11,15 @@ import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types"
 
 const mocks = vi.hoisted(() => ({
   getRecipeFull: vi.fn(),
-  getHouseholdMemberIdsForUser: vi.fn(),
+  getHouseholdMemberIdsByUserId: vi.fn(),
   listCategoryNamesForUsers: vi.fn(),
   replaceRecipeCategories: vi.fn(),
   categorizeRecipe: vi.fn(),
 }));
 
 vi.mock("@norish/db", () => ({ getRecipeFull: mocks.getRecipeFull }));
-vi.mock("@norish/db/repositories/households", () => ({
-  getHouseholdMemberIdsForUser: mocks.getHouseholdMemberIdsForUser,
+vi.mock("@norish/db/repositories/household-members", () => ({
+  getHouseholdMemberIdsByUserId: mocks.getHouseholdMemberIdsByUserId,
 }));
 vi.mock("@norish/db/repositories/categories", () => ({
   listCategoryNamesForUsers: mocks.listCategoryNamesForUsers,
@@ -71,7 +71,7 @@ describe("processAutoCategorizationJob", () => {
       description: null,
       recipeIngredients: [{ ingredientName: "tequila" }],
     });
-    mocks.getHouseholdMemberIdsForUser.mockResolvedValue(["owner-1", "owner-2"]);
+    mocks.getHouseholdMemberIdsByUserId.mockResolvedValue(["owner-1", "owner-2"]);
     mocks.listCategoryNamesForUsers.mockResolvedValue(HOUSEHOLD);
     mocks.categorizeRecipe.mockResolvedValue(["Drinks"]);
     mocks.replaceRecipeCategories.mockResolvedValue(true);
@@ -80,7 +80,7 @@ describe("processAutoCategorizationJob", () => {
   it("categorizes from the recipe owner's household list and saves the pick", async () => {
     await processAutoCategorizationJob(job());
 
-    expect(mocks.getHouseholdMemberIdsForUser).toHaveBeenCalledWith("owner-1");
+    expect(mocks.getHouseholdMemberIdsByUserId).toHaveBeenCalledWith("owner-1");
     expect(mocks.listCategoryNamesForUsers).toHaveBeenCalledWith(["owner-1", "owner-2"]);
     expect(mocks.categorizeRecipe).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Margarita" }),

@@ -6,7 +6,8 @@
  */
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
-import { getAllergiesForUsers, getHouseholdMemberIds } from "@norish/db";
+import { getAllergiesForUsers } from "@norish/db";
+import { getHouseholdMemberIdsByHouseholdId } from "@norish/db/repositories/household-members";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
 import { detectAllergiesInRecipe } from "@norish/shared-server/ai/enrichment/allergy-detector";
 import { createLogger } from "@norish/shared-server/logger";
@@ -28,7 +29,7 @@ export function startAllergyDetectionWorker(): void {
     QUEUE_NAMES.ALLERGY_DETECTION,
     (job) =>
       runEnrichmentJob(job, async (recipe) => {
-        const memberIds = await getHouseholdMemberIds(job.data.householdId);
+        const memberIds = await getHouseholdMemberIdsByHouseholdId(job.data.householdId);
         const allergies = await getAllergiesForUsers(memberIds);
         const allergiesToDetect = Array.from(new Set(allergies.map((allergy) => allergy.tagName)));
 

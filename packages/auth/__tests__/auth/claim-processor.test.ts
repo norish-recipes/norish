@@ -30,7 +30,7 @@ vi.mock("@norish/db/repositories/households", () => ({
 }));
 
 vi.mock("@norish/db/repositories/household-members", () => ({
-  getHouseholdMemberIds: (...args: unknown[]) => mockGetHouseholdMemberIds(...args),
+  getHouseholdMemberIdsByHouseholdId: (...args: unknown[]) => mockGetHouseholdMemberIds(...args),
 }));
 
 vi.mock("@norish/shared-server/cache/household", () => ({
