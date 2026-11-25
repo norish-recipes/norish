@@ -19,6 +19,11 @@ export default function HouseholdInfoCard() {
   if (!household) return null;
 
   const otherMembers = household.users.filter((u) => u.id !== currentUserId);
+
+  if (otherMembers.length === 0) {
+    return <SettingsCard description={t("justYou")} icon={HomeIcon} title={household.name} />;
+  }
+
   const handleLeaveHousehold = () => {
     leaveHousehold(household.id);
     setShowLeaveModal(false);

@@ -6,13 +6,12 @@ import { ClipboardDocumentIcon, HomeIcon, UserGroupIcon } from "@heroicons/react
 import type { HouseholdShape } from "../household-shape";
 
 export default function HouseholdSkeleton({ shape }: { shape: HouseholdShape }) {
-  // Without a household, its two cards sit side by side.
-  if (shape === "none") {
+  if (shape === "solo") {
     return (
       <SettingsCardsSkeleton
-        sideBySide
         cards={[
-          { icon: HomeIcon, section: "household.create", description: true, rows: 2 },
+          { icon: HomeIcon, rows: 1 },
+          { icon: ClipboardDocumentIcon, section: "household.joinCode", rows: 2 },
           { icon: UserGroupIcon, section: "household.join", description: true, rows: 2 },
         ]}
       />

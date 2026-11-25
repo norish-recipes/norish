@@ -78,7 +78,7 @@ export default function UsersCard() {
             hideOnNarrow: true,
             label: t("table.household"),
             className: "text-sm",
-            render: (row: AdminUserRowDTO) => row.household?.name ?? t("noHousehold"),
+            render: (row: AdminUserRowDTO) => row.household.name,
           },
           {
             key: "joined",
