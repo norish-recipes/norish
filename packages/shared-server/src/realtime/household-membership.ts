@@ -3,27 +3,36 @@ import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/ho
 import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
 import { households } from "@norish/shared-server/realtime/households";
 
+/** Who hears a committed membership change: the account that moved, then those who stay. */
+export interface MembershipAnnouncements {
+  toMover?: () => Promise<void>;
+  toOthers?: () => Promise<void>;
+}
+
 /**
- * After a committed membership change: drops the household cache first, so no read
- * serves the old household, then announces, then the Scope Change (ADR-0033), which
- * runs even when the cache or an announcement throws.
+ * Drops the household cache, tells the mover, then its Scope Change (ADR-0033) without waiting on
+ * those who stay, who hear last. Each step runs even when an earlier one throws.
  */
 export async function announceMembershipChange(
   change: { userId: string; reason: string; affectedUserIds: string[] },
-  announce: () => Promise<void>
+  announce: MembershipAnnouncements
 ): Promise<void> {
   try {
     await invalidateHouseholdCacheForUsers([change.userId, ...change.affectedUserIds]);
   } finally {
     try {
-      await announce();
+      await announce.toMover?.();
     } finally {
-      await emitConnectionInvalidation(change.userId, change.reason);
+      try {
+        await emitConnectionInvalidation(change.userId, change.reason);
+      } finally {
+        await announce.toOthers?.();
+      }
     }
   }
 }
 
-/** An account joined a household: its members hear who, then the joiner rescopes. */
+/** An account joined a household: the joiner rescopes, then its members hear who. */
 export async function announceHouseholdJoin(
   join: {
     householdId: string;
@@ -31,21 +40,22 @@ export async function announceHouseholdJoin(
     memberIds: string[];
     reason: string;
   },
-  announceFirst: () => Promise<void> = async () => undefined
+  toJoiner?: () => Promise<void>
 ): Promise<void> {
   await announceMembershipChange(
     { userId: join.user.id, reason: join.reason, affectedUserIds: join.memberIds },
-    async () => {
-      await announceFirst();
+    {
+      toMover: toJoiner,
+      toOthers: async () => {
+        const user: HouseholdUserInfo = {
+          id: join.user.id,
+          name: await join.user.name(),
+          version: join.user.version,
+          isAdmin: false,
+        };
 
-      const user: HouseholdUserInfo = {
-        id: join.user.id,
-        name: await join.user.name(),
-        version: join.user.version,
-        isAdmin: false,
-      };
-
-      await households.publish("userJoined", { user }, { householdId: join.householdId });
+        await households.publish("userJoined", { user }, { householdId: join.householdId });
+      },
     }
   );
 }

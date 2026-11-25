@@ -212,13 +212,14 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
 
       await announceMembershipChange(
         { userId: ctx.user.id, reason: "household-left", affectedUserIds: memberIds },
-        async () => {
-          // Remaining members hear it before the leaver's socket restarts.
-          for (const memberId of memberIds) {
-            await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
-          }
-
-          await publishHouseholdTo(ctx.user.id);
+        {
+          // The leaver's view gets its household of one before its socket restarts.
+          toMover: () => publishHouseholdTo(ctx.user.id),
+          toOthers: async () => {
+            for (const memberId of memberIds) {
+              await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
+            }
+          },
         }
       );
       await chaseLeftBehindEvents(ctx.user.id).catch((err) =>
@@ -294,16 +295,19 @@ const kick = authedProcedure
             reason: "household-kicked",
             affectedUserIds: result.value.memberIds,
           },
-          async () => {
-            // The kicked user gets their new household of one and hears why before the
-            // socket closes; the reconnect refetches under the new identity (ADR-0011).
-            await publishHouseholdTo(userIdToKick);
-            await households.publish(
-              "userKicked",
-              { householdId, kickedBy: ctx.user.id },
-              { userId: userIdToKick }
-            );
-            await households.publish("memberRemoved", { userId: userIdToKick }, { householdId });
+          {
+            // The kicked user gets their household of one and hears why before the socket
+            // closes; the reconnect refetches under the new identity (ADR-0011).
+            toMover: async () => {
+              await publishHouseholdTo(userIdToKick);
+              await households.publish(
+                "userKicked",
+                { householdId, kickedBy: ctx.user.id },
+                { userId: userIdToKick }
+              );
+            },
+            toOthers: () =>
+              households.publish("memberRemoved", { userId: userIdToKick }, { householdId }),
           }
         );
         await chaseLeftBehindEvents(userIdToKick).catch((err) =>

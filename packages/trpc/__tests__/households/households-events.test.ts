@@ -97,7 +97,7 @@ describe("household mutations announce before they restart the socket", () => {
     householdDb.isUserHouseholdAdmin.mockResolvedValue(true);
   });
 
-  it("join: drops the cache, then the joiner and the household hear it before the invalidation", async () => {
+  it("join: drops the cache, tells the joiner, rescopes them, then tells the household", async () => {
     householdDb.joinHousehold.mockResolvedValue({
       joined: { householdId, version: 1 },
       leftHouseholdId: "own-household",
@@ -111,8 +111,8 @@ describe("household mutations announce before they restart the socket", () => {
     expect(timeline()).toEqual([
       "cache:drop",
       "household:created",
-      "household:userJoined",
       "connection.invalidate:household-joined",
+      "household:userJoined",
     ]);
     expect(households.published[1]!.channel).toBe(
       `norish:household:household:${householdId}:userJoined`
@@ -146,7 +146,7 @@ describe("household mutations announce before they restart the socket", () => {
     expect(householdDb.joinHousehold).not.toHaveBeenCalled();
   });
 
-  it("leave: the members hear `userLeft`, then the leaver gets their new household of one", async () => {
+  it("leave: the leaver gets their household of one and rescopes before the members hear it", async () => {
     const leaver = { ...household, adminUserId: memberId };
 
     householdDb.getHouseholdForUser
@@ -160,10 +160,10 @@ describe("household mutations announce before they restart the socket", () => {
     expect(householdDb.moveToHouseholdOfOne).toHaveBeenCalledWith(householdId, user.id, 3);
     expect(timeline()).toEqual([
       "cache:drop",
-      "household:userLeft",
-      "household:userLeft",
       "household:created",
       "connection.invalidate:household-left",
+      "household:userLeft",
+      "household:userLeft",
     ]);
     // Who stays comes from the move itself, so a member who joined meanwhile hears it too.
     expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
@@ -171,10 +171,10 @@ describe("household mutations announce before they restart the socket", () => {
       memberId,
       lateJoinerId,
     ]);
-    expect(households.published[0]!.target).toEqual({ userId: memberId });
-    expect(households.published[1]!.target).toEqual({ userId: lateJoinerId });
-    expect(households.published[2]!.target).toEqual({ userId: user.id });
-    expect(households.published[2]!.payload).toMatchObject({ household: { id: "new-household" } });
+    expect(households.published[0]!.target).toEqual({ userId: user.id });
+    expect(households.published[0]!.payload).toMatchObject({ household: { id: "new-household" } });
+    expect(households.published[1]!.target).toEqual({ userId: memberId });
+    expect(households.published[2]!.target).toEqual({ userId: lateJoinerId });
     // The leaver's synced entries of the household they left come off their calendar.
     expect(caldavSync.chaseLeftBehindEvents).toHaveBeenCalledWith(user.id);
   });
@@ -198,7 +198,7 @@ describe("household mutations announce before they restart the socket", () => {
     expect(householdDb.moveToHouseholdOfOne).not.toHaveBeenCalled();
   });
 
-  it("kick: the kicked user and the household hear it before the kicked user's invalidation", async () => {
+  it("kick: the kicked user hears it and rescopes before the household hears it", async () => {
     householdDb.kickUserFromHousehold.mockResolvedValue(moved([user.id, lateJoinerId]));
 
     await householdsRouter
@@ -210,8 +210,8 @@ describe("household mutations announce before they restart the socket", () => {
       "cache:drop",
       "household:created",
       "household:userKicked",
-      "household:memberRemoved",
       "connection.invalidate:household-kicked",
+      "household:memberRemoved",
     ]);
     // The removed member gets their new household of one before their socket restarts.
     expect(households.published[0]!.target).toEqual({ userId: memberId });
