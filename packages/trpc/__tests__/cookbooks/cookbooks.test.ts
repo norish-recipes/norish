@@ -83,6 +83,7 @@ describe("cookbook procedures", () => {
       const summary = cookbookSummary();
 
       createCookbook.mockResolvedValue(summary);
+      getCookbookRow.mockResolvedValue(cookbookRow());
 
       const { caller } = callerFor();
       const result = await caller.cookbooks.create({ title: "Weeknights" });
@@ -231,7 +232,8 @@ describe("cookbook procedures", () => {
 
       policy.delete = "everyone";
       getCookbookRow.mockResolvedValue(row);
-      deleteCookbookById.mockResolvedValue({ applied: true, stale: false, value: undefined });
+      // The row went from the household its Owner moved to after the check.
+      deleteCookbookById.mockResolvedValue({ applied: true, stale: false, value: "moved-to" });
 
       const { caller } = callerFor();
 
@@ -239,6 +241,11 @@ describe("cookbook procedures", () => {
         id: row.id,
         deleted: true,
       });
+      expect(cookbooks.publish).toHaveBeenCalledWith(
+        "deleted",
+        { id: row.id },
+        { viewPolicy: "household", householdId: "moved-to" }
+      );
       expect(canAccessResource).toHaveBeenCalledWith(
         "delete",
         "test-household-id",

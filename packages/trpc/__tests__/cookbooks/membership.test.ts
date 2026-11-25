@@ -166,6 +166,23 @@ describe("cookbook membership", () => {
     );
   });
 
+  it("echoes to the household the cookbook is in at publish, after its Owner moved", async () => {
+    getCookbookRow
+      .mockResolvedValueOnce(cookbookRow())
+      .mockResolvedValueOnce(cookbookRow({ householdId: "moved-to" }));
+
+    await callerFor().cookbooks.setMembership({
+      cookbookId: COOKBOOK_ID,
+      recipeIds: [RECIPE_ID],
+      isMember: true,
+    });
+
+    expect(cookbooks.publish).toHaveBeenCalledWith("membershipChanged", expect.anything(), {
+      viewPolicy: "household",
+      householdId: "moved-to",
+    });
+  });
+
   it("creates a cookbook already holding the recipe, in one step", async () => {
     createCookbook.mockResolvedValue({
       ...cookbookRow(),

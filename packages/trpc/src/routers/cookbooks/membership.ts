@@ -10,6 +10,7 @@ import {
 } from "@norish/db/repositories/cookbooks";
 import { listRecipes } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { cookbookAudience } from "@norish/shared-server/realtime/audience";
 import {
   CookbookForRecipeInputSchema,
   CookbookMemberIdsInputSchema,
@@ -42,7 +43,7 @@ const setMembership = authedProcedure
   .mutation(async ({ ctx, input }) => {
     const access = await recipeAccess(ctx, input.recipeIds, "view");
 
-    const { householdId } = await assertCookbookAccess(ctx, input.cookbookId, "edit");
+    await assertCookbookAccess(ctx, input.cookbookId, "edit");
 
     // A recipe gone or unseen by the time a queued call replays is left out,
     // so the rest still land.
@@ -66,7 +67,7 @@ const setMembership = authedProcedure
     );
 
     if (recipeIds.length > 0) {
-      await emitCookbookEvent(householdId, "membershipChanged", {
+      await emitCookbookEvent(await cookbookAudience(input.cookbookId), "membershipChanged", {
         cookbookId: input.cookbookId,
         recipeIds,
         isMember: input.isMember,

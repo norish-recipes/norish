@@ -529,7 +529,7 @@ describe("cookbook repository", () => {
 
       const deleted = await deleteCookbookById(cookbook.id, cookbook.version);
 
-      expect(deleted.applied).toBe(true);
+      expect(deleted).toMatchObject({ applied: true, value: cookbook.householdId });
       expect(await getCookbookForViewer(viewer(ownerId), cookbook.id)).toBeNull();
 
       const recipesStillThere = await getTestDb().query.recipes.findMany();

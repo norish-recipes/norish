@@ -4,7 +4,6 @@ import type { ClientEventName, PayloadOf } from "@norish/shared/contracts/realti
 import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
 import { resourceAccess } from "@norish/auth/permissions";
 import { getCookbookRow } from "@norish/db/repositories/cookbooks";
-import { policyAudience } from "@norish/shared-server/realtime/audience";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
 import { notFoundError, refuseUnlessAllowed } from "../recipes/helpers";
@@ -31,12 +30,14 @@ export async function assertCookbookAccess(
   return cookbook;
 }
 
-/** Broadcast a cookbook event to whoever the view policy now lets see the household's cookbooks. */
+/** Broadcast a cookbook event to its audience, read at publish (`cookbookAudience`); none, none hear. */
 export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealtime>>(
-  householdId: string,
+  audience: PolicyTarget | null,
   event: E,
   data: PayloadOf<CookbooksRealtime, E>
 ): Promise<void> {
+  if (!audience) return;
+
   // Every cookbook event is policy-scoped; `TargetFor` cannot see that for an open `E`.
   const publish = cookbooks.publish as (
     event: E,
@@ -44,5 +45,5 @@ export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealt
     target: PolicyTarget
   ) => Promise<void>;
 
-  await publish(event, data, await policyAudience(householdId));
+  await publish(event, data, audience);
 }

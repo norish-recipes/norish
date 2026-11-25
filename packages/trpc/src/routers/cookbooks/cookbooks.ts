@@ -11,6 +11,7 @@ import {
 } from "@norish/db/repositories/cookbooks";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { saveCookbookImageBytes, sweepCookbookImages } from "@norish/shared-server/media/storage";
+import { cookbookAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import {
   CookbookCreateInputSchema,
   CookbookDeleteInputSchema,
@@ -80,10 +81,12 @@ const create = authedProcedure
     const cookbook = { ...created, memberCount: recipeIds.length };
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook created");
-    await emitCookbookEvent(cookbook.householdId, "created", { cookbook });
+    const audience = await cookbookAudience(cookbook.id);
+
+    await emitCookbookEvent(audience, "created", { cookbook });
 
     if (recipeIds.length > 0) {
-      await emitCookbookEvent(cookbook.householdId, "membershipChanged", {
+      await emitCookbookEvent(audience, "membershipChanged", {
         cookbookId: cookbook.id,
         recipeIds,
         isMember: true,
@@ -123,13 +126,13 @@ const update = authedProcedure
     if (input.image !== undefined) await sweepCookbookImages(cookbook.id, input.image);
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook updated");
-    await emitCookbookEvent(cookbook.householdId, "updated", { cookbook });
+    await emitCookbookEvent(await cookbookAudience(cookbook.id), "updated", { cookbook });
 
     return cookbook;
   });
 
 const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async ({ ctx, input }) => {
-  const { householdId } = await assertCookbookAccess(ctx, input.id, "delete");
+  await assertCookbookAccess(ctx, input.id, "delete");
 
   const outcome = await deleteCookbookById(input.id, input.version);
 
@@ -146,7 +149,9 @@ const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async (
   // go with it, through the join table's cascade.
   await sweepCookbookImages(input.id);
   log.info({ userId: ctx.user.id, cookbookId: input.id }, "Cookbook deleted");
-  await emitCookbookEvent(householdId, "deleted", { id: input.id });
+  // Gone, so its audience is the household the delete took it from.
+  if (outcome.value)
+    await emitCookbookEvent(await policyAudience(outcome.value), "deleted", { id: input.id });
 
   return { id: input.id, deleted: true };
 });

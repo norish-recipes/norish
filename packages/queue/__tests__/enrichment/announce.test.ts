@@ -75,8 +75,9 @@ describe("publishEnrichmentLifecycle", () => {
 });
 
 describe("publishEnrichmentRecipeUpdated", () => {
-  it("marks the canonical update as enrichment-originated, naming its kind", async () => {
-    const recipe = { id: "recipe-1", householdId: "owners-household" } as FullRecipeDTO;
+  it("marks the canonical update as enrichment-originated, to the row's household at publish", async () => {
+    // The DTO was read before its Owner moved; the row is in the Owner's household now.
+    const recipe = { id: "recipe-1", householdId: "before-the-move" } as FullRecipeDTO;
 
     await publishEnrichmentRecipeUpdated(data, recipe);
 

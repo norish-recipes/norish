@@ -327,7 +327,7 @@ export async function updateCookbook(
 export async function deleteCookbookById(
   id: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<string | null>> {
   const conditions = [eq(cookbooks.id, id)];
 
   if (version) conditions.push(eq(cookbooks.version, version));
@@ -335,11 +335,12 @@ export async function deleteCookbookById(
   const deleted = await db
     .delete(cookbooks)
     .where(and(...conditions))
-    .returning({ id: cookbooks.id });
+    .returning({ householdId: cookbooks.householdId });
 
   if (deleted.length === 0 && version) return staleOutcome();
 
-  return appliedOutcome(undefined);
+  // The household the row was in as it went, or null when it was already gone.
+  return appliedOutcome(deleted[0]?.householdId ?? null);
 }
 
 /** Every cookbook this reader may see, under the active sort. */

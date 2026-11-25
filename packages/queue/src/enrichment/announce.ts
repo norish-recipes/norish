@@ -11,11 +11,7 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeBecameUsablePayload } from "@norish/shared/contracts/realtime/recipe-enrichment";
 import type { RecipeEnrichmentLifecycleState } from "@norish/shared/lib/recipe-enrichment";
 import { createLogger } from "@norish/shared-server/logger";
-import {
-  accountAudience,
-  policyAudience,
-  recipeAudience,
-} from "@norish/shared-server/realtime/audience";
+import { accountAudience, recipeAudience } from "@norish/shared-server/realtime/audience";
 import { recipeEnrichment } from "@norish/shared-server/realtime/recipe-enrichment";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
@@ -82,6 +78,10 @@ export async function publishEnrichmentRecipeUpdated(
   data: RecipeEnrichmentJobData,
   recipe: FullRecipeDTO
 ): Promise<void> {
+  const audience = await recipeAudience(recipe.id);
+
+  if (!audience) return;
+
   await recipes.publish(
     "updated",
     {
@@ -89,6 +89,6 @@ export async function publishEnrichmentRecipeUpdated(
       source: "enrichment",
       kind: data.kind,
     },
-    await policyAudience(recipe.householdId)
+    audience
   );
 }
